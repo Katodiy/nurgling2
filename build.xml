@@ -71,7 +71,7 @@
   </target>
 
 
-  <target name="hafen-client" depends="build-env, extlib/jogl, extlib/lwjgl-gl">
+  <target name="hafen-client" depends="build-env, extlib/jogl, extlib/lwjgl-gl, resources">
     <javac srcdir="src" destdir="build/classes" debug="on"
 	   source="1.8" target="1.8" includeantruntime="no"
 	   bootclasspath="${boot-classpath}">
@@ -110,7 +110,7 @@
       <fileset dir="build/classes-lib" />
       <manifest>
 	<attribute name="Main-Class" value="haven.MainFrame" />
-	<attribute name="Class-Path" value="jogl-all.jar gluegen-rt.jar lwjgl-fat.jar lwjgl-opengl-fat.jar builtin-res.jar hafen-res.jar" />
+	<attribute name="Class-Path" value="jogl-all.jar gluegen-rt.jar lwjgl-fat.jar lwjgl-opengl-fat.jar builtin-res.jar hafen-res.jar nurgler-res.jar " />
       </manifest>
     </jar>
     <chmod file="build/hafen.jar" perm="a+x" />
@@ -169,4 +169,15 @@
     <delete dir="lib/ext" />
     <delete dir="bin" />
   </target>
+
+  <target name="resources">
+    <exec executable="java" failifexecutionfails="false">
+      <arg line="-jar etc/LayerUtil.jar -re resources/src resources/compiled/res" />
+    </exec>
+    <jar destfile="build/nurgling-res.jar" update="true">
+      <fileset dir="resources/compiled" />
+    </jar>
+    <copy todir="bin/" file="build/nurgling-res.jar" />
+  </target>
+
 </project>
