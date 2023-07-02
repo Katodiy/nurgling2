@@ -2,8 +2,10 @@ package nurgling;
 
 import haven.*;
 
-public class NCore extends Widget {
+public class NCore extends Widget
+{
     private boolean botmod = false;
+
     public class BotmodSettings
     {
         public String user;
@@ -11,8 +13,11 @@ public class NCore extends Widget {
         public String character;
         public String bot;
     }
+
     private BotmodSettings bms;
-    public BotmodSettings getBotMod(){
+
+    public BotmodSettings getBotMod()
+    {
         return bms;
     }
 
@@ -20,17 +25,20 @@ public class NCore extends Widget {
     {
         return botmod;
     }
+
     NConfig config;
 
-    public NCore() {
+    public NCore()
+    {
         config = new NConfig();
         config.read();
     }
 
     @Override
-    public void tick(double dt) {
+    public void tick(double dt)
+    {
         super.tick(dt);
-        if(config.isUpdated())
+        if (config.isUpdated())
         {
             config.write();
         }

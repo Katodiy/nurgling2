@@ -16,7 +16,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
-public class NLoginScreen extends LoginScreen {
+public class NLoginScreen extends LoginScreen
+{
 
     private boolean msgMode = false;
 
@@ -24,20 +25,25 @@ public class NLoginScreen extends LoginScreen {
 
     int marg = UI.scale(10);
 
-    public NLoginScreen(String hostname) {
+    public NLoginScreen(String hostname)
+    {
         super(hostname);
         add(new LoginList(new Coord(UI.scale(200), UI.scale(bg.sz().y - marg * 2))), new Coord(marg, marg));
         optbtn.move(new Coord(UI.scale(680), UI.scale(30)));
 
         adda(new StatusLabel(hostname, 0.5), bgc.x, bg.sz().y, 0.5, 1);
         ArrayList<NLoginData> logpass = (ArrayList<NLoginData>) NConfig.get(NConfig.Key.credentials);
-        if (logpass != null) {
-            for (NLoginData item : logpass) {
+        if (logpass != null)
+        {
+            for (NLoginData item : logpass)
+            {
                 loginItems.add(new NLoginDataItem(item));
             }
         }
-        try {
-            if (new File("ver").exists()) {
+        try
+        {
+            if (new File("ver").exists())
+            {
                 URL upd_url = new URL((String) Objects.requireNonNull(NConfig.get(NConfig.Key.baseurl)));
                 ReadableByteChannel rbc = Channels.newChannel(upd_url.openStream());
                 FileOutputStream fos = null;
@@ -49,13 +55,19 @@ public class NLoginScreen extends LoginScreen {
                 BufferedReader reader2 = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get("ver")), StandardCharsets.UTF_8));
                 String line2 = reader2.readLine();
                 reader2.close();
-                if (!line2.contains(line)) {
-                    Window win = adda(new Window(new Coord(UI.scale(150, 40)), "Attention") {
+                if (!line2.contains(line))
+                {
+                    Window win = adda(new Window(new Coord(UI.scale(150, 40)), "Attention")
+                    {
                         @Override
-                        public void wdgmsg(String msg, Object... args) {
-                            if (msg.equals("close")) {
+                        public void wdgmsg(String msg, Object... args)
+                        {
+                            if (msg.equals("close"))
+                            {
                                 hide();
-                            } else {
+                            }
+                            else
+                            {
                                 super.wdgmsg(msg, args);
                             }
                         }
@@ -64,15 +76,19 @@ public class NLoginScreen extends LoginScreen {
                     win.add(new Label("New version available!"));
                 }
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    protected void progress(String p) {
+    protected void progress(String p)
+    {
         super.progress(p);
-        if (ui.core.isBotmod()) {
+        if (ui.core.isBotmod())
+        {
             wdgmsg("login", new Object[]{new AuthClient.NativeCred(ui.core.getBotMod().user, ui.core.getBotMod().pass), false});
         }
     }
@@ -81,12 +97,17 @@ public class NLoginScreen extends LoginScreen {
             Widget sender,
             String msg,
             Object... args
-    ) {
+    )
+    {
 
-        if (sender == this && !msgMode) {
-            if (!login.pass.text().isEmpty()) {
+        if (sender == this && !msgMode)
+        {
+            if (!login.pass.text().isEmpty())
+            {
                 saveLoginPass(login.user.text(), login.pass.text());
-            } else {
+            }
+            else
+            {
                 if (args[0] != null && args[0] instanceof AuthClient.TokenCred) ;
                 saveLoginToken(login.user.text(), ((AuthClient.TokenCred) args[0]).token);
             }
@@ -94,18 +115,24 @@ public class NLoginScreen extends LoginScreen {
         super.wdgmsg(sender, msg, args);
     }
 
-    void saveLoginPass(String login, String pass) {
+    void saveLoginPass(String login, String pass)
+    {
         ArrayList<NLoginData> logpass;
-        if (!pass.isEmpty()) {
+        if (!pass.isEmpty())
+        {
 
             logpass = (ArrayList<NLoginData>) (NConfig.get(NConfig.Key.credentials));
-            if (logpass == null) {
+            if (logpass == null)
+            {
                 logpass = new ArrayList<>();
             }
             boolean isFound = false;
-            for (NLoginData item : logpass) {
-                if (item.name.equals(login)) {
-                    if (!pass.equals(item.pass)) {
+            for (NLoginData item : logpass)
+            {
+                if (item.name.equals(login))
+                {
+                    if (!pass.equals(item.pass))
+                    {
                         item.pass = pass;
                         item.isTokenUsed = false;
                         NConfig.set(NConfig.Key.credentials, logpass);
@@ -113,7 +140,8 @@ public class NLoginScreen extends LoginScreen {
                     isFound = true;
                 }
             }
-            if (!isFound) {
+            if (!isFound)
+            {
                 logpass.add(new NLoginData(login, pass));
                 NConfig.set(NConfig.Key.credentials, logpass);
             }
@@ -121,27 +149,36 @@ public class NLoginScreen extends LoginScreen {
     }
 
 
-    void saveLoginToken(String login, byte[] buff) {
+    void saveLoginToken(String login, byte[] buff)
+    {
         ArrayList<NLoginData> logpass;
-        if (buff.length > 0) {
+        if (buff.length > 0)
+        {
 
             logpass = (ArrayList<NLoginData>) NConfig.get(NConfig.Key.credentials);
-            if (logpass == null) {
+            if (logpass == null)
+            {
                 logpass = new ArrayList<>();
             }
             boolean isFound = false;
-            for (NLoginData item : logpass) {
-                if (item.name.equals(login)) {
-                    if (item.token != null && item.token.length == buff.length) {
+            for (NLoginData item : logpass)
+            {
+                if (item.name.equals(login))
+                {
+                    if (item.token != null && item.token.length == buff.length)
+                    {
                         for (int i = 0; i < buff.length; i++)
-                            if (buff[i] != item.token[i]) {
+                            if (buff[i] != item.token[i])
+                            {
                                 item.token = buff;
                                 item.isTokenUsed = true;
                                 item.pass = "";
                                 NConfig.set(NConfig.Key.credentials, logpass);
                             }
 
-                    } else {
+                    }
+                    else
+                    {
                         item.token = buff;
                         item.isTokenUsed = true;
                         item.pass = "";
@@ -150,21 +187,26 @@ public class NLoginScreen extends LoginScreen {
                     isFound = true;
                 }
             }
-            if (!isFound) {
+            if (!isFound)
+            {
                 logpass.add(new NLoginData(login, buff));
                 NConfig.set(NConfig.Key.credentials, logpass);
             }
         }
     }
 
-    public void removeToken() {
+    public void removeToken()
+    {
         ArrayList<NLoginData> logpass = ((ArrayList<NLoginData>) NConfig.get(NConfig.Key.credentials));
         if (logpass != null)
-            for (NLoginData item : logpass) {
-                if (item.name.equals(login.user.text())) {
+            for (NLoginData item : logpass)
+            {
+                if (item.name.equals(login.user.text()))
+                {
                     logpass.remove(item);
                     NConfig.set(NConfig.Key.credentials, logpass);
-                    for (NLoginDataItem item1 : loginItems) {
+                    for (NLoginDataItem item1 : loginItems)
+                    {
                         if (item1.nd == item)
                             loginItems.remove(item1);
                         break;
@@ -176,22 +218,28 @@ public class NLoginScreen extends LoginScreen {
     }
 
 
-    public class LoginList extends SListBox<NLoginDataItem, Widget> {
-        LoginList(Coord sz) {
+    public class LoginList extends SListBox<NLoginDataItem, Widget>
+    {
+        LoginList(Coord sz)
+        {
             super(sz, UI.scale(25));
             pack();
         }
 
-        protected List<NLoginDataItem> items() {
+        protected List<NLoginDataItem> items()
+        {
             return (loginItems);
         }
 
-        protected Widget makeitem(NLoginDataItem item, int idx, Coord sz) {
-            return (new ItemWidget<NLoginDataItem>(this, sz, item) {
+        protected Widget makeitem(NLoginDataItem item, int idx, Coord sz)
+        {
+            return (new ItemWidget<NLoginDataItem>(this, sz, item)
+            {
                 {
                     int len = 0;
                     int h = 0;
-                    for (NLoginDataItem pL : loginItems) {
+                    for (NLoginDataItem pL : loginItems)
+                    {
                         len = Math.max(len, pL.sz.x);
                         h = pL.sz.y;
                     }
@@ -200,7 +248,8 @@ public class NLoginScreen extends LoginScreen {
                     add(item);
                 }
 
-                public boolean mousedown(Coord c, int button) {
+                public boolean mousedown(Coord c, int button)
+                {
                     boolean psel = sel == item;
                     super.mousedown(c, button);
                     return (true);
@@ -210,25 +259,30 @@ public class NLoginScreen extends LoginScreen {
     }
 
 
-    public class NLoginDataItem extends Widget {
+    public class NLoginDataItem extends Widget
+    {
         NLoginData nd;
         Label text;
         IButton remove;
 
         @Override
-        public void resize(Coord sz) {
+        public void resize(Coord sz)
+        {
             super.resize(sz);
             int x = sz.x - NStyle.removei[0].sz().x - UI.scale(65);
             remove.move(new Coord(x, sz.y / 2 - remove.sz.y / 2 + UI.scale(2)));
         }
 
-        public NLoginDataItem(NLoginData nd) {
+        public NLoginDataItem(NLoginData nd)
+        {
             this.nd = nd;
             this.text = add(new Label(nd.name, NStyle.fcomboitems), new Coord(UI.scale(7), 0));
 
-            remove = add(new IButton(NStyle.removei[0].back, NStyle.removei[1].back, NStyle.removei[2].back) {
+            remove = add(new IButton(NStyle.removei[0].back, NStyle.removei[1].back, NStyle.removei[2].back)
+            {
                 @Override
-                public void click() {
+                public void click()
+                {
                     ArrayList<NLoginData> ld = ((ArrayList<NLoginData>) NConfig.get(NConfig.Key.credentials));
                     ld.remove(nd);
                     NConfig.set(NConfig.Key.credentials, ld);
@@ -240,9 +294,11 @@ public class NLoginScreen extends LoginScreen {
         }
 
         @Override
-        public boolean mousedown(Coord c, int button) {
+        public boolean mousedown(Coord c, int button)
+        {
             boolean res = super.mousedown(c, button);
-            if (!res) {
+            if (!res)
+            {
                 msgMode = true;
                 if (!nd.isTokenUsed)
                     NLoginScreen.this.wdgmsg("login", new Object[]{new AuthClient.NativeCred(nd.name, nd.pass), false});

@@ -10,29 +10,36 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.stream.*;
 
-public class NConfig {
+public class NConfig
+{
 
-    public enum Key {
-        baseurl, credentials
+    public enum Key
+    {
+        baseurl,
+        credentials
     }
 
     HashMap<Key, Object> conf = new HashMap<>();
     private boolean isUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
 
-    public boolean isUpdated() {
+    public boolean isUpdated()
+    {
         return isUpd;
     }
 
-    public static Object get(Key key) {
+    public static Object get(Key key)
+    {
         if (current == null)
             return null;
         else
             return current.conf.get(key);
     }
 
-    public static void set(Key key, Object val) {
-        if (current != null) {
+    public static void set(Key key, Object val)
+    {
+        if (current != null)
+        {
             current.isUpd = true;
             current.conf.put(key, val);
         }
@@ -40,11 +47,15 @@ public class NConfig {
 
     static NConfig current;
 
-    private ArrayList<Object> readArray(ArrayList<HashMap<String, Object>> objs) {
-        if (objs.size() > 0) {
+    private ArrayList<Object> readArray(ArrayList<HashMap<String, Object>> objs)
+    {
+        if (objs.size() > 0)
+        {
             ArrayList<Object> res = new ArrayList<>();
-            for (HashMap<String, Object> obj : objs) {
-                switch ((String) obj.get("type")) {
+            for (HashMap<String, Object> obj : objs)
+            {
+                switch ((String) obj.get("type"))
+                {
                     case "NLoginData":
                         res.add(new NLoginData(obj));
                 }
@@ -54,50 +65,72 @@ public class NConfig {
         return new ArrayList<>();
     }
 
-    public void read() {
+    public void read()
+    {
         current = this;
         StringBuilder contentBuilder = new StringBuilder();
 
-        try (Stream<String> stream = Files.lines(Paths.get(path), StandardCharsets.UTF_8)) {
+        try (Stream<String> stream = Files.lines(Paths.get(path), StandardCharsets.UTF_8))
+        {
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
-        } catch (IOException ignore) {
+        }
+        catch (IOException ignore)
+        {
         }
 
-        if (!contentBuilder.toString().isEmpty()) {
+        if (!contentBuilder.toString().isEmpty())
+        {
             JSONObject main = new JSONObject(contentBuilder.toString());
             Map<String, Object> map = main.toMap();
             conf = new HashMap<>();
-            for (Map.Entry<String, Object> entry : map.entrySet()) {
-                if (entry.getValue() instanceof HashMap<?, ?>) {
+            for (Map.Entry<String, Object> entry : map.entrySet())
+            {
+                if (entry.getValue() instanceof HashMap<?, ?>)
+                {
                     HashMap<String, Object> hobj = ((HashMap<String, Object>) entry.getValue());
                     String type;
-                    if ((type = (String) hobj.get("type")) != null) {
-                        switch (type) {
+                    if ((type = (String) hobj.get("type")) != null)
+                    {
+                        switch (type)
+                        {
                             case "NLoginData":
                                 conf.put(Key.valueOf(entry.getKey()), new NLoginData(hobj));
                         }
                     }
-                } else if (entry.getValue() instanceof ArrayList<?>) {
+                }
+                else if (entry.getValue() instanceof ArrayList<?>)
+                {
                     conf.put(Key.valueOf(entry.getKey()), readArray((ArrayList<HashMap<String, Object>>) entry.getValue()));
-                } else {
+                }
+                else
+                {
                     conf.put(Key.valueOf(entry.getKey()), entry.getValue());
                 }
             }
         }
     }
 
-    private ArrayList<Object> prepareArray(ArrayList<Object> objs) {
-        if (objs.size() > 0) {
+    private ArrayList<Object> prepareArray(ArrayList<Object> objs)
+    {
+        if (objs.size() > 0)
+        {
             ArrayList<Object> res = new ArrayList<>();
-            if (objs.get(0) instanceof JConf) {
-                for (Object obj : objs) {
+            if (objs.get(0) instanceof JConf)
+            {
+                for (Object obj : objs)
+                {
                     res.add(((JConf) obj).toJson());
                 }
-            } else if (objs.get(0) instanceof ArrayList<?>) {
-                for (Object obj : objs) {
+            }
+            else if (objs.get(0) instanceof ArrayList<?>)
+            {
+                for (Object obj : objs)
+                {
                     res.add(prepareArray((ArrayList<Object>) obj));
                 }
-            } else {
+            }
+            else
+            {
                 res.addAll(objs);
             }
             return res;
@@ -105,25 +138,35 @@ public class NConfig {
         return objs;
     }
 
-    public void write() {
+    public void write()
+    {
         Map<String, Object> prep = new HashMap<>();
-        for (Map.Entry<Key, Object> entry : conf.entrySet()) {
-            if (entry.getValue() instanceof JConf) {
+        for (Map.Entry<Key, Object> entry : conf.entrySet())
+        {
+            if (entry.getValue() instanceof JConf)
+            {
                 prep.put(entry.getKey().toString(), ((JConf) entry.getValue()).toJson());
-            } else if (entry.getValue() instanceof ArrayList<?>) {
+            }
+            else if (entry.getValue() instanceof ArrayList<?>)
+            {
                 prep.put(entry.getKey().toString(), prepareArray((ArrayList<Object>) entry.getValue()));
-            } else {
+            }
+            else
+            {
                 prep.put(entry.getKey().toString(), entry.getValue());
             }
         }
 
         JSONObject main = new JSONObject(prep);
-        try {
+        try
+        {
             FileWriter f = new FileWriter(path);
             main.write(f);
             f.close();
             current.isUpd = false;
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             throw new RuntimeException(e);
         }
     }
