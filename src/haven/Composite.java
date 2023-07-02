@@ -106,6 +106,11 @@ public class Composite extends Drawable implements EquipTarget {
 	    try {
 		Composited.Poses np = comp.new Poses(loadposes(nposes, comp.skel, nposesold));
 		np.set(nposesold?0:ipollen);
+		System.out.println(gob.toString()+"||" + gob.getres());
+		for(ResData dat : nposes)
+		{
+			System.out.println(dat);
+		}
 		nposes = null;
 		updequ();
 	    } catch(Loading e) {}

@@ -1,8 +1,7 @@
 package nurgling;
 
 import haven.*;
-import jdk.nashorn.internal.parser.*;
-import nurgling.tools.*;
+import nurgling.conf.*;
 import org.json.*;
 
 import java.io.*;
@@ -13,44 +12,46 @@ import java.util.stream.*;
 
 public class NConfig {
 
+    public enum Key {
+        baseurl, credentials
+    }
 
-    HashMap<String, Object> conf = new HashMap<>();
-
+    HashMap<Key, Object> conf = new HashMap<>();
     private boolean isUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
-    public boolean isUpdated(){
+
+    public boolean isUpdated() {
         return isUpd;
     }
 
-    public static Object get(String name){
-        if(current == null)
+    public static Object get(Key key) {
+        if (current == null)
             return null;
         else
-            return current.conf.get(name);
+            return current.conf.get(key);
     }
 
-    public static void set(String name, Object val){
-        if(current != null) {
+    public static void set(Key key, Object val) {
+        if (current != null) {
             current.isUpd = true;
-            current.conf.put(name, val);
+            current.conf.put(key, val);
         }
     }
 
     static NConfig current;
 
-    private ArrayList<Object> readArray(ArrayList<Object> objs){
-        if(objs.size()>0)
-        {
+    private ArrayList<Object> readArray(ArrayList<HashMap<String, Object>> objs) {
+        if (objs.size() > 0) {
             ArrayList<Object> res = new ArrayList<>();
-            for (Object obj : objs)
-            {
-                String val = (String)obj;
-                if(val.startsWith("NLoginData"))
-                    res.add(new NLoginData(val));
+            for (HashMap<String, Object> obj : objs) {
+                switch ((String) obj.get("type")) {
+                    case "NLoginData":
+                        res.add(new NLoginData(obj));
+                }
             }
             return res;
         }
-        return objs;
+        return new ArrayList<>();
     }
 
     public void read() {
@@ -59,8 +60,7 @@ public class NConfig {
 
         try (Stream<String> stream = Files.lines(Paths.get(path), StandardCharsets.UTF_8)) {
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
-        } catch (IOException e) {
-            //handle exception
+        } catch (IOException ignore) {
         }
 
         if (!contentBuilder.toString().isEmpty()) {
@@ -68,56 +68,55 @@ public class NConfig {
             Map<String, Object> map = main.toMap();
             conf = new HashMap<>();
             for (Map.Entry<String, Object> entry : map.entrySet()) {
-                if (entry.getValue() instanceof String) {
-                    if (((String) entry.getValue()).contains("NColor")) {
-                        conf.put(entry.getKey(), NColor.build((String) entry.getValue()));
+                if (entry.getValue() instanceof HashMap<?, ?>) {
+                    HashMap<String, Object> hobj = ((HashMap<String, Object>) entry.getValue());
+                    String type;
+                    if ((type = (String) hobj.get("type")) != null) {
+                        switch (type) {
+                            case "NLoginData":
+                                conf.put(Key.valueOf(entry.getKey()), new NLoginData(hobj));
+                        }
                     }
-                    else
-                        conf.put(entry.getKey(), entry.getValue());
-                }
-                else if(entry.getValue() instanceof ArrayList<?>)
-                {
-                    conf.put(entry.getKey(), readArray((ArrayList<Object>) entry.getValue()));
-                }
-                else
-                {
-                    conf.put(entry.getKey(), entry.getValue());
+                } else if (entry.getValue() instanceof ArrayList<?>) {
+                    conf.put(Key.valueOf(entry.getKey()), readArray((ArrayList<HashMap<String, Object>>) entry.getValue()));
+                } else {
+                    conf.put(Key.valueOf(entry.getKey()), entry.getValue());
                 }
             }
         }
     }
 
-    private ArrayList<Object> prepareArray(ArrayList<Object> objs){
-        if(objs.size()>0)
-        {
-            if(objs.get(0) instanceof NLoginData)
-            {
-                ArrayList<Object> res = new ArrayList<>();
-                for (Object obj : objs)
-                {
-                    res.add(obj.toString());
+    private ArrayList<Object> prepareArray(ArrayList<Object> objs) {
+        if (objs.size() > 0) {
+            ArrayList<Object> res = new ArrayList<>();
+            if (objs.get(0) instanceof JConf) {
+                for (Object obj : objs) {
+                    res.add(((JConf) obj).toJson());
                 }
-                return res;
+            } else if (objs.get(0) instanceof ArrayList<?>) {
+                for (Object obj : objs) {
+                    res.add(prepareArray((ArrayList<Object>) obj));
+                }
+            } else {
+                res.addAll(objs);
             }
+            return res;
         }
         return objs;
     }
-    public void write(){
-        Map<String, Object> prep = new HashMap<>();
-        for (Map.Entry<String, Object> entry : conf.entrySet()) {
 
-            if (entry.getValue() instanceof NColor) {
-                prep.put(entry.getKey(), entry.getValue().toString());
-            }
-            else if(entry.getValue() instanceof ArrayList<?>)
-            {
-                prep.put(entry.getKey(),prepareArray((ArrayList<Object>) entry.getValue()));
-            }
-            else
-            {
-                prep.put(entry.getKey(), entry.getValue());
+    public void write() {
+        Map<String, Object> prep = new HashMap<>();
+        for (Map.Entry<Key, Object> entry : conf.entrySet()) {
+            if (entry.getValue() instanceof JConf) {
+                prep.put(entry.getKey().toString(), ((JConf) entry.getValue()).toJson());
+            } else if (entry.getValue() instanceof ArrayList<?>) {
+                prep.put(entry.getKey().toString(), prepareArray((ArrayList<Object>) entry.getValue()));
+            } else {
+                prep.put(entry.getKey().toString(), entry.getValue());
             }
         }
+
         JSONObject main = new JSONObject(prep);
         try {
             FileWriter f = new FileWriter(path);
