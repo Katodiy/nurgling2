@@ -13,6 +13,7 @@ import java.util.stream.*;
 
 public class NConfig {
 
+
     HashMap<String, Object> conf = new HashMap<>();
 
     private boolean isUpd = false;
@@ -37,7 +38,22 @@ public class NConfig {
 
     static NConfig current;
 
-    public void read(){
+    private ArrayList<Object> readArray(ArrayList<Object> objs){
+        if(objs.size()>0)
+        {
+            ArrayList<Object> res = new ArrayList<>();
+            for (Object obj : objs)
+            {
+                String val = (String)obj;
+                if(val.startsWith("NLoginData"))
+                    res.add(new NLoginData(val));
+            }
+            return res;
+        }
+        return objs;
+    }
+
+    public void read() {
         current = this;
         StringBuilder contentBuilder = new StringBuilder();
 
@@ -47,26 +63,58 @@ public class NConfig {
             //handle exception
         }
 
-        if(!contentBuilder.toString().isEmpty()) {
+        if (!contentBuilder.toString().isEmpty()) {
             JSONObject main = new JSONObject(contentBuilder.toString());
             Map<String, Object> map = main.toMap();
             conf = new HashMap<>();
             for (Map.Entry<String, Object> entry : map.entrySet()) {
-                if (entry.getValue() instanceof String && ((String) entry.getValue()).contains("NColor")) {
-                    conf.put(entry.getKey(), NColor.build((String) entry.getValue()));
-                } else {
+                if (entry.getValue() instanceof String) {
+                    if (((String) entry.getValue()).contains("NColor")) {
+                        conf.put(entry.getKey(), NColor.build((String) entry.getValue()));
+                    }
+                    else
+                        conf.put(entry.getKey(), entry.getValue());
+                }
+                else if(entry.getValue() instanceof ArrayList<?>)
+                {
+                    conf.put(entry.getKey(), readArray((ArrayList<Object>) entry.getValue()));
+                }
+                else
+                {
                     conf.put(entry.getKey(), entry.getValue());
                 }
             }
         }
     }
 
+    private ArrayList<Object> prepareArray(ArrayList<Object> objs){
+        if(objs.size()>0)
+        {
+            if(objs.get(0) instanceof NLoginData)
+            {
+                ArrayList<Object> res = new ArrayList<>();
+                for (Object obj : objs)
+                {
+                    res.add(obj.toString());
+                }
+                return res;
+            }
+        }
+        return objs;
+    }
     public void write(){
         Map<String, Object> prep = new HashMap<>();
         for (Map.Entry<String, Object> entry : conf.entrySet()) {
+
             if (entry.getValue() instanceof NColor) {
                 prep.put(entry.getKey(), entry.getValue().toString());
-            } else {
+            }
+            else if(entry.getValue() instanceof ArrayList<?>)
+            {
+                prep.put(entry.getKey(),prepareArray((ArrayList<Object>) entry.getValue()));
+            }
+            else
+            {
                 prep.put(entry.getKey(), entry.getValue());
             }
         }
@@ -75,6 +123,7 @@ public class NConfig {
             FileWriter f = new FileWriter(path);
             main.write(f);
             f.close();
+            current.isUpd = false;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -38,6 +38,7 @@ import java.awt.image.BufferedImage;
 import static haven.Utils.el;
 import haven.render.Environment;
 import haven.render.Render;
+import nurgling.*;
 
 public class UI {
     public static int MOD_SHIFT = KeyMatch.S, MOD_CTRL = KeyMatch.C, MOD_META = KeyMatch.M, MOD_SUPER = KeyMatch.SUPER;
@@ -60,7 +61,7 @@ public class UI {
     private boolean gprefsdirty = false;
     public final ActAudio.Root audio = new ActAudio.Root();
     private static final double scalef;
-    
+    public NCore core;
     {
 	lastevent = lasttick = Utils.rtime();
     }

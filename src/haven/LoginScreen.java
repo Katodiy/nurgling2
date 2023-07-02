@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.widgets.*;
+
 import java.util.*;
 import java.awt.event.KeyEvent;
 
@@ -33,12 +35,12 @@ public class LoginScreen extends Widget {
     public static final Text.Foundry
 	textf = new Text.Foundry(Text.sans, 16).aa(true),
 	textfs = new Text.Foundry(Text.sans, 14).aa(true);
-    public static final Tex bg = Resource.loadtex("gfx/loginscr");
+    public static final Tex bg = Resource.loadtex("nurgling/hud/loginscr");
     public static final Position bgc = new Position(UI.scale(420, 300));
     public final Credbox login;
     public final String hostname;
     private Text error, progress;
-    private Button optbtn;
+    protected Button optbtn;
     private OptWnd opts;
 
     private String getpref(String name, String def) {
@@ -59,7 +61,7 @@ public class LoginScreen extends Widget {
     public static final KeyBinding kb_deltoken = KeyBinding.get("login/deltoken", KeyMatch.forchar('F', KeyMatch.M));
     public class Credbox extends Widget {
 	public final UserEntry user;
-	private final TextEntry pass;
+	public final TextEntry pass;
 	private final CheckBox savetoken;
 	private final Button fbtn;
 	private final IButton exec;
@@ -172,6 +174,7 @@ public class LoginScreen extends Widget {
 	}
 
 	private void forget() {
+		((NLoginScreen)parent).removeToken();
 	    String nm = user.text();
 	    Bootstrap.settoken(nm, hostname, null);
 	    savetoken.set(false);
@@ -207,7 +210,6 @@ public class LoginScreen extends Widget {
 		}
 		if(ret == null)
 		    ret = new AuthClient.NativeCred(user.text(), pw);
-		pass.rsettext("");
 	    }
 	    return(ret);
 	}
@@ -279,7 +281,7 @@ public class LoginScreen extends Widget {
 	    this.error = textf.render(error, java.awt.Color.RED);
     }
 
-    private void progress(String p) {
+    protected void progress(String p) {
 	if(progress != null)
 	    progress = null;
 	if(p != null)
