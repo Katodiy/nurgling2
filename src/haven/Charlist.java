@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.*;
+
 import java.awt.Color;
 import java.util.*;
 
@@ -57,7 +59,16 @@ public class Charlist extends Widget {
 	sad = adda(new IButton("gfx/hud/buttons/csad", "u", "d", "o"), bg.sz().x / 2, list.c.y + list.sz.y + margin, 0.5, 0)
 	    .action(() -> scroll(1));
 	sau.hide(); sad.hide();
-	resize(new Coord(bg.sz().x, sad.c.y + sad.sz.y));
+	Button logout  = add(new Button(UI.scale(90), "Log out") {
+		@Override
+		public void click() {
+			RemoteUI rui = (RemoteUI) ui.rcvr;
+			synchronized (rui.sess) {
+				rui.sess.close();
+			}
+		}
+	}, list.sz.x/2-UI.scale(45), sad.c.y + sad.sz.y + margin );
+	resize(new Coord(bg.sz().x, logout.c.y + logout.sz.y));
     }
 
     public static class Char {

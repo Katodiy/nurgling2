@@ -47,7 +47,7 @@ public class UI {
     private final Map<Integer, Widget> widgets = new TreeMap<Integer, Widget>();
     private final Map<Widget, Integer> rwidgets = new HashMap<Widget, Integer>();
     Environment env;
-    Receiver rcvr;
+    public Receiver rcvr;
     public Coord mc = Coord.z, lcc = Coord.z;
     public Session sess;
     public boolean modshift, modctrl, modmeta, modsuper;
