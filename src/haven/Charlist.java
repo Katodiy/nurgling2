@@ -33,7 +33,7 @@ import java.util.*;
 
 public class Charlist extends Widget {
     public static final Tex bg = Resource.loadtex("gfx/hud/avakort");
-    public static final Text.Furnace tf = new PUtils.BlurFurn(new PUtils.TexFurn(new Text.Foundry(Text.fraktur, 20).aa(true), Window.ctex), UI.scale(2), UI.scale(2), Color.BLACK);
+    public static final Text.Furnace tf = new PUtils.BlurFurn(new PUtils.TexFurn(new Text.Foundry(Text.sans, 20).aa(true), Window.ctex), UI.scale(2), UI.scale(2), Color.BLACK);
     public static final int margin = UI.scale(6);
     public static final int btnw = UI.scale(100);
     public final int height;
@@ -53,10 +53,10 @@ public class Charlist extends Widget {
 	super(Coord.z);
 	this.height = height;
 	setcanfocus(true);
-	sau = adda(new IButton("gfx/hud/buttons/csau", "u", "d", "o"), bg.sz().x / 2, 0, 0.5, 0)
+	sau = adda(new IButton("nurgling/hud/buttons/csau/", "u", "d", "o"), bg.sz().x / 2, 0, 0.5, 0)
 	    .action(() -> scroll(-1));
 	list = add(new Boxlist(height), 0, sau.c.y + sau.sz.y + margin);
-	sad = adda(new IButton("gfx/hud/buttons/csad", "u", "d", "o"), bg.sz().x / 2, list.c.y + list.sz.y + margin, 0.5, 0)
+	sad = adda(new IButton("nurgling/hud/buttons/csad/", "u", "d", "o"), bg.sz().x / 2, list.c.y + list.sz.y + margin, 0.5, 0)
 	    .action(() -> scroll(1));
 	sau.hide(); sad.hide();
 	Button logout  = add(new Button(UI.scale(90), "Log out") {

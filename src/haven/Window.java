@@ -29,31 +29,32 @@ package haven;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import static haven.PUtils.*;
+import nurgling.*;
 
 public class Window extends Widget implements DTarget {
-    public static final Tex bg = Resource.loadtex("gfx/hud/wnd/lg/bg");
-    public static final Tex bgl = Resource.loadtex("gfx/hud/wnd/lg/bgl");
-    public static final Tex bgr = Resource.loadtex("gfx/hud/wnd/lg/bgr");
-    public static final Tex cl = Resource.loadtex("gfx/hud/wnd/lg/cl");
-    public static final TexI cm = new TexI(Resource.loadsimg("gfx/hud/wnd/lg/cm"));
-    public static final Tex cr = Resource.loadtex("gfx/hud/wnd/lg/cr");
-    public static final Tex tm = Resource.loadtex("gfx/hud/wnd/lg/tm");
-    public static final Tex tr = Resource.loadtex("gfx/hud/wnd/lg/tr");
-    public static final Tex lm = Resource.loadtex("gfx/hud/wnd/lg/lm");
-    public static final Tex lb = Resource.loadtex("gfx/hud/wnd/lg/lb");
-    public static final Tex rm = Resource.loadtex("gfx/hud/wnd/lg/rm");
-    public static final Tex bl = Resource.loadtex("gfx/hud/wnd/lg/bl");
-    public static final Tex bm = Resource.loadtex("gfx/hud/wnd/lg/bm");
-    public static final Tex br = Resource.loadtex("gfx/hud/wnd/lg/br");
-    public static final Tex sizer = Resource.loadtex("gfx/hud/wnd/sizer");
+	public static final Tex bg = Resource.loadtex("nurgling/hud/wnd/bg");
+	public static final Tex bgl = Resource.loadtex("nurgling/hud/wnd/bgl");
+	public static final Tex bgr = Resource.loadtex("nurgling/hud/wnd/bgr");
+	public static final Tex cl = Resource.loadtex("nurgling/hud/wnd/cl");
+	public static final TexI cm = new TexI(Resource.loadsimg("nurgling/hud/wnd/cm"));
+	public static final Tex cr = Resource.loadtex("nurgling/hud/wnd/cr");
+	public static final Tex tm = Resource.loadtex("nurgling/hud/wnd/tm");
+	public static final Tex tr = Resource.loadtex("nurgling/hud/wnd/tr");
+	public static final Tex lm = Resource.loadtex("nurgling/hud/wnd/lm");
+	public static final Tex lb = Resource.loadtex("nurgling/hud/wnd/lb");
+	public static final Tex rm = Resource.loadtex("nurgling/hud/wnd/rm");
+	public static final Tex bl = Resource.loadtex("nurgling/hud/wnd/bl");
+	public static final Tex bm = Resource.loadtex("nurgling/hud/wnd/bm");
+	public static final Tex br = Resource.loadtex("nurgling/hud/wnd/br");
+	public static final Tex sizer = Resource.loadtex("nurgling/hud/wnd/sizer");
     public static final Coord tlm = UI.scale(18, 30);
     public static final Coord brm = UI.scale(13, 22);
-    public static final Coord cpo = UI.rscale(36, 16.4);
-    public static final int capo = 7, capio = 2;
+	public static final Coord cpo = UI.rscale(24, 12.4);
+	public static final int capo = 7, capio = 2;
     public static final Coord dlmrgn = UI.scale(23, 14);
     public static final Coord dsmrgn = UI.scale(9, 9);
-    public static final BufferedImage ctex = Resource.loadimg("gfx/hud/fonttex");
-    public static final Text.Furnace cf = new Text.Imager(new PUtils.TexFurn(new Text.Foundry(Text.fraktur, 15).aa(true), ctex)) {
+    public static final BufferedImage ctex = Resource.loadimg("nurgling/hud/fonttex");
+    public static final Text.Furnace cf = new Text.Imager(new PUtils.TexFurn(new Text.Foundry(Text.sans, 15).aa(true), ctex)) {
 	    protected BufferedImage proc(Text text) {
 		// return(rasterimg(blurmask2(text.img.getRaster(), 1, 1, Color.BLACK)));
 		return(rasterimg(blurmask2(text.img.getRaster(), UI.rscale(0.75), UI.rscale(1.0), Color.BLACK)));
@@ -69,10 +70,7 @@ public class Window extends Widget implements DTarget {
 	    public Coord bisz() {return(super.bisz().sub(bo.mul(2)));}
 	    public Coord cisz() {return(super.cisz().sub(co.mul(2)));}
 	};
-    private static final BufferedImage[] cbtni = new BufferedImage[] {
-	Resource.loadsimg("gfx/hud/wnd/lg/cbtnu"),
-	Resource.loadsimg("gfx/hud/wnd/lg/cbtnd"),
-	Resource.loadsimg("gfx/hud/wnd/lg/cbtnh")};
+
     public Deco deco;
     public boolean dt = false;
     public String cap;
@@ -180,7 +178,7 @@ public class Window extends Widget implements DTarget {
 
 	public DefaultDeco(boolean lg) {
 	    this.lg = lg;
-	    cbtn = add(new IButton(cbtni[0], cbtni[1], cbtni[2])).action(() -> parent.wdgmsg("close"));
+	    cbtn = add(new IButton(NStyle.cbtni[0], NStyle.cbtni[1], NStyle.cbtni[2])).action(() -> parent.wdgmsg("close"));
 	}
 	public DefaultDeco() {this(false);}
 
@@ -197,7 +195,7 @@ public class Window extends Widget implements DTarget {
 	    resize(wsz);
 	    ca = Area.sized(tlm, csz);
 	    aa = Area.sized(ca.ul.add(mrgn), asz);
-	    cbtn.c = Coord.of(sz.x - cbtn.sz.x, 0);
+		cbtn.c = Coord.of(sz.x - cbtn.sz.x-UI.scale(15), UI.scale(18));
 	}
 
 	public Area contarea() {

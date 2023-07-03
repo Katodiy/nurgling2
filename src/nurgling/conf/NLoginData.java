@@ -27,14 +27,19 @@ public class NLoginData implements JConf
     public NLoginData(HashMap<String, Object> values)
     {
         name = (String) values.get("user");
-        pass = (String) values.get("pass");
-        isTokenUsed = (Boolean) values.get("isToken");
-        ArrayList<Object> buft = (ArrayList<Object>) values.get("token");
-        token = new byte[buft.size()];
-        int count = 0;
-        for (Object b : buft)
+        if(values.get("pass")!=null)
+            pass = (String) values.get("pass");
+        if(values.get("isToken")!=null)
+            isTokenUsed = (Boolean) values.get("isToken");
+        if(isTokenUsed)
         {
-            token[count++] = ((Integer) b).byteValue();
+            ArrayList<Object> buft = (ArrayList<Object>) values.get("token");
+            token = new byte[buft.size()];
+            int count = 0;
+            for (Object b : buft)
+            {
+                token[count++] = ((Integer) b).byteValue();
+            }
         }
     }
 
@@ -54,14 +59,18 @@ public class NLoginData implements JConf
         JSONObject object = new JSONObject();
         object.put("type", "NLoginData");
         object.put("user", name);
-        object.put("pass", pass);
-        object.put("isToken", isTokenUsed);
-        JSONArray jtoken = new JSONArray();
-        for (Byte b : token)
+        if(!pass.isEmpty())
+            object.put("pass", pass);
+        if(isTokenUsed)
         {
-            jtoken.put(b);
+            object.put("isToken", isTokenUsed);
+            JSONArray jtoken = new JSONArray();
+            for (Byte b : token)
+            {
+                jtoken.put(b);
+            }
+            object.put("token", jtoken);
         }
-        object.put("token", jtoken);
         return object;
     }
 }

@@ -141,12 +141,12 @@ public class LoginScreen extends Widget {
 	    tkbox.pack();
 	    tkbox.hide();
 
-	    adda(exec = new IButton("gfx/hud/buttons/login", "u", "d", "o") {
+	    adda(exec = new IButton("nurgling/hud/buttons/login/", "u", "d", "o") {
 		    protected void depress() {ui.sfx(Button.clbtdown.stream());}
 		    protected void unpress() {ui.sfx(Button.clbtup.stream());}
 		    public void click() {enter();}
 		},
-		pos("cmid").y(Math.max(pwbox.pos("bl").y, tkbox.pos("bl").y)).adds(0, 35), 0.5, 0.0);
+		pos("cmid").y(Math.max(pwbox.pos("bl").y, tkbox.pos("bl").y)).adds(0, 20), 0.5, 0.0);
 	    pack();
 	}
 
