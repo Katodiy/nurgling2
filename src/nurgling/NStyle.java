@@ -16,4 +16,10 @@ public class NStyle
             Resource.loadsimg("nurgling/hud/wnd/cbtnu"),
             Resource.loadsimg("nurgling/hud/wnd/cbtnd"),
             Resource.loadsimg("nurgling/hud/wnd/cbtnh")};
+
+    public static final TexI[] locki = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/dh"))};
 }

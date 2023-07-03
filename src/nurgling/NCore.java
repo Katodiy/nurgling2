@@ -4,6 +4,14 @@ import haven.*;
 
 public class NCore extends Widget
 {
+
+    public enum Mode
+    {
+        IDLE,
+        DRAG
+    }
+
+    public Mode mode = NCore.Mode.DRAG;
     private boolean botmod = false;
 
     public class BotmodSettings

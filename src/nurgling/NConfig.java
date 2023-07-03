@@ -16,7 +16,8 @@ public class NConfig
     public enum Key
     {
         baseurl,
-        credentials
+        credentials,
+        dragprop
     }
 
     HashMap<Key, Object> conf = new HashMap<>();
@@ -58,6 +59,10 @@ public class NConfig
                 {
                     case "NLoginData":
                         res.add(new NLoginData(obj));
+                        break;
+                    case "NDragProp":
+                        res.add(new NDragProp(obj));
+                        break;
                 }
             }
             return res;
