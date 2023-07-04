@@ -954,7 +954,7 @@ public class Resource implements Serializable {
 	for(Class<?> cl : dolda.jglob.Loader.get(LayerName.class).classes()) {
 	    String nm = cl.getAnnotation(LayerName.class).value();
 	    if(LayerFactory.class.isAssignableFrom(cl)) {
-		addltype(nm, Utils.construct(cl.asSubclass(LayerFactory.class)));
+		addltype(nm, (LayerFactory<?>) Utils.construct(cl.asSubclass(LayerFactory.class)));
 	    } else if(Layer.class.isAssignableFrom(cl)) {
 		addltype(nm, cl.asSubclass(Layer.class));
 	    } else {
@@ -1610,6 +1610,12 @@ public class Resource implements Serializable {
 			return(null);
 		    }
 		    try {
+				try  {
+					String path = "haven.res." + name.replaceAll("/", ".") + "." + clnm;
+					Class.forName(path);
+					clnm = path;
+				}  catch (ClassNotFoundException ignored) {
+				}
 			ret = loader().loadClass(clnm);
 		    } catch(ClassNotFoundException e) {
 			throw(new LoadException(e, Resource.this));

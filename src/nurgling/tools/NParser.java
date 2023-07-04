@@ -4,6 +4,33 @@ import haven.*;
 
 public class NParser
 {
+    public static boolean checkName(
+            final String name,
+            final NAlias regEx
+    ) { if (regEx!=null) {
+        /// Проверяем имя на соответствие
+        for (String key : regEx.keys) {
+            if (name.toLowerCase().contains(key.toLowerCase())) {
+                for (String ex : regEx.exceptions) {
+                    if (name.toLowerCase().contains(ex.toLowerCase())) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+    }
+        return false;
+    }
+
+    public static boolean checkName(
+            final String name,
+            final String... args
+    ) {
+        return checkName(name, new NAlias(args));
+    }
+
+
     public static Coord str2coord(String val)
     {
         String []prep = ((val.substring(val.lastIndexOf("(")+1,val.lastIndexOf(")"))).replaceAll(" ","")).split(",");

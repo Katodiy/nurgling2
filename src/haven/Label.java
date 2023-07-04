@@ -97,4 +97,8 @@ public class Label extends Widget {
 	    super.uimsg(msg, args);
 	}
     }
+
+	public String text(){
+		return texts;
+	}
 }

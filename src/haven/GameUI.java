@@ -219,15 +219,16 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	    String genus = "";
 	    if(args.length > 2)
 		genus = (String)args[2];
-		gameUI = new GameUI(chrid, plid, genus);
+		gameUI = new NGameUI(chrid, plid, genus, (NUI)ui);
 	    return(gameUI);
 	}
     }
     
     private final Coord minimapc;
     private final Coord menugridc;
-    public GameUI(String chrid, long plid, String genus) {
+    public GameUI(String chrid, long plid, String genus, NUI nui) {
 	this.chrid = chrid;
+	nui.sessInfo.characterInfo = add(new NCharacterInfo(chrid, nui));
 	this.plid = plid;
 	this.genus = genus;
 	setcanfocus(true);
@@ -317,6 +318,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	savewndpos();
 	Debug.log = new java.io.PrintWriter(System.err);
 	ui.cons.clearout();
+	gameUI = null;
 	super.dispose();
     }
 

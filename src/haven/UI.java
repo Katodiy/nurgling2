@@ -45,7 +45,7 @@ public class UI {
     public RootWidget root;
     private final LinkedList<Grab> keygrab = new LinkedList<Grab>();
 	public final LinkedList<Grab> mousegrab = new LinkedList<Grab>();
-    private final Map<Integer, Widget> widgets = new TreeMap<Integer, Widget>();
+    protected final Map<Integer, Widget> widgets = new TreeMap<Integer, Widget>();
     private final Map<Widget, Integer> rwidgets = new HashMap<Widget, Integer>();
     Environment env;
     public Receiver rcvr;
