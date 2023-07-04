@@ -28,8 +28,9 @@ package haven;
 
 import java.util.*;
 import static haven.Utils.uint32;
+import nurgling.widgets.*;
 
-public class Fightview extends Widget {
+public class Fightview extends NDraggableWidget {
     public static final Tex bg = Resource.loadtex("gfx/hud/bosq");
     public static final int height = 5;
     public static final int ymarg = UI.scale(5);
@@ -197,7 +198,7 @@ public class Fightview extends Widget {
     }
     
     public Fightview() {
-        super(new Coord(width, (bg.sz().y + ymarg) * height));
+        super("Fightview", new Coord(width, (bg.sz().y + ymarg) * height));
 	lsdisp = add(new Rellist(height));
 	layout();
     }

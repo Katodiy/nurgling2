@@ -26,10 +26,13 @@
 
 package haven;
 
+import nurgling.widgets.*;
+
 import java.util.*;
 import java.awt.Color;
 
-public class Bufflist extends Widget {
+public class Bufflist extends NDraggableWidget
+{
     public static final int margin = UI.scale(2);
     public static final int num = 5;
 
@@ -38,7 +41,7 @@ public class Bufflist extends Widget {
     }
 
     public Bufflist() {
-        super(Buff.cframe.sz());
+        super("bufflist", Buff.cframe.sz());
     }
 
     private void arrange(Widget imm) {
@@ -90,5 +93,6 @@ public class Bufflist extends Widget {
 		continue;
 	    wdg.draw(g.reclipl(xlate(wdg.c, true), wdg.sz));
 	}
+	super.draw(g);
     }
 }

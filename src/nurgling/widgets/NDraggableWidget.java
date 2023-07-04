@@ -9,7 +9,6 @@ public class NDraggableWidget extends Widget
     protected final String name;
     private UI.Grab dm;
     private Coord doff;
-
     protected ICheckBox btnLock;
     public static final IBox box = Window.wbox;
 
@@ -23,13 +22,29 @@ public class NDraggableWidget extends Widget
             public void changed(boolean val)
             {
                 super.changed(val);
+                if(NDraggableWidget.this.parent instanceof GameUI)
+                {
+                    Coord2d kff = new Coord2d(c.x / (double) GameUI.getInstance().sz.x, c.y / (double) GameUI.getInstance().sz.y);
+                    NDragProp.set(name, new NDragProp( NDraggableWidget.this.c , val, name, kff));
+                }
+                else
+                {
+                    NDragProp.set(name, new NDragProp(NDraggableWidget.this.c, val, name));
+                }
             }
         }, new Coord(sz.x - NStyle.locki[0].sz().x / 2, NStyle.locki[0].sz().y / 2));
         this.sz = sz.add(new Coord(NStyle.locki[0].sz().x, 0));
         NDragProp prop = NDragProp.get(name);
         if (prop.c != Coord.z)
         {
-            this.c = prop.c;
+            if(GameUI.getInstance()!=null && GameUI.getInstance().sz!=Coord.z)
+            {
+                this.c = GameUI.getInstance().sz.mul(prop.pos_koef).round();
+            }
+            else
+            {
+                this.c = prop.c;
+            }
             this.btnLock.a = prop.locked;
         }
     }
@@ -39,7 +54,7 @@ public class NDraggableWidget extends Widget
     {
         Coord nsz = sz.add(new Coord(NStyle.locki[0].sz().x, 0));
         super.resize(nsz);
-        btnLock.move(new Coord(nsz.x - 2 * NStyle.locki[0].sz().x, 0));
+        btnLock.move(new Coord(nsz.x - NStyle.locki[0].sz().x - NStyle.locki[0].sz().x / 2, NStyle.locki[0].sz().y / 2));
     }
 
     public static final Tex bg = Resource.loadtex("nurgling/hud/wnd/bg");
@@ -52,7 +67,7 @@ public class NDraggableWidget extends Widget
         {
             int x_pos = ctl.sz().x;
             int y_pos = ctl.sz().y;
-            for (int x = 0; x + bg.sz().x < sz.x - ctl.sz().x / 2; x += bg.sz().x)
+            for (int x = ctl.sz().x / 2; x + bg.sz().x < sz.x - ctl.sz().x / 2; x += bg.sz().x)
             {
                 for (int y = ctl.sz().y / 2; y + bg.sz().y < sz.y - ctl.sz().y / 2; y += bg.sz().y)
                 {
@@ -126,7 +141,15 @@ public class NDraggableWidget extends Widget
         {
             dm.remove();
             dm = null;
-            NDragProp.set(name, new NDragProp( this.c , btnLock.a, name));
+            if(NDraggableWidget.this.parent instanceof GameUI)
+            {
+                Coord2d kff = new Coord2d( (NDraggableWidget.this.c.x / (double) GameUI.getInstance().sz.x),  (NDraggableWidget.this.c.y / (double) GameUI.getInstance().sz.y));
+                NDragProp.set(name, new NDragProp( NDraggableWidget.this.c , btnLock.a, name, kff));
+            }
+            else
+            {
+                NDragProp.set(name, new NDragProp(NDraggableWidget.this.c, btnLock.a, name));
+            }
             return true;
         }
         else
@@ -140,14 +163,19 @@ public class NDraggableWidget extends Widget
     {
         if (ui.core.mode == NCore.Mode.DRAG)
         {
+
             if (dm != null)
             {
-                this.c = this.c.add(c.add(doff.inv()));
+                Coord prepc = this.c.add(c.add(doff.inv()));
+                this.c = prepc.div(UI.scale(8)).mul(UI.scale(8)).sub(UI.scale(4),UI.scale(4));
             }
             else
             {
-                Coord cc = xlate(btnLock.c, true);
-                btnLock.mousemove(c.add(cc.inv()));
+                if (c.isect(Coord.z, sz))
+                {
+                    Coord cc = xlate(btnLock.c, true);
+                    btnLock.mousemove(c.add(cc.inv()));
+                }
             }
         }
         else
@@ -170,5 +198,10 @@ public class NDraggableWidget extends Widget
             if (btnLock.visible())
                 btnLock.hide();
         }
+    }
+
+    public String getName()
+    {
+        return name;
     }
 }

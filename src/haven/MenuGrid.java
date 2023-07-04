@@ -38,7 +38,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
     public final static Tex bg = Resource.loadtex("gfx/hud/invsq");
     public final static Coord bgsz = bg.sz().add(-UI.scale(1), -UI.scale(1));
     public final static RichText.Foundry ttfnd = new RichText.Foundry(TextAttribute.FAMILY, "SansSerif", TextAttribute.SIZE, UI.scale(10f));
-    private static Coord gsz = new Coord(4, 4);
+    private static Coord gsz = new Coord(8, 4);
     public final Set<Pagina> paginae = new HashSet<Pagina>();
     public Pagina cur;
     private Pagina dragging;
@@ -324,7 +324,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
     }
 
     public MenuGrid() {
-	super(bgsz.mul(gsz).add(UI.scale(1), UI.scale(1)));
+	super( bgsz.mul(gsz).add(UI.scale(1), UI.scale(1)));
     }
 
     private void updlayout() {
@@ -467,7 +467,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	    pressed = h;
 	    grab = ui.grabmouse(this);
 	}
-	return(true);
+	return(super.mousedown(c,button));
     }
 
     public void mousemove(Coord c) {
@@ -476,6 +476,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	    if(h != pressed)
 		dragging = pressed.pag;
 	}
+	super.mousemove(c);
     }
 
     public void change(Pagina dst) {
@@ -519,7 +520,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	    grab.remove();
 	    grab = null;
 	}
-	return(true);
+	return(super.mouseup(c,button));
     }
 
     public void uimsg(String msg, Object... args) {

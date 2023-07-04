@@ -110,10 +110,10 @@ public class Session implements Resource.Resolver {
 	}
     }
 
-    private static class CachedRes {
+    public static class CachedRes {
 	private final Waitable.Queue wq = new Waitable.Queue();
 	private final int resid;
-	private String resnm = null;
+	public String resnm = null;
 	private int resver;
 	private Reference<Ref> ind;
 	private int prio = -6;
