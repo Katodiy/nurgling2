@@ -33,7 +33,7 @@ public class Speedget extends Widget {
     public static final String tips[];
     public static final Coord tsz;
     public int cur, max;
-
+	final static int marg = UI.scale(2);
     static {
 	String[] names = {"crawl", "walk", "run", "sprint"};
 	String[] vars = {"dis", "off", "on"};
@@ -41,8 +41,8 @@ public class Speedget extends Widget {
 	int w = 0;
 	for(int i = 0; i < names.length; i++) {
 	    for(int o = 0; o < vars.length; o++)
-		imgs[i][o] = Resource.loadtex("gfx/hud/meter/rmeter/" + names[i] + "-" + vars[o]);
-	    w += imgs[i][0].sz().x;
+		imgs[i][o] = Resource.loadtex("nurgling/hud/rmeter/" + names[i] + "-" + vars[o]);
+	    w += imgs[i][0].sz().x + marg;
 	}
 	tsz = new Coord(w, imgs[0][0].sz().y);
 	tips = new String[names.length];
@@ -77,7 +77,7 @@ public class Speedget extends Widget {
 	    else
 		t = imgs[i][1];
 	    g.image(t, new Coord(x, 0));
-	    x += t.sz().x;
+	    x += t.sz().x + marg;
 	}
     }
 

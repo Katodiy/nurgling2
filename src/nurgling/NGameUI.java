@@ -98,4 +98,13 @@ public class NGameUI extends GameUI
         return realmBuff;
     }
 
+    @Override
+    public void addchild(Widget child, Object... args)
+    {
+        super.addchild(child, args);
+        String place = ((String) args[0]).intern();
+        if (place.equals("chr") && chrwdg != null) {
+            ((NUI) ui).sessInfo.characterInfo.setCharWnd(chrwdg);
+        }
+    }
 }

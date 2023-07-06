@@ -1129,7 +1129,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 
     public static class MenuCheckBox extends ICheckBox {
 	MenuCheckBox(String base, KeyBinding gkey, String tooltip) {
-	    super("gfx/hud/" + base, "", "-d", "-h", "-dh");
+	    super("nurgling/hud/buttons/" + base, "u", "d", "h", "dh");
 	    setgkey(gkey);
 	    settip(tooltip);
 	}
@@ -1143,11 +1143,11 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public class MainMenu extends NDraggableWidget {
 	public MainMenu() {
 	    super("mainmenu",Coord.z);
-	    add(new MenuCheckBox("rbtn-inv", kb_inv, "Inventory"), 0, 0).state(() -> wndstate(invwnd)).click(() -> togglewnd(invwnd));
-	    add(new MenuCheckBox("rbtn-equ", kb_equ, "Equipment"), 0, 0).state(() -> wndstate(equwnd)).click(() -> togglewnd(equwnd));
-	    add(new MenuCheckBox("rbtn-chr", kb_chr, "Character Sheet"), 0, 0).state(() -> wndstate(chrwdg)).click(() -> togglewnd(chrwdg));
-	    add(new MenuCheckBox("rbtn-bud", kb_bud, "Kith & Kin"), 0, 0).state(() -> wndstate(zerg)).click(() -> togglewnd(zerg));
-	    add(new MenuCheckBox("rbtn-opt", kb_opt, "Options"), 0, 0).state(() -> wndstate(opts)).click(() -> togglewnd(opts));
+	    prev = add(new MenuCheckBox("rbtn/inv/", kb_inv, "Inventory"), 0, 0).state(() -> wndstate(invwnd)).click(() -> togglewnd(invwnd));
+	    prev = add(new MenuCheckBox("rbtn/equ/", kb_equ, "Equipment"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(equwnd)).click(() -> togglewnd(equwnd));
+	    prev = add(new MenuCheckBox("rbtn/chr/", kb_chr, "Character Sheet"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(chrwdg)).click(() -> togglewnd(chrwdg));
+	    prev = add(new MenuCheckBox("rbtn/bud/", kb_bud, "Kith & Kin"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(zerg)).click(() -> togglewnd(zerg));
+	    add(new MenuCheckBox("rbtn/opt/", kb_opt, "Options"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(opts)).click(() -> togglewnd(opts));
 		pack();
 	}
 
@@ -1174,25 +1174,25 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 
 	public MapMenu() {
 	    super(mapmenubg.sz());
-	    add(new MenuCheckBox("lbtn-claim", kb_claim, "Display personal claims"), 0, 0).changed(a -> toggleol("cplot", a));
-	    add(new MenuCheckBox("lbtn-vil", kb_vil, "Display village claims"), 0, 0).changed(a -> toggleol("vlg", a));
-	    add(new MenuCheckBox("lbtn-rlm", kb_rlm, "Display provinces"), 0, 0).changed(a -> toggleol("prov", a));
-	    add(new MenuCheckBox("lbtn-map", kb_map, "Map")).state(() -> wndstate(mapfile)).click(() -> {
-		    togglewnd(mapfile);
-		    if(mapfile != null)
-			Utils.setprefb("wndvis-map", mapfile.visible());
-		});
-	    add(new MenuCheckBox("lbtn-ico", kb_ico, "Icon settings"), 0, 0).state(() -> wndstate(iconwnd)).click(() -> {
-		    if(iconconf == null)
-			return;
-		    if(iconwnd == null) {
-			iconwnd = new GobIcon.SettingsWindow(iconconf, () -> Utils.defer(GameUI.this::saveiconconf));
-			fitwdg(GameUI.this.add(iconwnd, Utils.getprefc("wndc-icon", new Coord(200, 200))));
-		    } else {
-			ui.destroy(iconwnd);
-			iconwnd = null;
-		    }
-		});
+//	    add(new MenuCheckBox("lbtn-claim", kb_claim, "Display personal claims"), 0, 0).changed(a -> toggleol("cplot", a));
+//	    add(new MenuCheckBox("lbtn-vil", kb_vil, "Display village claims"), 0, 0).changed(a -> toggleol("vlg", a));
+//	    add(new MenuCheckBox("lbtn-rlm", kb_rlm, "Display provinces"), 0, 0).changed(a -> toggleol("prov", a));
+//	    add(new MenuCheckBox("lbtn-map", kb_map, "Map")).state(() -> wndstate(mapfile)).click(() -> {
+//		    togglewnd(mapfile);
+//		    if(mapfile != null)
+//			Utils.setprefb("wndvis-map", mapfile.visible());
+//		});
+//	    add(new MenuCheckBox("lbtn-ico", kb_ico, "Icon settings"), 0, 0).state(() -> wndstate(iconwnd)).click(() -> {
+//		    if(iconconf == null)
+//			return;
+//		    if(iconwnd == null) {
+//			iconwnd = new GobIcon.SettingsWindow(iconconf, () -> Utils.defer(GameUI.this::saveiconconf));
+//			fitwdg(GameUI.this.add(iconwnd, Utils.getprefc("wndc-icon", new Coord(200, 200))));
+//		    } else {
+//			ui.destroy(iconwnd);
+//			iconwnd = null;
+//		    }
+//		});
 	}
 
 	public void draw(GOut g) {
