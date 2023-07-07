@@ -1,68 +1,59 @@
 package nurgling;
 
-import java.io.*;
-import java.net.*;
-import java.nio.charset.*;
+import haven.Resource;
+import org.json.JSONObject;
+
 import java.util.*;
 
 public class NDataTables
 {
-
-
     public HashMap<String, String> data_vessel;
     public HashMap<String, List<String>> data_food;
     public HashMap<String, List<String>> data_drinks;
     public HashMap<String, String> vessel_res;
 
-    public NDataTables() {
+    public NDataTables()
+    {
         read_drink_data();
     }
 
-    private void read_drink_data() {
+    private void read_drink_data()
+    {
         data_vessel = new HashMap<>();
         data_food = new HashMap<>();
         data_drinks = new HashMap<>();
         vessel_res = new HashMap<>();
-//            URL url = NUtils.class.getProtectionDomain().getCodeSource().getLocation();
-//
-//            if (url != null) {
-//                String path = url.toURI().getPath().substring(0, url.toURI().getPath().lastIndexOf("/"));
-//                BufferedReader reader = new BufferedReader(
-//                        new InputStreamReader(new FileInputStream(path + "/drink_data.json"), StandardCharsets.UTF_8));
-//                JSONParser parser = new JSONParser();
-//                JSONObject jsonObject = (JSONObject) parser.parse(reader);
-//
-//                // loop array
-//                JSONArray msg = (JSONArray) jsonObject.get("data_food");
-//                Iterator<JSONObject> iterator = msg.iterator();
-//                while (iterator.hasNext()) {
-//                    JSONObject item = iterator.next();
-//                    ArrayList<String> types = new ArrayList<>((JSONArray) item.get("types"));
-//                    data_food.put((String)item.get("name"),types);
-//                }
-//
-//                JSONArray msg1 = (JSONArray) jsonObject.get("data_drinks");
-//                Iterator<JSONObject> iterator1 = msg1.iterator();
-//                while (iterator1.hasNext()) {
-//                    JSONObject item = iterator1.next();
-//                    ArrayList<String> types = new ArrayList<>((JSONArray) item.get("drink"));
-//                    data_drinks.put((String)item.get("types"),types);
-//                }
-//
-//                JSONArray msg2 = (JSONArray) jsonObject.get("data_vessel");
-//                Iterator<JSONObject> iterator2 = msg2.iterator();
-//                while (iterator2.hasNext()) {
-//                    JSONObject item = iterator2.next();
-//                    data_vessel.put((String)item.get("drink"),(String)item.get("vessel"));
-//                }
-//
-//                JSONArray msg3 = (JSONArray) jsonObject.get("vessel_res");
-//                Iterator<JSONObject> iterator3 = msg3.iterator();
-//                while (iterator3.hasNext()) {
-//                    JSONObject item = iterator3.next();
-//                    vessel_res.put((String)item.get("vessel"),(String)item.get("res"));
-//                }
-//            }
 
+        Resource.Tooltip drink_data = ((Resource.Tooltip) Resource.remote().loadwait("nurgling/data/drink_data").layer(Resource.Tooltip.class));
+
+        if (drink_data != null)
+        {
+            JSONObject jdata = new JSONObject(drink_data.t);
+            Map<String, Object> data = jdata.toMap();
+            ArrayList<HashMap<String, Object>> df = ((ArrayList<HashMap<String, Object>>) data.get("data_food"));
+            for (HashMap<String, Object> obj : df)
+            {
+                data_food.put((String) obj.get("name"), (ArrayList<String>) obj.get("types"));
+            }
+
+            ArrayList<HashMap<String, Object>> dd = ((ArrayList<HashMap<String, Object>>) data.get("data_drinks"));
+            for (HashMap<String, Object> obj : dd)
+            {
+                data_drinks.put((String) obj.get("types"), (ArrayList<String>) obj.get("drink"));
+            }
+
+            ArrayList<HashMap<String, Object>> dv = ((ArrayList<HashMap<String, Object>>) data.get("data_vessel"));
+            for (HashMap<String, Object> obj : dv)
+            {
+                data_vessel.put((String) obj.get("drink"), (String) obj.get("vessel"));
+            }
+
+            ArrayList<HashMap<String, Object>> vr = ((ArrayList<HashMap<String, Object>>) data.get("vessel_res"));
+            for (HashMap<String, Object> obj : vr)
+            {
+                vessel_res.put((String) obj.get("vessel"), (String) obj.get("res"));
+            }
+        }
     }
 }
+

@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import static haven.Inventory.sqsz;
 import haven.res.ui.tt.defn.*;
+import nurgling.iteminfo.NFoodInfo;
 
 public class NGItem extends GItem
 {
@@ -22,6 +23,22 @@ public class NGItem extends GItem
     public String name()
     {
         return name;
+    }
+
+    public boolean needlongtip()
+    {
+        for (ItemInfo inf : info()) {
+            if (inf instanceof NFoodInfo) {
+                return ((NFoodInfo) inf).needToolTip;
+            }
+//            else if (inf instanceof NCuriosity) {
+//                return ((NCuriosity) inf).needUpdate();
+//            }
+//            if (inf instanceof ISlots) {
+//                return this.ui.modshift!=((ISlots)inf).isShifted;
+//            }
+        }
+        return false;
     }
 
     public static class NContent
@@ -143,13 +160,13 @@ public class NGItem extends GItem
     {
         if (name != null)
         {
-            if (msg.equals("take"))
+            if (msg.equals("take") || (msg.equals("iact")))
             {
                 NUtils.getGameUI().getCharInfo().setCandidate(name());
-            }
-            else if (msg.equals("iact"))
-            {
-                NUtils.getGameUI().getCharInfo().setFlowerCandidate(this);
+                if (msg.equals("iact"))
+                {
+                    NUtils.getGameUI().getCharInfo().setFlowerCandidate(this);
+                }
             }
         }
         super.wdgmsg(msg, args);

@@ -98,7 +98,8 @@ public class WItem extends Widget implements DTarget {
 		shorttip = longtip = null;
 		ttinfo = info;
 	    }
-		longtip = new LongTip(info);
+		if(longtip == null || ((NGItem)item).needlongtip())
+			longtip = new LongTip(info);
 		return(longtip);
 	} catch(Loading e) {
 	    return("...");
