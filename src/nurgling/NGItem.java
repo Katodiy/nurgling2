@@ -3,12 +3,14 @@ package nurgling;
 import haven.*;
 import static haven.Inventory.sqsz;
 import haven.res.ui.tt.defn.*;
+import nurgling.iteminfo.NCuriosity;
 import nurgling.iteminfo.NFoodInfo;
 
 public class NGItem extends GItem
 {
     String name = null;
     private Float quality = null;
+    public long meterUpdated = 0;
 
     public NGItem(Indir<Resource> res, Message sdt)
     {
@@ -31,9 +33,9 @@ public class NGItem extends GItem
             if (inf instanceof NFoodInfo) {
                 return ((NFoodInfo) inf).needToolTip;
             }
-//            else if (inf instanceof NCuriosity) {
-//                return ((NCuriosity) inf).needUpdate();
-//            }
+            else if (inf instanceof NCuriosity) {
+                return ((NCuriosity) inf).needUpdate();
+            }
 //            if (inf instanceof ISlots) {
 //                return this.ui.modshift!=((ISlots)inf).isShifted;
 //            }
@@ -172,4 +174,11 @@ public class NGItem extends GItem
         super.wdgmsg(msg, args);
     }
 
+
+    public void uimsg(String name, Object... args) {
+        super.uimsg(name, args);
+        if(name.equals("tt") || name.equals("meter")) {
+            meterUpdated = System.currentTimeMillis();
+        }
+    }
 }

@@ -15,6 +15,7 @@ public class NConfig
 
     public enum Key
     {
+        is_real_time,
         baseurl,
         credentials,
         dragprop
@@ -113,6 +114,8 @@ public class NConfig
                 }
             }
         }
+        if(NConfig.get(Key.is_real_time)== null)
+            NConfig.set(Key.is_real_time, true);
     }
 
     private ArrayList<Object> prepareArray(ArrayList<Object> objs)
