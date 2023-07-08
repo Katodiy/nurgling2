@@ -127,4 +127,10 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
             g.aimage(data, new Coord(data.sz().x,g.sz().y - data.sz().y), 1, 0);
         }
     }
+
+    @Override
+    public boolean tick(double dt)
+    {
+        return true;
+    }
 }

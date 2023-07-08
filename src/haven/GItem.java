@@ -47,7 +47,7 @@ public class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owne
     private boolean hoverset;
     protected GSprite spr;
     protected ItemInfo.Raw rawinfo;
-    private List<ItemInfo> info = Collections.emptyList();
+    protected List<ItemInfo> info = Collections.emptyList();
 
     @RName("item")
     public static class $_ implements Factory {
@@ -65,11 +65,12 @@ public class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owne
     public interface OverlayInfo<T> {
 	public T overlay();
 	public void drawoverlay(GOut g, T data);
+	public default boolean tick(double dt) {return true;}
     }
 
     public static class InfoOverlay<T> {
 	public final OverlayInfo<T> inf;
-	public final T data;
+	public T data;
 
 	public InfoOverlay(OverlayInfo<T> inf) {
 	    this.inf = inf;
@@ -119,7 +120,10 @@ public class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owne
 	public int itemnum() {
 	    return(num);
 	}
-    }
+
+	@Override
+	public boolean tick(double dt) { return true; }
+	}
 
     public GItem(Indir<Resource> res, Message sdt) {
 	this.res = res;

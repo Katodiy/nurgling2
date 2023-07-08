@@ -408,4 +408,10 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             }
         }
     }
+
+    @Override
+    public boolean tick(double dt)
+    {
+        return true;
+    }
 }

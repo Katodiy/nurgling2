@@ -43,6 +43,10 @@ public class NGItem extends GItem
         return false;
     }
 
+    public NContent content(){
+        return content;
+    }
+
     public static class NContent
     {
         private double quality = -1;
@@ -114,7 +118,7 @@ public class NGItem extends GItem
                                                 if (b[0] instanceof Integer)
                                                 {
                                                     String resName2 = NUtils.getUI().sess.getResName((Integer) b[0]);
-                                                    if (b.length > 2) if (resName2 != null)
+                                                    if (b.length >= 2) if (resName2 != null)
                                                     {
                                                         if (resName2.equals("ui/tt/cn"))
                                                         {

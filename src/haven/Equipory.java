@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.NWItem;
+
 import java.util.*;
 import static haven.Inventory.invsq;
 
@@ -132,7 +134,7 @@ public class Equipory extends Widget implements DTarget {
 	    for(int i = 0; i < args.length; i++) {
 		int ep = (Integer)args[i];
 		if(ep < ecoords.length)
-		    v.add(add(new WItem(g), ecoords[ep].add(1, 1)));
+		    v.add(add(new NWItem(g), ecoords[ep].add(1, 1)));
 	    }
 	    v.trimToSize();
 	    wmap.put(g, v);

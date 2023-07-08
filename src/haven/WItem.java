@@ -128,7 +128,7 @@ public class WItem extends Widget implements DTarget {
 		    return(ret);
 		});
 	});
-    public final AttrCache<GItem.InfoOverlay<?>[]> itemols = new AttrCache<>(this::info, info -> {
+    private final AttrCache<GItem.InfoOverlay<?>[]> itemols = new AttrCache<>(this::info, info -> {
 	    ArrayList<GItem.InfoOverlay<?>> buf = new ArrayList<>();
 	    for(ItemInfo inf : info) {
 		if(inf instanceof GItem.OverlayInfo)
@@ -137,7 +137,13 @@ public class WItem extends Widget implements DTarget {
 	    GItem.InfoOverlay<?>[] ret = buf.toArray(new GItem.InfoOverlay<?>[0]);
 	    return(() -> ret);
 	});
-    public final AttrCache<Double> itemmeter = new AttrCache<>(this::info, AttrCache.map1(NGItem.MeterInfo.class, minf -> minf::meter));
+
+	public AttrCache<GItem.InfoOverlay<?>[]> getItemols()
+	{
+		return itemols;
+	}
+
+	public final AttrCache<Double> itemmeter = new AttrCache<>(this::info, AttrCache.map1(NGItem.MeterInfo.class, minf -> minf::meter));
 
     private Widget contparent() {
 	/* XXX: This is a bit weird, but I'm not sure what the alternative is... */
