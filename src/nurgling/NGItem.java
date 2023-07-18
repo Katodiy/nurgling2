@@ -9,7 +9,7 @@ import nurgling.iteminfo.NFoodInfo;
 public class NGItem extends GItem
 {
     String name = null;
-    private Float quality = null;
+    public Float quality = null;
     public long meterUpdated = 0;
 
     public NGItem(Indir<Resource> res, Message sdt)
@@ -85,76 +85,13 @@ public class NGItem extends GItem
     public void tick(double dt)
     {
         super.tick(dt);
-        if (name == null && rawinfo != null)
+        if (name == null && spr != null)
         {
-            for (Object o : rawinfo.data)
+            if (!res.get().name.contains("coin"))
             {
-                if (o instanceof Object[])
+                if (res.get() != null)
                 {
-                    Object[] a = (Object[]) o;
-                    if (a[0] instanceof Integer)
-                    {
-                        String resName = NUtils.getUI().sess.getResName((Integer) a[0]);
-                        if (resName != null)
-                        {
-                            if (resName.equals("ui/tt/q/quality"))
-                            {
-                                if (a.length > 2) quality = (Float) a[1];
-                            }
-                            else if (resName.equals("ui/tt/cont"))
-                            {
-                                double q = -1;
-                                String name = null;
-                                for (Object so : a)
-                                {
-                                    if (so instanceof Object[])
-                                    {
-                                        Object[] cont = (Object[]) so;
-                                        for (Object sso : cont)
-                                        {
-                                            if (sso instanceof Object[])
-                                            {
-                                                Object[] b = (Object[]) sso;
-                                                if (b[0] instanceof Integer)
-                                                {
-                                                    String resName2 = NUtils.getUI().sess.getResName((Integer) b[0]);
-                                                    if (b.length >= 2) if (resName2 != null)
-                                                    {
-                                                        if (resName2.equals("ui/tt/cn"))
-                                                        {
-                                                            name = (String) b[1];
-                                                        }
-                                                        else if (resName2.equals("ui/tt/q/quality"))
-                                                        {
-                                                            q = (Float) b[1];
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                if (name != null && q != -1)
-                                {
-                                    content = new NContent(q, name);
-                                }
-                            }
-                            else if (resName.equals("ui/tt/coin"))
-                            {
-                                name = (String) a[1];
-                            }
-                            if (spr != null)
-                            {
-                                if (!res.get().name.contains("coin"))
-                                {
-                                    if (res.get() != null)
-                                    {
-                                        name = DefName.getname(this);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    name = DefName.getname(this);
                 }
             }
         }
@@ -179,10 +116,78 @@ public class NGItem extends GItem
     }
 
 
+    @Override
     public void uimsg(String name, Object... args) {
         super.uimsg(name, args);
         if(name.equals("tt") || name.equals("meter")) {
             meterUpdated = System.currentTimeMillis();
+        }
+    }
+    @Override
+    protected void updateraw()
+    {
+        if (rawinfo != null)
+        {
+            for (Object o : rawinfo.data)
+            {
+                if (o instanceof Object[])
+                {
+                    Object[] a = (Object[]) o;
+                    if (a[0] instanceof Integer)
+                    {
+                        String resName = NUtils.getUI().sess.getResName((Integer) a[0]);
+                        if (resName != null)
+                        {
+                            switch (resName)
+                            {
+                                case "ui/tt/q/quality":
+                                    if (a.length >= 2) quality = (Float) a[1];
+                                    break;
+                                case "ui/tt/cont":
+                                    double q = -1;
+                                    String name = null;
+                                    for (Object so : a)
+                                    {
+                                        if (so instanceof Object[])
+                                        {
+                                            Object[] cont = (Object[]) so;
+                                            for (Object sso : cont)
+                                            {
+                                                if (sso instanceof Object[])
+                                                {
+                                                    Object[] b = (Object[]) sso;
+                                                    if (b[0] instanceof Integer)
+                                                    {
+                                                        String resName2 = NUtils.getUI().sess.getResName((Integer) b[0]);
+                                                        if (b.length >= 2) if (resName2 != null)
+                                                        {
+                                                            if (resName2.equals("ui/tt/cn"))
+                                                            {
+                                                                name = (String) b[1];
+                                                            }
+                                                            else if (resName2.equals("ui/tt/q/quality"))
+                                                            {
+                                                                q = (Float) b[1];
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (name != null && q != -1)
+                                    {
+                                        content = new NContent(q, name);
+                                    }
+                                    break;
+                                case "ui/tt/coin":
+                                    this.name = (String) a[1];
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

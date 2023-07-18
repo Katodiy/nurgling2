@@ -26,6 +26,8 @@
 
 package haven;
 
+import haven.res.ui.tt.wellmined.WellMined;
+
 import java.util.*;
 import java.util.function.*;
 import java.lang.reflect.*;
@@ -374,6 +376,10 @@ public abstract class ItemInfo {
 		    ret.add(inf);
 	    } else if(o instanceof String) {
 		ret.add(new AdHoc(owner, (String)o));
+		if(o.equals("Well mined"))
+		{
+			ret.add(0,new WellMined(owner));
+		}
 	    } else {
 		throw(new ClassCastException("Unexpected object type " + o.getClass() + " in item info array."));
 	    }

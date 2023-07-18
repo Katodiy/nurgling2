@@ -22,7 +22,7 @@ public class NWItem extends WItem
         if(ols != null) {
             for(GItem.InfoOverlay<Tex> ol : ols)
                 if (!ol.inf.tick(dt))
-                    ol.data = ((Quality) ol.inf).overlay();
+                    ol.data = ol.inf.overlay();
         }
     }
 }

@@ -33,7 +33,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
-public class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owner {
+public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owner {
     public Indir<Resource> res;
     public MessageBuf sdt;
     public int meter = 0;
@@ -49,7 +49,9 @@ public class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owne
     protected ItemInfo.Raw rawinfo;
     protected List<ItemInfo> info = Collections.emptyList();
 
-    @RName("item")
+	protected abstract void updateraw();
+
+	@RName("item")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
 	    int res = (Integer)args[0];
@@ -203,6 +205,7 @@ public class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owne
 	} else if(name == "tt") {
 	    info = null;
 	    rawinfo = new ItemInfo.Raw(args);
+		updateraw();
 	    infoseq++;
 	} else if(name == "meter") {
 	    meter = (int)((Number)args[0]).doubleValue();
