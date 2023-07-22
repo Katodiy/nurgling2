@@ -8,9 +8,12 @@ import java.util.*;
 
 public class NGameUI extends GameUI
 {
+    public NSearchItem itemsForSearch = null;
+
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
+        itemsForSearch = new NSearchItem();
     }
 
     public int getMaxBase(){
@@ -105,6 +108,10 @@ public class NGameUI extends GameUI
         String place = ((String) args[0]).intern();
         if (place.equals("chr") && chrwdg != null) {
             ((NUI) ui).sessInfo.characterInfo.setCharWnd(chrwdg);
+        }
+        if (maininv != null && ((NInventory) maininv).searchwdg == null)
+        {
+            ((NInventory) maininv).installMainInv();
         }
     }
 }

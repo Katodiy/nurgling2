@@ -4,7 +4,10 @@ package haven.res.ui.tt.slot;
 import haven.*;
 import haven.res.ui.tt.attrmod.AttrMod;
 
+import nurgling.NGItem;
+import nurgling.NUtils;
 import nurgling.iteminfo.NSearchable;
+import nurgling.tools.NSearchItem;
 
 import java.awt.image.BufferedImage;
 import java.util.*;
@@ -155,17 +158,17 @@ public class Slotted extends ItemInfo.Tip implements GItem.OverlayInfo<Tex>, NSe
 
 	@Override
 	public boolean search() {
-//		NGameUI.SearchItem si = NUtils.getGameUI().itemsForSearch;
-//		if (!si.gilding.isEmpty()) {
-//			for (NGameUI.SearchItem.Stat gild : NUtils.getGameUI().itemsForSearch.gilding) {
-//				if (searchImage.get(gild.v) == null || (gild.a!=0 && !(gild.isMore == (searchImage.get(gild.v) > gild.a))))
-//					return false;
-//			}
-//			if (!NUtils.getGameUI().itemsForSearch.name.isEmpty() && ((NGItem) owner).name() != null) {
-//				return ((NGItem) owner).name().toLowerCase().contains(NUtils.getGameUI().itemsForSearch.name.toLowerCase());
-//			}
-//			return true;
-//		}
+		NSearchItem si = NUtils.getGameUI().itemsForSearch;
+		if (!si.gilding.isEmpty()) {
+			for (NSearchItem.Stat gild : NUtils.getGameUI().itemsForSearch.gilding) {
+				if (searchImage.get(gild.v) == null || (gild.a!=0 && !(gild.isMore == (searchImage.get(gild.v) > gild.a))))
+					return false;
+			}
+			if (!NUtils.getGameUI().itemsForSearch.name.isEmpty() && ((NGItem) owner).name() != null) {
+				return ((NGItem) owner).name().toLowerCase().contains(NUtils.getGameUI().itemsForSearch.name.toLowerCase());
+			}
+			return true;
+		}
 		return false;
 	}
 }

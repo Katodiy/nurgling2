@@ -15,6 +15,10 @@ public class NConfig
 
     public enum Key
     {
+        showVarity,
+        autoFlower,
+        autoSplitter,
+        autoDropper,
         is_real_time,
         baseurl,
         credentials,

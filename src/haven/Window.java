@@ -420,6 +420,10 @@ public class Window extends Widget implements DTarget {
     public void mousemove(Coord c) {
 	if(dm != null) {
 	    this.c = this.c.add(c.add(doff.inv()));
+		for(Widget ch = child; ch != null; ch = ch.next){
+			if (ch instanceof NInventory)
+				((NInventory) ch).movePopup(this.c);
+		}
 	} else {
 	    super.mousemove(c);
 	}

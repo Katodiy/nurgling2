@@ -1,14 +1,11 @@
 package nurgling;
 
-import haven.GItem;
-import haven.ItemInfo;
-import haven.Tex;
-import haven.WItem;
-import haven.res.ui.tt.q.quality.Quality;
+import haven.*;
+import nurgling.iteminfo.NSearchable;
+import nurgling.tools.NSearchItem;
 
 public class NWItem extends WItem
 {
-    boolean withContent = false;
     public NWItem(GItem item)
     {
         super(item);
@@ -24,5 +21,99 @@ public class NWItem extends WItem
                 if (!ol.inf.tick(dt))
                     ol.data = ol.inf.overlay();
         }
+        search();
+    }
+
+    private void search()
+    {
+        if (NUtils.getGameUI().itemsForSearch != null && !NUtils.getGameUI().itemsForSearch.isEmpty())
+        {
+            String name = ((NGItem) item).name();
+            if (name != null)
+            {
+                if (NUtils.getGameUI().itemsForSearch.onlyName())
+                {
+                    if (name.toLowerCase().contains(NUtils.getGameUI().itemsForSearch.name))
+                    {
+                        if (!((NGItem) item).isSearched)
+                        {
+                            ((NGItem) item).isSearched = true;
+                        }
+                        return;
+                    }
+                }
+            }
+            if (item.spr != null)
+            {
+                if (item.info != null)
+                {
+                    for (ItemInfo inf : item.info)
+                    {
+                        if (inf instanceof NSearchable)
+                        {
+                            if (((NSearchable) inf).search())
+                            {
+                                if (!((NGItem) item).isSearched)
+                                {
+                                    if (!NUtils.getGameUI().itemsForSearch.q.isEmpty() && !searchQuality()) return;
+                                    ((NGItem) item).isSearched = true;
+                                }
+                                return;
+                            }
+                        }
+                    }
+                    if (!NUtils.getGameUI().itemsForSearch.q.isEmpty() && searchQuality())
+                    {
+                        if (!((NGItem) item).isSearched)
+                        {
+                            ((NGItem) item).isSearched = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (((NGItem) item).isSearched)
+        {
+            if (NUtils.getGameUI().itemsForSearch != null && !NUtils.getGameUI().itemsForSearch.q.isEmpty() && searchQuality())
+                return;
+            ((NGItem) item).isSearched = false;
+        }
+    }
+
+    private boolean searchQuality() {
+        for(NSearchItem.Quality q : NUtils.getGameUI().itemsForSearch.q)
+        {
+            if(((NGItem) item).quality!=null)
+            {
+                switch (q.type)
+                {
+                    case MORE:
+                        if (((NGItem) item).quality <= q.val) return false;
+                        break;
+                    case LOW:
+                        if (((NGItem) item).quality >= q.val) return false;
+                        break;
+                    case EQ:
+                        if (((NGItem) item).quality != q.val) return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        if (!NUtils.getGameUI().itemsForSearch.name.isEmpty()) {
+            String name = ((NGItem) item).name();
+            if(name!=null) {
+                return name.toLowerCase().contains(NUtils.getGameUI().itemsForSearch.name);
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

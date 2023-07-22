@@ -45,9 +45,9 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
     public int infoseq;
     private Widget hovering;
     private boolean hoverset;
-    protected GSprite spr;
+    public GSprite spr;
     protected ItemInfo.Raw rawinfo;
-    protected List<ItemInfo> info = Collections.emptyList();
+    public List<ItemInfo> info = Collections.emptyList();
 
 	protected abstract void updateraw();
 

@@ -27,14 +27,26 @@
 package haven;
 
 import haven.res.ui.tt.wellmined.WellMined;
+import nurgling.NGItem;
+import nurgling.iteminfo.NQuestItem;
+import nurgling.iteminfo.NSearchingHighlight;
 
 import java.util.*;
 import java.util.function.*;
-import java.lang.reflect.*;
 import java.awt.image.BufferedImage;
 import java.awt.Graphics;
 
-public abstract class ItemInfo {
+public abstract class ItemInfo implements Comparable<ItemInfo> {
+	@Override
+	public int compareTo(ItemInfo o)
+	{
+		return Integer.compare(order(),o.order());
+	}
+
+	public int order(){
+		return 100;
+	}
+
     public final Owner owner;
 
     public interface Owner extends OwnerContext {
@@ -378,12 +390,18 @@ public abstract class ItemInfo {
 		ret.add(new AdHoc(owner, (String)o));
 		if(o.equals("Well mined"))
 		{
-			ret.add(0,new WellMined(owner));
+			ret.add(new WellMined(owner));
 		}
 	    } else {
 		throw(new ClassCastException("Unexpected object type " + o.getClass() + " in item info array."));
 	    }
 	}
+	if(owner instanceof NGItem)
+	{
+		ret.add(new NSearchingHighlight(owner));
+		ret.add(new NQuestItem(owner));
+	}
+	Collections.sort(ret);
 	return(ret);
     }
 

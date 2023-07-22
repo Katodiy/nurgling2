@@ -3,11 +3,14 @@ package nurgling;
 import haven.*;
 import static haven.Inventory.sqsz;
 import haven.res.ui.tt.defn.*;
+import haven.res.ui.tt.slots.ISlots;
 import nurgling.iteminfo.NCuriosity;
 import nurgling.iteminfo.NFoodInfo;
 
 public class NGItem extends GItem
 {
+    public boolean isSearched = false;
+    public boolean isQuested = false;
     String name = null;
     public Float quality = null;
     public long meterUpdated = 0;
@@ -36,9 +39,9 @@ public class NGItem extends GItem
             else if (inf instanceof NCuriosity) {
                 return ((NCuriosity) inf).needUpdate();
             }
-//            if (inf instanceof ISlots) {
-//                return this.ui.modshift!=((ISlots)inf).isShifted;
-//            }
+            if (inf instanceof ISlots) {
+                return this.ui.modshift!=((ISlots)inf).isShifted;
+            }
         }
         return false;
     }

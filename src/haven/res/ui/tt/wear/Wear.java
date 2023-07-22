@@ -42,4 +42,10 @@ public class Wear extends ItemInfo.Tip implements GItem.OverlayInfo<Tex> {
             g.chcolor();
         }
     }
+
+    @Override
+    public int order()
+    {
+        return 90;
+    }
 }

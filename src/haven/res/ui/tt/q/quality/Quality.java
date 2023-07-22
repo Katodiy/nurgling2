@@ -23,6 +23,12 @@ public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
     }
     }
 
+    @Override
+    public int order()
+    {
+        return 101;
+    }
+
     public static ItemInfo mkinfo(Owner owner, Object... args) {
 	return(new Quality(owner, ((Number)args[1]).doubleValue()));
     }

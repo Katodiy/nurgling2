@@ -7,6 +7,7 @@ import static haven.CharWnd.iconfilter;
 import static haven.PUtils.convolvedown;
 import haven.resutil.*;
 import nurgling.*;
+import nurgling.tools.NSearchItem;
 import nurgling.widgets.*;
 
 import java.awt.*;
@@ -20,7 +21,12 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         this(owner, end, glut, 0, evs, efs, types);
     }
 
-    public static boolean show = true;
+    public static boolean show;
+
+    static
+    {
+        show = (Boolean)NConfig.get(NConfig.Key.showVarity);
+    }
     static double coefSubscribe = 1.5;
     static double coefVerif = 1.2;
     static double coefVar = 0.3999;
@@ -157,25 +163,25 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     @Override
     public boolean search()
     {
-//        if(name!=null) {
-//            calcData();
-//            NGameUI.SearchItem si = NUtils.getGameUI().itemsForSearch;
-//            if(!si.food.isEmpty()) {
-//                for (NGameUI.SearchItem.Stat fep : NUtils.getGameUI().itemsForSearch.food) {
-//                    if (searchImage.get(fep.v) == null || (fep.a!=0 && !(fep.isMore == (searchImage.get(fep.v) > fep.a))))
-//                        return false;
-//                }
-//                if (si.fgs)
-//                    return (delta > 0);
-//                if(!NUtils.getGameUI().itemsForSearch.name.isEmpty())
-//                {
-//                    return name.toLowerCase().contains(NUtils.getGameUI().itemsForSearch.name.toLowerCase());
-//                }
-//                return true;
-//            }
-//            if (si.fgs)
-//                return (delta > 0);
-//        }
+        if(name!=null) {
+            calcData();
+            NSearchItem si = NUtils.getGameUI().itemsForSearch;
+            if(!si.food.isEmpty()) {
+                for (NSearchItem.Stat fep : NUtils.getGameUI().itemsForSearch.food) {
+                    if (searchImage.get(fep.v) == null || (fep.a!=0 && !(fep.isMore == (searchImage.get(fep.v) > fep.a))))
+                        return false;
+                }
+                if (si.fgs)
+                    return (delta > 0);
+                if(!NUtils.getGameUI().itemsForSearch.name.isEmpty())
+                {
+                    return name.toLowerCase().contains(NUtils.getGameUI().itemsForSearch.name.toLowerCase());
+                }
+                return true;
+            }
+            if (si.fgs)
+                return (delta > 0);
+        }
         return false;
     }
 
@@ -395,23 +401,24 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     @Override
     public void drawoverlay(GOut g, Tex data)
     {
-        if (show && data != null)
+        if (show && isVarity)
         {
-            NCharacterInfo ci = NUtils.getGameUI().getCharInfo();
-            if (ci != null)
-            {
-                name = ((NGItem) owner).name();
-                if (name != null)
-                {
-                    if (!ci.varity.contains(name)) g.aimage(data, data.sz(), 1, 1);
-                }
-            }
+             g.aimage(data, data.sz(), 1, 1);
         }
     }
 
     @Override
     public boolean tick(double dt)
     {
-        return true;
+        NCharacterInfo ci = NUtils.getGameUI().getCharInfo();
+        if (ci != null)
+        {
+            name = ((NGItem) owner).name();
+            if (name != null)
+            {
+                isVarity = !ci.varity.contains(name);
+            }
+        }
+        return check();
     }
 }
