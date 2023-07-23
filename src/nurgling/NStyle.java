@@ -4,6 +4,7 @@ import haven.*;
 
 import java.awt.*;
 import java.awt.image.*;
+import java.util.*;
 
 public class NStyle
 {
@@ -24,4 +25,17 @@ public class NStyle
             new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/d")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/h")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/dh"))};
+
+    private final static ArrayList<BufferedImage> hlight = new ArrayList<>();
+    static {
+        for(int i = 0 ; i < 6; i ++)
+        {
+            hlight.add(Resource.loadsimg("nurgling/hud/buttons/hlight/"+i));
+        }
+    }
+
+    public static BufferedImage getHLight(NUI ui)
+    {
+        return hlight.get((int) ((ui.tickId/5)%6));
+    }
 }

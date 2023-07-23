@@ -45,7 +45,7 @@ import java.awt.datatransfer.*;
 
 public class ChatUI extends NResizableWidget
 {
-    public static final RichText.Foundry fnd = new RichText.Foundry(new ChatParser(TextAttribute.FONT, Text.dfont.deriveFont(UI.scale(12f)), TextAttribute.FOREGROUND, Color.BLACK)).aa(true);
+    public static final RichText.Foundry fnd = new RichText.Foundry(new ChatParser(TextAttribute.FONT, Text.dfont.deriveFont(UI.scale(14f)), TextAttribute.FOREGROUND, Color.BLACK)).aa(true);
     public static final Text.Foundry qfnd = new Text.Foundry(Text.dfont, 12, new java.awt.Color(192, 255, 192));
     public static final int selw = UI.scale(130);
     public static final Coord marg = UI.scale(new Coord(9, 9));
@@ -288,7 +288,7 @@ public class ChatUI extends NResizableWidget
 	}
 
 	public static class SimpleMessage extends Message {
-	    public final String text;
+	    public String text;
 	    public final Color col;
 
 	    public SimpleMessage(String text, Color col) {
@@ -300,6 +300,7 @@ public class ChatUI extends NResizableWidget
 	    public SimpleMessage(String text, Color col, int w) {this(text, col);}
 
 	    public Indir<Text> render(int w) {
+		text = NUtils.timestamp(text);
 		if(col == null)
 		    return(() -> fnd.render(RichText.Parser.quote(text), w));
 		else
@@ -905,7 +906,7 @@ public class ChatUI extends NResizableWidget
 		}
 
 		public Text get() {
-		    return(fnd.render(RichText.Parser.quote(String.format("%s: %s", nm, text)), w, TextAttribute.FOREGROUND, col));
+		    return(fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s", NUtils.timestamp(), nm, text)), w, TextAttribute.FOREGROUND, col));
 		}
 	    }
 
@@ -979,7 +980,7 @@ public class ChatUI extends NResizableWidget
 
 	public void uimsg(String msg, Object... args) {
 	    if(msg == "msg") {
-		if (process((String) args[1])) {
+		if (process((String) args[2])) {
 		Integer from = (Integer)args[0];
 		long gobid = Utils.uint32((Integer)args[1]);
 		String line = (String)args[2];
@@ -1208,8 +1209,51 @@ public class ChatUI extends NResizableWidget
 	    }
 	}
 
+	final BufferedImage[] right = new BufferedImage[] {
+			Resource.loadsimg("nurgling/hud/buttons/msg/right/u"),
+			Resource.loadsimg("nurgling/hud/buttons/msg/right/d"),
+			Resource.loadsimg("nurgling/hud/buttons/msg/right/h")};
+
+	final BufferedImage[] left = new BufferedImage[] {
+			Resource.loadsimg("nurgling/hud/buttons/msg/left/u"),
+			Resource.loadsimg("nurgling/hud/buttons/msg/left/d"),
+			Resource.loadsimg("nurgling/hud/buttons/msg/left/h")};
+
+	final BufferedImage disleft = Resource.loadsimg("nurgling/hud/buttons/msg/left/dis");
+	final BufferedImage disright = Resource.loadsimg("nurgling/hud/buttons/msg/right/dis");
+
+	IButton toRight;
+	IButton toLeft;
+
 	public Selector(Coord sz) {
 	    super(sz);
+		toRight = add(new IButton(right[0],right[1],right[2]){
+			@Override
+			public void click()
+			{
+				s += 1;
+				if (s + 1 >= chls.size())
+					s = chls.size()-1;
+			}
+		},new Coord(sz.x - right[0].getWidth(),sz.y/2-right[0].getHeight()/2));
+		toLeft = add(new IButton(left[0],left[1],left[2]){
+			@Override
+			public void click()
+			{
+				s -= 1;
+				if (s - 1 < 0)
+					s = 0;
+			}
+		},new Coord(0,sz.y/2-right[0].getHeight()/2));
+		pack();
+	}
+
+	@Override
+	public void resize(Coord sz)
+	{
+		super.resize(sz);
+		toRight.move(new Coord(sz.x - right[0].getWidth(),sz.y/2-right[0].getHeight()/2));
+		toLeft.move(new Coord(0,sz.y/2-right[0].getHeight()/2));
 	}
 
 	private void add(Channel chan) {
@@ -1229,7 +1273,8 @@ public class ChatUI extends NResizableWidget
 	}
 
 	public void draw(GOut g) {
-		int x = chanseld.sz().x / 2;
+		int x = chanseld.sz().x / 2 + left[0].getWidth();
+		int smax = 0;
 	    synchronized(chls) {
 		for(int i = s; i < chls.size(); i++) {
 		    DarkChannel ch = chls.get(i);
@@ -1244,18 +1289,56 @@ public class ChatUI extends NResizableWidget
 		    } else {
 			g.aimage(icon, Coord.of(x - name.sz().x / 2 - icon.sz().x, chanseld.sz().y / 2), 0.0, 0.5);
 			g.aimage(name, Coord.of(x - name.sz().x / 2 , chanseld.sz().y / 2), 0.0, 0.5);
-				g.aimage(icon, Coord.of(x + name.sz().x / 2, chanseld.sz().y / 2), 0.0, 0.5);
-//		    g.image(chandiv, Coord.of(0, y + chanseld.sz().y));
+			g.aimage(icon, Coord.of(x + name.sz().x / 2, chanseld.sz().y / 2), 0.0, 0.5);
 		}
 		x += chanseld.sz().x;
 		if (x >= sz.x)
+		{
+			smax = i;
 			break;
 		}
+		}
 	    }
+		super.draw(g);
+		if(!toLeft.visible())
+		{
+			g.image(disleft, new Coord(0, sz.y / 2 - right[0].getHeight() / 2));
+		}
+		else{
+			if(s>0)
+			{
+				for(int i = 0; i < s; i++)
+				{
+					if(chls.get(i).rname()!=null && chls.get(i).urgency!=0)
+						g.image(NStyle.getHLight((NUI)ui), new Coord(0, sz.y / 2 - right[0].getHeight() / 2));
+				}
+			}
+		}
+		if(!toRight.visible())
+			g.image(disright,new Coord(sz.x - right[0].getWidth(),sz.y/2-right[0].getHeight()/2));
+		else
+		{
+			if(smax!= 0 && smax<chls.size()-1)
+			{
+				for(int i = smax+1; i < chls.size(); i++)
+				{
+					if(chls.get(i).rname()!=null && chls.get(i).urgency!=0)
+						g.image(NStyle.getHLight((NUI)ui), new Coord(sz.x - right[0].getWidth(),sz.y/2-right[0].getHeight()/2));
+				}
+			}
+		}
 	}
 
 	public void tick(double dt) {
 	    ds = ts + (Math.pow(2, -dt * 20) * (ds - ts));
+		if(s==0)
+			toLeft.hide();
+		else
+			toLeft.show();
+		if(s==chls.size()-1)
+			toRight.hide();
+		else
+			toRight.show();
 	}
 
 	public void show(int si) {
@@ -1304,13 +1387,15 @@ public class ChatUI extends NResizableWidget
 	}
 
 	private Channel bypos(Coord c) {
-		int i = (c.x / chanseld.sz().x) + s;
+		int i = ((c.x-left[0].getWidth()) / chanseld.sz().x) + s;
 		if ((i >= 0) && (i < chls.size()))
 			return (chls.get(i).chan);
 		return (null);
 	}
 
 	public boolean mousedown(Coord c, int button) {
+		if(!super.mousedown(c,button))
+		{
 	    Channel chan = bypos(c);
 	    cstart = chan;
 	    if(chan != null) {
@@ -1320,10 +1405,13 @@ public class ChatUI extends NResizableWidget
 		    chan.selmousedown(c, button);
 		}
 	    }
-	    return(true);
+		}
+		return(true);
 	}
 
 	public boolean mouseup(Coord c, int button) {
+		if(!super.mousedown(c,button))
+		{
 	    Channel chan = bypos(c);
 	    if(chan != null) {
 		if(button != 1) {
@@ -1333,6 +1421,7 @@ public class ChatUI extends NResizableWidget
 		}
 	    }
 	    cstart = null;
+		}
 	    return(true);
 	}
 
@@ -1346,10 +1435,14 @@ public class ChatUI extends NResizableWidget
 	public boolean mousewheel(Coord c, int amount) {
 	    if(!ui.modshift) {
 			s += amount;
-			if (s >= chls.size() - (sz.y / offset))
-				s = chls.size() - (sz.y / offset);
+			if (s >= chls.size()-1)
+			{
+				s = chls.size()-1;
+			}
 			if (s < 0)
+			{
 				s = 0;
+			}
 	    } else {
 		if(amount < 0)
 		    up();
