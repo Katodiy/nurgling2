@@ -26,6 +26,9 @@
 
 package haven;
 
+import nurgling.*;
+import nurgling.widgets.*;
+
 import java.util.*;
 import java.awt.Color;
 import java.awt.Font;
@@ -40,11 +43,13 @@ import java.util.regex.*;
 import java.io.IOException;
 import java.awt.datatransfer.*;
 
-public class ChatUI extends Widget {
+public class ChatUI extends NResizableWidget
+{
     public static final RichText.Foundry fnd = new RichText.Foundry(new ChatParser(TextAttribute.FONT, Text.dfont.deriveFont(UI.scale(12f)), TextAttribute.FOREGROUND, Color.BLACK)).aa(true);
     public static final Text.Foundry qfnd = new Text.Foundry(Text.dfont, 12, new java.awt.Color(192, 255, 192));
     public static final int selw = UI.scale(130);
     public static final Coord marg = UI.scale(new Coord(9, 9));
+	public static final Coord dmarg = UI.scale(new Coord(7, 7));
     public static final Color[] urgcols = new Color[] {
 	null,
 	new Color(0, 128, 255),
@@ -60,14 +65,14 @@ public class ChatUI extends Widget {
     private UI.Grab qgrab;
 
     public ChatUI() {
-	super(Coord.of(0, UI.scale(Math.max(minh, Utils.getprefi("chatsize", minh)))));
-	chansel = add(new Selector(new Coord(selw, sz.y - marg.y)), marg);
+	super("ChatUI");
+	chansel = add(new Selector(new Coord(sz.x, sz.y - marg.y)), marg);
 	setfocusctl(true);
 	setcanfocus(true);
     }
 
     protected void added() {
-	base = this.c;
+	base = new Coord(0, 0);
 	resize(this.sz);
     }
 
@@ -145,6 +150,22 @@ public class ChatUI extends Widget {
 		public int size() {return(rmsgs.size());}
 		public Message get(int i) {return(rmsgs.get(i).msg);}
 	    };
+
+		public boolean process(String msg) {
+			Pattern highlight = Pattern.compile("^@(-?\\d+)$");
+			Matcher matcher = highlight.matcher(msg);
+			if (matcher.matches()) {
+//				try {
+//					Gob gob = NUtils.getGob(Long.parseLong(matcher.group(1)));
+//					if (gob != null) {
+//						gob.addTag(NGob.Tags.highlighted);
+//						return false;
+//					}
+//				} catch (Exception ignored) {
+//				}
+			}
+			return true;
+		}
 
 	public static abstract class Message {
 	    public final double time = Utils.ntime();
@@ -839,6 +860,7 @@ public class ChatUI extends Widget {
 
 	public void uimsg(String msg, Object... args) {
 	    if((msg == "msg") || (msg == "log")) {
+		if (process(msg)) {
 		String line = (String)args[0];
 		Color col = null;
 		if(args.length > 1) col = (Color)args[1];
@@ -846,6 +868,7 @@ public class ChatUI extends Widget {
 		int urgency = (args.length > 2) ? (Integer)args[2] : 0;
 		Message cmsg = new SimpleMessage(line, col);
 		append(cmsg, urgency);
+		}
 	    } else {
 		super.uimsg(msg, args);
 	    }
@@ -956,6 +979,7 @@ public class ChatUI extends Widget {
 
 	public void uimsg(String msg, Object... args) {
 	    if(msg == "msg") {
+		if (process((String) args[1])) {
 		Integer from = (Integer)args[0];
 		long gobid = Utils.uint32((Integer)args[1]);
 		String line = (String)args[2];
@@ -970,6 +994,7 @@ public class ChatUI extends Widget {
 		} else {
 		    Message cmsg = new NamedMessage(from, line, Utils.blendcol(col, Color.WHITE, 0.5));
 		    append(cmsg, urgency);
+		}
 		}
 	    } else {
 		super.uimsg(msg, args);
@@ -999,6 +1024,7 @@ public class ChatUI extends Widget {
 
 	public void uimsg(String msg, Object... args) {
 	    if(msg == "msg") {
+		if (process(msg)) {
 		String t = (String)args[0];
 		String line = (String)args[1];
 		if(t.equals("in")) {
@@ -1011,6 +1037,7 @@ public class ChatUI extends Widget {
 		String err = (String)args[0];
 		Message cmsg = new SimpleMessage(err, Color.RED);
 		append(cmsg, 3);
+		}
 	    } else {
 		super.uimsg(msg, args);
 	    }
@@ -1073,8 +1100,8 @@ public class ChatUI extends Widget {
     public <T extends Widget> T add(T w) {
 	if(w instanceof Channel) {
 	    Channel chan = (Channel)w;
-	    chan.c = chansel.c.add(chansel.sz.x, 0);
-	    chan.resize(sz.x - marg.x - chan.c.x, sz.y - chan.c.y);
+	    chan.c = chansel.c.add(0, UI.scale(25));
+	    chan.resize(sz.x - 2 * marg.x, sz.y - chan.c.y);
 	    super.add(w);
 	    chansel.add(chan);
 	    select(chan, false);
@@ -1093,9 +1120,9 @@ public class ChatUI extends Widget {
 	}
     }
     
-    private static final Tex chandiv = Resource.loadtex("gfx/hud/chat-cdiv");
-    private static final Tex chanseld = Resource.loadtex("gfx/hud/chat-csel");
-    private class Selector extends Widget {
+	//private static final Tex chandiv = Resource.loadtex("gfx/hud/chat-cdiv");
+    private static final Tex chanseld = Resource.loadtex("nurgling/hud/chat/csel");
+	public class Selector extends Widget {
 	public final BufferedImage ctex = Resource.loadimg("gfx/hud/chantex");
 	public final Text.Foundry tf = new Text.Foundry(Text.serif.deriveFont(Font.BOLD, UI.scale(12))).aa(true);
 	public final Color[] uc = {
@@ -1104,9 +1131,9 @@ public class ChatUI extends Widget {
 	    new Color(255, 128, 0),
 	    new Color(255, 0, 0),
 	};
-	private final List<DarkChannel> chls = new ArrayList<DarkChannel>();
+	public final List<DarkChannel> chls = new ArrayList<DarkChannel>();
 	private final int iconsz = UI.scale(16), ellw = tf.strsize("...").x, maxnmw = selw - iconsz;
-	private final int offset = chandiv.sz().y + chanseld.sz().y;
+	private final int offset = chanseld.sz().y;
 	private int ts = 0;
 	private double ds = 0;
 	private Channel cstart;
@@ -1129,15 +1156,15 @@ public class ChatUI extends Widget {
 	    return(-1);
 	}
 
-	public void resize(Coord sz) {
-	    int si = chidx(sel);
-	    boolean fit = (((si * offset) - ts) >= 0) && (((si * offset) - ts + chanseld.sz().y) <= this.sz.y);
-	    super.resize(sz);
-	    ds = clips((int)Math.round(ds));
-	    ts = clips(ts);
-	    if(fit)
-		show(si);
-	}
+//	public void resize(Coord sz) {
+//	    int si = chidx(sel);
+////	    boolean fit = (((si * offset) - ts) >= 0) && (((si * offset) - ts + chanseld.sz().y) <= this.sz.y);
+//	    super.resize(sz);
+//	    ds = clips((int)Math.round(ds));
+//	    ts = clips(ts);
+////	    if(fit)
+//		show(si);
+//	}
 
 	private class DarkChannel {
 	    public final Channel chan;
@@ -1145,7 +1172,6 @@ public class ChatUI extends Widget {
 	    public Tex ricon;
 	    private int urgency = 0;
 	    private Resource.Image icon;
-
 	    private DarkChannel(Channel chan) {
 		this.chan = chan;
 	    }
@@ -1203,29 +1229,27 @@ public class ChatUI extends Widget {
 	}
 
 	public void draw(GOut g) {
-	    int ds = (int)Math.round(this.ds);
+		int x = chanseld.sz().x / 2;
 	    synchronized(chls) {
-		for(int i = ds / offset; i < chls.size(); i++) {
-		    int y = i * offset - ds;
-		    if(y >= sz.y)
-			break;
+		for(int i = s; i < chls.size(); i++) {
 		    DarkChannel ch = chls.get(i);
 		    if(ch.chan == sel)
-			g.image(chanseld, Coord.of(0, y));
+			g.image(chanseld, Coord.of(x - chanseld.sz().x / 2, 0));
 		    Tex name = ch.rname().tex(), icon = null;
 		    try {
 			icon = ch.ricon();
 		    } catch(Loading l) {}
-		    int my = y + (chanseld.sz().y / 2) - UI.scale(1);
 		    if(icon == null) {
-			g.aimage(name, Coord.of(sz.x / 2, my), 0.5, 0.5);
+			g.aimage(name, Coord.of(x, chanseld.sz().y / 2), 0.5, 0.5);
 		    } else {
-			int w = name.sz().x + icon.sz().x;
-			int x = (sz.x - w) / 2;
-			g.aimage(icon, Coord.of(x, my), 0.0, 0.5); x += icon.sz().x;
-			g.aimage(name, Coord.of(x, my), 0.0, 0.5);
-		    }
-		    g.image(chandiv, Coord.of(0, y + chanseld.sz().y));
+			g.aimage(icon, Coord.of(x - name.sz().x / 2 - icon.sz().x, chanseld.sz().y / 2), 0.0, 0.5);
+			g.aimage(name, Coord.of(x - name.sz().x / 2 , chanseld.sz().y / 2), 0.0, 0.5);
+				g.aimage(icon, Coord.of(x + name.sz().x / 2, chanseld.sz().y / 2), 0.0, 0.5);
+//		    g.image(chandiv, Coord.of(0, y + chanseld.sz().y));
+		}
+		x += chanseld.sz().x;
+		if (x >= sz.x)
+			break;
 		}
 	    }
 	}
@@ -1280,11 +1304,10 @@ public class ChatUI extends Widget {
 	}
 
 	private Channel bypos(Coord c) {
-	    int ds = (int)Math.round(this.ds);
-	    int i = (c.y + ds) / offset;
-	    if((i >= 0) && (i < chls.size()))
-		return(chls.get(i).chan);
-	    return(null);
+		int i = (c.x / chanseld.sz().x) + s;
+		if ((i >= 0) && (i < chls.size()))
+			return (chls.get(i).chan);
+		return (null);
 	}
 
 	public boolean mousedown(Coord c, int button) {
@@ -1314,13 +1337,19 @@ public class ChatUI extends Widget {
 	}
 
 	private int clips(int s) {
-	    int maxh = (chls.size() * offset) - sz.y - chandiv.sz().y;
+	    int maxh = (chls.size() * offset) - sz.y ;
 	    return(Math.max(Math.min(s, maxh), 0));
 	}
 
+	private int s = 0;
+
 	public boolean mousewheel(Coord c, int amount) {
 	    if(!ui.modshift) {
-		ts = clips(ts + (amount * UI.scale(40)));
+			s += amount;
+			if (s >= chls.size() - (sz.y / offset))
+				s = chls.size() - (sz.y / offset);
+			if (s < 0)
+				s = 0;
 	    } else {
 		if(amount < 0)
 		    up();
@@ -1338,7 +1367,7 @@ public class ChatUI extends Widget {
 	    prev.hide();
 	sel.show();
 	chansel.show(chan);
-	resize(sz);
+	resize(new Coord(sz).sub(NStyle.locki[0].sz().x,0));
 	if(focus || hasfocus)
 	    setfocus(chan);
     }
@@ -1410,25 +1439,25 @@ public class ChatUI extends Widget {
 	    }
 	}
     }
+	private static final Tex bulc = new TexI(Resource.loadsimg("nurgling/hud/chat/lc"));
+	private static final Tex burc = new TexI(Resource.loadsimg("nurgling/hud/chat/rc"));
+	private static final Tex bhb = new TexI(Resource.loadsimg("nurgling/hud/chat/hori"));
+	private static final Tex bvlb = new TexI(Resource.loadsimg("nurgling/hud/chat/vert"));
+	private static final Tex bvrb = bvlb;
+	private static final Tex bcbd = new TexI(Resource.loadsimg("nurgling/hud/chat/cbtng"));
 
-    private static final Tex bulc = Resource.loadtex("gfx/hud/chat-lc");
-    private static final Tex burc = Resource.loadtex("gfx/hud/chat-rc");
-    private static final Tex bhb = Resource.loadtex("gfx/hud/chat-hori");
-    private static final Tex bvlb = Resource.loadtex("gfx/hud/chat-verti");
-    private static final Tex bvrb = bvlb;
-    private static final Tex bmf = Resource.loadtex("gfx/hud/chat-mid");
-    private static final Tex bcbd = Resource.loadtex("gfx/hud/chat-close-g");
-    public void draw(GOut g) {
+
+	public void draw(GOut g) {
+	super.draw(g);
 	g.rimage(Window.bg, marg, sz.sub(marg.x * 2, marg.y));
 	super.draw(g);
-	g.image(bulc, new Coord(0, 0));
-	g.image(burc, new Coord(sz.x - burc.sz().x, 0));
-	g.rimagev(bvlb, new Coord(0, bulc.sz().y), sz.y - bulc.sz().y);
-	g.rimagev(bvrb, new Coord(sz.x - bvrb.sz().x, burc.sz().y), sz.y - burc.sz().y);
-	g.rimageh(bhb, new Coord(bulc.sz().x, 0), sz.x - bulc.sz().x - burc.sz().x);
-	g.aimage(bmf, new Coord(sz.x / 2, 0), 0.5, 0);
-	if((sel == null) || (sel.cb == null))
-	    g.aimage(bcbd, new Coord(sz.x, 0), 1, 0);
+	g.image(bulc, new Coord(-bulc.sz().x/2+dmarg.x, -bulc.sz().y/2+dmarg.y));
+	g.image(burc, new Coord(sz.x - burc.sz().x/2 - dmarg.x, -bulc.sz().y/2+dmarg.y));
+	g.rimagev(bvlb, new Coord(-bulc.sz().x/2+dmarg.x, bulc.sz().y/2+dmarg.y), sz.y );
+	g.rimagev(bvrb, new Coord(sz.x - burc.sz().x/2 - dmarg.x, bulc.sz().y/2+dmarg.y), sz.y);
+	g.rimageh(bhb, new Coord(bulc.sz().x/2+dmarg.x, -bulc.sz().y/2+dmarg.y), sz.x - bulc.sz().x/2 - burc.sz().x/2 - dmarg.x*2);
+	if ((sel == null) || (sel.cb == null))
+		g.aimage(bcbd, new Coord(sz.x + marg.x - bcbd.sz().x, marg.y +bcbd.sz().y/2 +bcbd.sz().y), 1, 0);
     }
 
     private static final Resource notifsfx = Resource.local().loadwait("sfx/hud/chat");
@@ -1460,9 +1489,9 @@ public class ChatUI extends Widget {
 
     public void resize(Coord sz) {
 	super.resize(sz);
-	if(visible)
-	    this.c = base.add(0, -this.sz.y);
-	chansel.resize(new Coord(selw, this.sz.y - marg.y));
+//	if(visible)
+//	    this.c = base.add(0, -this.sz.y);
+	chansel.resize(new Coord(this.sz.x - UI.scale(18), UI.scale(25)));
 	if(sel != null)
 	    sel.resize(new Coord(this.sz.x - marg.x - sel.c.x, this.sz.y - sel.c.y));
     }
@@ -1535,14 +1564,7 @@ public class ChatUI extends Widget {
     private Coord doff;
     private static final int minh = 111;
     public boolean mousedown(Coord c, int button) {
-	int bmfx = (sz.x - bmf.sz().x) / 2;
-	if((button == 1) && (c.y < bmf.sz().y) && (c.x >= bmfx) && (c.x <= (bmfx + bmf.sz().x))) {
-	    dm = ui.grabmouse(this);
-	    doff = c;
-	    return(true);
-	} else {
 	    return(super.mousedown(c, button));
-	}
     }
 
     public void mousemove(Coord c) {

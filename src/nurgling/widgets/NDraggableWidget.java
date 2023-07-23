@@ -33,6 +33,7 @@ public class NDraggableWidget extends Widget
                 }
             }
         }, new Coord(sz.x - NStyle.locki[0].sz().x / 2, NStyle.locki[0].sz().y / 2));
+        btnLock.hide();
         this.sz = sz.add(new Coord(NStyle.locki[0].sz().x, 0));
         NDragProp prop = NDragProp.get(name);
         if (prop.c != Coord.z)

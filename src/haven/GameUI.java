@@ -68,7 +68,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public Progress prog = null;
     private boolean afk = false;
     public BeltSlot[] belt = new BeltSlot[144];
-    public Belt beltwdg;
     public final Map<Integer, String> polowners = new HashMap<Integer, String>();
     public Bufflist buffs;
 
@@ -234,8 +233,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	setcanfocus(true);
 	setfocusctl(true);
 	chat = add(new ChatUI());
-	chat.show(Utils.getprefb("chatvis", true));
-	beltwdg.raise();
 
 	add(new MapMenu(), 0, 0);
 	minimapc = new Coord(UI.scale(4), UI.scale(34));
@@ -755,7 +752,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	public static final Tex cells = Resource.loadtex("nurgling/hud/cell");
 
     public void draw(GOut g) {
-	beltwdg.c = new Coord(chat.c.x, Math.min(chat.c.y - beltwdg.sz.y, sz.y - beltwdg.sz.y));
 	Widget next;
 	boolean mapViewReady = false;
 	for(Widget wdg = child; wdg != null; wdg = next) {
@@ -789,8 +785,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	int by = sz.y;
 	if(chat.visible())
 	    by = Math.min(by, chat.c.y);
-	if(beltwdg.visible())
-	    by = Math.min(by, beltwdg.c.y);
 	if(cmdline != null) {
 	    drawcmd(g, new Coord(blpw + UI.scale(10), by -= UI.scale(20)));
 	} else if(lastmsg != null) {
@@ -802,9 +796,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		g.chcolor();
 		g.image(lastmsg.tex(), new Coord(blpw + UI.scale(10), by -= UI.scale(20)));
 	    }
-	}
-	if(!chat.visible()) {
-	    chat.drawsmall(g, new Coord(blpw + UI.scale(10), by), UI.scale(100));
 	}
     }
     
@@ -1199,7 +1190,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     }
 
     public static final KeyBinding kb_shoot = KeyBinding.get("screenshot", KeyMatch.forchar('S', KeyMatch.M));
-    public static final KeyBinding kb_chat = KeyBinding.get("chat-toggle", KeyMatch.forchar('C', KeyMatch.C));
     public static final KeyBinding kb_hide = KeyBinding.get("ui-toggle", KeyMatch.nil);
     public static final KeyBinding kb_logout = KeyBinding.get("logout", KeyMatch.nil);
     public static final KeyBinding kb_switchchr = KeyBinding.get("logout-cs", KeyMatch.nil);
@@ -1218,19 +1208,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	    return(true);
 	} else if(kb_switchchr.key().match(ev)) {
 	    act("lo", "cs");
-	    return(true);
-	} else if(kb_chat.key().match(ev)) {
-	    if(chat.visible() && !chat.hasfocus) {
-		setfocus(chat);
-	    } else {
-		if(chat.targetshow) {
-		    chat.sshow(false);
-		} else {
-		    chat.sshow(true);
-		    setfocus(chat);
-		}
-	    }
-	    Utils.setprefb("chatvis", chat.targetshow);
 	    return(true);
 	} else if((key == 27) && (map != null) && !map.hasfocus) {
 	    setfocus(map);
@@ -1269,14 +1246,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		}
 	}
 
-
-	chat.resize(sz.x - blpw - brpw);
-	chat.move(new Coord(blpw, sz.y));
 	if(map != null)
 	    map.resize(sz);
 	if(prog != null)
 	    prog.move(sz.sub(prog.sz).mul(0.5, 0.35));
-	beltwdg.c = new Coord(blpw + UI.scale(10), sz.y - beltwdg.sz.y - UI.scale(5));
     }
     
     public void presize() {
@@ -1395,33 +1368,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 
 	public NKeyBelt() {
 	    super(nkeybg.sz());
-	    adda(new IButton("gfx/hud/hb-btn-chat", "", "-d", "-h") {
-		    Tex glow;
-		    {
-			this.tooltip = RichText.render("Chat ($col[255,255,0]{Ctrl+C})", 0);
-			glow = new TexI(PUtils.rasterimg(PUtils.blurmask(up.getRaster(), UI.scale(2), UI.scale(2), Color.WHITE)));
-		    }
-
-		    public void click() {
-			if(chat.targetshow) {
-			    chat.sshow(false);
-			} else {
-			    chat.sshow(true);
-			    setfocus(chat);
-			}
-			Utils.setprefb("chatvis", chat.targetshow);
-		    }
-
-		    public void draw(GOut g) {
-			super.draw(g);
-			Color urg = chat.urgcols[chat.urgency];
-			if(urg != null) {
-			    GOut g2 = g.reclipl2(UI.scale(-4, -4), g.sz().add(UI.scale(4, 4)));
-			    g2.chcolor(urg.getRed(), urg.getGreen(), urg.getBlue(), 128);
-			    g2.image(glow, Coord.z);
-			}
-		    }
-		}, sz, 1, 1);
 	}
 	
 	private Coord beltc(int i) {
@@ -1468,18 +1414,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	    return(true);
 	}
     }
-    
-    {
-	String val = Utils.getpref("belttype", "n");
-	if(val.equals("n")) {
-	    beltwdg = add(new NKeyBelt());
-	} else if(val.equals("f")) {
-	    beltwdg = add(new FKeyBelt());
-	} else {
-	    beltwdg = add(new NKeyBelt());
-	}
-    }
-    
+
     private Map<String, Console.Command> cmdmap = new TreeMap<String, Console.Command>();
     {
 	cmdmap.put("afk", new Console.Command() {
@@ -1493,21 +1428,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		    Object[] ad = new Object[args.length - 1];
 		    System.arraycopy(args, 1, ad, 0, ad.length);
 		    wdgmsg("act", ad);
-		}
-	    });
-	cmdmap.put("belt", new Console.Command() {
-		public void run(Console cons, String[] args) {
-		    if(args[1].equals("f")) {
-			beltwdg.destroy();
-			beltwdg = add(new FKeyBelt());
-			Utils.setpref("belttype", "f");
-			resize(sz);
-		    } else if(args[1].equals("n")) {
-			beltwdg.destroy();
-			beltwdg = add(new NKeyBelt());
-			Utils.setpref("belttype", "n");
-			resize(sz);
-		    }
 		}
 	    });
 	cmdmap.put("chrmap", new Console.Command() {

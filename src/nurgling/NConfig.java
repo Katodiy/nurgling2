@@ -22,7 +22,8 @@ public class NConfig
         is_real_time,
         baseurl,
         credentials,
-        dragprop
+        dragprop,
+        resizeprop
     }
 
 
@@ -78,6 +79,9 @@ public class NConfig
                         break;
                     case "NDragProp":
                         res.add(new NDragProp(obj));
+                        break;
+                    case "NResizeProp":
+                        res.add(new NResizeProp(obj));
                         break;
                 }
             }
