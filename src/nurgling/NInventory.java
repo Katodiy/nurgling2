@@ -123,12 +123,15 @@ public class NInventory extends Inventory
         ((ICheckBox)pw).a = Slotted.show;
         pw = toggles.add(new ICheckBox(vari[0], vari[1], vari[2], vari[3]) {
             @Override
-            public void changed(boolean val) {
+            public void changed(boolean val)
+            {
                 super.changed(val);
                 NFoodInfo.show = val;
+                NConfig.set(NConfig.Key.showVarity, val);
             }
         }, pw.pos("bl").add(UI.scale(new Coord(0, 5))));
         pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/var/u").flayer(Resource.tooltip).t);
+        NFoodInfo.show = (Boolean)NConfig.get(NConfig.Key.showVarity);
         ((ICheckBox)pw).a = NFoodInfo.show;
         pw = toggles.add(new ICheckBox(stacki[0], stacki[1], stacki[2], stacki[3]) {
             @Override

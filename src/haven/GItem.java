@@ -114,6 +114,7 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
     public static class Amount extends ItemInfo implements NumberInfo {
 	private final int num;
 
+	boolean name_checked = false;
 	public Amount(Owner owner, int num) {
 	    super(owner);
 	    this.num = num;
@@ -124,7 +125,39 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 	}
 
 	@Override
-	public boolean tick(double dt) { return true; }
+	public boolean tick(double dt)
+	{
+		if (!name_checked)
+		{
+			if (owner instanceof NGItem)
+			{
+				if (((NGItem) owner).name() != null)
+				{
+					name_checked = true;
+					if (((NGItem) owner).name().contains("Truffle"))
+					{
+						return num < 5;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	public Tex overlay()
+	{
+		if (owner instanceof NGItem)
+		{
+			if (((NGItem) owner).name() != null)
+			{
+				name_checked = true;
+				if (((NGItem) owner).name().contains("Truffle") && num >= 5)
+				{
+					return (new TexI(GItem.NumberInfo.numrender(itemnum(), Color.GREEN)));
+				}
+			}
+		}
+		return NumberInfo.super.overlay();
+	}
 	}
 
     public GItem(Indir<Resource> res, Message sdt) {

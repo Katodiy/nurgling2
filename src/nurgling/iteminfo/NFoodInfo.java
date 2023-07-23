@@ -23,10 +23,6 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
 
     public static boolean show;
 
-    static
-    {
-        show = (Boolean)NConfig.get(NConfig.Key.showVarity);
-    }
     static double coefSubscribe = 1.5;
     static double coefVerif = 1.2;
     static double coefVar = 0.3999;

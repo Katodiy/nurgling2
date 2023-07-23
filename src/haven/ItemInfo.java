@@ -182,7 +182,7 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 	}
     }
 
-    public static class Name extends Tip {
+    public static class Name extends Tip  {
 	public final Text str;
 
 	public Name(Owner owner, Text str) {

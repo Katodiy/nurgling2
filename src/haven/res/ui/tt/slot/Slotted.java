@@ -34,14 +34,6 @@ public class Slotted extends ItemInfo.Tip implements GItem.OverlayInfo<Tex>, NSe
 	this.pmax = pmax;
 	this.attrs = attrs;
 	this.sub = sub;
-		for(ItemInfo info: sub) {
-			if (info instanceof AttrMod) {
-				AttrMod mod = (AttrMod) info;
-				for (AttrMod.Mod m : mod.mods) {
-					searchImage.put(stat_map.get(m.attr.name),m.mod);
-				}
-			}
-		}
     }
 
     public static ItemInfo mkinfo(Owner owner, Object... args) {
@@ -126,33 +118,29 @@ public class Slotted extends ItemInfo.Tip implements GItem.OverlayInfo<Tex>, NSe
 			g.aimage(data, new Coord(data.sz().x, g.sz().y - data.sz().y), 1, 0);
 	}
 
-	public static void init()
+	static
 	{
-		synchronized (stat_map) {
-			if (stat_map.isEmpty()) {
-				stat_map.put( "gfx/hud/chr/explore","exp");
-				stat_map.put("gfx/hud/chr/lore","lor");
-				stat_map.put( "gfx/hud/chr/agi","agi");
-				stat_map.put("gfx/hud/chr/str","str");
-				stat_map.put("gfx/hud/chr/masonry","mas");
-				stat_map.put( "gfx/hud/chr/prc","per");
-				stat_map.put( "gfx/hud/chr/cooking","cook");
-				stat_map.put("gfx/hud/chr/carpentry","car");
-				stat_map.put("gfx/hud/chr/stealth","ste");
-				stat_map.put( "gfx/hud/chr/survive","sur");
-				stat_map.put("gfx/hud/chr/unarmed","ua");
-				stat_map.put( "gfx/hud/chr/int","int");
-				stat_map.put("gfx/hud/chr/wil","wil");
-				stat_map.put( "gfx/hud/chr/dex","dex");
-				stat_map.put("gfx/hud/chr/farming","far");
-				stat_map.put( "gfx/hud/chr/melee","mel");
-				stat_map.put("gfx/hud/chr/psy","psy");
-				stat_map.put( "gfx/hud/chr/sewing","sew");
-				stat_map.put( "gfx/hud/chr/ranged","mar");
-				stat_map.put( "gfx/hud/chr/invmore","inv");
-				stat_map.put( "gfx/hud/chr/csm","csm");
-			}
-		}
+		stat_map.put("gfx/hud/chr/explore", "exp");
+		stat_map.put("gfx/hud/chr/lore", "lor");
+		stat_map.put("gfx/hud/chr/agi", "agi");
+		stat_map.put("gfx/hud/chr/str", "str");
+		stat_map.put("gfx/hud/chr/masonry", "mas");
+		stat_map.put("gfx/hud/chr/prc", "per");
+		stat_map.put("gfx/hud/chr/cooking", "cook");
+		stat_map.put("gfx/hud/chr/carpentry", "car");
+		stat_map.put("gfx/hud/chr/stealth", "ste");
+		stat_map.put("gfx/hud/chr/survive", "sur");
+		stat_map.put("gfx/hud/chr/unarmed", "ua");
+		stat_map.put("gfx/hud/chr/int", "int");
+		stat_map.put("gfx/hud/chr/wil", "wil");
+		stat_map.put("gfx/hud/chr/dex", "dex");
+		stat_map.put("gfx/hud/chr/farming", "far");
+		stat_map.put("gfx/hud/chr/melee", "mel");
+		stat_map.put("gfx/hud/chr/psy", "psy");
+		stat_map.put("gfx/hud/chr/sewing", "sew");
+		stat_map.put("gfx/hud/chr/ranged", "mar");
+		stat_map.put("gfx/hud/chr/invmore", "inv");
+		stat_map.put("gfx/hud/chr/csm", "csm");
 	}
 
 
@@ -170,5 +158,22 @@ public class Slotted extends ItemInfo.Tip implements GItem.OverlayInfo<Tex>, NSe
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public boolean tick(double dt)
+	{
+		if(searchImage.isEmpty())
+		{
+			for(ItemInfo info: sub) {
+				if (info instanceof AttrMod) {
+					AttrMod mod = (AttrMod) info;
+					for (AttrMod.Mod m : mod.mods) {
+						searchImage.put(stat_map.get(m.attr.name),m.mod);
+					}
+				}
+			}
+		}
+		return GItem.OverlayInfo.super.tick(dt);
 	}
 }

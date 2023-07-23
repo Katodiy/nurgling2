@@ -25,6 +25,17 @@ public class NConfig
         dragprop
     }
 
+
+    public NConfig()
+    {
+        conf = new HashMap<>();
+        conf.put(Key.showVarity, false);
+        conf.put(Key.autoFlower, false);
+        conf.put(Key.autoSplitter, false);
+        conf.put(Key.autoDropper, false);
+        conf.put(Key.is_real_time, true);
+    }
+
     HashMap<Key, Object> conf = new HashMap<>();
     private boolean isUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
@@ -92,7 +103,6 @@ public class NConfig
         {
             JSONObject main = new JSONObject(contentBuilder.toString());
             Map<String, Object> map = main.toMap();
-            conf = new HashMap<>();
             for (Map.Entry<String, Object> entry : map.entrySet())
             {
                 if (entry.getValue() instanceof HashMap<?, ?>)
@@ -118,8 +128,7 @@ public class NConfig
                 }
             }
         }
-        if(NConfig.get(Key.is_real_time)== null)
-            NConfig.set(Key.is_real_time, true);
+
     }
 
     private ArrayList<Object> prepareArray(ArrayList<Object> objs)
