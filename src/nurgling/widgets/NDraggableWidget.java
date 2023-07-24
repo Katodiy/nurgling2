@@ -9,6 +9,7 @@ public class NDraggableWidget extends Widget
     protected final String name;
     private UI.Grab dm;
     private Coord doff;
+    public Coord target_c;
     protected ICheckBox btnLock;
     public static final IBox box = Window.wbox;
 
@@ -24,11 +25,6 @@ public class NDraggableWidget extends Widget
                 super.changed(val);
                 if(NDraggableWidget.this.parent instanceof GameUI)
                 {
-                    Coord2d kff = new Coord2d(c.x / (double) GameUI.getInstance().sz.x, c.y / (double) GameUI.getInstance().sz.y);
-                    NDragProp.set(name, new NDragProp( NDraggableWidget.this.c , val, name, kff));
-                }
-                else
-                {
                     NDragProp.set(name, new NDragProp(NDraggableWidget.this.c, val, name));
                 }
             }
@@ -38,17 +34,17 @@ public class NDraggableWidget extends Widget
         NDragProp prop = NDragProp.get(name);
         if (prop.c != Coord.z)
         {
-            if(GameUI.getInstance()!=null && GameUI.getInstance().sz!=Coord.z)
-            {
-                this.c = GameUI.getInstance().sz.mul(prop.pos_koef).round();
-            }
-            else
-            {
-                this.c = prop.c;
-            }
+            this.c = new Coord(prop.c);
+            this.target_c = prop.c;
             this.btnLock.a = prop.locked;
         }
+        else
+        {
+            this.target_c = new Coord(Coord.z);
+        }
     }
+
+
 
     @Override
     public void resize(Coord sz)
@@ -142,15 +138,8 @@ public class NDraggableWidget extends Widget
         {
             dm.remove();
             dm = null;
-            if(NDraggableWidget.this.parent instanceof GameUI)
-            {
-                Coord2d kff = new Coord2d( (NDraggableWidget.this.c.x / (double) GameUI.getInstance().sz.x),  (NDraggableWidget.this.c.y / (double) GameUI.getInstance().sz.y));
-                NDragProp.set(name, new NDragProp( NDraggableWidget.this.c , btnLock.a, name, kff));
-            }
-            else
-            {
-                NDragProp.set(name, new NDragProp(NDraggableWidget.this.c, btnLock.a, name));
-            }
+            NDragProp.set(name, new NDragProp(NDraggableWidget.this.c, btnLock.a, name));
+
             return true;
         }
         else
@@ -198,6 +187,20 @@ public class NDraggableWidget extends Widget
         {
             if (btnLock.visible())
                 btnLock.hide();
+        }
+
+        if(GameUI.getInstance()!=null && GameUI.getInstance().sz!=Coord.z)
+        {
+            if(c.x + sz.x > GameUI.getInstance().sz.x - GameUI.margin.x)
+                c.x = GameUI.getInstance().sz.x - sz.x;
+            else
+                if(ui.core.mode!= NCore.Mode.DRAG)
+                    c.x = target_c.x;
+            if(c.y + sz.y > GameUI.getInstance().sz.y - GameUI.margin.y)
+                c.y = GameUI.getInstance().sz.y - sz.y;
+            else
+                if(ui.core.mode!= NCore.Mode.DRAG)
+                    c.y = target_c.y;
         }
     }
 

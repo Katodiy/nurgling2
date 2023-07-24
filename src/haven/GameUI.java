@@ -1233,17 +1233,24 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	toggleui((uimode + 1) % 3);
     }
 
+	public static final Coord margin = UI.scale(new Coord(10,10));
     public void resize(Coord sz) {
 	super.resize(sz);
 	Widget next;
 	for (Widget wdg = child; wdg != null; wdg = next)
 	{
 		next = wdg.next;
-		if (wdg instanceof NDraggableWidget)
-		{
-			Coord2d kff = NDragProp.get(((NDraggableWidget) wdg).getName()).pos_koef;
-			wdg.c = sz.mul(kff).round();
-		}
+//		if (wdg instanceof NDraggableWidget)
+//		{
+//			if(wdg.c.x+wdg.sz.x>sz.x - margin.x)
+//				wdg.c.x = sz.x - wdg.sz.x - margin.x;
+//			else
+//				wdg.c.x = ((NDraggableWidget) wdg).target_c.x;
+//			if(wdg.c.y+wdg.sz.y>sz.y - margin.y)
+//				wdg.c.y = sz.y - wdg.sz.y - margin.y;
+//			else
+//				wdg.c.y = ((NDraggableWidget) wdg).target_c.y;
+//		}
 	}
 
 	if(map != null)

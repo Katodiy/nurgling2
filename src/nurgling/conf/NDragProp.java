@@ -12,21 +12,12 @@ public class NDragProp implements JConf
     public Coord c;
     public boolean locked;
     public String name;
-    public Coord2d pos_koef = Coord2d.z;
 
     public NDragProp(Coord c, boolean locked, String name)
     {
         this.c = c;
         this.locked = locked;
         this.name = name;
-    }
-
-    public NDragProp(Coord c, boolean locked, String name, Coord2d pos_koef)
-    {
-        this.c = c;
-        this.locked = locked;
-        this.name = name;
-        this.pos_koef = pos_koef;
     }
 
     public NDragProp(HashMap<String, Object> values)
@@ -36,8 +27,6 @@ public class NDragProp implements JConf
             locked = (Boolean) values.get("locked");
         if (values.get("coord") != null)
             c = NParser.str2coord((String) values.get("coord"));
-        if (values.get("pos_koef") != null)
-            pos_koef = NParser.str2coord2((String) values.get("pos_koef"));
     }
 
     @Override
@@ -48,7 +37,6 @@ public class NDragProp implements JConf
         jobj.put("name", name);
         jobj.put("locked", locked);
         jobj.put("coord", c.toString());
-        jobj.put("pos_koef", pos_koef.toString());
         return jobj;
     }
 

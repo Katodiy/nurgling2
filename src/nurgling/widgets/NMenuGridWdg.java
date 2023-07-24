@@ -62,7 +62,6 @@ public class NMenuGridWdg extends NDraggableWidget
         super.mousemove(c);
     }
 
-
     @Override
     public void draw(GOut g)
     {
