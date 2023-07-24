@@ -311,7 +311,7 @@ public class ChatUI extends NResizableWidget
 	public Channel(boolean closable) {
 	    sb = add(new Scrollbar(0, 0, 0));
 	    if(closable)
-		cb = add(new IButton("gfx/hud/chat-close", "", "-d", "-h"));
+		cb = add(new IButton(NStyle.cbtni[0], NStyle.cbtni[1], NStyle.cbtni[2]));
 	    else
 		cb = null;
 	}
@@ -469,7 +469,7 @@ public class ChatUI extends NResizableWidget
 		}
 	    }
 	    if(cb != null) {
-		cb.c = new Coord(sz.x + marg.x - cb.sz.x, -marg.y);
+		cb.c = new Coord(sz.x + marg.x - cb.sz.x -cb.sz.x/2, -marg.y + cb.sz.x/2);
 	    }
 	}
 
