@@ -30,9 +30,9 @@ import java.util.*;
 
 public class KeyBinding {
     private static final Map<String, KeyBinding> bindings = new HashMap<>();
-    public final String id;
-    public final KeyMatch defkey;
-    public final int modign;
+    public String id;
+    public KeyMatch defkey;
+    public int modign;
     public KeyMatch key;
 
     private KeyBinding(String id, KeyMatch defkey, int modign) {
@@ -40,6 +40,10 @@ public class KeyBinding {
 	this.defkey = defkey;
 	this.modign = modign;
     }
+
+	public KeyBinding()
+	{
+	}
 
     public void set(KeyMatch key) {
 	Utils.setpref("keybind/" + id, KeyMatch.reduce(key));

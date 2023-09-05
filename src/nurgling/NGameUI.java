@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.res.ui.rbuff.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
 
@@ -14,6 +15,10 @@ public class NGameUI extends GameUI
     {
         super(chrid, plid, genus, nui);
         itemsForSearch = new NSearchItem();
+        for(int i = 0; i<(Integer)NConfig.get(NConfig.Key.numbelts); i++)
+        {
+            add(new NToolBelt("belt" + String.valueOf(i), i*12, 4, 12));
+        }
     }
 
     public int getMaxBase(){
@@ -77,11 +82,11 @@ public class NGameUI extends GameUI
             {
                 for (Widget pbuff = wdg1.child; pbuff != null; pbuff = pbuff.next)
                 {
-                    if (pbuff instanceof Buff)
+                    if (pbuff instanceof RealmBuff)
                     {
-                        if (NParser.checkName(((Buff) pbuff).res.get().name, new NAlias("realm")))
+                        if (((Buff) pbuff).info!=null)
                         {
-                            ArrayList<ItemInfo> realm = new ArrayList<>(((Buff) pbuff).info());
+                            ArrayList<ItemInfo> realm = new ArrayList<>(((Buff) pbuff).info);
                             for (Object data : realm)
                             {
                                 if (data instanceof ItemInfo.AdHoc)

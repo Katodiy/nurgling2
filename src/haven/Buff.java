@@ -46,7 +46,7 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
     protected int a = 255;
     protected boolean dest = false;
     private ItemInfo.Raw rawinfo = null;
-    private List<ItemInfo> info = Collections.emptyList();
+    public List<ItemInfo> info = Collections.emptyList();
     /* Deprecated */
     String tt = null;
     int ameter = -1;

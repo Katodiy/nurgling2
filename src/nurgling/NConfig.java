@@ -23,6 +23,8 @@ public class NConfig
         baseurl,
         credentials,
         dragprop,
+        numbelts,
+        toolbelts,
         resizeprop
     }
 
@@ -35,6 +37,7 @@ public class NConfig
         conf.put(Key.autoSplitter, false);
         conf.put(Key.autoDropper, false);
         conf.put(Key.is_real_time, true);
+        conf.put(Key.numbelts, 1);
     }
 
     HashMap<Key, Object> conf = new HashMap<>();
@@ -63,6 +66,14 @@ public class NConfig
         }
     }
 
+    public static void needUpdate()
+    {
+        if (current != null)
+        {
+            current.isUpd = true;
+        }
+    }
+
     static NConfig current;
 
     private ArrayList<Object> readArray(ArrayList<HashMap<String, Object>> objs)
@@ -82,6 +93,9 @@ public class NConfig
                         break;
                     case "NResizeProp":
                         res.add(new NResizeProp(obj));
+                        break;
+                    case "NToolBeltProp":
+                        res.add(new NToolBeltProp(obj));
                         break;
                 }
             }

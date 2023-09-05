@@ -27,6 +27,9 @@
 package haven;
 
 import haven.render.*;
+import nurgling.*;
+import nurgling.conf.*;
+
 import java.awt.event.KeyEvent;
 
 public class OptWnd extends Window {
@@ -554,6 +557,18 @@ public class OptWnd extends Window {
 	    for(int i = 0; i < Fightsess.kb_acts.length; i++)
 		y = addbtn(cont, String.format("Combat action %d", i + 1), Fightsess.kb_acts[i], y);
 	    y = addbtn(cont, "Switch targets", Fightsess.kb_relcycle, y);
+
+		y = cont.adda(new Label("Tool belt"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
+		for(int i = 0 ; i < (Integer)NConfig.get(NConfig.Key.numbelts); i++)
+		{
+			for( int j = 0; j < 12 ; j ++)
+			{
+				y = addbtn(cont, "Belt#" + i +" button" + j, NToolBeltProp.get("belt"+i).getKb().get(j), y);
+			}
+		}
+
+
+
 	    prev = adda(new PointBind(UI.scale(200)), scroll.pos("bl").adds(0, 10).x(scroll.sz.x / 2), 0.5, 0.0);
 	    prev = adda(new PButton(UI.scale(200), "Back", 27, back), prev.pos("bl").adds(0, 10).x(scroll.sz.x / 2), 0.5, 0.0);
 	    pack();
@@ -570,6 +585,7 @@ public class OptWnd extends Window {
 	    public void set(KeyMatch key) {
 		super.set(key);
 		cmd.set(key);
+		NConfig.needUpdate();
 	    }
 
 	    public void draw(GOut g) {

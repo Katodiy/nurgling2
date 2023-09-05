@@ -128,7 +128,7 @@ public class IMeter extends LayerMeter {
 						text = NStyle.meter.render(val.substring(val.indexOf(":")+1).replace("/", " / ")).tex();
 						break;
 					case "Energy":
-						text = NStyle.meter.render(val.substring(val.indexOf(":")+1, val.lastIndexOf("("))).tex();
+						text = NStyle.meter.render(val.substring(val.indexOf(":")+1, val.lastIndexOf("%")+1)).tex();
 						break;
 
 				}
