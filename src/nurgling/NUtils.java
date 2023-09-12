@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import nurgling.tools.*;
 
 import java.text.*;
 import java.util.*;
@@ -29,5 +30,10 @@ public class NUtils
 
     public static String timestamp(String text) {
         return String.format("[%s] %s", timestamp(), text);
+    }
+
+    public static void moveTo(Coord2d z) throws InterruptedException
+    {
+        getUI().core.addTask(new NTasks.IsMoving());
     }
 }

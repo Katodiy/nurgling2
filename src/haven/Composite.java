@@ -46,7 +46,9 @@ public class Composite extends Drawable implements EquipTarget {
     private boolean nposesold, retainequ = false;
     private float tptime;
     private WrapMode tpmode;
-    
+
+	public String current_pose;
+
     public Composite(Gob gob, Indir<Resource> base) {
 	super(gob);
 	this.base = base;
@@ -106,6 +108,7 @@ public class Composite extends Drawable implements EquipTarget {
 	    try {
 		Composited.Poses np = comp.new Poses(loadposes(nposes, comp.skel, nposesold));
 		np.set(nposesold?0:ipollen);
+		current_pose = nposes.toString();
 		nposes = null;
 		updequ();
 	    } catch(Loading e) {}

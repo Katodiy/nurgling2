@@ -9,6 +9,8 @@ import java.util.*;
 
 public class NGameUI extends GameUI
 {
+
+    NBotsMenu botsMenu;
     public NSearchItem itemsForSearch = null;
 
     public NGameUI(String chrid, long plid, String genus, NUI nui)
@@ -21,6 +23,8 @@ public class NGameUI extends GameUI
             NDraggableWidget belt = add(new NDraggableWidget(new NToolBelt(name, i * 12, 4, 12), name, UI.scale(new Coord(500, 56))));
             belt.setFlipped(true);
         }
+
+        add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
     }
 
     public int getMaxBase(){
