@@ -39,9 +39,8 @@ import haven.MapFile.SMarker;
 import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
 import static haven.OCache.posres;
-import nurgling.widgets.*;
 
-public class MiniMap extends NDraggableWidget
+public class MiniMap extends Widget
 {
     public static final Tex bg = Resource.loadtex("gfx/hud/mmap/ptex");
     public static final Tex nomap = Resource.loadtex("gfx/hud/mmap/nomap");
@@ -61,7 +60,7 @@ public class MiniMap extends NDraggableWidget
     protected Location dloc;
 
     public MiniMap(Coord sz, MapFile file) {
-	super("minimap", sz);
+	super(sz);
 	this.file = file;
     }
 

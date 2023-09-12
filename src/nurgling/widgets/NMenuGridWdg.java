@@ -3,7 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.*;
 
-public class NMenuGridWdg extends NDraggableWidget
+public class NMenuGridWdg extends Widget
 {
     MenuGrid menuGrid;
 
@@ -12,7 +12,7 @@ public class NMenuGridWdg extends NDraggableWidget
     public static final IBox pbox = Window.wbox;
     public NMenuGridWdg()
     {
-        super("menugrid", Coord.z);
+        super( Coord.z);
     }
 
     public MenuGrid setMenuGrid(MenuGrid menuGrid)

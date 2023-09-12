@@ -27,6 +27,18 @@ public class NStyle
             new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/h")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/dh"))};
 
+    public static final TexI[] visi = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/dh"))};
+
+    public static final TexI[] flipi = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/flip/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/flip/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/flip/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/flip/dh"))};
+
     private final static ArrayList<BufferedImage> hlight = new ArrayList<>();
     static {
         for(int i = 0 ; i < 6; i ++)

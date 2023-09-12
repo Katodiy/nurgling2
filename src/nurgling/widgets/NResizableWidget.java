@@ -8,6 +8,12 @@ import java.util.*;
 
 public class NResizableWidget extends NDraggableWidget
 {
+    public NResizableWidget(Widget content, String name, Coord sz)
+    {
+        super(content, name, NResizeProp.find(name) != null ? Objects.requireNonNull(NResizeProp.find(name)) : sz);
+    }
+
+
     public NResizableWidget(String name)
     {
         super(name, NResizeProp.find(name) != null ? Objects.requireNonNull(NResizeProp.find(name)) : new Coord(200, 200));
@@ -24,7 +30,7 @@ public class NResizableWidget extends NDraggableWidget
 
     public boolean mousedown(Coord c, int button) {
         if (!btnLock.a) {
-            int d = (c.x - (sz.x - sizeru.sz().x/2 - NStyle.locki[0].sz().x/2)) * ( - sizeru.sz().x/2) - (c.y - (sz.y - sizeru.sz().y/2)) * ( sizeru.sz().y/2);
+            int d = (c.x - (sz.x - sizeru.sz().x/2 - UI.scale(15))) * ( - sizeru.sz().x/2) - (c.y - (sz.y - sizeru.sz().y/2)) * ( sizeru.sz().y/2);
             if ((button == 1) && d <= 0) {
                 if (drag == null) {
                     drag = ui.grabmouse(this);
@@ -47,7 +53,7 @@ public class NResizableWidget extends NDraggableWidget
         else
         {
             Coord cc = xlate(c, true);
-            isHighlighted = ((c.x - (sz.x - sizeru.sz().x/2 - NStyle.locki[0].sz().x/2)) * ( - sizeru.sz().x/2) - (c.y - (sz.y - sizeru.sz().y/2)) * ( sizeru.sz().y/2))<0 && c.isect(Coord.z, sz);
+            isHighlighted = ((c.x - (sz.x - sizeru.sz().x/2 - UI.scale(15))) * ( - sizeru.sz().x/2) - (c.y - (sz.y - sizeru.sz().y/2)) * ( sizeru.sz().y/2))<0 && c.isect(Coord.z, sz);
 
         }
         super.mousemove(c);
@@ -90,14 +96,14 @@ public class NResizableWidget extends NDraggableWidget
             if (drag != null)
             {
                 if (!btnLock.a)
-                    g.image(sizerd, sz.sub(sizerd.sz()).sub(NStyle.locki[0].sz().x / 2, 0));
+                    g.image(sizerd, sz.sub(sizerd.sz()).sub(NStyle.locki[0].sz().x / 2, UI.scale(8)));
             }
             else if (isHighlighted)
             {
-                g.image(sizerh, sz.sub(sizerd.sz()).sub(NStyle.locki[0].sz().x / 2, 0));
+                g.image(sizerh, sz.sub(sizerd.sz()).sub(NStyle.locki[0].sz().x / 2, UI.scale(8)));
             }
             else
-                g.image(sizeru, sz.sub(sizerd.sz()).sub(NStyle.locki[0].sz().x / 2, 0));
+                g.image(sizeru, sz.sub(sizerd.sz()).sub(NStyle.locki[0].sz().x / 2, UI.scale(8)));
         }
     }
 

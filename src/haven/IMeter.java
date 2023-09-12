@@ -35,7 +35,8 @@ public class IMeter extends LayerMeter {
 	public String name;
 	Tex text = null;
     public static final Coord off = UI.scale(24, 4);
-    public static final Coord fsz = UI.scale(220, 56);
+    public static final Coord fsz = UI.scale(190, 48);
+    public static final Coord ssz = UI.scale(145, 48);
     public static final Coord msz = UI.scale(130, 20);
     public final Indir<Resource> bg;
 

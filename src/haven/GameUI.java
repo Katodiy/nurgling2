@@ -232,8 +232,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	this.genus = genus;
 	setcanfocus(true);
 	setfocusctl(true);
-	chat = add(new ChatUI());
 
+	chat = new ChatUI();
+	NResizableWidget chatwdg = new NResizableWidget(chat,"ChatUI",new Coord(400,200));
+	add(chatwdg);
 	add(new MapMenu(), 0, 0);
 	minimapc = new Coord(UI.scale(4), UI.scale(34));
 	Tex rbtnbg = Resource.loadtex("gfx/hud/csearch-bg");
@@ -242,11 +244,11 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	menugridc = brframe.c.add(UI.scale(20), UI.scale(34));
 	Img rbtnimg =add(new Img(rbtnbg), 0, sz.y - rbtnbg.sz().y);
 	rbtnimg.hide();
-	add(new MainMenu());
+	add(new NDraggableWidget(new MainMenu(), "mainmenu", UI.scale(225,52)));
 	menubuttons(rbtnimg);
-	portrait = add(new NPortpraitWdg(Frame.with(new Avaview(Avaview.dasz, plid, "avacam"), false), UI.scale(10, 10)));
-	buffs = add(new Bufflist());
-	add(new Cal());
+	portrait = add(new NDraggableWidget(Frame.with(new Avaview(Avaview.dasz, plid, "avacam"), false),"portrait", UI.scale(120, 108)));
+	add(new NDraggableWidget(buffs = new Bufflist(),"bufflist",Coord.z));
+	add(new NDraggableWidget(new Cal(),"Calendar",UI.scale(160,90)));
 	syslog = chat.add(new ChatUI.Log("System"));
 	opts = add(new OptWnd());
 	opts.hide();
@@ -553,17 +555,18 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		     * existing mapfile with a new one is better. */
 		    throw(new RuntimeException("failed to load mapfile", e));
 		}
-		mmap = add(new CornerMap(UI.scale(new Coord(133, 133)), file));
+		add(new NResizableWidget(mmap = new CornerMap(UI.scale(new Coord(133, 133)), file),"minimap", new Coord(250, 250)));
 		mmap.lower();
 		mapfile = new MapWnd(file, map, Utils.getprefc("wndsz-map", UI.scale(new Coord(700, 500))), "Map");
 		mapfile.show(Utils.getprefb("wndvis-map", false));
 		add(mapfile, Utils.getprefc("wndc-map", new Coord(50, 50)));
 	    }
 	} else if(place == "menu") {
-	    NMenuGridWdg mwdg = add(new NMenuGridWdg());
+	    NMenuGridWdg mwdg = new NMenuGridWdg();
 		menu = mwdg.setMenuGrid((MenuGrid)child);
+		add(new NDraggableWidget(mwdg,"menugrid",new Coord(mwdg.sz).add(NDraggableWidget.delta)));
 	} else if(place == "fight") {
-	    fv = add((Fightview)child);
+	   add(new NDraggableWidget( fv = (Fightview)child,"Fightview",child.sz));
 	} else if(place == "fsess") {
 	    add(child);
 	} else if(place == "inv") {
@@ -631,9 +634,9 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	    add(child, portrait.pos("bl").adds(0, 10));
 	} else if(place == "meter") {
 		if(child instanceof IMeter)
-	    	add(new NMeterWdg("meter" + ((IMeter)child).name,Coord.z, child));
+	    	add(new NDraggableWidget(child, "meter" + ((IMeter)child).name,IMeter.fsz));
 		else if(child instanceof Speedget)
-			add(new NMeterWdg("speedmeter" ,Coord.z, child));
+			add(new NDraggableWidget(child, "speedmeter" ,IMeter.ssz));
 	    meters.add(child);
 	} else if(place == "buff") {
 	    buffs.addchild(child);
@@ -872,7 +875,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	}
 
 	public void draw(GOut g) {
-	    g.image(bg, Coord.z, UI.scale(bg.sz()));
+		// TODO подложка для карты
+	    //g.image(bg, Coord.z, UI.scale(bg.sz()));
 	    super.draw(g);
 	}
 
@@ -1128,9 +1132,9 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public static final KeyBinding kb_chr = KeyBinding.get("chr", KeyMatch.forchar('T', KeyMatch.C));
     public static final KeyBinding kb_bud = KeyBinding.get("bud", KeyMatch.forchar('B', KeyMatch.C));
     public static final KeyBinding kb_opt = KeyBinding.get("opt", KeyMatch.forchar('O', KeyMatch.C));
-    public class MainMenu extends NDraggableWidget {
+    public class MainMenu extends Widget {
 	public MainMenu() {
-	    super("mainmenu",Coord.z);
+	    super(Coord.z);
 	    prev = add(new MenuCheckBox("rbtn/inv/", kb_inv, "Inventory"), 0, 0).state(() -> wndstate(invwnd)).click(() -> togglewnd(invwnd));
 	    prev = add(new MenuCheckBox("rbtn/equ/", kb_equ, "Equipment"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(equwnd)).click(() -> togglewnd(equwnd));
 	    prev = add(new MenuCheckBox("rbtn/chr/", kb_chr, "Character Sheet"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(chrwdg)).click(() -> togglewnd(chrwdg));
@@ -1184,7 +1188,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	}
 
 	public void draw(GOut g) {
-	    g.image(mapmenubg, Coord.z);
 	    super.draw(g);
 	}
     }

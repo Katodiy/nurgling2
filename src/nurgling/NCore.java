@@ -11,7 +11,7 @@ public class NCore extends Widget
         DRAG
     }
 
-    public Mode mode = Mode.IDLE;
+    public Mode mode = Mode.DRAG;
     private boolean botmod = false;
     public boolean enablegrid = true;
 

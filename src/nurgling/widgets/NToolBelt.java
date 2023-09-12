@@ -14,7 +14,7 @@ import nurgling.*;
 import nurgling.conf.*;
 import nurgling.tools.*;
 
-public class NToolBelt extends NDraggableWidget implements DTarget, DropTarget {
+public class NToolBelt extends Widget implements DTarget, DropTarget {
     private static final Text.Foundry fnd = new Text.Foundry(Text.sans, 12);
     public static final int GAP = 10;
     public static final int PAD = 2;
@@ -28,11 +28,10 @@ public class NToolBelt extends NDraggableWidget implements DTarget, DropTarget {
     private final int group;
     private final int start;
     private final int size;
-    private final IButton btnFlip;
-    private boolean vertical = false;
     Tex[] keys;
     private GameUI.BeltSlot last = null;
     private Tex ttip = null;
+    private boolean vertical = false;
 
 
     public NToolBelt(String name, int start, int group, ArrayList<KeyBinding> beltkeys) {
@@ -45,8 +44,7 @@ public class NToolBelt extends NDraggableWidget implements DTarget, DropTarget {
 
 
     public NToolBelt(String name, int start, int group, int size, ArrayList<KeyBinding> beltkeys) {
-        super(name, new Coord(0,0) );
-        this.vertical = false; // NConfiguration.getInstance().toolBelts.get(name).isVertical;
+        super( new Coord(0,0) );
         this.start = start;
         this.group = group;
         this.size = size;
@@ -54,9 +52,6 @@ public class NToolBelt extends NDraggableWidget implements DTarget, DropTarget {
 //        loadBelt();
         updateButtons(beltkeys);
         sz = beltc(size - 1).add(INVSZ);
-        btnFlip = add(new IButton("nurgling/hud/buttons/flip/", "u", "d", "h"), new Coord(0, 0));
-        btnFlip.action(this::flip);
-        update_buttons();
     }
 
 //    private void loadBelt() {
@@ -124,18 +119,6 @@ public class NToolBelt extends NDraggableWidget implements DTarget, DropTarget {
         }
     }
 
-
-    private void update_buttons() {
-//        btnFlip.visible = !locked;
-        if(vertical) {
-            btnLock.c = new Coord(BTNSZ, 0);
-            btnFlip.c = Coord.z;
-        } else {
-            btnLock.c = new Coord(0, BTNSZ);
-            btnFlip.c = Coord.z;
-        }
-    }
-
     private void resize() {
         sz = beltc(size - 1).add(INVSZ);
     }
@@ -148,10 +131,10 @@ public class NToolBelt extends NDraggableWidget implements DTarget, DropTarget {
 //        update_buttons();
 //    }
 
-    private void flip() {
-        vertical = !vertical;
+    @Override
+    public void flip(boolean val) {
+        vertical = val;
         resize();
-        update_buttons();
     }
 
     private GameUI.BeltSlot belt(int slot) {

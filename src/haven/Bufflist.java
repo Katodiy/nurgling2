@@ -31,7 +31,7 @@ import nurgling.widgets.*;
 import java.util.*;
 import java.awt.Color;
 
-public class Bufflist extends NDraggableWidget
+public class Bufflist extends Widget
 {
     public static final int margin = UI.scale(2);
     public static final int num = 5;
@@ -41,7 +41,7 @@ public class Bufflist extends NDraggableWidget
     }
 
     public Bufflist() {
-        super("bufflist", Buff.cframe.sz());
+        super( Buff.cframe.sz());
     }
 
     private void arrange(Widget imm) {
@@ -69,7 +69,10 @@ public class Bufflist extends NDraggableWidget
 	    if(c.x + wdg.sz.x > br.x) br.x = c.x + wdg.sz.x;
 	    if(c.y + wdg.sz.y > br.y) br.y = c.y + wdg.sz.y;
 	}
-	resize(br);
+	if(parent instanceof NDraggableWidget)
+		parent.resize(br.add(NDraggableWidget.delta));
+	else
+		resize(br);
 	double off = 1.0 / mv.size(), coff = 0.0;
 	for(Pair<Managed, Coord> p : mv) {
 	    p.a.move(p.b, coff);

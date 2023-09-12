@@ -43,7 +43,7 @@ import java.util.regex.*;
 import java.io.IOException;
 import java.awt.datatransfer.*;
 
-public class ChatUI extends NResizableWidget
+public class ChatUI extends Widget
 {
     public static final RichText.Foundry fnd = new RichText.Foundry(new ChatParser(TextAttribute.FONT, Text.dfont.deriveFont(UI.scale(14f)), TextAttribute.FOREGROUND, Color.BLACK)).aa(true);
     public static final Text.Foundry qfnd = new Text.Foundry(Text.dfont, 12, new java.awt.Color(192, 255, 192));
@@ -65,7 +65,7 @@ public class ChatUI extends NResizableWidget
     private UI.Grab qgrab;
 
     public ChatUI() {
-	super("ChatUI");
+	//super("ChatUI");
 	chansel = add(new Selector(new Coord(sz.x, sz.y - marg.y)), marg);
 	setfocusctl(true);
 	setcanfocus(true);
@@ -1102,7 +1102,8 @@ public class ChatUI extends NResizableWidget
 	if(w instanceof Channel) {
 	    Channel chan = (Channel)w;
 	    chan.c = chansel.c.add(0, UI.scale(25));
-	    chan.resize(sz.x - 2 * marg.x, sz.y - chan.c.y);
+		cresize();
+	    //chan.resize(sz.x - 2 * marg.x, sz.y - chan.c.y);
 	    super.add(w);
 	    chansel.add(chan);
 	    select(chan, false);
@@ -1460,7 +1461,8 @@ public class ChatUI extends NResizableWidget
 	    prev.hide();
 	sel.show();
 	chansel.show(chan);
-	resize(new Coord(sz).sub(NStyle.locki[0].sz().x,0));
+	cresize();
+	//resize(new Coord(sz).sub(NStyle.locki[0].sz().x,0));
 	if(focus || hasfocus)
 	    setfocus(chan);
     }
@@ -1541,7 +1543,6 @@ public class ChatUI extends NResizableWidget
 
 
 	public void draw(GOut g) {
-	super.draw(g);
 	g.rimage(Window.bg, marg, sz.sub(marg.x * 2, marg.y));
 	super.draw(g);
 	g.image(bulc, new Coord(-bulc.sz().x/2+dmarg.x, -bulc.sz().y/2+dmarg.y));
@@ -1581,13 +1582,18 @@ public class ChatUI extends NResizableWidget
     }
 
     public void resize(Coord sz) {
-	super.resize(sz);
+		super.resize(sz);
 //	if(visible)
 //	    this.c = base.add(0, -this.sz.y);
-	chansel.resize(new Coord(this.sz.x - UI.scale(18), UI.scale(25)));
-	if(sel != null)
-	    sel.resize(new Coord(this.sz.x - marg.x - sel.c.x, this.sz.y - sel.c.y));
+		cresize();
     }
+
+	public void cresize()
+	{
+		chansel.resize(new Coord(this.sz.x - UI.scale(18), UI.scale(25)));
+		if(sel != null)
+			sel.resize(new Coord(this.sz.x - marg.x - sel.c.x, this.sz.y - sel.c.y));
+	}
 
     public boolean targetshow = false;
     public void sshow(boolean show) {
@@ -1605,7 +1611,7 @@ public class ChatUI extends NResizableWidget
     }
 
     public void move(Coord base) {
-	this.c = (this.base = base).add(0, visible ? -sz.y : 0);
+	this.c = base;
     }
 
     public void expand() {

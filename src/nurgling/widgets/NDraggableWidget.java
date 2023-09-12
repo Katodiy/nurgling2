@@ -11,7 +11,23 @@ public class NDraggableWidget extends Widget
     private Coord doff;
     public Coord target_c;
     protected ICheckBox btnLock;
+    protected ICheckBox btnVis;
+    private boolean isFlipped = false;
+    protected ICheckBox btnFlip;
     public static final IBox box = Window.wbox;
+
+    public final static Coord off = new Coord(UI.scale(10,10));
+    public final static Coord delta = new Coord(UI.scale(35,20));
+    private Widget content = null;
+
+    public NDraggableWidget(Widget content, String name, Coord sz)
+    {
+        this(name,sz);
+        this.content = add(content);
+        this.content.visible = btnVis.a;
+        content.resize(this.sz.sub(delta));
+        content.move(off);
+    }
 
     public NDraggableWidget(String name, Coord sz)
     {
@@ -25,18 +41,60 @@ public class NDraggableWidget extends Widget
                 super.changed(val);
                 if(NDraggableWidget.this.parent instanceof GameUI)
                 {
-                    NDragProp.set(name, new NDragProp(NDraggableWidget.this.c, val, name));
+                    NDragProp prop = new NDragProp(NDraggableWidget.this.c, val, btnVis.a, name);
+                    prop.flip = btnFlip.a;
+                    NDragProp.set(name, prop);
                 }
             }
-        }, new Coord(sz.x - NStyle.locki[0].sz().x / 2, NStyle.locki[0].sz().y / 2));
+        }, new Coord(sz.x - NStyle.locki[0].sz().x - NStyle.locki[0].sz().x / 2, NStyle.locki[0].sz().y / 2));
+
+        add(btnVis = new ICheckBox(NStyle.visi[0], NStyle.visi[1], NStyle.visi[2], NStyle.visi[3])
+        {
+            @Override
+            public void changed(boolean val)
+            {
+                super.changed(val);
+                content.visible = val;
+                if(NDraggableWidget.this.parent instanceof GameUI)
+                {
+                    NDragProp prop = new NDragProp(NDraggableWidget.this.c, btnLock.a, val, name);
+                    prop.flip = btnFlip.a;
+                    NDragProp.set(name, prop);
+                }
+            }
+        }, new Coord(sz.x - NStyle.locki[0].sz().x - NStyle.locki[0].sz().x / 2, NStyle.locki[0].sz().y + off.y));
+
+        add(btnFlip = new ICheckBox(NStyle.flipi[0], NStyle.flipi[1], NStyle.flipi[2], NStyle.flipi[3])
+        {
+            @Override
+            public void changed(boolean val)
+            {
+                super.changed(val);
+                if(content!=null)
+                {
+                    flipContent();
+                }
+                if(NDraggableWidget.this.parent instanceof GameUI)
+                {
+                    NDragProp prop = new NDragProp(NDraggableWidget.this.c, btnLock.a, btnVis.a, name);
+                    prop.flip = val;
+                    NDragProp.set(name, prop);
+                }
+            }
+        }, new Coord(NStyle.locki[0].sz().x / 2, NStyle.locki[0].sz().y/2));
+
+        btnVis.hide();
         btnLock.hide();
-        this.sz = sz.add(new Coord(NStyle.locki[0].sz().x, 0));
+        btnFlip.hide();
+//        this.sz = sz.add(new Coord(NStyle.locki[0].sz().x, 0));
         NDragProp prop = NDragProp.get(name);
         if (prop.c != Coord.z)
         {
             this.c = new Coord(prop.c);
             this.target_c = prop.c;
             this.btnLock.a = prop.locked;
+            this.btnVis.a = prop.vis;
+            this.btnFlip.a = prop.flip;
         }
         else
         {
@@ -49,9 +107,16 @@ public class NDraggableWidget extends Widget
     @Override
     public void resize(Coord sz)
     {
-        Coord nsz = sz.add(new Coord(NStyle.locki[0].sz().x, 0));
-        super.resize(nsz);
-        btnLock.move(new Coord(nsz.x - NStyle.locki[0].sz().x - NStyle.locki[0].sz().x / 2, NStyle.locki[0].sz().y / 2));
+        super.resize(sz);
+        btnLock.move(new Coord(sz.x - NStyle.locki[0].sz().x - NStyle.locki[0].sz().x / 2, NStyle.locki[0].sz().y / 2));
+        btnVis.move(new Coord(sz.x - NStyle.locki[0].sz().x - NStyle.locki[0].sz().x / 2, NStyle.locki[0].sz().y + off.y));
+        if(isFlipped)
+            btnFlip.move(new Coord(NStyle.locki[0].sz().x / 2, NStyle.locki[0].sz().y/2));
+        if(content!=null)
+        {
+            content.resize(sz.sub(delta));
+            content.move(off);
+        }
     }
 
     public static final Tex bg = Resource.loadtex("nurgling/hud/wnd/bg");
@@ -97,10 +162,10 @@ public class NDraggableWidget extends Widget
     {
         if (ui.core.mode == NCore.Mode.DRAG)
         {
-            Coord cc = xlate(btnLock.c, true);
-            if (!btnLock.mousedown(c.add(cc.inv()), button))
+            if (    !btnLock.mousedown(c.add(xlate(btnLock.c, true).inv()), button) &&
+                    !btnVis.mousedown(c.add(xlate(btnVis.c, true).inv()), button) &&
+                    !btnFlip.mousedown(c.add(xlate(btnFlip.c, true).inv()), button))
             {
-
                 if (c.isect(Coord.z, sz))
                     if (ui.mousegrab.isEmpty())
                     {
@@ -139,7 +204,6 @@ public class NDraggableWidget extends Widget
             dm.remove();
             dm = null;
             NDragProp.set(name, new NDragProp(NDraggableWidget.this.c, btnLock.a, name));
-
             return true;
         }
         else
@@ -163,8 +227,10 @@ public class NDraggableWidget extends Widget
             {
                 if (c.isect(Coord.z, sz))
                 {
-                    Coord cc = xlate(btnLock.c, true);
-                    btnLock.mousemove(c.add(cc.inv()));
+                    btnLock.mousemove(c.add(xlate(btnLock.c, true).inv()));
+                    btnVis.mousemove(c.add(xlate(btnVis.c, true).inv()));
+                    if(isFlipped)
+                        btnFlip.mousemove(c.add(xlate(btnFlip.c, true).inv()));
                 }
             }
         }
@@ -182,11 +248,18 @@ public class NDraggableWidget extends Widget
         if (ui.core.mode == NCore.Mode.DRAG)
         {
             btnLock.show();
+            btnVis.show();
+            if( isFlipped )
+                btnFlip.show();
         }
         else
         {
             if (btnLock.visible())
+            {
                 btnLock.hide();
+                btnVis.hide();
+                btnFlip.hide();
+            }
         }
 
         if(GameUI.getInstance()!=null && GameUI.getInstance().sz!=Coord.z)
@@ -207,5 +280,17 @@ public class NDraggableWidget extends Widget
     public String getName()
     {
         return name;
+    }
+
+    public void flipContent()
+    {
+        content.flip(btnFlip.a);
+        resize(content.sz.add(delta));
+    }
+
+    public void setFlipped(boolean val)
+    {
+        isFlipped = val;
+        flipContent();
     }
 }

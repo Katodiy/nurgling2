@@ -17,7 +17,9 @@ public class NGameUI extends GameUI
         itemsForSearch = new NSearchItem();
         for(int i = 0; i<(Integer)NConfig.get(NConfig.Key.numbelts); i++)
         {
-            add(new NToolBelt("belt" + String.valueOf(i), i*12, 4, 12));
+            String name = "belt" + String.valueOf(i);
+            NDraggableWidget belt = add(new NDraggableWidget(new NToolBelt(name, i * 12, 4, 12), name, UI.scale(new Coord(500, 56))));
+            belt.setFlipped(true);
         }
     }
 

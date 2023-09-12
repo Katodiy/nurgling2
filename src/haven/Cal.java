@@ -32,8 +32,7 @@ import nurgling.widgets.*;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
-public class Cal extends NDraggableWidget
-{
+public class Cal extends Widget {
     public static final double hbr = UI.scale(20.0);
     static final Tex bg = Resource.loadtex("gfx/hud/calendar/glass");
     static final Tex[] dlnd = new Tex[4];
@@ -51,7 +50,7 @@ public class Cal extends NDraggableWidget
     }
 
     public Cal() {
-	super("Calendar", bg.sz());
+	super(bg.sz());
     }
 
     public void draw(GOut g) {
@@ -61,15 +60,14 @@ public class Cal extends NDraggableWidget
 	int mp = (int)Math.round(a.mp * (double)moon.f.length) % moon.f.length;
 	Resource.Image moon = Cal.moon.f[mp][0];
 	Resource.Image sun = Cal.sun.f[(int)((now / Cal.sun.d) % Cal.sun.f.length)][0];
-	Coord mc = Coord.sc((a.dt + 0.25) * 2 * PI, hbr).add(sz.div(2)).sub(moon.sz.div(2)).sub(sz.x/2-bg.sz().x/2,0);
-	Coord sc = Coord.sc((a.dt + 0.75) * 2 * PI, hbr).add(sz.div(2)).sub(sun.sz.div(2)).sub(sz.x/2-bg.sz().x/2,0);
+	Coord mc = Coord.sc((a.dt + 0.25) * 2 * PI, hbr).add(sz.div(2)).sub(moon.sz.div(2));
+	Coord sc = Coord.sc((a.dt + 0.75) * 2 * PI, hbr).add(sz.div(2)).sub(sun.sz.div(2));
 	g.chcolor(a.mc);
 	g.image(moon, mc);
 	g.chcolor();
 	g.image(sun, sc);
 	g.image((a.night ? nlnd : dlnd)[a.is], Coord.z);
 	g.image(bg, Coord.z);
-	super.draw(g);
     }
 
     public boolean checkhit(Coord c) {
