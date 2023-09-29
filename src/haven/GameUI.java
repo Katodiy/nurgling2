@@ -205,8 +205,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	}
     }
 
-	private static GameUI gameUI = null;
-    public static GameUI getInstance(){
+	private static NGameUI gameUI = null;
+    public static NGameUI getInstance(){
 		return gameUI;
 	}
 
