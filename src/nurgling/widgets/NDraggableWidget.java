@@ -99,6 +99,7 @@ public class NDraggableWidget extends Widget
         else
         {
             this.target_c = new Coord(Coord.z);
+            this.btnVis.a = true;
         }
     }
 
@@ -203,7 +204,9 @@ public class NDraggableWidget extends Widget
         {
             dm.remove();
             dm = null;
-            NDragProp.set(name, new NDragProp(NDraggableWidget.this.c, btnLock.a, name));
+            NDragProp res = new NDragProp(NDraggableWidget.this.c, btnLock.a, name);
+            res.flip = btnFlip.a;
+            NDragProp.set(name, res);
             return true;
         }
         else
@@ -264,16 +267,14 @@ public class NDraggableWidget extends Widget
 
         if(GameUI.getInstance()!=null && GameUI.getInstance().sz!=Coord.z)
         {
-            if(c.x + sz.x > GameUI.getInstance().sz.x - GameUI.margin.x)
+            if (c.x + sz.x > GameUI.getInstance().sz.x - GameUI.margin.x)
                 c.x = GameUI.getInstance().sz.x - sz.x;
             else
-                if(ui.core.mode!= NCore.Mode.DRAG)
-                    c.x = target_c.x;
-            if(c.y + sz.y > GameUI.getInstance().sz.y - GameUI.margin.y)
+                c.x = target_c.x;
+            if (c.y + sz.y > GameUI.getInstance().sz.y - GameUI.margin.y)
                 c.y = GameUI.getInstance().sz.y - sz.y;
             else
-                if(ui.core.mode!= NCore.Mode.DRAG)
-                    c.y = target_c.y;
+                c.y = target_c.y;
         }
     }
 
