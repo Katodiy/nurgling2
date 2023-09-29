@@ -28,10 +28,10 @@ public class NStyle
             new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/dh"))};
 
     public static final TexI[] visi = new TexI[]{
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/u")),
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/d")),
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/h")),
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lock/dh"))};
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/vis/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/vis/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/vis/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/vis/dh"))};
 
     public static final TexI[] flipi = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/flip/u")),
