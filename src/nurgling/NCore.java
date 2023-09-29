@@ -18,6 +18,8 @@ public class NCore extends Widget
     private boolean botmod = false;
     public boolean enablegrid = true;
 
+    public NPFMap pfMap = new NPFMap(MCache.tilesz2.x/4.d);
+
     public class BotmodSettings
     {
         public String user;

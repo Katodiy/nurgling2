@@ -56,6 +56,7 @@ public class Resource implements Serializable {
     public static Class<Tooltip> tooltip = Tooltip.class;
     
     private Collection<Layer> layers = new LinkedList<Layer>();
+	public final Collection<Layer> getLayers() { return layers;}
     public final String name;
     public int ver;
     public ResSource source;
@@ -1136,10 +1137,13 @@ public class Resource implements Serializable {
     public class Neg extends Layer {
 	public Coord cc;
 	public Coord[][] ep;
-		
+	public Coord ac, bc;
+
 	public Neg(Message buf) {
 	    cc = cdec(buf);
-	    buf.skip(12);
+		ac = cdec(buf);
+		bc = cdec(buf);
+		buf.skip(4);
 	    ep = new Coord[8][0];
 	    int en = buf.uint8();
 	    for(int i = 0; i < en; i++) {

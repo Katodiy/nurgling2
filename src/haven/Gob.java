@@ -29,9 +29,12 @@ package haven;
 import java.util.*;
 import java.util.function.*;
 import haven.render.*;
+import nurgling.*;
 
 public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, EquipTarget, Skeleton.HasPose {
-    public Coord2d rc;
+    // Координата
+	public Coord2d rc;
+	// Угол поворота
     public double a;
     public boolean virtual = false;
     int clprio = 0;
@@ -46,6 +49,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
     private final LinkedList<Runnable> deferred = new LinkedList<>();
     private Loader.Future<?> deferral = null;
 
+	public NGob ngob;
     public static class Overlay implements RenderTree.Node {
 	public final int id;
 	public final Gob gob;
@@ -414,6 +418,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	this.id = id;
 	if(id < 0)
 	    virtual = true;
+	ngob = new NGob();
     }
 
     public Gob(Glob glob, Coord2d c) {
@@ -596,6 +601,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	    if(a instanceof SetupMod)
 		setupmods.add((SetupMod)a);
 	    attr.put(ac, a);
+		ngob.checkattr(a, id);
 	}
 	if(prev != null)
 	    prev.dispose();
