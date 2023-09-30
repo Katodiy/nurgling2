@@ -27,6 +27,7 @@
 package haven;
 
 import java.util.*;
+import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.awt.Color;
 import java.awt.event.KeyEvent;

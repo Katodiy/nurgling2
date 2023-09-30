@@ -52,7 +52,7 @@ public class NGob
                     if (hitBox != null && NUtils.findGob(parent.id) != null)
                     {
                         // TODO пока не ясно, есть ли ситуации когда обновление объекта скажывается на изменени сетки пф
-                        NUtils.getUI().core.pfMap.processGob(parent.id);
+                        NUtils.getGameUI().pfMap.processGob(parent.id);
                     }
                 }
             }

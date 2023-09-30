@@ -1616,7 +1616,8 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	super.maindraw(out);
     }
 
-    private Loading camload = null, lastload = null;
+    private Loading camload = null;
+	public Loading lastload = null;
     public void draw(GOut g) {
 	Loader.Future<Plob> placing = this.placing;
 	if((placing != null) && placing.done())

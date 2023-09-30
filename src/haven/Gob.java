@@ -431,7 +431,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 		a.ctick(dt);
 		if (a instanceof Homing)
 		{
-			NUtils.getUI().core.pfMap.processKritter(id);
+			NUtils.getGameUI().pfMap.processKritter(id);
 		}
 	}
 	for(Iterator<Overlay> i = ols.iterator(); i.hasNext();) {
