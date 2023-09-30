@@ -51,7 +51,7 @@ public class NConfig
         conf.put(Key.nextflatsurface, false);
         conf.put(Key.flatsurface, false);
         conf.put(Key.nextshowCSprite, false);
-        conf.put(Key.showCSprite, false);
+        conf.put(Key.showCSprite, true);
 
     }
 
@@ -161,7 +161,8 @@ public class NConfig
                 }
             }
         }
-
+        conf.put(Key.showCSprite,conf.get(Key.nextshowCSprite));
+        conf.put(Key.flatsurface,conf.get(Key.nextflatsurface));
     }
 
     private ArrayList<Object> prepareArray(ArrayList<Object> objs)

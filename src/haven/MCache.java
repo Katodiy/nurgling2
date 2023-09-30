@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.function.*;
 import java.lang.ref.*;
 import haven.render.*;
+import nurgling.*;
 
 /* XXX: This whole file is a bit of a mess and could use a bit of a
  * rewrite some rainy day. Synchronization especially is quite hairy. */
@@ -485,6 +486,7 @@ public class MCache implements MapSource {
 	    Random rnd = new Random(id + cutc.x + (cutc.y * cutn.x));
 	    Tileset.Flavor.Buffer buf = new Tileset.Flavor.Buffer(sess.glob, garea, rnd.nextLong());
 
+		if((Boolean) NConfig.get(NConfig.Key.showCSprite)){
 	    int[] ids = new int[16];
 	    int nids = 0;
 	    {
@@ -514,7 +516,7 @@ public class MCache implements MapSource {
 		}
 	    }
 	    buf.finish();
-
+		}
 	    return(new Flavobjs(buf.mats));
 	}
 
