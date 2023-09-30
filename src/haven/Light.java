@@ -33,6 +33,7 @@ import haven.render.RenderList;
 import haven.render.sl.ShaderMacro;
 import haven.render.sl.Uniform;
 import static haven.Utils.c2fa;
+import nurgling.*;
 
 public abstract class Light implements RenderTree.Node {
     public float[] amb, dif, spc;
@@ -86,6 +87,11 @@ public abstract class Light implements RenderTree.Node {
 	    synchronized(ll) {
 		cl = new Object[ll.size()][];
 		for(int i = 0; i < cl.length; i++) {
+			if(ll.get(0).obj ().amb[0]!= 1.f && (Boolean)NConfig.get(NConfig.Key.nightVision)) {
+				ll.get ( 0 ).obj ().amb[0] = 1.f;
+				ll.get ( 0 ).obj ().amb[1] = 1.f;
+				ll.get ( 0 ).obj ().amb[2] = 1.f;
+			}
 		    cl[i] = ll.get(i).obj().params(ll.get(i).state());
 		}
 	    }

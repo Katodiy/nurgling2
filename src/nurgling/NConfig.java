@@ -25,7 +25,14 @@ public class NConfig
         dragprop,
         numbelts,
         toolbelts,
-        resizeprop
+        resizeprop,
+        showCropStage,
+        nightVision,
+        showBB,
+        nextflatsurface,
+        flatsurface,
+        nextshowCSprite,
+        showCSprite
     }
 
 
@@ -38,6 +45,14 @@ public class NConfig
         conf.put(Key.autoDropper, false);
         conf.put(Key.is_real_time, true);
         conf.put(Key.numbelts, 1);
+        conf.put(Key.showCropStage, false);
+        conf.put(Key.nightVision, false);
+        conf.put(Key.showBB, false);
+        conf.put(Key.nextflatsurface, false);
+        conf.put(Key.flatsurface, false);
+        conf.put(Key.nextshowCSprite, false);
+        conf.put(Key.showCSprite, false);
+
     }
 
     HashMap<Key, Object> conf = new HashMap<>();

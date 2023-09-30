@@ -33,7 +33,7 @@ import haven.render.*;
 public class ResDrawable extends Drawable implements EquipTarget {
     public final Indir<Resource> res;
     public final Sprite spr;
-    MessageBuf sdt;
+    public MessageBuf sdt;
     // private double delay = 0; XXXRENDER
 
     public ResDrawable(Gob gob, Indir<Resource> res, Message sdt) {
@@ -108,4 +108,20 @@ public class ResDrawable extends Drawable implements EquipTarget {
 	    }
 	}
     }
+
+	public long calcMarker()
+	{
+		if (sdt.rbuf.length >= 4) {
+			long res = (sdt.rbuf[3] << 24);
+			res += (sdt.rbuf[2] << 16);
+			res += ((sdt.rbuf[1] << 8) + sdt.rbuf[0]);
+			return res;
+		}
+		if (sdt.rbuf.length == 2) {
+			return ((sdt.rbuf[1] << 8) + sdt.rbuf[0]);
+		} else if (sdt.rbuf.length - 1 < 0) {
+			return -1;
+		}
+		return sdt.rbuf[0];
+	}
 }

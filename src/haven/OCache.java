@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
 import haven.render.*;
+import nurgling.*;
 
 public class OCache implements Iterable<Gob> {
     public static final int OD_REM = 0;
@@ -86,6 +87,10 @@ public class OCache implements Iterable<Gob> {
 	    synchronized(this) {
 		cbs = new ArrayList<>(this.cbs);
 		objs.put(ob.id, ob);
+			if(ob.ngob.hitBox!=null)
+			{
+				NUtils.getUI().core.pfMap.processGob(ob.id);
+			}
 	    }
 	    for(ChangeCallback cb : cbs)
 		cb.added(ob);
@@ -97,6 +102,10 @@ public class OCache implements Iterable<Gob> {
 	Collection<ChangeCallback> cbs;
 	synchronized(this) {
 	    old = objs.remove(ob.id, ob);
+		if(ob.ngob.hitBox!=null)
+		{
+			NUtils.getUI().core.pfMap.deleteGob(ob.id);
+		}
 	    if((old != null) && (old != ob))
 		throw(new RuntimeException(String.format("object %d removed wrong object", ob.id)));
 	    cbs = new ArrayList<>(this.cbs);

@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.*;
+
 public class LinMove extends Moving {
     public static final double MAXOVER = 0.5;
     public Coord2d s, v;
@@ -102,7 +104,13 @@ public class LinMove extends Moving {
 	    if(t < 0)
 		g.delattr(Moving.class);
 	    else
-		lm.sett(t);
+		{
+			if(g.ngob.hitBox!=null)
+			{
+				NUtils.getUI().core.pfMap.processKritter(g.id);
+			}
+			lm.sett(t);
+		}
 	    if(e >= 0)
 		lm.e = e;
 	    else

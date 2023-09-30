@@ -36,4 +36,9 @@ public class NUtils
     {
         getUI().core.addTask(new NTasks.IsMoving());
     }
+
+    public static Gob findGob(long id)
+    {
+        return NUtils.getGameUI().ui.sess.glob.oc.getgob( id );
+    }
 }

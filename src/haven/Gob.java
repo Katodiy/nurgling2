@@ -418,7 +418,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	this.id = id;
 	if(id < 0)
 	    virtual = true;
-	ngob = new NGob();
+	ngob = new NGob(this);
     }
 
     public Gob(Glob glob, Coord2d c) {
@@ -427,7 +427,13 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 
     public void ctick(double dt) {
 	for(GAttrib a : attr.values())
-	    a.ctick(dt);
+	{
+		a.ctick(dt);
+		if (a instanceof Homing)
+		{
+			NUtils.getUI().core.pfMap.processKritter(id);
+		}
+	}
 	for(Iterator<Overlay> i = ols.iterator(); i.hasNext();) {
 	    Overlay ol = i.next();
 	    if(ol.slots == null) {
@@ -519,6 +525,24 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	return(null);
     }
 
+	public Overlay findol(Class<? extends Sprite> spr ) {
+		for (Overlay ol : ols) {
+			if (ol.spr.getClass() == spr)
+				return (ol);
+		}
+		return(null);
+	}
+
+	public void findoraddol(Overlay ol) {
+		if(findol(ol.spr.getClass())==null)
+			synchronized (ols) {
+				addol(ol, true);
+			}
+	}
+	public void addcustomol(Sprite ol) {
+		findoraddol(new Overlay(this, ol));
+	}
+
     public void dispose() {
 	for(GAttrib a : attr.values())
 	    a.dispose();
@@ -592,6 +616,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 		    if(prev instanceof RenderTree.Node) {
 			RUtils.multiadd(this.slots, (RenderTree.Node)prev);
 			attr.put(ac, prev);
+			ngob.checkattr(a, id);
 		    }
 		    if(prev instanceof SetupMod)
 			setupmods.add((SetupMod)prev);

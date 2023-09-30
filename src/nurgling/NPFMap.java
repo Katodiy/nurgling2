@@ -36,12 +36,17 @@ public class NPFMap
     }
 
 
-    public void processGob(long id) throws NPFMapException
+    public void processGob(long id)
     {
 
     }
 
-    public void deleteGob(long id) throws NPFMapException
+    public void processKritter(long id)
+    {
+
+    }
+
+    public void deleteGob(long id)
     {
 
     }
@@ -53,19 +58,18 @@ public class NPFMap
     }
 
     // rc - центр квадрата
-    public void processTile(Coord2d rc, TyleType type) throws NPFMapException
+    public void processTile(Coord2d rc, TyleType type)
     {
     }
 
     ///@param delta - Координата сдвига сетки( -1, 0)
-    public void shiftGrid(Coord delta) throws NPFMapException
+    public void shiftGrid(Coord delta)
     {
 
     }
 
-    public void clear() throws NPFMapException
+    public void clear()
     {
-        throw new NPFMapException("sdagsdg");
     }
 
     public PFGraph getGraph(Coord2d begin, Coord2d end)
@@ -83,13 +87,5 @@ public class NPFMap
         }
 
         HashMap<Long,Vertex> data = new HashMap();
-    }
-
-    public static class NPFMapException extends Exception
-    {
-        NPFMapException(String msg)
-        {
-            super(msg);
-        }
     }
 }
