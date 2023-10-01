@@ -31,7 +31,7 @@ import haven.render.*;
 import haven.render.gl.*;
 import java.awt.Toolkit;
 import haven.JOGLPanel.SyncMode;
-import nurgling.NUI;
+import nurgling.*;
 
 public interface GLPanel extends UIPanel, UI.Context {
     public GLEnvironment env();
@@ -461,6 +461,7 @@ public interface GLPanel extends UIPanel, UI.Context {
 	public UI newui(UI.Runner fun) {
 	    UI prevui, newui = new NUI(p, new Coord(p.getSize()), fun);
 	    newui.env = p.env();
+		UI.ui = (NUI) newui;
 	    if(p.getParent() instanceof Console.Directory)
 		newui.cons.add((Console.Directory)p.getParent());
 	    if(p instanceof Console.Directory)

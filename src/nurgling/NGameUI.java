@@ -13,7 +13,6 @@ public class NGameUI extends GameUI
     NBotsMenu botsMenu;
     public NSearchItem itemsForSearch = null;
 
-    public NPFMap pfMap = new NPFMap(MCache.tilesz2.x/4.d);
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -26,8 +25,6 @@ public class NGameUI extends GameUI
         }
 
         add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
-
-        add(pfMap);
     }
 
     public int getMaxBase(){

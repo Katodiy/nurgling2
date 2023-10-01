@@ -59,7 +59,7 @@ public class NPFMap extends Widget
     public void tick(double dt)
     {
         super.tick(dt);
-        if(NUtils.getGameUI().map!=null)
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
             if(NUtils.getGameUI().map.lastload!=null)
             {

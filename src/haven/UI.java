@@ -41,6 +41,11 @@ import haven.render.Render;
 import nurgling.*;
 
 public class UI {
+
+	static NUI ui = null;
+	public static NUI getInstance(){
+		return ui;
+	}
     public static int MOD_SHIFT = KeyMatch.S, MOD_CTRL = KeyMatch.C, MOD_META = KeyMatch.M, MOD_SUPER = KeyMatch.SUPER;
     public RootWidget root;
     private final LinkedList<Grab> keygrab = new LinkedList<Grab>();

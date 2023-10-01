@@ -7,6 +7,16 @@ import java.util.concurrent.*;
 
 public class NCore extends Widget
 {
+    boolean debug = true;
+    boolean isinspect = false;
+    public boolean isInspectMode()
+    {
+        if(debug)
+        {
+            return isinspect;
+        }
+        return false;
+    }
 
     public enum Mode
     {
@@ -18,7 +28,7 @@ public class NCore extends Widget
     private boolean botmod = false;
     public boolean enablegrid = true;
 
-
+    public NPFMap pfMap = new NPFMap(MCache.tilesz2.x/4.d);
     public class BotmodSettings
     {
         public String user;
@@ -48,6 +58,8 @@ public class NCore extends Widget
     {
         config = new NConfig();
         config.read();
+
+        add(pfMap);
     }
 
     @Override

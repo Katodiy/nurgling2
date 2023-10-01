@@ -3,6 +3,8 @@ package nurgling;
 import haven.*;
 import nurgling.widgets.*;
 
+import java.awt.event.*;
+
 public class NUI extends UI
 {
     public class NSessInfo {
@@ -51,5 +53,30 @@ public class NUI extends UI
             }
         }
         super.tick();
+    }
+
+    @Override
+    public void keydown(KeyEvent ev) {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null) {
+            if (ev.getKeyCode() == KeyEvent.VK_SHIFT) {
+                core.isinspect = true;
+            }
+        }
+        super.keydown(ev);
+    }
+
+    @Override
+    public void mousemove(MouseEvent ev, Coord c) {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null) {
+            if (core!=null && core.isinspect) {
+                if (modshift) {
+                    ((NMapView) NUtils.getGameUI().map).inspect(c);
+                } else {
+                    core.isinspect = false;
+                    ((NMapView) NUtils.getGameUI().map).ttip.clear();
+                }
+            }
+        }
+        super.mousemove(ev, c);
     }
 }

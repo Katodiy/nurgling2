@@ -89,7 +89,7 @@ public class OCache implements Iterable<Gob> {
 		objs.put(ob.id, ob);
 			if(ob.ngob.hitBox!=null)
 			{
-				NUtils.getGameUI().pfMap.processGob(ob.id);
+				NUtils.getUI().core.pfMap.processGob(ob.id);
 			}
 	    }
 	    for(ChangeCallback cb : cbs)
@@ -104,7 +104,7 @@ public class OCache implements Iterable<Gob> {
 	    old = objs.remove(ob.id, ob);
 		if(ob.ngob.hitBox!=null)
 		{
-			NUtils.getGameUI().pfMap.deleteGob(ob.id);
+			NUtils.getUI().core.pfMap.deleteGob(ob.id);
 		}
 	    if((old != null) && (old != ob))
 		throw(new RuntimeException(String.format("object %d removed wrong object", ob.id)));

@@ -41,7 +41,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
     public long id;
     public boolean removed = false;
     public final Glob glob;
-    Map<Class<? extends GAttrib>, GAttrib> attr = new HashMap<Class<? extends GAttrib>, GAttrib>();
+    public Map<Class<? extends GAttrib>, GAttrib> attr = new HashMap<Class<? extends GAttrib>, GAttrib>();
     public final Collection<Overlay> ols = new ArrayList<Overlay>();
     public final Collection<RenderTree.Slot> slots = new ArrayList<>(1);
     public int updateseq = 0;
@@ -433,7 +433,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 		a.ctick(dt);
 		if (a instanceof Homing)
 		{
-			NUtils.getGameUI().pfMap.processKritter(id);
+			NUtils.getUI().core.pfMap.processKritter(id);
 		}
 	}
 	for(Iterator<Overlay> i = ols.iterator(); i.hasNext();) {
@@ -978,4 +978,14 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	public TickList.Ticking ticker() {return(this);}
     }
     public final Placed placed = new Placed();
+
+	public static Gob from(Clickable ci) {
+		if (ci instanceof Gob.GobClick) {
+			return ((Gob.GobClick) ci).gob;
+		} else if (ci instanceof Composited.CompositeClick) {
+			Gob.GobClick gi = ((Composited.CompositeClick) ci).gi;
+			return gi != null ? gi.gob : null;
+		}
+		return null;
+	}
 }

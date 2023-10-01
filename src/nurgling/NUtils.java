@@ -20,8 +20,7 @@ public class NUtils
     }
 
     public static NUI getUI(){
-        assert (GameUI.getInstance()!=null);
-        return (NUI)GameUI.getInstance().ui;
+        return (NUI)UI.getInstance();
     }
 
     public static String timestamp() {

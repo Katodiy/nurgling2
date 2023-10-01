@@ -107,7 +107,7 @@ public class LinMove extends Moving {
 		{
 			if(g.ngob.hitBox!=null)
 			{
-				NUtils.getGameUI().pfMap.processKritter(g.id);
+				NUtils.getUI().core.pfMap.processKritter(g.id);
 			}
 			lm.sett(t);
 		}
