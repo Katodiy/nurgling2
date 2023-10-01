@@ -1,0 +1,23 @@
+#TILESET2 LAYER FOR RES src/custom/mine.res//
+#ID 
+1
+#VarSize 
+4
+#Var 
+tex
+tiles/ridge-tex
+20
+1
+a
+light
+def
+bump
+tiles/ridge-tex
+20
+101
+col
+[128,128,128,128]
+[255,255,255,255]
+[0,0,0,0]
+[0,0,0,0]
+0.0

@@ -912,6 +912,8 @@ public class MCache implements MapSource {
     }
 
     public double getz(SurfaceID id, Coord2d pc) {
+	if((Boolean) NConfig.get(NConfig.Key.flatsurface))
+		return 0;
 	Coord tc = pc.floor(tilesz);
 	Grid g = getgridt(tc);
 	MapMesh cut = g.getcut(tc.sub(g.ul).div(cutsz));
@@ -1065,6 +1067,23 @@ public class MCache implements MapSource {
 	}
 	return(res);
     }
+
+	public String tilesetname(int i) {
+		Reference<Resource>[] sets = this.sets;
+		if(i >= sets.length)
+			return(null);
+		Resource res = (sets[i] == null) ? null : sets[i].get();
+		if(res == null) {
+			Resource.Spec[] nsets = this.nsets;
+			if(nsets[i] == null)
+				return(null);
+			return nsets[i].name;
+		}
+		else
+		{
+			return (res.name);
+		}
+	}
 
     public Tileset tileset(int i) {
 	Reference<Tileset>[] csets = this.csets;

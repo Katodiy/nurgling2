@@ -74,10 +74,12 @@ public class NPFMap extends Widget
                 if (NUtils.getGameUI().map.player() != null)
                 {
                     Coord plcrd = NUtils.getGameUI().map.player().rc.div(MCache.tilesz).floor();
-                    if (NUtils.getGameUI().ui.sess.glob.map.grids.get((plcrd.div(MCache.cmaps))) != null)
+                    synchronized (NUtils.getGameUI().ui.sess.glob.map.grids)
                     {
-                        Resource res = NUtils.getGameUI().ui.sess.glob.map.tilesetr(NUtils.getGameUI().ui.sess.glob.map.gettile(plcrd));
-                        String name = res.name;
+                        if (NUtils.getGameUI().ui.sess.glob.map.grids.get((plcrd.div(MCache.cmaps))) != null)
+                        {
+                            String name = NUtils.getGameUI().ui.sess.glob.map.tilesetname(NUtils.getGameUI().ui.sess.glob.map.gettile(plcrd));
+                        }
                     }
                     //
                     //if ( res_beg.name.contains ( "tiles/cave" ) || res_beg.name.contains ( "tiles/nil" ) || res_beg.name.contains ( "tiles/deep" ) ||

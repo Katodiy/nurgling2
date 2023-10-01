@@ -123,4 +123,15 @@ public class NStyle
         }
         return null;
     }
+
+    private static Tiler ridge;
+
+    public static HashMap<String, Tileset> customTileRes = new HashMap<String, Tileset>(){
+        {put("ridge", Resource.local().loadwait("tiles/ridge").layer(Tileset.class));}
+    };
+    public static Tiler getRidge() {
+        if(ridge==null)
+            ridge = customTileRes.get("ridge").tfac().create(7001, customTileRes.get("ridge"));
+        return ridge;
+    }
 }

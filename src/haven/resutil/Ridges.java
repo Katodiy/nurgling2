@@ -37,6 +37,7 @@ import haven.Tiler.SModel;
 import haven.Tiler.VertFactory;
 import haven.Surface.MeshVertex;
 import static haven.Utils.clip;
+import nurgling.*;
 
 public class Ridges implements MapMesh.ConsHooks {
     private static final float EPSILON = 0.01f;
@@ -587,7 +588,21 @@ public class Ridges implements MapMesh.ConsHooks {
 	this.ridge[ms.ts.o(tc)] = new RPart(rdg);
     }
 
-    public boolean model(Coord tc) {
+	public boolean model(Coord tc)
+	{
+		if ((Boolean) NConfig.get(NConfig.Key.flatsurface))
+		{
+			boolean[] b = breaks(tc);
+			if (!b[0] && !b[1] && !b[2] && !b[3])
+				return (false);
+			return true;
+		}
+		else {
+			return (_model(tc));
+		}
+	}
+
+	public boolean _model(Coord tc) {
 	tc = new Coord(tc);
 	boolean[] b = breaks(tc);
 	int d;
