@@ -1442,7 +1442,18 @@ public class OptWnd extends Window {
 
 				}, prev.pos("bl").adds(0, 5));
 
+				prev = add(new CheckBox("Hide nature objects:") {
+					{
+						a = !(Boolean) NConfig.get(NConfig.Key.hideNature);
+					}
 
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.hideNature, !val);
+						a = val;
+						NUtils.showHideNature();
+					}
+
+				}, prev.pos("bl").adds(0, 5));
 //				prev = add(new CheckBox("Collect Food Info:") {
 //					{
 //						a = NConfiguration.getInstance().collectFoodInfo;

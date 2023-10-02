@@ -40,4 +40,28 @@ public class NUtils
     {
         return NUtils.getGameUI().ui.sess.glob.oc.getgob( id );
     }
+
+    public static void showHideNature() {
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc) {
+            if((Boolean) NConfig.get(NConfig.Key.hideNature))
+                for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc) {
+                    if (gob.ngob.name!=null && isNatureObject(gob.ngob.name))
+                    {
+                        gob.hideObject();
+                    }
+                }
+            else
+                for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc) {
+                    if (gob.ngob.name!=null && isNatureObject(gob.ngob.name))
+                    {
+                        gob.showObject();
+                    }
+                }
+        }
+    }
+
+    public static boolean isNatureObject(String name)
+    {
+        return NParser.checkName(name, "gfx/terobjs/tree", "gfx/terobjs/bumlings","gfx/terobjs/bushes","gfx/terobjs/stonepillar" );
+    }
 }

@@ -32,7 +32,8 @@ public class NConfig
         nextflatsurface,
         flatsurface,
         nextshowCSprite,
-        showCSprite
+        showCSprite,
+        hideNature
     }
 
 
@@ -52,6 +53,7 @@ public class NConfig
         conf.put(Key.flatsurface, false);
         conf.put(Key.nextshowCSprite, false);
         conf.put(Key.showCSprite, true);
+        conf.put(Key.hideNature, false);
 
     }
 
