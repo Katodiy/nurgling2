@@ -144,6 +144,7 @@ public class ChatUI extends Widget
 	public int urgency = 0;
 	private final Scrollbar sb;
 	private final IButton cb;
+	private double dy;
 
 	/* Deprecated? */
 	public final List<Message> msgs = new AbstractList<Message>() {
@@ -417,7 +418,7 @@ public class ChatUI extends Widget
 	    g.chcolor(0, 0, 0, 128);
 	    g.frect(Coord.z, sz);
 	    g.chcolor();
-	    int sy = sb.val, h = ih(), w = iw();
+	    int sy = (int)Math.round(dy), h = ih(), w = iw();
 	    boolean sel = false;
 	    synchronized(rmsgs) {
 		int smi = messageat(sy, true);
@@ -450,8 +451,14 @@ public class ChatUI extends Widget
 	    trimunseen();
 	}
 
+	public void tick(double dt) {
+	    super.tick(dt);
+	    double ty = sb.val;
+	    dy = ty + (Math.pow(2, -dt * 40) * (dy - ty));
+	}
+
 	public boolean mousewheel(Coord c, int amount) {
-	    sb.ch(amount * 15);
+	    sb.ch(amount * 45);
 	    return(true);
 	}
 
@@ -468,6 +475,7 @@ public class ChatUI extends Widget
 			sb.val = sb.max;
 		}
 	    }
+	    dy = sb.val;
 	    if(cb != null) {
 		cb.c = new Coord(sz.x + marg.x - cb.sz.x -cb.sz.x/2, -marg.y + cb.sz.x/2);
 	    }
@@ -1331,6 +1339,7 @@ public class ChatUI extends Widget
 	}
 
 	public void tick(double dt) {
+	    super.tick(dt);
 	    ds = ts + (Math.pow(2, -dt * 20) * (ds - ts));
 		if(s==0)
 			toLeft.hide();
