@@ -12,7 +12,7 @@ public class NBotsMenu extends Widget
     public NBotsMenu()
     {
         NLayout resources = new NLayout("resources");
-        resources.elements.add(new NButton("chop",new PathFinder()));
+        resources.elements.add(new NButton("chop",new TransferItemsTo()));
         addLayout(resources);
         showLayouts();
         pack();

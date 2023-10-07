@@ -4,6 +4,7 @@ import haven.*;
 import haven.res.ui.tt.slot.Slotted;
 import haven.res.ui.tt.stackn.Stack;
 import nurgling.iteminfo.NFoodInfo;
+import nurgling.tasks.*;
 import nurgling.widgets.NPopupWidget;
 import nurgling.widgets.NSearchWidget;
 
@@ -20,6 +21,26 @@ public class NInventory extends Inventory
         super(sz);
     }
 
+    public int getNumberFreeCoord(Coord coord) throws InterruptedException
+    {
+        GetNumberFreeCoord gnfc = new GetNumberFreeCoord(this, coord);
+        NUtils.getUI().core.addTask(gnfc);
+        return gnfc.result();
+    }
+
+    public int getNumberFreeCoord(GItem item) throws InterruptedException
+    {
+        GetNumberFreeCoord gnfc = new GetNumberFreeCoord(this, item);
+        NUtils.getUI().core.addTask(gnfc);
+        return gnfc.result();
+    }
+
+    public int getNumberFreeCoord(WItem item) throws InterruptedException
+    {
+        GetNumberFreeCoord gnfc = new GetNumberFreeCoord(this, item);
+        NUtils.getUI().core.addTask(gnfc);
+        return gnfc.result();
+    }
     @Override
     public void resize(Coord sz) {
         super.resize(new Coord(sz));
@@ -182,5 +203,102 @@ public class NInventory extends Inventory
         toggles.pack();
         movePopup(parent.c);
         toggles.pack();
+    }
+
+    private short[][] containerMatrix()
+    {
+        short[][] ret = new short[isz.y][isz.x];
+        for (int x = 0; x < isz.x; x++)
+        {
+            for (int y = 0; y < isz.y; y++)
+            {
+                if (sqmask == null || !sqmask[y * isz.x + x])
+                {
+                    ret[y][x] = 0; // Пустая ячейка
+                }
+                else
+                {
+                    ret[y][x] = 2; // Заблокированная ячейка
+                }
+            }
+        }
+        for (Widget widget = child; widget != null; widget = widget.next)
+        {
+            if (widget instanceof WItem)
+            {
+                WItem item = (WItem) widget;
+                if (((NGItem) item.item).spr != null)
+                {
+                    Coord size = ((NGItem) item.item).spr.sz().div(32);
+                    int xSize = size.x;
+                    int ySize = size.y;
+                    int xLoc = item.c.div(33).x;
+                    int yLoc = item.c.div(33).y;
+
+                    for (int j = 0; j < ySize; j++)
+                    {
+                        for (int i = 0; i < xSize; i++)
+                        {
+                            if (yLoc + j < isz.y && xLoc + i < isz.x)
+                            {
+                                ret[yLoc + j][xLoc + i] = 1;
+                            }
+                        }
+                    }
+                }
+                else
+                    return null;
+            }
+        }
+        return ret;
+    }
+
+    public int calcNumberFreeCoord(Coord target_size)
+    {
+        int count = 0;
+        short[][] inventory = containerMatrix();
+        if(inventory == null)
+            return -1;
+        for (int i = 0; i < isz.y; i++) {
+            for (int j = 0; j < isz.x; j++) {
+                if (inventory[i][j] == 0) {
+                    if (i + target_size.x - 1 < isz.y && j + target_size.y - 1 < isz.x) {
+                        boolean isFree = true;
+                        for (int k = i; k < i + target_size.x; k++) {
+                            for (int n = j; n < j + target_size.y; n++) {
+                                if (inventory[k][n]!=0) {
+                                    isFree = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (isFree) {
+                            count += 1;
+                            for (int k = i; k < i + target_size.x; k++) {
+                                for (int n = j; n < j + target_size.y; n++) {
+                                    inventory[k][n] = 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    int calcFreeSpace()
+    {
+        int freespace = 0;
+        short[][] inventory = containerMatrix();
+        if(inventory == null)
+            return -1;
+        for (int i = 0; i < isz.x; i++) {
+            for (int j = 0; j < isz.y; j++) {
+                if (inventory[i][j] == 0)
+                    freespace++;
+            }
+        }
+        return freespace;
     }
 }

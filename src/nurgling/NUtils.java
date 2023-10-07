@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import nurgling.tasks.*;
 import nurgling.tools.*;
 
 import java.text.*;
@@ -33,7 +34,7 @@ public class NUtils
 
     public static void moveTo(Coord2d z) throws InterruptedException
     {
-        getUI().core.addTask(new NTasks.IsMoving());
+        getUI().core.addTask(new IsMoving());
     }
 
     public static Gob findGob(long id)

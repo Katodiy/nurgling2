@@ -1287,7 +1287,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	}
     }
 
-    private double lastmsgsfx = 0;
+    protected double lastmsgsfx = 0;
     public void msg(String msg) {
 	msg(msg, Color.WHITE, Color.WHITE);
 	double now = Utils.rtime();

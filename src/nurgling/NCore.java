@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import nurgling.tasks.*;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -39,8 +40,8 @@ public class NCore extends Widget
 
     private BotmodSettings bms;
 
-    private final LinkedList<Task> for_remove = new LinkedList<>();
-    private final ConcurrentLinkedQueue<Task> tasks = new ConcurrentLinkedQueue<>();
+    private final LinkedList<NTask> for_remove = new LinkedList<>();
+    private final ConcurrentLinkedQueue<NTask> tasks = new ConcurrentLinkedQueue<>();
 
     public BotmodSettings getBotMod()
     {
@@ -72,7 +73,7 @@ public class NCore extends Widget
         }
         synchronized (tasks)
         {
-            for(final Task task: tasks)
+            for(final NTask task: tasks)
             {
                 try
                 {
@@ -95,12 +96,9 @@ public class NCore extends Widget
         }
     }
 
-    public abstract static class Task
-    {
-        public abstract boolean check();
-    };
 
-    public void addTask(final Task task) throws InterruptedException
+
+    public void addTask(final NTask task) throws InterruptedException
     {
         synchronized (tasks)
         {

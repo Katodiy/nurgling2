@@ -1,10 +1,14 @@
 package nurgling;
 
 import haven.*;
+import haven.Button;
+import haven.Label;
+import haven.Window;
 import haven.res.ui.rbuff.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
 
+import java.awt.*;
 import java.util.*;
 
 public class NGameUI extends GameUI
@@ -38,6 +42,18 @@ public class NGameUI extends GameUI
 
     public NCharacterInfo getCharInfo() {
         return ((NUI)ui).sessInfo.characterInfo;
+    }
+
+    public Window getWindow ( String cap ) {
+        for ( Widget w = lchild ; w != null ; w = w.prev ) {
+            if ( w instanceof Window ) {
+                Window wnd = ( Window ) w;
+                if ( wnd.cap != null && wnd.cap.equals(cap)) {
+                    return wnd;
+                }
+            }
+        }
+        return null;
     }
 
     public Window getWindowWithButton ( String cap, String button ) {
@@ -124,5 +140,31 @@ public class NGameUI extends GameUI
         {
             ((NInventory) maininv).installMainInv();
         }
+    }
+
+    public void tickmsg(String msg) {
+        msg("TICK#" + NUtils.getTickId() + " MSG: " + msg, Color.WHITE, Color.WHITE);
+        double now = Utils.rtime();
+        if(now - lastmsgsfx > 0.1) {
+            ui.sfx(RootWidget.msgsfx);
+            lastmsgsfx = now;
+        }
+    }
+
+    public NInventory getInventory ( String name ) {
+        Window spwnd = getWindow ( name );
+        if(spwnd == null){
+            return null;
+        }
+        for ( Widget sp = spwnd.lchild ; sp != null ; sp = sp.prev ) {
+            if ( sp instanceof Inventory ) {
+                return ( ( NInventory ) sp );
+            }
+        }
+        return null;
+    }
+
+    public NInventory getInventory () {
+        return (NInventory) maininv;
     }
 }
