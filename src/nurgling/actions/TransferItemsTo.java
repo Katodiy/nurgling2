@@ -16,7 +16,7 @@ public class TransferItemsTo implements Action
             {
                 if (gob.getres() != null && gob.getres().name != null)
                 {
-                    if (NParser.checkName(gob.getres().name, "frame"))
+                    if (NParser.checkName(gob.getres().name, "chest"))
                     {
                         /// Сравнивается расстояние между игроком и объектом
                         double dist = NUtils.getGameUI().map.player().rc.dist(gob.rc);
@@ -37,10 +37,10 @@ public class TransferItemsTo implements Action
     public Results run(NGameUI gui) throws InterruptedException
     {
         gui.tickmsg("start");
-//        if(new OpenTargetContainer("Frame", findChest()).run(gui).equals(Results.SUCCESS()));
-//        {
-        gui.tickmsg("total free coord 2x2 " + gui.getInventory().getNumberFreeCoord(new Coord(2,2)));
-//        }
+        if(new OpenTargetContainer("Chest", findChest()).run(gui).equals(Results.SUCCESS()));
+        {
+            gui.tickmsg("total free coord 2x2 " + gui.getInventory("Chest").getNumberFreeCoord(new Coord(2,2)));
+        }
         return Results.SUCCESS();
     }
 }

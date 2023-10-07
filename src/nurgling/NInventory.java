@@ -5,6 +5,7 @@ import haven.res.ui.tt.slot.Slotted;
 import haven.res.ui.tt.stackn.Stack;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.tasks.*;
+import nurgling.tools.*;
 import nurgling.widgets.NPopupWidget;
 import nurgling.widgets.NSearchWidget;
 
@@ -37,10 +38,34 @@ public class NInventory extends Inventory
 
     public int getNumberFreeCoord(WItem item) throws InterruptedException
     {
-        GetNumberFreeCoord gnfc = new GetNumberFreeCoord(this, item);
-        NUtils.getUI().core.addTask(gnfc);
-        return gnfc.result();
+        return getNumberFreeCoord(item.item);
     }
+
+    public WItem getItem(NAlias name) throws InterruptedException
+    {
+        GetItem gi = new GetItem(this, name);
+        NUtils.getGameUI().tickmsg("start search");
+        NUtils.getUI().core.addTask(gi);
+        NUtils.getGameUI().tickmsg("item found");
+        return gi.getResult();
+    }
+
+    public WItem getItem(String name) throws InterruptedException
+    {
+        return getItem(new NAlias(name));
+    }
+
+    public void dropOn(Coord dc, String name) throws InterruptedException
+    {
+        if (NUtils.getGameUI().vhand != null)
+        {
+            wdgmsg("drop", dc);
+            NUtils.getGameUI().tickmsg("dropon send");
+            NUtils.getUI().core.addTask(new DropOn(this, dc, name));
+            NUtils.getGameUI().tickmsg("DropOn completed");
+        }
+    }
+
     @Override
     public void resize(Coord sz) {
         super.resize(new Coord(sz));
@@ -229,11 +254,11 @@ public class NInventory extends Inventory
                 WItem item = (WItem) widget;
                 if (((NGItem) item.item).spr != null)
                 {
-                    Coord size = ((NGItem) item.item).spr.sz().div(32);
+                    Coord size = ((NGItem) item.item).spr.sz().div(UI.scale(32));
                     int xSize = size.x;
                     int ySize = size.y;
-                    int xLoc = item.c.div(33).x;
-                    int yLoc = item.c.div(33).y;
+                    int xLoc = item.c.div(Inventory.sqsz).x;
+                    int yLoc = item.c.div(Inventory.sqsz).y;
 
                     for (int j = 0; j < ySize; j++)
                     {
@@ -300,5 +325,25 @@ public class NInventory extends Inventory
             }
         }
         return freespace;
+    }
+
+    public boolean isSlotFree(Coord pos)
+    {
+        short[][] inventory = containerMatrix();
+        return inventory!=null && inventory[pos.y][pos.x] == 0;
+    }
+
+    public boolean isItemInSlot(Coord pos , NAlias name)
+    {
+        for (Widget widget = child; widget != null; widget = widget.next)
+        {
+            if (widget instanceof WItem)
+            {
+                WItem item = (WItem) widget;
+                if(item.c.div(Inventory.sqsz).equals(pos))
+                    return ((NGItem)item.item).name() != null && NParser.checkName(((NGItem)item.item).name(), name);
+            }
+        }
+        return false;
     }
 }
