@@ -29,6 +29,7 @@ package haven;
 import java.awt.Color;
 import java.awt.Font;
 import static java.lang.Math.PI;
+import nurgling.*;
 
 public class FlowerMenu extends Widget {
     public static final Color pink = new Color(255, 0, 128);
@@ -38,7 +39,8 @@ public class FlowerMenu extends Widget {
     public static final Tex pbg = Window.bg;
     public static final int ph = UI.scale(30), ppl = 8;
     public Petal[] opts;
-    private UI.Grab mg, kg;
+    protected UI.Grab mg;
+	protected UI.Grab kg;
 
     @RName("sm")
     public static class $_ implements Factory {
@@ -46,7 +48,7 @@ public class FlowerMenu extends Widget {
 	    String[] opts = new String[args.length];
 	    for(int i = 0; i < args.length; i++)
 		opts[i] = (String)args[i];
-	    return(new FlowerMenu(opts));
+	    return(new NFlowerMenu(opts));
 	}
     }
 
@@ -219,8 +221,8 @@ public class FlowerMenu extends Widget {
     }
 
     public boolean mousedown(Coord c, int button) {
-	if(!anims.isEmpty())
-	    return(true);
+//	if(!anims.isEmpty())
+//	    return(true);
 	if(!super.mousedown(c, button))
 	    choose(null);
 	return(true);

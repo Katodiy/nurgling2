@@ -10,6 +10,9 @@ public class NStyle
 {
     public static Text.Foundry fcomboitems = new Text.Foundry(Text.sans, 16).aa(true);
     public static Text.Furnace meter = new PUtils.BlurFurn(new Text.Foundry(Text.sans, 12, Color.WHITE).aa(true), 2, 1, new Color(60,30,30));
+    public static Text.Foundry flower = new Text.Foundry(Text.sans, 12,new Color(255, 250, 205)).aa(true);
+    public static Text.Furnace flower2 = new PUtils.BlurFurn(new Text.Foundry(Text.sans, 12,     new Color(255, 250, 205)).aa(true), 2, 1, new Color(60,30,30));
+
     public static Text.Furnace hotkey = new PUtils.BlurFurn(new Text.Foundry(Text.sans, 12, Color.WHITE).aa(true), 1, 1, new Color(0,0,0));
     public static final TexI[] removei = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/removeItem/u")),
