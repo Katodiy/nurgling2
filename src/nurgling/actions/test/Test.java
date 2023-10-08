@@ -21,8 +21,8 @@ public abstract class Test implements Action
         {
             body(gui);
             count++;
-            if(total+count%200 == 0)
-
+            if (total + count % 200 == 0)
+                gui.tickmsg("Total passed:" + String.valueOf(total + count));
             if (System.currentTimeMillis() - start >= 60000)
             {
                 start = System.currentTimeMillis();
