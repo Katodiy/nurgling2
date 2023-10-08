@@ -12,13 +12,17 @@ public class NBotsMenu extends Widget
     final static String dir_path = "nurgling/bots/icons/";
     public NBotsMenu()
     {
-        NLayout resources = new NLayout("resources");
-        resources.elements.add(new NButton("chop",new TESTorestockpiletransfer()));
-        resources.elements.add(new NButton("chop",new TESTorestockpiletransfernoclose()));
-        resources.elements.add(new NButton("chop",new TESTblockstockpiletransferpacks()));
-        resources.elements.add(new NButton("chop",new TESTbranchinvtransferpacks()));
-        resources.elements.add(new NButton("chop",new TESTtakehanddporop()));
-        addLayout(resources);
+        if(NUtils.getUI().core.debug)
+        {
+            NLayout tests = new NLayout("resources");
+            tests.elements.add(new NButton("chop", new TESTorestockpiletransfer()));
+            tests.elements.add(new NButton("chop", new TESTorestockpiletransfernoclose()));
+            tests.elements.add(new NButton("chop", new TESTblockstockpiletransferpacks()));
+            tests.elements.add(new NButton("chop", new TESTbranchinvtransferpacks()));
+            tests.elements.add(new NButton("chop", new TESTtakehanddporop()));
+            tests.elements.add(new NButton("chop", new TESTskinstockpiletransfer()));
+            addLayout(tests);
+        }
         showLayouts();
         pack();
     }
