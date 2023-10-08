@@ -4,6 +4,8 @@ import haven.*;
 import nurgling.*;
 import nurgling.tools.*;
 
+import java.util.*;
+
 public class TransferItemsTo implements Action
 {
     // TODO FOR DELETE
@@ -16,7 +18,7 @@ public class TransferItemsTo implements Action
             {
                 if (gob.getres() != null && gob.getres().name != null)
                 {
-                    if (NParser.checkName(gob.getres().name, "chest"))
+                    if (NParser.checkName(gob.getres().name, "stockpile"))
                     {
                         /// Сравнивается расстояние между игроком и объектом
                         double dist = NUtils.getGameUI().map.player().rc.dist(gob.rc);
@@ -33,31 +35,33 @@ public class TransferItemsTo implements Action
         return result;
     }
 
+    public static final NAlias hides = new NAlias(new ArrayList<>(Arrays.asList("Fur", "skin", "hide")),
+            new ArrayList<>(Arrays.asList("blood", "raw", "Fresh", "Jacket", "cape")));
+
+    public static final NAlias ores = new NAlias(new ArrayList<>(Arrays.asList("rit", "Ore", "ore")));
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-//        String container = "Stockpile";
-//        gui.tickmsg("start");
-//        while (true)
-//        {
-//            new OpenTargetContainer(container, findChest()).run(gui);
-//            for (int i = 0; i < 13; i++)
-//                new TransferItems(gui.getStockpile(), gui.getInventory().getItems("Block"), 1).run(gui);
-//            new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
-//
-//            new OpenTargetContainer(container, findChest()).run(gui);
-//            for (int i = 0; i < 13; i++)
-//                new TakeItemsFromPile(gui.getStockpile(), new Coord(1, 2), 1).run(gui);
-////            new TransferItems(gui.getInventory(container), gui.getInventory().getItems("Autumn Steak"), 10).run(gui);
-////            new TransferItems(gui.getInventory(container), gui.getInventory().getItems("Autumn Steak"), 10).run(gui);
-//            new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
-//        }
+        String container = "Stockpile";
+        while (true)
+        {
+            new OpenTargetContainer(container, findChest()).run(gui);
+            ArrayList<WItem> items = gui.getInventory().getItems(ores);
+            new TransferItems(gui.getStockpile(), items, items.size()).run(gui);
+            new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
+
+            new OpenTargetContainer(container, findChest()).run(gui);
+            new TakeItemsFromPile(gui.getStockpile()).run(gui);
+//            new TransferItems(gui.getInventory(container), gui.getInventory().getItems("Autumn Steak"), 10).run(gui);
+            new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
+        }
 //        return Results.SUCCESS();
-        gui.tickmsg("start");
-//        if(new OpenTargetContainer("Chest", findChest()).run(gui).equals(Results.SUCCESS()));
-//        {
-            gui.tickmsg("total free coord 2x2 " + gui.getInventory().getNumberFreeCoord(new Coord(1,2)));
-//        }
-        return Results.SUCCESS();
+//        gui.tickmsg("start");
+////        if(new OpenTargetContainer("Chest", findChest()).run(gui).equals(Results.SUCCESS()));
+////        {
+//            gui.tickmsg("total free coord 2x2 " + gui.getInventory().getNumberFreeCoord(new Coord(1,2)));
+////        }
+//        return Results.SUCCESS();
     }
 }

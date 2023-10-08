@@ -46,6 +46,28 @@ public class TakeItemsFromPile implements Action
             gui.getStockpile().transfer(target_size);
             NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), oldSpace + target_size));
         }
+        else
+        {
+            if(target_coord.x>1 || target_coord.y>1)
+            {
+                int count = 0;
+                while (gui.getInventory().getNumberFreeCoord(target_coord) > 0 && gui.getStockpile()!=null)
+                {
+                    int oldSpace = gui.getInventory().getItems().size();
+                    gui.getStockpile().transfer(1);
+                    NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), oldSpace + 1));
+                    count++;
+                }
+                target_size = count;
+            }
+            else
+            {
+                target_size = Math.min(gui.getInventory().getFreeSpace(),gui.getStockpile().total());
+                int oldSpace = gui.getInventory().getItems().size();
+                gui.getStockpile().transfer(Math.min(gui.getInventory().getFreeSpace(),gui.getStockpile().total()));
+                NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), oldSpace + target_size));
+            }
+        }
         return Results.SUCCESS();
     }
 

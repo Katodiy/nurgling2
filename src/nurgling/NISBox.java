@@ -28,11 +28,35 @@ public class NISBox extends ISBox
         return -1;
     }
 
+    public int calcCount()
+    {
+        if ( label == null || label.text == null ) {
+            return -1;
+        }
+        int sep = label.text.indexOf ( '/' );
+        if ( sep > 0 ) {
+            String count = label.text.substring ( 0, sep );
+            try {
+                return Integer.parseInt ( count );
+            }
+            catch ( NumberFormatException nfe ) {
+            }
+        }
+        return -1;
+    }
+
     public int getFreeSpace() throws InterruptedException
     {
         GetFreeSpace gfs = new GetFreeSpace(this);
         NUtils.getUI().core.addTask(gfs);
         return gfs.result();
+    }
+
+    public int total() throws InterruptedException
+    {
+        GetPileSize gps = new GetPileSize(this);
+        NUtils.getUI().core.addTask(gps);
+        return gps.getResult();
     }
 
     public void transfer(int amount)
@@ -42,4 +66,6 @@ public class NISBox extends ISBox
             wdgmsg("xfer2", -1, 1);
         }
     }
+
+
 }

@@ -16,7 +16,6 @@ public class SwapItems implements Action
             WItem item = gui.getInventory().getItem(name);
             if (item == null)
             {
-                gui.tickmsg("error item " + name + "notfound");
                 return Results.ERROR("error item " + name + "notfound");
             }
             pos = item.c.div(Inventory.sqsz);

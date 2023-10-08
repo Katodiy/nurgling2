@@ -100,13 +100,16 @@ public class NCore extends Widget
 
     public void addTask(final NTask task) throws InterruptedException
     {
-        synchronized (tasks)
+        if(!task.check())
         {
-            tasks.add(task);
-        }
-        synchronized (task)
-        {
-            task.wait();
+            synchronized (tasks)
+            {
+                tasks.add(task);
+            }
+            synchronized (task)
+            {
+                task.wait();
+            }
         }
     }
 }

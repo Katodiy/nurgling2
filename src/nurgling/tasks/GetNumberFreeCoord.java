@@ -34,7 +34,7 @@ public class GetNumberFreeCoord implements NTask
             if(item.spr == null)
                 return false;
             else
-                size = item.spr.sz();
+                size = item.spr.sz().div(UI.scale(32));
         freeCoord = inv.calcNumberFreeCoord(size);
         return freeCoord>=0;
     }

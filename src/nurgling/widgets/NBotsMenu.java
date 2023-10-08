@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
+import nurgling.actions.test.*;
 
 import java.util.*;
 
@@ -12,16 +13,21 @@ public class NBotsMenu extends Widget
     public NBotsMenu()
     {
         NLayout resources = new NLayout("resources");
-        resources.elements.add(new NButton("chop",new TransferItemsTo()));
+        resources.elements.add(new NButton("chop",new TESTorestockpiletransfer()));
+        resources.elements.add(new NButton("chop",new TESTorestockpiletransfernoclose()));
+        resources.elements.add(new NButton("chop",new TESTblockstockpiletransferpacks()));
+        resources.elements.add(new NButton("chop",new TESTbranchinvtransferpacks()));
+        resources.elements.add(new NButton("chop",new TESTtakehanddporop()));
         addLayout(resources);
         showLayouts();
         pack();
     }
 
     void addLayout(NLayout lay){
+        int count = 0;
         for(NButton btn: lay.elements)
         {
-            add(btn.btn);
+            add(btn.btn, new Coord(0, (btn.btn.sz.y + UI.scale(2)) * count++));
             btn.btn.hide();
         }
         add(lay.btn);
@@ -144,6 +150,7 @@ public class NBotsMenu extends Widget
                 }
                 element.btn.show();
             }
+            parent.resize(new Coord((w + 1) * UI.scale(34), (w > 0 ? 9 : h + 1) * UI.scale(34)).add(NDraggableWidget.delta));
         }
     };
 }

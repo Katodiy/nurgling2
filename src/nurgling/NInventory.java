@@ -93,9 +93,7 @@ public class NInventory extends Inventory
         if (NUtils.getGameUI().vhand != null)
         {
             wdgmsg("drop", dc);
-            NUtils.getGameUI().tickmsg("dropon send");
             NUtils.getUI().core.addTask(new DropOn(this, dc, name));
-            NUtils.getGameUI().tickmsg("DropOn completed");
         }
     }
 
@@ -351,8 +349,8 @@ public class NInventory extends Inventory
         short[][] inventory = containerMatrix();
         if(inventory == null)
             return -1;
-        for (int i = 0; i < isz.x; i++) {
-            for (int j = 0; j < isz.y; j++) {
+        for (int i = 0; i < isz.y; i++) {
+            for (int j = 0; j < isz.x; j++) {
                 if (inventory[i][j] == 0)
                     freespace++;
             }

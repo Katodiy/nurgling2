@@ -21,7 +21,6 @@ public class CloseTargetWindow implements Action
         {
             wnd.wdgmsg("close");
             gui.ui.core.addTask(new WindowIsClosed(wnd));
-            gui.tickmsg("window was close");
         }
         return Results.SUCCESS();
     }
