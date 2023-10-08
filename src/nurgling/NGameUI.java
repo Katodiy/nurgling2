@@ -76,6 +76,22 @@ public class NGameUI extends GameUI
         return null;
     }
 
+    public boolean isWindowExist ( Window twnd )
+    {
+        for (Widget w = lchild; w != null; w = w.prev)
+        {
+            if (w instanceof Window)
+            {
+                Window wnd = (Window) w;
+                if (wnd.equals(twnd))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public double getTableMod() {
         double table_mod = 1;
         Window table = getWindowWithButton("Table", "Feast!");

@@ -36,11 +36,18 @@ public class TransferItemsTo implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
+        String container = "Large Chest";
         gui.tickmsg("start");
-        if(new OpenTargetContainer("Chest", findChest()).run(gui).equals(Results.SUCCESS()));
+        while(true)
         {
-            gui.tickmsg("total free coord 2x2 " + gui.getInventory("Chest").getNumberFreeCoord(new Coord(2,2)));
+            new OpenTargetContainer(container, findChest()).run(gui);
+            new TransferItems(gui.getInventory(), gui.getInventory(container).getItems("Autumn Steak"), 10).run(gui);
+            new TransferItems(gui.getInventory(), gui.getInventory(container).getItems("Autumn Steak"), 10).run(gui);
+            new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
+            new OpenTargetContainer(container, findChest()).run(gui);
+            new TransferItems(gui.getInventory(container), gui.getInventory().getItems("Autumn Steak"), 10).run(gui);
+            new TransferItems(gui.getInventory(container), gui.getInventory().getItems("Autumn Steak"), 10).run(gui);
+            new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
         }
-        return Results.SUCCESS();
     }
 }

@@ -9,6 +9,8 @@ import nurgling.tools.*;
 import nurgling.widgets.NPopupWidget;
 import nurgling.widgets.NSearchWidget;
 
+import java.util.*;
+
 public class NInventory extends Inventory
 {
     public NSearchWidget searchwdg;
@@ -44,15 +46,32 @@ public class NInventory extends Inventory
     public WItem getItem(NAlias name) throws InterruptedException
     {
         GetItem gi = new GetItem(this, name);
-        NUtils.getGameUI().tickmsg("start search");
         NUtils.getUI().core.addTask(gi);
-        NUtils.getGameUI().tickmsg("item found");
         return gi.getResult();
     }
 
     public WItem getItem(String name) throws InterruptedException
     {
         return getItem(new NAlias(name));
+    }
+
+    public ArrayList<WItem> getItems(NAlias name) throws InterruptedException
+    {
+        GetItems gi = new GetItems(this, name);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
+    public ArrayList<WItem> getItems(String name) throws InterruptedException
+    {
+        return getItems(new NAlias(name));
+    }
+
+    public ArrayList<WItem> getItems(GItem target) throws InterruptedException
+    {
+        GetItems gi = new GetItems(this, target);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
     }
 
     public void dropOn(Coord dc, String name) throws InterruptedException
