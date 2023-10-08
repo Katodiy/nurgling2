@@ -9,8 +9,8 @@ import java.util.*;
 public class WaitItems implements NTask
 {
     private final int target_size;
-    NAlias name;
-    NInventory inventory;
+    NAlias name = null;
+    Widget inventory;
 
     GItem target = null;
     public WaitItems(NInventory inventory, NAlias name, int size)
@@ -27,6 +27,18 @@ public class WaitItems implements NTask
         this.target_size = size;
     }
 
+    public WaitItems(NISBox inv, int size)
+    {
+        this.inventory = inv;
+        this.target_size = size;
+    }
+
+    public WaitItems(NInventory inv, int size)
+    {
+        this.inventory = inv;
+        this.target_size = size;
+    }
+
     @Override
     public boolean check()
     {
@@ -36,27 +48,37 @@ public class WaitItems implements NTask
                 name = new NAlias(((NGItem) target).name());
             else
                 return false;
-        result.clear();
-        for (Widget widget = inventory.child; widget != null; widget = widget.next)
+
+        if(inventory instanceof NInventory)
         {
-            if (widget instanceof WItem)
+            result.clear();
+
+            for (Widget widget = inventory.child; widget != null; widget = widget.next)
             {
-                WItem item = (WItem) widget;
-                String item_name;
-                if ((item_name = ((NGItem) item.item).name()) == null)
+                if (widget instanceof WItem)
                 {
-                    return false;
-                }
-                else
-                {
-                    if (NParser.checkName(item_name, name))
+                    WItem item = (WItem) widget;
+                    String item_name;
+                    if ((item_name = ((NGItem) item.item).name()) == null)
                     {
-                        result.add(item);
+                        return false;
+                    }
+                    else
+                    {
+                        if (name == null || NParser.checkName(item_name, name))
+                        {
+                            result.add(item);
+                        }
                     }
                 }
             }
+            return result.size() == target_size;
         }
-        return result.size() == target_size;
+        else if(inventory instanceof NISBox)
+        {
+            return ((NISBox) inventory).calcFreeSpace() == target_size;
+        }
+        return false;
     }
 
     private ArrayList<WItem> result = new ArrayList<>();

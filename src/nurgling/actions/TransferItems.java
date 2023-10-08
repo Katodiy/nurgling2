@@ -8,17 +8,29 @@ import java.util.*;
 
 public class TransferItems implements Action
 {
-    NInventory inv = null;
+    Widget target = null;
     ArrayList<WItem> items;
     int count = -1;
 
     public TransferItems(NInventory inv, ArrayList<WItem> items)
     {
-        this.inv = inv;
+        this.target = inv;
         this.items = items;
     }
 
     public TransferItems(NInventory inv, ArrayList<WItem> items, int count)
+    {
+        this(inv, items);
+        this.count = count;
+    }
+
+    public TransferItems(NISBox inv, ArrayList<WItem> items)
+    {
+        this.target = inv;
+        this.items = items;
+    }
+
+    public TransferItems(NISBox inv, ArrayList<WItem> items, int count)
     {
         this(inv, items);
         this.count = count;
@@ -29,16 +41,47 @@ public class TransferItems implements Action
     {
         if(items.size()>0)
         {
-            int oldSize = inv.getItems(items.get(0).item).size();
-            int target_size = (count == -1) ? items.size() : Math.min(count, items.size());
-            for (int i = 0; i < target_size; i++)
+            if(target instanceof NInventory)
             {
-                items.get(i).item.wdgmsg("transfer", Coord.z);
+                NInventory inv = (NInventory) target;
+                int oldSize = inv.getItems(items.get(0).item).size();
+                int target_size = (count == -1) ? items.size() : Math.min(count, items.size());
+                target_size = Math.min(target_size, inv.getNumberFreeCoord(items.get(0)));
+                for (int i = 0; i < target_size; i++)
+                {
+                    items.get(i).item.wdgmsg("transfer", Coord.z);
+                }
+                gui.ui.core.addTask(new WaitItems(inv, items.get(0).item, oldSize + target_size));
+                items_transferd = target_size;
+                space_left = inv.getNumberFreeCoord(items.get(0));
             }
-            gui.tickmsg("command sended: " + target_size);
-            gui.ui.core.addTask(new WaitItems(inv, items.get(0).item, oldSize + target_size));
-            gui.tickmsg("all items transfered: " + target_size);
+            if(target instanceof NISBox)
+            {
+                NISBox inv = (NISBox) target;
+                int oldSize = inv.getFreeSpace();
+                int target_size = (count == -1) ? items.size() : Math.min(count, items.size());
+                target_size = Math.min(target_size, oldSize);
+                for (int i = 0; i < target_size; i++)
+                {
+                    items.get(i).item.wdgmsg("transfer", Coord.z);
+                }
+                gui.ui.core.addTask(new WaitItems(inv, oldSize - target_size));
+
+            }
         }
         return Results.SUCCESS();
     }
+
+    public int spaceLeft()
+    {
+        return space_left;
+    }
+
+    public int itemsTransfered()
+    {
+        return items_transferd;
+    }
+
+    private int items_transferd = 0;
+    private int space_left = -1;
 }

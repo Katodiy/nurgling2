@@ -183,4 +183,17 @@ public class NGameUI extends GameUI
     public NInventory getInventory () {
         return (NInventory) maininv;
     }
+
+    public NISBox getStockpile () {
+        Window spwnd = getWindow ( "Stockpile" );
+        if(spwnd == null){
+            return null;
+        }
+        for ( Widget sp = spwnd.lchild ; sp != null ; sp = sp.prev ) {
+            if ( sp instanceof NISBox ) {
+                return ( ( NISBox ) sp );
+            }
+        }
+        return null;
+    }
 }

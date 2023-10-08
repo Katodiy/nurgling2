@@ -8,10 +8,16 @@ import java.util.*;
 
 public class GetItems implements NTask
 {
-    NAlias name;
+    NAlias name = null;
     NInventory inventory;
 
     GItem target = null;
+
+    public GetItems(NInventory inventory)
+    {
+        this.inventory = inventory;
+    }
+
     public GetItems(NInventory inventory, NAlias name)
     {
         this.name = name;
@@ -45,7 +51,7 @@ public class GetItems implements NTask
                 }
                 else
                 {
-                    if(NParser.checkName(item_name, name))
+                    if(name == null || NParser.checkName(item_name, name))
                     {
                         result.add(item);
                     }

@@ -12,7 +12,14 @@ public class OpenTargetContainer implements Action
     {
         gui.map.wdgmsg ( "click", Coord.z, gob.rc.floor ( posres ), 3, 0, 0, ( int ) gob.id,
                 gob.rc.floor ( posres ), 0, -1 );
-        gui.ui.core.addTask(new FindNInventory(name));
+        switch (name)
+        {
+            case "Stockpile":
+                gui.ui.core.addTask(new FindNISBox(name));
+                break;
+            default:
+                gui.ui.core.addTask(new FindNInventory(name));
+        }
         return Results.SUCCESS();
     }
 

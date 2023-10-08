@@ -36,18 +36,28 @@ public class TransferItemsTo implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        String container = "Large Chest";
+//        String container = "Stockpile";
+//        gui.tickmsg("start");
+//        while (true)
+//        {
+//            new OpenTargetContainer(container, findChest()).run(gui);
+//            for (int i = 0; i < 13; i++)
+//                new TransferItems(gui.getStockpile(), gui.getInventory().getItems("Block"), 1).run(gui);
+//            new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
+//
+//            new OpenTargetContainer(container, findChest()).run(gui);
+//            for (int i = 0; i < 13; i++)
+//                new TakeItemsFromPile(gui.getStockpile(), new Coord(1, 2), 1).run(gui);
+////            new TransferItems(gui.getInventory(container), gui.getInventory().getItems("Autumn Steak"), 10).run(gui);
+////            new TransferItems(gui.getInventory(container), gui.getInventory().getItems("Autumn Steak"), 10).run(gui);
+//            new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
+//        }
+//        return Results.SUCCESS();
         gui.tickmsg("start");
-        while(true)
-        {
-            new OpenTargetContainer(container, findChest()).run(gui);
-            new TransferItems(gui.getInventory(), gui.getInventory(container).getItems("Autumn Steak"), 10).run(gui);
-            new TransferItems(gui.getInventory(), gui.getInventory(container).getItems("Autumn Steak"), 10).run(gui);
-            new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
-            new OpenTargetContainer(container, findChest()).run(gui);
-            new TransferItems(gui.getInventory(container), gui.getInventory().getItems("Autumn Steak"), 10).run(gui);
-            new TransferItems(gui.getInventory(container), gui.getInventory().getItems("Autumn Steak"), 10).run(gui);
-            new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
-        }
+//        if(new OpenTargetContainer("Chest", findChest()).run(gui).equals(Results.SUCCESS()));
+//        {
+            gui.tickmsg("total free coord 2x2 " + gui.getInventory().getNumberFreeCoord(new Coord(1,2)));
+//        }
+        return Results.SUCCESS();
     }
 }

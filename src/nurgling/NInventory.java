@@ -43,6 +43,13 @@ public class NInventory extends Inventory
         return getNumberFreeCoord(item.item);
     }
 
+    public int getFreeSpace() throws InterruptedException
+    {
+        GetFreeSpace gfs = new GetFreeSpace(this);
+        NUtils.getUI().core.addTask(gfs);
+        return gfs.result();
+    }
+
     public WItem getItem(NAlias name) throws InterruptedException
     {
         GetItem gi = new GetItem(this, name);
@@ -53,6 +60,13 @@ public class NInventory extends Inventory
     public WItem getItem(String name) throws InterruptedException
     {
         return getItem(new NAlias(name));
+    }
+
+    public ArrayList<WItem> getItems() throws InterruptedException
+    {
+        GetItems gi = new GetItems(this);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
     }
 
     public ArrayList<WItem> getItems(NAlias name) throws InterruptedException
@@ -331,7 +345,7 @@ public class NInventory extends Inventory
         return count;
     }
 
-    int calcFreeSpace()
+    public int calcFreeSpace()
     {
         int freespace = 0;
         short[][] inventory = containerMatrix();
