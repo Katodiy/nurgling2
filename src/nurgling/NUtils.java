@@ -73,4 +73,11 @@ public class NUtils
         getUI().core.addTask(tith);
         return getGameUI().vhand;
     }
+
+    public static NFlowerMenu getFlowerMenu() throws InterruptedException
+    {
+        FindNFlowerMenu fnf = new FindNFlowerMenu();
+        getUI().core.addTask(fnf);
+        return fnf.getResult();
+    }
 }

@@ -2,8 +2,6 @@ package nurgling;
 
 import haven.*;
 
-import java.awt.*;
-
 public class NFlowerMenu extends FlowerMenu
 {
     public static final Tex bl = Resource.loadtex("nurgling/hud/flower/left");
@@ -126,5 +124,23 @@ public class NFlowerMenu extends FlowerMenu
             return(true);
         }
         return(false);
+    }
+
+    public boolean chooseOpt(String value)
+    {
+        for(NPetal petal: nopts)
+        {
+            if(petal.name.equals(value))
+            {
+                nchoose(petal);
+                return true;
+            }
+            else
+            {
+                uimsg("cancel");
+                return false;
+            }
+        }
+        return false;
     }
 }
