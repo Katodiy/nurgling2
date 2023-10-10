@@ -42,6 +42,25 @@ public class NStyle
             new TexI(Resource.loadsimg("nurgling/hud/buttons/flip/h")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/flip/dh"))};
 
+    public static final Tex[] gear = new Tex[]{
+            Resource.loadtex("nurgling/hud/gear/0"),
+            Resource.loadtex("nurgling/hud/gear/1"),
+            Resource.loadtex("nurgling/hud/gear/2"),
+            Resource.loadtex("nurgling/hud/gear/3"),
+            Resource.loadtex("nurgling/hud/gear/4"),
+            Resource.loadtex("nurgling/hud/gear/5"),
+            Resource.loadtex("nurgling/hud/gear/6"),
+            Resource.loadtex("nurgling/hud/gear/7"),
+            Resource.loadtex("nurgling/hud/gear/8"),
+            Resource.loadtex("nurgling/hud/gear/9"),
+            Resource.loadtex("nurgling/hud/gear/10"),
+            Resource.loadtex("nurgling/hud/gear/11")};
+
+    public static final TexI[] canceli = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/h"))};
+
     private final static ArrayList<BufferedImage> hlight = new ArrayList<>();
     static {
         for(int i = 0 ; i < 6; i ++)

@@ -237,7 +237,7 @@ public class NInventory extends Inventory
             }
         }, pw.pos("bl").add(UI.scale(new Coord(0, 5))));
         pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/autoflower/u").flayer(Resource.tooltip).t);
-
+        ((ICheckBox)pw).a = (Boolean)NConfig.get(NConfig.Key.autoFlower);
         pw = toggles.add(new ICheckBox(autosplittor[0], autosplittor[1], autosplittor[2], autosplittor[3]) {
             @Override
             public void changed(boolean val) {

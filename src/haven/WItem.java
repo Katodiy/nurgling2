@@ -208,7 +208,10 @@ public class WItem extends Widget implements DTarget {
 	    }
 	    return(true);
 	} else if(btn == 3) {
-	    item.wdgmsg("iact", c, ui.modflags());
+		{
+			item.wdgmsg("iact", c, ui.modflags());
+			NUtils.getUI().core.setLastAction(this);
+		}
 	    return(true);
 	}
 	return(false);

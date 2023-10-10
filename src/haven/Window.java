@@ -79,6 +79,23 @@ public class Window extends Widget implements DTarget {
     public boolean decohide = false;
     public boolean large = false;
 
+    public void disable()
+    {
+		if(dwdg!=null)
+			dwdg.show();
+    }
+
+	public void enable()
+	{
+		if(dwdg!=null)
+			dwdg.hide();
+	}
+
+	public boolean isDisabled()
+	{
+		return dwdg.visible;
+	}
+
     @RName("wnd")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
@@ -95,6 +112,8 @@ public class Window extends Widget implements DTarget {
 	this.large = lg;
 	setfocustab(true);
 	chdeco(defdeco ? makedeco() : deco);
+	dwdg = add(new DisablerWdg());
+	dwdg.hide();
     }
 
     public Window(Coord sz, String cap, boolean lg, Deco deco) {
@@ -310,6 +329,56 @@ public class Window extends Widget implements DTarget {
 	}
     }
 
+	@Override
+	public void draw(GOut g)
+	{
+		super.draw(g);
+		if (dwdg!=null && dwdg.visible)
+		{
+			Coord cc = xlate(dwdg.c, true);
+			GOut g2 = g.reclip(cc, dwdg.sz);
+			if(deco instanceof DefaultDeco)
+				((DefaultDeco)deco).drawbg(g);
+			dwdg.draw(g2);
+		}
+	}
+
+	DisablerWdg dwdg = null;
+
+	public class DisablerWdg extends Widget{
+
+		@Override
+		public void draw(GOut g) {
+			if(deco!=null && deco instanceof DefaultDeco) {
+				if(!this.cancelb.visible)
+					this.cancelb.show();
+				int id = (int) (NUtils.getTickId() / 5) % 12;
+
+				g.image(NStyle.gear[id], new Coord(deco.contarea().sz().x / 2 - NStyle.gear[0].sz().x / 2, deco.contarea().sz().y / 2 - NStyle.gear[0].sz().y / 2));
+				super.draw(g);
+			}
+		}
+
+		@Override
+		public void resize(Coord sz) {
+			super.resize(sz);
+			cancelb.move( new Coord(deco.contarea().sz().x / 2 - NStyle.canceli[0].sz().x / 2  + UI.scale(1), deco.contarea().sz().y / 2 - NStyle.canceli[0].sz().y / 2 - UI.scale(1)));
+		}
+
+		public IButton cancelb;
+
+		public DisablerWdg() {
+			super();
+			cancelb = add(new IButton(NStyle.canceli[0].back,NStyle.canceli[1].back,NStyle.canceli[2].back){
+				@Override
+				public void click() {
+					parent.hide();
+				}
+			});
+			cancelb.hide();
+		}
+	}
+
     public void cdraw(GOut g) {
     }
 
@@ -343,6 +412,8 @@ public class Window extends Widget implements DTarget {
     private void resize2(Coord sz) {
 	if(deco != null) {
 	    deco.iresize(sz);
+		if(dwdg!=null)
+			dwdg.resize(sz);
 	    deco.c = deco.contarea().ul.inv();
 	    this.sz = deco.sz;
 	} else {
@@ -399,6 +470,15 @@ public class Window extends Widget implements DTarget {
     }
 
     public boolean mousedown(Coord c, int button) {
+	if(dwdg.visible())
+	{
+		Coord cc = xlate(dwdg.c, true);
+		if(c.isect(cc, dwdg.sz))
+		{
+			dwdg.mousedown(c.add(cc.inv()), button);
+		}
+		return true;
+	}
 	if(super.mousedown(c, button)) {
 	    parent.setfocus(this);
 	    raise();
@@ -408,6 +488,15 @@ public class Window extends Widget implements DTarget {
     }
 
     public boolean mouseup(Coord c, int button) {
+	if(dwdg.visible())
+	{
+		Coord cc = xlate(dwdg.c, true);
+		if(c.isect(cc, dwdg.sz))
+		{
+			dwdg.mouseup(c.add(cc.inv()), button);
+		}
+		return(true);
+	}
 	if(dm != null) {
 	    dm.remove();
 	    dm = null;
@@ -418,6 +507,10 @@ public class Window extends Widget implements DTarget {
     }
 
     public void mousemove(Coord c) {
+	if(dwdg.visible())
+	{
+		dwdg.mousemove(c);
+	}
 	if(dm != null) {
 	    this.c = this.c.add(c.add(doff.inv()));
 		for(Widget ch = child; ch != null; ch = ch.next){

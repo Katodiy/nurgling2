@@ -11,6 +11,7 @@ public class GetItems implements NTask
     NAlias name = null;
     NInventory inventory;
 
+    boolean eq = false;
     GItem target = null;
 
     public GetItems(NInventory inventory)
@@ -28,6 +29,7 @@ public class GetItems implements NTask
     {
         this.target = target;
         this.inventory = inventory;
+        this.eq = true;
     }
 
     @Override
@@ -51,7 +53,7 @@ public class GetItems implements NTask
                 }
                 else
                 {
-                    if(name == null || NParser.checkName(item_name, name))
+                    if (name == null || (eq && name.keys.size() > 0) ? item_name.equals(name.getDefault()) : NParser.checkName(item_name, name))
                     {
                         result.add(item);
                     }

@@ -19,11 +19,67 @@ public class NCore extends Widget
         return false;
     }
 
+    public void enableBotMod()
+    {
+        botmod = true;
+    }
+
+    public void disableBotMod()
+    {
+        botmod = false;
+    }
+
+
     public enum Mode
     {
         IDLE,
         DRAG
     }
+
+    public class LastActions
+    {
+        public String petal = null;
+        public WItem item = null;
+        public Gob gob = null;
+    }
+
+    private LastActions actions = new LastActions();
+
+    public LastActions getLastActions()
+    {
+        return actions;
+    }
+
+    public void setLastAction(String petal, WItem item)
+    {
+        actions = new LastActions();
+        actions.petal = petal;
+        actions.item = item;
+    }
+
+    public void setLastAction(String petal, Gob gob)
+    {
+        actions = new LastActions();
+        actions.petal = petal;
+        actions.gob = gob;
+    }
+
+    public void setLastAction(Gob gob)
+    {
+        actions = new LastActions();
+        actions.gob = gob;
+    }
+
+    public void setLastAction(WItem item)
+    {
+        actions = new LastActions();
+        actions.item = item;
+    }
+    public void resetLastAction()
+    {
+        actions = new LastActions();
+    }
+
 
     public Mode mode = Mode.IDLE;
     private boolean botmod = false;

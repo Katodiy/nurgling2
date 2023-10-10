@@ -38,7 +38,7 @@ public class SelectFlowerAction implements Action
         if(target instanceof WItem)
         {
             WItem item = (WItem) target;
-            item.item.wdgmsg("iact", Coord.z, 0);
+            item.item.wdgmsg("iact", item.c, 0);
         }
         else if (target instanceof Gob)
         {

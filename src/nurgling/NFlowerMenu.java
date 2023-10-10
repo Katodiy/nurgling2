@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import nurgling.actions.bots.*;
 
 public class NFlowerMenu extends FlowerMenu
 {
@@ -43,6 +44,25 @@ public class NFlowerMenu extends FlowerMenu
         else
         {
             wdgmsg("cl", option.num, ui.modflags());
+            NCore.LastActions actions = NUtils.getUI().core.getLastActions();
+            if (actions.item != null)
+            {
+                NUtils.getUI().core.setLastAction(option.name, actions.item);
+            }
+            else if (actions.gob != null)
+            {
+                NUtils.getUI().core.setLastAction(option.name, actions.gob);
+            }
+        }
+        if(!NUtils.getUI().core.isBotmod() && (Boolean)NConfig.get(NConfig.Key.autoFlower))
+        {
+            if (option != null)
+            {
+                if(NUtils.getUI().core.getLastActions().item != null && NUtils.getUI().core.getLastActions().item.parent instanceof NInventory)
+                {
+                    AutoChooser.enable((NInventory) NUtils.getUI().core.getLastActions().item.parent, option.name);
+                }
+            }
         }
     }
 
@@ -135,12 +155,8 @@ public class NFlowerMenu extends FlowerMenu
                 nchoose(petal);
                 return true;
             }
-            else
-            {
-                uimsg("cancel");
-                return false;
-            }
         }
+        uimsg("cancel");
         return false;
     }
 }
