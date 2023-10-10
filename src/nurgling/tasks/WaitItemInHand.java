@@ -4,25 +4,25 @@ import haven.*;
 import nurgling.*;
 import nurgling.tools.*;
 
-public class TakeItemToHand implements NTask
+public class WaitItemInHand implements NTask
 {
     String name;
     GItem item = null;
     NInventory inventory;
 
-    public TakeItemToHand(String name, NInventory inventory)
+    public WaitItemInHand(String name, NInventory inventory)
     {
         this.name = name;
         this.inventory = inventory;
     }
 
-    public TakeItemToHand(WItem item, NInventory inventory)
+    public WaitItemInHand(WItem item, NInventory inventory)
     {
         this.item = item.item;
         this.inventory = inventory;
     }
 
-    public TakeItemToHand(GItem item, NInventory inventory)
+    public WaitItemInHand(GItem item, NInventory inventory)
     {
         this.item = item;
         this.inventory = inventory;

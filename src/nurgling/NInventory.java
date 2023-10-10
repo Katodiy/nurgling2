@@ -43,6 +43,26 @@ public class NInventory extends Inventory
         return getNumberFreeCoord(item.item);
     }
 
+    public Coord getFreeCoord(Coord sz) throws InterruptedException
+    {
+        GetFreePlace gfp = new GetFreePlace(this, sz);
+        NUtils.getUI().core.addTask(gfp);
+        return gfp.result();
+    }
+    public Coord getFreeCoord(GItem item) throws InterruptedException
+    {
+        GetFreePlace gfp = new GetFreePlace(this, item);
+        NUtils.getUI().core.addTask(gfp);
+        return gfp.result();
+    }
+
+    public Coord getFreeCoord(WItem item) throws InterruptedException
+    {
+        GetFreePlace gfp = new GetFreePlace(this, item.item);
+        NUtils.getUI().core.addTask(gfp);
+        return gfp.result();
+    }
+
     public int getFreeSpace() throws InterruptedException
     {
         GetFreeSpace gfs = new GetFreeSpace(this);
@@ -341,6 +361,34 @@ public class NInventory extends Inventory
             }
         }
         return count;
+    }
+
+    public Coord findFreeCoord(Coord target_size)
+    {
+        short[][] inventory = containerMatrix();
+        if(inventory == null)
+            return null;
+        for (int i = 0; i < isz.y; i++) {
+            for (int j = 0; j < isz.x; j++) {
+                if (inventory[i][j] == 0) {
+                    if (i + target_size.x - 1 < isz.y && j + target_size.y - 1 < isz.x) {
+                        boolean isFree = true;
+                        for (int k = i; k < i + target_size.x; k++) {
+                            for (int n = j; n < j + target_size.y; n++) {
+                                if (inventory[k][n]!=0) {
+                                    isFree = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (isFree) {
+                            return new Coord(j,i);
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public int calcFreeSpace()

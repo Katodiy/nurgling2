@@ -29,6 +29,21 @@ public class NCore extends Widget
         botmod = false;
     }
 
+    public void resetTasks()
+    {
+        synchronized (tasks)
+        {
+            if(tasks.size()>0)
+            {
+                for (final NTask task : tasks)
+                {
+                    task.notify();
+                }
+                tasks.clear();
+            }
+        }
+    }
+
 
     public enum Mode
     {

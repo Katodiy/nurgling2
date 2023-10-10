@@ -88,7 +88,10 @@ public class Window extends Widget implements DTarget {
 	public void enable()
 	{
 		if(dwdg!=null)
+		{
 			dwdg.hide();
+			NUtils.getUI().core.resetTasks();
+		}
 	}
 
 	public boolean isDisabled()

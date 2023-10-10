@@ -58,9 +58,12 @@ public class NFlowerMenu extends FlowerMenu
         {
             if (option != null)
             {
-                if(NUtils.getUI().core.getLastActions().item != null && NUtils.getUI().core.getLastActions().item.parent instanceof NInventory)
+                if(!option.name.equals("Split"))
                 {
-                    AutoChooser.enable((NInventory) NUtils.getUI().core.getLastActions().item.parent, option.name);
+                    if (NUtils.getUI().core.getLastActions().item != null && NUtils.getUI().core.getLastActions().item.parent instanceof NInventory)
+                    {
+                        AutoChooser.enable((NInventory) NUtils.getUI().core.getLastActions().item.parent, option.name);
+                    }
                 }
             }
         }

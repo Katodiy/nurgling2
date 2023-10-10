@@ -26,6 +26,9 @@
 
 package haven;
 
+import nurgling.*;
+import nurgling.actions.bots.*;
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -152,6 +155,16 @@ public class TextEntry extends Widget implements ReadLine.Owner {
     public void activate(String text) {
 	if(canactivate)
 	    wdgmsg("activate", text);
+		{
+			if (!NUtils.getUI().core.isBotmod() && (Boolean) NConfig.get(NConfig.Key.autoSplitter) && parent instanceof Window && ((Window) parent).cap.equals("Split"))
+			{
+				WItem item;
+				if ((item = NUtils.getUI().core.getLastActions().item) != null && item.parent instanceof NInventory)
+				{
+					AutoSplitter.enable((NInventory) item.parent,Double.parseDouble(text));
+				}
+			}
+		}
     }
 
     public void done(ReadLine buf) {

@@ -69,7 +69,7 @@ public class NUtils
     public static WItem takeItemToHand(WItem item) throws InterruptedException
     {
         item.item.wdgmsg("take", Coord.z);
-        TakeItemToHand tith = new TakeItemToHand(item, getGameUI().getInventory());
+        WaitItemInHand tith = new WaitItemInHand(item, getGameUI().getInventory());
         getUI().core.addTask(tith);
         return getGameUI().vhand;
     }

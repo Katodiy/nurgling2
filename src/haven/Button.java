@@ -26,6 +26,9 @@
 
 package haven;
 
+import nurgling.*;
+import nurgling.actions.bots.*;
+
 import java.awt.Graphics;
 import java.awt.Color;
 import java.awt.Font;

@@ -91,4 +91,17 @@ public class NUI extends UI
         }
         return null;
     }
+
+    public Window findInRoot(String cap)
+    {
+        for (Widget wdg : root.children())
+        {
+            if (wdg instanceof Window)
+            {
+                if(((Window) wdg).cap.equals(cap))
+                    return (Window)wdg;
+            }
+        }
+        return null;
+    }
 }
