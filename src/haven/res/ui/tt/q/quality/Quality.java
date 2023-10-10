@@ -20,6 +20,7 @@ public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
 	super(owner, icon, "Quality", q);
     if (owner instanceof NGItem) {
         ownitem = (NGItem) owner;
+        ownitem.quality = (float) q;
     }
     }
 

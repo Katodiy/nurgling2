@@ -144,7 +144,7 @@ public class NGItem extends GItem
                             switch (resName)
                             {
                                 case "ui/tt/q/quality":
-                                    if (a.length >= 2) quality = (Float) a[1];
+                                    if (a.length >= 2)  quality = (Float) a[1];
                                     break;
                                 case "ui/tt/cont":
                                     double q = -1;
