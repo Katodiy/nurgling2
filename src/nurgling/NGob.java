@@ -14,7 +14,6 @@ public class NGob
     private CellsArray ca = null;
     private boolean isDynamic = false;
     private boolean isGate = false;
-    private boolean isPlayer = false;
     protected long modelAttribute = -1;
     final Gob parent;
     public NGob(Gob parent)

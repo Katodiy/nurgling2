@@ -111,6 +111,7 @@ public class ResDrawable extends Drawable implements EquipTarget {
 	    if((d != null) && (d.res == res) && !d.sdt.equals(sdt) && (d.spr != null) && (d.spr instanceof Sprite.CUpd)) {
 		((Sprite.CUpd)d.spr).update(sdt);
 		d.sdt = sdt;
+		g.ngob.checkattr(d,g.id);
 	    } else if((d == null) || (d.res != res) || !d.sdt.equals(sdt)) {
 		g.setattr(new ResDrawable(g, res, sdt));
 	    }

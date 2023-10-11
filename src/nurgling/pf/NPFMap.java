@@ -22,13 +22,14 @@ public class NPFMap
     }
 
     Cell[][] cells;
-
     Coord begin, end;
     int dsize;
     int size;
 
-    public NPFMap(Coord2d a, Coord2d b)
+    public NPFMap(Coord2d src, Coord2d dst)
     {
+        Coord2d a = new Coord2d(Math.min(src.x,dst.x),Math.min(src.y,dst.y));
+        Coord2d b = new Coord2d(Math.max(src.x,dst.x),Math.max(src.y,dst.y));
         // Последнее деление умножение нужно чтобы сопоставить сетку пф с сеткой лофтара по углу (ускорение запроса поверхности тайлов)
         Coord center = Utils.toPfGrid(a.add((b.sub(a)).div(2))).div(2).mul(2);
         dsize = (((int) ((b.sub(a).len() / MCache.tilepfsz.x)))/2)*2;
@@ -44,6 +45,27 @@ public class NPFMap
                 cells[i][j] = new Cell(new Coord(begin.x + i, begin.y + j));
             }
         }
+    }
+
+
+    public Coord getBegin()
+    {
+        return begin;
+    }
+
+    public Coord getEnd()
+    {
+        return end;
+    }
+
+    public Cell[][] getCells()
+    {
+        return cells;
+    }
+
+    public int getSize()
+    {
+        return size;
     }
 
     public void build()
@@ -92,9 +114,7 @@ public class NPFMap
                 }
             }
         }
-        print();
     }
-
 
     public void print (){
         Coord csz = new Coord(UI.scale(10),UI.scale(10));
@@ -111,6 +131,8 @@ public class NPFMap
                             g.chcolor(Color.RED);
                         else if (cells[i][j].val == 0)
                             g.chcolor(Color.GREEN);
+                        else if (cells[i][j].val == 7)
+                            g.chcolor(Color.BLUE);
                         else
                             g.chcolor(Color.BLACK);
                         g.rect(new Coord(i*UI.scale(10),j*UI.scale(10)).add(deco.contarea().ul),csz);
@@ -130,20 +152,6 @@ public class NPFMap
         NUtils.getUI().bind(wnd, 7002);
     }
 
-    public PFGraph getGraph()
-    {
-        return null;
-    }
 
-    class PFGraph
-    {
-        class Vertex{
-            // Нужен только список соседей в которые можно пойти
-            ArrayList<Long> neighbours = new ArrayList<>();
-            boolean isVisited;
-            double distance;
-        }
 
-        HashMap<Long,Vertex> data = new HashMap();
-    }
 }
