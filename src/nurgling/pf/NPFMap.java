@@ -29,9 +29,10 @@ public class NPFMap
 
     public NPFMap(Coord2d a, Coord2d b)
     {
-        Coord center = Utils.toPfGrid(a.add((b.sub(a)).div(2)));
-        dsize = (int) (b.sub(a).len() / MCache.tilepfsz.x);
-        size = 2*dsize;
+        // Последнее деление умножение нужно чтобы сопоставить сетку пф с сеткой лофтара по углу (ускорение запроса поверхности тайлов)
+        Coord center = Utils.toPfGrid(a.add((b.sub(a)).div(2))).div(2).mul(2);
+        dsize = (((int) ((b.sub(a).len() / MCache.tilepfsz.x)))/2)*2;
+        size = 2 * dsize;
 
         cells = new Cell[size][size];
         begin = new Coord(center.x - dsize, center.y - dsize);
@@ -40,7 +41,7 @@ public class NPFMap
         {
             for (int j = 0; j < size; j++)
             {
-                cells[i][j] = new Cell(new Coord(begin.x + i, begin.y+j));
+                cells[i][j] = new Cell(new Coord(begin.x + i, begin.y + j));
             }
         }
     }
@@ -49,11 +50,11 @@ public class NPFMap
     {
         synchronized (NUtils.getGameUI().ui.sess.glob.oc)
         {
+            CellsArray ca;
             for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
             {
-                if (gob.ngob != null && gob.ngob.ca != null)
+                if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null)
                 {
-                    CellsArray ca = gob.ngob.ca;
                     if ((ca.begin.x >= begin.x && ca.begin.x <= end.x ||
                             ca.end.x >= begin.x && ca.end.x <= end.x) &&
                             (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
@@ -69,6 +70,24 @@ public class NPFMap
                                     cells[ii][jj].val = ca.cells[i][j];
                                 }
                             }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < size; i += 2)
+        {
+            for (int j = 0; j < size; j += 2)
+            {
+
+                if (cells[i][j].val == 0)
+                {
+                    String name = NUtils.getGameUI().ui.sess.glob.map.tilesetname(NUtils.getGameUI().ui.sess.glob.map.gettile(cells[i][j].pos.div(2)));
+                    if (name != null && (name.startsWith("gfx/tiles/cave") || name.startsWith("gfx/tiles/rocks") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep")))
+                    {
+                        cells[i][j].val = 2;
+                        cells[i+1][j].val = 2;
+                        cells[i][j+1].val = 2;
+                        cells[i+1][j+1].val = 2;
                     }
                 }
             }
@@ -90,8 +109,10 @@ public class NPFMap
                     {
                         if (cells[i][j].val == 1)
                             g.chcolor(Color.RED);
-                        else
+                        else if (cells[i][j].val == 0)
                             g.chcolor(Color.GREEN);
+                        else
+                            g.chcolor(Color.BLACK);
                         g.rect(new Coord(i*UI.scale(10),j*UI.scale(10)).add(deco.contarea().ul),csz);
                     }
                 }
@@ -107,26 +128,6 @@ public class NPFMap
 
         }, new Coord(UI.scale(100),UI.scale(100)));
         NUtils.getUI().bind(wnd, 7002);
-//        try {
-//            File file = new File("notes3.txt");
-//            file.createNewFile(); // если файл существует - команда игнорируется
-//            FileOutputStream fileOutputStream = new FileOutputStream(file, false);
-//            Writer writer = new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8);
-//            for ( int i = 0; i < size ; i++ )
-//            {
-//                for (int j = 0; j < size; j++)
-//                {
-//                    if (cells[i][j].val == 1)
-//                        writer.write("◙");
-//                    else
-//                        writer.write("⊡");
-//                }
-//                writer.write('\n');
-//            }
-//            writer.close();
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
     }
 
     public PFGraph getGraph()

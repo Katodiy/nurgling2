@@ -60,22 +60,47 @@ public class CellsArray
             Coord2d b_c = cd.sub(bd);
             Coord2d c_d = dd.sub(cd);
             Coord2d d_a = ad.sub(dd);
-            short[][] dcells = new short[x_len + 1][y_len + 1];
-            for (int i = 0; i < x_len + 1; i++)
+            int factor = 1;
+            double delta = Math.abs(Math.min(hb.end.x-hb.begin.x,hb.end.y-hb.begin.y));
+            while (delta<MCache.tilepfsz.x)
             {
-                for (int j = 0; j < y_len + 1; j++)
+                delta *= 2;
+                factor *= 2;
+            }
+
+            short[][] dcells = new short[x_len*factor + 1][y_len*factor + 1];
+            for (int i = 0; i < x_len*factor + 1; i++)
+            {
+                for (int j = 0; j < y_len*factor + 1; j++)
                 {
                     dcells[i][j] = (short) ((a_b.dot(pos.sub(ad)) >= 0 && b_c.dot(pos.sub(bd)) >= 0 && c_d.dot(pos.sub(cd)) >= 0 && d_a.dot(pos.sub(dd)) >= 0) ? 1 : 0);
-                    pos.y += MCache.tilepfsz.y;
+                    pos.y += (MCache.tilepfsz.y/factor);
                 }
-                pos.x += MCache.tilepfsz.x;
+                pos.x += (MCache.tilepfsz.x/factor);
                 pos.y = start.y;
             }
+
+
             for (int i = 0; i < x_len; i++)
             {
                 for (int j = 0; j < y_len; j++)
                 {
-                    cells[i][j] = (short) ((dcells[i][j] == 1 || dcells[i + 1][j] == 1 || dcells[i][j + 1] == 1 || dcells[i + 1][j + 1] == 1) ? 1 : 0);
+                    if(factor>1)
+                    {
+                        short res = 0;
+                        for(int k = 0; k < factor; k++)
+                        {
+                            for(int n = 0; n < factor; n++)
+                            {
+                                res |= dcells[factor * i + k][factor * j + n];
+                            }
+                        }
+                        cells[i][j] = res;
+                    }
+                    else
+                    {
+                        cells[i][j] = (short) ((dcells[i][j] == 1 || dcells[i + 1][j] == 1 || dcells[i][j + 1] == 1 || dcells[i + 1][j + 1] == 1) ? 1 : 0);
+                    }
                 }
             }
             cells[a.x -begin.x][a.y -begin.y] = 1;
