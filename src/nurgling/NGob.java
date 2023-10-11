@@ -2,6 +2,7 @@ package nurgling;
 
 import haven.*;
 import nurgling.overlays.*;
+import nurgling.pf.*;
 import nurgling.tools.*;
 
 import java.util.*;
@@ -55,6 +56,7 @@ public class NGob
                         if (hitBox != null)
                         {
                             parent.addcustomol(new NModelBox(parent));
+                            new CellsArray(parent);
                             // TODO пока не ясно, есть ли ситуации когда обновление объекта скажывается на изменени сетки пф
                             if (NUtils.getGameUI() != null)
                             {
