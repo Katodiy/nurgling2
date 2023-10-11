@@ -22,6 +22,7 @@ public class NBotsMenu extends Widget
             tests.elements.add(new NButton("chop", new TESTtakehanddporop()));
             tests.elements.add(new NButton("chop", new TESTskinstockpiletransfer()));
             tests.elements.add(new NButton("chop", new TESTselectfloweraction()));
+            tests.elements.add(new NButton("chop", new TESTpf()));
             addLayout(tests);
         }
         showLayouts();

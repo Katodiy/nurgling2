@@ -24,8 +24,8 @@ public class CellsArray
         if ((Math.abs((gob.a * 180 / Math.PI) / 90) % 1 < 0.01))
         {
             Coord2d a1 = hb.begin.rotate(gob.a).shift(gob.rc);
-            Coord a = a1.div(MCache.tilepfsz).floor();
-            Coord b = hb.end.rotate(gob.a).shift(gob.rc).div(MCache.tilepfsz).floor();
+            Coord a = Utils.toPfGrid(a1);
+            Coord b = Utils.toPfGrid(hb.end.rotate(gob.a).shift(gob.rc));
             begin = new Coord(Math.min(a.x, b.x), Math.min(a.y, b.y));
             end = new Coord(Math.max(a.x, b.x), Math.max(a.y, b.y));
             x_len = end.x - begin.x + 1;
@@ -45,10 +45,10 @@ public class CellsArray
             Coord2d bd = new Coord2d(hb.end.x, hb.begin.y).rotate(gob.a).shift(gob.rc);
             Coord2d cd = hb.end.rotate(gob.a).shift(gob.rc);
             Coord2d dd = new Coord2d(hb.begin.x, hb.end.y).rotate(gob.a).shift(gob.rc);
-            Coord a = ad.div(MCache.tilepfsz).floor();
-            Coord b = bd.div(MCache.tilepfsz).floor();
-            Coord c = cd.div(MCache.tilepfsz).floor();
-            Coord d = dd.div(MCache.tilepfsz).floor();
+            Coord a = Utils.toPfGrid(ad);
+            Coord b = Utils.toPfGrid(bd);
+            Coord c = Utils.toPfGrid(cd);
+            Coord d = Utils.toPfGrid(dd);
             begin = new Coord(Math.min(Math.min(a.x, b.x), Math.min(c.x, d.x)), Math.min(Math.min(a.y, b.y), Math.min(c.y, d.y)));
             end = new Coord(Math.max(Math.max(a.x, b.x), Math.max(c.x, d.x)), Math.max(Math.max(a.y, b.y), Math.max(c.y, d.y)));
             x_len = end.x - begin.x + 1;

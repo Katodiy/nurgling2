@@ -11,6 +11,7 @@ public class NGob
 {
     public NHitBox hitBox = null;
     public String name = null;
+    public CellsArray ca = null;
 
     final Gob parent;
     public NGob(Gob parent)
@@ -56,15 +57,7 @@ public class NGob
                         if (hitBox != null)
                         {
                             parent.addcustomol(new NModelBox(parent));
-                            new CellsArray(parent);
-                            // TODO пока не ясно, есть ли ситуации когда обновление объекта скажывается на изменени сетки пф
-                            if (NUtils.getGameUI() != null)
-                            {
-                                if (NUtils.findGob(parent.id) != null)
-                                {
-                                    NUtils.getUI().core.pfMap.processGob(parent.id);
-                                }
-                            }
+                            ca = new CellsArray(parent);
                         }
                     }
                 }

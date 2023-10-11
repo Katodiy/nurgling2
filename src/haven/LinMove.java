@@ -104,13 +104,7 @@ public class LinMove extends Moving {
 	    if(t < 0)
 		g.delattr(Moving.class);
 	    else
-		{
-			if(g.ngob.hitBox!=null)
-			{
-				NUtils.getUI().core.pfMap.processKritter(g.id);
-			}
 			lm.sett(t);
-		}
 	    if(e >= 0)
 		lm.e = e;
 	    else

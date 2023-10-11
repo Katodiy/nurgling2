@@ -430,13 +430,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 
     public void ctick(double dt) {
 	for(GAttrib a : attr.values())
-	{
 		a.ctick(dt);
-		if (a instanceof Homing)
-		{
-			NUtils.getUI().core.pfMap.processKritter(id);
-		}
-	}
 	for(Iterator<Overlay> i = ols.iterator(); i.hasNext();) {
 	    Overlay ol = i.next();
 	    if(ol.slots == null) {

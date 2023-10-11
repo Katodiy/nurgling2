@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import nurgling.pf.*;
 import nurgling.tasks.*;
 
 import java.util.*;
@@ -100,7 +101,6 @@ public class NCore extends Widget
     private boolean botmod = false;
     public boolean enablegrid = true;
 
-    public NPFMap pfMap = new NPFMap(MCache.tilesz2.x/4.d);
     public class BotmodSettings
     {
         public String user;
@@ -130,8 +130,6 @@ public class NCore extends Widget
     {
         config = new NConfig();
         config.read();
-
-        add(pfMap);
     }
 
     @Override
