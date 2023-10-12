@@ -11,6 +11,7 @@ public class IsMoving implements NTask
 
     Coord2d coord;
 
+    int count = 0;
     public IsMoving(Coord2d coord)
     {
         this.coord = coord;
@@ -19,6 +20,7 @@ public class IsMoving implements NTask
     @Override
     public boolean check()
     {
+        count++;
         if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null && NUtils.getGameUI().map.player() != null)
         {
             if (NUtils.getGameUI().map.player().rc.dist(coord) <= pfmdelta)
@@ -27,7 +29,8 @@ public class IsMoving implements NTask
             if (drawable != null)
             {
                 String pose;
-                return drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && NParser.checkName(pose, "borka/walking", "borka/running");
+                // Экстренный выход если движение так и началось ( 200 попыток )
+                return count > 200 || drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && NParser.checkName(pose, "borka/walking", "borka/running");
             }
         }
         return false;

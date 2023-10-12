@@ -146,17 +146,30 @@ public class PathFinder implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        LinkedList<Graph.Vertex> path = construct();
-        if (path != null)
+        while(true)
         {
-            for (Graph.Vertex vert : path)
+            LinkedList<Graph.Vertex> path = construct();
+            if (path != null)
             {
-                Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
-                new GoTo(targetCoord).run(gui);
+                boolean needRestart = false;
+                for (Graph.Vertex vert : path)
+                {
+                    Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
+                    if(!(new GoTo(targetCoord).run(gui)).IsSuccess())
+                    {
+                        this.begin = gui.map.player().rc;
+                        needRestart = true;
+                        break;
+                    }
+                }
+                if(!needRestart)
+                    return Results.SUCCESS();
             }
-            return Results.SUCCESS();
+            else
+            {
+                return Results.ERROR("Can't find path");
+            }
         }
-        return Results.ERROR("Can't find path");
     }
 
     LinkedList<Graph.Vertex> construct() throws InterruptedException
@@ -171,6 +184,7 @@ public class PathFinder implements Action
             end_pos = Utils.toPfGrid(end).sub(pfmap.getBegin());
             // Находим свободные начальные и конечные точки
             fixStartEnd();
+            NPFMap.print(pfmap.getSize(), pfmap.getCells());
             Graph res = null;
             if (pfmap.getCells()[end_pos.x][end_pos.y].val == 7)
             {

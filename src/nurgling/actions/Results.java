@@ -4,9 +4,12 @@ import nurgling.NUtils;
 
 public class Results {
     String msg;
+    boolean isSuccess = false;
     public static Results SUCCESS()
     {
-        return new Results(null);
+        Results res =new Results(null);
+        res.isSuccess = true;
+        return res;
     }
 
     public static Results ERROR(String msg)
@@ -20,8 +23,15 @@ public class Results {
             NUtils.getGameUI ().error( msg );
     }
 
-    public boolean equal(Results l)
+    public static Results FAIL()
     {
-        return msg == null || l.msg.equals(msg);
+        Results res =new Results(null);
+        res.isSuccess = false;
+        return res;
+    }
+
+    public boolean IsSuccess()
+    {
+        return isSuccess;
     }
 }

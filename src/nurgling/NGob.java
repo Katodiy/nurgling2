@@ -84,10 +84,10 @@ public class NGob
         {
             if(NUtils.getGameUI().map!=null)
             {
-                if(NUtils.getGameUI().map.player()!=null && parent.id == NUtils.getGameUI().map.player().id)
+                if (NUtils.getGameUI().map.player() != null && (parent.id == NUtils.getGameUI().map.player().id || parent.getattr(Following.class) != null))
                     return null;
+                ca = new CellsArray(parent);
             }
-            ca = new CellsArray(parent);
         } else if (isGate)
         {
             if(modelAttribute == 2)
@@ -96,5 +96,10 @@ public class NGob
                 return null;
         }
         return ca;
+    }
+
+    public void markAsDynamic()
+    {
+        isDynamic = true;
     }
 }

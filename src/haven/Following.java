@@ -39,6 +39,7 @@ public class Following extends Moving {
 	this.tgt = tgt;
 	this.xfres = xfres;
 	this.xfname = xfname;
+	gob.ngob.markAsDynamic();
     }
 
     public Coord3f getc() {
