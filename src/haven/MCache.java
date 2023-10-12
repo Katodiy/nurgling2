@@ -37,6 +37,7 @@ import nurgling.*;
 public class MCache implements MapSource {
     public static final Coord2d tilesz = Coord2d.of(11, 11);
     public static final Coord2d tilepfsz = Coord2d.of(5.5, 5.5);
+    public static final Coord2d dtilepfsz = Coord2d.of(2.75, 2.75);
     public static final Coord tilesz2 = tilesz.round(); /* XXX: Remove me in due time. */
     public static final Coord cmaps = Coord.of(100, 100);
     public static final Coord cutsz = Coord.of(25, 25);

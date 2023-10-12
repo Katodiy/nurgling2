@@ -3,6 +3,7 @@ package nurgling.actions;
 import nurgling.NUtils;
 
 public class Results {
+    String msg;
     public static Results SUCCESS()
     {
         return new Results(null);
@@ -14,8 +15,13 @@ public class Results {
     }
 
     private Results(String msg) {
+        this.msg = msg;
         if(msg!=null)
             NUtils.getGameUI ().error( msg );
     }
 
+    public boolean equal(Results l)
+    {
+        return msg == null || l.msg.equals(msg);
+    }
 }

@@ -5,13 +5,11 @@ import haven.Window;
 import nurgling.*;
 
 import java.awt.*;
-import java.io.*;
-import java.nio.charset.*;
-import java.util.*;
 
 public class NPFMap
 {
-    public class Cell{
+    public static class Cell
+    {
         public Cell(Coord pos)
         {
             this.pos = pos;
@@ -26,13 +24,13 @@ public class NPFMap
     int dsize;
     int size;
 
-    public NPFMap(Coord2d src, Coord2d dst)
+    public NPFMap(Coord2d src, Coord2d dst, int mul)
     {
-        Coord2d a = new Coord2d(Math.min(src.x,dst.x),Math.min(src.y,dst.y));
-        Coord2d b = new Coord2d(Math.max(src.x,dst.x),Math.max(src.y,dst.y));
+        Coord2d a = new Coord2d(Math.min(src.x, dst.x), Math.min(src.y, dst.y));
+        Coord2d b = new Coord2d(Math.max(src.x, dst.x), Math.max(src.y, dst.y));
         // Последнее деление умножение нужно чтобы сопоставить сетку пф с сеткой лофтара по углу (ускорение запроса поверхности тайлов)
         Coord center = Utils.toPfGrid(a.add((b.sub(a)).div(2))).div(2).mul(2);
-        dsize = (((int) ((b.sub(a).len() / MCache.tilepfsz.x)))/2)*2;
+        dsize = (((int) ((b.sub(a).len() / MCache.tilepfsz.x))) / 2) * 2 * mul;
         size = 2 * dsize;
 
         cells = new Cell[size][size];
@@ -107,51 +105,72 @@ public class NPFMap
                     if (name != null && (name.startsWith("gfx/tiles/cave") || name.startsWith("gfx/tiles/rocks") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep")))
                     {
                         cells[i][j].val = 2;
-                        cells[i+1][j].val = 2;
-                        cells[i][j+1].val = 2;
-                        cells[i+1][j+1].val = 2;
+                        cells[i + 1][j].val = 2;
+                        cells[i][j + 1].val = 2;
+                        cells[i + 1][j + 1].val = 2;
                     }
                 }
             }
         }
     }
 
-    public void print (){
-        Coord csz = new Coord(UI.scale(10),UI.scale(10));
-        Window wnd = NUtils.getUI().root.add(new Window(new Coord(size*UI.scale(10),size*UI.scale(10)),"PFMAP"){
+    public static void print(int size, Cell[][] cells)
+    {
+        Coord csz = new Coord(UI.scale(10), UI.scale(10));
+        Window wnd = NUtils.getUI().root.add(new Window(new Coord(size * UI.scale(10), size * UI.scale(10)), "PFMAP")
+        {
             @Override
             public void draw(GOut g)
             {
                 super.draw(g);
-                for ( int i = 0; i < size ; i++ )
+                for (int i = 0; i < size; i++)
                 {
-                    for (int j = size-1; j >= 0; j--)
+                    for (int j = size - 1; j >= 0; j--)
                     {
                         if (cells[i][j].val == 1)
                             g.chcolor(Color.RED);
                         else if (cells[i][j].val == 0)
                             g.chcolor(Color.GREEN);
+                        else if (cells[i][j].val == 3)
+                        {
+                            g.chcolor(Color.YELLOW);
+                            g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
+                            continue;
+                        }
                         else if (cells[i][j].val == 7)
                             g.chcolor(Color.BLUE);
+                        else if (cells[i][j].val == 8)
+                        {
+                            g.chcolor(Color.MAGENTA);
+                            g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
+                            continue;
+                        }
+                        else if (cells[i][j].val == 9)
+                        {
+                            g.chcolor(Color.CYAN);
+                            g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
+                            continue;
+                        }
                         else
                             g.chcolor(Color.BLACK);
-                        g.rect(new Coord(i*UI.scale(10),j*UI.scale(10)).add(deco.contarea().ul),csz);
+                        g.rect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
                     }
                 }
             }
 
-            public void wdgmsg(Widget sender, String msg, Object... args) {
-                if((sender == this) && (msg == "close")) {
+            public void wdgmsg(Widget sender, String msg, Object... args)
+            {
+                if ((sender == this) && (msg == "close"))
+                {
                     destroy();
-                } else {
+                }
+                else
+                {
                     super.wdgmsg(sender, msg, args);
                 }
             }
 
-        }, new Coord(UI.scale(100),UI.scale(100)));
+        }, new Coord(UI.scale(100), UI.scale(100)));
         NUtils.getUI().bind(wnd, 7002);
     }
-
-
-
 }

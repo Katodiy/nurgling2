@@ -32,11 +32,6 @@ public class NUtils
         return String.format("[%s] %s", timestamp(), text);
     }
 
-    public static void moveTo(Coord2d z) throws InterruptedException
-    {
-        getUI().core.addTask(new IsMoving());
-    }
-
     public static Gob findGob(long id)
     {
         return NUtils.getGameUI().ui.sess.glob.oc.getgob( id );

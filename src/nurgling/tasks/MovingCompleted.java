@@ -6,28 +6,27 @@ import nurgling.*;
 import static nurgling.actions.PathFinder.pfmdelta;
 import nurgling.tools.*;
 
-public class IsMoving implements NTask
+public class MovingCompleted implements NTask
 {
+    Coord2d target;
 
-    Coord2d coord;
-
-    public IsMoving(Coord2d coord)
+    public MovingCompleted(Coord2d target)
     {
-        this.coord = coord;
+        this.target = target;
     }
 
     @Override
     public boolean check()
     {
+        Coord2d plc;
         if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null && NUtils.getGameUI().map.player() != null)
         {
-            if (NUtils.getGameUI().map.player().rc.dist(coord) <= pfmdelta)
-                return true;
             Drawable drawable = (Drawable) NUtils.getGameUI().map.player().getattr(Drawable.class);
+            plc = NUtils.getGameUI().map.player().rc;
             if (drawable != null)
             {
                 String pose;
-                return drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && NParser.checkName(pose, "borka/walking", "borka/running");
+                return (drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && !NParser.checkName(pose, "borka/walking", "borka/running"));
             }
         }
         return false;
