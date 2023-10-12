@@ -51,8 +51,8 @@ public class NHitBox
             put("gfx/terobjs/furn/bed-sturdy", new NHitBox(new Coord(-9,-6),new Coord(9,6)));
             put("gfx/terobjs/vehicle/wreckingball-fold", new NHitBox(new Coord(-5,-11),new Coord(5,11)));
             put("gfx/terobjs/quern", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
-            put("gfx/terobjs/arch/palisadeseg", new NHitBox(new Coord(-5,-5),new Coord(5,5)));
-            put("gfx/terobjs/arch/palisadecp", new NHitBox(new Coord(-5,-5),new Coord(5,5)));
+            put("gfx/terobjs/arch/palisadeseg", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
+            put("gfx/terobjs/arch/palisadecp", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
             put("gfx/terobjs/arch/polecp", new NHitBox(new Coord(-5,-5),new Coord(5,5)));
             put("gfx/terobjs/arch/poleseg", new NHitBox(new Coord(-5,-5),new Coord(5,5)));
             put("gfx/terobjs/arch/drystonewallseg", new NHitBox(new Coord(-5,-5),new Coord(5,5)));

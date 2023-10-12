@@ -45,6 +45,17 @@ public class ResDrawable extends Drawable implements EquipTarget {
 	spr = Sprite.create(gob, rres, this.sdt.clone());
     }
 
+	public static String getTexResName(Gob owner, MessageBuf src)
+	{
+		MessageBuf msg = src.clone();
+		byte[] b;
+		if ((b = msg.bytes()).length >= 2)
+		{
+			return owner.context(Resource.Resolver.class).getres((new MessageBuf(b)).clone().uint16()).get().name;
+		}
+		else return null;
+	}
+
     public ResDrawable(Gob gob, Resource res) {
 	this(gob, res.indir(), MessageBuf.nil);
     }
