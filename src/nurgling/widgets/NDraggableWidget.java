@@ -202,11 +202,13 @@ public class NDraggableWidget extends Widget
     {
         if (dm != null && ui.core.mode == NCore.Mode.DRAG)
         {
-            dm.remove();
-            dm = null;
             NDragProp res = new NDragProp(NDraggableWidget.this.c, btnLock.a, name);
             res.flip = btnFlip.a;
             NDragProp.set(name, res);
+            target_c.x = this.c.x;
+            target_c.y = this.c.y;
+            dm.remove();
+            dm = null;
             return true;
         }
         else
@@ -265,7 +267,7 @@ public class NDraggableWidget extends Widget
             }
         }
 
-        if(GameUI.getInstance()!=null && GameUI.getInstance().sz!=Coord.z)
+        if(GameUI.getInstance()!=null && GameUI.getInstance().sz!=Coord.z && dm == null)
         {
             if (c.x + sz.x > GameUI.getInstance().sz.x - GameUI.margin.x)
                 c.x = GameUI.getInstance().sz.x - sz.x;

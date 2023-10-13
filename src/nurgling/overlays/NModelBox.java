@@ -142,7 +142,7 @@ public class NModelBox extends Sprite implements RenderTree.Node
     @Override
     public void draw(GOut g)
     {
-        if (!(Boolean) NConfig.get(NConfig.Key.flatsurface))
+        if ((Boolean) NConfig.get(NConfig.Key.showBB))
             super.draw(g);
     }
 }

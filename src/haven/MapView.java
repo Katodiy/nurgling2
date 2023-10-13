@@ -45,12 +45,12 @@ public class MapView extends PView implements DTarget, Console.Directory {
     public static boolean clickdb = false;
     public long plgob = -1;
     public Coord2d cc;
-    private final Glob glob;
+    public final Glob glob;
     private int view = 2;
     private Collection<Delayed> delayed = new LinkedList<Delayed>();
     private Collection<Delayed> delayed2 = new LinkedList<Delayed>();
     public Camera camera = restorecam();
-    private Loader.Future<Plob> placing = null;
+    protected Loader.Future<Plob> placing = null;
     private Grabber grab;
     private Selector selection;
     private Coord3f camoff = new Coord3f(Coord3f.o);
@@ -642,7 +642,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 
     private class MapRaster extends RenderTree.Node.Track1 {
 	final MCache map = glob.map;
-	Area area;
+	public Area area;
 	Loading lastload = new Loading("Initializing map...");
 
 	abstract class Grid<T> extends RenderTree.Node.Track1 {
@@ -776,7 +776,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		}
 	    };
 
-	private Overlay(OverlayInfo id) {
+	public Overlay(OverlayInfo id) {
 	    this.id = id;
 	}
 
@@ -813,7 +813,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
     private final Map<String, Integer> oltags = new HashMap<>();
     private final Map<OverlayInfo, Overlay> ols = new HashMap<>();
     {oltags.put("show", 1);}
-    private void oltick() {
+    protected void oltick() {
 	try {
 	    for(Overlay ol : ols.values())
 		ol.used = false;

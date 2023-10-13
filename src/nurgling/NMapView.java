@@ -15,6 +15,8 @@ public class NMapView extends MapView
 
     final HashMap<String, String> ttip = new HashMap<>();
 
+    private final Map<MCache.OverlayInfo, Overlay> custom_ols = new HashMap<>();
+    public HashMap<String, NOverlayInfo> olsinf = new HashMap<>();
     public Object tooltip(Coord c, Widget prev) {
         if (!ttip.isEmpty() && NUtils.getGameUI().ui.core.isInspectMode()) {
 
@@ -141,5 +143,102 @@ public class NMapView extends MapView
             }
         }.run();
     }
+
+    class NOverlayInfo
+    {
+        public MCache.OverlayInfo id;
+        boolean needUpdate = false;
+
+        public NOverlayInfo(MCache.OverlayInfo flayer, boolean b) {
+            this.id = flayer;
+            this.needUpdate = b;
+        }
+
+        HashMap<Long, ArrayList<NMiningSafeMap.History>> gobs = new HashMap<>();
+    }
+
+
+
+    @Override
+    protected void oltick()
+    {
+        if (terrain.area != null)
+        {
+            for (NOverlayInfo olinf : olsinf.values())
+            {
+                if ((olinf.needUpdate && !olinf.gobs.isEmpty()) && custom_ols.get(olinf.id) != null)
+                {
+                    synchronized (NUtils.getGameUI().map.glob.map.grids)
+                    {
+                        for (MCache.Grid grid : NUtils.getGameUI().map.glob.map.grids.values())
+                        {
+                            for (int i = 0; i < grid.cuts.length; i++)
+                            {
+                                try
+                                {
+                                    MCache.Grid.Deferred<MapMesh> mesh = grid.cuts[i].mesh;
+                                    if (mesh == null)
+                                        return;
+                                    grid.cuts[i].ols.put(olinf.id, mesh.get().makeol(olinf.id));
+                                    grid.cuts[i].olols.put(olinf.id, mesh.get().makeolol(olinf.id));
+                                }
+                                catch (Loading l)
+                                {
+                                    l.boostprio(2);
+                                }
+                            }
+                        }
+                        olinf.needUpdate = false;
+                    }
+                }
+                Overlay ol = custom_ols.get(olinf.id);
+                if (ol == null)
+                {
+                    try
+                    {
+                        basic.add(ol = new Overlay(olinf.id));
+                        custom_ols.put(olinf.id, ol);
+                    }
+                    catch (Loading l)
+                    {
+                        l.boostprio(2);
+                    }
+                }
+            }
+        }
+        super.oltick();
+        if (terrain.area != null)
+            for (NOverlayInfo olinf : olsinf.values())
+                for (Iterator<Map.Entry<Long, ArrayList<NMiningSafeMap.History>>> iter = olinf.gobs.entrySet().iterator(); iter.hasNext(); )
+                {
+                    Map.Entry<Long, ArrayList<NMiningSafeMap.History>> item = iter.next();
+                    Long gobid = item.getKey();
+                    if (NUtils.getGameUI().map.glob.oc.getgob(gobid) == null && placing == null)
+                    {
+                        for (NMiningSafeMap.History h : olinf.gobs.get(gobid))
+                        {
+                            for (int i = 0; i < h.g.ols.length; i++)
+                            {
+                                if (h.g.ols[i].get().layer(MCache.ResOverlay.class) == olinf.id)
+                                {
+                                    h.g.ol[i][h.t.x + (h.t.y * MCache.cmaps.x)] = false;
+                                }
+                            }
+                        }
+                        iter.remove();
+                        olinf.needUpdate = true;
+                    }
+                }
+    }
+
+    public void setStatus(MCache.OverlayInfo id, boolean status){
+        for(NOverlayInfo inf: olsinf.values()){
+            if(inf.id == id){
+                inf.needUpdate = status;
+                return;
+            }
+        }
+    }
+
 
 }
