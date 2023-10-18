@@ -2,14 +2,14 @@
 package haven.res.ui.tt.q.qbuff;
 
 import haven.*;
-
+import java.util.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-@FromResource(name = "ui/tt/q/qbuff", version = 6)
+@haven.FromResource(name = "ui/tt/q/qbuff", version = 7)
 public class QBuff extends ItemInfo.Tip {
     public BufferedImage icon;
     public String name;
@@ -92,11 +92,20 @@ public class QBuff extends ItemInfo.Tip {
 	l.intern(lid).ql.add(this);
     }
 
+    public static class Short extends Tip {
+	public final QBuff q;
+
+	public Short(Owner owner, QBuff q) {
+	    super(owner);
+	    this.q = q;
+	}
+
+	public void prepare(Layout l) {
+	    l.intern(sid).ql.add(q);
+	}
+    }
+
     public Tip shortvar() {
-	return(new Tip(owner) {
-		public void prepare(Layout l) {
-		    l.intern(sid).ql.add(QBuff.this);
-		}
-	    });
+	return(new Short(owner, this));
     }
 }

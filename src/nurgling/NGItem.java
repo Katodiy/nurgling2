@@ -131,6 +131,7 @@ public class NGItem extends GItem
     {
         if (rawinfo != null)
         {
+            content = null;
             for (Object o : rawinfo.data)
             {
                 if (o instanceof Object[])

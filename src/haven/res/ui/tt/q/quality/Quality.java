@@ -2,16 +2,16 @@
 package haven.res.ui.tt.q.quality;
 
 /* $use: ui/tt/q/qbuff */
-
 import haven.*;
 import haven.res.ui.tt.q.qbuff.QBuff;
 import nurgling.NGItem;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import haven.MenuGrid.Pagina;
 
 /* >tt: Quality */
-@FromResource(name = "ui/tt/q/quality", version = 25)
+@haven.FromResource(name = "ui/tt/q/quality", version = 26)
 public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
     NGItem ownitem = null;
     boolean withContent = false;

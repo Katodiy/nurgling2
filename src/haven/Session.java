@@ -209,6 +209,9 @@ public class Session implements Resource.Resolver {
 	    int resid = msg.uint16();
 	    String resname = msg.string();
 	    int resver = msg.uint16();
+		synchronized (res_id_cache) {
+			res_id_cache.put(resid, resname);
+		}
 	    cachedres(resid).set(resname, resver);
 	} else if(msg.type == RMessage.RMSG_SFX) {
 	    Indir<Resource> resid = getres(msg.uint16());
