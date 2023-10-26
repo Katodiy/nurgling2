@@ -13,8 +13,8 @@ import java.util.*;
 
 public class NGameUI extends GameUI
 {
-
     NBotsMenu botsMenu;
+    public NGUIInfo guiinfo;
     public NSearchItem itemsForSearch = null;
 
     public NGameUI(String chrid, long plid, String genus, NUI nui)
@@ -29,6 +29,7 @@ public class NGameUI extends GameUI
         }
 
         add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
+        add(guiinfo = new NGUIInfo(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
     }
 
     public int getMaxBase(){
@@ -195,5 +196,12 @@ public class NGameUI extends GameUI
             }
         }
         return null;
+    }
+
+    @Override
+    public void resize(Coord sz)
+    {
+        super.resize(sz);
+        guiinfo.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
     }
 }

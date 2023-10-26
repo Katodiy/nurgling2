@@ -446,7 +446,19 @@ public class OptWnd extends Window {
 
     public class InterfacePanel extends Panel {
 	public InterfacePanel(Panel back) {
-	    Widget prev = add(new Label("Interface scale (requires restart)"), 0, 0);
+		Widget prev = add(new Button(200, "Drag Mode"){
+			@Override
+			public void click()
+			{
+				super.click();
+				if(NUtils.getGameUI()!=null)
+				{
+					ui.core.mode = NCore.Mode.DRAG;
+					NUtils.getGameUI().guiinfo.show();
+				}
+			}
+		});
+		prev = add(new Label("Interface scale (requires restart)"), prev.pos("bl").adds(0, 5));
 	    {
 		Label dpy = new Label("");
 		final double smin = 1, smax = Math.floor(UI.maxscale() / 0.25) * 0.25;

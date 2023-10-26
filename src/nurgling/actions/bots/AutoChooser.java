@@ -21,26 +21,29 @@ public class AutoChooser implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        NUtils.getUI().core.enableBotMod();
-        NCore.LastActions actions = NUtils.getUI().core.getLastActions();
-        if(actions.item!=null && actions.petal!=null)
+        if(inv!=null && (Window)inv.parent!=null)
         {
-            NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
-            ArrayList<WItem> items = inv.getItems(actions.item.item);
-            if(items.size()>0)
-                ((Window)inv.parent).disable();
-            for(WItem item : items)
+            NUtils.getUI().core.enableBotMod();
+            NCore.LastActions actions = NUtils.getUI().core.getLastActions();
+            if (actions.item != null && actions.petal != null)
             {
-                if(!((Window)inv.parent).isDisabled())
+                NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
+                ArrayList<WItem> items = inv.getItems(actions.item.item);
+                if (items.size() > 0)
+                    ((Window) inv.parent).disable();
+                for (WItem item : items)
                 {
-                    NUtils.getUI().core.disableBotMod();
-                    return Results.SUCCESS();
+                    if (!((Window) inv.parent).isDisabled())
+                    {
+                        NUtils.getUI().core.disableBotMod();
+                        return Results.SUCCESS();
+                    }
+                    new SelectFlowerAction(actions.petal, (NWItem) item).run(gui);
                 }
-                new SelectFlowerAction(actions.petal, (NWItem) item).run(gui);
             }
+            NUtils.getUI().core.disableBotMod();
+            ((Window) inv.parent).enable();
         }
-        NUtils.getUI().core.disableBotMod();
-        ((Window)inv.parent).enable();
         return Results.SUCCESS();
     }
 
