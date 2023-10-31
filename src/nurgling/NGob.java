@@ -63,6 +63,11 @@ public class NGob
                             }
                         }
 
+                        if (NParser.checkName(name, new NAlias(new ArrayList<>(Arrays.asList("ladder", "minesupport", "towercap")))))
+                        {
+                            parent.addcustomol(new NMiningSafeMap(parent, "minesup", 100));
+                        }
+
                         setDynamic();
 
                         NHitBox custom = NHitBox.findCustom(name);

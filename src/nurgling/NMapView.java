@@ -11,6 +11,10 @@ public class NMapView extends MapView
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
         super(sz, glob, cc, plgob);
+        olsinf.put("minesup", new NOverlayInfo(Resource.remote().loadwait("map/overlay/minesup-o").flayer(MCache.ResOverlay.class),false));
+        olsinf.put("areas", new NOverlayInfo(Resource.remote().loadwait("map/overlay/areas-o").flayer(MCache.ResOverlay.class),false));
+        toggleol("areas", true);
+        toggleol("minesup", true);
     }
 
     final HashMap<String, String> ttip = new HashMap<>();
@@ -174,6 +178,7 @@ public class NMapView extends MapView
                         {
                             for (int i = 0; i < grid.cuts.length; i++)
                             {
+
                                 try
                                 {
                                     MCache.Grid.Deferred<MapMesh> mesh = grid.cuts[i].mesh;
@@ -238,6 +243,15 @@ public class NMapView extends MapView
                 return;
             }
         }
+    }
+
+
+    public void toggleol(String tag, boolean a)
+    {
+        if (a)
+            enol(tag);
+        else
+            disol(tag);
     }
 
 

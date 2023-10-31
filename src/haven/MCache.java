@@ -274,7 +274,7 @@ public class MCache implements MapSource {
 	public final Coord gc, ul;
 	public final int tiles[] = new int[cmaps.x * cmaps.y];
 	public final float z[] = new float[cmaps.x * cmaps.y];
-	public Indir<Resource> ols[];
+	public Indir<Resource>[] ols;
 	public boolean ol[][];
 	public long id;
 	public int seq = -1;
@@ -742,7 +742,18 @@ public class MCache implements MapSource {
 	    }
 	    this.ols = olids;
 	    this.ol = ols;
+		initcustom();
 	    fill_plots = null;
+	}
+
+	private void initcustom()
+	{
+		ols = Arrays.copyOf(ols, ols.length + 2);
+		ol = Arrays.copyOf(ol, ol.length + 2);
+		ols[ols.length-2] = Resource.remote().load("map/overlay/areas-o");
+		ols[ols.length-1] = Resource.remote().load("map/overlay/minesup-o");
+		ol[ol.length-2] = new boolean[cmaps.x * cmaps.y];
+		ol[ol.length-1] = new boolean[cmaps.x * cmaps.y];
 	}
 
 	private void subfill(Message msg) {
