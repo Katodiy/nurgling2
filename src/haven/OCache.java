@@ -447,6 +447,7 @@ public class OCache implements Iterable<Gob> {
 
     public static class ObjDelta {
 	public int fl, frame;
+	public int initframe;
 	public long id;
 	public final List<AttrDelta> attrs = new LinkedList<>();
 	public boolean rem = false;
@@ -481,8 +482,8 @@ public class OCache implements Iterable<Gob> {
 	if(delta.rem)
 	    return(netremove(delta.id, delta.frame - 1));
 	synchronized(netinfo) {
-	    if((delta.fl & 1) != 0)
-		netremove(delta.id, delta.frame - 1);
+	    if(delta.initframe > 0)
+		netremove(delta.id, delta.initframe - 1);
 	    GobInfo ng = netget(delta.id, delta.frame);
 	    if(ng != null) {
 		synchronized(ng) {
