@@ -53,7 +53,7 @@ public class NMiningSafeMap extends Sprite
             if (isInstalled)
                 for (int i = 0; i < h.g.ols.length; i++)
                 {
-                    if (h.g.ols[i].get().layer(MCache.ResOverlay.class) == id.id)
+                    if (h.g.ols[i]!=null && h.g.ols[i].get().layer(MCache.ResOverlay.class) == id.id)
                     {
                         if (h.g.ol[i][h.t.x + (h.t.y * MCache.cmaps.x)] != h.val)
                         {
