@@ -130,6 +130,7 @@ public class NCore extends Widget
     {
         config = new NConfig();
         config.read();
+        mode = (Boolean) NConfig.get(NConfig.Key.show_drag_menu) ? Mode.DRAG : Mode.IDLE;
     }
 
     @Override

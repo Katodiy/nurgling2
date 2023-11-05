@@ -1,4 +1,4 @@
-package nurgling;
+package nurgling.areas;
 
 public class NArea
 {

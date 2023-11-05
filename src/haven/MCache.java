@@ -31,6 +31,7 @@ import java.util.function.*;
 import java.lang.ref.*;
 import haven.render.*;
 import nurgling.*;
+import nurgling.areas.*;
 
 /* XXX: This whole file is a bit of a mess and could use a bit of a
  * rewrite some rainy day. Synchronization especially is quite hairy. */
@@ -53,6 +54,7 @@ public class MCache implements MapSource {
     private final Waitable.Queue gridwait = new Waitable.Queue();
     Map<Coord, Request> req = new HashMap<Coord, Request>();
     public Map<Coord, Grid> grids = new HashMap<Coord, Grid>();
+    public ArrayList<NArea> areas = new ArrayList<NArea>();
     Session sess;
     Set<Overlay> ols = new HashSet<Overlay>();
     public int olseq = 0, chseq = 0;

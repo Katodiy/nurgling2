@@ -30,6 +30,8 @@ public class NGameUI extends GameUI
 
         add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
         add(guiinfo = new NGUIInfo(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
+        if(!(Boolean) NConfig.get(NConfig.Key.show_drag_menu))
+            guiinfo.hide();
     }
 
     public int getMaxBase(){

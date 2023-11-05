@@ -458,6 +458,52 @@ public class OptWnd extends Window {
 				}
 			}
 		});
+		prev = add(new Label("Camera:"), prev.pos("bl").adds(0, UI.scale(5)));
+		Dropbox cam = add(new Dropbox<String>(UI.scale(100), 5, UI.scale(16)) {
+			@Override
+			protected String listitem(int i) {
+				return new LinkedList<>(NMapView.camlist()).get(i);
+			}
+
+			@Override
+			protected int listitems() {
+				return NMapView.camlist().size();
+			}
+
+			@Override
+			protected void drawitem(GOut g, String item, int i) {
+				g.text(item, Coord.z);
+			}
+
+			@Override
+			public void change(String item) {
+				super.change(item);
+				NMapView.defcam(item);
+				if(NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+					NUtils.getGameUI().map.camera = NUtils.getGameUI().map.restorecam();
+				}
+			}
+		}, prev.pos("ur").adds(5, 0));
+		cam.sel = NMapView.defcam();
+
+		prev = add(new CheckBox("Invert horizontal camera rotation") {
+			{a = (Boolean)NConfig.get(NConfig.Key.invert_hor);}
+
+			public void set(boolean val) {
+				a = val;
+				NConfig.set(NConfig.Key.invert_hor,val);
+			}
+		}, prev.pos("bl").adds(0, UI.scale(5)));
+
+
+		prev = add(new CheckBox("Invert vertical camera rotation") {
+			{a = (Boolean)NConfig.get(NConfig.Key.invert_ver);}
+
+			public void set(boolean val) {
+				a = val;
+				NConfig.set(NConfig.Key.invert_ver,val);
+			}
+		}, prev.pos("bl").adds(0, UI.scale(5)));
 		prev = add(new Label("Interface scale (requires restart)"), prev.pos("bl").adds(0, 5));
 	    {
 		Label dpy = new Label("");

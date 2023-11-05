@@ -57,7 +57,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
     public double shake = 0.0;
     public static double plobpgran = Utils.getprefd("plobpgran", 8);
     public static double plobagran = Utils.getprefd("plobagran", 12);
-    private static final Map<String, Class<? extends Camera>> camtypes = new HashMap<String, Class<? extends Camera>>();
+    protected static final Map<String, Class<? extends Camera>> camtypes = new HashMap<String, Class<? extends Camera>>();
     
     public interface Delayed {
 	public void run(GOut g);
@@ -371,7 +371,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	private Coord dragorig = null;
 	private float anglorig;
 	private float tangl = angl;
-	private float tfield = field;
+	protected float tfield = field;
 	private boolean isometric = true;
 	private final float pi2 = (float)(Math.PI * 2);
 	private double tf = 1.0;
@@ -441,7 +441,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		tangl = (float)(Math.PI * 0.5 * (Math.floor(tangl / (Math.PI * 0.5)) + 0.5));
 	}
 
-	private void chfield(float nf) {
+	protected void chfield(float nf) {
 	    tfield = nf;
 	    tfield = Math.max(Math.min(tfield, sz.x * (float)Math.sqrt(2) / 8f), 50);
 	    if(tfield > 100)
@@ -2256,7 +2256,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	throw(new RuntimeException("No valid constructor found for camera " + ct.getName()));
     }
 
-    private Camera restorecam() {
+    Camera restorecam() {
 	Class<? extends Camera> ct = camtypes.get(Utils.getpref("defcam", null));
 	if(ct == null)
 	    return(new SOrthoCam());
@@ -2326,4 +2326,27 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		}
 	    });
     }
+
+	public class NOrthoCam extends SOrthoCam {
+		@Override
+		public void release () {
+
+		}
+
+		@Override
+		public void chfield ( float nf ) {
+			if ( nf > 20 && nf < 800 ) {
+				super.tfield = nf;
+			}
+		}
+
+		@Override
+		public boolean wheel (
+				Coord c,
+				int amount
+		) {
+			chfield ( super.tfield + amount * 10 );
+			return ( true );
+		}
+	}
 }

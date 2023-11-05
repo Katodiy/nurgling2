@@ -53,6 +53,7 @@ public class NGUIInfo extends Window
     private void closeEvent()
     {
         NUtils.getUI().core.mode = NCore.Mode.IDLE;
+        NConfig.set(NConfig.Key.show_drag_menu, false);
         this.hide();
     }
 }

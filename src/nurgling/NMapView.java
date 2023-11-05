@@ -85,6 +85,18 @@ public class NMapView extends MapView
         return (super.tooltip(c, prev));
     }
 
+    public static Collection<String> camlist(){
+        return camtypes.keySet();
+    }
+    static {camtypes.put("northo", NOrthoCam.class);}
+    
+    public static String defcam(){
+        return Utils.getpref("defcam", "ortho");
+    }
+    public static void defcam(String name) {
+        Utils.setpref("defcam", name);
+    }
+
     void inspect(Coord c) {
         new Hittest(c) {
             @Override

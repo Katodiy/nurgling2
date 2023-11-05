@@ -15,7 +15,6 @@ public class NGob
     private CellsArray ca = null;
     private boolean isDynamic = false;
     private boolean isGate = false;
-    private boolean isIconsing = false;
     protected long modelAttribute = -1;
     final Gob parent;
 
@@ -52,15 +51,6 @@ public class NGob
                         if (NParser.checkName(name, new NAlias("plants")))
                         {
                             parent.addcustomol(new NCropMarker(parent));
-                        }
-                        else
-                        {
-                            isIconsing = (name.equals("gfx/terobjs/iconsign"));
-                            if (isIconsing && a instanceof ResDrawable )
-                            {
-                                nattr.put(IconSign.class,new IconSign(parent,(ResDrawable) a));
-                                NUtils.getUI().sess.glob.oc.addiconSign(parent);
-                            }
                         }
 
                         if (NParser.checkName(name, new NAlias(new ArrayList<>(Arrays.asList("ladder", "minesupport", "towercap")))))

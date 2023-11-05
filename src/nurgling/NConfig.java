@@ -33,7 +33,10 @@ public class NConfig
         flatsurface,
         nextshowCSprite,
         showCSprite,
-        hideNature
+        hideNature,
+        invert_hor,
+        invert_ver,
+        show_drag_menu
     }
 
 
@@ -54,6 +57,9 @@ public class NConfig
         conf.put(Key.nextshowCSprite, false);
         conf.put(Key.showCSprite, true);
         conf.put(Key.hideNature, false);
+        conf.put(Key.invert_hor, false);
+        conf.put(Key.invert_ver, false);
+        conf.put(Key.show_drag_menu, true);
 
     }
 
