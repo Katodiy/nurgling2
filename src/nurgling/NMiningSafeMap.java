@@ -45,7 +45,7 @@ public class NMiningSafeMap extends Sprite
     @Override
     public boolean tick(double dt)
     {
-        NMapView.NOverlayInfo id = ((NMapView) NUtils.getGameUI().map).olsinf.get(name);
+        NMapView.NOverlayGobInfo id = (NMapView.NOverlayGobInfo)((NMapView) NUtils.getGameUI().map).olsinf.get(name);
 
         boolean needUpdate = false;
         for (History h : current)
@@ -111,7 +111,7 @@ public class NMiningSafeMap extends Sprite
                 ((NMapView) NUtils.getGameUI().map).setStatus(id.id, true);
             isInstalled = true;
             if (owner != null)
-                ((NMapView) NUtils.getGameUI().map).olsinf.get(name).gobs.put(owner.id, current);
+                ((NMapView.NOverlayGobInfo)((NMapView) NUtils.getGameUI().map).olsinf.get(name)).gobs.put(owner.id, current);
         }
         return super.tick(dt);
     }

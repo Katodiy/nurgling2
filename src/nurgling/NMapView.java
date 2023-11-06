@@ -3,20 +3,47 @@ package nurgling;
 import haven.*;
 import static haven.MCache.tilesz;
 import nurgling.areas.*;
+import org.json.*;
 
 import java.awt.image.*;
+import java.io.*;
+import java.nio.charset.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
+import java.util.stream.*;
 
 public class NMapView extends MapView
 {
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
         super(sz, glob, cc, plgob);
-        olsinf.put("minesup", new NOverlayInfo(Resource.remote().loadwait("map/overlay/minesup-o").flayer(MCache.ResOverlay.class),false));
+        olsinf.put("minesup", new NOverlayGobInfo(Resource.remote().loadwait("map/overlay/minesup-o").flayer(MCache.ResOverlay.class),false));
         olsinf.put("areas", new NOverlayInfo(Resource.remote().loadwait("map/overlay/areas-o").flayer(MCache.ResOverlay.class),false));
         toggleol("areas", true);
         toggleol("minesup", true);
+
+        if(new File(NConfig.current.path_areas).exists())
+        {
+            StringBuilder contentBuilder = new StringBuilder();
+            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_areas), StandardCharsets.UTF_8))
+            {
+                stream.forEach(s -> contentBuilder.append(s).append("\n"));
+            }
+            catch (IOException ignore)
+            {
+            }
+
+            if (!contentBuilder.toString().isEmpty())
+            {
+                JSONObject main = new JSONObject(contentBuilder.toString());
+                JSONArray array = (JSONArray) main.get("areas");
+                for (int i = 0; i < array.length(); i++)
+                {
+                    areas.add(new NArea((JSONObject) array.get(i)));
+                }
+            }
+        }
     }
 
     final HashMap<String, String> ttip = new HashMap<>();
@@ -165,18 +192,18 @@ public class NMapView extends MapView
         }.run();
     }
 
-    HashMap<String, NArea> areas = new HashMap<>();
+    LinkedList<NArea> areas = new LinkedList<>();
 
     public String addArea(NArea.Space result)
     {
         String key;
         NArea newArea = new NArea(key = ("New Area" + String.valueOf(areas.size())));
         newArea.space = result;
-        areas.put(key,newArea);
+        areas.add(newArea);
         return key;
     }
 
-    class NOverlayInfo
+    public class NOverlayInfo
     {
         public MCache.OverlayInfo id;
         boolean needUpdate = false;
@@ -185,11 +212,26 @@ public class NMapView extends MapView
             this.id = flayer;
             this.needUpdate = b;
         }
+    }
 
+    public class NOverlayGobInfo extends NOverlayInfo
+    {
+        public NOverlayGobInfo(MCache.OverlayInfo flayer, boolean b) {
+            super(flayer,b);
+        }
         HashMap<Long, ArrayList<NMiningSafeMap.History>> gobs = new HashMap<>();
     }
 
 
+    @Override
+    public void tick(double dt)
+    {
+        for(NArea area : areas)
+        {
+            area.tick(dt);
+        }
+        super.tick(dt);
+    }
 
     @Override
     protected void oltick()
@@ -198,7 +240,7 @@ public class NMapView extends MapView
         {
             for (NOverlayInfo olinf : olsinf.values())
             {
-                if ((olinf.needUpdate && !olinf.gobs.isEmpty()) && custom_ols.get(olinf.id) != null)
+                if ((olinf.needUpdate && (!(olinf instanceof NOverlayGobInfo) || !((NOverlayGobInfo)olinf).gobs.isEmpty())) && custom_ols.get(olinf.id) != null)
                 {
                     synchronized (NUtils.getGameUI().map.glob.map.grids)
                     {
@@ -241,25 +283,29 @@ public class NMapView extends MapView
         }
         super.oltick();
         if (terrain.area != null)
-            for (NOverlayInfo olinf : olsinf.values())
-                for (Iterator<Map.Entry<Long, ArrayList<NMiningSafeMap.History>>> iter = olinf.gobs.entrySet().iterator(); iter.hasNext(); )
+            for (NOverlayInfo colinf : olsinf.values())
+                if(colinf instanceof NMapView.NOverlayGobInfo)
                 {
-                    Map.Entry<Long, ArrayList<NMiningSafeMap.History>> item = iter.next();
-                    Long gobid = item.getKey();
-                    if (NUtils.getGameUI().map.glob.oc.getgob(gobid) == null && placing == null)
+                    NMapView.NOverlayGobInfo olinf = (NMapView.NOverlayGobInfo)colinf;
+                    for (Iterator<Map.Entry<Long, ArrayList<NMiningSafeMap.History>>> iter = olinf.gobs.entrySet().iterator(); iter.hasNext(); )
                     {
-                        for (NMiningSafeMap.History h : olinf.gobs.get(gobid))
+                        Map.Entry<Long, ArrayList<NMiningSafeMap.History>> item = iter.next();
+                        Long gobid = item.getKey();
+                        if (NUtils.getGameUI().map.glob.oc.getgob(gobid) == null && placing == null)
                         {
-                            for (int i = 0; i < h.g.ols.length; i++)
+                            for (NMiningSafeMap.History h : olinf.gobs.get(gobid))
                             {
-                                if (h.g.ols[i].get().layer(MCache.ResOverlay.class) == olinf.id)
+                                for (int i = 0; i < h.g.ols.length; i++)
                                 {
-                                    h.g.ol[i][h.t.x + (h.t.y * MCache.cmaps.x)] = false;
+                                    if (h.g.ols[i].get().layer(MCache.ResOverlay.class) == olinf.id)
+                                    {
+                                        h.g.ol[i][h.t.x + (h.t.y * MCache.cmaps.x)] = false;
+                                    }
                                 }
                             }
+                            iter.remove();
+                            olinf.needUpdate = true;
                         }
-                        iter.remove();
-                        olinf.needUpdate = true;
                     }
                 }
     }

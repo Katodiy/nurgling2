@@ -38,6 +38,7 @@ public class NAreaSelector implements Runnable
                     if(result!=null)
                     {
                         ((NMapView) NUtils.getGameUI().map).addArea(result);
+                        NConfig.needAreasUpdate();
                     }
                     NUtils.getGameUI().areasWidget.show();
                 }

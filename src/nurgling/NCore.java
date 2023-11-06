@@ -141,6 +141,10 @@ public class NCore extends Widget
         {
             config.write();
         }
+        if( config.isAreasUpdated())
+        {
+            config.writeAreas();
+        }
         synchronized (tasks)
         {
             for(final NTask task: tasks)

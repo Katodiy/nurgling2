@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import nurgling.areas.*;
 import nurgling.conf.*;
 import org.json.*;
 
@@ -65,11 +66,18 @@ public class NConfig
 
     HashMap<Key, Object> conf = new HashMap<>();
     private boolean isUpd = false;
+    private boolean isAreasUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
+    String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
 
     public boolean isUpdated()
     {
         return isUpd;
+    }
+
+    public boolean isAreasUpdated()
+    {
+        return isAreasUpd;
     }
 
     public static Object get(Key key)
@@ -94,6 +102,14 @@ public class NConfig
         if (current != null)
         {
             current.isUpd = true;
+        }
+    }
+
+    public static void needAreasUpdate()
+    {
+        if (current != null)
+        {
+            current.isAreasUpd = true;
         }
     }
 
@@ -231,6 +247,32 @@ public class NConfig
         catch (IOException e)
         {
             throw new RuntimeException(e);
+        }
+    }
+
+
+    public void writeAreas()
+    {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            JSONObject main = new JSONObject();
+            JSONArray jareas = new JSONArray();
+            for(NArea area : ((NMapView)NUtils.getGameUI().map).areas)
+            {
+                jareas.put(area.toJson());
+            }
+            main.put("areas",jareas);
+            try
+            {
+                FileWriter f = new FileWriter(path_areas);
+                main.write(f);
+                f.close();
+                current.isAreasUpd = false;
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

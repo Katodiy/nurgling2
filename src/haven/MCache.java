@@ -874,6 +874,20 @@ public class MCache implements MapSource {
 	}
     }
 
+	public Grid findGrid(long id)
+	{
+		synchronized(grids) {
+			for(Grid g : grids.values())
+			{
+				if(g.id == id)
+				{
+					return g;
+				}
+			}
+		}
+		return null;
+	}
+
     public Grid getgridt(Coord tc) {
 	return(getgrid(tc.div(cmaps)));
     }
