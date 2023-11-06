@@ -2,9 +2,11 @@ package nurgling;
 
 import haven.*;
 import static haven.MCache.tilesz;
+import nurgling.areas.*;
 
 import java.awt.image.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 
 public class NMapView extends MapView
 {
@@ -21,6 +23,9 @@ public class NMapView extends MapView
 
     private final Map<MCache.OverlayInfo, Overlay> custom_ols = new HashMap<>();
     public HashMap<String, NOverlayInfo> olsinf = new HashMap<>();
+
+    public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
+    public NArea.Space areaSpace = null;
     public Object tooltip(Coord c, Widget prev) {
         if (!ttip.isEmpty() && NUtils.getGameUI().ui.core.isInspectMode()) {
 
@@ -160,6 +165,17 @@ public class NMapView extends MapView
         }.run();
     }
 
+    HashMap<String, NArea> areas = new HashMap<>();
+
+    public String addArea(NArea.Space result)
+    {
+        String key;
+        NArea newArea = new NArea(key = ("New Area" + String.valueOf(areas.size())));
+        newArea.space = result;
+        areas.put(key,newArea);
+        return key;
+    }
+
     class NOverlayInfo
     {
         public MCache.OverlayInfo id;
@@ -266,5 +282,40 @@ public class NMapView extends MapView
             disol(tag);
     }
 
+    @Override
+    public boolean mousedown(Coord c, int button)
+    {
+        if ( isAreaSelectionMode.get() )
+        {
+            if (selection == null)
+            {
+                selection = new NSelector();
+            }
+        }
+        return super.mousedown(c, button);
+    }
 
+    public class NSelector extends Selector
+    {
+        public boolean mmouseup(Coord mc, int button)
+        {
+            synchronized (NMapView.this)
+            {
+                if (sc != null)
+                {
+                    Coord ec = mc.div(MCache.tilesz2);
+                    xl.mv = false;
+                    tt = null;
+                    areaSpace = new NArea.Space(sc,ec);
+                    ol.destroy();
+                    mgrab.remove();
+                    sc = null;
+                    destroy();
+                    selection = null;
+                    isAreaSelectionMode.set(false);
+                }
+                return (true);
+            }
+        }
+    }
 }

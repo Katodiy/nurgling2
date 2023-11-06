@@ -52,7 +52,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
     public Camera camera = restorecam();
     protected Loader.Future<Plob> placing = null;
     private Grabber grab;
-    private Selector selection;
+    public Selector selection;
     private Coord3f camoff = new Coord3f(Coord3f.o);
     public double shake = 0.0;
     public static double plobpgran = Utils.getprefd("plobpgran", 8);
@@ -2152,13 +2152,13 @@ public class MapView extends PView implements DTarget, Console.Directory {
 
 	    public Material mat() {return(mat);}
 	};
-    private class Selector implements Grabber {
-	Coord sc;
-	MCache.Overlay ol;
-	UI.Grab mgrab;
+    protected class Selector implements Grabber {
+	protected Coord sc;
+	protected MCache.Overlay ol;
+	protected UI.Grab mgrab;
 	int modflags;
-	Text tt;
-	final GrabXL xl = new GrabXL(this) {
+	protected Text tt;
+	protected final GrabXL xl = new GrabXL(this) {
 		public boolean mmousedown(Coord cc, int button) {
 		    if(button != 1)
 			return(false);

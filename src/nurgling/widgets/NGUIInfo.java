@@ -14,7 +14,6 @@ public class NGUIInfo extends Window
     public NGUIInfo()
     {
         super(new Coord(xs,ys), "Nurgling GUI settings");
-        //hide();
 
         RichTextBox rb;
         prev = add(rb = new RichTextBox(UI.scale(new Coord(500, 180)), "$img[nurgling/hud/dragmode/title] Welcome to custom client Nurgling! \n" +
