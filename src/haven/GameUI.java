@@ -59,6 +59,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     private Widget qqview;
     public BuddyWnd buddies;
     private final Zergwnd zerg;
+    public NAreasWidget areas;
     public final Collection<Polity> polities = new ArrayList<Polity>();
     public HelpWnd help;
     public OptWnd opts;
@@ -245,7 +246,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	menugridc = brframe.c.add(UI.scale(20), UI.scale(34));
 	Img rbtnimg =add(new Img(rbtnbg), 0, sz.y - rbtnbg.sz().y);
 	rbtnimg.hide();
-	add(new NDraggableWidget(new MainMenu(), "mainmenu", UI.scale(225,52)));
+	add(new NDraggableWidget(new MainMenu(), "mainmenu", UI.scale(280,52)));
 	menubuttons(rbtnimg);
 	portrait = add(new NDraggableWidget(Frame.with(new Avaview(Avaview.dasz, plid, "avacam"), false),"portrait", UI.scale(120, 108)));
 	add(new NDraggableWidget(buffs = new Bufflist(),"bufflist",Coord.z));
@@ -255,6 +256,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	opts.hide();
 	zerg = add(new Zergwnd(), Utils.getprefc("wndc-zerg", UI.scale(new Coord(187, 50))));
 	zerg.hide();
+	add(areas = new NAreasWidget(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
+	areas.hide();
     }
 
     protected void attached() {
@@ -1139,6 +1142,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public static final KeyBinding kb_equ = KeyBinding.get("equ", KeyMatch.forchar('E', KeyMatch.C));
     public static final KeyBinding kb_chr = KeyBinding.get("chr", KeyMatch.forchar('T', KeyMatch.C));
     public static final KeyBinding kb_bud = KeyBinding.get("bud", KeyMatch.forchar('B', KeyMatch.C));
+    public static final KeyBinding kb_areas = KeyBinding.get("areas", KeyMatch.forchar('L', KeyMatch.C));
     public static final KeyBinding kb_opt = KeyBinding.get("opt", KeyMatch.forchar('O', KeyMatch.C));
     public class MainMenu extends Widget {
 	public MainMenu() {
@@ -1146,6 +1150,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	    prev = add(new MenuCheckBox("rbtn/inv/", kb_inv, "Inventory"), 0, 0).state(() -> wndstate(invwnd)).click(() -> togglewnd(invwnd));
 	    prev = add(new MenuCheckBox("rbtn/equ/", kb_equ, "Equipment"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(equwnd)).click(() -> togglewnd(equwnd));
 	    prev = add(new MenuCheckBox("rbtn/chr/", kb_chr, "Character Sheet"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(chrwdg)).click(() -> togglewnd(chrwdg));
+	    prev = add(new MenuCheckBox("rbtn/areas/", kb_areas, "Areas Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(areas)).click(() -> togglewnd(areas));
 	    prev = add(new MenuCheckBox("rbtn/bud/", kb_bud, "Kith & Kin"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(zerg)).click(() -> togglewnd(zerg));
 	    add(new MenuCheckBox("rbtn/opt/", kb_opt, "Options"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(opts)).click(() -> togglewnd(opts));
 		pack();

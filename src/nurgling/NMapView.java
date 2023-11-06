@@ -19,8 +19,11 @@ public class NMapView extends MapView
     {
         super(sz, glob, cc, plgob);
         olsinf.put("minesup", new NOverlayGobInfo(Resource.remote().loadwait("map/overlay/minesup-o").flayer(MCache.ResOverlay.class),false));
-        olsinf.put("areas", new NOverlayInfo(Resource.remote().loadwait("map/overlay/areas-o").flayer(MCache.ResOverlay.class),false));
-        toggleol("areas", true);
+        olsinf.put("hareas", new NOverlayInfo(Resource.remote().loadwait("map/overlay/areash-o").flayer(MCache.ResOverlay.class),false));
+        for(int i = 0 ; i < MCache.customolssize; i++)
+            olsinf.put("areas"+String.valueOf(i), new NOverlayInfo(Resource.remote().loadwait("map/overlay/areas-o"+String.valueOf(i)).flayer(MCache.ResOverlay.class),false));
+//        toggleol("areas", true);
+        toggleol("hareas", true);
         toggleol("minesup", true);
 
         if(new File(NConfig.current.path_areas).exists())
@@ -361,6 +364,60 @@ public class NMapView extends MapView
                     isAreaSelectionMode.set(false);
                 }
                 return (true);
+            }
+        }
+    }
+
+    public Collection<String> areas(){
+        LinkedList<String> areasNames = new LinkedList<>();
+        for(NArea area : areas)
+        {
+            areasNames.add(area.name);
+        }
+        return areasNames;
+    }
+
+    public void selectArea(String name)
+    {
+        for(NArea area : areas)
+        {
+            if(area.isHighlighted)
+            {
+                area.isHighlighted = false;
+                area.wasHighlighted = true;
+            }
+        }
+
+        for(NArea area : areas)
+        {
+            if(area.name.equals(name))
+            {
+                area.isHighlighted = true;
+            }
+        }
+    }
+
+    public NArea findArea(String name)
+    {
+        for(NArea area : areas)
+        {
+            if(area.name.equals(name))
+            {
+                return area;
+            }
+        }
+        return null;
+    }
+
+    public void removeArea(String name)
+    {
+        for(NArea area : areas)
+        {
+            if(area.name.equals(name))
+            {
+                area.prepareForDelete();
+                areas.remove(area);
+                break;
             }
         }
     }

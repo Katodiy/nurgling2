@@ -43,6 +43,8 @@ public class MCache implements MapSource {
     public static final Coord cmaps = Coord.of(100, 100);
     public static final Coord cutsz = Coord.of(25, 25);
     public static final Coord cutn = cmaps.div(cutsz);
+
+	public final static int customolssize = 10;
     private final Object setmon = new Object();
     private Resource.Spec[] nsets = new Resource.Spec[16];
     @SuppressWarnings("unchecked")
@@ -750,12 +752,18 @@ public class MCache implements MapSource {
 
 	private void initcustom()
 	{
-		ols = Arrays.copyOf(ols, ols.length + 2);
-		ol = Arrays.copyOf(ol, ol.length + 2);
-		ols[ols.length-2] = Resource.remote().load("map/overlay/areas-o");
-		ols[ols.length-1] = Resource.remote().load("map/overlay/minesup-o");
-		ol[ol.length-2] = new boolean[cmaps.x * cmaps.y];
-		ol[ol.length-1] = new boolean[cmaps.x * cmaps.y];
+		ols = Arrays.copyOf(ols, ols.length + customolssize + 2);
+		ol = Arrays.copyOf(ol, ol.length + customolssize + 2);
+		for (int i = customolssize; i > 0; i--)
+		{
+			ols[ols.length - i] = Resource.remote().load("map/overlay/areas-o"+String.valueOf(i-1));
+			ol[ol.length - i] = new boolean[cmaps.x * cmaps.y];
+		}
+
+		ols[ols.length - customolssize - 2] = Resource.remote().load("map/overlay/minesup-o");
+		ols[ols.length - customolssize - 1] = Resource.remote().load("map/overlay/areash-o");
+		ol[ol.length - customolssize - 2] = new boolean[cmaps.x * cmaps.y];
+		ol[ol.length - customolssize - 1] = new boolean[cmaps.x * cmaps.y];
 	}
 
 	private void subfill(Message msg) {

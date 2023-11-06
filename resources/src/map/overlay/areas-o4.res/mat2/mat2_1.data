@@ -1,9 +1,9 @@
 #TILESET2 LAYER FOR RES src/custom/vlg-o.res//
 #ID 
-0
-#VarSize 
+1
+#VarSize
 2
 #Var
 maskdepth
 vcol
-[190,34,34,120]
+[124,252,0,196]

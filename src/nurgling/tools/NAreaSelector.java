@@ -26,7 +26,7 @@ public class NAreaSelector implements Runnable
                 SelectArea sa;
                 if(createMode)
                 {
-                    NUtils.getGameUI().areasWidget.hide();
+                    NUtils.getGameUI().areas.hide();
                 }
                 NUtils.getUI().core.addTask(sa = new SelectArea());
                 if (sa.getResult() != null)
@@ -40,7 +40,7 @@ public class NAreaSelector implements Runnable
                         ((NMapView) NUtils.getGameUI().map).addArea(result);
                         NConfig.needAreasUpdate();
                     }
-                    NUtils.getGameUI().areasWidget.show();
+                    NUtils.getGameUI().areas.show();
                 }
             }
             catch (InterruptedException e)

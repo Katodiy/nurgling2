@@ -10,6 +10,7 @@ import java.util.*;
 
 public class NArea
 {
+    private static int nextolid = 0;
     public static class VArea
     {
         public Area area;
@@ -34,10 +35,10 @@ public class NArea
         {
             Coord begin = new Coord(Math.min(sc.x, ec.x), Math.min(sc.y, ec.y));
             Coord end = new Coord(Math.max(sc.x, ec.x), Math.max(sc.y, ec.y));
-            Coord bd = begin.div(MCache.cmaps);
-            Coord ed = end.div(MCache.cmaps);
-            Coord bm = begin.mod(MCache.cmaps);
-            Coord em = end.mod(MCache.cmaps);
+            Coord bd = begin.div(cmaps);
+            Coord ed = end.div(cmaps);
+            Coord bm = begin.mod(cmaps);
+            Coord em = end.mod(cmaps);
             if (bd.equals(ed.x,ed.y))
             {
                 MCache.Grid grid = NUtils.getGameUI().map.glob.map.grids.get(bd);
@@ -77,6 +78,7 @@ public class NArea
     public NArea(String name)
     {
         this.name = name;
+        olid = nextolid++ % MCache.customolssize;
     }
 
     public NArea(JSONObject obj)
@@ -89,12 +91,11 @@ public class NArea
             JSONObject jarea = (JSONObject) jareas.get(i);
             space.space.put((Long) jarea.get("id"), new VArea(new Area(new Coord((Integer) jarea.get("begin_x"), (Integer) jarea.get("begin_y")), new Coord((Integer) jarea.get("end_x"), (Integer) jarea.get("end_y")))));
         }
+        olid = (nextolid++) % MCache.customolssize;
     }
-
-
-
     public Space space;
-    String name;
+    public String name;
+    final int olid;
     NAlias items = new NAlias();
     NAlias ws = new NAlias();
     NAlias ic = new NAlias();
@@ -121,59 +122,137 @@ public class NArea
     }
 
 
+    public static class History
+    {
+        MCache.Grid g;
+        Coord t;
+        boolean val;
+
+        public History(MCache.Grid g, Coord t, boolean b)
+        {
+            this.g = g;
+            this.t = t;
+            this.val = b;
+        }
+    }
+
+    ArrayList<History> current = new ArrayList<>();
     public boolean isHighlighted = false;
-    public boolean isInstalled = false;
+    public boolean wasHighlighted = false;
+    public boolean forDelete = false;
     public void tick(double dt)
     {
-        NMapView.NOverlayInfo id = ((NMapView) NUtils.getGameUI().map).olsinf.get(isHighlighted ? "hareas" : "areas");
-
-        boolean needUpdate = false;
-
-//        if (needUpdate)
-//            ((NMapView) NUtils.getGameUI().map).setStatus(id.id, true);
-
-//            needUpdate = false;
-
-        for (long a : space.space.keySet())
+        if(!forDelete)
         {
-            MCache.Grid g = NUtils.getGameUI().map.glob.map.findGrid(a);
-            if (!space.space.get(a).isVis && g != null)
-            {
-                for (int i = 0; i < g.ols.length; i++)
+            NMapView.NOverlayInfo id = ((NMapView) NUtils.getGameUI().map).olsinf.get(isHighlighted ? "hareas" : ("areas" + String.valueOf(olid)));
+
+            boolean needUpdate = false;
+            boolean needReset = false;
+
+            if (isVisible())
+                for (History h : current)
                 {
-                    try
+                    for (int i = 0; i < h.g.ols.length; i++)
                     {
-                        if (g.ols[i].get().layer(MCache.ResOverlay.class) == id.id)
+                        if (h.g.ols[i] != null && h.g.ol[i] != null && h.g.ols[i].get().layer(MCache.ResOverlay.class) == id.id)
                         {
-                            Area area = space.space.get(a).area;
-                            for (int x = area.ul.x; x <= area.br.x; x++)
+                            if (h.g.ol[i][h.t.x + (h.t.y * MCache.cmaps.x)] != h.val)
                             {
-                                for (int y = area.ul.y; y <= area.br.y; y++)
-                                {
-                                    g.ol[i][x + (y * MCache.cmaps.x)] = true;
-                                }
+                                needReset = true;
+                                h.g.ol[i][h.t.x + (h.t.y * MCache.cmaps.x)] = h.val;
                             }
-                            space.space.get(a).isVis = true;
-                            needUpdate = true;
                         }
-                    }catch (Loading e)
-                    {
-                        //TODO: fcn loading
                     }
                 }
-            }
-            else
-            {
-                if (g == null && space.space.get(a).isVis)
-                {
-                    space.space.get(a).isVis = false;
-                    needUpdate = true;
-                }
 
+            if (wasHighlighted)
+            {
+                needReset = true;
+                wasHighlighted = false;
+            }
+
+            if (needReset)
+            {
+                NMapView.NOverlayInfo rid = ((NMapView) NUtils.getGameUI().map).olsinf.get((isHighlighted) ? ("areas" + String.valueOf(olid)) : "hareas");
+                clearOverlayHistory(rid);
+
+                current.clear();
+            }
+            for (long a : space.space.keySet())
+            {
+                MCache.Grid g = NUtils.getGameUI().map.glob.map.findGrid(a);
+                if ((!space.space.get(a).isVis || needReset) && g != null)
+                {
+                    for (int i = 0; i < g.ols.length; i++)
+                    {
+                        try
+                        {
+                            if (g.ols[i].get().layer(MCache.ResOverlay.class) == id.id)
+                            {
+                                Area area = space.space.get(a).area;
+                                for (int x = area.ul.x; x <= area.br.x; x++)
+                                {
+                                    for (int y = area.ul.y; y <= area.br.y; y++)
+                                    {
+                                        g.ol[i][x + (y * cmaps.x)] = true;
+                                        current.add(new History(g, new Coord(x, y), true));
+                                    }
+                                }
+                                space.space.get(a).isVis = true;
+                                needUpdate = true;
+                            }
+                        }
+                        catch (Loading e)
+                        {
+                            //TODO: fcn loading
+                        }
+                    }
+                }
+                else
+                {
+                    if (g == null && space.space.get(a).isVis)
+                    {
+                        space.space.get(a).isVis = false;
+                        needUpdate = true;
+                    }
+
+                }
+            }
+            if (needUpdate)
+                ((NMapView) NUtils.getGameUI().map).setStatus(id.id, true);
+        }
+    }
+
+    private void clearOverlayHistory(NMapView.NOverlayInfo rid)
+    {
+        for (History h : current)
+        {
+            for (int i = 0; i < h.g.ols.length; i++)
+            {
+                if (h.g.ols[i] != null && h.g.ol[i] != null && h.g.ols[i].get().layer(MCache.ResOverlay.class) == rid.id)
+                {
+                    h.g.ol[i][h.t.x + (h.t.y * MCache.cmaps.x)] = false;
+                }
             }
         }
-        if (needUpdate)
-            ((NMapView) NUtils.getGameUI().map).setStatus(id.id, true);
+        ((NMapView) NUtils.getGameUI().map).setStatus(rid.id, true);
+    }
+
+    public void prepareForDelete()
+    {
+        NMapView.NOverlayInfo rid = ((NMapView) NUtils.getGameUI().map).olsinf.get((!isHighlighted) ? ("areas" + String.valueOf(olid)) : "hareas");
+        forDelete = true;
+        clearOverlayHistory(rid);
+    }
+
+    private boolean isVisible()
+    {
+        for(VArea s: space.space.values())
+        {
+            if(!s.isVis)
+                return false;
+        }
+        return true;
     }
 
     public JSONObject toJson()
