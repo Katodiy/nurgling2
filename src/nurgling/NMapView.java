@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import static haven.MCache.tilesz;
 import nurgling.areas.*;
+import nurgling.tools.*;
 import org.json.*;
 
 import java.awt.image.*;
@@ -195,14 +196,27 @@ public class NMapView extends MapView
         }.run();
     }
 
-    LinkedList<NArea> areas = new LinkedList<>();
+    final LinkedList<NArea> areas = new LinkedList<>();
 
     public String addArea(NArea.Space result)
     {
         String key;
-        NArea newArea = new NArea(key = ("New Area" + String.valueOf(areas.size())));
-        newArea.space = result;
-        areas.add(newArea);
+        synchronized (areas)
+        {
+            HashSet<String> names = new HashSet<String>();
+            for(NArea area : areas)
+            {
+                names.add(area.name);
+            }
+            key = ("New Area" + String.valueOf(areas.size()));
+            while(names.contains(key))
+            {
+                key = key+"(1)";
+            }
+            NArea newArea = new NArea(key);
+            newArea.space = result;
+            areas.add(newArea);
+        }
         return key;
     }
 
@@ -229,9 +243,12 @@ public class NMapView extends MapView
     @Override
     public void tick(double dt)
     {
-        for(NArea area : areas)
+        synchronized (areas)
         {
-            area.tick(dt);
+            for (NArea area : areas)
+            {
+                area.tick(dt);
+            }
         }
         super.tick(dt);
     }
@@ -415,8 +432,36 @@ public class NMapView extends MapView
         {
             if(area.name.equals(name))
             {
-                area.prepareForDelete();
+                area.inWork = true;
+                area.clearOverlayArea();
                 areas.remove(area);
+                break;
+            }
+        }
+    }
+    public void changeArea(String name)
+    {
+        for(NArea area : areas)
+        {
+            if(area.name.equals(name))
+            {
+                area.inWork = true;
+                area.clearOverlayArea();
+                NAreaSelector.changeArea(area);
+                break;
+            }
+        }
+    }
+
+    public void changeAreaName(String old, String new_name)
+    {
+        for(NArea area : areas)
+        {
+            if(area.name.equals(old))
+            {
+                area.name = new_name;
+                NConfig.needAreasUpdate();
+                NUtils.getGameUI().areas.adrop.change(new_name);
                 break;
             }
         }

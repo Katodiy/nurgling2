@@ -24,6 +24,16 @@ public class PathFinder implements Action
         this.begin = begin;
         this.end = end;
     }
+    public PathFinder(Coord2d end)
+    {
+        this(NUtils.getGameUI().map.player().rc, end);
+    }
+
+    public PathFinder(Gob target)
+    {
+        this(target.rc);
+    }
+
 
     private void fixStartEnd()
     {
@@ -67,22 +77,22 @@ public class PathFinder implements Action
                     {
                         if (posl.y > 1)
                             checkAndAdd(new Coord(posl.x, posl.y - i), coords);
-                        if (posl.y < pfmap.getSize())
+                        if (posl.y < pfmap.getSize() - 1)
                             checkAndAdd(new Coord(posl.x, posl.y + i), coords);
                     }
                 }
             }
             posl = new Coord(posl.x - 1, posl.y);
-            if (posr.x < pfmap.getSize())
+            if (posr.x < pfmap.getSize() - 1)
             {
                 checkAndAdd(posr, coords);
                 if (!isHardMode)
                 {
                     for (int i = 1; i <= delta; i++)
                     {
-                        if (posr.y > i)
+                        if (posr.y > 1)
                             checkAndAdd(new Coord(posr.x, posr.y - i), coords);
-                        if (posr.y < pfmap.getSize())
+                        if (posr.y < pfmap.getSize() - 1)
                             checkAndAdd(new Coord(posr.x, posr.y + i), coords);
                     }
                 }
@@ -97,13 +107,13 @@ public class PathFinder implements Action
                     {
                         if (posb.x > i)
                             checkAndAdd(new Coord(posb.x - i, posb.y), coords);
-                        if (posb.x < pfmap.getSize())
+                        if (posb.x < pfmap.getSize() - 1)
                             checkAndAdd(new Coord(posb.x + i, posb.y), coords);
                     }
                 }
             }
             posb = new Coord(posb.x, posb.y - 1);
-            if (posu.y < pfmap.getSize())
+            if (posu.y < pfmap.getSize() - 1)
             {
                 checkAndAdd(posu, coords);
                 if (!isHardMode)
@@ -112,7 +122,7 @@ public class PathFinder implements Action
                     {
                         if (posu.x > i)
                             checkAndAdd(new Coord(posu.x - i, posu.y), coords);
-                        if (posu.x < pfmap.getSize())
+                        if (posu.x < pfmap.getSize() - 1)
                             checkAndAdd(new Coord(posu.x + i, posu.y), coords);
                     }
                 }
@@ -132,16 +142,6 @@ public class PathFinder implements Action
         }
     }
 
-
-    PathFinder(Coord2d end)
-    {
-        this(NUtils.getGameUI().map.player().rc, end);
-    }
-
-    PathFinder(Gob target)
-    {
-        this(target.rc);
-    }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException

@@ -14,7 +14,7 @@ public class NArea
     public static class VArea
     {
         public Area area;
-        boolean isVis = false;
+        public boolean isVis = false;
 
         public VArea(Area area)
         {
@@ -27,7 +27,7 @@ public class NArea
         private final int max = 99;
         private final int min = 0;
 
-        HashMap<Long,VArea> space = new HashMap<>();
+        public HashMap<Long,VArea> space = new HashMap<>();
         public Space()
         {}
 
@@ -139,10 +139,32 @@ public class NArea
     ArrayList<History> current = new ArrayList<>();
     public boolean isHighlighted = false;
     public boolean wasHighlighted = false;
-    public boolean forDelete = false;
+    public boolean inWork = false;
+
+    public Pair<Coord2d,Coord2d> getRCArea()
+    {
+        if(isVisible())
+        {
+            Coord begin = null;
+            Coord end = null;
+            for (Long id : space.space.keySet())
+            {
+                MCache.Grid grid = NUtils.getGameUI().map.glob.map.findGrid(id);
+                Area area = space.space.get(id).area;
+                Coord b = area.ul.add(grid.ul);
+                Coord e = area.br.add(grid.ul);
+                begin = (begin != null) ? new Coord(Math.min(begin.x, b.x), Math.min(begin.y, b.y)) : b;
+                end = (end != null) ? new Coord(Math.max(end.x, e.x), Math.max(end.y, e.y)) : e;
+            }
+            if (begin != null)
+                return new Pair<Coord2d, Coord2d>(begin.mul(MCache.tilesz).sub(MCache.tilehsz), end.mul(MCache.tilesz).add(MCache.tilehsz));
+        }
+        return null;
+    }
+
     public void tick(double dt)
     {
-        if(!forDelete)
+        if(!inWork)
         {
             NMapView.NOverlayInfo id = ((NMapView) NUtils.getGameUI().map).olsinf.get(isHighlighted ? "hareas" : ("areas" + String.valueOf(olid)));
 
@@ -238,11 +260,11 @@ public class NArea
         ((NMapView) NUtils.getGameUI().map).setStatus(rid.id, true);
     }
 
-    public void prepareForDelete()
+    public void clearOverlayArea()
     {
         NMapView.NOverlayInfo rid = ((NMapView) NUtils.getGameUI().map).olsinf.get((!isHighlighted) ? ("areas" + String.valueOf(olid)) : "hareas");
-        forDelete = true;
         clearOverlayHistory(rid);
+        current.clear();
     }
 
     private boolean isVisible()
@@ -273,6 +295,4 @@ public class NArea
         res.put("space",jspaces);
         return res;
     }
-
-
 }

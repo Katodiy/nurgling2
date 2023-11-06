@@ -30,7 +30,7 @@ public class NPFMap
         Coord2d b = new Coord2d(Math.max(src.x, dst.x), Math.max(src.y, dst.y));
         // Последнее деление умножение нужно чтобы сопоставить сетку пф с сеткой лофтара по углу (ускорение запроса поверхности тайлов)
         Coord center = Utils.toPfGrid(a.add((b.sub(a)).div(2))).div(2).mul(2);
-        dsize = (((int) ((b.sub(a).len() / MCache.tilepfsz.x))) / 2) * 2 * mul;
+        dsize = Math.max(8,(((int) ((b.sub(a).len() / MCache.tilehsz.x))) / 2) * 2 * mul);
         size = 2 * dsize;
 
         cells = new Cell[size][size];

@@ -8,11 +8,30 @@ public class NAreaSelector implements Runnable
 {
     protected NArea.Space result;
 
-    boolean createMode = false;
-
-    public NAreaSelector(boolean createMode)
+    public enum Mode
     {
-        this.createMode = createMode;
+        CREATE,
+        CHANGE,
+        SELECT
+    }
+
+    Mode mode = Mode.CREATE;
+
+    public NAreaSelector(Mode mode)
+    {
+        this.mode = mode;
+    }
+
+    public static void changeArea(NArea area)
+    {
+        new Thread(new NAreaSelector(area,Mode.CHANGE)).start();
+    }
+
+    NArea area = null;
+    private NAreaSelector(NArea area, Mode mode)
+    {
+        this.area = area;
+        this.mode = mode;
     }
 
     @Override
@@ -24,7 +43,7 @@ public class NAreaSelector implements Runnable
             try
             {
                 SelectArea sa;
-                if(createMode)
+                if(mode!=Mode.SELECT)
                 {
                     NUtils.getGameUI().areas.hide();
                 }
@@ -33,11 +52,19 @@ public class NAreaSelector implements Runnable
                 {
                     result = sa.getResult();
                 }
-                if(createMode)
+                if(mode!=Mode.SELECT)
                 {
                     if(result!=null)
                     {
-                        ((NMapView) NUtils.getGameUI().map).addArea(result);
+                        if(mode == Mode.CREATE)
+                            ((NMapView) NUtils.getGameUI().map).addArea(result);
+                        else if(mode == Mode.CHANGE)
+                        {
+                            area.space = result;
+                            for(NArea.VArea space: area.space.space.values())
+                                space.isVis = false;
+                            area.inWork = false;
+                        }
                         NConfig.needAreasUpdate();
                     }
                     NUtils.getGameUI().areas.show();

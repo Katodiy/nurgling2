@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import nurgling.areas.*;
 import nurgling.tasks.*;
 import nurgling.tools.*;
 
@@ -35,6 +36,14 @@ public class NUtils
     public static Gob findGob(long id)
     {
         return NUtils.getGameUI().ui.sess.glob.oc.getgob( id );
+    }
+
+    public static NArea findArea(String name){
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            return ((NMapView)NUtils.getGameUI().map).findArea(name);
+        }
+        return null;
     }
 
     public static void showHideNature() {

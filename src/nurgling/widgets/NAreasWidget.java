@@ -9,9 +9,7 @@ import java.util.*;
 
 public class NAreasWidget extends Window
 {
-
-    NArea current = null;
-    Dropbox adrop;
+    public Dropbox adrop;
     public NAreasWidget()
     {
         super(UI.scale(new Coord(600,500)), "Areas Settings");
@@ -21,9 +19,21 @@ public class NAreasWidget extends Window
             {
                 super.click();
                 NUtils.getGameUI().msg("Please, select area");
-                new Thread(new NAreaSelector(true)).start();
+                new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE)).start();
             }
         });
+
+        Widget change = add(new Button(UI.scale(150), "Change area"){
+            @Override
+            public void click()
+            {
+                super.click();
+                if(adrop.sel!=null)
+                {
+                    ((NMapView)NUtils.getGameUI().map).changeArea((String) adrop.sel);
+                }
+            }
+        }, prev.pos("ur").adds(5, 0));
 
         add(new Button(UI.scale(150), "Remove area"){
             @Override
@@ -37,10 +47,10 @@ public class NAreasWidget extends Window
                     adrop.sel = null;
                 }
             }
-        }, prev.pos("ur").adds(5, 0));
+        }, change.pos("ur").adds(5, 0));
 
 
-        adrop = add(new Dropbox<String>(UI.scale(200), 5, UI.scale(16)) {
+        prev = adrop = add(new Dropbox<String>(UI.scale(200), 5, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
                 return new LinkedList<>(((NMapView)NUtils.getGameUI().map).areas()).get(i);
@@ -62,6 +72,20 @@ public class NAreasWidget extends Window
                 ((NMapView)NUtils.getGameUI().map).selectArea(item);
             }
         }, prev.pos("bl").adds(0, 10));
+
+        add(new Button(UI.scale(100), "Edit name"){
+            @Override
+            public void click()
+            {
+                super.click();
+                if(adrop.sel!=null)
+                {
+                    NArea area = ((NMapView)NUtils.getGameUI().map).findArea((String)adrop.sel);
+                    NEditAreaName.changeName(area);
+                }
+            }
+        }, prev.pos("ur").adds(5, -10));
+
         pack();
     }
 }

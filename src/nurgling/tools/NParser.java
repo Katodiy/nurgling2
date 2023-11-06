@@ -1,6 +1,8 @@
 package nurgling.tools;
 
 import haven.*;
+import nurgling.*;
+import nurgling.tasks.*;
 
 public class NParser
 {
@@ -41,5 +43,16 @@ public class NParser
     {
         String []prep = ((val.substring(val.lastIndexOf("(")+1,val.lastIndexOf(")"))).replaceAll(" ","")).split(",");
         return new Coord2d(Double.parseDouble(prep[0]),Double.parseDouble(prep[1]));
+    }
+
+    public static boolean isIt(Gob gob, NAlias name) throws InterruptedException
+    {
+        NUtils.getUI().core.addTask(new GetGobName(gob));
+        if (gob.ngob.name != null)
+        {
+            return NParser.checkName(gob.ngob.name, name);
+        }
+        else
+            return false;
     }
 }

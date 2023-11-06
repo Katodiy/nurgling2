@@ -3,8 +3,6 @@ package nurgling.pf;
 import haven.*;
 import nurgling.*;
 
-import java.util.*;
-
 public class CellsArray
 {
     Coord begin;
@@ -54,7 +52,7 @@ public class CellsArray
             x_len = end.x - begin.x + 1;
             y_len = end.y - begin.y + 1;
             cells = new short[x_len][y_len];
-            Coord2d start = begin.mul(MCache.tilepfsz);
+            Coord2d start = begin.mul(MCache.tilehsz);
             Coord2d pos = new Coord2d(start.x, start.y);
             Coord2d a_b = bd.sub(ad);
             Coord2d b_c = cd.sub(bd);
@@ -62,7 +60,7 @@ public class CellsArray
             Coord2d d_a = ad.sub(dd);
             int factor = 1;
             double delta = Math.abs(Math.min(hb.end.x-hb.begin.x,hb.end.y-hb.begin.y));
-            while (delta<MCache.tilepfsz.x)
+            while (delta<MCache.tilehsz.x)
             {
                 delta *= 2;
                 factor *= 2;
@@ -74,9 +72,9 @@ public class CellsArray
                 for (int j = 0; j < y_len*factor + 1; j++)
                 {
                     dcells[i][j] = (short) ((a_b.dot(pos.sub(ad)) >= 0 && b_c.dot(pos.sub(bd)) >= 0 && c_d.dot(pos.sub(cd)) >= 0 && d_a.dot(pos.sub(dd)) >= 0) ? 1 : 0);
-                    pos.y += (MCache.tilepfsz.y/factor);
+                    pos.y += (MCache.tilehsz.y/factor);
                 }
-                pos.x += (MCache.tilepfsz.x/factor);
+                pos.x += (MCache.tilehsz.x/factor);
                 pos.y = start.y;
             }
 
