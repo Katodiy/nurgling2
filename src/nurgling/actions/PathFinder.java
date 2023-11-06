@@ -6,6 +6,7 @@ import nurgling.pf.*;
 import nurgling.pf.Utils;
 
 import java.util.*;
+import java.util.concurrent.atomic.*;
 
 public class PathFinder implements Action
 {
@@ -14,7 +15,7 @@ public class PathFinder implements Action
     Coord start_pos;
     Coord end_pos;
     ArrayList<Coord> end_poses;
-    boolean isHardMode = false;
+    public boolean isHardMode = false;
 
     Coord2d begin;
     Coord2d end;
@@ -32,9 +33,10 @@ public class PathFinder implements Action
     public PathFinder(Gob target)
     {
         this(target.rc);
+        target_id = target.id;
     }
 
-
+    long target_id = -1;
     private void fixStartEnd()
     {
         NPFMap.Cell[][] cells = pfmap.getCells();
@@ -66,64 +68,72 @@ public class PathFinder implements Action
         Coord posr = new Coord(pos.x + 1, pos.y);
 
         int delta = 1;
-        while (coords.isEmpty())
+        AtomicBoolean xp = new AtomicBoolean(true);
+        AtomicBoolean xm = new AtomicBoolean(true);
+        AtomicBoolean yp = new AtomicBoolean(true);
+        AtomicBoolean ym = new AtomicBoolean(true);
+
+        boolean andLastCircle = true;
+        while ((coords.isEmpty() || andLastCircle) && (xp.get() || xm.get() || yp.get() || ym.get()) && delta < 100)
         {
-            if (posl.x >= 0)
+            if (!coords.isEmpty())
+                andLastCircle = false;
+            if (posl.x >= 0 && xm.get())
             {
-                checkAndAdd(posl, coords);
+                checkAndAdd(posl, coords, xm);
                 if (!isHardMode)
                 {
                     for (int i = 1; i <= delta; i++)
                     {
                         if (posl.y > 1)
-                            checkAndAdd(new Coord(posl.x, posl.y - i), coords);
+                            checkAndAdd(new Coord(posl.x, posl.y - i), coords, null);
                         if (posl.y < pfmap.getSize() - 1)
-                            checkAndAdd(new Coord(posl.x, posl.y + i), coords);
+                            checkAndAdd(new Coord(posl.x, posl.y + i), coords, null);
                     }
                 }
             }
             posl = new Coord(posl.x - 1, posl.y);
-            if (posr.x < pfmap.getSize() - 1)
+            if (posr.x < pfmap.getSize() - 1 && xp.get())
             {
-                checkAndAdd(posr, coords);
+                checkAndAdd(posr, coords, xp);
                 if (!isHardMode)
                 {
                     for (int i = 1; i <= delta; i++)
                     {
                         if (posr.y > 1)
-                            checkAndAdd(new Coord(posr.x, posr.y - i), coords);
+                            checkAndAdd(new Coord(posr.x, posr.y - i), coords, null);
                         if (posr.y < pfmap.getSize() - 1)
-                            checkAndAdd(new Coord(posr.x, posr.y + i), coords);
+                            checkAndAdd(new Coord(posr.x, posr.y + i), coords, null);
                     }
                 }
             }
             posr = new Coord(posr.x + 1, posr.y);
-            if (posb.y >= 0)
+            if (posb.y >= 0 && ym.get())
             {
-                checkAndAdd(posb, coords);
+                checkAndAdd(posb, coords, ym);
                 if (!isHardMode)
                 {
                     for (int i = 1; i <= delta; i++)
                     {
                         if (posb.x > i)
-                            checkAndAdd(new Coord(posb.x - i, posb.y), coords);
+                            checkAndAdd(new Coord(posb.x - i, posb.y), coords, null);
                         if (posb.x < pfmap.getSize() - 1)
-                            checkAndAdd(new Coord(posb.x + i, posb.y), coords);
+                            checkAndAdd(new Coord(posb.x + i, posb.y), coords, null);
                     }
                 }
             }
             posb = new Coord(posb.x, posb.y - 1);
-            if (posu.y < pfmap.getSize() - 1)
+            if (posu.y < pfmap.getSize() - 1 && yp.get())
             {
-                checkAndAdd(posu, coords);
+                checkAndAdd(posu, coords, yp);
                 if (!isHardMode)
                 {
                     for (int i = 1; i <= delta; i++)
                     {
                         if (posu.x > i)
-                            checkAndAdd(new Coord(posu.x - i, posu.y), coords);
+                            checkAndAdd(new Coord(posu.x - i, posu.y), coords, null);
                         if (posu.x < pfmap.getSize() - 1)
-                            checkAndAdd(new Coord(posu.x + i, posu.y), coords);
+                            checkAndAdd(new Coord(posu.x + i, posu.y), coords, null);
                     }
                 }
             }
@@ -133,12 +143,17 @@ public class PathFinder implements Action
         return coords;
     }
 
-    private void checkAndAdd(Coord pos, ArrayList<Coord> coords)
+    private void checkAndAdd(Coord pos, ArrayList<Coord> coords, AtomicBoolean check)
     {
         if (pfmap.getCells()[pos.x][pos.y].val == 0)
         {
             pfmap.getCells()[pos.x][pos.y].val = 7;
             coords.add(pos);
+        }
+        else if (target_id!=-1 && check!=null)
+        {
+            if(!pfmap.getCells()[pos.x][pos.y].content.contains(target_id))
+                check.set(false);
         }
     }
 
@@ -172,11 +187,11 @@ public class PathFinder implements Action
         }
     }
 
-    LinkedList<Graph.Vertex> construct() throws InterruptedException
+    public LinkedList<Graph.Vertex> construct() throws InterruptedException
     {
         LinkedList<Graph.Vertex> path = new LinkedList<>();
         int mul = 1;
-        while (path.size() == 0 && mul < 10)
+        while (path.size() == 0 && mul < 5)
         {
             pfmap = new NPFMap(begin, end, mul);
             pfmap.build();
@@ -228,10 +243,22 @@ public class PathFinder implements Action
                 path = res.getPath();
                 if (path.size() > 0)
                     return path;
-                else
-                    mul++;
             }
+            mul++;
         }
         return null;
+    }
+
+
+    public static boolean isAvailable(Gob target) throws InterruptedException
+    {
+        return new PathFinder(target).construct()!=null;
+    }
+
+    public static boolean isAvailable(Gob target, boolean hardMode) throws InterruptedException
+    {
+        PathFinder pf = new PathFinder(target);
+        pf.isHardMode = true;
+        return pf.construct()!=null;
     }
 }

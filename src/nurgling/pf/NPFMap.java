@@ -5,6 +5,7 @@ import haven.Window;
 import nurgling.*;
 
 import java.awt.*;
+import java.util.*;
 
 public class NPFMap
 {
@@ -17,6 +18,7 @@ public class NPFMap
 
         public Coord pos = new Coord();
         public short val;
+        public ArrayList<Long> content = new ArrayList<>();
     }
 
     Cell[][] cells;
@@ -88,6 +90,10 @@ public class NPFMap
                                 if (ii > 0 && ii < size && jj > 0 && jj < size)
                                 {
                                     cells[ii][jj].val = ca.cells[i][j];
+                                    if(ca.cells[i][j]!=0)
+                                    {
+                                        cells[ii][jj].content.add(gob.id);
+                                    }
                                 }
                             }
                     }
@@ -116,61 +122,64 @@ public class NPFMap
 
     public static void print(int size, Cell[][] cells)
     {
-        Coord csz = new Coord(UI.scale(10), UI.scale(10));
-        Window wnd = NUtils.getUI().root.add(new Window(new Coord(size * UI.scale(10), size * UI.scale(10)), "PFMAP")
+        if(!NUtils.getUI().core.debug)
         {
-            @Override
-            public void draw(GOut g)
+            Coord csz = new Coord(UI.scale(10), UI.scale(10));
+            Window wnd = NUtils.getUI().root.add(new Window(new Coord(size * UI.scale(10), size * UI.scale(10)), "PFMAP")
             {
-                super.draw(g);
-                for (int i = 0; i < size; i++)
+                @Override
+                public void draw(GOut g)
                 {
-                    for (int j = size - 1; j >= 0; j--)
+                    super.draw(g);
+                    for (int i = 0; i < size; i++)
                     {
-                        if (cells[i][j].val == 1)
-                            g.chcolor(Color.RED);
-                        else if (cells[i][j].val == 0)
-                            g.chcolor(Color.GREEN);
-                        else if (cells[i][j].val == 3)
+                        for (int j = size - 1; j >= 0; j--)
                         {
-                            g.chcolor(Color.YELLOW);
-                            g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
-                            continue;
+                            if (cells[i][j].val == 1)
+                                g.chcolor(Color.RED);
+                            else if (cells[i][j].val == 0)
+                                g.chcolor(Color.GREEN);
+                            else if (cells[i][j].val == 3)
+                            {
+                                g.chcolor(Color.YELLOW);
+                                g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
+                                continue;
+                            }
+                            else if (cells[i][j].val == 7)
+                                g.chcolor(Color.BLUE);
+                            else if (cells[i][j].val == 8)
+                            {
+                                g.chcolor(Color.MAGENTA);
+                                g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
+                                continue;
+                            }
+                            else if (cells[i][j].val == 9)
+                            {
+                                g.chcolor(Color.CYAN);
+                                g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
+                                continue;
+                            }
+                            else
+                                g.chcolor(Color.BLACK);
+                            g.rect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
                         }
-                        else if (cells[i][j].val == 7)
-                            g.chcolor(Color.BLUE);
-                        else if (cells[i][j].val == 8)
-                        {
-                            g.chcolor(Color.MAGENTA);
-                            g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
-                            continue;
-                        }
-                        else if (cells[i][j].val == 9)
-                        {
-                            g.chcolor(Color.CYAN);
-                            g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
-                            continue;
-                        }
-                        else
-                            g.chcolor(Color.BLACK);
-                        g.rect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
                     }
                 }
-            }
 
-            public void wdgmsg(Widget sender, String msg, Object... args)
-            {
-                if ((sender == this) && (msg == "close"))
+                public void wdgmsg(Widget sender, String msg, Object... args)
                 {
-                    destroy();
+                    if ((sender == this) && (msg == "close"))
+                    {
+                        destroy();
+                    }
+                    else
+                    {
+                        super.wdgmsg(sender, msg, args);
+                    }
                 }
-                else
-                {
-                    super.wdgmsg(sender, msg, args);
-                }
-            }
 
-        }, new Coord(UI.scale(100), UI.scale(100)));
-        NUtils.getUI().bind(wnd, 7002);
+            }, new Coord(UI.scale(100), UI.scale(100)));
+            NUtils.getUI().bind(wnd, 7002);
+        }
     }
 }
