@@ -44,7 +44,9 @@ public class NMapView extends MapView
                 JSONArray array = (JSONArray) main.get("areas");
                 for (int i = 0; i < array.length(); i++)
                 {
-                    areas.add(new NArea((JSONObject) array.get(i)));
+                    NArea a;
+                    areas.add(a = new NArea((JSONObject) array.get(i)));
+                    NUtils.getGameUI().areas.addArea(a.name);
                 }
             }
         }
@@ -216,6 +218,7 @@ public class NMapView extends MapView
             NArea newArea = new NArea(key);
             newArea.space = result;
             areas.add(newArea);
+            NUtils.getGameUI().areas.addArea(newArea.name);
         }
         return key;
     }
@@ -435,6 +438,7 @@ public class NMapView extends MapView
                 area.inWork = true;
                 area.clearOverlayArea();
                 areas.remove(area);
+                NUtils.getGameUI().areas.removeArea(area.name);
                 break;
             }
         }
@@ -462,6 +466,8 @@ public class NMapView extends MapView
                 area.name = new_name;
                 NConfig.needAreasUpdate();
                 NUtils.getGameUI().areas.adrop.change(new_name);
+                NUtils.getGameUI().areas.removeArea(old);
+                NUtils.getGameUI().areas.addArea(new_name);
                 break;
             }
         }

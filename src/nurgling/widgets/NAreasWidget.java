@@ -6,10 +6,14 @@ import nurgling.areas.*;
 import nurgling.tools.*;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 public class NAreasWidget extends Window
 {
     public Dropbox adrop;
+
+    public IngredientContainer in_items;
+    public IngredientContainer out_items;
     public NAreasWidget()
     {
         super(UI.scale(new Coord(600,500)), "Areas Settings");
@@ -49,6 +53,7 @@ public class NAreasWidget extends Window
             }
         }, change.pos("ur").adds(5, 0));
 
+        prev = add(new AreaList(UI.scale(new Coord(300,200))), prev.pos("bl").adds(0, 10));
 
         prev = adrop = add(new Dropbox<String>(UI.scale(200), 5, UI.scale(16)) {
             @Override
@@ -86,6 +91,78 @@ public class NAreasWidget extends Window
             }
         }, prev.pos("ur").adds(5, -10));
 
+        prev = add(in_items = new IngredientContainer(), prev.pos("bl").add(0,5));
+        add(out_items = new IngredientContainer(), prev.pos("ur").adds(5, 0));
+
         pack();
+    }
+
+    public void removeArea(String area)
+    {
+        areas.remove(area);
+    }
+
+
+    public class AreaItem extends Widget{
+        Label text;
+        IButton remove;
+
+        @Override
+        public void resize(Coord sz) {
+            remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5),  remove.c.y));
+            super.resize(sz);
+        }
+
+        public AreaItem(String text){
+            this.text = add(new Label(text));
+            remove = add(new IButton(NStyle.removei[0].back,NStyle.removei[1].back,NStyle.removei[2].back){
+                @Override
+                public void click() {
+                    ((NMapView)NUtils.getGameUI().map).removeArea(AreaItem.this.text.text());
+                    NConfig.needAreasUpdate();
+                }
+            },this.text.pos("ur").add(UI.scale(5),UI.scale(1) ));
+            remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).t);
+
+            pack();
+        }
+    }
+    private ConcurrentHashMap<String, AreaItem> areas = new ConcurrentHashMap<>();
+
+    public void addArea(String val)
+    {
+        areas.put(val, new AreaItem(val));
+    }
+
+    public class AreaList extends SListBox<AreaItem, Widget> {
+        AreaList(Coord sz) {
+            super(sz, UI.scale(15));
+        }
+
+        protected List<AreaItem> items() {return new ArrayList<>(areas.values());}
+
+        @Override
+        public void resize(Coord sz) {
+            super.resize(new Coord(UI.scale(120)-UI.scale(6), sz.y));
+        }
+
+        protected Widget makeitem(AreaItem item, int idx, Coord sz) {
+            return(new ItemWidget<AreaItem>(this, sz, item) {
+                {
+                    //item.resize(new Coord(searchF.sz.x - removei[0].sz().x  + UI.scale(4), item.sz.y));
+                    add(item);
+                }
+
+                public boolean mousedown(Coord c, int button) {
+                    boolean psel = sel == item;
+                    super.mousedown(c, button);
+                    if(!psel) {
+                        String value = item.text.text();
+                        NUtils.getGameUI().itemsForSearch.install(value);
+                    }
+                    return(true);
+                }
+            });
+        }
     }
 }

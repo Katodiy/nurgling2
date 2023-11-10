@@ -11,6 +11,7 @@ public class NStyle
     public static Text.Foundry fcomboitems = new Text.Foundry(Text.sans, 16).aa(true);
     public static Text.Furnace meter = new PUtils.BlurFurn(new Text.Foundry(Text.sans, 12, Color.WHITE).aa(true), 2, 1, new Color(60,30,30));
     public static Text.Foundry flower = new Text.Foundry(Text.sans, 12,new Color(255, 250, 205)).aa(true);
+    public static Text.Foundry iiqual = new Text.Foundry(Text.sans, 12,new Color(0, 0, 0)).aa(true);
 
     public static final RichText.Foundry nifnd = new RichText.Foundry(Resource.remote(), java.awt.font.TextAttribute.FAMILY, "SansSerif", java.awt.font.TextAttribute.SIZE, UI.scale(14)).aa(true);
     public static Text.Furnace hotkey = new PUtils.BlurFurn(new Text.Foundry(Text.sans, 12, Color.WHITE).aa(true), 1, 1, new Color(0,0,0));
@@ -60,6 +61,7 @@ public class NStyle
             new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/u")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/d")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/h"))};
+
 
     private final static ArrayList<BufferedImage> hlight = new ArrayList<>();
     static {

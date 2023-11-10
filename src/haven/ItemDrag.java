@@ -27,6 +27,7 @@
 package haven;
 
 import nurgling.NWItem;
+import nurgling.tools.*;
 
 public class ItemDrag extends NWItem
 {
@@ -52,6 +53,11 @@ public class ItemDrag extends NWItem
     public boolean dropon(Widget w, Coord c) {
 	if(w instanceof DTarget) {
 	    if(((DTarget)w).drop(c, c.add(doff.inv())))
+		return(true);
+	}
+	if(w instanceof NDTarget)
+	{
+		if(((NDTarget)w).drop(this, c, c.add(doff.inv())))
 		return(true);
 	}
 	for(Widget wdg = w.lchild; wdg != null; wdg = wdg.prev) {

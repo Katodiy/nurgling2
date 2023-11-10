@@ -1,7 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
-import nurgling.NUtils;
+import nurgling.*;
 
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -193,10 +193,7 @@ public class NSearchWidget extends Widget {
     private static final Text.Foundry elf = CharWnd.attrf;
     private static final int elh = elf.height() + UI.scale(2);
 
-    private static final TexI[] removei = new TexI[]{
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/removeItem/u")),
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/removeItem/d")),
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/removeItem/h"))};
+
 
     public class CmdItem extends Widget{
         Label text;
@@ -204,13 +201,13 @@ public class NSearchWidget extends Widget {
 
         @Override
         public void resize(Coord sz) {
-            remove.move(new Coord(sz.x - removei[0].sz().x - UI.scale(5),  remove.c.y));
+            remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5),  remove.c.y));
             super.resize(sz);
         }
 
         public CmdItem(String text){
             this.text = add(new Label(text));
-            remove = add(new IButton(removei[0].back,removei[1].back,removei[2].back){
+            remove = add(new IButton(NStyle.removei[0].back,NStyle.removei[1].back,NStyle.removei[2].back){
                 @Override
                 public void click() {
                     cmdHistory.remove(text);
@@ -222,6 +219,7 @@ public class NSearchWidget extends Widget {
             pack();
         }
     }
+
 
     public class CmdList extends SListBox<CmdItem, Widget> {
         CmdList(Coord sz) {
@@ -239,7 +237,7 @@ public class NSearchWidget extends Widget {
         protected Widget makeitem(CmdItem item, int idx, Coord sz) {
             return(new ItemWidget<CmdItem>(this, sz, item) {
                 {
-                    item.resize(new Coord(searchF.sz.x - removei[0].sz().x  + UI.scale(4), item.sz.y));
+                    item.resize(new Coord(searchF.sz.x - NStyle.removei[0].sz().x  + UI.scale(4), item.sz.y));
                     add(item);
                 }
 

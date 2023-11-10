@@ -4,8 +4,12 @@
 package haven.res.lib.itemtex;
 
 import haven.*;
+import static haven.Resource.imgc;
 import haven.render.*;
+import haven.res.lib.layspr.*;
 import haven.res.lib.mapres.ResourceMap;
+import org.json.*;
+
 import java.util.*;
 import java.awt.image.BufferedImage;
 
@@ -46,7 +50,7 @@ public class ItemTex {
     public static BufferedImage sprimg(GSprite spr) {
 	if(spr instanceof GSprite.ImageSprite)
 	    return(((GSprite.ImageSprite)spr).image());
-	return(spr.owner.getres().layer(Resource.imgc).img);
+	return(spr.owner.getres().layer(imgc).img);
     }
 
     public static final Map<MessageBuf, BufferedImage> made = new CacheMap<>();
@@ -98,4 +102,50 @@ public class ItemTex {
 	}
 	return(tex);
     }
+
+	public static BufferedImage create(JSONObject object) {
+		if(object.has("layer"))
+		{
+			LinkedList<Indir<Resource>> layReses = new LinkedList<>();
+			JSONArray jlayer = (JSONArray) object.get("layer");
+			for(int i = 0 ; i < jlayer.length(); i++)
+			{
+				layReses.add(Resource.remote().loadwait((String) jlayer.get(i)).indir());
+			}
+			return new Layered(null, layReses).image();
+		}
+		else if (object.has("static"))
+		{
+			return Resource.remote().loadwait((String)object.get("static")).layer(imgc).img;
+		}
+		return null;
+	}
+
+	public static JSONObject save(GSprite spr){
+		JSONObject res = new JSONObject();
+		if(spr instanceof Layered)
+		{
+			JSONArray jlay = new JSONArray();
+			Layered lspr = (Layered) spr;
+			for (Layer lay : lspr.lay)
+			{
+				if (lay instanceof Image)
+				{
+					Resource.Image ilay = (Resource.Image) ((Image) lay).img;
+					String name = ilay.getres().name;
+					jlay.put(name);
+				}
+			}
+			res.put("layer", jlay);
+			return res;
+		}
+		else if(spr instanceof  StaticGSprite)
+		{
+			Resource.Image ilay = (Resource.Image) ((StaticGSprite) spr).img;
+			String name = ilay.getres().name;
+			res.put("static", name);
+			return res;
+		}
+		return null;
+	}
 }
