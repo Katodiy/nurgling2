@@ -66,8 +66,10 @@ public class NModelBox extends Sprite implements RenderTree.Node
 
     public static class HidePol extends Sprite implements RenderTree.Node
     {
+        public static Pipe.Op lmat = Pipe.Op.compose(Rendered.last, States.Depthtest.none, States.maskdepth,new States.Facecull(),new States.LineWidth(4), new BaseColor(new java.awt.Color(227, 28, 1, 195)));
         public static Pipe.Op emat = Pipe.Op.compose(new BaseColor(new java.awt.Color(224, 193, 79, 255)));
         final Model emod;
+        final Model lmod;
         private NBoundingBox.Polygon pol;
 
         static final VertexArray.Layout pfmt = new VertexArray.Layout(
@@ -82,8 +84,10 @@ public class NModelBox extends Sprite implements RenderTree.Node
             VertexArray va = new VertexArray(pfmt,
                     new VertexArray.Buffer((4) * pfmt.inputs[0].stride, DataBuffer.Usage.STATIC,
                             this::fill));
-
+            short [] iarr = {0,1,2,3,0};
+            Model.Indices indb = new Model.Indices(5, NumberFormat.UINT16, DataBuffer.Usage.STATIC, DataBuffer.Filler.of(iarr));
             this.emod = new Model(Model.Mode.TRIANGLE_FAN, va, null);
+            this.lmod = new Model(Model.Mode.LINE_STRIP, va, indb);
         }
 
         private FillBuffer fill(
@@ -114,12 +118,14 @@ public class NModelBox extends Sprite implements RenderTree.Node
 
         public void added(RenderTree.Slot slot)
         {
-            slot.ostate(Pipe.Op.compose(emat));
-            slot.add(emod);
+            slot.add(emod,emat);
+            slot.add(lmod,lmat);
         }
     }
 
     private final NBoundingBox bb;
+
+    boolean isShow = false;
 
     Gob gob;
 
@@ -131,18 +137,46 @@ public class NModelBox extends Sprite implements RenderTree.Node
 
     }
 
+    Collection<RenderTree.Node> nodes = new ArrayList<>();
+    RenderTree.Slot slot = null;
+
     public void added(RenderTree.Slot slot)
     {
-        for (NBoundingBox.Polygon pol : bb.polygons)
+        this.slot = slot;
+        if (nodes.isEmpty())
         {
-            new HidePol(pol).added(slot);
+            for (NBoundingBox.Polygon pol : bb.polygons)
+            {
+                nodes.add(new HidePol(pol));
+            }
         }
+
+    }
+
+    @Override
+    public boolean tick(double dt)
+    {
+        if ((Boolean) NConfig.get(NConfig.Key.showBB) != isShow)
+        {
+            isShow = (Boolean) NConfig.get(NConfig.Key.showBB);
+            if (isShow)
+            {
+                for (RenderTree.Node n : nodes)
+                {
+                    slot.add(n);
+                }
+            }
+            else
+            {
+                slot.clear();
+            }
+        }
+        return super.tick(dt);
     }
 
     @Override
     public void draw(GOut g)
     {
-        if ((Boolean) NConfig.get(NConfig.Key.showBB))
-            super.draw(g);
+        super.draw(g);
     }
 }

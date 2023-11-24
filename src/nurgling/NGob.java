@@ -68,7 +68,7 @@ public class NGob
                     }
                     if (hitBox != null)
                     {
-                        //parent.addcustomol(new NModelBox(parent));
+                        parent.addcustomol(new NModelBox(parent));
                         if (!isDynamic)
                             ca = new CellsArray(parent);
                     }
