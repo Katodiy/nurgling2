@@ -30,7 +30,6 @@ import java.util.*;
 import java.util.function.*;
 import haven.render.*;
 import nurgling.*;
-import nurgling.tools.*;
 
 public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, EquipTarget, Skeleton.HasPose {
     // Координата
@@ -609,7 +608,8 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	if(a != null) {
 	    if(a instanceof RenderTree.Node) {
 		try {
-		    RUtils.multiadd(this.slots, (RenderTree.Node)a);
+			if ((Boolean)NConfig.get(NConfig.Key.hideNature) || ngob.name==null || !NUtils.isNatureObject(ngob.name))
+		    	RUtils.multiadd(this.slots, (RenderTree.Node)a);
 		} catch(Loading l) {
 		    if(prev instanceof RenderTree.Node) {
 			RUtils.multiadd(this.slots, (RenderTree.Node)prev);
@@ -989,7 +989,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 		return null;
 	}
 
-	public void hideObject() {
+	public void show() {
 		for (GAttrib a : attr.values()) {
 
 			if (a instanceof RenderTree.Node) {
@@ -1000,7 +1000,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 		}
 	}
 
-	public void showObject() {
+	public void hide() {
 		for (GAttrib a : attr.values()) {
 			if (a instanceof RenderTree.Node) {
 				synchronized (slots) {

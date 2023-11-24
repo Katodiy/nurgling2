@@ -52,14 +52,14 @@ public class NUtils
                 for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc) {
                     if (gob.ngob.name!=null && isNatureObject(gob.ngob.name))
                     {
-                        gob.hideObject();
+                        gob.show();
                     }
                 }
             else
                 for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc) {
                     if (gob.ngob.name!=null && isNatureObject(gob.ngob.name))
                     {
-                        gob.showObject();
+                        gob.hide();
                     }
                 }
         }
