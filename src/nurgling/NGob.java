@@ -12,6 +12,7 @@ public class NGob
 {
     public NHitBox hitBox = null;
     public String name = null;
+    public boolean isQuested = true;
     private CellsArray ca = null;
     private boolean isDynamic = false;
     private boolean isGate = false;
