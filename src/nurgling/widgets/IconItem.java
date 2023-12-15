@@ -4,6 +4,7 @@ import haven.*;
 import haven.res.lib.itemtex.*;
 import nurgling.*;
 
+import javax.swing.*;
 import java.awt.image.*;
 import java.util.*;
 
@@ -85,8 +86,8 @@ public class IconItem extends Widget
         if(menu == null) {
             menu = new NFlowerMenu(opt.toArray(new String[0])) {
                 public boolean mousedown(Coord c, int button) {
-                    if(!super.mousedown(c, button))
-                        choose(null);
+                    if(super.mousedown(c, button))
+                        nchoose(null);
                     return(true);
                 }
 
@@ -98,17 +99,20 @@ public class IconItem extends Widget
                 @Override
                 public void nchoose(NPetal option)
                 {
-                    if(option.name.equals("Threshold"))
+                    if(option!=null)
                     {
-                        Widget par = IconItem.this.parent;
-                        Coord pos = IconItem.this.c.add(UI.scale(32,38));
-                        while(par!=null && !(par instanceof GameUI))
+                        if (option.name.equals("Threshold"))
                         {
-                            pos = pos.add(par.c);
-                            par = par.parent;
+                            Widget par = IconItem.this.parent;
+                            Coord pos = IconItem.this.c.add(UI.scale(32, 38));
+                            while (par != null && !(par instanceof GameUI))
+                            {
+                                pos = pos.add(par.c);
+                                par = par.parent;
+                            }
+                            SetThreshold st = new SetThreshold(val);
+                            ui.root.add(st, pos);
                         }
-                        SetThreshold st = new SetThreshold(val);
-                        ui.root.add(st, pos);
                     }
                     uimsg("cancel");
                 }
@@ -145,6 +149,19 @@ public class IconItem extends Widget
                     ui.destroy(SetThreshold.this);
                 }
             },prev.pos("ur").add(5,-5));
+        }
+
+        @Override
+        public void wdgmsg(String msg, Object... args)
+        {
+            if(msg.equals("close"))
+            {
+                destroy();
+            }
+            else
+            {
+                super.wdgmsg(msg, args);
+            }
         }
     }
 }

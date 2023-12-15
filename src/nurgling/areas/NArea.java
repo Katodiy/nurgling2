@@ -10,7 +10,7 @@ import java.util.*;
 
 public class NArea
 {
-    private static int nextolid = 0;
+
     public static class VArea
     {
         public Area area;
@@ -24,7 +24,7 @@ public class NArea
 
     public static class Space
     {
-        private final int max = 99;
+        private final int max = 100;
         private final int min = 0;
 
         public HashMap<Long,VArea> space = new HashMap<>();
@@ -38,7 +38,7 @@ public class NArea
             Coord bd = begin.div(cmaps);
             Coord ed = end.div(cmaps);
             Coord bm = begin.mod(cmaps);
-            Coord em = end.mod(cmaps);
+            Coord em = end.mod(cmaps).add(1,1);
             if (bd.equals(ed.x,ed.y))
             {
                 MCache.Grid grid = NUtils.getGameUI().map.glob.map.grids.get(bd);
@@ -78,24 +78,25 @@ public class NArea
     public NArea(String name)
     {
         this.name = name;
-        olid = nextolid++ % MCache.customolssize;
     }
 
     public NArea(JSONObject obj)
     {
         this.name = (String) obj.get("name");
+        this.id = (Integer) obj.get("id");
         space = new Space();
         JSONArray jareas = (JSONArray) obj.get("space");
         for (int i = 0; i < jareas.length(); i++)
         {
             JSONObject jarea = (JSONObject) jareas.get(i);
             space.space.put((Long) jarea.get("id"), new VArea(new Area(new Coord((Integer) jarea.get("begin_x"), (Integer) jarea.get("begin_y")), new Coord((Integer) jarea.get("end_x"), (Integer) jarea.get("end_y")))));
+            grids_id.add((Long)jarea.get("id"));
         }
-        olid = (nextolid++) % MCache.customolssize;
     }
     public Space space;
     public String name;
-    final int olid;
+    public int id;
+    public final ArrayList<Long> grids_id = new ArrayList<>();
     NAlias items = new NAlias();
     NAlias ws = new NAlias();
     NAlias ic = new NAlias();
@@ -121,25 +122,28 @@ public class NArea
         return containers;
     }
 
-
-    public static class History
-    {
-        MCache.Grid g;
-        Coord t;
-        boolean val;
-
-        public History(MCache.Grid g, Coord t, boolean b)
-        {
-            this.g = g;
-            this.t = t;
-            this.val = b;
-        }
-    }
-
-    ArrayList<History> current = new ArrayList<>();
     public boolean isHighlighted = false;
     public boolean wasHighlighted = false;
     public boolean inWork = false;
+
+    public Area getArea()
+    {
+        Coord begin = null;
+        Coord end = null;
+        for (Long id : space.space.keySet())
+        {
+            MCache.Grid grid = NUtils.getGameUI().map.glob.map.findGrid(id);
+            if(grid!=null)
+            {
+                Area area = space.space.get(id).area;
+                Coord b = area.ul.add(grid.ul);
+                Coord e = area.br.add(grid.ul);
+                begin = (begin != null) ? new Coord(Math.min(begin.x, b.x), Math.min(begin.y, b.y)) : b;
+                end = (end != null) ? new Coord(Math.max(end.x, e.x), Math.max(end.y, e.y)) : e;
+            }
+        }
+        return new Area(begin,end);
+    }
 
     public Pair<Coord2d,Coord2d> getRCArea()
     {
@@ -164,107 +168,10 @@ public class NArea
 
     public void tick(double dt)
     {
-        if(!inWork)
+        if(NUtils.getGameUI().map.nols.get(id)==null && !inWork)
         {
-            NMapView.NOverlayInfo id = ((NMapView) NUtils.getGameUI().map).olsinf.get(isHighlighted ? "hareas" : ("areas" + String.valueOf(olid)));
-
-            boolean needUpdate = false;
-            boolean needReset = false;
-
-            if (isVisible())
-                for (History h : current)
-                {
-                    for (int i = 0; i < h.g.ols.length; i++)
-                    {
-                        if (h.g.ols[i] != null && h.g.ol[i] != null && h.g.ols[i].get().layer(MCache.ResOverlay.class) == id.id)
-                        {
-                            if (h.g.ol[i][h.t.x + (h.t.y * MCache.cmaps.x)] != h.val)
-                            {
-                                needReset = true;
-                                h.g.ol[i][h.t.x + (h.t.y * MCache.cmaps.x)] = h.val;
-                            }
-                        }
-                    }
-                }
-
-            if (wasHighlighted)
-            {
-                needReset = true;
-                wasHighlighted = false;
-            }
-
-            if (needReset)
-            {
-                NMapView.NOverlayInfo rid = ((NMapView) NUtils.getGameUI().map).olsinf.get((isHighlighted) ? ("areas" + String.valueOf(olid)) : "hareas");
-                clearOverlayHistory(rid);
-
-                current.clear();
-            }
-            for (long a : space.space.keySet())
-            {
-                MCache.Grid g = NUtils.getGameUI().map.glob.map.findGrid(a);
-                if ((!space.space.get(a).isVis || needReset) && g != null)
-                {
-                    for (int i = 0; i < g.ols.length; i++)
-                    {
-                        try
-                        {
-                            if (g.ols[i].get().layer(MCache.ResOverlay.class) == id.id)
-                            {
-                                Area area = space.space.get(a).area;
-                                for (int x = area.ul.x; x <= area.br.x; x++)
-                                {
-                                    for (int y = area.ul.y; y <= area.br.y; y++)
-                                    {
-                                        g.ol[i][x + (y * cmaps.x)] = true;
-                                        current.add(new History(g, new Coord(x, y), true));
-                                    }
-                                }
-                                space.space.get(a).isVis = true;
-                                needUpdate = true;
-                            }
-                        }
-                        catch (Loading e)
-                        {
-                            //TODO: fcn loading
-                        }
-                    }
-                }
-                else
-                {
-                    if (g == null && space.space.get(a).isVis)
-                    {
-                        space.space.get(a).isVis = false;
-                        needUpdate = true;
-                    }
-
-                }
-            }
-            if (needUpdate)
-                ((NMapView) NUtils.getGameUI().map).setStatus(id.id, true);
+            NUtils.getGameUI().map.addCustomOverlay(id);
         }
-    }
-
-    private void clearOverlayHistory(NMapView.NOverlayInfo rid)
-    {
-        for (History h : current)
-        {
-            for (int i = 0; i < h.g.ols.length; i++)
-            {
-                if (h.g.ols[i] != null && h.g.ol[i] != null && h.g.ols[i].get().layer(MCache.ResOverlay.class) == rid.id)
-                {
-                    h.g.ol[i][h.t.x + (h.t.y * MCache.cmaps.x)] = false;
-                }
-            }
-        }
-        ((NMapView) NUtils.getGameUI().map).setStatus(rid.id, true);
-    }
-
-    public void clearOverlayArea()
-    {
-        NMapView.NOverlayInfo rid = ((NMapView) NUtils.getGameUI().map).olsinf.get((!isHighlighted) ? ("areas" + String.valueOf(olid)) : "hareas");
-        clearOverlayHistory(rid);
-        current.clear();
     }
 
     private boolean isVisible()
@@ -281,6 +188,7 @@ public class NArea
     {
         JSONObject res = new JSONObject();
         res.put("name", name);
+        res.put("id", id);
         JSONArray jspaces = new JSONArray();
         for(long id : space.space.keySet())
         {

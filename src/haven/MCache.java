@@ -26,12 +26,18 @@
 
 package haven;
 
+import java.io.*;
+import java.nio.charset.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 import java.lang.ref.*;
+import java.util.stream.*;
+
 import haven.render.*;
 import nurgling.*;
 import nurgling.areas.*;
+import org.json.*;
 
 /* XXX: This whole file is a bit of a mess and could use a bit of a
  * rewrite some rainy day. Synchronization especially is quite hairy. */
@@ -56,11 +62,38 @@ public class MCache implements MapSource {
     private final Waitable.Queue gridwait = new Waitable.Queue();
     Map<Coord, Request> req = new HashMap<Coord, Request>();
     public Map<Coord, Grid> grids = new HashMap<Coord, Grid>();
-    public ArrayList<NArea> areas = new ArrayList<NArea>();
+    public final HashMap<Integer, NArea> areas = new HashMap<>();
     Session sess;
     Set<Overlay> ols = new HashSet<Overlay>();
     public int olseq = 0, chseq = 0;
     Map<Integer, Defrag> fragbufs = new TreeMap<Integer, Defrag>();
+
+
+	void init()
+	{
+		if(new File(NConfig.current.path_areas).exists())
+		{
+			StringBuilder contentBuilder = new StringBuilder();
+			try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_areas), StandardCharsets.UTF_8))
+			{
+				stream.forEach(s -> contentBuilder.append(s).append("\n"));
+			}
+			catch (IOException ignore)
+			{
+			}
+
+			if (!contentBuilder.toString().isEmpty())
+			{
+				JSONObject main = new JSONObject(contentBuilder.toString());
+				JSONArray array = (JSONArray) main.get("areas");
+				for (int i = 0; i < array.length(); i++)
+				{
+					NArea a = new NArea((JSONObject) array.get(i));
+					areas.put(a.id, a);
+				}
+			}
+		}
+	}
 
     public static class LoadingMap extends Loading {
 	public final Coord gc;
@@ -362,6 +395,9 @@ public class MCache implements MapSource {
 	    public final Map<OverlayInfo, RenderTree.Node> ols = new HashMap<>();
 	    public final Map<OverlayInfo, RenderTree.Node> olols = new HashMap<>();
 
+		public final Map<Integer, RenderTree.Node> nols = new HashMap<>();
+		public final Map<Integer, RenderTree.Node> nedgs = new HashMap<>();
+
 	    public Cut(Coord cc) {
 		this.cc = cc;
 		this.mesh = new Deferred<MapMesh>() {
@@ -408,8 +444,20 @@ public class MCache implements MapSource {
 			    ((Disposable)r).dispose();
 		    }
 		    olols.clear();
-		}
+			for(RenderTree.Node nol : nols.values())
+			{
+			if(nol instanceof Disposable)
+				((Disposable)nol).dispose();
+			}
+			nols.clear();
+			for(RenderTree.Node nol : nedgs.values())
+			{
+				if(nol instanceof Disposable)
+					((Disposable)nol).dispose();
+			}
+			nedgs.clear();
 	    }
+		}
 	}
 
 	public Grid(Coord gc) {
@@ -562,13 +610,56 @@ public class MCache implements MapSource {
 	    }
 	    return(cut.ols.get(id));
 	}
+
+	public RenderTree.Node getnolcut(Integer id, Coord cc) {
+		if(areas.get(id)!= null && areas.get(id).grids_id.contains(this.id))
+		{
+			int nseq = MCache.this.olseq;
+			if (this.olseq != nseq)
+			{
+				for (int i = 0; i < cutn.x * cutn.y; i++)
+				{
+					for (RenderTree.Node r : cuts[i].nols.values())
+					{
+						if (r instanceof Disposable)
+							((Disposable) r).dispose();
+					}
+					for (RenderTree.Node r : cuts[i].nedgs.values())
+					{
+						if (r instanceof Disposable)
+							((Disposable) r).dispose();
+					}
+					cuts[i].nols.clear();
+					cuts[i].nedgs.clear();
+				}
+				this.olseq = nseq;
+			}
+			Cut cut = geticut(cc);
+			if (!cut.nols.containsKey(id))
+			{
+				MapView.NOverlay nol = NUtils.getGameUI().map.nols.get(id);
+				cut.nols.put(id, nol.makenol(getcut(cc), this.id, ul));
+				cut.nedgs.put(id, nol.makenolol(getcut(cc),this.id, ul));
+				nol.cuts.add(cut);
+
+			}
+			return (cut.nols.get(id));
+		}
+		return null;
+	}
 	
 	public RenderTree.Node getololcut(OverlayInfo id, Coord cc) {
 	    getolcut(id, cc);
 	    return(geticut(cc).olols.get(id));
 	}
 
-	public void ivneigh(Coord nc) {
+	public RenderTree.Node getnedgecut(Integer id, Coord cc) {
+		getnolcut(id, cc);
+		return(geticut(cc).nedgs.get(id));
+	}
+
+
+		public void ivneigh(Coord nc) {
 	    Coord cc = new Coord();
 	    for(cc.y = 0; cc.y < cutn.y; cc.y++) {
 		for(cc.x = 0; cc.x < cutn.x; cc.x++) {
@@ -818,6 +909,7 @@ public class MCache implements MapSource {
 
     public MCache(Session sess) {
 	this.sess = sess;
+	init();
     }
 
     public void ctick(double dt) {
@@ -1042,6 +1134,19 @@ public class MCache implements MapSource {
 	    return(getgrid(cc.div(cutn)).getololcut(id, cc.mod(cutn)));
 	}
     }
+
+	public RenderTree.Node getnolcut(Integer id, Coord cc) {
+		synchronized(grids) {
+			return(getgrid(cc.div(cutn)).getnolcut(id, cc.mod(cutn)));
+		}
+	}
+
+	public RenderTree.Node getnedgecut(Integer id, Coord cc) {
+		synchronized(grids) {
+			return(getgrid(cc.div(cutn)).getnedgecut(id, cc.mod(cutn)));
+		}
+	}
+
 
     public void mapdata2(Message msg) {
 	Coord c = msg.coord();

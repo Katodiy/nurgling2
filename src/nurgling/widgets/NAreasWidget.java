@@ -10,13 +10,14 @@ import java.util.concurrent.*;
 
 public class NAreasWidget extends Window
 {
-    public Dropbox adrop;
-
     public IngredientContainer in_items;
     public IngredientContainer out_items;
+
+    AreaList al;
     public NAreasWidget()
     {
         super(UI.scale(new Coord(600,500)), "Areas Settings");
+
         prev = add(new Button(UI.scale(150), "Create area"){
             @Override
             public void click()
@@ -27,81 +28,48 @@ public class NAreasWidget extends Window
             }
         });
 
-        Widget change = add(new Button(UI.scale(150), "Change area"){
-            @Override
-            public void click()
-            {
-                super.click();
-                if(adrop.sel!=null)
-                {
-                    ((NMapView)NUtils.getGameUI().map).changeArea((String) adrop.sel);
-                }
-            }
-        }, prev.pos("ur").adds(5, 0));
+        prev = add(al = new AreaList(UI.scale(new Coord(300,200))), prev.pos("bl").adds(0, 10));
 
-        add(new Button(UI.scale(150), "Remove area"){
-            @Override
-            public void click()
-            {
-                super.click();
-                if(adrop.sel!=null)
-                {
-                    ((NMapView)NUtils.getGameUI().map).removeArea((String) adrop.sel);
-                    NConfig.needAreasUpdate();
-                    adrop.sel = null;
-                }
-            }
-        }, change.pos("ur").adds(5, 0));
+//        add(new Button(UI.scale(100), "Edit name"){
+//            @Override
+//            public void click()
+//            {
+//                super.click();
+//                if(adrop.sel!=null)
+//                {
+//                    NArea area = ((NMapView)NUtils.getGameUI().map).findArea((String)adrop.sel);
+//                    NEditAreaName.changeName(area);
+//                }
+//            }
+//        }, prev.pos("ur").adds(5, -10));
 
-        prev = add(new AreaList(UI.scale(new Coord(300,200))), prev.pos("bl").adds(0, 10));
-
-        prev = adrop = add(new Dropbox<String>(UI.scale(200), 5, UI.scale(16)) {
-            @Override
-            protected String listitem(int i) {
-                return new LinkedList<>(((NMapView)NUtils.getGameUI().map).areas()).get(i);
-            }
-
-            @Override
-            protected int listitems() {
-                return ((NMapView)NUtils.getGameUI().map).areas().size();
-            }
-
-            @Override
-            protected void drawitem(GOut g, String item, int i) {
-                g.text(item, Coord.z);
-            }
-
-            @Override
-            public void change(String item) {
-                super.change(item);
-                ((NMapView)NUtils.getGameUI().map).selectArea(item);
-            }
-        }, prev.pos("bl").adds(0, 10));
-
-        add(new Button(UI.scale(100), "Edit name"){
-            @Override
-            public void click()
-            {
-                super.click();
-                if(adrop.sel!=null)
-                {
-                    NArea area = ((NMapView)NUtils.getGameUI().map).findArea((String)adrop.sel);
-                    NEditAreaName.changeName(area);
-                }
-            }
-        }, prev.pos("ur").adds(5, -10));
-
-        prev = add(in_items = new IngredientContainer(), prev.pos("bl").add(0,5));
+        prev = add(in_items = new IngredientContainer(), prev.pos("ur").add(5,0));
         add(out_items = new IngredientContainer(), prev.pos("ur").adds(5, 0));
 
         pack();
     }
 
-    public void removeArea(String area)
+    public void removeArea(int id)
     {
-        areas.remove(area);
+        areas.remove(id);
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            MapView.NOverlay nol = NUtils.getGameUI().map.nols.get(id);
+            nol.remove();
+            NUtils.getGameUI().map.nols.remove(id);
+        }
     }
 
+    @Override
+    public void show()
+    {
+        if(areas.isEmpty() && !NUtils.getGameUI().map.glob.map.areas.isEmpty())
+        {
+            for (NArea area : NUtils.getGameUI().map.glob.map.areas.values())
+                addArea(area.id, area.name);
+        }
+        super.show();
+    }
 
     public class AreaItem extends Widget{
         Label text;
@@ -121,17 +89,90 @@ public class NAreasWidget extends Window
                     ((NMapView)NUtils.getGameUI().map).removeArea(AreaItem.this.text.text());
                     NConfig.needAreasUpdate();
                 }
-            },this.text.pos("ur").add(UI.scale(5),UI.scale(1) ));
+            },new Coord(al.sz.x - NStyle.removei[0].sz().x, 0).sub(UI.scale(5),UI.scale(1) ));
             remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).t);
 
             pack();
         }
-    }
-    private ConcurrentHashMap<String, AreaItem> areas = new ConcurrentHashMap<>();
 
-    public void addArea(String val)
+        @Override
+        public boolean mousedown(Coord c, int button)
+        {
+            if(button==3)
+            {
+                opts(c);
+                return true;
+            }
+            else
+            {
+                return super.mousedown(c, button);
+            }
+        }
+
+        final ArrayList<String> opt = new ArrayList<String>(){
+            {
+                add("Select area space");
+                add("Set color");
+                add("Edit name");
+            }
+        };
+
+        NFlowerMenu menu;
+
+        public void opts( Coord c ) {
+            if(menu == null) {
+                menu = new NFlowerMenu(opt.toArray(new String[0])) {
+                    public boolean mousedown(Coord c, int button) {
+                        if(super.mousedown(c, button))
+                            nchoose(null);
+                        return(true);
+                    }
+
+                    public void destroy() {
+                        menu = null;
+                        super.destroy();
+                    }
+
+                    @Override
+                    public void nchoose(NPetal option)
+                    {
+                        if(option!=null)
+                        {
+                            if (option.name.equals("Select area space"))
+                            {
+                                ((NMapView)NUtils.getGameUI().map).changeArea(AreaItem.this.text.text());
+                            }
+                            else if (option.name.equals("Set color"))
+                            {
+
+                            }
+                            else if (option.name.equals("Edit name"))
+                            {
+
+                            }
+                        }
+                        uimsg("cancel");
+                    }
+
+                };
+            }
+            Widget par = parent;
+            Coord pos = c;
+            while(par!=null && !(par instanceof GameUI))
+            {
+                pos = pos.add(par.c);
+                par = par.parent;
+            }
+            ui.root.add(menu, pos.add(UI.scale(25,38)));
+        }
+
+
+    }
+    private ConcurrentHashMap<Integer, AreaItem> areas = new ConcurrentHashMap<>();
+
+    public void addArea(int id, String val)
     {
-        areas.put(val, new AreaItem(val));
+        areas.put(id, new AreaItem(val));
     }
 
     public class AreaList extends SListBox<AreaItem, Widget> {
@@ -163,6 +204,23 @@ public class NAreasWidget extends Window
                     return(true);
                 }
             });
+        }
+
+        @Override
+        public void wdgmsg(String msg, Object... args)
+        {
+            super.wdgmsg(msg, args);
+        }
+    }
+
+    @Override
+    public void wdgmsg(Widget sender, String msg, Object... args)
+    {
+        if(msg.equals("close"))
+            hide();
+        else
+        {
+            super.wdgmsg(sender, msg, args);
         }
     }
 }

@@ -57,10 +57,14 @@ public class NAreaSelector implements Runnable
                     if(result!=null)
                     {
                         if(mode == Mode.CREATE)
+                        {
                             ((NMapView) NUtils.getGameUI().map).addArea(result);
+                        }
                         else if(mode == Mode.CHANGE)
                         {
                             area.space = result;
+                            area.grids_id.clear();
+                            area.grids_id.addAll(area.space.space.keySet());
                             for(NArea.VArea space: area.space.space.values())
                                 space.isVis = false;
                             area.inWork = false;

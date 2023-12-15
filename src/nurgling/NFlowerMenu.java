@@ -99,6 +99,7 @@ public class NFlowerMenu extends FlowerMenu
             g.image((isHighligted) ? bhr : br, new Coord(len - br.sz().x, 0));
         }
 
+        @Override
         public boolean mousedown(Coord c, int button) {
             nchoose(this);
             return(true);

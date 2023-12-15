@@ -85,5 +85,9 @@ public class NUtils
         return fnf.getResult();
     }
 
+    public static NArea getArea(int id)
+    {
+        return getGameUI().map.glob.map.areas.get(id);
+    }
 //
 }

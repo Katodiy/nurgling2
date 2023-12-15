@@ -4,58 +4,24 @@ import haven.*;
 import static haven.MCache.tilesz;
 import nurgling.areas.*;
 import nurgling.tools.*;
-import org.json.*;
 
 import java.awt.image.*;
-import java.io.*;
-import java.nio.charset.*;
-import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
-import java.util.stream.*;
 
 public class NMapView extends MapView
 {
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
         super(sz, glob, cc, plgob);
-        olsinf.put("minesup", new NOverlayGobInfo(Resource.remote().loadwait("map/overlay/minesup-o").flayer(MCache.ResOverlay.class),false));
-        olsinf.put("hareas", new NOverlayInfo(Resource.remote().loadwait("map/overlay/areash-o").flayer(MCache.ResOverlay.class),false));
         for(int i = 0 ; i < MCache.customolssize; i++)
-            olsinf.put("areas"+String.valueOf(i), new NOverlayInfo(Resource.remote().loadwait("map/overlay/areas-o"+String.valueOf(i)).flayer(MCache.ResOverlay.class),false));
-//        toggleol("areas", true);
         toggleol("hareas", true);
         toggleol("minesup", true);
-
-        if(new File(NConfig.current.path_areas).exists())
-        {
-            StringBuilder contentBuilder = new StringBuilder();
-            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_areas), StandardCharsets.UTF_8))
-            {
-                stream.forEach(s -> contentBuilder.append(s).append("\n"));
-            }
-            catch (IOException ignore)
-            {
-            }
-
-            if (!contentBuilder.toString().isEmpty())
-            {
-                JSONObject main = new JSONObject(contentBuilder.toString());
-                JSONArray array = (JSONArray) main.get("areas");
-                for (int i = 0; i < array.length(); i++)
-                {
-                    NArea a;
-                    areas.add(a = new NArea((JSONObject) array.get(i)));
-                    NUtils.getGameUI().areas.addArea(a.name);
-                }
-            }
-        }
     }
 
     final HashMap<String, String> ttip = new HashMap<>();
 
-    private final Map<MCache.OverlayInfo, Overlay> custom_ols = new HashMap<>();
-    public HashMap<String, NOverlayInfo> olsinf = new HashMap<>();
+    public final Map<Integer, NOverlay> custom_ols = new HashMap<>();
 
     public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
     public NArea.Space areaSpace = null;
@@ -198,57 +164,44 @@ public class NMapView extends MapView
         }.run();
     }
 
-    final LinkedList<NArea> areas = new LinkedList<>();
 
     public String addArea(NArea.Space result)
     {
         String key;
-        synchronized (areas)
+        synchronized (glob.map.areas)
         {
             HashSet<String> names = new HashSet<String>();
-            for(NArea area : areas)
+            int id = 0;
+            for(NArea area : glob.map.areas.values())
             {
+                if(area.id >= id)
+                {
+                    id = area.id + 1;
+                }
                 names.add(area.name);
             }
-            key = ("New Area" + String.valueOf(areas.size()));
+            key = ("New Area" + String.valueOf(glob.map.areas.size()));
             while(names.contains(key))
             {
                 key = key+"(1)";
             }
             NArea newArea = new NArea(key);
+            newArea.id = id;
             newArea.space = result;
-            areas.add(newArea);
-            NUtils.getGameUI().areas.addArea(newArea.name);
+            newArea.grids_id.addAll(newArea.space.space.keySet());
+            glob.map.areas.put(id, newArea);
+            NUtils.getGameUI().areas.addArea(id, newArea.name);
         }
         return key;
-    }
-
-    public class NOverlayInfo
-    {
-        public MCache.OverlayInfo id;
-        boolean needUpdate = false;
-
-        public NOverlayInfo(MCache.OverlayInfo flayer, boolean b) {
-            this.id = flayer;
-            this.needUpdate = b;
-        }
-    }
-
-    public class NOverlayGobInfo extends NOverlayInfo
-    {
-        public NOverlayGobInfo(MCache.OverlayInfo flayer, boolean b) {
-            super(flayer,b);
-        }
-        HashMap<Long, ArrayList<NMiningSafeMap.History>> gobs = new HashMap<>();
     }
 
 
     @Override
     public void tick(double dt)
     {
-        synchronized (areas)
+        synchronized (glob.map.areas)
         {
-            for (NArea area : areas)
+            for (NArea area : glob.map.areas.values())
             {
                 area.tick(dt);
             }
@@ -259,89 +212,10 @@ public class NMapView extends MapView
     @Override
     protected void oltick()
     {
-        if (terrain.area != null)
-        {
-            for (NOverlayInfo olinf : olsinf.values())
-            {
-                if ((olinf.needUpdate && (!(olinf instanceof NOverlayGobInfo) || !((NOverlayGobInfo)olinf).gobs.isEmpty())) && custom_ols.get(olinf.id) != null)
-                {
-                    synchronized (NUtils.getGameUI().map.glob.map.grids)
-                    {
-                        for (MCache.Grid grid : NUtils.getGameUI().map.glob.map.grids.values())
-                        {
-                            for (int i = 0; i < grid.cuts.length; i++)
-                            {
-
-                                try
-                                {
-                                    MCache.Grid.Deferred<MapMesh> mesh = grid.cuts[i].mesh;
-                                    if (mesh == null)
-                                        return;
-                                    grid.cuts[i].ols.put(olinf.id, mesh.get().makeol(olinf.id));
-                                    grid.cuts[i].olols.put(olinf.id, mesh.get().makeolol(olinf.id));
-                                }
-                                catch (Loading l)
-                                {
-                                    l.boostprio(2);
-                                }
-                            }
-                        }
-                        olinf.needUpdate = false;
-                    }
-                }
-                Overlay ol = custom_ols.get(olinf.id);
-                if (ol == null)
-                {
-                    try
-                    {
-                        basic.add(ol = new Overlay(olinf.id));
-                        custom_ols.put(olinf.id, ol);
-                    }
-                    catch (Loading l)
-                    {
-                        l.boostprio(2);
-                    }
-                }
-            }
-        }
         super.oltick();
-        if (terrain.area != null)
-            for (NOverlayInfo colinf : olsinf.values())
-                if(colinf instanceof NMapView.NOverlayGobInfo)
-                {
-                    NMapView.NOverlayGobInfo olinf = (NMapView.NOverlayGobInfo)colinf;
-                    for (Iterator<Map.Entry<Long, ArrayList<NMiningSafeMap.History>>> iter = olinf.gobs.entrySet().iterator(); iter.hasNext(); )
-                    {
-                        Map.Entry<Long, ArrayList<NMiningSafeMap.History>> item = iter.next();
-                        Long gobid = item.getKey();
-                        if (NUtils.getGameUI().map.glob.oc.getgob(gobid) == null && placing == null)
-                        {
-                            for (NMiningSafeMap.History h : olinf.gobs.get(gobid))
-                            {
-                                for (int i = 0; i < h.g.ols.length; i++)
-                                {
-                                    if (h.g.ols[i].get().layer(MCache.ResOverlay.class) == olinf.id)
-                                    {
-                                        h.g.ol[i][h.t.x + (h.t.y * MCache.cmaps.x)] = false;
-                                    }
-                                }
-                            }
-                            iter.remove();
-                            olinf.needUpdate = true;
-                        }
-                    }
-                }
+        for(NOverlay ol : nols.values())
+            ol.tick();
     }
-
-    public void setStatus(MCache.OverlayInfo id, boolean status){
-        for(NOverlayInfo inf: olsinf.values()){
-            if(inf.id == id){
-                inf.needUpdate = status;
-                return;
-            }
-        }
-    }
-
 
     public void toggleol(String tag, boolean a)
     {
@@ -390,7 +264,7 @@ public class NMapView extends MapView
 
     public Collection<String> areas(){
         LinkedList<String> areasNames = new LinkedList<>();
-        for(NArea area : areas)
+        for(NArea area : glob.map.areas.values())
         {
             areasNames.add(area.name);
         }
@@ -399,7 +273,7 @@ public class NMapView extends MapView
 
     public void selectArea(String name)
     {
-        for(NArea area : areas)
+        for(NArea area : glob.map.areas.values())
         {
             if(area.isHighlighted)
             {
@@ -408,7 +282,7 @@ public class NMapView extends MapView
             }
         }
 
-        for(NArea area : areas)
+        for(NArea area : glob.map.areas.values())
         {
             if(area.name.equals(name))
             {
@@ -419,7 +293,7 @@ public class NMapView extends MapView
 
     public NArea findArea(String name)
     {
-        for(NArea area : areas)
+        for(NArea area : glob.map.areas.values())
         {
             if(area.name.equals(name))
             {
@@ -431,26 +305,31 @@ public class NMapView extends MapView
 
     public void removeArea(String name)
     {
-        for(NArea area : areas)
+        for(NArea area : glob.map.areas.values())
         {
             if(area.name.equals(name))
             {
                 area.inWork = true;
-                area.clearOverlayArea();
-                areas.remove(area);
-                NUtils.getGameUI().areas.removeArea(area.name);
+//                area.clearOverlayArea();
+                glob.map.areas.remove(area.id);
+                NUtils.getGameUI().areas.removeArea(area.id);
                 break;
             }
         }
     }
     public void changeArea(String name)
     {
-        for(NArea area : areas)
+        for(NArea area : glob.map.areas.values())
         {
             if(area.name.equals(name))
             {
                 area.inWork = true;
-                area.clearOverlayArea();
+                if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+                {
+                    MapView.NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
+                    nol.remove();
+                    NUtils.getGameUI().map.nols.remove(area.id);
+                }
                 NAreaSelector.changeArea(area);
                 break;
             }
@@ -459,15 +338,12 @@ public class NMapView extends MapView
 
     public void changeAreaName(String old, String new_name)
     {
-        for(NArea area : areas)
+        for(NArea area : glob.map.areas.values())
         {
             if(area.name.equals(old))
             {
                 area.name = new_name;
                 NConfig.needAreasUpdate();
-                NUtils.getGameUI().areas.adrop.change(new_name);
-                NUtils.getGameUI().areas.removeArea(old);
-                NUtils.getGameUI().areas.addArea(new_name);
                 break;
             }
         }

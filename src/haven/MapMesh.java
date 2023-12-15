@@ -37,6 +37,7 @@ import haven.Surface.MeshVertex;
 import haven.render.Rendered.Order;
 import haven.resutil.*;
 import nurgling.*;
+import nurgling.areas.*;
 
 public class MapMesh implements RenderTree.Node, Disposable {
     public final Coord ul, sz;
@@ -489,18 +490,45 @@ public class MapMesh implements RenderTree.Node, Disposable {
 
 	public Comparator<OLOrder> comparator() {return(cmp);}
     }
+
+
+	public static class NOLOrder extends Order<NOLOrder> {
+		public final Integer id;
+
+		public NOLOrder(Integer id) {
+			this.id = id;
+		}
+
+		public int mainorder() {
+			return(1003);
+		}
+
+		public boolean equals(Object x) {
+			return((x instanceof NOLOrder) && (((NOLOrder) x).id.equals(this.id)));
+		}
+
+		public int hashCode() {
+			return(System.identityHashCode(id));
+		}
+
+		private final static Comparator<NOLOrder> cmp = (a, b) -> {
+			return(Utils.idcmp.compare(a.id, b.id));
+		};
+
+		public Comparator<NOLOrder> comparator() {return(cmp);}
+	}
     private static final VertexArray.Layout olvfmt = new VertexArray.Layout(new VertexArray.Layout.Input(Homo3D.vertex, new VectorFormat(3, NumberFormat.FLOAT32), 0, 0, 16),
 									    new VertexArray.Layout.Input(Homo3D.normal, new VectorFormat(3, NumberFormat.SNORM8), 0, 12, 16));
-    private static class OLArray {
+    public static class OLArray {
 	VertexArray dat;
-	int[] vl;
+	public int[] vl;
 
 	OLArray(VertexArray dat, int[] vl) {
 	    this.dat = dat;
 	    this.vl = vl;
 	}
     }
-    private OLArray makeolvbuf() {
+    public OLArray makeolvbuf() {
 	MapSurface ms = data(gnd);
 	int[] vl = new int[ms.vl.length];
 	haven.Surface.Normals sn = ms.data(haven.Surface.nrm);
@@ -527,13 +555,13 @@ public class MapMesh implements RenderTree.Node, Disposable {
 	}
 	return(new OLArray(vbuf.finv(), vl));
     }
-    private OLArray olvert = null;
+    public OLArray olvert = null;
 
-    private static class ShallowWrap implements RenderTree.Node, Rendered, Disposable {
+    public static class ShallowWrap implements RenderTree.Node, Rendered, Disposable {
 	final Rendered r;
 	final Pipe.Op st;
 
-	ShallowWrap(Rendered r, Pipe.Op st) {
+	public ShallowWrap(Rendered r, Pipe.Op st) {
 	    this.r = r;
 	    this.st = st;
 	}
@@ -639,6 +667,8 @@ public class MapMesh implements RenderTree.Node, Disposable {
 										       DataBuffer.Filler.of(Arrays.copyOf(buf.fl, buf.fn))));
 	return(new ShallowWrap(mod, Pipe.Op.compose(new OLOrder(id), new States.LineWidth(2))));
     }
+
+
 
     private void clean() {
 	int on = data.size();

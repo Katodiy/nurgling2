@@ -68,7 +68,7 @@ public class NConfig
     private boolean isUpd = false;
     private boolean isAreasUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
-    String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
+    public String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
 
     public boolean isUpdated()
     {
@@ -113,7 +113,7 @@ public class NConfig
         }
     }
 
-    static NConfig current;
+    public static NConfig current;
 
     private ArrayList<Object> readArray(ArrayList<HashMap<String, Object>> objs)
     {
@@ -257,7 +257,7 @@ public class NConfig
         {
             JSONObject main = new JSONObject();
             JSONArray jareas = new JSONArray();
-            for(NArea area : ((NMapView)NUtils.getGameUI().map).areas)
+            for(NArea area : ((NMapView)NUtils.getGameUI().map).glob.map.areas.values())
             {
                 jareas.put(area.toJson());
             }
