@@ -89,5 +89,12 @@ public class NUtils
     {
         return getGameUI().map.glob.map.areas.get(id);
     }
+
+    public static Gob player()
+    {
+        if(getGameUI()== null || getGameUI().map ==null)
+            return null;
+        return getGameUI().map.player();
+    }
 //
 }

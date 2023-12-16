@@ -77,35 +77,40 @@ public class IngredientContainer extends Widget implements NDTarget
         {
             String name = ((NGItem) item.item).name();
             JSONObject res = ItemTex.save(item.item.spr);
-            if (res != null)
-            {
-                JSONArray data;
-                if(type.equals("in"))
-                    data = NUtils.getArea(id).jin;
-                else
-                    data = NUtils.getArea(id).jout;
-                boolean find = false;
-                for (int i = 0; i < data.length(); i++)
-                {
-                    if (((JSONObject) data.get(i)).get("name").equals(name))
-                    {
-                        find = true;
-                        break;
-                    }
-                }
-                if(!find)
-                {
-                    res.put("name", name);
-                    res.put("marked", false);
-                    addIcon(res);
-                    data.put(res);
-                    NUtils.getArea(id).update();
-                    NConfig.needAreasUpdate();
-                }
-
-            }
+            addItem(name, res);
         }
         return true;
+    }
+
+    public void addItem(String name, JSONObject res)
+    {
+        if (res != null)
+        {
+            JSONArray data;
+            if(type.equals("in"))
+                data = NUtils.getArea(id).jin;
+            else
+                data = NUtils.getArea(id).jout;
+            boolean find = false;
+            for (int i = 0; i < data.length(); i++)
+            {
+                if (((JSONObject) data.get(i)).get("name").equals(name))
+                {
+                    find = true;
+                    break;
+                }
+            }
+            if(!find)
+            {
+                res.put("name", name);
+                res.put("marked", false);
+                addIcon(res);
+                data.put(res);
+                NUtils.getArea(id).update();
+                NConfig.needAreasUpdate();
+            }
+
+        }
     }
 
     Integer id = -1;

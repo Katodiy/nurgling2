@@ -43,7 +43,7 @@ public class Spec implements GSprite.Owner, ItemInfo.SpriteOwner {
     public GSprite sprite() {return(spr);}
     public Resource resource() {return(res.res.get());}
 
-    private GSprite spr = null;
+    public GSprite spr = null;
     public GSprite spr() {
 	if(spr == null)
 	    spr = GSprite.create(this, res.res.get(), res.sdt.clone());

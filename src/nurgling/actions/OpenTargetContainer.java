@@ -17,6 +17,9 @@ public class OpenTargetContainer implements Action
             case "Stockpile":
                 gui.ui.core.addTask(new FindNISBox(name));
                 break;
+            case "Barter Stand":
+                gui.ui.core.addTask(new FindBarterStand());
+                break;
             default:
                 gui.ui.core.addTask(new FindNInventory(name));
         }

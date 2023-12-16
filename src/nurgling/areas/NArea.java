@@ -183,12 +183,7 @@ public class NArea
 
     private boolean isVisible()
     {
-        for(VArea s: space.space.values())
-        {
-            if(!s.isVis)
-                return false;
-        }
-        return true;
+        return NUtils.getGameUI().map.nols.get(id)!=null;
     }
 
     public JSONObject toJson()

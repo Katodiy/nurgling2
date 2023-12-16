@@ -44,6 +44,7 @@ public class NEditAreaName extends Window
     public static void changeName(NArea area, NAreasWidget.AreaItem item)
     {
         NUtils.getGameUI().nean.show();
+        NUtils.getGameUI().nean.raise();
         NUtils.getGameUI().nean.area = area;
         NUtils.getGameUI().nean.item = item;
         NUtils.getGameUI().nean.te.settext(area.name);

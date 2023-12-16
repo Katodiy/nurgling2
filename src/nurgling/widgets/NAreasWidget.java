@@ -6,6 +6,7 @@ import haven.Label;
 import haven.Window;
 import haven.render.*;
 import nurgling.*;
+import nurgling.actions.bots.*;
 import nurgling.areas.*;
 import nurgling.tools.*;
 import org.json.*;
@@ -23,7 +24,7 @@ public class NAreasWidget extends Window
     public IngredientContainer in_items;
     public IngredientContainer out_items;
     CurrentSpecialisationList csl;
-    AreaList al;
+    public AreaList al;
     public NAreasWidget()
     {
         super(UI.scale(new Coord(700,500)), "Areas Settings");
@@ -107,7 +108,7 @@ public class NAreasWidget extends Window
         Label text;
         IButton remove;
 
-        NArea area;
+        public NArea area;
 
         @Override
         public void resize(Coord sz) {
@@ -153,6 +154,7 @@ public class NAreasWidget extends Window
                 add("Select area space");
                 add("Set color");
                 add("Edit name");
+                add("Scan");
             }
         };
 
@@ -225,6 +227,10 @@ public class NAreasWidget extends Window
                             {
                                 NEditAreaName.changeName(area, AreaItem.this);
                             }
+                            else if (option.name.equals("Scan"))
+                            {
+                                Scaner.startScan(area);
+                            }
                         }
                         uimsg("cancel");
                     }
@@ -249,6 +255,12 @@ public class NAreasWidget extends Window
         in_items.load(id);
         out_items.load(id);
         loadSpec(id);
+    }
+
+    public void set(int id)
+    {
+        al.change(areas.get(id));
+        select(id);
     }
 
     public void loadSpec(int id)
