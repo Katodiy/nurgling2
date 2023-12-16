@@ -12,6 +12,7 @@ public class IconItem extends Widget
 {
     public static final TexI frame = new TexI(Resource.loadimg("nurgling/hud/iconframe"));
     public static final TexI framet = new TexI(Resource.loadimg("nurgling/hud/iconframet"));
+    public static final TexI bm = new TexI(Resource.loadimg("nurgling/hud/bartermark"));
 
     Tex tex = null;
 
@@ -19,12 +20,13 @@ public class IconItem extends Widget
     TexI q;
 
     boolean isThreshold = false;
+    boolean isMarked = false;
 
     int val;
 
     String name;
 
-    public IconItem(String name, BufferedImage img)
+    public IconItem(String name, BufferedImage img, Boolean isMarked)
     {
         this.name = name;
         tip = new TexI(RichText.render(name).img);
@@ -53,6 +55,10 @@ public class IconItem extends Widget
                 g.image(frame, Coord.z, UI.scale(32, 32));
             }
             g.image(tex, Coord.z, UI.scale(32,32));
+            if(isMarked)
+            {
+                g.image(bm, UI.scale(16,16), UI.scale(16, 16));
+            }
         }
     }
 
@@ -80,6 +86,15 @@ public class IconItem extends Widget
         {
             add("Threshold");
             add("Delete");
+            add("Mark as barter");
+        }
+    };
+
+    final ArrayList<String> uopt = new ArrayList<String>(){
+        {
+            add("Threshold");
+            add("Delete");
+            add("Unmark");
         }
     };
 
@@ -87,7 +102,7 @@ public class IconItem extends Widget
 
     public void opts( Coord c ) {
         if(menu == null) {
-            menu = new NFlowerMenu(opt.toArray(new String[0])) {
+            menu = new NFlowerMenu((!isMarked)?opt.toArray(new String[0]):uopt.toArray(new String[0])) {
                 public boolean mousedown(Coord c, int button) {
                     if(super.mousedown(c, button))
                         nchoose(null);
@@ -120,6 +135,14 @@ public class IconItem extends Widget
                         else if(option.name.equals("Delete"))
                         {
                             ((IngredientContainer)IconItem.this.parent).delete(IconItem.this.name);
+                        }
+                        else if(option.name.equals("Mark as barter"))
+                        {
+                            ((IngredientContainer)IconItem.this.parent).setMarked(IconItem.this.name, true);
+                        }
+                        else if(option.name.equals("Unmark"))
+                        {
+                            ((IngredientContainer)IconItem.this.parent).setMarked(IconItem.this.name, false);
                         }
                     }
                     uimsg("cancel");
