@@ -10,6 +10,7 @@ public class NStyle
 {
     public static Text.Foundry fcomboitems = new Text.Foundry(Text.sans, 16).aa(true);
     public static Text.Furnace meter = new PUtils.BlurFurn(new Text.Foundry(Text.sans, 12, Color.WHITE).aa(true), 2, 1, new Color(60,30,30));
+    public static Text.Foundry areastitle = new Text.Foundry(Text.serif, 15, Color.WHITE);
     public static Text.Foundry flower = new Text.Foundry(Text.sans, 12,new Color(255, 250, 205)).aa(true);
     public static Text.Foundry iiqual = new Text.Foundry(Text.sans, 12,new Color(0, 0, 0)).aa(true);
 
@@ -62,6 +63,20 @@ public class NStyle
             new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/d")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/h"))};
 
+    public static final TexI[] addarea = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/addarea/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/addarea/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/addarea/h"))};
+
+    public static final TexI[] add = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/add/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/add/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/add/h"))};
+
+    public static final TexI[] remove = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/remove/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/remove/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/remove/h"))};
 
     private final static ArrayList<BufferedImage> hlight = new ArrayList<>();
     static {

@@ -844,7 +844,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 
 		public void added(RenderTree.Slot slot) {
 //			Material overlay_mat = new Material(new BaseColor(194,194,65,56));
-			slot.add(base,new BaseColor(194,194,65,56));
+			slot.add(base,new BaseColor(NUtils.getArea(id).color));
 			slot.add(outl, new BaseColor(200,200,200,200));
 			super.added(slot);
 		}

@@ -1,24 +1,34 @@
 package nurgling.widgets;
 
 import haven.*;
+import haven.Frame;
+import haven.Label;
+import haven.Window;
+import haven.render.*;
 import nurgling.*;
 import nurgling.areas.*;
 import nurgling.tools.*;
+import org.json.*;
 
+import javax.swing.*;
+import javax.swing.colorchooser.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 
 public class NAreasWidget extends Window
 {
     public IngredientContainer in_items;
     public IngredientContainer out_items;
-
+    CurrentSpecialisationList csl;
     AreaList al;
     public NAreasWidget()
     {
-        super(UI.scale(new Coord(600,500)), "Areas Settings");
-
-        prev = add(new Button(UI.scale(150), "Create area"){
+        super(UI.scale(new Coord(700,500)), "Areas Settings");
+        IButton create;
+        prev = add(create = new IButton(NStyle.addarea[0].back,NStyle.addarea[1].back,NStyle.addarea[2].back){
             @Override
             public void click()
             {
@@ -26,26 +36,48 @@ public class NAreasWidget extends Window
                 NUtils.getGameUI().msg("Please, select area");
                 new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE)).start();
             }
-        });
+        },new Coord(0,UI.scale(5)));
+        create.settip("Create new area");
 
-        prev = add(al = new AreaList(UI.scale(new Coord(300,200))), prev.pos("bl").adds(0, 10));
+        prev = add(al = new AreaList(UI.scale(new Coord(400,170))), prev.pos("bl").adds(0, 10));
+        Widget lab = add(new Label("Specialisation",NStyle.areastitle), prev.pos("bl").add(UI.scale(0,5)));
 
-//        add(new Button(UI.scale(100), "Edit name"){
-//            @Override
-//            public void click()
-//            {
-//                super.click();
-//                if(adrop.sel!=null)
-//                {
-//                    NArea area = ((NMapView)NUtils.getGameUI().map).findArea((String)adrop.sel);
-//                    NEditAreaName.changeName(area);
-//                }
-//            }
-//        }, prev.pos("ur").adds(5, -10));
+        add(csl = new CurrentSpecialisationList(UI.scale(164,190)),lab.pos("bl").add(UI.scale(0,5)));
+        add(new IButton(NStyle.add[0].back,NStyle.add[1].back,NStyle.add[2].back){
+            @Override
+            public void click()
+            {
+                super.click();
+                if(al.sel!=null)
+                    Specialisation.selectSpecialisation(al.sel.area);
+            }
+        },prev.pos("br").sub(UI.scale(40,-5)));
 
-        prev = add(in_items = new IngredientContainer(), prev.pos("ur").add(5,0));
-        add(out_items = new IngredientContainer(), prev.pos("ur").adds(5, 0));
+        add(new IButton(NStyle.remove[0].back,NStyle.remove[1].back,NStyle.remove[2].back){
+            @Override
+            public void click()
+            {
+                super.click();
+                if(al.sel!=null)
+                {
+                    al.sel.area.spec.remove(csl.sel.text.text());
+                    for(SpecialisationItem item : specItems)
+                    {
+                        if(item.text.text().equals(csl.sel.text.text()))
+                        {
+                            specItems.remove(item);
+                            break;
+                        }
+                    }
+                    NConfig.needAreasUpdate();
+                }
+            }
+        },prev.pos("br").sub(UI.scale(17,-5)));
 
+        prev = add(Frame.with(in_items = new IngredientContainer("in"),true), prev.pos("ur").add(UI.scale(5,-5)));
+        add(new Label("In:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
+        prev = add(Frame.with(out_items = new IngredientContainer("out"),true), prev.pos("ur").adds(UI.scale(5, 0)));
+        add(new Label("Out:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
         pack();
     }
 
@@ -66,7 +98,7 @@ public class NAreasWidget extends Window
         if(areas.isEmpty() && !NUtils.getGameUI().map.glob.map.areas.isEmpty())
         {
             for (NArea area : NUtils.getGameUI().map.glob.map.areas.values())
-                addArea(area.id, area.name);
+                addArea(area.id, area.name, area);
         }
         super.show();
     }
@@ -75,14 +107,17 @@ public class NAreasWidget extends Window
         Label text;
         IButton remove;
 
+        NArea area;
+
         @Override
         public void resize(Coord sz) {
             remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5),  remove.c.y));
             super.resize(sz);
         }
 
-        public AreaItem(String text){
+        public AreaItem(String text, NArea area){
             this.text = add(new Label(text));
+            this.area = area;
             remove = add(new IButton(NStyle.removei[0].back,NStyle.removei[1].back,NStyle.removei[2].back){
                 @Override
                 public void click() {
@@ -95,18 +130,22 @@ public class NAreasWidget extends Window
             pack();
         }
 
+
+
         @Override
         public boolean mousedown(Coord c, int button)
         {
-            if(button==3)
+            if (button == 3)
             {
                 opts(c);
                 return true;
             }
-            else
+            else if (button == 1)
             {
-                return super.mousedown(c, button);
+                NAreasWidget.this.select(area.id);
             }
+            return super.mousedown(c, button);
+
         }
 
         final ArrayList<String> opt = new ArrayList<String>(){
@@ -144,11 +183,47 @@ public class NAreasWidget extends Window
                             }
                             else if (option.name.equals("Set color"))
                             {
+                                JColorChooser colorChooser = new JColorChooser();
+                                final AbstractColorChooserPanel[] panels = colorChooser.getChooserPanels();
+                                for (final AbstractColorChooserPanel accp : panels) {
+                                    if (!accp.getDisplayName().equals("RGB")) {
+                                        colorChooser.removeChooserPanel(accp);
+                                    }
+                                }
+                                colorChooser.setPreviewPanel(new JPanel());
 
+                                colorChooser.setColor(area.color);
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        float old = NUtils.getUI().gprefs.bghz.val;
+                                        NUtils.getUI().gprefs.bghz.val = NUtils.getUI().gprefs.hz.val;
+                                        JDialog chooser = JColorChooser.createDialog(null, "SelectColor", true, colorChooser, new AbstractAction() {
+                                            @Override
+                                            public void actionPerformed(ActionEvent e) {
+                                                area.color = colorChooser.getColor();
+                                                if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+                                                {
+                                                    MapView.NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
+                                                    nol.remove();
+                                                    NUtils.getGameUI().map.nols.remove(area.id);
+                                                }
+                                            }
+                                        }, new ActionListener() {
+                                            @Override
+                                            public void actionPerformed(ActionEvent e) {
+
+                                            }
+                                        });
+                                        chooser.setVisible(true);
+                                        NUtils.getUI().gprefs.bghz.val= old;
+                                    }
+                                }).start();
                             }
                             else if (option.name.equals("Edit name"))
                             {
-
+                                NEditAreaName.changeName(area, AreaItem.this);
                             }
                         }
                         uimsg("cancel");
@@ -168,11 +243,27 @@ public class NAreasWidget extends Window
 
 
     }
+
+    private void select(int id)
+    {
+        in_items.load(id);
+        out_items.load(id);
+        loadSpec(id);
+    }
+
+    public void loadSpec(int id)
+    {
+        specItems.clear();
+        for (String spec : NUtils.getArea(id).spec)
+        {
+            specItems.add(new SpecialisationItem(spec));
+        }
+    }
     private ConcurrentHashMap<Integer, AreaItem> areas = new ConcurrentHashMap<>();
 
-    public void addArea(int id, String val)
+    public void addArea(int id, String val, NArea area)
     {
-        areas.put(id, new AreaItem(val));
+        areas.put(id, new AreaItem(val, area));
     }
 
     public class AreaList extends SListBox<AreaItem, Widget> {
@@ -184,7 +275,7 @@ public class NAreasWidget extends Window
 
         @Override
         public void resize(Coord sz) {
-            super.resize(new Coord(UI.scale(120)-UI.scale(6), sz.y));
+            super.resize(new Coord(UI.scale(170)-UI.scale(6), sz.y));
         }
 
         protected Widget makeitem(AreaItem item, int idx, Coord sz) {
@@ -199,7 +290,6 @@ public class NAreasWidget extends Window
                     super.mousedown(c, button);
                     if(!psel) {
                         String value = item.text.text();
-                        NUtils.getGameUI().itemsForSearch.install(value);
                     }
                     return(true);
                 }
@@ -211,8 +301,19 @@ public class NAreasWidget extends Window
         {
             super.wdgmsg(msg, args);
         }
-    }
 
+        Color bg = new Color(30,40,40,160);
+        @Override
+        public void draw(GOut g)
+        {
+            g.chcolor(bg);
+            g.frect(Coord.z, g.sz());
+            super.draw(g);
+        }
+
+
+    }
+    List<SpecialisationItem> specItems = new ArrayList<>();
     @Override
     public void wdgmsg(Widget sender, String msg, Object... args)
     {
@@ -221,6 +322,79 @@ public class NAreasWidget extends Window
         else
         {
             super.wdgmsg(sender, msg, args);
+        }
+    }
+
+    public class CurrentSpecialisationList extends SListBox<SpecialisationItem, Widget> {
+        CurrentSpecialisationList(Coord sz) {
+            super(sz, UI.scale(15));
+        }
+
+        @Override
+        public void change(SpecialisationItem item)
+        {
+            super.change(item);
+        }
+
+        protected List<SpecialisationItem> items() {return specItems;}
+
+        @Override
+        public void resize(Coord sz) {
+            super.resize(new Coord(sz.x, sz.y));
+        }
+
+        protected Widget makeitem(SpecialisationItem item, int idx, Coord sz) {
+            return(new ItemWidget<SpecialisationItem>(this, sz, item) {
+                {
+                    add(item);
+                }
+
+                public boolean mousedown(Coord c, int button) {
+                    super.mousedown(c, button);
+                    return(true);
+                }
+            });
+        }
+
+        @Override
+        public void wdgmsg(String msg, Object... args)
+        {
+            super.wdgmsg(msg, args);
+        }
+
+        Color bg = new Color(30,40,40,160);
+
+        @Override
+        public void draw(GOut g)
+        {
+            g.chcolor(bg);
+            g.frect(Coord.z, g.sz());
+            super.draw(g);
+        }
+
+
+    }
+
+    public static class SpecialisationItem extends Widget
+    {
+        Label text;
+
+
+        public SpecialisationItem(String text)
+        {
+            this.text = add(new Label(text));
+            pack();
+        }
+    }
+
+    @Override
+    public void tick(double dt)
+    {
+        super.tick(dt);
+        if(al.sel == null)
+        {
+            NAreasWidget.this.in_items.load(-1);
+            NAreasWidget.this.out_items.load(-1);
         }
     }
 }

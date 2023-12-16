@@ -6,10 +6,17 @@ import nurgling.*;
 import nurgling.tools.*;
 import org.json.*;
 
+import java.awt.*;
 import java.util.*;
 
 public class NArea
 {
+
+
+
+    public void update()
+    {
+    }
 
     public static class VArea
     {
@@ -20,6 +27,8 @@ public class NArea
         {
             this.area = area;
         }
+
+
     }
 
     public static class Space
@@ -84,6 +93,14 @@ public class NArea
     {
         this.name = (String) obj.get("name");
         this.id = (Integer) obj.get("id");
+        if(obj.has("color"))
+        {
+            JSONObject color = (JSONObject) obj.get("color");
+            if (color != null)
+            {
+                this.color = new Color((Integer) color.get("r"), (Integer) color.get("g"), (Integer) color.get("b"), (Integer) color.get("a"));
+            }
+        }
         space = new Space();
         JSONArray jareas = (JSONArray) obj.get("space");
         for (int i = 0; i < jareas.length(); i++)
@@ -92,38 +109,28 @@ public class NArea
             space.space.put((Long) jarea.get("id"), new VArea(new Area(new Coord((Integer) jarea.get("begin_x"), (Integer) jarea.get("begin_y")), new Coord((Integer) jarea.get("end_x"), (Integer) jarea.get("end_y")))));
             grids_id.add((Long)jarea.get("id"));
         }
+        if(obj.has("in"))
+        {
+            jin = (JSONArray) obj.get("in");
+        }
+        if(obj.has("out"))
+        {
+            jout = (JSONArray) obj.get("out");
+        }
+        if(obj.has("spec"))
+        {
+            jspec = (JSONArray) obj.get("spec");
+            for(int i = 0 ; i < jspec.length(); i++)
+                spec.add((String)jspec.get(i));
+        }
     }
     public Space space;
     public String name;
     public int id;
+    public Color color = new Color(194,194,65,56);
     public final ArrayList<Long> grids_id = new ArrayList<>();
-    NAlias items = new NAlias();
-    NAlias ws = new NAlias();
-    NAlias ic = new NAlias();
-    NAlias containers = new NAlias();
 
-    public NAlias getItems()
-    {
-        return items;
-    }
-
-    public NAlias getWorkstations()
-    {
-        return ws;
-    }
-
-    public NAlias getICategories()
-    {
-        return ic;
-    }
-
-    public NAlias getContainers()
-    {
-        return containers;
-    }
-
-    public boolean isHighlighted = false;
-    public boolean wasHighlighted = false;
+    public ArrayList<String> spec = new ArrayList<>();
     public boolean inWork = false;
 
     public Area getArea()
@@ -189,6 +196,12 @@ public class NArea
         JSONObject res = new JSONObject();
         res.put("name", name);
         res.put("id", id);
+        JSONObject jcolor = new JSONObject();
+        jcolor.put("r", color.getRed());
+        jcolor.put("g", color.getGreen());
+        jcolor.put("b", color.getBlue());
+        jcolor.put("a", color.getAlpha());
+        res.put("color", jcolor);
         JSONArray jspaces = new JSONArray();
         for(long id : space.space.keySet())
         {
@@ -201,6 +214,19 @@ public class NArea
             jspaces.put(jspace);
         }
         res.put("space",jspaces);
+        res.put("in",jin);
+        res.put("out",jout);
+        JSONArray jspec = new JSONArray();
+        for(String s: spec)
+        {
+            jspec.put(s);
+        }
+        res.put("spec",jspec);
+        this.jspec = jspec;
         return res;
     }
+    
+    public JSONArray jin = new JSONArray();
+    public JSONArray jspec = new JSONArray();
+    public JSONArray jout = new JSONArray();
 }

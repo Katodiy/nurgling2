@@ -20,19 +20,36 @@ public class NEditAreaName extends Window
                 NEditAreaName.this.hide();
                 if(!te.text().isEmpty())
                 {
-                    ((NMapView) NUtils.getGameUI().map).changeAreaName(area.name, te.text());
+                    ((NMapView) NUtils.getGameUI().map).changeAreaName(area.id, te.text());
+                    item.text.settext(te.text());
                     NConfig.needAreasUpdate();
                 }
             }
         }, prev.pos("ur").adds(5, -6));
     }
 
-    public static void changeName(NArea area)
+    @Override
+    public void wdgmsg(String msg, Object... args)
+    {
+        if(msg.equals("close"))
+        {
+            hide();
+        }
+        else
+        {
+            super.wdgmsg(msg, args);
+        }
+    }
+
+    public static void changeName(NArea area, NAreasWidget.AreaItem item)
     {
         NUtils.getGameUI().nean.show();
         NUtils.getGameUI().nean.area = area;
+        NUtils.getGameUI().nean.item = item;
         NUtils.getGameUI().nean.te.settext(area.name);
+
     }
 
     public NArea area;
+    NAreasWidget.AreaItem item;
 }

@@ -190,7 +190,7 @@ public class NMapView extends MapView
             newArea.space = result;
             newArea.grids_id.addAll(newArea.space.space.keySet());
             glob.map.areas.put(id, newArea);
-            NUtils.getGameUI().areas.addArea(id, newArea.name);
+            NUtils.getGameUI().areas.addArea(id, newArea.name, newArea);
         }
         return key;
     }
@@ -271,26 +271,6 @@ public class NMapView extends MapView
         return areasNames;
     }
 
-    public void selectArea(String name)
-    {
-        for(NArea area : glob.map.areas.values())
-        {
-            if(area.isHighlighted)
-            {
-                area.isHighlighted = false;
-                area.wasHighlighted = true;
-            }
-        }
-
-        for(NArea area : glob.map.areas.values())
-        {
-            if(area.name.equals(name))
-            {
-                area.isHighlighted = true;
-            }
-        }
-    }
-
     public NArea findArea(String name)
     {
         for(NArea area : glob.map.areas.values())
@@ -336,16 +316,9 @@ public class NMapView extends MapView
         }
     }
 
-    public void changeAreaName(String old, String new_name)
+    public void changeAreaName(Integer id, String new_name)
     {
-        for(NArea area : glob.map.areas.values())
-        {
-            if(area.name.equals(old))
-            {
-                area.name = new_name;
-                NConfig.needAreasUpdate();
-                break;
-            }
-        }
+        glob.map.areas.get(id).name = new_name;
+        NConfig.needAreasUpdate();
     }
 }

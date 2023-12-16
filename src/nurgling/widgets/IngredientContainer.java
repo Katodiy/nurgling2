@@ -4,6 +4,7 @@ import haven.*;
 import haven.res.lib.itemtex.*;
 import haven.res.lib.layspr.*;
 import nurgling.*;
+import nurgling.areas.*;
 import nurgling.tools.*;
 import org.json.*;
 
@@ -13,6 +14,9 @@ import java.util.*;
 
 public class IngredientContainer extends Widget implements NDTarget
 {
+    static Color bg = new Color(30,40,40,160);
+
+
     public class Ingredient{
         public String name;
         public BufferedImage image;
@@ -26,16 +30,19 @@ public class IngredientContainer extends Widget implements NDTarget
 
     ArrayList<Ingredient> items = new ArrayList<>();
 
-    public IngredientContainer()
+    public IngredientContainer(String type)
     {
+        this.type = type;
         this.sz = UI.scale(new Coord(200,400));
     }
+
+    String type;
 
     @Override
     public void draw(GOut g)
     {
 
-        g.chcolor(Color.BLACK);
+        g.chcolor(bg);
         g.frect(Coord.z, g.sz());
         super.draw(g);
     }
@@ -46,20 +53,119 @@ public class IngredientContainer extends Widget implements NDTarget
         {
             Ingredient ing;
             items.add(ing = new Ingredient((String)res.get("name"), ItemTex.create(res)));
-            add(new IconItem(ing.name, ing.image),UI.scale(new Coord(35*((items.size()-1)%5),51*((items.size()-1)/5))).add(new Coord(5,5)));
+            IconItem it = add(new IconItem(ing.name, ing.image),UI.scale(new Coord(35*((items.size()-1)%5),51*((items.size()-1)/5))).add(new Coord(5,5)));
+            if(res.has("th"))
+            {
+                it.isThreshold = true;
+                it.val = (Integer)res.get("th");
+                it.q = new TexI(NStyle.iiqual.render(String.valueOf(it.val)).img);
+            }
+            icons.add(it);
         }
     }
+
+    ArrayList<IconItem> icons = new ArrayList<>();
 
     @Override
     public boolean drop(WItem item, Coord cc, Coord ul)
     {
-        String name = ((NGItem) item.item).name();
-        JSONObject res = ItemTex.save(item.item.spr);
-        if(res!=null)
+        if(id!=-1)
         {
-            res.put("name", name);
-            addIcon(res);
+            String name = ((NGItem) item.item).name();
+            JSONObject res = ItemTex.save(item.item.spr);
+            if (res != null)
+            {
+                JSONArray data;
+                if(type.equals("in"))
+                    data = NUtils.getArea(id).jin;
+                else
+                    data = NUtils.getArea(id).jout;
+                boolean find = false;
+                for (int i = 0; i < data.length(); i++)
+                {
+                    if (((JSONObject) data.get(i)).get("name").equals(name))
+                    {
+                        find = true;
+                        break;
+                    }
+                }
+                if(!find)
+                {
+                    res.put("name", name);
+                    addIcon(res);
+                    data.put(res);
+                    NUtils.getArea(id).update();
+                    NConfig.needAreasUpdate();
+                }
+
+            }
         }
         return true;
+    }
+
+    Integer id = -1;
+
+    public void load(Integer id)
+    {
+        this.id = id;
+        items.clear();
+        for (IconItem it : icons)
+        {
+            it.destroy();
+        }
+        icons.clear();
+        if (id != -1)
+        {
+            JSONArray data;
+            if (type.equals("in"))
+                data = NUtils.getArea(id).jin;
+            else
+                data = NUtils.getArea(id).jout;
+            for (int i = 0; i < data.length(); i++)
+            {
+                addIcon(((JSONObject) data.get(i)));
+            }
+        }
+    }
+
+
+    public void setThreshold(String name, int val)
+    {
+        JSONArray data;
+        if(type.equals("in"))
+            data = NUtils.getArea(id).jin;
+        else
+            data = NUtils.getArea(id).jout;
+
+        for (int i = 0; i < data.length(); i++)
+        {
+            if (((JSONObject) data.get(i)).get("name").equals(name))
+            {
+                ((JSONObject) data.get(i)).put("th",val);
+                NConfig.needAreasUpdate();
+                return;
+            }
+        }
+    }
+
+
+    public void delete(String name)
+    {
+        JSONArray data;
+        if(type.equals("in"))
+            data = NUtils.getArea(id).jin;
+        else
+            data = NUtils.getArea(id).jout;
+
+        for (int i = 0; i < data.length(); i++)
+        {
+            if (((JSONObject) data.get(i)).get("name").equals(name))
+            {
+                data.remove(i);
+                NConfig.needAreasUpdate();
+                load(id);
+                return;
+            }
+        }
     }
 }

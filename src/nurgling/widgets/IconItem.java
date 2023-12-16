@@ -22,8 +22,11 @@ public class IconItem extends Widget
 
     int val;
 
+    String name;
+
     public IconItem(String name, BufferedImage img)
     {
+        this.name = name;
         tip = new TexI(RichText.render(name).img);
 
         tex = new TexI(img);
@@ -112,6 +115,11 @@ public class IconItem extends Widget
                             }
                             SetThreshold st = new SetThreshold(val);
                             ui.root.add(st, pos);
+
+                        }
+                        else if(option.name.equals("Delete"))
+                        {
+                            ((IngredientContainer)IconItem.this.parent).delete(IconItem.this.name);
                         }
                     }
                     uimsg("cancel");
@@ -146,6 +154,7 @@ public class IconItem extends Widget
                     IconItem.this.isThreshold = true;
                     IconItem.this.val = Integer.valueOf(te.text());
                     IconItem.this.q = new TexI(NStyle.iiqual.render(te.text()).img);
+                    ((IngredientContainer)IconItem.this.parent).setThreshold(IconItem.this.name,IconItem.this.val);
                     ui.destroy(SetThreshold.this);
                 }
             },prev.pos("ur").add(5,-5));

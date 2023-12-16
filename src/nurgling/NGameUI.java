@@ -18,6 +18,7 @@ public class NGameUI extends GameUI
     public NSearchItem itemsForSearch = null;
 
     public NEditAreaName nean;
+    public Specialisation spec;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -35,6 +36,8 @@ public class NGameUI extends GameUI
             guiinfo.hide();
         add(nean = new NEditAreaName());
         nean.hide();
+        add(spec = new Specialisation());
+        spec.hide();
     }
 
     public int getMaxBase(){
@@ -210,5 +213,6 @@ public class NGameUI extends GameUI
         guiinfo.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
         areas.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
         nean.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
+        spec.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
     }
 }
