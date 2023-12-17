@@ -813,6 +813,14 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	return(null);
     }
 
+	public String pose() {
+		Drawable d = getattr(Drawable.class);
+		if(d != null)
+			if(d instanceof Composite)
+				return ((Composite) d).current_pose;
+		return(null);
+	}
+
     private static final ClassResolver<Gob> ctxr = new ClassResolver<Gob>()
 	.add(Gob.class, g -> g)
 	.add(Glob.class, g -> g.glob)

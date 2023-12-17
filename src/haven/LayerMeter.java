@@ -32,7 +32,7 @@ import java.util.*;
 public abstract class LayerMeter extends Widget implements ItemInfo.Owner {
     protected ItemInfo.Raw rawinfo = null;
     protected List<ItemInfo> info = Collections.emptyList();
-    protected List<Meter> meters = Collections.emptyList();
+    public List<Meter> meters = Collections.emptyList();
 
     public LayerMeter(Coord sz) {
 	super(sz);

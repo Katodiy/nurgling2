@@ -10,13 +10,14 @@ import nurgling.widgets.*;
 
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 public class NGameUI extends GameUI
 {
     NBotsMenu botsMenu;
     public NGUIInfo guiinfo;
     public NSearchItem itemsForSearch = null;
-
+    public NCraftWindow craftwnd;
     public NEditAreaName nean;
     public Specialisation spec;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
@@ -156,14 +157,27 @@ public class NGameUI extends GameUI
     @Override
     public void addchild(Widget child, Object... args)
     {
-        super.addchild(child, args);
         String place = ((String) args[0]).intern();
-        if (place.equals("chr") && chrwdg != null) {
-            ((NUI) ui).sessInfo.characterInfo.setCharWnd(chrwdg);
+        if (place == "craft") {
+            if (craftwnd == null) {
+                craftwnd = add(new NCraftWindow(), new Coord(400, 200));
+            }
+            craftwnd.add(child);
+            craftwnd.pack();
+            craftwnd.raise();
+            craftwnd.show();
         }
-        if (maininv != null && ((NInventory) maininv).searchwdg == null)
+        else
         {
-            ((NInventory) maininv).installMainInv();
+            super.addchild(child, args);
+            if (place.equals("chr") && chrwdg != null)
+            {
+                ((NUI) ui).sessInfo.characterInfo.setCharWnd(chrwdg);
+            }
+            if (maininv != null && ((NInventory) maininv).searchwdg == null)
+            {
+                ((NInventory) maininv).installMainInv();
+            }
         }
     }
 
@@ -214,5 +228,31 @@ public class NGameUI extends GameUI
         areas.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
         nean.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
         spec.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
+    }
+
+    public List<IMeter.Meter> getmeters (String name ) {
+        for ( Widget meter : meters ) {
+            if ( meter instanceof IMeter ) {
+                IMeter im = ( IMeter ) meter;
+                Resource res = im.bg.get ();
+                if ( res != null ) {
+                    if ( res.basename ().equals ( name ) ) {
+                        return im.meters;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public IMeter.Meter getmeter (
+            String name,
+            int midx
+    ) {
+        List<IMeter.Meter> meters = getmeters ( name );
+        if ( meters != null && midx < meters.size () ) {
+            return meters.get ( midx );
+        }
+        return null;
     }
 }

@@ -48,7 +48,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public GobIcon.Settings iconconf;
     public MiniMap mmap;
     public Fightview fv;
-    private List<Widget> meters = new LinkedList<Widget>();
+    protected List<Widget> meters = new LinkedList<Widget>();
     private Text lastmsg;
     private double msgtime;
     private Window invwnd, equwnd, makewnd, srchwnd, iconwnd;
@@ -327,7 +327,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	    super(sz, cap, lg);
 	}
 
-	Hidewnd(Coord sz, String cap) {
+	public Hidewnd(Coord sz, String cap) {
 	    super(sz, cap);
 	}
 
@@ -1286,7 +1286,21 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     }
 
     private double lasterrsfx = 0;
+
+	private String lastError = null;
+
+	public void dropLastError()
+	{
+		lastError = null;
+	}
+
+	public String getLastError()
+	{
+		return lastError;
+	}
+
     public void error(String msg) {
+	lastError = msg;
 	msg(msg, new Color(192, 0, 0), new Color(255, 0, 0));
 	double now = Utils.rtime();
 	if(now - lasterrsfx > 0.1) {

@@ -96,5 +96,11 @@ public class NUtils
             return null;
         return getGameUI().map.player();
     }
+
+    public static double getStamina()
+    {
+        IMeter.Meter stam = getGameUI().getmeter ( "stam", 0 );
+        return stam.a;
+    }
 //
 }

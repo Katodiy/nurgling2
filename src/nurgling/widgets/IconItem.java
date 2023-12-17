@@ -1,10 +1,9 @@
 package nurgling.widgets;
 
 import haven.*;
-import haven.res.lib.itemtex.*;
 import nurgling.*;
+import nurgling.areas.*;
 
-import javax.swing.*;
 import java.awt.image.*;
 import java.util.*;
 
@@ -20,13 +19,14 @@ public class IconItem extends Widget
     TexI q;
 
     boolean isThreshold = false;
-    boolean isMarked = false;
+
+    NArea.Ingredient.Type type = NArea.Ingredient.Type.CONTAINER;
 
     int val;
 
     String name;
 
-    public IconItem(String name, BufferedImage img, Boolean isMarked)
+    public IconItem(String name, BufferedImage img)
     {
         this.name = name;
         tip = new TexI(RichText.render(name).img);
@@ -55,7 +55,7 @@ public class IconItem extends Widget
                 g.image(frame, Coord.z, UI.scale(32, 32));
             }
             g.image(tex, Coord.z, UI.scale(32,32));
-            if(isMarked)
+            if(type == NArea.Ingredient.Type.BARTER)
             {
                 g.image(bm, UI.scale(16,16), UI.scale(16, 16));
             }
@@ -102,7 +102,7 @@ public class IconItem extends Widget
 
     public void opts( Coord c ) {
         if(menu == null) {
-            menu = new NFlowerMenu((!isMarked)?opt.toArray(new String[0]):uopt.toArray(new String[0])) {
+            menu = new NFlowerMenu((type!=NArea.Ingredient.Type.CONTAINER)?opt.toArray(new String[0]):uopt.toArray(new String[0])) {
                 public boolean mousedown(Coord c, int button) {
                     if(super.mousedown(c, button))
                         nchoose(null);
@@ -138,11 +138,11 @@ public class IconItem extends Widget
                         }
                         else if(option.name.equals("Mark as barter"))
                         {
-                            ((IngredientContainer)IconItem.this.parent).setMarked(IconItem.this.name, true);
+                            ((IngredientContainer)IconItem.this.parent).setType(IconItem.this.name, NArea.Ingredient.Type.BARTER);
                         }
                         else if(option.name.equals("Unmark"))
                         {
-                            ((IngredientContainer)IconItem.this.parent).setMarked(IconItem.this.name, false);
+                            ((IngredientContainer)IconItem.this.parent).setType(IconItem.this.name, NArea.Ingredient.Type.CONTAINER);
                         }
                     }
                     uimsg("cancel");
@@ -174,11 +174,20 @@ public class IconItem extends Widget
                 public void click()
                 {
                     super.click();
-                    IconItem.this.isThreshold = true;
-                    IconItem.this.val = Integer.valueOf(te.text());
-                    IconItem.this.q = new TexI(NStyle.iiqual.render(te.text()).img);
-                    ((IngredientContainer)IconItem.this.parent).setThreshold(IconItem.this.name,IconItem.this.val);
+                    try
+                    {
+                        IconItem.this.isThreshold = true;
+                        IconItem.this.val = Integer.valueOf(te.text());
+                        IconItem.this.q = new TexI(NStyle.iiqual.render(te.text()).img);
+                        ((IngredientContainer)IconItem.this.parent).setThreshold(IconItem.this.name,IconItem.this.val);
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        IconItem.this.isThreshold = false;
+                        ((IngredientContainer)IconItem.this.parent).setThreshold(IconItem.this.name,-1);
+                    }
                     ui.destroy(SetThreshold.this);
+
                 }
             },prev.pos("ur").add(5,-5));
         }

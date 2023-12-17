@@ -78,6 +78,12 @@ public class NStyle
             new TexI(Resource.loadsimg("nurgling/hud/buttons/remove/d")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/remove/h"))};
 
+    public static final TexI[] auto = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/auto/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/auto/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/auto/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/auto/dh"))
+    };
     private final static ArrayList<BufferedImage> hlight = new ArrayList<>();
     static {
         for(int i = 0 ; i < 6; i ++)

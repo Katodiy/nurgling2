@@ -2,6 +2,7 @@ package nurgling.areas;
 
 import haven.*;
 import static haven.MCache.cmaps;
+import haven.render.sl.*;
 import nurgling.*;
 import nurgling.tools.*;
 import org.json.*;
@@ -13,6 +14,29 @@ public class NArea
 {
 
 
+    public static NArea findIn(NAlias nAlias)
+    {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids)
+            {
+                if(NUtils.getGameUI().map.glob.map.areas.get(id).containIn(nAlias))
+                    return NUtils.getGameUI().map.glob.map.areas.get(id);
+            }
+        }
+        return null;
+    }
+
+    private boolean containIn(NAlias nAlias)
+    {
+        for (int i = 0; i < jin.length(); i++)
+        {
+            if(NParser.checkName(((String) ((JSONObject)jin.get(i)).get("name")), nAlias))
+                return true;
+        }
+        return false;
+    }
 
     public void update()
     {
@@ -224,4 +248,40 @@ public class NArea
     public JSONArray jin = new JSONArray();
     public JSONArray jspec = new JSONArray();
     public JSONArray jout = new JSONArray();
+
+    public static class Ingredient
+    {
+        public static enum Type
+        {
+            BARTER,
+            CONTAINER,
+            PILE
+        }
+
+        public Type type;
+
+        String name;
+
+        public Ingredient(Type type, String name)
+        {
+            this.type = type;
+            this.name = name;
+        }
+    }
+
+    public Ingredient getInput(String name)
+    {
+        for (int i = 0; i < jin.length(); i++)
+        {
+            JSONObject obj = (JSONObject)jin.get(i);
+            if(((String)((JSONObject)jin.get(i)).get("name")).equals(name))
+            {
+                NArea.Ingredient.Type type = (obj.has("type")) ?
+                        type = NArea.Ingredient.Type.valueOf((String) obj.get("type")) :
+                        Ingredient.Type.CONTAINER;
+                return new Ingredient(type,name);
+            }
+        }
+        return null;
+    }
 }

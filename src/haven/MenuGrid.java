@@ -35,6 +35,8 @@ import haven.Resource.AButton;
 import java.util.*;
 
 public class MenuGrid extends Widget implements KeyBinding.Bindable {
+	public static Pagina lastPagina = null;
+
     public final static Tex bg = Resource.loadtex("gfx/hud/invsq");
     public final static Coord bgsz = bg.sz().add(-UI.scale(1), -UI.scale(1));
     public final static RichText.Foundry ttfnd = new RichText.Foundry(TextAttribute.FAMILY, "SansSerif", TextAttribute.SIZE, UI.scale(10f));
@@ -106,6 +108,10 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 		if(iact.click != null)
 		    args = Utils.extend(args, iact.click.clickargs());
 	    }
+		if(MenuGrid.lastPagina != pag)
+			MenuGrid.lastPagina = pag;
+		else
+			MenuGrid.lastPagina = null;
 	    pag.scm.wdgmsg("act", args);
 	}
 

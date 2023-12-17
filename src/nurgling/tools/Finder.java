@@ -102,4 +102,30 @@ public class Finder
         }
         return result;
     }
+
+    public static Gob findGob(NAlias name) throws InterruptedException
+    {
+        NUtils.getUI().core.addTask(new FindPlayer());
+        Gob result = null;
+        double dist = 10000;
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
+                {
+                    if (NParser.isIt(gob, name) && NUtils.player() != null)
+                    {
+                        double new_dist;
+                        if ((new_dist = gob.rc.dist(NUtils.player().rc)) < dist)
+                        {
+                            dist = new_dist;
+                            result = gob;
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
 }

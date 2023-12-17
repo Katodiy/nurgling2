@@ -2,7 +2,6 @@ package nurgling.widgets;
 
 import haven.*;
 import haven.res.lib.itemtex.*;
-import haven.res.lib.layspr.*;
 import nurgling.*;
 import nurgling.areas.*;
 import nurgling.tools.*;
@@ -53,16 +52,16 @@ public class IngredientContainer extends Widget implements NDTarget
         {
             Ingredient ing;
             items.add(ing = new Ingredient((String)res.get("name"), ItemTex.create(res)));
-            IconItem it = add(new IconItem(ing.name, ing.image, (res.has("marked")?(Boolean) res.get("marked"):false)),UI.scale(new Coord(35*((items.size()-1)%5),51*((items.size()-1)/5))).add(new Coord(5,5)));
+            IconItem it = add(new IconItem(ing.name, ing.image),UI.scale(new Coord(35*((items.size()-1)%5),51*((items.size()-1)/5))).add(new Coord(5,5)));
             if(res.has("th"))
             {
                 it.isThreshold = true;
                 it.val = (Integer)res.get("th");
                 it.q = new TexI(NStyle.iiqual.render(String.valueOf(it.val)).img);
             }
-            if(res.has("marked"))
+            if(res.has("type"))
             {
-                it.isMarked = (Boolean)res.get("marked");
+                it.type = NArea.Ingredient.Type.valueOf((String)res.get("type"));
             }
             icons.add(it);
         }
@@ -103,7 +102,7 @@ public class IngredientContainer extends Widget implements NDTarget
             if(!find)
             {
                 res.put("name", name);
-                res.put("marked", false);
+                res.put("type", NArea.Ingredient.Type.CONTAINER.toString());
                 addIcon(res);
                 data.put(res);
                 NUtils.getArea(id).update();
@@ -158,7 +157,7 @@ public class IngredientContainer extends Widget implements NDTarget
         }
     }
 
-    public void setMarked(String name, boolean val)
+    public void setType(String name, NArea.Ingredient.Type val)
     {
         JSONArray data;
         if(type.equals("in"))
@@ -170,8 +169,8 @@ public class IngredientContainer extends Widget implements NDTarget
         {
             if (((JSONObject) data.get(i)).get("name").equals(name))
             {
-                ((JSONObject) data.get(i)).put("marked",val);
-                icons.get(i).isMarked = val;
+                ((JSONObject) data.get(i)).put("type",val.toString());
+                icons.get(i).type = val;
                 NConfig.needAreasUpdate();
                 return;
             }

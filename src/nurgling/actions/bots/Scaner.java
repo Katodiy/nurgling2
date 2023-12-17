@@ -61,7 +61,7 @@ public class Scaner implements Action
                         if (!find)
                         {
                             res.put("name", name);
-                            res.put("marked", true);
+                            res.put("type", NArea.Ingredient.Type.BARTER.toString());
                             data.put(res);
 
                         }
@@ -87,7 +87,7 @@ public class Scaner implements Action
                         if (!find)
                         {
                             res.put("name", name);
-                            res.put("marked", true);
+                            res.put("type", NArea.Ingredient.Type.BARTER.toString());
                             data.put(res);
                         }
                     }

@@ -75,7 +75,7 @@ public class NPFMap
             CellsArray ca;
             for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
             {
-                if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null)
+                if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player()!=null && gob.id!=NUtils.player().id)
                 {
                     if ((ca.begin.x >= begin.x && ca.begin.x <= end.x ||
                             ca.end.x >= begin.x && ca.end.x <= end.x) &&
