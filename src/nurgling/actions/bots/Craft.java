@@ -53,7 +53,7 @@ public class Craft implements Action
         int size = 0;
         for(NMakewindow.Spec s: mwnd.inputs)
         {
-            NArea area = NArea.findIn(new NAlias(s.name));
+            NArea area = NArea.findIn(s.name);
             if(area == null)
                 return Results.ERROR("NO area for: " + s.name);
             context.addInput(s.name, Context.GetInput(s.name, area));

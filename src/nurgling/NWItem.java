@@ -1,8 +1,10 @@
 package nurgling;
 
 import haven.*;
+import haven.res.lib.itemtex.*;
 import nurgling.iteminfo.NSearchable;
 import nurgling.tools.NSearchItem;
+import org.json.*;
 
 public class NWItem extends WItem
 {
@@ -115,5 +117,19 @@ public class NWItem extends WItem
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean mousedown(Coord c, int btn)
+    {
+        boolean res = super.mousedown(c, btn);
+        if(res)
+        {
+            JSONObject res_obj = ItemTex.save(item.spr);
+            res_obj.put("name",((NGItem)item).name);
+            System.out.println(res_obj);
+
+        }
+        return res;
     }
 }

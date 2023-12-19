@@ -26,6 +26,7 @@
 
 package haven;
 
+import haven.res.lib.itemtex.*;
 import nurgling.*;
 
 import java.awt.Color;
@@ -193,7 +194,7 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 	return(spr);
     }
 
-    public void tick(double dt) {
+	public void tick(double dt) {
 	super.tick(dt);
 	GSprite spr = spr();
 	if(spr != null)

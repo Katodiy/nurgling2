@@ -2,14 +2,17 @@ package nurgling.widgets;
 
 import haven.Button;
 import haven.*;
+import haven.Frame;
 import haven.Label;
 import static haven.Inventory.*;
+import haven.res.lib.itemtex.*;
 import haven.res.ui.tt.defn.*;
 import nurgling.*;
 import nurgling.actions.bots.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
 import nurgling.tools.*;
+import org.json.*;
 
 import java.awt.*;
 import java.awt.image.*;
@@ -22,6 +25,7 @@ public class NMakewindow extends Widget {
 
     public static final TexI aready = new TexI(Resource.loadsimg("nurgling/hud/autocraft/ready"));
     public static final TexI anotfound = new TexI(Resource.loadsimg("nurgling/hud/autocraft/notfound"));
+    public static final TexI categories = new TexI(Resource.loadsimg("nurgling/hud/autocraft/spec"));
     public static final Text tooll = Text.render(("Tools:"));
     public static final Coord boff = UI.scale(new Coord(7, 9));
     public String rcpnm;
@@ -56,6 +60,8 @@ public class NMakewindow extends Widget {
         private Object[] rawinfo;
         private List<ItemInfo> info;
 
+        Ingredient ing = null;
+
         public Spec(Indir<Resource> res, Message sdt, int num, Object[] info) {
             this.res = res;
             this.sdt = new MessageBuf(sdt);
@@ -75,7 +81,14 @@ public class NMakewindow extends Widget {
 
         public void draw(GOut g) {
             try {
-                sprite().draw(g);
+                if(ing==null || !autoMode)
+                {
+                    sprite().draw(g);
+                }
+                else
+                {
+                    g.image(ing.img, Coord.z);
+                }
             } catch(Loading e) {}
             if(num != null)
                 g.aimage(num, Inventory.sqsz, 1.0, 1.0);
@@ -153,7 +166,11 @@ public class NMakewindow extends Widget {
             }
             if(NMakewindow.this.autoMode && name!=null)
             {
-                logistic = (NArea.findIn(new NAlias(name)) != null);
+                logistic = (NArea.findIn(name) != null);
+                if(!logistic)
+                {
+                    categories = (VSpec.categories.get(name)!=null);
+                }
             }
         }
 
@@ -163,6 +180,9 @@ public class NMakewindow extends Widget {
         }
 
         public boolean logistic = false;
+        public boolean categories = false;
+
+
     }
 
     public void tick(double dt) {
@@ -176,6 +196,36 @@ public class NMakewindow extends Widget {
                 s.spr.tick(dt);
             s.tick(dt);
         }
+    }
+
+    @Override
+    public boolean mousedown(Coord c, int button)
+    {
+        if(autoMode)
+        {
+            Coord sc = new Coord(xoff, 0);
+            boolean popt = false;
+            for(Spec s: inputs)
+            {
+                boolean opt = s.opt();
+                if(opt != popt)
+                    sc = sc.add(10, 0);
+                if(s.categories)
+                {
+                    if(c.isect(sc, Inventory.sqsz))
+                    {
+                        if(cat==null)
+                        {
+                            add(cat = new Categories(VSpec.categories.get(s.name),s), sc.add(UI.scale(0, sqsz.y)).sub(UI.scale(5,5)));
+                            pack();
+                        }
+                    }
+                }
+                sc = sc.add(Inventory.sqsz.x, 0);
+                popt = opt;
+            }
+        }
+        return super.mousedown(c, button);
     }
 
     TextEntry craft_num;
@@ -272,7 +322,26 @@ public class NMakewindow extends Widget {
                 }
                 else
                 {
-                    sg.image(anotfound, Coord.z);
+                    if(s.categories)
+                    {
+                        if(s.ing==null)
+                            sg.image(categories, Coord.z);
+                        else
+                        {
+                            if(s.ing.logistic)
+                            {
+                                sg.image(aready, Coord.z);
+                            }
+                            else
+                            {
+                                sg.image(anotfound, Coord.z);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        sg.image(anotfound, Coord.z);
+                    }
                 }
             }
         }
@@ -572,6 +641,8 @@ public class NMakewindow extends Widget {
         }
     }
 
+
+
     public static class Optional extends ItemInfo.Tip {
         public static final Text text = RichText.render(String.format("$i{%s}", "Optional"), 0);
         public Optional(Owner owner) {
@@ -593,6 +664,140 @@ public class NMakewindow extends Widget {
 
         public Color olcol() {
             return(olcol);
+        }
+    }
+
+    Categories cat = null;
+
+    class Ingredient{
+        BufferedImage img;
+        String name;
+        boolean logistic;
+
+        public Ingredient(JSONObject obj)
+        {
+            img = ItemTex.create(obj);
+            name = (String) obj.get("name");
+        }
+
+        void tick(double dt)
+        {
+            logistic = (NArea.findIn(name) != null);
+        }
+    }
+
+    final static Coord catoff = UI.scale(8,8);
+    final static Coord catend = UI.scale(15,15);
+    public class Categories extends Widget
+    {
+
+        Color bg = new Color(30,40,40,160);
+        ArrayList<Ingredient> data = new ArrayList<>();
+        Frame fr;
+
+        Spec s;
+        public Categories(ArrayList<JSONObject> objs, Spec s)
+        {
+            super(new Coord(Math.max((Inventory.sqsz.x+UI.scale(1))*((objs.size()/6>=1)?6:0),(Inventory.sqsz.x+UI.scale(1))*(objs.size()%6))- UI.scale(2),(Inventory.sqsz.x+UI.scale(1))*(objs.size()/6+1)).add(UI.scale(20,18)));
+            this.s = s;
+            add(fr = new Frame(sz.sub(catend),true));
+            for(JSONObject obj: objs)
+            {
+                data.add(new Ingredient(obj));
+            }
+        }
+
+        @Override
+        public void draw(GOut g)
+        {
+            g.chcolor(bg);
+            g.frect(UI.scale(4,4), fr.inner());
+            Coord pos = new Coord(catoff);
+            Coord shift = new Coord(0,0);
+            for(Ingredient ing: data)
+            {
+                GOut sg = g.reclip(pos, invsq.sz());
+                sg.image(ing.img, Coord.z);
+                if(ing.logistic)
+                {
+                    sg.image(aready, Coord.z);
+                }
+                else
+                {
+                    sg.image(anotfound, Coord.z);
+                }
+                if(shift.x<5)
+                {
+                    pos = pos.add(Inventory.sqsz.x + UI.scale(1), 0);
+                    shift.x+=1;
+                }
+                else
+                {
+                    pos.x = UI.scale(8);
+                    pos = pos.add(0, Inventory.sqsz.y + UI.scale(1));
+                }
+            }
+            super.draw(g);
+        }
+        UI.Grab mg;
+        @Override
+        protected void added()
+        {
+            mg = NUtils.getUI().grabmouse(this);
+        }
+
+        @Override
+        public void remove()
+        {
+            mg.remove();
+            super.remove();
+        }
+
+        @Override
+        public boolean mousedown(Coord c, int button)
+        {
+            Coord pos = new Coord(catoff);
+            if(!c.isect(pos, sz.sub(catend)))
+            {
+                destroy();
+                cat = null;
+                return false;
+            }
+            else
+            {
+                Coord shift = new Coord(0,0);
+                for(Ingredient ing: data)
+                {
+                    if(c.isect(pos, invsq.sz()))
+                    {
+                        s.ing = ing;
+                        destroy();
+                        cat = null;
+                        return false;
+                    }
+                    if(shift.x<5)
+                    {
+                        pos = pos.add(Inventory.sqsz.x + UI.scale(1), 0);
+                        shift.x+=1;
+                    }
+                    else
+                    {
+                        pos.x = UI.scale(8);
+                        pos = pos.add(0, Inventory.sqsz.y + UI.scale(1));
+                    }
+                }
+                return true;
+            }
+        }
+
+        @Override
+        public void tick(double dt)
+        {
+            super.tick(dt);
+            for(Ingredient ing: data)
+            {
+                ing.tick(dt);
+            }
         }
     }
 }

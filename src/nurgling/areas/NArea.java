@@ -14,25 +14,25 @@ public class NArea
 {
 
 
-    public static NArea findIn(NAlias nAlias)
+    public static NArea findIn(String name)
     {
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
             Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
             for(Integer id : nids)
             {
-                if(NUtils.getGameUI().map.glob.map.areas.get(id).containIn(nAlias))
+                if(NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name))
                     return NUtils.getGameUI().map.glob.map.areas.get(id);
             }
         }
         return null;
     }
 
-    private boolean containIn(NAlias nAlias)
+    private boolean containIn(String name)
     {
         for (int i = 0; i < jin.length(); i++)
         {
-            if(NParser.checkName(((String) ((JSONObject)jin.get(i)).get("name")), nAlias))
+            if(((String) ((JSONObject)jin.get(i)).get("name")).equals(name))
                 return true;
         }
         return false;
