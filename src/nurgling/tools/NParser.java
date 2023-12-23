@@ -55,4 +55,9 @@ public class NParser
         else
             return false;
     }
+
+    public static boolean isIt(Gob.Overlay ol, NAlias name)
+    {
+        return (ol.spr instanceof StaticSprite && ((StaticSprite)ol.spr).res!=null && NParser.checkName(((StaticSprite)ol.spr).res.name,name));
+    }
 }

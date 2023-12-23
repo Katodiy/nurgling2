@@ -49,7 +49,7 @@ public abstract class TexRender implements Tex, Disposable {
 	img.dispose();
     }
 
-    private static final ShaderMacro mktex = prog -> {
+    public static final ShaderMacro mktex = prog -> {
 	Tex2D.get(prog).tex2d(new Uniform.Data<Object>(p -> {
 		    TexDraw draw = p.get(TexDraw.slot);
 		    TexClip clip = p.get(TexClip.slot);

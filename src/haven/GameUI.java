@@ -566,7 +566,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		menu = mwdg.setMenuGrid((MenuGrid)child);
 		add(new NDraggableWidget(mwdg,"menugrid",new Coord(mwdg.sz).add(NDraggableWidget.delta)));
 	} else if(place == "fight") {
-	   add(new NDraggableWidget( fv = (Fightview)child,"Fightview",child.sz));
+	   add(new NDraggableWidget( fv = (Fightview)child,"Fightview",UI.scale(230,380)));
 	} else if(place == "fsess") {
 	    add(child);
 	} else if(place == "inv") {

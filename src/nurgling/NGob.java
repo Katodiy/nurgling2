@@ -5,6 +5,7 @@ import nurgling.nattrib.*;
 import nurgling.overlays.*;
 import nurgling.pf.*;
 import nurgling.tools.*;
+import static nurgling.tools.VSpec.chest_state;
 
 import java.util.*;
 
@@ -57,6 +58,18 @@ public class NGob
                         if (NParser.checkName(name, new NAlias(new ArrayList<>(Arrays.asList("ladder", "minesupport", "towercap")))))
                         {
                            // parent.addcustomol(new NMiningSafeMap(parent, "minesup", 100));
+                        }
+                        if (name.equals("gfx/terobjs/chest"))
+                        {
+                            parent.setattr(new NContainerTex(parent,NStyle.chestAlt,chest_state));
+                        }
+                        if (name.equals("gfx/terobjs/cupboard"))
+                        {
+                            parent.setattr(new NContainerTex(parent,NStyle.cupboardAlt,chest_state));
+                        }
+                        if (name.equals("gfx/terobjs/dframe"))
+                        {
+                            parent.setattr(new NDframeTex(parent,NStyle.dframeAlt));
                         }
 
                         setDynamic();

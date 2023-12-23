@@ -122,8 +122,8 @@ public class Session implements Resource.Resolver {
 	    resid = id;
 	}
 
-	private class Ref implements Indir<Resource> {
-	    private Resource res;
+	public class Ref implements Indir<Resource> {
+	    public Resource res;
 
 	    public Resource get() {
 		if(res == null) {
@@ -137,6 +137,12 @@ public class Session implements Resource.Resolver {
 		}
 		return(res);
 	    }
+
+		public String resnm()
+		{
+			return CachedRes.this.resnm;
+		}
+
 
 	    public String toString() {
 		if(res == null) {

@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.render.*;
 
 import java.awt.*;
 import java.awt.image.*;
@@ -15,6 +16,9 @@ public class NStyle
     public static Text.Foundry iiqual = new Text.Foundry(Text.sans, 12,new Color(0, 0, 0)).aa(true);
 
     public static final RichText.Foundry nifnd = new RichText.Foundry(Resource.remote(), java.awt.font.TextAttribute.FAMILY, "SansSerif", java.awt.font.TextAttribute.SIZE, UI.scale(14)).aa(true);
+    public static Text.Furnace openings = new PUtils.BlurFurn(new Text.Foundry(Text.sans.deriveFont(Font.BOLD, UI.scale(16)), 16, Color.WHITE).aa(true), 1, 1, new Color(60,30,30));
+    public static Text.Furnace mip = new PUtils.BlurFurn(new Text.Foundry(Text.sans.deriveFont(Font.BOLD, UI.scale(16)), 16, Color.GREEN).aa(true), 1, 1, new Color(60,30,30));
+    public static Text.Furnace eip = new PUtils.BlurFurn(new Text.Foundry(Text.sans.deriveFont(Font.BOLD, UI.scale(16)), 16, Color.RED).aa(true), 1, 1, new Color(60,30,30));
     public static Text.Furnace hotkey = new PUtils.BlurFurn(new Text.Foundry(Text.sans, 12, Color.WHITE).aa(true), 1, 1, new Color(0,0,0));
     public static final TexI[] removei = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/removeItem/u")),
@@ -178,5 +182,35 @@ public class NStyle
         if(ridge==null)
             ridge = customTileRes.get("ridge").tfac().create(7001, customTileRes.get("ridge"));
         return ridge;
+    }
+
+    public static enum Container
+    {
+        FREE,
+        NOTFREE,
+        FULL
+    }
+    public static HashMap<Container, Texture2D.Sampler2D> chestAlt = new HashMap<>();
+    static
+    {
+        chestAlt.put(Container.FREE,new TexI(Resource.loadimg("alttex/chest/free")).st().data);
+        chestAlt.put(Container.FULL,new TexI(Resource.loadimg("alttex/chest/full")).st().data);
+        chestAlt.put(Container.NOTFREE,new TexI(Resource.loadimg("alttex/chest/notfree")).st().data);
+    }
+
+    public static HashMap<Container, Texture2D.Sampler2D> cupboardAlt = new HashMap<>();
+    static
+    {
+        cupboardAlt.put(Container.FREE,new TexI(Resource.loadimg("alttex/cupboard/free")).st().data);
+        cupboardAlt.put(Container.FULL,new TexI(Resource.loadimg("alttex/cupboard/full")).st().data);
+        cupboardAlt.put(Container.NOTFREE,new TexI(Resource.loadimg("alttex/cupboard/notfree")).st().data);
+    }
+
+    public static HashMap<Container, Texture2D.Sampler2D> dframeAlt = new HashMap<>();
+    static
+    {
+        dframeAlt.put(Container.FREE,new TexI(Resource.loadimg("alttex/dframe/free")).st().data);
+        dframeAlt.put(Container.FULL,new TexI(Resource.loadimg("alttex/dframe/full")).st().data);
+        dframeAlt.put(Container.NOTFREE,new TexI(Resource.loadimg("alttex/dframe/notfree")).st().data);
     }
 }

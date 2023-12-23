@@ -117,12 +117,12 @@ public class NMapView extends MapView
                             StringBuilder ols = new StringBuilder();
                             boolean isPrinted = false;
                             for (Gob.Overlay ol : gob.ols) {
-                                if (ol.spr != null) {
+//                                if (ol.spr != null) {
                                     isPrinted = true;
                                     String res = ol.spr.getClass().toString();
                                     if(!res.contains("$"))
                                         ols.append(res + " ");
-                                }
+//                                }
                             }
                             if(isPrinted)
                                 ttip.put("ols", ols.toString());

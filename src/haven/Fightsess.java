@@ -27,6 +27,9 @@
 package haven;
 
 import haven.render.*;
+import nurgling.*;
+import nurgling.overlays.*;
+
 import java.util.*;
 import java.awt.Color;
 import java.awt.event.InputEvent;
@@ -91,7 +94,8 @@ public class Fightsess extends Widget {
 	Coord3f raw = pl.placed.getc();
 	if(raw == null)
 	    return;
-	pcc = map.screenxf(raw).round2();
+	//pcc = map.screenxf(raw).round2();
+	pcc = new Coord(NUtils.getGameUI().sz.div(2));
 	pho = (int)(map.screenxf(raw.add(0, 0, UI.scale(20))).round2().sub(pcc).y) - UI.scale(20);
     }
 
@@ -185,27 +189,55 @@ public class Fightsess extends Widget {
     public void draw(GOut g) {
 	updatepos();
 	double now = Utils.rtime();
-
+	Coord guisz = NUtils.getGameUI().map.sz;
+	Coord buffc = pcc.sub(0 , guisz.y/4 + guisz.y/8);
 	for(Buff buff : fv.buffs.children(Buff.class))
-	    buff.draw(g.reclip(pcc.add(-buff.c.x - Buff.cframe.sz().x - UI.scale(20), buff.c.y + pho - Buff.cframe.sz().y), buff.sz));
+	{
+		Coord pos = buffc.add(-buff.c.x - Buff.cframe.sz().x - UI.scale(20), 0);
+		NRelation.RelBuff rb = fv.altbuffs.get(buff);
+		if(rb == null)
+		{
+			buff.draw(g.reclip(pos, buff.sz));
+		}
+		else
+		{
+			Coord bsz = buff.sz.sub(0,UI.scale(5));
+			g.reclip(pos, bsz).image(rb.bg, Coord.z,bsz);
+			g.reclip(pos, bsz).image(rb.text, bsz.div(2).sub(rb.text.sz().div(2)));
+		}
+	}
 	if(fv.current != null) {
 	    for(Buff buff : fv.current.buffs.children(Buff.class))
-		buff.draw(g.reclip(pcc.add(buff.c.x + UI.scale(20), buff.c.y + pho - Buff.cframe.sz().y), buff.sz));
+		{
+			Coord pos = buffc.add(buff.c.x + UI.scale(20), 0);
+			NRelation.RelBuff rb = fv.altrelbuffs.get(buff);
+			if(rb == null)
+			{
+				buff.draw(g.reclip(pos, buff.sz));
+			}
+			else
+			{
+				Coord bsz = buff.sz.sub(0,UI.scale(5));
+				g.reclip(pos, bsz).image(rb.bg, Coord.z,bsz);
+				g.reclip(pos, bsz).image(rb.text, bsz.div(2).sub(rb.text.sz().div(2)));
+			}
+		}
 
-	    g.aimage(ip.get().tex(), pcc.add(-UI.scale(75), 0), 1, 0.5);
-	    g.aimage(oip.get().tex(), pcc.add(UI.scale(75), 0), 0, 0.5);
+	    g.aimage(ip.get().tex(), pcc.add(-UI.scale(75), -guisz.y/4), 1, 0.5);
+	    g.aimage(oip.get().tex(), pcc.add(UI.scale(75), -guisz.y/4), 0, 0.5);
 
-	    if(fv.lsrel.size() > 1)
-		curtgtfx = fxon(fv.current.gobid, tgtfx, curtgtfx);
+//	    if(fv.lsrel.size() > 1)
+//		curtgtfx = fxon(fv.current.gobid, tgtfx, curtgtfx);
 	}
 
 	{
-	    Coord cdc = pcc.add(cmc);
+	    Coord cdc = pcc.add(cmc).sub(new Coord(0,guisz.y/3));
 	    if(now < fv.atkct) {
 		double a = (now - fv.atkcs) / (fv.atkct - fv.atkcs);
 		g.chcolor(255, 0, 128, 224);
 		g.fellipse(cdc, UI.scale(new Coord(24, 24)), Math.PI / 2 - (Math.PI * 2 * Math.min(1.0 - a, 1.0)), Math.PI / 2);
 		g.chcolor();
+		g.aimage(NStyle.openings.render(String.format("%.1f",(fv.atkct - now ))).tex(),cdc,0.5,0.5);
 	    }
 	    g.image(cdframe, cdc.sub(cdframe.sz().div(2)));
 	}
@@ -218,7 +250,7 @@ public class Fightsess extends Widget {
 	    double lastuse = fv.lastuse;
 	    if(lastact != null) {
 		Tex ut = lastact.get().flayer(Resource.imgc).tex();
-		Coord useul = pcc.add(usec1).sub(ut.sz().div(2));
+		Coord useul = pcc.add(usec1).sub(ut.sz().div(2)).sub(0,guisz.y/3);
 		g.image(ut, useul);
 		g.image(useframe, useul.sub(useframeo));
 		double a = now - lastuse;
@@ -241,7 +273,7 @@ public class Fightsess extends Widget {
 		double lastuse = fv.current.lastuse;
 		if(lastact != null) {
 		    Tex ut = lastact.get().flayer(Resource.imgc).tex();
-		    Coord useul = pcc.add(usec2).sub(ut.sz().div(2));
+		    Coord useul = pcc.add(usec2).sub(ut.sz().div(2)).sub(0,guisz.y/3);
 		    g.image(ut, useul);
 		    g.image(useframe, useul.sub(useframeo));
 		    double a = now - lastuse;
@@ -256,7 +288,7 @@ public class Fightsess extends Widget {
 	    }
 	}
 	for(int i = 0; i < actions.length; i++) {
-	    Coord ca = pcc.add(actc(i));
+	    Coord ca = pcc.add(actc(i)).add(0,guisz.y/5);
 	    Action act = actions[i];
 	    try {
 		if(act != null) {

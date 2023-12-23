@@ -119,17 +119,17 @@ public class NWItem extends WItem
         return true;
     }
 
-    @Override
-    public boolean mousedown(Coord c, int btn)
-    {
-        boolean res = super.mousedown(c, btn);
-        if(res)
-        {
-            JSONObject res_obj = ItemTex.save(item.spr);
-            res_obj.put("name",((NGItem)item).name);
-            System.out.println(res_obj);
-
-        }
-        return res;
-    }
+//    @Override
+//    public boolean mousedown(Coord c, int btn)
+//    {
+//        boolean res = super.mousedown(c, btn);
+//        if(res)
+//        {
+//            JSONObject res_obj = ItemTex.save(item.spr);
+//            res_obj.put("name",((NGItem)item).name);
+//            System.out.println(res_obj);
+//
+//        }
+//        return res;
+//    }
 }

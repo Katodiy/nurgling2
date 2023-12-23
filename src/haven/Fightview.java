@@ -28,6 +28,10 @@ package haven;
 
 import java.util.*;
 import static haven.Utils.uint32;
+import nurgling.*;
+import nurgling.conf.*;
+import nurgling.overlays.*;
+import nurgling.tools.*;
 import nurgling.widgets.*;
 
 public class Fightview extends Widget {
@@ -51,11 +55,23 @@ public class Fightview extends Widget {
     public Mainrel curdisp;
     private List<Relation> nonmain = Collections.emptyList();
 
-    public class Relation {
+
+	@Override
+	public void resize(Coord sz)
+	{
+		super.resize(sz);
+	}
+
+	public class Relation {
         public final long gobid;
 	public final Bufflist buffs = add(new Bufflist()); {buffs.hide();}
 	public final Bufflist relbuffs = add(new Bufflist()); {relbuffs.hide();}
 	public int gst, ip, oip;
+	public double agi_delta = -1;
+	public double duration = -1;
+	public double actend = -1;
+	public Pair <Double, Double> pairend = null;
+	public Pair <Double, Double> pairdur = null;
 	public Indir<Resource> lastact = null;
 	public double lastuse = 0;
 	public boolean invalid = false;
@@ -77,6 +93,56 @@ public class Fightview extends Widget {
 	public void use(Indir<Resource> act) {
 	    lastact = act;
 	    lastuse = Utils.rtime();
+		if (agi_delta!=-1)
+		{
+//			if(lastact.get() instanceof Session.CachedRes.Ref)
+			if (lastact instanceof Session.CachedRes.Ref)
+			{
+				String aname = ((Session.CachedRes.Ref)lastact).resnm();
+				if (aname != null)
+				{
+					Double val = NCooldown.data.get(aname);
+					if (val != null)
+					{
+						duration = val / agi_delta - 0.01;
+
+						actend = lastuse + duration;
+						pairend = null;
+					}
+					else
+					{
+
+						val = NCooldown.fixeddata.get(aname);
+						if(val!= null)
+						{
+							duration = val;
+							actend = lastuse + duration;
+							pairend = null;
+						}
+						else
+						{
+							Pair<Double,Double> range = NCooldown.vardata.get(aname);
+							if(range!=null)
+							{
+								duration = 0;
+								pairdur = range;
+
+								if(aname.equals("paginae/atk/takeaim"))
+								{
+									pairend = new Pair<>(lastuse + (1 + 0.2 * oip) * range.a, lastuse + (1 + 0.2 * oip) * range.b);
+									pairdur = new Pair<>(range.a*(1 + 0.2 * oip), range.b*(1 + 0.2 * oip));
+								}
+								else
+								{
+									pairend = new Pair<>(lastuse + range.a, lastuse + range.b);
+								}
+							}
+						}
+					}
+
+				}
+			}
+		}
 	}
     }
 
@@ -259,7 +325,7 @@ public class Fightview extends Widget {
 	}
 	lsdisp.move(pos.add(-lsdisp.sz.x, UI.scale(10)));
 	resize(sz.x, lsdisp.c.y + lsdisp.sz.y);
-    }
+	}
 
     private void updrel() {
 	List<Relation> nrel = new ArrayList<>(lsrel);
@@ -278,6 +344,12 @@ public class Fightview extends Widget {
 	    add(curdisp = new Mainrel(rel));
 	}
 	current = rel;
+	if(current!=null)
+	{
+		Gob gob = Finder.findGob(current.gobid);
+		if(gob!=null)
+			gob.addcustomol(new NTargetFight(gob));
+	}
 	layout();
 	updrel();
     }
@@ -288,8 +360,60 @@ public class Fightview extends Widget {
 	    Widget inf = obinfo(rel.gobid, false);
 	    if(inf != null)
 		inf.tick(dt);
+		Gob gob;
+		if((gob = Finder.findGob(rel.gobid))!=null && gob.findol(NRelation.class)==null)
+		{
+			gob.addcustomol(new NRelation(gob));
+		}
+		if(current!=null)
+		{
+			gob = Finder.findGob(current.gobid);
+			if(gob!=null && gob.findol(NTargetFight.class)==null)
+			{
+				gob.addcustomol(new NTargetFight(gob));
+			}
+		}
 	}
-    }
+		updateBuff(buffs,altbuffs);
+	if(current!=null)
+		updateBuff(current.buffs,altrelbuffs);
+	}
+
+	private void updateBuff(Bufflist bufflist, HashMap<Buff, NRelation.RelBuff> mapbuffs)
+	{
+		mapbuffs.clear();
+		for (Buff buff: bufflist.children(Buff.class))
+		{
+			if(buff.res instanceof Session.CachedRes.Ref)
+			{
+				Session.CachedRes.Ref ref = ((Session.CachedRes.Ref)buff.res);
+				String resnm = ref.resnm();
+				if(resnm!=null)
+				{
+					int val = (int) Math.min(10, buff.ameter / 10);
+					if (resnm.equals("paginae/atk/cornered"))
+					{
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.corn.get(val)));
+					}
+					else if (resnm.equals("paginae/atk/dizzy"))
+					{
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.dizz.get(val)));
+					}
+					else if (resnm.equals("paginae/atk/reeling"))
+					{
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.reel.get(val)));
+					}
+					else if (resnm.equals("paginae/atk/offbalance"))
+					{
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.gren.get(val)));
+					}
+				}
+		}
+		}
+	}
+
+	public HashMap<Buff, NRelation.RelBuff> altbuffs = new HashMap<>();
+	public HashMap<Buff, NRelation.RelBuff> altrelbuffs = new HashMap<>();
 
     public static class Notfound extends RuntimeException {
         public final long id;
@@ -316,7 +440,9 @@ public class Fightview extends Widget {
 
     public void uimsg(String msg, Object... args) {
         if(msg == "new") {
-            Relation rel = new Relation(uint32((Integer)args[0]));
+			long id = uint32((Integer)args[0]);
+            Relation rel = new Relation(id);
+			Finder.findGob(id).addcustomol(new NRelation(Finder.findGob(id)));
 	    rel.give((Integer)args[1]);
 	    rel.ip = (Integer)args[2];
 	    rel.oip = (Integer)args[3];
@@ -339,6 +465,21 @@ public class Fightview extends Widget {
             return;
 	} else if(msg == "used") {
 	    use((args[0] == null)?null:ui.sess.getres((Integer)args[0]));
+		if(lastact!=null && current!=null && lastact instanceof Session.CachedRes.Ref)
+		{
+			String aname = ((Session.CachedRes.Ref)lastact).resnm();
+			if(aname!=null)
+			{
+				Double val = NCooldown.data.get(aname);
+				if(val != null)
+				{
+					if (current.agi_delta == -1)
+					{
+						current.agi_delta = (atkct - atkcs) / val;
+					}
+				}
+			}
+		}
 	    return;
 	} else if(msg == "ruse") {
 	    Relation rel = getrel(uint32((Integer)args[0]));

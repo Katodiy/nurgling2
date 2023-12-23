@@ -1,5 +1,6 @@
 package nurgling.tools;
 
+import nurgling.*;
 import org.json.*;
 
 import java.util.*;
@@ -41,5 +42,12 @@ public class VSpec
         categories.put("Raw", new ArrayList<>());
         categories.put("Edible Mushroom", new ArrayList<>());
         categories.put("Solid Fat", new ArrayList<>());
+    }
+
+    public static HashMap<NStyle.Container, Integer> chest_state = new HashMap<>();
+    static
+    {
+        chest_state.put(NStyle.Container.FREE, 3);
+        chest_state.put(NStyle.Container.FULL, 28);
     }
 }

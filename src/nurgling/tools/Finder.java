@@ -128,4 +128,9 @@ public class Finder
         }
         return result;
     }
+
+    public static Gob findGob(long gobid)
+    {
+        return NUtils.getGameUI().ui.sess.glob.oc.getgob(gobid);
+    }
 }
