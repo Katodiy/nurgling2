@@ -33,7 +33,7 @@ import haven.render.*;
 
 public class KinInfo extends GAttrib implements RenderTree.Node, PView.Render2D {
     public static final BufferedImage vlg = Resource.loadimg("gfx/hud/vilind");
-    public static final Text.Foundry nfnd = new Text.Foundry(Text.dfont, 10);
+    public static final Text.Foundry nfnd = new Text.Foundry(Text.dfont, 12);
     public String name;
     public int group, type;
     public double seen = 0;

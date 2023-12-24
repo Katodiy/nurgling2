@@ -58,7 +58,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public MapWnd mapfile;
     private Widget qqview;
     public BuddyWnd buddies;
-    private final Zergwnd zerg;
+    protected final NZergwnd zerg;
     public NAreasWidget areas;
     public final Collection<Polity> polities = new ArrayList<Polity>();
     public HelpWnd help;
@@ -254,7 +254,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	syslog = chat.add(new ChatUI.Log("System"));
 	opts = add(new OptWnd());
 	opts.hide();
-	zerg = add(new Zergwnd(), Utils.getprefc("wndc-zerg", UI.scale(new Coord(187, 50))));
+	zerg = add(new NZergwnd(), Utils.getprefc("wndc-zerg", UI.scale(new Coord(187, 50))));
 	zerg.hide();
 	add(areas = new NAreasWidget(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
 	areas.hide();
@@ -323,7 +323,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     }
 
     public static class Hidewnd extends Window {
-	Hidewnd(Coord sz, String cap, boolean lg) {
+	public Hidewnd(Coord sz, String cap, boolean lg) {
 	    super(sz, cap, lg);
 	}
 

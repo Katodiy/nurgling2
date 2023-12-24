@@ -39,7 +39,7 @@ public class Polity extends Widget {
     public final Map<Integer, Member> idmap = new HashMap<Integer, Member>();
     protected Widget mw;
 
-    public static final Text unk = Text.render("???");
+    public static final Text unk = Text.render("?Unknown?");
     public static final Text self = Text.render("You", new Color(192, 192, 255));
     public class Member {
 	public final Integer id;
@@ -57,6 +57,7 @@ public class Polity extends Widget {
 		rn = (b == null) ? unk : (b.rname());
 	    }
 	    g.aimage(rn.tex(), UI.scale(0, 10), 0, 0.5);
+		g.aimage(rn.tex(), UI.scale(0, 10).add(new Coord(rn.tex().sz().x,0)), 0, 0.5);
 	}
     }
 

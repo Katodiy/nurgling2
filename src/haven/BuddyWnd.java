@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.*;
+
 import java.awt.Color;
 import java.util.*;
 import java.text.Collator;
@@ -56,7 +58,37 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	new Color(255, 0, 255),
 	new Color(255, 0, 128),
     };
-    private Comparator<Buddy> bcmp;
+
+	final Set<Integer> req = new HashSet<>();
+	@Override
+	public void tick(double dt)
+	{
+		super.tick(dt);
+		double now = Utils.rtime();
+		if(NUtils.getGameUI().zerg!=null && NUtils.getGameUI().zerg.visible)
+		{
+			synchronized (req)
+			{
+				int count = 0;
+				if (req.isEmpty())
+					for (Buddy b : buddies)
+					{
+						if ((now - b.upTime > 10 || b.upTime == 0) && count++<7)
+						{
+							wdgmsg("ch", b.id);
+							req.add(b.id);
+							b.upTime = now;
+						}
+					}
+			}
+			for (Buddy b : buddies)
+			{
+				b.lastOnline = Text.render(lastOnline(b.atime, b, null));
+			}
+		}
+	}
+
+	private Comparator<Buddy> bcmp;
     private Comparator<Buddy> alphacmp = new Comparator<Buddy>() {
 	private Collator c = Collator.getInstance();
 	public int compare(Buddy a, Buddy b) {
@@ -71,8 +103,7 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
     };
     private Comparator<Buddy> statuscmp = new Comparator<Buddy>() {
 	public int compare(Buddy a, Buddy b) {
-	    if(a.online == b.online) return(alphacmp.compare(a, b));
-	    else                     return(b.online - a.online);
+	    return Double.compare(b.atime,a.atime);
 	}
     };
     
@@ -86,7 +117,12 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
     public class Buddy {
 	public int id;
 	public String name;
+	public long atime;
 	Text rname = null;
+	Text lastOnline = null;
+
+	public double upTime = 0;
+
 	public int online;
 	public int group;
 	public boolean seen;
@@ -241,6 +277,40 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	}
     }
 
+	static public String lastOnline(long checktime, Buddy b, BuddyInfo bi)
+	{
+		String text;
+		if(b.online == 1) {
+			if(bi!=null)
+				bi.utime = 0;
+			text = "Now";
+		} else {
+			int au, atime = (int)((long)Utils.ntime() - checktime);
+			String unit;
+			if(atime >= (604800 * 2)) {
+				au = 604800;
+				unit = "week";
+			} else if(atime >= 86400) {
+				au = 86400;
+				unit = "day";
+			} else if(atime >= 3600) {
+				au = 3600;
+				unit = "hour";
+			} else if(atime >= 60) {
+				au = 60;
+				unit = "minute";
+			} else {
+				au = 1;
+				unit = "second";
+			}
+			int am = atime / au;
+			if(bi!=null)
+				bi.utime = checktime + ((am + 1) * au);
+			text = am + " " + unit + ((am > 1)?"s":"") + " ago";
+		}
+		return text;
+	}
+
     @RName("grp")
     public static class $grp implements Factory {
 	public Widget create(UI ui, Object[] args) {
@@ -293,37 +363,12 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 		setatime();
 	}
 
+
+
 	private void setatime() {
-	    String text;
-	    if(buddy.online == 1) {
-		this.utime = 0;
-		text = "Last seen: Now";
-	    } else {
-		int au, atime = (int)((long)Utils.ntime() - this.atime);
-		String unit;
-		if(atime >= (604800 * 2)) {
-		    au = 604800;
-		    unit = "week";
-		} else if(atime >= 86400) {
-		    au = 86400;
-		    unit = "day";
-		} else if(atime >= 3600) {
-		    au = 3600;
-		    unit = "hour";
-		} else if(atime >= 60) {
-		    au = 60;
-		    unit = "minute";
-		} else {
-		    au = 1;
-		    unit = "second";
-		}
-		int am = atime / au;
-		this.utime = this.atime + ((am + 1) * au);
-		text = "Last seen: " + am + " " + unit + ((am > 1)?"s":"") + " ago";
-	    }
 	    if(atimel != null)
 		ui.destroy(atimel);
-	    atimel = add(new Label(text), margin2, grp.c.y + grp.sz.y + margin2);
+	    atimel = add(new Label("Last seen: " + lastOnline(atime, buddy, this)), margin2, grp.c.y + grp.sz.y + margin2);
 	}
 
 	private void setopts() {
@@ -379,6 +424,8 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 			    g.aimage(offline, Coord.of(sz.y / 2), 0.5, 0.5);
 			g.chcolor(gc[b.group]);
 			g.aimage(b.rname().tex(), Coord.of(sz.y + margin1, sz.y / 2), 0.0, 0.5);
+			if(b.lastOnline!=null)
+				g.aimage(b.lastOnline.tex(), Coord.of(sz.x - b.lastOnline.tex().sz().x - margin1,sz.y / 2), 0.0, 0.5);
 			g.chcolor();
 		    }
 
@@ -392,7 +439,7 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 		});
 	}
 
-	protected void drawbg(GOut g) {
+		protected void drawbg(GOut g) {
 	    g.chcolor(0, 0, 0, 128);
 	    g.frect(Coord.z, sz);
 	    g.chcolor();
@@ -534,8 +581,43 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	    Collections.sort(buddies, bcmp);
 	}
     }
-    
+
+	int lastSet = -1;
     public void uimsg(String msg, Object... args) {
+	synchronized (req)
+	{
+		if(!req.isEmpty() )
+		{
+			if (msg.equals("i-set"))
+			{
+				if (req.contains((int) args[0]))
+				{
+					lastSet = (int) args[0];
+					req.remove((int) args[0]);
+					return;
+				}
+			}
+		}
+		if(lastSet!=-1)
+		{
+			if(msg.equals("i-atime") && lastSet!=-1)
+			{
+				for(Buddy b : buddies)
+				{
+					if(b.id == lastSet)
+					{
+						b.atime = (long)Utils.ntime() - ((Number)args[0]).longValue();
+						lastSet = -1;
+						return;
+					}
+				}
+			}
+			if(msg.equals("i-ava"))
+			{
+				return;
+			}
+		}
+	}
 	if(msg == "add") {
 	    int id = (Integer)args[0];
 	    String name = ((String)args[1]).intern();
