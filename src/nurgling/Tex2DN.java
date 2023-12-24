@@ -16,7 +16,6 @@ class Tex2DN extends State
     {
         this.tex = tex;
         this.src = src;
-
     }
 
 
@@ -25,7 +24,7 @@ class Tex2DN extends State
         return new Uniform(Type.SAMPLER2D, data.value, data.deps);
     }
 
-    private static final Uniform ctex = new Uniform(SAMPLER2D, p -> p.get(slot).tex, slot);
+
     private static final ShaderMacro shader = prog ->
     {
         Tex2D.get(prog).tex2d(new Uniform.Data<Object>(p ->
@@ -57,18 +56,21 @@ class Tex2DN extends State
             }
             else
             {
-                throw (new AssertionError());
+                return p.get(slot).tex;
             }
 
         }, TexRender.TexDraw.slot, TexRender.TexClip.slot, slot));
-        Tex2DN.mod2.modify(prog);
+        Tex2DN.mod1.modify(prog);
     };
 
-    public static final ShaderMacro mod2 = prog ->
-    {
-        final ValBlock.Value tex2d = Tex2D.get(prog).color();
-        tex2d.force();
-        FragColor.fragcol(prog.fctx).mod(in -> tex2d.ref(), 0);
+
+    private static final ShaderMacro mod1 =new ShaderMacro()
+    {        @Override
+        public void modify(ProgramContext prog)
+        {
+            final ValBlock.Value tex2d = Tex2D.get(prog).color();
+            tex2d.force();
+        }
     };
 
     public ShaderMacro shader()
