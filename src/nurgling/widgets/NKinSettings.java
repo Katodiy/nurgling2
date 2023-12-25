@@ -21,7 +21,7 @@ public class NKinSettings extends Window
         super(UI.scale(300, 150), "Kin Notification");
         this.btn = btn;
         prev = add(gs = new GroupSelector(0));
-        prev = add(ring = new CheckBox("Selection circle")
+        prev = add(ring = new CheckBox("Character highlighting")
         {
 
             public void set(boolean val)
@@ -32,7 +32,7 @@ public class NKinSettings extends Window
             }
 
         }, prev.pos("bl").adds(0, 5));
-        prev = add(arrow = new CheckBox("Arrow to character")
+        prev = add(arrow = new CheckBox("Character arrow pointer ")
         {
 
             public void set(boolean val)
@@ -42,7 +42,7 @@ public class NKinSettings extends Window
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-        prev = add(alarm = new CheckBox("Alarm")
+        prev = add(alarm = new CheckBox("Character sound alarm ")
         {
 
             public void set(boolean val)
@@ -54,7 +54,7 @@ public class NKinSettings extends Window
 
         }, prev.pos("bl").adds(0, 5));
 
-        prev = add(hil = new CheckBox("Hide in list")
+        prev = add(hil = new CheckBox("Hide character from kinlist")
         {
 
             public void set(boolean val)
