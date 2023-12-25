@@ -27,13 +27,15 @@
 package haven;
 
 import nurgling.*;
+import nurgling.conf.*;
+import nurgling.widgets.*;
 
 import java.awt.Color;
 import java.util.*;
 import java.text.Collator;
 
 public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
-    private List<Buddy> buddies = new ArrayList<Buddy>();
+    public List<Buddy> buddies = new ArrayList<Buddy>();
     private Map<Integer, Buddy> idmap = new HashMap<Integer, Buddy>();
     private BuddyList bl;
     private TextEntry pname, charpass, opass;
@@ -58,36 +60,6 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	new Color(255, 0, 255),
 	new Color(255, 0, 128),
     };
-
-	final Set<Integer> req = new HashSet<>();
-	@Override
-	public void tick(double dt)
-	{
-		super.tick(dt);
-		double now = Utils.rtime();
-		if(NUtils.getGameUI().zerg!=null && NUtils.getGameUI().zerg.visible)
-		{
-			synchronized (req)
-			{
-				int count = 0;
-				if (req.isEmpty())
-					for (Buddy b : buddies)
-					{
-						if ((now - b.upTime > 10 || b.upTime == 0) && count++<7)
-						{
-							wdgmsg("ch", b.id);
-							req.add(b.id);
-							b.upTime = now;
-						}
-					}
-			}
-			for (Buddy b : buddies)
-			{
-				b.lastOnline = Text.render(lastOnline(b.atime, b, null));
-			}
-		}
-	}
-
 	private Comparator<Buddy> bcmp;
     private Comparator<Buddy> alphacmp = new Comparator<Buddy>() {
 	private Collator c = Collator.getInstance();
@@ -110,7 +82,7 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
     @RName("buddy")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-	    return(new BuddyWnd());
+	    return(new NBuddyWnd());
 	}
     }
     
@@ -119,7 +91,7 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	public String name;
 	public long atime;
 	Text rname = null;
-	Text lastOnline = null;
+	public Text lastOnline = null;
 
 	public double upTime = 0;
 
@@ -363,8 +335,6 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 		setatime();
 	}
 
-
-
 	private void setatime() {
 	    if(atimel != null)
 		ui.destroy(atimel);
@@ -412,7 +382,15 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	    super(sz, margin3);
 	}
 
-	public List<Buddy> allitems() {return(buddies);}
+	public List<Buddy> allitems() {
+		List<Buddy> visbuddies = new ArrayList<>();
+		for(Buddy b: buddies)
+		{
+			if(!NKinProp.get(b.group).hideinlist)
+				visbuddies.add(b);
+		}
+		return(visbuddies);
+	}
 	public boolean searchmatch(Buddy b, String txt) {return(b.name.toLowerCase().indexOf(txt.toLowerCase()) >= 0);}
 
 	public Widget makeitem(Buddy b, int idx, Coord sz) {
@@ -547,7 +525,6 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 		    BuddyWnd.this.wdgmsg("bypwd", opass.text());
 		    opass.settext("");
 	}), opass.pos("bl").adds(0, 5));
-	pack();
     }
 
     private String randpwd() {
@@ -582,42 +559,7 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	}
     }
 
-	int lastSet = -1;
     public void uimsg(String msg, Object... args) {
-	synchronized (req)
-	{
-		if(!req.isEmpty() )
-		{
-			if (msg.equals("i-set"))
-			{
-				if (req.contains((int) args[0]))
-				{
-					lastSet = (int) args[0];
-					req.remove((int) args[0]);
-					return;
-				}
-			}
-		}
-		if(lastSet!=-1)
-		{
-			if(msg.equals("i-atime") && lastSet!=-1)
-			{
-				for(Buddy b : buddies)
-				{
-					if(b.id == lastSet)
-					{
-						b.atime = (long)Utils.ntime() - ((Number)args[0]).longValue();
-						lastSet = -1;
-						return;
-					}
-				}
-			}
-			if(msg.equals("i-ava"))
-			{
-				return;
-			}
-		}
-	}
 	if(msg == "add") {
 	    int id = (Integer)args[0];
 	    String name = ((String)args[1]).intern();

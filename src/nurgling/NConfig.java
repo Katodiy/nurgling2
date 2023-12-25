@@ -37,6 +37,7 @@ public class NConfig
         hideNature,
         invert_hor,
         invert_ver,
+        kinprop,
         show_drag_menu
     }
 
@@ -132,6 +133,9 @@ public class NConfig
                         break;
                     case "NResizeProp":
                         res.add(new NResizeProp(obj));
+                        break;
+                    case "NKinProp":
+                        res.add(new NKinProp(obj));
                         break;
                     case "NToolBeltProp":
                         res.add(new NToolBeltProp(obj));

@@ -58,7 +58,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public MapWnd mapfile;
     private Widget qqview;
     public BuddyWnd buddies;
-    protected final NZergwnd zerg;
+    public final NZergwnd zerg;
     public NAreasWidget areas;
     public final Collection<Polity> polities = new ArrayList<Polity>();
     public HelpWnd help;

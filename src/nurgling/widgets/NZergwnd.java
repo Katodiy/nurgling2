@@ -37,7 +37,7 @@ public class NZergwnd extends GameUI.Hidewnd
     }
 
     public NZergwnd() {
-        super(Coord.z, "Kith & Kin2", true);
+        super(Coord.z, "Kith & Kin", true);
         kin = add(new NZergwnd.TButton("kin", false));
         kin.tooltip = Text.render("Kin");
         pol = add(new NZergwnd.TButton("pol", true));
@@ -76,4 +76,6 @@ public class NZergwnd extends GameUI.Hidewnd
         ntab(p, btn);
         btn.tooltip = Text.render(p.cap);
     }
+
+
 }
