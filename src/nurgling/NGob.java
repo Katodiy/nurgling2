@@ -59,17 +59,26 @@ public class NGob
                         {
                            // parent.addcustomol(new NMiningSafeMap(parent, "minesup", 100));
                         }
-                        if (name.equals("gfx/terobjs/chest"))
+                        if(name.contains("gfx/terobjs"))
                         {
-                            parent.setattr(new NContainerTex(parent,NStyle.chestAlt,chest_state));
+                            switch (name)
+                            {
+                                case "gfx/terobjs/chest":
+                                    parent.setattr(new NContainerTex(parent, NStyle.chestAlt, chest_state));
+                                    break;
+                                case "gfx/terobjs/cupboard":
+                                    parent.setattr(new NContainerTex(parent, NStyle.cupboardAlt, chest_state));
+                                    break;
+                                case "gfx/terobjs/dframe":
+                                    parent.setattr(new NDframeTex(parent, NStyle.dframeAlt));
+                                    break;
+                            }
                         }
-                        if (name.equals("gfx/terobjs/cupboard"))
+
+                        if (name.equals("gfx/borka/body") && NUtils.playerID() != parent.id)
                         {
-                            parent.setattr(new NContainerTex(parent,NStyle.cupboardAlt,chest_state));
-                        }
-                        if (name.equals("gfx/terobjs/dframe"))
-                        {
-                            parent.setattr(new NDframeTex(parent,NStyle.dframeAlt));
+                            parent.addcustomol(new NKinRing(parent));
+                            parent.setattr(new NKinTex(parent));
                         }
 
                         setDynamic();

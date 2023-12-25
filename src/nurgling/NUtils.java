@@ -97,6 +97,13 @@ public class NUtils
         return getGameUI().map.player();
     }
 
+    public static long playerID()
+    {
+        if(getGameUI()== null || getGameUI().map ==null )
+            return -1;
+        return getGameUI().map.plgob;
+    }
+
     public static double getStamina()
     {
         IMeter.Meter stam = getGameUI().getmeter ( "stam", 0 );

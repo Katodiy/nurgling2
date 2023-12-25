@@ -1,7 +1,8 @@
-package nurgling;
+package nurgling.overlays;
 
 import haven.*;
 import haven.render.*;
+import nurgling.*;
 import nurgling.tools.*;
 
 import java.util.*;

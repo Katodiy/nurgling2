@@ -219,4 +219,17 @@ public class NStyle
         dframeAlt.put(Container.FULL,new TexI(Resource.loadimg("alttex/dframe/full")).st().data);
         dframeAlt.put(Container.NOTFREE,new TexI(Resource.loadimg("alttex/dframe/notfree")).st().data);
     }
+
+    public static HashMap<Integer, Texture2D.Sampler2D> dkinAlt = new HashMap<>();
+    static
+    {
+        dkinAlt.put(0,new TexI(Resource.loadimg("marks/kintears/white")).st().data);
+        dkinAlt.put(1,new TexI(Resource.loadimg("marks/kintears/green")).st().data);
+        dkinAlt.put(2,new TexI(Resource.loadimg("marks/kintears/red")).st().data);
+        dkinAlt.put(3,new TexI(Resource.loadimg("marks/kintears/blue")).st().data);
+        dkinAlt.put(4,new TexI(Resource.loadimg("marks/kintears/turquoise")).st().data);
+        dkinAlt.put(5,new TexI(Resource.loadimg("marks/kintears/yellow")).st().data);
+        dkinAlt.put(6,new TexI(Resource.loadimg("marks/kintears/violet")).st().data);
+        dkinAlt.put(7,new TexI(Resource.loadimg("marks/kintears/pink")).st().data);
+    }
 }

@@ -5,14 +5,14 @@ import haven.render.*;
 import haven.render.sl.*;
 import static haven.render.sl.Type.SAMPLER2D;
 
-class Tex2DN extends State
+public class Tex2DN extends State
 {
 
     static final Slot<Tex2DN> slot = new Slot<>(Slot.Type.DRAW, Tex2DN.class);
     final Texture2D.Sampler2D tex;
     final Texture2D.Sampler2D src;
 
-    Tex2DN(Texture2D.Sampler2D tex, Texture2D.Sampler2D src)
+    public Tex2DN(Texture2D.Sampler2D tex, Texture2D.Sampler2D src)
     {
         this.tex = tex;
         this.src = src;
