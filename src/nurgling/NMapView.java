@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import static haven.MCache.tilesz;
 import nurgling.areas.*;
+import nurgling.overlays.map.*;
 import nurgling.tools.*;
 
 import java.awt.image.*;
@@ -306,7 +307,7 @@ public class NMapView extends MapView
                 area.inWork = true;
                 if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
                 {
-                    MapView.NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
+                    NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
                     nol.remove();
                     NUtils.getGameUI().map.nols.remove(area.id);
                 }

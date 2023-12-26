@@ -520,7 +520,7 @@ public class MapMesh implements RenderTree.Node, Disposable {
     private static final VertexArray.Layout olvfmt = new VertexArray.Layout(new VertexArray.Layout.Input(Homo3D.vertex, new VectorFormat(3, NumberFormat.FLOAT32), 0, 0, 16),
 									    new VertexArray.Layout.Input(Homo3D.normal, new VectorFormat(3, NumberFormat.SNORM8), 0, 12, 16));
     public static class OLArray {
-	VertexArray dat;
+	public VertexArray dat;
 	public int[] vl;
 
 	OLArray(VertexArray dat, int[] vl) {

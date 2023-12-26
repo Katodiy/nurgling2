@@ -37,6 +37,7 @@ import java.util.stream.*;
 import haven.render.*;
 import nurgling.*;
 import nurgling.areas.*;
+import nurgling.overlays.map.*;
 import org.json.*;
 
 /* XXX: This whole file is a bit of a mess and could use a bit of a
@@ -637,7 +638,7 @@ public class MCache implements MapSource {
 			Cut cut = geticut(cc);
 			if (!cut.nols.containsKey(id))
 			{
-				MapView.NOverlay nol = NUtils.getGameUI().map.nols.get(id);
+				NOverlay nol = NUtils.getGameUI().map.nols.get(id);
 				cut.nols.put(id, nol.makenol(getcut(cc), this.id, ul));
 				cut.nedgs.put(id, nol.makenolol(getcut(cc),this.id, ul));
 				nol.cuts.add(cut);

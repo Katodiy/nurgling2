@@ -8,6 +8,7 @@ import haven.render.*;
 import nurgling.*;
 import nurgling.actions.bots.*;
 import nurgling.areas.*;
+import nurgling.overlays.map.*;
 import nurgling.tools.*;
 import org.json.*;
 
@@ -87,7 +88,7 @@ public class NAreasWidget extends Window
         areas.remove(id);
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
-            MapView.NOverlay nol = NUtils.getGameUI().map.nols.get(id);
+            NOverlay nol = NUtils.getGameUI().map.nols.get(id);
             nol.remove();
             NUtils.getGameUI().map.nols.remove(id);
         }
@@ -207,7 +208,7 @@ public class NAreasWidget extends Window
                                                 area.color = colorChooser.getColor();
                                                 if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
                                                 {
-                                                    MapView.NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
+                                                    NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
                                                     nol.remove();
                                                     NUtils.getGameUI().map.nols.remove(area.id);
                                                 }
