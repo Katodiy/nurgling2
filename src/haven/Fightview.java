@@ -442,7 +442,9 @@ public class Fightview extends Widget {
         if(msg == "new") {
 			long id = uint32((Integer)args[0]);
             Relation rel = new Relation(id);
-			Finder.findGob(id).addcustomol(new NRelation(Finder.findGob(id)));
+			Gob g = Finder.findGob(id);
+			if(g!=null)
+				g.addcustomol(new NRelation(Finder.findGob(id)));
 	    rel.give((Integer)args[1]);
 	    rel.ip = (Integer)args[2];
 	    rel.oip = (Integer)args[3];
