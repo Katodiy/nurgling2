@@ -5,18 +5,24 @@ import haven.render.*;
 import nurgling.*;
 import nurgling.areas.*;
 
+import java.awt.*;
 import java.util.*;
 
 public class NOverlay extends MapView.MapRaster
 {
     final Integer id;
+    public boolean requpdate2 = false;
 
-    final Grid base = new Grid<RenderTree.Node>() {
+    public boolean requpdate(){
+        return false;
+    }
+    Color bc;
+    public final Grid base = new Grid<RenderTree.Node>() {
         public RenderTree.Node getcut(Coord cc) {
             return(map.getnolcut(id, cc));
         }
     };
-    final Grid outl = new Grid<RenderTree.Node>() {
+    public final Grid outl = new Grid<RenderTree.Node>() {
         public RenderTree.Node getcut(Coord cc) {
             return(map.getnedgecut(id, cc));
         }
@@ -24,6 +30,8 @@ public class NOverlay extends MapView.MapRaster
 
     public NOverlay(Integer id) {
         super(NUtils.getGameUI().map.glob.map, NUtils.getGameUI().map.view);
+        if(id>=0)
+            bc = NUtils.getArea(id).color;
         this.id = id;
     }
 
@@ -37,7 +45,7 @@ public class NOverlay extends MapView.MapRaster
 
     public void added(RenderTree.Slot slot) {
 //			Material overlay_mat = new Material(new BaseColor(194,194,65,56));
-        slot.add(base,new BaseColor(NUtils.getArea(id).color));
+        slot.add(base,new BaseColor(bc));
         slot.add(outl, new BaseColor(200,200,200,200));
         super.added(slot);
     }

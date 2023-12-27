@@ -613,10 +613,11 @@ public class MCache implements MapSource {
 	}
 
 	public RenderTree.Node getnolcut(Integer id, Coord cc) {
-		if(areas.get(id)!= null && areas.get(id).grids_id.contains(this.id))
+		boolean requpd = (NUtils.getGameUI().map.nols.get(id)!= null && NUtils.getGameUI().map.nols.get(id).requpdate2);
+		if((areas.get(id)!= null && areas.get(id).grids_id.contains(this.id)) || NMapView.isCustom(id))
 		{
 			int nseq = MCache.this.olseq;
-			if (this.olseq != nseq)
+			if (this.olseq != nseq || requpd)
 			{
 				for (int i = 0; i < cutn.x * cutn.y; i++)
 				{
@@ -636,13 +637,12 @@ public class MCache implements MapSource {
 				this.olseq = nseq;
 			}
 			Cut cut = geticut(cc);
-			if (!cut.nols.containsKey(id))
+			if (!cut.nols.containsKey(id) || requpd)
 			{
 				NOverlay nol = NUtils.getGameUI().map.nols.get(id);
 				cut.nols.put(id, nol.makenol(getcut(cc), this.id, ul));
 				cut.nedgs.put(id, nol.makenolol(getcut(cc),this.id, ul));
 				nol.cuts.add(cut);
-
 			}
 			return (cut.nols.get(id));
 		}

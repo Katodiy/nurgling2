@@ -131,6 +131,15 @@ public class Finder
 
     public static Gob findGob(long gobid)
     {
-        return NUtils.getGameUI().ui.sess.glob.oc.getgob(gobid);
+        if(gobid == -1)
+        {
+            if(NUtils.getGameUI().map.placing!=null)
+                return NUtils.getGameUI().map.placing.get();
+            return null;
+        }
+        else
+        {
+            return NUtils.getGameUI().ui.sess.glob.oc.getgob(gobid);
+        }
     }
 }

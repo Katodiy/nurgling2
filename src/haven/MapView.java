@@ -50,7 +50,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
     private Collection<Delayed> delayed = new LinkedList<Delayed>();
     private Collection<Delayed> delayed2 = new LinkedList<Delayed>();
     public Camera camera = restorecam();
-    protected Loader.Future<Plob> placing = null;
+    public Loader.Future<Plob> placing = null;
     private Grabber grab;
     public Selector selection;
     private Coord3f camoff = new Coord3f(Coord3f.o);
@@ -824,6 +824,11 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		NOverlay n;
 		nols.put(id ,n = new NOverlay(id));
 		basic.add(n);
+	}
+
+	public void addCustomOverlay(Integer id, NOverlay ol){
+		nols.put(id ,ol);
+		basic.add(ol);
 	}
 
 

@@ -55,9 +55,21 @@ public class NGob
                             parent.addcustomol(new NCropMarker(parent));
                         }
 
-                        if (NParser.checkName(name, new NAlias(new ArrayList<>(Arrays.asList("ladder", "minesupport", "towercap")))))
-                        {
-                           // parent.addcustomol(new NMiningSafeMap(parent, "minesup", 100));
+                        if (NParser.checkName(name, new NAlias(new ArrayList<String>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<String>(Arrays.asList("stump", "wrack", "log"))))) {
+                            switch (name)
+                            {
+                                case "gfx/terobjs/ladder":
+                                case "gfx/terobjs/minesupport":
+                                case "gfx/terobjs/trees/towercap":
+                                    parent.addcustomol(new NMiningSupport(parent, 100));
+                                    break;
+                                case "gfx/terobjs/minebeam":
+                                    parent.addcustomol(new NMiningSupport(parent, 150));
+                                    break;
+                                case "gfx/terobjs/column":
+                                    parent.addcustomol(new NMiningSupport(parent, 125));
+                                    break;
+                            }
                         }
                         if(name.contains("gfx/terobjs"))
                         {

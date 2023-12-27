@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.*;
 
 public class NMapView extends MapView
 {
+    public static final int MINING_OVERLAY = - 1;
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
         super(sz, glob, cc, plgob);
@@ -22,10 +23,36 @@ public class NMapView extends MapView
 
     final HashMap<String, String> ttip = new HashMap<>();
 
-    public final Map<Integer, NOverlay> custom_ols = new HashMap<>();
-
     public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
     public NArea.Space areaSpace = null;
+
+    public static NMiningOverlay getMiningOl()
+    {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            synchronized (NUtils.getGameUI().map)
+            {
+                NMiningOverlay mo = (NMiningOverlay) NUtils.getGameUI().map.nols.get(MINING_OVERLAY);
+                if (mo == null)
+                {
+                    NUtils.getGameUI().map.addCustomOverlay(MINING_OVERLAY, new NMiningOverlay());
+                }
+                mo = (NMiningOverlay) NUtils.getGameUI().map.nols.get(MINING_OVERLAY);
+                return mo;
+            }
+        }
+        return null;
+    }
+
+    public static boolean isCustom(Integer id)
+    {
+        if(id == MINING_OVERLAY)
+        {
+            return NUtils.getGameUI().map.nols.get(MINING_OVERLAY)!=null;
+        }
+        return false;
+    }
+
     public Object tooltip(Coord c, Widget prev) {
         if (!ttip.isEmpty() && NUtils.getGameUI().ui.core.isInspectMode()) {
 
