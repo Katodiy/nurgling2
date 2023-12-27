@@ -26,6 +26,8 @@
 
 package haven;
 
+import java.awt.*;
+
 public class Progress extends Widget {
     Text text;
 

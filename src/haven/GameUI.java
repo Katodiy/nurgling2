@@ -743,6 +743,9 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 
 	public void draw(GOut g) {
 	    g.image(curi, Coord.z);
+		TexI label = new TexI(NStyle.openings.render(String.format("%.0f %%",prog*100)).img);
+		Coord pos= new Coord(curi.sz.x/2 - label.sz.x/2,0);
+		g.aimage(label, pos,0,0);
 	}
 
 	public boolean checkhit(Coord c) {
