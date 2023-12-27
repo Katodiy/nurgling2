@@ -32,6 +32,7 @@ import nurgling.actions.bots.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.util.*;
 
 public class TextEntry extends Widget implements ReadLine.Owner {
     public static final Color defcol = new Color(255, 205, 109), dirtycol = new Color(255, 232, 209);
@@ -225,4 +226,31 @@ public class TextEntry extends Widget implements ReadLine.Owner {
     public String text() {
 	return(buf.line());
     }
+
+	public static class NumberValue extends TextEntry {
+		private static final Set<Integer> ALLOWED_KEYS = new HashSet<Integer>(Arrays.asList(
+				KeyEvent.VK_0, KeyEvent.VK_1, KeyEvent.VK_2, KeyEvent.VK_3, KeyEvent.VK_4,
+				KeyEvent.VK_5, KeyEvent.VK_6, KeyEvent.VK_7, KeyEvent.VK_8, KeyEvent.VK_9,
+				KeyEvent.VK_NUMPAD0, KeyEvent.VK_NUMPAD1, KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD3, KeyEvent.VK_NUMPAD4,
+				KeyEvent.VK_NUMPAD5, KeyEvent.VK_NUMPAD6, KeyEvent.VK_NUMPAD7, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD9,
+				KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
+				KeyEvent.VK_ENTER, KeyEvent.VK_BACK_SPACE, KeyEvent.VK_DELETE
+		));
+
+		public NumberValue(int w, String deftext) {
+			super(w, deftext);
+		}
+
+		@Override
+		public boolean keydown(KeyEvent ev) {
+			int keyCode = ev.getKeyCode();
+			if(keyCode == 0){
+				keyCode = ev.getKeyChar();
+			}
+			if (ALLOWED_KEYS.contains(keyCode)) {
+				return super.keydown(ev);
+			}
+			return false;
+		}
+	}
 }
