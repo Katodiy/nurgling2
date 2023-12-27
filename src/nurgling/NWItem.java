@@ -119,10 +119,21 @@ public class NWItem extends WItem
         return true;
     }
 
-//    @Override
-//    public boolean mousedown(Coord c, int btn)
-//    {
-//        boolean res = super.mousedown(c, btn);
+    @Override
+    public boolean mousedown(Coord c, int btn)
+    {
+        if(ui.modshift)
+        {
+            if (ui.modmeta)
+            {
+                if (parent instanceof NInventory)
+                {
+                    wdgmsg("transfer-same", item, btn == 3);
+                    return true;
+                }
+            }
+        }
+        return super.mousedown(c, btn);
 //        if(res)
 //        {
 //            JSONObject res_obj = ItemTex.save(item.spr);
@@ -131,5 +142,5 @@ public class NWItem extends WItem
 //
 //        }
 //        return res;
-//    }
+    }
 }

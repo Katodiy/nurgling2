@@ -12,7 +12,6 @@ import nurgling.*;
 
 
 public class NEquipProxy extends Widget implements DTarget {
-    public static final Color BG_COLOR = new Color(91, 128, 51, 202);
     NEquipory.Slots []slots;
     public NEquipProxy(NEquipory.Slots...slots) {
         super(new Coord(UI.scale(2)+NInventory.sqsz.x*3, NInventory.sqsz.y+UI.scale(2) ));
@@ -50,9 +49,6 @@ public class NEquipProxy extends Widget implements DTarget {
         Equipory equipory = NUtils.getEquipment();
         if(equipory != null) {
             int k = 0;
-            g.chcolor(BG_COLOR);
-            g.frect(Coord.z, sz);
-            g.chcolor();
             Coord c0 = new Coord(0, 0);
             for (NEquipory.Slots slot : slots) {
                 c0.x = k;

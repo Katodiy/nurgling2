@@ -425,4 +425,67 @@ public class NInventory extends Inventory
         }
         return false;
     }
+
+    @Override
+    public void wdgmsg(Widget sender, String msg, Object... args) {
+        if (msg.equals("transfer-same")) {
+            process(getSame((NGItem) args[0], (Boolean) args[1]), "transfer");
+        }
+        else
+        {
+            super.wdgmsg(sender, msg, args);
+        }
+    }
+
+    private void process(List<NGItem> items, String action) {
+        for (GItem item : items) {
+            item.wdgmsg(action, Coord.z);
+        }
+    }
+
+    private List<NGItem> getSame(NGItem item, Boolean ascending)
+    {
+        List<NGItem> items = new ArrayList<>();
+        if (item != null && item.name() != null)
+        {
+
+            for (Widget wdg = lchild; wdg != null; wdg = wdg.prev)
+            {
+                if (wdg.visible && wdg instanceof NWItem)
+                {
+                    NWItem wItem = (NWItem) wdg;
+                    if (item.isSearched)
+                    {
+                        if (((NGItem) wItem.item).isSearched)
+                            items.add((NGItem) wItem.item);
+                    }
+                    else
+                    {
+
+                        if (NParser.checkName(item.name(), ((NGItem) wItem.item).name()))
+                        {
+                            items.add((NGItem) wItem.item);
+                        }
+                    }
+                }
+            }
+            items.sort(ascending ? ITEM_COMPARATOR_ASC : ITEM_COMPARATOR_DESC);
+        }
+        return items;
+    }
+
+    public static final Comparator<NGItem> ITEM_COMPARATOR_ASC = new Comparator<NGItem>() {
+        @Override
+        public int compare(NGItem o1, NGItem o2) {
+            return Double.compare(o1.quality, o2.quality);
+        }
+    };
+    public static final Comparator<NGItem> ITEM_COMPARATOR_DESC = new Comparator<NGItem>() {
+        @Override
+        public int compare(NGItem o1, NGItem o2) {
+            return ITEM_COMPARATOR_ASC.compare(o2, o1);
+        }
+    };
+
+
 }
