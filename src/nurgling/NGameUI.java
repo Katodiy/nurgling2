@@ -20,10 +20,13 @@ public class NGameUI extends GameUI
     public NCraftWindow craftwnd;
     public NEditAreaName nean;
     public Specialisation spec;
+
+    public NEquipProxy nep;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
         itemsForSearch = new NSearchItem();
+        add(new NDraggableWidget(nep = new NEquipProxy(NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT, NEquipory.Slots.BELT), "EquipProxy",  UI.scale(138, 55)));
         for(int i = 0; i<(Integer)NConfig.get(NConfig.Key.numbelts); i++)
         {
             String name = "belt" + String.valueOf(i);

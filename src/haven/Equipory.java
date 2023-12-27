@@ -30,6 +30,7 @@ import nurgling.NWItem;
 
 import java.util.*;
 import static haven.Inventory.invsq;
+import nurgling.widgets.*;
 
 public class Equipory extends Widget implements DTarget {
     private static final Tex bg = Resource.loadtex("gfx/hud/equip/bg");
@@ -78,7 +79,7 @@ public class Equipory extends Widget implements DTarget {
 	    }
 	}
     }
-    Map<GItem, Collection<WItem>> wmap = new HashMap<>();
+    public Map<GItem, Collection<WItem>> wmap = new HashMap<>();
     private final Avaview ava;
 
     @RName("epry")
@@ -91,7 +92,7 @@ public class Equipory extends Widget implements DTarget {
 		gobid = -1;
 	    else
 		gobid = Utils.uint32((Integer)args[0]);
-	    return(new Equipory(gobid));
+	    return(new NEquipory(gobid));
 	}
     }
 

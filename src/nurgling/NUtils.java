@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.areas.*;
 import nurgling.tasks.*;
 import nurgling.tools.*;
+import nurgling.widgets.*;
 
 import java.text.*;
 import java.util.*;
@@ -109,5 +110,16 @@ public class NUtils
         IMeter.Meter stam = getGameUI().getmeter ( "stam", 0 );
         return stam.a;
     }
-//
+
+    public static NEquipory getEquipment(){
+        if ( getGameUI().equwnd != null ) {
+            for ( Widget w = getGameUI().equwnd.lchild ; w != null ; w = w.prev ) {
+                if ( w instanceof Equipory ) {
+                    return ( NEquipory ) w;
+                }
+            }
+        }
+        return null;
+    }
+
 }
