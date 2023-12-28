@@ -38,7 +38,8 @@ public class NConfig
         invert_hor,
         invert_ver,
         kinprop,
-        show_drag_menu
+        show_drag_menu,
+        discordNotification
     }
 
 
@@ -139,6 +140,9 @@ public class NConfig
                         break;
                     case "NToolBeltProp":
                         res.add(new NToolBeltProp(obj));
+                        break;
+                    case "NDiscordNotification":
+                        res.add(new NDiscordNotification(obj));
                         break;
                 }
             }
