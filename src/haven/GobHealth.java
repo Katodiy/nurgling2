@@ -30,6 +30,7 @@ import java.awt.Color;
 import java.util.Random;
 import haven.render.*;
 import haven.resutil.CrackTex;
+import nurgling.overlays.*;
 
 public class GobHealth extends GAttrib implements Gob.SetupMod {
     public final float hp;
