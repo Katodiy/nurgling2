@@ -3,6 +3,8 @@ package nurgling;
 import haven.*;
 import nurgling.actions.bots.*;
 
+import java.util.*;
+
 public class NFlowerMenu extends FlowerMenu
 {
     public static final Tex bl = Resource.loadtex("nurgling/hud/flower/left");
@@ -33,6 +35,11 @@ public class NFlowerMenu extends FlowerMenu
         {
             nopts[i].resize(len, bl.sz().y);
         }
+    }
+
+    public NFlowerMenu(ArrayList<String> opts)
+    {
+        this(opts.toArray(new String[0]));
     }
 
     public void nchoose(NPetal option)

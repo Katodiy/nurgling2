@@ -213,7 +213,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
     static {camtypes.put("follow", FollowCam.class);}
 
     public class SimpleCam extends Camera {
-	private float dist = 50.0f;
+	public float dist = 50.0f;
 	private float elev = (float)Math.PI / 4.0f;
 	private float angl = 0.0f;
 	private Coord dragorig = null;
@@ -316,7 +316,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	protected float dist = 500.0f;
 	protected float elev = (float)Math.PI / 6.0f;
 	protected float angl = -(float)Math.PI / 4.0f;
-	protected float field = (float)(100 * Math.sqrt(2));
+	public float field = (float)(100 * Math.sqrt(2));
 	private Coord dragorig = null;
 	private float anglorig;
 	protected Coord3f cc, jc;

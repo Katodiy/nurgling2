@@ -97,17 +97,17 @@ public class ItemDrag extends NWItem
 		if(dropon(parent, c.add(this.c)))
 			return(true);
 	}
-	else if(!ui.modctrl && !ui.modshift && !ui.modmeta) {
+	else if(button == 3) {
+		interact(parent, c.add(this.c));
+		return(true);
+	}
+	else if(!ui.modctrl && !ui.modshift && !ui.modmeta ) {
 	    /* XXX */
 	    GameUI gui = getparent(GameUI.class);
 	    if((gui != null) && (gui.map != null)) {
 		ui.modctrl = false;
 		return(gui.map.mousedown(gui.map.rootxlate(c.add(rootpos())), button));
 	    }
-	}
-	else if(button == 3) {
-	    interact(parent, c.add(this.c));
-	    return(true);
 	}
 	return(false);
     }

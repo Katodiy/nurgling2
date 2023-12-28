@@ -60,6 +60,7 @@ public class GobHealth extends GAttrib implements Gob.SetupMod {
 	public void apply(Gob g, OCache.AttrDelta msg) {
 	    int hp = msg.uint8();
 	    g.setattr(new GobHealth(g, hp / 4.0f));
+	    g.addcustomol(new NGobHealthOverlay(g));
 	}
     }
 }
