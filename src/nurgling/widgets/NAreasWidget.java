@@ -62,10 +62,16 @@ public class NAreasWidget extends Window
                 super.click();
                 if(al.sel!=null)
                 {
-                    al.sel.area.spec.remove(csl.sel.text.text());
+                    for(NArea.Specialisation s: al.sel.area.spec)
+                    {
+                        if(s.name.equals(csl.sel.item.name)) {
+                            al.sel.area.spec.remove(s);
+                            break;
+                        }
+                    }
                     for(SpecialisationItem item : specItems)
                     {
-                        if(item.text.text().equals(csl.sel.text.text()))
+                        if(item.item.name.equals(csl.sel.item.name))
                         {
                             specItems.remove(item);
                             break;
@@ -267,7 +273,7 @@ public class NAreasWidget extends Window
     public void loadSpec(int id)
     {
         specItems.clear();
-        for (String spec : NUtils.getArea(id).spec)
+        for (NArea.Specialisation spec : NUtils.getArea(id).spec)
         {
             specItems.add(new SpecialisationItem(spec));
         }
@@ -388,14 +394,67 @@ public class NAreasWidget extends Window
 
     }
 
-    public static class SpecialisationItem extends Widget
+
+
+    public class SpecialisationItem extends Widget
     {
         Label text;
+        NArea.Specialisation item;
+        IButton spec = null;
+        NFlowerMenu menu;
 
-
-        public SpecialisationItem(String text)
+        public SpecialisationItem(NArea.Specialisation item)
         {
-            this.text = add(new Label(text));
+            this.item = item;
+            if(item.subtype == null) {
+                this.text = add(new Label(item.name));
+            }
+            else
+            {
+                this.text = add(new Label(item.name + "(" + item.subtype + ")"));
+            }
+            if(SpecialisationData.data.get(item.name)!=null)
+            {
+                add(spec = new IButton("nurgling/hud/buttons/settings/","u","d","h"){
+                    @Override
+                    public void click() {
+                        super.click();
+                        menu = new NFlowerMenu(SpecialisationData.data.get(item.name)) {
+                            public boolean mousedown(Coord c, int button) {
+                                if(super.mousedown(c, button))
+                                    nchoose(null);
+                                return(true);
+                            }
+
+                            public void destroy() {
+                                menu = null;
+                                super.destroy();
+                            }
+
+                            @Override
+                            public void nchoose(NPetal option)
+                            {
+                                if(option!=null)
+                                {
+                                    SpecialisationItem.this.text.settext(item.name + "(" + option.name + ")");
+                                    item.subtype = option.name;
+                                    NConfig.needAreasUpdate();
+                                }
+                                uimsg("cancel");
+                            }
+
+                        };
+                        Widget par = parent;
+                        Coord pos = c.add(UI.scale(32,43));
+                        while(par!=null && !(par instanceof GameUI))
+                        {
+                            pos = pos.add(par.c);
+                            par = par.parent;
+                        }
+                        ui.root.add(menu, pos);
+                    }
+                },UI.scale(new Coord(135,0)));
+            }
             pack();
         }
     }

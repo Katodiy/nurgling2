@@ -5,6 +5,7 @@ import static haven.MCache.cmaps;
 import haven.render.sl.*;
 import nurgling.*;
 import nurgling.tools.*;
+import nurgling.widgets.Specialisation;
 import org.json.*;
 
 import java.awt.*;
@@ -12,7 +13,20 @@ import java.util.*;
 
 public class NArea
 {
+    public static class Specialisation
+    {
+        public String name;
+        public String subtype = null;
 
+        public Specialisation(String name, String subtype) {
+            this.name = name;
+            this.subtype = subtype;
+        }
+
+        public Specialisation(String name) {
+            this.name = name;
+        }
+    }
 
     public static NArea findIn(String name)
     {
@@ -38,8 +52,36 @@ public class NArea
         return false;
     }
 
-    public void update()
+    public static NArea findSpec(String name)
     {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids)
+            {
+                for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
+                    if(s.name.equals(name))
+                        return NUtils.getGameUI().map.glob.map.areas.get(id);
+                }
+            }
+        }
+        return null;
+    }
+
+    public static NArea findSpec(String name, String sub)
+    {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids)
+            {
+                for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
+                    if(s.name.equals(name) && s.subtype!=null && s.subtype.equals(sub))
+                        return NUtils.getGameUI().map.glob.map.areas.get(id);
+                }
+            }
+        }
+        return null;
     }
 
     public static class VArea
@@ -144,8 +186,17 @@ public class NArea
         if(obj.has("spec"))
         {
             jspec = (JSONArray) obj.get("spec");
-            for(int i = 0 ; i < jspec.length(); i++)
-                spec.add((String)jspec.get(i));
+            for(int i = 0 ; i < jspec.length(); i++) {
+
+                String name = (String) ((JSONObject) jspec.get(i)).get("name");
+                if (((JSONObject) jspec.get(i)).has("subtype")) {
+                    spec.add(new Specialisation(name, (String) ((JSONObject) jspec.get(i)).get("subtype")));
+                }
+                else
+                {
+                    spec.add(new Specialisation(name));
+                }
+            }
         }
     }
     public Space space;
@@ -154,7 +205,7 @@ public class NArea
     public Color color = new Color(194,194,65,56);
     public final ArrayList<Long> grids_id = new ArrayList<>();
 
-    public ArrayList<String> spec = new ArrayList<>();
+    public ArrayList<Specialisation> spec = new ArrayList<>();
     public boolean inWork = false;
 
     public Area getArea()
@@ -236,9 +287,13 @@ public class NArea
         res.put("in",jin);
         res.put("out",jout);
         JSONArray jspec = new JSONArray();
-        for(String s: spec)
+        for(Specialisation s: spec)
         {
-            jspec.put(s);
+            JSONObject obj = new JSONObject();
+            obj.put("name", s.name);
+            if(s.subtype!=null)
+                obj.put("subtype", s.subtype);
+            jspec.put(obj);
         }
         res.put("spec",jspec);
         this.jspec = jspec;

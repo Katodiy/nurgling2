@@ -105,7 +105,6 @@ public class IngredientContainer extends Widget implements NDTarget
                 res.put("type", NArea.Ingredient.Type.CONTAINER.toString());
                 addIcon(res);
                 data.put(res);
-                NUtils.getArea(id).update();
                 NConfig.needAreasUpdate();
             }
 

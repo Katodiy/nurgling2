@@ -94,7 +94,6 @@ public class Scaner implements Action
                 }
             }
         }
-        area.update();
         NConfig.needAreasUpdate();
         NUtils.getGameUI().areas.set(area.id);
 

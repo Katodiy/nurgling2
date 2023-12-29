@@ -28,6 +28,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem("kiln"));
         specialisation.add(new SpecialisationItem("water"));
         specialisation.add(new SpecialisationItem("swill"));
+        specialisation.add(new SpecialisationItem("crop"));
     }
 
     public class SpecialisationList extends SListBox<SpecialisationItem, Widget> {
@@ -59,9 +60,15 @@ public class Specialisation extends Window
                     super.mousedown(c, button);
 
                     String value = item.text.text();
-                    if(!area.spec.contains(value))
+                    boolean isFound = false;
+                    for(NArea.Specialisation s: area.spec)
                     {
-                        area.spec.add(value);
+                        if(s.name.equals(item.text.text()))
+                            isFound = true;
+                    }
+                    if(!isFound)
+                    {
+                        area.spec.add(new NArea.Specialisation(value));
                         NConfig.needAreasUpdate();
                         NUtils.getGameUI().areas.loadSpec(area.id);
                         Specialisation.this.hide();
