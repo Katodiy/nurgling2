@@ -9,48 +9,44 @@ import java.util.Iterator;
 
 public class NDiscordNotification implements JConf{
 
-    public static String discordBot = "general";
-    public static String discordWebhookUrl = "";
-    public static String discordWebhookUsername = "";
-    public static String discordWebhookIcon = "";
+    public String settingsName = "general";
+    public String webhookUrl = "";
+    public String webhookUsername = "";
+    public String webhookIcon = "";
 
-    public NDiscordNotification(String discordBot, String discordWebhookUrl, String discordWebhookUsername, String discordWebhookIcon ){
-        this.discordBot = discordBot;
-        this.discordWebhookUrl = discordWebhookUrl;
-        this.discordWebhookUsername = discordWebhookUsername;
-        this.discordWebhookIcon = discordWebhookIcon;
-    }
-
-    public NDiscordNotification(){
-
+    public NDiscordNotification(String settingsName, String discordWebhookUrl, String WebhookUsername, String discordWebhookIcon ){
+        this.settingsName = settingsName;
+        this.webhookUrl = discordWebhookUrl;
+        this.webhookUsername = WebhookUsername;
+        this.webhookIcon = discordWebhookIcon;
     }
 
     @Override
     public String toString()
     {
-        return "NDiscordNotification[" + discordBot + "," + discordWebhookUrl + "," + discordWebhookUsername + "," + discordWebhookIcon + "]";
+        return "NDiscordNotification[" + settingsName + "," + webhookUrl + "," + webhookUsername + "," + webhookIcon + "]";
     }
 
 
     public NDiscordNotification(HashMap<String, Object> values) {
-        if(values.get("discordBot") != null)
-            discordBot = (String) values.get("discordBot");
-        if (values.get("discordWebhookUrl") != null)
-            discordWebhookUrl = (String) values.get("discordWebhookUrl");
-        if (values.get("discordWebhookUsername") != null)
-            discordWebhookUsername = (String) values.get("discordWebhookUsername");
-        if (values.get("discordWebhookIcon") != null)
-            discordWebhookIcon = (String) values.get("discordWebhookIcon");
+        if(values.get("settingsName") != null)
+            settingsName = (String) values.get("settingsName");
+        if (values.get("webhookUrl") != null)
+            webhookUrl = (String) values.get("webhookUrl");
+        if (values.get("webhookUsername") != null)
+            webhookUsername = (String) values.get("webhookUsername");
+        if (values.get("webhookIcon") != null)
+            webhookIcon = (String) values.get("webhookIcon");
     }
 
     @Override
     public JSONObject toJson() {
         JSONObject jdiscord = new JSONObject();
         jdiscord.put("type", "NDiscordNotification");
-        jdiscord.put("discordBot", discordBot);
-        jdiscord.put("discordWebhookUrl", discordWebhookUrl);
-        jdiscord.put("discordWebhookUsername", discordWebhookUsername);
-        jdiscord.put("discordWebhookIcon", discordWebhookIcon);
+        jdiscord.put("settingsName", settingsName);
+        jdiscord.put("webhookUrl", webhookUrl);
+        jdiscord.put("webhookUsername", webhookUsername);
+        jdiscord.put("webhookIcon", webhookIcon);
         return jdiscord;
     }
 
@@ -62,7 +58,7 @@ public class NDiscordNotification implements JConf{
             for (Iterator<NDiscordNotification> i = discordProps.iterator(); i.hasNext(); )
             {
                 NDiscordNotification oldprop = i.next();
-                if (oldprop.discordBot == prop.discordBot)
+                if (oldprop.settingsName.equals(prop.settingsName))
                 {
                     i.remove();
                     break;
@@ -85,7 +81,7 @@ public class NDiscordNotification implements JConf{
             discordProps = new ArrayList<>();
         for (NDiscordNotification prop : discordProps)
         {
-            if (prop.discordBot.equals(botKey))
+            if (prop.settingsName.equals(botKey))
             {
                 return prop;
             }

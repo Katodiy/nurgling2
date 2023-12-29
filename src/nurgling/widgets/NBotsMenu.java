@@ -15,7 +15,7 @@ public class NBotsMenu extends Widget
         if(NUtils.getUI().core.debug)
         {
             NLayout tests = new NLayout("resources");
-            tests.elements.add(new NButton("chop", new TESTorestockpiletransfer()));
+            tests.elements.add(new NButton("chop", new TESTdiscordPush()));
             tests.elements.add(new NButton("chop", new TESTorestockpiletransfernoclose()));
             tests.elements.add(new NButton("chop", new TESTblockstockpiletransferpacks()));
             tests.elements.add(new NButton("chop", new TESTbranchinvtransferpacks()));

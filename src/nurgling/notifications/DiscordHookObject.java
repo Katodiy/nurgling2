@@ -1,11 +1,14 @@
 package nurgling.notifications;
 
+import nurgling.*;
+import org.json.*;
+
 import javax.net.ssl.HttpsURLConnection;
 import java.awt.Color;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.net.URL;
+import java.nio.charset.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,14 +21,14 @@ import java.util.Set;
  * Come from: https://gist.github.com/k3kdude/fba6f6b37594eae3d6f9475330733bdb
  * Authors: Gelox_, k3kdude
  */
-public class DiscordHookObject {
+public class DiscordHookObject implements Runnable{
 
     private final String url;
     private String content;
     private String username;
     private String avatarUrl;
     private boolean tts;
-    private List<EmbedObject> embeds = new ArrayList<>();
+    private final List<EmbedObject> embeds = new ArrayList<>();
 
     /**
      * Constructs a new DiscordWebhook instance
@@ -60,11 +63,7 @@ public class DiscordHookObject {
         this.embeds.add(embed);
     }
 
-    public void execute() throws IOException {
-        if (this.content == null && this.embeds.isEmpty()) {
-            throw new IllegalArgumentException("Set content or add at least one EmbedObject");
-        }
-
+    public void run() {
         JSONObject json = new JSONObject();
 
         json.put("content", this.content);
@@ -146,21 +145,35 @@ public class DiscordHookObject {
             json.put("embeds", embedObjects.toArray());
         }
 
-        URL url = new URL(this.url);
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        connection.addRequestProperty("Content-Type", "application/json");
-        connection.addRequestProperty("User-Agent", "Java-DiscordWebhook");
-        connection.setDoOutput(true);
-        connection.setRequestMethod("POST");
+        try
+        {
+            URL url = new URL(this.url);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.addRequestProperty("Content-Type", "application/json");
+            connection.addRequestProperty("User-Agent", "Java-DiscordWebhook");
+            connection.setDoOutput(true);
+            connection.setRequestMethod("POST");
+            byte[] data = json.toString().getBytes(StandardCharsets.UTF_8);
+            connection.setFixedLengthStreamingMode(data.length);
+            OutputStream stream = connection.getOutputStream();
+            stream.write(data);
+            stream.flush();
+            stream.close();
 
-        OutputStream stream = connection.getOutputStream();
-        stream.write(json.toString().getBytes());
-        stream.flush();
-        stream.close();
+            String str;
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            while ((str = in.readLine()) != null)
+            {
+                NUtils.getGameUI().msg(str);
+            }
+            in.close();
 
-        connection.getResponseCode();
-        connection.getInputStream().close(); //I'm not sure why but it doesn't work without getting the InputStream
-        connection.disconnect();
+            connection.disconnect();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     public static class EmbedObject {
@@ -344,55 +357,6 @@ public class DiscordHookObject {
             private boolean isInline() {
                 return inline;
             }
-        }
-    }
-
-    private class JSONObject {
-
-        private final HashMap<String, Object> map = new HashMap<>();
-
-        void put(String key, Object value) {
-            if (value != null) {
-                map.put(key, value);
-            }
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            Set<Map.Entry<String, Object>> entrySet = map.entrySet();
-            builder.append("{");
-
-            int i = 0;
-            for (Map.Entry<String, Object> entry : entrySet) {
-                Object val = entry.getValue();
-                builder.append(quote(entry.getKey())).append(":");
-
-                if (val instanceof String) {
-                    builder.append(quote(String.valueOf(val)));
-                } else if (val instanceof Integer) {
-                    builder.append(Integer.valueOf(String.valueOf(val)));
-                } else if (val instanceof Boolean) {
-                    builder.append(val);
-                } else if (val instanceof JSONObject) {
-                    builder.append(val.toString());
-                } else if (val.getClass().isArray()) {
-                    builder.append("[");
-                    int len = Array.getLength(val);
-                    for (int j = 0; j < len; j++) {
-                        builder.append(Array.get(val, j).toString()).append(j != len - 1 ? "," : "");
-                    }
-                    builder.append("]");
-                }
-
-                builder.append(++i == entrySet.size() ? "}" : ",");
-            }
-
-            return builder.toString();
-        }
-
-        private String quote(String string) {
-            return "\"" + string + "\"";
         }
     }
 }

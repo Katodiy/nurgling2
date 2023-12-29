@@ -5,6 +5,8 @@ import haven.Button;
 import haven.Label;
 import haven.Window;
 import haven.res.ui.rbuff.*;
+import nurgling.conf.*;
+import nurgling.notifications.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
 
@@ -258,4 +260,32 @@ public class NGameUI extends GameUI
         }
         return null;
     }
+
+    public void msgToDiscord(NDiscordNotification settings, String message)
+    {
+        if (message != null && !message.isEmpty())
+        {
+            if (settings != null)
+            {
+                DiscordHookObject webhook = new DiscordHookObject(settings.webhookUrl);
+
+                webhook.setContent(message);
+
+                webhook.setAvatarUrl(settings.webhookIcon);
+                webhook.setUsername(settings.webhookUsername);
+                webhook.addEmbed(new nurgling.notifications.DiscordHookObject.EmbedObject()
+                        .setColor(java.awt.Color.RED)
+                        .setThumbnail(settings.webhookIcon)
+                        .setAuthor("Nurgling2", "https://github.com/Katodiy/nurgling2", "https://raw.githubusercontent.com/Katodiy/nurgling2/master/resources/src/nurgling/hud/dragmode/title.res/image/image_0.png")
+                        .setUrl("https://github.com/Katodiy/nurgling2"));
+                new Thread(webhook).start();
+
+            }
+            else
+            {
+                error("No discord wrapper settings");
+            }
+        }
+    }
+
 }
