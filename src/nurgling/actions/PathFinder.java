@@ -234,15 +234,16 @@ public class PathFinder implements Action
                         return (Integer.compare(o1.getPathLen(), o2.getPathLen()));
                     }
                 });
-                if (graphs.size() > 0)
+                if (!graphs.isEmpty())
                     res = graphs.get(0);
             }
             if (res != null)
             {
                 NPFMap.print(pfmap.getSize(), res.getVert());
                 path = res.getPath();
-                if (path.size() > 0)
+                if (!path.isEmpty()) {
                     return path;
+                }
             }
             mul++;
         }

@@ -8,7 +8,7 @@ public class NHitBox
 {
     public Coord2d begin;
     public Coord2d end;
-    NHitBox(Coord begin, Coord end)
+    public NHitBox(Coord begin, Coord end)
     {
         this.begin = new Coord2d(begin);
         this.end = new Coord2d(end);
@@ -20,6 +20,7 @@ public class NHitBox
             put("log", new NHitBox(new Coord(-10,-2),new Coord(10,2)));
             put("gfx/terobjs/vehicle/dugout", new NHitBox(new Coord(-10,-2),new Coord(10,2)));
             put("gfx/terobjs/trough", new NHitBox(new Coord(-4,-12),new Coord(4,12)));
+            put("gfx/terobjs/minehole", new NHitBox(new Coord(-15,-15),new Coord(15,15)));
             put("bumlings", new NHitBox(new Coord(-3,-3),new Coord(3,3)));
             put("gfx/terobjs/arch/stonemansion", new NHitBox(new Coord(-50,-50),new Coord(50,50)));
             put("gfx/terobjs/arch/logcabin", new NHitBox(new Coord(-23,-23),new Coord(23,23)));
@@ -49,6 +50,7 @@ public class NHitBox
             put("gfx/terobjs/granary", new NHitBox(new Coord(-16,-16),new Coord(16,16)));
             put("gfx/terobjs/pow", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/smokeshed", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
+            put("gfx/terobjs/vehicle/cart", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
             put("gfx/terobjs/knarrdock", new NHitBox(new Coord(-60,-14),new Coord(62,14)));
             put("gfx/terobjs/furn/bed-sturdy", new NHitBox(new Coord(-9,-6),new Coord(9,6)));
             put("gfx/terobjs/vehicle/wreckingball-fold", new NHitBox(new Coord(-5,-11),new Coord(5,11)));

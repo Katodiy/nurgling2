@@ -28,6 +28,7 @@ package haven;
 
 import java.util.Iterator;
 import static java.lang.Math.PI;
+import static java.lang.Math.atan;
 
 public class Coord2d implements Comparable<Coord2d>, java.io.Serializable {
     public double x, y;
@@ -209,5 +210,21 @@ public class Coord2d implements Comparable<Coord2d>, java.io.Serializable {
 
     public double proj (Coord2d other){
         return dot( other )/len ();
+    }
+
+    public double curAngle() {
+        double res = 0;
+        if (x > 0 && y >= 0) {
+            res = atan(y / x);
+        } else if (x > 0 && y < 0) {
+            res = atan(y / x) + 2 * PI;
+        } else if (x < 0) {
+            res = atan(y / x) + PI;
+        } else if (x == 0 && y > 0) {
+            res = PI / 2;
+        } else if (x == 0 && y < 0) {
+            res = 3 * PI / 2;
+        }
+        return res;
     }
 }

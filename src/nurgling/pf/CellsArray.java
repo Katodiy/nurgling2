@@ -14,16 +14,18 @@ public class CellsArray
 
     public CellsArray(Gob gob)
     {
-        // DON`T USE IT WITHOUT HITBOXES!!!!
-        assert (gob.ngob.hitBox != null);
-        NHitBox hb = gob.ngob.hitBox;
-
-
-        if ((Math.abs((gob.a * 180 / Math.PI) / 90) % 1 < 0.01))
+        this(gob.ngob.hitBox, gob.a, gob.rc);
+    }
+    
+    
+    public CellsArray(NHitBox hb, double angl, Coord2d rc)
+    {
+        
+        if ((Math.abs((angl * 180 / Math.PI) / 90) % 1 < 0.01))
         {
-            Coord2d a1 = hb.begin.rotate(gob.a).shift(gob.rc);
+            Coord2d a1 = hb.begin.rotate(angl).shift(rc);
             Coord a = Utils.toPfGrid(a1);
-            Coord b = Utils.toPfGrid(hb.end.rotate(gob.a).shift(gob.rc));
+            Coord b = Utils.toPfGrid(hb.end.rotate(angl).shift(rc));
             begin = new Coord(Math.min(a.x, b.x), Math.min(a.y, b.y));
             end = new Coord(Math.max(a.x, b.x), Math.max(a.y, b.y));
             x_len = end.x - begin.x + 1;
@@ -39,10 +41,10 @@ public class CellsArray
         }
         else
         {
-            Coord2d ad = hb.begin.rotate(gob.a).shift(gob.rc);
-            Coord2d bd = new Coord2d(hb.end.x, hb.begin.y).rotate(gob.a).shift(gob.rc);
-            Coord2d cd = hb.end.rotate(gob.a).shift(gob.rc);
-            Coord2d dd = new Coord2d(hb.begin.x, hb.end.y).rotate(gob.a).shift(gob.rc);
+            Coord2d ad = hb.begin.rotate(angl).shift(rc);
+            Coord2d bd = new Coord2d(hb.end.x, hb.begin.y).rotate(angl).shift(rc);
+            Coord2d cd = hb.end.rotate(angl).shift(rc);
+            Coord2d dd = new Coord2d(hb.begin.x, hb.end.y).rotate(angl).shift(rc);
             Coord a = Utils.toPfGrid(ad);
             Coord b = Utils.toPfGrid(bd);
             Coord c = Utils.toPfGrid(cd);

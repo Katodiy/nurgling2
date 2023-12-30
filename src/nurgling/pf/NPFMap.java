@@ -120,6 +120,30 @@ public class NPFMap
         }
     }
 
+    public boolean checkCA(CellsArray ca) {
+        if ((ca.begin.x >= begin.x && ca.begin.x <= end.x ||
+                ca.end.x >= begin.x && ca.end.x <= end.x) &&
+                (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
+                        ca.end.y >= begin.y && ca.end.y <= end.y))
+        {
+            for (int i = 0; i < ca.x_len; i++)
+                for (int j = 0; j < ca.y_len; j++)
+                {
+                    int ii = i + ca.begin.x - begin.x;
+                    int jj = j + ca.begin.y - begin.y;
+                    if (ii > 0 && ii < size && jj > 0 && jj < size)
+                    {
+                        if(ca.cells[i][j] != 0 && cells[ii][jj].val !=0)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            return true;
+        }
+        return false;
+    }
+
     public static void print(int size, Cell[][] cells)
     {
         if(!NUtils.getUI().core.debug)
