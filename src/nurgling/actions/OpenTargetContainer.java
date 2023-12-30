@@ -20,6 +20,9 @@ public class OpenTargetContainer implements Action
             case "Barter Stand":
                 gui.ui.core.addTask(new FindBarterStand());
                 break;
+            case "Barrel":
+                gui.ui.core.addTask(new FindBarrel());
+                break;
             default:
                 gui.ui.core.addTask(new FindNInventory(name));
         }

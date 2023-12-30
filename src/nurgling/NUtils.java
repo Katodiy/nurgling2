@@ -9,6 +9,8 @@ import nurgling.widgets.*;
 import java.text.*;
 import java.util.*;
 
+import static haven.OCache.posres;
+
 public class NUtils
 {
     public static long getTickId()
@@ -122,4 +124,15 @@ public class NUtils
         return null;
     }
 
+    public static void activateItem(Gob gob, boolean shift) {
+        getGameUI().map.wdgmsg("itemact", Coord.z, gob.rc.floor(posres), shift ? 1 : 0, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
+    }
+
+    public static void activateItem(Gob gob) {
+        activateItem(gob, false);
+    }
+
+    public static void dropsame(Gob gob) {
+        getGameUI().map.wdgmsg("itemact", Coord.z, gob.rc.floor(posres), 3, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
+    }
 }

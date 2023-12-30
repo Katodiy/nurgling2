@@ -17,6 +17,6 @@ public class GetGobName implements NTask
     @Override
     public boolean check()
     {
-        return gob.ngob.name!=null;
+        return gob.ngob.name!=null || gob.updateseq!=0;
     }
 }

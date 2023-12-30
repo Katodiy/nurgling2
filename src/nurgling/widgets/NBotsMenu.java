@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
+import nurgling.actions.bots.TurnipsFarmer;
 import nurgling.actions.test.*;
 
 import java.util.*;
@@ -15,7 +16,7 @@ public class NBotsMenu extends Widget
         if(NUtils.getUI().core.debug)
         {
             NLayout tests = new NLayout("resources");
-            tests.elements.add(new NButton("chop", new TESTdiscordPush()));
+            tests.elements.add(new NButton("chop", new TurnipsFarmer()));
             tests.elements.add(new NButton("chop", new TESTorestockpiletransfernoclose()));
             tests.elements.add(new NButton("chop", new TESTblockstockpiletransferpacks()));
             tests.elements.add(new NButton("chop", new TESTbranchinvtransferpacks()));

@@ -103,6 +103,35 @@ public class Finder
         return result;
     }
 
+
+    public static Gob findCrop(NArea area, NAlias name, int stage) throws InterruptedException
+    {
+        NUtils.getUI().core.addTask(new FindPlayer());
+        Pair<Coord2d,Coord2d> space = area.getRCArea();
+        Gob result = null;
+        double dist = 10000;
+        synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
+            for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
+                if (!(gob instanceof OCache.Virtual))
+                {
+                    if (gob.rc.x >= space.a.x && gob.rc.y >= space.a.y && gob.rc.x <= space.b.x && gob.rc.y <= space.b.y)
+                    {
+                        if (NParser.isIt(gob, name) && gob.ngob.getModelAttribute() == stage && NUtils.player()!=null)
+                        {
+                            double new_dist;
+                            if((new_dist = gob.rc.dist(NUtils.player().rc))<dist)
+                            {
+                                dist = new_dist;
+                                result = gob;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     public static Gob findGob(NAlias name) throws InterruptedException
     {
         NUtils.getUI().core.addTask(new FindPlayer());

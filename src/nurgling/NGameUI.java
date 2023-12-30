@@ -5,6 +5,7 @@ import haven.Button;
 import haven.Label;
 import haven.Window;
 import haven.res.ui.rbuff.*;
+import haven.res.ui.relcnt.RelCont;
 import nurgling.conf.*;
 import nurgling.notifications.*;
 import nurgling.tools.*;
@@ -13,6 +14,7 @@ import nurgling.widgets.*;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class NGameUI extends GameUI
 {
@@ -260,6 +262,44 @@ public class NGameUI extends GameUI
         }
         return null;
     }
+
+    public double getBarrelContent()
+    {
+        return getBarrelContent(new NAlias(""));
+    }
+
+    public double getBarrelContent(NAlias content){
+        Window spwnd = getWindow ( "Barrel" );
+        if(spwnd!=null) {
+            for (Widget sp = spwnd.lchild; sp != null; sp = sp.prev) {
+                /// Выбираем внутренний контейнер
+                if (sp instanceof RelCont) {
+                    for(Pair<Widget, Supplier<Coord>> pair:((RelCont) sp).childpos) {
+                        if (pair.a.getClass().getName().contains("TipLabel")) {
+                            try {
+                                for (ItemInfo inf : (Collection<ItemInfo>) (pair.a.getClass().getField("info").get(pair.a))) {
+                                    if (inf instanceof ItemInfo.Name) {
+                                        String name = ((ItemInfo.Name) inf).str.text;
+                                        if (NParser.checkName(name.toLowerCase(), content))
+                                            return Double.parseDouble(name.substring(0, name.indexOf(' ')));
+                                    } else if (inf instanceof ItemInfo.AdHoc) {
+                                        if (NParser.checkName(((ItemInfo.AdHoc) inf).str.text, "Empty")) {
+                                            return 0;
+                                        }
+                                    }
+                                }
+                            } catch (NoSuchFieldException | IllegalAccessException e) {
+                                e.printStackTrace();
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
 
     public void msgToDiscord(NDiscordNotification settings, String message)
     {

@@ -117,6 +117,15 @@ public class NInventory extends Inventory
         }
     }
 
+    public void dropOn(Coord dc, NAlias name) throws InterruptedException
+    {
+        if (NUtils.getGameUI().vhand != null)
+        {
+            wdgmsg("drop", dc);
+            NUtils.getUI().core.addTask(new DropOn(this, dc, name));
+        }
+    }
+
     @Override
     public void resize(Coord sz) {
         super.resize(new Coord(sz));
@@ -362,6 +371,12 @@ public class NInventory extends Inventory
         }
         return count;
     }
+
+    public Coord findFreeCoord(WItem wItem)
+    {
+        return findFreeCoord(wItem.item.spr.sz().div(UI.scale(32)));
+    }
+
 
     public Coord findFreeCoord(Coord target_size)
     {

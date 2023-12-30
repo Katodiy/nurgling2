@@ -19,6 +19,7 @@ public class NHitBox
         {
             put("log", new NHitBox(new Coord(-10,-2),new Coord(10,2)));
             put("gfx/terobjs/vehicle/dugout", new NHitBox(new Coord(-10,-2),new Coord(10,2)));
+            put("gfx/terobjs/trough", new NHitBox(new Coord(-4,-12),new Coord(4,12)));
             put("bumlings", new NHitBox(new Coord(-3,-3),new Coord(3,3)));
             put("gfx/terobjs/arch/stonemansion", new NHitBox(new Coord(-50,-50),new Coord(50,50)));
             put("gfx/terobjs/arch/logcabin", new NHitBox(new Coord(-23,-23),new Coord(23,23)));

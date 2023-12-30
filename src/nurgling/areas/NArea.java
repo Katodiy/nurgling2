@@ -52,6 +52,14 @@ public class NArea
         return false;
     }
 
+    public static NArea findSpec(NArea.Specialisation spec)
+    {
+        if(spec.subtype==null)
+            return findSpec(spec.name);
+        else
+            return findSpec(spec.name, spec.subtype);
+    }
+
     public static NArea findSpec(String name)
     {
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
