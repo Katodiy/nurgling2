@@ -416,7 +416,7 @@ public class RenderTree implements RenderList.Adapter, Disposable {
 	private boolean stlock = false;
 	private TreeSlot[] children = null;
 	private int nchildren = 0;
-	private int pidx = -1;
+	public int pidx = -1;
 
 	private TreeSlot(RenderTree tree, TreeSlot parent, Node node) {
 	    this.tree = tree;

@@ -81,7 +81,7 @@ public class TransferToBarrel implements Action{
 
 
                     if (NUtils.getGameUI().vhand != null) {
-                        gui.getInventory().dropOn(gui.getInventory().findFreeCoord(NUtils.getGameUI().vhand), items);
+                        gui.getInventory().dropOn(gui.getInventory().findFreeCoord(NUtils.getGameUI().vhand));
                     }
                 }
             }

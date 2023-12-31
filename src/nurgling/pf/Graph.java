@@ -194,10 +194,10 @@ public class Graph implements Runnable
             LinkedList<Vertex> for_remove = new LinkedList<>();
             int shift = 2;
 
-            for(int i = 0; i < path.size(); i ++) {
+            for(int i = -1; i < path.size(); i ++) {
                 int di = 0;
                 while (i + shift < path.size()) {
-                    Coord2d first = Utils.pfGridToWorld(path.get(i).pos);
+                    Coord2d first = (i!=-1)?Utils.pfGridToWorld(path.get(i).pos):NUtils.player().rc;
                     Coord2d second = Utils.pfGridToWorld(path.get(i+shift).pos);
                     Coord2d fsdir = second.sub(first);
                     Coord2d center = fsdir.div(2).add(first);

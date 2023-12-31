@@ -13,6 +13,7 @@ import java.util.*;
 
 public class NArea
 {
+
     public static class Specialisation
     {
         public String name;
@@ -251,7 +252,7 @@ public class NArea
                 end = (end != null) ? new Coord(Math.max(end.x, e.x), Math.max(end.y, e.y)) : e;
             }
             if (begin != null)
-                return new Pair<Coord2d, Coord2d>(begin.mul(MCache.tilesz), end.mul(MCache.tilesz).add(MCache.tilesz));
+                return new Pair<Coord2d, Coord2d>(begin.mul(MCache.tilesz), end.sub(1,1).mul(MCache.tilesz).add(MCache.tilesz));
         }
         return null;
     }
@@ -347,4 +348,26 @@ public class NArea
         }
         return null;
     }
+
+
+
+    public ArrayList<Coord2d> getTiles(NAlias name){
+        ArrayList<Coord2d> tiles = new ArrayList<>();
+        Pair<Coord2d,Coord2d> range = getRCArea();
+        Coord2d pos = new Coord2d(range.a.x,range.a.y);
+        while ( pos.x < range.b.x ) {
+            while ( pos.y < range.b.y ) {
+                Coord pltc = ( new Coord2d ( pos.x / MCache.tilesz.x, pos.y / MCache.tilesz.y ) ).floor ();
+                Resource res_beg = NUtils.getGameUI().ui.sess.glob.map.tilesetr ( NUtils.getGameUI().ui.sess.glob.map.gettile ( pltc ) );
+                if ( NParser.checkName ( res_beg.name, name ) ) {
+                    tiles.add(new Coord2d(pos.x, pos.y));
+                }
+                pos.y += MCache.tilesz.y;
+            }
+            pos.y = range.a.y;
+            pos.x += MCache.tilesz.x;
+        }
+        return tiles;
+    }
+
 }

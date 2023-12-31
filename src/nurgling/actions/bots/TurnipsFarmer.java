@@ -1,10 +1,7 @@
 package nurgling.actions.bots;
 
 import nurgling.NGameUI;
-import nurgling.actions.Action;
-import nurgling.actions.HarvestCrop;
-import nurgling.actions.Results;
-import nurgling.actions.Validator;
+import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.tools.NAlias;
 
@@ -29,6 +26,7 @@ public class TurnipsFarmer implements Action {
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
             new HarvestCrop(NArea.findSpec(field),NArea.findSpec(seed),NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/turnip"),new NAlias("Turnip"),1).run(gui);
+            new SeedCrop(NArea.findSpec(field),NArea.findSpec(seed),NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/turnip"),new NAlias("Turnip"),1).run(gui);
             return Results.SUCCESS();
         }
 

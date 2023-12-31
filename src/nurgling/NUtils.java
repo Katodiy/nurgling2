@@ -128,6 +128,15 @@ public class NUtils
         getGameUI().map.wdgmsg("itemact", Coord.z, gob.rc.floor(posres), shift ? 1 : 0, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
     }
 
+    public static void activateGob(Gob gob) {
+        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 1, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
+    }
+
+    public static void takeAllGob(Gob gob) {
+        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 3, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
+    }
+
+
     public static void activateItem(Gob gob) {
         activateItem(gob, false);
     }
@@ -135,4 +144,12 @@ public class NUtils
     public static void dropsame(Gob gob) {
         getGameUI().map.wdgmsg("itemact", Coord.z, gob.rc.floor(posres), 3, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
     }
+
+    public static void dropToInv() throws InterruptedException {
+        if(NUtils.getGameUI().vhand!=null) {
+            getGameUI().getInventory().dropOn(getGameUI().getInventory().findFreeCoord(NUtils.getGameUI().vhand));
+        }
+    }
+
+
 }

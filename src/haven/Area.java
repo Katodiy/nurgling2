@@ -26,6 +26,11 @@
 
 package haven;
 
+import nurgling.NUtils;
+import nurgling.tools.Finder;
+import nurgling.tools.NAlias;
+import nurgling.tools.NParser;
+
 import java.util.*;
 
 public class Area implements Iterable<Coord>, java.io.Serializable {
@@ -34,6 +39,11 @@ public class Area implements Iterable<Coord>, java.io.Serializable {
     public Area(Coord ul, Coord br) {
 	this.ul = ul;
 	this.br = br;
+    }
+
+    public Area(Coord ul, Coord br, boolean forced) {
+        this.ul = new Coord(Math.min(ul.x,br.x),Math.min(ul.y,br.y));
+        this.br = new Coord(Math.max(ul.x,br.x),Math.max(ul.y,br.y));
     }
 
     public int hashCode() {
@@ -160,5 +170,45 @@ public class Area implements Iterable<Coord>, java.io.Serializable {
 
     public String toString() {
 	return(String.format("((%d, %d) - (%d, %d))", ul.x, ul.y, br.x, br.y));
+    }
+
+
+    public static class Tile
+    {
+        Coord pos;
+        public String name;
+        public boolean isFree = false;
+
+        public Tile(Coord pos, String name, boolean isFree) {
+            this.pos = pos;
+            this.name = name;
+            this.isFree = isFree;
+        }
+    }
+
+    public static Tile[][]
+    getTiles(Area a, NAlias names) {
+        Coord pos = new Coord(a.ul);
+        Tile[][] res = new Tile[a.br.x-a.ul.x+1][a.br.y-a.ul.y+1];
+        int i = 0;
+        int j = 0;
+        while(pos.x<=a.br.x) {
+            while (pos.y <= a.br.y) {
+                Resource res_beg = NUtils.getGameUI().ui.sess.glob.map.tilesetr ( NUtils.getGameUI().ui.sess.glob.map.gettile ( pos ) );
+                res[i][j] = new Tile(pos, res_beg.name, (names==null)?Finder.isEmpty(pos):Finder.isEmpty(pos,names));
+                pos.y += 1;
+                j++;
+            }
+            j = 0;
+            pos.y = a.ul.y;
+            pos.x ++;
+            i++;
+        }
+        return res;
+    }
+
+    public String space()
+    {
+        return "Area(" + (br.x-ul.x) + " , " +(br.y-ul.y) +")";
     }
 }

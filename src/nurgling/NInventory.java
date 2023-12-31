@@ -126,6 +126,15 @@ public class NInventory extends Inventory
         }
     }
 
+    public void dropOn(Coord dc) throws InterruptedException
+    {
+        if (NUtils.getGameUI().vhand != null)
+        {
+            wdgmsg("drop", dc);
+            NUtils.getUI().core.addTask(new DropOn(this, dc, ((NGItem)NUtils.getGameUI().vhand.item).name()));
+        }
+    }
+
     @Override
     public void resize(Coord sz) {
         super.resize(new Coord(sz));
@@ -506,4 +515,8 @@ public class NInventory extends Inventory
     };
 
 
+    public void activateItem(NAlias name) throws InterruptedException {
+        WItem it = getItem(name);
+        it.item.wdgmsg("iact", Coord.z, 1);
+    }
 }

@@ -127,6 +127,8 @@ public class NModelBox extends Sprite implements RenderTree.Node
 
     boolean isShow = false;
 
+    boolean isVisible = false;
+
     Gob gob;
 
     public NModelBox(Gob gob)
@@ -159,15 +161,20 @@ public class NModelBox extends Sprite implements RenderTree.Node
         if ((Boolean) NConfig.get(NConfig.Key.showBB) != isShow)
         {
             isShow = (Boolean) NConfig.get(NConfig.Key.showBB);
-            if (isShow)
+            if (isShow && slot.parent()!=null)
             {
+                if(!isVisible)
+                {
+                isVisible = true;
                 for (RenderTree.Node n : nodes)
                 {
                     slot.add(n);
                 }
+                }
             }
             else
             {
+                isVisible = false;
                 slot.clear();
             }
         }
