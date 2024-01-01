@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.widgets.*;
 
 import java.awt.event.*;
+import java.util.Map;
 
 public class NUI extends UI
 {
@@ -103,5 +104,17 @@ public class NUI extends UI
             }
         }
         return null;
+    }
+
+    public int getMenuGridId () {
+        int id = 0;
+        /// Проверяем все зарегистрированные виджеты
+        for ( Map.Entry<Widget, Integer> widget : rwidgets.entrySet () ) {
+            if ( widget.getKey () instanceof MenuGrid ) {
+                /// Если проверяемый виджет - Экипировка возвращаем id
+                id = widget.getValue ();
+            }
+        }
+        return id;
     }
 }

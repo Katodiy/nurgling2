@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.*;
 import nurgling.pf.*;
 import nurgling.pf.Utils;
+import nurgling.tools.Finder;
 
 import java.util.*;
 import java.util.concurrent.atomic.*;
@@ -36,7 +37,7 @@ public class PathFinder implements Action
         target_id = target.id;
     }
 
-    long target_id = -1;
+    long target_id = -2;
     private void fixStartEnd()
     {
         NPFMap.Cell[][] cells = pfmap.getCells();
@@ -44,7 +45,7 @@ public class PathFinder implements Action
         {
             start_pos = findFreeNear(start_pos).get(0);
         }
-        cells[start_pos.x][start_pos.y].val = 7;
+//        cells[start_pos.x][start_pos.y].val = 7;
         if (cells[end_pos.x][end_pos.y].val != 0)
         {
             end_poses = findFreeNear(end_pos);
@@ -61,6 +62,11 @@ public class PathFinder implements Action
 
     private ArrayList<Coord> findFreeNear(Coord pos)
     {
+//        if(target_id!=-2)
+//        {
+//            return findFreeNearByHB();
+//        }
+
         ArrayList<Coord> coords = new ArrayList<>();
         Coord posl = new Coord(pos.x - 1, pos.y);
         Coord posb = new Coord(pos.x, pos.y - 1);
@@ -150,7 +156,7 @@ public class PathFinder implements Action
             pfmap.getCells()[pos.x][pos.y].val = 7;
             coords.add(pos);
         }
-        else if (target_id!=-1 && check!=null)
+        else if (target_id!=-2 && check!=null)
         {
             if(!pfmap.getCells()[pos.x][pos.y].content.contains(target_id))
                 check.set(false);
@@ -194,6 +200,8 @@ public class PathFinder implements Action
         while (path.size() == 0 && mul < 5)
         {
             pfmap = new NPFMap(begin, end, mul);
+            if(dummy!=null)
+                pfmap.addGob(dummy);
             pfmap.build();
             start_pos = Utils.toPfGrid(begin).sub(pfmap.getBegin());
             end_pos = Utils.toPfGrid(end).sub(pfmap.getBegin());
@@ -236,10 +244,15 @@ public class PathFinder implements Action
                 });
                 if (!graphs.isEmpty())
                     res = graphs.get(0);
+//                for (Graph g: graphs)
+//                {
+//                    NPFMap.print(pfmap.getSize(), g.getVert());
+//                }
             }
+
             if (res != null)
             {
-                NPFMap.print(pfmap.getSize(), res.getVert());
+//
                 path = res.getPath();
                 if (!path.isEmpty()) {
                     return path;
@@ -262,4 +275,42 @@ public class PathFinder implements Action
         pf.isHardMode = true;
         return pf.construct()!=null;
     }
+
+    public PathFinder(Gob dummy, boolean virtual) {
+        this(dummy);
+        this.dummy = dummy;
+        assert virtual;
+    }
+
+
+    private ArrayList<Coord> findFreeNearByHB() {
+        Gob target = dummy;
+        if (target == null) {
+            target = Finder.findGob(target_id);
+        }
+        ArrayList<Coord> res = new ArrayList<>();
+        CellsArray ca = target.ngob.getCA();
+        if (ca != null) {
+            for (int i = 0; i < ca.x_len; i++)
+                for (int j = 0; j < ca.y_len; j++) {
+                    int ii = i + ca.begin.x - pfmap.begin.x;
+                    int jj = j + ca.begin.y - pfmap.begin.y;
+                    Coord npfpos = new Coord(ii, jj);
+                    if (ii > 0 && ii < pfmap.size && jj > 0 && jj < pfmap.size) {
+                        if (ca.cells[i][j] != 0) {
+                            for (int d = 0; d < 4; d++) {
+                                Coord test_coord = npfpos.add(Coord.uecw[d]);
+                                if (pfmap.cells[test_coord.x][test_coord.y].val == 0) {
+                                    pfmap.getCells()[test_coord.x][test_coord.y].val = 7;
+                                    res.add(test_coord);
+                                }
+                            }
+                        }
+                    }
+                }
+        }
+        return res;
+    }
+
+    Gob dummy;
 }

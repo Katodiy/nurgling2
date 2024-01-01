@@ -15,7 +15,7 @@ public class NGob
     public String name = null;
     public boolean isQuested = true;
     private CellsArray ca = null;
-    private boolean isDynamic = false;
+    boolean isDynamic = false;
     private boolean isGate = false;
     protected long modelAttribute = -1;
     final Gob parent;
@@ -32,6 +32,10 @@ public class NGob
         if (a instanceof ResDrawable)
         {
             modelAttribute = ((ResDrawable) a).calcMarker();
+        }
+        if(a instanceof Following)
+        {
+            isDynamic = true;
         }
 
         if (a instanceof Drawable)
@@ -93,8 +97,6 @@ public class NGob
                             parent.setattr(new NKinTex(parent));
                         }
 
-                        setDynamic();
-
                         NHitBox custom = NHitBox.findCustom(name);
                         if (custom != null)
                         {
@@ -103,9 +105,12 @@ public class NGob
                     }
                     if (hitBox != null)
                     {
-                        parent.addcustomol(new NModelBox(parent));
-                        if (!isDynamic)
-                            ca = new CellsArray(parent);
+                        if(ca==null) {
+                            setDynamic();
+                            parent.addcustomol(new NModelBox(parent));
+                            if (!isDynamic)
+                                ca = new CellsArray(parent);
+                        }
                     }
                 }
             }
@@ -127,11 +132,12 @@ public class NGob
         {
             if(NUtils.getGameUI().map!=null)
             {
-                if (NUtils.getGameUI().map.player() != null && (parent.id == NUtils.getGameUI().map.player().id || parent.getattr(Following.class) != null))
+                if (NUtils.getGameUI().map.player() != null && parent.id == NUtils.getGameUI().map.player().id)
                     return null;
                 ca = new CellsArray(parent);
             }
-        } else if (isGate)
+        }
+        else if (isGate)
         {
             if(modelAttribute == 2)
                 return ca;
@@ -152,5 +158,22 @@ public class NGob
         {
             attrib.tick(dt);
         }
+    }
+
+    public static Gob getDummy(Coord2d rc, double a, String resName)
+    {
+        Gob res = new Gob(null, rc, -1);
+        if(resName!=null)
+            res.ngob.hitBox = NHitBox.findCustom(resName);
+        res.a = a;
+        return res;
+    }
+
+    public static Gob getDummy(Coord2d rc, double a, NHitBox hb)
+    {
+        Gob res = getDummy(rc, a, (String) null);
+        res.ngob.hitBox = hb;
+        res.ngob.isDynamic = true;
+        return res;
     }
 }

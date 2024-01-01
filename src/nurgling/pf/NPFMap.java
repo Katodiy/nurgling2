@@ -9,6 +9,33 @@ import java.util.*;
 
 public class NPFMap
 {
+    public void addGob(Gob gob) {
+        CellsArray ca;
+        if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player()!=null && gob.id!=NUtils.player().id && gob.getattr(Following.class) == null)
+        {
+            if ((ca.begin.x >= begin.x && ca.begin.x <= end.x ||
+                    ca.end.x >= begin.x && ca.end.x <= end.x) &&
+                    (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
+                            ca.end.y >= begin.y && ca.end.y <= end.y))
+            {
+                for (int i = 0; i < ca.x_len; i++)
+                    for (int j = 0; j < ca.y_len; j++)
+                    {
+                        int ii = i + ca.begin.x - begin.x;
+                        int jj = j + ca.begin.y - begin.y;
+                        if (ii > 0 && ii < size && jj > 0 && jj < size)
+                        {
+                            cells[ii][jj].val = ca.cells[i][j];
+                            if(ca.cells[i][j]!=0)
+                            {
+                                cells[ii][jj].content.add(gob.id);
+                            }
+                        }
+                    }
+            }
+        }
+    }
+
     public static class Cell
     {
         public Cell(Coord pos)
@@ -21,10 +48,11 @@ public class NPFMap
         public ArrayList<Long> content = new ArrayList<>();
     }
 
-    Cell[][] cells;
-    Coord begin, end;
+    public Cell[][] cells;
+    public Coord begin;
+    Coord end;
     int dsize;
-    int size;
+    public int size;
 
     public NPFMap(Coord2d src, Coord2d dst, int mul)
     {
@@ -72,32 +100,10 @@ public class NPFMap
     {
         synchronized (NUtils.getGameUI().ui.sess.glob.oc)
         {
-            CellsArray ca;
+
             for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
             {
-                if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player()!=null && gob.id!=NUtils.player().id)
-                {
-                    if ((ca.begin.x >= begin.x && ca.begin.x <= end.x ||
-                            ca.end.x >= begin.x && ca.end.x <= end.x) &&
-                            (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
-                                    ca.end.y >= begin.y && ca.end.y <= end.y))
-                    {
-                        for (int i = 0; i < ca.x_len; i++)
-                            for (int j = 0; j < ca.y_len; j++)
-                            {
-                                int ii = i + ca.begin.x - begin.x;
-                                int jj = j + ca.begin.y - begin.y;
-                                if (ii > 0 && ii < size && jj > 0 && jj < size)
-                                {
-                                    cells[ii][jj].val = ca.cells[i][j];
-                                    if(ca.cells[i][j]!=0)
-                                    {
-                                        cells[ii][jj].content.add(gob.id);
-                                    }
-                                }
-                            }
-                    }
-                }
+               addGob(gob);
             }
         }
         for (int i = 0; i < size; i += 2)

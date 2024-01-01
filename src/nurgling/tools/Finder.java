@@ -210,4 +210,23 @@ public class Finder
         }
         return true;
     }
+
+
+    public static Gob findLiftedbyPlayer() {
+        long plid;
+        Following fl;
+        if ((plid = NUtils.playerID()) != -1) {
+            synchronized (NUtils.getGameUI().ui.sess.glob.oc) {
+                for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc) {
+                    if ((fl = gob.getattr(Following.class)) != null) {
+
+                        if (fl.tgt == plid) {
+                            return gob;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
 }

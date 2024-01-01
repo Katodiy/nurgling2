@@ -92,6 +92,11 @@ public class NMapView extends MapView
                 imgs.add(gob);
                 imgs.add(RichText.render(ttip.get("HitBox"), 0).img);
             }
+            if (ttip.get("isDynamic") != null) {
+                BufferedImage gob = RichText.render(String.format("$col[255,83,83]{%s}:", "isDynamic"), 0).img;
+                imgs.add(gob);
+                imgs.add(RichText.render(ttip.get("isDynamic"), 0).img);
+            }
             if (ttip.get("marker") != null) {
                 BufferedImage gob = RichText.render(String.format("$col[255,83,83]{%s}:", "Marker"), 0).img;
                 imgs.add(gob);
@@ -138,8 +143,10 @@ public class NMapView extends MapView
                     Gob gob = Gob.from(inf.ci);
                     if (gob != null) {
                         ttip.put("gob", gob.ngob.name);
-                        if(gob.ngob.hitBox!=null)
+                        if(gob.ngob.hitBox!=null) {
                             ttip.put("HitBox", gob.ngob.hitBox.toString());
+                            ttip.put("isDynamic", String.valueOf(gob.ngob.isDynamic));
+                        }
                         ttip.put("rc" , gob.rc.toString());
                         if(!gob.ols.isEmpty()) {
                             StringBuilder ols = new StringBuilder();

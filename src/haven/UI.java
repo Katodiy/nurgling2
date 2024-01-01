@@ -51,7 +51,7 @@ public class UI {
     private final LinkedList<Grab> keygrab = new LinkedList<Grab>();
 	public final LinkedList<Grab> mousegrab = new LinkedList<Grab>();
     protected final Map<Integer, Widget> widgets = new TreeMap<Integer, Widget>();
-    private final Map<Widget, Integer> rwidgets = new HashMap<Widget, Integer>();
+    protected final Map<Widget, Integer> rwidgets = new HashMap<Widget, Integer>();
     Environment env;
     public Receiver rcvr;
     public Coord mc = Coord.z, lcc = Coord.z;

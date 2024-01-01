@@ -5,12 +5,12 @@ import nurgling.*;
 
 public class CellsArray
 {
-    Coord begin;
+    public Coord begin;
     Coord end;
     public short [][] cells;
 
-    int x_len;
-    int y_len;
+    public int x_len;
+    public int y_len;
 
     public CellsArray(Gob gob)
     {

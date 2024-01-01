@@ -151,5 +151,20 @@ public class NUtils
         }
     }
 
+    public static void lift(
+            Gob gob
+    )
+            throws InterruptedException {
+        getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "carry");
+        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 1, 0, 0, (int) gob.id, gob.rc.floor(posres),
+                0, -1);
+        getUI().core.addTask(new WaitLifted(gob));
+    }
+
+    public static void place(Gob gob, Coord2d coord2d) throws InterruptedException {
+        getGameUI().map.wdgmsg("click", Coord.z, coord2d.floor(posres), 3, 0);
+        getUI().core.addTask(new WaitPlaced(gob));
+    }
+
 
 }

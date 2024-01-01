@@ -168,7 +168,13 @@ public class NModelBox extends Sprite implements RenderTree.Node
                 isVisible = true;
                 for (RenderTree.Node n : nodes)
                 {
-                    slot.add(n);
+                    try {
+                        slot.add(n);
+                    }
+                    catch (RenderTree.SlotRemoved e)
+                    {
+                        return true;
+                    }
                 }
                 }
             }
