@@ -3,6 +3,8 @@ package nurgling.tools;
 import haven.*;
 import nurgling.*;
 import nurgling.areas.*;
+import nurgling.pf.CellsArray;
+import nurgling.pf.NPFMap;
 import nurgling.tasks.*;
 
 import java.util.*;
@@ -321,5 +323,82 @@ public class Finder
         }
         sort(result);
         return result;
+    }
+
+
+    public static Coord2d getFreePlace(NArea area, Gob placed) {
+        Coord2d pos = null;
+
+        Pair<Coord2d, Coord2d> rcarea = area.getRCArea();
+        Coord2d a = rcarea.a;
+        Coord2d b = rcarea.b;
+        // Последнее деление умножение нужно чтобы сопоставить сетку пф с сеткой лофтара по углу (ускорение запроса поверхности тайлов)
+
+        Coord begin = nurgling.pf.Utils.toPfGrid(a,(byte) 1);
+        Coord end =  nurgling.pf.Utils.toPfGrid(b,(byte) 1);
+
+
+        NPFMap.Cell[][] cells = new NPFMap.Cell[end.x - begin.x][end.y - begin.y];
+
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                CellsArray ca;
+                if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player()!=null && gob.id!=NUtils.player().id && gob.getattr(Following.class) == null)
+                {
+                    if ((ca.begin.x >= begin.x && ca.begin.x <= end.x ||
+                            ca.end.x >= begin.x && ca.end.x <= end.x) &&
+                            (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
+                                    ca.end.y >= begin.y && ca.end.y <= end.y))
+                    {
+                        for (int i = 0; i < ca.x_len; i++)
+                            for (int j = 0; j < ca.y_len; j++)
+                            {
+                                int ii = i + ca.begin.x - begin.x;
+                                int jj = j + ca.begin.y - begin.y;
+                                if (ii > 0 && ii < end.x - begin.x && jj > 0 && jj < end.y - begin.y)
+                                {
+                                    cells[ii][jj].val = ca.cells[i][j];
+                                    if(ca.cells[i][j]!=0)
+                                    {
+                                        cells[ii][jj].content.add(gob.id);
+                                    }
+                                }
+                            }
+                    }
+                }
+            }
+        }
+        CellsArray gca = placed.ngob.getCA((byte) 1);
+        Coord checkpos = new Coord(begin);
+        while (checkpos.x+gca.x_len<end.x) {
+            while (checkpos.y + gca.y_len < end.y) {
+                boolean free = true;
+
+                for (int i = 0; i < gca.x_len; i++) {
+                    for (int j = 0; j < gca.y_len; j++) {
+                        if (gca.cells[i][j] != 0 && cells[checkpos.x - begin.x][checkpos.y - begin.y].val != 0) {
+                            free = false;
+                            break;
+                        }
+                        if (!free)
+                            break;
+                    }
+                }
+                if (free)
+                {
+                    return nurgling.pf.Utils.pfGridToWorld(checkpos,(byte)1);
+                }
+                else
+                {
+                    checkpos.y = checkpos.y + gca.y_len;
+                }
+            }
+            checkpos.x=checkpos.x+gca.x_len;
+            checkpos.y = begin.y;
+        }
+        return pos;
     }
 }

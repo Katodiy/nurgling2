@@ -1,6 +1,8 @@
 package nurgling;
 
 import haven.*;
+import haven.res.ui.croster.Entry;
+import haven.res.ui.croster.RosterWindow;
 import nurgling.areas.*;
 import nurgling.tasks.*;
 import nurgling.tools.*;
@@ -166,5 +168,21 @@ public class NUtils
         getUI().core.addTask(new WaitPlaced(gob));
     }
 
+    public static RosterWindow getRosterWindow(Class<? extends Entry> cattleRoster) throws InterruptedException {
+        RosterWindow w;
+        if((w = (RosterWindow)NUtils.getGameUI().getWindow("Cattle Roster")) == null) {
+            getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "cattle");
+            getUI().core.addTask(new WaitRosterLoad());
+        }
+        w.show(cattleRoster);
+        return w;
+    }
+
+    public static Comparator<Gob> d_comp = new Comparator<Gob>() {
+        @Override
+        public int compare(Gob o1, Gob o2) {
+            return Double.compare(o1.rc.dist(NUtils.getGameUI().map.player().rc),o2.rc.dist(NUtils.getGameUI().map.player().rc));
+        }
+    };
 
 }

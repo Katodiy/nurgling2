@@ -29,8 +29,11 @@ package haven;
 import java.util.*;
 import static haven.Utils.uint32;
 import nurgling.*;
+import nurgling.areas.NArea;
 import nurgling.conf.*;
 import nurgling.overlays.*;
+import nurgling.pf.CellsArray;
+import nurgling.pf.NPFMap;
 import nurgling.tools.*;
 import nurgling.widgets.*;
 

@@ -14,7 +14,7 @@ public class NGob
     public NHitBox hitBox = null;
     public String name = null;
     public boolean isQuested = true;
-    private CellsArray ca = null;
+    private HashMap<Byte, CellsArray> ca = new HashMap<>();
     boolean isDynamic = false;
     private boolean isGate = false;
     protected long modelAttribute = -1;
@@ -105,11 +105,11 @@ public class NGob
                     }
                     if (hitBox != null)
                     {
-                        if(ca==null) {
+                        if(ca.get((byte)4) == null) {
                             setDynamic();
                             parent.addcustomol(new NModelBox(parent));
                             if (!isDynamic)
-                                ca = new CellsArray(parent);
+                                ca.put((byte)4, new CellsArray(parent,(byte)4));
                         }
                     }
                 }
@@ -126,7 +126,7 @@ public class NGob
     public long getModelAttribute() {
         return modelAttribute;
     }
-    public CellsArray getCA()
+    public CellsArray getCA(byte scale)
     {
         if(isDynamic)
         {
@@ -134,17 +134,27 @@ public class NGob
             {
                 if (NUtils.getGameUI().map.player() != null && parent.id == NUtils.getGameUI().map.player().id)
                     return null;
-                ca = new CellsArray(parent);
+                return new CellsArray(parent, scale);
             }
         }
         else if (isGate)
         {
-            if(modelAttribute == 2)
-                return ca;
-            else
+            if(modelAttribute != 2)
                 return null;
         }
-        return ca;
+        else
+        {
+            if(ca.get(scale)==null)
+            {
+                ca.put(scale, new CellsArray(parent,scale));
+            }
+        }
+        return ca.get(scale);
+    }
+
+    public CellsArray getCA()
+    {
+        return getCA((byte)4);
     }
 
     public void markAsDynamic()
@@ -176,4 +186,6 @@ public class NGob
         res.ngob.isDynamic = true;
         return res;
     }
+
+
 }

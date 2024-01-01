@@ -6,26 +6,26 @@ import nurgling.*;
 public class CellsArray
 {
     public Coord begin;
-    Coord end;
+    public Coord end;
     public short [][] cells;
 
     public int x_len;
     public int y_len;
 
-    public CellsArray(Gob gob)
+    public CellsArray(Gob gob, byte scale)
     {
-        this(gob.ngob.hitBox, gob.a, gob.rc);
+        this(gob.ngob.hitBox, gob.a, gob.rc, scale);
     }
     
     
-    public CellsArray(NHitBox hb, double angl, Coord2d rc)
+    public CellsArray(NHitBox hb, double angl, Coord2d rc, byte scale)
     {
         
         if ((Math.abs((angl * 180 / Math.PI) / 90) % 1 < 0.01))
         {
             Coord2d a1 = hb.begin.rotate(angl).shift(rc);
-            Coord a = Utils.toPfGrid(a1);
-            Coord b = Utils.toPfGrid(hb.end.rotate(angl).shift(rc));
+            Coord a = Utils.toPfGrid(a1,scale);
+            Coord b = Utils.toPfGrid(hb.end.rotate(angl).shift(rc),scale);
             begin = new Coord(Math.min(a.x, b.x), Math.min(a.y, b.y));
             end = new Coord(Math.max(a.x, b.x), Math.max(a.y, b.y));
             x_len = end.x - begin.x + 1;
@@ -45,16 +45,16 @@ public class CellsArray
             Coord2d bd = new Coord2d(hb.end.x, hb.begin.y).rotate(angl).shift(rc);
             Coord2d cd = hb.end.rotate(angl).shift(rc);
             Coord2d dd = new Coord2d(hb.begin.x, hb.end.y).rotate(angl).shift(rc);
-            Coord a = Utils.toPfGrid(ad);
-            Coord b = Utils.toPfGrid(bd);
-            Coord c = Utils.toPfGrid(cd);
-            Coord d = Utils.toPfGrid(dd);
+            Coord a = Utils.toPfGrid(ad,scale);
+            Coord b = Utils.toPfGrid(bd,scale);
+            Coord c = Utils.toPfGrid(cd,scale);
+            Coord d = Utils.toPfGrid(dd,scale);
             begin = new Coord(Math.min(Math.min(a.x, b.x), Math.min(c.x, d.x)), Math.min(Math.min(a.y, b.y), Math.min(c.y, d.y)));
             end = new Coord(Math.max(Math.max(a.x, b.x), Math.max(c.x, d.x)), Math.max(Math.max(a.y, b.y), Math.max(c.y, d.y)));
             x_len = end.x - begin.x + 1;
             y_len = end.y - begin.y + 1;
             cells = new short[x_len][y_len];
-            Coord2d start = begin.mul(MCache.tilehsz);
+            Coord2d start = begin.mul(MCache.tilehsz.mul(4./scale));
             Coord2d pos = new Coord2d(start.x, start.y);
             Coord2d a_b = bd.sub(ad);
             Coord2d b_c = cd.sub(bd);

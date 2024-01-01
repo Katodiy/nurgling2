@@ -15,6 +15,7 @@ public class PathFinder implements Action
     NPFMap pfmap;
     Coord start_pos;
     Coord end_pos;
+    public static byte scale = 4;
     ArrayList<Coord> end_poses;
     public boolean isHardMode = false;
 
@@ -178,7 +179,7 @@ public class PathFinder implements Action
                 for (Graph.Vertex vert : path)
                 {
 
-                    Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
+                    Coord2d targetCoord = Utils.pfGridToWorld(vert.pos, scale);
                     if(vert == path.getLast())
                     {
                         if(targetCoord.dist(end)<MCache.tilehsz.x)
@@ -218,8 +219,9 @@ public class PathFinder implements Action
             if(dummy!=null)
                 pfmap.addGob(dummy);
             pfmap.build();
-            start_pos = Utils.toPfGrid(begin).sub(pfmap.getBegin());
-            end_pos = Utils.toPfGrid(end).sub(pfmap.getBegin());
+
+            start_pos = Utils.toPfGrid(begin,scale).sub(pfmap.getBegin());
+            end_pos = Utils.toPfGrid(end,scale).sub(pfmap.getBegin());
             // Находим свободные начальные и конечные точки
 
             if(!fixStartEnd(test)) {
