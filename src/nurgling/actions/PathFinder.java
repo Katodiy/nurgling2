@@ -38,11 +38,12 @@ public class PathFinder implements Action
     }
 
     long target_id = -2;
-    private void fixStartEnd()
+    private boolean fixStartEnd(boolean test)
     {
         NPFMap.Cell[][] cells = pfmap.getCells();
-        if (cells[start_pos.x][start_pos.y].val != 0)
-        {
+        if (cells[start_pos.x][start_pos.y].val != 0) {
+            if (target_id != -2 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test)
+                return false;
             start_pos = findFreeNear(start_pos).get(0);
         }
 //        cells[start_pos.x][start_pos.y].val = 7;
@@ -58,6 +59,7 @@ public class PathFinder implements Action
         {
             cells[end_pos.x][end_pos.y].val = 7;
         }
+        return true;
     }
 
     private ArrayList<Coord> findFreeNear(Coord pos)
@@ -175,7 +177,13 @@ public class PathFinder implements Action
                 boolean needRestart = false;
                 for (Graph.Vertex vert : path)
                 {
+
                     Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
+                    if(vert == path.getLast())
+                    {
+                        if(targetCoord.dist(end)<MCache.tilehsz.x)
+                            targetCoord = end;
+                    }
                     if(!(new GoTo(targetCoord).run(gui)).IsSuccess())
                     {
                         this.begin = gui.map.player().rc;
@@ -188,12 +196,19 @@ public class PathFinder implements Action
             }
             else
             {
+                if(dn)
+                    return Results.SUCCESS();
                 return Results.ERROR("Can't find path");
             }
         }
     }
 
     public LinkedList<Graph.Vertex> construct() throws InterruptedException
+    {
+        return construct(false);
+    }
+
+    public LinkedList<Graph.Vertex> construct(boolean test) throws InterruptedException
     {
         LinkedList<Graph.Vertex> path = new LinkedList<>();
         int mul = 1;
@@ -206,7 +221,11 @@ public class PathFinder implements Action
             start_pos = Utils.toPfGrid(begin).sub(pfmap.getBegin());
             end_pos = Utils.toPfGrid(end).sub(pfmap.getBegin());
             // Находим свободные начальные и конечные точки
-            fixStartEnd();
+
+            if(!fixStartEnd(test)) {
+                dn = false;
+                return null;
+            }
             NPFMap.print(pfmap.getSize(), pfmap.getCells());
             Graph res = null;
             if (pfmap.getCells()[end_pos.x][end_pos.y].val == 7)
@@ -252,7 +271,6 @@ public class PathFinder implements Action
 
             if (res != null)
             {
-//
                 path = res.getPath();
                 if (!path.isEmpty()) {
                     return path;
@@ -266,14 +284,14 @@ public class PathFinder implements Action
 
     public static boolean isAvailable(Gob target) throws InterruptedException
     {
-        return new PathFinder(target).construct()!=null;
+        return new PathFinder(target).construct(true)!=null;
     }
 
     public static boolean isAvailable(Gob target, boolean hardMode) throws InterruptedException
     {
         PathFinder pf = new PathFinder(target);
         pf.isHardMode = true;
-        return pf.construct()!=null;
+        return pf.construct(true)!=null;
     }
 
     public PathFinder(Gob dummy, boolean virtual) {
@@ -313,4 +331,6 @@ public class PathFinder implements Action
     }
 
     Gob dummy;
+
+    boolean dn = false;
 }

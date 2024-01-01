@@ -11,6 +11,7 @@ import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SeedCrop implements Action{
 
@@ -58,31 +59,24 @@ public class SeedCrop implements Action{
         do {
             if (!rev) {
                 while (pos.x >= field.getArea().ul.x) {
-                    boolean setDir = true;
+                    AtomicBoolean setDir = new AtomicBoolean(true);
                     if (revdir) {
                         while (pos.y <= field.getArea().br.y - 1) {
                             Coord endPos = new Coord(Math.max(pos.x - 1, field.getArea().ul.x), Math.min(pos.y + 1, field.getArea().br.y - 1));
                             Area harea = new Area(pos, endPos, true);
-                            NUtils.getGameUI().msg(harea.space());
-                            seedCrop(gui, barrel, harea, revdir, harea.ul.mul(MCache.tilesz));
+                            Coord2d endp = harea.ul.mul(MCache.tilesz).sub(MCache.tilehsz.x,-MCache.tilehsz.y).sub(0,MCache.tileqsz.y);
+                            seedCrop(gui, barrel, harea, revdir, endp,setDir);
                             pos.y += 2;
-                            if (setDir) {
-                                new SetDir(new Coord2d(0, 1)).run(gui);
-                                setDir = false;
-                            }
+
                         }
                         pos.y = field.getArea().br.y - 1;
                     } else {
                         while (pos.y >= field.getArea().ul.y) {
                             Coord endPos = new Coord(Math.max(pos.x - 1, field.getArea().ul.x), Math.max(pos.y - 1, field.getArea().ul.y));
                             Area harea = new Area(pos, endPos, true);
-                            NUtils.getGameUI().msg(harea.space());
-                            seedCrop(gui, barrel, harea, revdir, harea.br.mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y));
+                            Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y).add(0,MCache.tileqsz.y);
+                            seedCrop(gui, barrel, harea, revdir,endp ,setDir);
                             pos.y -= 2;
-                            if (setDir) {
-                                new SetDir(new Coord2d(0, -1)).run(gui);
-                                setDir = false;
-                            }
                         }
                         pos.y = field.getArea().ul.y;
                     }
@@ -91,31 +85,24 @@ public class SeedCrop implements Action{
                 }
             } else {
                 while (pos.x <= field.getArea().br.x - 1) {
-                    boolean setDir = true;
+                    AtomicBoolean setDir = new AtomicBoolean(true);
                     if (revdir) {
                         while (pos.y <= field.getArea().br.y - 1) {
                             Coord endPos = new Coord(Math.min(pos.x + 1, field.getArea().br.x - 1), Math.min(pos.y + 1, field.getArea().br.y - 1));
                             Area harea = new Area(pos, endPos, true);
-                            NUtils.getGameUI().msg(harea.space());
-                            seedCrop(gui, barrel, harea, revdir, harea.ul.mul(MCache.tilesz));
+                            Coord2d endp = harea.ul.mul(MCache.tilesz).sub(-MCache.tilehsz.x,-MCache.tilehsz.y).sub(0,MCache.tileqsz.y);
+                            seedCrop(gui, barrel, harea, revdir, endp,setDir);
                             pos.y += 2;
-                            if (setDir) {
-                                new SetDir(new Coord2d(0, 1)).run(gui);
-                                setDir = false;
-                            }
+
                         }
                         pos.y = field.getArea().br.y - 1;
                     } else {
                         while (pos.y >= field.getArea().ul.y) {
                             Coord endPos = new Coord(Math.min(pos.x + 1, field.getArea().br.x - 1), Math.max(pos.y - 1, field.getArea().ul.y));
                             Area harea = new Area(pos, endPos, true);
-                            NUtils.getGameUI().msg(harea.space());
-                            seedCrop(gui, barrel, harea, revdir, harea.br.mul(MCache.tilesz).add(MCache.tilehsz));
+                            Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz).add(0,MCache.tileqsz.y);
+                            seedCrop(gui, barrel, harea, revdir,endp ,setDir);
                             pos.y -= 2;
-                            if (setDir) {
-                                new SetDir(new Coord2d(0, -1)).run(gui);
-                                setDir = false;
-                            }
                         }
                         pos.y = field.getArea().ul.y;
                     }
@@ -131,7 +118,7 @@ public class SeedCrop implements Action{
         return Results.SUCCESS();
     }
 
-    void  seedCrop(NGameUI gui, Gob barrel, Area area, boolean rev, Coord2d target_coord) throws InterruptedException {
+    void  seedCrop(NGameUI gui, Gob barrel, Area area, boolean rev, Coord2d target_coord, AtomicBoolean setDir) throws InterruptedException {
         if (gui.getInventory().getItems(iseed).size() < 2) {
             if (!gui.hand.isEmpty()) {
                 NUtils.dropToInv();
@@ -162,6 +149,13 @@ public class SeedCrop implements Action{
 
            if(count>0) {
                new PathFinder(target_coord).run(NUtils.getGameUI());
+               if (setDir.get()) {
+                   if(rev)
+                       new SetDir(new Coord2d(0, 1)).run(gui);
+                   else
+                       new SetDir(new Coord2d(0, -1)).run(gui);
+                   setDir.set(false);
+               }
                NUtils.getGameUI().getInventory().activateItem(iseed);
                NUtils.getUI().core.addTask(new GetCurs("harvest"));
                if (rev) {

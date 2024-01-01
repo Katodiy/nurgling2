@@ -45,6 +45,7 @@ import org.json.*;
 public class MCache implements MapSource {
     public static final Coord2d tilesz = Coord2d.of(11, 11);
     public static final Coord2d tilehsz = Coord2d.of(5.5, 5.5);
+    public static final Coord2d tileqsz = Coord2d.of(2.75, 2.75);
     public static final Coord2d dtilepfsz = Coord2d.of(2.75, 2.75);
     public static final Coord tilesz2 = tilesz.round(); /* XXX: Remove me in due time. */
     public static final Coord cmaps = Coord.of(100, 100);

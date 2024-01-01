@@ -3,9 +3,11 @@ package nurgling.actions;
 import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
+import haven.MCache;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.tasks.WaitDir;
+import nurgling.tasks.WaitPos;
 
 import static haven.OCache.posres;
 

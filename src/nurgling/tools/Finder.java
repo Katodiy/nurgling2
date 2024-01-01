@@ -75,6 +75,53 @@ public class Finder
         return result;
     }
 
+    public static ArrayList<Gob> findGobs(Area area, NAlias name) throws InterruptedException
+    {
+        Coord2d b = area.ul.mul(MCache.tilesz);
+        Coord2d e = area.br.mul(MCache.tilesz).add(MCache.tilesz);
+        Pair<Coord2d,Coord2d> space = new Pair<>(b,e);
+        ArrayList<Gob> result = new ArrayList<> ();
+        synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
+            for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
+                if (!(gob instanceof OCache.Virtual))
+                {
+                    if (gob.rc.x >= space.a.x && gob.rc.y >= space.a.y && gob.rc.x <= space.b.x && gob.rc.y <= space.b.y)
+                    {
+                        if (NParser.isIt(gob, name))
+                        {
+                            result.add(gob);
+                        }
+                    }
+                }
+            }
+        }
+        sort(result);
+        return result;
+    }
+
+
+    public static ArrayList<Gob> findGobs(NArea area, NAlias name, int mattr) throws InterruptedException
+    {
+        Pair<Coord2d,Coord2d> space = area.getRCArea();
+        ArrayList<Gob> result = new ArrayList<> ();
+        synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
+            for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
+                if (!(gob instanceof OCache.Virtual))
+                {
+                    if (gob.rc.x >= space.a.x && gob.rc.y >= space.a.y && gob.rc.x <= space.b.x && gob.rc.y <= space.b.y)
+                    {
+                        if (NParser.isIt(gob, name) && gob.ngob.getModelAttribute() == mattr)
+                        {
+                            result.add(gob);
+                        }
+                    }
+                }
+            }
+        }
+        sort(result);
+        return result;
+    }
+
     public static Gob findGob(NArea area, NAlias name) throws InterruptedException
     {
         NUtils.getUI().core.addTask(new FindPlayer());
@@ -172,9 +219,9 @@ public class Finder
         }
     }
 
-    public static boolean isEmpty(Coord pos) {
+    public static Gob findGob(Coord pos) {
         Pair<Coord2d,Coord2d> space = new Pair<>(new Coord2d(pos.x*MCache.tilesz.x,pos.y*MCache.tilesz.y),new Coord2d((pos.x + 1) *MCache.tilesz.x,(pos.y+1)*MCache.tilesz.y));
-        NUtils.getGameUI().msg(space.a + " " +  space.b);
+//        NUtils.getGameUI().msg(space.a + " " +  space.b);
         synchronized (NUtils.getGameUI().ui.sess.glob.oc)
         {
             for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
@@ -184,16 +231,19 @@ public class Finder
                     // Только внутри тайла, без пересечений
                     if (gob.id!= NUtils.playerID() && gob.rc.x >=space.a.x && gob.rc.y >=space.a.y && gob.rc.x <=space.b.x && gob.rc.y <=space.b.y)
                     {
-                        return false;
+                        return gob;
                     }
                 }
             }
         }
-        return true;
+        return null;
     }
-    public static boolean isEmpty(Coord pos, NAlias exc){
+
+
+
+    public static Gob findGob(Coord pos, NAlias exc){
         Pair<Coord2d,Coord2d> space = new Pair<>(new Coord2d(pos.x*MCache.tilesz.x,pos.y*MCache.tilesz.y),new Coord2d((pos.x + 1) *MCache.tilesz.x,(pos.y+1)*MCache.tilesz.y));
-        NUtils.getGameUI().msg(space.a + " " +  space.b);
+//        NUtils.getGameUI().msg(space.a + " " +  space.b);
         synchronized (NUtils.getGameUI().ui.sess.glob.oc)
         {
             for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
@@ -202,13 +252,13 @@ public class Finder
                     if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector"))) {
                         // Только внутри тайла, без пересечений
                         if (gob.id != NUtils.playerID() && gob.rc.x >= space.a.x && gob.rc.y >= space.a.y && gob.rc.x <= space.b.x && gob.rc.y <= space.b.y) {
-                            return false;
+                            return gob;
                         }
                     }
                 }
             }
         }
-        return true;
+        return null;
     }
 
 
@@ -228,5 +278,48 @@ public class Finder
             }
         }
         return null;
+    }
+
+    public static Gob findGob(Coord pos, NAlias crop, int stage) {
+        Pair<Coord2d,Coord2d> space = new Pair<>(new Coord2d(pos.x*MCache.tilesz.x,pos.y*MCache.tilesz.y),new Coord2d((pos.x + 1) *MCache.tilesz.x,(pos.y+1)*MCache.tilesz.y));
+//        NUtils.getGameUI().msg(space.a + " " +  space.b);
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
+                {
+                    // Только внутри тайла, без пересечений
+                    if (gob.id!= NUtils.playerID() && gob.rc.x >=space.a.x && gob.rc.y >=space.a.y && gob.rc.x <=space.b.x && gob.rc.y <=space.b.y && NParser.checkName(gob.ngob.name,crop) && gob.ngob.getModelAttribute()==stage)
+                    {
+                        return gob;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public static ArrayList<Gob> findGobs(Area area, NAlias name, int stage) {
+        Coord2d b = area.ul.mul(MCache.tilesz);
+        Coord2d e = area.br.mul(MCache.tilesz).add(MCache.tilesz);
+        Pair<Coord2d,Coord2d> space = new Pair<>(b,e);
+        ArrayList<Gob> result = new ArrayList<> ();
+        synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
+            for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
+                if (!(gob instanceof OCache.Virtual))
+                {
+                    if (gob.rc.x >= space.a.x && gob.rc.y >= space.a.y && gob.rc.x <= space.b.x && gob.rc.y <= space.b.y)
+                    {
+                        if (gob.ngob.name!=null && NParser.checkName(gob.ngob.name, name) && gob.ngob.getModelAttribute() == stage )
+                        {
+                            result.add(gob);
+                        }
+                    }
+                }
+            }
+        }
+        sort(result);
+        return result;
     }
 }

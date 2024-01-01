@@ -195,7 +195,7 @@ public class Area implements Iterable<Coord>, java.io.Serializable {
         while(pos.x<=a.br.x) {
             while (pos.y <= a.br.y) {
                 Resource res_beg = NUtils.getGameUI().ui.sess.glob.map.tilesetr ( NUtils.getGameUI().ui.sess.glob.map.gettile ( pos ) );
-                res[i][j] = new Tile(pos, res_beg.name, (names==null)?Finder.isEmpty(pos):Finder.isEmpty(pos,names));
+                res[i][j] = new Tile(pos, res_beg.name, (names==null)?Finder.findGob(pos)==null:Finder.findGob(pos,names)==null);
                 pos.y += 1;
                 j++;
             }

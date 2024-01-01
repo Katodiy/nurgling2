@@ -45,6 +45,9 @@ public class TransferToBarrel implements Action{
             ArrayList<WItem> targetItems = new ArrayList<>();
             int sum = 0;
             for (WItem item : witems) {
+                if (sum + barrelCont > th) {
+                    break;
+                }
                 for (ItemInfo inf : item.item.info)
                     if (inf instanceof GItem.Amount) {
                         sum += ((GItem.Amount) inf).itemnum();
