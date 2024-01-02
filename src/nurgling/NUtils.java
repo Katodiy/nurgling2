@@ -1,6 +1,8 @@
 package nurgling;
 
 import haven.*;
+import haven.res.gfx.hud.rosters.cow.Ochs;
+import haven.res.ui.croster.CattleId;
 import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import nurgling.areas.*;
@@ -185,4 +187,13 @@ public class NUtils
         }
     };
 
+    public static Entry getAnimalEntity(Gob gob, Class<? extends Entry> cattleRoster ){
+        GetAnimalEntry gae = new GetAnimalEntry(gob,cattleRoster);
+        try {
+            NUtils.getUI().core.addTask(gae);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return gae.getResult();
+    }
 }

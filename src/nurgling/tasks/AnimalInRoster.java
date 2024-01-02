@@ -25,9 +25,9 @@ public class AnimalInRoster implements NTask
     {
         if(animal.getattr(CattleId.class)==null)
             return false;
-        if(rw.roster(cattleRoster).entries.get(animal) == null)
+        if(rw.roster(cattleRoster).entries.get(animal.getattr(CattleId.class).id) == null)
             return false;
-        return rw.roster(cattleRoster).entries.get(animal).getClass() == cattleRoster;
+        return rw.roster(cattleRoster).entries.get(animal.getattr(CattleId.class).id).getClass() == cattleRoster;
     }
 
 }

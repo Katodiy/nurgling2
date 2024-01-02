@@ -154,7 +154,7 @@ public class NPFMap
 
     public static void print(int size, Cell[][] cells)
     {
-        if(!NUtils.getUI().core.debug)
+        if(NUtils.getUI().core.debug)
         {
             Coord csz = new Coord(UI.scale(10), UI.scale(10));
             Window wnd = NUtils.getUI().root.add(new Window(new Coord(size * UI.scale(10), size * UI.scale(10)), "PFMAP")

@@ -31,6 +31,8 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem("trough"));
         specialisation.add(new SpecialisationItem("crop"));
         specialisation.add(new SpecialisationItem("seed"));
+        specialisation.add(new SpecialisationItem("cows"));
+        specialisation.add(new SpecialisationItem("deadkritter"));
     }
 
     public class SpecialisationList extends SListBox<SpecialisationItem, Widget> {

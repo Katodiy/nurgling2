@@ -94,9 +94,9 @@ public class PathFinder implements Action
                 {
                     for (int i = 1; i <= delta; i++)
                     {
-                        if (posl.y > 1)
+                        if (posl.y - i > 1)
                             checkAndAdd(new Coord(posl.x, posl.y - i), coords, null);
-                        if (posl.y < pfmap.getSize() - 1)
+                        if (posl.y + i < pfmap.getSize() - i)
                             checkAndAdd(new Coord(posl.x, posl.y + i), coords, null);
                     }
                 }
@@ -109,9 +109,9 @@ public class PathFinder implements Action
                 {
                     for (int i = 1; i <= delta; i++)
                     {
-                        if (posr.y > 1)
+                        if (posr.y - i > 1)
                             checkAndAdd(new Coord(posr.x, posr.y - i), coords, null);
-                        if (posr.y < pfmap.getSize() - 1)
+                        if (posr.y + i < pfmap.getSize())
                             checkAndAdd(new Coord(posr.x, posr.y + i), coords, null);
                     }
                 }
@@ -124,9 +124,9 @@ public class PathFinder implements Action
                 {
                     for (int i = 1; i <= delta; i++)
                     {
-                        if (posb.x > i)
+                        if (posb.x - i > 1)
                             checkAndAdd(new Coord(posb.x - i, posb.y), coords, null);
-                        if (posb.x < pfmap.getSize() - 1)
+                        if (posb.x + i < pfmap.getSize())
                             checkAndAdd(new Coord(posb.x + i, posb.y), coords, null);
                     }
                 }
@@ -139,9 +139,9 @@ public class PathFinder implements Action
                 {
                     for (int i = 1; i <= delta; i++)
                     {
-                        if (posu.x > i)
+                        if (posu.x- i > 1)
                             checkAndAdd(new Coord(posu.x - i, posu.y), coords, null);
-                        if (posu.x < pfmap.getSize() - 1)
+                        if (posu.x+ i < pfmap.getSize())
                             checkAndAdd(new Coord(posu.x + i, posu.y), coords, null);
                     }
                 }

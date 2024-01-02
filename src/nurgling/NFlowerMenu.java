@@ -132,12 +132,19 @@ public class NFlowerMenu extends FlowerMenu
 
     public void uimsg(String msg, Object... args)
     {
+
         if (msg.equals("cancel") || msg.equals("act"))
         {
-            mg.remove();
-            kg.remove();
             ui.destroy(NFlowerMenu.this);
         }
+    }
+
+
+    @Override
+    public void destroy() {
+        mg.remove();
+        kg.remove();
+        super.destroy();
     }
 
     public boolean keydown(java.awt.event.KeyEvent ev) {

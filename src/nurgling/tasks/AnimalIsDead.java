@@ -16,7 +16,7 @@ public class AnimalIsDead implements NTask
     @Override
     public boolean check()
     {
-        return animal.pose()!=null && NParser.checkName(animal.pose(), "knocked");
+        return animal.pose()!=null && NParser.checkName(animal.pose(), "knock");
     }
 
 }

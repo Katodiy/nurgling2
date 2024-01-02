@@ -372,14 +372,14 @@ public class Finder
             }
         }
         CellsArray gca = placed.ngob.getCA((byte) 1);
-        Coord checkpos = new Coord(begin);
+        Coord checkpos = new Coord(0,0);
         while (checkpos.x+gca.x_len<end.x) {
             while (checkpos.y + gca.y_len < end.y) {
                 boolean free = true;
 
                 for (int i = 0; i < gca.x_len; i++) {
                     for (int j = 0; j < gca.y_len; j++) {
-                        if (gca.cells[i][j] != 0 && cells[checkpos.x - begin.x][checkpos.y - begin.y].val != 0) {
+                        if (gca.cells[i][j] != 0 && cells[checkpos.x][checkpos.y].val != 0) {
                             free = false;
                             break;
                         }
