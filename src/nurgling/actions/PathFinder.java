@@ -47,12 +47,12 @@ public class PathFinder implements Action
         if (cells[start_pos.x][start_pos.y].val != 0) {
             if (target_id != -2 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test)
                 return false;
-            start_pos = findFreeNear(start_pos).get(0);
+            start_pos = findFreeNear(start_pos,true).get(0);
         }
 //        cells[start_pos.x][start_pos.y].val = 7;
         if (cells[end_pos.x][end_pos.y].val != 0)
         {
-            end_poses = findFreeNear(end_pos);
+            end_poses = findFreeNear(end_pos,false);
             for (Coord coord : end_poses)
             {
                 cells[coord.x][coord.y].val = 7;
@@ -65,12 +65,13 @@ public class PathFinder implements Action
         return true;
     }
 
-    private ArrayList<Coord> findFreeNear(Coord pos)
+    private ArrayList<Coord> findFreeNear(Coord pos, boolean start)
     {
-        if(target_id!=-2)
-        {
-            return findFreeNearByHB();
-        }
+        if(!start)
+            if(target_id!=-2)
+            {
+                return findFreeNearByHB();
+            }
 
         ArrayList<Coord> coords = new ArrayList<>();
         Coord posl = new Coord(pos.x - 1, pos.y);
@@ -280,7 +281,7 @@ public class PathFinder implements Action
                     path = getPath(pfmap, res.path);
                 else
                     path = res.path;
-
+                NPFMap.print(pfmap.getSize(), res.getVert());
                 if (!path.isEmpty()) {
                     return path;
                 }

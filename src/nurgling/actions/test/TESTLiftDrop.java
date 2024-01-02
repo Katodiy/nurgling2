@@ -31,7 +31,7 @@ public class TESTLiftDrop extends Test
     public void body(NGameUI gui) throws InterruptedException
     {
 
-        new PathFinder(Finder.findGob(new NAlias("gfx/kritter/cattle/cattle"))).run(gui);
+        new PathFinder(Finder.findGob(new NAlias("gfx/kritter/cattle/calf"))).run(gui);
 //        Coord2d pos = trough.rc;
 //        new LiftObject(trough).run(gui);
 //        new PlaceObject(trough, pos).run(gui);

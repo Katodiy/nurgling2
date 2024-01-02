@@ -60,8 +60,7 @@ public class NPFMap
     {
         Coord2d a = new Coord2d(Math.min(src.x, dst.x), Math.min(src.y, dst.y));
         Coord2d b = new Coord2d(Math.max(src.x, dst.x), Math.max(src.y, dst.y));
-        // Последнее деление умножение нужно чтобы сопоставить сетку пф с сеткой лофтара по углу (ускорение запроса поверхности тайлов)
-        Coord center = Utils.toPfGrid(a.add((b.sub(a)).div(2)),scale).div(2).mul(2);
+        Coord center = Utils.toPfGrid(a.add((b.sub(a)).div(2)),scale);
         dsize = Math.max(8,(((int) ((b.sub(a).len() / MCache.tilehsz.x))) / 2) * 2 * mul);
         size = 2 * dsize;
 
@@ -108,20 +107,25 @@ public class NPFMap
                addGob(gob);
             }
         }
-        for (int i = 0; i < size; i += 2)
+        for (int i = 0; i < size; i += 1)
         {
-            for (int j = 0; j < size; j += 2)
+            for (int j = 0; j < size; j += 1)
             {
 
                 if (cells[i][j].val == 0)
                 {
-                    String name = NUtils.getGameUI().ui.sess.glob.map.tilesetname(NUtils.getGameUI().ui.sess.glob.map.gettile(cells[i][j].pos.div(2)));
-                    if (name != null && (name.startsWith("gfx/tiles/cave") || name.startsWith("gfx/tiles/rocks") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep")))
-                    {
-                        cells[i][j].val = 2;
-                        cells[i + 1][j].val = 2;
-                        cells[i][j + 1].val = 2;
-                        cells[i + 1][j + 1].val = 2;
+                    ArrayList<Coord> cand = new ArrayList<>();
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos,scale).add(new Coord2d(-MCache.tileqsz.x,MCache.tileqsz.y))).div(MCache.tilesz).floor());
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos,scale).add(new Coord2d(MCache.tileqsz.x,-MCache.tileqsz.y))).div(MCache.tilesz).floor());
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos,scale).add(new Coord2d(-MCache.tileqsz.x,-MCache.tileqsz.y))).div(MCache.tilesz).floor());
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos,scale).add(new Coord2d(MCache.tileqsz.x,MCache.tileqsz.y))).div(MCache.tilesz).floor());
+
+                    for(Coord c : cand) {
+                        String name = NUtils.getGameUI().ui.sess.glob.map.tilesetname(NUtils.getGameUI().ui.sess.glob.map.gettile(c));
+
+                        if (name != null && (name.startsWith("gfx/tiles/cave") || name.startsWith("gfx/tiles/rocks") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep"))) {
+                            cells[i][j].val = 2;
+                        }
                     }
                 }
             }

@@ -11,6 +11,6 @@ public class Utils
 
     public static Coord2d pfGridToWorld(Coord coord, byte scale)
     {
-        return coord.mul(MCache.tilehsz).mul(4./scale).add(MCache.tilehsz);
+        return coord.mul(MCache.tilehsz).mul(4./scale).add(MCache.tileqsz);
     }
 }

@@ -49,17 +49,12 @@ public class CellsArray
             Coord b = Utils.toPfGrid(bd,scale);
             Coord c = Utils.toPfGrid(cd,scale);
             Coord d = Utils.toPfGrid(dd,scale);
-//            Coord2d a1 = Utils.pfGridToWorld(a,scale);
-//            Coord2d b1 = Utils.pfGridToWorld(b,scale);
-//            Coord2d c1 = Utils.pfGridToWorld(c,scale);
-//            Coord2d d1 = Utils.pfGridToWorld(d,scale);
             begin = new Coord(Math.min(Math.min(a.x, b.x), Math.min(c.x, d.x)), Math.min(Math.min(a.y, b.y), Math.min(c.y, d.y)));
             end = new Coord(Math.max(Math.max(a.x, b.x), Math.max(c.x, d.x)), Math.max(Math.max(a.y, b.y), Math.max(c.y, d.y)));
-            x_len = end.x - begin.x+2;
-            y_len = end.y - begin.y+2;
+            x_len = end.x - begin.x+1;
+            y_len = end.y - begin.y+1;
             cells = new short[x_len][y_len];
-            Coord2d start = Utils.pfGridToWorld(begin, scale);
-            Coord2d pos = new Coord2d(start.x, start.y).sub(MCache.tilehsz);
+
             Coord2d a_b = bd.sub(ad).norm();
             Coord2d b_c = cd.sub(bd).norm();
             Coord2d c_d = dd.sub(cd).norm();
@@ -71,11 +66,21 @@ public class CellsArray
                 delta /= 2;
                 factor *= 2;
             }
+//            if(delta>MCache.tilehsz.x)
+//                factor = (int)Math.round(delta/ MCache.tilehsz.x)+3;
 
-            short[][] dcells = new short[x_len*factor + 1 ][y_len*factor + 1];
-            for (int i = 0; i < x_len*factor; i++)
+//            while (delta>MCache.tilehsz.x)
+//            {
+//                delta /= 2;
+//                factor *= 2;
+//            }
+
+            short[][] dcells = new short[x_len*factor+1][y_len*factor+1];
+            Coord2d start = Utils.pfGridToWorld(begin, scale);//.add(MCache.tilehsz.div(factor*2));
+            Coord2d pos = new Coord2d(start.x, start.y);
+            for (int i = 0; i <= x_len*factor; i++)
             {
-                for (int j = 0; j < y_len*factor; j++)
+                for (int j = 0; j <= y_len*factor; j++)
                 {
                     dcells[i][j] = (short) ((a_b.dot(pos.sub(ad).norm()) >= 0 && b_c.dot(pos.sub(bd).norm()) >= 0 && c_d.dot(pos.sub(cd).norm()) >= 0 && d_a.dot(pos.sub(dd).norm()) >= 0) ? 1 : 0);
                     pos.y += (MCache.tilehsz.y/factor);
@@ -83,7 +88,6 @@ public class CellsArray
                 pos.x += (MCache.tilehsz.x/factor);
                 pos.y = start.y;
             }
-
 
             for (int i = 0; i < x_len; i++)
             {
@@ -97,7 +101,7 @@ public class CellsArray
                             for(int n = 0; n <= factor; n++)
                             {
 //                                if((factor * i + k) < x_len*factor && (factor * j + n)<y_len*factor)
-                                    res |= dcells[factor * i + k][factor * j + n];
+                                res |= dcells[factor * i + k][factor * j + n];
                             }
                         }
                         cells[i][j] = res;
@@ -108,7 +112,6 @@ public class CellsArray
                     }
                 }
             }
-
         }
     }
 }
