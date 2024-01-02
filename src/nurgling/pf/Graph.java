@@ -107,7 +107,7 @@ public class Graph implements Runnable
         return vert[end.x][end.y].len != -1 ? vert[end.x][end.y].len : Integer.MAX_VALUE;
     }
 
-    LinkedList<Vertex> path = new LinkedList<>();
+    public LinkedList<Vertex> path = new LinkedList<>();
 
     boolean addToPath(Vertex v)
     {
@@ -163,63 +163,59 @@ public class Graph implements Runnable
         return c.val == 3 && c.len == len;
     }
 
-    public LinkedList<Vertex> getPath()
+    public static LinkedList<Vertex> getPath(NPFMap map, LinkedList<Vertex> path)
     {
-        Coord dir = new Coord();
-        Gob player = NUtils.player();
-        if (!path.isEmpty())
-        {
-            Iterator<Vertex> it;
-            it = path.iterator();
-            Vertex prev = it.next();
-            prev.val = 9;
-            LinkedList<Vertex> for_remove = new LinkedList<>();
-            while (it.hasNext())
-            {
-                Vertex cur = it.next();
-                Coord cur_dir = new Coord(cur.i, cur.j).sub(new Coord(prev.i, prev.j));
-                if (cur_dir.equals(dir.x, dir.y))
-                    for_remove.add(prev);
-                else
-                {
-                    prev.val = 9;
-                    dir = cur_dir;
-                }
-                prev = cur;
-            }
-            path.removeAll(for_remove);
-        }
-        if(!path.isEmpty())
-        {
-            LinkedList<Vertex> for_remove = new LinkedList<>();
-            int shift = 2;
+            Coord dir = new Coord();
+            Gob player = NUtils.player();
 
-            for(int i = -1; i < path.size(); i ++) {
-                int di = 0;
-                while (i + shift < path.size()) {
-                    Coord2d first = (i!=-1)?Utils.pfGridToWorld(path.get(i).pos, (byte)4):NUtils.player().rc;
-                    Coord2d second = Utils.pfGridToWorld(path.get(i+shift).pos, (byte)4);
-                    Coord2d fsdir = second.sub(first);
-                    Coord2d center = fsdir.div(2).add(first);
-                    int hlen = (int) Math.ceil(fsdir.len() / 2);
-                    NHitBox hb = new NHitBox(new Coord(-2, -hlen), new Coord(2, hlen));
-
-                    if(map.checkCA(new CellsArray(hb, fsdir.curAngle(), center, (byte)4))) {
-                        for_remove.add(path.get(i + shift - 1));
-                        shift++;
-                        di++;
+            if (!path.isEmpty()) {
+                Iterator<Vertex> it;
+                it = path.iterator();
+                Vertex prev = it.next();
+                prev.val = 9;
+                LinkedList<Vertex> for_remove = new LinkedList<>();
+                while (it.hasNext()) {
+                    Vertex cur = it.next();
+                    Coord cur_dir = new Coord(cur.i, cur.j).sub(new Coord(prev.i, prev.j));
+                    if (cur_dir.equals(dir.x, dir.y))
+                        for_remove.add(prev);
+                    else {
+                        prev.val = 9;
+                        dir = cur_dir;
                     }
-                    else
-                    {
-                        shift = 2;
-                        i+=di;
-                        break;
+                    prev = cur;
+                }
+                path.removeAll(for_remove);
+            }
+            if (!path.isEmpty()) {
+                LinkedList<Vertex> for_remove = new LinkedList<>();
+                int shift = 2;
+
+                for (int i = -1; i < path.size(); i++) {
+                    int di = 0;
+                    while (i + shift < path.size()) {
+                        Coord2d first = (i != -1) ? Utils.pfGridToWorld(path.get(i).pos, (byte) 4) : NUtils.player().rc;
+                        Coord2d second = Utils.pfGridToWorld(path.get(i + shift).pos, (byte) 4);
+                        Coord2d fsdir = second.sub(first);
+                        Coord2d center = fsdir.div(2).add(first);
+                        int hlen = (int) Math.ceil(fsdir.len() / 2);
+                        NHitBox hb = new NHitBox(new Coord(-2, -hlen), new Coord(2, hlen));
+
+                        if (map.checkCA(new CellsArray(hb, fsdir.curAngle(), center, (byte) 4))) {
+                            for_remove.add(path.get(i + shift - 1));
+                            shift++;
+                            di++;
+                        } else {
+                            shift = 2;
+                            i += di;
+                            break;
+                        }
                     }
                 }
+                path.removeAll(for_remove);
+                if (player != null && Utils.pfGridToWorld(path.get(0).pos, (byte) 4).dist(player.rc) <= 1)
+                    path.remove(0);
             }
-            path.removeAll(for_remove);
-            if (player != null && Utils.pfGridToWorld(path.get(0).pos, (byte)4).dist(player.rc) <= 1) path.remove(0);
-        }
         return path;
     }
 
@@ -228,8 +224,8 @@ public class Graph implements Runnable
         double dist;
         int len = -1;
 
-        int i;
-        int j;
+        public int i;
+        public int j;
 
         public Vertex(Coord pos, short val)
         {

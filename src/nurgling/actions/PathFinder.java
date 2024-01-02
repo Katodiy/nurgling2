@@ -9,6 +9,8 @@ import nurgling.tools.Finder;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
+import static nurgling.pf.Graph.getPath;
+
 public class PathFinder implements Action
 {
     public static double pfmdelta = 0.1;
@@ -65,10 +67,10 @@ public class PathFinder implements Action
 
     private ArrayList<Coord> findFreeNear(Coord pos)
     {
-//        if(target_id!=-2)
-//        {
-//            return findFreeNearByHB();
-//        }
+        if(target_id!=-2)
+        {
+            return findFreeNearByHB();
+        }
 
         ArrayList<Coord> coords = new ArrayList<>();
         Coord posl = new Coord(pos.x - 1, pos.y);
@@ -173,27 +175,26 @@ public class PathFinder implements Action
         while(true)
         {
             LinkedList<Graph.Vertex> path = construct();
-            if (path != null)
-            {
+            if (path != null) {
                 boolean needRestart = false;
-                for (Graph.Vertex vert : path)
-                {
+                    for (Graph.Vertex vert : path) {
 
-                    Coord2d targetCoord = Utils.pfGridToWorld(vert.pos, scale);
-                    if(vert == path.getLast())
-                    {
-                        if(targetCoord.dist(end)<MCache.tilehsz.x)
-                            targetCoord = end;
+                        Coord2d targetCoord = Utils.pfGridToWorld(vert.pos, scale);
+                        if (vert == path.getLast()) {
+                            if (targetCoord.dist(end) < MCache.tilehsz.x)
+                                targetCoord = end;
+                        }
+
+
+                        if (!(new GoTo(targetCoord).run(gui)).IsSuccess()) {
+                            this.begin = gui.map.player().rc;
+                            needRestart = true;
+                            break;
+                        }
+
                     }
-                    if(!(new GoTo(targetCoord).run(gui)).IsSuccess())
-                    {
-                        this.begin = gui.map.player().rc;
-                        needRestart = true;
-                        break;
-                    }
-                }
-                if(!needRestart)
-                    return Results.SUCCESS();
+                    if (!needRestart)
+                        return Results.SUCCESS();
             }
             else
             {
@@ -203,6 +204,8 @@ public class PathFinder implements Action
             }
         }
     }
+
+    public boolean isDynamic = false;
 
     public LinkedList<Graph.Vertex> construct() throws InterruptedException
     {
@@ -273,7 +276,11 @@ public class PathFinder implements Action
 
             if (res != null)
             {
-                path = res.getPath();
+                if(!isDynamic)
+                    path = getPath(pfmap, res.path);
+                else
+                    path = res.path;
+
                 if (!path.isEmpty()) {
                     return path;
                 }
@@ -320,6 +327,7 @@ public class PathFinder implements Action
                         if (ca.cells[i][j] != 0) {
                             for (int d = 0; d < 4; d++) {
                                 Coord test_coord = npfpos.add(Coord.uecw[d]);
+                                if(test_coord.x<pfmap.size && test_coord.x>=0 && test_coord.y<pfmap.size && test_coord.y>=0)
                                 if (pfmap.cells[test_coord.x][test_coord.y].val == 0) {
                                     pfmap.getCells()[test_coord.x][test_coord.y].val = 7;
                                     res.add(test_coord);

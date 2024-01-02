@@ -64,6 +64,8 @@ public class CowsHerd implements JConf {
             ignoreBD = (Boolean) values.get("bd");
         if (values.get("dk") != null)
             disable_killing = (Boolean) values.get("dk");
+        if(current==null)
+            current = name;
     }
 
     public static void set(CowsHerd prop)

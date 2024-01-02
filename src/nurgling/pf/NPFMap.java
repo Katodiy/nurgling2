@@ -152,12 +152,15 @@ public class NPFMap
         return false;
     }
 
+    public static Window wnd = null;
     public static void print(int size, Cell[][] cells)
     {
         if(NUtils.getUI().core.debug)
         {
             Coord csz = new Coord(UI.scale(10), UI.scale(10));
-            Window wnd = NUtils.getUI().root.add(new Window(new Coord(size * UI.scale(10), size * UI.scale(10)), "PFMAP")
+            if(wnd!=null)
+                wnd.destroy();
+            wnd = NUtils.getUI().root.add(new Window(new Coord(size * UI.scale(10), size * UI.scale(10)), "PFMAP")
             {
                 @Override
                 public void draw(GOut g)

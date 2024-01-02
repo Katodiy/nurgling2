@@ -2,21 +2,14 @@
 package haven.res.ui.croster;
 
 import haven.*;
-import haven.render.*;
+
 import java.util.*;
-import java.util.function.*;
-import haven.MenuGrid.Pagina;
+
 import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.gfx.hud.rosters.goat.Goat;
 import haven.res.gfx.hud.rosters.horse.Horse;
 import haven.res.gfx.hud.rosters.pig.Pig;
 import haven.res.gfx.hud.rosters.sheep.Sheep;
-import nurgling.NStyle;
-import nurgling.NUtils;
-import nurgling.widgets.NKinSettings;
-
-import java.awt.Color;
-import java.awt.image.BufferedImage;
 
 @haven.FromResource(name = "ui/croster", version = 74)
 public class RosterWindow extends Window {
@@ -71,7 +64,7 @@ public class RosterWindow extends Window {
 		}
 	}
 
-	public boolean allLoaded(){
+	public boolean allLoaded(Class<? extends Entry> cattleRoster){
 		if(!isLoaded(Goat.class)){
 			return false;
 		}

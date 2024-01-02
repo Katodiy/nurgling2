@@ -173,9 +173,11 @@ public class NUtils
     public static RosterWindow getRosterWindow(Class<? extends Entry> cattleRoster) throws InterruptedException {
         RosterWindow w;
         if((w = (RosterWindow)NUtils.getGameUI().getWindow("Cattle Roster")) == null) {
-            getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "cattle");
-            getUI().core.addTask(new WaitRosterLoad());
+            getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "croster");
+            getUI().core.addTask(new WaitRosterLoad(cattleRoster));
+            w = (RosterWindow)NUtils.getGameUI().getWindow("Cattle Roster");
         }
+
         w.show(cattleRoster);
         return w;
     }

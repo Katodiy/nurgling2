@@ -17,6 +17,13 @@ public class IsMoving implements NTask
         this.coord = coord;
     }
 
+    int th = 200;
+    public IsMoving(Coord2d coord, int th)
+    {
+        this.coord = coord;
+        this.th = th;
+    }
+
     @Override
     public boolean check()
     {
@@ -30,9 +37,13 @@ public class IsMoving implements NTask
             {
                 String pose;
                 // Экстренный выход если движение так и началось ( 200 попыток )
-                return count > 200 || drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && NParser.checkName(pose, "borka/walking", "borka/running");
+                return count > th || drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && NParser.checkName(pose, "borka/walking", "borka/running");
             }
         }
         return false;
+    }
+    public boolean getResult()
+    {
+        return count <= th;
     }
 }

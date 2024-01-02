@@ -1,14 +1,13 @@
 package nurgling.tasks;
 
-import haven.Coord2d;
-import haven.Gob;
+import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
-import nurgling.NUI;
 import nurgling.NUtils;
 
 public class WaitRosterLoad implements NTask {
-
-    public WaitRosterLoad() {
+    Class<? extends Entry> cattleRoster;
+    public WaitRosterLoad(Class<? extends Entry> cattleRoster) {
+        this.cattleRoster = cattleRoster;
     }
 
     @Override
@@ -16,7 +15,7 @@ public class WaitRosterLoad implements NTask {
         RosterWindow rw = (RosterWindow)NUtils.getGameUI().getWindow("Cattle Roster");
         if(rw == null)
             return false;
-        return rw.allLoaded();
+        return rw.isLoaded(cattleRoster);
     }
 }
 

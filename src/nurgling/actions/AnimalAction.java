@@ -7,6 +7,7 @@ import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import nurgling.*;
 import nurgling.areas.NArea;
+import nurgling.overlays.NTestRing;
 import nurgling.tasks.AnimalInRoster;
 import nurgling.tasks.AnimalIsDead;
 import nurgling.tools.Finder;
@@ -29,6 +30,16 @@ public class AnimalAction <C extends Entry> implements Action {
         RosterWindow w = NUtils.getRosterWindow(cattleRoster);
         ArrayList<Gob> gobs = Finder.findGobs(current,animal);
         ArrayList<Gob> targets = new ArrayList<>();
+
+        for(Gob gob: gobs)
+        {
+            NTestRing tr = new NTestRing(gob);
+            gob.addcustomol(tr);
+            DynamicPf pf = new DynamicPf(gob);
+            pf.run(gui);
+            tr.tr = true;
+        }
+
 
         while(memorize(gobs,gui,w,cattleRoster));
 
