@@ -55,11 +55,11 @@ public class CellsArray
 //            Coord2d d1 = Utils.pfGridToWorld(d,scale);
             begin = new Coord(Math.min(Math.min(a.x, b.x), Math.min(c.x, d.x)), Math.min(Math.min(a.y, b.y), Math.min(c.y, d.y)));
             end = new Coord(Math.max(Math.max(a.x, b.x), Math.max(c.x, d.x)), Math.max(Math.max(a.y, b.y), Math.max(c.y, d.y)));
-            x_len = end.x - begin.x+1;
-            y_len = end.y - begin.y+1;
+            x_len = end.x - begin.x+2;
+            y_len = end.y - begin.y+2;
             cells = new short[x_len][y_len];
             Coord2d start = Utils.pfGridToWorld(begin, scale);
-            Coord2d pos = new Coord2d(start.x, start.y);
+            Coord2d pos = new Coord2d(start.x, start.y).sub(MCache.tilehsz);
             Coord2d a_b = bd.sub(ad).norm();
             Coord2d b_c = cd.sub(bd).norm();
             Coord2d c_d = dd.sub(cd).norm();
