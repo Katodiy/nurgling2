@@ -30,10 +30,18 @@ public class TESTLiftDrop extends Test
     @Override
     public void body(NGameUI gui) throws InterruptedException
     {
-
-        new PathFinder(Finder.findGob(new NAlias("gfx/kritter/cattle/cattle"))).run(gui);
-//        Coord2d pos = trough.rc;
-//        new LiftObject(trough).run(gui);
-//        new PlaceObject(trough, pos).run(gui);
+        Gob trough = Finder.findGob(new NAlias("gfx/terobjs/trough"));
+        Coord2d pos = trough.rc;
+        Gob cistern  = Finder.findGob(new NAlias("gfx/terobjs/cistern"));
+        new LiftObject(trough).run(gui);
+        new PathFinder ( cistern ).run(gui);
+        NUtils.activateGob ( cistern );
+        NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 7));
+        new PlaceObject(trough, pos).run(gui);
+        new LiftObject(trough).run(gui);
+        new PathFinder ( cistern ).run(gui);
+        NUtils.activateGob ( cistern );
+        NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 0));
+        new PlaceObject(trough, pos).run(gui);
     }
 }
