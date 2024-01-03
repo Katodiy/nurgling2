@@ -2,7 +2,7 @@ package nurgling.pf;
 
 import haven.*;
 
-public class AreaD implements Comparable<AreaD>, java.io.Serializable
+public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable
 {
 // ul  0
 //     _____
@@ -13,48 +13,61 @@ public class AreaD implements Comparable<AreaD>, java.io.Serializable
     public Coord2d ul, br;
     public Coord2d rc = Coord2d.of(0);
     public double a = 0;
-    double sn, cs;
+    double sn = 0, cs = 1;
     public static Coord2d[] n = {Coord2d.of(0, 1), Coord2d.of(-1, 0), Coord2d.of(0, -1), Coord2d.of(1, 0)};
     public double[] d = {0, 0, 0, 0};
     public Coord2d[] c = new Coord2d[4];
     boolean ortho = false;
 
-    public AreaD(Coord2d ul, Coord2d br)
+    public NHitBoxD(Coord2d ul, Coord2d br)
+    {
+        this.setOrtho(ul, br, Coord2d.of(0));
+    }
+
+    public NHitBoxD(Coord ul, Coord br)
+    {
+        this(Coord2d.of(ul),Coord2d.of(br));
+    }
+
+    public NHitBoxD(Coord2d ul, Coord2d br, Coord2d r)
+    {
+        this.setOrtho(ul, br, r);
+    }
+
+    public NHitBoxD(Coord2d ul, Coord2d br, Coord2d r, double angle)
+    {
+        if(Math.abs(((4 * angle) / Math.PI) % 2.0) > 0.0001)
+        {
+            this.ul = Coord2d.of(Math.min(ul.x, br.x), Math.min(ul.y, br.y));
+            this.br = Coord2d.of(Math.max(ul.x, br.x), Math.max(ul.y, br.y));
+            reCalc_n(r, angle);
+        }
+        else
+        {
+            this.setOrtho(ul, br, r);
+        }
+    }
+
+    public void setOrtho(Coord2d ul, Coord2d br, Coord2d r)
     {
         this.ul = Coord2d.of(Math.min(ul.x, br.x), Math.min(ul.y, br.y));
         this.br = Coord2d.of(Math.max(ul.x, br.x), Math.max(ul.y, br.y));
-        c[0] = this.ul;
-        c[1] = Coord2d.of(this.br.x, this.ul.y);
-        c[2] = this.br;
-        c[3] = Coord2d.of(this.ul.x, this.br.y);
+        rc = Coord2d.of(r.x, r.y);
+        c[0] = this.ul.add(r);
+        c[1] = Coord2d.of(this.br.x, this.ul.y).add(r);
+        c[2] = this.br.add(r);
+        c[3] = Coord2d.of(this.ul.x, this.br.y).add(r);
         ortho = true;
     }
-
-    public AreaD(Coord2d ul, Coord2d br, Coord2d r)
-    {
-        this.ul = Coord2d.of(Math.min(ul.x, br.x), Math.min(ul.y, br.y));
-        this.br = Coord2d.of(Math.max(ul.x, br.x), Math.max(ul.y, br.y));
-        reCalc_n(r, 0);
-        this.br = Coord2d.of(Math.max(ul.x, br.x), Math.max(ul.y, br.y));
-
-    }
-
-    public AreaD(Coord2d ul, Coord2d br, Coord2d r, double angle)
-    {
-        this.ul = Coord2d.of(Math.min(ul.x, br.x), Math.min(ul.y, br.y));
-        this.br = Coord2d.of(Math.max(ul.x, br.x), Math.max(ul.y, br.y));
-        reCalc_n(r, angle);
-    }
-
 
     @Override
     public boolean equals(Object o)
     {
-        if (!(o instanceof AreaD))
+        if (!(o instanceof NHitBoxD))
         {
             return (false);
         }
-        AreaD a = (AreaD) o;
+        NHitBoxD a = (NHitBoxD) o;
         return (a.ul.equals(ul) && a.br.equals(br));
     }
 
@@ -65,7 +78,7 @@ public class AreaD implements Comparable<AreaD>, java.io.Serializable
         return X + Y;
     }
 
-    public int compareTo(AreaD c)
+    public int compareTo(NHitBoxD c)
     {
         return (br == c.br) ? ul.compareTo(c.ul) : br.compareTo(c.br);
     }
@@ -73,7 +86,7 @@ public class AreaD implements Comparable<AreaD>, java.io.Serializable
     //functionality
     public boolean reCalc_n(Coord2d NewShift, double newAngle)
     {
-        if ((a != newAngle) || (NewShift != rc))
+     //   if ((a != newAngle) || (NewShift != rc))
         {
             a = newAngle;
             sn = Math.sin(a);
@@ -105,7 +118,7 @@ public class AreaD implements Comparable<AreaD>, java.io.Serializable
             }
             return true;
         }
-        return false;
+      //  return false;
     }
 
     public Coord2d getCircumscribedUL()
@@ -162,7 +175,7 @@ public class AreaD implements Comparable<AreaD>, java.io.Serializable
         }
         else
         {
-            return ((c.x >= ul.x) && (c.y >= ul.y) && (c.x < br.x) && (c.y < br.y));
+            return ((c.x >= this.c[0].x) && (c.y >= this.c[0].y) && (c.x < this.c[2].x) && (c.y < this.c[2].y));
         }
     }
 
@@ -174,7 +187,7 @@ public class AreaD implements Comparable<AreaD>, java.io.Serializable
         }
         else
         {
-            return ((c.x >= ul.x) && (c.y >= ul.y) && (c.x <= br.x) && (c.y <= br.y));
+            return ((c.x >= this.c[0].x) && (c.y >= this.c[0].y) && (c.x <= this.c[2].x) && (c.y <= this.c[2].y));
         }
     }
 
@@ -186,7 +199,31 @@ public class AreaD implements Comparable<AreaD>, java.io.Serializable
         }
         else
         {
-            return ((c.x > ul.x) && (c.y > ul.y) && (c.x < br.x) && (c.y < br.y));
+            return ((c.x > this.c[0].x) && (c.y > this.c[0].y) && (c.x < this.c[2].x) && (c.y < this.c[2].y));
         }
+    }
+
+    public boolean intersects(NHitBoxD other)
+    {
+        for (int k = 0; k < 4; k++)
+            if (this.contains(other.c[k]) || other.contains(this.c[k]))
+                return true;
+        return false;
+    }
+
+    public boolean intersectsGreedy(NHitBoxD other)
+    {
+        for (int k = 0; k < 4; k++)
+            if (this.containsGreedy(other.c[k]) || other.containsGreedy(this.c[k]))
+                return true;
+        return false;
+    }
+
+    public boolean intersectsLoosely(NHitBoxD other)
+    {
+        for (int k = 0; k < 4; k++)
+            if (this.containsLoosely(other.c[k]) || other.containsLoosely(this.c[k]))
+                return true;
+        return false;
     }
 }

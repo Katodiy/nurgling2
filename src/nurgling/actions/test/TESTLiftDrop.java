@@ -5,10 +5,11 @@ import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.LiftObject;
-import nurgling.actions.OpenTargetContainer;
+import nurgling.actions.FindPlaceAndAction;
 import nurgling.actions.PathFinder;
 import nurgling.actions.PlaceObject;
 import nurgling.areas.NArea;
+import nurgling.pf.*;
 import nurgling.tasks.ChangeModelAtrib;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -30,6 +31,9 @@ public class TESTLiftDrop extends Test
     @Override
     public void body(NGameUI gui) throws InterruptedException
     {
+//        NPFMap npf = new NPFMap(NUtils.player().rc, Finder.findGob(new NAlias("gfx/terobjs/barrel")).rc, 2);
+//        npf.build();
+//        npf.print(npf.getSize(), npf.getCells());
         Gob trough = Finder.findGob(new NAlias("gfx/terobjs/trough"));
         Coord2d pos = trough.rc;
         Gob cistern  = Finder.findGob(new NAlias("gfx/terobjs/cistern"));
@@ -37,11 +41,11 @@ public class TESTLiftDrop extends Test
         new PathFinder ( cistern ).run(gui);
         NUtils.activateGob ( cistern );
         NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 7));
-        new PlaceObject(trough, pos).run(gui);
+        new FindPlaceAndAction(trough, NArea.findSpec("trough")).run(gui);
         new LiftObject(trough).run(gui);
         new PathFinder ( cistern ).run(gui);
         NUtils.activateGob ( cistern );
         NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 0));
-        new PlaceObject(trough, pos).run(gui);
+        new FindPlaceAndAction(trough, NArea.findSpec("trough")).run(gui);
     }
 }
