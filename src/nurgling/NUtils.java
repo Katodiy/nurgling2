@@ -165,8 +165,10 @@ public class NUtils
         getUI().core.addTask(new WaitLifted(gob));
     }
 
-    public static void place(Gob gob, Coord2d coord2d) throws InterruptedException {
-        getGameUI().map.wdgmsg("click", Coord.z, coord2d.floor(posres), 3, 0);
+    public static void place(Gob gob, Coord2d coord2d, double a) throws InterruptedException {
+        NUtils.activateGob(gob);
+        getUI().core.addTask(new WaitPlob());
+        getGameUI().map.wdgmsg("place", coord2d.floor(posres), (int)Math.round(a * 32768 / Math.PI), 1, 1);
         getUI().core.addTask(new WaitPlaced(gob));
     }
 

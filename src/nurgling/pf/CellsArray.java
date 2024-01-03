@@ -21,7 +21,7 @@ public class CellsArray
     public CellsArray(NHitBox hb, double angl, Coord2d rc, byte scale)
     {
 
-//        if ((Math.abs((angl * 180 / Math.PI) / 90) % 1 < 0.01)) {
+//       20.01)) {
 //            Coord2d a1 = hb.begin.rotate(angl).shift(rc);
 //            Coord a = Utils.toPfGrid(a1, scale);
 //            Coord b = Utils.toPfGrid(hb.end.rotate(angl).shift(rc), scale);
@@ -52,7 +52,11 @@ public class CellsArray
                 cells[i][j] = 0;
                 for (int k = 0; k < 4; k++)
                 {
-                    if (tile.containsLoosely(objToApproach.c[k]) || objToApproach.containsLoosely(tile.c[k]))
+                    if (tile.containsLoosely(objToApproach.c[k]) )
+                    {
+                        cells[i][j] = (short) 1;
+                    }
+                    if ( objToApproach.containsLoosely(tile.c[k]))
                     {
                         cells[i][j] = (short) 1;
                     }

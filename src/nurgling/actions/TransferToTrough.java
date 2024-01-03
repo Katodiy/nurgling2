@@ -31,11 +31,12 @@ public class TransferToTrough implements Action {
                             gui.getInventory().dropOn(gui.getInventory().findFreeCoord(NUtils.getGameUI().vhand));
                         }
                         Coord2d pos = trough.rc;
+                        double a = trough.a;
                         new LiftObject(trough).run(gui);
                         new PathFinder ( cistern ).run(gui);
                         NUtils.activateGob ( cistern );
                         NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 7));
-                        new PlaceObject(trough, pos).run(gui);
+                        new PlaceObject(trough, pos, a).run(gui);
                     }
 //                    Gob cistern = Finder.findObjectInArea ( new NAlias ( new ArrayList<>( Arrays
 //                                    .asList ( "cistern")) ),

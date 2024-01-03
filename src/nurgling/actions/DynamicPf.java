@@ -49,46 +49,60 @@ public class DynamicPf implements Action
 
             }
         }
+
+        public boolean checkDN() {
+            PathFinder pf = new PathFinder(target);
+            try {
+                path = pf.construct();
+
+            } catch (InterruptedException e) {
+
+            }
+            return pf.getDNStatus();
+        }
     }
+
 
 
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         WorkerPf wpf = new WorkerPf();
-        NUtils.getUI().core.addTask((new WaitPath(wpf)));
-        LinkedList<Graph.Vertex> path = wpf.path;
-        updatePath(path, wpf);
-        while (path != null && !path.isEmpty()) {
-            Coord2d targetCoord = Utils.pfGridToWorld(path.pop().pos, (byte) 4);
-            gui.map.wdgmsg("click", Coord.z, targetCoord.floor(posres), 1, 0);
-            IsMoving im;
-            NUtils.getUI().core.addTask(im = new IsMoving(targetCoord,20));
-            if(im.getResult()) {
-                DynMovingCompleted dmc;
-                NUtils.getUI().core.addTask((dmc = new DynMovingCompleted(new WorkerPf(), target, targetCoord)));
-                if (dmc.needUpdate()) {
-                    if (dmc.wpf.path != null) {
-                        NUtils.getGameUI().msg("update" + dmc.wpf.path.size());
-                        path = dmc.wpf.path;
 
-                        updatePath(path, dmc.wpf);
+        do {
+            NUtils.getUI().core.addTask((new WaitPath(wpf)));
+            LinkedList<Graph.Vertex> path = wpf.path;
+            updatePath(path, wpf);
+            while (!path.isEmpty()) {
+                Coord2d targetCoord = Utils.pfGridToWorld(path.pop().pos, (byte) 4);
+                gui.map.wdgmsg("click", Coord.z, targetCoord.floor(posres), 1, 0);
+                IsMoving im;
+                NUtils.getUI().core.addTask(im = new IsMoving(targetCoord, 20));
+                if (im.getResult()) {
+                    DynMovingCompleted dmc;
+                    NUtils.getUI().core.addTask((dmc = new DynMovingCompleted(new WorkerPf(), target, targetCoord)));
+                    if (dmc.needUpdate()) {
+                        if (dmc.wpf.path != null) {
+                            NUtils.getGameUI().msg("update" + dmc.wpf.path.size());
+                            path = dmc.wpf.path;
+
+                            updatePath(path, dmc.wpf);
 
 
+                        }
+                    } else {
+                        if (targetCoord.dist(NUtils.player().rc) > MCache.tilehsz.len())
+                            NUtils.getGameUI().msg("break");
                     }
                 } else {
-                    if (targetCoord.dist(NUtils.player().rc) > MCache.tilehsz.len())
-                        NUtils.getGameUI().msg("break");
+                    wpf = new WorkerPf();
+                    NUtils.getUI().core.addTask((new WaitPath(wpf)));
+                    path = wpf.path;
+                    updatePath(path, wpf);
                 }
             }
-            else
-            {
-                wpf = new WorkerPf();
-                NUtils.getUI().core.addTask((new WaitPath(wpf)));
-                path = wpf.path;
-                updatePath(path, wpf);
-            }
         }
+        while (!wpf.checkDN());
         return Results.SUCCESS();
     }
 
