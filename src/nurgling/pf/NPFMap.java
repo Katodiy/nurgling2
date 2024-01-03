@@ -11,10 +11,14 @@ import static nurgling.actions.PathFinder.scale;
 
 public class NPFMap
 {
-    public void addGob(Gob gob) {
+    public CellsArray addGob(Gob gob) {
         CellsArray ca;
+
         if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player()!=null && gob.id!=NUtils.player().id && gob.getattr(Following.class) == null)
         {
+            CellsArray old = new CellsArray(ca.x_len,ca.y_len);
+            old.begin = ca.begin;
+            old.end = ca.end;
             if ((ca.begin.x >= begin.x && ca.begin.x <= end.x ||
                     ca.end.x >= begin.x && ca.end.x <= end.x) &&
                     (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
@@ -27,6 +31,7 @@ public class NPFMap
                         int jj = j + ca.begin.y - begin.y;
                         if (ii > 0 && ii < size && jj > 0 && jj < size)
                         {
+                            old.cells[i][j] = cells[ii][jj].val;
                             cells[ii][jj].val = ca.cells[i][j];
                             if(ca.cells[i][j]!=0)
                             {
@@ -35,8 +40,28 @@ public class NPFMap
                         }
                     }
             }
+            return old;
+        }
+        return null;
+    }
+
+    public void setCellArray(CellsArray ca) {
+
+        if ((ca.begin.x >= begin.x && ca.begin.x <= end.x ||
+                ca.end.x >= begin.x && ca.end.x <= end.x) &&
+                (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
+                        ca.end.y >= begin.y && ca.end.y <= end.y)) {
+            for (int i = 0; i < ca.x_len; i++)
+                for (int j = 0; j < ca.y_len; j++) {
+                    int ii = i + ca.begin.x - begin.x;
+                    int jj = j + ca.begin.y - begin.y;
+                    if (ii > 0 && ii < size && jj > 0 && jj < size) {
+                        cells[ii][jj].val = ca.cells[i][j];
+                    }
+                }
         }
     }
+
 
     public static class Cell
     {
