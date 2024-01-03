@@ -55,8 +55,11 @@ public class PathFinder implements Action
             end_poses = findFreeNear(end_pos,false);
             for (Coord coord : end_poses)
             {
+                if(start_pos.equals(coord))
+                    return false;
                 cells[coord.x][coord.y].val = 7;
             }
+
         }
         else
         {
@@ -229,7 +232,7 @@ public class PathFinder implements Action
             // Находим свободные начальные и конечные точки
 
             if(!fixStartEnd(test)) {
-                dn = false;
+                dn = true;
                 return null;
             }
             NPFMap.print(pfmap.getSize(), pfmap.getCells());
@@ -344,4 +347,9 @@ public class PathFinder implements Action
     Gob dummy;
 
     boolean dn = false;
+
+    boolean getDNStatus()
+    {
+        return dn;
+    }
 }

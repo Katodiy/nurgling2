@@ -15,10 +15,10 @@ public class PlaceObject implements Action {
         if(gob == null)
             gob = findLiftedbyPlayer();
         if ( gob != null ) {
-            PathFinder pf = new PathFinder ( NGob.getDummy(pos,0, gob.ngob.hitBox) , true);
+            PathFinder pf = new PathFinder ( NGob.getDummy(pos, a, gob.ngob.hitBox) , true);
             pf.isHardMode = true;
             pf.run(gui);
-            NUtils.place(gob,pos);
+            NUtils.place(gob,pos,a);
             return Results.SUCCESS();
         }
         return Results.ERROR("No gob for place");
@@ -26,13 +26,16 @@ public class PlaceObject implements Action {
 
     public PlaceObject(
             Gob gob,
-            Coord2d pos
+            Coord2d pos,
+            double a
 
     ) {
         this.gob = gob;
         this.pos = pos;
+        this.a = a;
     }
 
     Gob gob = null;
     Coord2d pos = null;
+    double a = 0;
 }

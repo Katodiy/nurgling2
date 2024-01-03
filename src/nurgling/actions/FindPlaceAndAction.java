@@ -21,7 +21,7 @@ public class FindPlaceAndAction implements Action {
         if ( placed != null ) {
             Coord2d pos = Finder.getFreePlace(area, placed);
             if(pos!=null) {
-                new PlaceObject(placed, pos);
+                new PlaceObject(placed, pos,0);
                 return Results.SUCCESS();
             }
             else

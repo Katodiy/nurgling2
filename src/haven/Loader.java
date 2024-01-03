@@ -158,6 +158,14 @@ public class Loader {
 	    }
 	}
 
+	public boolean ready()
+	{
+		if(done) {
+            return exc == null;
+		}
+		return false;
+	}
+
 	public T get() {
 	    synchronized(this) {
 		if(done) {

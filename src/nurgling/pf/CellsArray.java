@@ -11,8 +11,6 @@ public class CellsArray
 
     public int x_len;
     public int y_len;
-    float angle;
-
 
     public CellsArray(Gob gob, byte scale)
     {
@@ -38,6 +36,5 @@ public class CellsArray
                 cells[i][j] = (tile.intersectsLoosely(objToApproach))? (short)1:0;
             }
         }
-        int kek =1;
     }
 }
