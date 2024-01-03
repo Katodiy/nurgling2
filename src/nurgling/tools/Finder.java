@@ -332,9 +332,9 @@ public class Finder
         ArrayList<NHitBoxD> significantGobs = new ArrayList<> ();
         NHitBoxD chekerOfArea = new NHitBoxD(area.getRCArea().a, area.getRCArea().b);
 
-        NHitBoxD compareGobBox = new NHitBoxD(placed.ngob.hitBox.begin, placed.ngob.hitBox.end, Coord2d.of(0),0);
-        if(chekerOfArea.c[2].sub(chekerOfArea.c[0]).x < compareGobBox.getCircumscribedBR().sub(compareGobBox.getCircumscribedUL()).x ||
-                chekerOfArea.c[2].sub(chekerOfArea.c[0]).y < compareGobBox.getCircumscribedBR().sub(compareGobBox.getCircumscribedUL()).y )
+        NHitBoxD temporalGobBox = new NHitBoxD(placed.ngob.hitBox.begin, placed.ngob.hitBox.end, Coord2d.of(0),0);
+        if(chekerOfArea.c[2].sub(chekerOfArea.c[0]).x < temporalGobBox.getCircumscribedBR().sub(temporalGobBox.getCircumscribedUL()).x ||
+                chekerOfArea.c[2].sub(chekerOfArea.c[0]).y < temporalGobBox.getCircumscribedBR().sub(temporalGobBox.getCircumscribedUL()).y )
             return null;
 
         synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
