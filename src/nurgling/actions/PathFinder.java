@@ -47,7 +47,10 @@ public class PathFinder implements Action
         if (cells[start_pos.x][start_pos.y].val != 0) {
             if (target_id != -2 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test)
                 return false;
-            start_pos = findFreeNear(start_pos,true).get(0);
+            ArrayList<Coord> st_poses = findFreeNear(start_pos,true);
+            if(st_poses.isEmpty())
+                return false;
+            start_pos = st_poses.get(0);
         }
 //        cells[start_pos.x][start_pos.y].val = 7;
         if (cells[end_pos.x][end_pos.y].val != 0)
@@ -223,9 +226,11 @@ public class PathFinder implements Action
         while (path.size() == 0 && mul < 5)
         {
             pfmap = new NPFMap(begin, end, mul);
-            if(dummy!=null)
-                pfmap.addGob(dummy);
+
             pfmap.build();
+            CellsArray dca = null;
+            if(dummy!=null)
+                dca = pfmap.addGob(dummy);
 
             start_pos = Utils.toPfGrid(begin,scale).sub(pfmap.getBegin());
             end_pos = Utils.toPfGrid(end,scale).sub(pfmap.getBegin());
@@ -235,6 +240,9 @@ public class PathFinder implements Action
                 dn = true;
                 return null;
             }
+
+            if(dca!=null)
+                pfmap.setCellArray(dca);
             NPFMap.print(pfmap.getSize(), pfmap.getCells());
             Graph res = null;
             if (pfmap.getCells()[end_pos.x][end_pos.y].val == 7)

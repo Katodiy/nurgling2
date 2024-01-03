@@ -18,6 +18,12 @@ public class CellsArray
     }
 
 
+    public CellsArray(int x_len, int y_len){
+        this.cells = new short[x_len][y_len];
+        this.x_len = x_len;
+        this.y_len = y_len;
+    }
+
     public CellsArray(NHitBox hb, double angl, Coord2d rc, byte scale)
     {
 
