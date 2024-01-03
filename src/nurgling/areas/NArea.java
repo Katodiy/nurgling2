@@ -86,9 +86,11 @@ public class NArea
             Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
             for(Integer id : nids)
             {
-                for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
-                    if(s.name.equals(name) && s.subtype!=null && s.subtype.equals(sub))
-                        return NUtils.getGameUI().map.glob.map.areas.get(id);
+                if(id>=0) {
+                    for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
+                        if (s.name.equals(name) && s.subtype != null && s.subtype.equals(sub))
+                            return NUtils.getGameUI().map.glob.map.areas.get(id);
+                    }
                 }
             }
         }

@@ -12,7 +12,7 @@ public class NParser
     ) { if (regEx!=null) {
         /// Проверяем имя на соответствие
         for (String key : regEx.keys) {
-            if (name.toLowerCase().contains(key.toLowerCase())) {
+            if (key!=null && name.toLowerCase().contains(key.toLowerCase())) {
                 for (String ex : regEx.exceptions) {
                     if (name.toLowerCase().contains(ex.toLowerCase())) {
                         return false;

@@ -29,7 +29,8 @@ public class AreaD implements Comparable<AreaD>, java.io.Serializable
     {
         this.ul = Coord2d.of(Math.min(ul.x, br.x), Math.min(ul.y, br.y));
         this.br = Coord2d.of(Math.max(ul.x, br.x), Math.max(ul.y, br.y));
-        reCalc_n(r, 0);
+        reCalc_n(r, 0);        this.br = Coord2d.of(Math.max(ul.x, br.x), Math.max(ul.y, br.y));
+
     }
 
     public AreaD(Coord2d ul, Coord2d br, Coord2d r, double angle)
