@@ -12,7 +12,7 @@ public class GoTo implements Action
 
     public GoTo(Coord2d targetCoord)
     {
-        this.targetCoord = targetCoord.add(MCache.tileqsz);
+        this.targetCoord = targetCoord;
     }
 
     @Override
