@@ -4,6 +4,7 @@
 package haven.res.gfx.hud.rosters.goat;
 
 import haven.*;
+import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.ui.croster.*;
 import java.util.*;
 
@@ -30,7 +31,8 @@ public class GoatRoster extends CattleRoster<Goat> {
 	new Column<Goat>(Resource.classres(GoatRoster.class).pool.load("gfx/hud/rosters/woolquality", 1), Comparator.comparing((Goat e) -> e.woolq).reversed()),
 	new Column<Goat>(Resource.classres(GoatRoster.class).pool.load("gfx/hud/rosters/hidequality", 1), Comparator.comparing((Goat e) -> e.hideq).reversed()),
 
-	new Column<Goat>(Resource.classres(GoatRoster.class).pool.load("gfx/hud/rosters/breedingquality", 1), Comparator.comparing((Goat e) -> e.seedq).reversed())
+	new Column<Goat>(Resource.classres(GoatRoster.class).pool.load("gfx/hud/rosters/breedingquality", 1), Comparator.comparing((Goat e) -> e.seedq).reversed()),
+	new Column<Goat>(Resource.local().load("nurgling/hud/rang", 1), Comparator.comparing(Goat::rang).reversed())
     );
     protected List<Column> cols() {return(cols);}
 

@@ -3,41 +3,44 @@ package nurgling.conf;
 import nurgling.NConfig;
 import org.json.JSONObject;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
-public class CowsHerd implements JConf {
+public class GoatsHerd implements JConf {
 
     public boolean ignoreChildren = false;
     public boolean ignoreBD = false;
     public boolean disable_killing = false;
-    public int adultCows = 4;
+    public int adultGoats = 4;
     public int breedingGap = 10;
     public double milkq = 1.5;
+    public double woolq = 0.33;
     public double meatq = 0.;
     public double hideq = 0.;
     public double meatquanth =0.;
     public double milkquanth =0.;
+    public double woolquanth =0.;
     public double meatquan1 = 0.;
     public double meatquan2 = 0.;
     public double milkquan1 = 0.;
     public double milkquan2 = 0.;
+    public double woolquan1 = 0.;
+    public double woolquan2 = 0.;
     public double coverbreed = 0.;
     public String name;
 
-    public CowsHerd( String name)
+    public GoatsHerd(String name)
     {
         this.name = name;
     }
 
-    public CowsHerd(HashMap<String, Object> values)
+    public GoatsHerd(HashMap<String, Object> values)
     {
         name = (String) values.get("name");
         if (values.get("adult_count") != null)
-            adultCows = (Integer) values.get("adult_count");
+            adultGoats = (Integer) values.get("adult_count");
         if (values.get("breading_gap") != null)
             breedingGap = (Integer) values.get("breading_gap");
         if (values.get("mq") != null)
@@ -66,18 +69,26 @@ public class CowsHerd implements JConf {
             disable_killing = (Boolean) values.get("dk");
         if (values.get("coverbreed") != null)
             coverbreed = ((Number) values.get("coverbreed")).doubleValue();
+        if (values.get("woolquan1") != null)
+            woolquan1 = ((Number) values.get("woolquan1")).doubleValue();
+        if (values.get("woolquan2") != null)
+            woolquan2 = ((Number) values.get("woolquan2")).doubleValue();
+        if (values.get("woolquanth") != null)
+            woolquanth = ((Number) values.get("woolquanth")).doubleValue();
+        if (values.get("wq") != null)
+            woolq = ((Number) values.get("wq")).doubleValue();
         if(current==null)
             current = name;
     }
 
-    public static void set(CowsHerd prop)
+    public static void set(GoatsHerd prop)
     {
-        ArrayList<CowsHerd> cowsHerds = ((ArrayList<CowsHerd>) NConfig.get(NConfig.Key.cowsprop));
-        if (cowsHerds != null)
+        ArrayList<GoatsHerd> goatsHerds = ((ArrayList<GoatsHerd>) NConfig.get(NConfig.Key.goatsprop));
+        if (goatsHerds != null)
         {
-            for (Iterator<CowsHerd> i = cowsHerds.iterator(); i.hasNext(); )
+            for (Iterator<GoatsHerd> i = goatsHerds.iterator(); i.hasNext(); )
             {
-                CowsHerd oldprop = i.next();
+                GoatsHerd oldprop = i.next();
                 if (oldprop.name.equals(prop.name))
                 {
                     i.remove();
@@ -88,30 +99,30 @@ public class CowsHerd implements JConf {
         }
         else
         {
-            cowsHerds = new ArrayList<>();
+            goatsHerds = new ArrayList<>();
         }
-        cowsHerds.add(prop);
+        goatsHerds.add(prop);
         current = prop.name;
-        NConfig.set(NConfig.Key.cowsprop, cowsHerds);
+        NConfig.set(NConfig.Key.goatsprop, goatsHerds);
     }
 
     public static void remove(String val) {
-        ArrayList<CowsHerd> cowsHerd = ((ArrayList<CowsHerd>) NConfig.get(NConfig.Key.cowsprop));
-        if (cowsHerd == null)
-            cowsHerd = new ArrayList<>();
-        for (CowsHerd prop : cowsHerd)
+        ArrayList<GoatsHerd> goatsHerd = ((ArrayList<GoatsHerd>) NConfig.get(NConfig.Key.goatsprop));
+        if (goatsHerd == null)
+            goatsHerd = new ArrayList<>();
+        for (GoatsHerd prop : goatsHerd)
         {
             if (prop.name.equals(val))
             {
-                cowsHerd.remove(prop);
+                goatsHerd.remove(prop);
                 break;
             }
         }
         if(val.equals(current)) {
-            if(cowsHerd.isEmpty())
+            if(goatsHerd.isEmpty())
             current = null;
             else
-                current = cowsHerd.get(0).name;
+                current = goatsHerd.get(0).name;
         }
     }
 
@@ -122,41 +133,45 @@ public class CowsHerd implements JConf {
     @Override
     public String toString()
     {
-        return "CowsHerd[" + name + "]";
+        return "goatsHerd[" + name + "]";
     }
 
     @Override
     public JSONObject toJson()
     {
-        JSONObject jCowsHerd = new JSONObject();
-        jCowsHerd.put("type", "CowsHerd");
-        jCowsHerd.put("name", name);
-        jCowsHerd.put("adult_count", adultCows);
-        jCowsHerd.put("breading_gap", breedingGap);
-        jCowsHerd.put("mq", milkq);
-        jCowsHerd.put("meatq", meatq);
-        jCowsHerd.put("hideq", hideq);
-        jCowsHerd.put("milkquan1", milkquan1);
-        jCowsHerd.put("milkquan2", milkquan2);
-        jCowsHerd.put("milkquanth", milkquanth);
-        jCowsHerd.put("meatquan1", meatquan1);
-        jCowsHerd.put("meatquan2", meatquan2);
-        jCowsHerd.put("meatquanth", meatquanth);
-        jCowsHerd.put("ic", ignoreChildren);
-        jCowsHerd.put("bd", ignoreBD);
-        jCowsHerd.put("dk", disable_killing);
-        jCowsHerd.put("coverbreed", coverbreed);
-        return jCowsHerd;
+        JSONObject jGoatsHerd = new JSONObject();
+        jGoatsHerd.put("type", "GoatsHerd");
+        jGoatsHerd.put("name", name);
+        jGoatsHerd.put("adult_count", adultGoats);
+        jGoatsHerd.put("breading_gap", breedingGap);
+        jGoatsHerd.put("mq", milkq);
+        jGoatsHerd.put("meatq", meatq);
+        jGoatsHerd.put("hideq", hideq);
+        jGoatsHerd.put("milkquan1", milkquan1);
+        jGoatsHerd.put("milkquan2", milkquan2);
+        jGoatsHerd.put("milkquanth", milkquanth);
+        jGoatsHerd.put("meatquan1", meatquan1);
+        jGoatsHerd.put("meatquan2", meatquan2);
+        jGoatsHerd.put("meatquanth", meatquanth);
+        jGoatsHerd.put("ic", ignoreChildren);
+        jGoatsHerd.put("bd", ignoreBD);
+        jGoatsHerd.put("dk", disable_killing);
+        jGoatsHerd.put("woolquan1", woolquan1);
+        jGoatsHerd.put("woolquan2", woolquan2);
+        jGoatsHerd.put("woolquanth", woolquanth);
+        jGoatsHerd.put("wq", woolq);
+        jGoatsHerd.put("coverbreed", coverbreed);
+        return jGoatsHerd;
     }
 
-    public static CowsHerd get(String val)
+    public static GoatsHerd get(String val)
     {
         if(val == null)
             return null;
-        ArrayList<CowsHerd> cowsHerd = ((ArrayList<CowsHerd>) NConfig.get(NConfig.Key.cowsprop));
-        if (cowsHerd == null)
-            cowsHerd = new ArrayList<>();
-        for (CowsHerd prop : cowsHerd)
+        ArrayList<GoatsHerd> goatsHerd = ((ArrayList<GoatsHerd>) NConfig.get(NConfig.Key.goatsprop));
+        if (goatsHerd == null)
+            goatsHerd = new ArrayList<>();
+        for (GoatsHerd prop : goatsHerd)
         {
             if (prop.name.equals(val))
             {
@@ -164,12 +179,12 @@ public class CowsHerd implements JConf {
             }
         }
         current = val;
-        return new CowsHerd(val);
+        return new GoatsHerd(val);
     }
 
     static String current = null;
 
-    public static CowsHerd getCurrent()
+    public static GoatsHerd getCurrent()
     {
         return get(current);
     }
@@ -177,10 +192,10 @@ public class CowsHerd implements JConf {
     public static HashSet<String> getKeySet()
     {
         HashSet<String> res = new HashSet<>();
-        ArrayList<CowsHerd> cowsHerd = ((ArrayList<CowsHerd>) NConfig.get(NConfig.Key.cowsprop));
-        if (cowsHerd == null)
-            cowsHerd = new ArrayList<>();
-        for (CowsHerd prop : cowsHerd)
+        ArrayList<GoatsHerd> goatsHerd = ((ArrayList<GoatsHerd>) NConfig.get(NConfig.Key.goatsprop));
+        if (goatsHerd == null)
+            goatsHerd = new ArrayList<>();
+        for (GoatsHerd prop : goatsHerd)
         {
             res.add(prop.name);
         }

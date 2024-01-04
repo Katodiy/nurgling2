@@ -63,6 +63,8 @@ public class NArea
 
     public static NArea findSpec(String name)
     {
+        double dist = 10000;
+        NArea res = null;
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
             Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
@@ -70,17 +72,23 @@ public class NArea
             {
                 if(id>=0) {
                     for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
-                        if (s.name.equals(name))
-                            return NUtils.getGameUI().map.glob.map.areas.get(id);
+                        if (s.name.equals(name)) {
+                            NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
+                            Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                            if ((testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc)) < dist)
+                                res = test;
+                        }
                     }
                 }
             }
         }
-        return null;
+        return res;
     }
 
     public static NArea findSpec(String name, String sub)
     {
+        double dist = 10000;
+        NArea res = null;
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
             Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
@@ -88,13 +96,17 @@ public class NArea
             {
                 if(id>=0) {
                     for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
-                        if (s.name.equals(name) && s.subtype != null && s.subtype.equals(sub))
-                            return NUtils.getGameUI().map.glob.map.areas.get(id);
+                        if (s.name.equals(name) && s.subtype != null && s.subtype.equals(sub)) {
+                            NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
+                            Pair<Coord2d,Coord2d> testrc = test.getRCArea();
+                            if ((testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))<dist)
+                                res = test;
+                        }
                     }
                 }
             }
         }
-        return null;
+        return res;
     }
 
     public static class VArea

@@ -31,16 +31,6 @@ public class AnimalAction <C extends Entry> implements Action {
         ArrayList<Gob> gobs = Finder.findGobs(current,animal);
         ArrayList<Gob> targets = new ArrayList<>();
 
-        for(Gob gob: gobs)
-        {
-            NTestRing tr = new NTestRing(gob);
-            gob.addcustomol(tr);
-            DynamicPf pf = new DynamicPf(gob);
-            pf.run(gui);
-            tr.tr = true;
-        }
-
-
         while(memorize(gobs,gui,w,cattleRoster));
 
         for (Gob gob : gobs) {

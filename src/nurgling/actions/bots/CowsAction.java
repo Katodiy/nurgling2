@@ -1,10 +1,14 @@
-package nurgling.actions;
+package nurgling.actions.bots;
 
 import haven.Gob;
 import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.ui.croster.CattleId;
 import nurgling.NGameUI;
 import nurgling.NUtils;
+import nurgling.actions.Action;
+import nurgling.actions.AnimalAction;
+import nurgling.actions.Results;
+import nurgling.actions.Validator;
 import nurgling.areas.NArea;
 import nurgling.conf.CowsHerd;
 import nurgling.tools.NAlias;

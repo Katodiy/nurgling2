@@ -32,6 +32,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem("crop"));
         specialisation.add(new SpecialisationItem("seed"));
         specialisation.add(new SpecialisationItem("cows"));
+        specialisation.add(new SpecialisationItem("goats"));
         specialisation.add(new SpecialisationItem("deadkritter"));
     }
 
