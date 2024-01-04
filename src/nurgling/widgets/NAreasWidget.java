@@ -415,7 +415,7 @@ public class NAreasWidget extends Window
             }
             if(SpecialisationData.data.get(item.name)!=null)
             {
-                add(spec = new IButton("nurgling/hud/buttons/settings/","u","d","h"){
+                add(spec = new IButton("nurgling/hud/buttons/settingsnf/","u","d","h"){
                     @Override
                     public void click() {
                         super.click();

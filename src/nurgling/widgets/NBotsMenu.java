@@ -18,20 +18,25 @@ public class NBotsMenu extends Widget
     {
         if(NUtils.getUI().core.debug)
         {
-            NLayout tests = new NLayout("resources");
-            tests.elements.add(new NButton("chop", new TurnipsFarmer()));
-            tests.elements.add(new NButton("chop", new TESTLiftDrop()));
-            tests.elements.add(new NButton("chop", new GoatsAction()));
-            tests.elements.add(new NButton("log", new TransferLog()));
-            tests.elements.add(new NButton("chop", new TESTorestockpiletransfernoclose()));
-            tests.elements.add(new NButton("chop", new TESTblockstockpiletransferpacks()));
-            tests.elements.add(new NButton("chop", new TESTbranchinvtransferpacks()));
-            tests.elements.add(new NButton("chop", new TESTtakehanddporop()));
-            tests.elements.add(new NButton("chop", new TESTskinstockpiletransfer()));
-            tests.elements.add(new NButton("chop", new TESTselectfloweraction()));
-            tests.elements.add(new NButton("chop", new TESTpf()));
+            NLayout resources = new NLayout("resources");
+            resources.elements.add(new NButton("log", new TransferLog()));
+            addLayout(resources);
+            NLayout farming = new NLayout("farming");
+            farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
+            farming.elements.add(new NButton("goats", new GoatsAction()));
+            farming.elements.add(new NButton("cows", new CowsAction()));
+            addLayout(farming);
+            NLayout tests = new NLayout("tools");
+            tests.elements.add(new NButton("test1", new TESTLiftDrop()));
+            tests.elements.add(new NButton("test2", new TESTorestockpiletransfernoclose()));
+            tests.elements.add(new NButton("test3", new TESTblockstockpiletransferpacks()));
+            tests.elements.add(new NButton("test4", new TESTbranchinvtransferpacks()));
+            tests.elements.add(new NButton("test5", new TESTtakehanddporop()));
+            tests.elements.add(new NButton("test6", new TESTskinstockpiletransfer()));
+            tests.elements.add(new NButton("test7", new TESTselectfloweraction()));
+            tests.elements.add(new NButton("test8", new TESTpf()));
 //            tests.elements.add(new NButton("chop", new TESTfindallchest()));
-            tests.elements.add(new NButton("chop", new TESTAvalaible()));
+            tests.elements.add(new NButton("test9", new TESTAvalaible()));
             addLayout(tests);
         }
         showLayouts();
