@@ -182,7 +182,18 @@ public class NCore extends Widget
             }
             synchronized (task)
             {
-                task.wait();
+                try {
+                    task.wait();
+                }
+                catch (InterruptedException e)
+                {
+                    synchronized (tasks)
+                    {
+                        tasks.remove(task);
+                        throw e;
+                    }
+                }
+
             }
         }
     }

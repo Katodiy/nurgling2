@@ -24,7 +24,7 @@ public class NGameUI extends GameUI
     public NCraftWindow craftwnd;
     public NEditAreaName nean;
     public Specialisation spec;
-
+    public BotsInterruptWidget biw;
     public NEquipProxy nep;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
@@ -46,6 +46,7 @@ public class NGameUI extends GameUI
         nean.hide();
         add(spec = new Specialisation());
         spec.hide();
+        add(biw = new BotsInterruptWidget());
     }
 
     public int getMaxBase(){
@@ -235,6 +236,7 @@ public class NGameUI extends GameUI
         areas.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
         nean.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
         spec.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
+        biw.move(new Coord(sz.x / 2 - biw.sz.x / 2, sz.y / 2 - biw.sz.y / 2));
     }
 
     public List<IMeter.Meter> getmeters (String name ) {

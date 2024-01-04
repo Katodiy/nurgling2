@@ -99,7 +99,8 @@ public class NBotsMenu extends Widget
 
         void start(String path, Action action)
         {
-            new Thread(new Runnable()
+            Thread t;
+            (t = new Thread(new Runnable()
             {
                 @Override
                 public void run()
@@ -114,7 +115,8 @@ public class NBotsMenu extends Widget
                         NUtils.getGameUI().msg(path + ":" +"STOPPED");
                     }
                 }
-            }, path).start();
+            }, path)).start();
+            NUtils.getGameUI().biw.addObserve(t);
         }
     };
 
