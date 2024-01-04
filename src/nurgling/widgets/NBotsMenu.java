@@ -5,6 +5,7 @@ import nurgling.*;
 import nurgling.actions.*;
 import nurgling.actions.bots.CowsAction;
 import nurgling.actions.bots.GoatsAction;
+import nurgling.actions.bots.TransferLog;
 import nurgling.actions.bots.TurnipsFarmer;
 import nurgling.actions.test.*;
 
@@ -21,6 +22,7 @@ public class NBotsMenu extends Widget
             tests.elements.add(new NButton("chop", new TurnipsFarmer()));
             tests.elements.add(new NButton("chop", new TESTLiftDrop()));
             tests.elements.add(new NButton("chop", new GoatsAction()));
+            tests.elements.add(new NButton("log", new TransferLog()));
             tests.elements.add(new NButton("chop", new TESTorestockpiletransfernoclose()));
             tests.elements.add(new NButton("chop", new TESTblockstockpiletransferpacks()));
             tests.elements.add(new NButton("chop", new TESTbranchinvtransferpacks()));
@@ -97,6 +99,20 @@ public class NBotsMenu extends Widget
                     });
         }
 
+        private NButton()
+        {
+            btn = new IButton(Resource.loadsimg(dir_path + "back" + "/u"), Resource.loadsimg(dir_path +  "back" + "/d"), Resource.loadsimg(dir_path +  "back" + "/h")){
+                @Override
+                public void click() {
+                    super.click();
+                    showLayouts();
+                }
+            };
+
+        }
+
+
+
         void start(String path, Action action)
         {
             Thread t;
@@ -137,6 +153,7 @@ public class NBotsMenu extends Widget
                     showElements();
                 }
             });
+            elements.add(new NButton());
         }
 
         void hideElements()

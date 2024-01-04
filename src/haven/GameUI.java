@@ -228,7 +228,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	    return(gameUI);
 	}
     }
-    
+	NResizableWidget chatwdg;
     private final Coord minimapc;
     private final Coord menugridc;
     public GameUI(String chrid, long plid, String genus, NUI nui) {
@@ -240,7 +240,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	setfocusctl(true);
 
 	chat = new ChatUI();
-	NResizableWidget chatwdg = new NResizableWidget(chat,"ChatUI",new Coord(400,200));
+	chatwdg = new NResizableWidget(chat,"ChatUI",new Coord(400,200));
 	add(chatwdg);
 	add(new MapMenu(), 0, 0);
 	minimapc = new Coord(UI.scale(4), UI.scale(34));
@@ -802,9 +802,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		lastmsg = null;
 	    } else {
 		g.chcolor(0, 0, 0, 192);
-		g.frect(new Coord(blpw + UI.scale(8), by - UI.scale(22)), lastmsg.sz().add(UI.scale(4), UI.scale(4)));
+		Coord pos = chatwdg.c.sub(UI.scale(-20,lastmsg.tex().sz().y + 5));
+		g.frect(new Coord(pos.x + UI.scale(8), pos.y), lastmsg.sz().add(UI.scale(4), UI.scale(4)));
 		g.chcolor();
-		g.image(lastmsg.tex(), new Coord(blpw + UI.scale(10), by -= UI.scale(20)));
+		g.image(lastmsg.tex(), new Coord(pos.x + UI.scale(10), pos.y));
 	    }
 	}
     }

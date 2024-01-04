@@ -13,6 +13,11 @@ import static nurgling.actions.PathFinder.scale;
 import static nurgling.tools.Finder.findLiftedbyPlayer;
 
 public class FindPlaceAndAction implements Action {
+    public FindPlaceAndAction(Gob gob, Pair<Coord2d, Coord2d> rcArea) {
+        this.placed = gob;
+        this.area = rcArea;
+    }
+
     @Override
     public Results run ( NGameUI gui )
             throws InterruptedException {
@@ -38,9 +43,9 @@ public class FindPlaceAndAction implements Action {
             NArea area)
     {
         this.placed = gob;
-        this.area = area;
+        this.area = area.getRCArea();
     }
 
     Gob placed = null;
-    NArea area = null;
+    Pair<Coord2d, Coord2d> area = null;
 }

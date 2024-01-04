@@ -57,6 +57,11 @@ public class Finder
     public static ArrayList<Gob> findGobs(NArea area, NAlias name) throws InterruptedException
     {
         Pair<Coord2d,Coord2d> space = area.getRCArea();
+        return findGobs(space,name);
+    }
+
+    public static ArrayList<Gob> findGobs(Pair<Coord2d,Coord2d> space, NAlias name) throws InterruptedException
+    {
         ArrayList<Gob> result = new ArrayList<> ();
         synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
             for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
@@ -99,6 +104,7 @@ public class Finder
         sort(result);
         return result;
     }
+
 
 
     public static ArrayList<Gob> findGobs(NArea area, NAlias name, int mattr) throws InterruptedException
@@ -151,34 +157,6 @@ public class Finder
         return result;
     }
 
-
-    public static Gob findCrop(NArea area, NAlias name, int stage) throws InterruptedException
-    {
-        NUtils.getUI().core.addTask(new FindPlayer());
-        Pair<Coord2d,Coord2d> space = area.getRCArea();
-        Gob result = null;
-        double dist = 10000;
-        synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
-            for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
-                if (!(gob instanceof OCache.Virtual))
-                {
-                    if (gob.rc.x >= space.a.x && gob.rc.y >= space.a.y && gob.rc.x <= space.b.x && gob.rc.y <= space.b.y)
-                    {
-                        if (NParser.isIt(gob, name) && gob.ngob.getModelAttribute() == stage && NUtils.player()!=null)
-                        {
-                            double new_dist;
-                            if((new_dist = gob.rc.dist(NUtils.player().rc))<dist)
-                            {
-                                dist = new_dist;
-                                result = gob;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return result;
-    }
 
     public static Gob findGob(NAlias name) throws InterruptedException
     {
@@ -325,12 +303,12 @@ public class Finder
     }
 
 
-    public static Coord2d getFreePlace(NArea area, Gob placed) {
+    public static Coord2d getFreePlace(Pair<Coord2d,Coord2d> area, Gob placed) {
         Coord2d pos = null;
 
 
         ArrayList<NHitBoxD> significantGobs = new ArrayList<> ();
-        NHitBoxD chekerOfArea = new NHitBoxD(area.getRCArea().a, area.getRCArea().b);
+        NHitBoxD chekerOfArea = new NHitBoxD(area.a, area.b);
 
         NHitBoxD temporalGobBox = new NHitBoxD(placed.ngob.hitBox.begin, placed.ngob.hitBox.end, Coord2d.of(0),0);
         if(chekerOfArea.c[2].sub(chekerOfArea.c[0]).x < temporalGobBox.getCircumscribedBR().sub(temporalGobBox.getCircumscribedUL()).x ||
@@ -348,14 +326,14 @@ public class Finder
             }
         }
 
-        Coord inchMax = area.getRCArea().b.sub(area.getRCArea().a).floor();
+        Coord inchMax = area.b.sub(area.a).floor();
         Coord margin =  placed.ngob.hitBox.end.sub(placed.ngob.hitBox.begin).floor(2,2);
         for (int i = margin.x; i < inchMax.x - margin.x; i++)
         {
             for (int j = margin.y; j < inchMax.y - margin.y; j++)
             {
                 boolean passed = true;
-                NHitBoxD testGobBox = new NHitBoxD(placed.ngob.hitBox.begin, placed.ngob.hitBox.end, area.getRCArea().a.add(i,j),0);
+                NHitBoxD testGobBox = new NHitBoxD(placed.ngob.hitBox.begin, placed.ngob.hitBox.end, area.a.add(i,j),0);
                 for ( NHitBoxD significantHitbox : significantGobs )
                     if(significantHitbox.intersectsGreedy(testGobBox))
                         passed = false;
@@ -365,4 +343,5 @@ public class Finder
         }
         return pos;
     }
+
 }

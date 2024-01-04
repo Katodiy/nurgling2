@@ -70,7 +70,7 @@ public class BotsInterruptWidget extends Widget {
     void repack()
     {
         double r = NStyle.gear[0].sz().x*1.5;
-        double phi = -Math.PI/6;
+        double phi = -Math.PI/3;
         for(Gear g: obs)
         {
             g.move(new Coord((int)Math.round(r*Math.cos(phi))-NStyle.gear[0].sz().x/2 + sz.x/2, (int)Math.round(r*Math.sin(phi))-NStyle.gear[0].sz().y/2+ sz.y/2 + UI.scale(50)));
@@ -103,7 +103,9 @@ public class BotsInterruptWidget extends Widget {
         {
             for(Gear g: obs)
             {
-                if(g.t.isInterrupted()) {
+                if(g.t.isInterrupted() || !g.t.isAlive())
+                {
+                    g.remove();
                     obs.remove(g);
                     break;
                 }

@@ -623,7 +623,8 @@ public class NMakewindow extends Widget {
         }
         else
         {
-            new Thread(new Runnable()
+            Thread t;
+            (t = new Thread(new Runnable()
             {
                 @Override
                 public void run()
@@ -637,7 +638,8 @@ public class NMakewindow extends Widget {
                         NUtils.getGameUI().tickmsg(AutoChooser.class.getName() + "stopped");
                     }
                 }
-            }, "Auto craft(BOT)").start();
+            }, "Auto craft(BOT)")).start();
+            NUtils.getGameUI().biw.addObserve(t);
         }
     }
 
