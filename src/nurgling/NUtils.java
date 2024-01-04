@@ -132,6 +132,10 @@ public class NUtils
         getGameUI().map.wdgmsg("itemact", Coord.z, gob.rc.floor(posres), shift ? 1 : 0, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
     }
 
+    public static void activateItem(Coord2d pos) {
+        getGameUI().map.wdgmsg("itemact", Coord.z, pos.floor(posres),0);
+    }
+
     public static void activateGob(Gob gob) {
         getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 1, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
     }
@@ -200,4 +204,14 @@ public class NUtils
         }
         return gae.getResult();
     }
+
+    public static void takeFromEarth(Gob gob) throws InterruptedException {
+        if(gob!=null)
+        {
+            getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 0, 1, (int) gob.id,
+                    gob.rc.floor(posres), 0, -1);
+            getUI().core.addTask(new NoGob(gob.id));
+        }
+    }
+
 }

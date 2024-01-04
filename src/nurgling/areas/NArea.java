@@ -31,16 +31,41 @@ public class NArea
 
     public static NArea findIn(String name)
     {
+        double dist = 10000;
+        NArea res = null;
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
             Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
             for(Integer id : nids)
             {
-                if(NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name))
-                    return NUtils.getGameUI().map.glob.map.areas.get(id);
+                if(NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
+                    NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
+                    Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                    if ((testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc)) < dist)
+                        res = test;
+                }
             }
         }
-        return null;
+        return res;
+    }
+
+    public static NArea findOut(String name) {
+        double dist = 10000;
+        NArea res = null;
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids)
+            {
+                if(NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name)) {
+                    NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
+                    Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                    if ((testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc)) < dist)
+                        res = test;
+                }
+            }
+        }
+        return res;
     }
 
     private boolean containIn(String name)
@@ -48,6 +73,16 @@ public class NArea
         for (int i = 0; i < jin.length(); i++)
         {
             if(((String) ((JSONObject)jin.get(i)).get("name")).equals(name))
+                return true;
+        }
+        return false;
+    }
+
+    private boolean containOut(String name)
+    {
+        for (int i = 0; i < jout.length(); i++)
+        {
+            if(((String) ((JSONObject)jout.get(i)).get("name")).equals(name) && !((JSONObject)jout.get(i)).has("th"))
                 return true;
         }
         return false;

@@ -3,10 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
-import nurgling.actions.bots.CowsAction;
-import nurgling.actions.bots.GoatsAction;
-import nurgling.actions.bots.TransferLog;
-import nurgling.actions.bots.TurnipsFarmer;
+import nurgling.actions.bots.*;
 import nurgling.actions.test.*;
 
 import java.util.*;
@@ -23,8 +20,10 @@ public class NBotsMenu extends Widget
             addLayout(resources);
             NLayout farming = new NLayout("farming");
             farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
+            farming.elements.add(new NButton("hemp", new HempFarmer()));
+            farming.elements.add(new NButton("flax", new FlaxFarmer()));
             farming.elements.add(new NButton("goats", new GoatsAction()));
-            farming.elements.add(new NButton("cows", new CowsAction()));
+            farming.elements.add(new NButton("cows", new nurgling.actions.bots.CowsAction()));
             addLayout(farming);
             NLayout tests = new NLayout("tools");
             tests.elements.add(new NButton("test1", new TESTLiftDrop()));

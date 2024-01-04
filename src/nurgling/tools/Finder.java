@@ -218,6 +218,23 @@ public class Finder
         return null;
     }
 
+    public static Gob findGob(Coord2d pos) {
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
+                {
+                    if (gob.id!= NUtils.playerID() && gob.rc.dist(pos)<0.5)
+                    {
+                        return gob;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
 
 
     public static Gob findGob(Coord pos, NAlias exc){
@@ -302,15 +319,18 @@ public class Finder
         return result;
     }
 
-
     public static Coord2d getFreePlace(Pair<Coord2d,Coord2d> area, Gob placed) {
+        return getFreePlace(area,placed.ngob.hitBox);
+    }
+
+    public static Coord2d getFreePlace(Pair<Coord2d,Coord2d> area, NHitBox hitBox) {
         Coord2d pos = null;
 
 
         ArrayList<NHitBoxD> significantGobs = new ArrayList<> ();
         NHitBoxD chekerOfArea = new NHitBoxD(area.a, area.b);
 
-        NHitBoxD temporalGobBox = new NHitBoxD(placed.ngob.hitBox.begin, placed.ngob.hitBox.end, Coord2d.of(0),0);
+        NHitBoxD temporalGobBox = new NHitBoxD(hitBox.begin, hitBox.end, Coord2d.of(0),0);
         if(chekerOfArea.c[2].sub(chekerOfArea.c[0]).x < temporalGobBox.getCircumscribedBR().sub(temporalGobBox.getCircumscribedUL()).x ||
                 chekerOfArea.c[2].sub(chekerOfArea.c[0]).y < temporalGobBox.getCircumscribedBR().sub(temporalGobBox.getCircumscribedUL()).y )
             return null;
@@ -327,13 +347,13 @@ public class Finder
         }
 
         Coord inchMax = area.b.sub(area.a).floor();
-        Coord margin =  placed.ngob.hitBox.end.sub(placed.ngob.hitBox.begin).floor(2,2);
+        Coord margin =  hitBox.end.sub(hitBox.begin).floor(2,2);
         for (int i = margin.x; i < inchMax.x - margin.x; i++)
         {
             for (int j = margin.y; j < inchMax.y - margin.y; j++)
             {
                 boolean passed = true;
-                NHitBoxD testGobBox = new NHitBoxD(placed.ngob.hitBox.begin, placed.ngob.hitBox.end, area.a.add(i,j),0);
+                NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, area.a.add(i,j),0);
                 for ( NHitBoxD significantHitbox : significantGobs )
                     if(significantHitbox.intersectsGreedy(testGobBox))
                         passed = false;

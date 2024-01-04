@@ -38,7 +38,6 @@ public class TakeFromBarrel implements Action{
             NUtils.takeAllGob(barrel);
             NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), items, NUtils.getGameUI().getInventory().getItems(items).size()));
         }
-        NUtils.getUI().core.addTask(new WaitItemInHand( items.getDefault() , NUtils.getGameUI().getInventory()));
 
         if(!gui.hand.isEmpty()) {
             NUtils.activateItem(barrel, false);

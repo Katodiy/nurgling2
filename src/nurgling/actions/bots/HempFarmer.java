@@ -8,12 +8,12 @@ import nurgling.tools.NAlias;
 import java.util.ArrayList;
 
 
-public class TurnipsFarmer implements Action {
+public class HempFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
 
-        NArea.Specialisation field = new NArea.Specialisation("crop", "Turnip");
-        NArea.Specialisation seed = new NArea.Specialisation("seed", "Turnip");
+        NArea.Specialisation field = new NArea.Specialisation("crop", "Hemp");
+        NArea.Specialisation seed = new NArea.Specialisation("seed", "Hemp");
         NArea.Specialisation trough = new NArea.Specialisation("trough");
         NArea.Specialisation swill = new NArea.Specialisation("swill");
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
@@ -25,8 +25,10 @@ public class TurnipsFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NArea.findSpec(field),NArea.findSpec(seed),NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/turnip"),new NAlias("Turnip"),1).run(gui);
-            new SeedCrop(NArea.findSpec(field),NArea.findSpec(seed),new NAlias("plants/turnip"),new NAlias("Turnip")).run(gui);
+            new HarvestCrop(NArea.findSpec(field),NArea.findSpec(seed),NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/hemp"),new NAlias("Hemp"),4).run(gui);
+            if(NArea.findOut("Hemp Fibres")!=null)
+                new CollectItemsToPile(NArea.findSpec(field).getRCArea(),NArea.findOut("Hemp Fibres").getRCArea(),new NAlias("hempfibre", "Hemp Fibres")).run(gui);
+            new SeedCrop(NArea.findSpec(field),NArea.findSpec(seed),new NAlias("plants/hemp"),new NAlias("Hemp")).run(gui);
             return Results.SUCCESS();
         }
 
