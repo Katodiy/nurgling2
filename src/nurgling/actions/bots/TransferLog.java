@@ -3,10 +3,7 @@ package nurgling.actions.bots;
 import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.NUtils;
-import nurgling.actions.Action;
-import nurgling.actions.FindPlaceAndAction;
-import nurgling.actions.LiftObject;
-import nurgling.actions.Results;
+import nurgling.actions.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -23,9 +20,18 @@ public class TransferLog implements Action {
         NUtils.getGameUI().msg("Please, select output area");
         (outsa = new SelectArea()).run(gui);
         ArrayList<Gob> logs;
-        while (!(logs = Finder.findGobs(insa.getRCArea(), new NAlias("log", "oldtrunk"))).isEmpty()) {
-            logs.sort(NUtils.d_comp);
-            Gob log = logs.get(0);
+        while (!(logs = Finder.findGobs(insa.getRCArea(), new NAlias("goat"))).isEmpty()) {
+            ArrayList<Gob> availableLogs = new ArrayList<>();
+            for (Gob currGob: logs)
+            {
+                if(PathFinder.isAvailable(currGob))
+                    availableLogs.add(currGob);
+            }
+            if(availableLogs.isEmpty())
+                return Results.ERROR("Cant reach any object");
+
+            availableLogs.sort(NUtils.d_comp);
+            Gob log = availableLogs.get(0);
             new LiftObject(log).run(gui);
             new FindPlaceAndAction(log, outsa.getRCArea()).run(gui);
         }
