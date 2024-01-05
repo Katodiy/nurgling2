@@ -206,7 +206,7 @@ public class NPFMap
                                 g.chcolor(Color.RED);
                             else if (cells[i][j].val == 0)
                                 g.chcolor(Color.GREEN);
-                            else if (cells[i][j].val == 3)
+                            else if (cells[i][j].val == 4)
                             {
                                 g.chcolor(Color.YELLOW);
                                 g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);

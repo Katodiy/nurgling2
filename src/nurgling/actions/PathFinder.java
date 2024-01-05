@@ -233,7 +233,6 @@ public class PathFinder implements Action
                             break;
                         }
                         NUtils.getGameUI().msg(NUtils.player().rc.toString());
-//                        Thread.sleep(5000);
 
                     }
                     if (!needRestart)

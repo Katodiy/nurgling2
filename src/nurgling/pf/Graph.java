@@ -36,7 +36,6 @@ public class Graph implements Runnable
                 @Override
                 public int compare(Vertex o1, Vertex o2)
                 {
-                    int res;
                     return (Double.compare(o1.dist * 100 + o1.len, o2.dist * 100 + o2.len));
                     //return ((res = Double.compare(o1.dist, o2.dist)) == 0 ? Integer.compare(o1.len, o2.len) : res);
                 }
@@ -45,18 +44,19 @@ public class Graph implements Runnable
                 next = candidates.get(0);
             else
             {
-                if(vert[end.x][end.y].val == 3)
+                if(vert[end.x][end.y].val == 4)
                     break;
                 return;
             }
         }
-        while (vert[end.x][end.y].val != 3);
+        while (vert[end.x][end.y].val != 4);
+
         addToPath(vert[end.x][end.y]);
     }
 
     private void analise(Vertex v)
     {
-        v.val = 3;
+        v.val = 4;
         if (v.i > 0)
         {
             if (v.j > 0)
@@ -103,7 +103,7 @@ public class Graph implements Runnable
             if(c.i>0)
             {
 
-                if(c.j>0 && ((vert[c.i-1][c.j].val & 3) == 0) && ((vert[c.i][c.j-1].val & 3)) == 0)
+                if(c.j>0 && (vert[c.i][c.j - 1].val & 3) == 0 && (vert[c.i - 1][c.j].val & 3) == 0)
                 {
                     int tlen = vert[c.i-1][c.j - 1].len;
                     if(tlen !=-1 && tlen+141<c.len)
@@ -116,7 +116,7 @@ public class Graph implements Runnable
                 {
                     c.len = tlen+100;
                 }
-                if(c.j<size-1 && (vert[c.i-1][c.j].val & 3) == 0 && (vert[c.i][c.j+1].val & 3) == 0)
+                if(c.j<size-1  && (vert[c.i][c.j + 1].val & 3) == 0 && (vert[c.i - 1][c.j].val & 3) == 0)
                 {
                     tlen = vert[c.i-1][c.j+1].len;
                     if(tlen !=-1 && tlen+141<c.len)
@@ -143,7 +143,7 @@ public class Graph implements Runnable
             }
             if(c.i<size-1)
             {
-                if(c.j>0 && (vert[c.i+1][c.j].val & 3) == 0 && (vert[c.i][c.j-1].val & 3) == 0)
+                if(c.j>0  && (vert[c.i][c.j - 1].val & 3) == 0 && (vert[c.i + 1][c.j].val & 3) == 0)
                 {
                     int tlen = vert[c.i+1][c.j - 1].len;
                     if(tlen !=-1 && tlen+141<c.len)
@@ -156,7 +156,7 @@ public class Graph implements Runnable
                 {
                     c.len = tlen+100;
                 }
-                if(c.j<size-1 && ((vert[c.i+1][c.j].val & 3) == 0) && ((vert[c.i][c.j+1].val & 3) == 0))
+                if(c.j<size-1  && (vert[c.i][c.j + 1].val & 3) == 0 && (vert[c.i + 1][c.j].val & 3) == 0)
                 {
                     tlen = vert[c.i+1][c.j+1].len;
                     if(tlen !=-1 && tlen+141<c.len)
@@ -184,14 +184,14 @@ public class Graph implements Runnable
             return true;
         if (v.i > 0)
         {
-            if (v.j > 0)
+            if (v.j > 0 && ((vert[v.i-1][v.j].val & 3) == 0) && ((vert[v.i][v.j-1].val & 3) == 0))
             {
                 if (checkPath(vert[v.i - 1][v.j - 1], v.len - 141))
                     return addToPath(vert[v.i - 1][v.j - 1]);
             }
             if (checkPath(vert[v.i - 1][v.j], v.len - 100))
                 return addToPath(vert[v.i - 1][v.j]);
-            if (v.j < size - 1)
+            if (v.j < size - 1 && ((vert[v.i-1][v.j].val & 3) == 0) && ((vert[v.i][v.j+1].val & 3) == 0))
             {
                 if (checkPath(vert[v.i - 1][v.j + 1], v.len - 141))
                     return addToPath(vert[v.i - 1][v.j + 1]);
@@ -201,33 +201,35 @@ public class Graph implements Runnable
         {
             if (checkPath(vert[v.i][v.j - 1], v.len - 100))
                 return addToPath(vert[v.i][v.j - 1]);
-            if (v.i < size - 1)
-            {
-                if (checkPath(vert[v.i + 1][v.j - 1], v.len - 141))
-                    return addToPath(vert[v.i + 1][v.j - 1]);
-            }
-        }
-        if (v.i < size - 1)
-        {
-            if (checkPath(vert[v.i + 1][v.j], v.len - 100))
-                return addToPath(vert[v.i + 1][v.j]);
-            if (v.j < size - 1)
-            {
-                if (checkPath(vert[v.i + 1][v.j + 1], v.len - 141))
-                    return addToPath(vert[v.i + 1][v.j + 1]);
-            }
         }
         if (v.j < size - 1)
         {
             if (checkPath(vert[v.i][v.j + 1], v.len - 100))
                 return addToPath(vert[v.i][v.j + 1]);
         }
+        if (v.i < size - 1)
+        {
+            if (v.j>0)
+            {
+                if (checkPath(vert[v.i + 1][v.j - 1], v.len - 141)&& ((vert[v.i+1][v.j].val & 3) == 0) && ((vert[v.i][v.j-1].val & 3) == 0))
+                    return addToPath(vert[v.i + 1][v.j - 1]);
+            }
+            if (checkPath(vert[v.i + 1][v.j], v.len - 100))
+                return addToPath(vert[v.i + 1][v.j]);
+            if (v.j < size - 1 && ((vert[v.i+1][v.j].val & 3) == 0) && ((vert[v.i][v.j+1].val & 3) == 0))
+            {
+                if (checkPath(vert[v.i + 1][v.j + 1], v.len - 141))
+                    return addToPath(vert[v.i + 1][v.j + 1]);
+            }
+
+        }
+
         return false;
     }
 
     private boolean checkPath(Vertex c, int len)
     {
-        return c.val == 3 && c.len == len;
+        return c.val == 4 && c.len == len;
     }
 
     public static LinkedList<Vertex> getPath(NPFMap map, LinkedList<Vertex> path)
