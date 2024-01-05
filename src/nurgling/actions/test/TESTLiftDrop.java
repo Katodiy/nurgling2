@@ -31,20 +31,20 @@ public class TESTLiftDrop extends Test
 //        NPFMap npf = new NPFMap(NUtils.player().rc, Finder.findGob(new NAlias("gfx/terobjs/trough")).rc, 2);
 //        npf.build();
 //        npf.print(npf.getSize(), npf.getCells());
-        new PathFinder(Finder.findGob(new NAlias("gfx/terobjs/trough"))).run(gui);
-//        Gob trough = Finder.findGob(new NAlias("gfx/terobjs/cattle/calf"));
-//        Coord2d pos = trough.rc;
-//        double a = trough.a;
-//        Gob cistern  = Finder.findGob(new NAlias("gfx/terobjs/cistern"));
-//        new LiftObject(trough).run(gui);
-//        new PathFinder ( cistern ).run(gui);
-//        NUtils.activateGob ( cistern );
-//        NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 7));
-//        new FindPlaceAndAction(trough, NArea.findSpec("trough")).run(gui);
-//        new LiftObject(trough).run(gui);
-//        new PathFinder ( cistern ).run(gui);
-//        NUtils.activateGob ( cistern );
-//        NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 0));
-//        new FindPlaceAndAction(trough, NArea.findSpec("trough")).run(gui);
+//        new PathFinder(Finder.findGob(new NAlias("gfx/terobjs/trough"))).run(gui);
+        Gob trough = Finder.findGob(new NAlias("gfx/terobjs/trough"));
+        Coord2d pos = trough.rc;
+        double a = trough.a;
+        Gob cistern  = Finder.findGob(new NAlias("gfx/terobjs/cistern"));
+        new LiftObject(trough).run(gui);
+        new PathFinder ( cistern ).run(gui);
+        NUtils.activateGob ( cistern );
+        NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 7));
+        new FindPlaceAndAction(trough, NArea.findSpec("trough")).run(gui);
+        new LiftObject(trough).run(gui);
+        new PathFinder ( cistern ).run(gui);
+        NUtils.activateGob ( cistern );
+        NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 0));
+        new FindPlaceAndAction(trough, NArea.findSpec("trough")).run(gui);
     }
 }

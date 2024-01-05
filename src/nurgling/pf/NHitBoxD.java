@@ -17,11 +17,27 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable
     public static Coord2d[] n = {Coord2d.of(0, 1), Coord2d.of(-1, 0), Coord2d.of(0, -1), Coord2d.of(1, 0)};
     public double[] d = {0, 0, 0, 0};
     public Coord2d[] c = new Coord2d[4];
+    public Coord2d[] checkPoints; //= new Coord2d[0];
     boolean ortho = false;
+    boolean primitive = false;
+
+
+    public NHitBoxD(Coord rc)
+    {
+        primitive = true;
+        this.move(rc);
+    }
+
+    public NHitBoxD(Coord2d ul)
+    {
+        primitive = true;
+        this.move(ul);
+    }
 
     public NHitBoxD(Coord2d ul, Coord2d br)
     {
-        this.setOrtho(ul, br, Coord2d.of(0),false);
+        this.setOrtho(ul, br, Coord2d.of(0), false);
+        setUpCheckpoints();
     }
 
     public NHitBoxD(Coord ul, Coord br)
@@ -31,7 +47,8 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable
 
     public NHitBoxD(Coord2d ul, Coord2d br, Coord2d r)
     {
-        this.setOrtho(ul, br, r,false);
+        this.setOrtho(ul, br, r, false);
+        setUpCheckpoints();
     }
 
     public NHitBoxD(Coord2d ul, Coord2d br, Coord2d r, double angle)
@@ -48,9 +65,31 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable
             if (Math.abs(((2 * angle) / Math.PI) % 2.0 - 1) < 0.0001)
             {
                 this.a = Math.PI / 2;
-                this.setOrtho(ul, br, r,true);
-            }else
-                this.setOrtho(ul, br, r,false);
+                this.setOrtho(ul, br, r, true);
+            }
+            else
+            {
+                this.setOrtho(ul, br, r, false);
+            }
+        }
+        setUpCheckpoints();
+    }
+
+    public void move(Coord newRC)
+    {
+        if (primitive)
+        {
+            this.setOrtho(MCache.tileqsz.sub(MCache.tilehsz), MCache.tileqsz, Utils.pfGridToWorld(newRC), false);
+            setUpCheckpoints();
+        }
+    }
+
+    public void move(Coord2d newUL)
+    {
+        if (primitive)
+        {
+            this.setOrtho(newUL, newUL.add(MCache.tilehsz), Coord2d.of(0), false);
+            setUpCheckpoints();
         }
     }
 
@@ -73,6 +112,70 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable
         c[2] = this.br.add(rc);
         c[3] = Coord2d.of(this.ul.x, this.br.y).add(rc);
         ortho = true;
+    }
+
+    public void setUpCheckpoints()
+    {
+        if (primitive)
+        {
+            if (checkPoints == null)
+            {
+                checkPoints = new Coord2d[1];
+//                checkPoints = new Coord2d[4];
+            }
+//            for (int k = 0; k < 4; k++)
+//            {
+//                checkPoints[k] = c[k].add(c[(k < 3) ? k + 1 : 0]).div(2);
+//            }
+            checkPoints[0] = this.rc;
+            return;
+        }
+
+        double xRange = br.x - ul.x;
+        double yRange = br.y - ul.y;
+//        if (Math.max(xRange, yRange) < MCache.tilehsz.x)
+//        {
+//            return;
+//        }
+        Coord2d startMax1, endMax1, axisMax1;
+        Coord2d startMax2, endMax2, axisMax2;
+        Coord2d startMin1, endMin1, axisMin1;
+        Coord2d startMin2, endMin2, axisMin2;
+        startMax1 = c[0];
+        startMin1 = c[0];
+        endMax2 = c[2];
+        endMin2 = c[2];
+        if (xRange > yRange)
+        {
+            startMin2 = c[1];
+            endMin1 = c[3];
+            startMax2 = c[3];
+            endMax1 = c[1];
+        }
+        else
+        {
+            startMin2 = c[3];
+            endMin1 = c[1];
+            startMax2 = c[1];
+            endMax1 = c[3];
+        }
+        axisMax1 = endMax1.sub(startMax1);
+        axisMax2 = endMax2.sub(startMax2);
+        axisMin1 = endMin1.sub(startMin1);
+        axisMin2 = endMin2.sub(startMin2);
+        int amountMax = (int) Math.ceil(Math.max(xRange, yRange) / MCache.tilehsz.x) ;
+        int amountMin = (int) Math.ceil(Math.min(xRange, yRange) / MCache.tilehsz.x) ;
+        checkPoints = new Coord2d[amountMax * 2 + amountMin * 2];
+        for (int i = 0; i < amountMax; i++)
+        {
+            checkPoints[i] = startMax1.add(axisMax1.mul((i + 1) / (double) (amountMax + 1)));
+            checkPoints[amountMax + i] = startMax2.add(axisMax2.mul((i + 1) / (double) (amountMax + 1)));
+        }
+        for (int i = 0; i < amountMin; i++)
+        {
+            checkPoints[amountMax * 2 + i] = startMin1.add(axisMin1.mul((i + 1) / (double) (amountMin + 1)));
+            checkPoints[amountMax * 2 + amountMin + i] = startMin2.add(axisMin2.mul((i + 1) / (double) (amountMin + 1)));
+        }
     }
 
     @Override
@@ -227,7 +330,23 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable
                 return true;
             }
         }
-        return (this.contains(other.rc) || other.contains(this.rc));
+
+
+        for (Coord2d checkPoint : other.checkPoints)
+        {
+            if (this.contains(checkPoint))
+            {
+                return true;
+            }
+        }
+        for (Coord2d checkPoint : this.checkPoints)
+        {
+            if (other.contains(checkPoint))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean intersectsGreedy(NHitBoxD other)
@@ -239,7 +358,23 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable
                 return true;
             }
         }
-        return (this.containsGreedy(other.rc) || other.containsGreedy(this.rc));
+
+
+        for (Coord2d checkPoint : other.checkPoints)
+        {
+            if (this.containsGreedy(checkPoint))
+            {
+                return true;
+            }
+        }
+        for (Coord2d checkPoint : this.checkPoints)
+        {
+            if (other.containsGreedy(checkPoint))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean intersectsLoosely(NHitBoxD other)
@@ -251,6 +386,22 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable
                 return true;
             }
         }
-        return (this.containsLoosely(other.rc) || other.containsLoosely(this.rc));
+
+
+        for (Coord2d checkPoint : other.checkPoints)
+        {
+            if (this.containsLoosely(checkPoint))
+            {
+                return true;
+            }
+        }
+        for (Coord2d checkPoint : this.checkPoints)
+        {
+            if (other.containsLoosely(checkPoint))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

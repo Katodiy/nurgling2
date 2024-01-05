@@ -9,7 +9,6 @@ import nurgling.pf.NPFMap;
 import nurgling.pf.Utils;
 import nurgling.tools.Finder;
 
-import static nurgling.actions.PathFinder.scale;
 import static nurgling.tools.Finder.findLiftedbyPlayer;
 
 public class FindPlaceAndAction implements Action {
