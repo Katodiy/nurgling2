@@ -89,14 +89,34 @@ public class PathFinder implements Action
                 }
 
                 CellsArray ca = target.ngob.getCA();
-                return findFreeNearByHB(ca,target_id, dummy);
+                return findFreeNearByHB(ca,target_id, dummy, start);
             }
         else
         {
             if(!pfmap.cells[pos.x][pos.y].content.isEmpty()) {
                 Gob gob = Finder.findGob(pfmap.cells[pos.x][pos.y].content.get(0));
                 if (gob != null && gob.ngob != null) {
-                    ArrayList<Coord> res = findFreeNearByHB(gob.ngob.getCA(), pfmap.cells[pos.x][pos.y].content.get(0), dummy);
+                    Coord2d test2d_coord = NUtils.player().rc;
+                    double dst = 9000, testdst;
+                    long res_id = -2;
+                    for(long id : pfmap.cells[pos.x][pos.y].content)
+                    {
+                        if(id>=0)
+                        {
+                            if ((testdst = Finder.findGob(id).rc.dist(test2d_coord))<dst) {
+                                res_id = id;
+                                dst = testdst;
+                            }
+                        }
+                        else
+                        {
+                            if ((testdst = dummy.rc.dist(test2d_coord))<dst) {
+                                res_id = id;
+                                dst = testdst;
+                            }
+                        }
+                    }
+                    ArrayList<Coord> res = findFreeNearByHB(gob.ngob.getCA(), res_id, dummy, start);
                     res.sort(c_comp);
                     return res;
                 }
@@ -212,15 +232,18 @@ public class PathFinder implements Action
                         Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
                         if( vert == path.getFirst())
                         {
-                            Coord2d playerrc = NUtils.player().rc;
-                            if(Math.abs(targetCoord.x-playerrc.x)<Math.abs(targetCoord.y-playerrc.y))
-                            {
-                                targetCoord.x = playerrc.x;
-                            }
-                            else
-                            {
-                                targetCoord.y = playerrc.y;
-                            }
+                            Coord2d playerrc = NUtils.player ().rc;
+                            double dx, dy;
+                            if (Math.min (dx = Math.abs (targetCoord.x - playerrc.x), dy = Math.abs (targetCoord.y - playerrc.y)) < MCache.tilehsz.x)
+
+                                if (dx < dy)
+                                {
+                                    targetCoord.x = playerrc.x;
+                                }
+                                else
+                                {
+                                    targetCoord.y = playerrc.y;
+                                }
                         }
 
 
@@ -371,7 +394,7 @@ public class PathFinder implements Action
     }
 
 
-    private ArrayList<Coord> findFreeNearByHB(CellsArray ca, long target_id, Gob dummy) {
+    private ArrayList<Coord> findFreeNearByHB(CellsArray ca, long target_id, Gob dummy, boolean isStart) {
         ArrayList<Coord> res = new ArrayList<>();
         if (ca != null) {
             for (int i = 0; i < ca.x_len; i++)
@@ -385,7 +408,7 @@ public class PathFinder implements Action
                                 Coord test_coord = npfpos.add(Coord.uecw[d]);
                                 if(test_coord.x<pfmap.size && test_coord.x>=0 && test_coord.y<pfmap.size && test_coord.y>=0)
                                 if (pfmap.cells[test_coord.x][test_coord.y].val == 0) {
-                                    if(pfmap.cells[npfpos.x][npfpos.y].content.size()==1) {
+                                    if(isStart || pfmap.cells[npfpos.x][npfpos.y].content.size()==1 ) {
                                         pfmap.getCells()[test_coord.x][test_coord.y].val = 7;
                                         res.add(test_coord);
                                     }
