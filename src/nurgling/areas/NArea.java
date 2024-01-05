@@ -38,13 +38,15 @@ public class NArea
             Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
             for(Integer id : nids)
             {
-                if(NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
-                    NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
-                    Pair<Coord2d, Coord2d> testrc = test.getRCArea();
-                    double testdist;
-                    if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
-                        res = test;
-                        dist = testdist;
+                if(id>0) {
+                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
+                        NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
+                        Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                        double testdist;
+                        if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                            res = test;
+                            dist = testdist;
+                        }
                     }
                 }
             }
