@@ -412,12 +412,12 @@ public class PathFinder implements Action
                                         pfmap.getCells()[test_coord.x][test_coord.y].val = 7;
                                         res.add(test_coord);
                                     }
-                                    else
+                                    else if (pfmap.cells[npfpos.x][npfpos.y].content.size()>1)
                                     {
-                                        Coord2d test2d_coord = Utils.pfGridToWorld(test_coord);
+                                        Coord2d test2d_coord = Utils.pfGridToWorld(pfmap.cells[npfpos.x][npfpos.y].pos);
                                         double dst = 9000, testdst;
                                         long res_id = -2;
-                                        for(long id : pfmap.cells[test_coord.x][test_coord.y].content)
+                                        for(long id : pfmap.cells[npfpos.x][npfpos.y].content)
                                         {
                                             if(id>=0)
                                             {
