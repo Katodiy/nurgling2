@@ -210,6 +210,20 @@ public class PathFinder implements Action
                 boolean needRestart = false;
                     for (Graph.Vertex vert : path) {
                         Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
+                        if( vert == path.getFirst())
+                        {
+                            Coord2d playerrc = NUtils.player().rc;
+                            if(Math.abs(targetCoord.x-playerrc.x)<Math.abs(targetCoord.y-playerrc.y))
+                            {
+                                targetCoord.x = playerrc.x;
+                            }
+                            else
+                            {
+                                targetCoord.y = playerrc.y;
+                            }
+                        }
+
+
                         if(target_id==-1 && vert == path.getLast())
                         {
                             if(Math.abs(targetCoord.x-end.x)<Math.abs(targetCoord.y-end.y))
