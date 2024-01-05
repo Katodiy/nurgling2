@@ -78,9 +78,14 @@ public class AnimalAction <C extends Entry> implements Action {
             return;
         forkill.sort(NUtils.d_comp);
         Gob target = forkill.get(0);
-        new PathFinder(target).run(gui);
-        new SelectFlowerAction("Slaughter", target ).run(gui);
-        NUtils.getUI().core.addTask(new AnimalIsDead(target));
+        boolean res = false;
+        while (!res) {
+            new DynamicPf(target).run(gui);
+            new SelectFlowerAction("Slaughter", target).run(gui);
+            AnimalIsDead aid = new AnimalIsDead(target);
+            NUtils.getUI().core.addTask(aid);
+            res = aid.getRes();
+        }
         new LiftObject(target).run(gui);
         new FindPlaceAndAction(target,NArea.findSpec("deadkritter")).run(gui);
         Collection<Object> args = new ArrayList<>();

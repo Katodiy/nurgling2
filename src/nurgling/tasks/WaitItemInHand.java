@@ -28,18 +28,29 @@ public class WaitItemInHand implements NTask
         this.inventory = inventory;
     }
 
-    @Override
-    public boolean check()
+    public WaitItemInHand()
     {
-        if (item != null)
+
+    }
+
+    @Override
+    public boolean check() {
+        if (item != null) {
             if (((NGItem) item).name() == null)
                 return false;
             else
                 name = ((NGItem) item).name();
-        WItem res;
-        return (res = NUtils.getGameUI().vhand) != null &&
-                res.item.info != null &&
-                ((NGItem) res.item).name() != null &&
-                NParser.checkName(((NGItem) res.item).name(), name);
+            WItem res;
+            return (res = NUtils.getGameUI().vhand) != null &&
+                    res.item.info != null &&
+                    ((NGItem) res.item).name() != null &&
+                    NParser.checkName(((NGItem) res.item).name(), name);
+        } else {
+            WItem res;
+            return (res = NUtils.getGameUI().vhand) != null &&
+                    res.item.info != null &&
+                    ((NGItem) res.item).name() != null;
+        }
     }
+
 }

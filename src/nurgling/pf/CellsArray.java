@@ -12,9 +12,9 @@ public class CellsArray
     public int x_len;
     public int y_len;
 
-    public CellsArray(Gob gob, byte scale)
+    public CellsArray(Gob gob)
     {
-        this(gob.ngob.hitBox, gob.a, gob.rc, scale);
+        this(gob.ngob.hitBox, gob.a, gob.rc);
     }
 
 
@@ -24,12 +24,12 @@ public class CellsArray
         this.y_len = y_len;
     }
 
-    public CellsArray(NHitBox hb, double angl, Coord2d rc, byte scale)
+    public CellsArray(NHitBox hb, double angl, Coord2d rc)
     {
         NHitBoxD objToApproach = new NHitBoxD(hb.begin, hb.end, rc, angl);
-        begin = Utils.toPfGrid(objToApproach.getCircumscribedUL(), scale);
-        Coord2d dBegin = Utils.pfGridToWorld(begin, scale).sub(MCache.tileqsz);
-        end = Utils.toPfGrid(objToApproach.getCircumscribedBR(), scale);
+        begin = Utils.toPfGrid(objToApproach.getCircumscribedUL());
+        Coord2d dBegin = Utils.pfGridToWorld(begin).sub(MCache.tileqsz);
+        end = Utils.toPfGrid(objToApproach.getCircumscribedBR());
         x_len = end.x - begin.x + 1;
         y_len = end.y - begin.y + 1;
         cells = new short[x_len][y_len];

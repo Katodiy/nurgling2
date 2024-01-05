@@ -41,8 +41,11 @@ public class NArea
                 if(NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
                     NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
                     Pair<Coord2d, Coord2d> testrc = test.getRCArea();
-                    if ((testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc)) < dist)
+                    double testdist;
+                    if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
                         res = test;
+                        dist = testdist;
+                    }
                 }
             }
         }
@@ -60,8 +63,11 @@ public class NArea
                 if(NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name)) {
                     NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
                     Pair<Coord2d, Coord2d> testrc = test.getRCArea();
-                    if ((testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc)) < dist)
+                    double testdist;
+                    if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
                         res = test;
+                        dist = testdist;
+                    }
                 }
             }
         }
@@ -110,8 +116,11 @@ public class NArea
                         if (s.name.equals(name)) {
                             NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
                             Pair<Coord2d, Coord2d> testrc = test.getRCArea();
-                            if ((testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc)) < dist)
+                            double testdist;
+                            if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
                                 res = test;
+                                dist = testdist;
+                            }
                         }
                     }
                 }
@@ -134,8 +143,11 @@ public class NArea
                         if (s.name.equals(name) && s.subtype != null && s.subtype.equals(sub)) {
                             NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
                             Pair<Coord2d,Coord2d> testrc = test.getRCArea();
-                            if ((testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))<dist)
+                            double testdist;
+                            if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
                                 res = test;
+                                dist = testdist;
+                            }
                         }
                     }
                 }

@@ -17,7 +17,6 @@ public class PathFinder implements Action
     NPFMap pfmap;
     Coord start_pos;
     Coord end_pos;
-    public static byte scale = 4;
     ArrayList<Coord> end_poses;
     public boolean isHardMode = false;
 
@@ -71,13 +70,38 @@ public class PathFinder implements Action
         return true;
     }
 
+
+    public static Comparator<Coord> c_comp = new Comparator<Coord>() {
+        @Override
+        public int compare(Coord o1, Coord o2) {
+            return Double.compare(Utils.pfGridToWorld(o1).dist(NUtils.getGameUI().map.player().rc),Utils.pfGridToWorld(o2).dist(NUtils.getGameUI().map.player().rc));
+        }
+    };
+
     private ArrayList<Coord> findFreeNear(Coord pos, boolean start)
     {
         if(!start)
             if(target_id!=-2)
             {
-                return findFreeNearByHB();
+                Gob target = dummy;
+                if (target == null) {
+                    target = Finder.findGob(target_id);
+                }
+
+                CellsArray ca = target.ngob.getCA();
+                return findFreeNearByHB(ca);
             }
+        else
+        {
+            if(!pfmap.cells[pos.x][pos.y].content.isEmpty()) {
+                Gob gob = Finder.findGob(pfmap.cells[pos.x][pos.y].content.get(0));
+                if (gob != null && gob.ngob != null) {
+                    ArrayList<Coord> res = findFreeNearByHB(gob.ngob.getCA());
+                    res.sort(c_comp);
+                    return res;
+                }
+            }
+        }
 
         ArrayList<Coord> coords = new ArrayList<>();
         Coord posl = new Coord(pos.x - 1, pos.y);
@@ -185,9 +209,19 @@ public class PathFinder implements Action
             if (path != null) {
                 boolean needRestart = false;
                     for (Graph.Vertex vert : path) {
-
-                        Coord2d targetCoord = Utils.pfGridToWorld(vert.pos, scale);
-                        if (vert == path.getLast()) {
+                        Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
+                        if(target_id==-1 && vert == path.getLast())
+                        {
+                            if(Math.abs(targetCoord.x-end.x)<Math.abs(targetCoord.y-end.y))
+                            {
+                                targetCoord.x = end.x;
+                            }
+                            else
+                            {
+                                targetCoord.y = end.y;
+                            }
+                        }
+                        else if (vert == path.getLast()) {
                             if (targetCoord.dist(end) < MCache.tilehsz.x)
                                 targetCoord = end;
                         }
@@ -232,8 +266,8 @@ public class PathFinder implements Action
             if(dummy!=null)
                 dca = pfmap.addGob(dummy);
 
-            start_pos = Utils.toPfGrid(begin,scale).sub(pfmap.getBegin());
-            end_pos = Utils.toPfGrid(end,scale).sub(pfmap.getBegin());
+            start_pos = Utils.toPfGrid(begin).sub(pfmap.getBegin());
+            end_pos = Utils.toPfGrid(end).sub(pfmap.getBegin());
             // Находим свободные начальные и конечные точки
 
             if(!fixStartEnd(test)) {
@@ -322,13 +356,8 @@ public class PathFinder implements Action
     }
 
 
-    private ArrayList<Coord> findFreeNearByHB() {
-        Gob target = dummy;
-        if (target == null) {
-            target = Finder.findGob(target_id);
-        }
+    private ArrayList<Coord> findFreeNearByHB(CellsArray ca) {
         ArrayList<Coord> res = new ArrayList<>();
-        CellsArray ca = target.ngob.getCA();
         if (ca != null) {
             for (int i = 0; i < ca.x_len; i++)
                 for (int j = 0; j < ca.y_len; j++) {

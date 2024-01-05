@@ -77,7 +77,7 @@ public class WaitMoreItems implements NTask
                     }
                 }
             }
-            return result.size() >= target_size &&  result.size()>0;
+            return result.size() >= target_size && !result.isEmpty();
         }
         else if(inventory instanceof NISBox)
         {

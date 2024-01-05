@@ -30,6 +30,8 @@ import java.lang.ref.*;
 import java.util.*;
 import java.util.concurrent.locks.*;
 import haven.*;
+import nurgling.NUtils;
+
 import static haven.Utils.eq;
 
 /*
@@ -724,7 +726,7 @@ public class RenderTree implements RenderList.Adapter, Disposable {
 		DepInfo bk = dstate();
 		int idx = slot.id;
 		if((bk.states.length <= idx) || !bk.def[idx])
-		    throw(new RuntimeException("Reading undefined slot " + slot + " from slot-pipe"));
+		    NUtils.getGameUI().error("Reading undefined slot " + slot + " from slot-pipe");
 		return((T)bk.states[idx]);
 	    }
 

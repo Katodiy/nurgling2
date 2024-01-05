@@ -7,7 +7,6 @@ import nurgling.*;
 import java.awt.*;
 import java.util.*;
 
-import static nurgling.actions.PathFinder.scale;
 
 public class NPFMap
 {
@@ -85,7 +84,7 @@ public class NPFMap
     {
         Coord2d a = new Coord2d(Math.min(src.x, dst.x), Math.min(src.y, dst.y));
         Coord2d b = new Coord2d(Math.max(src.x, dst.x), Math.max(src.y, dst.y));
-        Coord center = Utils.toPfGrid(a.add((b.sub(a)).div(2)),scale);
+        Coord center = Utils.toPfGrid(a.add((b.sub(a)).div(2)));
         dsize = Math.max(8,(((int) ((b.sub(a).len() / MCache.tilehsz.x))) / 2) * 2 * mul);
         size = 2 * dsize;
 
@@ -140,10 +139,10 @@ public class NPFMap
                 if (cells[i][j].val == 0)
                 {
                     ArrayList<Coord> cand = new ArrayList<>();
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos,scale).add(new Coord2d(-MCache.tileqsz.x,MCache.tileqsz.y))).div(MCache.tilesz).floor());
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos,scale).add(new Coord2d(MCache.tileqsz.x,-MCache.tileqsz.y))).div(MCache.tilesz).floor());
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos,scale).add(new Coord2d(-MCache.tileqsz.x,-MCache.tileqsz.y))).div(MCache.tilesz).floor());
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos,scale).add(new Coord2d(MCache.tileqsz.x,MCache.tileqsz.y))).div(MCache.tilesz).floor());
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(-MCache.tileqsz.x,MCache.tileqsz.y))).div(MCache.tilesz).floor());
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(MCache.tileqsz.x,-MCache.tileqsz.y))).div(MCache.tilesz).floor());
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(-MCache.tileqsz.x,-MCache.tileqsz.y))).div(MCache.tilesz).floor());
+                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(MCache.tileqsz.x,MCache.tileqsz.y))).div(MCache.tilesz).floor());
 
                     for(Coord c : cand) {
                         String name = NUtils.getGameUI().ui.sess.glob.map.tilesetname(NUtils.getGameUI().ui.sess.glob.map.gettile(c));

@@ -83,7 +83,8 @@ public class TransferToBarrel implements Action{
                     NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), items, witems.size() - targetItems.size() - 1));
 
 
-                    if (NUtils.getGameUI().vhand != null) {
+                    if (NUtils.getGameUI().vhand != null ) {
+                        NUtils.getUI().core.addTask(new WaitItemInHand());
                         gui.getInventory().dropOn(gui.getInventory().findFreeCoord(NUtils.getGameUI().vhand));
                     }
                 }

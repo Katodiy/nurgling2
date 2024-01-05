@@ -72,9 +72,9 @@ public class DynamicPf implements Action
         do {
             NUtils.getUI().core.addTask((new WaitPath(wpf)));
             LinkedList<Graph.Vertex> path = wpf.path;
-            updatePath(path, wpf);
+            updatePath(path, wpf,target);
             while (!path.isEmpty()) {
-                Coord2d targetCoord = Utils.pfGridToWorld(path.pop().pos, (byte) 4);
+                Coord2d targetCoord = Utils.pfGridToWorld(path.pop().pos);
                 gui.map.wdgmsg("click", Coord.z, targetCoord.floor(posres), 1, 0);
                 IsMoving im;
                 NUtils.getUI().core.addTask(im = new IsMoving(targetCoord, 20));
@@ -86,7 +86,7 @@ public class DynamicPf implements Action
                             NUtils.getGameUI().msg("update" + dmc.wpf.path.size());
                             path = dmc.wpf.path;
 
-                            updatePath(path, dmc.wpf);
+                            updatePath(path, dmc.wpf,target);
 
 
                         }
@@ -98,7 +98,7 @@ public class DynamicPf implements Action
                     wpf = new WorkerPf();
                     NUtils.getUI().core.addTask((new WaitPath(wpf)));
                     path = wpf.path;
-                    updatePath(path, wpf);
+                    updatePath(path, wpf,target);
                 }
             }
         }
@@ -106,19 +106,19 @@ public class DynamicPf implements Action
         return Results.SUCCESS();
     }
 
-    private static void updatePath(LinkedList<Graph.Vertex> path, WorkerPf wpf) {
+    private static void updatePath(LinkedList<Graph.Vertex> path, WorkerPf wpf, Gob target) {
         if (!path.isEmpty()) {
             LinkedList<Graph.Vertex> for_remove = new LinkedList<>();
             int shift = 1;
             while (shift < path.size()) {
                 Coord2d first = NUtils.player().rc;
-                Coord2d second = Utils.pfGridToWorld(path.get(shift).pos, (byte) 4);
+                Coord2d second = Utils.pfGridToWorld(path.get(shift).pos);
                 Coord2d fsdir = second.sub(first);
                 Coord2d center = fsdir.div(2).add(first);
                 int hlen = (int) Math.ceil(fsdir.len() / 2);
                 NHitBox hb = new NHitBox(new Coord(-1, -hlen), new Coord(1, hlen));
 
-                if (wpf.pfMap.checkCA(new CellsArray(hb, fsdir.curAngle(), center, (byte) 4))) {
+                if (wpf.pfMap.checkCA(new CellsArray(hb, fsdir.curAngle(), center))) {
                     for_remove.add(path.get(shift - 1));
                     shift++;
                 } else {

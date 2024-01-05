@@ -48,8 +48,11 @@ public interface GroupPipe extends Pipe {
 	    int grp = gstate(i);
 	    if(grp < 0)
 		ret[i] = null;
-	    else
-		ret[i] = group(grp).get(State.Slot.slots.idlist[i]);
+	    else {
+			State st = group(grp).get(State.Slot.slots.idlist[i]);
+			if(st!=null)
+				ret[i] = st;
+		}
 	}
 	return(ret);
     }

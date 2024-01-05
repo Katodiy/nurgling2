@@ -60,44 +60,109 @@ public class Graph implements Runnable
             if (v.j > 0)
             {
                 if ((vert[v.i][v.j - 1].val & 3) == 0 && (vert[v.i - 1][v.j].val & 3) == 0)
-                    check(vert[v.i - 1][v.j - 1], v.len + 141);
+                    check(vert[v.i - 1][v.j - 1]);
             }
-            check(vert[v.i - 1][v.j], v.len + 100);
+            check(vert[v.i - 1][v.j]);
             if (v.j < size - 1)
             {
                 if ((vert[v.i][v.j + 1].val & 3) == 0 && (vert[v.i - 1][v.j].val & 3) == 0)
-                    check(vert[v.i - 1][v.j + 1], v.len + 141);
+                    check(vert[v.i - 1][v.j + 1]);
             }
         }
         if (v.j > 0)
         {
-            check(vert[v.i][v.j - 1], v.len + 100);
+            check(vert[v.i][v.j - 1]);
             if (v.i < size - 1)
             {
                 if ((vert[v.i][v.j - 1].val & 3) == 0 && (vert[v.i + 1][v.j].val & 3) == 0)
-                    check(vert[v.i + 1][v.j - 1], v.len + 141);
+                    check(vert[v.i + 1][v.j - 1]);
             }
         }
         if (v.i < size - 1)
         {
-            check(vert[v.i + 1][v.j], v.len + 100);
+            check(vert[v.i + 1][v.j]);
             if (v.j < size - 1)
             {
                 if ((vert[v.i][v.j + 1].val & 3) == 0 && (vert[v.i + 1][v.j].val & 3) == 0)
-                    check(vert[v.i + 1][v.j + 1], v.len + 141);
+                    check(vert[v.i + 1][v.j + 1]);
             }
         }
         if (v.j < size - 1)
         {
-            check(vert[v.i][v.j + 1], v.len + 100);
+            check(vert[v.i][v.j + 1]);
         }
     }
 
-    private void check(Vertex c, int len)
+    private void check(Vertex c)
     {
         if (c.val == 0 && c.len == -1)
         {
-            c.len = len;
+            c.len = Integer.MAX_VALUE;
+            if(c.i>0)
+            {
+
+                if(c.j>0 && ((vert[c.i-1][c.j].val & 3) == 0) && ((vert[c.i][c.j-1].val & 3)) == 0)
+                {
+                    int tlen = vert[c.i-1][c.j - 1].len;
+                    if(tlen !=-1 && tlen+141<c.len)
+                    {
+                        c.len = tlen+141;
+                    }
+                }
+                int tlen = vert[c.i-1][c.j].len;
+                if(tlen !=-1 && tlen+100<c.len)
+                {
+                    c.len = tlen+100;
+                }
+                if(c.j<size-1 && (vert[c.i-1][c.j].val & 3) == 0 && (vert[c.i][c.j+1].val & 3) == 0)
+                {
+                    tlen = vert[c.i-1][c.j+1].len;
+                    if(tlen !=-1 && tlen+141<c.len)
+                    {
+                        c.len = tlen+141;
+                    }
+                }
+            }
+            if(c.j>0)
+            {
+                int tlen = vert[c.i][c.j - 1].len;
+                if(tlen !=-1 && tlen+100<c.len)
+                {
+                    c.len = tlen+100;
+                }
+            }
+            if(c.j<size-1)
+            {
+                int tlen = vert[c.i][c.j+1].len;
+                if(tlen !=-1 && tlen+100<c.len)
+                {
+                    c.len = tlen+100;
+                }
+            }
+            if(c.i<size-1)
+            {
+                if(c.j>0 && (vert[c.i+1][c.j].val & 3) == 0 && (vert[c.i][c.j-1].val & 3) == 0)
+                {
+                    int tlen = vert[c.i+1][c.j - 1].len;
+                    if(tlen !=-1 && tlen+141<c.len)
+                    {
+                        c.len = tlen+141;
+                    }
+                }
+                int tlen = vert[c.i+1][c.j].len;
+                if(tlen !=-1 && tlen+100<c.len)
+                {
+                    c.len = tlen+100;
+                }
+                if(c.j<size-1 && ((vert[c.i+1][c.j].val & 3) == 0) && ((vert[c.i][c.j+1].val & 3) == 0))
+                {
+                    tlen = vert[c.i+1][c.j+1].len;
+                    if(tlen !=-1 && tlen+141<c.len)
+                    {
+                        c.len = tlen+141;
+                    }
+                }
+            }
             candidates.add(c);
         }
     }
@@ -194,14 +259,14 @@ public class Graph implements Runnable
                 for (int i = -1; i < path.size(); i++) {
                     int di = 0;
                     while (i + shift < path.size()) {
-                        Coord2d first = (i != -1) ? Utils.pfGridToWorld(path.get(i).pos, (byte) 4) : NUtils.player().rc;
-                        Coord2d second = Utils.pfGridToWorld(path.get(i + shift).pos, (byte) 4);
+                        Coord2d first = (i != -1) ? Utils.pfGridToWorld(path.get(i).pos) : NUtils.player().rc;
+                        Coord2d second = Utils.pfGridToWorld(path.get(i + shift).pos);
                         Coord2d fsdir = second.sub(first);
                         Coord2d center = fsdir.div(2).add(first);
                         int hlen = (int) Math.ceil(fsdir.len() / 2);
-                        NHitBox hb = new NHitBox(new Coord(-2, -hlen), new Coord(2, hlen));
+                        NHitBox hb = new NHitBox(new Coord(-3, -hlen-1), new Coord(3, hlen+1));
 
-                        if (map.checkCA(new CellsArray(hb, fsdir.curAngle(), center, (byte) 4))) {
+                        if (map.checkCA(new CellsArray(hb, fsdir.curAngle(), center))) {
                             for_remove.add(path.get(i + shift - 1));
                             shift++;
                             di++;
@@ -213,7 +278,7 @@ public class Graph implements Runnable
                     }
                 }
                 path.removeAll(for_remove);
-                if (player != null && Utils.pfGridToWorld(path.get(0).pos, (byte) 4).dist(player.rc) <= 1)
+                if (player != null && Utils.pfGridToWorld(path.get(0).pos).dist(player.rc) <= 1)
                     path.remove(0);
             }
         return path;

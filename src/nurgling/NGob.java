@@ -109,7 +109,7 @@ public class NGob
                             setDynamic();
                             parent.addcustomol(new NModelBox(parent));
                             if (!isDynamic)
-                                ca.put((byte)4, new CellsArray(parent,(byte)4));
+                                ca.put((byte)4, new CellsArray(parent));
                         }
                     }
                 }
@@ -134,7 +134,7 @@ public class NGob
             {
                 if (NUtils.getGameUI().map.player() != null && parent.id == NUtils.getGameUI().map.player().id)
                     return null;
-                return new CellsArray(parent, scale);
+                return new CellsArray(parent);
             }
         }
         else if (isGate)
@@ -146,7 +146,7 @@ public class NGob
         {
             if(ca.get(scale)==null)
             {
-                ca.put(scale, new CellsArray(parent,scale));
+                ca.put(scale, new CellsArray(parent));
             }
         }
         return ca.get(scale);
