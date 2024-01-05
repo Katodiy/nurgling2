@@ -45,6 +45,8 @@ public class Graph implements Runnable
                 next = candidates.get(0);
             else
             {
+                if(vert[end.x][end.y].val == 3)
+                    break;
                 return;
             }
         }
@@ -252,35 +254,35 @@ public class Graph implements Runnable
                 }
                 path.removeAll(for_remove);
             }
-            if (!path.isEmpty()) {
-                LinkedList<Vertex> for_remove = new LinkedList<>();
-                int shift = 2;
-
-                for (int i = -1; i < path.size(); i++) {
-                    int di = 0;
-                    while (i + shift < path.size()) {
-                        Coord2d first = (i != -1) ? Utils.pfGridToWorld(path.get(i).pos) : NUtils.player().rc;
-                        Coord2d second = Utils.pfGridToWorld(path.get(i + shift).pos);
-                        Coord2d fsdir = second.sub(first);
-                        Coord2d center = fsdir.div(2).add(first);
-                        int hlen = (int) Math.ceil(fsdir.len() / 2);
-                        NHitBox hb = new NHitBox(new Coord(-3, -hlen-1), new Coord(3, hlen+1));
-
-                        if (map.checkCA(new CellsArray(hb, fsdir.curAngle(), center))) {
-                            for_remove.add(path.get(i + shift - 1));
-                            shift++;
-                            di++;
-                        } else {
-                            shift = 2;
-                            i += di;
-                            break;
-                        }
-                    }
-                }
-                path.removeAll(for_remove);
-                if (player != null && Utils.pfGridToWorld(path.get(0).pos).dist(player.rc) <= 1)
-                    path.remove(0);
-            }
+//            if (!path.isEmpty()) {
+//                LinkedList<Vertex> for_remove = new LinkedList<>();
+//                int shift = 2;
+//
+//                for (int i = -1; i < path.size(); i++) {
+//                    int di = 0;
+//                    while (i + shift < path.size()) {
+//                        Coord2d first = (i != -1) ? Utils.pfGridToWorld(path.get(i).pos) : NUtils.player().rc;
+//                        Coord2d second = Utils.pfGridToWorld(path.get(i + shift).pos);
+//                        Coord2d fsdir = second.sub(first);
+//                        Coord2d center = fsdir.div(2).add(first);
+//                        int hlen = (int) Math.ceil(fsdir.len() / 2);
+//                        NHitBox hb = new NHitBox(new Coord(-3, -hlen-1), new Coord(3, hlen+1));
+//
+//                        if (map.checkCA(new CellsArray(hb, fsdir.curAngle(), center))) {
+//                            for_remove.add(path.get(i + shift - 1));
+//                            shift++;
+//                            di++;
+//                        } else {
+//                            shift = 2;
+//                            i += di;
+//                            break;
+//                        }
+//                    }
+//                }
+//                path.removeAll(for_remove);
+//                if (player != null && Utils.pfGridToWorld(path.get(0).pos).dist(player.rc) <= 1)
+//                    path.remove(0);
+//            }
         return path;
     }
 

@@ -84,18 +84,22 @@ public class NPFMap
     {
         Coord2d a = new Coord2d(Math.min(src.x, dst.x), Math.min(src.y, dst.y));
         Coord2d b = new Coord2d(Math.max(src.x, dst.x), Math.max(src.y, dst.y));
-        Coord center = Utils.toPfGrid(a.add((b.sub(a)).div(2)));
+        Coord center = Utils.toPfGrid((a.add(b)).div(2));
         dsize = Math.max(8,(((int) ((b.sub(a).len() / MCache.tilehsz.x))) / 2) * 2 * mul);
-        size = 2 * dsize;
+        size = 2 * dsize+1;
 
         cells = new Cell[size][size];
-        begin = new Coord(center.x - dsize, center.y - dsize);
-        end = new Coord(center.x + dsize, center.y + dsize);
+        begin = center.sub(dsize,dsize);
+        end = center.add(dsize,dsize);
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
             {
                 cells[i][j] = new Cell(new Coord(begin.x + i, begin.y + j));
+                if(i == 0 || j == 0 || i == size-1 || j == size-1)
+                {
+                    cells[i][j].val=2;
+                }
             }
         }
     }

@@ -14,10 +14,10 @@ import static nurgling.pf.Graph.getPath;
 public class PathFinder implements Action
 {
     public static double pfmdelta = 0.1;
-    NPFMap pfmap;
-    Coord start_pos;
-    Coord end_pos;
-    ArrayList<Coord> end_poses;
+    NPFMap pfmap = null;
+    Coord start_pos = null;
+    Coord end_pos = null;
+    ArrayList<Coord> end_poses = null;
     public boolean isHardMode = false;
 
     Coord2d begin;
@@ -226,12 +226,14 @@ public class PathFinder implements Action
                                 targetCoord = end;
                         }
 
-
+                        NUtils.getGameUI().msg(targetCoord.toString());
                         if (!(new GoTo(targetCoord).run(gui)).IsSuccess()) {
                             this.begin = gui.map.player().rc;
                             needRestart = true;
                             break;
                         }
+                        NUtils.getGameUI().msg(NUtils.player().rc.toString());
+//                        Thread.sleep(5000);
 
                     }
                     if (!needRestart)

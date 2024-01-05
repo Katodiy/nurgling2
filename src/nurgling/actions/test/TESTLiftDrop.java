@@ -28,10 +28,10 @@ public class TESTLiftDrop extends Test
     @Override
     public void body(NGameUI gui) throws InterruptedException
     {
-        NPFMap npf = new NPFMap(NUtils.player().rc, Finder.findGob(new NAlias("gfx/kritter/cattle/calf")).rc, 2);
-        npf.build();
-        npf.print(npf.getSize(), npf.getCells());
-
+//        NPFMap npf = new NPFMap(NUtils.player().rc, Finder.findGob(new NAlias("gfx/terobjs/trough")).rc, 2);
+//        npf.build();
+//        npf.print(npf.getSize(), npf.getCells());
+        new PathFinder(Finder.findGob(new NAlias("gfx/terobjs/trough"))).run(gui);
 //        Gob trough = Finder.findGob(new NAlias("gfx/terobjs/cattle/calf"));
 //        Coord2d pos = trough.rc;
 //        double a = trough.a;
