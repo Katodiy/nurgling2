@@ -31,9 +31,9 @@ public class NPFMap
                         if (ii > 0 && ii < size && jj > 0 && jj < size)
                         {
                             old.cells[i][j] = cells[ii][jj].val;
-                            cells[ii][jj].val = ca.cells[i][j];
                             if(ca.cells[i][j]!=0)
                             {
+                                cells[ii][jj].val = ca.cells[i][j];
                                 cells[ii][jj].content.add(gob.id);
                             }
                         }
