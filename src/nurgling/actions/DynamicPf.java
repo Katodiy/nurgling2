@@ -111,11 +111,11 @@ public class DynamicPf implements Action
                 int hlen = (int) Math.ceil(fsdir.len() / 2);
                 NHitBox hb = new NHitBox(new Coord(-1, -hlen), new Coord(1, hlen));
 
-                if (wpf.pfMap.checkCA(new CellsArray(hb, fsdir.curAngle(), center))) {
+                if (wpf.pfMap.checkCA(new CellsArray(hb, fsdir.curAngle(), center)).isEmpty()) {
                     for_remove.add(path.get(shift - 1));
                     shift++;
                 } else {
-
+                    /// TODO здесь тоже надо было бы добавить проверку обычного оптимизатора, но лень
                     break;
                 }
             }

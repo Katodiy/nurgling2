@@ -3,6 +3,7 @@ package nurgling.pf;
 import haven.*;
 import nurgling.NHitBox;
 import nurgling.NUtils;
+import nurgling.tools.Finder;
 
 import java.util.*;
 
@@ -267,15 +268,55 @@ public class Graph implements Runnable
                         Coord2d fsdir = second.sub(first);
                         Coord2d center = fsdir.div(2).add(first);
                         int hlen = (int) Math.ceil(fsdir.len() / 2);
-                        NHitBox hb = new NHitBox(new Coord(-hlen+(int)Math.round(MCache.tilehsz.x),-2 ), new Coord(hlen-(int)Math.round(MCache.tilehsz.y), 2));
-                        if (map.checkCA(new CellsArray(hb, fsdir.curAngle(), center))) {
+                        NHitBox hb = new NHitBox(new Coord(-hlen,-2 ), new Coord(hlen, 2));
+                        ArrayList<Coord> data;
+                        if ((data = map.checkCA(new CellsArray(hb, fsdir.curAngle(), center))).isEmpty()) {
                             for_remove.add(path.get(i + shift - 1));
                             shift++;
                             di++;
                         } else {
-                            shift = 2;
-                            i += di;
-                            break;
+                            NHitBoxD hbd = new NHitBoxD(hb.begin, hb.end, center, fsdir.curAngle());
+                            boolean isFree = true;
+                            ArrayList<Coord> corners = new ArrayList<>();
+                            for(Coord2d c2d : hbd.c)
+                            {
+                                corners.add(Utils.toPfGrid(c2d).sub(map.begin));
+                            }
+                            for(Coord datac : data)
+                            {
+                                if(corners.contains(datac))
+                                {
+                                    for (long id : map.cells[datac.x][datac.y].content)
+                                    {
+                                        Gob g = Finder.findGob(id);
+                                        if(g!=null) {
+                                            if (hbd.intersectsGreedy(new NHitBoxD(g.ngob.hitBox.begin, g.ngob.hitBox.end, g.rc, g.a))) {
+                                                isFree = false;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if(!isFree)
+                                        break;
+                                }
+                                else
+                                {
+                                    isFree = false;
+                                    break;
+                                }
+                            }
+
+                            if(isFree)
+                            {
+                                for_remove.add(path.get(i + shift - 1));
+                                shift++;
+                                di++;
+                            }
+                            else {
+                                shift = 2;
+                                i += di;
+                                break;
+                            }
                         }
                     }
                 }

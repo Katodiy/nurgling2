@@ -160,7 +160,8 @@ public class NPFMap
         }
     }
 
-    public boolean checkCA(CellsArray ca) {
+    public ArrayList<Coord> checkCA(CellsArray ca) {
+        ArrayList<Coord> result = new ArrayList<>();
         if ((ca.begin.x >= begin.x && ca.begin.x <= end.x ||
                 ca.end.x >= begin.x && ca.end.x <= end.x) &&
                 (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
@@ -175,13 +176,12 @@ public class NPFMap
                     {
                         if(ca.cells[i][j] != 0 && cells[ii][jj].val !=0)
                         {
-                            return false;
+                            result.add(new Coord(ii,jj));
                         }
                     }
                 }
-            return true;
         }
-        return false;
+        return result;
     }
 
     public static Window wnd = null;
