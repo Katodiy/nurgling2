@@ -83,16 +83,9 @@ public class DynamicPf implements Action
                     NUtils.getUI().core.addTask((dmc = new DynMovingCompleted(new WorkerPf(), target, targetCoord)));
                     if (dmc.needUpdate()) {
                         if (dmc.wpf.path != null) {
-                            NUtils.getGameUI().msg("update" + dmc.wpf.path.size());
                             path = dmc.wpf.path;
-
                             updatePath(path, dmc.wpf,target);
-
-
                         }
-                    } else {
-                        if (targetCoord.dist(NUtils.player().rc) > MCache.tilehsz.len())
-                            NUtils.getGameUI().msg("break");
                     }
                 } else {
                     wpf = new WorkerPf();

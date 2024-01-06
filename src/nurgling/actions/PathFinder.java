@@ -263,14 +263,11 @@ public class PathFinder implements Action
                                 targetCoord = end;
                         }
 
-                        NUtils.getGameUI().msg(targetCoord.toString());
                         if (!(new GoTo(targetCoord).run(gui)).IsSuccess()) {
                             this.begin = gui.map.player().rc;
                             needRestart = true;
                             break;
                         }
-                        NUtils.getGameUI().msg(NUtils.player().rc.toString());
-
                     }
                     if (!needRestart)
                         return Results.SUCCESS();
