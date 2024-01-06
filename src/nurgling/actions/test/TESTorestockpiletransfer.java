@@ -25,13 +25,14 @@ public class TESTorestockpiletransfer extends Test
     @Override
     public void body(NGameUI gui) throws InterruptedException
     {
-        new OpenTargetContainer(container, TestUtils.findGob("stockpile")).run(gui);
+        Gob pile = TestUtils.findGob("stockpile");
+        new OpenTargetContainer(container, pile).run(gui);
         ArrayList<WItem> items = gui.getInventory().getItems(ores);
-        new TransferItems(gui.getStockpile(), items, items.size()).run(gui);
+        new TransferItemsOLD(gui.getStockpile(), items, items.size()).run(gui);
         new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
 
-        new OpenTargetContainer(container, TestUtils.findGob("stockpile")).run(gui);
-        new TakeItemsFromPile(gui.getStockpile()).run(gui);
+        new OpenTargetContainer(container, pile).run(gui);
+        new TakeItemsFromPile(pile, gui.getStockpile()).run(gui);
         new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
     }
 }

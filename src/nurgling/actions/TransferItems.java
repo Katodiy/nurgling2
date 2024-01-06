@@ -1,87 +1,48 @@
 package nurgling.actions;
 
-import haven.*;
-import nurgling.*;
-import nurgling.tasks.*;
+import haven.WItem;
+import haven.Widget;
+import haven.Window;
+import haven.res.ui.barterbox.Shopbox;
+import nurgling.NGameUI;
+import nurgling.NUtils;
+import nurgling.tasks.WaitItems;
+import nurgling.tools.Context;
+import nurgling.tools.NAlias;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TransferItems implements Action
 {
-    Widget target = null;
-    ArrayList<WItem> items;
-    int count = -1;
+    final Context cnt;
+    String item;
+    int count;
 
-    public TransferItems(NInventory inv, ArrayList<WItem> items)
-    {
-        this.target = inv;
-        this.items = items;
-    }
 
-    public TransferItems(NInventory inv, ArrayList<WItem> items, int count)
+    public TransferItems(Context context, String item, int count)
     {
-        this(inv, items);
-        this.count = count;
-    }
-
-    public TransferItems(NISBox inv, ArrayList<WItem> items)
-    {
-        this.target = inv;
-        this.items = items;
-    }
-
-    public TransferItems(NISBox inv, ArrayList<WItem> items, int count)
-    {
-        this(inv, items);
+        this.cnt = context;
+        this.item = item;
         this.count = count;
     }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        if(items.size()>0)
+        AtomicInteger left = new AtomicInteger(count);
+        for(Context.Output output: cnt.getOutputs(item))
         {
-            if(target instanceof NInventory)
+            if(output instanceof Context.Pile)
             {
-                NInventory inv = (NInventory) target;
-                int oldSize = inv.getItems(items.get(0).item).size();
-                int target_size = (count == -1) ? items.size() : Math.min(count, items.size());
-                target_size = Math.min(target_size, inv.getNumberFreeCoord(items.get(0)));
-                for (int i = 0; i < target_size; i++)
-                {
-                    items.get(i).item.wdgmsg("transfer", Coord.z);
-                }
-                gui.ui.core.addTask(new WaitItems(inv, items.get(0).item, oldSize + target_size));
-                items_transferd = target_size;
-                space_left = inv.getNumberFreeCoord(items.get(0));
+                if(((Context.OutputPile)output).getArea()!=null)
+                    return new TransferToPiles(((Context.OutputPile)output).getArea().getRCArea(),new NAlias(item)).run(gui);
             }
-            if(target instanceof NISBox)
-            {
-                NISBox inv = (NISBox) target;
-                int oldSize = inv.getFreeSpace();
-                int target_size = (count == -1) ? items.size() : Math.min(count, items.size());
-                target_size = Math.min(target_size, oldSize);
-                for (int i = 0; i < target_size; i++)
-                {
-                    items.get(i).item.wdgmsg("transfer", Coord.z);
-                }
-                gui.ui.core.addTask(new WaitItems(inv, oldSize - target_size));
 
-            }
+            if(left.get() == 0)
+                return Results.SUCCESS();
         }
         return Results.SUCCESS();
     }
 
-    public int spaceLeft()
-    {
-        return space_left;
-    }
-
-    public int itemsTransfered()
-    {
-        return items_transferd;
-    }
-
-    private int items_transferd = 0;
-    private int space_left = -1;
 }

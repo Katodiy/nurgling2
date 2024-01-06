@@ -1,13 +1,10 @@
 package nurgling.actions;
 
 import haven.*;
-import haven.res.lib.itemtex.*;
 import haven.res.ui.barterbox.*;
 import nurgling.*;
-import nurgling.areas.*;
 import nurgling.tasks.*;
 import nurgling.tools.*;
-import org.json.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.*;
@@ -34,8 +31,13 @@ public class TakeItems implements Action
         {
             if(input instanceof Context.Barter)
                 takeFromBarter(left,gui, (Context.Barter)input);
-            if(left.get() == 0)
+            else if (input instanceof Context.InputPile)
+            {
+                takeFromPile(left, gui,(Context.InputPile) input);
+            }
+            if(left.get() == 0) {
                 return Results.SUCCESS();
+            }
         }
         return Results.SUCCESS();
     }
@@ -47,7 +49,7 @@ public class TakeItems implements Action
         ArrayList<WItem> items = gui.getInventory("Chest").getItems("Branch");
         int size = items.size();
         int to_take = Math.min(left.get(),size);
-        new TransferItems(gui.getInventory(), gui.getInventory("Chest").getItems("Branch"), to_take).run(gui);
+        new TransferItemsOLD(gui.getInventory(), gui.getInventory("Chest").getItems("Branch"), to_take).run(gui);
         left.set(left.get() - to_take);
         new PathFinder(barter.barter).run(gui);
         new OpenTargetContainer("Barter Stand", barter.barter).run(gui);
@@ -78,6 +80,17 @@ public class TakeItems implements Action
                 }
             }
         }
+        return Results.SUCCESS();
+    }
+
+    public Results takeFromPile(AtomicInteger left, NGameUI gui, Context.InputPile pile) throws InterruptedException
+    {
+        new PathFinder(pile.pile).run(gui);
+        new OpenTargetContainer("Stockpile",  pile.pile).run(gui);
+        TakeItemsFromPile tifp;
+        (tifp = new TakeItemsFromPile(pile.pile, gui.getStockpile(), left.get())).run(gui);
+        new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
+        left.set(left.get()-tifp.getResult());
         return Results.SUCCESS();
     }
 }

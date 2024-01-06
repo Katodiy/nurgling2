@@ -7,32 +7,38 @@ import nurgling.tasks.*;
 public class TakeItemsFromPile implements Action
 {
     NISBox pile;
+    Gob gpile;
     Coord target_coord = new Coord(1,1);
 
     int target_size = Integer.MAX_VALUE;
+    int took = 0;
 
-    public TakeItemsFromPile(NISBox pile)
+    public TakeItemsFromPile(Gob gob, NISBox pile)
     {
         this.pile = pile;
+        this.gpile = gob;
     }
 
-    public TakeItemsFromPile(NISBox pile, Coord target_coord)
+    public TakeItemsFromPile(Gob gob, NISBox pile, Coord target_coord)
     {
         this.pile = pile;
         this.target_coord = target_coord;
+        this.gpile = gob;
     }
 
-    public TakeItemsFromPile(NISBox pile, int target_size)
+    public TakeItemsFromPile(Gob gob, NISBox pile, int target_size)
     {
         this.pile = pile;
         this.target_size = target_size;
+        this.gpile = gob;
     }
 
-    public TakeItemsFromPile(NISBox pile, Coord target_coord, int target_size)
+    public TakeItemsFromPile(Gob gob, NISBox pile, Coord target_coord, int target_size)
     {
         this.pile = pile;
         this.target_coord = target_coord;
         this.target_size = target_size;
+        this.gpile = gob;
     }
 
     @Override
@@ -40,11 +46,13 @@ public class TakeItemsFromPile implements Action
     {
         if(target_size!=Integer.MAX_VALUE)
         {
-            target_size = Math.min(target_size, gui.getInventory().getNumberFreeCoord(target_coord));
+            target_size = Math.min(Math.min(target_size, gui.getInventory().getNumberFreeCoord(target_coord)),pile.total());
 
             int oldSpace = gui.getInventory().getItems().size();
             gui.getStockpile().transfer(target_size);
-            NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), oldSpace + target_size));
+            WaitItemsFromPile wifp = new WaitItemsFromPile(gpile.id, gui.getInventory(), oldSpace, target_size);
+            NUtils.getUI().core.addTask(wifp);
+            took += gui.getInventory().getItems().size() - oldSpace;
         }
         else
         {
@@ -55,7 +63,9 @@ public class TakeItemsFromPile implements Action
                 {
                     int oldSpace = gui.getInventory().getItems().size();
                     gui.getStockpile().transfer(1);
-                    NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), oldSpace + 1));
+                    WaitItemsFromPile wifp = new WaitItemsFromPile(gpile.id, gui.getInventory(), oldSpace , 1);
+                    NUtils.getUI().core.addTask(wifp);
+                    took += gui.getInventory().getItems().size() - oldSpace;
                     count++;
                 }
                 target_size = count;
@@ -65,7 +75,9 @@ public class TakeItemsFromPile implements Action
                 target_size = Math.min(gui.getInventory().getFreeSpace(),gui.getStockpile().total());
                 int oldSpace = gui.getInventory().getItems().size();
                 gui.getStockpile().transfer(Math.min(gui.getInventory().getFreeSpace(),gui.getStockpile().total()));
-                NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), oldSpace + target_size));
+                WaitItemsFromPile wifp = new WaitItemsFromPile(gpile.id, gui.getInventory(), oldSpace , target_size);
+                NUtils.getUI().core.addTask(wifp);
+                took = gui.getInventory().getItems().size() - oldSpace;
             }
         }
         return Results.SUCCESS();
@@ -73,6 +85,6 @@ public class TakeItemsFromPile implements Action
 
     public int getResult()
     {
-        return target_size;
+        return took;
     }
 }

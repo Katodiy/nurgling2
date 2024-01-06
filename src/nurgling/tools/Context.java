@@ -1,6 +1,7 @@
 package nurgling.tools;
 
 import haven.*;
+import nurgling.NUtils;
 import nurgling.areas.*;
 
 import java.util.*;
@@ -8,9 +9,27 @@ import java.util.*;
 public class Context
 {
 
+    public static NAlias containers = new NAlias(
+        "gfx/terobjs/chest",
+        "gfx/terobjs/crate",
+        "gfx/terobjs/cupboard",
+        "gfx/terobjs/shed");
+
+
     public ArrayList<Input> getInputs(String name)
     {
-        return input.get(name);
+        ArrayList<Input> in =  input.get(name);
+        ArrayList<Input> for_remove =  new ArrayList<>();
+        for(Input i : in)
+        {
+            if(i instanceof Pile)
+            {
+                if(Finder.findGob(((Pile) i).pile.id)==null)
+                    for_remove.add(i);
+            }
+        }
+        in.removeAll(for_remove);
+        return in;
     }
 
     static HashMap<String, String> equip_map;
@@ -22,6 +41,7 @@ public class Context
     static {
         workstation_map = new HashMap<>();
         workstation_map.put("paginae/bld/meatgrinder",new Workstation("gfx/terobjs/meatgrinder", "gfx/borka/idle"));
+        workstation_map.put("paginae/bld/loom",new Workstation("gfx/terobjs/loom", "gfx/borka/loomsit"));
     }
     public void addTools(List<Indir<Resource>> tools)
     {
@@ -42,6 +62,10 @@ public class Context
 
     public String equip = null;
     public Workstation workstation = null;
+
+    public ArrayList<Output> getOutputs(String name) {
+        return output.get(name);
+    }
 
     public static class Workstation
     {
@@ -79,6 +103,79 @@ public class Context
         }
     }
 
+    public static class InputPile extends Pile implements Input
+    {
+        public InputPile(Gob gob)
+        {
+            super(gob);
+        }
+    }
+
+    public static class OutputPile extends Pile implements Output
+    {
+        public OutputPile(Gob gob)
+        {
+            super(gob);
+        }
+
+        public OutputPile(Gob gob, NArea area)
+        {
+            super(gob);
+            this.area = area;
+        }
+
+        @Override
+        public NArea getArea() {
+            return area;
+        }
+
+        NArea area = null;
+    }
+
+    public static class Pile {
+        public Gob pile;
+        public Pile(Gob gob)
+        {
+            this.pile = gob;
+        }
+    }
+
+    public static class InputContainer implements Input
+    {
+        public InputContainer(Gob gob)
+        {
+            this.container = gob;
+        }
+        public Gob container;
+    }
+
+    public static ArrayList<Output> GetOutput(String item, NArea area)  throws InterruptedException
+    {
+        ArrayList<Output> outputs = new ArrayList<>();
+        NArea.Ingredient ingredient = area.getOutput(item);
+        switch (ingredient.type)
+        {
+            case BARTER:
+//                inputs.add(new InputBarter( Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
+//                        Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
+                break;
+            case CONTAINER:
+            {
+                for(Gob gob: Finder.findGobs(area, containers))
+                {
+//                    inputs.add(new InputContainer(gob));
+                }
+                for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
+                {
+                    outputs.add(new OutputPile(gob, area));
+                }
+
+            }
+        }
+        return outputs;
+    }
+
+
     public static ArrayList<Input> GetInput(String item, NArea area ) throws InterruptedException
     {
         ArrayList<Input> inputs = new ArrayList<>();
@@ -89,13 +186,33 @@ public class Context
                 inputs.add(new InputBarter( Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
                                             Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
                 break;
+            case CONTAINER:
+            {
+                for(Gob gob: Finder.findGobs(area, containers))
+                {
+                        inputs.add(new InputContainer(gob));
+                }
+                for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
+                {
+                        inputs.add(new InputPile(gob));
+                }
+
+            }
         }
+        inputs.sort(new Comparator<Input>() {
+            @Override
+            public int compare(Input o1, Input o2) {
+                if (o1 instanceof InputPile && o2 instanceof InputPile)
+                    return NUtils.d_comp.compare(((InputPile)o1).pile,((InputPile)o2).pile);
+                return 0;
+            }
+        });
         return inputs;
     }
 
     public interface Output
     {
-
+        NArea getArea();
     }
 
     public class OutputBarter extends Barter implements Output
@@ -103,7 +220,15 @@ public class Context
         public OutputBarter(Gob barter, Gob chest)
         {
             super(barter, chest);
+
         }
+
+        @Override
+        public NArea getArea() {
+            return area;
+        }
+
+        NArea area = null;
     }
 
     HashMap<String,ArrayList<Input>> input = new HashMap<>();
@@ -126,8 +251,20 @@ public class Context
         return true;
     }
 
-    public boolean addOutput(Output output)
+    public boolean addOutput(String name, Output out)
     {
+        output.computeIfAbsent(name, k -> new ArrayList<>());
+        output.get(name).add(out);
+        return true;
+    }
+
+    public boolean addOutput(String name, ArrayList<Output> outputs)
+    {
+        for(Output out: outputs)
+        {
+            if(!addOutput(name, out))
+                return false;
+        }
         return true;
     }
 }

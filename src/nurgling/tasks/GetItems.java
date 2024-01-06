@@ -53,7 +53,7 @@ public class GetItems implements NTask
                 }
                 else
                 {
-                    if ((name == null) || (eq && !name.keys.isEmpty()) ? item_name.equals(name.getDefault()) : NParser.checkName(item_name, name))
+                    if (name == null || (eq && !name.keys.isEmpty() ? item_name.equals(name.getDefault()) : NParser.checkName(item_name, name)))
                     {
                         result.add(item);
                     }

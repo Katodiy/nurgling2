@@ -63,6 +63,10 @@ public class Craft implements Action
         for(NMakewindow.Spec s: mwnd.outputs)
         {
             size +=s.count;
+            NArea area = NArea.findOut(s.name);
+            if(area != null) {
+                context.addOutput(s.name, Context.GetOutput(s.name, area));
+            }
         }
 
         if(!mwnd.tools.isEmpty())
@@ -85,9 +89,21 @@ public class Craft implements Action
                 new UseWorkStation(context).run(gui);
             }
             mwnd.wdgmsg("make", 1);
+            HashMap<String, Integer> oldSize = new HashMap<>();
             for(NMakewindow.Spec s: mwnd.outputs)
             {
-                NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(s.name), for_craft));
+                oldSize.put(s.name,NUtils.getGameUI().getInventory().getItems(s.name).size());
+            }
+            for(NMakewindow.Spec s: mwnd.outputs)
+            {
+                NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(s.name), oldSize.get(s.name) + for_craft));
+            }
+            for(NMakewindow.Spec s: mwnd.outputs)
+            {
+                GetItems gi;
+                NUtils.getUI().core.addTask(gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(s.name)));
+                if(!gi.getResult().isEmpty() && context.getOutputs(s.name)!=null)
+                    new TransferItems(context,s.name,gi.getResult().size()).run(gui);
             }
             left -=for_craft;
         }

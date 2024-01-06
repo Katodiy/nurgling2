@@ -5,6 +5,7 @@ import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.tasks.FilledPile;
+import nurgling.tasks.FindNISBox;
 import nurgling.tasks.NotThisInHand;
 import nurgling.tasks.WaitItems;
 import nurgling.tools.Finder;
@@ -36,11 +37,16 @@ public class TransferToPiles implements Action{
                         if(PathFinder.isAvailable(gob)) {
                             target = gob;
                             new PathFinder(target).run(gui);
-                            if (gui.hand.isEmpty()) {
-                                NUtils.takeItemToHand(witems.get(0));
+                            witems = gui.getInventory().getItems(items);
+                            int size = witems.size();
+                            new OpenTargetContainer("Stockpile", target).run(gui);
+                            int target_size = Math.min(size,gui.getStockpile().getFreeSpace());
+
+                            for (int i = 0; i < target_size; i++)
+                            {
+                                witems.get(i).item.wdgmsg("transfer", Coord.z);
                             }
-                            NUtils.dropsame(gob);
-                            NUtils.getUI().core.addTask(new FilledPile(gob, items));
+                            NUtils.getUI().core.addTask(new FilledPile(target, items, target_size,size));
 
                             if((witems = gui.getInventory().getItems(items)).isEmpty())
                                 return Results.SUCCESS();
@@ -51,13 +57,18 @@ public class TransferToPiles implements Action{
                 while(!(gui.getInventory().getItems(items)).isEmpty()) {
                     PileMaker pm;
                     (pm = new PileMaker(out, items, pileName)).run(gui);
-                    witems = gui.getInventory().getItems(items);
-                    if (!gui.hand.isEmpty()) {
-                        NUtils.takeItemToHand(witems.get(0));
-                    }
                     Gob pile = pm.getPile();
-                    NUtils.dropsame(pile);
-                    NUtils.getUI().core.addTask(new FilledPile(pile, items));
+                    witems = gui.getInventory().getItems(items);
+                    int size = witems.size();
+                    new OpenTargetContainer("Stockpile", pile).run(gui);
+                    int target_size = Math.min(size,gui.getStockpile().getFreeSpace());
+
+                    for (int i = 0; i < target_size; i++)
+                    {
+                        witems.get(i).item.wdgmsg("transfer", Coord.z);
+                    }
+                    NUtils.getUI().core.addTask(new FilledPile(pile, items, target_size,size));
+
                 }
             }
         return Results.SUCCESS();
@@ -78,6 +89,10 @@ public class TransferToPiles implements Action{
             return new NAlias("gfx/terobjs/stockpile-brick");
         } else if (NParser.checkName(items.getDefault(), new NAlias("leaf"))) {
             return new NAlias("gfx/terobjs/stockpile-leaf");
+        } else if (NParser.checkName(items.getDefault(), new NAlias("Hemp Cloth"))) {
+            return new NAlias("gfx/terobjs/stockpile-cloth");
+        } else if (NParser.checkName(items.getDefault(), new NAlias("Linen Cloth"))) {
+            return new NAlias("gfx/terobjs/stockpile-cloth");
         }
         else
             return new NAlias("stockpile");

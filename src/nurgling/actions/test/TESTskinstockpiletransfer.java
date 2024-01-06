@@ -28,13 +28,14 @@ public class TESTskinstockpiletransfer extends Test
     @Override
     public void body(NGameUI gui) throws InterruptedException
     {
-        new OpenTargetContainer(container, TestUtils.findGob("stockpile")).run(gui);
+        Gob gob =  TestUtils.findGob("stockpile");
+        new OpenTargetContainer(container,gob).run(gui);
         ArrayList<WItem> items = gui.getInventory().getItems(hides);
-        new TransferItems(gui.getStockpile(), items, items.size()).run(gui);
+        new TransferItemsOLD(gui.getStockpile(), items, items.size()).run(gui);
         new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
 
         new OpenTargetContainer(container, TestUtils.findGob("stockpile")).run(gui);
-        new TakeItemsFromPile(gui.getStockpile(), new Coord(2, 2)).run(gui);
+        new TakeItemsFromPile(gob, gui.getStockpile(), new Coord(2, 2)).run(gui);
         new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
     }
 }

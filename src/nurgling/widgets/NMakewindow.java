@@ -10,7 +10,6 @@ import haven.res.ui.tt.defn.*;
 import nurgling.*;
 import nurgling.actions.bots.*;
 import nurgling.areas.*;
-import nurgling.conf.*;
 import nurgling.tools.*;
 import org.json.*;
 
@@ -166,8 +165,13 @@ public class NMakewindow extends Widget {
             }
             if(NMakewindow.this.autoMode && name!=null)
             {
-                logistic = (NArea.findIn(name) != null);
-                if(!logistic)
+                logisticin = (NArea.findIn(name) != null);
+                if(!logisticin)
+                {
+                    categories = (VSpec.categories.get(name)!=null);
+                }
+                logisticout = (NArea.findOut(name) != null);
+                if(!logisticout)
                 {
                     categories = (VSpec.categories.get(name)!=null);
                 }
@@ -179,7 +183,8 @@ public class NMakewindow extends Widget {
             return name;
         }
 
-        public boolean logistic = false;
+        public boolean logisticin = false;
+        public boolean logisticout = false;
         public boolean categories = false;
 
 
@@ -316,7 +321,7 @@ public class NMakewindow extends Widget {
             popt = opt;
             if(autoMode)
             {
-                if(s.logistic)
+                if(s.logisticin)
                 {
                     sg.image(aready, Coord.z);
                 }
@@ -397,7 +402,7 @@ public class NMakewindow extends Widget {
             c = c.add(Inventory.sqsz.x, 0);
             if(autoMode)
             {
-                if(s.logistic)
+                if(s.logisticout)
                 {
                     sg.image(aready, Coord.z);
                 }
@@ -586,7 +591,8 @@ public class NMakewindow extends Widget {
             wdgmsg("make", 0);
         else
         {
-            new Thread(new Runnable()
+            Thread t;
+            (t = new Thread(new Runnable()
             {
                 @Override
                 public void run()
@@ -611,7 +617,8 @@ public class NMakewindow extends Widget {
                         NUtils.getGameUI().tickmsg(Craft.class.getName() + "stopped");
                     }
                 }
-            }, "Auto craft(BOT)").start();
+            }, "Auto craft(BOT)")).start();
+            NUtils.getGameUI().biw.addObserve(t);
         }
     }
 

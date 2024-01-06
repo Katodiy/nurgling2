@@ -14,6 +14,8 @@ import java.util.*;
 public class NArea
 {
 
+
+
     public static class Specialisation
     {
         public String name;
@@ -404,6 +406,21 @@ public class NArea
         {
             JSONObject obj = (JSONObject)jin.get(i);
             if(((String)((JSONObject)jin.get(i)).get("name")).equals(name))
+            {
+                NArea.Ingredient.Type type = (obj.has("type")) ?
+                        type = NArea.Ingredient.Type.valueOf((String) obj.get("type")) :
+                        Ingredient.Type.CONTAINER;
+                return new Ingredient(type,name);
+            }
+        }
+        return null;
+    }
+
+    public Ingredient getOutput(String name) {
+        for (int i = 0; i < jout.length(); i++)
+        {
+            JSONObject obj = (JSONObject)jout.get(i);
+            if(((String)((JSONObject)jout.get(i)).get("name")).equals(name))
             {
                 NArea.Ingredient.Type type = (obj.has("type")) ?
                         type = NArea.Ingredient.Type.valueOf((String) obj.get("type")) :

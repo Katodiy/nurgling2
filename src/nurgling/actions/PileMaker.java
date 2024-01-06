@@ -40,7 +40,8 @@ public class PileMaker implements Action{
         if((pos = Finder.getFreePlace(out,hb))==null)
             return Results.ERROR("No free space");
         if (gui.hand.isEmpty()) {
-            NUtils.takeItemToHand(NUtils.getGameUI().getInventory().getItem(items));
+            if(NUtils.takeItemToHand(NUtils.getGameUI().getInventory().getItem(items))==null)
+                return Results.FAIL();
         }
         new PathFinder( NGob.getDummy(pos, 0, hb),true).run(gui);
         NUtils.activateItem(pos);

@@ -46,13 +46,14 @@ public class TransferItemsTo implements Action
         String container = "Stockpile";
         while (true)
         {
-            new OpenTargetContainer(container, findChest()).run(gui);
+            Gob pile = findChest();
+            new OpenTargetContainer(container, pile).run(gui);
             ArrayList<WItem> items = gui.getInventory().getItems(ores);
-            new TransferItems(gui.getStockpile(), items, items.size()).run(gui);
+            new TransferItemsOLD(gui.getStockpile(), items, items.size()).run(gui);
             new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
 
             new OpenTargetContainer(container, findChest()).run(gui);
-            new TakeItemsFromPile(gui.getStockpile()).run(gui);
+            new TakeItemsFromPile(pile, gui.getStockpile()).run(gui);
 //            new TransferItems(gui.getInventory(container), gui.getInventory().getItems("Autumn Steak"), 10).run(gui);
             new CloseTargetWindow(NUtils.getGameUI().getWindow(container)).run(gui);
         }
