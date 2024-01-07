@@ -18,6 +18,7 @@ import static haven.Inventory.invsq;
 public class UsingTools extends Widget {
     public static class Tools {
         public static ArrayList<Tool> axes = new ArrayList<>();
+        public static ArrayList<Tool> shovels = new ArrayList<>();
         static {
             axes.add(new Tool("gfx/invobjs/woodsmansaxe", "Woodsman's Axe", "gfx/invobjs/small/woodsmansaxe"));
             axes.add(new Tool("gfx/invobjs/stoneaxe", "Stone Axe"));
@@ -25,15 +26,24 @@ public class UsingTools extends Widget {
             axes.add(new Tool("gfx/invobjs/axe-m", "Metal Axe"));
             axes.add(new Tool("gfx/invobjs/tinkersthrowingaxe", "Tinker's Axe"));
             axes.add(new Tool("gfx/invobjs/b12axe", "Battle Axe of the Twelfth Bay", "gfx/invobjs/small/b12axe"));
+            shovels.add(new Tool("gfx/invobjs/small/shovel-w", "Wooden Shovel"));
+            shovels.add(new Tool("gfx/invobjs/small/shovel-m", "Metal Shovel"));
+            shovels.add(new Tool("gfx/invobjs/small/shovel-t", "Tinker's Shovel"));
         }
     }
 
     public static final TexI frame = new TexI(Resource.loadimg("nurgling/hud/iconframe"));
-    public UsingTools(ArrayList<Tool> tools) {
+    public UsingTools(ArrayList<Tool> tools, boolean showLabel) {
         this.tools = tools;
         prev = add(l = new Label("Tool:"));
+        if(!showLabel)
+            l.hide();
         sz = prev.sz.add(0,Inventory.sqsz.y).add(UI.scale(0,5));
         sz.x = Math.max(Inventory.sqsz.x,sz.x);
+    }
+
+    public UsingTools(ArrayList<Tool> tools) {
+        this(tools,true);
     }
 
     final ArrayList<Tool> tools;

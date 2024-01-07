@@ -10,6 +10,8 @@ import nurgling.areas.NArea;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.tasks.HandIsFree;
 import nurgling.tasks.WaitItemContent;
+import nurgling.tasks.WaitPos;
+import nurgling.tasks.WaitPose;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.NEquipory;
@@ -23,6 +25,11 @@ public class AutoEater implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
 
         ArrayList<WItem> witems = NUtils.getGameUI().getInventory().getItems(NFoodInfo.class);
+
+        /// Лучше все же не есть в движении
+        Gob pl = NUtils.player();
+        NUtils.clickGob(pl);
+        NUtils.getUI().core.addTask(new WaitPose(pl,"gfx/borka/idle"));
 
         while (!witems.isEmpty()) {
             double cEnrj = NUtils.getEnergy();

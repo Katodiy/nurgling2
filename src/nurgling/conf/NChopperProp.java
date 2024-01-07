@@ -15,6 +15,7 @@ public class NChopperProp implements JConf
     final private String username;
     final private String chrid;
     public String tool = null;
+    public String shovel = null;
     public boolean autoeat = false;
     public boolean autorefill = false;
     public boolean ngrowth = false;
@@ -31,6 +32,8 @@ public class NChopperProp implements JConf
         username = (String) values.get("username");
         if (values.get("tool") != null)
             tool = (String) values.get("tool");
+        if (values.get("shovel") != null)
+            shovel = (String) values.get("shovel");
         if (values.get("autoeat") != null)
             autoeat = (Boolean) values.get("autoeat");
         if (values.get("autorefill") != null)
@@ -79,6 +82,7 @@ public class NChopperProp implements JConf
         jchopper.put("username", username);
         jchopper.put("chrid", chrid);
         jchopper.put("tool", tool);
+        jchopper.put("shovel", shovel);
         jchopper.put("autoeat", autoeat);
         jchopper.put("autorefill", autorefill);
         jchopper.put("ngrowth", ngrowth);

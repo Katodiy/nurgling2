@@ -14,8 +14,8 @@ public class NGob
     public NHitBox hitBox = null;
     public String name = null;
     public boolean isQuested = true;
-    private HashMap<Byte, CellsArray> ca = new HashMap<>();
-    boolean isDynamic = false;
+    private CellsArray ca = null;
+    boolean isDynamic = true;
     private boolean isGate = false;
     protected long modelAttribute = -1;
     final Gob parent;
@@ -105,11 +105,11 @@ public class NGob
                     }
                     if (hitBox != null)
                     {
-                        if(ca.get((byte)4) == null) {
+                        if(ca == null) {
                             setDynamic();
                             parent.addcustomol(new NModelBox(parent));
                             if (!isDynamic)
-                                ca.put((byte)4, new CellsArray(parent));
+                                ca = new CellsArray(parent);
                         }
                     }
                 }
@@ -119,14 +119,14 @@ public class NGob
 
     private void setDynamic()
     {
-        isDynamic = (NParser.checkName(name, new NAlias("kritter", "borka", "vehicle")));
+//        isDynamic = (NParser.checkName(name, new NAlias("kritter", "borka", "vehicle")));
         isGate = (NParser.checkName(name, new NAlias("gate")));
     }
 
     public long getModelAttribute() {
         return modelAttribute;
     }
-    public CellsArray getCA(byte scale)
+    public CellsArray getCA()
     {
         if(isDynamic)
         {
@@ -144,17 +144,12 @@ public class NGob
         }
         else
         {
-            if(ca.get(scale)==null)
+            if(ca==null)
             {
-                ca.put(scale, new CellsArray(parent));
+                ca = new CellsArray(parent);
             }
         }
-        return ca.get(scale);
-    }
-
-    public CellsArray getCA()
-    {
-        return getCA((byte)4);
+        return ca;
     }
 
     public void markAsDynamic()

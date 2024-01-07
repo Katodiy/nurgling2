@@ -80,7 +80,7 @@ public class NUtils
     public static WItem takeItemToHand(WItem item) throws InterruptedException
     {
         item.item.wdgmsg("take", Coord.z);
-        WaitItemInHand tith = new WaitItemInHand(item, getGameUI().getInventory());
+        WaitItemInHand tith = new WaitItemInHand(item);
         getUI().core.addTask(tith);
         return getGameUI().vhand;
     }
@@ -133,6 +133,15 @@ public class NUtils
         }
         return null;
     }
+
+    public static void clickGob(Gob gob) {
+        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres),1, 0, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
+    }
+
+    public static void rclickGob(Gob gob) {
+        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres),3, 0, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
+    }
+
 
     public static void activateItem(Gob gob, boolean shift) {
         getGameUI().map.wdgmsg("itemact", Coord.z, gob.rc.floor(posres), shift ? 1 : 0, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);

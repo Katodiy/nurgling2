@@ -13,6 +13,7 @@ public class Chopper extends Window implements Checkable {
     CheckBox stumps = null;
 
     UsingTools usingTools = null;
+    UsingTools usingSovels = null;
 
     public Chopper() {
         super(new Coord(200,200), "Chopper");
@@ -25,6 +26,10 @@ public class Chopper extends Window implements Checkable {
             @Override
             public void set(boolean a) {
                 super.set(a);
+                if(a)
+                    usingSovels.show();
+                else
+                    usingSovels.hide();
             }
 
         }, prev.pos("bl").add(UI.scale(0,5)));
@@ -69,12 +74,28 @@ public class Chopper extends Window implements Checkable {
         {
             for(UsingTools.Tool tl : UsingTools.Tools.axes)
             {
-                if (tl.path.equals(startprop.tool)) {
+                if (tl.name.equals(startprop.tool)) {
                     usingTools.s = tl;
                     break;
                 }
             }
 
+        }
+
+        add(usingSovels = new UsingTools(UsingTools.Tools.shovels, false), prev.pos("ur").add(UI.scale(10,0)));
+        if(startprop.shovel!=null)
+        {
+            for(UsingTools.Tool tl : UsingTools.Tools.shovels)
+            {
+                if (tl.name.equals(startprop.shovel)) {
+                    usingSovels.s = tl;
+                    break;
+                }
+            }
+        }
+        if(!startprop.stumps)
+        {
+            usingSovels.hide();
         }
 
         prev = add(new Button(UI.scale(150), "Start"){
@@ -87,7 +108,9 @@ public class Chopper extends Window implements Checkable {
                 prop.stumps = stumps.a;
                 prop.ngrowth = ngrowth.a;
                 if(usingTools.s!=null)
-                    prop.tool = usingTools.s.path;
+                    prop.tool = usingTools.s.name;
+                if(prop.stumps && usingSovels.s!=null)
+                    prop.shovel = usingSovels.s.name;
                 NChopperProp.set(prop);
                 isReady = true;
             }

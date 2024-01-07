@@ -1,9 +1,7 @@
 package nurgling.actions.bots;
 
-import haven.Gob;
-import haven.UI;
-import haven.Widget;
-import haven.Window;
+import haven.*;
+import haven.res.lib.tree.TreeScale;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
@@ -14,6 +12,7 @@ import nurgling.tasks.WaitPos;
 import nurgling.tasks.WaitPose;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
+import nurgling.tools.NParser;
 import nurgling.widgets.bots.Checkable;
 
 import java.util.ArrayList;
@@ -41,41 +40,62 @@ public class Chopper implements Action {
         {
             return Results.ERROR("No config");
         }
+        if((!prop.stumps || prop.shovel==null) || (prop.tool == null))
+        {
+            return Results.ERROR("Not set required tools");
+        }
         SelectArea insa;
         NUtils.getGameUI().msg("Please select area for deforestation");
         (insa = new SelectArea()).run(gui);
         NAlias pattern = prop.stumps ? new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log","oldtrunk"))) :
                 new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log", "oldtrunk", "stump")));
         ArrayList<Gob> trees;
-        while (!(trees = Finder.findGobs(insa.getRCArea(),pattern)).isEmpty())
-        {
+        while (!(trees = Finder.findGobs(insa.getRCArea(),pattern)).isEmpty()) {
             trees.sort(NUtils.d_comp);
 
-            Gob tree = trees.get(0);
-            new PathFinder(tree).run(gui);
-            //TODO equip
-            while (Finder.findGob(tree.id)!=null)
+            if(prop.ngrowth)
             {
-                new SelectFlowerAction("Chop", tree).run(gui);
-                NUtils.getUI().core.addTask(new WaitPose(NUtils.player(),"gfx/borka/treechop"));
+                ArrayList<Gob> for_remove = new ArrayList<>();
+                for (Gob tree: trees)
+                {
+                    if(tree.getattr(TreeScale.class)!=null)
+                    {
+                        for_remove.add(tree);
+                    }
+                }
+                trees.removeAll(for_remove);
+                if(trees.isEmpty())
+                    break;
+            }
+
+            Gob tree = trees.get(0);
+
+            new PathFinder(tree).run(gui);
+
+            while (Finder.findGob(tree.id) != null) {
+                if (NParser.isIt(tree, new NAlias("stump"))) {
+                    new Equip(prop.shovel).run(gui);
+                    new Destroy(tree,"gfx/borka/shoveldig").run(gui);
+                } else {
+                    new Equip(prop.tool).run(gui);
+                    new SelectFlowerAction("Chop", tree).run(gui);
+                    NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/treechop"));
+                }
                 WaitChopperState wcs = new WaitChopperState(tree, prop);
                 NUtils.getUI().core.addTask(wcs);
-                switch (wcs.getState())
-                {
+                switch (wcs.getState()) {
                     case TREENOTFOUND:
                         break;
                     case TIMEFORDRINK: {
-                        if(prop.autorefill)
-                        {
-                            if(FillWaterskins.checkIfNeed())
+                        if (prop.autorefill) {
+                            if (FillWaterskins.checkIfNeed())
                                 new FillWaterskins().run(gui);
                             new PathFinder(tree).run(gui);
                         }
                         new Drink(0.9).run(gui);
                         break;
                     }
-                    case TIMEFOREAT:
-                    {
+                    case TIMEFOREAT: {
                         new AutoEater().run(gui);
                         break;
                     }
@@ -84,6 +104,7 @@ public class Chopper implements Action {
 
                 }
             }
+
         }
 
         return Results.SUCCESS();

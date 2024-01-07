@@ -8,24 +8,20 @@ public class WaitItemInHand implements NTask
 {
     String name;
     GItem item = null;
-    NInventory inventory;
 
-    public WaitItemInHand(String name, NInventory inventory)
+    public WaitItemInHand(String name)
     {
         this.name = name;
-        this.inventory = inventory;
     }
 
-    public WaitItemInHand(WItem item, NInventory inventory)
+    public WaitItemInHand(WItem item)
     {
         this.item = item.item;
-        this.inventory = inventory;
     }
 
-    public WaitItemInHand(GItem item, NInventory inventory)
+    public WaitItemInHand(GItem item)
     {
         this.item = item;
-        this.inventory = inventory;
     }
 
     public WaitItemInHand()
