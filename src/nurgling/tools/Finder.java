@@ -342,8 +342,8 @@ public class Finder
         synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
             for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
                 if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
-                    if(gob.ngob.hitBox != null && gob.getattr(Following.class)==null){
-                        NHitBoxD gobBox = new NHitBoxD(gob.ngob.hitBox.begin, gob.ngob.hitBox.end, gob.rc, gob.a);
+                    if(gob.ngob.hitBox != null && gob.getattr(Following.class)==null  && gob.id!= NUtils.player().id){
+                        NHitBoxD gobBox = new NHitBoxD(gob);
                         if (gobBox.intersectsGreedy(chekerOfArea))
                             significantGobs.add(gobBox);
                 }
