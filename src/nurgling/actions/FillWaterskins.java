@@ -60,4 +60,24 @@ public class FillWaterskins implements Action {
         }
         return Results.SUCCESS();
     }
+
+    public static boolean checkIfNeed() throws InterruptedException {
+        WItem wbelt = NUtils.getEquipment().findItem(NEquipory.Slots.BELT.idx);
+        if (wbelt != null) {
+            if (wbelt.item.contents instanceof NInventory) {
+                ArrayList<WItem> witems = ((NInventory) wbelt.item.contents).getItems(new NAlias("Waterskin"));
+                if (!witems.isEmpty()) {
+                    for (WItem item : witems) {
+                        NGItem ngItem = ((NGItem) item.item);
+                        if (ngItem.content() != null) {
+                            if (ngItem.content().name().contains("Water"))
+                                return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

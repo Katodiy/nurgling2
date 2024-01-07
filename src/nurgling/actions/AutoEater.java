@@ -24,15 +24,19 @@ public class AutoEater implements Action {
 
         ArrayList<WItem> witems = NUtils.getGameUI().getInventory().getItems(NFoodInfo.class);
 
-        if(!witems.isEmpty()) {
+        while (!witems.isEmpty()) {
             double cEnrj = NUtils.getEnergy();
-            for (WItem item : witems) {
-                NFoodInfo fi = ((NGItem) item.item).getInfo(NFoodInfo.class);
-                if (cEnrj + fi.energy() < 8100) {
-                    new SelectFlowerAction("Eat", (NWItem) item).run(gui);
-                }
+            NFoodInfo fi = ((NGItem) witems.get(0).item).getInfo(NFoodInfo.class);
+            if (cEnrj + fi.energy()/100 < 0.81) {
+                new SelectFlowerAction("Eat", witems.get(0)).run(gui);
             }
+            else
+            {
+                break;
+            }
+            witems = NUtils.getGameUI().getInventory().getItems(NFoodInfo.class);
         }
+
         return Results.SUCCESS();
     }
 }

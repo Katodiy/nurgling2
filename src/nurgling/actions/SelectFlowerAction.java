@@ -13,7 +13,7 @@ public class SelectFlowerAction implements Action
     Object target;
     Sprite spr = null;
 
-    public SelectFlowerAction(String opt, NWItem item)
+    public SelectFlowerAction(String opt, WItem item)
     {
         this.opt = opt;
         this.target = item;

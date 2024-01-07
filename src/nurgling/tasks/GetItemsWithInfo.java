@@ -29,7 +29,20 @@ public class GetItemsWithInfo implements NTask
         for (Widget widget = inventory.child; widget != null; widget = widget.next) {
             if (widget instanceof WItem) {
                 WItem item = (WItem) widget;
-                if (item.item.info != null) {
+                if(item.item.contents!=null) {
+                    for (Widget swidget = item.item.contents.child; swidget != null; swidget = swidget.next) {
+                        if (swidget instanceof WItem) {
+                            WItem sitem = (WItem) swidget;
+                            if (sitem.item.info != null) {
+                                for (ItemInfo inf : sitem.item.info)
+                                    if (inf.getClass() == c) {
+                                        result.add(sitem);
+                                    }
+                            }
+                        }
+                    }
+                }
+                else if (item.item.info != null) {
                     for (ItemInfo inf : item.item.info)
                         if (inf.getClass() == c) {
                             result.add(item);
