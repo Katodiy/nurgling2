@@ -16,8 +16,8 @@ public class NBotsMenu extends Widget
         if(NUtils.getUI().core.debug)
         {
             NLayout resources = new NLayout("resources");
-            resources.elements.add(new NButton("log", new TransferLog()));
             resources.elements.add(new NButton("choper", new Chopper()));
+            resources.elements.add(new NButton("log", new TransferLog()));
             addLayout(resources);
             NLayout farming = new NLayout("farming");
             farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
