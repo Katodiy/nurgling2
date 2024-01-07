@@ -129,10 +129,14 @@ public class Finder
         return result;
     }
 
-    public static Gob findGob(NArea area, NAlias name) throws InterruptedException
+    public static Gob findGob(NArea area, NAlias name) throws InterruptedException {
+        return findGob(area.getRCArea(),name);
+    }
+
+    public static Gob findGob(Pair<Coord2d,Coord2d> space, NAlias name) throws InterruptedException
     {
         NUtils.getUI().core.addTask(new FindPlayer());
-        Pair<Coord2d,Coord2d> space = area.getRCArea();
+
         Gob result = null;
         double dist = 10000;
         synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {

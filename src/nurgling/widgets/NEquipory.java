@@ -2,6 +2,9 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.*;
+import nurgling.tasks.GetItem;
+import nurgling.tasks.WaitItemSpr;
+import nurgling.tools.NAlias;
 
 import java.util.*;
 
@@ -76,5 +79,13 @@ public class NEquipory extends Equipory
                 }
             }
         }
+    }
+
+    public WItem findItem(int id) throws InterruptedException {
+        if (quickslots[id] != null) {
+            NUtils.getUI().core.addTask(new WaitItemSpr(quickslots[id]));
+            return quickslots[id];
+        }
+        return null;
     }
 }

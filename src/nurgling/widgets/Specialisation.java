@@ -21,19 +21,35 @@ public class Specialisation extends Window
         super(UI.scale(200,500), "Specialisation");
         add(new SpecialisationList(UI.scale(200,500)));
     }
+    public enum SpecName
+    {
+        smelter,
+        kiln,
+        water,
+        swill,
+        trough,
+        crop,
+        seed,
+        cows,
+        goats,
+        deadkritter,
+        water_refiller
+    }
+
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
 
     static {
-        specialisation.add(new SpecialisationItem("smelter"));
-        specialisation.add(new SpecialisationItem("kiln"));
-        specialisation.add(new SpecialisationItem("water"));
-        specialisation.add(new SpecialisationItem("swill"));
-        specialisation.add(new SpecialisationItem("trough"));
-        specialisation.add(new SpecialisationItem("crop"));
-        specialisation.add(new SpecialisationItem("seed"));
-        specialisation.add(new SpecialisationItem("cows"));
-        specialisation.add(new SpecialisationItem("goats"));
-        specialisation.add(new SpecialisationItem("deadkritter"));
+        specialisation.add(new SpecialisationItem(SpecName.smelter.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.kiln.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.water.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.swill.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.trough.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.crop.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.seed.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.cows.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.goats.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.deadkritter.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.water_refiller.toString()));
     }
 
     public class SpecialisationList extends SListBox<SpecialisationItem, Widget> {

@@ -214,4 +214,8 @@ public class NUtils
         }
     }
 
+    public static void transferToBelt() {
+        if(NUtils.getEquipment()!=null && NUtils.getEquipment().quickslots[NEquipory.Slots.BELT.idx]!=null)
+            NUtils.getEquipment().quickslots[NEquipory.Slots.BELT.idx].item.wdgmsg("itemact",0);
+    }
 }

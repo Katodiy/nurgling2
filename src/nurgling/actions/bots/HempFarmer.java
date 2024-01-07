@@ -4,6 +4,7 @@ import nurgling.NGameUI;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.tools.NAlias;
+import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
@@ -12,10 +13,10 @@ public class HempFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
 
-        NArea.Specialisation field = new NArea.Specialisation("crop", "Hemp");
-        NArea.Specialisation seed = new NArea.Specialisation("seed", "Hemp");
-        NArea.Specialisation trough = new NArea.Specialisation("trough");
-        NArea.Specialisation swill = new NArea.Specialisation("swill");
+        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Hemp");
+        NArea.Specialisation seed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Hemp");
+        NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
+        NArea.Specialisation swill = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
         req.add(seed);
