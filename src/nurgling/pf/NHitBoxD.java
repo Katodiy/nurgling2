@@ -51,6 +51,9 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable
         setUpCheckpoints();
     }
 
+    public NHitBoxD(Gob gob){
+        this(gob.ngob.hitBox.begin, gob.ngob.hitBox.end, gob.rc, gob.a);
+    }
     public NHitBoxD(Coord2d ul, Coord2d br, Coord2d r, double angle)
     {
         if (Math.abs(((4 * angle) / Math.PI) % 2.0) > 0.0001)

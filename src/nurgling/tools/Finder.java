@@ -328,6 +328,8 @@ public class Finder
 
 
         ArrayList<NHitBoxD> significantGobs = new ArrayList<> ();
+        if(NUtils.player() != null)
+            significantGobs.add( new NHitBoxD(NUtils.player()));
         NHitBoxD chekerOfArea = new NHitBoxD(area.a, area.b);
 
         NHitBoxD temporalGobBox = new NHitBoxD(hitBox.begin, hitBox.end, Coord2d.of(0),0);
@@ -339,7 +341,7 @@ public class Finder
             for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
                 if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
                     if(gob.ngob.hitBox != null && gob.getattr(Following.class)==null){
-                        NHitBoxD gobBox = new NHitBoxD(gob.ngob.hitBox.begin, gob.ngob.hitBox.end, gob.rc, gob.a);
+                        NHitBoxD gobBox = new NHitBoxD(gob);
                         if (gobBox.intersectsGreedy(chekerOfArea))
                             significantGobs.add(gobBox);
                 }
