@@ -16,23 +16,27 @@ import java.util.ArrayList;
 import static haven.Inventory.invsq;
 
 public class UsingTools extends Widget {
-    ArrayList<Tool> axes = new ArrayList<>();
-    {
-//        axes.add(new Tool("gfx/invobjs/stoneaxe","Stone Axe"));
-        axes.add(new Tool("gfx/invobjs/woodsmansaxe","Woodsman's Axe", "gfx/invobjs/small/woodsmansaxe"));
-        axes.add(new Tool("gfx/invobjs/stoneaxe","Stone Axe"));
-        axes.add(new Tool("gfx/invobjs/butcherscleaver", "Butcher's cleaver"));
-        axes.add(new Tool("gfx/invobjs/axe-m", "Metal Axe"));
-        axes.add(new Tool("gfx/invobjs/tinkersthrowingaxe", "Tinker's Axe"));
-        axes.add(new Tool("gfx/invobjs/b12axe", "Battle Axe of the Twelfth Bay","gfx/invobjs/small/b12axe"));
+    public static class Tools {
+        public static ArrayList<Tool> axes = new ArrayList<>();
+        static {
+            axes.add(new Tool("gfx/invobjs/woodsmansaxe", "Woodsman's Axe", "gfx/invobjs/small/woodsmansaxe"));
+            axes.add(new Tool("gfx/invobjs/stoneaxe", "Stone Axe"));
+            axes.add(new Tool("gfx/invobjs/butcherscleaver", "Butcher's cleaver"));
+            axes.add(new Tool("gfx/invobjs/axe-m", "Metal Axe"));
+            axes.add(new Tool("gfx/invobjs/tinkersthrowingaxe", "Tinker's Axe"));
+            axes.add(new Tool("gfx/invobjs/b12axe", "Battle Axe of the Twelfth Bay", "gfx/invobjs/small/b12axe"));
+        }
     }
 
     public static final TexI frame = new TexI(Resource.loadimg("nurgling/hud/iconframe"));
-    public UsingTools() {
+    public UsingTools(ArrayList<Tool> tools) {
+        this.tools = tools;
         prev = add(l = new Label("Tool:"));
         sz = prev.sz.add(0,Inventory.sqsz.y).add(UI.scale(0,5));
         sz.x = Math.max(Inventory.sqsz.x,sz.x);
     }
+
+    final ArrayList<Tool> tools;
     Label l;
     @Override
     public void draw(GOut g) {
@@ -46,7 +50,7 @@ public class UsingTools extends Widget {
     public boolean mousedown(Coord c, int button) {
         if(c.isect(new Coord(0,l.sz.y+UI.scale(5)),new Coord(sz)))
         {
-            avTools = NUtils.getUI().root.add(new AvTools(axes));
+            avTools = NUtils.getUI().root.add(new AvTools(tools));
             Coord pos = new Coord(0,l.sz.y+UI.scale(5));
             Widget par = this;
             while (par!=null && par!=NUtils.getGameUI()) {
@@ -62,7 +66,7 @@ public class UsingTools extends Widget {
         }
     }
 
-    class Tool{
+    public static class Tool{
         TexI img;
         String name;
         String path;

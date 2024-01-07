@@ -39,7 +39,7 @@ public class NConfig
         invert_ver,
         kinprop,
         show_drag_menu,
-        cowsprop, goatsprop, discordNotification
+        cowsprop, goatsprop, chopperprop, discordNotification
     }
 
 
@@ -149,6 +149,9 @@ public class NConfig
                         break;
                     case "GoatsHerd":
                         res.add(new GoatsHerd(obj));
+                        break;
+                    case "NChopperProp":
+                        res.add(new NChopperProp(obj));
                         break;
                 }
             }

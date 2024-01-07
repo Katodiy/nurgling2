@@ -39,10 +39,12 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     double delta = 0;
     HashMap<String, Double> searchImage = new HashMap<>();
 
+    double energy;
     public NFoodInfo(Owner owner, double end, double glut, double cons, Event[] evs, Effect[] efs, int[] types)
     {
         super(owner, end, glut, cons, evs, efs, types);
         s_end = Utils.odformat2(end * 100, 2);
+        this.energy = end;
         s_glut = Utils.odformat2(glut * 100, 2);
         s_end_glut = Utils.odformat2(end / glut, 2);
         for (Event event : evs)
@@ -179,6 +181,10 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                 return (delta > 0);
         }
         return false;
+    }
+
+    public double energy() {
+        return energy;
     }
 
     class FepVis

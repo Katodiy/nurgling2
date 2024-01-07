@@ -519,4 +519,11 @@ public class NInventory extends Inventory
         WItem it = getItem(name);
         it.item.wdgmsg("iact", Coord.z, 1);
     }
+
+    public <C extends ItemInfo> ArrayList<WItem> getItems(Class<C> c) throws InterruptedException
+    {
+        GetItemsWithInfo gi = new GetItemsWithInfo(this, c);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
 }

@@ -194,4 +194,16 @@ public class NGItem extends GItem
             }
         }
     }
+
+    public <C extends ItemInfo> C getInfo(Class<C> c){
+        if(info!=null)
+        {
+            for(ItemInfo inf : info)
+            {
+                if(inf.getClass() == c)
+                    return (C)inf;
+            }
+        }
+        return null;
+    }
 }

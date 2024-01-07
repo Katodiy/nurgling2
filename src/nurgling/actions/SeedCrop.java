@@ -119,7 +119,6 @@ public class SeedCrop implements Action {
                 if (!gui.getInventory().getItems(iseed).isEmpty()) {
                     new TransferToBarrel(barrel, iseed).run(gui);
                 }
-                throw new InterruptedException("No seeds");
             }
         }
 

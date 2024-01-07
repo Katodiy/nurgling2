@@ -117,6 +117,12 @@ public class NUtils
         return stam.a;
     }
 
+    public static double getEnergy()
+    {
+        IMeter.Meter stam = getGameUI().getmeter ( "nrj", 0 );
+        return stam.a;
+    }
+
     public static NEquipory getEquipment(){
         if ( getGameUI().equwnd != null ) {
             for ( Widget w = getGameUI().equwnd.lchild ; w != null ; w = w.prev ) {

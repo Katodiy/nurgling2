@@ -36,7 +36,7 @@ public class TakeFromBarrel implements Action{
         }
         if(count==-1) {
             NUtils.takeAllGob(barrel);
-            NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), items, NUtils.getGameUI().getInventory().getItems(items).size()));
+            NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), items, 3));
         }
 
         if(!gui.hand.isEmpty()) {

@@ -28,7 +28,7 @@ public class FilledTrough implements NTask
                 name = new NAlias(((NGItem) target).name());
             else
                 return false;
-        if (trough.ngob.getModelAttribute() == 7)
+        if (trough.ngob.getModelAttribute() == 7 && NUtils.getGameUI().vhand == null)
             return true;
         for (Widget widget = NUtils.getGameUI().getInventory().child; widget != null; widget = widget.next) {
             if (widget instanceof WItem) {
@@ -43,7 +43,7 @@ public class FilledTrough implements NTask
                 }
             }
         }
-        return true;
+        return NUtils.getGameUI().vhand == null;
 
     }
 

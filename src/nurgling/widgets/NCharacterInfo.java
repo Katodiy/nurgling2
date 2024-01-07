@@ -10,7 +10,7 @@ import java.util.*;
 
 public class NCharacterInfo extends Widget {
 
-    String chrid;
+    public String chrid;
     String path;
     public final Set<String> varity = new HashSet<>();
     CharWnd charWnd = null;

@@ -38,21 +38,6 @@ public class TransferToTrough implements Action {
                         NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 7));
                         new PlaceObject(trough, pos, a).run(gui);
                     }
-//                    Gob cistern = Finder.findObjectInArea ( new NAlias ( new ArrayList<>( Arrays
-//                                    .asList ( "cistern")) ),
-//                            1000,
-//                            Finder.findNearestMark ( AreasID.swill) );
-//                    PathFinder pf = new PathFinder ( gui, cistern );
-//                    pf.ignoreGob (trough);
-//                    pf.run ();
-//                    NUtils.activate ( cistern );
-//                    int counter = 0;
-//                    while ( Finder.findObject ( trough.id ).getModelAttribute() == 7  &&
-//                            counter < 20) {
-//                        counter++;
-//                        Thread.sleep ( 50 );
-//                    }
-//                    new PlaceLifted ( AreasID.swill, trough.getHitBox(),new NAlias ("trough") ).run ( gui );
                 }
                 NUtils.takeItemToHand(witems.get(0));
                 NUtils.dropsame(trough);
