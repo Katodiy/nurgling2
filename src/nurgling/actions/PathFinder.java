@@ -246,7 +246,6 @@ public class PathFinder implements Action
                                 }
                         }
 
-
                         if(target_id==-1 && vert == path.getLast())
                         {
                             if(Math.abs(targetCoord.x-end.x)<Math.abs(targetCoord.y-end.y))

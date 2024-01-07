@@ -707,7 +707,7 @@ public class NMakewindow extends Widget {
         Spec s;
         public Categories(ArrayList<JSONObject> objs, Spec s)
         {
-            super(new Coord(Math.max((Inventory.sqsz.x+UI.scale(1))*((objs.size()/6>=1)?6:0),(Inventory.sqsz.x+UI.scale(1))*(objs.size()%6))- UI.scale(2),(Inventory.sqsz.x+UI.scale(1))*(objs.size()/6+1)).add(UI.scale(20,18)));
+            super(new Coord(Math.max((Inventory.sqsz.x+UI.scale(1))*((objs.size()/6>=1)?6:0),(Inventory.sqsz.x+UI.scale(1))*(objs.size()%6))- UI.scale(2),(Inventory.sqsz.x+UI.scale(1))*(objs.size()/6+(objs.size()%6!=0?1:0))).add(UI.scale(20,18)));
             this.s = s;
             add(fr = new Frame(sz.sub(catend),true));
             for(JSONObject obj: objs)

@@ -17,6 +17,7 @@ public class NBotsMenu extends Widget
         {
             NLayout resources = new NLayout("resources");
             resources.elements.add(new NButton("log", new TransferLog()));
+            resources.elements.add(new NButton("choper", new Chopper()));
             addLayout(resources);
             NLayout farming = new NLayout("farming");
             farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
