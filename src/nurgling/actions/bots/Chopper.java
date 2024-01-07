@@ -74,10 +74,10 @@ public class Chopper implements Action {
 
             while (Finder.findGob(tree.id) != null) {
                 if (NParser.isIt(tree, new NAlias("stump"))) {
-                    new Equip(prop.shovel).run(gui);
+                    new Equip(new NAlias(prop.shovel)).run(gui);
                     new Destroy(tree,"gfx/borka/shoveldig").run(gui);
                 } else {
-                    new Equip(prop.tool).run(gui);
+                    new Equip(new NAlias(prop.tool)).run(gui);
                     new SelectFlowerAction("Chop", tree).run(gui);
                     NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/treechop"));
                 }

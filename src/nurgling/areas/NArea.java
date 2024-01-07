@@ -119,11 +119,13 @@ public class NArea
                     for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
                         if (s.name.equals(name)) {
                             NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
-                            Pair<Coord2d, Coord2d> testrc = test.getRCArea();
-                            double testdist;
-                            if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
-                                res = test;
-                                dist = testdist;
+                            if(test.isVisible()) {
+                                Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                                double testdist;
+                                if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                                    res = test;
+                                    dist = testdist;
+                                }
                             }
                         }
                     }
@@ -332,9 +334,14 @@ public class NArea
         }
     }
 
-    private boolean isVisible()
-    {
-        return NUtils.getGameUI().map.nols.get(id)!=null;
+    private boolean isVisible() {
+        for (Long id : space.space.keySet()) {
+            for (MCache.Grid g : NUtils.getGameUI().map.glob.map.grids.values()) {
+                if (g.id == id)
+                    return true;
+            }
+        }
+        return false;
     }
 
     public JSONObject toJson()

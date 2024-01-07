@@ -20,11 +20,16 @@ import java.util.HashSet;
 
 public class Equip implements Action {
 
-    String target_name;
-    String exception = null;
+    NAlias target_name;
+    NAlias exception = null;
 
-    public Equip(String target_name) {
+    public Equip(NAlias target_name) {
         this.target_name = target_name;
+    }
+
+    public Equip(NAlias target_name, NAlias exception) {
+        this.target_name = target_name;
+        this.exception = exception;
     }
 
     @Override
@@ -33,14 +38,14 @@ public class Equip implements Action {
         WItem lhand = NUtils.getEquipment().findItem (NEquipory.Slots.HAND_LEFT.idx);
 
         WItem rhand = NUtils.getEquipment().findItem (NEquipory.Slots.HAND_RIGHT.idx);
-        if((lhand!=null && NParser.checkName(target_name,((NGItem)lhand.item).name())) || (rhand!=null && NParser.checkName(target_name,((NGItem)rhand.item).name())))
+        if((lhand!=null && NParser.checkName(((NGItem)lhand.item).name(), target_name) || (rhand!=null && NParser.checkName(((NGItem)rhand.item).name(),target_name))))
         {
             return Results.SUCCESS();
         }
         WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
         if(wbelt!=null) {
             if (wbelt.item.contents instanceof NInventory) {
-                WItem witem = ((NInventory) wbelt.item.contents).getItem(new NAlias(target_name));
+                WItem witem = ((NInventory) wbelt.item.contents).getItem(target_name);
                 if(witem != null) {
                     if (isTwoHanded(witem) && ((lhand != null && rhand != null && lhand != rhand && !isTwoHanded(lhand)))) {
                         NUtils.takeItemToHand(rhand);
@@ -56,20 +61,19 @@ public class Equip implements Action {
                         ((NInventory) wbelt.item.contents).dropOn(witem.c.div(Inventory.sqsz));
                         NUtils.getUI().core.addTask(new WaitItemInHand(witem));
                         NUtils.getEquipment().wdgmsg("drop", -1);
-                        NUtils.getUI().core.addTask(new WaitItemInEquip(witem,new NEquipory.Slots[]{NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT}));
                     } else {
-                        if (rhand == null && lhand == null) {
+                        if ((rhand == null && lhand == null) || (!isTwoHanded(witem) && (rhand == null || lhand == null))) {
                             NUtils.takeItemToHand(witem);
                             NUtils.getEquipment().wdgmsg("drop", -1);
-                            NUtils.getUI().core.addTask(new WaitItemInEquip(witem,new NEquipory.Slots[]{NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT}));
                         } else {
 
-                            if(lhand!=null && !NParser.checkName(((NGItem)lhand.item).name(), new NAlias(exception)))
+                            if(lhand!=null && !NParser.checkName(((NGItem)lhand.item).name(), exception))
                             {
                                 NUtils.takeItemToHand(lhand);
                                 ((NInventory) wbelt.item.contents).dropOn(witem.c.div(Inventory.sqsz));
                                 NUtils.getUI().core.addTask(new WaitItemInHand(witem));
                                 NUtils.getEquipment().wdgmsg("drop", -1);
+
                             }
                             else
                             {
