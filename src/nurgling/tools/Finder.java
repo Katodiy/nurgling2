@@ -359,7 +359,7 @@ public class Finder
                 boolean passed = true;
                 NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, area.a.add(i,j),0);
                 for ( NHitBoxD significantHitbox : significantGobs )
-                    if(significantHitbox.intersectsGreedy(testGobBox))
+                    if(significantHitbox.intersectsLoosely(testGobBox))
                         passed = false;
                 if(passed)
                     return Coord2d.of(testGobBox.rc.x, testGobBox.rc.y);
