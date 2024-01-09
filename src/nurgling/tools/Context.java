@@ -15,6 +15,17 @@ public class Context
         "gfx/terobjs/cupboard",
         "gfx/terobjs/shed");
 
+    public static HashMultiMap<String, String> contcaps = new HashMultiMap<>();
+    static {
+        contcaps.put("gfx/terobjs/chest", "Chest");
+        contcaps.put("gfx/terobjs/crate", "Crate");
+        contcaps.put("gfx/terobjs/cupboard", "Cupboard");
+        contcaps.put("gfx/terobjs/shed", "Shed");
+        contcaps.put("gfx/terobjs/smelter", "Ore Smelter");
+        contcaps.put("gfx/terobjs/smelter", "Smith's Smelter");
+        contcaps.put("gfx/terobjs/primsmelter", "Furnace");
+    }
+
 
     public ArrayList<Input> getInputs(String name)
     {
@@ -95,6 +106,38 @@ public class Context
 
     }
 
+    interface Updater{
+        boolean isEqual(Container cont);
+    }
+
+    public static class Container
+    {
+        boolean isFree = false;
+
+        int freeSpace;
+
+        int maxSpace;
+
+        Collection<String> names;
+
+        String cap;
+
+        Gob gob;
+
+        public Container(Gob gob, Collection<String> names) {
+            this.gob = gob;
+            this.names = names;
+        }
+    }
+
+    public static class InputContainer extends Container implements Input
+    {
+        public InputContainer(Gob gob, Collection<String> name)
+        {
+            super(gob, name);
+        }
+    }
+
     public static class InputBarter extends Barter implements Input
     {
         public InputBarter(Gob barter, Gob chest)
@@ -140,15 +183,6 @@ public class Context
         }
     }
 
-    public static class InputContainer implements Input
-    {
-        public InputContainer(Gob gob)
-        {
-            this.container = gob;
-        }
-        public Gob container;
-    }
-
     public static ArrayList<Output> GetOutput(String item, NArea area)  throws InterruptedException
     {
         ArrayList<Output> outputs = new ArrayList<>();
@@ -190,7 +224,7 @@ public class Context
             {
                 for(Gob gob: Finder.findGobs(area, containers))
                 {
-                        inputs.add(new InputContainer(gob));
+                        inputs.add(new InputContainer(gob, contcaps.getall(gob.ngob.name)));
                 }
                 for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
                 {
@@ -234,6 +268,12 @@ public class Context
     HashMap<String,ArrayList<Input>> input = new HashMap<>();
     HashMap<String,ArrayList<Output>> output = new HashMap<>();
 
+    public ArrayList<Container> getContainersInWork() {
+        return containersInWork;
+    }
+
+    final ArrayList<Container> containersInWork = new ArrayList<>();
+
     public boolean addInput(String name, Input in)
     {
         input.computeIfAbsent(name, k -> new ArrayList<>());
@@ -256,6 +296,14 @@ public class Context
         output.computeIfAbsent(name, k -> new ArrayList<>());
         output.get(name).add(out);
         return true;
+    }
+
+    public void addConstContainers(ArrayList<Container> containers)
+    {
+        synchronized (containersInWork)
+        {
+             containersInWork.addAll(containers);
+        }
     }
 
     public boolean addOutput(String name, ArrayList<Output> outputs)
