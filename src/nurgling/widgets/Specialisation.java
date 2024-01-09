@@ -31,6 +31,8 @@ public class Specialisation extends Window
         crop,
         seed,
         cows,
+        sheeps,
+        pigs,
         goats,
         deadkritter,
         water_refiller
@@ -48,7 +50,9 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.seed.toString()));
         specialisation.add(new SpecialisationItem(SpecName.cows.toString()));
         specialisation.add(new SpecialisationItem(SpecName.goats.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.sheeps.toString()));
         specialisation.add(new SpecialisationItem(SpecName.deadkritter.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.pigs.toString()));
         specialisation.add(new SpecialisationItem(SpecName.water_refiller.toString()));
     }
 

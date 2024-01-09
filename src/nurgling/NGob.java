@@ -15,7 +15,7 @@ public class NGob {
     public String name = null;
     public boolean isQuested = true;
     private CellsArray ca = null;
-    boolean isDynamic = true;
+    boolean isDynamic = false;
     private boolean isGate = false;
     protected long modelAttribute = -1;
     final Gob parent;
@@ -101,7 +101,9 @@ public class NGob {
         }
     }
 
-    private void setDynamic() {
+
+    private void setDynamic()
+    {
         isDynamic = (NParser.checkName(name, new NAlias("kritter", "borka", "vehicle")));
         isGate = (NParser.checkName(name, new NAlias("gate")));
     }
@@ -121,7 +123,8 @@ public class NGob {
             if (modelAttribute != 2)
                 return null;
         } else {
-            if (ca == null) {
+            if(ca==null && hitBox!=null)
+            {
                 ca = new CellsArray(parent);
             }
         }

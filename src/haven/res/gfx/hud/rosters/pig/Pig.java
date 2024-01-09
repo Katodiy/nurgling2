@@ -5,7 +5,7 @@ package haven.res.gfx.hud.rosters.pig;
 
 import haven.*;
 import haven.res.ui.croster.*;
-import java.util.*;
+import nurgling.conf.PigsHerd;
 
 @haven.FromResource(name = "gfx/hud/rosters/pig", version = 62)
 public class Pig extends Entry {
@@ -37,6 +37,7 @@ public class Pig extends Entry {
 	drawcol(g, PigRoster.cols.get(i), 1, milkq, percent, i++);
 	drawcol(g, PigRoster.cols.get(i), 1, hideq, percent, i++);
 	drawcol(g, PigRoster.cols.get(i), 1, seedq, null, i++);
+	drawcol(g, PigRoster.cols.get(i), 1, rang(), null, i++);
 	super.draw(g);
     }
 
@@ -67,6 +68,20 @@ public class Pig extends Entry {
 	}
 	return(super.mousedown(c, button));
     }
+
+	public double rang() {
+		PigsHerd herd = PigsHerd.getCurrent();
+		if (herd != null) {
+			double ql = (!herd.ignoreBD || hog) ? (q > (seedq - herd.breedingGap)) ? (q + seedq - herd.breedingGap) / 2. : q + ((seedq - herd.breedingGap) - q) * herd.coverbreed : q;
+			double m = ql * herd.meatq * meatq / 100.;
+			double qm = meat * herd.meatquan1 + ((meat > herd.meatquanth) ? ((meat - herd.meatquanth) * (herd.meatquan2 - herd.meatquan1)) : 0);
+			double qtruf = prc * herd.trufquan1 + ((prc > herd.trufquanth) ? ((prc - herd.trufquanth) * (herd.trufquan2 - herd.trufquan1)) : 0);
+			double hide = ql * herd.hideq * hideq / 100.;
+
+			return ((m + qm + qtruf + hide) == 0) ? ql : Math.round((m + qm + qtruf + hide) * 10) / 10.;
+		}
+		return 0;
+	}
 }
 
 /* >wdg: PigRoster */

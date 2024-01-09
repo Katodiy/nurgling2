@@ -32,6 +32,10 @@ public class DynamicPf implements Action
         this.target = gob;
     }
 
+    public DynamicPf(Gob dummy, boolean b) {
+    }
+
+    boolean virtual = false;
     public class WorkerPf implements Runnable
     {
         public LinkedList<Graph.Vertex> path;

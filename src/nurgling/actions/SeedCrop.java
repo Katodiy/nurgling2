@@ -145,6 +145,10 @@ public class SeedCrop implements Action {
                     new SetDir(new Coord2d(0, -1)).run(gui);
                 setDir.set(false);
             }
+            if(gui.getInventory().getItems(iseed).size() < 2) {
+                NUtils.getGameUI().msg("No items for seeding");
+                return;
+            }
             NUtils.getGameUI().getInventory().activateItem(iseed);
             NUtils.getUI().core.addTask(new GetCurs("harvest"));
             if (rev) {

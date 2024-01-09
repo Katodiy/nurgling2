@@ -127,7 +127,7 @@ public class AnimalAction <C extends Entry> implements Action {
         gobs.sort(NUtils.d_comp);
         for (Gob gob : gobs) {
             if (gob.getattr(CattleId.class) == null && gob.pose()!=null && !NParser.checkName(gob.pose(),"knocked")) {
-                new PathFinder(gob).run(gui);
+                new DynamicPf(gob).run(gui);
                 new SelectFlowerAction("Memorize", gob).run(gui);
                 NUtils.getUI().core.addTask(new AnimalInRoster(gob, cattleRoster, w));
                 return true;

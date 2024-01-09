@@ -10,11 +10,15 @@ import java.util.function.*;
 import haven.MenuGrid.Pagina;
 import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.gfx.hud.rosters.goat.Goat;
+import haven.res.gfx.hud.rosters.pig.Pig;
+import haven.res.gfx.hud.rosters.sheep.Sheep;
 import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.widgets.NKinSettings;
 import nurgling.widgets.settings.Cows;
 import nurgling.widgets.settings.Goats;
+import nurgling.widgets.settings.Pigs;
+import nurgling.widgets.settings.Sheeps;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -101,6 +105,38 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 					gset.hide();
 				}
 			}
+			else if(type == Sheep.class)
+			{
+				if(val) {
+					if (sset == null) {
+						sset = new Sheeps();
+						ui.root.add(sset, this.rootpos());
+					}
+					sset.show();
+					sset.raise();
+					sset.move(this.rootpos());
+				}
+				else
+				{
+					sset.hide();
+				}
+			}
+			else if(type == Pig.class)
+			{
+				if(val) {
+					if (pset == null) {
+						pset = new Pigs();
+						ui.root.add(pset, this.rootpos());
+					}
+					pset.show();
+					pset.raise();
+					pset.move(this.rootpos());
+				}
+				else
+				{
+					pset.hide();
+				}
+			}
 		}
 
 		@Override
@@ -115,6 +151,16 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 				if(gset!=null)
 					a = gset.visible;
 			}
+			if(type == Sheep.class)
+			{
+				if(sset!=null)
+					a = sset.visible;
+			}
+			if(type == Pig.class)
+			{
+				if(pset!=null)
+					a = pset.visible;
+			}
 			super.tick(dt);
 		}
 	}, new Coord(sz.x - NStyle.settingsi[0].sz().x / 2, NStyle.settingsi[0].sz().y / 2).sub(shift));
@@ -123,6 +169,8 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 
 	Cows cset = null;
 	Goats gset = null;
+	Sheeps sset = null;
+	Pigs pset = null;
 
     public static <E extends Entry>  List<Column> initcols(Column... attrs) {
 	for(int i = 0, x = CheckBox.sbox.sz().x + UI.scale(10); i < attrs.length; i++) {
