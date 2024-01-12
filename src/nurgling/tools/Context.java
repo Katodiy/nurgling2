@@ -1,6 +1,8 @@
 package nurgling.tools;
 
 import haven.*;
+import nurgling.NGItem;
+import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.areas.*;
 
@@ -26,20 +28,25 @@ public class Context
         contcaps.put("gfx/terobjs/primsmelter", "Furnace");
     }
 
+    public void updateContainer(String cap, NInventory inventory, Container container) throws InterruptedException {
+        containerUpdater.update(cap,inventory,container);
+    }
+
 
     public ArrayList<Input> getInputs(String name)
     {
         ArrayList<Input> in =  input.get(name);
         ArrayList<Input> for_remove =  new ArrayList<>();
-        for(Input i : in)
-        {
-            if(i instanceof Pile)
-            {
-                if(Finder.findGob(((Pile) i).pile.id)==null)
-                    for_remove.add(i);
+        if(in!=null) {
+            for (Input i : in) {
+                if (i instanceof Pile) {
+                    if (Finder.findGob(((Pile) i).pile.id) == null)
+                        for_remove.add(i);
+                }
             }
+
+            in.removeAll(for_remove);
         }
-        in.removeAll(for_remove);
         return in;
     }
 
@@ -78,6 +85,10 @@ public class Context
         return output.get(name);
     }
 
+    public Set<String> getOutputItems() {
+        return output.keySet();
+    }
+
     public static class Workstation
     {
         public String station;
@@ -106,33 +117,54 @@ public class Context
 
     }
 
-    interface Updater{
-        boolean isEqual(Container cont);
+    public interface Updater{
+        void update(String cap, NInventory inv, Container cont) throws InterruptedException;
     }
 
     public static class Container
     {
-        boolean isFree = false;
+        public boolean isFree = false;
 
-        int freeSpace;
+        public int freeSpace;
 
-        int maxSpace;
+        public int maxSpace;
 
-        Collection<String> names;
+        public ArrayList<String> names;
 
-        String cap;
+        public String cap = null;
 
-        Gob gob;
+        public Gob gob = null;
 
-        public Container(Gob gob, Collection<String> names) {
+        public HashMap<String, Integer> itemInfo = new HashMap<>();
+
+        public Container(Gob gob, ArrayList<String> names) {
             this.gob = gob;
             this.names = names;
         }
     }
 
+
+    public static class OutputContainer extends Container implements Output
+    {
+
+        public OutputContainer(Gob gob, NArea area)
+        {
+            super(gob,  new ArrayList<>(Context.contcaps.getall(gob.ngob.name)));
+            this.area = area;
+        }
+
+        @Override
+        public NArea getArea() {
+            return area;
+        }
+
+        NArea area = null;
+    }
+
+
     public static class InputContainer extends Container implements Input
     {
-        public InputContainer(Gob gob, Collection<String> name)
+        public InputContainer(Gob gob, ArrayList<String> name)
         {
             super(gob, name);
         }
@@ -185,7 +217,10 @@ public class Context
 
     public static ArrayList<Output> GetOutput(String item, NArea area)  throws InterruptedException
     {
+
         ArrayList<Output> outputs = new ArrayList<>();
+        if(area == null)
+            return outputs;
         NArea.Ingredient ingredient = area.getOutput(item);
         switch (ingredient.type)
         {
@@ -197,11 +232,15 @@ public class Context
             {
                 for(Gob gob: Finder.findGobs(area, containers))
                 {
-//                    inputs.add(new InputContainer(gob));
+                    outputs.add(new OutputContainer(gob,area));
                 }
                 for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
                 {
                     outputs.add(new OutputPile(gob, area));
+                }
+                if(outputs.isEmpty())
+                {
+                    outputs.add(new OutputPile(null, area));
                 }
 
             }
@@ -224,7 +263,7 @@ public class Context
             {
                 for(Gob gob: Finder.findGobs(area, containers))
                 {
-                        inputs.add(new InputContainer(gob, contcaps.getall(gob.ngob.name)));
+                        inputs.add(new InputContainer(gob, new ArrayList<>(contcaps.getall(gob.ngob.name))));
                 }
                 for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
                 {
@@ -314,5 +353,29 @@ public class Context
                 return false;
         }
         return true;
+    }
+
+    public void fillForInventory(NInventory inv, HashMap<String, Integer> itemInfo) throws InterruptedException {
+        for(WItem item: inv.getItems())
+        {
+            String name = ((NGItem)item.item).name();
+            if(output.get(name)== null)
+                addOutput(name , Context.GetOutput(name, NArea.findOut(((NGItem)item.item).name())));
+            itemInfo.put(name, inv.getItems((((NGItem) item.item).name())).size());
+        }
+    }
+
+    Context.Updater containerUpdater = new Context.Updater() {
+        @Override
+        public void update(String cap, NInventory inv, Context.Container cont) throws InterruptedException {
+            cont.cap = cap;
+            cont.freeSpace = inv.getFreeSpace();
+            cont.maxSpace = inv.getTotalSpace();
+            cont.isFree = cont.freeSpace == cont.maxSpace;
+        }
+    };
+    public void setCurrentUpdater(Context.Updater updater)
+    {
+        containerUpdater = updater;
     }
 }

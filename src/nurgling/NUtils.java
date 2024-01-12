@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.Window;
 import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.ui.croster.CattleId;
 import haven.res.ui.croster.Entry;
@@ -10,6 +11,7 @@ import nurgling.tasks.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
 
+import java.awt.*;
 import java.text.*;
 import java.util.*;
 
@@ -232,5 +234,20 @@ public class NUtils
     public static void transferToBelt() {
         if(NUtils.getEquipment()!=null && NUtils.getEquipment().quickslots[NEquipory.Slots.BELT.idx]!=null)
             NUtils.getEquipment().quickslots[NEquipory.Slots.BELT.idx].item.wdgmsg("itemact",0);
+    }
+
+    public static double getFuelLvl(String cap, Color c) {
+        Window inv;
+        if ((inv = getGameUI().getWindow(cap)) != null) {
+            for (Widget w = inv.lchild; w != null; w = w.prev) {
+                if (w instanceof VMeter) {
+                    for (LayerMeter.Meter meter : ((VMeter) w).meters) {
+                        if (meter.c.getRed() == c.getRed() && meter.c.getBlue() == c.getBlue() && meter.c.getGreen() == c.getGreen())
+                            return meter.a;
+                    }
+                }
+            }
+        }
+        return 0;
     }
 }

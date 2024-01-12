@@ -2,7 +2,8 @@ package nurgling.pf;
 
 import haven.*;
 
-public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
+public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable
+{
 // ul  0
 //     _____
 //   3|    |1
@@ -13,15 +14,16 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     public Coord2d rc = Coord2d.of(0);
     public double a = 0;
     double sn = 0, cs = 1;
-    public Coord2d[] n = {Coord2d.of(0, 1), Coord2d.of(-1, 0), Coord2d.of(0, -1), Coord2d.of(1, 0)};
+    public static Coord2d[] n = {Coord2d.of(0, 1), Coord2d.of(-1, 0), Coord2d.of(0, -1), Coord2d.of(1, 0)};
     public double[] d = {0, 0, 0, 0};
     public Coord2d[] c = new Coord2d[4];
-    public Coord2d[] checkPoints;
+    public Coord2d[] checkPoints; //= new Coord2d[0];
     boolean ortho = false;
     boolean primitive = false;
 
 
-    public NHitBoxD(Coord rc) {
+    public NHitBoxD(Coord rc)
+    {
         primitive = true;
         this.move(rc);
     }
@@ -48,9 +50,10 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     public NHitBoxD(Gob gob) {
         this(gob.ngob.hitBox.begin, gob.ngob.hitBox.end, gob.rc, gob.a);
     }
-
-    public NHitBoxD(Coord2d ul, Coord2d br, Coord2d r, double angle) {
-        if (Math.abs(((4 * angle) / Math.PI) % 2.0) > 0.0001) {
+    public NHitBoxD(Coord2d ul, Coord2d br, Coord2d r, double angle)
+    {
+        if (Math.abs(((4 * angle) / Math.PI) % 2.0) > 0.0001 || (ul.x != -br.x) || (ul.y != -br.y))
+        {
             this.ul = Coord2d.of(Math.min(ul.x, br.x), Math.min(ul.y, br.y));
             this.br = Coord2d.of(Math.max(ul.x, br.x), Math.max(ul.y, br.y));
             reCalc_n(r, angle);

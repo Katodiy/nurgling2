@@ -10,8 +10,9 @@ public class OpenTargetContainer implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        gui.map.wdgmsg ( "click", Coord.z, gob.rc.floor ( posres ), 3, 0, 0, ( int ) gob.id,
-                gob.rc.floor ( posres ), 0, -1 );
+        if(NUtils.getGameUI().getWindow(name)==null)
+            gui.map.wdgmsg ( "click", Coord.z, gob.rc.floor ( posres ), 3, 0, 0, ( int ) gob.id,
+                    gob.rc.floor ( posres ), 0, -1 );
         switch (name)
         {
             case "Stockpile":

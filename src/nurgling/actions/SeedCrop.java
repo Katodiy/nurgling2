@@ -156,9 +156,9 @@ public class SeedCrop implements Action {
             } else {
                 NUtils.getGameUI().map.wdgmsg("sel", area.br, area.ul, 1);
             }
-            if (gui.getInventory().getItems(iseed).size() >= 2) {
+//            if (gui.getInventory().getItems(iseed).size() >= 2) {
                 NUtils.getUI().core.addTask(new WaitGobsInField(area, total));
-            }
+//            }
 
         }
 
