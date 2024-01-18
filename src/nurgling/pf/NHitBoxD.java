@@ -37,7 +37,7 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     }
 
     public NHitBoxD(Coord ul, Coord br) {
-        this(Coord2d.of(ul), Coord2d.of(br));
+        this(Utils.pfGridToWorld(ul), Utils.pfGridToWorld(br.add(1,1)));
     }
 
     public NHitBoxD(Coord2d ul, Coord2d br, Coord2d r) {
@@ -50,7 +50,7 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     }
 
     public NHitBoxD(Coord2d ul, Coord2d br, Coord2d r, double angle) {
-        if (Math.abs(((4 * angle) / Math.PI) % 2.0) > 0.0001) {
+        if (Math.abs(((4 * angle) / Math.PI) % 2.0) > 0.0001 || (ul.x != -br.x) || (ul.y != -br.y)) {
             this.ul = Coord2d.of(Math.min(ul.x, br.x), Math.min(ul.y, br.y));
             this.br = Coord2d.of(Math.max(ul.x, br.x), Math.max(ul.y, br.y));
             reCalc_n(r, angle);
@@ -64,6 +64,16 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
             }
         }
         setUpCheckpoints();
+    }
+
+    public static NHitBoxD shaftBoxObjectFactory(Coord2d begin, Coord2d end, double halfWidth) {
+        double halfLength = begin.dist(end) / 2;
+        return new NHitBoxD(
+                Coord2d.of(-halfLength, -halfWidth),
+                Coord2d.of(halfLength, halfWidth),
+                begin.add(end).div(2),
+                end.angle(begin)
+        );
     }
 
     public void move(Coord newRC) {
@@ -196,6 +206,18 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
             return true;
         }
         //  return false;
+    }
+
+    public Coord2d projectCenter( Coord2d direction){
+        double tau =  Float.MAX_VALUE;
+        for(int k = 0; k<4 ;k++) {
+            if (Math.abs(direction.dot(this.n[k])) > 0.0001 ) {
+                double tauTemp = Math.min(tau, (d[k] - rc.dot(n[k])) / direction.dot(n[k]));
+                if (tauTemp>0)
+                    tau = tauTemp;
+            }
+        }
+        return rc.add(direction.mul(tau));
     }
 
     public Coord2d getCircumscribedUL() {

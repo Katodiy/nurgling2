@@ -28,7 +28,7 @@ public class AutoSplitter implements Action
         {
             String name = ((NGItem) item.item).name();
             NUtils.getUI().core.enableBotMod();
-            NUtils.getUI().core.addTask(new WaitItemInHand(item, (NInventory) item.parent));
+            NUtils.getUI().core.addTask(new WaitItemInHand(item));
             NInventory inv = (NInventory) item.parent;
             ((Window) inv.parent).disable();
             ArrayList<WItem> items = inv.getItems(name);
@@ -62,7 +62,7 @@ public class AutoSplitter implements Action
                                 ((TextEntry) w2).activate(String.valueOf(value));
                             }
                         }
-                        NUtils.getUI().core.addTask(new WaitItemInHand(item, (NInventory) item.parent));
+                        NUtils.getUI().core.addTask(new WaitItemInHand(item));
                         inv.dropOn(inv.getFreeCoord(item), name);
                     }
                 }
