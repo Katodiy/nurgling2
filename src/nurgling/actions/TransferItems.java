@@ -24,8 +24,8 @@ public class TransferItems implements Action
     public Results run(NGameUI gui) throws InterruptedException
     {
         AtomicInteger left = new AtomicInteger(count);
-        if(cnt.getOutputs(item)!=null) {
-            for (Context.Output output : cnt.getOutputs(item)) {
+        if(cnt.getOutputs(item, 1)!=null) {
+            for (Context.Output output : cnt.getOutputs(item, 1)) {
                 if (output instanceof Context.Pile) {
                     if (((Context.OutputPile) output).getArea() != null)
                         return new TransferToPiles(((Context.OutputPile) output).getArea().getRCArea(), new NAlias(item)).run(gui);
@@ -35,8 +35,8 @@ public class TransferItems implements Action
                         return new TransferToContainer(cnt, (Context.OutputContainer) output, new NAlias(item) ).run(gui);
                 }
                 if (output instanceof Context.Barter) {
-//                if(((Context.Container)output).getArea()!=null)
-//                    return new TransferToPiles(((Context.OutputPile)output).getArea().getRCArea(),new NAlias(item)).run(gui);
+                    if(((Context.OutputBarter)output).getArea()!=null)
+                        return new TransferToBarter(((Context.OutputBarter)output),new NAlias(item)).run(gui);
                 }
 
                 if (left.get() == 0)

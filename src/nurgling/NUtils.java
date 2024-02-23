@@ -225,9 +225,12 @@ public class NUtils
     public static void takeFromEarth(Gob gob) throws InterruptedException {
         if(gob!=null)
         {
+            int size = NUtils.getGameUI().getInventory().getItems().size();
             getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 0, 1, (int) gob.id,
                     gob.rc.floor(posres), 0, -1);
             getUI().core.addTask(new NoGob(gob.id));
+            if(NUtils.getGameUI().getInventory().getFreeSpace()<5)
+                getUI().core.addTask(new WaitAnotherSize(NUtils.getGameUI().getInventory(), size));
         }
     }
 

@@ -6,6 +6,7 @@ import nurgling.tools.Context;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeMap;
 
 public class FreeContainer implements Action
 {
@@ -13,10 +14,10 @@ public class FreeContainer implements Action
     Context context;
 
     boolean freeInEnd;
-    HashSet<String> transferedItems;
+    HashSet<TreeMap<Integer,String>> transferedItems;
 
     Context.Updater updater;
-    public FreeContainer(Context.Container cont, Context context, boolean freeInEnd, HashSet<String> transferedItems) {
+    public FreeContainer(Context.Container cont, Context context, boolean freeInEnd, HashSet<TreeMap<Integer,String>> transferedItems) {
         this.cont = cont;
         this.context = context;
         this.freeInEnd = freeInEnd;
@@ -29,39 +30,35 @@ public class FreeContainer implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        data.addAll(cont.itemInfo.keySet());
-        for(String name: data)
-        {
-            if(context.getOutputs(name)!=null) {
-                while (cont.itemInfo.get(name) != null) {
-                    new PathFinder(cont.gob).run(gui);
-                    new OpenTargetContainer(cont.cap, cont.gob).run(gui);
-                    TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont, name);
-                    tifc.run(gui);
-                    if(cont.itemInfo.get(name)!=null)
-                    {
-                        cont.freeSpace = gui.getInventory(cont.cap).getFreeSpace();
-                        cont.isFree = cont.freeSpace == cont.maxSpace;
-                        transferedItems.addAll(data);
-                        transferAll(context, gui, transferedItems);
-                    }
-                }
-            }
-        }
-        cont.freeSpace = gui.getInventory(cont.cap).getFreeSpace();
-        cont.isFree = cont.freeSpace == cont.maxSpace;
-        transferedItems.addAll(data);
-        if(freeInEnd) {
-            transferAll(context, gui, transferedItems);
-        }
+//        data.addAll(cont.itemInfo.keySet());
+//        for(String name: data)
+//        {
+//                if (cont.itemInfo.get(name) != null) {
+//                    if(context.getOutputs(name)!=null) {
+//                    new PathFinder(cont.gob).run(gui);
+//                    new OpenTargetContainer(cont.cap, cont.gob).run(gui);
+//                    TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont, name);
+//                    tifc.run(gui);
+//                    if(cont.itemInfo.get(name)!=null)
+//                    {
+//                        cont.freeSpace = gui.getInventory(cont.cap).getFreeSpace();
+//                        cont.isFree = cont.freeSpace == cont.maxSpace;
+//                        transferedItems.addAll(data);
+//                        transferAll(context, gui, transferedItems);
+//                    }
+//                }
+//            }
+//        }
+//        cont.freeSpace = gui.getInventory(cont.cap).getFreeSpace();
+//        cont.isFree = cont.freeSpace == cont.maxSpace;
+//        transferedItems.addAll(data);
+//        if(freeInEnd) {
+//            transferAll(context, gui, transferedItems);
+//        }
         return Results.SUCCESS();
     }
 
-    Set<String> data = new HashSet<>();
 
-    public Set<String> getData() {
-        return data;
-    }
 
     public static void transferAll(Context context, NGameUI gui, Set<String> names) throws InterruptedException
     {

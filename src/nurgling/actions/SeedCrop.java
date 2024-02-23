@@ -2,9 +2,11 @@ package nurgling.actions;
 
 import haven.*;
 import nurgling.NGameUI;
+import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.tasks.GetCurs;
+import nurgling.tasks.WaitAnotherAmount;
 import nurgling.tasks.WaitGobsInField;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -135,7 +137,10 @@ public class SeedCrop implements Action {
                 }
             }
         }
-
+        if(gui.getInventory().getItems(iseed).size() < 2) {
+            NUtils.getGameUI().msg("No items for seeding");
+            return;
+        }
         if (count > 0) {
             new PathFinder(target_coord).run(NUtils.getGameUI());
             if (setDir.get()) {
@@ -145,21 +150,17 @@ public class SeedCrop implements Action {
                     new SetDir(new Coord2d(0, -1)).run(gui);
                 setDir.set(false);
             }
-            if(gui.getInventory().getItems(iseed).size() < 2) {
-                NUtils.getGameUI().msg("No items for seeding");
-                return;
-            }
+            int stacks_size = NUtils.getGameUI().getInventory().getTotalAmountItems(iseed);
             NUtils.getGameUI().getInventory().activateItem(iseed);
             NUtils.getUI().core.addTask(new GetCurs("harvest"));
+
             if (rev) {
                 NUtils.getGameUI().map.wdgmsg("sel", area.ul, area.br, 1);
             } else {
                 NUtils.getGameUI().map.wdgmsg("sel", area.br, area.ul, 1);
             }
-//            if (gui.getInventory().getItems(iseed).size() >= 2) {
-                NUtils.getUI().core.addTask(new WaitGobsInField(area, total));
-//            }
-
+            NUtils.getUI().core.addTask(new WaitGobsInField(area, total));
+            NUtils.getUI().core.addTask(new WaitAnotherAmount(NUtils.getGameUI().getInventory(),iseed,stacks_size));
         }
 
     }

@@ -38,11 +38,8 @@ public class NBotsMenu extends Widget
             addLayout(utils);
             NLayout tests = new NLayout("tools");
             tests.elements.add(new NButton("test1", new TESTLiftDrop()));
-            tests.elements.add(new NButton("test2", new TESTorestockpiletransfernoclose()));
-            tests.elements.add(new NButton("test3", new TESTblockstockpiletransferpacks()));
             tests.elements.add(new NButton("test4", new TESTbranchinvtransferpacks()));
             tests.elements.add(new NButton("test5", new TESTtakehanddporop()));
-            tests.elements.add(new NButton("test6", new TESTskinstockpiletransfer()));
             tests.elements.add(new NButton("test7", new TESTselectfloweraction()));
             tests.elements.add(new NButton("test8", new TESTpf()));
 //            tests.elements.add(new NButton("chop", new TESTfindallchest()));

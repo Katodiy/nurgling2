@@ -170,7 +170,7 @@ public class NMakewindow extends Widget {
                 {
                     categories = (VSpec.categories.get(name)!=null);
                 }
-                logisticout = (NArea.findOut(name) != null);
+                logisticout = (NArea.findOut(name,1) != null);
                 if(!logisticout)
                 {
                     categories = (VSpec.categories.get(name)!=null);

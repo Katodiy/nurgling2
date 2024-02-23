@@ -49,7 +49,7 @@ public class TakeItems implements Action
         ArrayList<WItem> items = gui.getInventory("Chest").getItems("Branch");
         int size = items.size();
         int to_take = Math.min(left.get(),size);
-        new TransferItemsOLD(gui.getInventory(), gui.getInventory("Chest").getItems("Branch"), to_take).run(gui);
+        new SimpleTransferToContainer(gui.getInventory(), gui.getInventory("Chest").getItems("Branch"), to_take).run(gui);
         left.set(left.get() - to_take);
         new PathFinder(barter.barter).run(gui);
         new OpenTargetContainer("Barter Stand", barter.barter).run(gui);

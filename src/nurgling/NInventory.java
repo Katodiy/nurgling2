@@ -96,7 +96,21 @@ public class NInventory extends Inventory
         return gi.getResult();
     }
 
+    public int getTotalAmountItems(NAlias name) throws InterruptedException
+    {
+        GetTotalAmountItems gi = new GetTotalAmountItems(this, name);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
     public ArrayList<WItem> getItems(NAlias name) throws InterruptedException
+    {
+        GetItems gi = new GetItems(this, name);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
+    public ArrayList<WItem> getItemsOfType(NAlias name) throws InterruptedException
     {
         GetItems gi = new GetItems(this, name);
         NUtils.getUI().core.addTask(gi);

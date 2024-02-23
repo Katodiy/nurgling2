@@ -279,6 +279,7 @@ public class NGameUI extends GameUI
                     for(Pair<Widget, Supplier<Coord>> pair:((RelCont) sp).childpos) {
                         if (pair.a.getClass().getName().contains("TipLabel")) {
                             try {
+                                ///TODO
                                 for (ItemInfo inf : (Collection<ItemInfo>) (pair.a.getClass().getField("info").get(pair.a))) {
                                     if (inf instanceof ItemInfo.Name) {
                                         String name = ((ItemInfo.Name) inf).str.text;

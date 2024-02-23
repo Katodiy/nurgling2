@@ -27,7 +27,7 @@ public class TakeItemsFromContainer implements Action
     Coord target_coord = new Coord(1,1);
 
     String name;
-    public TakeItemsFromContainer(Context.Container cont, String name)
+    public TakeItemsFromContainer(Context.Container cont, String name, int th)
     {
         this.cont = cont;
         this.name = name;
@@ -55,10 +55,10 @@ public class TakeItemsFromContainer implements Action
             NUtils.getUI().core.addTask(wi);
             took = target_size;
             items = inv.getItems(name);
-            if(items.isEmpty())
-                cont.itemInfo.remove(name);
-            else
-                cont.itemInfo.put(name, items.size());
+//            if(items.isEmpty())
+//                cont.itemInfo.remove(name);
+//            else
+//                cont.itemInfo.put(name, items.size());
         }
         return Results.SUCCESS();
     }

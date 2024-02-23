@@ -81,8 +81,16 @@ public class Context
     public String equip = null;
     public Workstation workstation = null;
 
-    public ArrayList<Output> getOutputs(String name) {
-        return output.get(name);
+    public ArrayList<Output> getOutputs(String name, int th) {
+        if(output.get(name)!=null)
+        {
+            for(Integer val: output.get(name).keySet())
+            {
+                if(th>=val)
+                    return output.get(name).get(val);
+            }
+        }
+        return null;
     }
 
     public Set<String> getOutputItems() {
@@ -135,7 +143,7 @@ public class Context
 
         public Gob gob = null;
 
-        public HashMap<String, Integer> itemInfo = new HashMap<>();
+        public HashMap<String, HashSet<Double>> itemInfo = new HashMap<>();
 
         public Container(Gob gob, ArrayList<String> names) {
             this.gob = gob;
@@ -147,10 +155,11 @@ public class Context
     public static class OutputContainer extends Container implements Output
     {
 
-        public OutputContainer(Gob gob, NArea area)
+        public OutputContainer(Gob gob, NArea area, int th)
         {
             super(gob,  new ArrayList<>(Context.contcaps.getall(gob.ngob.name)));
             this.area = area;
+            this.th = th;
         }
 
         @Override
@@ -159,6 +168,14 @@ public class Context
         }
 
         NArea area = null;
+
+        @Override
+        public int getTh()
+        {
+            return th;
+        }
+
+        Integer th = 1;
     }
 
 
@@ -193,10 +210,11 @@ public class Context
             super(gob);
         }
 
-        public OutputPile(Gob gob, NArea area)
+        public OutputPile(Gob gob, NArea area, int th)
         {
             super(gob);
             this.area = area;
+            this.th = th;
         }
 
         @Override
@@ -205,6 +223,14 @@ public class Context
         }
 
         NArea area = null;
+
+        @Override
+        public int getTh()
+        {
+            return th;
+        }
+
+        Integer th = 1;
     }
 
     public static class Pile {
@@ -225,22 +251,22 @@ public class Context
         switch (ingredient.type)
         {
             case BARTER:
-//                inputs.add(new InputBarter( Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
-//                        Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
+                outputs.add(new OutputBarter( Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
+                        Finder.findGob(area, new NAlias("gfx/terobjs/chest")),area, ingredient.th));
                 break;
             case CONTAINER:
             {
                 for(Gob gob: Finder.findGobs(area, containers))
                 {
-                    outputs.add(new OutputContainer(gob,area));
+                    outputs.add(new OutputContainer(gob,area, ingredient.th));
                 }
                 for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
                 {
-                    outputs.add(new OutputPile(gob, area));
+                    outputs.add(new OutputPile(gob, area, ingredient.th));
                 }
                 if(outputs.isEmpty())
                 {
-                    outputs.add(new OutputPile(null, area));
+                    outputs.add(new OutputPile(null, area, ingredient.th));
                 }
 
             }
@@ -286,14 +312,17 @@ public class Context
     public interface Output
     {
         NArea getArea();
+
+        int getTh();
     }
 
-    public class OutputBarter extends Barter implements Output
+    public static class OutputBarter extends Barter implements Output
     {
-        public OutputBarter(Gob barter, Gob chest)
+        public OutputBarter(Gob barter, Gob chest, NArea area, int th)
         {
             super(barter, chest);
-
+            this.area = area;
+            this.th = th;
         }
 
         @Override
@@ -302,10 +331,17 @@ public class Context
         }
 
         NArea area = null;
+        @Override
+        public int getTh()
+        {
+            return th;
+        }
+
+        Integer th = 1;
     }
 
     HashMap<String,ArrayList<Input>> input = new HashMap<>();
-    HashMap<String,ArrayList<Output>> output = new HashMap<>();
+    public HashMap<String,SortedMap<Integer,ArrayList<Output>>> output = new HashMap<>();
 
     public ArrayList<Container> getContainersInWork() {
         return containersInWork;
@@ -330,10 +366,11 @@ public class Context
         return true;
     }
 
-    public boolean addOutput(String name, Output out)
+    public boolean addOutput(String name, int th, Output out)
     {
-        output.computeIfAbsent(name, k -> new ArrayList<>());
-        output.get(name).add(out);
+        output.computeIfAbsent(name, k -> new TreeMap<>());
+        output.get(name).computeIfAbsent(th, k -> new ArrayList<>());
+        output.get(name).get(th).add(out);
         return true;
     }
 
@@ -349,19 +386,21 @@ public class Context
     {
         for(Output out: outputs)
         {
-            if(!addOutput(name, out))
+            if(!addOutput(name, out.getTh(), out))
                 return false;
         }
         return true;
     }
 
-    public void fillForInventory(NInventory inv, HashMap<String, Integer> itemInfo) throws InterruptedException {
+    public void fillForInventory(NInventory inv, HashMap<String, HashSet<Double>> itemInfo) throws InterruptedException {
         for(WItem item: inv.getItems())
         {
             String name = ((NGItem)item.item).name();
-            if(output.get(name)== null)
-                addOutput(name , Context.GetOutput(name, NArea.findOut(((NGItem)item.item).name())));
-            itemInfo.put(name, inv.getItems((((NGItem) item.item).name())).size());
+            double quality = ((NGItem)item.item).quality;
+            addOutput(name , Context.GetOutput(name, NArea.findOut(((NGItem)item.item).name(), quality)));
+            itemInfo.computeIfAbsent(name, k -> new HashSet<>());
+            HashSet<Double> threads = itemInfo.get(name);
+            threads.add(quality);
         }
     }
 
