@@ -63,7 +63,7 @@ public class FoodInfo extends ItemInfo.Tip {
 	    this.a = a;
 	}
 
-	public Event(CharWnd.FoodMeter.Event ev, BufferedImage img, double a) {
+	public Event(BAttrWnd.FoodMeter.Event ev, BufferedImage img, double a) {
 		this.ev = ev;
 		this.img = img;
 		this.a = a;

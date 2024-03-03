@@ -33,6 +33,8 @@ import java.util.*;
 import java.util.function.*;
 import haven.resutil.FoodInfo;
 import haven.resutil.Curiosity;
+import nurgling.NUI;
+
 import static haven.PUtils.*;
 
 public class CharWnd extends Window {
@@ -250,6 +252,7 @@ public class CharWnd extends Window {
 	if((place == "tab") || /* XXX: Remove me! */ Utils.eq(args[0], Coord.of(47, 47))) {
 	    if(child instanceof BAttrWnd) {
 		battr = battrtab.add((BAttrWnd)child, Coord.z);
+		((NUI) ui).sessInfo.characterInfo.setCharWnd(this);
 	    } else if(child instanceof SAttrWnd) {
 		sattr = sattrtab.add((SAttrWnd)child, Coord.z);
 	    } else if(child instanceof SkillWnd) {

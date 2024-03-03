@@ -50,12 +50,13 @@ public class NGameUI extends GameUI
     }
 
     public int getMaxBase(){
-        return chrwdg.base.stream().max(new Comparator<CharWnd.Attr>() {
-            @Override
-            public int compare(CharWnd.Attr o1, CharWnd.Attr o2) {
-                return Integer.compare(o1.attr.base,o2.attr.base);
-            }
-        }).get().attr.base;
+        return 0;
+//        return chrwdg.base.stream().max(new Comparator<CharWnd.Attr>() {
+//            @Override
+//            public int compare(CharWnd.Attr o1, CharWnd.Attr o2) {
+//                return Integer.compare(o1.attr.base,o2.attr.base);
+//            }
+//        }).get().attr.base;
     }
 
     public NCharacterInfo getCharInfo() {
@@ -178,10 +179,6 @@ public class NGameUI extends GameUI
         else
         {
             super.addchild(child, args);
-            if (place.equals("chr") && chrwdg != null)
-            {
-                ((NUI) ui).sessInfo.characterInfo.setCharWnd(chrwdg);
-            }
             if (maininv != null && ((NInventory) maininv).searchwdg == null)
             {
                 ((NInventory) maininv).installMainInv();
@@ -191,11 +188,6 @@ public class NGameUI extends GameUI
 
     public void tickmsg(String msg) {
         msg("TICK#" + NUtils.getTickId() + " MSG: " + msg, Color.WHITE, Color.WHITE);
-        double now = Utils.rtime();
-        if(now - lastmsgsfx > 0.1) {
-            ui.sfx(RootWidget.msgsfx);
-            lastmsgsfx = now;
-        }
     }
 
     public NInventory getInventory ( String name ) {

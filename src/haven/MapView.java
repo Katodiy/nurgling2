@@ -511,10 +511,13 @@ public class MapView extends PView implements DTarget, Console.Directory {
     }
 
     public void dispose() {
-	gobs.slot.remove();
-	clmaplist.dispose();
-	clobjlist.dispose();
-	super.dispose();
+		if(gobs!=null && gobs.slot!=null)
+			gobs.slot.remove();
+		if(clmaplist!=null)
+			clmaplist.dispose();
+		if(clobjlist!=null)
+			clobjlist.dispose();
+		super.dispose();
     }
 
     public boolean visol(String tag) {

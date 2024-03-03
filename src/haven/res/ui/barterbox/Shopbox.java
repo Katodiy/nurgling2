@@ -12,7 +12,7 @@ import java.util.*;
 import java.awt.Color;
 
 /* >wdg: haven.res.ui.barterbox.Shopbox */
-@haven.FromResource(name = "ui/barterbox", version = 71)
+@haven.FromResource(name = "ui/barterbox", version = 73)
 public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Owner {
     public static final Text qlbl = Text.render("Quality:");
     public static final Text any = Text.render("Any");
@@ -266,8 +266,9 @@ public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Own
 	    cinfo = null;
 	    longtip = null;
 	} else if(name == "n") {
-	    leftNum = (Integer)args[0];
-	    this.num = Text.render(String.format("%d left", leftNum));
+	    int num = (Integer)args[0];
+	    this.num = Text.render(String.format("%d left", num));
+		this.leftNum = num;
 	} else if(name == "price") {
 	    int a = 0;
 	    if(args[a] == null) {

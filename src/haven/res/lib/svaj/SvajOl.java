@@ -8,7 +8,7 @@ import static haven.render.sl.Cons.*;
 import static haven.render.sl.Type.*;
 import static haven.render.sl.Function.PDir.*;
 
-@haven.FromResource(name = "lib/svaj", version = 24)
+@haven.FromResource(name = "lib/svaj", version = 25)
 public class SvajOl extends Sprite implements Gob.SetupMod {
     public static final float v1 = 0.5f, v2 = 0.5f;
     public final Coord3f zhvec, chvec;
@@ -41,8 +41,8 @@ public class SvajOl extends Sprite implements Gob.SetupMod {
 	} catch(Loading l) {
 	    return(cur);
 	}
+	origin.y = -origin.y;
 	if((cur == null) || !Utils.eq(origin, cur.origin)) {
-	    origin.y = -origin.y;
 	    cur = new Svaj(zhvec, zhfreq, chvec, chfreq, origin);
 	}
 	return(cur);

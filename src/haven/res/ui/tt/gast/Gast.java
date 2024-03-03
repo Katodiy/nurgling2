@@ -1,13 +1,14 @@
-package haven.res.ui.tt.gast;/* Preprocessed source code */
+/* Preprocessed source code */
 /* $use: ui/tt/wear */
 
+package haven.res.ui.tt.gast;
+
 import haven.*;
+import java.awt.image.BufferedImage;
 import haven.res.ui.tt.wear.Wear;
 
-import java.awt.image.BufferedImage;
-
 /* >tt: Gast */
-@FromResource(name = "ui/tt/gast", version = 10)
+@haven.FromResource(name = "ui/tt/gast", version = 11)
 public class Gast extends ItemInfo.Tip implements GItem.NumberInfo {
     public final double glut, fev;
 
@@ -33,7 +34,16 @@ public class Gast extends ItemInfo.Tip implements GItem.NumberInfo {
     public int itemnum() {
 	Wear wear = find(Wear.class, owner.info());
 	if(wear == null)
-	    return(0);
+	    return(-1);
 	return(wear.m - wear.d);
+    }
+
+    public Tex overlay() {
+	return((itemnum() >= 0) ? GItem.NumberInfo.super.overlay() : null);
+    }
+
+    public void drawoverlay(GOut g, Tex tex) {
+	if(tex != null)
+	    GItem.NumberInfo.super.drawoverlay(g, tex);
     }
 }

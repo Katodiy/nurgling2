@@ -108,7 +108,7 @@ public class NCraftWindow extends GameUI.Hidewnd {
         }
         Tex icon = new TexI(PUtils.convolvedown(pagina.res.get().layer(Resource.imgc).img, new Coord(20, 20), CharWnd.iconfilter));
 
-        NTabStrip.Button<Pagina> added = tabStrip.insert(0, icon, pagina.act().name, pagina);
+        NTabStrip.Button<Pagina> added = tabStrip.insert(0, icon, pagina.button().name(), pagina);
         added.tag = pagina;
         tabStrip.select(added);
         added.setActive(true);

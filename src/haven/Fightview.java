@@ -393,22 +393,22 @@ public class Fightview extends Widget {
 				String resnm = ref.resnm();
 				if(resnm!=null)
 				{
-					int val = (int) Math.min(10, buff.ameter / 10);
+					int val = (int) Math.min(10, buff.ameter() / 10);
 					if (resnm.equals("paginae/atk/cornered"))
 					{
-						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.corn.get(val)));
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter())).tex(), NRelation.corn.get(val)));
 					}
 					else if (resnm.equals("paginae/atk/dizzy"))
 					{
-						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.dizz.get(val)));
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter())).tex(), NRelation.dizz.get(val)));
 					}
 					else if (resnm.equals("paginae/atk/reeling"))
 					{
-						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.reel.get(val)));
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter())).tex(), NRelation.reel.get(val)));
 					}
 					else if (resnm.equals("paginae/atk/offbalance"))
 					{
-						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.gren.get(val)));
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter())).tex(), NRelation.gren.get(val)));
 					}
 				}
 		}

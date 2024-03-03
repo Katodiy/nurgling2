@@ -1,8 +1,7 @@
 package nurgling.iteminfo;
 
 import haven.*;
-import static haven.CharWnd.Constipations.elh;
-import static haven.CharWnd.Constipations.tflt;
+import static haven.BAttrWnd.Constipations.tflt;
 import static haven.CharWnd.iconfilter;
 import static haven.PUtils.convolvedown;
 import haven.resutil.*;
@@ -63,7 +62,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     {
         if (NUtils.getGameUI().chrwdg != null && NUtils.getUI().sessInfo != null)
         {
-            return (((NUtils.getUI().sessInfo.isSubscribed) ? coefSubscribe : (NUtils.getUI().sessInfo.isVerified) ? coefVerif : 1) * fepSum * NUtils.getGameUI().chrwdg.glut.gmod * NUtils.getGameUI().getTableMod() + fepSum * NUtils.getGameUI().chrwdg.glut.gmod * NUtils.getGameUI().getTableMod() * NUtils.getGameUI().getRealmMod()) * efficiency / 100;
+            return (((NUtils.getUI().sessInfo.isSubscribed) ? coefSubscribe : (NUtils.getUI().sessInfo.isVerified) ? coefVerif : 1) * fepSum * NUtils.getGameUI().chrwdg.battr.glut.gmod * NUtils.getGameUI().getTableMod() + fepSum * NUtils.getGameUI().chrwdg.battr.glut.gmod * NUtils.getGameUI().getTableMod() * NUtils.getGameUI().getRealmMod()) * efficiency / 100;
         }
         return 0;
     }
@@ -73,17 +72,17 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         if (nurgling.NUtils.getGameUI().chrwdg != null)
         {
             double cur_fep = 0;
-            for (CharWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.feps.els)
+            for (BAttrWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.battr.feps.els)
             {
                 cur_fep += el.a;
             }
             if (isVarity)
             {
-                return (NUtils.getGameUI().chrwdg.feps.cap - Math.sqrt(coefVar * NUtils.getGameUI().getMaxBase() * NUtils.getGameUI().chrwdg.glut.gmod / (NUtils.getGameUI().getCharInfo().varity.size() + 1)) - cur_fep);
+                return (NUtils.getGameUI().chrwdg.battr.feps.cap - Math.sqrt(coefVar * NUtils.getGameUI().getMaxBase() * NUtils.getGameUI().chrwdg.battr.glut.gmod / (NUtils.getGameUI().getCharInfo().varity.size() + 1)) - cur_fep);
             }
             else
             {
-                return NUtils.getGameUI().chrwdg.feps.cap - cur_fep;
+                return NUtils.getGameUI().chrwdg.battr.feps.cap - cur_fep;
             }
         }
         return 0;
@@ -108,11 +107,11 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                     return true;
                 }
             }
-            if (NUtils.getGameUI().chrwdg.cons.els.size() > 0)
+            if (!NUtils.getGameUI().chrwdg.battr.cons.els.isEmpty())
             {
                 for (int type : types)
                 {
-                    CharWnd.Constipations.El c = NUtils.getGameUI().chrwdg.cons.els.get(type);
+                    BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(type);
                     if (efficiency != ((c != null) ? Math.min(100, c.a * 100) : 100))
                     {
                         needToolTip = true;
@@ -269,9 +268,9 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     {
         if (consImgs.get(value) == null)
         {
-            CharWnd.Constipations.El c = NUtils.getGameUI().chrwdg.cons.els.get(value);
+            BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(value);
             if (c != null)
-                consImgs.put(value, convolvedown(new ItemSpec(OwnerContext.uictx.curry(NUtils.getUI()), c.t, null).image(), new Coord(elh, elh), tflt));
+                consImgs.put(value, convolvedown(new ItemSpec(OwnerContext.uictx.curry(NUtils.getUI()), c.t, null).image(), new Coord(UI.scale(16), UI.scale(16)), tflt));
         }
         return consImgs.get(value);
     }
@@ -300,11 +299,11 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             }
             if (NUtils.getGameUI().chrwdg != null)
             {
-                if (NUtils.getGameUI().chrwdg.cons.els.size() > 0)
+                if (NUtils.getGameUI().chrwdg.battr.cons.els.size() > 0)
                 {
                     for (int type : types)
                     {
-                        CharWnd.Constipations.El c = NUtils.getGameUI().chrwdg.cons.els.get(type);
+                        BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(type);
                         if (c != null)
                         {
                             efficiency = c.a * 100;
@@ -322,7 +321,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         imgs.add(extentTitle());
         for (int type : types)
         {
-            CharWnd.Constipations.El c = NUtils.getGameUI().chrwdg.cons.els.get(type);
+            BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(type);
             if (c != null)
             {
                 efficiency = c.a * 100;
@@ -343,7 +342,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             else
                 imgs.add(RichText.render(String.format("Expected FEP: $col[128,255,0]{%.2f} $col[255,0,0]{(+%.2f \u00B1 %.2f)} ", expeted_fep, delta, error), 0).img);
             double cur_fep = 0;
-            for (CharWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.feps.els)
+            for (BAttrWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.battr.feps.els)
             {
                 cur_fep += el.a;
             }

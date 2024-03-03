@@ -1,22 +1,21 @@
-package haven.res.ui.tt.slots;/* Preprocessed source code */
+/* Preprocessed source code */
 /* $use: lib/tspec */
+
+package haven.res.ui.tt.slots;
 
 import haven.*;
 import haven.res.lib.tspec.Spec;
+import static haven.PUtils.*;
+import java.awt.image.*;
+import java.awt.Graphics;
+import java.awt.Font;
+import java.awt.Color;
+import java.util.*;
 import haven.res.ui.tt.attrmod.AttrMod;
 import nurgling.NGItem;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-
-import static haven.PUtils.convolvedown;
-
-/* >tt: haven.res.ui.tt.slots.Fac */
-@FromResource(name = "ui/tt/slots", version = 28)
+/* >tt: Fac */
+@haven.FromResource(name = "ui/tt/slots", version = 30)
 public class ISlots extends ItemInfo.Tip implements GItem.NumberInfo {
     public static final Text ch = Text.render("Gilding:");
     public static final Text.Foundry progf = new Text.Foundry(Text.dfont.deriveFont(Font.ITALIC), 10, new Color(0, 169, 224));
@@ -24,13 +23,17 @@ public class ISlots extends ItemInfo.Tip implements GItem.NumberInfo {
     public final int left;
     public final double pmin, pmax;
     public final Resource[] attrs;
+    public final boolean ignol;
 	public boolean isShifted = false;
+
     public ISlots(Owner owner, int left, double pmin, double pmax, Resource[] attrs) {
 	super(owner);
 	this.left = left;
 	this.pmin = pmin;
 	this.pmax = pmax;
 	this.attrs = attrs;
+	// XXX? Should the format be changed instead?
+	ignol = owner.fcontext(MenuGrid.class, false) != null;
     }
 
     public static final String chc = "192,192,255";
@@ -82,7 +85,7 @@ public class ISlots extends ItemInfo.Tip implements GItem.NumberInfo {
 	    l.cmp.add(progf.render((left > 1)?String.format("Gildable \u00d7%d", left):"Gildable").img, new Coord(10, l.cmp.sz.y));
     }
 
-    public static final Object[] defn = {Loading.waitfor(Resource.remote().load("ui/tt/defn", 6))};
+    public static final Object[] defn = {Loading.waitfor(Resource.classres(ISlots.class).pool.load("ui/tt/defn", 7))};
     public class SItem {
 	public final Resource res;
 	public final GSprite spr;
@@ -127,5 +130,10 @@ public class ISlots extends ItemInfo.Tip implements GItem.NumberInfo {
     public static final Color avail = new Color(128, 192, 255);
     public Color numcolor() {
 	return((left > 0) ? avail : Color.WHITE);
+    }
+
+    public void drawoverlay(GOut g, Tex tex) {
+	if(!ignol)
+	    GItem.NumberInfo.super.drawoverlay(g, tex);
     }
 }

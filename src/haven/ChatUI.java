@@ -992,7 +992,6 @@ public class ChatUI extends Widget
 		    Message cmsg = new NamedMessage(from.intValue(), line, Utils.blendcol(col, Color.WHITE, 0.5));
 		    append(cmsg, urgency);
 		}
-		}
 	    } else {
 		super.uimsg(msg, args);
 	    }

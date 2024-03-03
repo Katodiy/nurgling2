@@ -2,14 +2,12 @@
 package haven.res.lib.tspec;
 
 import haven.*;
+import java.util.*;
 
-import java.util.List;
-import java.util.Random;
-
-@FromResource(name = "lib/tspec", version = 4)
+@haven.FromResource(name = "lib/tspec", version = 5)
 public class Spec implements GSprite.Owner, ItemInfo.SpriteOwner {
     private static final Object[] definfo = {
-	new Object[] {Loading.waitfor(Resource.remote().load("ui/tt/defn", 6))},
+	new Object[] {Loading.waitfor(Resource.remote().load("ui/tt/defn", 7))},
     };
     public final Object[] info;
     public final ResData res;
@@ -62,8 +60,7 @@ public class Spec implements GSprite.Owner, ItemInfo.SpriteOwner {
     }
 
     public String name() {
-	GSprite spr;
-    spr = spr();
+	GSprite spr = spr();
 	ItemInfo.Name nm = ItemInfo.find(ItemInfo.Name.class, info());
 	if(nm == null)
 	    return(null);

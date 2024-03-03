@@ -16,12 +16,12 @@ public class Fac implements ItemInfo.InfoFactory {
 
 	class FepCache
 	{
-		public FepCache(CharWnd.FoodMeter.Event ev, BufferedImage img) {
+		public FepCache(BAttrWnd.FoodMeter.Event ev, BufferedImage img) {
 			this.ev = ev;
 			this.img = img;
 		}
 
-		public final CharWnd.FoodMeter.Event ev;
+		public final BAttrWnd.FoodMeter.Event ev;
 		public final BufferedImage img;
 	}
 
@@ -43,7 +43,7 @@ public class Fac implements ItemInfo.InfoFactory {
 		if (!fepResCache.containsKey((Integer) evd[a])) {
 			Resource res = owner.context(Resource.Resolver.class).getres((Integer) evd[a]).get();
 			fepResCache.put((Integer) evd[a], new FepCache(
-					res.flayer(CharWnd.FoodMeter.Event.class)
+					res.flayer(BAttrWnd.FoodMeter.Event.class)
 					, PUtils.convolve(res.flayer(Resource.imgc).img, imgsz, CharWnd.iconfilter)
 			));
 		}

@@ -118,22 +118,22 @@ public class NRelation extends Sprite implements RenderTree.Node, PView.Render2D
 								String resnm = ref.resnm();
 								if(resnm!=null)
 								{
-									int val = (int) Math.min(10, b.ameter / 10);
+									int val = (int) Math.min(10, b.ameter() / 10);
 									if (resnm.equals("paginae/atk/cornered"))
 									{
-										buffs.add(new RelBuff((TexI) NStyle.openings.render(String.valueOf(b.ameter)).tex(), corn.get(val)));
+										buffs.add(new RelBuff((TexI) NStyle.openings.render(String.valueOf(b.ameter())).tex(), corn.get(val)));
 									}
 									else if (resnm.equals("paginae/atk/dizzy"))
 									{
-										buffs.add(new RelBuff((TexI) NStyle.openings.render(String.valueOf(b.ameter)).tex(), dizz.get(val)));
+										buffs.add(new RelBuff((TexI) NStyle.openings.render(String.valueOf(b.ameter())).tex(), dizz.get(val)));
 									}
 									else if (resnm.equals("paginae/atk/reeling"))
 									{
-										buffs.add(new RelBuff((TexI) NStyle.openings.render(String.valueOf(b.ameter)).tex(), reel.get(val)));
+										buffs.add(new RelBuff((TexI) NStyle.openings.render(String.valueOf(b.ameter())).tex(), reel.get(val)));
 									}
 									else if (resnm.equals("paginae/atk/offbalance"))
 									{
-										buffs.add(new RelBuff((TexI) NStyle.openings.render(String.valueOf(b.ameter)).tex(), gren.get(val)));
+										buffs.add(new RelBuff((TexI) NStyle.openings.render(String.valueOf(b.ameter())).tex(), gren.get(val)));
 									}
 									else
 									{

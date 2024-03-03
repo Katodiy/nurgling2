@@ -1,6 +1,4 @@
 /* Preprocessed source code */
-/* $use: ui/tt/defn */
-
 package haven.res.lib.layspr;
 
 import haven.*;
@@ -8,8 +6,8 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
-@haven.FromResource(name = "lib/layspr", version = 15)
-public class BaseLayered extends Layered implements haven.res.ui.tt.defn.DynName {
+@haven.FromResource(name = "lib/layspr", version = 16)
+public class BaseLayered extends Layered implements ItemInfo.Name.Dynamic {
     public final String name;
 
     public BaseLayered(Owner owner, List<Indir<Resource>> lay) {
