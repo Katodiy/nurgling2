@@ -20,7 +20,7 @@ public class TransferLog implements Action {
         NUtils.getGameUI().msg("Please, select output area");
         (outsa = new SelectArea()).run(gui);
         ArrayList<Gob> logs;
-        while (!(logs = Finder.findGobs(insa.getRCArea(), new NAlias("goat"))).isEmpty()) {
+        while (!(logs = Finder.findGobs(insa.getRCArea(), new NAlias("log"))).isEmpty()) {
             ArrayList<Gob> availableLogs = new ArrayList<>();
             for (Gob currGob: logs)
             {
