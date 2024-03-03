@@ -507,8 +507,9 @@ public class OptWnd extends Window {
 		prev = add(new Label("Interface scale (requires restart)"), prev.pos("bl").adds(0, 5));
 	    {
 		Label dpy = new Label("");
-		final double smin = 1, smax = Math.floor(UI.maxscale() / 0.25) * 0.25;
-		final int steps = (int)Math.round((smax - smin) / 0.25);
+		final double gran = 0.05;
+		final double smin = 1, smax = Math.floor(UI.maxscale() / gran) * gran;
+		final int steps = (int)Math.round((smax - smin) / gran);
 		addhlp(prev.pos("bl").adds(0, 2), UI.scale(5),
 		       prev = new HSlider(UI.scale(160), 0, steps, (int)Math.round(steps * (Utils.getprefd("uiscale", 1.0) - smin) / (smax - smin))) {
 			       protected void added() {
@@ -536,7 +537,7 @@ public class OptWnd extends Window {
 		    final int steps = (int)Math.round((smax - smin) / 0.25);
 		    int ival = (int)Math.round(MapView.plobpgran);
 		    addhlp(Coord.of(x + UI.scale(5), pos.c.y), UI.scale(5),
-			   prev = new HSlider(UI.scale(155 - x), 2, 17, (ival == 0) ? 17 : ival) {
+			   prev = new HSlider(UI.scale(155) - x, 2, 17, (ival == 0) ? 17 : ival) {
 				   protected void added() {
 				       dpy();
 				   }
@@ -561,7 +562,7 @@ public class OptWnd extends Window {
 			    ival = i;
 		    }
 		    addhlp(Coord.of(x + UI.scale(5), ang.c.y), UI.scale(5),
-			   prev = new HSlider(UI.scale(155 - x), 0, vals.length - 1, ival) {
+			   prev = new HSlider(UI.scale(155) - x, 0, vals.length - 1, ival) {
 				   protected void added() {
 				       dpy();
 				   }

@@ -204,10 +204,12 @@ public interface GLPanel extends UIPanel, UI.Context {
 		    pos.x = 0;
 		if(pos.y < 0)
 		    pos.y = 0;
+		Coord br = pos.add(sz);
+		Coord m = UI.scale(2, 2);
 		g.chcolor(244, 247, 21, 192);
-		g.rect(pos.add(-3, -3), sz.add(6, 6));
+		g.rect2(pos.sub(m).sub(1, 1), br.add(m).add(1, 1));
 		g.chcolor(35, 35, 35, 192);
-		g.frect(pos.add(-2, -2), sz.add(4, 4));
+		g.frect2(pos.sub(m), br.add(m));
 		g.chcolor();
 		g.image(tex, pos);
 	    }
@@ -278,10 +280,7 @@ public interface GLPanel extends UIPanel, UI.Context {
 		FastText.aprintf(g, new Coord(10, y -= dy), 0, 1, "Mapview: %s", map.stats());
 		// FastText.aprintf(g, new Coord(10, y -= dy), 0, 1, "Click: Map: %s, Obj: %s", map.clmaplist.stats(), map.clobjlist.stats());
 	    }
-	    if(ui.sess != null)
-		FastText.aprintf(g, new Coord(10, y -= dy), 0, 1, "Async: L %s, D %s", ui.sess.glob.loader.stats(), Defer.gstats());
-	    else
-		FastText.aprintf(g, new Coord(10, y -= dy), 0, 1, "Async: D %s", Defer.gstats());
+	    FastText.aprintf(g, new Coord(10, y -= dy), 0, 1, "Async: L %s, D %s", ui.loader.stats(), Defer.gstats());
 	    int rqd = Resource.local().qdepth() + Resource.remote().qdepth();
 	    if(rqd > 0)
 		FastText.aprintf(g, new Coord(10, y -= dy), 0, 1, "RQ depth: %d (%d)", rqd, Resource.local().numloaded() + Resource.remote().numloaded());

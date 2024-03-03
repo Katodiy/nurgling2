@@ -28,11 +28,11 @@ package haven;
 
 import haven.res.lib.itemtex.*;
 import nurgling.*;
-
+import java.util.*;
+import haven.render.*;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.util.*;
 
 public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owner {
     public Indir<Resource> res;
@@ -55,14 +55,26 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 	@RName("item")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-	    int res = (Integer)args[0];
-	    Message sdt = (args.length > 1)?new MessageBuf((byte[])args[1]):Message.nil;
-	    return(new NGItem(ui.sess.getres(res), sdt));
+	    Indir<Resource> res = ui.sess.getresv(args[0]);
+	    Message sdt = (args.length > 1) ? new MessageBuf((byte[])args[1]) : Message.nil;
+	    return(new NGItem(res, sdt));
 	}
     }
 
-    public interface ColorInfo {
+    public interface RStateInfo {
+	public Pipe.Op rstate();
+    }
+
+    public interface ColorInfo extends RStateInfo {
 	public Color olcol();
+
+	public default Pipe.Op rstate() {
+	    return(buf -> {
+		    Color col = olcol();
+		    if(col != null)
+			new ColorMask(col).apply(buf);
+		});
+	}
     }
 
     public interface OverlayInfo<T> {
@@ -229,11 +241,11 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 
     public void uimsg(String name, Object... args) {
 	if(name == "num") {
-	    num = (Integer)args[0];
+	    num = Utils.iv(args[0]);
 	} else if(name == "chres") {
 	    synchronized(this) {
-		res = ui.sess.getres((Integer)args[0]);
-		sdt = (args.length > 1)?new MessageBuf((byte[])args[1]):MessageBuf.nil;
+		res = ui.sess.getresv(args[0]);
+		sdt = (args.length > 1) ? new MessageBuf((byte[])args[1]) : MessageBuf.nil;
 		spr = null;
 	    }
 	} else if(name == "tt") {
@@ -242,14 +254,14 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 		updateraw();
 	    infoseq++;
 	} else if(name == "meter") {
-	    meter = (int)((Number)args[0]).doubleValue();
+	    meter = Utils.iv(args[0]);
 	} else if(name == "contopen") {
 	    if(contentswnd != null) {
 		boolean nst;
 		if(args[0] == null)
 		    nst = (contentswnd.st != "wnd");
 		else
-		    nst = ((Integer)args[0]) != 0;
+		    nst = Utils.bv(args[0]);
 		contentswnd.wndshow(nst);
 	    }
 	} else {

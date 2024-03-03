@@ -134,6 +134,18 @@ public class Resource implements Serializable {
     public static interface Resolver {
 	public Indir<Resource> getres(int id);
 
+	public default Indir<Resource> getresv(Object desc) {
+	    if(desc == null)
+		return(null);
+	    if(desc instanceof Number) {
+		int id = ((Number)desc).intValue();
+		if(id < 0)
+		    return(null);
+		return(this.getres(id));
+	    }
+	    throw(new ClassCastException("unknown type for resource id: " + desc));
+	}
+
 	public class ResourceMap implements Resource.Resolver {
 	    public final Resource.Resolver bk;
 	    public final Map<Integer, Integer> map;
@@ -166,7 +178,7 @@ public class Resource implements Serializable {
 		    return(Collections.emptyMap());
 		Map<Integer, Integer> ret = new HashMap<>();
 		for(int a = 0; a < args.length; a += 2)
-		    ret.put((Integer)args[a], (Integer)args[a + 1]);
+		    ret.put(Utils.iv(args[a]), Utils.iv(args[a + 1]));
 		return(ret);
 	    }
 
@@ -670,11 +682,7 @@ public class Resource implements Serializable {
 	    synchronized(loaders) {
 		while(loaders.size() < Math.min(nloaders, qsz)) {
 		    final Loader n = new Loader();
-		    Thread th = AccessController.doPrivileged(new PrivilegedAction<Thread>() {
-			    public Thread run() {
-				return(new HackThread(loadergroup, n, "Haven resource loader"));
-			    }
-			});
+		    Thread th = new HackThread(loadergroup, n, "Haven resource loader");
 		    th.setDaemon(true);
 		    th.start();
 		    while(!n.added) {
@@ -937,7 +945,8 @@ public class Resource implements Serializable {
     }
 
     public static void addltype(String name, LayerFactory<?> cons) {
-	ltypes.put(name, cons);
+	if(ltypes.put(name, cons) != null)
+	   Warning.warn("duplicated layer name: " + name);
     }
     
     public static <T extends Layer> void addltype(String name, Class<T> cl) {
@@ -977,26 +986,10 @@ public class Resource implements Serializable {
     }
 
     public static BufferedImage readimage(InputStream fp) throws IOException {
-	try {
-	    /* This can crash if not privileged due to ImageIO
-	     * creating tempfiles without doing that privileged
-	     * itself. It can very much be argued that this is a bug
-	     * in ImageIO. */
-	    return(AccessController.doPrivileged(new PrivilegedExceptionAction<BufferedImage>() {
-		    public BufferedImage run() throws IOException {
-			BufferedImage ret;
-			ret = ImageIO.read(fp);
-			if(ret == null)
-			    throw(new ImageReadException());
-			return(ret);
-		    }
-		}));
-	} catch(PrivilegedActionException e) {
-	    Throwable c = e.getCause();
-	    if(c instanceof IOException)
-		throw((IOException)c);
-	    throw(new AssertionError(c));
-	}
+	BufferedImage ret = ImageIO.read(fp);
+	if(ret == null)
+	    throw(new ImageReadException());
+	return(ret);
     }
 
     @LayerName("image")
@@ -1585,21 +1578,17 @@ public class Resource implements Serializable {
 	public ClassLoader loader() {
 	    synchronized(CodeEntry.this) {
 		if(this.loader == null) {
-		    this.loader = AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
-			    public ClassLoader run() {
-				ClassLoader ret = Resource.class.getClassLoader();
-				if(classpath.size() > 0) {
-				    Collection<ClassLoader> loaders = new LinkedList<ClassLoader>();
-				    for(Indir<Resource> res : classpath) {
-					loaders.add(res.get().flayer(CodeEntry.class).loader());
-				    }
-				    ret = new LibClassLoader(ret, loaders);
-				}
-				if(clmap.size() > 0)
-				    ret = new ResClassLoader(ret, CodeEntry.this);
-				return(ret);
-			    }
-			});
+		    ClassLoader loader = Resource.class.getClassLoader();
+		    if(classpath.size() > 0) {
+			Collection<ClassLoader> loaders = new LinkedList<ClassLoader>();
+			for(Indir<Resource> res : classpath) {
+			    loaders.add(res.get().flayer(CodeEntry.class).loader());
+			}
+			loader = new LibClassLoader(loader, loaders);
+		    }
+		    if(clmap.size() > 0)
+			loader = new ResClassLoader(loader, CodeEntry.this);
+		    this.loader = loader;
 		}
 	    }
 	    return(this.loader);
@@ -1661,18 +1650,16 @@ public class Resource implements Serializable {
 		    if(acl == null)
 			return(null);
 		    Object[] args = pa.getOrDefault(entry.name(), new Object[0]);
-		    inst = AccessController.doPrivileged((PrivilegedAction<Object>)() -> {
-			    PublishedCode.Instancer<?> mk;
-			    synchronized(PublishedCode.instancers) {
-				mk = PublishedCode.instancers.computeIfAbsent(entry, k -> {
-					if(k.instancer() == PublishedCode.Instancer.class)
-					    return(PublishedCode.Instancer.simple);
-					else
-					    return(Utils.construct(k.instancer()));
-				    });
-			    }
-			    return(mk.make(acl, Resource.this, args));
-			});
+		    PublishedCode.Instancer<?> mk;
+		    synchronized(PublishedCode.instancers) {
+			mk = PublishedCode.instancers.computeIfAbsent(entry, k -> {
+				if(k.instancer() == PublishedCode.Instancer.class)
+				    return(PublishedCode.Instancer.simple);
+				else
+				    return(Utils.construct(k.instancer()));
+			    });
+		    }
+		    inst = mk.make(acl, Resource.this, args);
 		    ipe.put(entry.name(), inst);
 		}
 		try {
@@ -1689,22 +1676,18 @@ public class Resource implements Serializable {
     }
 
     public static Resource classres(final Class<?> cl) {
-	return(AccessController.doPrivileged(new PrivilegedAction<Resource>() {
-		    public Resource run() {
-			ClassLoader l = cl.getClassLoader();
-			if(l instanceof ResClassLoader)
-			    return(((ResClassLoader)l).getres());
-			FromResource src = ResClassLoader.getsource(cl);
-			if(src != null) {
-			    /* XXX? This feels like a hack, but I can't think of
-			     * any better way to let resource code that has been
-			     * downloaded with `get-code' reference data in its
-			     * originating resource. */
-			    return(remote().loadwait(src.name(), src.version()));
-			}
-			throw(new RuntimeException("Cannot fetch resource of non-resloaded class " + cl));
-		    }
-		}));
+	ClassLoader l = cl.getClassLoader();
+	if(l instanceof ResClassLoader)
+	    return(((ResClassLoader)l).getres());
+	FromResource src = ResClassLoader.getsource(cl);
+	if(src != null) {
+	    /* XXX? This feels like a hack, but I can't think of
+	     * any better way to let resource code that has been
+	     * downloaded with `get-code' reference data in its
+	     * originating resource. */
+	    return(remote().loadwait(src.name(), src.version()));
+	}
+	throw(new RuntimeException("Cannot fetch resource of non-resloaded class " + cl));
     }
 
     public <T> T getcode(Class<T> cl, boolean fail) {

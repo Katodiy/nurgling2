@@ -91,7 +91,7 @@ public class Equipory extends Widget implements DTarget {
 	    else if(args[0] == null)
 		gobid = -1;
 	    else
-		gobid = Utils.uint32((Integer)args[0]);
+		gobid = Utils.uiv(args[0]);
 	    return(new NEquipory(gobid));
 	}
     }
@@ -133,7 +133,7 @@ public class Equipory extends Widget implements DTarget {
 	    GItem g = (GItem)child;
 	    ArrayList<WItem> v = new ArrayList<>();
 	    for(int i = 0; i < args.length; i++) {
-		int ep = (Integer)args[i];
+		int ep = Utils.iv(args[i]);
 		if(ep < ecoords.length)
 		    v.add(add(new NWItem(g), ecoords[ep].add(1, 1)));
 	    }

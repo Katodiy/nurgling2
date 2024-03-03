@@ -31,7 +31,7 @@ import java.util.function.*;
 import haven.render.*;
 import nurgling.*;
 
-public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, EquipTarget, Skeleton.HasPose {
+public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, EquipTarget {
     // Координата
 	public Coord2d rc;
 	// Угол поворота
@@ -53,32 +53,39 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
     public static class Overlay implements RenderTree.Node {
 	public final int id;
 	public final Gob gob;
-	public final Indir<Resource> res;
-	public MessageBuf sdt;
+	public final Sprite.Mill<?> sm;
 	public Sprite spr;
-	public boolean delign = false;
+	public boolean delign = false, old = false;
 	private Collection<RenderTree.Slot> slots = null;
 	private boolean added = false;
 
-	public Overlay(Gob gob, int id, Indir<Resource> res, Message sdt) {
+	public Overlay(Gob gob, int id, Sprite.Mill<?> sm) {
 	    this.gob = gob;
 	    this.id = id;
-	    this.res = res;
-	    this.sdt = new MessageBuf(sdt);
+	    this.sm = sm;
 	    this.spr = null;
+	}
+
+	public Overlay(Gob gob, Sprite.Mill<?> sm) {
+	    this(gob, -1, sm);
+	}
+
+	public Overlay(Gob gob, int id, Indir<Resource> res, Message sdt) {
+	    this(gob, id, owner -> Sprite.create(owner, res.get(), sdt));
 	}
 
 	public Overlay(Gob gob, Sprite spr) {
 	    this.gob = gob;
 	    this.id = -1;
-	    this.res = null;
-	    this.sdt = null;
+	    this.sm = null;
 	    this.spr = spr;
 	}
 
 	private void init() {
 	    if(spr == null) {
-		spr = Sprite.create(gob, res.get(), sdt);
+		spr = sm.create(gob);
+		if(old)
+		    spr.age();
 		if(added && (spr instanceof SetupMod))
 		    gob.setupmods.add((SetupMod)spr);
 	    }
@@ -113,10 +120,20 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	    }
 	    remove0();
 	    gob.ols.remove(this);
+	    removed();
 	}
 
 	public void remove() {
 	    remove(true);
+	}
+
+	protected void removed() {
+	}
+
+	public boolean tick(double dt) {
+	    if(spr == null)
+		return(false);
+	    return(spr.tick(dt));
 	}
 
 	public void added(RenderTree.Slot slot) {
@@ -437,7 +454,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 		    ol.init();
 		} catch(Loading e) {}
 	    } else {
-		boolean done = ol.spr.tick(dt);
+		boolean done = ol.tick(dt);
 		if((!ol.delign || (ol.spr instanceof Sprite.CDel)) && done) {
 		    ol.remove0();
 		    i.remove();
@@ -512,6 +529,15 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
     }
     public void addol(Indir<Resource> res, Message sdt) {
 	addol(new Overlay(this, -1, res, sdt));
+    }
+    public void addol(Sprite.Mill<?> ol) {
+	addol(new Overlay(this, ol));
+    }
+    public <S extends Sprite> S addolsync(Sprite.Mill<S> sm) {
+	Overlay ol = new Overlay(this, sm);
+	addol(ol, false);
+	@SuppressWarnings("unchecked") S ret = (S)ol.spr;
+	return(ret);
     }
 
     public Overlay findol(int id) {
@@ -670,7 +696,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	}
 
 	public String toString() {
-	    return(String.format("#<gob-click %d %s>", gob.id, gob.getres()));
+	    return(String.format("#<gob-click %s>", gob));
 	}
     }
 
@@ -799,6 +825,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	return(Utils.mkrandoom(id));
     }
 
+    @Deprecated
     public Resource getres() {
 	Drawable d = getattr(Drawable.class);
 	if(d != null)
@@ -806,20 +833,13 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	return(null);
     }
 
-    public Skeleton.Pose getpose() {
-	Drawable d = getattr(Drawable.class);
-	if(d != null)
-	    return(d.getpose());
-	return(null);
+    public String pose() {
+        Drawable d = getattr(Drawable.class);
+        if(d != null)
+            if(d instanceof Composite)
+                return ((Composite) d).current_pose;
+        return(null);
     }
-
-	public String pose() {
-		Drawable d = getattr(Drawable.class);
-		if(d != null)
-			if(d instanceof Composite)
-				return ((Composite) d).current_pose;
-		return(null);
-	}
 
     private static final ClassResolver<Gob> ctxr = new ClassResolver<Gob>()
 	.add(Gob.class, g -> g)
@@ -987,34 +1007,38 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
     }
     public final Placed placed = new Placed();
 
-	public static Gob from(Clickable ci) {
-		if (ci instanceof Gob.GobClick) {
-			return ((Gob.GobClick) ci).gob;
-		} else if (ci instanceof Composited.CompositeClick) {
-			Gob.GobClick gi = ((Composited.CompositeClick) ci).gi;
-			return gi != null ? gi.gob : null;
-		}
-		return null;
-	}
+    public String toString() {
+	return(String.format("#<ob %d %s>", id, getattr(Drawable.class)));
+    }
 
-	public void show() {
-		for (GAttrib a : attr.values()) {
+    public static Gob from(Clickable ci) {
+        if (ci instanceof Gob.GobClick) {
+            return ((Gob.GobClick) ci).gob;
+        } else if (ci instanceof Composited.CompositeClick) {
+            Gob.GobClick gi = ((Composited.CompositeClick) ci).gi;
+            return gi != null ? gi.gob : null;
+        }
+        return null;
+    }
 
-			if (a instanceof RenderTree.Node) {
-				synchronized (this) {
-					Loading.waitfor(() -> RUtils.multiadd(slots, (RenderTree.Node) a));
-				}
-			}
-		}
-	}
+    public void show() {
+        for (GAttrib a : attr.values()) {
 
-	public void hide() {
-		for (GAttrib a : attr.values()) {
-			if (a instanceof RenderTree.Node) {
-				synchronized (slots) {
-					RUtils.multirem(new ArrayList<>(a.slots));
-				}
-			}
-		}
-	}
+            if (a instanceof RenderTree.Node) {
+                synchronized (this) {
+                    Loading.waitfor(() -> RUtils.multiadd(slots, (RenderTree.Node) a));
+                }
+            }
+        }
+    }
+
+    public void hide() {
+        for (GAttrib a : attr.values()) {
+            if (a instanceof RenderTree.Node) {
+                synchronized (slots) {
+                    RUtils.multirem(new ArrayList<>(a.slots));
+                }
+            }
+        }
+    }
 }

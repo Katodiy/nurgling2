@@ -30,10 +30,8 @@ import java.awt.Color;
 import java.awt.event.KeyEvent;
 
 public class RootWidget extends ConsoleHost implements UI.MessageWidget {
-    public static final Resource defcurs = Resource.local().loadwait("gfx/hud/curs/arw");
     public static final Text.Foundry msgfoundry = new Text.Foundry(Text.dfont, 14);
-    public static final Resource errsfx = Resource.local().loadwait("sfx/error");
-    public static final Resource msgsfx = Resource.local().loadwait("sfx/msg");
+    public static final Resource defcurs = Resource.local().loadwait("gfx/hud/curs/arw");
     public boolean modtip = false;
     Profile guprof, grprof, ggprof;
     private Text lastmsg;
@@ -91,12 +89,28 @@ public class RootWidget extends ConsoleHost implements UI.MessageWidget {
 	if(msg == "err") {
 	    ui.error((String)args[0]);
 	} else if(msg == "msg") {
-	    ui.msg((String)args[0]);
+	    if(args.length == 1) {
+		ui.msg((String)args[0]);
+	    } else {
+		ui.loader.defer(() -> {
+			int a = 0;
+			String text = (String)args[a++];
+			Color color = Color.WHITE;
+			if(args[a] instanceof Color)
+			    color = (Color)args[a++];
+			Audio.Clip sfx = UI.msgsfx;
+			if(args.length > a) {
+			    Indir<Resource> res = ui.sess.getresv(args[a++]);
+			    sfx = (res == null) ? null : Audio.resclip(res.get());
+			}
+			ui.msg(text, color, sfx);
+		    }, null);
+	    }
 	} else if(msg == "sfx") {
 	    int a = 0;
-	    Indir<Resource> resid = ui.sess.getres((Integer)args[a++]);
-	    double vol = (args.length > a) ? ((Number)args[a++]).doubleValue() : 1.0;
-	    double spd = (args.length > a) ? ((Number)args[a++]).doubleValue() : 1.0;
+	    Indir<Resource> resid = ui.sess.getresv(args[a++]);
+	    double vol = (args.length > a) ? Utils.dv(args[a++]) : 1.0;
+	    double spd = (args.length > a) ? Utils.dv(args[a++]) : 1.0;
 	    ui.sess.glob.loader.defer(() -> {
 		    Audio.CS clip = Audio.fromres(resid.get());
 		    if(spd != 1.0)
@@ -107,8 +121,8 @@ public class RootWidget extends ConsoleHost implements UI.MessageWidget {
 		}, null);
 	} else if(msg == "bgm") {
 	    int a = 0;
-	    Indir<Resource> resid = (args.length > a) ? ui.sess.getres((Integer)args[a++]) : null;
-	    boolean loop = (args.length > a) ? ((Number)args[a++]).intValue() != 0 : false;
+	    Indir<Resource> resid = (args.length > a) ? ui.sess.getresv(args[a++]) : null;
+	    boolean loop = (args.length > a) ? Utils.bv(args[a++]) : false;
 	    if(Music.enabled) {
 		if(resid == null)
 		    Music.play(null, false);
@@ -125,24 +139,13 @@ public class RootWidget extends ConsoleHost implements UI.MessageWidget {
 	msgtime = Utils.rtime();
     }
 
-    private double lasterrsfx = 0;
-    public void error(String msg) {
-	msg(msg, new Color(192, 0, 0));
-	double now = Utils.rtime();
-	if(now - lasterrsfx > 0.1) {
-	    ui.sfx(errsfx);
-	    lasterrsfx = now;
-	}
+    public void msg(String msg, Color color, Audio.Clip sfx) {
+	msg(msg, color);
+	ui.sfxrl(sfx);
     }
 
-    private double lastmsgsfx = 0;
-    public void msg(String msg) {
-	msg(msg, Color.WHITE);
-	double now = Utils.rtime();
-	if(now - lastmsgsfx > 0.1) {
-	    ui.sfx(msgsfx);
-	    lastmsgsfx = now;
-	}
+    public void error(String msg) {
+	ui.error(msg);
     }
 
     public Object tooltip(Coord c, Widget prev) {

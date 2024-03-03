@@ -26,48 +26,52 @@
 
 package haven;
 
-import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 
-public class HRuler extends Widget {
-    public static final Color defcol = new Color(192, 192, 192, 128);
-    public final Coord marg;
-    public final Color color;
+public class AnimGSprite extends GSprite implements GSprite.ImageSprite {
+    public final Resource.Anim anim;
+    public final Resource.Image ref;
+    private int f, ft;
 
-    public HRuler(int w, Coord marg, Color color) {
-	super(Coord.of(w, (marg.y * 2) + 1));
-	this.marg = marg;
-	this.color = color;
-    }
+    public static final Factory fact = new Factory() {
+	    public GSprite create(Owner owner, Resource res, Message sdt) {
+		Resource.Anim anim = res.layer(Resource.animc);
+		if(anim != null)
+		    return(new AnimGSprite(owner, anim));
+		return(null);
+	    }
+	};
 
-    public HRuler(int w, Coord marg) {
-	this(w, marg, defcol);
-    }
-
-    private static Coord defmarg(int w) {
-	return(Coord.of(w / 10, UI.scale(2)));
-    }
-
-    public HRuler(int w, Color color) {
-	this(w, defmarg(w), color);
-    }
-
-    public HRuler(int w) {
-	this(w, defmarg(w));
-    }
-
-    @RName("hr")
-    public static class $_ implements Factory {
-	public Widget create(UI ui, Object[] args) {
-	    int w = UI.scale(Utils.iv(args[0]));
-	    Color col = defcol;
-	    if(args.length > 1)
-		col = (Color)args[1];
-	    return(new HRuler(w, col));
-	}
+    public AnimGSprite(Owner owner, Resource.Anim anim) {
+	super(owner);
+	this.anim = anim;
+	this.ref = anim.f[0][0];
     }
 
     public void draw(GOut g) {
-	g.chcolor(color);
-	g.line(marg, Coord.of(sz.x - 1 - marg.x, marg.y), 1);
+	for(Resource.Image img : anim.f[f])
+	    g.image(img, Coord.z);
+    }
+
+    public Coord sz() {
+	return(ref.ssz);
+    }
+
+    public BufferedImage image() {
+	BufferedImage ret = TexI.mkbuf(ref.ssz);
+	Graphics g = ret.getGraphics();
+	for(Resource.Image img : anim.f[0])
+	    g.drawImage(img.scaled(), img.so.x, img.so.y, null);
+	g.dispose();
+	return(ret);
+    }
+
+    public void tick(double dt) {
+	ft += Math.round(dt * 1000);
+	while(ft > anim.d) {
+	    f = (f + 1) % anim.f.length;
+	    ft -= anim.d;
+	}
     }
 }

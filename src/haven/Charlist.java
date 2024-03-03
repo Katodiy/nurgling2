@@ -45,7 +45,7 @@ public class Charlist extends Widget {
     @RName("charlist")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-	    return(new Charlist((Integer)args[0]));
+	    return(new Charlist(Utils.iv(args[0])));
 	}
     }
 
@@ -192,7 +192,7 @@ public class Charlist extends Widget {
 		if(rawdesc.length > 3) {
 		    Object[] rawposes = (Object[])rawdesc[3];
 		    for(int i = 0; i < rawposes.length; i += 2)
-			poses.add(new ResData(ui.sess.getres((Integer)rawposes[i]), new MessageBuf((byte[])rawposes[i + 1])));
+			poses.add(new ResData(ui.sess.getresv(rawposes[i]), new MessageBuf((byte[])rawposes[i + 1])));
 		}
 		c.ava(desc, map, poses);
 	    }
@@ -214,7 +214,7 @@ public class Charlist extends Widget {
 	    if(rawdesc.length > 3) {
 		Object[] rawposes = (Object[])rawdesc[3];
 		for(int i = 0; i < rawposes.length; i += 2)
-		    poses.add(new ResData(ui.sess.getres((Integer)rawposes[i]), new MessageBuf((byte[])rawposes[i + 1])));
+		    poses.add(new ResData(ui.sess.getresv(rawposes[i]), new MessageBuf((byte[])rawposes[i + 1])));
 	    }
 	    synchronized(chars) {
 		for(Char c : chars) {
@@ -225,7 +225,7 @@ public class Charlist extends Widget {
 		}
 	    }
 	} else if(msg == "biggu") {
-	    int id = (Integer)args[0];
+	    int id = Utils.iv(args[0]);
 	    if(id < 0) {
 		avalink = null;
 	    } else {

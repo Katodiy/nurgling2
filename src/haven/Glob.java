@@ -57,11 +57,26 @@ public class Glob {
 	party = new Party(this);
     }
 
-    @Resource.PublishedCode(name = "wtr")
     public static interface Weather {
 	public Pipe.Op state();
 	public void update(Object... args);
 	public boolean tick(double dt);
+
+	public static class FactMaker extends Resource.PublishedCode.Instancer.Chain<Factory> {
+	    public FactMaker() {super(Factory.class);}
+	    {
+		add(new Direct<>(Factory.class));
+		add(new StaticCall<>(Factory.class, "mkweather", Weather.class, new Class<?>[] {Object[].class},
+				     (make) -> (args) -> make.apply(new Object[]{args})));
+		add(new Construct<>(Factory.class, Weather.class, new Class<?>[] {Object[].class},
+				    (cons) -> (args) -> cons.apply(new Object[]{args})));
+	    }
+	}
+
+	@Resource.PublishedCode(name = "wtr", instancer = FactMaker.class)
+	public static interface Factory {
+	    public Weather weather(Object... args);
+	}
     }
 
     public static class CAttr {
@@ -185,27 +200,27 @@ public class Glob {
 	    Object[] a = msg.list();
 	    int n = 0;
 	    if(t == "tm") {
-		updgtime(((Number)a[n++]).doubleValue(), inc);
+		updgtime(Utils.dv(a[n++]), inc);
 	    } else if(t == "astro") {
-		double dt = ((Number)a[n++]).doubleValue();
-		double mp = ((Number)a[n++]).doubleValue();
-		double yt = ((Number)a[n++]).doubleValue();
-		boolean night = (Integer)a[n++] != 0;
+		double dt = Utils.dv(a[n++]);
+		double mp = Utils.dv(a[n++]);
+		double yt = Utils.dv(a[n++]);
+		boolean night = Utils.bv(a[n++]);
 		Color mc = (Color)a[n++];
-		int is = (n < a.length) ? ((Number)a[n++]).intValue() : 1;
-		double sp = (n < a.length) ? ((Number)a[n++]).doubleValue() : 0.5;
-		double sd = (n < a.length) ? ((Number)a[n++]).doubleValue() : 0.5;
-		double years = (n < a.length) ? ((Number)a[n++]).doubleValue() : 0.5;
-		double ym = (n < a.length) ? ((Number)a[n++]).doubleValue() : 0.5;
-		double md = (n < a.length) ? ((Number)a[n++]).doubleValue() : 0.5;
+		int is = (n < a.length) ? Utils.iv(a[n++]) : 1;
+		double sp = (n < a.length) ? Utils.dv(a[n++]) : 0.5;
+		double sd = (n < a.length) ? Utils.dv(a[n++]) : 0.5;
+		double years = (n < a.length) ? Utils.dv(a[n++]) : 0.5;
+		double ym = (n < a.length) ? Utils.dv(a[n++]) : 0.5;
+		double md = (n < a.length) ? Utils.dv(a[n++]) : 0.5;
 		ast = new Astronomy(dt, mp, yt, night, mc, is, sp, sd, years, ym, md);
 	    } else if(t == "light") {
 		synchronized(this) {
 		    tlightamb = (Color)a[n++];
 		    tlightdif = (Color)a[n++];
 		    tlightspc = (Color)a[n++];
-		    tlightang = ((Number)a[n++]).doubleValue();
-		    tlightelev = ((Number)a[n++]).doubleValue();
+		    tlightang = Utils.dv(a[n++]);
+		    tlightelev = Utils.dv(a[n++]);
 		    if(inc) {
 			olightamb = lightamb;
 			olightdif = lightdif;
@@ -228,13 +243,13 @@ public class Glob {
 			sky1 = sky2 = null;
 			skyblend = 0.0;
 		    } else {
-			sky1 = sess.getres(((Number)a[n++]).intValue());
+			sky1 = sess.getresv(a[n++]);
 			if(a.length < 2) {
 			    sky2 = null;
 			    skyblend = 0.0;
 			} else {
-			    sky2 = sess.getres(((Number)a[n++]).intValue());
-			    skyblend = ((Number)a[n++]).doubleValue();
+			    sky2 = sess.getresv(a[n++]);
+			    skyblend = Utils.dv(a[n++]);
 			}
 		    }
 		}
@@ -244,7 +259,7 @@ public class Glob {
 			wmap.clear();
 		    Collection<Object> old = new LinkedList<Object>(wmap.keySet());
 		    while(n < a.length) {
-			Indir<Resource> res = sess.getres(((Number)a[n++]).intValue());
+			Indir<Resource> res = sess.getresv(a[n++]);
 			Object[] args = (Object[])a[n++];
 			Object curv = wmap.get(res);
 			if(curv instanceof Weather) {
@@ -273,13 +288,11 @@ public class Glob {
 		    ret.add((Weather)val);
 		} else {
 		    try {
-			Class<? extends Weather> cl = cur.getKey().get().flayer(Resource.CodeEntry.class).getcl(Weather.class);
-			Weather w = Utils.construct(cl.getConstructor(Object[].class), new Object[] {val});
+			Weather.Factory f = cur.getKey().get().flayer(Resource.CodeEntry.class).get(Weather.Factory.class);
+			Weather w = f.weather((Object[])val);
 			cur.setValue(w);
 			ret.add(w);
 		    } catch(Loading l) {
-		    } catch(NoSuchMethodException e) {
-			throw(new RuntimeException(e));
 		    }
 		}
 	    }
