@@ -2,7 +2,7 @@ package nurgling;
 
 import haven.*;
 import static haven.Inventory.sqsz;
-import haven.res.ui.tt.defn.*;
+
 import haven.res.ui.tt.slots.ISlots;
 import haven.res.ui.tt.stackn.StackName;
 import nurgling.iteminfo.NCuriosity;

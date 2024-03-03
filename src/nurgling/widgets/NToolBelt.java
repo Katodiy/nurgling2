@@ -137,12 +137,13 @@ public class NToolBelt extends Widget implements DTarget, DropTarget {
         resize();
     }
 
-    private GameUI.ResBeltSlot belt(int slot) {
+    private GameUI.PagBeltSlot belt(int slot) {
         if(slot < 0) {return null;}
-        GameUI.ResBeltSlot res = null;// = custom[slot - start];
-        if(ui != null && NUtils.getGameUI() != null && NUtils.getGameUI().belt[slot] != null && NUtils.getGameUI().belt[slot] instanceof GameUI.ResBeltSlot) {
-            res = (GameUI.ResBeltSlot) NUtils.getGameUI().belt[slot];
-        }
+        GameUI.PagBeltSlot res = null;// = custom[slot - start];
+        if(ui != null && NUtils.getGameUI() != null && NUtils.getGameUI().belt[slot] != null)
+            if(NUtils.getGameUI().belt[slot] instanceof GameUI.PagBeltSlot) {
+                res = (GameUI.PagBeltSlot) NUtils.getGameUI().belt[slot];
+            }
         return res;
     }
 
@@ -189,9 +190,9 @@ public class NToolBelt extends Widget implements DTarget, DropTarget {
             int slot = slot(i);
             g.image(invsq, c);
             try {
-                GameUI.ResBeltSlot item = belt(slot);
+                GameUI.PagBeltSlot item = belt(slot);
                 if (item != null) {
-                    item.spr().draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
+                    item.draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                 }
             } catch (Loading ignored) {
             }
@@ -260,9 +261,9 @@ public class NToolBelt extends Widget implements DTarget, DropTarget {
 //                    pagina.click();
 //                }
 //                else {
-                    GameUI.ResBeltSlot item = belt(slot);
+                    GameUI.PagBeltSlot item = belt(slot);
                     if (item != null) {
-                        MenuGrid.Pagina pag = NUtils.getGameUI().menu.paginafor(item.rdt.res);
+                        MenuGrid.Pagina pag = NUtils.getGameUI().menu.paginafor(item.pag.res);
                         if (pag != null) {
 //                            if (((NMenuGrid) NUtils.getGameUI().menu).isCrafting(pag)) {
 //                                ((NMenuGrid) NUtils.getGameUI().menu).lastCraft = pag;
@@ -289,14 +290,14 @@ public class NToolBelt extends Widget implements DTarget, DropTarget {
     public Object tooltip(Coord c, Widget prev) {
         int slot = beltslot(c);
         if(slot < 0) {return super.tooltip(c, prev);}
-        GameUI.ResBeltSlot item = belt(slot);
+        GameUI.PagBeltSlot item = belt(slot);
         if(item == null) {return super.tooltip(c, prev);}
         if(last != item) {
             if(ttip != null) {ttip.dispose();}
             ttip = null;
             try {
                 if(NUtils.getGameUI().menu!=null) {
-                    MenuGrid.Pagina p = NUtils.getGameUI().menu.paginafor(item.rdt.res);
+                    MenuGrid.Pagina p = NUtils.getGameUI().menu.paginafor(item.pag.res);
                     last = item;
                 }
             } catch (Loading ignored) {}

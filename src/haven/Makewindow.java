@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.widgets.NMakewindow;
+
 import java.util.*;
 import java.awt.Font;
 import java.awt.Color;
@@ -47,7 +49,7 @@ public class Makewindow extends Widget {
     @RName("make")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-	    return(new Makewindow((String)args[0]));
+	    return(new NMakewindow((String)args[0]));
 	}
     }
 

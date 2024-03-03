@@ -6,7 +6,6 @@ import haven.Frame;
 import haven.Label;
 import static haven.Inventory.*;
 import haven.res.lib.itemtex.*;
-import haven.res.ui.tt.defn.*;
 import nurgling.*;
 import nurgling.actions.bots.*;
 import nurgling.areas.*;
@@ -159,7 +158,7 @@ public class NMakewindow extends Widget {
                 {
                     if (res.get() != null)
                     {
-                        name = DefName.getname(this);
+                        name = ItemInfo.Name.Default.get(this);
                     }
                 }
             }
@@ -554,9 +553,9 @@ public class NMakewindow extends Widget {
 
     private static String getDynamicName(GSprite spr) {
         if(spr != null) {
-            if(spr instanceof DynName)
+            if(spr instanceof ItemInfo.Name.Dynamic)
             {
-                return ((DynName)spr).name();
+                return ((ItemInfo.Name.Dynamic)spr).name();
             }
         }
         return null;
