@@ -2,6 +2,7 @@ package nurgling.tasks;
 
 import haven.*;
 import nurgling.*;
+import nurgling.NInventory.QualityType;
 import nurgling.tools.*;
 
 import java.util.*;
@@ -10,6 +11,7 @@ public class GetItems implements NTask
 {
     NAlias name = null;
     NInventory inventory;
+    QualityType quality;
 
     boolean eq = false;
     GItem target = null;
@@ -31,6 +33,28 @@ public class GetItems implements NTask
         this.inventory = inventory;
         this.eq = true;
     }
+
+    public GetItems(NInventory inventory, NAlias name, QualityType quality) {
+        this.inventory = inventory;
+        this.name = name;
+        this.quality = quality;
+    }
+
+    private Comparator<WItem> high = new Comparator<WItem>() {
+        @Override
+        public int compare(WItem lhs, WItem rhs) {
+            return Double.compare(((NGItem) rhs.item).quality, ((NGItem) lhs.item).quality);
+
+        }
+    };
+    private Comparator<WItem> low = new Comparator<WItem>() {
+        @Override
+        public int compare(WItem lhs, WItem rhs) {
+            return Double.compare(((NGItem) lhs.item).quality, ((NGItem) rhs.item).quality);
+
+        }
+    };
+
 
     @Override
     public boolean check()
@@ -59,6 +83,9 @@ public class GetItems implements NTask
                     }
                 }
             }
+        }
+        if (quality != null) {
+            Collections.sort(result, quality == QualityType.High ? high : low);
         }
         return true;
     }
