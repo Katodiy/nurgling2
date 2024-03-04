@@ -83,6 +83,8 @@ public class NBotsMenu extends Widget
                 h += 1;
             }
         }
+        if(parent!=null)
+            parent.resize(new Coord((w + 1) * UI.scale(34), layouts.size() * UI.scale(34)).add(NDraggableWidget.delta));
     }
 
     public void hideLayouts(){

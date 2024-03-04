@@ -4,14 +4,12 @@
 
 package haven.res.ui.tt.q.starred;
 
-import haven.FromResource;
-import haven.ItemInfo;
-import haven.Resource;
-import haven.res.ui.tt.q.qbuff.QBuff;
-import haven.res.ui.tt.q.quality.Quality;
+import haven.*;
+import haven.res.ui.tt.q.qbuff.*;
+import haven.res.ui.tt.q.quality.*;
 
 /* >tt: Starred */
-@FromResource(name = "ui/tt/q/starred", version = 2)
+@haven.FromResource(name = "ui/tt/q/starred", version = 3)
 public class Starred extends ItemInfo.Tip implements QBuff.Modifier {
     public Starred(Owner owner) {
 	super(owner);
@@ -28,7 +26,7 @@ public class Starred extends ItemInfo.Tip implements QBuff.Modifier {
     public void prepare(QBuff.QList ql) {
 	for(QBuff q : ql.ql) {
 	    if(q instanceof Quality) {
-			q.icon = Resource.remote().loadwait("ui/tt/q/quality").layer(Resource.imgc, 0).scaled();
+		q.icon = Resource.classres(Starred.class).layer(Resource.imgc).scaled();
 	    }
 	}
     }
