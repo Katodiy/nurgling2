@@ -90,7 +90,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
 
     public boolean check()
     {
-        if (NUtils.getGameUI().chrwdg != null)
+        if (NUtils.getGameUI().chrwdg != null && NUtils.getGameUI().chrwdg.battr!=null)
         {
 
             NCharacterInfo ci = NUtils.getGameUI().getCharInfo();
