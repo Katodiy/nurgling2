@@ -144,6 +144,13 @@ public class NBotsMenu extends Widget
                     {
                         NUtils.getGameUI().msg(path + ":" +"STOPPED");
                     }
+                    finally
+                    {
+                        if(action instanceof ActionWithFinal)
+                        {
+                            ((ActionWithFinal)action).endAction();
+                        }
+                    }
                 }
             }, path)).start();
             NUtils.getGameUI().biw.addObserve(t);
