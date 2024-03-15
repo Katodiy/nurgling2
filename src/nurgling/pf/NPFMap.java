@@ -10,6 +10,7 @@ import java.util.*;
 
 public class NPFMap
 {
+    public boolean waterMode = false;
     public CellsArray addGob(Gob gob) {
         CellsArray ca;
 
@@ -104,6 +105,12 @@ public class NPFMap
         }
     }
 
+    public NPFMap(Coord2d src, Coord2d dst, int mul, boolean waterMode)
+    {
+        this(src,dst,mul);
+        this.waterMode = waterMode;
+    }
+
 
     public Coord getBegin()
     {
@@ -150,9 +157,16 @@ public class NPFMap
 
                     for(Coord c : cand) {
                         String name = NUtils.getGameUI().ui.sess.glob.map.tilesetname(NUtils.getGameUI().ui.sess.glob.map.gettile(c));
-
-                        if (name != null && (name.startsWith("gfx/tiles/cave") || name.startsWith("gfx/tiles/rocks") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep"))) {
-                            cells[i][j].val = 2;
+                        if(!waterMode) {
+                            if (name != null && (name.startsWith("gfx/tiles/cave") || name.startsWith("gfx/tiles/rocks") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep"))) {
+                                cells[i][j].val = 2;
+                            }
+                        }
+                        else
+                        {
+                            if (name != null && !(name.startsWith("gfx/tiles/water") || name.startsWith("gfx/tiles/owater") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep"))) {
+                                cells[i][j].val = 2;
+                            }
                         }
                     }
                 }

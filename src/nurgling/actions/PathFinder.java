@@ -19,7 +19,7 @@ public class PathFinder implements Action
     Coord end_pos = null;
     ArrayList<Coord> end_poses = null;
     public boolean isHardMode = false;
-
+    public boolean waterMode = false;
     Coord2d begin;
     Coord2d end;
 
@@ -328,6 +328,7 @@ public class PathFinder implements Action
         {
             pfmap = new NPFMap(begin, end, mul);
 
+            pfmap.waterMode = waterMode;
             pfmap.build();
             CellsArray dca = null;
             if(dummy!=null)
