@@ -43,6 +43,7 @@ public class NomadCalibration extends ActionWithFinal {
                     Coord2d forWrite = gdst.getNext().sub(start);
                     coords.add(forWrite);
                     next = gdst.getNext();
+                    NUtils.getGameUI().msg("Added 1 coordinate. " + coords.size());
                 }
             } else {
                 return Results.ERROR("NomadCalibration did not find start_gob. No milestone or POW in range.");
