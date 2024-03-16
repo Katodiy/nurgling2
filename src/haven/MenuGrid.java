@@ -125,7 +125,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	}
     }
 
-    public static class PagButton implements ItemInfo.Owner, GSprite.Owner {
+    public static class PagButton implements ItemInfo.Owner, GSprite.Owner, RandomSource {
 	public final Pagina pag;
 	public final Resource res;
 	public final KeyBinding bind;
@@ -173,19 +173,16 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 		if(iact.click != null)
 		    eact = Utils.extend(eact, iact.click.clickargs());
 	    }
+
         if(MenuGrid.lastPagina != pag)
             MenuGrid.lastPagina = pag;
         else
             MenuGrid.lastPagina = null;
-	    AButton act = act();
-	    if((act != null) && (act.ad.length > 0)) {
+
+	    if(pag.id instanceof Indir)
 		pag.scm.wdgmsg("act", Utils.extend(Utils.extend(new Object[0], act().ad), eact));
-	    } else {
-		if(pag.id instanceof Indir)
-		    Warning.warn("tried to use resource-indexed pagina by id: " + res);
-		else
-		    pag.scm.wdgmsg("use", Utils.extend(new Object[] {pag.id}, eact));
-	    }
+	    else
+		pag.scm.wdgmsg("use", Utils.extend(new Object[] {pag.id}, eact));
 	}
 	public void tick(double dt) {
 	    if(spr != null)

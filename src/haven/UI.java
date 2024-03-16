@@ -643,6 +643,9 @@ public class UI {
     }
 
     public static interface MessageWidget {
+	public static final Audio.Clip errsfx = Audio.resclip(Resource.local().loadwait("sfx/error"));
+	public static final Audio.Clip msgsfx = Audio.resclip(Resource.local().loadwait("sfx/msg"));
+
 	public void msg(String msg, Color color, Audio.Clip sfx);
 
 	public static MessageWidget find(Widget w) {
@@ -666,11 +669,11 @@ public class UI {
     }
 
     public void error(String msg) {
-	msg(msg, new Color(192, 0, 0), errsfx);
+	msg(msg, new Color(192, 0, 0), MessageWidget.errsfx);
     }
 
     public void msg(String msg) {
-	msg(msg, Color.WHITE, msgsfx);
+	msg(msg, Color.WHITE, MessageWidget.msgsfx);
     }
 
     private void setmods(InputEvent ev) {
@@ -814,14 +817,12 @@ public class UI {
 	sfx(Audio.fromres(clip));
     }
 
-    public static final Audio.Clip errsfx = Audio.resclip(Resource.local().loadwait("sfx/error"));
-    public static final Audio.Clip msgsfx = Audio.resclip(Resource.local().loadwait("sfx/msg"));
     public final Map<Audio.Clip, Double> lastmsgsfx = new HashMap<>();
     public void sfxrl(Audio.Clip clip) {
 	if(clip != null) {
 	    double now = Utils.rtime();
 	    Double last = lastmsgsfx.get(clip);
-	    if((last == null) || (now - last > 0.1)) {
+	    if((last == null) || (now - last > 0.01)) {
 		sfx(clip);
 		lastmsgsfx.put(clip, now);
 	    }

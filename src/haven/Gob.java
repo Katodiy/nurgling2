@@ -31,10 +31,8 @@ import java.util.function.*;
 import haven.render.*;
 import nurgling.*;
 
-public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, EquipTarget {
-    // Координата
-	public Coord2d rc;
-	// Угол поворота
+public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, EquipTarget, RandomSource {
+    public Coord2d rc;
     public double a;
     public boolean virtual = false;
     int clprio = 0;

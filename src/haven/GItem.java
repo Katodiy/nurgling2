@@ -34,7 +34,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
-public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owner {
+public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owner, RandomSource {
     public Indir<Resource> res;
     public MessageBuf sdt;
     public int meter = 0;

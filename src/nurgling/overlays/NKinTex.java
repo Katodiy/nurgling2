@@ -22,11 +22,11 @@ public class NKinTex extends GAttrib implements Gob.SetupMod {
     }
 
     public Pipe.Op gobstate() {
-        KinInfo ki = (KinInfo)gob.getattr(KinInfo.class);
-        if(ki!=null)
-        {
-            return data.get(ki.group);
-        }
+//        KinInfo ki = (KinInfo)gob.getattr(KinInfo.class);
+//        if(ki!=null)
+//        {
+//            return data.get(ki.group);
+//        }
         return null;
     }
 }
