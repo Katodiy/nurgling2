@@ -3,5 +3,7 @@
 /local-config.properties
 /local-boot.properties
 /build.properties
+/.idea
+/resources/compiled
 /out
 *~
