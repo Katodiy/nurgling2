@@ -1,10 +1,7 @@
 /* Preprocessed source code */
-/* $use: lib/tspec */
-
 package haven.res.ui.tt.slots;
 
 import haven.*;
-import haven.res.lib.tspec.Spec;
 import static haven.PUtils.*;
 import java.awt.image.*;
 import java.awt.Graphics;
@@ -15,7 +12,7 @@ import haven.res.ui.tt.attrmod.AttrMod;
 import nurgling.NGItem;
 
 /* >tt: Fac */
-@haven.FromResource(name = "ui/tt/slots", version = 30)
+@haven.FromResource(name = "ui/tt/slots", version = 31)
 public class ISlots extends ItemInfo.Tip implements GItem.NumberInfo {
     public static final Text ch = Text.render("Gilding:");
     public static final Text.Foundry progf = new Text.Foundry(Text.dfont.deriveFont(Font.ITALIC), 10, new Color(0, 169, 224));
@@ -94,10 +91,10 @@ public class ISlots extends ItemInfo.Tip implements GItem.NumberInfo {
 
 	public SItem(ResData sdt, Object[] raw) {
 	    this.res = sdt.res.get();
-	    Spec spec1 = new Spec(sdt, owner, Utils.extend(new Object[] {defn}, raw));
+	    ItemSpec spec1 = new ItemSpec(owner, sdt, Utils.extend(new Object[] {defn}, raw));
 	    this.spr = spec1.spr();
 	    this.name = spec1.name();
-	    Spec spec2 = new Spec(sdt, owner, raw);
+	    ItemSpec spec2 = new ItemSpec(owner, sdt, raw);
 	    this.info = spec2.info();
 	}
 
