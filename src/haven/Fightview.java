@@ -278,10 +278,10 @@ public class Fightview extends Widget {
 	    if(args[1] == null)
 		p = buffs;
 	    else
-		p = getrel((Integer)args[1]).buffs;
+		p = getrel(Utils.uiv(args[1])).buffs;
 	    p.addchild(child);
 	} else if(args[0].equals("relbuff")) {
-	    getrel((Integer)args[1]).relbuffs.addchild(child);
+	    getrel(Utils.uiv(args[1])).relbuffs.addchild(child);
 	} else {
 	    super.addchild(child, args);
 	}
@@ -393,22 +393,22 @@ public class Fightview extends Widget {
 				String resnm = ref.resnm();
 				if(resnm!=null)
 				{
-					int val = (int) Math.min(10, buff.ameter / 10);
+					int val = (int) Math.min(10, buff.ameter() / 10);
 					if (resnm.equals("paginae/atk/cornered"))
 					{
-						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.corn.get(val)));
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter())).tex(), NRelation.corn.get(val)));
 					}
 					else if (resnm.equals("paginae/atk/dizzy"))
 					{
-						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.dizz.get(val)));
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter())).tex(), NRelation.dizz.get(val)));
 					}
 					else if (resnm.equals("paginae/atk/reeling"))
 					{
-						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.reel.get(val)));
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter())).tex(), NRelation.reel.get(val)));
 					}
 					else if (resnm.equals("paginae/atk/offbalance"))
 					{
-						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter)).tex(), NRelation.gren.get(val)));
+						mapbuffs.put(buff, new NRelation.RelBuff((TexI) NStyle.openings.render(String.valueOf(buff.ameter())).tex(), NRelation.gren.get(val)));
 					}
 				}
 		}
@@ -435,27 +435,21 @@ public class Fightview extends Widget {
         throw(new Notfound(gobid));
     }
 
-    private Indir<Resource> n2r(int num) {
-	if(num < 0)
-	    return(null);
-	return(ui.sess.getres(num));
-    }
-
     public void uimsg(String msg, Object... args) {
         if(msg == "new") {
-			long id = uint32((Integer)args[0]);
+            long id = Utils.uiv(args[0]);
             Relation rel = new Relation(id);
-			Gob g = Finder.findGob(id);
-			if(g!=null)
-				g.addcustomol(new NRelation(Finder.findGob(id)));
-	    rel.give((Integer)args[1]);
-	    rel.ip = (Integer)args[2];
-	    rel.oip = (Integer)args[3];
+            Gob g = Finder.findGob(id);
+            if(g!=null)
+                g.addcustomol(new NRelation(Finder.findGob(id)));
+            rel.give(Utils.iv(args[1]));
+	        rel.ip = Utils.iv(args[2]);
+	        rel.oip = Utils.iv(args[3]);
             lsrel.addFirst(rel);
-	    updrel();
+	        updrel();
             return;
         } else if(msg == "del") {
-            Relation rel = getrel(uint32((Integer)args[0]));
+            Relation rel = getrel(Utils.uiv(args[0]));
 	    rel.remove();
             lsrel.remove(rel);
 	    if(rel == current)
@@ -463,36 +457,36 @@ public class Fightview extends Widget {
 	    updrel();
             return;
         } else if(msg == "upd") {
-            Relation rel = getrel(uint32((Integer)args[0]));
-	    rel.give((Integer)args[1]);
-	    rel.ip = (Integer)args[2];
-	    rel.oip = (Integer)args[3];
+            Relation rel = getrel(Utils.uiv(args[0]));
+	    rel.give(Utils.iv(args[1]));
+	    rel.ip = Utils.iv(args[2]);
+	    rel.oip = Utils.iv(args[3]);
             return;
 	} else if(msg == "used") {
-	    use((args[0] == null)?null:ui.sess.getres((Integer)args[0]));
-		if(lastact!=null && current!=null && lastact instanceof Session.CachedRes.Ref)
-		{
-			String aname = ((Session.CachedRes.Ref)lastact).resnm();
-			if(aname!=null)
-			{
-				Double val = NCooldown.data.get(aname);
-				if(val != null)
-				{
-					if (current.agi_delta == -1)
-					{
-						current.agi_delta = (atkct - atkcs) / val;
-					}
-				}
-			}
-		}
-	    return;
+	    use((args[0] == null) ? null : ui.sess.getresv(args[0]));
+        if(lastact!=null && current!=null && lastact instanceof Session.CachedRes.Ref)
+        {
+            String aname = ((Session.CachedRes.Ref)lastact).resnm();
+            if(aname!=null)
+            {
+                Double val = NCooldown.data.get(aname);
+                if(val != null)
+                {
+                    if (current.agi_delta == -1)
+                    {
+                        current.agi_delta = (atkct - atkcs) / val;
+                    }
+                }
+            }
+        }
+        return;
 	} else if(msg == "ruse") {
-	    Relation rel = getrel(uint32((Integer)args[0]));
-	    rel.use((args[1] == null)?null:ui.sess.getres((Integer)args[1]));
+	    Relation rel = getrel(Utils.uiv(args[0]));
+	    rel.use((args[1] == null) ? null : ui.sess.getresv(args[1]));
 	    return;
         } else if(msg == "cur") {
             try {
-                Relation rel = getrel(uint32((Integer)args[0]));
+                Relation rel = getrel(Utils.uiv(args[0]));
                 lsrel.remove(rel);
                 lsrel.addFirst(rel);
 		setcur(rel);
@@ -502,14 +496,14 @@ public class Fightview extends Widget {
             return;
 	} else if(msg == "atkc") {
 	    atkcs = Utils.rtime();
-	    atkct = atkcs + (((Number)args[0]).doubleValue() * 0.06);
+	    atkct = atkcs + (Utils.dv(args[0]) * 0.06);
 	    return;
 	} else if(msg == "blk") {
-	    blk = n2r((Integer)args[0]);
+	    blk = ui.sess.getresv(args[0]);
 	    return;
 	} else if(msg == "atk") {
-	    batk = n2r((Integer)args[0]);
-	    iatk = n2r((Integer)args[1]);
+	    batk = ui.sess.getresv(args[0]);
+	    iatk = ui.sess.getresv(args[1]);
 	    return;
 	}
         super.uimsg(msg, args);

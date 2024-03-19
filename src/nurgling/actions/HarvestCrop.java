@@ -80,7 +80,7 @@ public class HarvestCrop implements Action{
                             while (pos.y <= field.getArea().br.y - 1) {
                                 Coord endPos = new Coord(Math.max(pos.x - 2, field.getArea().ul.x), Math.min(pos.y + 1, field.getArea().br.y - 1));
                                 Area harea = new Area(pos, endPos, true);
-                                Coord2d endp = harea.ul.mul(MCache.tilesz).add( MCache.tilesz.x + MCache.tilehsz.x, MCache.tilehsz.y).sub(0,MCache.tileqsz.y);
+                                Coord2d endp = harea.ul.mul(MCache.tilesz).add( MCache.tilesz.x + MCache.tilehsz.x, MCache.tilehsz.y).sub(0,MCache.tilehqsz.y);
                                 harvest(gui, barrel, trough, cistern, harea, revdir, endp, isFull, setDir);
                                 pos.y += 2;
                             }
@@ -89,7 +89,7 @@ public class HarvestCrop implements Action{
                             while (pos.y >= field.getArea().ul.y) {
                                 Coord endPos = new Coord(Math.max(pos.x - 2, field.getArea().ul.x), Math.max(pos.y - 1, field.getArea().ul.y));
                                 Area harea = new Area(pos, endPos, true);
-                                Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y).sub(MCache.tilesz.x, 0).add(0,MCache.tileqsz.y);
+                                Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y).sub(MCache.tilesz.x, 0).add(0,MCache.tilehqsz.y);
                                 harvest(gui, barrel, trough, cistern, harea, revdir,endp , isFull, setDir);
                                 pos.y -= 2;
                             }
@@ -105,7 +105,7 @@ public class HarvestCrop implements Action{
                             while (pos.y <= field.getArea().br.y - 1) {
                                 Coord endPos = new Coord(Math.min(pos.x + 2, field.getArea().br.x - 1), Math.min(pos.y + 1, field.getArea().br.y - 1));
                                 Area harea = new Area(pos, endPos, true);
-                                Coord2d endp = harea.ul.mul(MCache.tilesz).add(MCache.tilehsz.x+MCache.tilesz.x, MCache.tileqsz.y);
+                                Coord2d endp = harea.ul.mul(MCache.tilesz).add(MCache.tilehsz.x+MCache.tilesz.x, MCache.tilehqsz.y + MCache.tileqsz.y);
                                 harvest(gui, barrel, trough, cistern, harea, revdir, endp, isFull ,setDir);
                                 pos.y += 2;
                             }
@@ -114,7 +114,7 @@ public class HarvestCrop implements Action{
                             while (pos.y >= field.getArea().ul.y) {
                                 Coord endPos = new Coord(Math.min(pos.x + 2, field.getArea().br.x - 1), Math.max(pos.y - 1, field.getArea().ul.y));
                                 Area harea = new Area(pos, endPos, true);
-                                Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz).sub(MCache.tilesz.x, 0).add(0,MCache.tileqsz.y);
+                                Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz).sub(MCache.tilesz.x, 0).add(0,MCache.tilehqsz.y);
                                 harvest(gui, barrel, trough, cistern, harea, revdir, endp, isFull, setDir);
                                 pos.y -= 2;
                             }
@@ -155,8 +155,12 @@ public class HarvestCrop implements Action{
         if(NUtils.getStamina()<0.35)
             new Drink(0.9).run(gui);
         Gob plant;
-
-        if((plant = Finder.findGob(target_coord.div(MCache.tilesz).floor(),crop, stage))!=null) {
+        plant = Finder.findGob(target_coord.div(MCache.tilesz).floor(),crop, stage);
+        if(plant == null)
+        {
+            plant = Finder.findGob(target_coord.div(MCache.tilesz).floor(),new NAlias("gfx/terobjs/plants/fallowplant"), 0);
+        }
+        if(plant!=null) {
             new PathFinder(target_coord).run(gui);
             if (setDir.get()) {
                 if(rev)
@@ -170,6 +174,14 @@ public class HarvestCrop implements Action{
         }
         ArrayList<Gob> plants;
         while (!(plants = Finder.findGobs(area,crop,stage)).isEmpty())
+        {
+            plant = plants.get(0);
+            new PathFinder(plant).run(gui);
+            new SelectFlowerAction("Harvest", plant).run(gui);
+            NUtils.getUI().core.addTask(new NoGob(plant.id));
+        }
+
+        while (!(plants = Finder.findGobs(area,new NAlias("gfx/terobjs/plants/fallowplant"), 0)).isEmpty())
         {
             plant = plants.get(0);
             new PathFinder(plant).run(gui);

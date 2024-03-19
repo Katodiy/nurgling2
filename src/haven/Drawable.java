@@ -28,7 +28,7 @@ package haven;
 
 import haven.render.*;
 
-public abstract class Drawable extends GAttrib implements Skeleton.HasPose, RenderTree.Node {
+public abstract class Drawable extends GAttrib implements RenderTree.Node {
     public Drawable(Gob gob) {
 	super(gob);
     }
@@ -82,7 +82,7 @@ public abstract class Drawable extends GAttrib implements Skeleton.HasPose, Rend
 			if(desc.length > 2)
 			    id = (String)desc[2];
 			if(desc.length > 3)
-			    k = k.rot(((Number)desc[3]).doubleValue());
+			    k = k.rot(Utils.dv(desc[3]));
 			placer = new Gob.LinePlace(gob.glob.map, getsurf((String)desc[1]), res, id, k);
 			break;
 		    }
@@ -111,9 +111,5 @@ public abstract class Drawable extends GAttrib implements Skeleton.HasPose, Rend
     }
 
     public void gtick(Render g) {
-    }
-
-    public Skeleton.Pose getpose() {
-	return(null);
     }
 }

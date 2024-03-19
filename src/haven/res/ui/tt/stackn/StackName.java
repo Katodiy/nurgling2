@@ -1,23 +1,17 @@
 /* Preprocessed source code */
-/* $use: ui/tt/defn */
-
 package haven.res.ui.tt.stackn;
 
-import haven.FromResource;
-import haven.GSprite;
-import haven.ItemInfo;
-import haven.Resource;
-import haven.res.ui.tt.defn.DynName;
+import haven.*;
 
 /* >tt: StackName */
-@FromResource(name = "ui/tt/stackn", version = 2)
+@haven.FromResource(name = "ui/tt/stackn", version = 3)
 public class StackName implements ItemInfo.InfoFactory {
-    /* XXX: Remove me. Waiting on custom clients merging getname in defn. */
+    /* XXX: Remove me. Waiting on custom clients merging get in ItemInfo.Name.Default. */
     public static String getname(ItemInfo.Owner owner) {
 	if(owner instanceof ItemInfo.SpriteOwner) {
 	    GSprite spr = ((ItemInfo.SpriteOwner)owner).sprite();
-	    if(spr instanceof DynName)
-		return(((DynName)spr).name());
+	    if(spr instanceof ItemInfo.Name.Dynamic)
+		return(((ItemInfo.Name.Dynamic)spr).name());
 	}
 	if(!(owner instanceof ItemInfo.ResOwner))
 	    return(null);
@@ -32,6 +26,6 @@ public class StackName implements ItemInfo.InfoFactory {
 	String nm = getname(owner);
 	if(nm == null)
 	    return(null);
-	return(new Stack(owner, nm + ", stack of"));
+	return(new ItemInfo.Name(owner, nm + ", stack of"));
     }
 }

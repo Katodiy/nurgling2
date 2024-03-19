@@ -72,7 +72,7 @@ public class Scaner implements Action
                 {
                     String name = offer.name;
                     JSONObject res = ItemTex.save(offer.spr);
-                    if(res!=null)
+                    if(res!=null && !name.equals("Branch"))
                     {
                         JSONArray data = area.jin;
                         boolean find = false;

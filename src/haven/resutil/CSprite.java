@@ -39,8 +39,8 @@ public class CSprite extends Sprite {
     
     public CSprite(Owner owner, Resource res) {
 	super(owner, res);
-	rnd = owner.mkrandoom();
-	Gob gob = (Gob)owner;
+	rnd = owner.context(RandomSource.class).mkrandoom();
+	Gob gob = owner.context(Gob.class);
 	cc = gob.getrc();
     }
 

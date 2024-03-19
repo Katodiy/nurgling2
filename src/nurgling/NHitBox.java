@@ -40,7 +40,7 @@ public class NHitBox
             put("gfx/terobjs/leanto", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
             put("gfx/terobjs/stonepillar", new NHitBox(new Coord(-12,-12),new Coord(12,12)));
             put("gfx/terobjs/fineryforge", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
-            put("gfx/terobjs/smelter", new NHitBox(new Coord(-11,-11),new Coord(11,19)));
+            put("gfx/terobjs/smelter", new NHitBox(new Coord(-11,-20),new Coord(11,11)));
             put("gfx/terobjs/charterstone", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
             put("gfx/terobjs/steelcrucible", new NHitBox(new Coord(-3,-4),new Coord(3,4)));
             put("gfx/terobjs/beehive", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
@@ -53,7 +53,7 @@ public class NHitBox
             put("stockpile", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/smokeshed", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
             put("gfx/terobjs/vehicle/cart", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
-            put("gfx/terobjs/knarrdock", new NHitBox(new Coord(-60,-14),new Coord(62,14)));
+            put("gfx/terobjs/knarrdock", new NHitBox(new Coord(-62,-14),new Coord(60,14)));
             put("gfx/terobjs/furn/bed-sturdy", new NHitBox(new Coord(-9,-6),new Coord(9,6)));
             put("gfx/terobjs/vehicle/wreckingball-fold", new NHitBox(new Coord(-5,-11),new Coord(5,11)));
             put("gfx/terobjs/quern", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
@@ -74,7 +74,7 @@ public class NHitBox
             put("gfx/terobjs/stockpile-lemon", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/stockpile-nut", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/stockpile-cavebulb", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
-            put("gfx/terobjs/primsmelter", new NHitBox(new Coord(-11,-7),new Coord(8,7)));
+            put("gfx/terobjs/primsmelter", new NHitBox(new Coord(-8,-7),new Coord(11,7)));
             put("gfx/kritter/cattle/calf", new NHitBox(new Coord(-9,-3),new Coord(9,3)));
             put("gfx/kritter/horse/stallion", new NHitBox(new Coord(-9,-3),new Coord(9,3)));
             put("gfx/kritter/horse/mare", new NHitBox(new Coord(-9,-3),new Coord(9,3)));
@@ -87,9 +87,9 @@ public class NHitBox
             put("gfx/kritter/goat/billy", new NHitBox(new Coord(-5,-2),new Coord(5,2)));
             put("gfx/kritter/goat/nanny", new NHitBox(new Coord(-4,-2),new Coord(5,2)));
             put("gfx/kritter/goat/kid", new NHitBox(new Coord(-5,-2),new Coord(5,2)));
-            put("gfx/kritter/reindeer/teimdeercow", new NHitBox(new Coord(-6,-2),new Coord(12,2)));
-            put("gfx/kritter/reindeer/teimdeerbull", new NHitBox(new Coord(-6,-2),new Coord(12,2)));
-            put("gfx/kritter/reindeer/teimdeerkid", new NHitBox(new Coord(-6,-2),new Coord(12,2)));
+            put("gfx/kritter/reindeer/teimdeercow", new NHitBox(new Coord(-12,-2),new Coord(6,2)));
+            put("gfx/kritter/reindeer/teimdeerbull", new NHitBox(new Coord(-12,-2),new Coord(6,2)));
+            put("gfx/kritter/reindeer/teimdeerkid", new NHitBox(new Coord(-12,-2),new Coord(6,2)));
             put("gfx/terobjs/trees/orangetree", new NHitBox(new Coord(-3,-3),new Coord(3,3)));
             put("gfx/terobjs/trees/orangetreestump", new NHitBox(new Coord(-3,-3),new Coord(3,3)));
             put("gfx/terobjs/trees/driftwood2", new NHitBox(new Coord(-10,-2),new Coord(10,2)));

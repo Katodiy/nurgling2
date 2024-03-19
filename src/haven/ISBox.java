@@ -26,18 +26,24 @@
 
 package haven;
 
+import java.awt.Color;
 import nurgling.*;
 
 public class ISBox extends Widget implements DTarget {
-    static Tex bg = Resource.loadtex("gfx/hud/bosq");
-    static Text.Foundry lf;
-    private Indir<Resource> res;
+    public static final Color bgcol = new Color(43, 51, 44, 127);
+    public static final IBox box = new IBox("gfx/hud/bosq", "tl", "tr", "bl", "br", "el", "er", "et", "eb") {
+	    public void draw(GOut g, Coord tl, Coord sz) {
+		super.draw(g, tl, sz);
+		g.chcolor(bgcol);
+		g.frect(tl.add(ctloff()), sz.sub(cisz()));
+		g.chcolor();
+	    }
+	};
+    public static final Coord defsz = UI.scale(145, 42);
+    public static final Text.Foundry lf = new Text.Foundry(Text.fraktur, 22, Color.WHITE).aa(true);
+    private final Indir<Resource> res;
     protected Text label;
-    static {
-        lf = new Text.Foundry(Text.fraktur, 22, java.awt.Color.WHITE);
-        lf.aa = true;
-    }
-    
+
     @RName("isbox")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
@@ -45,34 +51,34 @@ public class ISBox extends Widget implements DTarget {
 	    if(args[0] instanceof String)
 		res = Resource.remote().load((String)args[0]);
 	    else
-		res = ui.sess.getres((Integer)args[0]);
-	    return(new NISBox(res, (Integer)args[1], (Integer)args[2], (Integer)args[3]));
+		res = ui.sess.getresv(args[0]);
+	    return(new NISBox(res, Utils.iv(args[1]), Utils.iv(args[2]), Utils.iv(args[3])));
 	}
     }
-    
+
     private void setlabel(int rem, int av, int bi) {
 	if(bi < 0)
 	    label = lf.renderf("%d/%d", rem, av);
 	else
 	    label = lf.renderf("%d/%d/%d", rem, av, bi);
     }
-    
+
     public ISBox(Indir<Resource> res, int rem, int av, int bi) {
-        super(bg.sz());
+        super(defsz);
         this.res = res;
         setlabel(rem, av, bi);
     }
-    
+
     public void draw(GOut g) {
-        g.image(bg, Coord.z);
+	box.draw(g, Coord.z, sz);
 	try {
             Tex t = res.get().flayer(Resource.imgc).tex();
-            Coord dc = new Coord(UI.scale(6), (bg.sz().y / 2) - (t.sz().y / 2));
+            Coord dc = Coord.of(UI.scale(6), (sz.y - t.sz().y) / 2);
             g.image(t, dc);
         } catch(Loading e) {}
-        g.image(label.tex(), new Coord(UI.scale(40), (bg.sz().y / 2) - (label.tex().sz().y / 2)));
+        g.image(label.tex(), new Coord(UI.scale(40), (sz.y - label.sz().y) / 2));
     }
-    
+
     public Object tooltip(Coord c, Widget prev) {
 	try {
 	    if(res.get().layer(Resource.tooltip) != null)
@@ -80,7 +86,7 @@ public class ISBox extends Widget implements DTarget {
 	} catch(Loading e) {}
 	return(null);
     }
-    
+
     public boolean mousedown(Coord c, int button) {
         if(button == 1) {
             if(ui.modshift)
@@ -91,7 +97,7 @@ public class ISBox extends Widget implements DTarget {
         }
         return(false);
     }
-    
+
     public boolean mousewheel(Coord c, int amount) {
 	if(amount < 0)
 	    wdgmsg("xfer2", -1, ui.modflags());
@@ -99,20 +105,20 @@ public class ISBox extends Widget implements DTarget {
 	    wdgmsg("xfer2", 1, ui.modflags());
 	return(true);
     }
-    
+
     public boolean drop(Coord cc, Coord ul) {
         wdgmsg("drop");
         return(true);
     }
-    
+
     public boolean iteminteract(Coord cc, Coord ul) {
         wdgmsg("iact");
         return(true);
     }
-    
+
     public void uimsg(String msg, Object... args) {
         if(msg == "chnum") {
-            setlabel((Integer)args[0], (Integer)args[1], (Integer)args[2]);
+            setlabel(Utils.iv(args[0]), Utils.iv(args[1]), Utils.iv(args[2]));
         } else {
             super.uimsg(msg, args);
         }

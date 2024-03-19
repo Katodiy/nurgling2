@@ -2,8 +2,9 @@ package nurgling;
 
 import haven.*;
 import static haven.Inventory.sqsz;
-import haven.res.ui.tt.defn.*;
+
 import haven.res.ui.tt.slots.ISlots;
+import haven.res.ui.tt.stackn.StackName;
 import nurgling.iteminfo.NCuriosity;
 import nurgling.iteminfo.NFoodInfo;
 
@@ -94,8 +95,12 @@ public class NGItem extends GItem
             {
                 if (res.get() != null)
                 {
-                    name = DefName.getname(this);
+                    name = ItemInfo.Name.Default.get(this);
                 }
+            }
+            else
+            {
+                name = StackName.getname(this);
             }
         }
     }
@@ -139,54 +144,44 @@ public class NGItem extends GItem
                     Object[] a = (Object[]) o;
                     if (a[0] instanceof Integer)
                     {
-                        String resName = NUtils.getUI().sess.getResName((Integer) a[0]);
-                        if (resName != null)
-                        {
-                            switch (resName)
-                            {
-                                case "ui/tt/q/quality":
-                                    if (a.length >= 2)  quality = (Float) a[1];
-                                    break;
-                                case "ui/tt/cont":
-                                    double q = -1;
-                                    String name = null;
-                                    for (Object so : a)
-                                    {
-                                        if (so instanceof Object[])
-                                        {
-                                            Object[] cont = (Object[]) so;
-                                            for (Object sso : cont)
-                                            {
-                                                if (sso instanceof Object[])
-                                                {
-                                                    Object[] b = (Object[]) sso;
-                                                    if (b[0] instanceof Integer)
-                                                    {
-                                                        String resName2 = NUtils.getUI().sess.getResName((Integer) b[0]);
-                                                        if (b.length >= 2) if (resName2 != null)
-                                                        {
-                                                            if (resName2.equals("ui/tt/cn"))
-                                                            {
-                                                                name = (String) b[1];
-                                                            }
-                                                            else if (resName2.equals("ui/tt/q/quality"))
-                                                            {
-                                                                q = (Float) b[1];
+                        if(nurgling.NUtils.getUI().sess!=null) {
+                            String resName = NUtils.getUI().sess.getResName((Integer) a[0]);
+                            if (resName != null) {
+                                switch (resName) {
+                                    case "ui/tt/q/quality":
+                                        if (a.length >= 2) quality = (Float) a[1];
+                                        break;
+                                    case "ui/tt/cont":
+                                        double q = -1;
+                                        String name = null;
+                                        for (Object so : a) {
+                                            if (so instanceof Object[]) {
+                                                Object[] cont = (Object[]) so;
+                                                for (Object sso : cont) {
+                                                    if (sso instanceof Object[]) {
+                                                        Object[] b = (Object[]) sso;
+                                                        if (b[0] instanceof Integer) {
+                                                            String resName2 = NUtils.getUI().sess.getResName((Integer) b[0]);
+                                                            if (b.length >= 2) if (resName2 != null) {
+                                                                if (resName2.equals("ui/tt/cn")) {
+                                                                    name = (String) b[1];
+                                                                } else if (resName2.equals("ui/tt/q/quality")) {
+                                                                    q = (Float) b[1];
+                                                                }
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
-                                    }
-                                    if (name != null && q != -1)
-                                    {
-                                        content = new NContent(q, name);
-                                    }
-                                    break;
-                                case "ui/tt/coin":
-                                    this.name = (String) a[1];
-                                    break;
+                                        if (name != null && q != -1) {
+                                            content = new NContent(q, name);
+                                        }
+                                        break;
+                                    case "ui/tt/coin":
+                                        this.name = (String) a[1];
+                                        break;
+                                }
                             }
                         }
                     }

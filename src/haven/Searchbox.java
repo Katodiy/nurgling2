@@ -41,124 +41,124 @@ public abstract class Searchbox<T> extends Listbox<T> {
     protected abstract boolean searchmatch(int idx, String text);
 
     public Searchbox(int w, int h, int itemh) {
-	super(w, h, itemh);
-	setcanfocus(true);
+        super(w, h, itemh);
+        setcanfocus(true);
     }
 
     public boolean keydown(KeyEvent ev) {
-	int mod = 0;
-	if((ev.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0) mod |= C;
-	if((ev.getModifiersEx() & (InputEvent.META_DOWN_MASK | InputEvent.ALT_DOWN_MASK)) != 0) mod |= M;
-	char c = ev.getKeyChar();
-	if(c == ev.CHAR_UNDEFINED)
-	    c = '\0';
-	int code = ev.getKeyCode();
-	if(mod == 0) {
-	    if(c == 8) {
-		if(searching != null) {
-		    search(searching.substring(0, searching.length() - 1));
-		    return(true);
-		}
-	    } else if(key_act.match(ev)) {
-		if(searching != null) {
-		    stopsearch();
-		    return(true);
-		}
-	    } else if(key_esc.match(ev)) {
-		if(searching != null) {
-		    stopsearch();
-		    return(true);
-		}
-	    } else if(code == KeyEvent.VK_UP) {
-		if((searching != null) && (cursidx > 0)) {
-		    cursidx--;
-		    display(sought[cursidx]);
-		    change(listitem(sought[cursidx]));
-		    updinfo();
-		    return(true);
-		}
-	    } else if(code == KeyEvent.VK_DOWN) {
-		if((searching != null) && (cursidx < sought.length - 1)) {
-		    cursidx++;
-		    display(sought[cursidx]);
-		    change(listitem(sought[cursidx]));
-		    updinfo();
-		    return(true);
-		}
-	    } else if(c >= 32) {
-		search(((searching == null) ? "" : searching) + c);
-		return(true);
-	    }
-	}
-	return(super.keydown(ev));
+        int mod = 0;
+        if((ev.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0) mod |= C;
+        if((ev.getModifiersEx() & (InputEvent.META_DOWN_MASK | InputEvent.ALT_DOWN_MASK)) != 0) mod |= M;
+        char c = ev.getKeyChar();
+        if(c == ev.CHAR_UNDEFINED)
+            c = '\0';
+        int code = ev.getKeyCode();
+        if(mod == 0) {
+            if(c == 8) {
+                if(searching != null) {
+                    search(searching.substring(0, searching.length() - 1));
+                    return(true);
+                }
+            } else if(key_act.match(ev)) {
+                if(searching != null) {
+                    stopsearch();
+                    return(true);
+                }
+            } else if(key_esc.match(ev)) {
+                if(searching != null) {
+                    stopsearch();
+                    return(true);
+                }
+            } else if(code == KeyEvent.VK_UP) {
+                if((searching != null) && (cursidx > 0)) {
+                    cursidx--;
+                    display(sought[cursidx]);
+                    change(listitem(sought[cursidx]));
+                    updinfo();
+                    return(true);
+                }
+            } else if(code == KeyEvent.VK_DOWN) {
+                if((searching != null) && (cursidx < sought.length - 1)) {
+                    cursidx++;
+                    display(sought[cursidx]);
+                    change(listitem(sought[cursidx]));
+                    updinfo();
+                    return(true);
+                }
+            } else if(c >= 32) {
+                search(((searching == null) ? "" : searching) + c);
+                return(true);
+            }
+        }
+        return(super.keydown(ev));
     }
 
     private void updinfo() {
-	if(cursidx >= 0)
-	    this.info = Text.renderf(Color.WHITE, "%s (%d/%d)", searching, cursidx + 1, sought.length);
-	else
-	    this.info = Text.renderf(Color.WHITE, "%s (%d)", searching, sought.length);
+        if(cursidx >= 0)
+            this.info = Text.renderf(Color.WHITE, "%s (%d/%d)", searching, cursidx + 1, sought.length);
+        else
+            this.info = Text.renderf(Color.WHITE, "%s (%d)", searching, sought.length);
     }
 
     public void search(String text) {
-	if(text.length() < 1) {
-	    stopsearch();
-	    return;
-	}
-	int ps = (searching == null) ? -1 : ((cursidx < 0) ? -1 : sought[cursidx]);
-	int[] si = new int[listitems()];
-	boolean[] fm = new boolean[si.length];
-	int ns = 0, nc = -1, ncc = -1;
-	for(int i = 0; i < si.length; i++) {
-	    if(searchmatch(i, text)) {
-		if(ps == i)
-		    nc = ns;
-		if((ncc == -1) || ((ps >= 0) && (i < ps)))
-		    ncc = ns;
-		si[ns++] = i;
-		fm[i] = true;
-	    }
-	}
-	if(nc < 0)
-	    nc = ncc;
-	si = Utils.splice(si, 0, ns);
-	this.searching = text;
-	this.sought = si;
-	this.cursidx = nc;
-	this.found = fm;
-	updinfo();
-	if(nc >= 0) {
-	    display(si[nc]);
-	    change(listitem(si[nc]));
-	}
+        if(text.length() < 1) {
+            stopsearch();
+            return;
+        }
+        int ps = (searching == null) ? -1 : ((cursidx < 0) ? -1 : sought[cursidx]);
+        int[] si = new int[listitems()];
+        boolean[] fm = new boolean[si.length];
+        int ns = 0, nc = -1, ncc = -1;
+        for(int i = 0; i < si.length; i++) {
+            if(searchmatch(i, text)) {
+                if(ps == i)
+                    nc = ns;
+                if((ncc == -1) || ((ps >= 0) && (i < ps)))
+                    ncc = ns;
+                si[ns++] = i;
+                fm[i] = true;
+            }
+        }
+        if(nc < 0)
+            nc = ncc;
+        si = Utils.splice(si, 0, ns);
+        this.searching = text;
+        this.sought = si;
+        this.cursidx = nc;
+        this.found = fm;
+        updinfo();
+        if(nc >= 0) {
+            display(si[nc]);
+            change(listitem(si[nc]));
+        }
     }
 
     public void draw(GOut g) {
-	super.draw(g);
-	if(searching != null) {
-	    g.aimage(info.tex(), g.sz(), 1, 1);
-	}
+        super.draw(g);
+        if(searching != null) {
+            g.aimage(info.tex(), g.sz(), 1, 1);
+        }
     }
 
     public void stopsearch() {
-	searching = null;
-	sought = null;
-	found = null;
-	info = null;
+        searching = null;
+        sought = null;
+        found = null;
+        info = null;
     }
 
     public void lostfocus() {
-	super.lostfocus();
-	stopsearch();
+        super.lostfocus();
+        stopsearch();
     }
 
     public boolean soughtitem(int i) {
-	return((searching != null) && (i >= 0) && (i < found.length) && found[i]);
+        return((searching != null) && (i >= 0) && (i < found.length) && found[i]);
     }
 
     public boolean mousedown(Coord c, int button) {
-	parent.setfocus(this);
-	stopsearch();
-	return(super.mousedown(c, button));
+        parent.setfocus(this);
+        stopsearch();
+        return(super.mousedown(c, button));
     }
 }

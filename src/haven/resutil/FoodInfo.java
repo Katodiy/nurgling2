@@ -53,17 +53,17 @@ public class FoodInfo extends ItemInfo.Tip {
 
     public static class Event {
 	public static final Coord imgsz = new Coord(Text.std.height(), Text.std.height());
-	public final CharWnd.FoodMeter.Event ev;
+	public final BAttrWnd.FoodMeter.Event ev;
 	public final BufferedImage img;
 	public final double a;
 
 	public Event(Resource res, double a) {
-	    this.ev = res.flayer(CharWnd.FoodMeter.Event.class);
+	    this.ev = res.flayer(BAttrWnd.FoodMeter.Event.class);
 	    this.img = PUtils.convolve(res.flayer(Resource.imgc).img, imgsz, CharWnd.iconfilter);
 	    this.a = a;
 	}
 
-	public Event(CharWnd.FoodMeter.Event ev, BufferedImage img, double a) {
+	public Event(BAttrWnd.FoodMeter.Event ev, BufferedImage img, double a) {
 		this.ev = ev;
 		this.img = img;
 		this.a = a;

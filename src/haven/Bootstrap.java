@@ -164,7 +164,7 @@ public class Bootstrap implements UI.Receiver, UI.Runner {
 
     public UI.Runner run(UI ui) throws InterruptedException {
 	ui.setreceiver(this);
-	ui.bind(ui.root.add(new NLoginScreen(hostname)), 1);
+	ui.newwidgetp(1, ($1, $2) -> new NLoginScreen(hostname), 0, new Object[] {Coord.z});
 	String loginname = getpref("loginname", "");
 	boolean savepw = false;
 	transtoken();
@@ -263,7 +263,7 @@ public class Bootstrap implements UI.Receiver, UI.Runner {
 			    break connect;
 			} catch(Connection.SessionConnError err) {
 			} catch(Connection.SessionError err) {
-			    ui.uimsg(1, "error", err.toString());
+			    ui.uimsg(1, "error", err.getMessage());
 			    continue retry;
 			}
 		    }

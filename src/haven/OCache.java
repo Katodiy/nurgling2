@@ -49,7 +49,7 @@ public class OCache implements Iterable<Gob> {
     public static final int OD_OVERLAY = 12;
     /* public static final int OD_AUTH = 13; -- Removed */
     public static final int OD_HEALTH = 14;
-    public static final int OD_BUDDY = 15;
+    /* public static final int OD_BUDDY = 15; -- Removed */
     public static final int OD_CMPPOSE = 16;
     public static final int OD_CMPMOD = 17;
     public static final int OD_CMPEQU = 18;
@@ -60,7 +60,7 @@ public class OCache implements Iterable<Gob> {
     public static final Coord2d posres = Coord2d.of(0x1.0p-10, 0x1.0p-10).mul(11, 11);
     /* XXX: Use weak refs */
     private Collection<Collection<Gob>> local = new LinkedList<Collection<Gob>>();
-    private HashMultiMap<Long, Gob> objs = new HashMultiMap<Long, Gob>();
+    private MultiMap<Long, Gob> objs = new HashMultiMap<Long, Gob>();
     private Glob glob;
     private final Collection<ChangeCallback> cbs = new WeakList<ChangeCallback>();
 
@@ -269,6 +269,20 @@ public class OCache implements Iterable<Gob> {
 	}
     }
 
+    public static class OlSprite implements Sprite.Mill<Sprite> {
+	public final Indir<Resource> res;
+	public Message sdt;
+
+	public OlSprite(Indir<Resource> res, Message sdt) {
+	    this.res = res;
+	    this.sdt = sdt;
+	}
+
+	public Sprite create(Sprite.Owner owner) {
+	    return(Sprite.create(owner, res.get(), sdt));
+	}
+    }
+
     @DeltaType(OD_OVERLAY)
     public static class $overlay implements Delta {
 	public void apply(Gob g, AttrDelta msg) {
@@ -295,14 +309,20 @@ public class OCache implements Iterable<Gob> {
 		sdt = new MessageBuf(sdt);
 		Gob.Overlay nol = null;
 		if(ol == null) {
-		    g.addol(nol = new Gob.Overlay(g, olid, res, sdt), false);
-		} else if(!ol.sdt.equals(sdt)) {
-		    if(ol.spr instanceof Sprite.CUpd) {
+		    nol = new Gob.Overlay(g, olid, new OlSprite(res, sdt));
+		    nol.old = msg.old;
+		    g.addol(nol, false);
+		} else {
+		    OlSprite os = (ol.sm instanceof OlSprite) ? (OlSprite)ol.sm : null;
+		    if((os != null) && Utils.eq(os.sdt, sdt)) {
+		    } else if((os != null) && (ol.spr instanceof Sprite.CUpd)) {
 			MessageBuf copy = new MessageBuf(sdt);
 			((Sprite.CUpd)ol.spr).update(copy);
-			ol.sdt = copy;
+			os.sdt = copy;
 		    } else {
-			g.addol(nol = new Gob.Overlay(g, olid, res, sdt), false);
+			nol = new Gob.Overlay(g, olid, new OlSprite(res, sdt));
+			nol.old = msg.old;
+			g.addol(nol, false);
 			ol.remove(false);
 		    }
 		}

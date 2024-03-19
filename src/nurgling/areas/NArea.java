@@ -56,23 +56,66 @@ public class NArea
         return res;
     }
 
-    public static NArea findOut(String name) {
+    public static NArea findOut(String name, double th) {
         double dist = 10000;
         NArea res = null;
+        class TestedArea
+        {
+            NArea area;
+            double th;
+
+            public TestedArea(NArea area, double th) {
+                this.area = area;
+                this.th = th;
+            }
+        }
+
+        Comparator<TestedArea> ta_comp = new Comparator<TestedArea>(){
+            @Override
+            public int compare(TestedArea o1, TestedArea o2)
+            {
+                return Double.compare(o1.th, o2.th);
+            }
+        };
+
+        ArrayList<TestedArea> areas = new ArrayList<>();
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
             Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
             for(Integer id : nids) {
                 if (id > 0)
-                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name)) {
-                        NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
-                        Pair<Coord2d, Coord2d> testrc = test.getRCArea();
-                        double testdist;
-                        if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
-                            res = test;
-                            dist = testdist;
-                        }
+                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name, th) ) {
+                        areas.add(new TestedArea(NUtils.getGameUI().map.glob.map.areas.get(id), th));
                     }
+            }
+        }
+
+        areas.sort(ta_comp);
+
+        double tth = 1;
+        for (TestedArea area : areas)
+        {
+            if(area.th<=th) {
+                res = area.area;
+                tth = area.th;
+            }
+        }
+
+        ArrayList<NArea> targets = new ArrayList<>();
+        for(TestedArea area :areas)
+        {
+            if(area.th ==tth)
+                targets.add(area.area);
+        }
+
+        if(targets.size()>1) {
+            for (NArea test: targets) {
+                Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                double testdist;
+                if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                    res = test;
+                    dist = testdist;
+                }
             }
         }
         return res;
@@ -88,12 +131,14 @@ public class NArea
         return false;
     }
 
-    private boolean containOut(String name)
+    private boolean containOut(String name, double th)
     {
-        for (int i = 0; i < jout.length(); i++)
-        {
-            if(((String) ((JSONObject)jout.get(i)).get("name")).equals(name) && !((JSONObject)jout.get(i)).has("th"))
-                return true;
+        for (int i = 0; i < jout.length(); i++) {
+            if (((String) ((JSONObject) jout.get(i)).get("name")).equals(name))
+                if (((JSONObject) jout.get(i)).has("th") && ((Double) ((JSONObject) jout.get(i)).get("th")) > th)
+                    return true;
+                else
+                    return true;
         }
         return false;
     }
@@ -400,10 +445,18 @@ public class NArea
 
         String name;
 
+
+        public int th = -1;
         public Ingredient(Type type, String name)
         {
             this.type = type;
             this.name = name;
+        }
+
+        public Ingredient(Type type, String name, int th)
+        {
+            this(type,name);
+            this.th = th;
         }
     }
 
@@ -432,6 +485,10 @@ public class NArea
                 NArea.Ingredient.Type type = (obj.has("type")) ?
                         type = NArea.Ingredient.Type.valueOf((String) obj.get("type")) :
                         Ingredient.Type.CONTAINER;
+                if(((JSONObject)jout.get(i)).get("th")!=null)
+                {
+                    return new Ingredient(type,name, (Integer)((JSONObject)jout.get(i)).get("th"));
+                }
                 return new Ingredient(type,name);
             }
         }

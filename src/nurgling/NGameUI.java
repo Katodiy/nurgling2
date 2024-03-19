@@ -12,9 +12,12 @@ import nurgling.tools.*;
 import nurgling.widgets.*;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 import java.util.function.Supplier;
+
+import static haven.Inventory.invsq;
 
 public class NGameUI extends GameUI
 {
@@ -50,12 +53,13 @@ public class NGameUI extends GameUI
     }
 
     public int getMaxBase(){
-        return chrwdg.base.stream().max(new Comparator<CharWnd.Attr>() {
-            @Override
-            public int compare(CharWnd.Attr o1, CharWnd.Attr o2) {
-                return Integer.compare(o1.attr.base,o2.attr.base);
-            }
-        }).get().attr.base;
+        return 0;
+//        return chrwdg.base.stream().max(new Comparator<CharWnd.Attr>() {
+//            @Override
+//            public int compare(CharWnd.Attr o1, CharWnd.Attr o2) {
+//                return Integer.compare(o1.attr.base,o2.attr.base);
+//            }
+//        }).get().attr.base;
     }
 
     public NCharacterInfo getCharInfo() {
@@ -178,10 +182,6 @@ public class NGameUI extends GameUI
         else
         {
             super.addchild(child, args);
-            if (place.equals("chr") && chrwdg != null)
-            {
-                ((NUI) ui).sessInfo.characterInfo.setCharWnd(chrwdg);
-            }
             if (maininv != null && ((NInventory) maininv).searchwdg == null)
             {
                 ((NInventory) maininv).installMainInv();
@@ -191,11 +191,6 @@ public class NGameUI extends GameUI
 
     public void tickmsg(String msg) {
         msg("TICK#" + NUtils.getTickId() + " MSG: " + msg, Color.WHITE, Color.WHITE);
-        double now = Utils.rtime();
-        if(now - lastmsgsfx > 0.1) {
-            ui.sfx(RootWidget.msgsfx);
-            lastmsgsfx = now;
-        }
     }
 
     public NInventory getInventory ( String name ) {
@@ -279,6 +274,7 @@ public class NGameUI extends GameUI
                     for(Pair<Widget, Supplier<Coord>> pair:((RelCont) sp).childpos) {
                         if (pair.a.getClass().getName().contains("TipLabel")) {
                             try {
+                                ///TODO
                                 for (ItemInfo inf : (Collection<ItemInfo>) (pair.a.getClass().getField("info").get(pair.a))) {
                                     if (inf instanceof ItemInfo.Name) {
                                         String name = ((ItemInfo.Name) inf).str.text;
@@ -330,4 +326,265 @@ public class NGameUI extends GameUI
         }
     }
 
+    public class NToolBelt extends Belt implements KeyBinding.Bindable{
+
+        public static final int GAP = 10;
+        public static final int PAD = 2;
+        public static final int BTNSZ = 17;
+        public final Coord INVSZ = invsq.sz();
+
+        final int group;
+        final int start;
+        final int size;
+        final String name;
+        private boolean vertical = false;
+        ArrayList<NKeyBinding> beltkeys = new ArrayList<>();
+        public NToolBelt(String name, int start, int group, int size) {
+            super( new Coord(0,0) );
+            this.start = start;
+            this.group = group;
+            this.size = size;
+            this.name = name;
+            sz = beltc(size - 1).add(INVSZ);
+            NToolBeltProp prop = NToolBeltProp.get(name);
+            for(KeyBinding kb: prop.getKb())
+            {
+                beltkeys.add(new NKeyBinding(kb));
+            }
+        }
+
+        @Override
+        public void flip(boolean val) {
+            vertical = val;
+            resize();
+        }
+
+        private void resize() {
+            sz = beltc(size - 1).add(INVSZ);
+        }
+
+        @Override
+        public int beltslot(Coord c) {
+            for (int i = 0; i < size; i++) {
+                if(c.isect(beltc(i), invsq.sz())) {
+                    return slot(i);
+                }
+            }
+            return (-1);
+        }
+
+        @Override
+        public KeyBinding getbinding(Coord cc) {
+            int slot = beltslot(cc);
+            if(slot!=-1)
+                return beltkeys.get(slot - start).kb;
+            return null;
+        }
+
+        @Override
+        public void draw(GOut g) {
+            for (int i = 0; i < size; i++) {
+                Coord c = beltc(i);
+                int slot = slot(i);
+                g.image(invsq, c);
+                try {
+                    Object item = belt(slot);
+                    if (item != null) {
+                        if(item instanceof PagBeltSlot)
+                            ((PagBeltSlot)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
+                        else if (item instanceof NBotsMenu.NButton)
+                            ((NBotsMenu.NButton)item).btn.draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
+                    }
+                } catch (Loading ignored) {
+                }
+                if (beltkeys.get(i).tex != null) {
+                    g.aimage(beltkeys.get(i).tex, c.add(INVSZ.sub(2, 0)), 1, 1);
+                }
+            }
+            super.draw(g);
+        }
+
+        @Override
+        public void keyact(int slot) {
+            if(map != null) {
+                NToolBeltProp prop = NToolBeltProp.get(name);
+                String path;
+                if((path = prop.custom.get(slot))!=null) {
+                    NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
+                    if(btn!=null) {
+                        btn.btn.click();
+                        return;
+                    }
+                }
+                super.keyact(slot);
+            }
+        }
+
+
+        @Override
+        public boolean mousedown(Coord c, int button) {
+            NToolBeltProp prop = NToolBeltProp.get(name);
+            int slot = beltslot(c);
+            if(button == 3)
+            {
+                if(prop.custom.get(slot)!=null) {
+                    prop.custom.remove(slot);
+                    NToolBeltProp.set(name, prop);
+                    return true;
+                }
+            }
+            else if (button == 1)
+            {
+                String path;
+                if((path = prop.custom.get(slot))!=null) {
+                    NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
+                    if(btn!=null) {
+                        btn.btn.click();
+                        return true;
+                    }
+                }
+            }
+            return super.mousedown(c, button);
+        }
+
+        private Object belt(int slot) {
+            if(slot < 0) {return null;}
+            String path;
+            if((path = NToolBeltProp.get(name).custom.get(slot) )== null) {
+                GameUI.PagBeltSlot res = null;
+                if (ui != null && NUtils.getGameUI() != null && NUtils.getGameUI().belt[slot] != null)
+                    if (NUtils.getGameUI().belt[slot] instanceof GameUI.PagBeltSlot) {
+                        res = (GameUI.PagBeltSlot) NUtils.getGameUI().belt[slot];
+                    }
+                return res;
+            }
+            else
+            {
+                return NUtils.getGameUI().botsMenu.find(path);
+            }
+        }
+
+        private int slot(int i) {return i + start;}
+
+        private Coord beltc(int i) {
+            return vertical ?
+                    new Coord(0, BTNSZ + ((INVSZ.y + PAD) * i) + (GAP * (i / group))) :
+                    new Coord(BTNSZ + ((INVSZ.x + PAD) * i) + (GAP * (i /group )), 0);
+        }
+
+        @Override
+        public void tick(double dt) {
+            super.tick(dt);
+            boolean res = false;
+            for(NKeyBinding kb : beltkeys)
+                res |= kb.tick();
+            if(res)
+            {
+                NToolBeltProp.set(name,NToolBeltProp.get(name));
+            }
+        }
+
+        @Override
+        public boolean globtype(char key, KeyEvent ev) {
+            if (!visible) {
+                return false;
+            }
+            for (int i = 0; i < beltkeys.size(); i++) {
+                if ((beltkeys.get(i).key != null && ev.getKeyCode() == beltkeys.get(i).key.code && ui.modflags() == beltkeys.get(i).key.modmatch)) {
+                    keyact(slot(i));
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public boolean dropthing(Coord c, Object thing) {
+            boolean res = super.dropthing(c,thing);
+            int slot = beltslot(c);
+            if(res) {
+                if(slot!=-1)
+                {
+                    NToolBeltProp prop = NToolBeltProp.get(name);
+                    prop.custom.remove(slot);
+                    NToolBeltProp.set(name,prop);
+                }
+                return true;
+            }
+
+            if(slot != -1) {
+                if(thing instanceof NBotsMenu.NButton) {
+                    NBotsMenu.NButton pag = (NBotsMenu.NButton)thing;
+                    NToolBeltProp prop = NToolBeltProp.get(name);
+                    prop.custom.put(slot,pag.path);
+                    NToolBeltProp.set(name,prop);
+                    return(true);
+                }
+            }
+            return(false);
+        }
+
+    }
+
+    public static class NKeyBinding
+    {
+        public int modign;
+        public KeyMatch key;
+        KeyBinding kb;
+        public NKeyBinding(KeyBinding old) {
+            this.kb = old;
+            this.key = old.key;
+            this.modign = old.modign;
+            updateTex();
+        }
+
+        Tex tex;
+        public void set(KeyMatch key) {
+            kb.set(key);
+            updateTex();
+        }
+
+        void updateTex()
+        {
+            String hotKey;
+            int mode  = 0;
+            if( key != null)
+            {
+                hotKey = KeyEvent.getKeyText(key.code);
+                mode = key.modmatch;
+
+                if (NParser.checkName(hotKey, new NAlias("Num")))
+                {
+                    hotKey = "N" + hotKey.substring(hotKey.indexOf("-") + 1);
+                }
+                if (NParser.checkName(hotKey, new NAlias("inus")))
+                {
+                    hotKey = "-";
+                }
+                else if (NParser.checkName(hotKey, new NAlias("quals")))
+                {
+                    hotKey = "=";
+                }
+                if ((mode & KeyMatch.C) != 0)
+                    hotKey = "C" + hotKey;
+                if ((mode & KeyMatch.S) != 0)
+                    hotKey = "S" + hotKey;
+                if ((mode & KeyMatch.M) != 0)
+                    hotKey = "A" + hotKey;
+                tex = NStyle.hotkey.render(hotKey).tex();
+            }
+        }
+
+        boolean tick()
+        {
+            if(kb.key!=key || kb.modign!=modign)
+            {
+                key = kb.key;
+                modign = kb.modign;
+                updateTex();
+                return true;
+            }
+            return false;
+        }
+    }
 }

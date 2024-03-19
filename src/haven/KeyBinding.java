@@ -35,14 +35,18 @@ public class KeyBinding {
     public int modign;
     public KeyMatch key;
 
-    private KeyBinding(String id, KeyMatch defkey, int modign) {
+    protected KeyBinding(String id, KeyMatch defkey, int modign) {
 	this.id = id;
 	this.defkey = defkey;
 	this.modign = modign;
     }
 
-	public KeyBinding()
+	public KeyBinding(KeyBinding old)
 	{
+		this.id = old.id;
+		this.defkey = old.defkey;
+		this.modign = old.modign;
+		this.key = old.key;
 	}
 
     public void set(KeyMatch key) {

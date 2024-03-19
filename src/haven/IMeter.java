@@ -43,37 +43,36 @@ public class IMeter extends LayerMeter {
     @RName("im")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-	    Indir<Resource> bg = ui.sess.getres((Integer)args[0]);
-		String resnm = ui.sess.rescache.get((Integer)args[0]).resnm;
-		if(resnm!=null)
-		{
-			String key = resnm.substring(resnm.lastIndexOf("/")+1);
-			switch (key)
-			{
-				case "hp":
-					bg = Resource.remote().load("nurgling/hud/meter/hp");
-					break;
-				case "stam":
-					bg = Resource.remote().load("nurgling/hud/meter/stam");
-					break;
-				case "nrj":
-					bg = Resource.remote().load("nurgling/hud/meter/nrj");
-					break;
-				case "mount":
-					bg = Resource.remote().load("nurgling/hud/meter/mount");
-					break;
-				case "boat":
-					bg = Resource.remote().load("nurgling/hud/meter/boat");
-					break;
-				case "häst":
-					bg = Resource.remote().load("nurgling/hud/meter/hast");
-					break;
-			}
-		}
+	    Indir<Resource> bg = ui.sess.getresv(args[0]);
+        String resnm = ui.sess.rescache.get((Integer)args[0]).resnm;
+        if(resnm!=null)
+        {
+            String key = resnm.substring(resnm.lastIndexOf("/")+1);
+            switch (key)
+            {
+                case "hp":
+                    bg = Resource.remote().load("nurgling/hud/meter/hp");
+                    break;
+                case "stam":
+                    bg = Resource.remote().load("nurgling/hud/meter/stam");
+                    break;
+                case "nrj":
+                    bg = Resource.remote().load("nurgling/hud/meter/nrj");
+                    break;
+                case "mount":
+                    bg = Resource.remote().load("nurgling/hud/meter/mount");
+                    break;
+                case "boat":
+                    bg = Resource.remote().load("nurgling/hud/meter/boat");
+                    break;
+                case "häst":
+                    bg = Resource.remote().load("nurgling/hud/meter/hast");
+                    break;
+            }
+        }
 
 	    List<Meter> meters = decmeters(args, 1);
 		IMeter result = new IMeter(bg, meters);
-
 		result.name = resnm;
 		if(resnm!= null && result.name.endsWith("st"))
 			result.name = "gfx/hud/meter/hast";

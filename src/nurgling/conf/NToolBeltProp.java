@@ -2,7 +2,6 @@ package nurgling.conf;
 
 import haven.*;
 import nurgling.*;
-import nurgling.tools.*;
 import org.json.*;
 
 import java.awt.event.*;
@@ -14,7 +13,7 @@ public class NToolBeltProp implements JConf
     boolean isVertiacal = false;
 
     ArrayList<KeyBinding> kb = new ArrayList<>(Arrays.asList(new KeyBinding[12]));
-
+    public HashMap<Integer, String> custom = new HashMap<>();
     public ArrayList<KeyBinding> getKb()
     {
         return kb;
@@ -22,13 +21,13 @@ public class NToolBeltProp implements JConf
 
     public NToolBeltProp(String name, boolean isVertiacal, ArrayList<KeyBinding> kb)
     {
-        this.kb = new ArrayList<>(kb);
+        this.kb = kb;
         this.isVertiacal = isVertiacal;
         this.name = name;
         for(int i = 0 ; i < kb.size() ; i ++)
         {
             if(this.kb.get(i)==null)
-                this.kb.set(i, new KeyBinding());
+                this.kb.set(i, KeyBinding.get (name + i, KeyMatch.nil));
         }
     }
 
@@ -46,9 +45,17 @@ public class NToolBeltProp implements JConf
             }
             else
             {
-                kb.set(i, new KeyBinding());
+                kb.set(i, KeyBinding.get (name + i, KeyMatch.nil));
             }
             i++;
+        }
+
+        if(values.get("custom")!=null) {
+            for (HashMap<String, Object> obj : (ArrayList<HashMap<String, Object>>) values.get("custom")) {
+                if (obj.get("path") != null) {
+                    custom.put((Integer) obj.get("id"), (String) obj.get("path"));
+                }
+            }
         }
     }
 
@@ -71,6 +78,18 @@ public class NToolBeltProp implements JConf
             jkba.put(jkb);
         }
         jobj.put("kb", jkba);
+
+        if(!custom.isEmpty()) {
+            JSONArray jcustoms = new JSONArray();
+            for (Integer id : custom.keySet()) {
+                JSONObject jcustom = new JSONObject();
+                jcustom.put("id", id);
+                jcustom.put("path", custom.get(id));
+                jcustoms.put(jcustom);
+            }
+            jobj.put("custom", jcustoms);
+        }
+
         return jobj;
     }
 

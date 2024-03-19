@@ -52,7 +52,7 @@ public class Button extends SIWidget {
     public BufferedImage cont;
     public Runnable action = null;
     static Text.Foundry tf = new Text.Foundry(Text.serif.deriveFont(Font.BOLD, UI.scale(12f))).aa(true);
-    static Text.Furnace nf = new PUtils.BlurFurn(new PUtils.TexFurn(tf, Window.ctex), 1, 1, new Color(80, 40, 0));
+    static Text.Furnace nf = new PUtils.BlurFurn(new PUtils.TexFurn(tf, Window.ctex), UI.rscale(0.75), UI.rscale(0.75), new Color(80, 40, 0));
     private boolean a = false, dis = false;
     private UI.Grab d = null;
 	
@@ -60,15 +60,15 @@ public class Button extends SIWidget {
     public static class $Btn implements Factory {
 	public Widget create(UI ui, Object[] args) {
 	    if(args.length > 2)
-		return(new Button(UI.scale((Integer)args[0]), (String)args[1], ((Integer)args[2]) != 0));
+		return(new Button(UI.scale(Utils.iv(args[0])), (String)args[1], Utils.bv(args[2])));
 	    else
-		return(new Button(UI.scale((Integer)args[0]), (String)args[1]));
+		return(new Button(UI.scale(Utils.iv(args[0])), (String)args[1]));
 	}
     }
     @RName("ltbtn")
     public static class $LTBtn implements Factory {
 	public Widget create(UI ui, Object[] args) {
-	    return(wrapped(UI.scale((Integer)args[0]), (String)args[1]));
+	    return(wrapped(UI.scale(Utils.iv(args[0])), (String)args[1]));
 	}
     }
 	
@@ -180,7 +180,7 @@ public class Button extends SIWidget {
 	    else
 		change((String)args[0]);
 	} else if(msg == "dis") {
-	    disable(((Integer)args[1]) != 0);
+	    disable(Utils.bv(args[1]));
 	} else {
 	    super.uimsg(msg, args);
 	}

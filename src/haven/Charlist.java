@@ -32,7 +32,7 @@ import java.awt.Color;
 import java.util.*;
 
 public class Charlist extends Widget {
-    public static final Tex bg = Resource.loadtex("gfx/hud/avakort");
+    public static final Coord bsz = UI.scale(289, 96);
     public static final Text.Furnace tf = new PUtils.BlurFurn(new PUtils.TexFurn(new Text.Foundry(Text.sans, 20).aa(true), Window.ctex), UI.scale(2), UI.scale(2), Color.BLACK);
     public static final int margin = UI.scale(6);
     public static final int btnw = UI.scale(100);
@@ -45,7 +45,7 @@ public class Charlist extends Widget {
     @RName("charlist")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-	    return(new Charlist((Integer)args[0]));
+	    return(new Charlist(Utils.iv(args[0])));
 	}
     }
 
@@ -53,22 +53,23 @@ public class Charlist extends Widget {
 	super(Coord.z);
 	this.height = height;
 	setcanfocus(true);
-	sau = adda(new IButton("nurgling/hud/buttons/csau/", "u", "d", "o"), bg.sz().x / 2, 0, 0.5, 0)
+	sau = adda(new IButton("nurgling/hud/buttons/csau/", "u", "d", "o"), bsz.x / 2, 0, 0.5, 0)
 	    .action(() -> scroll(-1));
 	list = add(new Boxlist(height), 0, sau.c.y + sau.sz.y + margin);
-	sad = adda(new IButton("nurgling/hud/buttons/csad/", "u", "d", "o"), bg.sz().x / 2, list.c.y + list.sz.y + margin, 0.5, 0)
+	sad = adda(new IButton("nurgling/hud/buttons/csad/", "u", "d", "o"), bsz.x / 2, list.c.y + list.sz.y + margin, 0.5, 0)
 	    .action(() -> scroll(1));
 	sau.hide(); sad.hide();
-	Button logout  = add(new Button(UI.scale(90), "Log out") {
-		@Override
-		public void click() {
-			RemoteUI rui = (RemoteUI) ui.rcvr;
-			synchronized (rui.sess) {
-				rui.sess.close();
-			}
-		}
-	}, list.sz.x/2-UI.scale(45), sad.c.y + sad.sz.y + margin );
-	resize(new Coord(bg.sz().x, logout.c.y + logout.sz.y));
+        Button logout  = add(new Button(UI.scale(90), "Log out") {
+            @Override
+            public void click() {
+                RemoteUI rui = (RemoteUI) ui.rcvr;
+                synchronized (rui.sess) {
+                    rui.sess.close();
+                }
+            }
+        }, list.sz.x/2-UI.scale(45), sad.c.y + sad.sz.y + margin );
+
+        resize(new Coord(bsz.x, sad.c.y + sad.sz.y + logout.c.y + logout.sz.y));
     }
 
     public static class Char {
@@ -93,7 +94,7 @@ public class Charlist extends Widget {
 	public final Avaview ava;
 
 	public Charbox(Char chr) {
-	    super(bg.sz());
+	    super(bsz);
 	    this.chr = chr;
 	    Widget avaf = adda(Frame.with(this.ava = new Avaview(Avaview.dasz, -1, "avacam"), false), Coord.of(sz.y / 2), 0.5, 0.5);
 	    add(new Img(tf.render(chr.name).tex()), avaf.pos("ur").adds(5, 0));
@@ -108,7 +109,7 @@ public class Charlist extends Widget {
 	public void draw(GOut g) {
 	    if(list.sel == chr)
 		g.chcolor(255, 255, 128, 255);
-	    g.image(bg, Coord.z);
+	    ISBox.box.draw(g, Coord.z, sz);
 	    g.chcolor();
 	    super.draw(g);
 	}
@@ -122,7 +123,7 @@ public class Charlist extends Widget {
 
     public class Boxlist extends SListBox<Char, Charbox> {
 	public Boxlist(int h) {
-	    super(Coord.of(bg.sz().x, ((bg.sz().y + margin) * h) - margin), bg.sz().y, margin);
+	    super(Coord.of(bsz.x, ((bsz.y + margin) * h) - margin), bsz.y, margin);
 	}
 
 	protected List<Char> items() {return(chars);}
@@ -166,7 +167,7 @@ public class Charlist extends Widget {
     }
 
     public void scroll(int amount) {
-	scrolltgt = Utils.clip(((scrolltgt < 0) ? list.scrollval() : scrolltgt) + ((bg.sz().y + margin) * amount), list.scrollmin(), list.scrollmax());
+	scrolltgt = Utils.clip(((scrolltgt < 0) ? list.scrollval() : scrolltgt) + ((bsz.y + margin) * amount), list.scrollmin(), list.scrollmax());
     }
 
     public boolean mousedown(Coord c, int button) {
@@ -192,7 +193,7 @@ public class Charlist extends Widget {
 		if(rawdesc.length > 3) {
 		    Object[] rawposes = (Object[])rawdesc[3];
 		    for(int i = 0; i < rawposes.length; i += 2)
-			poses.add(new ResData(ui.sess.getres((Integer)rawposes[i]), new MessageBuf((byte[])rawposes[i + 1])));
+			poses.add(new ResData(ui.sess.getresv(rawposes[i]), new MessageBuf((byte[])rawposes[i + 1])));
 		}
 		c.ava(desc, map, poses);
 	    }
@@ -214,7 +215,7 @@ public class Charlist extends Widget {
 	    if(rawdesc.length > 3) {
 		Object[] rawposes = (Object[])rawdesc[3];
 		for(int i = 0; i < rawposes.length; i += 2)
-		    poses.add(new ResData(ui.sess.getres((Integer)rawposes[i]), new MessageBuf((byte[])rawposes[i + 1])));
+		    poses.add(new ResData(ui.sess.getresv(rawposes[i]), new MessageBuf((byte[])rawposes[i + 1])));
 	    }
 	    synchronized(chars) {
 		for(Char c : chars) {
@@ -225,7 +226,7 @@ public class Charlist extends Widget {
 		}
 	    }
 	} else if(msg == "biggu") {
-	    int id = (Integer)args[0];
+	    int id = Utils.iv(args[0]);
 	    if(id < 0) {
 		avalink = null;
 	    } else {

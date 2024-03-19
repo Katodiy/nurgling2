@@ -43,7 +43,7 @@ public class Partyview extends Widget {
     @RName("pv")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-	    return(new Partyview(ui.sess.glob.party, (Integer)args[0]));
+	    return(new Partyview(ui.sess.glob.party, Utils.uiv(args[0])));
 	}
     }
 
@@ -88,10 +88,13 @@ public class Partyview extends Widget {
 	    Gob gob = m.getgob();
 	    if(gob == null)
 		return(tooltip);
+	    return(null);
+	    /*
 	    KinInfo ki = gob.getattr(KinInfo.class);
 	    if(ki == null)
 		return(null);
 	    return(tooltip = ki.rendered());
+	    */
 	}
     }
 
@@ -151,7 +154,7 @@ public class Partyview extends Widget {
 	if(msg == "list") {
 	    Map<Long, Member> nmemb = new HashMap<>(), cmemb = party.memb;
 	    for(int a = 0; a < args.length; a++) {
-		long id = Utils.uint32((Integer)args[a]);
+		long id = Utils.uiv(args[a]);
 		Member m = cmemb.get(id);
 		if(m == null)
 		    m = party.new Member(id);
@@ -159,10 +162,10 @@ public class Partyview extends Widget {
 	    }
 	    party.memb = nmemb;
 	} else if(msg == "ldr") {
-	    party.leader = party.memb.get(Utils.uint32((Integer)args[0]));
+	    party.leader = party.memb.get(Utils.uiv(args[0]));
 	} else if(msg == "m") {
 	    int a = 0;
-	    Member m = party.memb.get(Utils.uint32((Integer)args[a++]));
+	    Member m = party.memb.get(Utils.uiv(args[a++]));
 	    if(m != null) {
 		Coord2d c = null;
 		if((a < args.length) && (args[a] instanceof Coord))

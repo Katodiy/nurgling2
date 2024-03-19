@@ -1,13 +1,16 @@
-package haven.res.ui.tt.slots;/* Preprocessed source code */
-/* $use: lib/tspec */
+/* Preprocessed source code */
+package haven.res.ui.tt.slots;
 
 import haven.*;
+import static haven.PUtils.*;
+import java.awt.image.*;
+import java.awt.Graphics;
+import java.awt.Font;
+import java.awt.Color;
+import java.util.*;
 
-import java.util.LinkedList;
-import java.util.List;
-
-/* >tt: haven.res.ui.tt.slots.Fac */
-@FromResource(name = "ui/tt/slots", version = 28)
+/* >tt: Fac */
+@haven.FromResource(name = "ui/tt/slots", version = 31)
 public class Fac implements ItemInfo.InfoFactory {
     public ItemInfo build(ItemInfo.Owner owner, ItemInfo.Raw rawi, Object... args) {
 	Resource.Resolver rr = owner.context(Resource.Resolver.class);

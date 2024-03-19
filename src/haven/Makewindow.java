@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.widgets.NMakewindow;
+
 import java.util.*;
 import java.awt.Font;
 import java.awt.Color;
@@ -47,7 +49,7 @@ public class Makewindow extends Widget {
     @RName("make")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-	    return(new Makewindow((String)args[0]));
+	    return(new NMakewindow((String)args[0]));
 	}
     }
 
@@ -55,7 +57,7 @@ public class Makewindow extends Widget {
 	.add(Makewindow.class, wdg -> wdg)
 	.add(Glob.class, wdg -> wdg.ui.sess.glob)
 	.add(Session.class, wdg -> wdg.ui.sess);
-    public class Spec implements GSprite.Owner, ItemInfo.SpriteOwner {
+    public class Spec implements GSprite.Owner, ItemInfo.SpriteOwner, RandomSource {
 	public Indir<Resource> res;
 	public MessageBuf sdt;
 	public Tex num;
@@ -153,13 +155,13 @@ public class Makewindow extends Widget {
 	if(msg == "inpop") {
 	    List<Spec> inputs = new ArrayList<>();
 	    for(int i = 0; i < args.length;) {
-		int resid = (Integer)args[i++];
+		Indir<Resource> res = ui.sess.getresv(args[i++]);
 		Message sdt = (args[i] instanceof byte[]) ? new MessageBuf((byte[])args[i++]) : MessageBuf.nil;
-		int num = (Integer)args[i++];
+		int num = Utils.iv(args[i++]);
 		Object[] info = {};
 		if((i < args.length) && (args[i] instanceof Object[]))
 		    info = (Object[])args[i++];
-		inputs.add(new Spec(ui.sess.getres(resid), sdt, num, info));
+		inputs.add(new Spec(res, sdt, num, info));
 	    }
 	    ui.sess.glob.loader.defer(() -> {
 		    List<Input> wdgs = new ArrayList<>();
@@ -184,13 +186,13 @@ public class Makewindow extends Widget {
 	} else if(msg == "opop") {
 	    List<Spec> outputs = new ArrayList<Spec>();
 	    for(int i = 0; i < args.length;) {
-		int resid = (Integer)args[i++];
+		Indir<Resource> res = ui.sess.getresv(args[i++]);
 		Message sdt = (args[i] instanceof byte[]) ? new MessageBuf((byte[])args[i++]) : MessageBuf.nil;
-		int num = (Integer)args[i++];
+		int num = Utils.iv(args[i++]);
 		Object[] info = {};
 		if((i < args.length) && (args[i] instanceof Object[]))
 		    info = (Object[])args[i++];
-		outputs.add(new Spec(ui.sess.getres(resid), sdt, num, info));
+		outputs.add(new Spec(res, sdt, num, info));
 	    }
 	    ui.sess.glob.loader.defer(() -> {
 		    List<SpecWidget> wdgs = new ArrayList<>();
@@ -214,17 +216,17 @@ public class Makewindow extends Widget {
 	} else if(msg == "qmod") {
 	    List<Indir<Resource>> qmod = new ArrayList<Indir<Resource>>();
 	    for(Object arg : args)
-		qmod.add(ui.sess.getres((Integer)arg));
+		qmod.add(ui.sess.getresv(arg));
 	    this.qmod = qmod;
 	} else if(msg == "tool") {
-	    tools.add(ui.sess.getres((Integer)args[0]));
+	    tools.add(ui.sess.getresv(args[0]));
 	} else if(msg == "inprcps") {
-	    int idx = (Integer)args[0];
+	    int idx = Utils.iv(args[0]);
 	    List<MenuGrid.Pagina> rcps = new ArrayList<>();
 	    GameUI gui = getparent(GameUI.class);
 	    if((gui != null) && (gui.menu != null)) {
 		for(int a = 1; a < args.length; a++)
-		    rcps.add(gui.menu.paginafor(ui.sess.getres((Integer)args[a])));
+		    rcps.add(gui.menu.paginafor(ui.sess.getresv(args[a])));
 	    }
 	    inputs.get(idx).recipes(rcps);
 	} else {
@@ -319,7 +321,7 @@ public class Makewindow extends Widget {
 	    if((cc != null) && (rpag != null)) {
 		if(!rpag.isEmpty()) {
 		    SListMenu.of(UI.scale(250, 120), rpag,
-				 pag -> pag.button().name(), pag ->pag.button().img(),
+				 pag -> pag.button().name(), pag -> pag.button().img(),
 				 pag -> pag.button().use(new MenuGrid.Interaction(1, ui.modflags())))
 			.addat(this, cc.add(UI.scale(5, 5))).tick(dt);
 		}

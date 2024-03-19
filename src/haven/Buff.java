@@ -30,6 +30,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import haven.ItemInfo.AttrCache;
+import haven.res.ui.tt.ameter.AMeter;
 
 public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed {
     public static final Text.Foundry nfnd = new Text.Foundry(Text.dfont, 10);
@@ -53,10 +54,18 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
     int nmeter = -1;
     Tex ntext = null;
 
-    @RName("buff")
+	public int ameter() {
+		for (ItemInfo itemInfo : info()) {
+			if (itemInfo instanceof AMeter)
+				return (int) (((AMeter) itemInfo).m * 100);
+		}
+		return -1;
+	}
+
+	@RName("buff")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-	    Indir<Resource> res = ui.sess.getres((Integer)args[0]);
+	    Indir<Resource> res = ui.sess.getresv(args[0]);
 	    return(new Buff(res));
 	}
     }
@@ -76,8 +85,12 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
     public <T> T context(Class<T> cl) {return(ctxr.context(cl, this));}
 
     public List<ItemInfo> info() {
-	if(info == null)
+	if(info == null) {
 	    info = ItemInfo.buildinfo(this, rawinfo);
+	    Resource.Pagina pag = res.get().layer(Resource.pagina);
+	    if(pag != null)
+		info.add(new ItemInfo.Pagina(this, pag.text));
+	}
 	return(info);
     }
 
@@ -126,7 +139,7 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
 	    g.image(img, imgoff);
 	    Tex nmeter = (this.nmeter >= 0) ? nmeter() : nmeteri.get();
 	    if(nmeter != null)
-		g.aimage(nmeter, imgoff.add(img.sz()).sub(1, 1), 1, 1, UI.scale(nmeter.sz()));
+		g.aimage(nmeter, imgoff.add(img.sz()).sub(1, 1), 1, 1, nmeter.sz());
 	    Double cmeter;
 	    if(this.cmeter >= 0) {
 		double m = this.cmeter;
@@ -162,13 +175,14 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
 
     private BufferedImage longtip() {
 	BufferedImage img;
-	if(rawinfo != null)
+	if(rawinfo != null) {
 	    img = ItemInfo.longtip(info());
-	else
+	} else {
 	    img = shorttip();
-	Resource.Pagina pag = res.get().layer(Resource.pagina);
-	if(pag != null)
-	    img = ItemInfo.catimgs(0, img, RichText.render("\n" + pag.text, textw).img);
+	    Resource.Pagina pag = res.get().layer(Resource.pagina);
+	    if(pag != null)
+		img = ItemInfo.catimgs(0, img, RichText.render("\n" + pag.text, textw).img);
+	}
 	return(img);
     }
 
@@ -229,7 +243,7 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
 
     public void uimsg(String msg, Object... args) {
 	if(msg == "ch") {
-	    this.res = ui.sess.getres((Integer)args[0]);
+	    this.res = ui.sess.getresv(args[0]);
 	} else if(msg == "tt") {
 	    info = null;
 	    rawinfo = new ItemInfo.Raw(args);

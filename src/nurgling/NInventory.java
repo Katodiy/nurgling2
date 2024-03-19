@@ -70,6 +70,13 @@ public class NInventory extends Inventory
         return gfs.result();
     }
 
+    public int getTotalSpace() throws InterruptedException
+    {
+        GetTotalSpace gts = new GetTotalSpace(this);
+        NUtils.getUI().core.addTask(gts);
+        return gts.result();
+    }
+
     public WItem getItem(NAlias name) throws InterruptedException
     {
         GetItem gi = new GetItem(this, name);
@@ -89,7 +96,21 @@ public class NInventory extends Inventory
         return gi.getResult();
     }
 
+    public int getTotalAmountItems(NAlias name) throws InterruptedException
+    {
+        GetTotalAmountItems gi = new GetTotalAmountItems(this, name);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
     public ArrayList<WItem> getItems(NAlias name) throws InterruptedException
+    {
+        GetItems gi = new GetItems(this, name);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
+    public ArrayList<WItem> getItemsOfType(NAlias name) throws InterruptedException
     {
         GetItems gi = new GetItems(this, name);
         NUtils.getUI().core.addTask(gi);
@@ -428,6 +449,21 @@ public class NInventory extends Inventory
             }
         }
         return freespace;
+    }
+
+    public int calcTotalSpace()
+    {
+        int totalSpace = 0;
+        short[][] inventory = containerMatrix();
+        if(inventory == null)
+            return -1;
+        for (int i = 0; i < isz.y; i++) {
+            for (int j = 0; j < isz.x; j++) {
+                if (inventory[i][j] != 2)
+                    totalSpace++;
+            }
+        }
+        return totalSpace;
     }
 
     public boolean isSlotFree(Coord pos)
