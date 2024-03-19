@@ -46,6 +46,12 @@ public class NBotsMenu extends Widget
             tests.elements.add(new NButton("test9", new NomadWalker()));
             tests.elements.add(new NButton("calibrator", new NomadCalibration()));
             addLayout(tests);
+            NLayout nords = new NLayout("toolsNords");
+            tests.elements.add(new NButton("nomadCalibrator", new NomadCalibration() ));
+            tests.elements.add(new NButton("nomadWalker", new NomadWalker() ));
+            tests.elements.add(new NButton("nomadSailor", new NomadSailor() ));
+            addLayout(nords);
+
         }
         showLayouts();
         pack();
