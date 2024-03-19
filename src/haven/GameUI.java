@@ -54,7 +54,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public Window equwnd;
     private Window makewnd;
     private Window srchwnd;
-    private Window iconwnd;
+    public Window iconwnd;
     private Coord makewndc = Utils.getprefc("makewndc", new Coord(400, 200));
     public Inventory maininv;
     public CharWnd chrwdg;
@@ -75,7 +75,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public BeltSlot[] belt = new BeltSlot[144];
     public final Map<Integer, String> polowners = new HashMap<Integer, String>();
     public Bufflist buffs;
-
+	NMiniMapWnd mmapw = null;
     public static abstract class BeltSlot {
 	public final int idx;
 
@@ -594,7 +594,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		     * existing mapfile with a new one is better. */
 		    throw(new RuntimeException("failed to load mapfile", e));
 		}
-		add(new NResizableWidget(mmap = new CornerMap(UI.scale(new Coord(133, 133)), file),"minimap", new Coord(250, 250)));
+		add(new NResizableWidget((mmapw = new NMiniMapWnd("MiniMap", (NMapView) map, file)), "minimap", new Coord(250, 250)));
+		mmap = mmapw.miniMap;
 		mmap.lower();
 		mapfile = new MapWnd(file, map, Utils.getprefc("wndsz-map", UI.scale(new Coord(700, 500))), "Map");
 		mapfile.show(Utils.getprefb("wndvis-map", false));
@@ -1117,17 +1118,17 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	return(ret);
     }
 
-    private void fitwdg(Widget wdg) {
+    public void fitwdg(Widget wdg) {
 	wdg.c = fitwdg(wdg, wdg.c);
     }
 
-    private boolean wndstate(Window wnd) {
+    public boolean wndstate(Window wnd) {
 	if(wnd == null)
 	    return(false);
 	return(wnd.visible());
     }
 
-    private void togglewnd(Window wnd) {
+    public void togglewnd(Window wnd) {
 	if(wnd != null) {
 	    if(wnd.show(!wnd.visible())) {
 		wnd.raise();

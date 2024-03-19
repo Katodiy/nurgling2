@@ -33,7 +33,7 @@ public class IButton extends SIWidget {
     public final BufferedImage up, down, hover;
     public boolean h = false, a = false;
     public Runnable action = null;
-    private UI.Grab d = null;
+    public UI.Grab d = null;
 
     @RName("ibtn")
     public static class $_ implements Factory {

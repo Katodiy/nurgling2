@@ -6,6 +6,7 @@ import nurgling.actions.*;
 import nurgling.actions.bots.*;
 import nurgling.actions.test.*;
 
+import java.awt.image.BufferedImage;
 import java.util.*;
 
 public class NBotsMenu extends Widget
@@ -57,6 +58,88 @@ public class NBotsMenu extends Widget
         showLayouts();
         pack();
     }
+    NButton dragging = null;
+    @Override
+    public void draw(GOut g, boolean strict) {
+        super.draw(g, strict);
+        if(dragging != null) {
+            BufferedImage ds = dragging.btn.up;
+            Coord dssz = new Coord(ds.getWidth(),ds.getHeight());
+            ui.drawafter(new UI.AfterDraw() {
+                public void draw(GOut g) {
+                    g.reclip(ui.mc.sub(dssz.div(2)), dssz);
+                    g.image(new TexI(ds), ui.mc );
+                }
+            });
+        }
+    }
+    private NButton bhit(Coord c) {
+        for(NLayout lay : layouts)
+        {
+            for(NButton b : lay.elements)
+            {
+                if(b.btn.visible())
+                {
+                    if(c.x <= b.btn.c.x + b.btn.sz.x && c.y <= b.btn.c.y + b.btn.sz.y && c.x >= b.btn.c.x && c.y >= b.btn.c.y)
+                        return b;
+                }
+            }
+        }
+        return(null);
+    }
+    public void mousemove(Coord c) {
+        if((dragging == null) && (pressed != null)) {
+            NButton h = bhit(c);
+            if(h != pressed) {
+                dragging = pressed;
+                if(dragging.btn.d!=null)
+                {
+                    dragging.btn.d.remove();
+                    dragging.btn.d=null;
+                }
+            }
+        }
+        super.mousemove(c);
+    }
+
+    private NButton pressed = null;
+    private UI.Grab grab = null;
+    public boolean mouseup(Coord c, int button) {
+        NButton h = bhit(c);
+        if((button == 1) && (grab != null)) {
+            if(dragging != null) {
+                ui.dropthing(ui.root, ui.mc, dragging);
+                pressed = null;
+                dragging = null;
+            } else if(pressed != null) {
+                if(pressed == h) {
+                    pressed.btn.click();
+                }
+                pressed = null;
+            }
+            grab.remove();
+            grab = null;
+        }
+        return(super.mouseup(c,button));
+    }
+
+    public boolean mousedown(Coord c, int button) {
+        NButton h = bhit(c);
+        if((button == 1) && (h != null)) {
+            pressed = h;
+            grab = ui.grabmouse(this);
+        }
+        boolean res = super.mousedown(c,button);
+        if(pressed!=null)
+        {
+            if(pressed.btn.d!=null)
+            {
+                pressed.btn.d.remove();
+                pressed.btn.d=null;
+            }
+        }
+        return res;
+    }
 
     void addLayout(NLayout lay){
         int count = 0;
@@ -104,12 +187,25 @@ public class NBotsMenu extends Widget
 
     ArrayList<NLayout> layouts = new ArrayList<>();
 
-    class NButton
+    public NButton find(String path) {
+        for (NLayout lay : layouts)
+        {
+            for(NButton element: lay.elements)
+            {
+                if(element.path!=null && element.path.equals(path))
+                    return element;
+            }
+        }
+        return null;
+    }
+
+    public class NButton
     {
         public final IButton btn;
-
+        public String path;
         NButton(String path, Action action)
         {
+            this.path = path;
             btn = new IButton(Resource.loadsimg(dir_path + path + "/u"), Resource.loadsimg(dir_path + path + "/d"), Resource.loadsimg(dir_path + path + "/h")).action(
                     new Runnable()
                     {
