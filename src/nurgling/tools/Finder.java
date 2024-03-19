@@ -81,6 +81,37 @@ public class Finder
         return result;
     }
 
+    public static ArrayList<Gob> findGobs(NAlias name) throws InterruptedException
+    {
+        return findGobs(name, 10000);
+    }
+
+    public static ArrayList<Gob> findGobs(NAlias name, double distance) throws InterruptedException
+    {
+        NUtils.getUI().core.addTask(new FindPlayer());
+        double dist = distance;
+        ArrayList<Gob> result = new ArrayList<> ();
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
+                {
+                    if (NParser.isIt(gob, name) && NUtils.player() != null)
+                    {
+                        double new_dist;
+                        if ((new_dist = gob.rc.dist(NUtils.player().rc)) < dist)
+                        {
+                            dist = new_dist;
+                            result.add(gob);
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     public static ArrayList<Gob> findGobs(Area area, NAlias name) throws InterruptedException
     {
         Coord2d b = area.ul.mul(MCache.tilesz);
