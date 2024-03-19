@@ -49,10 +49,10 @@ public class NModelBox extends Sprite implements RenderTree.Node
             {
                 ArrayList<Polygon> polygons = new ArrayList<>();
                 Coord2d[] polyVertexes = new Coord2d[4];
-                polyVertexes[0] = hitBox.end;
-                polyVertexes[1] = new Coord2d(hitBox.begin.x, hitBox.end.y);
-                polyVertexes[2] = hitBox.begin;
-                polyVertexes[3] = new Coord2d(hitBox.end.x, hitBox.begin.y);
+                polyVertexes[0] = hitBox.begin;
+                polyVertexes[1] = new Coord2d(hitBox.end.x, hitBox.begin.y);
+                polyVertexes[2] = hitBox.end;
+                polyVertexes[3] = new Coord2d(hitBox.begin.x, hitBox.end.y);
                 polygons.add(new Polygon(polyVertexes));
 
                 return new NBoundingBox(polygons, true);

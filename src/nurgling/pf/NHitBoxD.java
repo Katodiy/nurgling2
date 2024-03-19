@@ -18,6 +18,7 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     public Coord2d[] c = new Coord2d[4];
     public Coord2d[] checkPoints;
     boolean ortho = false;
+    boolean asymmetric = false;
     boolean primitive = false;
 
 
@@ -32,12 +33,12 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     }
 
     public NHitBoxD(Coord2d ul, Coord2d br) {
-        this.setOrtho(ul, br, Coord2d.of(0), false);
+        this.setOrtho(ul, br, null, false);
         setUpCheckpoints();
     }
 
     public NHitBoxD(Coord ul, Coord br) {
-        this(Utils.pfGridToWorld(ul), Utils.pfGridToWorld(br.add(1,1)));
+        this(Utils.pfGridToWorld(ul).sub(MCache.tileqsz), Utils.pfGridToWorld(br).add(MCache.tileqsz));
     }
 
     public NHitBoxD(Coord2d ul, Coord2d br, Coord2d r) {
@@ -91,7 +92,12 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     }
 
     public void setOrtho(Coord2d ul, Coord2d br, Coord2d r, boolean halfPi) {
-        rc = Coord2d.of(r.x, r.y);
+        if(r != null) {
+            rc = Coord2d.of(r.x, r.y);
+        }
+        else {
+            rc = ul.add(br).div(2);
+        }
         if (halfPi) {
             this.ul = Coord2d.of(Math.min(ul.y, br.y), Math.min(ul.x, br.x));
             this.br = Coord2d.of(Math.max(ul.y, br.y), Math.max(ul.x, br.x));
@@ -115,42 +121,55 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
             return;
         }
 
+
         double xRange = br.x - ul.x;
         double yRange = br.y - ul.y;
-        Coord2d startMax1, endMax1, axisMax1;
-        Coord2d startMax2, endMax2, axisMax2;
-        Coord2d startMin1, endMin1, axisMin1;
-        Coord2d startMin2, endMin2, axisMin2;
-        startMax1 = c[0];
-        startMin1 = c[0];
-        endMax2 = c[2];
-        endMin2 = c[2];
+
+        Coord2d start, end, axis;
         if (xRange > yRange) {
-            startMin2 = c[1];
-            endMin1 = c[3];
-            startMax2 = c[3];
-            endMax1 = c[1];
+            start = c[0].add(c[3]).div(2);
+            end = c[1].add(c[2]).div(2);
         } else {
-            startMin2 = c[3];
-            endMin1 = c[1];
-            startMax2 = c[1];
-            endMax1 = c[3];
+            start = c[0].add(c[1]).div(2);
+            end = c[2].add(c[3]).div(2);
         }
-        axisMax1 = endMax1.sub(startMax1);
-        axisMax2 = endMax2.sub(startMax2);
-        axisMin1 = endMin1.sub(startMin1);
-        axisMin2 = endMin2.sub(startMin2);
+        axis = end.sub(start);
         int amountMax = (int) Math.ceil(Math.max(xRange, yRange) / MCache.tilehsz.x);
-        int amountMin = (int) Math.ceil(Math.min(xRange, yRange) / MCache.tilehsz.x);
-        checkPoints = new Coord2d[amountMax * 2 + amountMin * 2];
-        for (int i = 0; i < amountMax; i++) {
-            checkPoints[i] = startMax1.add(axisMax1.mul((i + 1) / (double) (amountMax + 1)));
-            checkPoints[amountMax + i] = startMax2.add(axisMax2.mul((i + 1) / (double) (amountMax + 1)));
-        }
-        for (int i = 0; i < amountMin; i++) {
-            checkPoints[amountMax * 2 + i] = startMin1.add(axisMin1.mul((i + 1) / (double) (amountMin + 1)));
-            checkPoints[amountMax * 2 + amountMin + i] = startMin2.add(axisMin2.mul((i + 1) / (double) (amountMin + 1)));
-        }
+
+//        Coord2d startMax1, endMax1, axisMax1;
+//        Coord2d startMax2, endMax2, axisMax2;
+//        Coord2d startMin1, endMin1, axisMin1;
+//        Coord2d startMin2, endMin2, axisMin2;
+//        startMax1 = c[0];
+//        startMin1 = c[0];
+//        endMax2 = c[2];
+//        endMin2 = c[2];
+//        if (xRange > yRange) {
+//            startMin2 = c[1];
+//            endMin1 = c[3];
+//            startMax2 = c[3];
+//            endMax1 = c[1];
+//        } else {
+//            startMin2 = c[3];
+//            endMin1 = c[1];
+//            startMax2 = c[1];
+//            endMax1 = c[3];
+//        }
+//        axisMax1 = endMax1.sub(startMax1);
+//        axisMax2 = endMax2.sub(startMax2);
+//        axisMin1 = endMin1.sub(startMin1);
+//        axisMin2 = endMin2.sub(startMin2);
+//        int amountMax = (int) Math.ceil(Math.max(xRange, yRange) / MCache.tilehsz.x);
+//        int amountMin = (int) Math.ceil(Math.min(xRange, yRange) / MCache.tilehsz.x);
+//        checkPoints = new Coord2d[amountMax * 2 + amountMin * 2];
+//        for (int i = 0; i < amountMax; i++) {
+//            checkPoints[i] = startMax1.add(axisMax1.mul((i + 1) / (double) (amountMax + 1)));
+//            checkPoints[amountMax + i] = startMax2.add(axisMax2.mul((i + 1) / (double) (amountMax + 1)));
+//        }
+//        for (int i = 0; i < amountMin; i++) {
+//            checkPoints[amountMax * 2 + i] = startMin1.add(axisMin1.mul((i + 1) / (double) (amountMin + 1)));
+//            checkPoints[amountMax * 2 + amountMin + i] = startMin2.add(axisMin2.mul((i + 1) / (double) (amountMin + 1)));
+//        }
     }
 
     @Override
