@@ -78,7 +78,7 @@ public class NGob {
                             }
                         }
 
-                        if (name.equals("gfx/borka/body") && NUtils.playerID() != parent.id) {
+                        if (NUtils.playerID()!= -1 && name.equals("gfx/borka/body") && NUtils.playerID() != parent.id) {
                             parent.addcustomol(new NKinRing(parent));
                             parent.setattr(new NKinTex(parent));
                         }
