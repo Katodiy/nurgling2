@@ -326,6 +326,15 @@ public class NGameUI extends GameUI
         }
     }
 
+    public void toggleol(String tag, boolean a) {
+        if(map != null) {
+            if(a)
+                map.enol(tag);
+            else
+                map.disol(tag);
+        }
+    }
+
     public class NToolBelt extends Belt implements KeyBinding.Bindable{
 
         public static final int GAP = 10;

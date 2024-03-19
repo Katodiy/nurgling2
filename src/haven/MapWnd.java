@@ -39,6 +39,8 @@ import haven.MapFile.PMarker;
 import haven.MapFile.SMarker;
 import haven.MiniMap.*;
 import haven.BuddyWnd.GroupSelector;
+import nurgling.widgets.NMiniMap;
+
 import static haven.MCache.tilesz;
 import static haven.MCache.cmaps;
 import static haven.Utils.eq;
@@ -266,7 +268,7 @@ public class MapWnd extends Window implements Console.Directory {
 	}
     }
 
-    private class View extends MiniMap {
+    private class View extends NMiniMap {
 	View(MapFile file) {
 	    super(file);
 	}
@@ -278,7 +280,7 @@ public class MapWnd extends Window implements Console.Directory {
 		    Tex img = disp.olimg(tag);
 		    if(img != null) {
 			g.chcolor(255, 255, 255, olalpha);
-			g.image(img, ul, UI.scale(img.sz()));
+			g.image(img, ul, UI.scale(img.sz()).mul(scale));
 		    }
 		} catch(Loading l) {
 		}
