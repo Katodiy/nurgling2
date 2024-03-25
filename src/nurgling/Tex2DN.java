@@ -21,6 +21,8 @@ public class Tex2DN extends State
 
     public Uniform tex2d(Uniform.Data<Object> data)
     {
+        if(data == null)
+            return null;
         return new Uniform(Type.SAMPLER2D, data.value, data.deps);
     }
 
@@ -29,6 +31,10 @@ public class Tex2DN extends State
     {
         Tex2D.get(prog).tex2d(new Uniform.Data<Object>(p ->
         {
+            if(p == null)
+            {
+                return null;
+            }
             TexRender.TexDraw draw = p.get(TexRender.TexDraw.slot);
             TexRender.TexClip clip = p.get(TexRender.TexClip.slot);
             if ((draw != null) && (clip != null))
