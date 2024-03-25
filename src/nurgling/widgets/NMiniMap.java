@@ -1,12 +1,15 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.NConfig;
 import nurgling.NUtils;
 
+import java.awt.*;
 import java.util.Map;
 import java.util.TreeMap;
 
 import static haven.MCache.cmaps;
+import static haven.MCache.tilesz;
 
 public class NMiniMap extends MiniMap implements Console.Directory {
     public int scale = 1;
@@ -53,6 +56,67 @@ public class NMiniMap extends MiniMap implements Console.Directory {
         //g.image(bg, Coord.z, UI.scale(bg.sz()));
         super.draw(g);
     }
+
+    void drawgrid(GOut g) {
+        int zmult = 1 << zoomlevel;
+        Coord offset = sz.div(2).sub(dloc.tc.div(scalef()));
+        Coord zmaps = cmaps.div( (float)zmult).mul(scale);
+
+        double width = UI.scale(1f);
+        Color col = g.getcolor();
+        g.chcolor(Color.RED);
+        for (int x = dgext.ul.x * zmult; x < dgext.br.x * zmult; x++) {
+            Coord a = UI.scale(zmaps.mul(x, dgext.ul.y * zmult)).add(offset);
+            Coord b = UI.scale(zmaps.mul(x, dgext.br.y * zmult)).add(offset);
+            if(a.x >= 0 && a.x <= sz.x) {
+                a.y = Utils.clip(a.y, 0, sz.y);
+                b.y = Utils.clip(b.y, 0, sz.y);
+                g.line(a, b, width);
+            }
+        }
+        for (int y = dgext.ul.y * zmult; y < dgext.br.y * zmult; y++) {
+            Coord a = UI.scale(zmaps.mul(dgext.ul.x * zmult, y)).add(offset);
+            Coord b = UI.scale(zmaps.mul(dgext.br.x * zmult, y)).add(offset);
+            if(a.y >= 0 && a.y <= sz.y) {
+                a.x = Utils.clip(a.x, 0, sz.x);
+                b.x = Utils.clip(b.x, 0, sz.x);
+                g.line(a, b, width);
+            }
+        }
+        g.chcolor(col);
+    }
+    public static final Coord _sgridsz = new Coord(100, 100);
+    public static final Coord VIEW_SZ = UI.scale(_sgridsz.mul(9).div(tilesz.floor()));
+    public static final Color VIEW_BG_COLOR = new Color(255, 255, 255, 60);
+    public static final Color VIEW_BORDER_COLOR = new Color(0, 0, 0, 128);
+    void drawview(GOut g) {
+        int zmult = 1 << zoomlevel;
+        Coord2d sgridsz = new Coord2d(_sgridsz);
+        Gob player = NUtils.getGameUI().map.player();
+        if(player != null) {
+            Coord rc = p2c(player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz));
+            Coord viewsz = VIEW_SZ.div(zmult).mul(scale);
+            g.chcolor(VIEW_BG_COLOR);
+            g.frect(rc, viewsz);
+            g.chcolor(VIEW_BORDER_COLOR);
+            g.rect(rc, viewsz);
+            g.chcolor();
+        }
+    }
+
+    @Override
+    public void drawparts(GOut g){
+        drawmap(g);
+        drawmarkers(g);
+        if(dlvl == 0)
+            drawicons(g);
+        drawparty(g);
+        boolean playerSegment = (sessloc != null) && ((curloc == null) || (sessloc.seg == curloc.seg));
+        if(zoomlevel <= 2 && (Boolean)NConfig.get(NConfig.Key.showGrid)) {drawgrid(g);}
+        if(playerSegment && zoomlevel <= 1 && (Boolean)NConfig.get(NConfig.Key.showView)) {drawview(g);}
+
+    }
+
     @Override
     protected float scalef() {
         return(UI.unscale((float)(1 << dlvl))/scale);

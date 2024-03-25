@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
 
@@ -57,12 +58,13 @@ public class NMiniMapWnd extends Widget{
         ACheckBox first = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/claim", GameUI.kb_claim, "Display personal claims"), 0, 0).changed(a -> NUtils.getGameUI().toggleol("cplot", a));
         toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vil", GameUI.kb_vil, "Display village claims"), (first.sz.x+UI.scale(3)), 0).changed(a -> NUtils.getGameUI().toggleol("vlg", a));
         toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/rlm", GameUI.kb_rlm, "Display realms"), (first.sz.x+UI.scale(3))*2, 0).changed(a -> NUtils.getGameUI().toggleol("realm", a));
-//        ACheckBox eye = toggle_panel.add(new NMenuCheckBox("lbtn-eye", kb_eye, "Display vision area"), (first.sz.x+UI.scale(3))*4, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("eye", a));
-//        eye.a = NConfiguration.getInstance().isEyed;
-//        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*5, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
+        ACheckBox eye = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vis", kb_eye, "Display vision area"), (first.sz.x+UI.scale(3))*4, 0).changed(a -> switchStatus("eye", a));
+        eye.a = (Boolean)NConfig.get(NConfig.Key.showView);
+
+        ACheckBox grid = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/grid", kb_grid, "Display grid"), (first.sz.x+UI.scale(3))*5, 0).changed(a -> switchStatus("grid", a));
+        grid.a = (Boolean) NConfig.get(NConfig.Key.showGrid);
+//        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
 //        path.a = NConfiguration.getInstance().isPaths;
-//        ACheckBox grid = toggle_panel.add(new NMenuCheckBox("lbtn-grid", kb_grid, "Display grid"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("grid", a));
-//        grid.a = NConfiguration.getInstance().isGrid;
 //        ACheckBox minesup = toggle_panel.add(new NMenuCheckBox("lbtn-minesup", kb_minesup, "Display safe mining area"), (first.sz.x+UI.scale(3))*7, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("minesup", a));
 //        minesup.a = NConfiguration.getInstance().minesup;
 //        NUtils.getGameUI().toggleol("minesup", minesup.a);
@@ -87,6 +89,19 @@ public class NMiniMapWnd extends Widget{
         toggle_panel.pack();
         add(toggle_panel);
         pack();
+    }
+
+    public void switchStatus(String val, Boolean a) {
+        switch (val){
+            case "eye": {
+                NConfig.set(NConfig.Key.showView,a);
+                break;
+            }
+            case "grid": {
+                NConfig.set(NConfig.Key.showGrid,a);
+                break;
+            }
+        }
     }
 
     public void draw(GOut g, boolean strict)

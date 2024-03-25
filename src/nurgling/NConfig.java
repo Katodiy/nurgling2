@@ -39,7 +39,14 @@ public class NConfig
         invert_ver,
         kinprop,
         show_drag_menu,
-        cowsprop, goatsprop, chopperprop, sheepsprop, pigsprop, discordNotification
+        cowsprop,
+        goatsprop,
+        chopperprop,
+        sheepsprop,
+        pigsprop,
+        discordNotification,
+        showGrid,
+        showView
     }
 
 
@@ -63,6 +70,8 @@ public class NConfig
         conf.put(Key.invert_hor, false);
         conf.put(Key.invert_ver, false);
         conf.put(Key.show_drag_menu, true);
+        conf.put(Key.showGrid, false);
+        conf.put(Key.showView, false);
 
     }
 
