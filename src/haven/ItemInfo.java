@@ -26,6 +26,8 @@
 
 package haven;
 
+import haven.res.ui.tt.stackn.Stack;
+import haven.res.ui.tt.stackn.StackName;
 import haven.res.ui.tt.wellmined.WellMined;
 import nurgling.NGItem;
 import nurgling.iteminfo.NQuestItem;
@@ -188,6 +190,7 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 	public Name(Owner owner, Text str) {
 	    super(owner);
 	    this.str = str;
+
 	}
 
 	public Name(Owner owner, String str) {
@@ -388,6 +391,10 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 		    }
 		    InfoFactory f = ttres.getcode(InfoFactory.class, true);
 		    inf = f.build(owner, raw, a);
+			if(f instanceof StackName)
+			{
+				ret.add(new Stack(owner, ((Name)inf).str.text));
+			}
 		}
 		if(inf != null)
 		    ret.add(inf);
