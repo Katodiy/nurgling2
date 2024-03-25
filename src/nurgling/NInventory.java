@@ -24,6 +24,10 @@ public class NInventory extends Inventory
         super(sz);
     }
 
+    public enum QualityType {
+        High, Low
+    }
+
     public int getNumberFreeCoord(Coord coord) throws InterruptedException
     {
         GetNumberFreeCoord gnfc = new GetNumberFreeCoord(this, coord);
@@ -88,6 +92,21 @@ public class NInventory extends Inventory
     {
         return getItem(new NAlias(name));
     }
+
+    public WItem getItem(NAlias name, QualityType type) throws InterruptedException {
+        ArrayList<WItem> items = getItems(name, type);
+        if (items.isEmpty()) {
+            return null;
+        }
+        return items.get(0);
+    }
+
+    public ArrayList<WItem> getItems(NAlias name, QualityType type) throws InterruptedException {
+        GetItems gi = new GetItems(this, name, type);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
 
     public ArrayList<WItem> getItems() throws InterruptedException
     {
