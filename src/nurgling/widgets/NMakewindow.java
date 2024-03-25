@@ -38,13 +38,6 @@ public class NMakewindow extends Widget {
 
     boolean autoMode = false;
 
-    @RName("make")
-    public static class $_ implements Factory {
-        public Widget create(UI ui, Object[] args) {
-            return(new NMakewindow((String)args[0]));
-        }
-    }
-
     private static final OwnerContext.ClassResolver<NMakewindow> ctxr = new OwnerContext.ClassResolver<NMakewindow>()
             .add(Glob.class, wdg -> wdg.ui.sess.glob)
             .add(Session.class, wdg -> wdg.ui.sess);
