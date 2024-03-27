@@ -5,8 +5,7 @@ import haven.render.*;
 import haven.render.sl.*;
 import static haven.render.sl.Type.SAMPLER2D;
 
-public class Tex2DN extends State
-{
+public class Tex2DN extends State implements Disposable {
 
     static final Slot<Tex2DN> slot = new Slot<>(Slot.Type.DRAW, Tex2DN.class);
     final Texture2D.Sampler2D tex;
@@ -21,6 +20,8 @@ public class Tex2DN extends State
 
     public Uniform tex2d(Uniform.Data<Object> data)
     {
+        if(data == null)
+            return null;
         return new Uniform(Type.SAMPLER2D, data.value, data.deps);
     }
 
@@ -29,6 +30,10 @@ public class Tex2DN extends State
     {
         Tex2D.get(prog).tex2d(new Uniform.Data<Object>(p ->
         {
+            if(p == null)
+            {
+                return null;
+            }
             TexRender.TexDraw draw = p.get(TexRender.TexDraw.slot);
             TexRender.TexClip clip = p.get(TexRender.TexClip.slot);
             if ((draw != null) && (clip != null))
@@ -81,5 +86,10 @@ public class Tex2DN extends State
     public void apply(Pipe p)
     {
         p.put(slot, this);
+    }
+
+    @Override
+    public void dispose() {
+        tex.dispose();
     }
 }

@@ -34,7 +34,7 @@ import java.awt.image.BufferedImage;
 
 public class Cal extends Widget {
     public static final double hbr = UI.scale(20.0);
-    static final Tex bg = Resource.loadtex("gfx/hud/calendar/glass");
+    static final Tex bg = Resource.loadtex("nurgling/hud/calendar/glass");
     static final Tex[] dlnd = new Tex[4];
     static final Tex[] nlnd = new Tex[4];
     static final Resource.Image dsky = Resource.loadrimg("gfx/hud/calendar/daysky");

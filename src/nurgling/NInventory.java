@@ -16,12 +16,16 @@ public class NInventory extends Inventory
     public NSearchWidget searchwdg;
     public NPopupWidget toggles;
     public ICheckBox bundle;
-    public MenuGrid.Pagina pagBundle = null;
+    public MenuGrid.PagButton pagBundle = null;
     boolean showPopup = false;
 
     public NInventory(Coord sz)
     {
         super(sz);
+    }
+
+    public enum QualityType {
+        High, Low
     }
 
     public int getNumberFreeCoord(Coord coord) throws InterruptedException
@@ -88,6 +92,21 @@ public class NInventory extends Inventory
     {
         return getItem(new NAlias(name));
     }
+
+    public WItem getItem(NAlias name, QualityType type) throws InterruptedException {
+        ArrayList<WItem> items = getItems(name, type);
+        if (items.isEmpty()) {
+            return null;
+        }
+        return items.get(0);
+    }
+
+    public ArrayList<WItem> getItems(NAlias name, QualityType type) throws InterruptedException {
+        GetItems gi = new GetItems(this, name, type);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
 
     public ArrayList<WItem> getItems() throws InterruptedException
     {
@@ -283,7 +302,7 @@ public class NInventory extends Inventory
             @Override
             public void changed(boolean val) {
                 super.changed(val);
-                pagBundle.button().use(new MenuGrid.Interaction(1, 0));
+                pagBundle.use(new MenuGrid.Interaction(1, 0));
             }
         }, pw.pos("ur").add(UI.scale(new Coord(5, 0))));
         bundle.settip(Resource.remote().loadwait("nurgling/hud/buttons/bundle/u").flayer(Resource.tooltip).t);

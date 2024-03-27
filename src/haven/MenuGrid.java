@@ -35,6 +35,9 @@ import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
 import haven.Resource.AButton;
 import haven.ItemInfo.AttrCache;
+import haven.res.ui.pag.toggle.Toggle;
+import nurgling.NInventory;
+import nurgling.NUtils;
 
 public class MenuGrid extends Widget implements KeyBinding.Bindable {
     public static Pagina lastPagina = null;
@@ -95,6 +98,10 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 		    button = new PagButton(this);
 		else
 		    button = f.make(this);
+			if (res.name.contains("paginae/act/itemcomb")) {
+				((NInventory) NUtils.getGameUI().maininv).pagBundle = button;
+				((NInventory) NUtils.getGameUI().maininv).bundle.a = ((Toggle)button).a;
+			}
 	    }
 	    return(button);
 	}

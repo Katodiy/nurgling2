@@ -113,8 +113,6 @@ public class NISBox extends ISBox
 
                 parent.add(take, UI.scale(87, 44));
                 take.canactivate = true;
-
-                sz = sz.add(0, UI.scale(25));
             }
         }
     }

@@ -3,16 +3,17 @@ package haven.res.ui.tt.q.quality;
 
 /* $use: ui/tt/q/qbuff */
 import haven.*;
-import haven.res.ui.tt.q.qbuff.QBuff;
-import nurgling.NGItem;
+import haven.res.ui.tt.q.qbuff.*;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import haven.MenuGrid.Pagina;
+import nurgling.NGItem;
 
 /* >tt: Quality */
 @haven.FromResource(name = "ui/tt/q/quality", version = 26)
 public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
+    public static boolean show = Utils.getprefb("qtoggle", false);
     NGItem ownitem = null;
     boolean withContent = false;
     private static final BufferedImage icon = Resource.remote().loadwait("ui/tt/q/quality").layer(Resource.imgc, 0).scaled();
@@ -53,14 +54,6 @@ public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
     }
 
     public void drawoverlay(GOut g, Tex ol) {
-
         g.aimage(ol, new Coord(g.sz().x - ol.sz().x, ol.sz().y), 0, 1);
     }
-
-    @Override
-    public boolean tick(double dt)
-    {
-        return (ownitem != null) && withContent != (ownitem.content() == null);
-    }
-
 }

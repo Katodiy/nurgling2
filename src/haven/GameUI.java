@@ -75,7 +75,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public BeltSlot[] belt = new BeltSlot[144];
     public final Map<Integer, String> polowners = new HashMap<Integer, String>();
     public Bufflist buffs;
-	NMiniMapWnd mmapw = null;
+	public NMiniMapWnd mmapw = null;
     public static abstract class BeltSlot {
 	public final int idx;
 
