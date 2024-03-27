@@ -21,6 +21,7 @@ import static haven.MCache.tilesz;
 
 public class NomadOisterer implements Action {
     static NAlias oyster = new NAlias("oyster", "oystermushroom");
+    static NAlias oysterInv = new NAlias(new ArrayList(Arrays.asList("Oyster")),new ArrayList(Arrays.asList("Opened")));
     static NAlias animals = new NAlias(new ArrayList<String>(
             Arrays.asList("/boar", "/badger", "/wolverine", "/adder", "/bat", "/moose", "/bear", "/wolf", "/lynx", "/walrus")));
 
@@ -72,9 +73,9 @@ public class NomadOisterer implements Action {
 
         Gob boat = Finder.findGob(new NAlias("rowboat"));
         if(gui.hand.isEmpty()){
-            PathFinder pathFinder = new PathFinder(boat);
-            pathFinder.isHardMode = true;
-            pathFinder.run(gui);
+//            PathFinder pathFinder = new PathFinder(boat);
+//            pathFinder.isHardMode = true;
+//            pathFinder.run(gui);
             NUtils.rclickGob(boat);
             NUtils.getUI().core.addTask(new FollowAndPose(NUtils.player(),"gfx/borka/rowboat-d"));
             //(<gfx/borka/rowboat-d(v5)>, Message(>3f))
@@ -106,8 +107,6 @@ public class NomadOisterer implements Action {
                 //TODO logout and cry
             }
             if(alarmOyster()){
-                ArrayList<Gob> oysters = Finder.findGobs(oyster, 275);
-                NUtils.getGameUI().msg("Found " + oysters.size() + " oysters.");
                 if(alarmAnimal()){
                     //TODO flee back
                     NUtils.getGameUI().msg("Continue!");
@@ -116,28 +115,11 @@ public class NomadOisterer implements Action {
                 if(alarmFoe()){
                     //TODO logout and cry
                 }
-                for(Gob oyster : oysters){
-                    PathFinder tpf = new PathFinder(oyster);
-                    tpf.waterMode = true;
-                    tpf.run(gui);
-                    if(alarmAnimal()){
-                        //TODO
-                        NUtils.getGameUI().msg("Continue!");
-                        continue;
-                    }
-                    if(alarmFoe()){
-
-                    }
-                    if(oyster != null){
-                        new SelectFlowerAction("Pick", oyster).run(gui);
-                    }
-                }
+                new OisterFounder().run(gui);
+                //Do something if PF return "cant find path"?
             }
-
             pf.run(gui);
-
         }
-
         return null;
     }
 

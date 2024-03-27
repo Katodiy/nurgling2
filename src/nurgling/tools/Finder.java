@@ -102,7 +102,7 @@ public class Finder
                         double new_dist;
                         if ((new_dist = gob.rc.dist(NUtils.player().rc)) < dist)
                         {
-                            dist = new_dist;
+                            //dist = new_dist;
                             result.add(gob);
                         }
                     }

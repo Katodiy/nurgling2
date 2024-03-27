@@ -51,7 +51,8 @@ public class NBotsMenu extends Widget
             nords.elements.add(new NButton("nomadCalibrator", new NomadCalibration() ));
             nords.elements.add(new NButton("nomadWalker", new NomadWalker() ));
             nords.elements.add(new NButton("nomadSailor", new NomadSailor() ));
-            nords.elements.add(new NButton("test1", new NomadOisterer() ));
+            nords.elements.add(new NButton("oysterCollector", new NomadOisterer() ));
+            nords.elements.add(new NButton("test1", new OisterFounder() ));
             addLayout(nords);
 
         }
