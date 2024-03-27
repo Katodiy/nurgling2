@@ -43,6 +43,10 @@ public class NGob {
                         if (lay instanceof Resource.Neg) {
                             hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
                         }
+                        else if(lay instanceof Resource.Obstacle)
+                        {
+                            hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                        }
                     }
                     if (name != null) {
                         if (NParser.checkName(name, new NAlias("plants"))) {

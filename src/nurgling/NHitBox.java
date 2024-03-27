@@ -96,6 +96,14 @@ public class NHitBox
             put("gfx/terobjs/stockpile-orange", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
         }
     };
+    static NHitBox fromObstacle(Coord2d[][] p)
+    {
+        if(p.length == 1 && p[0].length == 4)
+        {
+            return new NHitBox(p[0][0].floor(),p[0][2].ceil());
+        }
+        return null;
+    }
 
     public static NHitBox findCustom(String name)
     {
