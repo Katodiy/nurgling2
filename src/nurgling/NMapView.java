@@ -162,7 +162,34 @@ public class NMapView extends MapView
                             if(isPrinted)
                                 ttip.put("ols", ols.toString());
                         }
+                        if(!gob.attr.isEmpty()) {
+                            StringBuilder attrs = new StringBuilder();
+                            boolean isPrinted = false;
+                            for (GAttrib attr : gob.attr.values()) {
 
+                                if (attr instanceof Drawable) {
+                                    if (((Drawable) attr).getres() != null) {
+
+                                        if (((Drawable) attr).getres().getLayers() != null) {
+                                            isPrinted = true;
+                                            for (Resource.Layer lay : ((Drawable) attr).getres().getLayers()) {
+                                                String res = lay.getClass().toString();
+                                                tlays.add(res.replace("$","_") + " ");
+                                            }
+                                        }
+                                    }
+                                }
+
+//                                if (ol.spr != null) {
+                                isPrinted = true;
+                                String res = attr.getClass().toString();
+                                if(!res.contains("$"))
+                                    attrs.append(res + " ");
+//                                }
+                            }
+                            if(isPrinted)
+                                ttip.put("attr", attrs.toString());
+                        }
 
                         ttip.put("id", String.valueOf(gob.id));
 
