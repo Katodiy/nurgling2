@@ -111,6 +111,7 @@ public class NPFMap
         this.waterMode = waterMode;
     }
 
+    long currentTransport = -1;
 
     public Coord getBegin()
     {
@@ -134,12 +135,20 @@ public class NPFMap
 
     public void build()
     {
+        if(NUtils.playerID()!=-1) {
+            Following fl = NUtils.player().getattr(Following.class);
+            if(fl!= null)
+            {
+                currentTransport = fl.tgt;
+            }
+        }
         synchronized (NUtils.getGameUI().ui.sess.glob.oc)
         {
 
             for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
             {
-               addGob(gob);
+                if(gob.id!=currentTransport)
+                    addGob(gob);
             }
         }
         for (int i = 0; i < size; i += 1)

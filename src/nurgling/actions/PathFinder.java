@@ -89,40 +89,7 @@ public class PathFinder implements Action
                 }
 
                 CellsArray ca = target.ngob.getCA();
-                if(ca!=null) {
-                    NHitBoxD targetHitBox = new NHitBoxD(target);
-
-                    ArrayList<Coord> candidates = findFreeNearByHB(ca, target_id, dummy, start);
-                    ArrayList<NHitBoxD> checkBoxes = new ArrayList<>();
-                    for (Coord cc : candidates) {
-                        Coord2d candidateCenter = Utils.pfGridToWorld(cc);
-                        Coord2d direction = candidateCenter.sub(target.rc).norm();
-                        Coord2d endpoint = targetHitBox.projectCenter(direction).sub(direction.mul(1));
-                        checkBoxes.add(NHitBoxD.shaftBoxObjectFactory(candidateCenter.add(direction.mul(3)), endpoint, 3));
-                    }
-
-                    synchronized (NUtils.getGameUI().ui.sess.glob.oc) {
-                        for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc) {
-                            if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
-                                if (gob.ngob.hitBox != null && gob.getattr(Following.class) == null && gob.id != NUtils.player().id) {
-                                    NHitBoxD gobBox = new NHitBoxD(gob);
-                                    for (int i = 0; i < candidates.size(); i++) {
-                                        if (candidates.get(i) != null) {
-                                            if (checkBoxes.get(i).intersectsLoosely(gobBox))
-                                                candidates.set(i, null);
-                                        }
-                                    }
-                                }
-                        }
-                    }
-
-                    ArrayList<Coord> results = new ArrayList<>();
-                    for (Coord candidate : candidates) {
-                        if (candidate != null)
-                            results.add(candidate);
-                    }
-                    return results;
-                }
+                return findFreeNearByHB(ca,target_id, dummy, start);
             }
         else
         {
