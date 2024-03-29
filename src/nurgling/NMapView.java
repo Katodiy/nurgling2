@@ -113,6 +113,11 @@ public class NMapView extends MapView
                 imgs.add(gob);
                 imgs.add(RichText.render(ttip.get("ols"), 0).img);
             }
+            if (ttip.get("pose") != null) {
+                BufferedImage gob = RichText.render(String.format("$col[255,145,200]{%s}:", "Pose"), 0).img;
+                imgs.add(gob);
+                imgs.add(RichText.render(ttip.get("pose"), 0).img);
+            }
             if (ttip.get("attr") != null) {
                 BufferedImage gob = RichText.render(String.format("$col[155,255,83]{%s}:", "Attr"), 0).img;
                 imgs.add(gob);
@@ -184,7 +189,11 @@ public class NMapView extends MapView
 
                                 if (attr instanceof Drawable) {
                                     if (((Drawable) attr).getres() != null) {
-
+                                        Drawable drawable = ((Drawable) attr);
+                                        if(drawable instanceof Composite)
+                                        {
+                                            ttip.put("pose", ((Composite) drawable).current_pose);
+                                        }
                                         if (((Drawable) attr).getres().getLayers() != null) {
                                             isPrinted = true;
                                             for (Resource.Layer lay : ((Drawable) attr).getres().getLayers()) {
