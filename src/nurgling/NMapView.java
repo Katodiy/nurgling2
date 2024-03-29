@@ -22,6 +22,7 @@ public class NMapView extends MapView
     }
 
     final HashMap<String, String> ttip = new HashMap<>();
+    final ArrayList<String> tlays = new ArrayList<>();
 
     public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
     public NArea.Space areaSpace = null;
@@ -112,6 +113,19 @@ public class NMapView extends MapView
                 imgs.add(gob);
                 imgs.add(RichText.render(ttip.get("ols"), 0).img);
             }
+            if (ttip.get("attr") != null) {
+                BufferedImage gob = RichText.render(String.format("$col[155,255,83]{%s}:", "Attr"), 0).img;
+                imgs.add(gob);
+                imgs.add(RichText.render(ttip.get("attr"), 0).img);
+            }
+            if (!tlays.isEmpty() && false) {
+                BufferedImage gob = RichText.render(String.format("$col[155,32,176]{%s}:", "Layers"), 0).img;
+                imgs.add(gob);
+                for(String s: tlays)
+                {
+                    imgs.add(RichText.render(s, 0).img);
+                }
+            }
             if (ttip.get("poses") != null) {
                 BufferedImage gob = RichText.render(String.format("$col[255,128,128]{%s}:", "Poses"), 0).img;
                 imgs.add(gob);
@@ -139,6 +153,7 @@ public class NMapView extends MapView
             @Override
             protected void hit(Coord pc, Coord2d mc, ClickData inf) {
                 ttip.clear();
+                tlays.clear();
                 if (inf != null) {
                     Gob gob = Gob.from(inf.ci);
                     if (gob != null) {
