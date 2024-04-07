@@ -36,6 +36,7 @@ import java.awt.image.BufferedImage;
 import haven.Resource.AButton;
 import haven.ItemInfo.AttrCache;
 import haven.res.ui.pag.toggle.Toggle;
+import nurgling.NConfig;
 import nurgling.NInventory;
 import nurgling.NUtils;
 
@@ -668,6 +669,11 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
     public static final KeyBinding kb_back = KeyBinding.get("scm-back", KeyMatch.forcode(KeyEvent.VK_BACK_SPACE, 0));
     public static final KeyBinding kb_next = KeyBinding.get("scm-next", KeyMatch.forchar('N', KeyMatch.S | KeyMatch.C | KeyMatch.M, KeyMatch.S));
     public boolean globtype(char k, KeyEvent ev) {
+	if((Boolean) NConfig.get(NConfig.Key.disableMenugridKeys)){
+		return false;
+	}
+	if(ev.isAltDown() || ev.isShiftDown() || ev.isControlDown())
+		return false;
 	if(kb_root.key().match(ev) && (this.cur != null)) {
 	    change(null);
 	    return(true);

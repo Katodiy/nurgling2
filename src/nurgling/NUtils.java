@@ -193,6 +193,12 @@ public class NUtils
         getUI().core.addTask(new WaitPlaced(gob));
     }
 
+    public static void hfout() throws InterruptedException {
+        //getGameUI().menu.wdgmsg("act", "travel", "hearth");
+        getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "travel", "hearth", 0);
+        getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/idle"));
+    }
+
     public static RosterWindow getRosterWindow(Class<? extends Entry> cattleRoster) throws InterruptedException {
         RosterWindow w;
         if((w = (RosterWindow)NUtils.getGameUI().getWindow("Cattle Roster")) == null) {

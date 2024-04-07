@@ -46,7 +46,8 @@ public class NConfig
         pigsprop,
         discordNotification,
         showGrid,
-        showView
+        showView,
+        disableMenugridKeys
     }
 
 
@@ -72,6 +73,7 @@ public class NConfig
         conf.put(Key.show_drag_menu, true);
         conf.put(Key.showGrid, false);
         conf.put(Key.showView, false);
+        conf.put(Key.disableMenugridKeys, true);
 
     }
 

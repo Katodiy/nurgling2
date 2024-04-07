@@ -6,9 +6,10 @@ import nurgling.NUtils;
 import nurgling.tasks.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-
+import nurgling.actions.NomadOisterer.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static haven.OCache.posres;
 
@@ -27,16 +28,27 @@ public class OisterFounder implements Action {
             throws InterruptedException {
 
 
-        ArrayList<Gob> oysters = Finder.findGobs(new NAlias("gfx/terobjs/herbs/oyster"), 275);
+        ArrayList<Gob> oysters = Finder.findGobs(
+                new NAlias(new ArrayList(Arrays.asList("gfx/terobjs/herbs/oyster")),new ArrayList(Arrays.asList("Mushroom"))
+        ), 275);
         gui.msg("Found " + oysters.size());
+        gui.msg("Overall " + NomadOisterer.oic);
 
         for(Gob oysterr : oysters) {
+            if(NomadOisterer.alarmFoe()){
+                NUtils.getUI().msg("Found FOE! TPOUT!");
+                NUtils.hfout();
+                return Results.ERROR("Found foe and tp outed.");
+            }
             if(alarmAnimal()){
                 continue;
             }
             PathFinder pf = new PathFinder(oysterr);
             pf.waterMode = true;
             pf.run(gui);
+//            if(!pf.run(gui).IsSuccess()){
+//                continue;
+//            }
             Results res = new SelectFlowerAction("Pick", oysterr).run(gui);
             if(!res.IsSuccess()){
                 WItem oysterToDrop = gui.getInventory().getItem(new NAlias("Oyster"));
@@ -49,11 +61,26 @@ public class OisterFounder implements Action {
 
             NUtils.getUI().core.addTask(new WaitItems(
                     NUtils.getGameUI().getInventory(),
-                    new NAlias("Oyster"),
+                    new NAlias(new ArrayList(Arrays.asList("Oyster")),new ArrayList(Arrays.asList("Pearl"))),
                     1));
-            WItem wi = gui.getInventory().getItem(new NAlias(new ArrayList(Arrays.asList("Oyster")),new ArrayList(Arrays.asList("Opened"))));
+            WItem wi = gui.getInventory().getItem(new NAlias(new ArrayList(Arrays.asList("Oyster")),new ArrayList(Arrays.asList("Opened", "Pearl"))));
             if (wi != null) {
-                new SelectFlowerAction("Crack open", wi).run(gui);
+
+                try{
+                    if(!new SelectFlowerAction("Crack open", wi).run(gui).isSuccess){
+                        NUtils.getUI().msg("!Crack Open");
+                        wi = gui.getInventory().getItem(new NAlias(new ArrayList(Arrays.asList("Oyster")),new ArrayList(Arrays.asList("Opened", "Pearl"))));
+                        wi.item.wdgmsg("drop", wi.item.sz, gui.map.player().rc.floor(posres), 0);
+                        NUtils.getUI().msg("Tried to drop.");
+                        continue;
+                    }
+                }
+                catch( NullPointerException e){}
+                WItem pearl = gui.getInventory().getItem(new NAlias("Pearl"));
+                if(pearl != null){
+                    //NUtils.getUI().msg("Found pearl!");
+                    //coninue;
+                }
                 NUtils.getUI().core.addTask(new WaitItemInInventory(new NAlias("Opened")));
 
                 WItem witem = gui.getInventory().getItem(new NAlias("Opened"));
@@ -62,6 +89,8 @@ public class OisterFounder implements Action {
                         NUtils.getGameUI().getInventory(),
                         new NAlias("Opened"),
                         0));
+                NomadOisterer.oic.getAndAdd(1);
+
             }else {
                 return Results.ERROR("Did not find Cracked Oyster to drop.");
             }

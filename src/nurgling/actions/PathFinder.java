@@ -275,6 +275,9 @@ public class PathFinder implements Action
             {
                 if(dn)
                     return Results.SUCCESS();
+                System.out.println("Player.rc:" + NUtils.player().rc);
+                System.out.println("End:" + end);
+                System.out.println("----------");
                 return Results.ERROR("Can't find path");
             }
         }

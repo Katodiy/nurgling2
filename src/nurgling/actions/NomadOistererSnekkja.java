@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.tasks.FollowAndPose;
+import nurgling.tasks.IsVesselMoving;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -13,21 +14,19 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static haven.MCache.tilesz;
 
-public class NomadOisterer implements Action {
+public class NomadOistererSnekkja implements Action {
     static NAlias oyster = new NAlias("gfx/terobjs/herbs/oyster");
     static NAlias animals = new NAlias(new ArrayList<String>(
             Arrays.asList("/boar", "/badger", "/wolverine", "/adder", "/bat", "/moose", "/bear", "/wolf", "/lynx", "/walrus")));
     static AtomicInteger oic = new AtomicInteger(0);
 
-    public NomadOisterer(String path){
+    public NomadOistererSnekkja(String path){
         this.path = path;
     }
     public static boolean alarmOyster() throws InterruptedException {
@@ -80,18 +79,16 @@ public class NomadOisterer implements Action {
         }
         gui.msg("File is loaded");
 
-        Gob boat = Finder.findGob(new NAlias("rowboat"));
+        Gob snek = Finder.findGob(new NAlias("snekkja"));
         if(alarmFoe()){
             NUtils.getUI().msg("Found FOE! TPOUT!");
             NUtils.hfout();
             return Results.ERROR("Found foe and tp outed.");
         }
         if(gui.hand.isEmpty()){
-//            PathFinder pathFinder = new PathFinder(boat);
-//            pathFinder.isHardMode = true;
-//            pathFinder.run(gui);
-            NUtils.rclickGob(boat);
-            NUtils.getUI().core.addTask(new FollowAndPose(NUtils.player(),"gfx/borka/rowboat-d"));
+            NUtils.rclickGob(snek);
+            new SelectFlowerAction("Man the helm", snek).run(gui);
+            NUtils.getUI().core.addTask(new FollowAndPose(NUtils.player(),"gfx/borka/snekkjaman0"));
         }
 
         Gob gob = Finder.findGob (new NAlias ("pow") );
@@ -99,7 +96,7 @@ public class NomadOisterer implements Action {
 
         AtomicInteger oister_quantity = new AtomicInteger(0);
         for(Coord2d coord : coords){
-            if(boat.getattr(GobHealth.class).hp <= 0.5){
+            if(snek.getattr(GobHealth.class).hp <= 0.5){
                 NUtils.getGameUI().msg("Fix the boat!");
             }
 

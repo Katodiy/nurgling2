@@ -630,7 +630,7 @@ public class UI {
 		    wdg.uimsg(msg.intern(), args);
 		}
 	    } else {
-		throw(new UIException("Uimsg to non-existent widget " + id, msg, args));
+			throw(new UIException("Uimsg to non-existent widget " + id + "msg" + msg, msg, args));
 	    }
 	}
 

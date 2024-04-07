@@ -8,6 +8,7 @@ import nurgling.actions.test.*;
 
 import java.awt.image.BufferedImage;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class NBotsMenu extends Widget
 {
@@ -51,8 +52,10 @@ public class NBotsMenu extends Widget
             nords.elements.add(new NButton("nomadCalibrator", new NomadCalibration() ));
             nords.elements.add(new NButton("nomadWalker", new NomadWalker() ));
             nords.elements.add(new NButton("nomadSailor", new NomadSailor() ));
-            nords.elements.add(new NButton("oysterCollector", new NomadOisterer() ));
+            nords.elements.add(new NButton("oysterCollector", new NomadOisterer("./oyster1.dat") ));
+            nords.elements.add(new NButton("oysterCollector", new NomadOisterer("./oyster2.dat") ));
             nords.elements.add(new NButton("test1", new OisterFounder() ));
+            nords.elements.add(new NButton("test1", new NomadOistererSnekkja("./oyster1.dat") ));
             addLayout(nords);
 
         }
