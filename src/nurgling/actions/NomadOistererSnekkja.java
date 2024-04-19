@@ -24,7 +24,6 @@ public class NomadOistererSnekkja implements Action {
     static NAlias oyster = new NAlias("gfx/terobjs/herbs/oyster");
     static NAlias animals = new NAlias(new ArrayList<String>(
             Arrays.asList("/boar", "/badger", "/wolverine", "/adder", "/bat", "/moose", "/bear", "/wolf", "/lynx", "/walrus")));
-    static AtomicInteger oic = new AtomicInteger(0);
 
     public NomadOistererSnekkja(String path){
         this.path = path;
@@ -52,7 +51,7 @@ public class NomadOistererSnekkja implements Action {
     @Override
     public Results run ( NGameUI gui )
             throws InterruptedException {
-        int temp = oic.get();
+        int temp = NomadOisterer.oic.get();
         if(path.length() == 0)
             return Results.ERROR("Set proper path file.");
 
@@ -101,7 +100,7 @@ public class NomadOistererSnekkja implements Action {
             }
 
             Coord2d pos =  coord.add ( shift );
-            Coord poscoord = pos.div ( MCache.tilesz ).floor ();
+            Coord poscoord = pos.div ( tilesz ).floor ();
             pos = new Coord2d ( ( poscoord ).x * tilesz.x + tilesz.x/2, ( poscoord ).y * tilesz.y + tilesz.y/2);
             previousCoord = pos;//заготовка под задкование
             PathFinder pf = new PathFinder(pos);
@@ -131,10 +130,11 @@ public class NomadOistererSnekkja implements Action {
                 }
                 new OisterFounder().run(gui);
             }
+            //Thread.sleep(200);
         }
         NUtils.getGameUI().msg("End of coordinate list. HF outing...");
-        NUtils.getGameUI().msg("Totally for circle : " + (oic.get() - temp) + " oysters.");
-        NUtils.getGameUI().msg("Totally for day: " + oic.get() + " oysters.");
+        NUtils.getGameUI().msg("Totally for circle : " + (NomadOisterer.oic.get() - temp) + " oysters.");
+        NUtils.getGameUI().msg("Totally for day: " + NomadOisterer.oic.get() + " oysters.");
 
         NUtils.hfout();
         return null;

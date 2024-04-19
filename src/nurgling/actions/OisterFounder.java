@@ -43,12 +43,10 @@ public class OisterFounder implements Action {
             if(alarmAnimal()){
                 continue;
             }
+            //Thread.sleep(200);
             PathFinder pf = new PathFinder(oysterr);
             pf.waterMode = true;
             pf.run(gui);
-//            if(!pf.run(gui).IsSuccess()){
-//                continue;
-//            }
             Results res = new SelectFlowerAction("Pick", oysterr).run(gui);
             if(!res.IsSuccess()){
                 WItem oysterToDrop = gui.getInventory().getItem(new NAlias("Oyster"));
@@ -77,10 +75,6 @@ public class OisterFounder implements Action {
                 }
                 catch( NullPointerException e){}
                 WItem pearl = gui.getInventory().getItem(new NAlias("Pearl"));
-                if(pearl != null){
-                    //NUtils.getUI().msg("Found pearl!");
-                    //coninue;
-                }
                 NUtils.getUI().core.addTask(new WaitItemInInventory(new NAlias("Opened")));
 
                 WItem witem = gui.getInventory().getItem(new NAlias("Opened"));

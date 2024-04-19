@@ -4,10 +4,7 @@ import haven.Gob;
 import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
-import nurgling.tasks.FollowAndPose;
-import nurgling.tasks.IsVesselMoving;
-import nurgling.tasks.WaitItemInInventory;
-import nurgling.tasks.WaitItems;
+import nurgling.tasks.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -31,6 +28,7 @@ public class SnekkjaSail implements Action {
             new SelectFlowerAction("Man the helm", snek).run(gui);
             NUtils.getUI().core.addTask(new FollowAndPose(NUtils.player(),"gfx/borka/snekkjaman0"));
             NUtils.getUI().core.addTask(new IsVesselMoving(snek));
+            NUtils.getUI().core.addTask(new IsVesselNotMoving(snek));
             NUtils.getUI().msg("snek is moving");
         }
 

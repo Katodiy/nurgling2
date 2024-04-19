@@ -723,12 +723,22 @@ public class RenderTree implements RenderList.Adapter, Disposable {
 	public class SlotPipe implements Pipe {
 	    @SuppressWarnings("unchecked")
 	    public <T extends State> T get(State.Slot<T> slot) {
-		DepInfo bk = dstate();
-		int idx = slot.id;
-		if((bk.states.length <= idx) || !bk.def[idx])
-		    NUtils.getGameUI().error("Reading undefined slot " + slot + " from slot-pipe");
-		return((T)bk.states[idx]);
-	    }
+			int idx = 0;
+			DepInfo bk = null;
+			try {
+				bk = dstate();
+				idx = slot.id;
+				if ((bk.states.length <= idx) || !bk.def[idx])
+					NUtils.getGameUI().error("Reading undefined slot " + slot + " from slot-pipe");
+				return ((T) bk.states[idx]);
+			} catch (ArrayIndexOutOfBoundsException arex) {
+				System.out.println("idx:" + idx);
+				System.out.println("bk.states.len" + bk.states.length);
+				System.out.println("bk.states[idx - 1]:" + bk.states[idx - 1]);
+
+			}
+			return null;
+		}
 
 	    public Pipe copy() {
 		return(new BufPipe(states()));
