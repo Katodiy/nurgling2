@@ -55,9 +55,11 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
     Tex ntext = null;
 
 	public int ameter() {
-		for (ItemInfo itemInfo : info) {
-			if (itemInfo instanceof AMeter)
-				return (int) (((AMeter) itemInfo).m * 100);
+		if(info!=null) {
+			for (ItemInfo itemInfo : info) {
+				if (itemInfo instanceof AMeter)
+					return (int) (((AMeter) itemInfo).m * 100);
+			}
 		}
 		return -1;
 	}
