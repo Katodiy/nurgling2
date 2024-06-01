@@ -14,9 +14,9 @@ public class NDframeTex extends GAttrib implements Gob.SetupMod {
     public NDframeTex(Gob g, HashMap<NStyle.Container, Texture2D.Sampler2D> data) {
         super(g);
         ResDrawable rs = g.getattr(ResDrawable.class);
-        this.data.put(NStyle.Container.FREE, Pipe.Op.compose(new Tex2DN(data.get(NStyle.Container.FREE),rs.res.get().layer(TexR.class).tex().img)));
-        this.data.put(NStyle.Container.FULL, Pipe.Op.compose(new Tex2DN(data.get(NStyle.Container.FULL),rs.res.get().layer(TexR.class).tex().img)));
-        this.data.put(NStyle.Container.NOTFREE, Pipe.Op.compose(new Tex2DN(data.get(NStyle.Container.NOTFREE),rs.res.get().layer(TexR.class).tex().img)));
+//        this.data.put(NStyle.Container.FREE, Pipe.Op.compose(new Tex2DN(data.get(NStyle.Container.FREE),rs.res.get().layer(TexR.class).tex().img)));
+//        this.data.put(NStyle.Container.FULL, Pipe.Op.compose(new Tex2DN(data.get(NStyle.Container.FULL),rs.res.get().layer(TexR.class).tex().img)));
+//        this.data.put(NStyle.Container.NOTFREE, Pipe.Op.compose(new Tex2DN(data.get(NStyle.Container.NOTFREE),rs.res.get().layer(TexR.class).tex().img)));
     }
 
     public Pipe.Op gobstate() {

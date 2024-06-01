@@ -71,13 +71,13 @@ public class NGob {
                         if (name.contains("gfx/terobjs")) {
                             switch (name) {
                                 case "gfx/terobjs/chest":
-                                    parent.setattr(new NContainerTex(parent, NStyle.chestAlt, chest_state));
+//                                    parent.setattr(new NContainerTex(parent, NStyle.chestAlt, chest_state));
                                     break;
                                 case "gfx/terobjs/cupboard":
-                                    parent.setattr(new NContainerTex(parent, NStyle.cupboardAlt, chest_state));
+//                                    parent.setattr(new NContainerTex(parent, NStyle.cupboardAlt, chest_state));
                                     break;
                                 case "gfx/terobjs/dframe":
-                                    parent.setattr(new NDframeTex(parent, NStyle.dframeAlt));
+//                                    parent.setattr(new NDframeTex(parent, NStyle.dframeAlt));
                                     break;
                             }
                         }

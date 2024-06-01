@@ -1,10 +1,7 @@
 /* Preprocessed source code */
-/* $use: lib/mapres */
-
 package haven.res.lib.itemtex;
 
 import haven.*;
-import static haven.Resource.imgc;
 import haven.render.*;
 import haven.res.lib.layspr.*;
 import haven.res.lib.mapres.ResourceMap;
@@ -13,7 +10,7 @@ import org.json.*;
 import java.util.*;
 import java.awt.image.BufferedImage;
 
-@haven.FromResource(name = "lib/itemtex", version = 2)
+@haven.FromResource(name = "lib/itemtex", version = 3)
 public class ItemTex {
     public static class Icon implements GSprite.Owner, Resource.Resolver {
 	public final Resource res;
@@ -43,14 +40,14 @@ public class ItemTex {
 	    isdt = new MessageBuf(sdt.bytes(sdt.uint8()));
 	}
 	Resource ires = owner.context(Resource.Resolver.class).getres(resid).get();
-	GSprite.Owner ctx = new Icon(ires, new ResourceMap(owner.context(Resource.Resolver.class), sdt));
+	GSprite.Owner ctx = new Icon(ires, new Resource.Resolver.ResourceMap(owner.context(Resource.Resolver.class), sdt));
 	return(GSprite.create(ctx, ires, isdt));
     }
 
     public static BufferedImage sprimg(GSprite spr) {
 	if(spr instanceof GSprite.ImageSprite)
 	    return(((GSprite.ImageSprite)spr).image());
-	return(spr.owner.getres().layer(imgc).img);
+	return(spr.owner.getres().layer(Resource.imgc).img);
     }
 
     public static final Map<MessageBuf, BufferedImage> made = new CacheMap<>();
@@ -116,7 +113,7 @@ public class ItemTex {
 		}
 		else if (object.has("static"))
 		{
-			return Resource.remote().loadwait((String)object.get("static")).layer(imgc).img;
+			return Resource.remote().loadwait((String)object.get("static")).layer(Resource.imgc).img;
 		}
 		return null;
 	}
