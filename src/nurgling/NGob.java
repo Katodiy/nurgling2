@@ -93,11 +93,16 @@ public class NGob {
                         }
                     }
                     if (hitBox != null) {
-                        if (ca == null) {
-                            setDynamic();
-                            parent.addcustomol(new NModelBox(parent));
-                            if (!isDynamic)
-                                ca = new CellsArray(parent);
+                        if (NParser.checkName(name, new NAlias("gfx/terobjs/moundbed"))) {
+                            hitBox = null;
+                        }
+                        else {
+                            if (ca == null) {
+                                setDynamic();
+                                parent.addcustomol(new NModelBox(parent));
+                                if (!isDynamic)
+                                    ca = new CellsArray(parent);
+                            }
                         }
                     }
                 }

@@ -73,7 +73,7 @@ public class HarvestCrop implements Action{
 
         boolean revdir = rev;
 
-        while (!Finder.findGobs(field, crop, stage).isEmpty() || !Finder.findGobs(field, new NAlias("plants/fallowplant"), 0).isEmpty() ) {
+        while (!Finder.findGobs(field, crop, stage).isEmpty() || !Finder.findGobs(field, new NAlias("gfx/terobjs/plants/fallowplant"), 0).isEmpty() ) {
                 if (!rev) {
                     while (pos.x >= field.getArea().ul.x) {
                         AtomicBoolean setDir = new AtomicBoolean(true);
