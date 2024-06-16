@@ -118,6 +118,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	    }
 	    remove0();
 	    gob.ols.remove(this);
+		gob.ngob.removeol(this);
 	    removed();
 	}
 
@@ -518,6 +519,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	ol.init();
 	ol.add0();
 	ols.add(ol);
+	ngob.addol(ol);
     }
     public void addol(Overlay ol) {
 	addol(ol, true);

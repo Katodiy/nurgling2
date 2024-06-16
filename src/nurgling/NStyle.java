@@ -196,29 +196,6 @@ public class NStyle
         NOTFREE,
         FULL
     }
-    public static HashMap<Container, Texture2D.Sampler2D> chestAlt = new HashMap<>();
-    static
-    {
-        chestAlt.put(Container.FREE,new TexI(Resource.loadimg("alttex/chest/free")).st().data);
-        chestAlt.put(Container.FULL,new TexI(Resource.loadimg("alttex/chest/full")).st().data);
-        chestAlt.put(Container.NOTFREE,new TexI(Resource.loadimg("alttex/chest/notfree")).st().data);
-    }
-
-    public static HashMap<Container, Texture2D.Sampler2D> cupboardAlt = new HashMap<>();
-    static
-    {
-        cupboardAlt.put(Container.FREE,new TexI(Resource.loadimg("alttex/cupboard/free")).st().data);
-        cupboardAlt.put(Container.FULL,new TexI(Resource.loadimg("alttex/cupboard/full")).st().data);
-        cupboardAlt.put(Container.NOTFREE,new TexI(Resource.loadimg("alttex/cupboard/notfree")).st().data);
-    }
-
-    public static HashMap<Container, Texture2D.Sampler2D> dframeAlt = new HashMap<>();
-    static
-    {
-        dframeAlt.put(Container.FREE,new TexI(Resource.loadimg("alttex/dframe/free")).st().data);
-        dframeAlt.put(Container.FULL,new TexI(Resource.loadimg("alttex/dframe/full")).st().data);
-        dframeAlt.put(Container.NOTFREE,new TexI(Resource.loadimg("alttex/dframe/notfree")).st().data);
-    }
 
     public static HashMap<Integer, Texture2D.Sampler2D> dkinAlt = new HashMap<>();
     static

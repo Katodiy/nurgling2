@@ -1,0 +1,17 @@
+#TILESET2 LAYER FOR RES custom/src/gfx/terobjs/trees/pine-tex.res//
+#ID 
+0
+#VarSize 
+4
+#Var 
+col
+[204,204,204,255]
+[164,164,164,255]
+[0,0,0,255]
+[0,0,0,255]
+0.0
+tex
+0
+light
+def
+cel

@@ -161,14 +161,16 @@ public abstract class TexRender implements Tex, Disposable {
 		    tclip = true;
 	    }
 	    final boolean clip = tclip; /* ¦] */
-	    return(new Material.Res.Resolver() {
+		Material.Res.CustomResolver resolver = new Material.Res.CustomResolver() {
 		    public void resolve(Collection<Pipe.Op> buf, Collection<Pipe.Op> dynbuf) {
 			TexRender tex;
-			TexR rt;
-			if(tid >= 0)
-			    rt = tres.get().layer(TexR.class, tid);
-			else
-			    rt = tres.get().layer(TexR.class);
+			TexR rt = getCustomTex(Math.max(tid, 0));
+			if(rt == null) {
+				if (tid >= 0)
+					rt = tres.get().layer(TexR.class, tid);
+				else
+					rt = tres.get().layer(TexR.class);
+			}
 			if(rt != null) {
 			    tex = rt.tex();
 			} else {
@@ -177,7 +179,8 @@ public abstract class TexRender implements Tex, Disposable {
 			buf.add(tex.draw);
 			buf.add(clip ? tex.clip : noclip);
 		    }
-		});
+		};
+		return resolver;
 	}
     }
 }

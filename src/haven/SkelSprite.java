@@ -163,7 +163,10 @@ public class SkelSprite extends Sprite implements Sprite.CUpd, EquipTarget, Spri
     public void iparts(int mask, Collection<RenderTree.Node> rbuf, Collection<Runnable> tbuf, Collection<Consumer<Render>> gbuf) {
 	for(FastMesh.MeshRes mr : res.layers(FastMesh.MeshRes.class)) {
 	    if((mr.mat != null) && ((mr.id < 0) || (((1 << mr.id) & mask) != 0)))
-		rbuf.add(animwrap(mr.mat.get().apply(mr.m), tbuf, gbuf));
+		rbuf.add(animwrap(mr.mat.get((owner instanceof Gob
+				&& ((Gob)owner).ngob!=null
+				&& ((Gob)owner).ngob.customMask)?
+				((Gob)owner).ngob.mask():mask).apply(mr.m), tbuf, gbuf));
 	}
 	for(RenderLink.Res lr : res.layers(RenderLink.Res.class)) {
 	    if((lr.id < 0) || (((1 << lr.id) & mask) != 0)) {
