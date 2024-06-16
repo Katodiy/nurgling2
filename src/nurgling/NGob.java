@@ -72,8 +72,13 @@ public class NGob {
                                     break;
                             }
                         }
-                        if (name.contains("gfx/terobjs/dframe") || name.contains("gfx/terobjs/barrel") || name.contains("gfx/terobjs/cheeserack")) {
+                        if (name.contains("gfx/terobjs/dframe") || name.contains("gfx/terobjs/cheeserack")) {
                             customMask = true;
+                        }
+                        else if (name.contains("gfx/terobjs/barrel"))
+                        {
+                            customMask = true;
+                            parent.addcustomol(new NBarrelOverlay(parent));
                         }
 
                         if (NUtils.playerID()!= -1 && name.equals("gfx/borka/body") && NUtils.playerID() != parent.id) {

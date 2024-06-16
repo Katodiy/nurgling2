@@ -557,10 +557,10 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	}
 
 	public void findoraddol(Overlay ol) {
-		if(findol(ol.spr.getClass())==null)
-			synchronized (ols) {
+		synchronized (ols) {
+			if (findol(ol.spr.getClass()) == null)
 				addol(ol, true);
-			}
+		}
 	}
 	public void addcustomol(Sprite ol) {
 		findoraddol(new Overlay(this, ol));
