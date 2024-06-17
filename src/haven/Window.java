@@ -757,10 +757,16 @@ public class Window extends Widget implements DTarget {
 	public NormAnim(double t) {this(t, 0.0, false);}
 
 	public boolean tick(double dt) {
+		if((Boolean)NConfig.get(NConfig.Key.disableWinAnim)) {
+			return true;
+		}
+		else
+		{
 	    a += dt;
 	    double na = Math.min(a * s, 1.0);
 	    stick(this.na = rev ? (1.0 - na) : na);
 	    return(na >= 1.0);
+		}
 	}
 
 	public void stick(double a) {}
