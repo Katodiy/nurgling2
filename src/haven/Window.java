@@ -238,13 +238,15 @@ public class Window extends Widget implements DTarget {
 	    ((Window)parent).cdraw(g);
 	}
 
-	protected void drawbg(GOut g) {
+	protected void drawbg(GOut g,boolean floftar) {
+		if(floftar)
 	    g.usestate(bgblend);
 	    Coord bgc = new Coord();
 	    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bg.sz().y) {
 		for(bgc.x = ca.ul.x; bgc.x < ca.br.x; bgc.x += bg.sz().x)
 		    g.image(bg, bgc, ca.ul, ca.br);
 	    }
+		if(floftar)
 	    g.defstate();
 	    bgc.x = ca.ul.x;
 	    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgl.sz().y)
@@ -252,6 +254,9 @@ public class Window extends Widget implements DTarget {
 	    bgc.x = ca.br.x - bgr.sz().x;
 	    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgr.sz().y)
 		g.image(bgr, bgc, ca.ul, ca.br);
+	}
+	protected void drawbg(GOut g) {
+		drawbg(g, true);
 	}
 
 	protected void drawframe(GOut g) {
@@ -352,9 +357,10 @@ public class Window extends Widget implements DTarget {
 		{
 			Coord cc = xlate(dwdg.c, true);
 			GOut g2 = g.reclip(cc, dwdg.sz);
-			if(deco instanceof DefaultDeco)
-				((DefaultDeco)deco).drawbg(g);
-			dwdg.draw(g2);
+			if(deco instanceof DefaultDeco) {
+				((DefaultDeco) deco).drawbg(g,false);
+			}
+			dwdg.draw(g2,strict);
 		}
 	}
 
@@ -370,7 +376,7 @@ public class Window extends Widget implements DTarget {
 				int id = (int) (NUtils.getTickId() / 5) % 12;
 
 				g.image(NStyle.gear[id], new Coord(deco.contarea().sz().x / 2 - NStyle.gear[0].sz().x / 2, deco.contarea().sz().y / 2 - NStyle.gear[0].sz().y / 2));
-				super.draw(g);
+				super.draw(g,strict);
 			}
 		}
 
