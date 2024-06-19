@@ -36,6 +36,7 @@ public class NBotsMenu extends Widget
             NLayout utils = new NLayout("utils");
             utils.elements.add(new NButton("shieldsword", new EquipShieldSword()));
             utils.elements.add(new NButton("filwater", new FillWaterskins()));
+            utils.elements.add(new NButton("unbox", new FreeContainersInArea()));
             addLayout(utils);
             NLayout tests = new NLayout("tools");
             tests.elements.add(new NButton("test1", new TESTLiftDrop()));

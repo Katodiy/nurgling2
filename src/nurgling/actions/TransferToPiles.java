@@ -37,7 +37,6 @@ public class TransferToPiles implements Action{
                             new PathFinder(target).run(gui);
                             witems = gui.getInventory().getItems(items);
                             int size = witems.size();
-                            System.out.println(" witems" + size);
                             new OpenTargetContainer("Stockpile", target).run(gui);
                             int target_size = Math.min(size,gui.getStockpile().getFreeSpace());
                             int fullSize = gui.getInventory().getItems().size();
@@ -47,7 +46,6 @@ public class TransferToPiles implements Action{
                             }
                             NUtils.getUI().core.addTask(new FilledPile(target, items, target_size, size));
                             NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), fullSize - target_size));
-                            System.out.println(" WaitAnotherSize" + fullSize);
                             if((witems = gui.getInventory().getItems(items)).isEmpty())
                                 return Results.SUCCESS();
                         }
@@ -64,7 +62,6 @@ public class TransferToPiles implements Action{
                     new OpenTargetContainer("Stockpile", pile).run(gui);
                     int target_size = Math.min(size, gui.getStockpile().getFreeSpace());
                     int fullSize = gui.getInventory().getItems().size();
-                    System.out.println("gui.getInventory().getItems()" + fullSize);
                     for (int i = 0; i < target_size; i++)
                     {
                         witems.get(i).item.wdgmsg("transfer", Coord.z);

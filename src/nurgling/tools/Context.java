@@ -1,53 +1,32 @@
 package nurgling.tools;
 
-import haven.*;
-import nurgling.NGItem;
-import nurgling.NInventory;
+import haven.Gob;
+import haven.Indir;
+import haven.Resource;
 import nurgling.NUtils;
-import nurgling.areas.*;
+import nurgling.areas.NArea;
 
 import java.util.*;
 
-public class Context
-{
-
-    public static NAlias containers = new NAlias(
-        "gfx/terobjs/chest",
-        "gfx/terobjs/crate",
-        "gfx/terobjs/cupboard",
-        "gfx/terobjs/shed");
-
-    public static HashMultiMap<String, String> contcaps = new HashMultiMap<>();
+public class Context {
+    public static HashMap<String, String> contcaps = new HashMap<>();
     static {
         contcaps.put("gfx/terobjs/chest", "Chest");
         contcaps.put("gfx/terobjs/crate", "Crate");
         contcaps.put("gfx/terobjs/cupboard", "Cupboard");
         contcaps.put("gfx/terobjs/shed", "Shed");
-        contcaps.put("gfx/terobjs/smelter", "Ore Smelter");
-        contcaps.put("gfx/terobjs/smelter", "Smith's Smelter");
-        contcaps.put("gfx/terobjs/primsmelter", "Furnace");
     }
 
-    public void updateContainer(String cap, NInventory inventory, Container container) throws InterruptedException {
-        containerUpdater.update(cap,inventory,container);
-    }
-
-
-    public ArrayList<Input> getInputs(String name)
+    public static class Workstation
     {
-        ArrayList<Input> in =  input.get(name);
-        ArrayList<Input> for_remove =  new ArrayList<>();
-        if(in!=null) {
-            for (Input i : in) {
-                if (i instanceof Pile) {
-                    if (Finder.findGob(((Pile) i).pile.id) == null)
-                        for_remove.add(i);
-                }
-            }
+        public String station;
+        public String pose;
 
-            in.removeAll(for_remove);
+        public Workstation(String station, String pose)
+        {
+            this.station = station;
+            this.pose = pose;
         }
-        return in;
     }
 
     static HashMap<String, String> equip_map;
@@ -81,43 +60,11 @@ public class Context
     public String equip = null;
     public Workstation workstation = null;
 
-    public ArrayList<Output> getOutputs(String name, int th) {
-        if(output.get(name)!=null)
-        {
-            for(Integer val: output.get(name).keySet())
-            {
-                if(th>=val)
-                    return output.get(name).get(val);
-            }
-        }
-        return null;
-    }
-
-    public Set<String> getOutputItems() {
-        return output.keySet();
-    }
-
-    public static class Workstation
+    public interface Output
     {
-        public String station;
-        public String pose;
+        NArea getArea();
 
-        public Workstation(String station, String pose)
-        {
-            this.station = station;
-            this.pose = pose;
-        }
-    }
-    public static class Barter
-    {
-        public Gob barter;
-        public Gob chest;
-
-        public Barter(Gob barter, Gob chest)
-        {
-            this.barter = barter;
-            this.chest = chest;
-        }
+        int getTh();
     }
 
     public interface Input
@@ -125,65 +72,13 @@ public class Context
 
     }
 
-    public interface Updater{
-        void update(String cap, NInventory inv, Container cont) throws InterruptedException;
-    }
-
-    public static class Container
-    {
-        public boolean isFree = false;
-
-        public int freeSpace;
-
-        public int maxSpace;
-
-        public ArrayList<String> names;
-
-        public String cap = null;
-
-        public Gob gob = null;
-
-        public HashMap<String, HashSet<Double>> itemInfo = new HashMap<>();
-
-        public Container(Gob gob, ArrayList<String> names) {
-            this.gob = gob;
-            this.names = names;
-        }
-    }
-
-
-    public static class OutputContainer extends Container implements Output
-    {
-
-        public OutputContainer(Gob gob, NArea area, int th)
-        {
-            super(gob,  new ArrayList<>(Context.contcaps.getall(gob.ngob.name)));
-            this.area = area;
-            this.th = th;
-        }
-
-        @Override
-        public NArea getArea() {
-            return area;
-        }
-
-        NArea area = null;
-
-        @Override
-        public int getTh()
-        {
-            return th;
-        }
-
-        Integer th = 1;
-    }
-
 
     public static class InputContainer extends Container implements Input
     {
-        public InputContainer(Gob gob, ArrayList<String> name)
+        public InputContainer(Gob gob, String name)
         {
-            super(gob, name);
+            this.gob = gob;
+            this.cap = name;
         }
     }
 
@@ -202,6 +97,7 @@ public class Context
             super(gob);
         }
     }
+
 
     public static class OutputPile extends Pile implements Output
     {
@@ -256,9 +152,11 @@ public class Context
                 break;
             case CONTAINER:
             {
-                for(Gob gob: Finder.findGobs(area, containers))
+                for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
                 {
-                    outputs.add(new OutputContainer(gob,area, ingredient.th));
+                    OutputContainer container = new OutputContainer(gob,area, ingredient.th);
+                    container.initattr(Container.Space.class);
+                    outputs.add(container);
                 }
                 for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
                 {
@@ -287,9 +185,9 @@ public class Context
                 break;
             case CONTAINER:
             {
-                for(Gob gob: Finder.findGobs(area, containers))
+                for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
                 {
-                        inputs.add(new InputContainer(gob, new ArrayList<>(contcaps.getall(gob.ngob.name))));
+                        inputs.add(new InputContainer(gob, contcaps.get(gob.ngob.name)));
                 }
                 for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
                 {
@@ -309,12 +207,6 @@ public class Context
         return inputs;
     }
 
-    public interface Output
-    {
-        NArea getArea();
-
-        int getTh();
-    }
 
     public static class OutputBarter extends Barter implements Output
     {
@@ -340,14 +232,74 @@ public class Context
         Integer th = 1;
     }
 
-    HashMap<String,ArrayList<Input>> input = new HashMap<>();
-    public HashMap<String,SortedMap<Integer,ArrayList<Output>>> output = new HashMap<>();
-
-    public ArrayList<Container> getContainersInWork() {
-        return containersInWork;
+    public ArrayList<Output> getOutputs(String name, int th) {
+        if(output.get(name)!=null)
+        {
+            for(Integer val: output.get(name).keySet())
+            {
+                if(th>=val)
+                    return output.get(name).get(val);
+            }
+        }
+        return null;
     }
 
-    final ArrayList<Container> containersInWork = new ArrayList<>();
+    public static class Barter
+    {
+        public Gob barter;
+        public Gob chest;
+
+        public Barter(Gob barter, Gob chest)
+        {
+            this.barter = barter;
+            this.chest = chest;
+        }
+    }
+
+
+    public static class OutputContainer extends Container implements Output
+    {
+
+        public OutputContainer(Gob gob, NArea area, int th)
+        {
+            this.gob = gob;
+            this.cap = contcaps.get(gob.ngob.name);
+            this.area = area;
+            this.th = th;
+        }
+
+        @Override
+        public NArea getArea() {
+            return area;
+        }
+
+        NArea area = null;
+
+        @Override
+        public int getTh()
+        {
+            return th;
+        }
+
+        Integer th = 1;
+    }
+
+    public ArrayList<Input> getInputs(String name)
+    {
+        ArrayList<Input> in = input.get(name);
+        ArrayList<Input> for_remove =  new ArrayList<>();
+        if(in!=null) {
+            for (Input i : in) {
+                if (i instanceof Pile) {
+                    if (Finder.findGob(((Pile) i).pile.id) == null)
+                        for_remove.add(i);
+                }
+            }
+
+            in.removeAll(for_remove);
+        }
+        return in;
+    }
 
     public boolean addInput(String name, Input in)
     {
@@ -374,14 +326,6 @@ public class Context
         return true;
     }
 
-    public void addConstContainers(ArrayList<Container> containers)
-    {
-        synchronized (containersInWork)
-        {
-             containersInWork.addAll(containers);
-        }
-    }
-
     public boolean addOutput(String name, ArrayList<Output> outputs)
     {
         for(Output out: outputs)
@@ -392,29 +336,6 @@ public class Context
         return true;
     }
 
-    public void fillForInventory(NInventory inv, HashMap<String, HashSet<Double>> itemInfo) throws InterruptedException {
-        for(WItem item: inv.getItems())
-        {
-            String name = ((NGItem)item.item).name();
-            double quality = ((NGItem)item.item).quality;
-            addOutput(name , Context.GetOutput(name, NArea.findOut(((NGItem)item.item).name(), quality)));
-            itemInfo.computeIfAbsent(name, k -> new HashSet<>());
-            HashSet<Double> threads = itemInfo.get(name);
-            threads.add(quality);
-        }
-    }
-
-    Context.Updater containerUpdater = new Context.Updater() {
-        @Override
-        public void update(String cap, NInventory inv, Context.Container cont) throws InterruptedException {
-            cont.cap = cap;
-            cont.freeSpace = inv.getFreeSpace();
-            cont.maxSpace = inv.getTotalSpace();
-            cont.isFree = cont.freeSpace == cont.maxSpace;
-        }
-    };
-    public void setCurrentUpdater(Context.Updater updater)
-    {
-        containerUpdater = updater;
-    }
+    HashMap<String,ArrayList<Input>> input = new HashMap<>();
+    HashMap<String, SortedMap<Integer,ArrayList<Output>>> output = new HashMap<>();
 }

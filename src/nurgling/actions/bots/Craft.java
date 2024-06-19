@@ -103,7 +103,7 @@ public class Craft implements Action
                 GetItems gi;
                 NUtils.getUI().core.addTask(gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(s.name)));
                 if(!gi.getResult().isEmpty() && context.getOutputs(s.name, 1)!=null)
-                    new TransferItems(context,s.name,gi.getResult().size()).run(gui);
+                    new TransferItems(context,s.name).run(gui);
             }
             left -=for_craft;
         }

@@ -129,6 +129,13 @@ public class NInventory extends Inventory
         return gi.getResult();
     }
 
+    public ArrayList<WItem> getItems(NAlias name, double th) throws InterruptedException
+    {
+        GetItems gi = new GetItems(this, name, (float)th);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
     public ArrayList<WItem> getItemsOfType(NAlias name) throws InterruptedException
     {
         GetItems gi = new GetItems(this, name);
@@ -139,6 +146,11 @@ public class NInventory extends Inventory
     public ArrayList<WItem> getItems(String name) throws InterruptedException
     {
         return getItems(new NAlias(name));
+    }
+
+    public ArrayList<WItem> getItems(String name, double th) throws InterruptedException
+    {
+        return getItems(new NAlias(name), th);
     }
 
     public ArrayList<WItem> getItems(GItem target) throws InterruptedException

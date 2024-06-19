@@ -14,8 +14,6 @@ import java.util.*;
 public class NArea
 {
 
-
-
     public static class Specialisation
     {
         public String name;
@@ -56,37 +54,40 @@ public class NArea
         return res;
     }
 
+    private static class TestedArea
+    {
+        NArea area;
+        double th;
+
+        public TestedArea(NArea area, double th) {
+            this.area = area;
+            this.th = th;
+        }
+    }
+
+    static Comparator<TestedArea> ta_comp = new Comparator<TestedArea>(){
+        @Override
+        public int compare(TestedArea o1, TestedArea o2)
+        {
+            return Double.compare(o1.th, o2.th);
+        }
+    };
+
     public static NArea findOut(String name, double th) {
         double dist = 10000;
         NArea res = null;
-        class TestedArea
-        {
-            NArea area;
-            double th;
-
-            public TestedArea(NArea area, double th) {
-                this.area = area;
-                this.th = th;
-            }
-        }
-
-        Comparator<TestedArea> ta_comp = new Comparator<TestedArea>(){
-            @Override
-            public int compare(TestedArea o1, TestedArea o2)
-            {
-                return Double.compare(o1.th, o2.th);
-            }
-        };
 
         ArrayList<TestedArea> areas = new ArrayList<>();
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
             Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
             for(Integer id : nids) {
-                if (id > 0)
-                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name, th) ) {
-                        areas.add(new TestedArea(NUtils.getGameUI().map.glob.map.areas.get(id), th));
+                if (id > 0) {
+                    NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
+                    if (cand.isVisible() && cand.containOut(name, th)) {
+                        areas.add(new TestedArea(cand, th));
                     }
+                }
             }
         }
 
@@ -121,6 +122,29 @@ public class NArea
         return res;
     }
 
+    public static TreeMap<Integer,NArea> findOuts(String name)
+    {
+        TreeMap<Integer,NArea> areas = new TreeMap<>();
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids) {
+                if (id > 0)
+                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name) ) {
+                        NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
+                        for (int i = 0; i < cand.jout.length(); i++) {
+                            if (((String) ((JSONObject) cand.jout.get(i)).get("name")).equals(name))
+                            {
+                                Integer th = (((JSONObject) cand.jout.get(i)).has("th"))?((Integer) ((JSONObject) cand.jout.get(i)).get("th")):1;
+                                areas.put(th,cand);
+                            }
+                        }
+                    }
+            }
+        }
+        return areas;
+    }
+
     private boolean containIn(String name)
     {
         for (int i = 0; i < jin.length(); i++)
@@ -135,9 +159,18 @@ public class NArea
     {
         for (int i = 0; i < jout.length(); i++) {
             if (((String) ((JSONObject) jout.get(i)).get("name")).equals(name))
-                if (((JSONObject) jout.get(i)).has("th") && ((Double) ((JSONObject) jout.get(i)).get("th")) > th)
+                if (((JSONObject) jout.get(i)).has("th") && ((Integer) ((JSONObject) jout.get(i)).get("th")) > th)
                     return true;
                 else
+                    return true;
+        }
+        return false;
+    }
+
+    private boolean containOut(String name)
+    {
+        for (int i = 0; i < jout.length(); i++) {
+            if (((String) ((JSONObject) jout.get(i)).get("name")).equals(name))
                     return true;
         }
         return false;
@@ -485,7 +518,7 @@ public class NArea
                 NArea.Ingredient.Type type = (obj.has("type")) ?
                         type = NArea.Ingredient.Type.valueOf((String) obj.get("type")) :
                         Ingredient.Type.CONTAINER;
-                if(((JSONObject)jout.get(i)).get("th")!=null)
+                if(((JSONObject)jout.get(i)).has("th"))
                 {
                     return new Ingredient(type,name, (Integer)((JSONObject)jout.get(i)).get("th"));
                 }
