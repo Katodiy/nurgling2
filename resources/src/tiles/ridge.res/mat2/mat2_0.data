@@ -1,23 +1,17 @@
-#TILESET2 LAYER FOR RES src/custom/mine.res//
+#TILESET2 LAYER FOR RES custom/src/gfx/terobjs/trees/pine-tex.res//
 #ID 
-3
+0
 #VarSize 
 4
 #Var 
+col
+[204,204,204,255]
+[164,164,164,255]
+[0,0,0,255]
+[0,0,0,255]
+0.0
 tex
-tiles/ridge-tex
-20
-3
-a
+0
 light
 def
-bump
-tiles/ridge-tex
-20
-103
-col
-[128,128,128,128]
-[255,255,255,255]
-[0,0,0,0]
-[0,0,0,0]
-0.0
+cel
