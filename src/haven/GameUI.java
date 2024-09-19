@@ -672,7 +672,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	} else if(place == "chat") {
 	    chat.addchild(child);
 	} else if(place == "party") {
-	    add(child, portrait.pos("bl").adds(0, 10));
+	    add(new NDraggableWidget(child,"party",child.sz.add(NDraggableWidget.delta)), portrait.pos("bl").adds(0, 10));
 	} else if(place == "meter") {
 		if(child instanceof IMeter)
 	    	add(new NDraggableWidget(child, "meter" + ((IMeter)child).name,IMeter.fsz));
