@@ -570,6 +570,10 @@ public class ChatUI extends Widget
 		return(true);
 	    CharPos ch = charat(c);
 	    selorig = ch;
+	    if(ch != null) {
+		if(ch.rm.msg.mousedown(this, ch, c, btn))
+		    return(true);
+	    }
 	    if(btn == 1) {
 		selstart = selend = null;
 		if(ch != null) {
@@ -578,9 +582,6 @@ public class ChatUI extends Widget
 		    grab = ui.grabmouse(this);
 		}
 		return(true);
-	    } else {
-		if(ch != null)
-		    ch.rm.msg.mousedown(this, ch, c, btn);
 	    }
 	    return(true);
 	}
@@ -604,6 +605,32 @@ public class ChatUI extends Widget
 	    } else {
 		super.mousemove(c);
 	    }
+	}
+
+	public boolean mouseup(Coord c, int btn) {
+	    if(super.mouseup(c, btn))
+		return(true);
+	    if((btn == 1) && (grab != null)) {
+		grab.remove();
+		grab = null;
+		dragging = false;
+		if(selstart != null) {
+		    selected(selstart, selend);
+		    return(true);
+		}
+	    }
+	    CharPos ch = charat(c);
+	    if(ch != null) {
+		if(ch.rm.msg.mouseup(this, ch, c, btn))
+		    return(true);
+		if(!dragging && (selorig != null) && ch.equals(selorig)) {
+		    if(ch.rm.msg.clicked(this, ch, c, btn))
+			return(true);
+		    if(clicked(selorig, btn))
+			return(true);
+		}
+	    }
+	    return(true);
 	}
 
 	protected void selected(CharPos start, CharPos end) {
@@ -663,43 +690,23 @@ public class ChatUI extends Widget
 	    } catch(IllegalStateException e) {}
 	}
 
-	protected void clicked(CharPos pos) {
-	    AttributedCharacterIterator inf = pos.part.ti();
-	    inf.setIndex(pos.ch.getCharIndex() + pos.part.start);
-	    URI uri = (URI)inf.getAttribute(ChatAttribute.HYPERLINK);
-	    if(uri != null) {
-		try {
-		    WebBrowser.sshow(uri.toURL());
-		} catch(java.net.MalformedURLException e) {
-		    getparent(GameUI.class).error("Could not follow link.");
-		} catch(WebBrowser.BrowserException e) {
-		    getparent(GameUI.class).error("Could not launch web browser.");
-		}
-	    }
-	}
-
-	public boolean mouseup(Coord c, int btn) {
-	    if(super.mouseup(c, btn))
-		return(true);
+	protected boolean clicked(CharPos pos, int btn) {
 	    if(btn == 1) {
-		if(grab != null) {
-		    if(selstart != null)
-			selected(selstart, selend);
-		    else
-			clicked(selorig);
-		    grab.remove();
-		    grab = null;
-		    dragging = false;
+		AttributedCharacterIterator inf = pos.part.ti();
+		inf.setIndex(pos.ch.getCharIndex() + pos.part.start);
+		URI uri = (URI)inf.getAttribute(ChatAttribute.HYPERLINK);
+		if(uri != null) {
+		    try {
+			WebBrowser.sshow(uri.toURL());
+		    } catch(java.net.MalformedURLException e) {
+			getparent(GameUI.class).error("Could not follow link.");
+		    } catch(WebBrowser.BrowserException e) {
+			getparent(GameUI.class).error("Could not launch web browser.");
+		    }
 		}
-	    } else {
-		CharPos ch = charat(c);
-		if(ch != null) {
-		    ch.rm.msg.mouseup(this, ch, c, btn);
-		    if((selorig != null) && ch.equals(selorig))
-			ch.rm.msg.clicked(this, ch, c, btn);
-		}
+		return(true);
 	    }
-	    return(true);
+	    return(false);
 	}
 
 	public void select() {
@@ -881,6 +888,8 @@ public class ChatUI extends Widget
 	public final int urgency;
 	private final String name;
 	private final Map<Integer, Color> pc = new HashMap<Integer, Color>();
+	private Map<Integer, Boolean> muted = null;
+	private Integer mutewait = null;
 
 	public class NamedMessage extends Message {
 	    public final int from;
@@ -919,6 +928,25 @@ public class ChatUI extends Widget
 	    public boolean valid(Indir<Text> data) {
 		return(((Rendered)data).nm.equals(nm()));
 	    }
+
+	    public boolean clicked(Channel chan, CharPos pos, Coord c, int btn) {
+		if((btn == 3) && (muted != null)) {
+		    Boolean muted = MultiChat.this.muted.get(from);
+		    if(muted == null) {
+			mutewait = from;
+			wdgmsg("muted", from);
+		    } else {
+			mutemenu(from, muted);
+		    }
+		    return(true);
+		}
+		return(super.clicked(chan, pos, c, btn));
+	    }
+	}
+
+	private void mutemenu(int pl, boolean cur) {
+	    SListMenu.Action ma = SListMenu.Action.of(cur ? "Unmute" : "Mute", () -> wdgmsg("mute", pl, cur ? 0 : 1));
+	    SListMenu.of(UI.scale(250, 120), null, Arrays.asList(ma)).addat(ui.root, ui.mc);
 	}
 
 	public class MyMessage extends SimpleMessage {
@@ -960,6 +988,16 @@ public class ChatUI extends Widget
 		    Message cmsg = new NamedMessage(from.intValue(), line, fromcolor(from.intValue()));
 		    append(cmsg, urgency);
 		}
+	    } else if(msg == "mutable") {
+		this.muted = Utils.bv(args[0]) ? new HashMap<>() : null;
+	    } else if(msg == "muted") {
+		int pl = Utils.iv(args[0]);
+		boolean muted = Utils.bv(args[1]);
+		this.muted.put(pl, muted);
+		if((mutewait != null) && (mutewait == pl)) {
+		    mutewait = null;
+		    mutemenu(pl, muted);
+		}
 	    } else {
 		super.uimsg(msg, args);
 	    }
@@ -1000,10 +1038,37 @@ public class ChatUI extends Widget
     
     public static class PrivChat extends EntryChannel {
 	private final int other;
-	
+	private boolean muted;
+
+	public PrivChat(boolean closable, int other) {
+	    super(closable);
+	    this.other = other;
+	}
+
+	private void menu() {
+	    SListMenu.Action ma = SListMenu.Action.of(muted ? "Unmute" : "Mute", () -> wdgmsg("mute", muted ? 0 : 1));
+	    SListMenu.of(UI.scale(250, 120), null, Arrays.asList(ma)).addat(ui.root, ui.mc);
+	}
+
+	public boolean selclicked(Coord c, int btn) {
+	    if(btn == 3) {
+		menu();
+		return(true);
+	    }
+	    return(super.selclicked(c, btn));
+	}
+
 	public class InMessage extends SimpleMessage {
 	    public InMessage(String text) {
 		super(text, new Color(255, 128, 128, 255));
+	    }
+
+	    public boolean clicked(Channel chan, CharPos pos, Coord c, int btn) {
+		if(btn == 3) {
+		    menu();
+		    return(true);
+		}
+		return(super.clicked(chan, pos, c, btn));
 	    }
 	}
 
@@ -1011,11 +1076,6 @@ public class ChatUI extends Widget
 	    public OutMessage(String text) {
 		super(text, new Color(128, 128, 255, 255));
 	    }
-	}
-
-	public PrivChat(boolean closable, int other) {
-	    super(closable);
-	    this.other = other;
 	}
 
 	public void uimsg(String msg, Object... args) {
@@ -1033,7 +1093,9 @@ public class ChatUI extends Widget
 		String err = (String)args[0];
 		Message cmsg = new SimpleMessage(err, Color.RED);
 		append(cmsg, 3);
-		}
+	    } else if(msg == "muted") {
+		this.muted = Utils.bv(args[0]);
+        }
 	    } else {
 		super.uimsg(msg, args);
 	    }
@@ -1591,6 +1653,11 @@ public class ChatUI extends Widget
 			sel.resize(new Coord(this.sz.x - marg.x - sel.c.x, this.sz.y - sel.c.y));
 	}
 
+    public void presize() {
+	if(sz.y > parent.sz.y - UI.scale(100))
+	    hresize(Math.max(UI.scale(minh), parent.sz.y - UI.scale(100)));
+    }
+
     public boolean targetshow = false;
     public void sshow(boolean show) {
 	clearanims(Spring.class);
@@ -1600,6 +1667,7 @@ public class ChatUI extends Widget
 
     public void hresize(int h) {
 	clearanims(Spring.class);
+	resize(sz.x, h);
     }
 
     public void resize(int w) {
@@ -1664,7 +1732,7 @@ public class ChatUI extends Widget
 
     public void mousemove(Coord c) {
 	if(dm != null) {
-	    resize(sz.x, Math.max(UI.scale(minh), sz.y + doff.y - c.y));
+	    resize(sz.x, Math.max(UI.scale(minh), Math.min(parent.sz.y - UI.scale(100), sz.y + doff.y - c.y)));
 	} else {
 	    super.mousemove(c);
 	}

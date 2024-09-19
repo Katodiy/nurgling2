@@ -26,35 +26,45 @@
 
 package haven;
 
-public class UID extends Number {
-    public static final UID nil = new UID(0);
-    public final long bits;
+import java.awt.event.*;
+import java.awt.dnd.*;
+import java.awt.datatransfer.*;
+import java.io.IOException;
 
-    private UID(long bits) {
-	this.bits = bits;
-    }
-    public static UID of(long bits) {
-	if(bits == 0)
-	    return(nil);
-	return(new UID(bits));
-    }
+public interface SystemDrop {
+    public boolean supports(DataFlavor f);
+    public Object receive(DataFlavor f) throws IOException ;
 
-    public long longValue() {return(bits);}
+    public static SystemDrop of(DropTargetDragEvent ev) {
+	return(new SystemDrop() {
+		public boolean supports(DataFlavor f) {
+		    return(ev.isDataFlavorSupported(f));
+		}
 
-    public byte byteValue() {return((byte)bits);}
-    public short shortValue() {return((short)bits);}
-    public int intValue() {return((int)bits);}
-    public float floatValue() {return((float)bits);}
-    public double doubleValue() {return((double)bits);}
-
-    public int hashCode() {
-	return(Long.hashCode(bits));
-    }
-    public boolean equals(Object x) {
-	return((x instanceof UID) && (((UID)x).bits == bits));
+		public Object receive(DataFlavor f) throws IOException {
+		    try {
+			return(ev.getTransferable().getTransferData(f));
+		    } catch(UnsupportedFlavorException e) {
+			return(null);
+		    }
+		}
+	    });
     }
 
-    public String toString() {
-	return(Long.toUnsignedString(bits, 16));
+    public static SystemDrop of(DropTargetDropEvent ev) {
+	return(new SystemDrop() {
+		public boolean supports(DataFlavor f) {
+		    return(ev.isDataFlavorSupported(f));
+		}
+
+		public Object receive(DataFlavor f) throws IOException {
+		    ev.acceptDrop(ev.getDropAction());
+		    try {
+			return(ev.getTransferable().getTransferData(f));
+		    } catch(UnsupportedFlavorException e) {
+			return(null);
+		    }
+		}
+	    });
     }
 }
