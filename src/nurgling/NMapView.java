@@ -257,7 +257,7 @@ public class NMapView extends MapView
         synchronized (glob.map.areas)
         {
             HashSet<String> names = new HashSet<String>();
-            int id = 0;
+            int id = 1;
             for(NArea area : glob.map.areas.values())
             {
                 if(area.id >= id)

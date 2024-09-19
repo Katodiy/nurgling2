@@ -74,6 +74,7 @@ public class NConfig
         conf.put(Key.showGrid, false);
         conf.put(Key.showView, false);
         conf.put(Key.disableWinAnim, true);
+        conf.put(Key.baseurl," https://raw.githubusercontent.com/Katodiy/nurgling-release/master/ver");
 
     }
 
