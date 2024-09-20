@@ -57,25 +57,9 @@ public class NMiniMapWnd extends Widget{
         toggle_panel = new Widget();
         ACheckBox first = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/claim", GameUI.kb_claim, "Display personal claims"), 0, 0).changed(a -> NUtils.getGameUI().toggleol("cplot", a));
         toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vil", GameUI.kb_vil, "Display village claims"), (first.sz.x+UI.scale(3)), 0).changed(a -> NUtils.getGameUI().toggleol("vlg", a));
-        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/rlm", GameUI.kb_rlm, "Display realms"), (first.sz.x+UI.scale(3))*2, 0).changed(a -> NUtils.getGameUI().toggleol("realm", a));
-        ACheckBox eye = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vis", kb_eye, "Display vision area"), (first.sz.x+UI.scale(3))*4, 0).changed(a -> switchStatus("eye", a));
-        eye.a = (Boolean)NConfig.get(NConfig.Key.showView);
-
-        ACheckBox grid = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/grid", kb_grid, "Display grid"), (first.sz.x+UI.scale(3))*5, 0).changed(a -> switchStatus("grid", a));
-        grid.a = (Boolean) NConfig.get(NConfig.Key.showGrid);
-//        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
-//        path.a = NConfiguration.getInstance().isPaths;
-//        ACheckBox minesup = toggle_panel.add(new NMenuCheckBox("lbtn-minesup", kb_minesup, "Display safe mining area"), (first.sz.x+UI.scale(3))*7, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("minesup", a));
-//        minesup.a = NConfiguration.getInstance().minesup;
-//        NUtils.getGameUI().toggleol("minesup", minesup.a);
-        map_box = add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/map", GameUI.kb_map, "Map"), miniMap.sz.x-(first.sz.x), 0).state(() -> NUtils.getGameUI().wndstate(NUtils.getGameUI().mapfile)).click(() -> {
-            NUtils.getGameUI().togglewnd(NUtils.getGameUI().mapfile);
-            if(NUtils.getGameUI().mapfile != null)
-                Utils.setprefb("wndvis-map", NUtils.getGameUI().mapfile.visible());
-        });
-//        ACheckBox naturalobj = toggle_panel.add(new NMenuCheckBox("lbtn-naturalobj", kb_hidenature, "Hide/show natural objects"), (first.sz.x+UI.scale(3))*8, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("hidenature", a));
-//        naturalobj.a = NConfiguration.getInstance().hideNature;
-        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/ico", GameUI.kb_ico, "Icon settings"), (first.sz.x+UI.scale(3))*3, 0).state(() -> NUtils.getGameUI().wndstate(NUtils.getGameUI().iconwnd)).click(() -> {
+        int shift = 2;
+        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/rlm", GameUI.kb_rlm, "Display realms"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> NUtils.getGameUI().toggleol("realm", a));
+        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/ico", GameUI.kb_ico, "Icon settings"), (first.sz.x+UI.scale(3))*shift++, 0).state(() -> NUtils.getGameUI().wndstate(NUtils.getGameUI().iconwnd)).click(() -> {
             if(NUtils.getGameUI().iconconf == null)
                 return;
             if(NUtils.getGameUI().iconwnd == null) {
@@ -86,6 +70,24 @@ public class NMiniMapWnd extends Widget{
                 NUtils.getGameUI().iconwnd = null;
             }
         });
+        ACheckBox eye = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vis", kb_eye, "Display vision area"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("eye", a));
+        eye.a = (Boolean)NConfig.get(NConfig.Key.showView);
+
+        ACheckBox grid = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/grid", kb_grid, "Display grid"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("grid", a));
+        grid.a = (Boolean) NConfig.get(NConfig.Key.showGrid);
+        ACheckBox minesup = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/minesup", kb_grid, "Display mining overlay"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("miningol", a));
+        minesup.a = (Boolean) NConfig.get(NConfig.Key.miningol);
+//        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
+//        path.a = NConfiguration.getInstance().isPaths;
+
+        map_box = add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/map", GameUI.kb_map, "Map"), miniMap.sz.x-(first.sz.x), 0).state(() -> NUtils.getGameUI().wndstate(NUtils.getGameUI().mapfile)).click(() -> {
+            NUtils.getGameUI().togglewnd(NUtils.getGameUI().mapfile);
+            if(NUtils.getGameUI().mapfile != null)
+                Utils.setprefb("wndvis-map", NUtils.getGameUI().mapfile.visible());
+        });
+//        ACheckBox naturalobj = toggle_panel.add(new NMenuCheckBox("lbtn-naturalobj", kb_hidenature, "Hide/show natural objects"), (first.sz.x+UI.scale(3))*8, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("hidenature", a));
+//        naturalobj.a = NConfiguration.getInstance().hideNature;
+
         toggle_panel.pack();
         add(toggle_panel);
         pack();
@@ -99,6 +101,10 @@ public class NMiniMapWnd extends Widget{
             }
             case "grid": {
                 NConfig.set(NConfig.Key.showGrid,a);
+                break;
+            }
+            case "miningol": {
+                NConfig.set(NConfig.Key.miningol,a);
                 break;
             }
         }
@@ -169,35 +175,6 @@ public class NMiniMapWnd extends Widget{
             if(zoomlevel >= 5)
                 return(false);
             return(super.allowzoomout());
-        }
-
-        public void toggleol(String val, Boolean a) {
-            switch (val){
-                case "eye": {
-//                    NConfiguration.getInstance().isEyed = a;
-                    break;
-                }
-                case "path": {
-//                    NConfiguration.getInstance().isPaths = a;
-                    break;
-                }
-                case "grid": {
-//                    NConfiguration.getInstance().isGrid = a;
-                    break;
-                }
-                case "minesup":{
-//                    NUtils.getGameUI().toggleol(val, a);
-//                    NConfiguration.getInstance().minesup = a;
-                    break;
-                }
-                case "hidenature": {
-//                    NConfiguration.getInstance().hideNature = a;
-                    NUtils.showHideNature();
-//                    NConfiguration.getInstance().install();
-                    break;
-                }
-
-            }
         }
     }
 
