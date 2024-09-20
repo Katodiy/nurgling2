@@ -115,9 +115,11 @@ public class NMiningOverlay extends NOverlay
                     {
                         for (t.x = Math.max(beg.x, 0); t.x < Math.min(en.x, mm.sz.x + 2); t.x++)
                         {
-                            if (data[t.x - beg.x][t.y - beg.y])
+                            int dx = t.x - beg.x;
+                            int dy = t.y - beg.y;
+                            if (data.length > dx && data[dx].length > dy && data[dx][dy])
                             {
-                                buf2[t.x][t.y] = data[t.x - beg.x][t.y - beg.y];
+                                buf2[t.x][t.y] = data[dx][dy];
                             }
                         }
                     }
