@@ -393,7 +393,8 @@ public class NMapView extends MapView
                 if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
                 {
                     NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
-                    nol.remove();
+                    if (nol != null)
+                        nol.remove();
                     NUtils.getGameUI().map.nols.remove(area.id);
                 }
                 NAreaSelector.changeArea(area);

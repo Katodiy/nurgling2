@@ -64,7 +64,7 @@ public class NAreasWidget extends Window
                 {
                     for(NArea.Specialisation s: al.sel.area.spec)
                     {
-                        if(s.name.equals(csl.sel.item.name)) {
+                        if(csl.sel.item!=null && s.name.equals(csl.sel.item.name)) {
                             al.sel.area.spec.remove(s);
                             break;
                         }
