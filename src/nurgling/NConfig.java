@@ -47,7 +47,8 @@ public class NConfig
         discordNotification,
         showGrid,
         showView,
-        disableWinAnim
+        disableWinAnim,
+        crime, tracking, swimming, miningol
     }
 
 
@@ -75,6 +76,10 @@ public class NConfig
         conf.put(Key.showView, false);
         conf.put(Key.disableWinAnim, true);
         conf.put(Key.baseurl," https://raw.githubusercontent.com/Katodiy/nurgling-release/master/ver");
+        conf.put(Key.miningol,true);
+        conf.put(Key.crime,false);
+        conf.put(Key.tracking,false);
+        conf.put(Key.swimming,false);
 
     }
 

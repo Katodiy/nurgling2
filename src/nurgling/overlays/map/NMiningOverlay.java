@@ -96,30 +96,26 @@ public class NMiningOverlay extends NOverlay
 //        NArea.VArea space = NUtils.getArea(id).space.space.get(grid_id);
 //        Area curArea = space.area.xl(grid_ul);
         buf2 = new boolean[mm.sz.x + 2][mm.sz.y + 2];
-        for (Long id : curGobs)
-        {
-            Gob g = Finder.findGob(id);
+        if((Boolean)NConfig.get(NConfig.Key.miningol)) {
+            for (Long id : curGobs) {
+                Gob g = Finder.findGob(id);
 
-            if (g != null && g.findol(NMiningSupport.class) != null)
-            {
-                NMiningSupport nms = (NMiningSupport) g.findol(NMiningSupport.class).spr;
-                Coord beg = nms.begin.sub(mm.ul.sub(1, 1));
-                Coord en = nms.end.sub(mm.ul.sub(1, 1));
-                boolean[][] data = nms.getData();
-                if ((beg.x >= 0 && beg.x <= mm.sz.x + 2 ||
-                        en.x >= 0 && en.x <= mm.sz.x + 2) &&
-                        (beg.y >= 0 && beg.y <= mm.sz.y + 2 ||
-                                en.y >= 0 && en.y <= mm.sz.y + 2))
-                {
-                    for (t.y = Math.max(beg.y, 0); t.y < Math.min(en.y, mm.sz.y + 2); t.y++)
-                    {
-                        for (t.x = Math.max(beg.x, 0); t.x < Math.min(en.x, mm.sz.x + 2); t.x++)
-                        {
-                            int dx = t.x - beg.x;
-                            int dy = t.y - beg.y;
-                            if (data.length > dx && data[dx].length > dy && data[dx][dy])
-                            {
-                                buf2[t.x][t.y] = data[dx][dy];
+                if (g != null && g.findol(NMiningSupport.class) != null) {
+                    NMiningSupport nms = (NMiningSupport) g.findol(NMiningSupport.class).spr;
+                    Coord beg = nms.begin.sub(mm.ul.sub(1, 1));
+                    Coord en = nms.end.sub(mm.ul.sub(1, 1));
+                    boolean[][] data = nms.getData();
+                    if ((beg.x >= 0 && beg.x <= mm.sz.x + 2 ||
+                            en.x >= 0 && en.x <= mm.sz.x + 2) &&
+                            (beg.y >= 0 && beg.y <= mm.sz.y + 2 ||
+                                    en.y >= 0 && en.y <= mm.sz.y + 2)) {
+                        for (t.y = Math.max(beg.y, 0); t.y < Math.min(en.y, mm.sz.y + 2); t.y++) {
+                            for (t.x = Math.max(beg.x, 0); t.x < Math.min(en.x, mm.sz.x + 2); t.x++) {
+                                int dx = t.x - beg.x;
+                                int dy = t.y - beg.y;
+                                if (data.length > dx && data[dx].length > dy && data[dx][dy]) {
+                                    buf2[t.x][t.y] = data[dx][dy];
+                                }
                             }
                         }
                     }
@@ -209,6 +205,8 @@ public class NMiningOverlay extends NOverlay
         return (new MapMesh.ShallowWrap(mod, Pipe.Op.compose(new MapMesh.NOLOrder(id), new States.LineWidth(2))));
     }
 
+    boolean isVisible = (Boolean)NConfig.get(NConfig.Key.miningol);
+
     @Override
     public boolean requpdate()
     {
@@ -238,6 +236,12 @@ public class NMiningOverlay extends NOverlay
         {
             res = true;
             oldDummy = new Coord2d(dummy.rc.x, dummy.rc.y);
+        }
+
+        if(isVisible!=(Boolean)NConfig.get(NConfig.Key.miningol))
+        {
+            res = true;
+            isVisible=(Boolean)NConfig.get(NConfig.Key.miningol);
         }
         return res;
     }
