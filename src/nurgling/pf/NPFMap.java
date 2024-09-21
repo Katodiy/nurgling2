@@ -1,5 +1,6 @@
 package nurgling.pf;
 
+import com.sun.jdi.InternalException;
 import haven.*;
 import haven.Window;
 import nurgling.*;
@@ -16,6 +17,14 @@ public class NPFMap
 
         if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player()!=null && gob.id!=NUtils.player().id && gob.getattr(Following.class) == null)
         {
+            {
+                // TODO КОСТЫЛЬ В ЦЕНТР
+                Coord center = Utils.toPfGrid(gob.rc).sub(begin);
+                Cell c = cells[center.x][center.y];
+                c.content.add(gob.id);
+                c.val = 1;
+                // конец
+            }
             CellsArray old = new CellsArray(ca.x_len,ca.y_len);
             old.begin = ca.begin;
             old.end = ca.end;
@@ -81,13 +90,16 @@ public class NPFMap
     int dsize;
     public int size;
 
-    public NPFMap(Coord2d src, Coord2d dst, int mul)
-    {
+    public NPFMap(Coord2d src, Coord2d dst, int mul) throws InterruptedException {
         Coord2d a = new Coord2d(Math.min(src.x, dst.x), Math.min(src.y, dst.y));
         Coord2d b = new Coord2d(Math.max(src.x, dst.x), Math.max(src.y, dst.y));
         Coord center = Utils.toPfGrid((a.add(b)).div(2));
         dsize = Math.max(8,(((int) ((b.sub(a).len() / MCache.tilehsz.x))) / 2) * 2 * mul);
         size = 2 * dsize + 1;
+        if(dsize>200) {
+            NUtils.getGameUI().error("Unable to build grid of required size");
+            throw new InterruptedException();
+        }
 
         cells = new Cell[size][size];
         begin =  center.sub(dsize,dsize);
@@ -105,7 +117,7 @@ public class NPFMap
         }
     }
 
-    public NPFMap(Coord2d src, Coord2d dst, int mul, boolean waterMode)
+    public NPFMap(Coord2d src, Coord2d dst, int mul, boolean waterMode)throws InterruptedException
     {
         this(src,dst,mul);
         this.waterMode = waterMode;

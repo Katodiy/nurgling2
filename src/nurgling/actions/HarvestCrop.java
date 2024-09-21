@@ -57,8 +57,8 @@ public class HarvestCrop implements Action{
         }
         if (barrel == null)
             return Results.ERROR("No barrel for seed");
-        if (trough == null)
-            return Results.ERROR("No trough for seed");
+//        if (trough == null)
+//            return Results.ERROR("No trough for seed");
 
         TransferToBarrel tb;
         (tb = new TransferToBarrel(barrel, iseed)).run(gui);

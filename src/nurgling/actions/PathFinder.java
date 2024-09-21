@@ -39,12 +39,13 @@ public class PathFinder implements Action
         target_id = target.id;
     }
 
+
     long target_id = -2;
     private boolean fixStartEnd(boolean test)
     {
         NPFMap.Cell[][] cells = pfmap.getCells();
         if (cells[start_pos.x][start_pos.y].val != 0) {
-            if (target_id != -2 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test)
+            if (target_id >=0 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test)
                 return false;
             ArrayList<Coord> st_poses = findFreeNear(start_pos,true);
             if(st_poses.isEmpty())
@@ -57,7 +58,7 @@ public class PathFinder implements Action
             end_poses = findFreeNear(end_pos,false);
             for (Coord coord : end_poses)
             {
-                if(start_pos.equals(coord))
+                if(start_pos.equals(coord) && target_id >=0)
                     return false;
                 cells[coord.x][coord.y].val = 7;
             }
@@ -80,47 +81,32 @@ public class PathFinder implements Action
 
     private ArrayList<Coord> findFreeNear(Coord pos, boolean start)
     {
-        if(!start)
-            if(target_id!=-2)
-            {
+        if(!start) {
+            if (target_id != -2) {
                 Gob target = dummy;
                 if (target == null) {
                     target = Finder.findGob(target_id);
                 }
 
                 CellsArray ca = target.ngob.getCA();
-                return findFreeNearByHB(ca,target_id, dummy, start);
+                return findFreeNearByHB(ca, target_id, dummy, start);
             }
+        }
         else
         {
             if(!pfmap.cells[pos.x][pos.y].content.isEmpty()) {
-                Gob gob = Finder.findGob(pfmap.cells[pos.x][pos.y].content.get(0));
+                Gob gob = null;
+                int i = 0;
+                while(gob!=null && pfmap.cells[pos.x][pos.y].content.size()>i) {
+                    Gob cand = Finder.findGob(pfmap.cells[pos.x][pos.y].content.get(i));
+                    gob = cand != null ? cand : gob;
+                }
                 if (gob != null && gob.ngob != null) {
-                    Coord2d test2d_coord = NUtils.player().rc;
-                    double dst = 9000, testdst;
-                    long res_id = -2;
-                    for(long id : pfmap.cells[pos.x][pos.y].content)
-                    {
-                        if(id>=0)
-                        {
-                            if ((testdst = Finder.findGob(id).rc.dist(test2d_coord))<dst) {
-                                res_id = id;
-                                dst = testdst;
-                            }
-                        }
-                        else
-                        {
-                            if ((testdst = dummy.rc.dist(test2d_coord))<dst) {
-                                res_id = id;
-                                dst = testdst;
-                            }
-                        }
-                    }
-                    ArrayList<Coord> res = findFreeNearByHB(gob.ngob.getCA(), res_id, dummy, start);
-                    res.sort(c_comp);
-                    return res;
+                    CellsArray ca = gob.ngob.getCA();
+                    return findFreeNearByHB(ca, target_id, dummy, start);
                 }
             }
+            return new ArrayList<>(Arrays.asList(pos));
         }
 
         ArrayList<Coord> coords = new ArrayList<>();
@@ -226,7 +212,13 @@ public class PathFinder implements Action
         while(true)
         {
             LinkedList<Graph.Vertex> path = construct();
+
             if (path != null) {
+
+                if(dummy!=null) {
+                    System.out.println("dummy:" + dummy.rc);
+                    System.out.println("end:" + Utils.pfGridToWorld(path.getLast().pos));
+                }
                 boolean needRestart = false;
                     for (Graph.Vertex vert : path) {
                         Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
@@ -274,8 +266,13 @@ public class PathFinder implements Action
             else
             {
                 if(dn)
+                {
+//                    if(start_pos == end_poses.get(0) && NUtils.player().rc.dist(Utils.pfGridToWorld(pfmap.cells[start_pos]))
                     return Results.SUCCESS();
-                return Results.ERROR("Can't find path");
+                }
+                return
+                    Results.ERROR("Can't find path");
+
             }
         }
     }
@@ -291,7 +288,7 @@ public class PathFinder implements Action
     {
         LinkedList<Graph.Vertex> path = new LinkedList<>();
         int mul = 1;
-        while (path.size() == 0 && mul < 5)
+        while (path.size() == 0)
         {
             pfmap = new NPFMap(begin, end, mul);
 
@@ -374,7 +371,9 @@ public class PathFinder implements Action
 
     public static boolean isAvailable(Gob target) throws InterruptedException
     {
-        return new PathFinder(target).construct(true)!=null;
+        PathFinder pf = new PathFinder(target);
+        LinkedList<Graph.Vertex> res = pf.construct();
+        return res!=null || pf.dn;
     }
 
     public static boolean isAvailable(Gob target, boolean hardMode) throws InterruptedException
@@ -404,14 +403,14 @@ public class PathFinder implements Action
                             for (int d = 0; d < 4; d++) {
                                 Coord test_coord = npfpos.add(Coord.uecw[d]);
                                 if(test_coord.x<pfmap.size && test_coord.x>=0 && test_coord.y<pfmap.size && test_coord.y>=0)
-                                if (pfmap.cells[test_coord.x][test_coord.y].val == 0) {
+                                if (pfmap.cells[test_coord.x][test_coord.y].val == 0 || pfmap.cells[test_coord.x][test_coord.y].val == 7) {
                                     if(isStart || pfmap.cells[npfpos.x][npfpos.y].content.size()==1 ) {
                                         pfmap.getCells()[test_coord.x][test_coord.y].val = 7;
                                         res.add(test_coord);
                                     }
                                     else if (pfmap.cells[npfpos.x][npfpos.y].content.size()>1)
                                     {
-                                        Coord2d test2d_coord = Utils.pfGridToWorld(pfmap.cells[npfpos.x][npfpos.y].pos);
+                                        Coord2d test2d_coord = Utils.pfGridToWorld(pfmap.cells[test_coord.x][test_coord.y].pos);
                                         double dst = 9000, testdst;
                                         long res_id = -2;
                                         for(long id : pfmap.cells[npfpos.x][npfpos.y].content)
@@ -442,6 +441,22 @@ public class PathFinder implements Action
                     }
                 }
         }
+
+        Coord2d player = NUtils.player().rc;
+        Coord2d targerc = (dummy == null) ? Finder.findGob(target_id).rc:dummy.rc;
+        Coord2d playerdir = player.sub(targerc);
+
+        Comparator comp =  new Comparator<Coord>()
+        {
+            @Override
+            public int compare(Coord o1, Coord o2) {
+                Coord2d t01 = Utils.pfGridToWorld(pfmap.cells[o1.x][o1.y].pos).sub(targerc);
+                Coord2d t02 = Utils.pfGridToWorld(pfmap.cells[o2.x][o2.y].pos).sub(targerc);
+
+                return Double.compare(Math.acos(t01.dot(playerdir)/(playerdir.len()*t01.len())),Math.acos(t02.dot(playerdir)/(playerdir.len()*t02.len())));
+            }
+        };
+        res.sort(comp);
         return res;
     }
 
