@@ -48,7 +48,7 @@ public class NConfig
         showGrid,
         showView,
         disableWinAnim,
-        crime, tracking, swimming, miningol
+        crime, tracking, swimming, debug, miningol
     }
 
 
@@ -80,6 +80,7 @@ public class NConfig
         conf.put(Key.crime,false);
         conf.put(Key.tracking,false);
         conf.put(Key.swimming,false);
+        conf.put(Key.debug,false);
 
     }
 

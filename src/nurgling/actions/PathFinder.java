@@ -214,11 +214,6 @@ public class PathFinder implements Action
             LinkedList<Graph.Vertex> path = construct();
 
             if (path != null) {
-
-                if(dummy!=null) {
-                    System.out.println("dummy:" + dummy.rc);
-                    System.out.println("end:" + Utils.pfGridToWorld(path.getLast().pos));
-                }
                 boolean needRestart = false;
                     for (Graph.Vertex vert : path) {
                         Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
