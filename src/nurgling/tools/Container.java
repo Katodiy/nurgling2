@@ -2,11 +2,13 @@ package nurgling.tools;
 
 import haven.GAttrib;
 import haven.Gob;
-import nurgling.NInventory;
-import nurgling.NUtils;
+import haven.WItem;
+import haven.res.ui.tt.wellmined.WellMined;
+import nurgling.*;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,10 +17,9 @@ public class Container {
     public Gob gob;
     public String cap;
 
-    ArrayList<Updater> updaters = new ArrayList<>();
-
+    public Map<Class<? extends Updater>, Updater> updaters = new HashMap<Class<? extends Updater>, Updater>();
     public void update() throws InterruptedException {
-        for(Updater upd: updaters)
+        for(Updater upd: updaters.values())
         {
             upd.update();
         }
@@ -47,19 +48,62 @@ public class Container {
             res.put(MAXSPACE, NUtils.getGameUI().getInventory(cap).getTotalSpace());
         }
 
+
     }
+
+    static NAlias ores = new NAlias ( new ArrayList<> (
+            Arrays.asList ( "Cassiterite", "Lead Glance", "Wine Glance", "Chalcopyrite", "Malachite", "Peacock Ore", "Cinnabar", "Heavy Earth", "Iron Ochre",
+                    "Bloodstone", "Black Ore", "Galena", "Silvershine", "Horn Silver", "Direvein", "Schrifterz", "Leaf Ore", "Meteorite", "Dross") ) );
 
     public class FuelLvl extends Updater{
+        public static final String FUELLVL = "flvl";
+        public static final String MAXLVL = "maxlvl";
+        public static final String CREDOLVL = "credolvl";
+        public static final String FUELTYPE = "fueltype";
+        public static final String READY = "ready";
+        public static final String NOCREDO = "nocredo";
+
         @Override
         public void update()  throws InterruptedException{
-            res.put("flvl",(int)(30 * NUtils.getFuelLvl(cap, new Color(255, 128, 0))));
+            res.put(FUELLVL,(int)(30 * NUtils.getFuelLvl(cap, new Color(255, 128, 0))));
+            res.remove(NOCREDO);
+            if(res.containsKey(CREDOLVL))
+            {
+                for(WItem item : NUtils.getGameUI().getInventory().getItems(ores))
+                {
+                    if(((NGItem)item.item).getInfo(WellMined.class)==null)
+                        res.put(NOCREDO, true);
+                }
+                if(!res.containsKey(NOCREDO))
+                    res.put(NOCREDO, false);
+            }
         }
+
+        public void setMaxlvl(int maxLvl){
+            res.put(MAXLVL,maxLvl);
+        }
+
+        public void setCredolvl(int credolvl){
+            res.put(CREDOLVL,credolvl);
+        }
+
+        public void setFueltype(String fueltype){
+            res.put(FUELTYPE,fueltype);
+        }
+
+        public int neededFuel() {
+            if (!res.containsKey(NOCREDO) || (boolean) res.get(NOCREDO))
+                return (int) res.get(MAXLVL) - (int) res.get(FUELLVL);
+            else
+                return (int) res.get(CREDOLVL) - (int) res.get(FUELLVL);
+        }
+
     }
 
 
-    public Map<Class<? extends Updater>, Updater> res = new HashMap<Class<? extends Updater>, Updater>();
+
     public <C extends Updater> C getattr(Class<C> c) {
-        Updater attr = this.res.get(attrclass(c));
+        Updater attr = this.updaters.get(attrclass(c));
         if(!c.isInstance(attr))
             return(null);
         return(c.cast(attr));
@@ -77,8 +121,9 @@ public class Container {
     public <C extends Updater> void initattr(Class<C> c)
     {
         if(c == Space.class)
-            res.put(c,new Space());
+            updaters.put(c,new Space());
         else if(c == FuelLvl.class)
-            res.put(c,new FuelLvl());
+            updaters.put(c,new FuelLvl());
     }
+
 }

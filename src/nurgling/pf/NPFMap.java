@@ -17,14 +17,6 @@ public class NPFMap
 
         if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player()!=null && gob.id!=NUtils.player().id && gob.getattr(Following.class) == null)
         {
-            {
-                // TODO КОСТЫЛЬ В ЦЕНТР
-                Coord center = Utils.toPfGrid(gob.rc).sub(begin);
-                Cell c = cells[center.x][center.y];
-                c.content.add(gob.id);
-                c.val = 1;
-                // конец
-            }
             CellsArray old = new CellsArray(ca.x_len,ca.y_len);
             old.begin = ca.begin;
             old.end = ca.end;
@@ -33,6 +25,16 @@ public class NPFMap
                     (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
                             ca.end.y >= begin.y && ca.end.y <= end.y))
             {
+                {
+                    // TODO КОСТЫЛЬ В ЦЕНТР
+                    Coord center = Utils.toPfGrid(gob.rc).sub(begin);
+                    if(center.x>=begin.x && center.x<=end.x && center.y>=begin.y && center.y<=end.y) {
+                        Cell c = cells[center.x][center.y];
+                        c.content.add(gob.id);
+                        c.val = 1;
+                    }
+                    // конец
+                }
                 for (int i = 0; i < ca.x_len; i++)
                     for (int j = 0; j < ca.y_len; j++)
                     {

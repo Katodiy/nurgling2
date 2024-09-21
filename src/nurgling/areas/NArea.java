@@ -224,7 +224,7 @@ public class NArea
             {
                 if(id>=0) {
                     for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
-                        if (s.name.equals(name) && s.subtype != null && s.subtype.equals(sub)) {
+                        if (s.name.equals(name) && s.subtype != null && s.subtype.toLowerCase().equals(sub.toLowerCase())) {
                             NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
                             Pair<Coord2d,Coord2d> testrc = test.getRCArea();
                             double testdist;

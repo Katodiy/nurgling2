@@ -2,8 +2,10 @@ package nurgling.actions.bots;
 
 import haven.Gob;
 import nurgling.NGameUI;
+import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -16,73 +18,57 @@ public class SmelterAction implements Action {
 
 
     static NAlias ores = new NAlias ( new ArrayList<> (
-            Arrays.asList ( "cassiterite", "hematite", "peacockore", "chalcopyrite", "malachite", "leadglance",
-                    "cinnabar", "galena", "ilmenite", "hornsilver", "argentite", "sylvanite" , "magnetite", "nagyagite", "petzite", "cuprite","limonite") ) );
+            Arrays.asList ( "Cassiterite", "Lead Glance", "Wine Glance", "Chalcopyrite", "Malachite", "Peacock Ore", "Cinnabar", "Heavy Earth", "Iron Ochre",
+                    "Bloodstone", "Black Ore", "Galena", "Silvershine", "Horn Silver", "Direvein", "Schrifterz", "Leaf Ore", "Meteorite", "Dross") ) );
 
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NArea smelters = NArea.findSpec(Specialisation.SpecName.smelter.toString());
-        Finder.findGobs(smelters,new NAlias("gfx/terobjs/smelter"));
+        Finder.findGobs(smelters, new NAlias("gfx/terobjs/smelter"));
 
         ArrayList<Container> containers = new ArrayList<>();
 
-        for(Gob sm : Finder.findGobs(smelters,new NAlias("gfx/terobjs/smelter")))
-        {
+
+        for (Gob sm : Finder.findGobs(smelters, new NAlias("gfx/terobjs/smelter"))) {
             Container cand = new Container();
             cand.gob = sm;
-            cand.cap = ((sm.ngob.getModelAttribute()&128)==128)?"Smith's Smelter":"Ore Smelter";
+            cand.cap = ((sm.ngob.getModelAttribute() & 128) == 128) ? "Smith's Smelter" : "Ore Smelter";
+
+            cand.initattr(Container.Space.class);
+            cand.initattr(Container.FuelLvl.class);
+            cand.getattr(Container.FuelLvl.class).setMaxlvl(12);
+            cand.getattr(Container.FuelLvl.class).setCredolvl(9);
+            cand.getattr(Container.FuelLvl.class).setFueltype("coal");
             containers.add(cand);
         }
 
-        for(Gob sm : Finder.findGobs(smelters,new NAlias("gfx/terobjs/primsmelter")))
-        {
+        for (Gob sm : Finder.findGobs(smelters, new NAlias("gfx/terobjs/primsmelter"))) {
             Container cand = new Container();
             cand.gob = sm;
             cand.cap = "Furnace";
+
+            cand.initattr(Container.Space.class);
+            cand.initattr(Container.FuelLvl.class);
+            cand.getattr(Container.FuelLvl.class).setMaxlvl(30);
+            cand.getattr(Container.FuelLvl.class).setCredolvl(24);
+            cand.getattr(Container.FuelLvl.class).setFueltype("branch");
             containers.add(cand);
         }
-        new FreeContainers(containers).run(gui);
 
+        ArrayList<Gob> lighted = new ArrayList<>();
+        for (Container cont : containers) {
+            lighted.add(cont.gob);
+        }
 
-//        Context.Updater updater = new Context.Updater(){
-//
-//            @Override
-//            public void update(String cap, NInventory inv, Context.Container cont) throws InterruptedException {
-//                cont.cap = cap;
-//                cont.freeSpace = inv.getFreeSpace();
-//                cont.maxSpace = inv.getTotalSpace();
-//                cont.isFree = cont.freeSpace == cont.maxSpace;
-//                if(cont instanceof FuelToContainers.FueledContainer)
-//                {
-//                    FuelToContainers.FueledContainer smelter = (FuelToContainers.FueledContainer)cont;
-//                    smelter.fuelTotal = 9;
-//                    for(WItem item: inv.getItems(ores))
-//                    {
-//                        if(((NGItem)item.item).getInfo(WellMined.class)==null)
-//                            smelter.fuelTotal = 12;
-//                    }
-//
-//                    smelter.fuelNeed = Math.max(0,smelter.fuelTotal - (int)(30 * NUtils.getFuelLvl(cont.cap, new Color(255, 128, 0))));
-//                    if(!cap.equals("Furnace"))
-//                    {
-//                        smelter.fuelType = "Coal";
-//                    }
-//                }
-//            }
-//        };
-
-
-
-    //        FreeContainer.transferAll(context,gui, transferedItems);
-
-//        new FillContainer(context.getContainersInWork(), context, NArea.findSpec(Specialisation.SpecName.ore.toString()), ores).run(gui);
-//        new FuelToContainers(context, context.getContainersInWork()).run(gui);
-//        ArrayList<Gob> lighted = new ArrayList<>();
-//        for(Context.Container cont : context.getContainersInWork()) {
-//            lighted.add(cont.gob);
-//        }
-//        new LightGob(lighted, 2).run(gui);
+        Results res = null;
+        while(res == null || res.IsSuccess()) {
+            NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 2));
+            new FreeContainers(containers).run(gui);
+            res = new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.ore.toString()), ores).run(gui);
+            new FuelToContainers(containers).run(gui);
+            new LightGob(lighted, 2).run(gui);
+        }
         return Results.SUCCESS();
     }
 }
