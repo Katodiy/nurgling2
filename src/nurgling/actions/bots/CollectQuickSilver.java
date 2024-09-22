@@ -43,10 +43,11 @@ public class CollectQuickSilver implements Action {
         if (bucket != null && area != null) {
             Gob barrel = Finder.findGob(area, new NAlias("barrel"));
             if (barrel != null) {
-                NUtils.takeItemToHand(bucket);
                 for (Container container : containers) {
                     Container.TargetItems targetItems = container.getattr(Container.TargetItems.class);
                     if (targetItems.getTargets(target) != 0) {
+                        if(NUtils.getGameUI().vhand == null)
+                            NUtils.takeItemToHand(bucket);
                         new PathFinder(container.gob).run(gui);
                         new OpenTargetContainer(container).run(gui);
                         for (WItem item : NUtils.getGameUI().getInventory(container.cap).getItems(target)) {
@@ -56,11 +57,12 @@ public class CollectQuickSilver implements Action {
                     }
                 }
 
-
-                new PathFinder(barrel).run(gui);
-                NUtils.activateItem(barrel, true);
-                NUtils.getUI().core.addTask(new HandWithoutContent());
-                NUtils.getEquipment().wdgmsg("drop", -1);
+                if(NUtils.getGameUI().vhand != null) {
+                    new PathFinder(barrel).run(gui);
+                    NUtils.activateItem(barrel, true);
+                    NUtils.getUI().core.addTask(new HandWithoutContent());
+                    NUtils.getEquipment().wdgmsg("drop", -1);
+                }
             }
         }
 
