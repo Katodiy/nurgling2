@@ -15,6 +15,18 @@ public class Context {
         contcaps.put("gfx/terobjs/crate", "Crate");
         contcaps.put("gfx/terobjs/cupboard", "Cupboard");
         contcaps.put("gfx/terobjs/shed", "Shed");
+        contcaps.put("gfx/terobjs/largechest", "Large Chest");
+        contcaps.put("gfx/terobjs/metalcabinet", "Metal Cabinet");
+        contcaps.put("gfx/terobjs/strawbasket", "Straw Basket");
+        contcaps.put("gfx/terobjs/bonechest", "Bone Chest");
+        contcaps.put("gfx/terobjs/coffer", "Coffer");
+        contcaps.put("gfx/terobjs/leatherbasket", "Leather Basket");
+        contcaps.put("gfx/terobjs/woodbox", "Woodbox");
+        contcaps.put("gfx/terobjs/linencrate", "Linen Crate");
+        contcaps.put("gfx/terobjs/stonecasket", "Stone Casket");
+        contcaps.put("gfx/terobjs/birchbasket", "Birch Basket");
+        contcaps.put("gfx/terobjs/wbasket", "Basket");
+        contcaps.put("gfx/terobjs/exquisitechest", "Exquisite Chest");
     }
 
     public static class Workstation

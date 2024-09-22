@@ -42,6 +42,8 @@ public class NConfig
         cowsprop,
         goatsprop,
         chopperprop,
+        prepblockprop,
+        prepboardprop,
         sheepsprop,
         pigsprop,
         discordNotification,
@@ -176,6 +178,12 @@ public class NConfig
                         break;
                     case "NChopperProp":
                         res.add(new NChopperProp(obj));
+                        break;
+                    case "NPrepBProp":
+                        res.add(new NPrepBlocksProp(obj));
+                        break;
+                    case "NPrepBoardProp":
+                        res.add(new NPrepBoardsProp(obj));
                         break;
                 }
             }

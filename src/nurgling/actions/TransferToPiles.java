@@ -61,14 +61,14 @@ public class TransferToPiles implements Action{
                     int size = witems.size();
                     new OpenTargetContainer("Stockpile", pile).run(gui);
                     int target_size = Math.min(size, gui.getStockpile().getFreeSpace());
-                    int fullSize = gui.getInventory().getItems().size();
-                    for (int i = 0; i < target_size; i++)
-                    {
-                        witems.get(i).item.wdgmsg("transfer", Coord.z);
+                    if(target_size>0) {
+                        int fullSize = gui.getInventory().getItems().size();
+                        for (int i = 0; i < target_size; i++) {
+                            witems.get(i).item.wdgmsg("transfer", Coord.z);
+                        }
+                        NUtils.getUI().core.addTask(new FilledPile(pile, items, target_size, size));
+                        NUtils.getUI().core.addTask(new WaitAnotherSize(NUtils.getGameUI().getInventory(), fullSize));
                     }
-                    NUtils.getUI().core.addTask(new FilledPile(pile, items, target_size, size));
-                    NUtils.getUI().core.addTask(new WaitAnotherSize(NUtils.getGameUI().getInventory(), fullSize));
-
                 }
             }
         return Results.SUCCESS();
