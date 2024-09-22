@@ -38,7 +38,7 @@ public class FillContainersFromPiles implements Action
                     if (targetCoord.equals(1, 1)) {
                         for (Container tcont : conts) {
                             Container.Space tspace = tcont.getattr(Container.Space.class);
-                            target_size += (Integer) space.getRes().get(Container.Space.FREESPACE);
+                            target_size += (Integer) tspace.getRes().get(Container.Space.FREESPACE);
                         }
                     }
 

@@ -253,4 +253,12 @@ public class NUtils
         }
         return 0;
     }
+
+    public static void drop(WItem item) throws InterruptedException {
+        item.item.wdgmsg("drop", item.sz, getGameUI().map.player().rc, 0);
+    }
+
+    public static void itemact(WItem item) throws InterruptedException {
+        item.item.wdgmsg ( "itemact", 0 );
+    }
 }

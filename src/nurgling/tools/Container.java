@@ -100,6 +100,48 @@ public class Container {
 
     }
 
+    public class TargetItems extends Updater{
+        public static final String TARGETS = "targets";
+
+        @Override
+        public void update()  throws InterruptedException {
+            if (res.containsKey(TARGETS)) {
+                HashMap<NAlias, Integer> targets = ((HashMap<NAlias, Integer>) res.get(TARGETS));
+                for (NAlias target : targets.keySet()) {
+                    ((HashMap<NAlias, Integer>) res.get(TARGETS)).put(target, NUtils.getGameUI().getInventory(cap).getItems(target).size());
+                }
+            }
+        }
+
+        public int getTargets(NAlias target) {
+            for (NAlias cand : ((HashMap<NAlias, Integer>) res.get(TARGETS)).keySet()) {
+                if (NParser.checkName(target, cand)) {
+                    return ((HashMap<NAlias, Integer>) res.get(TARGETS)).get(cand);
+                }
+            }
+            return 0;
+        }
+
+        public void addTarget(NAlias target) {
+            boolean found = false;
+            for (NAlias cand : ((HashMap<NAlias, Integer>) res.get(TARGETS)).keySet()) {
+                if (NParser.checkName(target, cand)) {
+                    found = true;
+                }
+            }
+            if(!found)
+                ((HashMap<NAlias, Integer>)res.get(TARGETS)).put(target,0);
+        }
+
+        public void addTarget(String target) {
+            addTarget(new NAlias(target));
+        }
+
+        public TargetItems() {
+            res.put(TARGETS,new HashMap<NAlias, Integer>());
+        }
+    }
+
 
 
     public <C extends Updater> C getattr(Class<C> c) {
@@ -124,6 +166,8 @@ public class Container {
             updaters.put(c,new Space());
         else if(c == FuelLvl.class)
             updaters.put(c,new FuelLvl());
+        else if(c == TargetItems.class)
+            updaters.put(c,new TargetItems());
     }
 
 }
