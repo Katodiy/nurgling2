@@ -38,6 +38,7 @@ public class Specialisation extends Window
         water_refiller,
         ore,
         fuel,
+        ovens,
         barrel
     }
 
@@ -60,6 +61,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.ore.toString()));
         specialisation.add(new SpecialisationItem(SpecName.fuel.toString()));
         specialisation.add(new SpecialisationItem(SpecName.barrel.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.ovens.toString()));
     }
 
     public class SpecialisationList extends SListBox<SpecialisationItem, Widget> {

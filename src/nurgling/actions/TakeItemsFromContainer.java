@@ -31,7 +31,7 @@ public class TakeItemsFromContainer implements Action
         for(String name: names) {
             WItem item = inv.getItem(name);
             if (item != null) {
-                TreeMap<Integer, NArea> aras = NArea.findOuts(name);
+                TreeMap<Integer, NArea> aras = NArea.findOuts(new NAlias(name));
 
                 target_coord = inv.getItem(name).sz.div(Inventory.sqsz);
                 int oldSpace = gui.getInventory().getItems(name).size();

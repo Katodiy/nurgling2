@@ -118,6 +118,8 @@ public class NHitBox
             return new NHitBox(new Coord(-8,-8),new Coord(8,8));
         else if(name.endsWith("block"))
             return new NHitBox(new Coord(-5,-5),new Coord(5,5));
+        else if(name.endsWith("bar"))
+            return new NHitBox(new Coord(-5,-7),new Coord(5,7));
         return null;
     }
 

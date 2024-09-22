@@ -29,7 +29,7 @@ public class TransferItems implements Action
     public Results run(NGameUI gui) throws InterruptedException
     {
 
-        TreeMap<Integer, NArea> areas = NArea.findOuts(item);
+        TreeMap<Integer, NArea> areas = NArea.findOuts(new NAlias(item));
         ArrayList<Integer> ths = new ArrayList<>(areas.keySet());
         ListIterator<Integer> listIter = ths.listIterator(areas.size());
         while (listIter.hasPrevious()) {

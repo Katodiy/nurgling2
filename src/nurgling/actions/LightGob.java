@@ -35,7 +35,7 @@ public class LightGob implements Action
                 if ((gob.ngob.getModelAttribute() & flame_flag) == 0) {
                     new PathFinder(gob).run(gui);
                     NUtils.activateGob ( gob );
-                    NUtils.getUI().core.addTask(new WaitGobModelAttr(gob,2));
+                    NUtils.getUI().core.addTask(new WaitGobModelAttr(gob,flame_flag));
                 }
             }
             new PlaceObject(candelabrum, pos, 0).run(gui);

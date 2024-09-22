@@ -348,6 +348,7 @@ public class Context {
         return true;
     }
 
+    public ArrayList<Container> icontainers = new ArrayList<>();
     HashMap<String,ArrayList<Input>> input = new HashMap<>();
     HashMap<String, SortedMap<Integer,ArrayList<Output>>> output = new HashMap<>();
 }

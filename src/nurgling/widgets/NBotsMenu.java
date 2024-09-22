@@ -22,6 +22,7 @@ public class NBotsMenu extends Widget
         addLayout(resources);
         NLayout productions = new NLayout("productions");
         productions.elements.add(new NButton("smelter", new SmelterAction()));
+        productions.elements.add(new NButton("backer", new BackerAction()));
         addLayout(productions);
 
         NLayout farming = new NLayout("farming");

@@ -54,6 +54,25 @@ public class NArea
         return res;
     }
 
+    public static ArrayList<NArea> findAllIn(NAlias name)
+    {
+        ArrayList<NArea> results = new ArrayList<>();
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids)
+            {
+                if(id>0) {
+                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
+                        NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
+                        results.add(test);
+                    }
+                }
+            }
+        }
+        return results;
+    }
+
     private static class TestedArea
     {
         NArea area;
@@ -122,7 +141,7 @@ public class NArea
         return res;
     }
 
-    public static TreeMap<Integer,NArea> findOuts(String name)
+    public static TreeMap<Integer,NArea> findOuts(NAlias name)
     {
         TreeMap<Integer,NArea> areas = new TreeMap<>();
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
@@ -133,7 +152,7 @@ public class NArea
                     if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name) ) {
                         NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
                         for (int i = 0; i < cand.jout.length(); i++) {
-                            if (((String) ((JSONObject) cand.jout.get(i)).get("name")).equals(name))
+                            if (NParser.checkName((String) ((JSONObject) cand.jout.get(i)).get("name"),name))
                             {
                                 Integer th = (((JSONObject) cand.jout.get(i)).has("th"))?((Integer) ((JSONObject) cand.jout.get(i)).get("th")):1;
                                 areas.put(th,cand);
@@ -155,6 +174,17 @@ public class NArea
         return false;
     }
 
+    private boolean containIn(NAlias name)
+    {
+        for (int i = 0; i < jin.length(); i++)
+        {
+            if(NParser.checkName((String) ((JSONObject)jin.get(i)).get("name"),name))
+                return true;
+        }
+        return false;
+    }
+
+
     private boolean containOut(String name, double th)
     {
         for (int i = 0; i < jout.length(); i++) {
@@ -172,6 +202,15 @@ public class NArea
         for (int i = 0; i < jout.length(); i++) {
             if (((String) ((JSONObject) jout.get(i)).get("name")).equals(name))
                     return true;
+        }
+        return false;
+    }
+
+    private boolean containOut(NAlias name)
+    {
+        for (int i = 0; i < jout.length(); i++) {
+            if (NParser.checkName((String) ((JSONObject) jout.get(i)).get("name"),name))
+                return true;
         }
         return false;
     }

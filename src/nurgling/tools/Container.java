@@ -19,9 +19,11 @@ public class Container {
 
     public Map<Class<? extends Updater>, Updater> updaters = new HashMap<Class<? extends Updater>, Updater>();
     public void update() throws InterruptedException {
-        for(Updater upd: updaters.values())
+        if(NUtils.getGameUI().getInventory(cap)!=null)
         {
-            upd.update();
+            for (Updater upd : updaters.values()) {
+                upd.update();
+            }
         }
     }
 
