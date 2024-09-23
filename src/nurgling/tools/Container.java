@@ -71,13 +71,16 @@ public class Container {
             res.remove(NOCREDO);
             if(res.containsKey(CREDOLVL))
             {
-                for(WItem item : NUtils.getGameUI().getInventory().getItems(ores))
+                for(WItem item : NUtils.getGameUI().getInventory(cap).getItems(ores))
                 {
-                    if(((NGItem)item.item).getInfo(WellMined.class)==null)
+                    if(((NGItem)item.item).getInfo(WellMined.class)==null) {
                         res.put(NOCREDO, true);
+                        break;
+                    }
                 }
-                if(!res.containsKey(NOCREDO))
+                if(!res.containsKey(NOCREDO)) {
                     res.put(NOCREDO, false);
+                }
             }
         }
 
