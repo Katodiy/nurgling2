@@ -38,7 +38,7 @@ public class WaitPrepBlocksState implements NTask
             state = State.DANGER;
         } else if (NUtils.getStamina() <= 0.45) {
             state = State.TIMEFORDRINK;
-        } else if (NUtils.getGameUI().getInventory().calcNumberFreeCoord(new Coord(2, 1)) == 0) {
+        } else if (NUtils.getGameUI().getInventory().calcNumberFreeCoord(new Coord(1, 2)) == 0) {
             state = State.NOFREESPACE;
         }
         return state != State.WORKING;

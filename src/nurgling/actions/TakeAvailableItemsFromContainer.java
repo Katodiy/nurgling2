@@ -43,11 +43,11 @@ public class TakeAvailableItemsFromContainer implements Action
             WaitItems wi = new WaitItems(gui.getInventory(), name, oldSpace + target_size);
             NUtils.getUI().core.addTask(wi);
             cont.update();
+            count = target_size;
             if (items.size() > target_size) {
                 took = false;
                 return Results.FAIL();
             }
-            count = target_size;
         }
         took = true;
         return Results.SUCCESS();

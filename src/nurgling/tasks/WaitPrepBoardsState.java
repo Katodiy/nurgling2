@@ -38,7 +38,7 @@ public class WaitPrepBoardsState implements NTask
             state = State.DANGER;
         } else if (NUtils.getStamina() <= 0.45) {
             state = State.TIMEFORDRINK;
-        } else if (NUtils.getGameUI().getInventory().calcNumberFreeCoord(new Coord(1, 4)) == 0) {
+        } else if (NUtils.getGameUI().getInventory().calcNumberFreeCoord(new Coord(4, 1)) == 0) {
             state = State.NOFREESPACE;
         }
         return state != State.WORKING;
