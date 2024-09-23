@@ -18,7 +18,7 @@ public class NDraggableWidget extends Widget
 
     public final static Coord off = new Coord(UI.scale(10,10));
     public final static Coord delta = new Coord(UI.scale(35,20));
-    private Widget content = null;
+    public Widget content = null;
 
     public NDraggableWidget(Widget content, String name, Coord sz)
     {

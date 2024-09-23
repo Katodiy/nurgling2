@@ -690,7 +690,7 @@ public class MiniMap extends Widget
 	} catch(Loading l) {
 	    return(false);
 	}
-	return(false);
+	return(true);
     }
 
     public DisplayIcon iconat(Coord c) {

@@ -257,7 +257,7 @@ public class NMapView extends MapView
         synchronized (glob.map.areas)
         {
             HashSet<String> names = new HashSet<String>();
-            int id = 0;
+            int id = 1;
             for(NArea area : glob.map.areas.values())
             {
                 if(area.id >= id)
@@ -393,7 +393,8 @@ public class NMapView extends MapView
                 if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
                 {
                     NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
-                    nol.remove();
+                    if (nol != null)
+                        nol.remove();
                     NUtils.getGameUI().map.nols.remove(area.id);
                 }
                 NAreaSelector.changeArea(area);

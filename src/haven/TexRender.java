@@ -128,8 +128,11 @@ public abstract class TexRender implements Tex, Disposable {
 	    gc[6], gc[7], tc[6] * ix, tc[7] * iy,
 	};
 	g.usestate(draw);
-	g.out.draw1(g.state(), new Model(Model.Mode.TRIANGLE_STRIP, new VertexArray(vf_tex2d, new VertexArray.Buffer(data.length * 4, DataBuffer.Usage.EPHEMERAL, DataBuffer.Filler.of(data))), null, 0, 4));
-	g.usestate(ColorTex.slot);
+	try {
+	    g.out.draw1(g.state(), new Model(Model.Mode.TRIANGLE_STRIP, new VertexArray(vf_tex2d, new VertexArray.Buffer(data.length * 4, DataBuffer.Usage.EPHEMERAL, DataBuffer.Filler.of(data))), null, 0, 4));
+	} finally {
+	    g.usestate(TexDraw.slot);
+	}
     }
 
     @Material.ResName("tex")
@@ -161,14 +164,16 @@ public abstract class TexRender implements Tex, Disposable {
 		    tclip = true;
 	    }
 	    final boolean clip = tclip; /* ¦] */
-	    return(new Material.Res.Resolver() {
+		Material.Res.CustomResolver resolver = new Material.Res.CustomResolver() {
 		    public void resolve(Collection<Pipe.Op> buf, Collection<Pipe.Op> dynbuf) {
 			TexRender tex;
-			TexR rt;
-			if(tid >= 0)
-			    rt = tres.get().layer(TexR.class, tid);
-			else
-			    rt = tres.get().layer(TexR.class);
+			TexR rt = getCustomTex(Math.max(tid, 0));
+			if(rt == null) {
+				if (tid >= 0)
+					rt = tres.get().layer(TexR.class, tid);
+				else
+					rt = tres.get().layer(TexR.class);
+			}
 			if(rt != null) {
 			    tex = rt.tex();
 			} else {
@@ -177,7 +182,8 @@ public abstract class TexRender implements Tex, Disposable {
 			buf.add(tex.draw);
 			buf.add(clip ? tex.clip : noclip);
 		    }
-		});
+		};
+		return resolver;
 	}
     }
 }

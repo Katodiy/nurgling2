@@ -27,6 +27,7 @@ public class NUI extends UI
         {
             root.add(core = new NCore());
             bind(core, 7001);
+            core.debug = (Boolean) NConfig.get(NConfig.Key.debug);
             dataTables = new NDataTables();
         }
     }

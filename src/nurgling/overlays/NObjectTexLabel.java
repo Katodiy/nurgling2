@@ -11,7 +11,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class NObjectTexLabel extends Sprite implements RenderTree.Node, PView.Render2D{
-    private final Coord3f pos;
+    protected Coord3f pos;
     protected TexI label = null;
     protected TexI img = null;
     boolean forced = false;

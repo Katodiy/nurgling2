@@ -1,12 +1,14 @@
 package nurgling;
 
 import haven.*;
+import haven.render.sl.InstancedUniform;
+import haven.res.gfx.fx.eq.Equed;
+import haven.res.lib.vmat.Mapping;
+import haven.res.lib.vmat.Materials;
 import nurgling.nattrib.*;
 import nurgling.overlays.*;
 import nurgling.pf.*;
 import nurgling.tools.*;
-
-import static nurgling.tools.VSpec.chest_state;
 
 import java.util.*;
 
@@ -14,6 +16,8 @@ public class NGob {
     public NHitBox hitBox = null;
     public String name = null;
     public boolean isQuested = true;
+    public boolean customMask = false;
+    public int mask = -1;
     private CellsArray ca = null;
     boolean isDynamic = false;
     private boolean isGate = false;
@@ -68,18 +72,13 @@ public class NGob {
                                     break;
                             }
                         }
-                        if (name.contains("gfx/terobjs")) {
-                            switch (name) {
-                                case "gfx/terobjs/chest":
-                                    parent.setattr(new NContainerTex(parent, NStyle.chestAlt, chest_state));
-                                    break;
-                                case "gfx/terobjs/cupboard":
-                                    parent.setattr(new NContainerTex(parent, NStyle.cupboardAlt, chest_state));
-                                    break;
-                                case "gfx/terobjs/dframe":
-                                    parent.setattr(new NDframeTex(parent, NStyle.dframeAlt));
-                                    break;
-                            }
+                        if (name.contains("gfx/terobjs/dframe") || name.contains("gfx/terobjs/cheeserack")) {
+                            customMask = true;
+                        }
+                        else if (name.contains("gfx/terobjs/barrel"))
+                        {
+                            customMask = true;
+                            parent.addcustomol(new NBarrelOverlay(parent));
                         }
 
                         if (NUtils.playerID()!= -1 && name.equals("gfx/borka/body") && NUtils.playerID() != parent.id) {
@@ -93,11 +92,16 @@ public class NGob {
                         }
                     }
                     if (hitBox != null) {
-                        if (ca == null) {
-                            setDynamic();
-                            parent.addcustomol(new NModelBox(parent));
-                            if (!isDynamic)
-                                ca = new CellsArray(parent);
+                        if (NParser.checkName(name, new NAlias("gfx/terobjs/moundbed"))) {
+                            hitBox = null;
+                        }
+                        else {
+                            if (ca == null) {
+                                setDynamic();
+                                parent.addcustomol(new NModelBox(parent));
+                                if (!isDynamic)
+                                    ca = new CellsArray(parent);
+                            }
                         }
                     }
                 }
@@ -160,5 +164,86 @@ public class NGob {
         return res;
     }
 
+    public Materials mats(Mapping mapping) {
+        Material mat = null;
+        if(mapping instanceof Materials)
+        {
+            mat = ((Materials)mapping).mats.get(0);
+        }
+        if(name!=null)
+        {
+            MaterialFactory.Status status = MaterialFactory.getStatus(name,customMask? mask ():(int)getModelAttribute());
+            if(status == MaterialFactory.Status.NOTDEFINED)
+                return null;
+            if(!altMats.containsKey(status))
+            {
+                Map<Integer,Material> mats = MaterialFactory.getMaterials(name, status, mat);
+                if(mats!=null)
+                    altMats.put(status,new Materials(parent,mats));
+            }
+            return altMats.get(status);
+        }
+        return null;
+    }
 
+    HashMap<MaterialFactory.Status,Materials> altMats = new HashMap<>();
+
+
+    public void addol(Gob.Overlay ol) {
+        if (name != null)
+            if (name.equals("gfx/terobjs/dframe") || name.equals("gfx/terobjs/barrel")) {
+                if(ol.spr instanceof StaticSprite) {
+                    ResDrawable dr = ((ResDrawable) parent.getattr(Drawable.class));
+                    parent.setattr(new ResDrawable(parent, dr.res, dr.sdt, false));
+                }
+            }
+    }
+
+    public void removeol(Gob.Overlay ol) {
+        if (name != null)
+            if (name.equals("gfx/terobjs/dframe") || name.equals("gfx/terobjs/barrel") ) {
+                if(ol.spr instanceof StaticSprite) {
+                    ResDrawable dr = ((ResDrawable) parent.getattr(Drawable.class));
+                    parent.setattr(new ResDrawable(parent, dr.res, dr.sdt, false));
+                }
+            }
+    }
+
+    public int mask() {
+        if(name.equals("gfx/terobjs/dframe")) {
+            for (Gob.Overlay ol : parent.ols) {
+                if (ol.spr instanceof StaticSprite) {
+                    if (!NParser.isIt(ol, new NAlias("-blood", "-fishraw", "-windweed")) || NParser.isIt(ol, new NAlias("-windweed-dry"))) {
+                        return 2;
+                    } else {
+                        return 1;
+                    }
+                }
+            }
+            return 0;
+        }
+        else if (name.equals("gfx/terobjs/barrel"))
+        {
+            for (Gob.Overlay ol : parent.ols) {
+                if (ol.spr instanceof StaticSprite) {
+                    return 4;
+                }
+            }
+            return 0;
+        }
+        else if (name.equals("gfx/terobjs/cheeserack")) {
+            int counter = 0;
+            for (Gob.Overlay ol : parent.ols) {
+                if (ol.spr instanceof Equed) {
+                    counter++;
+                }
+            }
+            if (counter == 3)
+                return 2;
+            else if (counter != 0)
+                return 1;
+            return 0;
+        }
+        return -1;
+    }
 }

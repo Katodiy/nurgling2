@@ -26,6 +26,16 @@ public class NParser
     }
 
     public static boolean checkName(
+            final NAlias name,
+            final NAlias regEx
+    ) {
+        if (regEx != null && name != null) {
+            return (regEx.keys.containsAll(name.keys)) && (regEx.exceptions.containsAll(name.exceptions));
+        }
+        return false;
+    }
+
+    public static boolean checkName(
             final String name,
             final String... args
     ) {

@@ -50,7 +50,7 @@ public class NHitBox
             put("gfx/terobjs/granary", new NHitBox(new Coord(-16,-16),new Coord(16,16)));
             put("gfx/terobjs/pow", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/stockpile-cloth", new NHitBox(new Coord(-5,-5),new Coord(5,5)));
-            put("stockpile", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
+            put("stockpile", new NHitBox(new Coord(-5,-5),new Coord(5,5)));
             put("gfx/terobjs/smokeshed", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
             put("gfx/terobjs/vehicle/cart", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
             put("gfx/terobjs/knarrdock", new NHitBox(new Coord(-62,-14),new Coord(60,14)));
@@ -115,6 +115,12 @@ public class NHitBox
             return custom.get("log");
         if(name.startsWith("gfx/terobjs/bumlings"))
             return custom.get("bumlings");
+        else if(name.endsWith("board"))
+            return new NHitBox(new Coord(-8,-8),new Coord(8,8));
+        else if(name.endsWith("block"))
+            return new NHitBox(new Coord(-5,-5),new Coord(5,5));
+        else if(name.endsWith("bar"))
+            return new NHitBox(new Coord(-5,-7),new Coord(5,7));
         return null;
     }
 

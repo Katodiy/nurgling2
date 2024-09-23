@@ -613,6 +613,9 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	}
 	return(super.mouseup(c,button));
     }
+	boolean criminalIsInstall = false;
+	boolean trackingIsInstall = false;
+	boolean swimmingIsInstall = false;
 
     public void uimsg(String msg, Object... args) {
 	if(msg == "goto") {
@@ -654,6 +657,26 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 			    pag.invalidate();
 			}
 			paginae.add(pag);
+			if(pag.res instanceof Session.CachedRes.Ref)
+			{
+				String ref = ((Session.CachedRes.Ref)pag.res).resnm();
+				if((Boolean) NConfig.get(NConfig.Key.crime) != criminalIsInstall && (Boolean) NConfig.get(NConfig.Key.crime) && ref.equals("paginae/act/crime"))
+				{
+					pag.button().use(new Interaction());
+					criminalIsInstall = (Boolean) NConfig.get(NConfig.Key.crime);
+				}
+				else if((Boolean) NConfig.get(NConfig.Key.tracking) != trackingIsInstall && (Boolean) NConfig.get(NConfig.Key.tracking) && ref.equals("paginae/act/tracking"))
+				{
+					pag.button().use(new Interaction());
+					trackingIsInstall = (Boolean) NConfig.get(NConfig.Key.tracking);
+				}
+				else if((Boolean) NConfig.get(NConfig.Key.swimming) != swimmingIsInstall && (Boolean) NConfig.get(NConfig.Key.swimming) && ref.equals("paginae/act/swim"))
+				{
+					pag.button().use(new Interaction());
+					swimmingIsInstall = (Boolean) NConfig.get(NConfig.Key.swimming);
+				}
+			}
+
 		    } else {
 			paginae.remove(pag);
 		    }

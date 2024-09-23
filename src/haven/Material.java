@@ -31,6 +31,7 @@ import java.util.*;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
 import haven.render.*;
+import nurgling.tools.MaterialFactory;
 
 public class Material implements Pipe.Op {
     public final Pipe.Op states, dynstates;
@@ -204,23 +205,62 @@ public class Material implements Pipe.Op {
 	private transient List<Pipe.Op> states = new LinkedList<>(), dynstates = new LinkedList<>();
 	private transient List<Resolver> left = new LinkedList<>();
 	private transient Material m;
+	private transient HashMap<MaterialFactory.Status, Material> hm = new HashMap<>();
 
 	public interface Resolver {
 	    public void resolve(Collection<Pipe.Op> buf, Collection<Pipe.Op> dynbuf);
+	}
+
+	public abstract static class CustomResolver implements Resolver {
+		private Map<Integer,TexR> tex;
+
+		public TexR getCustomTex(int id) {
+			if(tex!=null)
+				return tex.get(id);
+			return null;
+		}
+
+		public void setCustomTex(Map<Integer,TexR> tex) {
+			this.tex = tex;
+		}
 	}
 
 	public Res(Resource res, int id) {
 	    res.super();
 	    this.id = id;
 	}
-
+	public Material get(int mask) {
+		synchronized(this) {
+			MaterialFactory.Status status = MaterialFactory.getStatus(getres().name, mask);
+			if(status!= MaterialFactory.Status.NOTDEFINED) {
+				if (!hm.containsKey(status)) {
+					for (Iterator<Resolver> i = left.iterator(); i.hasNext(); ) {
+						Resolver r = i.next();
+						if (r instanceof CustomResolver) {
+							((CustomResolver) r).setCustomTex(MaterialFactory.getMaterial(getres().name, status, r));
+						}
+						r.resolve(states, dynstates);
+					}
+					Material m = new Material(states.toArray(new Pipe.Op[0]), dynstates.toArray(new Pipe.Op[0])) {
+						public String toString() {
+							return (super.toString() + "@" + getres().name);
+						}
+					};
+					hm.put(status, m);
+				}
+				return (hm.get(status));
+			}
+			else
+				return get();
+		}
+	}
 	public Material get() {
 	    synchronized(this) {
 		if(m == null) {
 		    for(Iterator<Resolver> i = left.iterator(); i.hasNext();) {
 			Resolver r = i.next();
 			r.resolve(states, dynstates);
-			i.remove();
+//			i.remove();
 		    }
 		    m = new Material(states.toArray(new Pipe.Op[0]), dynstates.toArray(new Pipe.Op[0])) {
 			    public String toString() {
@@ -251,17 +291,24 @@ public class Material implements Pipe.Op {
 		lres = res.indir();
 		id = Utils.iv(args[0]);
 	    }
-	    return(new Res.Resolver() {
+	    return(new Res.CustomResolver() {
 		    public void resolve(Collection<Pipe.Op> buf, Collection<Pipe.Op> dynbuf) {
 			if(id >= 0) {
 			    Res mat = lres.get().layer(Res.class, id);
 			    if(mat == null)
 				throw(new Resource.LoadException("No such material in " + lres.get() + ": " + id, res));
-			    Material m = mat.get();
-			    if(m.states != Pipe.Op.nil)
-				buf.add(m.states);
-			    if(m.dynstates != Pipe.Op.nil)
-				dynbuf.add(m.dynstates);
+			    TexR texR;
+				if((texR = getCustomTex(id))==null) {
+					Material m = mat.get();
+					if (m.states != Pipe.Op.nil)
+						buf.add(m.states);
+					if(m.dynstates != Pipe.Op.nil)
+						dynbuf.add(m.dynstates);
+				}
+				else
+				{
+					buf.add(MaterialFactory.constructMaterial(texR,mat.get()).states);
+				}
 			} else {
 			    Material mat = fromres((Owner)null, lres.get(), Message.nil);
 			    if(mat == null)

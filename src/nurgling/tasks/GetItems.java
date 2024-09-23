@@ -11,8 +11,9 @@ public class GetItems implements NTask
 {
     NAlias name = null;
     NInventory inventory;
-    QualityType quality;
+    QualityType quality = null;
 
+    float th = -1;
     boolean eq = false;
     GItem target = null;
 
@@ -26,6 +27,22 @@ public class GetItems implements NTask
         this.name = name;
         this.inventory = inventory;
     }
+
+    public GetItems(NInventory inventory, NAlias name, float th)
+    {
+        this.name = name;
+        this.inventory = inventory;
+        this.th = th;
+    }
+
+    public GetItems(NInventory inventory, NAlias name, float th, QualityType quality)
+    {
+        this.name = name;
+        this.inventory = inventory;
+        this.th = th;
+        this.quality = quality;
+    }
+
 
     public GetItems(NInventory inventory, GItem target)
     {
@@ -79,7 +96,10 @@ public class GetItems implements NTask
                 {
                     if (name == null || (eq && !name.keys.isEmpty() ? item_name.equals(name.getDefault()) : NParser.checkName(item_name, name)))
                     {
-                        result.add(item);
+                        if(th == -1)
+                            result.add(item);
+                        else if( ((quality == QualityType.High || quality ==null) && ((NGItem) item.item).quality >= th) || (quality == QualityType.Low && ((NGItem) item.item).quality <= th))
+                            result.add(item);
                     }
                 }
             }

@@ -34,6 +34,7 @@ import java.net.*;
 import java.lang.ref.*;
 import java.lang.reflect.*;
 import java.util.prefs.*;
+import java.security.*;
 import java.util.*;
 import java.util.function.*;
 import java.awt.Graphics;
@@ -1523,6 +1524,14 @@ public class Utils {
     }
 
     @SuppressWarnings("unchecked")
+    public static <T> T[] cast(Object[] a, Class<T> cl) {
+	T[] d = (T[])Array.newInstance(cl, a.length);
+	for(int i = 0; i < a.length; i++)
+	    d[i] = cl.cast(a[i]);
+	return(d);
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T> T[] extend(T[] src, int off, int nl) {
 	T[] dst = (T[])Array.newInstance(src.getClass().getComponentType(), nl);
 	System.arraycopy(src, off, dst, 0, Math.min(src.length - off, dst.length));
@@ -1567,6 +1576,19 @@ public class Utils {
 	short[] dst = new short[nl];
 	System.arraycopy(src, 0, dst, 0, Math.min(src.length, dst.length));
 	return(dst);
+    }
+
+    public static byte[] concat(byte[]... parts) {
+	int n = 0;
+	for(byte[] p : parts)
+	    n += p.length;
+	byte[] rv = new byte[n];
+	int o = 0;
+	for(byte[] p : parts) {
+	    System.arraycopy(p, 0, rv, o, p.length);
+	    o += p.length;
+	}
+	return(rv);
     }
 
     public static <T> T el(Iterable<T> c) {
@@ -1739,16 +1761,16 @@ public class Utils {
 	return(buf.toString());
     }
 
-    public static URI uriparam(URI base, String... pars) {
+    public static URI uriparam(URI base, Object... pars) {
 	StringBuilder buf = new StringBuilder();
 	if(base.getQuery() != null)
 	    buf.append(base.getQuery());
 	for(int i = 0; i < pars.length; i += 2) {
 	    if(buf.length() > 0)
 		buf.append('&');
-	    buf.append(urlencode(pars[i]));
+	    buf.append(urlencode(String.valueOf(pars[i])));
 	    buf.append('=');
-	    buf.append(urlencode(pars[i + 1]));
+	    buf.append(urlencode(String.valueOf(pars[i + 1])));
 	}
 	try {
 	    return(new URI(base.getScheme(), base.getAuthority(), base.getPath(), buf.toString(), base.getFragment()));

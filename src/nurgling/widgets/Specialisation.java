@@ -37,7 +37,9 @@ public class Specialisation extends Window
         deadkritter,
         water_refiller,
         ore,
-        fuel
+        fuel,
+        ovens,
+        barrel
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -58,6 +60,8 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.water_refiller.toString()));
         specialisation.add(new SpecialisationItem(SpecName.ore.toString()));
         specialisation.add(new SpecialisationItem(SpecName.fuel.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.barrel.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.ovens.toString()));
     }
 
     public class SpecialisationList extends SListBox<SpecialisationItem, Widget> {
