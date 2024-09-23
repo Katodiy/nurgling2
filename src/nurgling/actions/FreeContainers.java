@@ -51,7 +51,7 @@ public class FreeContainers implements Action
                 new PathFinder(container.gob).run(gui);
                 new OpenTargetContainer(container).run(gui);
             }
-            container.update();
+            new CloseTargetContainer(container).run(gui);
         }
         for(String name: targets)
         {

@@ -39,6 +39,8 @@ public class CollectQuickSilver implements Action {
 
         WItem bucket = NUtils.getEquipment().findBucket("Quicksilver");
         NArea.Specialisation barrels = new NArea.Specialisation(Specialisation.SpecName.barrel.toString(), "Quicksilver");
+        if(barrels == null)
+            return Results.ERROR("Quicksilver spec not found");
         NArea area = NArea.findSpec(barrels);
         if (bucket != null && area != null) {
             Gob barrel = Finder.findGob(area, new NAlias("barrel"));
@@ -54,6 +56,7 @@ public class CollectQuickSilver implements Action {
                             NUtils.itemact(item);
                         }
                         NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(container.cap), target, 0));
+                        new CloseTargetContainer(container).run(gui);
                     }
                 }
 

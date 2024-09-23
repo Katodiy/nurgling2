@@ -45,7 +45,7 @@ public class DropTargets implements Action {
                     NUtils.drop(item);
                 }
                 NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(container.cap),target,0));
-                container.update();
+                new CloseTargetContainer(container).run(gui);
             }
         }
 

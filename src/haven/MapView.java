@@ -1169,8 +1169,10 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	if(pl != null)
 	    return(pl.getc());
 	else
-	    return(NUtils.getGameUI().map.glob.map.getzp(NUtils.getGameUI().map.cc));
-    }
+		if(NUtils.getGameUI()!=null)
+	    	return(NUtils.getGameUI().map.glob.map.getzp(NUtils.getGameUI().map.cc));
+    return null;
+	}
 
     public static class Clicklist implements RenderList<Rendered>, RenderList.Adapter {
 	public static final Pipe.Op clickbasic = Pipe.Op.compose(new States.Depthtest(States.Depthtest.Test.LE),

@@ -266,10 +266,12 @@ public class NArea
                         if (s.name.equals(name) && s.subtype != null && s.subtype.toLowerCase().equals(sub.toLowerCase())) {
                             NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
                             Pair<Coord2d,Coord2d> testrc = test.getRCArea();
-                            double testdist;
-                            if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
-                                res = test;
-                                dist = testdist;
+                            if(testrc!=null) {
+                                double testdist;
+                                if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                                    res = test;
+                                    dist = testdist;
+                                }
                             }
                         }
                     }
