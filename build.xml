@@ -174,9 +174,11 @@
   </target>
 
   <target name="resources">
-    <exec executable="java" failifexecutionfails="false">
-      <arg line="-jar etc/LayerUtil.jar -re resources/src resources/compiled/res" />
-    </exec>
+
+    <java jar="etc/LayerUtil.jar" fork="true">
+      <arg line="-re resources/src resources/compiled/res"/>
+    </java>
+
     <jar destfile="build/nurgling-res.jar" update="true">
       <fileset dir="resources/compiled" />
     </jar>
