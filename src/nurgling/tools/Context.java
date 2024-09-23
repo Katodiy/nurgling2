@@ -51,6 +51,7 @@ public class Context {
         workstation_map = new HashMap<>();
         workstation_map.put("paginae/bld/meatgrinder",new Workstation("gfx/terobjs/meatgrinder", "gfx/borka/idle"));
         workstation_map.put("paginae/bld/loom",new Workstation("gfx/terobjs/loom", "gfx/borka/loomsit"));
+        workstation_map.put("paginae/bld/ropewalk",new Workstation("gfx/terobjs/ropewalk", "gfx/borka/ropewalking"));
     }
     public void addTools(List<Indir<Resource>> tools)
     {
