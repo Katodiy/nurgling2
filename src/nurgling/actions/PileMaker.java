@@ -33,7 +33,10 @@ public class PileMaker implements Action{
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NHitBox hb = NHitBox.findCustom(pileName.getDefault());
+        NHitBox hb = NHitBox.findCustom(items.getDefault());
+        if(hb == null) {
+            hb = NHitBox.findCustom(pileName.getDefault());
+        }
         if(hb == null)
             return Results.ERROR("Hit box not found");
         Coord2d pos = null;
