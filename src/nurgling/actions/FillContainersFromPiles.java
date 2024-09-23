@@ -63,6 +63,7 @@ public class FillContainersFromPiles implements Action
                 }
                 new TransferToContainer(new Context(), cont, transferedItems).run(gui);
             }
+            new CloseTargetContainer(cont).run(gui);
         }
         return Results.SUCCESS();
     }

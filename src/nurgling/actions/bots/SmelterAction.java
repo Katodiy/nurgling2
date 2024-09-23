@@ -66,6 +66,7 @@ public class SmelterAction implements Action {
         ArrayList<Gob> lighted = new ArrayList<>();
         for (Container cont : containers) {
             lighted.add(cont.gob);
+
         }
 
         Results res = null;
