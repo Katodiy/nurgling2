@@ -42,10 +42,12 @@ public class NArea
                     if (NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
                         NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
                         Pair<Coord2d, Coord2d> testrc = test.getRCArea();
-                        double testdist;
-                        if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
-                            res = test;
-                            dist = testdist;
+                        if(test.getRCArea()!=null) {
+                            double testdist;
+                            if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                                res = test;
+                                dist = testdist;
+                            }
                         }
                     }
                 }

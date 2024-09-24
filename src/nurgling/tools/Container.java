@@ -105,6 +105,24 @@ public class Container {
 
     }
 
+
+    public class TestAttr extends Updater{
+        public static final String ATTR = "attr";
+
+        public void SetAttr(String attr){
+
+        }
+
+        @Override
+        public void update() throws InterruptedException {
+
+        }
+
+
+    }
+
+
+
     public class TargetItems extends Updater{
         public static final String TARGETS = "targets";
         public static final String MAXNUM = "maxnum";

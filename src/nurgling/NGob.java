@@ -62,6 +62,7 @@ public class NGob {
                                 case "gfx/terobjs/ladder":
                                 case "gfx/terobjs/minesupport":
                                 case "gfx/terobjs/trees/towercap":
+                                case "gfx/terobjs/map/naturalminesupport":
                                     parent.addcustomol(new NMiningSupport(parent, 100));
                                     break;
                                 case "gfx/terobjs/minebeam":
