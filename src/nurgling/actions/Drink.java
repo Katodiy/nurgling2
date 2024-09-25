@@ -17,7 +17,7 @@ public class Drink implements Action
     {
         if(NUtils.getStamina()<lvl)
         {
-            NUtils.getGameUI().dropLastError();
+            NUtils.getUI().dropLastError();
             for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae)
             {
                 if(pag.button()!=null && pag.button().name().equals("Drink"))

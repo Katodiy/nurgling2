@@ -186,14 +186,11 @@ public class NUtils
         getUI().core.addTask(new WaitLifted(gob));
     }
 
-    public static void dig(
-            Gob gob
-    )
+    public static void dig()
             throws InterruptedException {
         getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "dig");
-        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 1, 0, 0, (int) gob.id, gob.rc.floor(posres),
-                0, -1);
-        getUI().core.addTask(new WaitLifted(gob));
+        getGameUI().map.wdgmsg("click", Coord.z, player().rc.floor(posres), 1, 0);
+//        getUI().core.addTask(new WaitLifted(gob));
     }
 
     public static void place(Gob gob, Coord2d coord2d, double a) throws InterruptedException {
@@ -271,4 +268,9 @@ public class NUtils
     public static void itemact(WItem item) throws InterruptedException {
         item.item.wdgmsg ( "itemact", 0 );
     }
+
+    public static void addTask(NTask task) throws InterruptedException {
+        NUtils.getUI().core.addTask(task);
+    }
+
 }

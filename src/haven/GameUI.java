@@ -1369,20 +1369,9 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	ui.sfxrl(sfx);
     }
 
-    private String lastError = null;
 
-    public void dropLastError()
-    {
-        lastError = null;
-    }
-
-    public String getLastError()
-    {
-        return lastError;
-    }
 
     public void error(String msg) {
-    lastError = msg;
 	ui.error(msg);
     }
     

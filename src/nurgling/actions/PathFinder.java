@@ -283,7 +283,7 @@ public class PathFinder implements Action
     {
         LinkedList<Graph.Vertex> path = new LinkedList<>();
         int mul = 1;
-        while (path.size() == 0)
+        while (path.size() == 0 && mul < 1000)
         {
             pfmap = new NPFMap(begin, end, mul);
 

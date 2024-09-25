@@ -669,7 +669,22 @@ public class UI {
 	    h.msg(msg, color, sfx);
     }
 
+	private String lastError = null;
+
+	public void dropLastError()
+	{
+		lastError = null;
+	}
+
+	public String getLastError()
+	{
+		String forSend = lastError;
+		lastError = null;
+		return forSend;
+	}
+
     public void error(String msg) {
+	lastError = msg;
 	msg(msg, new Color(192, 0, 0), MessageWidget.errsfx);
     }
 
