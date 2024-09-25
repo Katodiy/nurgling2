@@ -70,4 +70,12 @@ public class NParser
     {
         return (ol.spr instanceof StaticSprite && ((StaticSprite)ol.spr).res!=null && NParser.checkName(((StaticSprite)ol.spr).res.name,name));
     }
+
+    public static boolean isIt(Coord pltc, NAlias name) {
+            Resource res_beg = NUtils.getGameUI().ui.sess.glob.map.tilesetr(NUtils.getGameUI().ui.sess.glob.map.gettile(pltc));
+            if (res_beg != null) {
+                return checkName(res_beg.name, name);
+            }
+            return false;
+    }
 }

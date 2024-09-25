@@ -86,6 +86,8 @@ public class IngredientContainer extends Widget implements NDTarget
         if (res != null)
         {
             JSONArray data;
+            if(NUtils.getArea(id)==null)
+                return;
             if(type.equals("in"))
                 data = NUtils.getArea(id).jin;
             else
@@ -140,6 +142,8 @@ public class IngredientContainer extends Widget implements NDTarget
     public void setThreshold(String name, int val)
     {
         JSONArray data;
+        if(NUtils.getArea(id)==null)
+            return;
         if(type.equals("in"))
             data = NUtils.getArea(id).jin;
         else
@@ -159,6 +163,8 @@ public class IngredientContainer extends Widget implements NDTarget
     public void setType(String name, NArea.Ingredient.Type val)
     {
         JSONArray data;
+        if(NUtils.getArea(id)==null)
+            return;
         if(type.equals("in"))
             data = NUtils.getArea(id).jin;
         else
@@ -180,6 +186,8 @@ public class IngredientContainer extends Widget implements NDTarget
     public void delete(String name)
     {
         JSONArray data;
+        if(NUtils.getArea(id)==null)
+            return;
         if(type.equals("in"))
             data = NUtils.getArea(id).jin;
         else
