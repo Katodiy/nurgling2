@@ -30,6 +30,7 @@ public class WaitDiggerState implements NTask
     {
         String lastMsg = NUtils.getUI().getLastError();
         String cpose = NUtils.player().pose();
+        state = State.WORKING;
         if(lastMsg!=null && lastMsg.contains(msg))
         {
             state = State.MSG;

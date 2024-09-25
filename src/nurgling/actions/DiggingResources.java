@@ -52,13 +52,17 @@ public class DiggingResources implements Action
                 new PathFinder(pos).run(gui);
                 NUtils.dig();
                 NUtils.addTask(new WaitPoseOrMsg(NUtils.player(), "gfx/borka/shoveldig", "no clay left"));
-                gui.map.wdgmsg("click", Coord.z, pos.floor(posres), 1, 0);
                 wds = new WaitDiggerState("no clay left");
                 NUtils.addTask(wds);
                 if (wds.getState() == WaitDiggerState.State.NOFREESPACE) {
                     new TransferToPiles(out, items).run(gui);
                 }
-            } while (wds.getState() != WaitDiggerState.State.MSG);
+                else if(wds.getState() == WaitDiggerState.State.TIMEFORDRINK) {
+                    new Drink(0.9).run(gui);
+                }
+                else if(wds.getState()== WaitDiggerState.State.DANGER)
+                    return Results.ERROR("no energy");
+            } while (wds.getState() == WaitDiggerState.State.WORKING);
         }
         new TransferToPiles(out, items).run(gui);
 

@@ -186,6 +186,11 @@ public class NUtils
         getUI().core.addTask(new WaitLifted(gob));
     }
 
+    public static String getCursorName()
+    {
+        return NUtils.getUI().root.cursorRes;
+    }
+
     public static void dig()
             throws InterruptedException {
         getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "dig");
