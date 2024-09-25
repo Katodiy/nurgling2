@@ -189,6 +189,7 @@ public class NUtils
     public static void dig()
             throws InterruptedException {
         getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "dig");
+        NUtils.addTask(new GetCurs("dig"));
         getGameUI().map.wdgmsg("click", Coord.z, player().rc.floor(posres), 1, 0);
 //        getUI().core.addTask(new WaitLifted(gob));
     }

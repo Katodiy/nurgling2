@@ -24,8 +24,11 @@ public class GoTo implements Action
         Resource res;
         if((res =NUtils.getUI().getcurs(Coord.z)) !=null)
         {
-            NUtils.rclickGob(NUtils.player());
-            NUtils.getUI().core.addTask(new GetCurs("arw"));
+            String cursname = res.name;
+            if(!NParser.checkName(res.name, "arw")) {
+                NUtils.rclickGob(NUtils.player());
+                NUtils.getUI().core.addTask(new GetCurs("arw"));
+            }
         }
 
         gui.map.wdgmsg("click", Coord.z, targetCoord.floor(posres), 1, 0);
