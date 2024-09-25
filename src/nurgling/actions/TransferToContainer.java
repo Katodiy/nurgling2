@@ -50,7 +50,12 @@ public class TransferToContainer implements Action{
                 if (container.cap != null) {
                     new OpenTargetContainer(container.cap, container.gob).run(gui);
                 }
-                transfer_size = Math.min(gui.getInventory().getItems(items).size(),Math.min(witems.size(), gui.getInventory(container.cap).getNumberFreeCoord(witems.get(0))));
+                transfer_size = Math.min(gui.getInventory().getItems(items).size(), Math.min(witems.size(), gui.getInventory(container.cap).getNumberFreeCoord(witems.get(0))));
+                if(container.getattr(Container.TargetItems.class)!=null && container.getattr(Container.TargetItems.class).getRes().containsKey(Container.TargetItems.MAXNUM)) {
+                    int need = (Integer) container.getattr(Container.TargetItems.class).getRes().get(Container.TargetItems.MAXNUM) - (Integer) container.getattr(Container.TargetItems.class).getTargets(items);
+                    transfer_size = Math.min(transfer_size, need);
+                }
+
                 int oldSpace = gui.getInventory(container.cap).getItems(items).size();
                 for(int i = 0; i <transfer_size; i++)
                 {

@@ -94,6 +94,7 @@ public class NHitBox
             put("gfx/terobjs/trees/orangetreestump", new NHitBox(new Coord(-3,-3),new Coord(3,3)));
             put("gfx/terobjs/trees/driftwood2", new NHitBox(new Coord(-10,-2),new Coord(10,2)));
             put("gfx/terobjs/stockpile-orange", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
+            put("gfx/terobjs/map/squirrelcache", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/map/clamreef", new NHitBox(new Coord(-15, -15), new Coord(15, 15)));
         }
     };
@@ -119,7 +120,7 @@ public class NHitBox
             return new NHitBox(new Coord(-8,-8),new Coord(8,8));
         else if(name.endsWith("block"))
             return new NHitBox(new Coord(-5,-5),new Coord(5,5));
-        else if(name.endsWith("bar"))
+        else if(name.toLowerCase().startsWith("bar of"))
             return new NHitBox(new Coord(-5,-7),new Coord(5,7));
         return null;
     }

@@ -52,6 +52,10 @@ public class PathFinder implements Action
                 return false;
             start_pos = st_poses.get(0);
         }
+        if(start_pos.equals(end_pos)) {
+            dn = true;
+            return false;
+        }
 //        cells[start_pos.x][start_pos.y].val = 7;
         if (cells[end_pos.x][end_pos.y].val != 0)
         {
@@ -283,7 +287,7 @@ public class PathFinder implements Action
     {
         LinkedList<Graph.Vertex> path = new LinkedList<>();
         int mul = 1;
-        while (path.size() == 0)
+        while (path.size() == 0 && mul < 1000)
         {
             pfmap = new NPFMap(begin, end, mul);
 

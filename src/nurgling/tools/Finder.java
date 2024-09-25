@@ -81,33 +81,34 @@ public class Finder
         return result;
     }
 
-    public static ArrayList<Gob> findGobs(NAlias name) throws InterruptedException
-    {
-        return findGobs(name, 10000);
-    }
+    public static ArrayList<Coord2d> findTilesInArea (
+            NAlias name,
+            Pair<Coord2d,Coord2d> area_rc
+    ) {
+        ArrayList<Coord2d> result = new ArrayList<> ();
+        boolean rev = false;
+        for ( double x = area_rc.a.x ; x < area_rc.b.x ; x += 11 ) {
+            ArrayList<Coord2d> line = new ArrayList<> ();
+            for ( double y = area_rc.a.y ; y < area_rc.b.y ; y += 11 ) {
+                Coord pltc = ( new Coord2d ( ( x ) / 11, ( y ) / 11 ) ).floor ();
 
-    public static ArrayList<Gob> findGobs(NAlias name, double distance) throws InterruptedException
-    {
-        NUtils.getUI().core.addTask(new FindPlayer());
-        double dist = distance;
-        ArrayList<Gob> result = new ArrayList<> ();
-        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
-        {
-            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
-            {
-                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
-                {
-                    if (NParser.isIt(gob, name) && NUtils.player() != null)
-                    {
-                        double new_dist;
-                        if ((new_dist = gob.rc.dist(NUtils.player().rc)) < dist)
-                        {
-                            //dist = new_dist;
-                            result.add(gob);
-                        }
-                    }
+                if ( NParser.isIt ( pltc, name ) ) {
+                    line.add ( new Coord2d ( x, y ) );
                 }
             }
+            if(rev)
+            {
+                for(int i = line.size()-1; i >= 0; i--)
+                {
+                    result.add( line.get(i) );
+                }
+            }
+            else
+            {
+                result.addAll(line);
+            }
+            rev = !rev;
+
         }
         return result;
     }

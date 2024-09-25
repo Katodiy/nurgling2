@@ -40,23 +40,22 @@ public class BackerAction implements Action {
             lighted.add(cont.gob);
         }
 
-        Context icontext = new Context();
-        for(NArea area : NArea.findAllIn(new NAlias("Dough", "Unbaked"))) {
-            for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-                Container cand = new Container();
-                cand.gob = sm;
-                cand.cap = Context.contcaps.get(cand.gob.ngob.name);
-                cand.initattr(Container.Space.class);
-                cand.initattr(Container.TargetItems.class);
-                cand.getattr(Container.TargetItems.class).addTarget("Dough");
-                cand.getattr(Container.TargetItems.class).addTarget("Unbaked");
-                icontext.icontainers.add(cand);
-            }
-        }
-
         Results res = null;
         while(res == null || res.IsSuccess()) {
             NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 4));
+            Context icontext = new Context();
+            for(NArea area : NArea.findAllIn(new NAlias("Dough", "Unbaked"))) {
+                for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
+                    Container cand = new Container();
+                    cand.gob = sm;
+                    cand.cap = Context.contcaps.get(cand.gob.ngob.name);
+                    cand.initattr(Container.Space.class);
+                    cand.initattr(Container.TargetItems.class);
+                    cand.getattr(Container.TargetItems.class).addTarget("Dough");
+                    cand.getattr(Container.TargetItems.class).addTarget("Unbaked");
+                    icontext.icontainers.add(cand);
+                }
+            }
             new FreeContainers(containers).run(gui);
             res = new FillContainersFromAreas(containers, new NAlias("Dough", "Unbaked"), icontext).run(gui);
             new FuelToContainers(containers).run(gui);

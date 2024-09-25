@@ -42,10 +42,12 @@ public class NArea
                     if (NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
                         NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
                         Pair<Coord2d, Coord2d> testrc = test.getRCArea();
-                        double testdist;
-                        if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
-                            res = test;
-                            dist = testdist;
+                        if(test.getRCArea()!=null) {
+                            double testdist;
+                            if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                                res = test;
+                                dist = testdist;
+                            }
                         }
                     }
                 }
@@ -91,6 +93,56 @@ public class NArea
             return Double.compare(o1.th, o2.th);
         }
     };
+
+    public static NArea findOut(NAlias name, double th) {
+        double dist = 10000;
+        NArea res = null;
+
+        ArrayList<TestedArea> areas = new ArrayList<>();
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids) {
+                if (id > 0) {
+                    NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
+                    if (cand.isVisible() && cand.containOut(name, th)) {
+                        areas.add(new TestedArea(cand, th));
+                    }
+                }
+            }
+        }
+
+        areas.sort(ta_comp);
+
+        double tth = 1;
+        for (TestedArea area : areas)
+        {
+            if(area.th<=th) {
+                res = area.area;
+                tth = area.th;
+            }
+        }
+
+        ArrayList<NArea> targets = new ArrayList<>();
+        for(TestedArea area :areas)
+        {
+            if(area.th ==tth)
+                targets.add(area.area);
+        }
+
+        if(targets.size()>1) {
+            for (NArea test: targets) {
+                Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                double testdist;
+                if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                    res = test;
+                    dist = testdist;
+                }
+            }
+        }
+        return res;
+    }
+
 
     public static NArea findOut(String name, double th) {
         double dist = 10000;
@@ -151,11 +203,12 @@ public class NArea
                 if (id > 0)
                     if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name) ) {
                         NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
-                        for (int i = 0; i < cand.jout.length(); i++) {
-                            if (NParser.checkName((String) ((JSONObject) cand.jout.get(i)).get("name"),name))
-                            {
-                                Integer th = (((JSONObject) cand.jout.get(i)).has("th"))?((Integer) ((JSONObject) cand.jout.get(i)).get("th")):1;
-                                areas.put(th,cand);
+                        if(cand.getRCArea()!=null) {
+                            for (int i = 0; i < cand.jout.length(); i++) {
+                                if (NParser.checkName((String) ((JSONObject) cand.jout.get(i)).get("name"), name)) {
+                                    Integer th = (((JSONObject) cand.jout.get(i)).has("th")) ? ((Integer) ((JSONObject) cand.jout.get(i)).get("th")) : 1;
+                                    areas.put(th, cand);
+                                }
                             }
                         }
                     }
@@ -189,6 +242,18 @@ public class NArea
     {
         for (int i = 0; i < jout.length(); i++) {
             if (((String) ((JSONObject) jout.get(i)).get("name")).equals(name))
+                if (((JSONObject) jout.get(i)).has("th") && ((Integer) ((JSONObject) jout.get(i)).get("th")) > th)
+                    return true;
+                else
+                    return true;
+        }
+        return false;
+    }
+
+    private boolean containOut(NAlias name, double th)
+    {
+        for (int i = 0; i < jout.length(); i++) {
+            if (NParser.checkName((String) ((JSONObject) jout.get(i)).get("name"),name))
                 if (((JSONObject) jout.get(i)).has("th") && ((Integer) ((JSONObject) jout.get(i)).get("th")) > th)
                     return true;
                 else

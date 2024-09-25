@@ -1576,6 +1576,18 @@ public class OptWnd extends Window {
 					}
 
 				}, prev.pos("bl").adds(0, 5));
+				prev = add(new CheckBox("DEBUG") {
+					{
+						a = (Boolean) NConfig.get(NConfig.Key.debug);
+					}
+
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.debug, val);
+						NUtils.getUI().core.debug = val;
+						a = val;
+					}
+
+				}, prev.pos("bl").adds(0, 5));
 				prev = add(new CheckBox("Disable menugrid keys:") {
 					{
 						a = (Boolean) NConfig.get(NConfig.Key.disableMenugridKeys);

@@ -79,7 +79,6 @@ public class FuelToContainers implements Action
                     NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
                 }
                 NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), aftersize));
-                new OpenTargetContainer(cont).run(gui);
                 new CloseTargetContainer(cont).run(gui);
             }
         }

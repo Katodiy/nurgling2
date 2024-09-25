@@ -11,6 +11,7 @@ import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -32,6 +33,7 @@ public class FillContainersFromAreas implements Action
         ArrayList<NArea> areas = NArea.findAllIn(transferedItems);
         for (Container cont : conts) {
             Container.Space space = cont.getattr(Container.Space.class);
+
             while ((Integer)space.getRes().get(Container.Space.FREESPACE)!=0)
             {
                     if (gui.getInventory().getItems(transferedItems).isEmpty()) {
@@ -40,24 +42,37 @@ public class FillContainersFromAreas implements Action
                         int target_size = 0;
                         for (Container tcont : conts) {
                             Container.Space tspace = tcont.getattr(Container.Space.class);
+                            if(tcont.getattr(Container.TargetItems.class).getRes().containsKey(Container.TargetItems.MAXNUM))
+                            {
+                                int need = (Integer)tcont.getattr(Container.TargetItems.class).getRes().get(Container.TargetItems.MAXNUM) - (Integer)tcont.getattr(Container.TargetItems.class).getTargets(transferedItems);
+                                target_size += Math.min(need,(Integer) tspace.getRes().get(Container.Space.FREESPACE));
+                            }
+                            else
+                            {
                             target_size += (Integer) tspace.getRes().get(Container.Space.FREESPACE);
+                            }
                         }
 
                         for (Container container : context.icontainers) {
-                            if(!container.getattr(Container.Space.class).isReady() || container.getattr(Container.TargetItems.class).getTargets(transferedItems)>0) {
+                            if (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.TargetItems.class).getTargets(transferedItems)>0) {
                                 new PathFinder(container.gob).run(gui);
                                 new OpenTargetContainer(container).run(gui);
                                 TakeAvailableItemsFromContainer tifc = new TakeAvailableItemsFromContainer(container, transferedItems, target_size);
                                 tifc.run(gui);
                                 target_size-=tifc.getCount();
-                                if(target_size==0)
+                                if(target_size==0 || !tifc.getResult())
                                     break;
                             }
                         }
                     }
                 if (gui.getInventory().getItems(transferedItems).isEmpty())
                     return Results.ERROR("NO ITEMS");
-                new TransferToContainer(new Context(), cont, transferedItems).run(gui);
+                TransferToContainer ttc = new TransferToContainer(new Context(), cont, transferedItems);
+                ttc.run(gui);
+                if(cont.getattr(Container.TargetItems.class).getRes().containsKey(Container.TargetItems.MAXNUM))
+                {
+
+                }
             }
         }
         return Results.SUCCESS();

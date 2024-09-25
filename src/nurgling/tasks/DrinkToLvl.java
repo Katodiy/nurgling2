@@ -17,10 +17,10 @@ public class DrinkToLvl implements NTask
     @Override
     public boolean check()
     {
-        if (NUtils.getGameUI().getLastError()!=null && NUtils.getGameUI().getLastError().equals("You have nothing on your hotbelt to drink."))
+        String lastError = NUtils.getUI().getLastError();
+        if (lastError!=null && lastError.equals("You have nothing on your hotbelt to drink."))
         {
             no_water = true;
-            NUtils.getGameUI().dropLastError();
             return true;
         }
         return NUtils.getStamina() >= lvl;

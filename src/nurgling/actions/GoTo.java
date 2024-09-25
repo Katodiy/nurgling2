@@ -21,6 +21,16 @@ public class GoTo implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
+        Resource res;
+        if((res =NUtils.getUI().getcurs(Coord.z)) !=null)
+        {
+            String cursname = res.name;
+            if(!NParser.checkName(res.name, "arw")) {
+                NUtils.rclickGob(NUtils.player());
+                NUtils.getUI().core.addTask(new GetCurs("arw"));
+            }
+        }
+
         gui.map.wdgmsg("click", Coord.z, targetCoord.floor(posres), 1, 0);
         Following fl = NUtils.player().getattr(Following.class);
         if( fl!= null )

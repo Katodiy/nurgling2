@@ -50,7 +50,7 @@ public class NConfig
         showGrid,
         showView,
         disableWinAnim,
-        crime, tracking, swimming, debug, miningol,
+        crime, tracking, swimming, debug, claydiggerprop, miningol,
         disableMenugridKeys
     }
 
@@ -186,6 +186,9 @@ public class NConfig
                         break;
                     case "NPrepBoardProp":
                         res.add(new NPrepBoardsProp(obj));
+                        break;
+                    case "NClayDiggerProp":
+                        res.add(new NClayDiggerProp(obj));
                         break;
                 }
             }
