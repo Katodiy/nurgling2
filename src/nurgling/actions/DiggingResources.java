@@ -62,7 +62,7 @@ public class DiggingResources implements Action
                 }
                 else if(wds.getState()== WaitDiggerState.State.DANGER)
                     return Results.ERROR("no energy");
-            } while (wds.getState() == WaitDiggerState.State.WORKING);
+            } while (wds.getState() != WaitDiggerState.State.MSG);
         }
         new TransferToPiles(out, items).run(gui);
 
