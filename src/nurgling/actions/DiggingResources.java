@@ -47,12 +47,13 @@ public class DiggingResources implements Action
             Coord2d pos = new Coord2d(tile.x + 5.5, tile.y + 5.5);
             if(NUtils.getGameUI().getInventory().getFreeSpace()==0)
                 new TransferToPiles(out, items).run(gui);
-            WaitDiggerState wds = new WaitDiggerState("no clay left");
+            WaitDiggerState wds;
             do {
                 new PathFinder(pos).run(gui);
                 NUtils.dig();
                 NUtils.addTask(new WaitPoseOrMsg(NUtils.player(), "gfx/borka/shoveldig", "no clay left"));
                 gui.map.wdgmsg("click", Coord.z, pos.floor(posres), 1, 0);
+                wds = new WaitDiggerState("no clay left");
                 NUtils.addTask(wds);
                 if (wds.getState() == WaitDiggerState.State.NOFREESPACE) {
                     new TransferToPiles(out, items).run(gui);

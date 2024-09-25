@@ -37,7 +37,7 @@ public class IsMoving implements NTask
             {
                 String pose;
                 // Экстренный выход если движение так и началось ( 200 попыток )
-                return count > th || drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && NParser.checkName(pose, "borka/walking", "borka/running");
+                return count > th || drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && NParser.checkName(pose, "borka/walking", "borka/running", "borka/wading");
             }
         }
         return false;

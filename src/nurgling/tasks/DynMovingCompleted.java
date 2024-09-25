@@ -32,7 +32,7 @@ public class DynMovingCompleted implements NTask
             if (drawable != null)
             {
                 String pose;
-                if (drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && !NParser.checkName(pose, "borka/walking", "borka/running"))
+                if (drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && !NParser.checkName(pose, "borka/walking", "borka/running", "borka/wading"))
                     if(targetCoord.dist(NUtils.player().rc) < MCache.tileqsz.len()) {
                         return true;
                     }
