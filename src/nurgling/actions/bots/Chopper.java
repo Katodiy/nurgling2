@@ -49,6 +49,15 @@ public class Chopper implements Action {
         (insa = new SelectArea()).run(gui);
         NAlias pattern = prop.stumps ? new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log","oldtrunk"))) :
                 new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log", "oldtrunk", "stump")));
+
+        if(!prop.bushes)
+        {
+            pattern.exceptions.add("bushes");
+        }
+        else
+        {
+            pattern.keys.add("gfx/terobjs/bushes");
+        }
         ArrayList<Gob> trees;
         while (!(trees = Finder.findGobs(insa.getRCArea(),pattern)).isEmpty()) {
             trees.sort(NUtils.d_comp);

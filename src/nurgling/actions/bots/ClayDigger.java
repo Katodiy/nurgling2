@@ -44,9 +44,10 @@ public class ClayDigger implements Action {
         {
             return Results.ERROR("Not set required tools");
         }
+        NUtils.getGameUI().msg("Please select area for dig clay");
         SelectArea insa;
         (insa = new SelectArea()).run(gui);
-        NUtils.getGameUI().msg("Please select area for dig clay");
+
 
         NArea area = NArea.findOut(new NAlias("clay"),1);
         if(area==null || area.getRCArea() == null)
