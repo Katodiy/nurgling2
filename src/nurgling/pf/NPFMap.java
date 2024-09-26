@@ -45,7 +45,8 @@ public class NPFMap
                             old.cells[i][j] = cells[ii][jj].val;
                             if(ca.cells[i][j]!=0)
                             {
-                                cells[ii][jj].val = ca.cells[i][j];
+                                if(cells[ii][jj].val!=1)
+                                    cells[ii][jj].val = ca.cells[i][j];
                                 cells[ii][jj].content.add(gob.id);
                             }
                         }
