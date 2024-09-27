@@ -29,7 +29,7 @@ public class VSpec
         ArrayList<JSONObject> onions = new ArrayList<>();
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/yellowonion\",\"name\":\"Yellow Onion\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/redonion\",\"name\":\"Red Onion\"}"));
-        onions.add(new JSONObject("{\"static\":\"gfx/invobjs/leek\",\"name\":\"Leek\",\"x\":2,\"y\":1}"));
+        onions.add(new JSONObject("{\"static\":\"gfx/invobjs/small/leek\",\"name\":\"Leek\",\"x\":2,\"y\":1}"));
         categories.put("Onion", onions);
 
 

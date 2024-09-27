@@ -76,8 +76,10 @@ public class SmelterAction implements Action {
             new CollectQuickSilver(containers).run(gui);
             new DropTargets(containers,new NAlias("Slag")).run(gui);
             res = new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.ore.toString()), ores).run(gui);
-            new FuelToContainers(containers).run(gui);
-            new LightGob(lighted, 2).run(gui);
+            if(!new FuelToContainers(containers).run(gui).IsSuccess())
+                return Results.ERROR("NO FUEL");
+            if(!new LightGob(lighted, 2).run(gui).IsSuccess())
+                return Results.ERROR("I can't start a fire");
         }
         return Results.SUCCESS();
     }
