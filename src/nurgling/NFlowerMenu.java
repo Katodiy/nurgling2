@@ -76,6 +76,17 @@ public class NFlowerMenu extends FlowerMenu
         }
     }
 
+    public boolean hasOpt(String action) {
+        for(NPetal petal: nopts)
+        {
+            if(petal.name.equals(action))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public class NPetal extends Widget {
         public String name;
         public int num;
