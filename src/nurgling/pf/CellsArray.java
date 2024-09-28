@@ -32,7 +32,7 @@ public class CellsArray {
         cells = new short[x_len][y_len];
         for (int i = 0; i < x_len; i++) {
             for (int j = 0; j < y_len; j++) {
-                tile.move(begin.add(i, j));
+                tile.setUnitSquare(begin.add(i, j));
                 cells[i][j] = (tile.intersectsLoosely(objToApproach)) ? (short) 1 : 0;
             }
         }
