@@ -9,11 +9,9 @@ import nurgling.NUtils;
 import java.awt.*;
 import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static haven.ItemInfo.catimgsh;
 import static nurgling.widgets.NDraggableWidget.drawBg;
@@ -31,6 +29,7 @@ public class NQuestInfo extends Widget
 
     public NQuestInfo() {
         super();
+        lastUpdate.set(0);
         Widget prev = add(modebtn = new NMiniMapWnd.NMenuCheckBox("nurgling/hud/buttons/questmode", null, "Switch mode"), UI.scale(margin.x)/2, UI.scale(margin.y)/2).changed(a -> {mode = (mode == Mode.QUESTGIVERS?Mode.TASKS:Mode.QUESTGIVERS);needUpdate.set(true);});
         add(hidebtn = new NMiniMapWnd.NMenuCheckBox("nurgling/hud/buttons/eye", null, "Hide credo"), prev.pos("ur")).changed(a -> {NConfig.set(NConfig.Key.hidecredo,a);needUpdate.set(true);});
         hidebtn.a = (boolean) NConfig.get(NConfig.Key.hidecredo);
@@ -49,6 +48,7 @@ public class NQuestInfo extends Widget
     HashMap<String,QuestGiver> qgconds = new HashMap<String,QuestGiver>();
     HashMap<Condition.State,Targets> taskconds = new HashMap<Condition.State,Targets>();
     private Tex glowon = null;
+    public static final AtomicInteger lastUpdate = new AtomicInteger(0);
 
     class Targets
     {
@@ -64,12 +64,39 @@ public class NQuestInfo extends Widget
         int uncompleted = 0;
     }
 
+    public static boolean isHuntingTarget(String target)
+    {
+        if(target!=null)
+            for(String ht:huntingT)
+            {
+                if(target.contains(ht))
+                {
+                    return true;
+                }
+            }
+        return false;
+    }
+
+    public static boolean isForageTarget(String target)
+    {
+        if(target!=null)
+            for(String ht:forageT)
+            {
+                if(target.contains(ht))
+                {
+                    return true;
+                }
+            }
+        return false;
+    }
 
 
     void update() {
         imgs.clear();
         qgconds.clear();
         taskconds.clear();
+        huntingT.clear();
+        forageT.clear();
         for(Condition.State st: Condition.State.values()) {
             taskconds.put(st, new Targets());
         }
@@ -79,16 +106,25 @@ public class NQuestInfo extends Widget
             for (Condition cond : quest.conditions) {
                 if (cond.state == Condition.State.TELL) {
                     quest.questGiver = ((Condition.QuestsGiver) cond.attrs.get(Condition.QuestsGiver.class)).name;
-                } else if (cond.ready == false) {
-                    isReady = false;
+                }
+                if(!cond.ready) {
+                    if (cond.state == Condition.State.KILL) {
+                        huntingT.add(((Condition.HuntTarget) cond.attrs.get(Condition.HuntTarget.class)).name);
+                    } else if (cond.state == Condition.State.PICK) {
+                        forageT.add(((Condition.PickTarget) cond.attrs.get(Condition.PickTarget.class)).name);
+                    }
+                    if (cond.state != Condition.State.TELL)
+                        isReady = false;
                 }
                 if(cond.state!=null)
                 {
                     switch (cond.state) {
                         case TELL:
                             break;
-                        default:
-                            taskconds.get(cond.state).conditions.add(cond);
+                        default: {
+                            if(!cond.ready)
+                                taskconds.get(cond.state).conditions.add(cond);
+                        }
                     }
                 }
             }
@@ -138,7 +174,7 @@ public class NQuestInfo extends Widget
             for (String qname : qgconds.keySet()) {
                 QuestGiver qg = qgconds.get(qname);
                 if (!qg.myConditions.isEmpty()) {
-                    imgs.add(new QuestImage(catimgsh(5, active_title.render(qname).img, numfnd1.render(String.format("($col[128,255,128]{%d}|$col[255,128,128]{%d})", qg.completed, qg.uncompleted)).img), -1));
+                    imgs.add(new QuestImage(catimgsh(5, active_title.render(qname).img, numfnd1.render(String.format("($col[128,255,128]{%d}|$col[255,128,128]{%d})", qg.completed, qg.uncompleted)).img), qg.myConditions.get(0).questId));
                 } else
                     imgs.add(new QuestImage(unactive_title.render(qname).img, -1));
                 for (Condition cond : qg.myConditions) {
@@ -146,7 +182,8 @@ public class NQuestInfo extends Widget
                         imgs.add(new QuestImage(fnd1.render(cond.target).img, cond.questId));
                 }
                 for (Condition cond : qg.otherConditions) {
-                    imgs.add(new QuestImage(fnd2.render(cond.target).img, cond.questId));
+                    if(!cond.ready)
+                        imgs.add(new QuestImage(fnd2.render(cond.target).img, cond.questId));
                 }
             }
         } else if (mode == Mode.TASKS) {
@@ -169,6 +206,7 @@ public class NQuestInfo extends Widget
         if (parent != null)
             parent.resize(sz.add(NDraggableWidget.delta));
         needUpdate.set(false);
+        lastUpdate.set(lastUpdate.get()+1);
     }
 
     static class QuestImage {
@@ -251,6 +289,9 @@ public class NQuestInfo extends Widget
     }
 
     AtomicBoolean needUpdate = new AtomicBoolean(false);
+
+    static final HashSet<String> huntingT = new HashSet<>();
+    static final HashSet<String> forageT = new HashSet<>();
 
     @Override
     public void tick(double dt) {
@@ -382,15 +423,16 @@ public class NQuestInfo extends Widget
             else if (target.contains("Pick"))
             {
                 this.state = State.PICK;
-//                forage_t.add(new Task(qid, c));
+                attrs.put(PickTarget.class, new PickTarget(target));
             }
             else if (target.contains("Kill") || target.contains("Raid") || target.contains("Defeat") ) {
                 this.state = State.KILL;
-//                hunting_t.add(new Task(qid, c));
+                attrs.put(HuntTarget.class, new HuntTarget(target));
             }
             else if (target.contains("Catch"))
             {
                 this.state = State.PICK;
+                attrs.put(PickTarget.class, new PickTarget(target));
             }
             else if (target.contains("Greet") || (target.contains("Visit") && !target.contains("cave")) || target.contains("wave") || target.contains("laugh") || target.contains("rage"))
             {
@@ -445,6 +487,82 @@ public class NQuestInfo extends Widget
             }
         }
 
+        class PickTarget
+        {
+            public String name;
+
+            public PickTarget(String info) {
+                info = info.toLowerCase();
+                String bufname;
+                int ind = info.indexOf(" a ");
+                if (ind != -1)
+                    bufname = info.substring(info.indexOf(" a ") + 3);
+                else {
+                    ind = info.indexOf(" an ");
+                    if (ind != -1)
+                        bufname = info.substring(info.indexOf(" an ") + 4);
+                    else
+                        bufname = info.substring(info.indexOf(" ") + 1);
+                }
+
+                if (!bufname.isEmpty()) {
+                    if (bufname.contains("blueberr"))
+                        bufname = "blueberr";
+                    else if (bufname.contains("lingon"))
+                        bufname = "lingon";
+                    else if (bufname.contains("woodgrouse hen"))
+                        bufname = "woodgrouse-f";
+                    else if (bufname.contains("morel"))
+                        bufname = "lorchel";
+                    else if (bufname.contains("yellowf"))
+                        bufname = "yellowf";
+                    else if (bufname.contains("hen"))
+                        bufname = "chicken/chicken";
+                    else if (bufname.contains("cock"))
+                        bufname = "chicken/roast";
+                    else if (bufname.contains("chantrell"))
+                        bufname = "herbs/chantrell";
+                    else if (bufname.contains("rat"))
+                        bufname = "rat/rat";
+                    name = (bufname.replaceAll("\\s+", "")).replaceAll("'+", "");
+                }
+            }
+        }
+
+        class HuntTarget {
+            public String name;
+
+            public HuntTarget(String info) {
+                info = info.toLowerCase();
+                String bufname;
+                int ind = info.indexOf(" a ");
+                if (ind != -1)
+                    bufname = info.substring(info.indexOf(" a ") + 3);
+                else {
+                    ind = info.indexOf(" an ");
+                    if (ind != -1)
+                        bufname = info.substring(info.indexOf(" an ") + 4);
+                    else
+                        bufname = info.substring(info.indexOf(" ") + 1);
+                }
+
+                if (!bufname.isEmpty()) {
+                    if (bufname.contains("mouflon"))
+                        bufname = "sheep";
+                    else if (bufname.contains("auroch"))
+                        bufname = "cattle";
+                    else if (bufname.contains("horse"))
+                        bufname = "horse/horse";
+                    if (info.contains("Raid a")) {
+                        if (bufname.contains("bird"))
+                            bufname = "nest";
+                        else
+                            bufname = "anthill";
+                    }
+                }
+                name = (bufname.replaceAll("\\s+", "")).replaceAll("'+", "");
+            }
+        }
 
 
         public Map<Class<?>, Object> attrs = new HashMap<>();
