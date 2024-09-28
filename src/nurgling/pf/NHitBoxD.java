@@ -175,7 +175,7 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
             yRange = c[0].dist(c[3]);
             xCnt = (int) Math.floor(xRange / MCache.tilehsz.x);
             yCnt = (int) Math.floor(yRange / MCache.tilehsz.x);
-            if ((checkPoints == null) || (checkPoints.length != (2 * (xCnt + yCnt))))
+            if ((checkPoints == null) || (checkPoints.length != (2 * (xCnt + yCnt))) || ((xCnt + yCnt) == 0))
                 checkPoints = new Coord2d[2 * (xCnt + yCnt)];
             checkPointsInitiated = true;
         }
@@ -298,30 +298,43 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
                         (other.c[0].y <= this.c[2].y));
         } else {
             for (int k = 0; k < 4; k++)
+                if (other.containsGreedy(this.c[k]))
+                    return true;
+            for (Coord2d checkPoint : this.checkPoints)
+                if (other.containsGreedy(checkPoint))
+                    return true;
+        }
+
+        if (!other.ortho) {
+            for (int k = 0; k < 4; k++)
                 if (this.containsGreedy(other.c[k]))
                     return true;
             for (Coord2d checkPoint : other.checkPoints)
                 if (this.containsGreedy(checkPoint))
                     return true;
         }
-        for (int k = 0; k < 4; k++)
-            if (other.containsGreedy(this.c[k]))
-                return true;
-        for (Coord2d checkPoint : this.checkPoints)
-            if (other.containsGreedy(checkPoint))
-                return true;
 
         return false;
     }
 
     public boolean intersectsLoosely(NHitBoxD other) {
         if (this.ortho) {
-            if (other.ortho)
+            if (other.ortho) {
                 return ((other.c[2].x > this.c[0].x) &&
                         (other.c[0].x < this.c[2].x) &&
                         (other.c[2].y > this.c[0].y) &&
                         (other.c[0].y < this.c[2].y));
+            }
         } else {
+            for (int k = 0; k < 4; k++)
+                if (other.containsLoosely(this.c[k]))
+                    return true;
+            for (Coord2d checkPoint : this.checkPoints)
+                if (other.containsLoosely(checkPoint))
+                    return true;
+        }
+
+        if (!other.ortho) {
             for (int k = 0; k < 4; k++)
                 if (this.containsLoosely(other.c[k]))
                     return true;
@@ -329,12 +342,7 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
                 if (this.containsLoosely(checkPoint))
                     return true;
         }
-        for (int k = 0; k < 4; k++)
-            if (other.containsLoosely(this.c[k]))
-                return true;
-        for (Coord2d checkPoint : this.checkPoints)
-            if (other.containsLoosely(checkPoint))
-                return true;
+
 
         return false;
     }
