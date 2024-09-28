@@ -286,4 +286,26 @@ public class NUtils
         NUtils.getUI().core.addTask(task);
     }
 
+    public static void setQuestConds(int id, Object... args)
+    {
+        NGameUI gui = getGameUI();
+        if(gui!=null)
+        {
+            gui.questinfo.updateConds(id, args);
+        }
+    }
+
+    public static void removeQuest(int id) {
+        NGameUI gui = getGameUI();
+        if(gui!=null) {
+            gui.questinfo.removeQuest(id);
+        }
+    }
+
+    public static void addQuest(int id) {
+        NGameUI gui = getGameUI();
+        if(gui!=null) {
+            gui.questinfo.addQuest(id);
+        }
+    }
 }
