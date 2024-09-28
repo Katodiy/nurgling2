@@ -50,7 +50,7 @@ public class NHitBox
             put("gfx/terobjs/granary", new NHitBox(new Coord(-16,-16),new Coord(16,16)));
             put("gfx/terobjs/pow", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/stockpile-cloth", new NHitBox(new Coord(-5,-5),new Coord(5,5)));
-            put("stockpile", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
+            put("stockpile", new NHitBox(new Coord(-5,-5),new Coord(5,5)));
             put("gfx/terobjs/smokeshed", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
             put("gfx/terobjs/vehicle/cart", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
             put("gfx/terobjs/knarrdock", new NHitBox(new Coord(-62,-14),new Coord(60,14)));
@@ -94,8 +94,17 @@ public class NHitBox
             put("gfx/terobjs/trees/orangetreestump", new NHitBox(new Coord(-3,-3),new Coord(3,3)));
             put("gfx/terobjs/trees/driftwood2", new NHitBox(new Coord(-10,-2),new Coord(10,2)));
             put("gfx/terobjs/stockpile-orange", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
+            put("gfx/terobjs/map/squirrelcache", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
         }
     };
+    static NHitBox fromObstacle(Coord2d[][] p)
+    {
+        if(p.length == 1 && p[0].length == 4)
+        {
+            return new NHitBox(p[0][0].floor(),p[0][2].ceil());
+        }
+        return null;
+    }
 
     public static NHitBox findCustom(String name)
     {
@@ -106,6 +115,14 @@ public class NHitBox
             return custom.get("log");
         if(name.startsWith("gfx/terobjs/bumlings"))
             return custom.get("bumlings");
+        else if(name.endsWith("board"))
+            return new NHitBox(new Coord(-8,-8),new Coord(8,8));
+        else if(name.endsWith("block"))
+            return new NHitBox(new Coord(-5,-5),new Coord(5,5));
+        else if(name.toLowerCase().startsWith("bar of"))
+            return new NHitBox(new Coord(-5,-7),new Coord(5,7));
+        else if(name.toLowerCase().endsWith("leaf"))
+            return new NHitBox(new Coord(-5,-5),new Coord(5,5));
         return null;
     }
 

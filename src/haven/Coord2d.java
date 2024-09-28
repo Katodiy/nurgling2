@@ -135,6 +135,10 @@ public class Coord2d implements Comparable<Coord2d>, java.io.Serializable {
     public Coord floor() {
 	return(Coord.of((int)Math.floor(x), (int)Math.floor(y)));
     }
+
+    public Coord ceil() {
+        return(Coord.of((int)Math.ceil(x), (int)Math.ceil(y)));
+    }
     public Coord2d floorf() {
 	return(Coord2d.of(Math.floor(x), Math.floor(y)));
     }

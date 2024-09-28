@@ -49,7 +49,7 @@ public interface Pipe {
 	public void apply(Pipe pipe);
 
 	public static class Composed implements Op {
-	    private final Op[] ops;
+	    public final Op[] ops;
 
 	    public Composed(Op... ops) {
 		this.ops = ops;

@@ -126,8 +126,10 @@ public class Speedget extends Widget {
     };
     public boolean globtype(char key, KeyEvent ev) {
 	int dir = 0;
-	if(kb_speedup.key().match(ev))
-	    dir = 1;
+	if(kb_speedup.key().match(ev)) {
+		dir = 1;
+		kb_speedup.key().match(ev);
+	}
 	else if(kb_speeddn.key().match(ev))
 	    dir = -1;
 	if(dir != 0) {

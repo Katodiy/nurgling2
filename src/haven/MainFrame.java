@@ -46,6 +46,7 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 	
     static {
 	try {
+	    System.setProperty("apple.awt.application.name", "Haven & Hearth");
 	    javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
 	} catch(Exception e) {}
     }
@@ -167,6 +168,12 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 	    throw(new Error(e));
 	}
 	setIconImage(icon);
+	try {
+	    Class<?> ctb = Class.forName("java.awt.Taskbar");
+	    Object tb = ctb.getMethod("getTaskbar").invoke(null);
+	    ctb.getMethod("setIconImage", Image.class).invoke(tb, icon);
+	} catch(Exception e) {
+	}
     }
 
     private UIPanel renderer() {
@@ -182,7 +189,7 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
     }
 
     public MainFrame(Coord isz) {
-	super("Haven & Hearth");
+	super("Haven & Hearth (Nurgling II)");
 	Coord sz;
 	if(isz == null) {
 	    sz = Utils.getprefc("wndsz", new Coord(800, 600));
@@ -291,9 +298,9 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 		fun = new Bootstrap();
 	    String t = fun.title();
 	    if(t == null)
-		setTitle("Haven & Hearth");
+		setTitle("Haven & Hearth (Nurgling II)");
 	    else
-		setTitle("Haven & Hearth \u2013 " + t);
+		setTitle("Haven & Hearth (Nurgling II) \u2013 " + t);
 	    fun = fun.run(p.newui(fun));
 	}
     }

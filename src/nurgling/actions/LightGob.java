@@ -1,22 +1,14 @@
 package nurgling.actions;
 
-import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
-import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
-import nurgling.areas.NArea;
-import nurgling.tasks.HandIsFree;
 import nurgling.tasks.WaitGobModelAttr;
-import nurgling.tasks.WaitTargetSize;
-import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class LightGob implements Action
 {
@@ -43,10 +35,14 @@ public class LightGob implements Action
                 if ((gob.ngob.getModelAttribute() & flame_flag) == 0) {
                     new PathFinder(gob).run(gui);
                     NUtils.activateGob ( gob );
-                    NUtils.getUI().core.addTask(new WaitGobModelAttr(gob,2));
+                    NUtils.getUI().core.addTask(new WaitGobModelAttr(gob,flame_flag));
                 }
             }
             new PlaceObject(candelabrum, pos, 0).run(gui);
+        }
+        else
+        {
+            return Results.FAIL();
         }
         return Results.SUCCESS();
     }

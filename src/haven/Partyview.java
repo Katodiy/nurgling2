@@ -27,6 +27,7 @@
 package haven;
 
 import haven.Party.Member;
+import nurgling.widgets.NDraggableWidget;
 
 import java.util.*;
 import java.awt.Color;
@@ -131,6 +132,8 @@ public class Partyview extends Widget {
 	}
 	for(Map.Entry<Member, MemberView> e : avs.entrySet())
 	    e.getValue().color = e.getKey().col;
+	if(parent instanceof NDraggableWidget)
+		parent.resize(sz.add(NDraggableWidget.delta));
     }
 
     public void tick(double dt) {
@@ -174,6 +177,8 @@ public class Partyview extends Widget {
 		    m.col = (Color)args[a++];
 		m.setc(c);
 	    }
+	} else if(msg == "pid") {
+	    party.id = Utils.iv(args[0]);
 	} else {
 	    super.uimsg(msg, args);
 	}

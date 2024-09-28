@@ -125,7 +125,7 @@ public class KeyMatch {
     public static KeyMatch forevent(KeyEvent ev, int modmask) {
 	int mod = mods(ev) & modmask;
 	char key = Character.toUpperCase(ev.getKeyChar());
-	int code = ev.getExtendedKeyCode();
+	int code = ev.getKeyCode();
 	if(key == KeyEvent.CHAR_UNDEFINED)
 	    key = 0;
 	if(code != VK_UNDEFINED) {
@@ -136,7 +136,7 @@ public class KeyMatch {
 		nm = Character.toString(key);
 	    else
 		nm = String.format("%X", code);
-	    return(new KeyMatch('\0', false, code, true, nm, modmask, mod));
+	    return(new KeyMatch('\0', false, code, false, nm, modmask, mod));
 	}
 	if(!Character.isISOControl(key))
 	    return(new KeyMatch(key, false, VK_UNDEFINED, false, Character.toString(key), modmask, mod));
@@ -190,7 +190,7 @@ public class KeyMatch {
 		int p2 = desc.indexOf(':', p);
 		int code = Integer.parseInt(desc.substring(p, p2), 16);
 		String nm = desc.substring(p2 + 1);
-		return(new KeyMatch('\0', false, code, c == 'k', nm, modmask, modmatch));
+		return(new KeyMatch('\0', false, code, false, nm, modmask, modmatch));
 	    }
 	    case 'n':
 		return(nil);

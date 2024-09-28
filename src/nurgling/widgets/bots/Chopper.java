@@ -11,6 +11,7 @@ public class Chopper extends Window implements Checkable {
     CheckBox autorefill = null;
     CheckBox ngrowth = null;
     CheckBox stumps = null;
+    CheckBox bushes = null;
 
     UsingTools usingTools = null;
     UsingTools usingSovels = null;
@@ -33,6 +34,19 @@ public class Chopper extends Window implements Checkable {
             }
 
         }, prev.pos("bl").add(UI.scale(0,5)));
+
+        prev = add(bushes = new CheckBox("Сut down bushes"){
+            {
+                a = startprop.bushes;
+            }
+            @Override
+            public void set(boolean a) {
+                super.set(a);
+            }
+
+        }, prev.pos("bl").add(UI.scale(0,5)));
+
+
         prev = add(ngrowth = new CheckBox("Ignore the growth")
         {
             {
@@ -107,6 +121,7 @@ public class Chopper extends Window implements Checkable {
                 prop.autorefill = autorefill.a;
                 prop.stumps = stumps.a;
                 prop.ngrowth = ngrowth.a;
+                prop.bushes = bushes.a;
                 if(usingTools.s!=null)
                     prop.tool = usingTools.s.name;
                 if(prop.stumps && usingSovels.s!=null)

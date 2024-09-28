@@ -22,6 +22,8 @@ import static haven.Inventory.invsq;
 public class NGameUI extends GameUI
 {
     NBotsMenu botsMenu;
+    public NAlarmWdg alarmWdg;
+    public NQuestInfo questinfo;
     public NGUIInfo guiinfo;
     public NSearchItem itemsForSearch = null;
     public NCraftWindow craftwnd;
@@ -42,6 +44,7 @@ public class NGameUI extends GameUI
         }
 
         add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
+        add(new NDraggableWidget(questinfo = new NQuestInfo(), "quests", questinfo.sz.add(NDraggableWidget.delta)));
         add(guiinfo = new NGUIInfo(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
         if(!(Boolean) NConfig.get(NConfig.Key.show_drag_menu))
             guiinfo.hide();
@@ -323,6 +326,15 @@ public class NGameUI extends GameUI
             {
                 error("No discord wrapper settings");
             }
+        }
+    }
+
+    public void toggleol(String tag, boolean a) {
+        if(map != null) {
+            if(a)
+                map.enol(tag);
+            else
+                map.disol(tag);
         }
     }
 

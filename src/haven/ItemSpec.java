@@ -54,7 +54,7 @@ public class ItemSpec implements GSprite.Owner, ItemInfo.SpriteOwner, RandomSour
     public GSprite sprite() {return(spr());}
     public Resource resource() {return(res.res.get());}
 
-    private GSprite spr = null;
+    public GSprite spr = null;
     public GSprite spr() {
 	if(spr == null)
 	    spr = GSprite.create(this, res.res.get(), res.sdt.clone());

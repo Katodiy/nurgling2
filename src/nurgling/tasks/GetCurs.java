@@ -22,12 +22,8 @@ public class GetCurs implements NTask
     @Override
     public boolean check()
     {
-        Resource res = NUtils.getUI().getcurs(Coord.z);
-        if(res!=null) {
-            cursname = res.name;
-            return NParser.checkName(res.name, name);
-        }
-        return false;
+        cursname = NUtils.getUI().root.cursorRes;
+        return NParser.checkName(cursname, name);
     }
 
     public String getResult(){

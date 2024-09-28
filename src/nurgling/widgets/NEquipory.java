@@ -5,6 +5,7 @@ import nurgling.*;
 import nurgling.tasks.GetItem;
 import nurgling.tasks.WaitItemSpr;
 import nurgling.tools.NAlias;
+import nurgling.tools.NParser;
 
 import java.util.*;
 
@@ -85,6 +86,23 @@ public class NEquipory extends Equipory
         if (quickslots[id] != null) {
             NUtils.getUI().core.addTask(new WaitItemSpr(quickslots[id]));
             return quickslots[id];
+        }
+        return null;
+    }
+
+    public WItem findBucket (String content) throws InterruptedException {
+        if (quickslots[Slots.HAND_RIGHT.idx] != null) {
+            NUtils.getUI().core.addTask(new WaitItemSpr(quickslots[Slots.HAND_RIGHT.idx]));
+            if (NParser.checkName("Bucket", ((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).name())) {
+                if (((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content() == null || NParser.checkName(((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content().name(), content))
+                    return quickslots[Slots.HAND_RIGHT.idx];
+            }
+        }
+        if (quickslots[Slots.HAND_LEFT.idx] != null) {
+            if (NParser.checkName("Bucket", ((NGItem) quickslots[Slots.HAND_LEFT.idx].item).name())) {
+                if (((NGItem) quickslots[Slots.HAND_LEFT.idx].item).content() == null || NParser.checkName(((NGItem) quickslots[Slots.HAND_LEFT.idx].item).content().name(), content))
+                    return quickslots[Slots.HAND_LEFT.idx];
+            }
         }
         return null;
     }

@@ -1,5 +1,6 @@
 package nurgling.pf;
 
+import com.sun.jdi.InternalException;
 import haven.*;
 import haven.Window;
 import nurgling.*;
@@ -24,6 +25,16 @@ public class NPFMap
                     (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
                             ca.end.y >= begin.y && ca.end.y <= end.y))
             {
+                {
+                    // TODO КОСТЫЛЬ В ЦЕНТР
+                    Coord center = Utils.toPfGrid(gob.rc).sub(begin);
+                    if(center.x>=begin.x && center.x<=end.x && center.y>=begin.y && center.y<=end.y) {
+                        Cell c = cells[center.x][center.y];
+                        c.content.add(gob.id);
+                        c.val = 1;
+                    }
+                    // конец
+                }
                 for (int i = 0; i < ca.x_len; i++)
                     for (int j = 0; j < ca.y_len; j++)
                     {
@@ -34,7 +45,8 @@ public class NPFMap
                             old.cells[i][j] = cells[ii][jj].val;
                             if(ca.cells[i][j]!=0)
                             {
-                                cells[ii][jj].val = ca.cells[i][j];
+                                if(cells[ii][jj].val!=1)
+                                    cells[ii][jj].val = ca.cells[i][j];
                                 cells[ii][jj].content.add(gob.id);
                             }
                         }
@@ -81,13 +93,16 @@ public class NPFMap
     int dsize;
     public int size;
 
-    public NPFMap(Coord2d src, Coord2d dst, int mul)
-    {
+    public NPFMap(Coord2d src, Coord2d dst, int mul) throws InterruptedException {
         Coord2d a = new Coord2d(Math.min(src.x, dst.x), Math.min(src.y, dst.y));
         Coord2d b = new Coord2d(Math.max(src.x, dst.x), Math.max(src.y, dst.y));
         Coord center = Utils.toPfGrid((a.add(b)).div(2));
         dsize = Math.max(8,(((int) ((b.sub(a).len() / MCache.tilehsz.x))) / 2) * 2 * mul);
         size = 2 * dsize + 1;
+        if(dsize>200) {
+            NUtils.getGameUI().error("Unable to build grid of required size");
+            throw new InterruptedException();
+        }
 
         cells = new Cell[size][size];
         begin =  center.sub(dsize,dsize);
@@ -105,12 +120,13 @@ public class NPFMap
         }
     }
 
-    public NPFMap(Coord2d src, Coord2d dst, int mul, boolean waterMode)
+    public NPFMap(Coord2d src, Coord2d dst, int mul, boolean waterMode)throws InterruptedException
     {
         this(src,dst,mul);
         this.waterMode = waterMode;
     }
 
+    long currentTransport = -1;
 
     public Coord getBegin()
     {
@@ -134,12 +150,20 @@ public class NPFMap
 
     public void build()
     {
+        if(NUtils.playerID()!=-1) {
+            Following fl = NUtils.player().getattr(Following.class);
+            if(fl!= null)
+            {
+                currentTransport = fl.tgt;
+            }
+        }
         synchronized (NUtils.getGameUI().ui.sess.glob.oc)
         {
 
             for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
             {
-               addGob(gob);
+                if(gob.id!=currentTransport)
+                    addGob(gob);
             }
         }
         for (int i = 0; i < size; i += 1)

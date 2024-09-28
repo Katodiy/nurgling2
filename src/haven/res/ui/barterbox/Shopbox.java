@@ -1,18 +1,15 @@
 /* Preprocessed source code */
-/* $use: lib/tspec */
-
 package haven.res.ui.barterbox;
 
 import haven.*;
 import static haven.Inventory.invsq;
 import static haven.Inventory.sqsz;
-import haven.res.lib.tspec.Spec;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.awt.Color;
 
 /* >wdg: haven.res.ui.barterbox.Shopbox */
-@haven.FromResource(name = "ui/barterbox", version = 73)
+@haven.FromResource(name = "ui/barterbox", version = 74)
 public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Owner {
     public static final Text qlbl = Text.render("Quality:");
     public static final Text any = Text.render("Any");
@@ -25,7 +22,7 @@ public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Own
 	spipec = UI.scale(85, 66),
 	bpipec = UI.scale(300, 66);
     public ResData res;
-    public Spec price;
+    public ItemSpec price;
     public Text num;
 	public int leftNum;
     public int pnum, pq;
@@ -107,7 +104,7 @@ public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Own
 	    }
 	}
 
-	Spec price = this.price;
+	ItemSpec price = this.price;
 	if(price != null) {
 	    GOut sg = g.reclip(pricec, invsq.sz());
 	    sg.image(invsq, Coord.z);
@@ -173,7 +170,7 @@ public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Own
 	if(c.isect(pricec, sqsz) && (price != null)) {
 	    try {
 		if(pricetip == null)
-		    pricetip = price.longtip();
+		    pricetip = new TexI(ItemInfo.longtip(price.info()));
 		return(pricetip);
 	    } catch(Loading l) {
 		return("...");
@@ -182,7 +179,7 @@ public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Own
 	return(super.tooltip(c, prev));
     }
 
-    public <C> C context(Class<C> cl) {return(Spec.uictx.context(cl, ui));}
+    public <C> C context(Class<C> cl) {return(OwnerContext.uictx.context(cl, ui));}
     @Deprecated
     public Glob glob() {return(ui.sess.glob);}
     public Resource resource() {return(res.res.get());}
@@ -285,7 +282,7 @@ public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Own
 		    while(args[a] instanceof Object[])
 			info = Utils.extend(info, args[a++]);
 		}
-		price = new Spec(new ResData(res, sdt), Spec.uictx(ui), info);
+		price = new ItemSpec(uictx.curry(ui), new ResData(res, sdt), info);
 	    }
 	    pricetip = null;
 	    pnum = (Integer)args[a++];

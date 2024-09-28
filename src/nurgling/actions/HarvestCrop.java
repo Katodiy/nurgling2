@@ -12,6 +12,8 @@ import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static haven.OCache.posres;
@@ -55,8 +57,8 @@ public class HarvestCrop implements Action{
         }
         if (barrel == null)
             return Results.ERROR("No barrel for seed");
-        if (trough == null)
-            return Results.ERROR("No trough for seed");
+//        if (trough == null)
+//            return Results.ERROR("No trough for seed");
 
         TransferToBarrel tb;
         (tb = new TransferToBarrel(barrel, iseed)).run(gui);
@@ -65,14 +67,13 @@ public class HarvestCrop implements Action{
         }
 
         AtomicBoolean isFull = new AtomicBoolean(tb.isFull());
-        Gob plant;
         Coord start = gui.map.player().rc.dist(field.getArea().br.mul(MCache.tilesz)) < gui.map.player().rc.dist(field.getArea().ul.mul(MCache.tilesz)) ? field.getArea().br.sub(1, 1) : field.getArea().ul;
         Coord pos = new Coord(start);
         boolean rev = (pos.equals(field.getArea().ul));
 
         boolean revdir = rev;
 
-        while (!Finder.findGobs(field, crop, stage).isEmpty()) {
+        while (!Finder.findGobs(field, crop, stage).isEmpty() || !Finder.findGobs(field, new NAlias("gfx/terobjs/plants/fallowplant"), 0).isEmpty() ) {
                 if (!rev) {
                     while (pos.x >= field.getArea().ul.x) {
                         AtomicBoolean setDir = new AtomicBoolean(true);

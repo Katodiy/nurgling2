@@ -53,11 +53,21 @@ public class Craft implements Action
         int size = 0;
         for(NMakewindow.Spec s: mwnd.inputs)
         {
-            NArea area = NArea.findIn(s.name);
-            if(area == null)
-                return Results.ERROR("NO area for: " + s.name);
-            context.addInput(s.name, Context.GetInput(s.name, area));
-            size += s.count;
+            if(!s.categories) {
+                NArea area = NArea.findIn(s.name);
+                if (area == null)
+                    return Results.ERROR("NO area for: " + s.name);
+                context.addInput(s.name, Context.GetInput(s.name, area));
+                size += s.count;
+            }
+            else if(s.ing!=null)
+            {
+                NArea area = NArea.findIn(s.ing.name);
+                if (area == null)
+                    return Results.ERROR("NO area for: " + s.ing.name);
+                context.addInput(s.ing.name, Context.GetInput(s.ing.name, area));
+                size += s.count;
+            }
         }
 
         for(NMakewindow.Spec s: mwnd.outputs)
@@ -74,14 +84,19 @@ public class Craft implements Action
            context.addTools(mwnd.tools);
         }
 
+        if(context.equip!=null)
+            new Equip(new NAlias(context.equip)).run(gui);
+
         int left = count;
         while (left>0)
         {
             int for_craft = Math.min(left,NUtils.getGameUI().getInventory().getFreeSpace()/size);
             for(NMakewindow.Spec s: mwnd.inputs)
             {
-                new TakeItems(context, s.name, s.count * for_craft).run(gui);
+                new TakeItems(context, s.ing==null?s.name:s.ing.name, s.count * for_craft).run(gui);
             }
+
+
 
             new Drink(0.9).run(gui);
             if(context.workstation!=null)
@@ -103,7 +118,7 @@ public class Craft implements Action
                 GetItems gi;
                 NUtils.getUI().core.addTask(gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(s.name)));
                 if(!gi.getResult().isEmpty() && context.getOutputs(s.name, 1)!=null)
-                    new TransferItems(context,s.name,gi.getResult().size()).run(gui);
+                    new TransferItems(context,s.name).run(gui);
             }
             left -=for_craft;
         }

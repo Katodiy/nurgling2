@@ -26,7 +26,7 @@ public class MovingCompleted implements NTask
             if (drawable != null)
             {
                 String pose;
-                return (drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && !NParser.checkName(pose, "borka/walking", "borka/running"));
+                return (drawable instanceof Composite && (pose = ((Composite) drawable).current_pose) != null && !NParser.checkName(pose, "borka/walking", "borka/running", "borka/wading"));
             }
         }
         return false;

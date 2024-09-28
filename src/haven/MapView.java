@@ -95,7 +95,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	public void resized() {
 	    float field = 0.5f;
 	    float aspect = ((float)sz.y) / ((float)sz.x);
-	    proj = Projection.frustum(-field, field, -aspect * field, aspect * field, 1, 2000);
+	    proj = Projection.frustum(-field, field, -aspect * field, aspect * field, 1, 5000);
 	}
 
 	public void apply(Pipe p) {
@@ -187,7 +187,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	    
 	    float field = field(elev);
 	    view = haven.render.Camera.pointed(curc.add(camoff).add(0.0f, 0.0f, h), dist(elev), elev, angl);
-	    proj = Projection.frustum(-field, field, -ca * field, ca * field, 1, 2000);
+	    proj = Projection.frustum(-field, field, -ca * field, ca * field, 1, 5000);
 	}
 
 	public float angle() {
@@ -1169,8 +1169,10 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	if(pl != null)
 	    return(pl.getc());
 	else
-	    return(NUtils.getGameUI().map.glob.map.getzp(NUtils.getGameUI().map.cc));
-    }
+		if(NUtils.getGameUI()!=null)
+	    	return(NUtils.getGameUI().map.glob.map.getzp(NUtils.getGameUI().map.cc));
+    return null;
+	}
 
     public static class Clicklist implements RenderList<Rendered>, RenderList.Adapter {
 	public static final Pipe.Op clickbasic = Pipe.Op.compose(new States.Depthtest(States.Depthtest.Test.LE),

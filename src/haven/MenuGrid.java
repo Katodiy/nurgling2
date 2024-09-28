@@ -35,6 +35,10 @@ import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
 import haven.Resource.AButton;
 import haven.ItemInfo.AttrCache;
+import haven.res.ui.pag.toggle.Toggle;
+import nurgling.NConfig;
+import nurgling.NInventory;
+import nurgling.NUtils;
 
 public class MenuGrid extends Widget implements KeyBinding.Bindable {
     public static Pagina lastPagina = null;
@@ -95,6 +99,10 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 		    button = new PagButton(this);
 		else
 		    button = f.make(this);
+			if (res.name.contains("paginae/act/itemcomb")) {
+				((NInventory) NUtils.getGameUI().maininv).pagBundle = button;
+				((NInventory) NUtils.getGameUI().maininv).bundle.a = ((Toggle)button).a;
+			}
 	    }
 	    return(button);
 	}
@@ -248,7 +256,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	}
 
 	public String sortkey() {
-	    if(act().ad.length == 0)
+	    if((act().ad.length == 0) && (pag.id instanceof Indir))
 		return("\0" + name());
 	    return(name());
 	}
@@ -605,6 +613,9 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	}
 	return(super.mouseup(c,button));
     }
+	boolean criminalIsInstall = false;
+	boolean trackingIsInstall = false;
+	boolean swimmingIsInstall = false;
 
     public void uimsg(String msg, Object... args) {
 	if(msg == "goto") {
@@ -646,6 +657,26 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 			    pag.invalidate();
 			}
 			paginae.add(pag);
+			if(pag.res instanceof Session.CachedRes.Ref)
+			{
+				String ref = ((Session.CachedRes.Ref)pag.res).resnm();
+				if((Boolean) NConfig.get(NConfig.Key.crime) != criminalIsInstall && (Boolean) NConfig.get(NConfig.Key.crime) && ref.equals("paginae/act/crime"))
+				{
+					pag.button().use(new Interaction());
+					criminalIsInstall = (Boolean) NConfig.get(NConfig.Key.crime);
+				}
+				else if((Boolean) NConfig.get(NConfig.Key.tracking) != trackingIsInstall && (Boolean) NConfig.get(NConfig.Key.tracking) && ref.equals("paginae/act/tracking"))
+				{
+					pag.button().use(new Interaction());
+					trackingIsInstall = (Boolean) NConfig.get(NConfig.Key.tracking);
+				}
+				else if((Boolean) NConfig.get(NConfig.Key.swimming) != swimmingIsInstall && (Boolean) NConfig.get(NConfig.Key.swimming) && ref.equals("paginae/act/swim"))
+				{
+					pag.button().use(new Interaction());
+					swimmingIsInstall = (Boolean) NConfig.get(NConfig.Key.swimming);
+				}
+			}
+
 		    } else {
 			paginae.remove(pag);
 		    }

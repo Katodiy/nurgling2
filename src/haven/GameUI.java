@@ -32,6 +32,7 @@ import java.util.function.*;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.image.WritableRaster;
+import haven.render.Location;
 import static haven.Inventory.invsq;
 import nurgling.*;
 import nurgling.conf.*;
@@ -54,7 +55,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public Window equwnd;
     private Window makewnd;
     private Window srchwnd;
-    private Window iconwnd;
+    public Window iconwnd;
     private Coord makewndc = Utils.getprefc("makewndc", new Coord(400, 200));
     public Inventory maininv;
     public CharWnd chrwdg;
@@ -75,7 +76,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public BeltSlot[] belt = new BeltSlot[144];
     public final Map<Integer, String> polowners = new HashMap<Integer, String>();
     public Bufflist buffs;
-
+	public NMiniMapWnd mmapw = null;
     public static abstract class BeltSlot {
 	public final int idx;
 
@@ -594,7 +595,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		     * existing mapfile with a new one is better. */
 		    throw(new RuntimeException("failed to load mapfile", e));
 		}
-		add(new NResizableWidget(mmap = new CornerMap(UI.scale(new Coord(133, 133)), file),"minimap", new Coord(250, 250)));
+		add(new NResizableWidget((mmapw = new NMiniMapWnd("MiniMap", (NMapView) map, file)), "minimap", new Coord(250, 250)));
+		mmap = mmapw.miniMap;
 		mmap.lower();
 		mapfile = new MapWnd(file, map, Utils.getprefc("wndsz-map", UI.scale(new Coord(700, 500))), "Map");
 		mapfile.show(Utils.getprefb("wndvis-map", false));
@@ -670,7 +672,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	} else if(place == "chat") {
 	    chat.addchild(child);
 	} else if(place == "party") {
-	    add(child, portrait.pos("bl").adds(0, 10));
+	    add(new NDraggableWidget(child,"party",child.sz.add(NDraggableWidget.delta)), portrait.pos("bl").adds(0, 10));
 	} else if(place == "meter") {
 		if(child instanceof IMeter)
 	    	add(new NDraggableWidget(child, "meter" + ((IMeter)child).name,IMeter.fsz));
@@ -713,6 +715,11 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 			    }
 			}
 			break;
+		    case "obj":
+			if(child instanceof Window) {
+			    ((Window)child).settrans(new GobTrans(map, Utils.uiv(opta[1])));
+			}
+			break;
 		    }
 		}
 	    }
@@ -722,6 +729,55 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	} else {
 	    throw(new UI.UIException("Illegal gameui child", place, args));
 	}
+    }
+
+    public static class GobTrans implements Window.Transition<GobTrans.Anim, GobTrans.Anim> {
+	public static final double time = 0.1;
+	public final MapView map;
+	public final long gobid;
+
+	public GobTrans(MapView map, long gobid) {
+	    this.map = map;
+	    this.gobid = gobid;
+	}
+
+	private Coord oc() {
+	    Gob gob = map.ui.sess.glob.oc.getgob(gobid);
+	    if(gob == null)
+		return(null);
+	    Location.Chain loc = Utils.el(gob.getloc());
+	    if(loc == null)
+		return(null);
+	    return(map.screenxf(loc.fin(Matrix4f.id).mul4(Coord3f.o).invy()).round2());
+	}
+
+	public class Anim extends Window.NormAnim {
+	    public final Window wnd;
+	    private Coord oc;
+
+	    public Anim(Window wnd, boolean hide, Anim from) {
+		super(time, from, hide);
+		this.wnd = wnd;
+		this.oc = wnd.c.add(wnd.sz.div(2));
+	    }
+
+	    public void draw(GOut g, Tex tex) {
+		GOut pg = g.reclipl(wnd.c.inv(), wnd.parent.sz);
+		Coord cur = oc();
+		if(cur != null)
+		    this.oc = cur;
+		Coord sz = tex.sz();
+		double na = Utils.smoothstep(this.na);
+		pg.chcolor(255, 255, 255, (int)(na * 255));
+		double fac = 1.0 - na;
+		Coord c = this.oc.sub(sz.div(2)).mul(1.0 - na).add(wnd.c.mul(na));
+		pg.image(tex, c.add((int)(sz.x * fac * 0.5), (int)(sz.y * fac * 0.5)),
+			 Coord.of((int)(sz.x * (1.0 - fac)), (int)(sz.y * (1.0 - fac))));
+	    }
+	}
+
+	public Anim show(Window wnd, Anim hide) {return(new Anim(wnd, false, hide));}
+	public Anim hide(Window wnd, Anim show) {return(new Anim(wnd, true,  show));}
     }
 
     public void cdestroy(Widget w) {
@@ -1117,17 +1173,17 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	return(ret);
     }
 
-    private void fitwdg(Widget wdg) {
+    public void fitwdg(Widget wdg) {
 	wdg.c = fitwdg(wdg, wdg.c);
     }
 
-    private boolean wndstate(Window wnd) {
+    public boolean wndstate(Window wnd) {
 	if(wnd == null)
 	    return(false);
 	return(wnd.visible());
     }
 
-    private void togglewnd(Window wnd) {
+    public void togglewnd(Window wnd) {
 	if(wnd != null) {
 	    if(wnd.show(!wnd.visible())) {
 		wnd.raise();
@@ -1228,7 +1284,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	if(key == ':') {
 	    entercmd();
 	    return(true);
-	} else if((Screenshooter.screenurl.get() != null) && kb_shoot.key().match(ev)) {
+	} else if(kb_shoot.key().match(ev) && (Screenshooter.screenurl.get() != null)) {
 	    Screenshooter.take(this, Screenshooter.screenurl.get());
 	    return(true);
 	} else if(kb_hide.key().match(ev)) {
@@ -1313,20 +1369,9 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	ui.sfxrl(sfx);
     }
 
-    private String lastError = null;
 
-    public void dropLastError()
-    {
-        lastError = null;
-    }
-
-    public String getLastError()
-    {
-        return lastError;
-    }
 
     public void error(String msg) {
-    lastError = msg;
 	ui.error(msg);
     }
     

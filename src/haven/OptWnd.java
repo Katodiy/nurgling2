@@ -1532,6 +1532,62 @@ public class OptWnd extends Window {
 					}
 
 				}, prev.pos("bl").adds(0, 5));
+				prev = add(new CheckBox("Show mining overlay") {
+					{
+						a = (Boolean) NConfig.get(NConfig.Key.miningol);
+					}
+
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.miningol, val);
+						a = val;
+					}
+
+				}, prev.pos("bl").adds(0, 5));
+				prev = add(new CheckBox("Enable tracking when login") {
+					{
+						a = (Boolean) NConfig.get(NConfig.Key.tracking);
+					}
+
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.tracking, val);
+						a = val;
+					}
+
+				}, prev.pos("bl").adds(0, 5));
+				prev = add(new CheckBox("Enable criminal acting when login") {
+					{
+						a = (Boolean) NConfig.get(NConfig.Key.crime);
+					}
+
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.crime, val);
+						a = val;
+					}
+
+				}, prev.pos("bl").adds(0, 5));
+				prev = add(new CheckBox("Enable criminal swimming when login") {
+					{
+						a = (Boolean) NConfig.get(NConfig.Key.swimming);
+					}
+
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.swimming, val);
+						a = val;
+					}
+
+				}, prev.pos("bl").adds(0, 5));
+				prev = add(new CheckBox("DEBUG") {
+					{
+						a = (Boolean) NConfig.get(NConfig.Key.debug);
+					}
+
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.debug, val);
+						NUtils.getUI().core.debug = val;
+						a = val;
+					}
+
+				}, prev.pos("bl").adds(0, 5));
 //				prev = add(new CheckBox("Collect Food Info:") {
 //					{
 //						a = NConfiguration.getInstance().collectFoodInfo;

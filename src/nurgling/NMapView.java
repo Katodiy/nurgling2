@@ -22,6 +22,7 @@ public class NMapView extends MapView
     }
 
     final HashMap<String, String> ttip = new HashMap<>();
+    final ArrayList<String> tlays = new ArrayList<>();
 
     public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
     public NArea.Space areaSpace = null;
@@ -112,6 +113,24 @@ public class NMapView extends MapView
                 imgs.add(gob);
                 imgs.add(RichText.render(ttip.get("ols"), 0).img);
             }
+            if (ttip.get("pose") != null) {
+                BufferedImage gob = RichText.render(String.format("$col[255,145,200]{%s}:", "Pose"), 0).img;
+                imgs.add(gob);
+                imgs.add(RichText.render(ttip.get("pose"), 0).img);
+            }
+            if (ttip.get("attr") != null) {
+                BufferedImage gob = RichText.render(String.format("$col[155,255,83]{%s}:", "Attr"), 0).img;
+                imgs.add(gob);
+                imgs.add(RichText.render(ttip.get("attr"), 0).img);
+            }
+            if (!tlays.isEmpty() && false) {
+                BufferedImage gob = RichText.render(String.format("$col[155,32,176]{%s}:", "Layers"), 0).img;
+                imgs.add(gob);
+                for(String s: tlays)
+                {
+                    imgs.add(RichText.render(s, 0).img);
+                }
+            }
             if (ttip.get("poses") != null) {
                 BufferedImage gob = RichText.render(String.format("$col[255,128,128]{%s}:", "Poses"), 0).img;
                 imgs.add(gob);
@@ -139,6 +158,7 @@ public class NMapView extends MapView
             @Override
             protected void hit(Coord pc, Coord2d mc, ClickData inf) {
                 ttip.clear();
+                tlays.clear();
                 if (inf != null) {
                     Gob gob = Gob.from(inf.ci);
                     if (gob != null) {
@@ -162,7 +182,38 @@ public class NMapView extends MapView
                             if(isPrinted)
                                 ttip.put("ols", ols.toString());
                         }
+                        if(!gob.attr.isEmpty()) {
+                            StringBuilder attrs = new StringBuilder();
+                            boolean isPrinted = false;
+                            for (GAttrib attr : gob.attr.values()) {
 
+                                if (attr instanceof Drawable) {
+                                    if (((Drawable) attr).getres() != null) {
+                                        Drawable drawable = ((Drawable) attr);
+                                        if(drawable instanceof Composite)
+                                        {
+                                            ttip.put("pose", ((Composite) drawable).current_pose);
+                                        }
+                                        if (((Drawable) attr).getres().getLayers() != null) {
+                                            isPrinted = true;
+                                            for (Resource.Layer lay : ((Drawable) attr).getres().getLayers()) {
+                                                String res = lay.getClass().toString();
+                                                tlays.add(res.replace("$","_") + " ");
+                                            }
+                                        }
+                                    }
+                                }
+
+//                                if (ol.spr != null) {
+                                isPrinted = true;
+                                String res = attr.getClass().toString();
+                                if(!res.contains("$"))
+                                    attrs.append(res + " ");
+//                                }
+                            }
+                            if(isPrinted)
+                                ttip.put("attr", attrs.toString());
+                        }
 
                         ttip.put("id", String.valueOf(gob.id));
 
@@ -206,7 +257,7 @@ public class NMapView extends MapView
         synchronized (glob.map.areas)
         {
             HashSet<String> names = new HashSet<String>();
-            int id = 0;
+            int id = 1;
             for(NArea area : glob.map.areas.values())
             {
                 if(area.id >= id)
@@ -342,7 +393,8 @@ public class NMapView extends MapView
                 if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
                 {
                     NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
-                    nol.remove();
+                    if (nol != null)
+                        nol.remove();
                     NUtils.getGameUI().map.nols.remove(area.id);
                 }
                 NAreaSelector.changeArea(area);

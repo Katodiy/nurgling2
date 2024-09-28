@@ -14,29 +14,38 @@ public class NBotsMenu extends Widget
     final static String dir_path = "nurgling/bots/icons/";
     public NBotsMenu()
     {
+        NLayout resources = new NLayout("resources");
+        resources.elements.add(new NButton("choper", new Chopper()));
+        resources.elements.add(new NButton("pblocks", new PrepareBlocks()));
+        resources.elements.add(new NButton("pboards", new PrepareBoards()));
+        resources.elements.add(new NButton("log", new TransferLog()));
+        resources.elements.add(new NButton("clay", new ClayDigger()));
+        resources.elements.add(new NButton("bark", new CollectBark()));
+        resources.elements.add(new NButton("bough", new CollectBough()));
+        resources.elements.add(new NButton("leaf", new CollectLeaf()));
+        addLayout(resources);
+        NLayout productions = new NLayout("productions");
+        productions.elements.add(new NButton("smelter", new SmelterAction()));
+        productions.elements.add(new NButton("backer", new BackerAction()));
+        productions.elements.add(new NButton("ugardenpot", new UnGardentPotAction()));
+        addLayout(productions);
+
+        NLayout farming = new NLayout("farming");
+        farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
+        farming.elements.add(new NButton("hemp", new HempFarmer()));
+        farming.elements.add(new NButton("flax", new FlaxFarmer()));
+        farming.elements.add(new NButton("goats", new GoatsAction()));
+        farming.elements.add(new NButton("sheeps", new SheepsAction()));
+        farming.elements.add(new NButton("pigs", new PigsAction()));
+        farming.elements.add(new NButton("cows", new nurgling.actions.bots.CowsAction()));
+        addLayout(farming);
+        NLayout utils = new NLayout("utils");
+        utils.elements.add(new NButton("shieldsword", new EquipShieldSword()));
+        utils.elements.add(new NButton("filwater", new FillWaterskins()));
+        utils.elements.add(new NButton("unbox", new FreeContainersInArea()));
+        addLayout(utils);
         if(NUtils.getUI().core.debug)
         {
-            NLayout resources = new NLayout("resources");
-            resources.elements.add(new NButton("choper", new Chopper()));
-            resources.elements.add(new NButton("log", new TransferLog()));
-            addLayout(resources);
-            NLayout productions = new NLayout("productions");
-            productions.elements.add(new NButton("smelter", new SmelterAction()));
-            addLayout(productions);
-
-            NLayout farming = new NLayout("farming");
-            farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
-            farming.elements.add(new NButton("hemp", new HempFarmer()));
-            farming.elements.add(new NButton("flax", new FlaxFarmer()));
-            farming.elements.add(new NButton("goats", new GoatsAction()));
-            farming.elements.add(new NButton("sheeps", new SheepsAction()));
-            farming.elements.add(new NButton("pigs", new PigsAction()));
-            farming.elements.add(new NButton("cows", new nurgling.actions.bots.CowsAction()));
-            addLayout(farming);
-            NLayout utils = new NLayout("utils");
-            utils.elements.add(new NButton("shieldsword", new EquipShieldSword()));
-            utils.elements.add(new NButton("filwater", new FillWaterskins()));
-            addLayout(utils);
             NLayout tests = new NLayout("tools");
             tests.elements.add(new NButton("test1", new TESTLiftDrop()));
             tests.elements.add(new NButton("test4", new TESTbranchinvtransferpacks()));

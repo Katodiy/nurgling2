@@ -54,8 +54,8 @@ public class Resource implements Serializable {
     public static Class<AButton> action = AButton.class;
     public static Class<Audio> audio = Audio.class;
     public static Class<Tooltip> tooltip = Tooltip.class;
-    
-    private Collection<Layer> layers = new LinkedList<Layer>();
+
+    protected Collection<Layer> layers = new LinkedList<Layer>();
 	public final Collection<Layer> getLayers() { return layers;}
     public final String name;
     public int ver;
@@ -109,54 +109,37 @@ public class Resource implements Serializable {
 	public Resource get() {
 	    return(get(0));
 	}
-
-	public static Resource loadsaved(Resource.Pool pool, Resource.Spec spec) {
-	    try {
-		if(spec.pool == null)
-		    return(pool.load(spec.name, spec.ver).get());
-		return(spec.get());
-	    } catch(Loading l) {
-		throw(l);
-	    } catch(Exception e) {
-		return(pool.load(spec.name).get());
-	    }
-	}
-
-	public Resource loadsaved(Resource.Pool pool) {
-	    return(loadsaved(pool, this));
-	}
-
-	public Resource loadsaved() {
-	    return(loadsaved(this.pool));
-	}
-    }
+   }
 
     public static class Saved extends Named implements Serializable {
 	public final transient Pool pool;
 	public int prio = 0;
+	private transient Indir<Resource> wver = null;
+	private Throwable verr = null;
+	private transient Resource loaded;
 
 	public Saved(Pool pool, String name, int ver) {
 	    super(name, ver);
 	    this.pool = pool;
 	}
 
-	private transient Indir<Resource> getting = null;
-	private Throwable verr = null;
 	public Resource get(int prio) {
+	    if(loaded != null)
+		return(loaded);
 	    if(verr == null) {
 		try {
-		    if(getting == null)
-			getting = pool.load(name, ver, prio);
-		    return(getting.get());
+		    if(wver == null)
+			wver = pool.load(name, ver, prio);
+		    return(loaded = wver.get());
 		} catch(Loading l) {
 		    throw(l);
 		} catch(Exception e) {
 		    verr = e;
-		    getting = pool.load(name, -1, prio);
+		    wver = null;
 		}
 	    }
 	    try {
-		return(getting.get());
+		return(loaded = pool.load(name, -1, prio).get());
 	    } catch(Throwable t) {
 		t.addSuppressed(verr);
 		throw(t);
@@ -166,19 +149,37 @@ public class Resource implements Serializable {
 	public Resource get() {
 	    return(get(prio));
 	}
+
+	public int savever() {
+	    if((loaded != null) && (loaded.ver > this.ver))
+		return(loaded.ver);
+	    return(this.ver);
+	}
     }
 
     public static interface Resolver {
 	public Indir<Resource> getres(int id);
 
+	public default Indir<Resource> dynres(UID uid) {
+	    return(() -> {throw(new NoSuchResourceException(String.format("dyn/%x", uid.longValue()), 1, null));});
+	}
+
 	public default Indir<Resource> getresv(Object desc) {
 	    if(desc == null)
 		return(null);
+	    if(desc instanceof UID)
+		return(dynres((UID)desc));
 	    if(desc instanceof Number) {
 		int id = ((Number)desc).intValue();
 		if(id < 0)
 		    return(null);
 		return(this.getres(id));
+	    }
+	    if(desc instanceof Resource)
+		return(((Resource)desc).indir());
+	    if(desc instanceof Indir) {
+		@SuppressWarnings("unchecked") Indir<Resource> ret = (Indir<Resource>)desc;
+		return(ret);
 	    }
 	    throw(new ClassCastException("unknown type for resource id: " + desc));
 	}
@@ -223,6 +224,10 @@ public class Resource implements Serializable {
 		return(bk.getres(map.get(id)));
 	    }
 
+	    public Indir<Resource> dynres(UID uid) {
+		return(bk.dynres(uid));
+	    }
+
 	    public String toString() {
 		return(map.toString());
 	    }
@@ -234,7 +239,21 @@ public class Resource implements Serializable {
 	this.name = name;
 	this.ver = ver;
     }
-	
+
+    public static class Virtual extends Resource {
+	public Virtual(Pool pool, String name, int ver) {
+	    super(pool, name, ver);
+	}
+
+	public Virtual(String name, int ver) {
+	    this(remote(), name, ver);
+	}
+
+	public void add(Layer layer) {
+	    layers.add(layer);
+	}
+    }
+
     public static void setcache(ResCache cache) {
 	prscache = cache;
     }
@@ -361,66 +380,29 @@ public class Resource implements Serializable {
     }
 
     public static class HttpSource implements ResSource, Serializable {
-	public static final String USER_AGENT;
-	private final transient SslHelper ssl;
 	public URI base;
 
-	static {
-	    StringBuilder buf = new StringBuilder();
-	    buf.append("Haven/1.0");
-	    if(!Config.confid.equals(""))
-		buf.append(" (" + Config.confid + ")");
-	    String jv = Utils.getprop("java.version", null);
-	    if((jv != null) && !jv.equals(""))
-		buf.append(" Java/" + jv);
-	    USER_AGENT = buf.toString();
-	}
-	
-	{
-	    ssl = new SslHelper();
-	    try {
-		ssl.trust(Resource.class.getResourceAsStream("ressrv.crt"));
-	    } catch(java.security.cert.CertificateException e) {
-		throw(new Error("Invalid built-in certificate", e));
-	    } catch(IOException e) {
-		throw(new Error(e));
-	    }
-	    ssl.ignoreName();
-	}
-	
 	public HttpSource(URI base) {
 	    this.base = base;
 	}
-		
+
 	private URI encodeuri(URI raw) throws IOException {
 	    /* This is kinda crazy, but it is, actually, how the Java
 	     * documentation recommends that it be done... */
 	    try {
-		return(new URI(new URI(raw.getScheme(), raw.getAuthority(), raw.getPath(), raw.getFragment()).toASCIIString()));
+		return(new URI(new URI(raw.getScheme(), raw.getUserInfo(), raw.getHost(), raw.getPort(), raw.getPath(), raw.getQuery(), raw.getFragment()).toASCIIString()));
 	    } catch(URISyntaxException e) {
 		throw(new IOException(e));
 	    }
 	}
 
 	public InputStream get(String name) throws IOException {
-	    URL resurl = encodeuri(base.resolve(name + ".res")).toURL();
-	    RetryingInputStream ret = new RetryingInputStream() {
-		    protected InputStream create() throws IOException {
-			URLConnection c;
-			if(resurl.getProtocol().equals("https"))
-			    c = ssl.connect(resurl);
-			else
-			    c = resurl.openConnection();
+	    return(Http.fetch(encodeuri(base.resolve(name + ".res")).toURL(), c -> {
 			/* Apparently, some versions of Java Web Start has
 			 * a bug in its internal cache where it refuses to
 			 * reload a URL even when it has changed. */
 			c.setUseCaches(false);
-			c.addRequestProperty("User-Agent", USER_AGENT);
-			return(c.getInputStream());
-		    }
-		};
-	    ret.check();
-	    return(ret);
+		    }));
 	}
 
 	public String toString() {
@@ -616,10 +598,18 @@ public class Resource implements Serializable {
 	private void handle(Queued res) {
 	    for(ResSource src : sources) {
 		try(InputStream in = src.get(res.name)) {
+		    Message msg = new StreamMessage(in);
+		    if(msg.eom()) {
+			/* XXX? This should not be necessary, but for some reason
+			 * it seems that custom client resources find their way to
+			 * create empty cache files by the same name. I don't know
+			 * how. */
+			throw(new FileNotFoundException("empty file"));
+		    }
 		    res.found = true;
 		    Resource ret = new Resource(this, res.name, res.ver);
 		    ret.source = src;
-		    ret.load(in);
+		    ret.load(msg);
 		    res.res = ret;
 		    res.error = null;
 		    break;
@@ -664,7 +654,7 @@ public class Resource implements Serializable {
 				return(cq);
 			    }
 			} else {
-			    if(cq.done && (cq.error != null)) {
+			    if((cq.ver != -1) && cq.done && (cq.error != null)) {
 				/* XXX: This is probably not the right way to handle this. */
 			    } else {
 				cq.boostprio(prio);
@@ -675,8 +665,8 @@ public class Resource implements Serializable {
 			queue.removeid(cq);
 		    }
 		    Queued nq = new Queued(name, ver, prio);
-		    queued.put(name, nq);
 		    if(parent == null) {
+			queued.put(name, nq);
 			queue.add(nq);
 			queue.notify();
 		    } else {
@@ -691,8 +681,8 @@ public class Resource implements Serializable {
 				    pq.rdep.add(nq);
 				}
 			    }
+			    queued.put(name, nq);
 			} else {
-			    queued.remove(name);
 			    nq.res = pr.get();
 			    nq.done = true;
 			}
@@ -709,6 +699,10 @@ public class Resource implements Serializable {
 
 	public Indir<Resource> dynres(long id) {
 	    return(load(String.format("dyn/%x", id), 1));
+	}
+
+	public Indir<Resource> dynres(UID id) {
+	    return(dynres(id.bits));
 	}
 
 	private void ckld() {
@@ -1878,8 +1872,7 @@ public class Resource implements Serializable {
     }
 
     private static final byte[] RESOURCE_SIG = "Haven Resource 1".getBytes(Utils.ascii);
-    private void load(InputStream st) throws IOException {
-	Message in = new StreamMessage(st);
+    private void load(Message in) {
 	if(!Arrays.equals(RESOURCE_SIG, in.bytes(RESOURCE_SIG.length)))
 	    throw(new LoadException("Invalid res signature", this));
 	int ver = in.uint16();

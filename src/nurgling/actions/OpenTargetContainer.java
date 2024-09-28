@@ -4,6 +4,7 @@ import haven.*;
 import static haven.OCache.posres;
 import nurgling.*;
 import nurgling.tasks.*;
+import nurgling.tools.Container;
 
 public class OpenTargetContainer implements Action
 {
@@ -27,6 +28,10 @@ public class OpenTargetContainer implements Action
             default:
                 gui.ui.core.addTask(new FindNInventory(name));
         }
+        if(cont!=null)
+        {
+            cont.update();
+        }
         return Results.SUCCESS();
     }
 
@@ -36,6 +41,14 @@ public class OpenTargetContainer implements Action
         this.gob = gob;
     }
 
+    public OpenTargetContainer(Container container)
+    {
+        this.name = container.cap;
+        this.gob = container.gob;
+        this.cont = container;
+    }
+
     String name;
     Gob gob;
+    Container cont = null;
 }
