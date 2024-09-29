@@ -94,6 +94,9 @@ public class NQuestInfo extends Widget
 
     void update() {
         imgs.clear();
+        for (String qname : qgconds.keySet()) {
+            setMarkersProp(qname, null);
+        }
         qgconds.clear();
         taskconds.clear();
         huntingT.clear();
