@@ -16,7 +16,7 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
 
     //secondary data
     double sn = 0, cs = 1;
-    public static Coord2d[] n = {Coord2d.of(0, 1), Coord2d.of(-1, 0), Coord2d.of(0, -1), Coord2d.of(1, 0)};
+    public Coord2d[] n = {Coord2d.of(0, 1), Coord2d.of(-1, 0), Coord2d.of(0, -1), Coord2d.of(1, 0)};
     public double[] d = {0, 0, 0, 0};
     //corners ul=>ur=>br=>bl
     public Coord2d[] c = new Coord2d[4];
@@ -62,8 +62,10 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
         this.ul = Coord2d.of(Math.min(ul.x, br.x), Math.min(ul.y, br.y));
         this.br = Coord2d.of(Math.max(ul.x, br.x), Math.max(ul.y, br.y));
 
-        if (((kPi < 0) ? ((kPi % 1.0) + 1.0) : (kPi % 1.0)) > 0.0001) move(r, angle);
-        else move_ortho(r, (int) Math.round(kPi));
+        if (((kPi < 0) ? ((kPi % 1.0) + 1.0) : (kPi % 1.0)) > 0.0001)
+            move(r, angle);
+        else
+            move_ortho(r, (int) Math.round(kPi));
     }
 
     public static NHitBoxD shaftBoxObjectFactory(Coord2d begin, Coord2d end, double halfWidth) {
@@ -232,31 +234,25 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     }
 
     public Coord2d getCircumscribedUL() {
-        //TODO refactor
-        double mx = Float.MAX_VALUE;
-        double my = Float.MAX_VALUE;
+        double mx = Double.MAX_VALUE;
+        double my = Double.MAX_VALUE;
         for (int ind = 0; ind < 4; ind++) {
-            if (c[ind].x < mx) {
+            if (c[ind].x < mx)
                 mx = c[ind].x;
-            }
-            if (c[ind].y < my) {
+            if (c[ind].y < my)
                 my = c[ind].y;
-            }
         }
         return new Coord2d(mx, my);
     }
 
     public Coord2d getCircumscribedBR() {
-        //TODO refactor
-        double mx = -Float.MAX_VALUE;
-        double my = -Float.MAX_VALUE;
+        double mx = -Double.MAX_VALUE;
+        double my = -Double.MAX_VALUE;
         for (int ind = 0; ind < 4; ind++) {
-            if (c[ind].x > mx) {
+            if (c[ind].x > mx)
                 mx = c[ind].x;
-            }
-            if (c[ind].y > my) {
+            if (c[ind].y > my)
                 my = c[ind].y;
-            }
         }
         return new Coord2d(mx, my);
     }
@@ -292,36 +288,40 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     }
 
     public boolean intersects(NHitBoxD other, boolean includeBorder) {
-        if (this.ortho) {
-            if (other.ortho) {
-                if (includeBorder)
-                    return ((other.c[2].x >= this.c[0].x) &&
-                            (other.c[0].x <= this.c[2].x) &&
-                            (other.c[2].y >= this.c[0].y) &&
-                            (other.c[0].y <= this.c[2].y));
-                else
-                    return ((other.c[2].x > this.c[0].x) &&
-                            (other.c[0].x < this.c[2].x) &&
-                            (other.c[2].y > this.c[0].y) &&
-                            (other.c[0].y < this.c[2].y));
-            }
-        } else {
-            for (int k = 0; k < 4; k++)
-                if (other.contains(this.c[k], includeBorder))
-                    return true;
-            for (Coord2d checkPoint : this.checkPoints)
-                if (other.contains(checkPoint, includeBorder))
-                    return true;
+        if (this.ortho && other.ortho) {
+            if (includeBorder)
+                return ((other.c[2].x >= this.c[0].x) &&
+                        (other.c[0].x <= this.c[2].x) &&
+                        (other.c[2].y >= this.c[0].y) &&
+                        (other.c[0].y <= this.c[2].y));
+            else
+                return ((other.c[2].x > this.c[0].x) &&
+                        (other.c[0].x < this.c[2].x) &&
+                        (other.c[2].y > this.c[0].y) &&
+                        (other.c[0].y < this.c[2].y));
         }
 
-        if (!other.ortho) {
-            for (int k = 0; k < 4; k++)
-                if (this.contains(other.c[k], includeBorder))
-                    return true;
+        if (this.ortho)
+            if (other.contains(this.rc, includeBorder))
+                return true;
+        if (other.ortho)
+            if (this.contains(other.rc, includeBorder))
+                return true;
+        for (int k = 0; k < 4; k++)
+            if (other.contains(this.c[k], includeBorder))
+                return true;
+        for (int k = 0; k < 4; k++)
+            if (this.contains(other.c[k], includeBorder))
+                return true;
+
+        if (!other.ortho)
             for (Coord2d checkPoint : other.checkPoints)
                 if (this.contains(checkPoint, includeBorder))
                     return true;
-        }
+        if (!this.ortho)
+            for (Coord2d checkPoint : this.checkPoints)
+                if (other.contains(checkPoint, includeBorder))
+                    return true;
 
         return false;
     }

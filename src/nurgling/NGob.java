@@ -108,9 +108,6 @@ public class NGob {
                             if (ca == null) {
                                 setDynamic();
                                 parent.addcustomol(new NModelBox(parent));
-                                //                            int as;
-//                            if(parent.id == 203677374)
-//                                as  = 21;
                                 if (!isDynamic)
                                     ca = new CellsArray(parent);
                             }

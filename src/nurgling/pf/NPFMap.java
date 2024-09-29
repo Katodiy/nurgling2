@@ -26,16 +26,6 @@ public class NPFMap
                     (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
                             ca.end.y >= begin.y && ca.end.y <= end.y))
             {
-                {
-                    // TODO КОСТЫЛЬ В ЦЕНТР
-                    Coord center = Utils.toPfGrid(gob.rc).sub(begin);
-                    if(center.x >= 0 && center.x <= end.x-begin.x && center.y >= 0 && center.y <= end.y-begin.y) {
-                        Cell c = cells[center.x][center.y];
-                        c.content.add(gob.id);
-                        c.val = 1;
-                    }
-                    // конец
-                }
                 for (int i = 0; i < ca.x_len; i++)
                     for (int j = 0; j < ca.y_len; j++)
                     {

@@ -25,8 +25,8 @@ public class CellsArray {
     public CellsArray(NHitBox hb, double angl, Coord2d rc) {
         NHitBoxD objToApproach = new NHitBoxD(hb.begin, hb.end, rc, angl);
         begin = Utils.toPfGrid(objToApproach.getCircumscribedUL());
-        NHitBoxD tile = new NHitBoxD(begin);
         end = Utils.toPfGrid(objToApproach.getCircumscribedBR());
+        NHitBoxD tile = new NHitBoxD(begin);
         x_len = end.x - begin.x + 1;
         y_len = end.y - begin.y + 1;
         cells = new short[x_len][y_len];
