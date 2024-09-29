@@ -3,6 +3,7 @@ package nurgling.overlays;
 
 import haven.*;
 import haven.render.*;
+import nurgling.NAlarmManager;
 import nurgling.NUtils;
 import nurgling.widgets.NQuestInfo;
 
@@ -44,6 +45,7 @@ public class NQuestTarget extends Sprite implements RenderTree.Node
                 new VertexArray.Buffer((4) * pfmt.inputs[0].stride, DataBuffer.Usage.STATIC,
                         DataBuffer.Filler.of(data)));
         this.emod = new Model(Model.Mode.TRIANGLE_FAN, va, null);
+        NAlarmManager.play( "alarm/quest");
     }
 
 
