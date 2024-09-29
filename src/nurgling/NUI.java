@@ -118,4 +118,9 @@ public class NUI extends UI
         }
         return id;
     }
+
+    public float getDeltaZ() {
+        return (float)Math.sin(tickId/10.)*1;
+    }
+
 }

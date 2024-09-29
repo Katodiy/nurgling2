@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import haven.Window;
 import nurgling.NConfig;
+import nurgling.NGItem;
 import nurgling.NStyle;
 import nurgling.NUtils;
 
@@ -49,7 +50,7 @@ public class NQuestInfo extends Widget
     HashMap<Condition.State,Targets> taskconds = new HashMap<Condition.State,Targets>();
     private Tex glowon = null;
     public static final AtomicInteger lastUpdate = new AtomicInteger(0);
-
+    private final Set<String> items = new HashSet<>();
     class Targets
     {
         ArrayList<Condition> conditions = new ArrayList<Condition>();
@@ -96,6 +97,7 @@ public class NQuestInfo extends Widget
         qgconds.clear();
         taskconds.clear();
         huntingT.clear();
+        items.clear();
         forageT.clear();
         for(Condition.State st: Condition.State.values()) {
             taskconds.put(st, new Targets());
@@ -104,8 +106,19 @@ public class NQuestInfo extends Widget
         for (NQuest quest : quests.values()) {
             boolean isReady = true;
             for (Condition cond : quest.conditions) {
+                Condition.QuestsGiver qg = null;
                 if (cond.state == Condition.State.TELL) {
                     quest.questGiver = ((Condition.QuestsGiver) cond.attrs.get(Condition.QuestsGiver.class)).name;
+                }
+                else if ((qg = ((Condition.QuestsGiver) cond.attrs.get(Condition.QuestsGiver.class)))!=null)
+                {
+                    if (!qgconds.containsKey(qg.name)) {
+                        qgconds.put(qg.name, new QuestGiver());
+                    }
+                }
+                if(cond.state == Condition.State.BRING && !cond.ready)
+                {
+                    items.add(((Condition.BringItem) cond.attrs.get(Condition.BringItem.class)).name);
                 }
                 if(!cond.ready) {
                     if (cond.state == Condition.State.KILL) {
@@ -149,19 +162,42 @@ public class NQuestInfo extends Widget
                     if (qgconds.containsKey(quest.questGiver)) {
                         qgconds.get(quest.questGiver).myConditions.add(cond);
                     }
+                    Condition.QuestsGiver qg = (Condition.QuestsGiver)cond.attrs.get(Condition.QuestsGiver.class);
+                    if(qg!=null && cond.state!= Condition.State.TELL)
+                    {
+                        qgconds.get(qg.name).otherConditions.add(cond);
+                    }
                 }
                 else
                 {
                     if(!(Boolean)NConfig.get(NConfig.Key.hidecredo))
                         credo.myConditions.add(cond);
                 }
-                if (cond.state == Condition.State.GREET) {
-                    String name = ((Condition.QuestsGiver) cond.attrs.get(Condition.QuestsGiver.class)).name;
-                    if (qgconds.containsKey(name)) {
-                        qgconds.get(name).otherConditions.add(cond);
+            }
+        }
+        for (String qname : qgconds.keySet()) {
+            QuestGiver qg = qgconds.get(qname);
+            HashSet<String> prop = new HashSet<>();
+            if(qg.completed!=0)
+            {
+                prop.add("tell");
+            }
+            for(Condition cond : qg.otherConditions) {
+                if(!cond.ready) {
+                    if (cond.state == Condition.State.BRING) {
+                        prop.add("bring");
+                    } else if (cond.state == Condition.State.GREET || cond.state == Condition.State.VISIT) {
+                        prop.add("greet");
+                    } else if (cond.state == Condition.State.RAGE) {
+                        prop.add("rage");
+                    } else if (cond.state == Condition.State.WAVE) {
+                        prop.add("wave");
+                    } else if (cond.state == Condition.State.LAUGH) {
+                        prop.add("laugh");
                     }
                 }
             }
+            setMarkersProp(qname, prop);
         }
         if (mode == Mode.QUESTGIVERS) {
             if(!credo.myConditions.isEmpty()) {
@@ -175,8 +211,18 @@ public class NQuestInfo extends Widget
                 QuestGiver qg = qgconds.get(qname);
                 if (!qg.myConditions.isEmpty()) {
                     imgs.add(new QuestImage(catimgsh(5, active_title.render(qname).img, numfnd1.render(String.format("($col[128,255,128]{%d}|$col[255,128,128]{%d})", qg.completed, qg.uncompleted)).img), qg.myConditions.get(0).questId));
-                } else
-                    imgs.add(new QuestImage(unactive_title.render(qname).img, -1));
+                } else {
+                    if (!qg.otherConditions.isEmpty()) {
+                        for (Condition cond : qg.otherConditions)
+                        {
+                            if(!cond.ready)
+                            {
+                                imgs.add(new QuestImage(unactive_title.render(qname).img, cond.questId));
+                                break;
+                            }
+                        }
+                    }
+                }
                 for (Condition cond : qg.myConditions) {
                     if (cond.state != Condition.State.TELL && !cond.ready)
                         imgs.add(new QuestImage(fnd1.render(cond.target).img, cond.questId));
@@ -418,6 +464,8 @@ public class NQuestInfo extends Widget
             if (target.contains("Bring"))
             {
                 this.state = State.BRING;
+                attrs.put(QuestsGiver.class, new QuestsGiver(target));
+                attrs.put(BringItem.class, new BringItem(target));
 //                bring_t.add(new Task(qid, c));
             }
             else if (target.contains("Pick"))
@@ -436,8 +484,23 @@ public class NQuestInfo extends Widget
             }
             else if (target.contains("Greet") || (target.contains("Visit") && !target.contains("cave")) || target.contains("wave") || target.contains("laugh") || target.contains("rage"))
             {
-                this.state = State.GREET;
                 attrs.put(QuestsGiver.class, new QuestsGiver(target));
+                if(target.contains("Greet") || (target.contains("Visit") && !target.contains("cave")))
+                {
+                    this.state = State.GREET;
+                }
+                else if(target.contains("wave"))
+                {
+                    this.state = State.WAVE;
+                }
+                else if(target.contains("laugh"))
+                {
+                    this.state = State.LAUGH;
+                }
+                else if(target.contains("rage"))
+                {
+                    this.state = State.RAGE;
+                }
             }
             else if (target.contains("Gain"))
             {
@@ -482,6 +545,27 @@ public class NQuestInfo extends Widget
                         name = info.substring(info.indexOf(" to ") + 4);
                     } else if (info.contains(" at ")) {
                         name = info.substring(info.indexOf(" at ") + 4);
+                    }
+                }
+            }
+        }
+
+        class BringItem
+        {
+            public String name = null;
+
+            public BringItem(String info) {
+                if( info.contains("Bring")){
+
+                    if(info.contains(" a ") || info.contains(" an ")) {
+                        if(info.contains(" a "))
+                            name = info.substring(info.indexOf(" a ") + 3, info.indexOf("to ") - 1);
+                        else
+                            name = info.substring(info.indexOf(" an ") + 4, info.indexOf("to ") - 1);
+                    }
+                    else
+                    {
+                        name = info.substring(6, info.indexOf("to ") - 1);
                     }
                 }
             }
@@ -574,5 +658,72 @@ public class NQuestInfo extends Widget
             return(c.cast(attr));
         }
 
+    }
+
+    public class MarkerInfo{
+        public String name;
+        public Coord2d coord;
+        public long seg;
+        public HashSet<String> prop;
+
+        public MarkerInfo(String name, Coord2d coord, long seg) {
+            this.name = name;
+            this.coord = coord;
+            this.seg = seg;
+        }
+    }
+
+    final static HashSet<MarkerInfo> markers = new HashSet<>();
+    public void addMarkerCoord(Coord2d tmp, String nm, long seg) {
+        synchronized (markers) {
+            for (MarkerInfo mi : markers) {
+                if (mi.name.equals(nm)) {
+                    mi.coord = tmp;
+                    mi.seg = seg;
+                    return;
+                }
+            }
+            markers.add(new MarkerInfo(nm, tmp, seg));
+        }
+        lastUpdate.set(lastUpdate.get()+1);
+    }
+
+    public static MarkerInfo getMarkerInfo(Gob gob)
+    {
+        synchronized (markers) {
+            for (MarkerInfo mi : markers) {
+                if (NUtils.getGameUI().mapfile.playerSegmentId() == mi.seg) {
+                    if (gob.rc.dist(mi.coord) < 1)
+                        return (mi);
+                }
+            }
+        }
+        return(null);
+    }
+
+    void setMarkersProp(String name, HashSet<String> props)
+    {
+        synchronized (markers) {
+            for (MarkerInfo mi : markers) {
+                if (mi.name.equals(name)) {
+                    mi.prop = props;
+                    return;
+                }
+            }
+            MarkerInfo mi = new MarkerInfo(name, null, -1);
+            mi.prop = props;
+            markers.add(mi);
+            lastUpdate.set(lastUpdate.get()+1);
+        }
+    }
+
+    public boolean isQuestedItem(NGItem item){
+        for(String name : items)
+        {
+            if(item.name()!=null && item.name().toLowerCase().contains(name))
+                return true;
+        }
+
+        return false;
     }
 }

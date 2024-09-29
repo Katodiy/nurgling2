@@ -37,6 +37,14 @@ import haven.MapFile.GridInfo;
 import haven.MapFile.Marker;
 import haven.MapFile.PMarker;
 import haven.MapFile.SMarker;
+import nurgling.NGob;
+import nurgling.NUtils;
+import nurgling.overlays.NQuestGiver;
+import nurgling.overlays.NQuestTarget;
+import nurgling.tools.Finder;
+import nurgling.tools.NAlias;
+import nurgling.tools.NParser;
+
 import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
 import static haven.MapView.getcc;
@@ -352,6 +360,13 @@ public class MiniMap extends Widget
 	    this.tip = Text.render(m.nm);
 	    if(marker instanceof PMarker)
 		this.hit = Area.sized(flagcc.inv(), UI.scale(flagbg.sz));
+		MiniMap.Location loc = NUtils.getGameUI().mapfile.view.sessloc;
+		if(NUtils.getGameUI().mapfile.playerSegmentId() == marker.seg && marker instanceof SMarker && NParser.checkName(((SMarker)marker).res.name,"small/bush","small/bumling")) {
+			{
+				Coord2d tmp = marker.tc.sub(loc.tc).mul(tilesz).add(tilesz.div(2));
+				NUtils.getGameUI().questinfo.addMarkerCoord(tmp,((SMarker)marker).nm,marker.seg);
+			}
+		}
 	}
 
 	public void draw(GOut g, Coord c) {

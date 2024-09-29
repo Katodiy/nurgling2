@@ -59,7 +59,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     private Coord makewndc = Utils.getprefc("makewndc", new Coord(400, 200));
     public Inventory maininv;
     public CharWnd chrwdg;
-    public MapWnd mapfile;
+    public NMapWnd mapfile;
     private Widget qqview;
     public BuddyWnd buddies;
     public final NZergwnd zerg;
@@ -598,7 +598,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		add(new NResizableWidget((mmapw = new NMiniMapWnd("MiniMap", (NMapView) map, file)), "minimap", new Coord(250, 250)));
 		mmap = mmapw.miniMap;
 		mmap.lower();
-		mapfile = new MapWnd(file, map, Utils.getprefc("wndsz-map", UI.scale(new Coord(700, 500))), "Map");
+		mapfile = new NMapWnd(file, map, Utils.getprefc("wndsz-map", UI.scale(new Coord(700, 500))), "Map");
 		mapfile.show(Utils.getprefb("wndvis-map", false));
 		add(mapfile, Utils.getprefc("wndc-map", new Coord(50, 50)));
 	    }

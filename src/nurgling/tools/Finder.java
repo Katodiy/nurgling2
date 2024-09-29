@@ -400,4 +400,25 @@ public class Finder
         return pos;
     }
 
+
+    public static Gob findGob (
+            Coord2d coord,
+            NAlias name
+    ) {
+        double length = 50000;
+        Gob result = null;
+        synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
+            for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
+                if ( gob != NUtils.getGameUI().map.player () ) {
+                            double dist = coord.dist(gob.rc);
+                            if (dist < length) {
+                                length = dist;
+                                result = gob;
+                            }
+                }
+            }
+        }
+        return result;
+    }
+
 }
