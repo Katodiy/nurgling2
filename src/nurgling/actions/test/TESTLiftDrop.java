@@ -28,8 +28,10 @@ public class TESTLiftDrop extends Test
     @Override
     public void body(NGameUI gui) throws InterruptedException
     {
+        long start =System.currentTimeMillis();
         NPFMap pfmap = new NPFMap(NUtils.player().rc.sub(new Coord2d(100,100)), NUtils.player().rc.add(new Coord2d(100,100)), 1);
         pfmap.build();
+        NUtils.getGameUI().msg("Build time in ms:" + String.valueOf(System.currentTimeMillis() - start));
         NPFMap.print(pfmap.getSize(), pfmap.getCells());
 //        new AutoEater().run(gui);
 //        NPFMap npf = new NPFMap(NUtils.player().rc, Finder.findGob(new NAlias("gfx/terobjs/trough")).rc, 2);

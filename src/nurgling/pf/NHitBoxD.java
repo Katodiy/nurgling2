@@ -108,10 +108,10 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
                 break;
 
             case 1:
-                c[0] = Coord2d.of(this.br.y, this.ul.x).add(rc);
-                c[1] = Coord2d.of(this.ul.y, this.ul.x).add(rc);
-                c[2] = Coord2d.of(this.ul.y, this.br.x).add(rc);
-                c[3] = Coord2d.of(this.br.y, this.br.x).add(rc);
+                c[0] = Coord2d.of(-this.br.y, this.ul.x).add(rc);
+                c[1] = Coord2d.of(-this.ul.y, this.ul.x).add(rc);
+                c[2] = Coord2d.of(-this.ul.y, this.br.x).add(rc);
+                c[3] = Coord2d.of(-this.br.y, this.br.x).add(rc);
                 break;
 
             case 2:
@@ -122,10 +122,10 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
                 break;
 
             case 3:
-                c[0] = Coord2d.of(-this.ul.y, -this.br.x).add(rc);
-                c[1] = Coord2d.of(-this.br.y, -this.br.x).add(rc);
-                c[2] = Coord2d.of(-this.br.y, -this.ul.x).add(rc);
-                c[3] = Coord2d.of(-this.ul.y, -this.ul.x).add(rc);
+                c[0] = Coord2d.of(this.ul.y, -this.br.x).add(rc);
+                c[1] = Coord2d.of(this.br.y, -this.br.x).add(rc);
+                c[2] = Coord2d.of(this.br.y, -this.ul.x).add(rc);
+                c[3] = Coord2d.of(this.ul.y, -this.ul.x).add(rc);
                 break;
         }
 
