@@ -15,6 +15,7 @@ public class NPFMap
     public CellsArray addGob(Gob gob) {
         CellsArray ca;
 
+
         if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player()!=null && gob.id!=NUtils.player().id && gob.getattr(Following.class) == null)
         {
             CellsArray old = new CellsArray(ca.x_len,ca.y_len);
@@ -28,7 +29,7 @@ public class NPFMap
                 {
                     // TODO КОСТЫЛЬ В ЦЕНТР
                     Coord center = Utils.toPfGrid(gob.rc).sub(begin);
-                    if(center.x>=begin.x && center.x<=end.x && center.y>=begin.y && center.y<=end.y) {
+                    if(center.x >= 0 && center.x <= end.x-begin.x && center.y >= 0 && center.y <= end.y-begin.y) {
                         Cell c = cells[center.x][center.y];
                         c.content.add(gob.id);
                         c.val = 1;
@@ -240,8 +241,11 @@ public class NPFMap
                     {
                         for (int j = size - 1; j >= 0; j--)
                         {
-                            if (cells[i][j].val == 1)
+                            if (cells[i][j].val == 1) {
                                 g.chcolor(Color.RED);
+                                g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
+                                continue;
+                            }
                             else if (cells[i][j].val == 0)
                                 g.chcolor(Color.GREEN);
                             else if (cells[i][j].val == 4)

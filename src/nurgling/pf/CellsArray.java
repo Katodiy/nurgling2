@@ -33,7 +33,7 @@ public class CellsArray {
         for (int i = 0; i < x_len; i++) {
             for (int j = 0; j < y_len; j++) {
                 tile.setUnitSquare(begin.add(i, j));
-                cells[i][j] = (tile.intersectsLoosely(objToApproach)) ? (short) 1 : 0;
+                cells[i][j] = (tile.intersects(objToApproach,false)) ? (short) 1 : 0;
             }
         }
     }

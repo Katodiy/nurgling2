@@ -83,7 +83,12 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     }
 
     public void setOrtho(Coord2d ul, Coord2d br, Coord2d r, int quarterTurns) {
-        if (r == null) rc = Coord2d.of((ul.x + br.x) / 2, (ul.y + br.y) / 2);
+        if (r == null)
+            rc = Coord2d.of((ul.x + br.x) / 2, (ul.y + br.y) / 2);
+        else {
+            rc.x = r.x;
+            rc.y = r.y;
+        }
         this.ul = Coord2d.of(Math.min(ul.x, br.x) - ((r == null) ? rc.x : 0), Math.min(ul.y, br.y) - ((r == null) ? rc.y : 0));
         this.br = Coord2d.of(Math.max(ul.x, br.x) - ((r == null) ? rc.x : 0), Math.max(ul.y, br.y) - ((r == null) ? rc.y : 0));
         move_ortho(rc, quarterTurns);
@@ -264,7 +269,7 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
         return br.sub(ul);
     }
 
-    public boolean contains(Coord2d c) {
+    public boolean containsSemiOpen(Coord2d c) {
         if (!ortho) {
             return (n[0].dot(c) >= d[0]) && (n[1].dot(c) > d[1]) && (n[2].dot(c) > d[2]) && (n[3].dot(c) >= d[3]);
         } else {
@@ -272,77 +277,51 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
         }
     }
 
-    public boolean containsGreedy(Coord2d c) {
+    public boolean contains(Coord2d c, boolean includeBorder) {
         if (!ortho) {
-            return (n[0].dot(c) >= d[0]) && (n[1].dot(c) >= d[1]) && (n[2].dot(c) >= d[2]) && (n[3].dot(c) >= d[3]);
+            if (includeBorder)
+                return (n[0].dot(c) >= d[0]) && (n[1].dot(c) >= d[1]) && (n[2].dot(c) >= d[2]) && (n[3].dot(c) >= d[3]);
+            else
+                return (n[0].dot(c) > d[0]) && (n[1].dot(c) > d[1]) && (n[2].dot(c) > d[2]) && (n[3].dot(c) > d[3]);
         } else {
-            return ((c.x >= this.c[0].x) && (c.y >= this.c[0].y) && (c.x <= this.c[2].x) && (c.y <= this.c[2].y));
+            if (includeBorder)
+                return ((c.x >= this.c[0].x) && (c.y >= this.c[0].y) && (c.x <= this.c[2].x) && (c.y <= this.c[2].y));
+            else
+                return ((c.x > this.c[0].x) && (c.y > this.c[0].y) && (c.x < this.c[2].x) && (c.y < this.c[2].y));
         }
     }
 
-    public boolean containsLoosely(Coord2d c) {
-        if (!ortho) {
-            return (n[0].dot(c) > d[0]) && (n[1].dot(c) > d[1]) && (n[2].dot(c) > d[2]) && (n[3].dot(c) > d[3]);
-        } else {
-            return ((c.x > this.c[0].x) && (c.y > this.c[0].y) && (c.x < this.c[2].x) && (c.y < this.c[2].y));
-        }
-    }
-
-
-    public boolean intersectsGreedy(NHitBoxD other) {
-        if (this.ortho) {
-            if (other.ortho)
-                return ((other.c[2].x >= this.c[0].x) &&
-                        (other.c[0].x <= this.c[2].x) &&
-                        (other.c[2].y >= this.c[0].y) &&
-                        (other.c[0].y <= this.c[2].y));
-        } else {
-            for (int k = 0; k < 4; k++)
-                if (other.containsGreedy(this.c[k]))
-                    return true;
-            for (Coord2d checkPoint : this.checkPoints)
-                if (other.containsGreedy(checkPoint))
-                    return true;
-        }
-
-        if (!other.ortho) {
-            for (int k = 0; k < 4; k++)
-                if (this.containsGreedy(other.c[k]))
-                    return true;
-            for (Coord2d checkPoint : other.checkPoints)
-                if (this.containsGreedy(checkPoint))
-                    return true;
-        }
-
-        return false;
-    }
-
-    public boolean intersectsLoosely(NHitBoxD other) {
+    public boolean intersects(NHitBoxD other, boolean includeBorder) {
         if (this.ortho) {
             if (other.ortho) {
-                return ((other.c[2].x > this.c[0].x) &&
-                        (other.c[0].x < this.c[2].x) &&
-                        (other.c[2].y > this.c[0].y) &&
-                        (other.c[0].y < this.c[2].y));
+                if (includeBorder)
+                    return ((other.c[2].x >= this.c[0].x) &&
+                            (other.c[0].x <= this.c[2].x) &&
+                            (other.c[2].y >= this.c[0].y) &&
+                            (other.c[0].y <= this.c[2].y));
+                else
+                    return ((other.c[2].x > this.c[0].x) &&
+                            (other.c[0].x < this.c[2].x) &&
+                            (other.c[2].y > this.c[0].y) &&
+                            (other.c[0].y < this.c[2].y));
             }
         } else {
             for (int k = 0; k < 4; k++)
-                if (other.containsLoosely(this.c[k]))
+                if (other.contains(this.c[k], includeBorder))
                     return true;
             for (Coord2d checkPoint : this.checkPoints)
-                if (other.containsLoosely(checkPoint))
+                if (other.contains(checkPoint, includeBorder))
                     return true;
         }
 
         if (!other.ortho) {
             for (int k = 0; k < 4; k++)
-                if (this.containsLoosely(other.c[k]))
+                if (this.contains(other.c[k], includeBorder))
                     return true;
             for (Coord2d checkPoint : other.checkPoints)
-                if (this.containsLoosely(checkPoint))
+                if (this.contains(checkPoint, includeBorder))
                     return true;
         }
-
 
         return false;
     }
