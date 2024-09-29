@@ -1565,7 +1565,7 @@ public class OptWnd extends Window {
 					}
 
 				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Enable criminal swimming when login") {
+				prev = add(new CheckBox("Enable swimming when login") {
 					{
 						a = (Boolean) NConfig.get(NConfig.Key.swimming);
 					}
