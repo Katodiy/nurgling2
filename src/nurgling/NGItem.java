@@ -7,11 +7,14 @@ import haven.res.ui.tt.slots.ISlots;
 import haven.res.ui.tt.stackn.StackName;
 import nurgling.iteminfo.NCuriosity;
 import nurgling.iteminfo.NFoodInfo;
+import nurgling.iteminfo.NQuestItem;
+import nurgling.widgets.NQuestInfo;
 
 public class NGItem extends GItem
 {
     public boolean isSearched = false;
     public boolean isQuested = false;
+    int lastQuestUpdate = 0;
     String name = null;
     public Float quality = null;
     public long meterUpdated = 0;
@@ -102,6 +105,12 @@ public class NGItem extends GItem
             {
                 name = StackName.getname(this);
             }
+
+        }
+        if(name!= null && lastQuestUpdate< NQuestInfo.lastUpdate.get())
+        {
+            isQuested = NUtils.getGameUI().questinfo.isQuestedItem(this);
+            lastQuestUpdate = NQuestInfo.lastUpdate.get();
         }
     }
 

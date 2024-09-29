@@ -308,4 +308,8 @@ public class NUtils
             gui.questinfo.addQuest(id);
         }
     }
+
+    public static float getDeltaZ() {
+        return getUI().getDeltaZ();
+    }
 }

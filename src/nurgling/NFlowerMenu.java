@@ -185,7 +185,7 @@ public class NFlowerMenu extends FlowerMenu
                 return true;
             }
         }
-        uimsg("cancel");
+        wdgmsg("cl", -1);
         return false;
     }
 }

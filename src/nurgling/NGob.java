@@ -13,6 +13,9 @@ import nurgling.widgets.NQuestInfo;
 
 import java.util.*;
 
+import static haven.MCache.cmaps;
+import static haven.MCache.tilesz;
+
 public class NGob {
     public NHitBox hitBox = null;
     public String name = null;
@@ -24,7 +27,7 @@ public class NGob {
     private boolean isGate = false;
     protected long modelAttribute = -1;
     final Gob parent;
-
+    public long seq;
     public int lastUpdate = 0;
     public Map<Class<? extends NAttrib>, NAttrib> nattr = new HashMap<Class<? extends NAttrib>, NAttrib>();
 
@@ -159,6 +162,11 @@ public class NGob {
         int nlu = NQuestInfo.lastUpdate.get();
         if (NQuestInfo.lastUpdate.get() > lastUpdate)
         {
+            NQuestInfo.MarkerInfo markerInfo;
+            if((markerInfo = NQuestInfo.getMarkerInfo(parent))!=null)
+            {
+                parent.addcustomol(new NQuestGiver(parent, markerInfo));
+            }
             if(NQuestInfo.isForageTarget(name))
             {
                 parent.addcustomol(new NQuestTarget(parent,false));
