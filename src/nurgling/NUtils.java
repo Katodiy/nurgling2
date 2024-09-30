@@ -193,6 +193,16 @@ public class NUtils
         getUI().core.addTask(new WaitLifted(gob));
     }
 
+    public static void attack(
+            Gob gob
+    )
+            throws InterruptedException {
+        getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "aggro");
+        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 1, 0, 0, (int) gob.id, gob.rc.floor(posres),
+                0, -1);
+        getUI().core.addTask(new WaitBattleWindow(gob.id));
+    }
+
     public static String getCursorName()
     {
         return NUtils.getUI().root.cursorRes;

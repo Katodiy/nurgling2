@@ -31,6 +31,8 @@ public class NQuestInfo extends Widget
     public NQuestInfo() {
         super();
         lastUpdate.set(0);
+        huntingT.clear();
+        forageT.clear();
         Widget prev = add(modebtn = new NMiniMapWnd.NMenuCheckBox("nurgling/hud/buttons/questmode", null, "Switch mode"), UI.scale(margin.x)/2, UI.scale(margin.y)/2).changed(a -> {mode = (mode == Mode.QUESTGIVERS?Mode.TASKS:Mode.QUESTGIVERS);needUpdate.set(true);});
         add(hidebtn = new NMiniMapWnd.NMenuCheckBox("nurgling/hud/buttons/eye", null, "Hide credo"), prev.pos("ur")).changed(a -> {NConfig.set(NConfig.Key.hidecredo,a);needUpdate.set(true);});
         hidebtn.a = (boolean) NConfig.get(NConfig.Key.hidecredo);
@@ -91,6 +93,11 @@ public class NQuestInfo extends Widget
         return false;
     }
 
+    @Override
+    public void dispose() {
+        markers.clear();
+        super.dispose();
+    }
 
     void update() {
         imgs.clear();
