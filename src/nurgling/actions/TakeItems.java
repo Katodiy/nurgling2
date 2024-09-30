@@ -35,6 +35,10 @@ public class TakeItems implements Action
             {
                 takeFromPile(left, gui,(Context.InputPile) input);
             }
+            else if (input instanceof Context.InputContainer)
+            {
+                //new TakeItemsFromContainer(input)
+            }
             if(left.get() == 0) {
                 return Results.SUCCESS();
             }

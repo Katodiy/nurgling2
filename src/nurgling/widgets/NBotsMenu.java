@@ -21,13 +21,18 @@ public class NBotsMenu extends Widget
         resources.elements.add(new NButton("pboards", new PrepareBoards()));
         resources.elements.add(new NButton("log", new TransferLog()));
         resources.elements.add(new NButton("clay", new ClayDigger()));
+        resources.elements.add(new NButton("bark", new CollectBark()));
+        resources.elements.add(new NButton("bough", new CollectBough()));
+        resources.elements.add(new NButton("leaf", new CollectLeaf()));
         addLayout(resources);
         NLayout productions = new NLayout("productions");
         productions.elements.add(new NButton("smelter", new SmelterAction()));
         productions.elements.add(new NButton("backer", new BackerAction()));
         productions.elements.add(new NButton("ugardenpot", new UnGardentPotAction()));
         addLayout(productions);
-
+        NLayout battle = new NLayout("battle");
+        battle.elements.add(new NButton("reagro", new Reagro()));
+        addLayout(battle);
         NLayout farming = new NLayout("farming");
         farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
         farming.elements.add(new NButton("hemp", new HempFarmer()));
@@ -256,7 +261,7 @@ public class NBotsMenu extends Widget
                     }
                     catch (InterruptedException e)
                     {
-                        NUtils.getGameUI().msg(path + ":" +"STOPPED");
+                        NUtils.getGameUI().msg(path + ":" + "STOPPED");
                     }
                     finally
                     {

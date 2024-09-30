@@ -84,6 +84,9 @@ public class Craft implements Action
            context.addTools(mwnd.tools);
         }
 
+        if(context.equip!=null)
+            new Equip(new NAlias(context.equip)).run(gui);
+
         int left = count;
         while (left>0)
         {
@@ -92,6 +95,8 @@ public class Craft implements Action
             {
                 new TakeItems(context, s.ing==null?s.name:s.ing.name, s.count * for_craft).run(gui);
             }
+
+
 
             new Drink(0.9).run(gui);
             if(context.workstation!=null)

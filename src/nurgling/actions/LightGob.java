@@ -40,6 +40,10 @@ public class LightGob implements Action
             }
             new PlaceObject(candelabrum, pos, 0).run(gui);
         }
+        else
+        {
+            return Results.FAIL();
+        }
         return Results.SUCCESS();
     }
 }

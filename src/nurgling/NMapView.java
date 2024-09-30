@@ -93,6 +93,11 @@ public class NMapView extends MapView
                 imgs.add(gob);
                 imgs.add(RichText.render(ttip.get("HitBox"), 0).img);
             }
+            if (ttip.get("dist") != null) {
+                BufferedImage gob = RichText.render(String.format("$col[255,128,105]{%s}:", "dist"), 0).img;
+                imgs.add(gob);
+                imgs.add(RichText.render(ttip.get("dist"), 0).img);
+            }
             if (ttip.get("isDynamic") != null) {
                 BufferedImage gob = RichText.render(String.format("$col[255,83,83]{%s}:", "isDynamic"), 0).img;
                 imgs.add(gob);
@@ -167,6 +172,8 @@ public class NMapView extends MapView
                             ttip.put("HitBox", gob.ngob.hitBox.toString());
                             ttip.put("isDynamic", String.valueOf(gob.ngob.isDynamic));
                         }
+                        ttip.put("dist", String.valueOf(gob.rc.dist(NUtils.player().rc)));
+                        ttip.put("Seg", String.valueOf(gob.ngob.seq));
                         ttip.put("rc" , gob.rc.toString());
                         if(!gob.ols.isEmpty()) {
                             StringBuilder ols = new StringBuilder();

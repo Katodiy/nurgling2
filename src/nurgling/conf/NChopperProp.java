@@ -20,6 +20,7 @@ public class NChopperProp implements JConf
     public boolean autorefill = false;
     public boolean ngrowth = false;
     public boolean stumps = false;
+    public boolean bushes = false;
 
     public NChopperProp(String username, String chrid) {
         this.username = username;
@@ -42,6 +43,8 @@ public class NChopperProp implements JConf
             ngrowth = (Boolean) values.get("ngrowth");
         if (values.get("stumps") != null)
             stumps = (Boolean) values.get("stumps");
+        if (values.get("bushes") != null)
+            bushes = (Boolean) values.get("bushes");
     }
 
     public static void set(NChopperProp prop)
@@ -87,6 +90,7 @@ public class NChopperProp implements JConf
         jchopper.put("autorefill", autorefill);
         jchopper.put("ngrowth", ngrowth);
         jchopper.put("stumps", stumps);
+        jchopper.put("bushes", bushes);
         return jchopper;
     }
 

@@ -96,6 +96,8 @@ public class NHitBox
             put("gfx/terobjs/stockpile-orange", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/map/squirrelcache", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/map/clamreef", new NHitBox(new Coord(-15, -15), new Coord(15, 15)));
+            put("gfx/terobjs/vehicle/wagon", new NHitBox(new Coord(-14,-8),new Coord(12,8)));
+            put("gfx/terobjs/dovecote", new NHitBox(new Coord(-7,-7),new Coord(7,7)));
         }
     };
     static NHitBox fromObstacle(Coord2d[][] p)
@@ -122,6 +124,8 @@ public class NHitBox
             return new NHitBox(new Coord(-5,-5),new Coord(5,5));
         else if(name.toLowerCase().startsWith("bar of"))
             return new NHitBox(new Coord(-5,-7),new Coord(5,7));
+        else if(name.toLowerCase().endsWith("leaf"))
+            return new NHitBox(new Coord(-5,-5),new Coord(5,5));
         return null;
     }
 

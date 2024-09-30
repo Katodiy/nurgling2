@@ -50,8 +50,14 @@ public class NConfig
         showGrid,
         showView,
         disableWinAnim,
-        crime, tracking, swimming, debug, claydiggerprop, miningol,
-        disableMenugridKeys
+        disableMenugridKeys,
+        crime,
+        tracking,
+        swimming,
+        debug,
+        claydiggerprop,
+        miningol,
+        hidecredo
     }
 
 
@@ -85,6 +91,7 @@ public class NConfig
         conf.put(Key.swimming,false);
         conf.put(Key.debug,false);
         conf.put(Key.disableMenugridKeys, true);
+        conf.put(Key.hidecredo,false);
 
     }
 

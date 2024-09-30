@@ -155,11 +155,11 @@ public class NMiniMap extends MiniMap implements Console.Directory {
             DisplayGrid dgrid = display[dgext.ri(c)];
             if(dgrid == null)
                 continue;
-//            for(NDisplayMarker mark : dgrid.markers(true)) {
-//                if(filter(mark))
-//                    continue;
-//                mark.draw(g, mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz), scale, ui, file, big);
-//            }
+            for(DisplayMarker mark : dgrid.markers(true)) {
+                if(filter(mark))
+                    continue;
+                mark.draw(g, mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz));
+            }
         }
     }
 

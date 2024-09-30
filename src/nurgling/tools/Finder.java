@@ -376,7 +376,7 @@ public class Finder
                 if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
                     if(gob.ngob.hitBox != null && gob.getattr(Following.class)==null  && gob.id!= NUtils.player().id){
                         NHitBoxD gobBox = new NHitBoxD(gob);
-                        if (gobBox.intersectsGreedy(chekerOfArea))
+                        if (gobBox.intersects(chekerOfArea,true))
                             significantGobs.add(gobBox);
                 }
             }
@@ -391,13 +391,34 @@ public class Finder
                 boolean passed = true;
                 NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, area.a.add(i,j),0);
                 for ( NHitBoxD significantHitbox : significantGobs )
-                    if(significantHitbox.intersectsLoosely(testGobBox))
+                    if(significantHitbox.intersects(testGobBox,false))
                         passed = false;
                 if(passed)
                     return Coord2d.of(testGobBox.rc.x, testGobBox.rc.y);
             }
         }
         return pos;
+    }
+
+
+    public static Gob findGob (
+            Coord2d coord,
+            NAlias name
+    ) {
+        double length = 50000;
+        Gob result = null;
+        synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
+            for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
+                if ( gob != NUtils.getGameUI().map.player () ) {
+                            double dist = coord.dist(gob.rc);
+                            if (dist < length) {
+                                length = dist;
+                                result = gob;
+                            }
+                }
+            }
+        }
+        return result;
     }
 
 }

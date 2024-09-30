@@ -44,6 +44,7 @@ public class Context {
     static HashMap<String, String> equip_map;
     static {
         equip_map = new HashMap<>();
+        equip_map.put("gfx/invobjs/small/fryingpan", "Frying Pan");
     }
 
     static HashMap<String, Workstation> workstation_map;

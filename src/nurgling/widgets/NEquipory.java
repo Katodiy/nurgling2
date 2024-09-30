@@ -97,6 +97,8 @@ public class NEquipory extends Equipory
                 if (((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content() == null || NParser.checkName(((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content().name(), content))
                     return quickslots[Slots.HAND_RIGHT.idx];
             }
+        }
+        if (quickslots[Slots.HAND_LEFT.idx] != null) {
             if (NParser.checkName("Bucket", ((NGItem) quickslots[Slots.HAND_LEFT.idx].item).name())) {
                 if (((NGItem) quickslots[Slots.HAND_LEFT.idx].item).content() == null || NParser.checkName(((NGItem) quickslots[Slots.HAND_LEFT.idx].item).content().name(), content))
                     return quickslots[Slots.HAND_LEFT.idx];

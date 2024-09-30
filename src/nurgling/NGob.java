@@ -9,8 +9,12 @@ import nurgling.nattrib.*;
 import nurgling.overlays.*;
 import nurgling.pf.*;
 import nurgling.tools.*;
+import nurgling.widgets.NQuestInfo;
 
 import java.util.*;
+
+import static haven.MCache.cmaps;
+import static haven.MCache.tilesz;
 
 public class NGob {
     public NHitBox hitBox = null;
@@ -23,7 +27,8 @@ public class NGob {
     private boolean isGate = false;
     protected long modelAttribute = -1;
     final Gob parent;
-
+    public long seq;
+    public int lastUpdate = 0;
     public Map<Class<? extends NAttrib>, NAttrib> nattr = new HashMap<Class<? extends NAttrib>, NAttrib>();
 
     public NGob(Gob parent) {
@@ -37,6 +42,12 @@ public class NGob {
         }
         if (a instanceof Following) {
             isDynamic = true;
+        }
+
+        if (a instanceof GobIcon)
+        {
+            GobIcon gi = (GobIcon) a;
+            String name = gi.icon().name();
         }
 
         if (a instanceof Drawable) {
@@ -147,6 +158,24 @@ public class NGob {
     public void tick(double dt) {
         for (NAttrib attrib : nattr.values()) {
             attrib.tick(dt);
+        }
+        int nlu = NQuestInfo.lastUpdate.get();
+        if (NQuestInfo.lastUpdate.get() > lastUpdate)
+        {
+            NQuestInfo.MarkerInfo markerInfo;
+            if((markerInfo = NQuestInfo.getMarkerInfo(parent))!=null)
+            {
+                parent.addcustomol(new NQuestGiver(parent, markerInfo));
+            }
+            if(NQuestInfo.isForageTarget(name))
+            {
+                parent.addcustomol(new NQuestTarget(parent,false));
+            }
+            else if(NQuestInfo.isHuntingTarget(name))
+            {
+                parent.addcustomol(new NQuestTarget(parent,true));
+            }
+            lastUpdate = nlu;
         }
     }
 

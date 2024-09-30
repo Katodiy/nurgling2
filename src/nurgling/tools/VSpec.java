@@ -29,6 +29,7 @@ public class VSpec
         ArrayList<JSONObject> onions = new ArrayList<>();
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/yellowonion\",\"name\":\"Yellow Onion\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/redonion\",\"name\":\"Red Onion\"}"));
+        onions.add(new JSONObject("{\"static\":\"gfx/invobjs/small/leek\",\"name\":\"Leek\",\"x\":2,\"y\":1}"));
         categories.put("Onion", onions);
 
 
@@ -47,9 +48,12 @@ public class VSpec
         salads.add(new JSONObject("{\"static\":\"gfx/invobjs/beetleaves\",\"name\":\"Beetroot Leaves\"}"));
         salads.add(new JSONObject("{\"static\":\"gfx/invobjs/lettuceleaf\",\"name\":\"Lettuce Leaf\"}"));
 
+        ArrayList<JSONObject> eggs = new ArrayList<>();
+        eggs.add(new JSONObject("{\"static\":\"gfx/invobjs/egg-chicken\",\"name\":\"Chicken Egg\"}"));
+
         categories.put("Salad Greens", salads);
         categories.put("Crop Seeds", new ArrayList<>());
-        categories.put("Egg", new ArrayList<>());
+        categories.put("Egg", eggs);
         categories.put("Raw", new ArrayList<>());
         categories.put("Edible Mushroom", new ArrayList<>());
         categories.put("Solid Fat", new ArrayList<>());

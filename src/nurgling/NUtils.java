@@ -94,6 +94,13 @@ public class NUtils
         return fnf.getResult();
     }
 
+    public static NFlowerMenu findFlowerMenu() throws InterruptedException
+    {
+        FindOrWaitNFlowerMenu fnf = new FindOrWaitNFlowerMenu();
+        getUI().core.addTask(fnf);
+        return fnf.getResult();
+    }
+
     public static NArea getArea(int id)
     {
         return getGameUI().map.glob.map.areas.get(id);
@@ -184,6 +191,21 @@ public class NUtils
         getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 1, 0, 0, (int) gob.id, gob.rc.floor(posres),
                 0, -1);
         getUI().core.addTask(new WaitLifted(gob));
+    }
+
+    public static void attack(
+            Gob gob
+    )
+            throws InterruptedException {
+        getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "aggro");
+        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 1, 0, 0, (int) gob.id, gob.rc.floor(posres),
+                0, -1);
+        getUI().core.addTask(new WaitBattleWindow(gob.id));
+    }
+
+    public static String getCursorName()
+    {
+        return NUtils.getUI().root.cursorRes;
     }
 
     public static void dig()
@@ -280,4 +302,30 @@ public class NUtils
         NUtils.getUI().core.addTask(task);
     }
 
+    public static void setQuestConds(int id, Object... args)
+    {
+        NGameUI gui = getGameUI();
+        if(gui!=null)
+        {
+            gui.questinfo.updateConds(id, args);
+        }
+    }
+
+    public static void removeQuest(int id) {
+        NGameUI gui = getGameUI();
+        if(gui!=null) {
+            gui.questinfo.removeQuest(id);
+        }
+    }
+
+    public static void addQuest(int id) {
+        NGameUI gui = getGameUI();
+        if(gui!=null) {
+            gui.questinfo.addQuest(id);
+        }
+    }
+
+    public static float getDeltaZ() {
+        return getUI().getDeltaZ();
+    }
 }

@@ -32,6 +32,8 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import static haven.LoginScreen.authmech;
+
 public class Bootstrap implements UI.Receiver, UI.Runner {
     public static final Config.Variable<String> authuser = Config.Variable.prop("haven.authuser", null);
     public static final Config.Variable<String> authserv = Config.Variable.prop("haven.authserv", null);
@@ -163,7 +165,16 @@ public class Bootstrap implements UI.Receiver, UI.Runner {
 
     public UI.Runner run(UI ui) throws InterruptedException {
 	ui.setreceiver(this);
-	ui.newwidgetp(1, ($1, $2) -> new NLoginScreen(hostname), 0, new Object[] {Coord.z});
+	switch(authmech.get()) {
+		case "native":
+			ui.newwidgetp(1, ($1, $2) -> new NLoginScreen(hostname), 0, new Object[] {Coord.z});
+			break;
+		case "steam":
+			ui.newwidgetp(1, ($1, $2) -> new LoginScreen(hostname), 0, new Object[] {Coord.z});
+			break;
+		default:
+			throw(new RuntimeException("Unknown authmech: " + authmech.get()));
+	}
 	String loginname = getpref("loginname", "");
 	boolean savepw = false;
 	String authserver = (authserv.get() == null) ? hostname : authserv.get();

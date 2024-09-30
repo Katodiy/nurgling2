@@ -15,6 +15,7 @@ public class NPFMap
     public CellsArray addGob(Gob gob) {
         CellsArray ca;
 
+
         if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player()!=null && gob.id!=NUtils.player().id && gob.getattr(Following.class) == null)
         {
             CellsArray old = new CellsArray(ca.x_len,ca.y_len);
@@ -25,16 +26,6 @@ public class NPFMap
                     (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
                             ca.end.y >= begin.y && ca.end.y <= end.y))
             {
-                {
-                    // TODO КОСТЫЛЬ В ЦЕНТР
-                    Coord center = Utils.toPfGrid(gob.rc).sub(begin);
-                    if(center.x>=begin.x && center.x<=end.x && center.y>=begin.y && center.y<=end.y) {
-                        Cell c = cells[center.x][center.y];
-                        c.content.add(gob.id);
-                        c.val = 1;
-                    }
-                    // конец
-                }
                 for (int i = 0; i < ca.x_len; i++)
                     for (int j = 0; j < ca.y_len; j++)
                     {
@@ -45,7 +36,8 @@ public class NPFMap
                             old.cells[i][j] = cells[ii][jj].val;
                             if(ca.cells[i][j]!=0)
                             {
-                                cells[ii][jj].val = ca.cells[i][j];
+                                if(cells[ii][jj].val!=1)
+                                    cells[ii][jj].val = ca.cells[i][j];
                                 cells[ii][jj].content.add(gob.id);
                             }
                         }
@@ -239,8 +231,11 @@ public class NPFMap
                     {
                         for (int j = size - 1; j >= 0; j--)
                         {
-                            if (cells[i][j].val == 1)
+                            if (cells[i][j].val == 1) {
                                 g.chcolor(Color.RED);
+                                g.frect(new Coord(i * UI.scale(10), j * UI.scale(10)).add(deco.contarea().ul), csz);
+                                continue;
+                            }
                             else if (cells[i][j].val == 0)
                                 g.chcolor(Color.GREEN);
                             else if (cells[i][j].val == 4)

@@ -153,6 +153,19 @@ public class Partyview extends Widget {
 	super.wdgmsg(sender, msg, args);
     }
 
+    private void updsteam() {
+	Steam api = Steam.get();
+	if(api != null)
+	    api.setparty(Integer.toString(party.id), party.memb.size());
+    }
+
+    public void destroy() {
+	super.destroy();
+	Steam api = Steam.get();
+	if(api != null)
+	    api.setparty(null, 0);
+    }
+
     public void uimsg(String msg, Object... args) {
 	if(msg == "list") {
 	    Map<Long, Member> nmemb = new HashMap<>(), cmemb = party.memb;
@@ -164,6 +177,7 @@ public class Partyview extends Widget {
 		nmemb.put(id, m);
 	    }
 	    party.memb = nmemb;
+	    updsteam();
 	} else if(msg == "ldr") {
 	    party.leader = party.memb.get(Utils.uiv(args[0]));
 	} else if(msg == "m") {
@@ -179,6 +193,7 @@ public class Partyview extends Widget {
 	    }
 	} else if(msg == "pid") {
 	    party.id = Utils.iv(args[0]);
+	    updsteam();
 	} else {
 	    super.uimsg(msg, args);
 	}

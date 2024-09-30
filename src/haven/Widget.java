@@ -44,6 +44,7 @@ public class Widget {
     public boolean canactivate = false, cancancel = false;
     public Widget focused;
     public Indir<Resource> cursor = null;
+    public String cursorRes = "gfx/hud/curs/arw";
     public Object tooltip = null;
     public KeyMatch gkey;
     public KeyBinding kb_gkey;
@@ -695,8 +696,10 @@ public class Widget {
 	} else if(msg == "curs") {
 	    if(args.length == 0)
 		cursor = null;
-	    else
-		cursor = Resource.remote().load((String)args[0], Utils.iv(args[1]));
+	    else {
+			cursorRes = (String) args[0];
+			cursor = Resource.remote().load((String) args[0], Utils.iv(args[1]));
+		}
 	} else if(msg == "tip") {
 	    int a = 0;
 	    Object tt = args[a++];
@@ -891,6 +894,11 @@ public class Widget {
 	return(false);
     }
 
+    public Widget setgkey(KeyMatch gkey) {
+	this.gkey = gkey;
+	return(this);
+    }
+	
     public Widget setgkey(KeyBinding gkey) {
 	kb_gkey = gkey;
 	if((tooltip == null) && (kb_gkey != null))
