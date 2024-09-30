@@ -49,24 +49,23 @@ public class NBotsMenu extends Widget
         addLayout(utils);
         if(NUtils.getUI().core.debug)
         {
-            NLayout tests = new NLayout("tools");
-            tests.elements.add(new NButton("test1", new TESTLiftDrop()));
-            tests.elements.add(new NButton("test4", new TESTbranchinvtransferpacks()));
-            tests.elements.add(new NButton("test5", new TESTtakehanddporop()));
-            tests.elements.add(new NButton("test7", new TESTselectfloweraction()));
-            tests.elements.add(new NButton("test8", new TESTpf()));
-//            tests.elements.add(new NButton("chop", new TESTfindallchest()));
-            tests.elements.add(new NButton("test9", new NomadWalker()));
-            tests.elements.add(new NButton("calibrator", new NomadCalibration()));
+            NLayout tests = new NLayout("utils");
+            tests.elements.add(new NButton("shieldsword", new TESTLiftDrop()));
+            tests.elements.add(new NButton("shieldsword", new TESTbranchinvtransferpacks()));
+            tests.elements.add(new NButton("shieldsword", new TESTtakehanddporop()));
+            tests.elements.add(new NButton("shieldsword", new TESTselectfloweraction()));
+            tests.elements.add(new NButton("shieldsword", new TESTpf()));
+            tests.elements.add(new NButton("shieldsword", new NomadWalker()));
+            tests.elements.add(new NButton("shieldsword", new NomadCalibration()));
             addLayout(tests);
-            NLayout nords = new NLayout("toolsNords");
-            nords.elements.add(new NButton("nomadCalibrator", new NomadCalibration() ));
-            nords.elements.add(new NButton("nomadWalker", new NomadWalker() ));
-            nords.elements.add(new NButton("nomadSailor", new NomadSailor() ));
-            nords.elements.add(new NButton("oysterCollector", new NomadOisterer("./oyster1.dat") ));
-            nords.elements.add(new NButton("oysterCollector", new NomadOisterer("./oyster2.dat") ));
-            nords.elements.add(new NButton("test1", new OisterFounder() ));
-            nords.elements.add(new NButton("test1", new NomadOistererSnekkja("./oyster1.dat") ));
+            NLayout nords = new NLayout("utils");
+            nords.elements.add(new NButton("shieldsword", new NomadCalibration() ));
+            nords.elements.add(new NButton("shieldsword", new NomadWalker() ));
+            nords.elements.add(new NButton("shieldsword", new NomadSailor() ));
+            nords.elements.add(new NButton("shieldsword", new NomadOisterer("./oyster1.dat") ));
+            nords.elements.add(new NButton("shieldsword", new NomadOisterer("./oyster2.dat") ));
+            nords.elements.add(new NButton("shieldsword", new OisterFounder() ));
+            nords.elements.add(new NButton("shieldsword", new NomadOistererSnekkja("./oyster1.dat") ));
             addLayout(nords);
 
         }
