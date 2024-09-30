@@ -26,7 +26,6 @@ public class NAlarmManager {
 //        alarms.put(NGob.Tags.troll,"alarm/troll");
 //        alarms.put(NGob.Tags.looserock,"alarm/looserock");
 
-
     }
 
     private static String last = null;

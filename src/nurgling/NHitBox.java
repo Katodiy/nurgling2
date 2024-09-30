@@ -95,6 +95,7 @@ public class NHitBox
             put("gfx/terobjs/trees/driftwood2", new NHitBox(new Coord(-10,-2),new Coord(10,2)));
             put("gfx/terobjs/stockpile-orange", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/map/squirrelcache", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
+            put("gfx/terobjs/dovecote", new NHitBox(new Coord(-7,-7),new Coord(7,7)));
         }
     };
     static NHitBox fromObstacle(Coord2d[][] p)
