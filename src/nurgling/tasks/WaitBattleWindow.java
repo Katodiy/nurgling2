@@ -8,7 +8,7 @@ import java.util.LinkedList;
 
 public class WaitBattleWindow implements NTask
 {
-    public WaitBattleWindow(long id)
+    public WaitBattleWindow(long id, boolean noWait)
     {
         this.id = id;
     }
@@ -20,10 +20,11 @@ public class WaitBattleWindow implements NTask
 
     long id;
 
-
+    int counter = 0;
     @Override
     public boolean check()
     {
+        counter++;
         if(id==-1)
         {
             return !NUtils.getGameUI().fv.lsrel.isEmpty();
@@ -35,6 +36,10 @@ public class WaitBattleWindow implements NTask
                 if(rel.gobid == id)
                     return true;
             }
+        }
+        if(counter>=30)
+        {
+           return true;
         }
         return false;
     }

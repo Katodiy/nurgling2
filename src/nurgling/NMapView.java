@@ -2,6 +2,8 @@ package nurgling;
 
 import haven.*;
 import static haven.MCache.tilesz;
+
+import haven.render.*;
 import nurgling.areas.*;
 import nurgling.overlays.map.*;
 import nurgling.tools.*;
@@ -63,6 +65,9 @@ public class NMapView extends MapView
                 imgs.add(gob);
                 imgs.add(RichText.render(ttip.get("gob"), 0).img);
             }
+                BufferedImage mc = RichText.render(String.format("$col[128,128,255]{%s}:", "MouseCoord"), 0).img;
+                imgs.add(mc);
+                imgs.add(RichText.render(getLCoord().toString(), 0).img);
             if (ttip.get("rc") != null) {
                 BufferedImage gob = RichText.render(String.format("$col[128,128,128]{%s}:", "Coord"), 0).img;
                 imgs.add(gob);
@@ -329,6 +334,24 @@ public class NMapView extends MapView
             }
         }
         return super.mousedown(c, button);
+    }
+
+    private Coord lastCoord = null;
+    private Coord2d lastCoord2d = new Coord2d();
+    @Override
+    public void mousemove(Coord c) {
+        lastCoord = c;
+        super.mousemove(c);
+    }
+
+    public Coord2d getLCoord() {
+        new Maptest(lastCoord){
+            public void hit(Coord pc, Coord2d mc) {
+                lastCoord2d.x = mc.x;
+                lastCoord2d.y = mc.y;
+            }
+        }.run();
+        return lastCoord2d;
     }
 
     public class NSelector extends Selector

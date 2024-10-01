@@ -31,6 +31,9 @@ public class NBotsMenu extends Widget
         addLayout(productions);
         NLayout battle = new NLayout("battle");
         battle.elements.add(new NButton("reagro", new Reagro()));
+        battle.elements.add(new NButton("attacknearcurs", new AggroNearCurs()));
+        battle.elements.add(new NButton("attacknear", new AggroNearest()));
+        battle.elements.add(new NButton("attacknearborka", new AggroNearestBorka()));
         addLayout(battle);
         NLayout farming = new NLayout("farming");
         farming.elements.add(new NButton("turnip", new TurnipsFarmer()));

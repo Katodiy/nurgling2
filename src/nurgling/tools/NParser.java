@@ -21,6 +21,15 @@ public class NParser
                 return true;
             }
         }
+        if(regEx.keys.isEmpty())
+        {
+            for (String ex : regEx.exceptions) {
+                if (name.toLowerCase().contains(ex.toLowerCase())) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
         return false;
     }

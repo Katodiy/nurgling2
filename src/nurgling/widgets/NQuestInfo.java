@@ -647,11 +647,14 @@ public class NQuestInfo extends Widget
                         bufname = "cattle";
                     else if (bufname.contains("horse"))
                         bufname = "horse/horse";
-                    if (info.contains("Raid a")) {
+                    else if (info.contains("Raid a")) {
                         if (bufname.contains("bird"))
                             bufname = "nest";
                         else
                             bufname = "anthill";
+                    }
+                    else {
+                        bufname += "kritter/";
                     }
                 }
                 name = (bufname.replaceAll("\\s+", "")).replaceAll("'+", "");

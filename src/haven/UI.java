@@ -54,7 +54,7 @@ public class UI {
 	public final LinkedList<Grab> mousegrab = new LinkedList<Grab>();
     protected final Map<Integer, Widget> widgets = new TreeMap<Integer, Widget>();
     protected final Map<Widget, Integer> rwidgets = new HashMap<Widget, Integer>();
-    Environment env;
+    public Environment env;
     public Receiver rcvr;
     public Coord mc = Coord.z, lcc = Coord.z;
     public Session sess;

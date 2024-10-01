@@ -10,6 +10,8 @@ import nurgling.tasks.WaitAnyEscaper;
 import nurgling.tasks.WaitBattleWindow;
 import nurgling.tasks.WaitRelationState;
 import nurgling.tools.Finder;
+import nurgling.tools.NAlias;
+import nurgling.tools.NParser;
 
 import java.util.ArrayList;
 
@@ -36,8 +38,8 @@ public class Reagro implements Action {
             if(wae.getEscaper()!=-1)
             {
                 Gob escaper = Finder.findGob(wae.getEscaper());
-                if (escaper != null && escaper.rc.dist(NUtils.player().rc) < 200) {
-                    NUtils.attack(escaper);
+                if (escaper != null && escaper.pose()!= null && !NParser.checkName(escaper.pose(), new NAlias("dead", "knock")) &&  escaper.rc.dist(NUtils.player().rc) < 200) {
+                    NUtils.attack(escaper, false);
                 }
             }
 

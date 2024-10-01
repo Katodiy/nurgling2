@@ -15,7 +15,7 @@ public class Buddy extends GAttrib implements InfoPart {
     public final Info info;
     private int bseq = -1;
     private BuddyWnd bw = null;
-    private BuddyWnd.Buddy b = null;
+    public BuddyWnd.Buddy b = null;
     private int rgrp;
     private String rnm;
 

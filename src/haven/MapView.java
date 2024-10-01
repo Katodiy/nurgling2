@@ -1431,7 +1431,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
     private ClickLocation<Texture.Image<Texture2D>> clickloc;
     private DepthBuffer<Texture.Image<Texture2D>> clickdepth;
     private Pipe.Op curclickbasic;
-    private Pipe.Op clickbasic(Coord sz) {
+    protected Pipe.Op clickbasic(Coord sz) {
 	if((curclickbasic == null) || !clickid.image.tex.sz().equals(sz)) {
 	    if(clickid != null) {
 		clickid.image.tex.dispose();
