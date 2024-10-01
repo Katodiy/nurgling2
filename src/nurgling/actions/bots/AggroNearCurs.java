@@ -27,7 +27,7 @@ public class AggroNearCurs implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         Coord2d lc = ((NMapView)NUtils.getGameUI().map).getLCoord();
-        Gob target = Finder.findGob(lc, new NAlias("kritter"),new NAlias(new ArrayList<String>(),new ArrayList<>(Arrays.asList("dead", "knock"))),200);
+        Gob target = Finder.findGob(lc, new NAlias(new ArrayList<>(Arrays.asList("kritter")), new ArrayList<>(Arrays.asList("horse"))),new NAlias(new ArrayList<String>(),new ArrayList<>(Arrays.asList("dead", "knock"))),200);
         if(target!=null) {
             NUtils.attack(target, false);
             if(!NParser.checkName(NUtils.getCursorName(), "arw")) {

@@ -252,13 +252,15 @@ public class Finder
                         if(poses!=null) {
                             if (gob.pose() != null) {
                                 if (NParser.checkName(gob.pose(), poses)) {
+                                    if(gob.rc.dist(coord2d)<dist)
                                         result.add(gob);
                                 }
                             }
                         }
                         else
                         {
-                            result.add(gob);
+                            if(gob.rc.dist(coord2d)<dist)
+                                result.add(gob);
                         }
                     }
                 }

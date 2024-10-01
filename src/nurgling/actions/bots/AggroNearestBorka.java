@@ -23,8 +23,7 @@ public class AggroNearestBorka implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        Coord2d lc = ((NMapView)NUtils.getGameUI().map).getLCoord();
-        ArrayList<Gob> cands = Finder.findGobs(lc, new NAlias("borka"),new NAlias(new ArrayList<String>(),new ArrayList<>(Arrays.asList("dead", "knock"))),2000);
+        ArrayList<Gob> cands = Finder.findGobs(NUtils.player().rc, new NAlias("borka"),new NAlias(new ArrayList<String>(),new ArrayList<>(Arrays.asList("dead", "knock"))),2000);
         ArrayList<Gob> targets = new ArrayList<>();
         for(Gob gob: cands) {
             Buddy buddy = gob.getattr(Buddy.class);
