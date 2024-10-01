@@ -2,6 +2,7 @@ package nurgling.actions.bots;
 
 import haven.Coord;
 import haven.Coord2d;
+import haven.Fightview;
 import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.NMapView;
@@ -25,9 +26,20 @@ public class AttackAll implements Action {
         ArrayList<Gob> cands = Finder.findGobs(NUtils.player().rc, new NAlias(new ArrayList<>(Arrays.asList("kritter")), new ArrayList<>(Arrays.asList("horse"))),new NAlias(new ArrayList<String>(),new ArrayList<>(Arrays.asList("dead", "knock"))),140);
         gui.msg(String.valueOf(cands.size()));
         for(Gob target : cands) {
-            if (target != null) {
-                NUtils.attack(target, false);
+            boolean isFound = false;
+            if(gui.fv!=null && gui.fv.lsrel!=null) {
+                for (Fightview.Relation rel : gui.fv.lsrel)
+                {
+                    if(target.id == rel.gobid) {
+                        isFound = true;
+                        break;
+                    }
+                }
             }
+            if(!isFound)
+                if (target != null) {
+                    NUtils.attack(target, false);
+                }
         }
         if (!NParser.checkName(NUtils.getCursorName(), "arw")) {
             NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 3, 0);

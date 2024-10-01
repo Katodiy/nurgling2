@@ -2,6 +2,7 @@ package nurgling.actions.bots;
 
 import haven.Coord;
 import haven.Coord2d;
+import haven.Fightview;
 import haven.Gob;
 import haven.res.ui.obj.buddy.Buddy;
 import nurgling.NGameUI;
@@ -31,14 +32,36 @@ public class AggroNearestBorka implements Action {
             {
                 if(!NUtils.getUI().sess.glob.party.memb.containsKey(gob.id))
                 {
-                    targets.add(gob);
+                    boolean isFound = false;
+                    if(gui.fv!=null && gui.fv.lsrel!=null) {
+                        for (Fightview.Relation rel : gui.fv.lsrel)
+                        {
+                            if(gob.id == rel.gobid) {
+                                isFound = true;
+                                break;
+                            }
+                        }
+                    }
+                    if(!isFound)
+                        targets.add(gob);
                 }
             }
             else
             {
                 if(buddy.b.group!=1)
                 {
-                    targets.add(gob);
+                    boolean isFound = false;
+                    if(gui.fv!=null && gui.fv.lsrel!=null) {
+                        for (Fightview.Relation rel : gui.fv.lsrel)
+                        {
+                            if(gob.id == rel.gobid) {
+                                isFound = true;
+                                break;
+                            }
+                        }
+                    }
+                    if(!isFound)
+                        targets.add(gob);
                 }
             }
         }
