@@ -346,8 +346,8 @@ public class NQuestInfo extends Widget
 
     AtomicBoolean needUpdate = new AtomicBoolean(false);
 
-    static final HashSet<String> huntingT = new HashSet<>();
-    static final HashSet<String> forageT = new HashSet<>();
+    public static final HashSet<String> huntingT = new HashSet<>();
+    public static final HashSet<String> forageT = new HashSet<>();
 
     @Override
     public void tick(double dt) {
