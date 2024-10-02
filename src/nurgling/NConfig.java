@@ -42,12 +42,22 @@ public class NConfig
         cowsprop,
         goatsprop,
         chopperprop,
+        prepblockprop,
+        prepboardprop,
         sheepsprop,
         pigsprop,
         discordNotification,
         showGrid,
+        disableMenugridKeys,
         showView,
-        disableMenugridKeys
+        disableWinAnim,
+        crime,
+        tracking,
+        swimming,
+        debug,
+        claydiggerprop,
+        miningol,
+        hidecredo
     }
 
 
@@ -74,6 +84,14 @@ public class NConfig
         conf.put(Key.showGrid, false);
         conf.put(Key.showView, false);
         conf.put(Key.disableMenugridKeys, true);
+        conf.put(Key.disableWinAnim, true);
+        conf.put(Key.baseurl," https://raw.githubusercontent.com/Katodiy/nurgling-release/master/ver");
+        conf.put(Key.miningol,true);
+        conf.put(Key.crime,false);
+        conf.put(Key.tracking,false);
+        conf.put(Key.swimming,false);
+        conf.put(Key.debug,false);
+        conf.put(Key.hidecredo,false);
 
     }
 
@@ -169,6 +187,15 @@ public class NConfig
                         break;
                     case "NChopperProp":
                         res.add(new NChopperProp(obj));
+                        break;
+                    case "NPrepBProp":
+                        res.add(new NPrepBlocksProp(obj));
+                        break;
+                    case "NPrepBoardProp":
+                        res.add(new NPrepBoardsProp(obj));
+                        break;
+                    case "NClayDiggerProp":
+                        res.add(new NClayDiggerProp(obj));
                         break;
                 }
             }

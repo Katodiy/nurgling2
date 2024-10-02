@@ -54,6 +54,8 @@ public abstract class Sprite implements RenderTree.Node {
 	public Random mkrandoom() {return(owner.mkrandoom());}
 	public <T> T context(Class<T> cl) {return(owner.context(cl));}
 
+	Owner owner(){return owner;}
+
 	public Resource getres() {return(res);}
 
 	public String toString() {

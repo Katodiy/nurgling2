@@ -952,4 +952,7 @@ public class MapWnd extends Window implements Console.Directory {
     public Map<String, Console.Command> findcmds() {
 	return(cmdmap);
     }
+
+
+
 }

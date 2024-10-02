@@ -1,69 +1,61 @@
 package nurgling.actions;
 
 import haven.Coord;
-import haven.Gob;
 import haven.Inventory;
 import haven.WItem;
-import nurgling.NGameUI;
-import nurgling.NISBox;
-import nurgling.NInventory;
-import nurgling.NUtils;
+import nurgling.*;
+import nurgling.areas.NArea;
 import nurgling.tasks.WaitItems;
-import nurgling.tasks.WaitItemsFromPile;
-import nurgling.tools.Context;
+import nurgling.tools.Container;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.TreeMap;
 
 public class TakeItemsFromContainer implements Action
 {
-    NInventory inv;
-    Context.Container cont;
-
-    int took = 0;
-
-    int target_size = Integer.MAX_VALUE;
-
     Coord target_coord = new Coord(1,1);
-
-    String name;
-    public TakeItemsFromContainer(Context.Container cont, String name, int th)
+    Container cont;
+    HashSet<String> names;
+    public TakeItemsFromContainer(Container cont, HashSet<String> names)
     {
         this.cont = cont;
-        this.name = name;
+        this.names = names;
     }
 
+    boolean took = false;
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NInventory inv = gui.getInventory(cont.cap);
-        WItem item = inv.getItem(name);
-        if (item != null) {
-            target_coord = inv.getItem(name).sz.div(Inventory.sqsz);
-            int oldSpace = gui.getInventory().getItems(name).size();
-            ArrayList<WItem> items = gui.getInventory(cont.cap).getItems(name);
-            if (target_size != Integer.MAX_VALUE) {
-                target_size =Math.min(Math.min(target_size, gui.getInventory().getNumberFreeCoord(target_coord)),items.size());
-            } else {
-                target_size = Math.min(gui.getInventory().getNumberFreeCoord(target_coord),items.size());
-            }
+        for(String name: names) {
+            WItem item = inv.getItem(name);
+            if (item != null) {
+                TreeMap<Integer, NArea> aras = NArea.findOuts(new NAlias(name));
+
+                target_coord = inv.getItem(name).sz.div(Inventory.sqsz);
+                int oldSpace = gui.getInventory().getItems(name).size();
+                ArrayList<WItem> items = gui.getInventory(cont.cap).getItems(name,aras.firstEntry().getKey());
+                int target_size = Math.min(gui.getInventory().getNumberFreeCoord(target_coord), items.size());
 
 
-            for (int i = 0; i < target_size; i++) {
-                items.get(i).item.wdgmsg("transfer", Coord.z);
+                for (int i = 0; i < target_size; i++) {
+                    items.get(i).item.wdgmsg("transfer", Coord.z);
+                }
+                WaitItems wi = new WaitItems(gui.getInventory(), new NAlias(name), oldSpace + target_size);
+                NUtils.getUI().core.addTask(wi);
+                cont.update();
+                if(items.size()>target_size) {
+                    took = false;
+                    return Results.FAIL();
+                }
             }
-            WaitItems wi = new WaitItems(gui.getInventory(), new NAlias(name), oldSpace + target_size);
-            NUtils.getUI().core.addTask(wi);
-            took = target_size;
-            items = inv.getItems(name);
-//            if(items.isEmpty())
-//                cont.itemInfo.remove(name);
-//            else
-//                cont.itemInfo.put(name, items.size());
         }
+        took = true;
         return Results.SUCCESS();
     }
 
-    public int getResult()
+    public boolean getResult()
     {
         return took;
     }

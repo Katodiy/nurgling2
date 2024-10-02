@@ -102,14 +102,15 @@ public class NLoginScreen extends LoginScreen
 
         if (sender == this && !msgMode)
         {
-            if (!login.pass.text().isEmpty())
+            Credbox clogin = (Credbox) login;
+            if (!clogin.pass.text().isEmpty())
             {
-                saveLoginPass(login.user.text(), login.pass.text());
+                saveLoginPass(clogin.user.text(), clogin.pass.text());
             }
             else
             {
                 if (args[0] != null && args[0] instanceof AuthClient.TokenCred) ;
-                saveLoginToken(login.user.text(), ((AuthClient.TokenCred) args[0]).token);
+                saveLoginToken(clogin.user.text(), ((AuthClient.TokenCred) args[0]).token);
             }
         }
         super.wdgmsg(sender, msg, args);
@@ -201,7 +202,7 @@ public class NLoginScreen extends LoginScreen
         if (logpass != null)
             for (NLoginData item : logpass)
             {
-                if (item.name.equals(login.user.text()))
+                if (item.name.equals(((Credbox)login).user.text()))
                 {
                     logpass.remove(item);
                     NConfig.set(NConfig.Key.credentials, logpass);

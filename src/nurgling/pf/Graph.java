@@ -268,6 +268,7 @@ public class Graph implements Runnable
                         Coord2d fsdir = second.sub(first);
                         Coord2d center = fsdir.div(2).add(first);
                         int hlen = (int) Math.ceil(fsdir.len() / 2);
+                        //TODO remake with beam box
                         NHitBox hb = new NHitBox(new Coord(-hlen,-2 ), new Coord(hlen, 2));
                         ArrayList<Coord> data;
                         if ((data = map.checkCA(new CellsArray(hb, fsdir.curAngle(), center))).isEmpty()) {
@@ -290,7 +291,7 @@ public class Graph implements Runnable
                                     {
                                         Gob g = Finder.findGob(id);
                                         if(g!=null) {
-                                            if (hbd.intersectsGreedy(new NHitBoxD(g.ngob.hitBox.begin, g.ngob.hitBox.end, g.rc, g.a))) {
+                                            if (hbd.intersects(new NHitBoxD(g.ngob.hitBox.begin, g.ngob.hitBox.end, g.rc, g.a),true)) {
                                                 isFree = false;
                                                 break;
                                             }

@@ -64,7 +64,11 @@ public class StaticSprite extends Sprite {
 	Collection<RenderTree.Node> rl = new LinkedList<>();
 	for(FastMesh.MeshRes mr : res.layers(FastMesh.MeshRes.class)) {
 	    if((mr.mat != null) && ((mr.id < 0) || (((1 << mr.id) & fl) != 0)))
-		rl.add(mr.mat.get().apply(mr.m));
+		rl.add(mr.mat.get((owner instanceof RecOwner
+				&& ((RecOwner)(owner)).owner() instanceof Gob
+				&& ((Gob) ((RecOwner)(owner)).owner()).ngob!=null
+				&& ((Gob) ((RecOwner)(owner)).owner()).ngob.customMask)?
+				((Gob) ((RecOwner)(owner)).owner()).ngob.mask():fl).apply(mr.m));
 	}
 	for(RenderLink.Res lr : res.layers(RenderLink.Res.class)) {
 	    if((lr.id < 0) || (((1 << lr.id) & fl) != 0))

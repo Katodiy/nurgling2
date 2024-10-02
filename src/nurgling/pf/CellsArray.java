@@ -25,15 +25,15 @@ public class CellsArray {
     public CellsArray(NHitBox hb, double angl, Coord2d rc) {
         NHitBoxD objToApproach = new NHitBoxD(hb.begin, hb.end, rc, angl);
         begin = Utils.toPfGrid(objToApproach.getCircumscribedUL());
-        NHitBoxD tile = new NHitBoxD(begin);
         end = Utils.toPfGrid(objToApproach.getCircumscribedBR());
+        NHitBoxD tile = new NHitBoxD(begin);
         x_len = end.x - begin.x + 1;
         y_len = end.y - begin.y + 1;
         cells = new short[x_len][y_len];
         for (int i = 0; i < x_len; i++) {
             for (int j = 0; j < y_len; j++) {
-                tile.move(begin.add(i, j));
-                cells[i][j] = (tile.intersectsLoosely(objToApproach)) ? (short) 1 : 0;
+                tile.setUnitSquare(begin.add(i, j));
+                cells[i][j] = (tile.intersects(objToApproach,false)) ? (short) 1 : 0;
             }
         }
     }

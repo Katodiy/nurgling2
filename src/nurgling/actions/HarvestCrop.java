@@ -57,8 +57,8 @@ public class HarvestCrop implements Action{
         }
         if (barrel == null)
             return Results.ERROR("No barrel for seed");
-        if (trough == null)
-            return Results.ERROR("No trough for seed");
+//        if (trough == null)
+//            return Results.ERROR("No trough for seed");
 
         TransferToBarrel tb;
         (tb = new TransferToBarrel(barrel, iseed)).run(gui);
@@ -73,7 +73,7 @@ public class HarvestCrop implements Action{
 
         boolean revdir = rev;
 
-        while (!Finder.findGobs(field, crop, stage).isEmpty() || !Finder.findGobs(field, new NAlias("plants/fallowplant"), 0).isEmpty() ) {
+        while (!Finder.findGobs(field, crop, stage).isEmpty() || !Finder.findGobs(field, new NAlias("gfx/terobjs/plants/fallowplant"), 0).isEmpty() ) {
                 if (!rev) {
                     while (pos.x >= field.getArea().ul.x) {
                         AtomicBoolean setDir = new AtomicBoolean(true);

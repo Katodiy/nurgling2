@@ -54,7 +54,7 @@ public class UI {
 	public final LinkedList<Grab> mousegrab = new LinkedList<Grab>();
     protected final Map<Integer, Widget> widgets = new TreeMap<Integer, Widget>();
     protected final Map<Widget, Integer> rwidgets = new HashMap<Widget, Integer>();
-    Environment env;
+    public Environment env;
     public Receiver rcvr;
     public Coord mc = Coord.z, lcc = Coord.z;
     public Session sess;
@@ -669,7 +669,22 @@ public class UI {
 	    h.msg(msg, color, sfx);
     }
 
+	private String lastError = null;
+
+	public void dropLastError()
+	{
+		lastError = null;
+	}
+
+	public String getLastError()
+	{
+		String forSend = lastError;
+		lastError = null;
+		return forSend;
+	}
+
     public void error(String msg) {
+	lastError = msg;
 	msg(msg, new Color(192, 0, 0), MessageWidget.errsfx);
     }
 

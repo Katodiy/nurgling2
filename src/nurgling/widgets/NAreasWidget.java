@@ -60,18 +60,18 @@ public class NAreasWidget extends Window
             public void click()
             {
                 super.click();
-                if(al.sel!=null)
+                if(al.sel!=null && csl.sel!=null)
                 {
                     for(NArea.Specialisation s: al.sel.area.spec)
                     {
-                        if(s.name.equals(csl.sel.item.name)) {
+                        if(csl.sel.item!=null && s.name.equals(csl.sel.item.name)) {
                             al.sel.area.spec.remove(s);
                             break;
                         }
                     }
                     for(SpecialisationItem item : specItems)
                     {
-                        if(item.item.name.equals(csl.sel.item.name))
+                        if(csl.sel.item!=null && item.item.name.equals(csl.sel.item.name))
                         {
                             specItems.remove(item);
                             break;
@@ -272,10 +272,11 @@ public class NAreasWidget extends Window
 
     public void loadSpec(int id)
     {
-        specItems.clear();
-        for (NArea.Specialisation spec : NUtils.getArea(id).spec)
-        {
-            specItems.add(new SpecialisationItem(spec));
+        if(NUtils.getArea(id)!=null) {
+            specItems.clear();
+            for (NArea.Specialisation spec : NUtils.getArea(id).spec) {
+                specItems.add(new SpecialisationItem(spec));
+            }
         }
     }
     private ConcurrentHashMap<Integer, AreaItem> areas = new ConcurrentHashMap<>();

@@ -64,6 +64,11 @@ public class SelectFlowerAction implements Action
             NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
             return Results.SUCCESS();
         }
-        return Results.ERROR("NO OPT:" + opt);
+        else
+        {
+            NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
+            return Results.ERROR("NO OPT:" + opt);
+        }
+
     }
 }

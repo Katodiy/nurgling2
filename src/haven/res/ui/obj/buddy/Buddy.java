@@ -5,14 +5,17 @@ import haven.*;
 import haven.render.*;
 import java.util.*;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.image.BufferedImage;
+import static haven.PUtils.*;
 
-@haven.FromResource(name = "ui/obj/buddy", version = 3)
+@haven.FromResource(name = "ui/obj/buddy", version = 4)
 public class Buddy extends GAttrib implements InfoPart {
     public final int id;
     public final Info info;
     private int bseq = -1;
     private BuddyWnd bw = null;
-    private BuddyWnd.Buddy b = null;
+    public BuddyWnd.Buddy b = null;
     private int rgrp;
     private String rnm;
 
@@ -55,7 +58,7 @@ public class Buddy extends GAttrib implements InfoPart {
 	    b = bw.find(id);
 	if(b != null) {
 	    Color col = BuddyWnd.gc[rgrp = b.group];
-	    cmp.add(Utils.outline2(Text.std.render(rnm = b.name, col).img, Utils.contrast(col)), Coord.z);
+	    cmp.add(InfoPart.rendertext(rnm = b.name, col), Coord.z);
 	}
 	this.b = b;
     }

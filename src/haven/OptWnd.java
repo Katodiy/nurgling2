@@ -818,6 +818,11 @@ public class OptWnd extends Window {
 	y = main.add(new PButton(UI.scale(200), "Nurgling settings", 'k', noptwnd), 0, y).pos("bl").adds(0, 5).y;
 	y += UI.scale(60);
 	if(gopts) {
+	    if((SteamStore.steamsvc.get() != null) && (Steam.get() != null)) {
+		y = main.add(new Button(UI.scale(200), "Visit store", false).action(() -> {
+			    SteamStore.launch(ui.sess);
+		}), 0, y).pos("bl").adds(0, 5).y;
+	    }
 	    y = main.add(new Button(UI.scale(200), "Switch character", false).action(() -> {
 			getparent(GameUI.class).act("lo", "cs");
 	    }), 0, y).pos("bl").adds(0, 5).y;
@@ -1539,6 +1544,62 @@ public class OptWnd extends Window {
 
 					public void set(boolean val) {
 						NConfig.set(NConfig.Key.disableMenugridKeys, val);
+						a = val;
+					}
+
+				}, prev.pos("bl").adds(0, 5));
+				prev = add(new CheckBox("Show mining overlay") {
+					{
+						a = (Boolean) NConfig.get(NConfig.Key.miningol);
+					}
+
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.miningol, val);
+						a = val;
+					}
+
+				}, prev.pos("bl").adds(0, 5));
+				prev = add(new CheckBox("Enable tracking when login") {
+					{
+						a = (Boolean) NConfig.get(NConfig.Key.tracking);
+					}
+
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.tracking, val);
+						a = val;
+					}
+
+				}, prev.pos("bl").adds(0, 5));
+				prev = add(new CheckBox("Enable criminal acting when login") {
+					{
+						a = (Boolean) NConfig.get(NConfig.Key.crime);
+					}
+
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.crime, val);
+						a = val;
+					}
+
+				}, prev.pos("bl").adds(0, 5));
+				prev = add(new CheckBox("Enable swimming when login") {
+					{
+						a = (Boolean) NConfig.get(NConfig.Key.swimming);
+					}
+
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.swimming, val);
+						a = val;
+					}
+
+				}, prev.pos("bl").adds(0, 5));
+				prev = add(new CheckBox("DEBUG") {
+					{
+						a = (Boolean) NConfig.get(NConfig.Key.debug);
+					}
+
+					public void set(boolean val) {
+						NConfig.set(NConfig.Key.debug, val);
+						NUtils.getUI().core.debug = val;
 						a = val;
 					}
 

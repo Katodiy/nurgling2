@@ -5,6 +5,8 @@ import haven.*;
 import haven.Frame;
 import haven.Label;
 import static haven.Inventory.*;
+
+import haven.render.Render;
 import haven.res.lib.itemtex.*;
 import nurgling.*;
 import nurgling.actions.bots.*;
@@ -51,7 +53,7 @@ public class NMakewindow extends Widget {
         private Object[] rawinfo;
         private List<ItemInfo> info;
 
-        Ingredient ing = null;
+        public Ingredient ing = null;
 
         public Spec(Indir<Resource> res, Message sdt, int num, Object[] info) {
             this.res = res;
@@ -167,6 +169,12 @@ public class NMakewindow extends Widget {
                 {
                     categories = (VSpec.categories.get(name)!=null);
                 }
+                for(Spec s : inputs) {
+                    if(s.categories && s.ing!=null)
+                    {
+                        s.ing.logistic = (NArea.findIn(s.ing.name) != null);
+                    }
+                }
             }
         }
 
@@ -193,6 +201,8 @@ public class NMakewindow extends Widget {
                 s.spr.tick(dt);
             s.tick(dt);
         }
+        if(cat!=null)
+            cat.tick(dt);
     }
 
     @Override
@@ -670,9 +680,9 @@ public class NMakewindow extends Widget {
 
     Categories cat = null;
 
-    class Ingredient{
+    public class Ingredient{
         BufferedImage img;
-        String name;
+        public String name;
         boolean logistic;
 
         public Ingredient(JSONObject obj)
@@ -794,11 +804,11 @@ public class NMakewindow extends Widget {
         @Override
         public void tick(double dt)
         {
-            super.tick(dt);
             for(Ingredient ing: data)
             {
                 ing.tick(dt);
             }
+            super.tick(dt);
         }
     }
 }

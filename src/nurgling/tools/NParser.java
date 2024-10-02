@@ -21,7 +21,26 @@ public class NParser
                 return true;
             }
         }
+        if(regEx.keys.isEmpty())
+        {
+            for (String ex : regEx.exceptions) {
+                if (name.toLowerCase().contains(ex.toLowerCase())) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
+        return false;
+    }
+
+    public static boolean checkName(
+            final NAlias name,
+            final NAlias regEx
+    ) {
+        if (regEx != null && name != null) {
+            return (regEx.keys.containsAll(name.keys)) && (regEx.exceptions.containsAll(name.exceptions));
+        }
         return false;
     }
 
@@ -59,5 +78,13 @@ public class NParser
     public static boolean isIt(Gob.Overlay ol, NAlias name)
     {
         return (ol.spr instanceof StaticSprite && ((StaticSprite)ol.spr).res!=null && NParser.checkName(((StaticSprite)ol.spr).res.name,name));
+    }
+
+    public static boolean isIt(Coord pltc, NAlias name) {
+            Resource res_beg = NUtils.getGameUI().ui.sess.glob.map.tilesetr(NUtils.getGameUI().ui.sess.glob.map.gettile(pltc));
+            if (res_beg != null) {
+                return checkName(res_beg.name, name);
+            }
+            return false;
     }
 }

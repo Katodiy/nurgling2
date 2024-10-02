@@ -112,6 +112,38 @@ public class Finder
         return result;
     }
 
+    public static ArrayList<Coord2d> findTilesInArea (
+            NAlias name,
+            Pair<Coord2d,Coord2d> area_rc
+    ) {
+        ArrayList<Coord2d> result = new ArrayList<> ();
+        boolean rev = false;
+        for ( double x = area_rc.a.x ; x < area_rc.b.x ; x += 11 ) {
+            ArrayList<Coord2d> line = new ArrayList<> ();
+            for ( double y = area_rc.a.y ; y < area_rc.b.y ; y += 11 ) {
+                Coord pltc = ( new Coord2d ( ( x ) / 11, ( y ) / 11 ) ).floor ();
+
+                if ( NParser.isIt ( pltc, name ) ) {
+                    line.add ( new Coord2d ( x, y ) );
+                }
+            }
+            if(rev)
+            {
+                for(int i = line.size()-1; i >= 0; i--)
+                {
+                    result.add( line.get(i) );
+                }
+            }
+            else
+            {
+                result.addAll(line);
+            }
+            rev = !rev;
+
+        }
+        return result;
+    }
+
     public static ArrayList<Gob> findGobs(Area area, NAlias name) throws InterruptedException
     {
         Coord2d b = area.ul.mul(MCache.tilesz);
@@ -196,8 +228,50 @@ public class Finder
     public static Gob findGob(NAlias name) throws InterruptedException
     {
         NUtils.getUI().core.addTask(new FindPlayer());
+        return findGob(NUtils.player().rc, name, null, 10000);
+    }
+
+    public static Gob findGob(Coord2d coord2d, NAlias name, NAlias poses, double dist) throws InterruptedException
+    {
         Gob result = null;
-        double dist = 10000;
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
+                {
+                    if (NParser.isIt(gob, name) && NUtils.player() != null && gob.id!=NUtils.player().id)
+                    {
+                        if(poses!=null) {
+                            if (gob.pose() != null) {
+                                if (NParser.checkName(gob.pose(), poses)) {
+                                    double new_dist;
+                                    if ((new_dist = gob.rc.dist(coord2d)) < dist) {
+                                        dist = new_dist;
+                                        result = gob;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            double new_dist;
+                            if ((new_dist = gob.rc.dist(coord2d)) < dist) {
+                                dist = new_dist;
+                                result = gob;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public static ArrayList<Gob> findGobs(Coord2d coord2d, NAlias name, NAlias poses, double dist) throws InterruptedException
+    {
+
+        ArrayList<Gob> result = new ArrayList<>();
         synchronized (NUtils.getGameUI().ui.sess.glob.oc)
         {
             for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
@@ -206,11 +280,18 @@ public class Finder
                 {
                     if (NParser.isIt(gob, name) && NUtils.player() != null)
                     {
-                        double new_dist;
-                        if ((new_dist = gob.rc.dist(NUtils.player().rc)) < dist)
+                        if(poses!=null) {
+                            if (gob.pose() != null) {
+                                if (NParser.checkName(gob.pose(), poses)) {
+                                    if(gob.rc.dist(coord2d)<dist)
+                                        result.add(gob);
+                                }
+                            }
+                        }
+                        else
                         {
-                            dist = new_dist;
-                            result = gob;
+                            if(gob.rc.dist(coord2d)<dist)
+                                result.add(gob);
                         }
                     }
                 }
@@ -375,7 +456,7 @@ public class Finder
                 if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
                     if(gob.ngob.hitBox != null && gob.getattr(Following.class)==null  && gob.id!= NUtils.player().id){
                         NHitBoxD gobBox = new NHitBoxD(gob);
-                        if (gobBox.intersectsGreedy(chekerOfArea))
+                        if (gobBox.intersects(chekerOfArea,true))
                             significantGobs.add(gobBox);
                 }
             }
@@ -390,7 +471,7 @@ public class Finder
                 boolean passed = true;
                 NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, area.a.add(i,j),0);
                 for ( NHitBoxD significantHitbox : significantGobs )
-                    if(significantHitbox.intersectsLoosely(testGobBox))
+                    if(significantHitbox.intersects(testGobBox,false))
                         passed = false;
                 if(passed)
                     return Coord2d.of(testGobBox.rc.x, testGobBox.rc.y);

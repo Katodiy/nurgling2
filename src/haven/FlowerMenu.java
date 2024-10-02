@@ -228,6 +228,11 @@ public class FlowerMenu extends Widget {
 	return(true);
     }
 
+	public void close()
+	{
+		new Cancel();
+	}
+
     public void uimsg(String msg, Object... args) {
 	if(msg == "cancel") {
 	    new Cancel();

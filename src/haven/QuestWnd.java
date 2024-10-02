@@ -26,6 +26,9 @@
 
 package haven;
 
+import nurgling.NGameUI;
+import nurgling.NUtils;
+
 import java.util.*;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -243,6 +246,7 @@ public class QuestWnd extends Widget {
 
 	    public void uimsg(String msg, Object... args) {
 		if(msg == "conds") {
+			NUtils.setQuestConds(id,args);
 		    int a = 0;
 		    List<Condition> ncond = new ArrayList<Condition>(args.length);
 		    while(a < args.length) {
@@ -702,19 +706,26 @@ public class QuestWnd extends Widget {
 			q.done = st;
 			q.mtime = mtime;
 			if(((fst == Quest.QST_PEND) || (fst == Quest.QST_DISABLED)) &&
-			   !((st == Quest.QST_PEND) || (st == Quest.QST_DISABLED)))
-			    q.done(getparent(GameUI.class));
+			   !((st == Quest.QST_PEND) || (st == Quest.QST_DISABLED))) {
+				q.done(getparent(GameUI.class));
+				NUtils.removeQuest(id);
+			}
 		    }
 		    QuestList nl = ((q.done == Quest.QST_PEND) || (q.done == Quest.QST_DISABLED)) ? cqst : dqst;
 		    if(nl != cl) {
 			if(cl != null)
 			    cl.remove(q);
 			nl.add(q);
+			if(nl!=dqst)
+			{
+				NUtils.addQuest(id);
+			}
 		    }
 		    nl.loading = true;
 		} else {
 		    cqst.remove(id);
 		    dqst.remove(id);
+			NUtils.removeQuest(id);
 		}
 	    }
 	} else {

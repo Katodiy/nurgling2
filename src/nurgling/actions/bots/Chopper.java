@@ -40,7 +40,7 @@ public class Chopper implements Action {
         {
             return Results.ERROR("No config");
         }
-        if((!prop.stumps || prop.shovel==null) || (prop.tool == null))
+        if((prop.stumps && prop.shovel==null) || (prop.tool == null))
         {
             return Results.ERROR("Not set required tools");
         }
@@ -49,6 +49,15 @@ public class Chopper implements Action {
         (insa = new SelectArea()).run(gui);
         NAlias pattern = prop.stumps ? new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log","oldtrunk"))) :
                 new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log", "oldtrunk", "stump")));
+
+        if(!prop.bushes)
+        {
+            pattern.exceptions.add("bushes");
+        }
+        else
+        {
+            pattern.keys.add("gfx/terobjs/bushes");
+        }
         ArrayList<Gob> trees;
         while (!(trees = Finder.findGobs(insa.getRCArea(),pattern)).isEmpty()) {
             trees.sort(NUtils.d_comp);
@@ -74,10 +83,12 @@ public class Chopper implements Action {
 
             while (Finder.findGob(tree.id) != null) {
                 if (NParser.isIt(tree, new NAlias("stump"))) {
-                    new Equip(new NAlias(prop.shovel)).run(gui);
+                    if(!new Equip(new NAlias(prop.shovel)).run(gui).IsSuccess())
+                        return Results.ERROR("Equipment not found: " + prop.shovel);
                     new Destroy(tree,"gfx/borka/shoveldig").run(gui);
                 } else {
-                    new Equip(new NAlias(prop.tool)).run(gui);
+                    if(!new Equip(new NAlias(prop.tool)).run(gui).IsSuccess())
+                        return Results.ERROR("Equipment not found: " + prop.tool);
                     new SelectFlowerAction("Chop", tree).run(gui);
                     NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/treechop"));
                 }

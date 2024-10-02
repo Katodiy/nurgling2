@@ -5,8 +5,11 @@ import haven.*;
 import haven.render.*;
 import java.util.*;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.image.BufferedImage;
+import static haven.PUtils.*;
 
-@haven.FromResource(name = "ui/obj/buddy", version = 3)
+@haven.FromResource(name = "ui/obj/buddy", version = 4)
 public class Info extends GAttrib implements RenderTree.Node, PView.Render2D {
     public final List<InfoPart> parts = new ArrayList<>();
     private Tex rend = null;

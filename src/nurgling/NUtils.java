@@ -94,6 +94,13 @@ public class NUtils
         return fnf.getResult();
     }
 
+    public static NFlowerMenu findFlowerMenu() throws InterruptedException
+    {
+        FindOrWaitNFlowerMenu fnf = new FindOrWaitNFlowerMenu();
+        getUI().core.addTask(fnf);
+        return fnf.getResult();
+    }
+
     public static NArea getArea(int id)
     {
         return getGameUI().map.glob.map.areas.get(id);
@@ -186,6 +193,30 @@ public class NUtils
         getUI().core.addTask(new WaitLifted(gob));
     }
 
+    public static void attack(
+            Gob gob, boolean noTask
+    )
+            throws InterruptedException {
+        getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "aggro");
+        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 1, 0, 0, (int) gob.id, gob.rc.floor(posres),
+                0, -1);
+        if(!noTask)
+            getUI().core.addTask(new WaitBattleWindow(gob.id, noTask));
+    }
+
+    public static String getCursorName()
+    {
+        return NUtils.getUI().root.cursorRes;
+    }
+
+    public static void dig()
+            throws InterruptedException {
+        getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "dig");
+        NUtils.addTask(new GetCurs("dig"));
+        getGameUI().map.wdgmsg("click", Coord.z, player().rc.floor(posres), 1, 0);
+//        getUI().core.addTask(new WaitLifted(gob));
+    }
+
     public static void place(Gob gob, Coord2d coord2d, double a) throws InterruptedException {
         NUtils.activateGob(gob);
         getUI().core.addTask(new WaitPlob());
@@ -258,5 +289,44 @@ public class NUtils
             }
         }
         return 0;
+    }
+
+    public static void drop(WItem item) throws InterruptedException {
+        item.item.wdgmsg("drop", item.sz, getGameUI().map.player().rc, 0);
+    }
+
+    public static void itemact(WItem item) throws InterruptedException {
+        item.item.wdgmsg ( "itemact", 0 );
+    }
+
+    public static void addTask(NTask task) throws InterruptedException {
+        NUtils.getUI().core.addTask(task);
+    }
+
+    public static void setQuestConds(int id, Object... args)
+    {
+        NGameUI gui = getGameUI();
+        if(gui!=null)
+        {
+            gui.questinfo.updateConds(id, args);
+        }
+    }
+
+    public static void removeQuest(int id) {
+        NGameUI gui = getGameUI();
+        if(gui!=null) {
+            gui.questinfo.removeQuest(id);
+        }
+    }
+
+    public static void addQuest(int id) {
+        NGameUI gui = getGameUI();
+        if(gui!=null) {
+            gui.questinfo.addQuest(id);
+        }
+    }
+
+    public static float getDeltaZ() {
+        return getUI().getDeltaZ();
     }
 }
