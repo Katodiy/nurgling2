@@ -7,6 +7,7 @@ import nurgling.pf.*;
 import nurgling.tasks.*;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class Finder
 {
@@ -449,4 +450,28 @@ public class Finder
         return pos;
     }
 
+    public static Gob findGobByPatterns(ArrayList<Pattern> qaPatterns, double dist) {
+        Gob result = null;
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
+                {
+                    if(gob.ngob!=null && gob.ngob.name!=null) {
+                        for(Pattern pattern : qaPatterns) {
+                            if(pattern.matcher(gob.ngob.name).matches()) {
+                                double new_dist;
+                                if (gob.id != NUtils.playerID() && (new_dist = gob.rc.dist(NUtils.player().rc)) < dist) {
+                                    dist = new_dist;
+                                    result = gob;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
 }

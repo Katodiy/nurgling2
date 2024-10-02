@@ -4,16 +4,21 @@ import haven.*;
 import static haven.MCache.tilesz;
 
 import haven.render.*;
+import nurgling.actions.ActionWithFinal;
+import nurgling.actions.QuickActionBot;
 import nurgling.areas.*;
 import nurgling.overlays.map.*;
 import nurgling.tools.*;
 
+import java.awt.event.KeyEvent;
 import java.awt.image.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
 public class NMapView extends MapView
 {
+    public static final KeyBinding kb_quickaction = KeyBinding.get("quickaction", KeyMatch.forchar('q',0));
+    public static final KeyBinding kb_quickignaction = KeyBinding.get("quickignaction", KeyMatch.forchar('q',1));
     public static final int MINING_OVERLAY = - 1;
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
@@ -352,6 +357,34 @@ public class NMapView extends MapView
             }
         }.run();
         return lastCoord2d;
+    }
+
+    @Override
+    public boolean keydown(KeyEvent ev) {
+        if(kb_quickaction.key().match(ev) || kb_quickignaction.key().match(ev)) {
+            Thread t;
+            (t = new Thread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        if(kb_quickaction.key().match(ev))
+                            new QuickActionBot(false).run(NUtils.getGameUI());
+                        else
+                            new QuickActionBot(true).run(NUtils.getGameUI());
+                    }
+                    catch (InterruptedException e)
+                    {
+                        NUtils.getGameUI().msg("quick action error" + ":" + "STOPPED");
+                    }
+                }
+            }, "quick action")).start();
+
+
+        }
+        return super.keydown(ev);
     }
 
     public class NSelector extends Selector
