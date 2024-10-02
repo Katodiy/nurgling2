@@ -18,9 +18,9 @@ public class OisterFounder implements Action {
             Arrays.asList("/boar", "/badger", "/wolverine", "/adder", "/bat", "/moose", "/bear", "/wolf", "/lynx", "/walrus")));
 
     public static boolean alarmAnimal() throws InterruptedException {
-        if(!Finder.findGobs(animals, 275).isEmpty()){
-            return true;
-        }
+//        if(!Finder.findGobs(animals, 275).isEmpty()){
+//            return true;
+//        }
         return false;
     }
     @Override
@@ -28,9 +28,9 @@ public class OisterFounder implements Action {
             throws InterruptedException {
 
 
-        ArrayList<Gob> oysters = Finder.findGobs(
-                new NAlias(new ArrayList(Arrays.asList("gfx/terobjs/herbs/oyster")),new ArrayList(Arrays.asList("Mushroom"))
-        ), 275);
+        ArrayList<Gob> oysters = new ArrayList<Gob>();//Finder.findGobs(
+//                new NAlias(new ArrayList(Arrays.asList("gfx/terobjs/herbs/oyster")),new ArrayList(Arrays.asList("Mushroom"))
+//        ), 275);
         gui.msg("Found " + oysters.size());
         gui.msg("Overall " + NomadOisterer.oic);
 
