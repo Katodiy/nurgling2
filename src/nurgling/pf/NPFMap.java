@@ -1,6 +1,5 @@
 package nurgling.pf;
 
-import com.sun.jdi.InternalException;
 import haven.*;
 import haven.Window;
 import nurgling.*;
@@ -12,31 +11,38 @@ import java.util.*;
 public class NPFMap
 {
     public boolean waterMode = false;
+    public Cell[][] cells;
+    // 1 hitbox
+    // 0 have path
+    // 2 unpathable tiles
+    // 4 pf been here
+    // 7 approach point (marked blue)
+    // 8 pf line
+    // 9 pf turn
+    public Coord begin;
+    Coord end;
+    int dsize;
+    public int size;
+    long currentTransport = -1;
+
     public CellsArray addGob(Gob gob) {
         CellsArray ca;
 
-
-        if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player()!=null && gob.id!=NUtils.player().id && gob.getattr(Following.class) == null)
-        {
-            CellsArray old = new CellsArray(ca.x_len,ca.y_len);
+        if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player() != null && gob.id != NUtils.player().id && gob.getattr(Following.class) == null) {
+            CellsArray old = new CellsArray(ca.x_len, ca.y_len);
             old.begin = ca.begin;
             old.end = ca.end;
-            if ((ca.begin.x >= begin.x && ca.begin.x <= end.x ||
-                    ca.end.x >= begin.x && ca.end.x <= end.x) &&
-                    (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
-                            ca.end.y >= begin.y && ca.end.y <= end.y))
-            {
+            if (ca.end.x >= begin.x && ca.begin.x <= end.x &&
+                    ca.end.y >= begin.y && ca.begin.y <= end.y) {
                 for (int i = 0; i < ca.x_len; i++)
-                    for (int j = 0; j < ca.y_len; j++)
-                    {
+                    for (int j = 0; j < ca.y_len; j++) {
                         int ii = i + ca.begin.x - begin.x;
                         int jj = j + ca.begin.y - begin.y;
-                        if (ii > 0 && ii < size && jj > 0 && jj < size)
-                        {
+                        if (ii > 0 && (ii + 1) < size && jj > 0 && (jj + 1) < size) {
                             old.cells[i][j] = cells[ii][jj].val;
-                            if(ca.cells[i][j]!=0)
-                            {
-                                if(cells[ii][jj].val!=1)
+
+                            if (ca.cells[i][j] != 0) {
+                                if (cells[ii][jj].val != 1)
                                     cells[ii][jj].val = ca.cells[i][j];
                                 cells[ii][jj].content.add(gob.id);
                             }
@@ -49,22 +55,131 @@ public class NPFMap
     }
 
     public void setCellArray(CellsArray ca) {
-
-        if ((ca.begin.x >= begin.x && ca.begin.x <= end.x ||
-                ca.end.x >= begin.x && ca.end.x <= end.x) &&
-                (ca.begin.y >= begin.y && ca.begin.y <= end.y ||
-                        ca.end.y >= begin.y && ca.end.y <= end.y)) {
+        if (ca.end.x >= begin.x && ca.begin.x <= end.x &&
+                ca.end.y >= begin.y && ca.begin.y <= end.y) {
             for (int i = 0; i < ca.x_len; i++)
                 for (int j = 0; j < ca.y_len; j++) {
                     int ii = i + ca.begin.x - begin.x;
                     int jj = j + ca.begin.y - begin.y;
-                    if (ii > 0 && ii < size && jj > 0 && jj < size) {
+                    if (ii > 0 && (ii + 1) < size && jj > 0 && (jj + 1) < size) {
                         cells[ii][jj].val = ca.cells[i][j];
+                        //TODO placeable vs passable
+                        cells[ii][jj].fullVal.force((ca.cells[i][j] == 0) ? CellType.Placeable : CellType.Blocked);
                     }
                 }
         }
     }
 
+    public enum  CellType {
+        Land((byte) 0, (byte) -1, -1),
+        Bog((byte) 1, (byte) -1, -1),
+        Shallow((byte) 2, (byte) -1, -1),
+        ShallowOcean((byte) 3, (byte) -1, -1),
+        Deep((byte) 4, (byte) -1, -1),
+        DeepOcean((byte) 5, (byte) -1, -1),
+        OpenSea((byte) 6, (byte) -1, -1),
+
+        Placeable((byte) -1, (byte) 0, -1),
+        Passable((byte) -1, (byte) 1, -1),
+        Blocked((byte) -1, (byte) 2, -1),
+        Forbidden((byte) -1, (byte) 3, -1),
+
+        PavedFloor((byte) -1, (byte) -1, 1),
+        GrassFloor((byte) -1, (byte) -1, 0.8),
+        ForestFloor((byte) -1, (byte) -1, 0.6),
+        SubmergedWalk((byte) -1, (byte) -1, 0.2),
+
+        Default((byte) 0, (byte) 0, 1);
+
+        CellType(byte land, byte obstruct, double moveSpeed) {
+            landType = land;
+            obstructionState = obstruct;
+            speedK = moveSpeed;
+        }
+
+        void cumulate(CellType other) {
+            if (other.landType != -1)
+                if (landType < other.landType)
+                    landType = other.landType;
+            if (other.obstructionState != -1)
+                if (obstructionState < other.obstructionState)
+                    obstructionState = other.obstructionState;
+            if (other.speedK != -1)
+                if (speedK > other.speedK)
+                    speedK = other.speedK;
+        }
+        void force(CellType other) {
+            if (other.landType != -1)
+                landType = other.landType;
+            if (other.obstructionState != -1)
+                obstructionState = other.obstructionState;
+            if (other.speedK != -1)
+                speedK = other.speedK;
+        }
+
+        private byte landType;
+        //0 walkable
+        //1 bog
+        //2 shallow
+        //3 shallow ocean
+        //4 deep
+        //5 deep ocean
+        //6 open sea
+
+        private byte obstructionState;
+        //0 passable & placeable
+        //1 non-placeable
+        //2 blocked by hit-box
+        //3 blocked by immovable object
+
+        private double speedK;
+        public short pfColour = -1;
+        //0 traversable
+        //1
+
+        public boolean isPfVisited() {
+            return pfVisited;
+        }
+
+        public void visitedByPf() {
+            this.pfVisited = true;
+        }
+
+
+        private boolean pfVisited = false;
+
+        public boolean isPlace_able() {
+            return ((landType == 0) && (obstructionState < 1));
+        }
+
+        public boolean isWalk_able() {
+            return ((landType <= 3) && (obstructionState < 2));
+        }
+
+        public boolean isSwim_able() {
+            return ((landType >= 1) && (landType <= 6) && (obstructionState < 2));
+        }
+
+        public boolean isSail_able() {
+            return ((landType >= 2) && (landType <= 6) && (obstructionState < 2));
+        }
+
+        public boolean isBlockedByMajorObject() {
+            return (obstructionState == 2);
+        }
+
+        public boolean isBlockedByHitbox() {
+            return (obstructionState == 3);
+        }
+
+        public boolean isBlocked() {
+            return (obstructionState == 3) || (obstructionState == 2);
+        }
+
+        public double getMoveSpeed() {
+            return speedK;
+        }
+    }
 
     public static class Cell
     {
@@ -73,30 +188,29 @@ public class NPFMap
             this.pos = pos;
         }
 
-        public Coord pos = new Coord();
+        public Coord pos;
+
         public short val;
+        public CellType fullVal = CellType.Default;
+
         public ArrayList<Long> content = new ArrayList<>();
     }
 
-    public Cell[][] cells;
-    public Coord begin;
-    Coord end;
-    int dsize;
-    public int size;
 
-    public NPFMap(Coord2d src, Coord2d dst, int mul) throws InterruptedException {
-        Coord2d a = new Coord2d(Math.min(src.x, dst.x), Math.min(src.y, dst.y));
-        Coord2d b = new Coord2d(Math.max(src.x, dst.x), Math.max(src.y, dst.y));
+
+    public NPFMap(Coord2d src, Coord2d tgt, int mul) throws InterruptedException {
+        Coord2d a = new Coord2d(Math.min(src.x, tgt.x), Math.min(src.y, tgt.y));
+        Coord2d b = new Coord2d(Math.max(src.x, tgt.x), Math.max(src.y, tgt.y));
         Coord center = Utils.toPfGrid((a.add(b)).div(2));
-        dsize = Math.max(8,(((int) ((b.sub(a).len() / MCache.tilehsz.x))) / 2) * 2 * mul);
+        dsize = Math.max(8,((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul);
         size = 2 * dsize + 1;
-        if(dsize>200) {
+        if(dsize>120) {
             NUtils.getGameUI().error("Unable to build grid of required size");
             throw new InterruptedException();
         }
 
         cells = new Cell[size][size];
-        begin =  center.sub(dsize,dsize);
+        begin = center.sub(dsize,dsize);
         end = center.add(dsize,dsize);
         for (int i = 0; i < size; i++)
         {
@@ -104,9 +218,7 @@ public class NPFMap
             {
                 cells[i][j] = new Cell( begin.add(i,j));
                 if(i == 0 || j == 0 || i == size-1 || j == size-1)
-                {
                     cells[i][j].val=2;
-                }
             }
         }
     }
@@ -116,8 +228,6 @@ public class NPFMap
         this(src,dst,mul);
         this.waterMode = waterMode;
     }
-
-    long currentTransport = -1;
 
     public Coord getBegin()
     {
