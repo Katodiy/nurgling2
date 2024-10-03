@@ -180,7 +180,7 @@ public class PathFinder implements Action {
                 return false;
             start_pos = st_poses.get(0);
         }
-        if (start_pos.equals(end_pos)) {
+        if (start_pos.equals(end_pos) && dummy==null) {
             dn = true;
             return false;
         }
@@ -219,17 +219,42 @@ public class PathFinder implements Action {
                 return findFreeNearByHB(ca, target_id, dummy, start);
             }
         } else {
-            if (!pfmap.cells[pos.x][pos.y].content.isEmpty()) {
-                Gob gob = null;
-                int i = 0;
-                while (gob != null && pfmap.cells[pos.x][pos.y].content.size() > i) {
-                    Gob cand = Finder.findGob(pfmap.cells[pos.x][pos.y].content.get(i));
-                    gob = cand != null ? cand : gob;
-                }
-                if (gob != null && gob.ngob != null) {
-                    CellsArray ca = gob.ngob.getCA();
+            if (pfmap.cells[pos.x][pos.y].val!=0 && pfmap.cells[pos.x][pos.y].val!=7) {
+                ArrayList<Coord> targets = null;
+                if(pfmap.cells[pos.x][pos.y].content.contains((long)-1)) {
+                    CellsArray ca = dummy.ngob.getCA();
                     return findFreeNearByHB(ca, target_id, dummy, start);
                 }
+                else {
+                    for (Long cand : pfmap.cells[pos.x][pos.y].content) {
+                        CellsArray ca;
+                        if (cand <= 0) {
+                            ca = dummy.ngob.getCA();
+                        } else {
+                            Gob gcand = Finder.findGob(cand);
+                            ca = gcand.ngob.getCA();
+                        }
+                        ArrayList<Coord> cords = findFreeNearByHB(ca, target_id, dummy, start);
+                        if (targets == null) {
+                            targets = cords;
+                        } else {
+                            ArrayList<Coord> forRemove = new ArrayList<>();
+                            for (Coord cord1 : targets) {
+                                boolean found = false;
+                                for (Coord coord2 : cords) {
+                                    if (cord1.equals(coord2.x, coord2.y)) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                if (!found)
+                                    forRemove.add(cord1);
+                            }
+                            targets.removeAll(forRemove);
+                        }
+                    }
+                }
+                return targets;
             }
         }
         return new ArrayList<>(Arrays.asList(pos));

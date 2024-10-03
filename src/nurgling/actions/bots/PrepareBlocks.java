@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import haven.Coord;
 import haven.Gob;
 import haven.UI;
 import nurgling.NGameUI;
@@ -50,6 +51,10 @@ public class PrepareBlocks implements Action {
             logs.sort(NUtils.d_comp);
             Gob log = logs.get(0);
             while (Finder.findGob(log.id) != null) {
+                if (NUtils.getGameUI().getInventory().calcNumberFreeCoord(new Coord(1, 2)) == 0)
+                {
+                    new TransferToPiles(outsa.getRCArea(),new NAlias("block")).run(gui);
+                }
                 new PathFinder(log).run(gui);
                 new Equip(new NAlias(prop.tool)).run(gui);
                 new SelectFlowerAction("Chop into blocks", log).run(gui);
@@ -73,6 +78,7 @@ public class PrepareBlocks implements Action {
                 }
             }
         }
+        new TransferToPiles(outsa.getRCArea(),new NAlias("block")).run(gui);
         return Results.SUCCESS();
     }
 }
