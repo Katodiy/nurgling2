@@ -29,6 +29,7 @@ package haven;
 import haven.render.*;
 import nurgling.*;
 import nurgling.conf.*;
+import nurgling.widgets.options.AutoSelection;
 import nurgling.widgets.options.QoL;
 import nurgling.widgets.options.QuickActions;
 
@@ -804,6 +805,7 @@ public class OptWnd extends Window {
 	}
     }
 	public Panel nquickAct;
+	public Panel autosel;
     public OptWnd(boolean gopts) {
 	super(Coord.z, "Options", true);
 	main = add(new Panel());
@@ -812,6 +814,7 @@ public class OptWnd extends Window {
 	Panel iface = add(new InterfacePanel(main));
 	Panel keybind = add(new BindingPanel(main));
 	Panel noptwnd = add(new NQolPanel(main));
+	autosel = add(new NAutoSelectPanel(main));
 	nquickAct = add(new NQuickActionsPanel(main));
 
 	int y = 0;
@@ -825,7 +828,7 @@ public class OptWnd extends Window {
 	y = (prev = main.add(new PButton(UI.scale(200), "Audio settings", 'a', audio), 0, y)).pos("bl").adds(0, 5).y;
 	main.add(new PButton(UI.scale(200), "Sound alarms", 'k', noptwnd), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Keybindings", 'k', keybind), 0, y)).pos("bl").adds(0, 5).y;
-	main.add(new PButton(UI.scale(200), "Automatic selection", 'k', noptwnd), x, prev.pos("ur").y);
+	main.add(new PButton(UI.scale(200), "Automatic selection", 'k', autosel), x, prev.pos("ur").y);
 
 	y += UI.scale(60);
 	if(gopts) {
@@ -952,4 +955,53 @@ public class OptWnd extends Window {
 		}
 	}
 
+
+	public class NAutoSelectPanel extends Panel  {
+		private final Widget save;
+		private final Widget back;
+
+		public AutoSelection autosel_p;
+
+
+		public NAutoSelectPanel(Panel prev1) {
+			super();
+
+			autosel_p = add(new AutoSelection(),Coord.z);
+
+			save = add(new Button(UI.scale(200), "Save") {
+				@Override
+				public void click() {
+					ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
+
+					for(AutoSelection.AutoSelectItem actionsItem: autosel_p.petals)
+					{
+						HashMap<String, Object> res = new HashMap<>();
+						res.put("type", "NPetal");
+						res.put("name", actionsItem.text());
+						res.put("enabled", actionsItem.isEnabled.a);
+						qpattern.add(res);
+					}
+
+					NConfig.set(NConfig.Key.petals, qpattern);
+					NConfig.needUpdate();
+				}
+			}, autosel_p.pos("bl").adds(0, UI.scale(5)));
+			back = add(new Button(UI.scale(200), "Back")
+			{
+				@Override
+				public void click() {
+					chpanel(prev1);
+				}
+
+				public boolean keydown(KeyEvent ev) {
+					if((ev.getKeyChar() == 27)) {
+						chpanel(prev1);
+						return(true);
+					}
+					return(false);
+				}
+			}, autosel_p.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
+			pack();
+		}
+	}
 }

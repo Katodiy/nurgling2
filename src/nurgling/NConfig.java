@@ -57,7 +57,7 @@ public class NConfig
         debug,
         claydiggerprop,
         miningol,
-        q_pattern, q_range, q_visitor, q_door, hidecredo
+        q_pattern, q_range, q_visitor, q_door, petals, singlePetal, asenable, hidecredo
     }
 
 
@@ -94,6 +94,8 @@ public class NConfig
         conf.put(Key.q_visitor,false);
         conf.put(Key.q_door,true);
         conf.put(Key.q_range,2);
+        conf.put(Key.singlePetal,false);
+        conf.put(Key.asenable,true);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -113,7 +115,13 @@ public class NConfig
         qpattern.add(res3);
         conf.put(Key.q_pattern, qpattern);
 
-
+        ArrayList<HashMap<String, Object>> petal = new ArrayList<>();
+        HashMap<String, Object> pres1 = new HashMap<>();
+        pres1.put("type", "NPetal");
+        pres1.put("name", "Giddyup!");
+        pres1.put("enabled", true);
+        petal.add(pres1);
+        conf.put(Key.petals, petal);
     }
 
     HashMap<Key, Object> conf = new HashMap<>();

@@ -359,8 +359,19 @@ public class NMapView extends MapView
         return lastCoord2d;
     }
 
+    public boolean shiftPressed = false;
+
+    @Override
+    public boolean keyup(KeyEvent ev) {
+        if(ev.getKeyCode() == 16)
+            shiftPressed = false;
+        return super.keyup(ev);
+    }
+
     @Override
     public boolean keydown(KeyEvent ev) {
+        if(ev.getKeyCode() == 16)
+            shiftPressed = true;
         if(kb_quickaction.key().match(ev) || kb_quickignaction.key().match(ev)) {
             Thread t;
             (t = new Thread(new Runnable()
