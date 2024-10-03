@@ -1,6 +1,7 @@
 package nurgling.tools;
 
 import haven.*;
+import haven.res.gfx.fx.eq.Equed;
 import nurgling.*;
 import nurgling.areas.*;
 import nurgling.pf.*;
@@ -463,8 +464,10 @@ public class Finder
                             if(pattern.matcher(gob.ngob.name).matches()) {
                                 double new_dist;
                                 if (gob.id != NUtils.playerID() && (new_dist = gob.rc.dist(NUtils.player().rc)) < dist) {
-                                    dist = new_dist;
-                                    result = gob;
+                                    if(!(Boolean)NConfig.get(NConfig.Key.q_visitor) || (!(NParser.checkName(gob.ngob.name, new NAlias("palisadebiggate","palisadegate"))) || gob.findol(Equed.class)==null)) {
+                                        dist = new_dist;
+                                        result = gob;
+                                    }
                                 }
                             }
                         }
