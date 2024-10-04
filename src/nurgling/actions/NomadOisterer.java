@@ -31,15 +31,15 @@ public class NomadOisterer implements Action {
         this.path = path;
     }
     public static boolean alarmOyster() throws InterruptedException {
-//        if(!Finder.findGobs(oyster, 275).isEmpty())
-//            return true;
+        if(!Finder.findGobs(oyster, 275).isEmpty())
+            return true;
         return false;
     }
 
     public static boolean alarmAnimal() throws InterruptedException {
-//        ArrayList<Gob> ar = Finder.findGobs(animals, 220);
-//        if(!Finder.findGobs(animals, 275).isEmpty())
-//            return true;
+        ArrayList<Gob> ar = Finder.findGobs(animals, 220);
+        if(!Finder.findGobs(animals, 275).isEmpty())
+            return true;
         return false;
     }
 

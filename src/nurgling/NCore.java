@@ -9,7 +9,7 @@ import java.util.concurrent.*;
 
 public class NCore extends Widget
 {
-    public boolean debug = false;
+    public boolean debug = true;
     boolean isinspect = false;
     public boolean isInspectMode()
     {

@@ -105,6 +105,23 @@ public class Container {
 
     }
 
+    public class WaterLvl extends Updater{
+        public static final String WATERLVL = "wlvl";
+        public static final String MAXWATERLVL = "maxwatlvl";
+
+        @Override
+        public void update()  throws InterruptedException{
+            res.put(WATERLVL,(int)(30 * NUtils.getFuelLvl(cap, new Color(71, 101, 153))));
+        }
+
+        public void setMaxlvl(int maxLvl){
+            res.put(MAXWATERLVL,maxLvl);
+        }
+
+        public int neededWater() {
+            return (int) res.get(MAXWATERLVL) - (int) res.get(WATERLVL);
+        }
+    }
 
     public class TestAttr extends Updater{
         public static final String ATTR = "attr";
@@ -196,6 +213,8 @@ public class Container {
             updaters.put(c,new FuelLvl());
         else if(c == TargetItems.class)
             updaters.put(c,new TargetItems());
+        else if(c == WaterLvl.class)
+            updaters.put(c,new WaterLvl());
     }
 
 }
