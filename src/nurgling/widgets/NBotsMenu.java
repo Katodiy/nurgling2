@@ -54,7 +54,7 @@ public class NBotsMenu extends Widget
         if(NUtils.getUI().core.debug)
         {
             NLayout tests = new NLayout("utils");
-            tests.elements.add(new NButton("shieldsword", new TESTLiftDrop()));
+            tests.elements.add(new NButton("shieldsword", new TestAction()));
             tests.elements.add(new NButton("shieldsword", new TESTbranchinvtransferpacks()));
             tests.elements.add(new NButton("shieldsword", new TESTtakehanddporop()));
             tests.elements.add(new NButton("shieldsword", new TESTselectfloweraction()));

@@ -37,6 +37,7 @@ public class Specialisation extends Window
         deadkritter,
         water_refiller,
         ore,
+        boiler,
         fuel,
         ovens,
         gardenpot, barrel
@@ -59,6 +60,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.pigs.toString()));
         specialisation.add(new SpecialisationItem(SpecName.water_refiller.toString()));
         specialisation.add(new SpecialisationItem(SpecName.ore.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.boiler.toString()));
         specialisation.add(new SpecialisationItem(SpecName.fuel.toString()));
         specialisation.add(new SpecialisationItem(SpecName.barrel.toString()));
         specialisation.add(new SpecialisationItem(SpecName.ovens.toString()));
