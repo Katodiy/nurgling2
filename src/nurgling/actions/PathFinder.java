@@ -234,7 +234,7 @@ public class PathFinder implements Action {
                             Gob gcand = Finder.findGob(cand);
                             ca = gcand.ngob.getCA();
                         }
-                        ArrayList<Coord> cords = findFreeNearByHB(ca, target_id, dummy, start);
+                        ArrayList<Coord> cords = findFreeNearByHB(ca, cand, dummy, start);
                         if (targets == null) {
                             targets = cords;
                         } else {
@@ -337,20 +337,34 @@ public class PathFinder implements Action {
                 }
         }
 
-        Coord2d player = NUtils.player().rc;
-        Coord2d targerc = (dummy == null) ? Finder.findGob(target_id).rc : dummy.rc;
-        Coord2d playerdir = player.sub(targerc);
+        if(isStart) {
+            Coord2d player = NUtils.player().rc;
+            Coord2d targerc = (dummy == null) ? Finder.findGob(target_id).rc : dummy.rc;
+            Coord2d playerdir = player.sub(targerc).norm();
 
-        Comparator comp = new Comparator<Coord>() {
-            @Override
-            public int compare(Coord o1, Coord o2) {
-                Coord2d t01 = Utils.pfGridToWorld(pfmap.cells[o1.x][o1.y].pos).sub(targerc);
-                Coord2d t02 = Utils.pfGridToWorld(pfmap.cells[o2.x][o2.y].pos).sub(targerc);
+            Comparator comp = new Comparator<Coord>() {
+                @Override
+                public int compare(Coord o1, Coord o2) {
+                    Coord2d t01 = Utils.pfGridToWorld(pfmap.cells[o1.x][o1.y].pos).sub(targerc).norm();
+                    Coord2d t02 = Utils.pfGridToWorld(pfmap.cells[o2.x][o2.y].pos).sub(targerc).norm();
 
-                return Double.compare(Math.acos(t01.dot(playerdir) / (playerdir.len() * t01.len())), Math.acos(t02.dot(playerdir) / (playerdir.len() * t02.len())));
-            }
-        };
-        res.sort(comp);
+                    return Double.compare(t02.dot(playerdir), t01.dot(playerdir));
+                }
+            };
+
+            res.sort(comp);
+//            Gob target = (dummy==null|| target_id!=-1)?Finder.findGob(target_id):dummy;
+//            System.out.println("+++++++++++++++++++++++");
+//            System.out.println("Target" + ((target!=dummy)?target.ngob.name:"") + "rc" + target.rc.toString() + " id " + target.id);
+//            System.out.println("targetrc " + targerc);
+//            System.out.println("Player" + " rc " + player.toString());
+//            for(Coord coord: res)
+//            {
+//                Coord2d pos = Utils.pfGridToWorld(pfmap.cells[coord.x][coord.y].pos);
+//                System.out.println(pos.toString() + "|" + " cos " + pos.sub(targerc).norm().dot(playerdir));
+//            }
+        }
+
         return res;
     }
 
