@@ -32,6 +32,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.awt.image.*;
 import java.awt.Color;
+import java.util.regex.Pattern;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.*;
 
@@ -695,15 +696,18 @@ public class GobIcon extends GAttrib {
 	private final PackCont.LinPack cont;
 	private final IconList list;
 	private Widget setbox;
+	private GroupBy groupBy;
 
 	public static class ListIcon {
 	    public final Setting conf;
 	    public final String name;
+	    public final String resn;
 	    public final Object[] id;
 
 	    public ListIcon(Setting conf) {
 		this.conf = conf;
 		this.name = conf.icon.name();
+		this.resn = conf.icon.res.name;
 		this.id = conf.icon.id();
 	    }
 	}
@@ -717,6 +721,7 @@ public class GobIcon extends GAttrib {
 	public class IconList extends SSearchBox<ListIcon, IconList.IconLine> {
 	    private List<ListIcon> ordered = Collections.emptyList();
 	    private Map<Setting.ID, Setting> cur = null;
+		private String group = null;
 
 	    private IconList(Coord sz) {
 		super(sz, elh);
@@ -743,11 +748,19 @@ public class GobIcon extends GAttrib {
 
 	    public void tick(double dt) {
 		Map<Setting.ID, Setting> cur = this.cur;
-		if(cur != conf.settings) {
+		if(cur != conf.settings || (groupBy.sel !=null && !groupBy.sel.equals(group))) {
+			group = groupBy.sel;
 		    cur = conf.settings;
 		    ArrayList<ListIcon> ordered = new ArrayList<>(cur.size());
-		    for(Setting conf : cur.values())
-			ordered.add(new ListIcon(conf));
+		    for(Setting conf : cur.values()) {
+				if(groupBy.sel!=null && !(groupBy.sel.contains("Display") || groupBy.sel.contains("Notify"))) {
+					if (groupBy.patterns.get(groupBy.sel).matcher(conf.icon.res.name).matches()) {
+						ordered.add(new ListIcon(conf));
+					}
+				}
+				else
+					ordered.add(new ListIcon(conf));
+			}
 		    this.cur = cur;
 		    this.ordered = ordered;
 		    Collections.sort(ordered, (a, b) -> {
@@ -758,6 +771,24 @@ public class GobIcon extends GAttrib {
 				return(c);
 			    return(0);
 			});
+		}
+		if(groupBy.sel!=null && (groupBy.sel.contains("Display") || groupBy.sel.contains("Notify"))) {
+			ArrayList<ListIcon> forRemove = new ArrayList<>();
+			if(groupBy.sel.contains("Display")) {
+				for (ListIcon icon : ordered) {
+						if (!icon.conf.show) {
+							forRemove.add(icon);
+						}
+				}
+			}
+			else if(groupBy.sel.contains("Notify")) {
+				for (ListIcon icon : ordered) {
+					if (!icon.conf.notify) {
+						forRemove.add(icon);
+					}
+				}
+			}
+			ordered.removeAll(forRemove);
 		}
 		super.tick(dt);
 	    }
@@ -874,10 +905,35 @@ public class GobIcon extends GAttrib {
 	    }
 	}
 
+	public class GroupBy extends SDropBox<String, Widget> {
+		private final List<String> items = new ArrayList<>();
+		public HashMap<String, Pattern> patterns = new HashMap<>();
+		public GroupBy(int w) {
+			super(w, UI.scale(160), UI.scale(20));
+			patterns.put("Kritter",Pattern.compile(("(gfx/kritter/.*)|(^(?=.*gfx/invobjs)(?!.*(arkose|olivine|clay|light|small|star|herbs|clue|crystal|ore|stone|quartz|dolomite|basalt|mica|gabbro|malachite|hematite|serpentine|sodalite|schist|calcite|fluorospar|feldspar|alabaster|apatite|talc|kyanite|bauxite|limestone|cinnabar|pyrite|jasper|marble|slate|agates|granite|obsidian|breccia|gneiss|halite|pyrophyllite|siltstone|chert|rhyolite|scoria|soapstone|tuff|zeolite|diorite|porphyry|hornblende|argillite|chrysocolla|fluorite|carnelian|carnallite|tremolite|zircon|rock|metal|flint|coal|galena|ilmenite|argentite|magnetite|leadglance|graywacke|cuprite|limonite|diabase|pegmatite|pumice|cassiterite|sylvanite|corund|zincspar|orthoclase|hornsilver|eclogite|bentonite|muscovite|phyllite|taconite|wollastonite|diatomite|tufa)).*)")));
+			patterns.put("Herbs",Pattern.compile("gfx/invobjs/herbs/.*"));
+			patterns.put("Bushes",Pattern.compile("gfx/terobjs/mm/bushes/.*"));
+			patterns.put("Trees",Pattern.compile("gfx/terobjs/mm/trees/.*"));
+			patterns.put("Bumblings",Pattern.compile("(gfx/invobjs/.*).*(ore|mineral|arkose|mica|diorite|gneiss|microlite|obsidian|sodalite|olivine|rock|metal|flint|coal|galena|ilmenite|argentite|leadglance|graywacke|cuprite|limonite|diabase|pegmatite|pumice|cassiterite|sylvanite|corund|zincspar|orthoclase|hornsilver|eclogite|gabbro|malachite|granite|dolomite|schist|quartz|calcite|cinnabar|serpentine|basalt|tremolite|rhyolite|feldspar|soapstone|bauxite|chert|pyrite|hematite|alabaster|apatite|fluorite|jasper|scoria|agates|tuff|zeolite|hornblende|magnetite|pyrophyllite|bentonite|marble|muscovite|phyllite|taconite|wollastonite|talc|siltstone|slate|diatomite|tufa|limestone)"));
+			patterns.put("Players",Pattern.compile("gfx/hud/mmap/plo"));
+			patterns.put("Display",null);
+			patterns.put("Notify",null);
+			items.addAll(patterns.keySet());
+		}
+
+		protected List<String> items() {return(items);}
+		protected Widget makeitem(String item, int idx, Coord sz) {return(SListWidget.TextItem.of(sz, Text.std, () -> item));}
+
+		public void change(String item) {
+			super.change(item);
+		}
+	}
+
 	public SettingsWindow(Settings conf) {
 	    super(Coord.z, "Icon settings");
 	    this.conf = conf;
-	    add(this.cont = new PackCont.LinPack.VPack(), Coord.z).margin(UI.scale(5)).packpar(true);
+		Widget prev = add(groupBy = new GroupBy(UI.scale(250)));
+	    add(this.cont = new PackCont.LinPack.VPack(), prev.pos("bl").adds(0,UI.scale(10))).margin(UI.scale(5)).packpar(true);
 	    list = cont.last(new IconList(UI.scale(250, 500)), 0);
 	    cont.last(new HRuler(list.sz.x), 0);
 	    cont.last(new CheckBox("Notification on newly seen icons") {
