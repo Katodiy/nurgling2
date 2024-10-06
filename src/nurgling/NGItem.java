@@ -10,6 +10,9 @@ import nurgling.iteminfo.NFoodInfo;
 import nurgling.iteminfo.NQuestItem;
 import nurgling.widgets.NQuestInfo;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class NGItem extends GItem
 {
     public boolean isSearched = false;
@@ -73,6 +76,17 @@ public class NGItem extends GItem
         public String name()
         {
             return name;
+        }
+
+        public String type() {
+            String regex = "of\\s+([A-Za-z]+)\\s*";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(name);
+            if (matcher.find()) {
+                return matcher.group(1);
+            } else {
+                return null;
+            }
         }
 
     }

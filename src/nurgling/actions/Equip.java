@@ -87,7 +87,7 @@ public class Equip implements Action {
                     NUtils.getUI().core.addTask(new WaitItemInEquip(witem,new NEquipory.Slots[]{NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT}));
                 }
                 else {
-                    return Results.ERROR("No target item");
+                        return Results.ERROR("No target item");
                 }
 
             }
