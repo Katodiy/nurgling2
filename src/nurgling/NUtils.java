@@ -346,4 +346,8 @@ public class NUtils
         }
         return vals;
     }
+
+    public static String getIconInfo(String name) {
+        return NStyle.iconName.get(name);
+    }
 }

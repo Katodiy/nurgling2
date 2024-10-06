@@ -26,6 +26,9 @@
 
 package haven;
 
+import nurgling.NStyle;
+import nurgling.NUtils;
+
 import java.util.*;
 import java.util.function.*;
 import java.io.*;
@@ -136,6 +139,11 @@ public class GobIcon extends GAttrib {
 	    super(owner, res);
 	    this.img = img;
 	}
+
+		public ImageIcon(Image img) {
+			super(null, null);
+			this.img = img;
+		}
 
 	public String name() {
 	    Resource.Tooltip name = res.layer(Resource.tooltip);
@@ -274,7 +282,7 @@ public class GobIcon extends GAttrib {
 
     public static class Setting implements Serializable {
 	public final ID id;
-	public final Icon icon;
+	public Icon icon;
 	public final Settings.ResID from;
 	public Resource.Saved res;
 	public boolean show, defshow, notify;
@@ -359,7 +367,14 @@ public class GobIcon extends GAttrib {
 	}
 
 	public Setting get(Icon icon) {
-	    return(settings.get(new Setting.ID(icon.res.name, icon.id())));
+		Setting.ID sid = new Setting.ID(icon.res.name, icon.id());
+		Resource.Saved sres;
+		if(!settings.containsKey(sid) && icon.owner instanceof Gob && (sres = NStyle.iconMap.get(((Gob)icon.owner).ngob.name))!=null) {
+			Setting set = new Setting(icon, new ResID(sres, new byte[0]));
+			set.icon = icon;
+			settings.put(sid, set);
+		}
+		return(settings.get(sid));
 	}
 
 	public static class ResID {
@@ -706,9 +721,17 @@ public class GobIcon extends GAttrib {
 
 	    public ListIcon(Setting conf) {
 		this.conf = conf;
-		this.name = conf.icon.name();
-		this.resn = conf.icon.res.name;
-		this.id = conf.icon.id();
+		if(conf.icon != null) {
+			this.name = conf.icon.name();
+			this.resn = conf.icon.res.name;
+			this.id = conf.icon.id();
+		}
+		else
+		{
+			this.resn = conf.res.name;
+			this.name = NUtils.getIconInfo(conf.res.name);
+			this.id = Icon.nilid;
+		}
 	    }
 	}
 
@@ -735,7 +758,7 @@ public class GobIcon extends GAttrib {
 				sz.x - UI.scale(2) - (sz.y / 2), sz.y / 2, 0.5, 0.5);
 		    prev = adda(new CheckBox("").state(() -> icon.conf.show).set(andsave(val -> icon.conf.show = val)).settip("Display"),
 				prev.c.x - UI.scale(2) - (sz.y / 2), sz.y / 2, 0.5, 0.5);
-		    add(SListWidget.IconText.of(Coord.of(prev.c.x - UI.scale(2), sz.y), item.conf.icon::image, item.conf.icon::name), Coord.z);
+			add(SListWidget.IconText.of(Coord.of(prev.c.x - UI.scale(2), sz.y), item.conf.icon::image, item.conf.icon::name), Coord.z);
 		}
 	    }
 
@@ -964,4 +987,6 @@ public class GobIcon extends GAttrib {
 	    }
 	}
     }
+
+
 }
