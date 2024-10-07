@@ -12,6 +12,7 @@ public abstract class Test implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
+        runAction();
         long start = System.currentTimeMillis();
 
         int count = 0;
@@ -34,6 +35,9 @@ public abstract class Test implements Action
             }
         }
         return Results.SUCCESS();
+    }
+
+    protected void runAction() throws InterruptedException {
     }
 
     public abstract void body(NGameUI gui) throws InterruptedException;

@@ -615,6 +615,17 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		    public void cresize(Widget ch) {
 			pack();
 		    }
+
+			@Override
+			public boolean keydown(KeyEvent ev) {
+				if(ev.getKeyCode() == KeyEvent.VK_TAB)
+				{
+						return false;
+				}
+				else {
+					return super.keydown(ev);
+				}
+			}
 		};
 	    invwnd.add(maininv = (Inventory)child, Coord.z);
 	    invwnd.pack();

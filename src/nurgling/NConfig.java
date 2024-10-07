@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
+import nurgling.widgets.options.QuickActions;
 import org.json.*;
 
 import java.io.*;
@@ -57,7 +58,7 @@ public class NConfig
         debug,
         claydiggerprop,
         miningol,
-        hidecredo
+        q_pattern, q_range, q_visitor, q_door, petals, singlePetal, asenable, hidecredo
     }
 
 
@@ -92,7 +93,37 @@ public class NConfig
         conf.put(Key.swimming,false);
         conf.put(Key.debug,false);
         conf.put(Key.hidecredo,false);
+        conf.put(Key.q_visitor,false);
+        conf.put(Key.q_door,true);
+        conf.put(Key.q_range,2);
+        conf.put(Key.singlePetal,false);
+        conf.put(Key.asenable,true);
 
+        ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
+        HashMap<String, Object> res1 = new HashMap<>();
+        res1.put("type", "NPattern");
+        res1.put("name", ".*cart");
+        res1.put("enabled", true);
+        qpattern.add(res1);
+        HashMap<String, Object> res2 = new HashMap<>();
+        res2.put("type", "NPattern");
+        res2.put("name", "gfx/kritter/.*");
+        res2.put("enabled", true);
+        qpattern.add(res2);
+        HashMap<String, Object> res3 = new HashMap<>();
+        res3.put("type", "NPattern");
+        res3.put("name", "gfx/terobjs/herbs.*");
+        res3.put("enabled", true);
+        qpattern.add(res3);
+        conf.put(Key.q_pattern, qpattern);
+
+        ArrayList<HashMap<String, Object>> petal = new ArrayList<>();
+        HashMap<String, Object> pres1 = new HashMap<>();
+        pres1.put("type", "NPetal");
+        pres1.put("name", "Giddyup!");
+        pres1.put("enabled", true);
+        petal.add(pres1);
+        conf.put(Key.petals, petal);
     }
 
     HashMap<Key, Object> conf = new HashMap<>();
@@ -151,52 +182,60 @@ public class NConfig
         if (objs.size() > 0)
         {
             ArrayList<Object> res = new ArrayList<>();
-            for (HashMap<String, Object> obj : objs)
-            {
-                switch ((String) obj.get("type"))
-                {
-                    case "NLoginData":
-                        res.add(new NLoginData(obj));
-                        break;
-                    case "NDragProp":
-                        res.add(new NDragProp(obj));
-                        break;
-                    case "NResizeProp":
-                        res.add(new NResizeProp(obj));
-                        break;
-                    case "NKinProp":
-                        res.add(new NKinProp(obj));
-                        break;
-                    case "NToolBeltProp":
-                        res.add(new NToolBeltProp(obj));
-                        break;
-                    case "NDiscordNotification":
-                        res.add(new NDiscordNotification(obj));
-                        break;
-                    case "CowsHerd":
-                        res.add(new CowsHerd(obj));
-                        break;
-                    case "GoatsHerd":
-                        res.add(new GoatsHerd(obj));
-                        break;
-                    case "SheepsHerd":
-                        res.add(new SheepsHerd(obj));
-                        break;
-                    case "PigsHerd":
-                        res.add(new PigsHerd(obj));
-                        break;
-                    case "NChopperProp":
-                        res.add(new NChopperProp(obj));
-                        break;
-                    case "NPrepBProp":
-                        res.add(new NPrepBlocksProp(obj));
-                        break;
-                    case "NPrepBoardProp":
-                        res.add(new NPrepBoardsProp(obj));
-                        break;
-                    case "NClayDiggerProp":
-                        res.add(new NClayDiggerProp(obj));
-                        break;
+
+            for (Object jobj : objs) {
+                if (jobj instanceof HashMap) {
+                    HashMap<String, Object> obj = (HashMap<String, Object>) jobj;
+                    switch ((String) obj.get("type")) {
+                        case "NLoginData":
+                            res.add(new NLoginData(obj));
+                            break;
+                        case "NDragProp":
+                            res.add(new NDragProp(obj));
+                            break;
+                        case "NResizeProp":
+                            res.add(new NResizeProp(obj));
+                            break;
+                        case "NKinProp":
+                            res.add(new NKinProp(obj));
+                            break;
+                        case "NToolBeltProp":
+                            res.add(new NToolBeltProp(obj));
+                            break;
+                        case "NDiscordNotification":
+                            res.add(new NDiscordNotification(obj));
+                            break;
+                        case "CowsHerd":
+                            res.add(new CowsHerd(obj));
+                            break;
+                        case "GoatsHerd":
+                            res.add(new GoatsHerd(obj));
+                            break;
+                        case "SheepsHerd":
+                            res.add(new SheepsHerd(obj));
+                            break;
+                        case "PigsHerd":
+                            res.add(new PigsHerd(obj));
+                            break;
+                        case "NChopperProp":
+                            res.add(new NChopperProp(obj));
+                            break;
+                        case "NPrepBProp":
+                            res.add(new NPrepBlocksProp(obj));
+                            break;
+                        case "NPrepBoardProp":
+                            res.add(new NPrepBoardsProp(obj));
+                            break;
+                        case "NClayDiggerProp":
+                            res.add(new NClayDiggerProp(obj));
+                            break;
+                        default:
+                            res.add(obj);
+                    }
+                }
+                else if (jobj instanceof String) {
+                    res.addAll(objs);
+                    break;
                 }
             }
             return res;

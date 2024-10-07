@@ -29,10 +29,12 @@ package haven;
 import haven.render.*;
 import nurgling.*;
 import nurgling.conf.*;
+import nurgling.widgets.options.AutoSelection;
+import nurgling.widgets.options.QoL;
+import nurgling.widgets.options.QuickActions;
 
 import java.awt.event.KeyEvent;
 import java.util.*;
-import java.util.stream.*;
 
 public class OptWnd extends Window {
     public final Panel main;
@@ -76,7 +78,7 @@ public class OptWnd extends Window {
 	}
     }
 
-    public class Panel extends Widget {
+    public static class Panel extends Widget {
 	public Panel() {
 	    visible = false;
 	    c = Coord.z;
@@ -637,6 +639,9 @@ public class OptWnd extends Window {
 	    for(int i = 0; i < Fightsess.kb_acts.length; i++)
 		y = addbtn(cont, String.format("Combat action %d", i + 1), Fightsess.kb_acts[i], y);
 	    y = addbtn(cont, "Switch targets", Fightsess.kb_relcycle, y);
+		y = cont.adda(new Label("Special ability"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
+		y = addbtn(cont, "Quick action", NMapView.kb_quickaction, y);
+		y = addbtn(cont, "Quick action (Alt.)", NMapView.kb_quickignaction, y);
 
 		y = cont.adda(new Label("Tool belt"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
 		for(int i = 0 ; i < (Integer)NConfig.get(NConfig.Key.numbelts); i++)
@@ -799,7 +804,8 @@ public class OptWnd extends Window {
 	    return(true);
 	}
     }
-
+	public Panel nquickAct;
+	public Panel autosel;
     public OptWnd(boolean gopts) {
 	super(Coord.z, "Options", true);
 	main = add(new Panel());
@@ -807,15 +813,23 @@ public class OptWnd extends Window {
 	Panel audio = add(new AudioPanel(main));
 	Panel iface = add(new InterfacePanel(main));
 	Panel keybind = add(new BindingPanel(main));
-	Panel noptwnd = add(new NOptWnd(main));
+	Panel noptwnd = add(new NQolPanel(main));
+	autosel = add(new NAutoSelectPanel(main));
+	nquickAct = add(new NQuickActionsPanel(main));
 
 	int y = 0;
+	int x = 0;
 	Widget prev;
-	y = main.add(new PButton(UI.scale(200), "Interface settings", 'v', iface), 0, y).pos("bl").adds(0, 5).y;
-	y = main.add(new PButton(UI.scale(200), "Video settings", 'v', video), 0, y).pos("bl").adds(0, 5).y;
-	y = main.add(new PButton(UI.scale(200), "Audio settings", 'a', audio), 0, y).pos("bl").adds(0, 5).y;
-	y = main.add(new PButton(UI.scale(200), "Keybindings", 'k', keybind), 0, y).pos("bl").adds(0, 5).y;
-	y = main.add(new PButton(UI.scale(200), "Nurgling settings", 'k', noptwnd), 0, y).pos("bl").adds(0, 5).y;
+	y = (prev = main.add(new PButton(UI.scale(200), "Interface settings", 'v', iface), 0, y)).pos("bl").adds(0, 5).y;
+	x = prev.pos("ur").adds(10, 0).x;
+	main.add(new PButton(UI.scale(200), "Quality of Life", 'k', noptwnd), x, prev.pos("ur").y);
+	y = (prev = main.add(new PButton(UI.scale(200), "Video settings", 'v', video), 0, y)).pos("bl").adds(0, 5).y;
+	main.add(new PButton(UI.scale(200), "Quick actions", 'k', nquickAct), x, prev.pos("ur").y);
+	y = (prev = main.add(new PButton(UI.scale(200), "Audio settings", 'a', audio), 0, y)).pos("bl").adds(0, 5).y;
+	main.add(new PButton(UI.scale(200), "Sound alarms", 'k', noptwnd), x, prev.pos("ur").y);
+	y = (prev = main.add(new PButton(UI.scale(200), "Keybindings", 'k', keybind), 0, y)).pos("bl").adds(0, 5).y;
+	main.add(new PButton(UI.scale(200), "Automatic selection", 'k', autosel), x, prev.pos("ur").y);
+
 	y += UI.scale(60);
 	if(gopts) {
 	    if((SteamStore.steamsvc.get() != null) && (Steam.get() != null)) {
@@ -823,16 +837,16 @@ public class OptWnd extends Window {
 			    SteamStore.launch(ui.sess);
 		}), 0, y).pos("bl").adds(0, 5).y;
 	    }
-	    y = main.add(new Button(UI.scale(200), "Switch character", false).action(() -> {
+	    y = (prev = main.add(new Button(UI.scale(200), "Switch character", false).action(() -> {
 			getparent(GameUI.class).act("lo", "cs");
-	    }), 0, y).pos("bl").adds(0, 5).y;
-	    y = main.add(new Button(UI.scale(200), "Log out", false).action(() -> {
+	    }), 0, y)).pos("bl").adds(0, 5).y;
+	    main.add(new Button(UI.scale(200), "Log out", false).action(() -> {
 			getparent(GameUI.class).act("lo");
-	    }), 0, y).pos("bl").adds(0, 5).y;
+	    }), x, prev.pos("ur").y);
 	}
 	y = main.add(new Button(UI.scale(200), "Close", false).action(() -> {
 		    OptWnd.this.hide();
-	}), 0, y).pos("bl").adds(0, 5).y;
+	}), x/2, y).pos("bl").adds(0, 5).y;
 	this.main.pack();
 
 	chpanel(this.main);
@@ -855,129 +869,24 @@ public class OptWnd extends Window {
 	super.show();
     }
 
-	public class NOptWnd extends Panel  {
+	public class NQolPanel extends Panel  {
 		private final Widget save;
 		private final Widget back;
 
-		private Widget oldVis;
-		private Widget curVis;
-		ArrayList<Widget> panels = new ArrayList<>();
 		private QoL qol_p;
-//		private BotSettings botsettings_p;
-//		private IngredientSettings is_p;
-//		private AreaSettings areas_p;
-//		private AutoPicking autoPicking_p;
-//		private MarksNRings marks_p;
-//		private ColorPanel colors_p;
-		private boolean needUpdate = false;
 
-		public NOptWnd(Panel prev1) {
+
+		public NQolPanel(Panel prev1) {
 			super();
-			Widget prev;
-			int button_size = 150;
-//			prev = add(new Button(button_size, "Marks and Rings") {
-//				@Override
-//				public void click() {
-//					for (Widget w : panels)
-//						w.hide();
-//					marks_p.show();
-//					curVis = qol_p;
-//
-//				}
-//			}, new Coord(0, 0));
 
-			prev = add(new Button(button_size, "Quality of Life") {
-				@Override
-				public void click() {
-					for (Widget w : panels)
-						w.hide();
-					qol_p.show();
-					curVis = qol_p;
+			qol_p = add(new QoL(),Coord.z);
 
-				}
-			}, new Coord(0, 0));
-			Widget start = prev;
-
-//			prev = add(new Button(button_size, "Bots Settings") {
-//				@Override
-//				public void click() {
-//					for (Widget w : panels)
-//						w.hide();
-//					botsettings_p.show();
-//					curVis = botsettings_p;
-//				}
-//			}, prev.pos("ur").adds(5, 0));
-
-//			prev = add(new Button(button_size, "Ingredient") {
-//				@Override
-//				public void click() {
-//					for (Widget w : panels)
-//						w.hide();
-//					is_p.show();
-//					curVis = is_p;
-//				}
-//			}, prev.pos("ur").adds(5, 0));
-
-//			prev = add(new Button(button_size, "Areas ID") {
-//				@Override
-//				public void click() {
-//					for (Widget w : panels)
-//						w.hide();
-//					areas_p.show();
-//					curVis = areas_p;
-//				}
-//			}, prev.pos("ur").adds(5, 0));
-
-//			prev = add(new Button(button_size, "Auto Picking") {
-//				@Override
-//				public void click() {
-//					for (Widget w : panels)
-//						w.hide();
-//					autoPicking_p.show();
-//					curVis = autoPicking_p;
-//				}
-//			}, prev.pos("ur").adds(5, 0));
-
-//			prev = add(new Button(button_size, "Colors") {
-//				@Override
-//				public void click() {
-//					for (Widget w : panels)
-//						w.hide();
-//					colors_p.show();
-//					curVis = colors_p;
-//				}
-//			}, prev.pos("ur").adds(5, 0));
-
-
-			qol_p = add(new QoL(), start.pos("bl").adds(0, 5));
-//			botsettings_p = add(new BotSettings(), start.pos("bl").adds(0, 5));
-//			is_p = add(new IngredientSettings(), start.pos("bl").adds(0, 5));
-//			areas_p = add(new AreaSettings(), start.pos("bl").adds(0, 5));
-//			marks_p = add(new MarksNRings(), start.pos("bl").adds(0, 5));
-//			colors_p = add(new ColorPanel(), start.pos("bl").adds(0, 5));
-//			autoPicking_p = add(new AutoPicking(), start.pos("bl").adds(0, 5));
-			panels.add(qol_p);
-//			panels.add(botsettings_p);
-//			panels.add(is_p);
-//			panels.add(areas_p);
-//			panels.add(marks_p);
-//			panels.add(colors_p);
-//			panels.add(autoPicking_p);
-			for (Widget w : panels)
-				w.hide();
-			oldVis = qol_p;
-			curVis = qol_p;
-			curVis.show();
 			save = add(new Button(UI.scale(200), "Save") {
 				@Override
 				public void click() {
-//					if(curVis == is_p){
-//						is_p.is.save();
-//					}
 					NConfig.needUpdate();
-//					NGob.updateMarked();
 				}
-			}, curVis.pos("bl").adds(0, UI.scale(5)));
+			}, qol_p.pos("bl").adds(0, UI.scale(5)));
 			back = add(new Button(UI.scale(200), "Back")
 			{
 				@Override
@@ -992,942 +901,118 @@ public class OptWnd extends Window {
 					}
 					return(false);
 				}
-			}, curVis.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
+			}, qol_p.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
 			pack();
-		}
-
-//		@Override
-//		public boolean drop(WItem target, Coord cc, Coord ul) {
-//			if(is_p==curVis)
-//				is_p.drop(target);
-//
-//			return true;
-//		}
-//
-//		@Override
-//		public boolean iteminteract(WItem target, Coord cc, Coord ul) {
-//			return false;
-//		}
-
-/*
-		class MarksNRings extends Widget {
-
-			Widget arrow_red_mark;
-			Widget ring_red_mark;
-
-			public MarksNRings() {
-				Widget prev;
-				prev = add(new Label("Ranges of buildings:"), new Coord(0, 0));
-				prev = add(new CheckBox("Barter Hand:") {
-					{
-						a = NConfiguration.getInstance().rings.get("barterhand").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("barterhand").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Trough:") {
-					{
-						a = NConfiguration.getInstance().rings.get("trough").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("trough").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Mine support:") {
-					{
-						a = NConfiguration.getInstance().rings.get("minesup").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("minesup").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-
-				prev = add(new CheckBox("Bee Skep:") {
-					{
-						a = NConfiguration.getInstance().rings.get("beeskep").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("beeskep").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-
-
-				prev = add(new Label("Ranges of animals:"), prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Adder:") {
-					{
-						a = NConfiguration.getInstance().rings.get("adder").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("adder").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("adder").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("adder").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("adder").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-				prev = add(new CheckBox("Badger:") {
-					{
-						a = NConfiguration.getInstance().rings.get("badger").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("badger").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("badger").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("badger").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("badger").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-
-				prev = add(new CheckBox("Bat:") {
-					{
-						a = NConfiguration.getInstance().rings.get("bat").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("bat").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("bat").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("bat").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("bat").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-
-				prev = add(new CheckBox("Bear:") {
-					{
-						a = NConfiguration.getInstance().rings.get("bear").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("bear").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("bear").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("bear").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("bear").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-				prev = add(new CheckBox("Boar:") {
-					{
-						a = NConfiguration.getInstance().rings.get("boar").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("boar").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("boar").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("boar").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("boar").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-				prev = add(new CheckBox("Goat:") {
-					{
-						a = NConfiguration.getInstance().rings.get("wildgoat").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("wildgoat").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("wildgoat").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("wildgoat").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("wildgoat").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-				prev = add(new CheckBox("Lynx:") {
-					{
-						a = NConfiguration.getInstance().rings.get("lynx").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("lynx").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("lynx").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("lynx").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("lynx").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-				prev = add(new CheckBox("Mammoth:") {
-					{
-						a = NConfiguration.getInstance().rings.get("mammoth").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("mammoth").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("mammoth").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("mammoth").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("mammoth").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-
-				prev = add(new CheckBox("Moose:") {
-					{
-						a = NConfiguration.getInstance().rings.get("moose").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("moose").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("moose").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("moose").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("moose").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-
-				prev = add(new CheckBox("Orca:") {
-					{
-						a = NConfiguration.getInstance().rings.get("orca").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("orca").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("orca").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("orca").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("orca").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-
-				prev = add(new CheckBox("Wolverine:") {
-					{
-						a = NConfiguration.getInstance().rings.get("wolverine").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("wolverine").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("wolverine").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("wolverine").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("wolverine").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-
-				prev = add(new CheckBox("Walrus:") {
-					{
-						a = NConfiguration.getInstance().rings.get("walrus").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("walrus").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("walrus").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("walrus").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("walrus").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-				prev = add(new CheckBox("Wolf:") {
-					{
-						a = NConfiguration.getInstance().rings.get("wolf").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("wolf").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("wolf").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("wolf").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("wolf").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-				prev = add(new CheckBox("Troll:") {
-					{
-						a = NConfiguration.getInstance().rings.get("troll").isEnable;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().rings.get("troll").isEnable = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new TextEntry(150, String.valueOf(NConfiguration.getInstance().rings.get("troll").size)) {
-
-					public void activate(String text) {
-						try {
-							NConfiguration.getInstance().rings.get("troll").size = Double.parseDouble(text);
-							commit();
-						} catch (NumberFormatException e) {
-							this.settext(String.valueOf(NConfiguration.getInstance().rings.get("troll").size));
-						}
-					}
-				}, new Coord(300, prev.c.y));
-				prev = add(new Label("Notification about players:"), prev.pos("bl").adds(0, 5));
-				Widget right;
-				prev = add(new Label("White:"), prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Arrow") {
-					{
-						a = NConfiguration.getInstance().players.get("white").arrow;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().players.get("white").arrow = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				add(new CheckBox("Ring") {
-					{
-						a = NConfiguration.getInstance().players.get("white").ring;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().players.get("white").ring = val;
-						a = val;
-					}
-				}, prev.pos("ur").adds(5, 0));
-				prev = add(new Label("Red:"), prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Arrow") {
-					{
-						a = NConfiguration.getInstance().players.get("red").arrow;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().players.get("red").arrow = val;
-						a = val;
-						if (!a)
-							arrow_red_mark.hide();
-						else
-							arrow_red_mark.show();
-					}
-				}, prev.pos("bl").adds(0, 5));
-
-				right = add(new CheckBox("Arrow mark") {
-					{
-						a = NConfiguration.getInstance().players.get("red").mark;
-						if (!NConfiguration.getInstance().players.get("red").arrow)
-							hide();
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().players.get("red").mark = val;
-						a = val;
-					}
-				}, prev.pos("ur").adds(5, 0));
-				arrow_red_mark = right;
-				right = add(new CheckBox("Ring") {
-					{
-						a = NConfiguration.getInstance().players.get("red").ring;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().players.get("red").ring = val;
-						a = val;
-						if (!a)
-							ring_red_mark.hide();
-						else
-							ring_red_mark.show();
-					}
-				}, right.pos("ur").adds(5, 0));
-				right = add(new CheckBox("Ring mark") {
-					{
-						a = NConfiguration.getInstance().players.get("red").mark_target;
-						if (!NConfiguration.getInstance().players.get("red").ring)
-							hide();
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().players.get("red").mark_target = val;
-						a = val;
-					}
-				}, right.pos("ur").adds(5, 0));
-				ring_red_mark = right;
-
-				pack();
-			}
-		}
-*/
-
-//		class ColorPanel extends Widget {
-//			public ColorPanel() {
-//				Widget prev;
-//				Widget color_b;
-//				prev = add(new Label("Overlays colors:"), new Coord(0, 0));
-//				color_b = add(new NColorWidget("IDLE:","free"), prev.pos("bl").adds(0, 5));
-//				color_b = add(new NColorWidget("Ready:", "ready"), color_b.pos("bl").adds(0, 5));
-//				color_b = add(new NColorWidget("Warning:","warning"), color_b.pos("bl").adds(0, 5));
-//				color_b = add(new NColorWidget("In work:","inwork"), color_b.pos("bl").adds(0, 5));
-//				prev = add(new Label("Garden pots:"), color_b.pos("bl").adds(0, 5));
-//				color_b = add(new NColorWidget("No soil:","no_soil"), prev.pos("bl").adds(0, 5));
-//				color_b = add(new NColorWidget("No water:", "no_water"), color_b.pos("bl").adds(0, 5));
-//				prev = add(new Label("Containers:"), color_b.pos("bl").adds(0, 5));
-//				color_b = add(new NColorWidget("Full:","full"), prev.pos("bl").adds(0, 5));
-//				color_b = add(new NColorWidget("Not full:", "not_full"), color_b.pos("bl").adds(0, 5));
-//				pack();
-//			}
-//		}
-
-		class QoL extends Widget {
-			public QoL() {
-
-				prev = add(new Label("Other:"), new Coord(0, 0));
-				prev = add(new CheckBox("Show crop stage:") {
-					{
-						a = (Boolean) NConfig.get(NConfig.Key.showCropStage);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.showCropStage, val);
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Night vision:") {
-					{
-						a = (Boolean) NConfig.get(NConfig.Key.nightVision);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.nightVision, val);
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-
-				prev = add(new CheckBox("Bounding Boxes:") {
-					{
-						a = (Boolean) NConfig.get(NConfig.Key.showBB);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.showBB, val);
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-
-				prev = add(new CheckBox("Flat surface (need reboot):") {
-					{
-						a = (Boolean) NConfig.get(NConfig.Key.nextflatsurface);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.nextflatsurface, val);
-						a = val;
-					}
-
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Show decorative objects (need reboot):") {
-					{
-						a = (Boolean) NConfig.get(NConfig.Key.nextshowCSprite);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.nextshowCSprite, val);
-						a = val;
-					}
-
-				}, prev.pos("bl").adds(0, 5));
-
-				prev = add(new CheckBox("Hide nature objects:") {
-					{
-						a = !(Boolean) NConfig.get(NConfig.Key.hideNature);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.hideNature, !val);
-						a = val;
-						NUtils.showHideNature();
-					}
-
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Disable menugrid keys:") {
-					{
-						a = (Boolean) NConfig.get(NConfig.Key.disableMenugridKeys);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.disableMenugridKeys, val);
-						a = val;
-					}
-
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Show mining overlay") {
-					{
-						a = (Boolean) NConfig.get(NConfig.Key.miningol);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.miningol, val);
-						a = val;
-					}
-
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Enable tracking when login") {
-					{
-						a = (Boolean) NConfig.get(NConfig.Key.tracking);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.tracking, val);
-						a = val;
-					}
-
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Enable criminal acting when login") {
-					{
-						a = (Boolean) NConfig.get(NConfig.Key.crime);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.crime, val);
-						a = val;
-					}
-
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Enable swimming when login") {
-					{
-						a = (Boolean) NConfig.get(NConfig.Key.swimming);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.swimming, val);
-						a = val;
-					}
-
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("DEBUG") {
-					{
-						a = (Boolean) NConfig.get(NConfig.Key.debug);
-					}
-
-					public void set(boolean val) {
-						NConfig.set(NConfig.Key.debug, val);
-						NUtils.getUI().core.debug = val;
-						a = val;
-					}
-
-				}, prev.pos("bl").adds(0, 5));
-//				prev = add(new CheckBox("Collect Food Info:") {
-//					{
-//						a = NConfiguration.getInstance().collectFoodInfo;
-//					}
-//
-//					public void set(boolean val) {
-//						NConfiguration.getInstance().collectFoodInfo = val;
-//						a = val;
-//					}
-//				}, prev.pos("bl").adds(0, 5));
-				/*
-				prev = add(new CheckBox("Bots zones:") {
-					{
-						a = NConfiguration.getInstance().showAreas;
-					}
-
-					public void set(boolean val) {
-						NConfiguration.getInstance().showAreas = val;
-						a = val;
-					}
-				}, prev.pos("bl").adds(0, 5));
-
-				prev = add(new Label("Visualisation of path:"), prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Player") {
-					{
-						a = NConfiguration.getInstance().pathCategories.contains(NPathVisualizer.PathCategory.ME);
-					}
-
-					public void set(boolean val) {
-						if(val)
-							NConfiguration.getInstance().pathCategories.add(NPathVisualizer.PathCategory.ME);
-						else
-							NConfiguration.getInstance().pathCategories.remove(NPathVisualizer.PathCategory.ME);
-						a = val;
-						NConfiguration.getInstance().write();
-					}
-				}, prev.pos("bl").adds(0, 5));
-
-				prev = add(new CheckBox("Foe") {
-					{
-						a = NConfiguration.getInstance().pathCategories.contains(NPathVisualizer.PathCategory.FOE);
-					}
-
-					public void set(boolean val) {
-						if(val)
-							NConfiguration.getInstance().pathCategories.add(NPathVisualizer.PathCategory.FOE);
-						else
-							NConfiguration.getInstance().pathCategories.remove(NPathVisualizer.PathCategory.FOE);
-						a = val;
-						NConfiguration.getInstance().write();
-					}
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Friend") {
-					{
-						a = NConfiguration.getInstance().pathCategories.contains(NPathVisualizer.PathCategory.FRIEND);
-					}
-
-					public void set(boolean val) {
-						if(val)
-							NConfiguration.getInstance().pathCategories.add(NPathVisualizer.PathCategory.FRIEND);
-						else
-							NConfiguration.getInstance().pathCategories.remove(NPathVisualizer.PathCategory.FRIEND);
-						a = val;
-						NConfiguration.getInstance().write();
-					}
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Other") {
-					{
-						a = NConfiguration.getInstance().pathCategories.contains(NPathVisualizer.PathCategory.OTHER);
-					}
-
-					public void set(boolean val) {
-						if(val)
-							NConfiguration.getInstance().pathCategories.add(NPathVisualizer.PathCategory.OTHER);
-						else
-							NConfiguration.getInstance().pathCategories.remove(NPathVisualizer.PathCategory.OTHER);
-						a = val;
-						NConfiguration.getInstance().write();
-					}
-				}, prev.pos("bl").adds(0, 5));
-				prev = add(new CheckBox("Path finder") {
-					{
-						a = NConfiguration.getInstance().pathCategories.contains(NPathVisualizer.PathCategory.PF);
-					}
-
-					public void set(boolean val) {
-						if(val)
-							NConfiguration.getInstance().pathCategories.add(NPathVisualizer.PathCategory.PF);
-						else
-							NConfiguration.getInstance().pathCategories.remove(NPathVisualizer.PathCategory.PF);
-						a = val;
-						NConfiguration.getInstance().write();
-					}
-				}, prev.pos("bl").adds(0, 5));
-				*/
-
-//				prev = add(new Label("Speed:"), prev.pos("bl").adds(0, 5));
-//				prev = add(new Label("Player:"), prev.pos("bl").adds(0, 5));
-//				Dropbox player = add(new Dropbox<String>(100, 5, 16) {
-//					@Override
-//					protected String listitem(int i) {
-//						return new LinkedList<>(NConfiguration.getInstance().playerSpeed_h.keySet()).get(i);
-//					}
-//
-//					@Override
-//					protected int listitems() {
-//						return NConfiguration.getInstance().playerSpeed_h.keySet().size();
-//					}
-//
-//					@Override
-//					protected void drawitem(GOut g, String item, int i) {
-//						g.text(item, Coord.z);
-//					}
-//
-//					@Override
-//					public void change(String item) {
-//						super.change(item);
-//						NConfiguration.getInstance().playerSpeed = NConfiguration.getInstance().playerSpeed_h.get(item);
-//					}
-//				}, prev.pos("ur").adds(20, 0));
-//
-//				for (String key : NConfiguration.getInstance().playerSpeed_h.keySet()) {
-//					if (NConfiguration.getInstance().playerSpeed_h.get(key) == NConfiguration.getInstance().playerSpeed)
-//						player.sel = key;
-//				}
-//
-//				prev = add(new Label("Horse:"), prev.pos("bl").adds(0, 5));
-//				Dropbox horse = add(new Dropbox<String>(100, 5, 16) {
-//					@Override
-//					protected String listitem(int i) {
-//						return new LinkedList<>(NConfiguration.getInstance().horseSpeed_h.keySet()).get(i);
-//					}
-//
-//					@Override
-//					protected int listitems() {
-//						return NConfiguration.getInstance().horseSpeed_h.keySet().size();
-//					}
-//
-//					@Override
-//					protected void drawitem(GOut g, String item, int i) {
-//						g.text(item, Coord.z);
-//					}
-//
-//					@Override
-//					public void change(String item) {
-//						super.change(item);
-//						NConfiguration.getInstance().horseSpeed = NConfiguration.getInstance().horseSpeed_h.get(item);
-//					}
-//				}, player.pos("bl").adds(0, 5));
-//				for (String key : NConfiguration.getInstance().horseSpeed_h.keySet()) {
-//					if (NConfiguration.getInstance().horseSpeed_h.get(key) == NConfiguration.getInstance().horseSpeed)
-//						horse.sel = key;
-//				}
-				pack();
-			}
-		}
-
-//		class IngredientSettings extends Widget {
-//			public void drop(WItem target) {
-//				is.drop(target);
-//			}
-//
-//			nurgling.bots.settings.IngredientSettings is;
-//
-//			public IngredientSettings() {
-//				is = add(new nurgling.bots.settings.IngredientSettings());
-//				pack();
-//			}
-//		}
-
-		/*
-		class AreaSettings extends Widget {
-			AreaIconSelecter area;
-			Dropbox<String> dropbox;
-			public AreaSettings() {
-				prev =  add(new Label("Select an existing area to set the image for SIGN"));
-				prev = dropbox = add(new Dropbox<String>(100, 5, 16) {
-					@Override
-					protected String listitem(int i) {
-						return Stream.of(AreasID.values())
-								.map(Enum::name)
-								.collect(Collectors.toList()).get(i);
-					}
-
-					@Override
-					protected int listitems() {
-						List<String> enumNames = Stream.of(AreasID.values())
-								.map(Enum::name)
-								.collect(Collectors.toList());
-						return enumNames.size();
-					}
-
-					@Override
-					protected void drawitem(GOut g, String item, int i) {
-						g.text(item, Coord.z);
-					}
-
-					@Override
-					public void change(String item) {
-						area.setAreaID(AreasID.valueOf(item));
-						super.change(item);
-					}
-				},prev.pos("bl").adds(0, 10));
-				TextEntry name = add(new TextEntry(110,""), prev.pos("ur").adds(5, -2));
-				add(new Button(50,"Set"){
-					@Override
-					public void click() {
-						try {
-							dropbox.change(name.text());
-						}catch (IllegalArgumentException e){
-							NUtils.getGameUI().msg("NAME NOT FOUND");
-						}
-					}
-				}, name.pos("ur").adds(5, -2));
-				prev = add(new Label("Setup correct image, using marker key (PRESS SHIFT and MOVE cursor on SIGN with image) or enter resName without PATH"),prev.pos("bl").adds(0, 10));
-				prev = area = (AreaIconSelecter)add(new AreaIconSelecter(AreasID.branch),prev.pos("bl").adds(0, 10));
-
-				pack();
-			}
-		}
-		*/
-        /*
-		class BotSettings extends Widget {
-			LinkedList<String> names = new LinkedList<>();
-			LinkedList<Widget> settings = new LinkedList<>();
-
-			public BotSettings() {
-
-				prev = add(new Dropbox<String>(UI.scale(100), UI.scale(5), UI.scale(16)) {
-					@Override
-					protected String listitem(int i) {
-						return names.get(i);
-					}
-
-					@Override
-					protected int listitems() {
-						return names.size();
-					}
-
-					@Override
-					protected void drawitem(GOut g, String item, int i) {
-						g.text(item, Coord.z);
-					}
-
-					@Override
-					public void change(String item) {
-						super.change(item);
-						for(Widget w: settings)
-							if(w.getClass().getName().contains(item)){
-								for(Widget unit: settings)
-									unit.hide();
-								w.show();
-								parent.pack();
-								((NOptWnd)parent.parent).needUpdate = true;
-							}
-					}
-				});
-
-
-				NOper l = (w)->{
-					add(w,prev.pos("bl").add(0,5));
-					settings.add(w);
-					names.add(w.getClass().getName().substring(23));
-				};
-
-				l.addWidget(new Dryer());
-				l.addWidget(new Butcher());
-				l.addWidget(new KFC());
-				l.addWidget(new Smelter());
-				l.addWidget(new Tanning());
-				l.addWidget(new FarmerCarrrot());
-				l.addWidget(new Goats());
-				l.addWidget(new Sheeps());
-				l.addWidget(new Cows());
-				l.addWidget(new Pigs());
-				l.addWidget(new Horses());
-				l.addWidget(new Communication());
-
-				for(Widget w: settings)
-					w.hide();
-				pack();
-			}
-		}
-		*/
-
-		/*
-		public class AutoPicking extends Widget {
-
-			public HashMap<Integer, Widget> wdgts = new HashMap<>();
-			public NAutoPickMenu pm;
-			public NAutoActionMenu am;
-			public AutoPicking() {
-				pm = add(new NAutoPickMenu());
-				for(NConfiguration.PickingAction action : NConfiguration.getInstance().pickingActions) {
-					pm.readItem(action.action,action.isEnable);
-				}
-
-				int len = 0;
-				for(NAutoPickMenu.PickItem pL : pm.pickList)
-				{
-					len = Math.max(len,pL.sz.x);
-				}
-				pm.resize(len+UI.scale(10),pm.sz.y);
-
-				am = add(new NAutoActionMenu(),pm.pos("ur").add(UI.scale(20),0));
-				for(String action : NConfiguration.getInstance().quickActions) {
-					am.readItem(action);
-				}
-
-				pack();
-			}
-		}
-		*/
-
-
-		public void draw(GOut g) {
-			if (curVis != oldVis || needUpdate) {
-				save.move(curVis.pos("bl").adds(0, UI.scale(5)));
-				back.move(curVis.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5) ));
-				oldVis = curVis;
-				pack();
-			}
-			super.draw(g);
 		}
 	}
 
+//	prev.pos("bl").adds(0, 5));
+//	prev = add(new CheckBox("Disable menugrid keys:") {
+//		{
+//			a = (Boolean) NConfig.get(NConfig.Key.disableMenugridKeys);
+//		}
+//
+//		public void set(boolean val) {
+//			NConfig.set(NConfig.Key.disableMenugridKeys, val);
+//			a = val;
+//		}
+
+	public class NQuickActionsPanel extends Panel  {
+		private final Widget save;
+		private final Widget back;
+
+		public QuickActions qol_p;
+
+
+		public NQuickActionsPanel(Panel prev1) {
+			super();
+
+			qol_p = add(new QuickActions(),Coord.z);
+
+			save = add(new Button(UI.scale(200), "Save") {
+				@Override
+				public void click() {
+					ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
+
+					for(QuickActions.ActionsItem actionsItem: qol_p.patterns)
+					{
+						HashMap<String, Object> res = new HashMap<>();
+						res.put("type", "NPattern");
+						res.put("name", actionsItem.text());
+						res.put("enabled", actionsItem.isEnabled.a);
+						qpattern.add(res);
+					}
+
+					NConfig.set(NConfig.Key.q_pattern, qpattern);
+					NConfig.needUpdate();
+				}
+			}, qol_p.pos("bl").adds(0, UI.scale(5)));
+			back = add(new Button(UI.scale(200), "Back")
+			{
+				@Override
+				public void click() {
+					chpanel(prev1);
+				}
+
+				public boolean keydown(KeyEvent ev) {
+					if((ev.getKeyChar() == 27)) {
+						chpanel(prev1);
+						return(true);
+					}
+					return(false);
+				}
+			}, qol_p.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
+			pack();
+		}
+	}
+
+
+	public class NAutoSelectPanel extends Panel  {
+		private final Widget save;
+		private final Widget back;
+
+		public AutoSelection autosel_p;
+
+
+		public NAutoSelectPanel(Panel prev1) {
+			super();
+
+			autosel_p = add(new AutoSelection(),Coord.z);
+
+			save = add(new Button(UI.scale(200), "Save") {
+				@Override
+				public void click() {
+					ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
+
+					for(AutoSelection.AutoSelectItem actionsItem: autosel_p.petals)
+					{
+						HashMap<String, Object> res = new HashMap<>();
+						res.put("type", "NPetal");
+						res.put("name", actionsItem.text());
+						res.put("enabled", actionsItem.isEnabled.a);
+						qpattern.add(res);
+					}
+
+					NConfig.set(NConfig.Key.petals, qpattern);
+					NConfig.needUpdate();
+				}
+			}, autosel_p.pos("bl").adds(0, UI.scale(5)));
+			back = add(new Button(UI.scale(200), "Back")
+			{
+				@Override
+				public void click() {
+					chpanel(prev1);
+				}
+
+				public boolean keydown(KeyEvent ev) {
+					if((ev.getKeyChar() == 27)) {
+						chpanel(prev1);
+						return(true);
+					}
+					return(false);
+				}
+			}, autosel_p.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
+			pack();
+		}
+	}
 }

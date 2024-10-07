@@ -149,7 +149,7 @@ public class WItem extends Widget implements DTarget {
 	return((cont == null) ? cont = ui.root : cont);
     }
 
-    private GSprite lspr = null;
+    public GSprite lspr = null;
     private Widget lcont = null;
     public void tick(double dt) {
 	/* XXX: This is ugly and there should be a better way to

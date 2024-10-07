@@ -82,7 +82,7 @@ public class UsingTools extends Widget {
 
     public static class Tool{
         TexI img;
-        String name;
+        public String name;
         String path;
 
         public Tool(String path, String name)

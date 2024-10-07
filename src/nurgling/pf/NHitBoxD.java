@@ -23,10 +23,9 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     boolean checkPointsInitiated = false;
     public Coord2d[] checkPoints;
     boolean ortho = true;
-    boolean asymmetric = false;
     boolean primitive = false;
 
-    private static boolean intersection_by_points = true;
+    private static final boolean intersection_by_points = false;
 
 
     public NHitBoxD(Coord rc) {
@@ -301,27 +300,31 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
                         (other.c[0].y < this.c[2].y));
         }
 
-        if (this.ortho)
-            if (other.contains(this.rc, includeBorder))
-                return true;
-        if (other.ortho)
-            if (this.contains(other.rc, includeBorder))
-                return true;
-        for (int k = 0; k < 4; k++)
-            if (other.contains(this.c[k], includeBorder))
-                return true;
-        for (int k = 0; k < 4; k++)
-            if (this.contains(other.c[k], includeBorder))
-                return true;
+        if (!intersection_by_points) {
+            if (this.ortho)
+                if (other.contains(this.rc, includeBorder))
+                    return true;
+            if (other.ortho)
+                if (this.contains(other.rc, includeBorder))
+                    return true;
+            for (int k = 0; k < 4; k++)
+                if (other.contains(this.c[k], includeBorder))
+                    return true;
+            for (int k = 0; k < 4; k++)
+                if (this.contains(other.c[k], includeBorder))
+                    return true;
 
-        if (!other.ortho)
-            for (Coord2d checkPoint : other.checkPoints)
-                if (this.contains(checkPoint, includeBorder))
-                    return true;
-        if (!this.ortho)
-            for (Coord2d checkPoint : this.checkPoints)
-                if (other.contains(checkPoint, includeBorder))
-                    return true;
+            if (!other.ortho)
+                for (Coord2d checkPoint : other.checkPoints)
+                    if (this.contains(checkPoint, includeBorder))
+                        return true;
+            if (!this.ortho)
+                for (Coord2d checkPoint : this.checkPoints)
+                    if (other.contains(checkPoint, includeBorder))
+                        return true;
+        } else {
+            //TODO precise intersection system
+        }
 
         return false;
     }

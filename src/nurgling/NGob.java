@@ -47,7 +47,7 @@ public class NGob {
         if (a instanceof GobIcon)
         {
             GobIcon gi = (GobIcon) a;
-            String name = gi.icon().name();
+//            String name = gi.icon().name();
         }
 
         if (a instanceof Drawable) {
@@ -64,6 +64,12 @@ public class NGob {
                         }
                     }
                     if (name != null) {
+                        if(NStyle.iconMap.containsKey(name))
+                        {
+                            //TODO трюфель
+                            parent.setattr(new GobIcon(parent,NStyle.iconMap.get(name),new byte[0]));
+                        }
+
                         if (NParser.checkName(name, new NAlias("plants"))) {
                             parent.addcustomol(new NCropMarker(parent));
                         }

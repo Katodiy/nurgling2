@@ -18,9 +18,11 @@ public class NFlowerMenu extends FlowerMenu
     NPetal[] nopts;
 
     int len = 0;
+    boolean shiftMode = false;
     public NFlowerMenu(String[] opts)
     {
         super();
+        shiftMode = ((NMapView)NUtils.getGameUI().map).shiftPressed;
         nopts = new NPetal[opts.length];
         int y = 0;
 
@@ -34,6 +36,24 @@ public class NFlowerMenu extends FlowerMenu
         for(int i = 0; i < opts.length; i++)
         {
             nopts[i].resize(len, bl.sz().y);
+        }
+    }
+
+    @Override
+    public void tick(double dt) {
+        super.tick(dt);
+        if(!shiftMode && (Boolean) NConfig.get(NConfig.Key.asenable)) {
+            if ((Boolean) NConfig.get(NConfig.Key.singlePetal) && nopts.length == 1) {
+                nchoose(nopts[0]);
+            } else {
+                ArrayList<String> autoPetal = NUtils.getPetals();
+                for (NPetal opt : nopts) {
+                    if (autoPetal.contains(opt.name)) {
+                        nchoose(opt);
+                        break;
+                    }
+                }
+            }
         }
     }
 

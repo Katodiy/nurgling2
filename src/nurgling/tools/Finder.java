@@ -1,12 +1,14 @@
 package nurgling.tools;
 
 import haven.*;
+import haven.res.gfx.fx.eq.Equed;
 import nurgling.*;
 import nurgling.areas.*;
 import nurgling.pf.*;
 import nurgling.tasks.*;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class Finder
 {
@@ -261,8 +263,50 @@ public class Finder
     public static Gob findGob(NAlias name) throws InterruptedException
     {
         NUtils.getUI().core.addTask(new FindPlayer());
+        return findGob(NUtils.player().rc, name, null, 10000);
+    }
+
+    public static Gob findGob(Coord2d coord2d, NAlias name, NAlias poses, double dist) throws InterruptedException
+    {
         Gob result = null;
-        double dist = 10000;
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
+                {
+                    if (NParser.isIt(gob, name) && NUtils.player() != null && gob.id!=NUtils.player().id)
+                    {
+                        if(poses!=null) {
+                            if (gob.pose() != null) {
+                                if (NParser.checkName(gob.pose(), poses)) {
+                                    double new_dist;
+                                    if ((new_dist = gob.rc.dist(coord2d)) < dist) {
+                                        dist = new_dist;
+                                        result = gob;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            double new_dist;
+                            if ((new_dist = gob.rc.dist(coord2d)) < dist) {
+                                dist = new_dist;
+                                result = gob;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public static ArrayList<Gob> findGobs(Coord2d coord2d, NAlias name, NAlias poses, double dist) throws InterruptedException
+    {
+
+        ArrayList<Gob> result = new ArrayList<>();
         synchronized (NUtils.getGameUI().ui.sess.glob.oc)
         {
             for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
@@ -271,11 +315,18 @@ public class Finder
                 {
                     if (NParser.isIt(gob, name) && NUtils.player() != null)
                     {
-                        double new_dist;
-                        if ((new_dist = gob.rc.dist(NUtils.player().rc)) < dist)
+                        if(poses!=null) {
+                            if (gob.pose() != null) {
+                                if (NParser.checkName(gob.pose(), poses)) {
+                                    if(gob.rc.dist(coord2d)<dist)
+                                        result.add(gob);
+                                }
+                            }
+                        }
+                        else
                         {
-                            dist = new_dist;
-                            result = gob;
+                            if(gob.rc.dist(coord2d)<dist)
+                                result.add(gob);
                         }
                     }
                 }
@@ -464,25 +515,33 @@ public class Finder
         return pos;
     }
 
-
-    public static Gob findGob (
-            Coord2d coord,
-            NAlias name
-    ) {
-        double length = 50000;
+    public static Gob findGobByPatterns(ArrayList<Pattern> qaPatterns, double dist) {
         Gob result = null;
-        synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
-            for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
-                if ( gob != NUtils.getGameUI().map.player () ) {
-                            double dist = coord.dist(gob.rc);
-                            if (dist < length) {
-                                length = dist;
-                                result = gob;
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
+                {
+                    if(gob.ngob!=null && gob.ngob.name!=null) {
+                        for(Pattern pattern : qaPatterns) {
+                            if(pattern.matcher(gob.ngob.name).matches()) {
+                                double new_dist;
+                                if (gob.id != NUtils.playerID() && (new_dist = gob.rc.dist(NUtils.player().rc)) < dist) {
+                                    if(!(Boolean)NConfig.get(NConfig.Key.q_visitor) || (!(NParser.checkName(gob.ngob.name, new NAlias("palisadebiggate","palisadegate"))) || gob.findol(Equed.class)==null)) {
+                                        Following fol;
+                                        if(!(NParser.checkName(gob.ngob.name,"horse") && (fol = NUtils.player().getattr(Following.class))!=null && fol.tgt == gob.id)) {
+                                            dist = new_dist;
+                                            result = gob;
+                                        }
+                                    }
+                                }
                             }
+                        }
+                    }
                 }
             }
         }
         return result;
     }
-
 }

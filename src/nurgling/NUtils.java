@@ -10,10 +10,13 @@ import nurgling.areas.*;
 import nurgling.tasks.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
+import nurgling.widgets.options.AutoSelection;
+import nurgling.widgets.options.QuickActions;
 
 import java.awt.*;
 import java.text.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static haven.OCache.posres;
 
@@ -328,5 +331,29 @@ public class NUtils
 
     public static float getDeltaZ() {
         return getUI().getDeltaZ();
+    }
+
+    public static ArrayList<Pattern> getQAPatterns() {
+        ArrayList<Pattern> patterns = new ArrayList<>();
+        for(QuickActions.ActionsItem ai : ((OptWnd.NQuickActionsPanel)getGameUI ().opts.nquickAct).qol_p.patterns)
+        {
+            if(ai.isEnabled.a)
+                patterns.add(Pattern.compile(ai.text()));
+        }
+        return patterns;
+    }
+
+    public static ArrayList<String> getPetals() {
+        ArrayList<String> vals = new ArrayList<>();
+        for(AutoSelection.AutoSelectItem ai : ((OptWnd.NAutoSelectPanel)getGameUI ().opts.autosel).autosel_p.petals)
+        {
+            if(ai.isEnabled.a)
+                vals.add(ai.text());
+        }
+        return vals;
+    }
+
+    public static String getIconInfo(String name) {
+        return NStyle.iconName.get(name);
     }
 }

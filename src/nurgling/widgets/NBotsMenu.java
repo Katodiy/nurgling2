@@ -8,7 +8,6 @@ import nurgling.actions.test.*;
 
 import java.awt.image.BufferedImage;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class NBotsMenu extends Widget
 {
@@ -50,6 +49,8 @@ public class NBotsMenu extends Widget
         utils.elements.add(new NButton("shieldsword", new EquipShieldSword()));
         utils.elements.add(new NButton("filwater", new FillWaterskins()));
         utils.elements.add(new NButton("unbox", new FreeContainersInArea()));
+        utils.elements.add(new NButton("water_cheker", new CheckWater()));
+        utils.elements.add(new NButton("clay_cheker", new CheckClay()));
         addLayout(utils);
         if(NUtils.getUI().core.debug)
         {
