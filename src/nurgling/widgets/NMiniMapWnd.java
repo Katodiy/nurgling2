@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import mapv4.MappingClient;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -10,6 +11,7 @@ import java.net.MalformedURLException;
 public class NMiniMapWnd extends Widget{
     NMapView map;
     public Map miniMap;
+    public ACheckBox geoloc;
     public static final KeyBinding kb_claim = KeyBinding.get("ol-claim", KeyMatch.nil);
     public static final KeyBinding kb_vil = KeyBinding.get("ol-vil", KeyMatch.nil);
 
@@ -77,6 +79,9 @@ public class NMiniMapWnd extends Widget{
         grid.a = (Boolean) NConfig.get(NConfig.Key.showGrid);
         ACheckBox minesup = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/minesup", kb_grid, "Display mining overlay"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("miningol", a));
         minesup.a = (Boolean) NConfig.get(NConfig.Key.miningol);
+        geoloc = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/geoloc", kb_grid, "ONLINE Navigation tracking"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> {NConfig.set(NConfig.Key.automaptrack,a); if(NUtils.getGameUI()!=null) ((OptWnd.NAutoMapperPanel)NUtils.getGameUI ().opts.nautomap).autoMapperSettings.navTrack.a = a;
+            MappingClient.getInstance().EnableTracking(a);});
+        geoloc.a = (Boolean) NConfig.get(NConfig.Key.automaptrack);
 //        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
 //        path.a = NConfiguration.getInstance().isPaths;
 

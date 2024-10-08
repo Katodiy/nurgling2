@@ -38,6 +38,7 @@ import haven.render.*;
 import nurgling.*;
 import nurgling.areas.*;
 import nurgling.overlays.map.*;
+import nurgling.tasks.GridsFilled;
 import org.json.*;
 
 /* XXX: This whole file is a bit of a mess and could use a bit of a
@@ -976,6 +977,43 @@ public class MCache implements MapSource {
 	    return(ret);
 	}
     }
+
+	public boolean checkGrid(Coord gc)
+	{
+		Reference<Grid> ref = cached.get();
+		Grid ret = (ref == null) ? null : ref.get();
+		if ((ret != null) && ret.gc.equals(gc) && !ret.removed)
+			return true;
+		synchronized(grids) {
+			ret = grids.get(gc);
+			if (ret == null) {
+				return false;
+			}
+			return true;
+		}
+	}
+
+	public boolean inReq(Coord gc)
+	{
+		return req.containsKey(gc);
+	}
+
+	public String[][] constructSection(Coord coord) throws InterruptedException {
+		final String[][] gridMap = new String[3][3];
+		NUtils.addTask(new GridsFilled(coord));
+		if(!grids.containsKey(coord))
+			return null;
+		for(Coord gc : grids.keySet())
+		{
+			Coord pos = gc.sub(coord.sub(1,1));
+			if(pos.x<0||pos.x>=3||pos.y<0||pos.y>=3)
+			{
+				return null;
+			}
+			gridMap[pos.x][pos.y] = String.valueOf(grids.get(gc).id);
+		}
+		return gridMap;
+	}
 
 	public Grid findGrid(long id)
 	{

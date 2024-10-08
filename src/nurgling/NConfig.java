@@ -3,7 +3,6 @@ package nurgling;
 import haven.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
-import nurgling.widgets.options.QuickActions;
 import org.json.*;
 
 import java.io.*;
@@ -57,7 +56,7 @@ public class NConfig
         debug,
         claydiggerprop,
         miningol,
-        q_pattern, q_range, q_visitor, q_door, petals, singlePetal, asenable, hidecredo
+        q_pattern, q_range, q_visitor, q_door, petals, singlePetal, asenable, autoMapper, endpoint, automaptrack, unloadgreen, hidecredo
     }
 
 
@@ -96,6 +95,10 @@ public class NConfig
         conf.put(Key.q_range,2);
         conf.put(Key.singlePetal,false);
         conf.put(Key.asenable,true);
+        conf.put(Key.autoMapper,false);
+        conf.put(Key.automaptrack,false);
+        conf.put(Key.unloadgreen,false);
+        conf.put(Key.endpoint,"");
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -123,6 +126,8 @@ public class NConfig
         petal.add(pres1);
         conf.put(Key.petals, petal);
     }
+
+
 
     HashMap<Key, Object> conf = new HashMap<>();
     private boolean isUpd = false;
@@ -260,27 +265,24 @@ public class NConfig
             Map<String, Object> map = main.toMap();
             for (Map.Entry<String, Object> entry : map.entrySet())
             {
-                if (entry.getValue() instanceof HashMap<?, ?>)
-                {
-                    HashMap<String, Object> hobj = ((HashMap<String, Object>) entry.getValue());
-                    String type;
-                    if ((type = (String) hobj.get("type")) != null)
-                    {
-                        switch (type)
-                        {
-                            case "NLoginData":
-                                conf.put(Key.valueOf(entry.getKey()), new NLoginData(hobj));
+                try {
+
+                    if (entry.getValue() instanceof HashMap<?, ?>) {
+                        HashMap<String, Object> hobj = ((HashMap<String, Object>) entry.getValue());
+                        String type;
+                        if ((type = (String) hobj.get("type")) != null) {
+                            switch (type) {
+                                case "NLoginData":
+                                    conf.put(Key.valueOf(entry.getKey()), new NLoginData(hobj));
+                            }
                         }
+                    } else if (Key.valueOf(entry.getKey()) != null && entry.getValue() instanceof ArrayList<?>) {
+                        conf.put(Key.valueOf(entry.getKey()), readArray((ArrayList<HashMap<String, Object>>) entry.getValue()));
+                    } else {
+                        conf.put(Key.valueOf(entry.getKey()), entry.getValue());
                     }
-                }
-                else if (entry.getValue() instanceof ArrayList<?>)
-                {
-                    conf.put(Key.valueOf(entry.getKey()), readArray((ArrayList<HashMap<String, Object>>) entry.getValue()));
-                }
-                else
-                {
-                    conf.put(Key.valueOf(entry.getKey()), entry.getValue());
-                }
+                }catch (IllegalArgumentException ignore)
+                {}
             }
         }
         conf.put(Key.showCSprite,conf.get(Key.nextshowCSprite));

@@ -29,6 +29,7 @@ package haven;
 import haven.render.*;
 import nurgling.*;
 import nurgling.conf.*;
+import nurgling.widgets.options.AutoMapper;
 import nurgling.widgets.options.AutoSelection;
 import nurgling.widgets.options.QoL;
 import nurgling.widgets.options.QuickActions;
@@ -806,6 +807,7 @@ public class OptWnd extends Window {
     }
 	public Panel nquickAct;
 	public Panel autosel;
+	public Panel nautomap;
     public OptWnd(boolean gopts) {
 	super(Coord.z, "Options", true);
 	main = add(new Panel());
@@ -814,6 +816,7 @@ public class OptWnd extends Window {
 	Panel iface = add(new InterfacePanel(main));
 	Panel keybind = add(new BindingPanel(main));
 	Panel noptwnd = add(new NQolPanel(main));
+	nautomap = add( new NAutoMapperPanel(main));
 	autosel = add(new NAutoSelectPanel(main));
 	nquickAct = add(new NQuickActionsPanel(main));
 
@@ -826,7 +829,7 @@ public class OptWnd extends Window {
 	y = (prev = main.add(new PButton(UI.scale(200), "Video settings", 'v', video), 0, y)).pos("bl").adds(0, 5).y;
 	main.add(new PButton(UI.scale(200), "Quick actions", 'k', nquickAct), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Audio settings", 'a', audio), 0, y)).pos("bl").adds(0, 5).y;
-	main.add(new PButton(UI.scale(200), "Sound alarms", 'k', noptwnd), x, prev.pos("ur").y);
+	main.add(new PButton(UI.scale(200), "Auto mapper", 'k', nautomap), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Keybindings", 'k', keybind), 0, y)).pos("bl").adds(0, 5).y;
 	main.add(new PButton(UI.scale(200), "Automatic selection", 'k', autosel), x, prev.pos("ur").y);
 
@@ -1004,4 +1007,42 @@ public class OptWnd extends Window {
 			pack();
 		}
 	}
+
+	public class NAutoMapperPanel extends Panel  {
+		private final Widget save;
+		private final Widget back;
+
+		public AutoMapper autoMapperSettings;
+
+
+		public NAutoMapperPanel(Panel prev1) {
+			super();
+
+			autoMapperSettings = add(new AutoMapper(),Coord.z);
+
+			save = add(new Button(UI.scale(200), "Save") {
+				@Override
+				public void click() {
+					NConfig.needUpdate();
+				}
+			}, autoMapperSettings.pos("bl").adds(0, UI.scale(5)));
+			back = add(new Button(UI.scale(200), "Back")
+			{
+				@Override
+				public void click() {
+					chpanel(prev1);
+				}
+
+				public boolean keydown(KeyEvent ev) {
+					if((ev.getKeyChar() == 27)) {
+						chpanel(prev1);
+						return(true);
+					}
+					return(false);
+				}
+			}, autoMapperSettings.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
+			pack();
+		}
+	}
+
 }
