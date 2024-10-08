@@ -3,6 +3,7 @@ package mapv4;
 import haven.*;
 import haven.MCache.LoadingMap;
 import haven.res.ui.obj.buddy.Buddy;
+import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.tasks.CheckGrid;
 import nurgling.tools.NParser;
@@ -210,6 +211,8 @@ public class MappingClient {
 	
 	@Override
 	public void run() {
+		if(!(Boolean)NConfig.get(NConfig.Key.autoMapper))
+			return;
 	    try {
 		final HttpURLConnection connection =
 		    (HttpURLConnection) new URL(endpoint + "/locate?gridID=" + gridID).openConnection();
@@ -221,6 +224,7 @@ public class MappingClient {
 			synchronized (cache) {
 			    cache.put(gridID, mr);
 			}
+			NUtils.setAutoMapperState(true);
 		    }
 		    
 		} finally {
@@ -253,6 +257,8 @@ public class MappingClient {
 	
 	@Override
 	public void run() {
+		if(!(Boolean)NConfig.get(NConfig.Key.autoMapper))
+			return;
 	    if(mapfile.lock.readLock().tryLock()) {
 		List<MarkerData> markers = mapfile.markers.stream().filter(uploadCheck).map(m -> {
 		    Coord mgc = new Coord(Math.floorDiv(m.tc.x, 100), Math.floorDiv(m.tc.y, 100));
@@ -290,6 +296,8 @@ public class MappingClient {
 	
 	@Override
 	public void run() {
+		if(!(Boolean)NConfig.get(NConfig.Key.autoMapper))
+			return;
 	    ArrayList<JSONObject> loadedMarkers = new ArrayList<>();
 	    while (!markers.isEmpty()) {
 		Iterator<MarkerData> iterator = markers.iterator();
@@ -339,6 +347,8 @@ public class MappingClient {
 	
 	@Override
 	public void run() {
+		if(!(Boolean)NConfig.get(NConfig.Key.autoMapper))
+			return;
 	    try {
 		HttpURLConnection connection =
 		    (HttpURLConnection) new URL(endpoint + "/markerUpdate").openConnection();
@@ -349,7 +359,7 @@ public class MappingClient {
 		    final String json = data.toString();
 		    out.write(json.getBytes(StandardCharsets.UTF_8));
 		}
-		int code = connection.getResponseCode();
+		NUtils.setAutoMapperState(connection.getResponseCode() == 200);
 		connection.disconnect();
 	    } catch (Exception ex) {
 		System.out.println(ex);
@@ -411,7 +421,7 @@ public class MappingClient {
 	
 	@Override
 	public void run() {
-		if(trackingEnabled) {
+		if(trackingEnabled && (Boolean)NConfig.get(NConfig.Key.autoMapper)) {
 		    Glob g = glob;
 		    Iterator<Map.Entry<Long, Tracking>> i = tracking.entrySet().iterator();
 		    JSONObject upload = new JSONObject();
@@ -436,7 +446,9 @@ public class MappingClient {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			connection.getResponseCode();
+
+			NUtils.setAutoMapperState(connection.getResponseCode() == 200);
+
 		    } catch (final Exception ex) {
 				ex.printStackTrace();
 		    }
@@ -455,15 +467,13 @@ public class MappingClient {
 
 		@Override
 		public void run() {
-			if (gridEnabled) {
+			if (gridEnabled && (Boolean)NConfig.get(NConfig.Key.autoMapper)) {
 				final String[][] gridMap;
 				try {
 					gridMap = NUtils.getGameUI().map.glob.map.constructSection(coord);
 
 					if (gridMap != null) {
 						scheduler.execute(new UploadGridUpdateTask(gridMap));
-					} else {
-						System.out.println("problem");
 					}
 				} catch (InterruptedException e) {
 					throw new RuntimeException(e);
@@ -480,7 +490,7 @@ public class MappingClient {
 
 			@Override
 			public void run() {
-				if (gridEnabled) {
+				if (gridEnabled && (Boolean)NConfig.get(NConfig.Key.autoMapper)) {
 					HashMap<String, Object> dataToSend = new HashMap<>();
 					try {
 						dataToSend.put("grids", this.gridMap);
@@ -496,6 +506,7 @@ public class MappingClient {
 							out.write(json.getBytes(StandardCharsets.UTF_8));
 						}
 						if (connection.getResponseCode() == 200) {
+							NUtils.setAutoMapperState(true);
 							DataInputStream dio = new DataInputStream(connection.getInputStream());
 							int nRead;
 							byte[] data = new byte[1024];
@@ -517,6 +528,10 @@ public class MappingClient {
 								}
 							}
 						}
+						else
+						{
+							NUtils.setAutoMapperState(false);
+						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -536,6 +551,8 @@ public class MappingClient {
 
 	@Override
 	public void run() {
+		if(!(Boolean)NConfig.get(NConfig.Key.autoMapper))
+			return;
 	    try {
 		MCache.Grid g = grid;
 		if(g != null && glob != null && glob.map != null) {

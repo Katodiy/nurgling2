@@ -6,6 +6,7 @@ import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.ui.croster.CattleId;
 import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
+import mapv4.StatusWdg;
 import nurgling.areas.*;
 import nurgling.tasks.*;
 import nurgling.tools.*;
@@ -350,4 +351,10 @@ public class NUtils
     public static String getIconInfo(String name) {
         return NStyle.iconName.get(name);
     }
+
+    public static void setAutoMapperState(boolean state)
+    {
+        StatusWdg.status.set(state);
+    }
+
 }
