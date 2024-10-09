@@ -573,7 +573,6 @@ public class MappingClient {
 		    }
 		}
 	    } catch (InterruptedException ex) {
-			ex.printStackTrace();
 	    }
 
 	}
