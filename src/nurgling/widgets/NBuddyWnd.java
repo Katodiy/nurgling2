@@ -45,7 +45,7 @@ public class NBuddyWnd extends BuddyWnd
     {
         super.tick(dt);
         double now = Utils.rtime();
-        if(NUtils.getGameUI().zerg!=null && NUtils.getGameUI().zerg.visible && parent.visible)
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().zerg!=null && NUtils.getGameUI().zerg.visible && parent.visible)
         {
             synchronized (req)
             {

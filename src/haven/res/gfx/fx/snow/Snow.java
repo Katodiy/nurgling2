@@ -321,7 +321,7 @@ public class Snow implements Glob.Weather, RenderTree.Node, TickList.Ticking, Ti
 	if(mv == null)
 	    return(false);
 	try {
-	    this.cc = Coord2d.of(MapView.getcc());
+	    this.cc = Coord2d.of(mv.getcc());
 	} catch(Loading l) {
 	    return(false);
 	}

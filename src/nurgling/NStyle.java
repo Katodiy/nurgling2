@@ -16,6 +16,7 @@ public class NStyle {
 
     public static final RichText.Foundry nifnd = new RichText.Foundry(Resource.remote(), java.awt.font.TextAttribute.FAMILY, "SansSerif", java.awt.font.TextAttribute.SIZE, UI.scale(14)).aa(true);
     public static Text.Furnace openings = new PUtils.BlurFurn(new Text.Foundry(Text.sans.deriveFont(Font.BOLD, UI.scale(16)), 16, Color.WHITE).aa(true), 1, 1, new Color(60, 30, 30));
+    public static Text.Furnace slotnums = new Text.Foundry(Text.sans.deriveFont(Font.BOLD, UI.scale(16)), 16, new Color(119, 153, 116,255)).aa(true);
     public static Text.Furnace mip = new PUtils.BlurFurn(new Text.Foundry(Text.sans.deriveFont(Font.BOLD, UI.scale(16)), 16, Color.GREEN).aa(true), 1, 1, new Color(60, 30, 30));
     public static Text.Furnace eip = new PUtils.BlurFurn(new Text.Foundry(Text.sans.deriveFont(Font.BOLD, UI.scale(16)), 16, Color.RED).aa(true), 1, 1, new Color(60, 30, 30));
     public static Text.Furnace hotkey = new PUtils.BlurFurn(new Text.Foundry(Text.sans, 12, Color.WHITE).aa(true), 1, 1, new Color(0, 0, 0));

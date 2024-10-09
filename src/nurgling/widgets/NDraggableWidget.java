@@ -271,14 +271,14 @@ public class NDraggableWidget extends Widget
             }
         }
 
-        if(GameUI.getInstance()!=null && GameUI.getInstance().sz!=Coord.z && dm == null)
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().sz!=Coord.z && dm == null)
         {
-            if (c.x + sz.x > GameUI.getInstance().sz.x - GameUI.margin.x)
-                c.x = GameUI.getInstance().sz.x - sz.x;
+            if (c.x + sz.x > NUtils.getGameUI().sz.x - GameUI.margin.x)
+                c.x = NUtils.getGameUI().sz.x - sz.x;
             else
                 c.x = target_c.x;
-            if (c.y + sz.y > GameUI.getInstance().sz.y - GameUI.margin.y)
-                c.y = GameUI.getInstance().sz.y - sz.y;
+            if (c.y + sz.y > NUtils.getGameUI().sz.y - GameUI.margin.y)
+                c.y = NUtils.getGameUI().sz.y - sz.y;
             else
                 c.y = target_c.y;
         }

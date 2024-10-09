@@ -26,13 +26,13 @@ public class NUtils
 {
     public static long getTickId()
     {
-        if(GameUI.getInstance()!= null )
-            return  ((NUI)GameUI.getInstance().ui).tickId;
+        if(NUtils.getGameUI()!= null )
+            return  NUtils.getUI().tickId;
         return -1;
     }
 
     public static NGameUI getGameUI(){
-        return (NGameUI) GameUI.getInstance();
+        return getUI().gui;
     }
 
     public static NUI getUI(){
@@ -138,7 +138,7 @@ public class NUtils
     }
 
     public static NEquipory getEquipment(){
-        if ( getGameUI().equwnd != null ) {
+        if ( getGameUI()!=null && getGameUI().equwnd != null ) {
             for ( Widget w = getGameUI().equwnd.lchild ; w != null ; w = w.prev ) {
                 if ( w instanceof Equipory ) {
                     return ( NEquipory ) w;

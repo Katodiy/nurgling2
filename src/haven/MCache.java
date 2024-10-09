@@ -616,6 +616,8 @@ public class MCache implements MapSource {
 	}
 
 	public RenderTree.Node getnolcut(Integer id, Coord cc) {
+		if(NUtils.getGameUI().map==null)
+			return null;
 		boolean requpd = (NUtils.getGameUI().map.nols.get(id)!= null && NUtils.getGameUI().map.nols.get(id).requpdate2);
 		if((areas.get(id)!= null && areas.get(id).grids_id.contains(this.id)) || NMapView.isCustom(id))
 		{

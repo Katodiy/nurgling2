@@ -412,6 +412,8 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     @Override
     public boolean tick(double dt)
     {
+        if(NUtils.getGameUI()==null)
+            return false;
         NCharacterInfo ci = NUtils.getGameUI().getCharInfo();
         if (ci != null)
         {

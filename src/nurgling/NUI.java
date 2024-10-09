@@ -40,7 +40,7 @@ public class NUI extends UI
         {
             sessInfo = new NSessInfo(sess.username);
         }
-        if(GameUI.getInstance() == null && sessInfo!=null)
+        if(gui == null && sessInfo!=null)
         {
             for (Widget wdg : widgets.values()) {
                 if (wdg instanceof Img) {

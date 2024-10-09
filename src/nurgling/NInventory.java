@@ -41,10 +41,10 @@ public class NInventory extends Inventory
 
     @Override
     public void draw(GOut g) {
+        super.draw(g);
         if(numbers!=null) {
             g.image(numbers,Coord.z);
         }
-        super.draw(g);
     }
 
 
@@ -57,7 +57,7 @@ public class NInventory extends Inventory
             for (int j = 0; j < isz.x; j++) {
                 if (inventory[i][j] == 0)
                 {
-                    numberMatrix[i][j] = new TexI(NStyle.openings.render(String.valueOf(counter)).img);
+                    numberMatrix[i][j] = new TexI(NStyle.slotnums.render(String.valueOf(counter)).img);
                 }
                 else
                 {
@@ -267,6 +267,8 @@ public class NInventory extends Inventory
 
     @Override
     public void tick(double dt) {
+        if(NUtils.getGameUI() == null)
+            return;
         super.tick(dt);
         if((Boolean)NConfig.get(NConfig.Key.showInventoryNums)) {
             short[][] newInv = containerMatrix();

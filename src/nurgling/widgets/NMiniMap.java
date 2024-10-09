@@ -90,9 +90,11 @@ public class NMiniMap extends MiniMap implements Console.Directory {
     public static final Color VIEW_BG_COLOR = new Color(255, 255, 255, 60);
     public static final Color VIEW_BORDER_COLOR = new Color(0, 0, 0, 128);
     void drawview(GOut g) {
+        if(ui.gui.map==null)
+            return;
         int zmult = 1 << zoomlevel;
         Coord2d sgridsz = new Coord2d(_sgridsz);
-        Gob player = NUtils.getGameUI().map.player();
+        Gob player = ui.gui.map.player();
         if(player != null) {
             Coord rc = p2c(player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz));
             Coord viewsz = VIEW_SZ.div(zmult).mul(scale);
@@ -106,6 +108,8 @@ public class NMiniMap extends MiniMap implements Console.Directory {
 
     @Override
     public void drawparts(GOut g){
+        if(NUtils.getGameUI()==null)
+            return;
         drawmap(g);
         drawmarkers(g);
         if(dlvl == 0)
