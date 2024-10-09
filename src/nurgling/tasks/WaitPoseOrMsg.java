@@ -18,13 +18,24 @@ public class WaitPoseOrMsg implements NTask
     Gob gob;
     String pose;
     String msg;
-
+    boolean isError = false;
 
     @Override
     public boolean check()
     {
         String cpose = gob.pose();
         String lastMsg = NUtils.getUI().getLastError();
-        return (cpose != null && cpose.contains(pose)) || (lastMsg!=null && lastMsg.contains(msg));
+        if((cpose != null && cpose.contains(pose)) )
+            return true;
+        if(lastMsg!=null && lastMsg.contains(msg))
+        {
+            isError = true;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isError() {
+        return isError;
     }
 }

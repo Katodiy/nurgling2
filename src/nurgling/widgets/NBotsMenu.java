@@ -51,6 +51,7 @@ public class NBotsMenu extends Widget
         utils.elements.add(new NButton("unbox", new FreeContainersInArea()));
         utils.elements.add(new NButton("water_cheker", new CheckWater()));
         utils.elements.add(new NButton("clay_cheker", new CheckClay()));
+        utils.elements.add(new NButton("clover", new FeedClover()));
         addLayout(utils);
         if(NUtils.getUI().core.debug)
         {
