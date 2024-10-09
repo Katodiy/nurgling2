@@ -117,7 +117,7 @@ public class NMapView extends MapView
     }
 
     public Object tooltip(Coord c, Widget prev) {
-        if (!ttip.isEmpty() && NUtils.getGameUI().ui.core.isInspectMode()) {
+        if (NUtils.getGameUI()!=null && !ttip.isEmpty() && NUtils.getGameUI().ui.core.isInspectMode()) {
 
             Collection<BufferedImage> imgs = new LinkedList<BufferedImage>();
             if (ttip.get("gob") != null) {
