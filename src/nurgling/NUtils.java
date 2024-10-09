@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.Button;
 import haven.Window;
 import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.ui.croster.CattleId;
@@ -387,6 +388,15 @@ public class NUtils
         if (NUtils.getGameUI().areas.visible) {
             ((NMapView) NUtils.getGameUI().map).destroyDummys();
             ((NMapView) NUtils.getGameUI().map).initDummys();
+        }
+    }
+
+    public static void startBuild(Window window) {
+        for (Widget sp = window.lchild; sp != null; sp = sp.prev) {
+            if (sp instanceof Button) {
+                if(((Button) sp).text!=null && ((Button) sp).text.text.equals("Build"))
+                    ((Button) sp).click();
+            }
         }
     }
 }

@@ -53,6 +53,9 @@ public class NBotsMenu extends Widget
         utils.elements.add(new NButton("clay_cheker", new CheckClay()));
         utils.elements.add(new NButton("clover", new FeedClover()));
         addLayout(utils);
+        NLayout build = new NLayout("build");
+        build.elements.add(new NButton("dframe", new BuildDryingFrame()));
+        addLayout(build);
         if(NUtils.getUI().core.debug)
         {
             NLayout tests = new NLayout("tools");

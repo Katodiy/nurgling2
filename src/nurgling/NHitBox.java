@@ -132,6 +132,10 @@ public class NHitBox
         return null;
     }
 
+    public NHitBox rotate(){
+        return new NHitBox(new Coord((int) begin.y, (int) begin.x),new Coord((int) end.y, (int) end.x));
+    }
+
     @Override
     public String toString()
     {

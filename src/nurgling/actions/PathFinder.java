@@ -47,30 +47,41 @@ public class PathFinder implements Action {
 
             if (path != null) {
                 boolean needRestart = false;
+                NUtils.getGameUI().msg(Utils.pfGridToWorld(path.getLast().pos).toString());
                 //TODO syntetic points
                 for (Graph.Vertex vert : path) {
                     Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
-                    if (vert == path.getFirst()) {
-                        Coord2d playerrc = NUtils.player().rc;
-                        double dx, dy;
-                        if (Math.min(dx = Math.abs(targetCoord.x - playerrc.x), dy = Math.abs(targetCoord.y - playerrc.y)) < MCache.tilehsz.x)
-
-                            if (dx < dy) {
-                                targetCoord.x = playerrc.x;
-                            } else {
-                                targetCoord.y = playerrc.y;
-                            }
-                    }
-
-                    if (target_id == -1 && vert == path.getLast()) {
-                        if (Math.abs(targetCoord.x - end.x) < Math.abs(targetCoord.y - end.y)) {
-                            targetCoord.x = end.x;
-                        } else {
-                            targetCoord.y = end.y;
+//                    if (vert == path.getFirst()) {
+//                        Coord2d playerrc = NUtils.player().rc;
+//                        double dx, dy;
+//                        if (Math.min(dx = Math.abs(targetCoord.x - playerrc.x), dy = Math.abs(targetCoord.y - playerrc.y)) < MCache.tilehsz.x)
+//
+//                            if (dx < dy) {
+//                                targetCoord.x = playerrc.x;
+//                            } else {
+//                                targetCoord.y = playerrc.y;
+//                            }
+//                    }
+//
+//                    if (target_id == -1 && vert == path.getLast()) {
+//                        if (Math.abs(targetCoord.x - end.x) < Math.abs(targetCoord.y - end.y)) {
+//                            targetCoord.x = end.x;
+//                        } else {
+//                            targetCoord.y = end.y;
+//                        }
+//                    } else if (vert == path.getLast()) {
+//                        if (targetCoord.dist(end) < MCache.tilehsz.x)
+//                            targetCoord = end;
+//                    }
+                    if(dummy!=null && vert == path.getLast()) {
+                        if(Math.abs(targetCoord.x-dummy.rc.x)<4)
+                        {
+                            targetCoord.x=dummy.rc.x;
                         }
-                    } else if (vert == path.getLast()) {
-                        if (targetCoord.dist(end) < MCache.tilehsz.x)
-                            targetCoord = end;
+                        if(Math.abs(targetCoord.y-dummy.rc.y)<4)
+                        {
+                            targetCoord.y=dummy.rc.y;
+                        }
                     }
 
                     if (!(new GoTo(targetCoord).run(gui)).IsSuccess()) {
@@ -160,7 +171,7 @@ public class PathFinder implements Action {
                     path = getPath(pfmap, res.path);
                 else
                     path = res.path;
-                NPFMap.print(pfmap.getSize(), res.getVert());
+//                NPFMap.print(pfmap.getSize(), res.getVert());
                 if (!path.isEmpty()) {
                     return path;
                 }

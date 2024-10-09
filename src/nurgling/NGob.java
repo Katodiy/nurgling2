@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import haven.render.sl.InstancedUniform;
 import haven.res.gfx.fx.eq.Equed;
+import haven.res.gfx.terobjs.consobj.Consobj;
 import haven.res.lib.vmat.Mapping;
 import haven.res.lib.vmat.Materials;
 import nurgling.nattrib.*;
@@ -53,16 +54,28 @@ public class NGob {
         if (a instanceof Drawable) {
             if (((Drawable) a).getres() != null) {
                 name = ((Drawable) a).getres().name;
+
                 if (((Drawable) a).getres().getLayers() != null) {
-                    for (Resource.Layer lay : ((Drawable) a).getres().getLayers()) {
-                        if (lay instanceof Resource.Neg) {
-                            hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
-                        }
-                        else if(lay instanceof Resource.Obstacle)
+                        if(a instanceof ResDrawable && ((ResDrawable) a).spr instanceof Consobj)
                         {
-                            hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                            Consobj consobj = (Consobj) ((ResDrawable) a).spr;
+                            for (Resource.Layer lay : ((Session.CachedRes.Ref)consobj.built.res).res.getLayers()) {
+                                if (lay instanceof Resource.Neg) {
+                                    hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                } else if (lay instanceof Resource.Obstacle) {
+                                    hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                }
+                            }
                         }
-                    }
+                        else {
+                            for (Resource.Layer lay : ((Drawable) a).getres().getLayers()) {
+                                if (lay instanceof Resource.Neg) {
+                                    hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                } else if (lay instanceof Resource.Obstacle) {
+                                    hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                }
+                            }
+                        }
                     if (name != null) {
                         if(NStyle.iconMap.containsKey(name))
                         {
