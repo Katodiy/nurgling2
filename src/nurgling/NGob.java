@@ -73,40 +73,39 @@ public class NGob {
                         if (NParser.checkName(name, new NAlias("plants"))) {
                             parent.addcustomol(new NCropMarker(parent));
                         }
-
-                        if (NParser.checkName(name, new NAlias(new ArrayList<String>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<String>(Arrays.asList("stump", "wrack", "log"))))) {
-                            switch (name) {
-                                case "gfx/terobjs/ladder":
-                                case "gfx/terobjs/minesupport":
-                                case "gfx/terobjs/trees/towercap":
-                                case "gfx/terobjs/map/naturalminesupport":
-                                    parent.addcustomol(new NMiningSupport(parent, 100));
-                                    break;
-                                case "gfx/terobjs/minebeam":
-                                    parent.addcustomol(new NMiningSupport(parent, 150));
-                                    break;
-                                case "gfx/terobjs/column":
-                                    parent.addcustomol(new NMiningSupport(parent, 125));
-                                    break;
+                        else {
+                            if (NParser.checkName(name, new NAlias(new ArrayList<String>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<String>(Arrays.asList("stump", "wrack", "log"))))) {
+                                switch (name) {
+                                    case "gfx/terobjs/ladder":
+                                    case "gfx/terobjs/minesupport":
+                                    case "gfx/terobjs/trees/towercap":
+                                    case "gfx/terobjs/map/naturalminesupport":
+                                        parent.addcustomol(new NMiningSupport(parent, 100));
+                                        break;
+                                    case "gfx/terobjs/minebeam":
+                                        parent.addcustomol(new NMiningSupport(parent, 150));
+                                        break;
+                                    case "gfx/terobjs/column":
+                                        parent.addcustomol(new NMiningSupport(parent, 125));
+                                        break;
+                                }
                             }
-                        }
-                        if (name.contains("gfx/terobjs/dframe") || name.contains("gfx/terobjs/cheeserack")) {
-                            customMask = true;
-                        }
-                        else if (name.contains("gfx/terobjs/barrel"))
-                        {
-                            customMask = true;
-                            parent.addcustomol(new NBarrelOverlay(parent));
-                        }
+                            if (name.contains("gfx/terobjs/dframe") || name.contains("gfx/terobjs/cheeserack")) {
+                                customMask = true;
+                            } else if (name.contains("gfx/terobjs/barrel")) {
+                                customMask = true;
+                                parent.addcustomol(new NBarrelOverlay(parent));
+                            }
 
-                        if (NUtils.playerID()!= -1 && name.equals("gfx/borka/body") && NUtils.playerID() != parent.id) {
-                            parent.addcustomol(new NKinRing(parent));
-                            parent.setattr(new NKinTex(parent));
-                        }
+                            if (NUtils.playerID() != -1 && name.equals("gfx/borka/body") && NUtils.playerID() != parent.id) {
+                                parent.addcustomol(new NKinRing(parent));
+                                parent.setattr(new NKinTex(parent));
+                            }
 
-                        NHitBox custom = NHitBox.findCustom(name);
-                        if (custom != null) {
-                            hitBox = custom;
+                            NHitBox custom = NHitBox.findCustom(name);
+                            if (custom != null) {
+                                hitBox = custom;
+                            }
                         }
                     }
                     if (hitBox != null) {
