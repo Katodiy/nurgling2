@@ -249,9 +249,9 @@ public class MapWnd extends Window implements Console.Directory {
 
 	public void resize(int h) {
 	    super.resize(new Coord(sz.x, h));
-	    listf.resize(listf.sz.x, sz.y - UI.scale(210));
+	    listf.resize(listf.sz.x, sz.y - UI.scale(250));
 	    listf.c = new Coord(sz.x - listf.sz.x, 0);
-	    list.resize(listf.inner());
+	    list.resize(listf.inner().sub(0,UI.scale(50)));
 	    mebtn.c = new Coord(0, sz.y - mebtn.sz.y);
 	    mibtn.c = new Coord(sz.x - btnw, sz.y - mibtn.sz.y);
 	    nobtn.c = new Coord(0, mebtn.c.y - UI.scale(30) - nobtn.sz.y);

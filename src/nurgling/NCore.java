@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import mapv4.MappingClient;
 import nurgling.pf.*;
 import nurgling.tasks.*;
 
@@ -196,5 +197,18 @@ public class NCore extends Widget
 
             }
         }
+    }
+
+    public void initAutomapper(String playername) {
+        if (MappingClient.initialized()) {
+            MappingClient.destroy();
+        }
+        MappingClient.init(ui.sess.glob);
+        MappingClient automapper = MappingClient.getInstance();
+        automapper.SetPlayerName(playername);
+        automapper.SetEndpoint((String) NConfig.get(NConfig.Key.endpoint));
+        automapper.EnableGridUploads((Boolean)NConfig.get(NConfig.Key.autoMapper));
+        automapper.EnableTracking((Boolean) NConfig.get(NConfig.Key.automaptrack));
+        MappingClient.getInstance().CheckEndpoint();
     }
 }

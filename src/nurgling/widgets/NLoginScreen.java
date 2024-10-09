@@ -45,7 +45,13 @@ public class NLoginScreen extends LoginScreen
             if (new File("ver").exists())
             {
                 URL upd_url = new URL((String) Objects.requireNonNull(NConfig.get(NConfig.Key.baseurl)));
-                ReadableByteChannel rbc = Channels.newChannel(upd_url.openStream());
+                ReadableByteChannel rbc = null;
+                try {
+                    rbc = Channels.newChannel(upd_url.openStream());
+                }
+                catch (Exception ignored)
+                {
+                }
                 FileOutputStream fos = null;
                 fos = new FileOutputStream("tmp_ver");
                 fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);

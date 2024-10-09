@@ -1,6 +1,8 @@
 package nurgling.widgets;
 
 import haven.*;
+import mapv4.MappingClient;
+import mapv4.StatusWdg;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -10,6 +12,7 @@ import java.net.MalformedURLException;
 public class NMiniMapWnd extends Widget{
     NMapView map;
     public Map miniMap;
+    public IButton geoloc;
     public static final KeyBinding kb_claim = KeyBinding.get("ol-claim", KeyMatch.nil);
     public static final KeyBinding kb_vil = KeyBinding.get("ol-vil", KeyMatch.nil);
 
@@ -23,6 +26,7 @@ public class NMiniMapWnd extends Widget{
 
     ACheckBox map_box;
     Widget toggle_panel;
+    public StatusWdg swdg;
     public static final IBox pbox = Window.wbox;
     public static final KeyBinding kb_eye = KeyBinding.get("ol-eye", KeyMatch.nil);
     public static final KeyBinding kb_grid = KeyBinding.get("ol-mgrid", KeyMatch.nil);
@@ -54,6 +58,7 @@ public class NMiniMapWnd extends Widget{
             miniMap = add(new Map(new Coord(UI.scale(133), UI.scale(133)), file, map));
             miniMap.lower();
         }
+
         toggle_panel = new Widget();
         ACheckBox first = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/claim", GameUI.kb_claim, "Display personal claims"), 0, 0).changed(a -> NUtils.getGameUI().toggleol("cplot", a));
         toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vil", GameUI.kb_vil, "Display village claims"), (first.sz.x+UI.scale(3)), 0).changed(a -> NUtils.getGameUI().toggleol("vlg", a));
@@ -77,6 +82,13 @@ public class NMiniMapWnd extends Widget{
         grid.a = (Boolean) NConfig.get(NConfig.Key.showGrid);
         ACheckBox minesup = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/minesup", kb_grid, "Display mining overlay"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("miningol", a));
         minesup.a = (Boolean) NConfig.get(NConfig.Key.miningol);
+        geoloc = toggle_panel.add(new IButton(Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/d"), Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/u"), Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/h"), new Runnable() {
+            @Override
+            public void run() {
+                MappingClient.getInstance().OpenMap(MappingClient.getInstance().GetMapRef());
+            }
+        }), (first.sz.x+UI.scale(3))*shift++, 0);
+
 //        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
 //        path.a = NConfiguration.getInstance().isPaths;
 
@@ -90,6 +102,7 @@ public class NMiniMapWnd extends Widget{
 
         toggle_panel.pack();
         add(toggle_panel);
+        swdg = add(new StatusWdg(UI.scale(32,32)), UI.scale(4,4));
         pack();
     }
 
@@ -116,6 +129,7 @@ public class NMiniMapWnd extends Widget{
         pbox.draw(g, miniMap.c.sub(marg), miniMap.sz.add(marg.mul(2)));
         drawWidget(g,strict,toggle_panel);
         drawWidget(g,strict,map_box);
+        drawWidget(g,strict,swdg);
     }
 
     void drawWidget(GOut g, boolean strict, Widget wdg)
