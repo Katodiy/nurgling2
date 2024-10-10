@@ -194,39 +194,6 @@ public class Finder
         return result;
     }
 
-
-    public static ArrayList<Gob> findGobs(Coord2d coord2d, NAlias name, NAlias poses, double dist) throws InterruptedException
-    {
-
-        ArrayList<Gob> result = new ArrayList<>();
-        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
-        {
-            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
-            {
-                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
-                {
-                    if (NParser.isIt(gob, name) && NUtils.player() != null)
-                    {
-                        if(poses!=null) {
-                            if (gob.pose() != null) {
-                                if (NParser.checkName(gob.pose(), poses)) {
-                                    if(gob.rc.dist(coord2d)<dist)
-                                        result.add(gob);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if(gob.rc.dist(coord2d)<dist)
-                                result.add(gob);
-                        }
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
     public static Gob findGob(NArea area, NAlias name) throws InterruptedException {
         return findGob(area.getRCArea(),name);
     }

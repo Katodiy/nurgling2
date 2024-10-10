@@ -30,7 +30,7 @@ public class UseWorkStationNC implements Action
             new PathFinder(ws).run(gui);
             gui.map.wdgmsg ( "click", Coord.z, ws.rc.floor ( posres ), 3, 0, 0, ( int ) ws.id,
                     ws.rc.floor ( posres ), 0, -1 );
-            NUtils.getUI().core.addTask(new FollowAndPose(NUtils.player(), new Context().workstation));
+            //NUtils.getUI().core.addTask(new FollowAndPose(NUtils.player(), new Context().workstation));
         }
         return Results.SUCCESS();
     }

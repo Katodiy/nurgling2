@@ -36,7 +36,7 @@ public class TestAction implements Action {
             containers.add(cand);
         }
 
-        new OpenTargetContainer(containers.getFirst()).run(gui);
+        //new OpenTargetContainer(containers.getFirst()).run(gui);
         new WaterToContainers(containers).run(gui);
 
 //        ArrayList<Gob> lighted = new ArrayList<>();
