@@ -322,8 +322,8 @@ public class Graph implements Runnable
                     }
                 }
                 path.removeAll(for_remove);
-                if (player != null && Utils.pfGridToWorld(path.get(0).pos).dist(player.rc) <= 1)
-                    path.remove(0);
+//                if (player != null && Utils.pfGridToWorld(path.get(0).pos).dist(player.rc) <= 1)
+//                    path.remove(0);
             }
         return path;
     }

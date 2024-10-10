@@ -47,7 +47,7 @@ public class PathFinder implements Action {
 
             if (path != null) {
                 boolean needRestart = false;
-                NUtils.getGameUI().msg(Utils.pfGridToWorld(path.getLast().pos).toString());
+//                NUtils.getGameUI().msg(Utils.pfGridToWorld(path.getLast().pos).toString());
                 //TODO syntetic points
                 for (Graph.Vertex vert : path) {
                     Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
@@ -171,7 +171,7 @@ public class PathFinder implements Action {
                     path = getPath(pfmap, res.path);
                 else
                     path = res.path;
-//                NPFMap.print(pfmap.getSize(), res.getVert());
+                NPFMap.print(pfmap.getSize(), res.getVert());
                 if (!path.isEmpty()) {
                     return path;
                 }
@@ -198,6 +198,19 @@ public class PathFinder implements Action {
 //        cells[start_pos.x][start_pos.y].val = 7;
         if (cells[end_pos.x][end_pos.y].val != 0) {
             end_poses = findFreeNear(end_pos, false);
+            if(dummy!=null)
+            {
+                ArrayList<Coord> best_poses = new ArrayList<>();
+                for(Coord coord : end_poses)
+                {
+                    Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos);
+                    if(coord2d.x+MCache.tileqsz.x > dummy.rc.x && coord2d.x-MCache.tileqsz.x< dummy.rc.x ||
+                            coord2d.y+MCache.tileqsz.y > dummy.rc.y && coord2d.y-MCache.tileqsz.y< dummy.rc.y)
+                        best_poses.add(coord);
+                }
+                if(!best_poses.isEmpty())
+                    end_poses = best_poses;
+            }
             for (Coord coord : end_poses) {
                 if (start_pos.equals(coord) && target_id >= 0)
                     return false;
