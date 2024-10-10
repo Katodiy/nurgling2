@@ -49,11 +49,9 @@ public class NMapView extends MapView
 
 
 
-    long gid = Long.MIN_VALUE+1;
 
     public void initDummys()
     {
-        gid = Long.MIN_VALUE+1;
         for(Integer id : glob.map.areas.keySet())
         {
             createAreaLabel(id);
@@ -68,13 +66,13 @@ public class NMapView extends MapView
         {
             Coord2d pos = (space.a.add(space.b)).div(2);
 
-            Gob dummy = new Gob(glob,pos, gid);
+            OCache.Virtual dummy = glob.oc.new Virtual(pos, 0);
             dummy.virtual = true;
-            area.gid = gid;
+            area.gid = dummy.id;
             NTexLabel notl = new NTexLabel(dummy);
             notl.label = new TexI(NStyle.openings.render(area.name).img);
             dummy.addcustomol(notl);
-            dummys.put(gid++, dummy);
+            dummys.put(dummy.id, dummy);
             glob.oc.add(dummy);
         }
     }
