@@ -514,7 +514,7 @@ public class NArea
 
     public void tick(double dt)
     {
-        if(NUtils.getGameUI().map!=null && NUtils.getGameUI().map.nols.get(id)==null && !inWork)
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null && NUtils.getGameUI().map.nols.get(id)==null && !inWork)
         {
             NUtils.getGameUI().map.addCustomOverlay(id);
         }

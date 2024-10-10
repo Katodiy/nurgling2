@@ -1067,7 +1067,10 @@ public class MCache implements MapSource {
     }
 
     public Coord3f getzp(Coord2d pc) {
-	return(Coord3f.of((float)pc.x, (float)pc.y, (float)getcz(pc)));
+		if((Boolean)NConfig.get(NConfig.Key.flatsurface))
+			return(Coord3f.of((float)pc.x, (float)pc.y, 0));
+		else
+			return(Coord3f.of((float)pc.x, (float)pc.y, (float)getcz(pc)));
     }
 
     public final ZSurface zsurf = new ZSurface() {
