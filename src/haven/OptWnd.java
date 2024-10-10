@@ -36,6 +36,7 @@ import nurgling.widgets.options.QuickActions;
 
 import java.awt.event.KeyEvent;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class OptWnd extends Window {
     public final Panel main;
@@ -448,6 +449,26 @@ public class OptWnd extends Window {
     }
 
     public class InterfacePanel extends Panel {
+	public class NumToolBox extends SDropBox<String, Widget> {
+		private final List<String> items = new ArrayList<>();
+		public NumToolBox(int w) {
+			super(w, UI.scale(160), UI.scale(20));
+			for(int i = 1; i <= 10; i++)
+				items.add(String.valueOf(i));
+			change(String.valueOf((Integer)NConfig.get(NConfig.Key.numbelts)));
+		}
+
+		protected List<String> items() {return(items);}
+		protected Widget makeitem(String item, int idx, Coord sz) {return(SListWidget.TextItem.of(sz, Text.std, () -> item));}
+
+		public void change(String item) {
+			super.change(item);
+			NConfig.set(NConfig.Key.numbelts,Integer.parseInt(item));
+		}
+	}
+
+
+
 	public InterfacePanel(Panel back) {
 		Widget prev = add(new Button(200, "Drag Mode"){
 			@Override
@@ -461,6 +482,9 @@ public class OptWnd extends Window {
 				}
 			}
 		});
+
+		prev = add(new Label("Number of panels hotkey (need reboot):"), prev.pos("bl").adds(0, UI.scale(5)));
+		prev = add(new NumToolBox(145), prev.pos("bl").adds(0, UI.scale(5)));
 		prev = add(new Label("Camera:"), prev.pos("bl").adds(0, UI.scale(5)));
 		Dropbox cam = add(new Dropbox<String>(UI.scale(100), 5, UI.scale(16)) {
 			@Override
