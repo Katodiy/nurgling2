@@ -200,4 +200,10 @@ public class NCore extends Widget
             }
         }
     }
+
+    @Override
+    public void dispose() {
+        mappingClient.done.set(true);
+        super.dispose();
+    }
 }

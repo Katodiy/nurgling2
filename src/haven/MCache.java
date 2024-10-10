@@ -56,9 +56,9 @@ public class MCache implements MapSource {
 
 	public final static int customolssize = 10;
     private final Object setmon = new Object();
-    private Resource.Spec[] nsets = new Resource.Spec[16];
+    public Resource.Spec[] nsets = new Resource.Spec[16];
     @SuppressWarnings("unchecked")
-    private Reference<Resource>[] sets = new Reference[16];
+    public Reference<Resource>[] sets = new Reference[16];
     @SuppressWarnings("unchecked")
     private Reference<Tileset>[] csets = new Reference[16];
     @SuppressWarnings("unchecked")
