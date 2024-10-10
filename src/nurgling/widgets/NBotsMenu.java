@@ -67,15 +67,6 @@ public class NBotsMenu extends Widget
             tests.elements.add(new NButton("shieldsword", new NomadWalker()));
             tests.elements.add(new NButton("shieldsword", new NomadCalibration()));
             addLayout(tests);
-            NLayout nords = new NLayout("utils");
-            nords.elements.add(new NButton("shieldsword", new NomadCalibration() ));
-            nords.elements.add(new NButton("shieldsword", new NomadWalker() ));
-            nords.elements.add(new NButton("shieldsword", new NomadSailor() ));
-            nords.elements.add(new NButton("shieldsword", new NomadOisterer("./oyster1.dat") ));
-            nords.elements.add(new NButton("shieldsword", new NomadOisterer("./oyster2.dat") ));
-            nords.elements.add(new NButton("shieldsword", new OisterFounder() ));
-            nords.elements.add(new NButton("shieldsword", new NomadOistererSnekkja("./oyster1.dat") ));
-            addLayout(nords);
 
         }
         showLayouts();

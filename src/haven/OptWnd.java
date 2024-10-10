@@ -933,17 +933,6 @@ public class OptWnd extends Window {
 		}
 	}
 
-//	prev.pos("bl").adds(0, 5));
-//	prev = add(new CheckBox("Disable menugrid keys:") {
-//		{
-//			a = (Boolean) NConfig.get(NConfig.Key.disableMenugridKeys);
-//		}
-//
-//		public void set(boolean val) {
-//			NConfig.set(NConfig.Key.disableMenugridKeys, val);
-//			a = val;
-//		}
-
 	public class NQuickActionsPanel extends Panel  {
 		private final Widget save;
 		private final Widget back;
