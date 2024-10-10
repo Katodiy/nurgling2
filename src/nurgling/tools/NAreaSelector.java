@@ -45,7 +45,9 @@ public class NAreaSelector implements Runnable
                 SelectArea sa;
                 if(mode!=Mode.SELECT)
                 {
+                    NUtils.getGameUI().areas.createMode = true;
                     NUtils.getGameUI().areas.hide();
+                    NUtils.getGameUI().areas.createMode = false;
                 }
                 NUtils.getUI().core.addTask(sa = new SelectArea());
                 if (sa.getResult() != null)
@@ -67,6 +69,7 @@ public class NAreaSelector implements Runnable
                             area.grids_id.addAll(area.space.space.keySet());
                             for(NArea.VArea space: area.space.space.values())
                                 space.isVis = false;
+                            ((NMapView) NUtils.getGameUI().map).createAreaLabel(area.id);
                             area.inWork = false;
                         }
                         NConfig.needAreasUpdate();

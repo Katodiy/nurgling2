@@ -7,6 +7,7 @@ import haven.render.*;
 import nurgling.actions.ActionWithFinal;
 import nurgling.actions.QuickActionBot;
 import nurgling.areas.*;
+import nurgling.overlays.NTexLabel;
 import nurgling.overlays.map.*;
 import nurgling.tools.*;
 
@@ -20,6 +21,7 @@ public class NMapView extends MapView
     public static final KeyBinding kb_quickaction = KeyBinding.get("quickaction", KeyMatch.forchar('q',0));
     public static final KeyBinding kb_quickignaction = KeyBinding.get("quickignaction", KeyMatch.forchar('q',1));
     public static final int MINING_OVERLAY = - 1;
+    public Coord lastGC = null;
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
         super(sz, glob, cc, plgob);
@@ -33,6 +35,57 @@ public class NMapView extends MapView
 
     public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
     public NArea.Space areaSpace = null;
+
+    public HashMap<Long, Gob> dummys = new HashMap<>();
+
+    @Override
+    public void draw(GOut g) {
+        super.draw(g);
+        for(Gob dummy : dummys.values())
+        {
+            dummy.gtick(g.out);
+        }
+    }
+
+
+
+
+    public void initDummys()
+    {
+        for(Integer id : glob.map.areas.keySet())
+        {
+            createAreaLabel(id);
+        }
+    }
+
+    public void createAreaLabel(Integer id) {
+        NArea area = glob.map.areas.get(id);
+        Pair<Coord2d,Coord2d> space = area.getRCArea();
+
+        if(space!=null)
+        {
+            Coord2d pos = (space.a.add(space.b)).div(2);
+
+            OCache.Virtual dummy = glob.oc.new Virtual(pos, 0);
+            dummy.virtual = true;
+            area.gid = dummy.id;
+            NTexLabel notl = new NTexLabel(dummy);
+            notl.label = new TexI(NStyle.openings.render(area.name).img);
+            dummy.addcustomol(notl);
+            dummys.put(dummy.id, dummy);
+            glob.oc.add(dummy);
+        }
+    }
+
+    public void destroyDummys()
+    {
+        for(Gob d: dummys.values())
+        {
+            if(glob.oc.getgob(d.id)!=null)
+                glob.oc.remove(d);
+        }
+        dummys.clear();
+    }
 
     public static NMiningOverlay getMiningOl()
     {
@@ -62,7 +115,7 @@ public class NMapView extends MapView
     }
 
     public Object tooltip(Coord c, Widget prev) {
-        if (!ttip.isEmpty() && NUtils.getGameUI().ui.core.isInspectMode()) {
+        if (NUtils.getGameUI()!=null && !ttip.isEmpty() && NUtils.getGameUI().ui.core.isInspectMode()) {
 
             Collection<BufferedImage> imgs = new LinkedList<BufferedImage>();
             if (ttip.get("gob") != null) {
@@ -294,6 +347,7 @@ public class NMapView extends MapView
             newArea.grids_id.addAll(newArea.space.space.keySet());
             glob.map.areas.put(id, newArea);
             NUtils.getGameUI().areas.addArea(id, newArea.name, newArea);
+            createAreaLabel(id);
         }
         return key;
     }
@@ -309,6 +363,22 @@ public class NMapView extends MapView
                 area.tick(dt);
             }
         }
+        ArrayList<Long> forRemove = new ArrayList<>();
+//        for(Gob dummy : dummys.values())
+//        {
+//            if(NUtils.findGob(dummy.id)==null)
+//            {
+//                forRemove.add(dummy.id);
+//                for (NArea area : glob.map.areas.values())
+//                {
+//                    if(area.gid == dummy.id)
+//                        createAreaLabel(area.id);
+//                }
+//
+//            }
+//        }
+//        for(Long id : forRemove)
+//            dummys.remove(id);
         super.tick(dt);
     }
 
@@ -452,7 +522,13 @@ public class NMapView extends MapView
                 area.inWork = true;
 //                area.clearOverlayArea();
                 glob.map.areas.remove(area.id);
+                Gob dummy = dummys.get(area.gid);
+                if(dummy != null) {
+                    glob.oc.remove(dummy);
+                    dummys.remove(area.gid);
+                }
                 NUtils.getGameUI().areas.removeArea(area.id);
+
                 break;
             }
         }
@@ -469,6 +545,11 @@ public class NMapView extends MapView
                     NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
                     if (nol != null)
                         nol.remove();
+                    Gob dummy = dummys.get(area.gid);
+                    if(dummy != null) {
+                        glob.oc.remove(dummy);
+                        dummys.remove(area.gid);
+                    }
                     NUtils.getGameUI().map.nols.remove(area.id);
                 }
                 NAreaSelector.changeArea(area);

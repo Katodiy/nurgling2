@@ -57,7 +57,7 @@ public class NConfig
         debug,
         claydiggerprop,
         miningol,
-        q_pattern, q_range, q_visitor, q_door, petals, singlePetal, asenable, autoMapper, endpoint, automaptrack, unloadgreen, hidecredo
+        q_pattern, q_range, q_visitor, q_door, petals, singlePetal, asenable, autoMapper, endpoint, automaptrack, unloadgreen, showInventoryNums, hidecredo
     }
 
 
@@ -100,6 +100,7 @@ public class NConfig
         conf.put(Key.autoMapper,false);
         conf.put(Key.automaptrack,false);
         conf.put(Key.unloadgreen,false);
+        conf.put(Key.showInventoryNums,true);
         conf.put(Key.endpoint,"");
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();

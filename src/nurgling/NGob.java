@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import haven.render.sl.InstancedUniform;
 import haven.res.gfx.fx.eq.Equed;
+import haven.res.gfx.terobjs.consobj.Consobj;
 import haven.res.lib.vmat.Mapping;
 import haven.res.lib.vmat.Materials;
 import nurgling.nattrib.*;
@@ -53,16 +54,28 @@ public class NGob {
         if (a instanceof Drawable) {
             if (((Drawable) a).getres() != null) {
                 name = ((Drawable) a).getres().name;
+
                 if (((Drawable) a).getres().getLayers() != null) {
-                    for (Resource.Layer lay : ((Drawable) a).getres().getLayers()) {
-                        if (lay instanceof Resource.Neg) {
-                            hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
-                        }
-                        else if(lay instanceof Resource.Obstacle)
+                        if(a instanceof ResDrawable && ((ResDrawable) a).spr instanceof Consobj)
                         {
-                            hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                            Consobj consobj = (Consobj) ((ResDrawable) a).spr;
+                            for (Resource.Layer lay : ((Session.CachedRes.Ref)consobj.built.res).res.getLayers()) {
+                                if (lay instanceof Resource.Neg) {
+                                    hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                } else if (lay instanceof Resource.Obstacle) {
+                                    hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                }
+                            }
                         }
-                    }
+                        else {
+                            for (Resource.Layer lay : ((Drawable) a).getres().getLayers()) {
+                                if (lay instanceof Resource.Neg) {
+                                    hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                } else if (lay instanceof Resource.Obstacle) {
+                                    hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                }
+                            }
+                        }
                     if (name != null) {
                         if(NStyle.iconMap.containsKey(name))
                         {
@@ -73,40 +86,39 @@ public class NGob {
                         if (NParser.checkName(name, new NAlias("plants"))) {
                             parent.addcustomol(new NCropMarker(parent));
                         }
-
-                        if (NParser.checkName(name, new NAlias(new ArrayList<String>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<String>(Arrays.asList("stump", "wrack", "log"))))) {
-                            switch (name) {
-                                case "gfx/terobjs/ladder":
-                                case "gfx/terobjs/minesupport":
-                                case "gfx/terobjs/trees/towercap":
-                                case "gfx/terobjs/map/naturalminesupport":
-                                    parent.addcustomol(new NMiningSupport(parent, 100));
-                                    break;
-                                case "gfx/terobjs/minebeam":
-                                    parent.addcustomol(new NMiningSupport(parent, 150));
-                                    break;
-                                case "gfx/terobjs/column":
-                                    parent.addcustomol(new NMiningSupport(parent, 125));
-                                    break;
+                        else {
+                            if (NParser.checkName(name, new NAlias(new ArrayList<String>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<String>(Arrays.asList("stump", "wrack", "log"))))) {
+                                switch (name) {
+                                    case "gfx/terobjs/ladder":
+                                    case "gfx/terobjs/minesupport":
+                                    case "gfx/terobjs/trees/towercap":
+                                    case "gfx/terobjs/map/naturalminesupport":
+                                        parent.addcustomol(new NMiningSupport(parent, 100));
+                                        break;
+                                    case "gfx/terobjs/minebeam":
+                                        parent.addcustomol(new NMiningSupport(parent, 150));
+                                        break;
+                                    case "gfx/terobjs/column":
+                                        parent.addcustomol(new NMiningSupport(parent, 125));
+                                        break;
+                                }
                             }
-                        }
-                        if (name.contains("gfx/terobjs/dframe") || name.contains("gfx/terobjs/cheeserack")) {
-                            customMask = true;
-                        }
-                        else if (name.contains("gfx/terobjs/barrel"))
-                        {
-                            customMask = true;
-                            parent.addcustomol(new NBarrelOverlay(parent));
-                        }
+                            if (name.contains("gfx/terobjs/dframe") || name.contains("gfx/terobjs/cheeserack")) {
+                                customMask = true;
+                            } else if (name.contains("gfx/terobjs/barrel")) {
+                                customMask = true;
+                                parent.addcustomol(new NBarrelOverlay(parent));
+                            }
 
-                        if (NUtils.playerID()!= -1 && name.equals("gfx/borka/body") && NUtils.playerID() != parent.id) {
-                            parent.addcustomol(new NKinRing(parent));
-                            parent.setattr(new NKinTex(parent));
-                        }
+                            if (NUtils.playerID() != -1 && name.equals("gfx/borka/body") && NUtils.playerID() != parent.id) {
+                                parent.addcustomol(new NKinRing(parent));
+                                parent.setattr(new NKinTex(parent));
+                            }
 
-                        NHitBox custom = NHitBox.findCustom(name);
-                        if (custom != null) {
-                            hitBox = custom;
+                            NHitBox custom = NHitBox.findCustom(name);
+                            if (custom != null) {
+                                hitBox = custom;
+                            }
                         }
                     }
                     if (hitBox != null) {

@@ -616,6 +616,8 @@ public class MCache implements MapSource {
 	}
 
 	public RenderTree.Node getnolcut(Integer id, Coord cc) {
+		if(NUtils.getGameUI() == null || NUtils.getGameUI().map==null)
+			return null;
 		boolean requpd = (NUtils.getGameUI().map.nols.get(id)!= null && NUtils.getGameUI().map.nols.get(id).requpdate2);
 		if((areas.get(id)!= null && areas.get(id).grids_id.contains(this.id)) || NMapView.isCustom(id))
 		{
@@ -1065,7 +1067,10 @@ public class MCache implements MapSource {
     }
 
     public Coord3f getzp(Coord2d pc) {
-	return(Coord3f.of((float)pc.x, (float)pc.y, (float)getcz(pc)));
+		if((Boolean)NConfig.get(NConfig.Key.flatsurface))
+			return(Coord3f.of((float)pc.x, (float)pc.y, 0));
+		else
+			return(Coord3f.of((float)pc.x, (float)pc.y, (float)getcz(pc)));
     }
 
     public final ZSurface zsurf = new ZSurface() {

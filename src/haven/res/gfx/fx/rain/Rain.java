@@ -219,7 +219,7 @@ public class Rain implements Glob.Weather, RenderTree.Node {
 	    return(false);
 	float dt = (float)ddt;
 	try {
-		Coord3f coord3f = MapView.getcc();
+		Coord3f coord3f = mv.getcc();
 		if(coord3f!=null)
 	    	this.cc = Coord2d.of(coord3f);
 	} catch(Loading l) {

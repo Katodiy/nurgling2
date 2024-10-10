@@ -464,15 +464,15 @@ public class NGameUI extends GameUI
             String path;
             if((path = NToolBeltProp.get(name).custom.get(slot) )== null) {
                 GameUI.PagBeltSlot res = null;
-                if (ui != null && NUtils.getGameUI() != null && NUtils.getGameUI().belt[slot] != null)
-                    if (NUtils.getGameUI().belt[slot] instanceof GameUI.PagBeltSlot) {
-                        res = (GameUI.PagBeltSlot) NUtils.getGameUI().belt[slot];
+                if (ui != null && belt[slot] != null)
+                    if (belt[slot] instanceof GameUI.PagBeltSlot) {
+                        res = (GameUI.PagBeltSlot) belt[slot];
                     }
                 return res;
             }
             else
             {
-                return NUtils.getGameUI().botsMenu.find(path);
+                return botsMenu.find(path);
             }
         }
 

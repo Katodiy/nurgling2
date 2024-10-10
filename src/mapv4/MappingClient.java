@@ -4,6 +4,7 @@ import haven.*;
 import haven.MCache.LoadingMap;
 import haven.res.ui.obj.buddy.Buddy;
 import nurgling.NConfig;
+import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.tasks.CheckGrid;
 import nurgling.tools.NParser;
@@ -139,34 +140,28 @@ public class MappingClient {
      */
     public void Track(long id, Coord2d coordinates) {
 	try {
-	    MCache.Grid g = glob.map.getgrid(toGC(coordinates));
+	    MCache.Grid g = glob.map.getgrid(NUtils.toGC(coordinates));
 		Gob gob;
 		if((gob = NUtils.findGob(id))!=null && gob.ngob!=null && NParser.checkName(gob.ngob.name,"gfx/borka/body"))
 	    	pu.Track(id, coordinates, g.id);
 	} catch (Exception ex) {}
     }
     
-    private Coord lastGC = null;
+
     
     /***
      * Called when entering a new grid
      * @param gc Grid coordinates
      */
     public void EnterGrid(Coord gc) {
-	lastGC = gc;
-	scheduler.execute(new GenerateGridUpdateTask(gc));
-    }
+		scheduler.execute(new GenerateGridUpdateTask(gc));
+	}
     
     /***
      * Called as you move around, automatically calculates if you have entered a new grid and calls EnterGrid accordingly.
      * @param c Normal coordinates
      */
-    public void CheckGridCoord(Coord2d c) {
-	Coord gc = toGC(c);
-	if(lastGC == null || !gc.equals(lastGC)) {
-	    EnterGrid(gc);
-	}
-    }
+
     
     private final Map<Long, MapRef> cache = new HashMap<Long, MapRef>();
     
@@ -177,7 +172,7 @@ public class MappingClient {
     public MapRef GetMapRef() {
 	try {
 	    Gob player = NUtils.player();
-	    Coord gc = toGC(player.rc);
+	    Coord gc = NUtils.toGC(player.rc);
 	    synchronized (cache) {
 		long id = glob.map.getgrid(gc).id;
 		MapRef mapRef = cache.get(id);
@@ -416,7 +411,7 @@ public class MappingClient {
 		}
 	    }
 	    t.gridId = gridId;
-	    t.coords = gridOffset(coordinates);
+	    t.coords = NUtils.gridOffset(coordinates);
 	}
 	
 	@Override
@@ -578,24 +573,11 @@ public class MappingClient {
 		    }
 		}
 	    } catch (InterruptedException ex) {
-			ex.printStackTrace();
 	    }
 
 	}
     }
 
-    private static Coord toGC(Coord2d c) {
-	return new Coord(Math.floorDiv((int) c.x, 1100), Math.floorDiv((int) c.y, 1100));
-    }
-
-    private static Coord toGridUnit(Coord2d c) {
-	return new Coord(Math.floorDiv((int) c.x, 1100) * 1100, Math.floorDiv((int) c.y, 1100) * 1100);
-    }
-
-    private static Coord2d gridOffset(Coord2d c) {
-	Coord gridUnit = toGridUnit(c);
-	return new Coord2d(c.x - gridUnit.x, c.y - gridUnit.y);
-    }
 
     public class MapRef {
 	public Coord gc;

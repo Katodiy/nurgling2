@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.*;
 import nurgling.areas.*;
+import nurgling.overlays.NTexLabel;
 
 public class NEditAreaName extends Window
 {
@@ -23,6 +24,11 @@ public class NEditAreaName extends Window
                     ((NMapView) NUtils.getGameUI().map).changeAreaName(area.id, te.text());
                     item.text.settext(te.text());
                     NConfig.needAreasUpdate();
+                    Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(area.gid);
+                    if(dummy != null) {
+                        NTexLabel tl = (NTexLabel) dummy.findol(NTexLabel.class).spr;
+                        tl.label = new TexI(NStyle.openings.render(area.name).img);
+                    }
                 }
             }
         }, prev.pos("ur").adds(5, -6));

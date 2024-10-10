@@ -713,7 +713,9 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	    /* XXX: Should be taken out of the main rendering
 	     * loop. Probably not a big deal, but still. */
 	    try {
-		Coord cc = new Coord2d(getcc()).floor(tilesz).div(MCache.cutsz);
+		if(NUtils.getGameUI()==null || NUtils.getGameUI().map == null)
+			return;
+		Coord cc = new Coord2d(NUtils.getGameUI().map.getcc()).floor(tilesz).div(MCache.cutsz);
 		area = new Area(cc.sub(view, view), cc.add(view, view).add(1, 1));
 		lastload = null;
 	    } catch(Loading l) {
@@ -1164,14 +1166,12 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	return((plgob < 0) ? null : glob.oc.getgob(plgob));
     }
     
-    public static Coord3f getcc() {
+    public Coord3f getcc() {
 	Gob pl = NUtils.player();
 	if(pl != null)
 	    return(pl.getc());
 	else
-		if(NUtils.getGameUI()!=null)
-	    	return(NUtils.getGameUI().map.glob.map.getzp(NUtils.getGameUI().map.cc));
-    return null;
+		return(glob.map.getzp(cc));
 	}
 
     public static class Clicklist implements RenderList<Rendered>, RenderList.Adapter {
@@ -1820,6 +1820,10 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		adjust.adjust(Plob.this, pc, mc, modflags);
 		lastmc = pc;
 	    }
+	}
+
+	public String toString() {
+	    return("#<plob>");
 	}
     }
 

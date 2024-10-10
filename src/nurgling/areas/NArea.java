@@ -13,7 +13,7 @@ import java.util.*;
 
 public class NArea
 {
-
+    public long gid = Long.MIN_VALUE;
     public static class Specialisation
     {
         public String name;
@@ -498,6 +498,8 @@ public class NArea
             for (Long id : space.space.keySet())
             {
                 MCache.Grid grid = NUtils.getGameUI().map.glob.map.findGrid(id);
+                if(grid==null)
+                    return null;
                 Area area = space.space.get(id).area;
                 Coord b = area.ul.add(grid.ul);
                 Coord e = area.br.add(grid.ul);
@@ -512,7 +514,7 @@ public class NArea
 
     public void tick(double dt)
     {
-        if(NUtils.getGameUI().map.nols.get(id)==null && !inWork)
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null && NUtils.getGameUI().map.nols.get(id)==null && !inWork)
         {
             NUtils.getGameUI().map.addCustomOverlay(id);
         }

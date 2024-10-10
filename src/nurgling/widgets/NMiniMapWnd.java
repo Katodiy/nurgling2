@@ -64,8 +64,8 @@ public class NMiniMapWnd extends Widget{
         toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vil", GameUI.kb_vil, "Display village claims"), (first.sz.x+UI.scale(3)), 0).changed(a -> NUtils.getGameUI().toggleol("vlg", a));
         int shift = 2;
         toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/rlm", GameUI.kb_rlm, "Display realms"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> NUtils.getGameUI().toggleol("realm", a));
-        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/ico", GameUI.kb_ico, "Icon settings"), (first.sz.x+UI.scale(3))*shift++, 0).state(() -> NUtils.getGameUI().wndstate(NUtils.getGameUI().iconwnd)).click(() -> {
-            if(NUtils.getGameUI().iconconf == null)
+        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/ico", GameUI.kb_ico, "Icon settings"), (first.sz.x+UI.scale(3))*shift++, 0).state(() -> NMiniMapWnd.this.ui.gui.wndstate(NMiniMapWnd.this.ui.gui.iconwnd)).click(() -> {
+            if(NUtils.getGameUI() == null || NUtils.getGameUI().iconconf == null)
                 return;
             if(NUtils.getGameUI().iconwnd == null) {
                 NUtils.getGameUI().iconwnd = new GobIcon.SettingsWindow(NUtils.getGameUI().iconconf);
@@ -92,7 +92,7 @@ public class NMiniMapWnd extends Widget{
 //        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
 //        path.a = NConfiguration.getInstance().isPaths;
 
-        map_box = add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/map", GameUI.kb_map, "Map"), miniMap.sz.x-(first.sz.x), 0).state(() -> NUtils.getGameUI().wndstate(NUtils.getGameUI().mapfile)).click(() -> {
+        map_box = add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/map", GameUI.kb_map, "Map"), miniMap.sz.x-(first.sz.x), 0).state(() -> NMiniMapWnd.this.ui.gui.wndstate(NMiniMapWnd.this.ui.gui.mapfile)).click(() -> {
             NUtils.getGameUI().togglewnd(NUtils.getGameUI().mapfile);
             if(NUtils.getGameUI().mapfile != null)
                 Utils.setprefb("wndvis-map", NUtils.getGameUI().mapfile.visible());

@@ -71,6 +71,7 @@ public class UI {
     public final Loader loader;
     public final CommandQueue queue = new CommandQueue();
     private static final double scalef;
+	public NGameUI gui = null;
     public NCore core;
     {
 	lastevent = lasttick = Utils.rtime();
@@ -430,6 +431,8 @@ public class UI {
 		wdg = type.create(UI.this, cargs);
 	    synchronized(UI.this) {
 		wdg.attach(UI.this);
+		if(typenm!=null && typenm.contains("gameui"))
+			UI.this.gui = (NGameUI) wdg;
 		bind(wdg, id);
 	    }
 	}

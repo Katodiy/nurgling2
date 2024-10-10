@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.Window;
 import haven.res.ui.tt.slot.Slotted;
 import haven.res.ui.tt.stackn.Stack;
 import nurgling.iteminfo.NFoodInfo;
@@ -9,7 +10,16 @@ import nurgling.tools.*;
 import nurgling.widgets.NPopupWidget;
 import nurgling.widgets.NSearchWidget;
 
+import java.awt.*;
+import java.awt.color.ColorSpace;
+import java.awt.image.BufferedImage;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
 import java.util.*;
+import java.util.List;
+
+import static haven.TexI.glcm;
 
 public class NInventory extends Inventory
 {
@@ -18,7 +28,8 @@ public class NInventory extends Inventory
     public ICheckBox bundle;
     public MenuGrid.PagButton pagBundle = null;
     boolean showPopup = false;
-
+    BufferedImage numbers = null;
+    short[][] oldinv = null;
     public NInventory(Coord sz)
     {
         super(sz);
@@ -26,6 +37,53 @@ public class NInventory extends Inventory
 
     public enum QualityType {
         High, Low
+    }
+
+    @Override
+    public void draw(GOut g) {
+        super.draw(g);
+        if(numbers!=null) {
+            g.image(numbers,Coord.z);
+        }
+    }
+
+
+    void generateNumberMatrix(short[][] inventory)
+    {
+        oldinv = inventory.clone();
+        TexI[][] numberMatrix = new TexI[isz.y][isz.x];
+        int counter = 1;
+        for (int i = 0; i < isz.y; i++) {
+            for (int j = 0; j < isz.x; j++) {
+                if (inventory[i][j] == 0)
+                {
+                    numberMatrix[i][j] = new TexI(NStyle.slotnums.render(String.valueOf(counter)).img);
+                }
+                else
+                {
+                    numberMatrix[i][j] = null;
+                }
+                if(inventory[i][j] != 2)
+                    counter++;
+            }
+        }
+        WritableRaster buf = Raster.createInterleavedRaster(java.awt.image.DataBuffer.TYPE_BYTE, isz.x*sqsz.y, isz.y*sqsz.x, 4, null);
+        BufferedImage tgt = new BufferedImage(new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_sRGB), new int[] {8, 8, 8, 8}, true, false, ComponentColorModel.TRANSLUCENT, java.awt.image.DataBuffer.TYPE_BYTE), buf, false, null);
+        Graphics2D g = tgt.createGraphics();
+        Coord coord = new Coord(0,0);
+        for (coord.y = 0; coord.y < isz.y; coord.y++) {
+            for (coord.x = 0; coord.x < isz.x; coord.x++) {
+                if(numberMatrix[coord.y][coord.x]!=null) {
+                    Coord pos = coord.mul(sqsz).add(sqsz.div(2));
+                    TexI img = numberMatrix[coord.y][coord.x];
+                    Coord sz = img.sz();
+                    pos = pos.add((int)((double)sz.x * -0.5), (int)((double)sz.y * -0.5));
+                    g.drawImage(img.back, pos.x,pos.y,null);
+                }
+            }
+        }
+        g.dispose();
+        numbers = tgt;
     }
 
     public int getNumberFreeCoord(Coord coord) throws InterruptedException
@@ -209,7 +267,40 @@ public class NInventory extends Inventory
 
     @Override
     public void tick(double dt) {
+        if(NUtils.getGameUI() == null)
+            return;
         super.tick(dt);
+        if((Boolean)NConfig.get(NConfig.Key.showInventoryNums)) {
+            short[][] newInv = containerMatrix();
+            boolean isDiffrent = false;
+            if (newInv != null)
+                if (oldinv != null) {
+                    if (newInv.length != oldinv.length)
+                        isDiffrent = true;
+                    else {
+                        for (int i = 0; i < newInv.length; i++) {
+                            if (newInv[i].length != oldinv[i].length) {
+                                isDiffrent = true;
+                                break;
+                            }
+                            for (int j = 0; j < newInv[i].length; j++) {
+                                if (newInv[i][j] != oldinv[i][j]) {
+                                    isDiffrent = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if(!isDiffrent && numbers == null)
+                            isDiffrent = true;
+                    }
+                } else {
+                    isDiffrent = true;
+                }
+            if (isDiffrent)
+                generateNumberMatrix(newInv);
+        }
+        else
+            numbers = null;
         if(toggles !=null)
             toggles.visible = parent.visible && showPopup;
     }
@@ -256,6 +347,12 @@ public class NInventory extends Inventory
             new TexI(Resource.loadsimg("nurgling/hud/buttons/bundle/h")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/bundle/dh"))};
 
+    private static final TexI[] numberi = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/numbering/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/numbering/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/numbering/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/numbering/dh"))};
+
     private static final TexI[] dropperi = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/dropper/u")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/dropper/d")),
@@ -300,6 +397,18 @@ public class NInventory extends Inventory
         pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/var/u").flayer(Resource.tooltip).t);
         NFoodInfo.show = (Boolean)NConfig.get(NConfig.Key.showVarity);
         ((ICheckBox)pw).a = NFoodInfo.show;
+
+        ICheckBox rpw = toggles.add(new ICheckBox(numberi[0], numberi[1], numberi[2], numberi[3]) {
+            @Override
+            public void changed(boolean val)
+            {
+                super.changed(val);
+                NConfig.set(NConfig.Key.showInventoryNums, val);
+            }
+        }, pw.pos("ur").add(UI.scale(new Coord(5, 0))));
+        rpw.settip(Resource.remote().loadwait("nurgling/hud/buttons/numbering/u").flayer(Resource.tooltip).t);
+        ((ICheckBox)rpw).a = (Boolean)NConfig.get(NConfig.Key.showInventoryNums);
+
         pw = toggles.add(new ICheckBox(stacki[0], stacki[1], stacki[2], stacki[3]) {
             @Override
             public void changed(boolean val) {

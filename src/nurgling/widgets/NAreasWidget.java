@@ -26,6 +26,7 @@ public class NAreasWidget extends Window
     public IngredientContainer out_items;
     CurrentSpecialisationList csl;
     public AreaList al;
+    public boolean createMode = false;
     public NAreasWidget()
     {
         super(UI.scale(new Coord(700,500)), "Areas Settings");
@@ -83,9 +84,9 @@ public class NAreasWidget extends Window
         },prev.pos("br").sub(UI.scale(17,-5)));
 
         prev = add(Frame.with(in_items = new IngredientContainer("in"),true), prev.pos("ur").add(UI.scale(5,-5)));
-        add(new Label("In:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
+        add(new Label("Take:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
         prev = add(Frame.with(out_items = new IngredientContainer("out"),true), prev.pos("ur").adds(UI.scale(5, 0)));
-        add(new Label("Out:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
+        add(new Label("Put:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
         pack();
     }
 
@@ -469,5 +470,21 @@ public class NAreasWidget extends Window
             NAreasWidget.this.in_items.load(-1);
             NAreasWidget.this.out_items.load(-1);
         }
+    }
+
+    @Override
+    public void hide() {
+        super.hide();
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null && !createMode)
+            ((NMapView)NUtils.getGameUI().map).destroyDummys();
+    }
+
+    @Override
+    public boolean show(boolean show) {
+        if(show)
+        {
+            ((NMapView)NUtils.getGameUI().map).initDummys();
+        }
+        return super.show(show);
     }
 }

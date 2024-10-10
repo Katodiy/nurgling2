@@ -128,7 +128,13 @@ public class NHitBox
             return new NHitBox(new Coord(-5,-7),new Coord(5,7));
         else if(name.toLowerCase().endsWith("leaf"))
             return new NHitBox(new Coord(-5,-5),new Coord(5,5));
+        else if(name.toLowerCase().startsWith("flax") || name.toLowerCase().endsWith("hemp"))
+            return new NHitBox(new Coord(-3,-3),new Coord(3,3));
         return null;
+    }
+
+    public NHitBox rotate(){
+        return new NHitBox(new Coord((int) begin.y, (int) begin.x),new Coord((int) end.y, (int) end.x));
     }
 
     @Override

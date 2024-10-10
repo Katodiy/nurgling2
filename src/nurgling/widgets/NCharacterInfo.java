@@ -80,7 +80,7 @@ public class NCharacterInfo extends Widget {
     @Override
     public void tick(double dt) {
         super.tick(dt);
-        if(charWnd!=null) {
+        if(charWnd!=null && NUtils.getUI()!=null) {
             double fepssize = calcFEPsize(charWnd);
             if(Math.abs(oldFEPSsize-fepssize)>0.005) {
                 if (varity.size() > 0 && fepssize==0) {

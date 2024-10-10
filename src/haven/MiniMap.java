@@ -47,7 +47,6 @@ import nurgling.tools.NParser;
 
 import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
-import static haven.MapView.getcc;
 import static haven.OCache.posres;
 
 public class MiniMap extends Widget
@@ -145,7 +144,7 @@ public class MiniMap extends Widget
 	public MapLocator(MapView mv) {this.mv = mv;}
 
 	public Location locate(MapFile file) {
-	    Coord mc = new Coord2d(getcc()).floor(MCache.tilesz);
+	    Coord mc = new Coord2d(mv.getcc()).floor(MCache.tilesz);
 	    if(mc == null)
 		throw(new Loading("Waiting for initial location"));
 	    MCache.Grid plg = mv.ui.sess.glob.map.getgrid(mc.div(cmaps));

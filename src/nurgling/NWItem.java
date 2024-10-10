@@ -28,58 +28,46 @@ public class NWItem extends WItem
 
     private void search()
     {
-        if (NUtils.getGameUI().itemsForSearch != null && !NUtils.getGameUI().itemsForSearch.isEmpty())
-        {
-            String name = ((NGItem) item).name();
-            if (name != null)
-            {
-                if (NUtils.getGameUI().itemsForSearch.onlyName())
-                {
-                    if (name.toLowerCase().contains(NUtils.getGameUI().itemsForSearch.name))
-                    {
-                        if (!((NGItem) item).isSearched)
-                        {
-                            ((NGItem) item).isSearched = true;
+        if(NUtils.getGameUI()!=null) {
+            if (NUtils.getGameUI().itemsForSearch != null && !NUtils.getGameUI().itemsForSearch.isEmpty()) {
+                String name = ((NGItem) item).name();
+                if (name != null) {
+                    if (NUtils.getGameUI().itemsForSearch.onlyName()) {
+                        if (name.toLowerCase().contains(NUtils.getGameUI().itemsForSearch.name)) {
+                            if (!((NGItem) item).isSearched) {
+                                ((NGItem) item).isSearched = true;
+                            }
+                            return;
                         }
-                        return;
                     }
                 }
-            }
-            if (item.spr != null)
-            {
-                if (item.info != null)
-                {
-                    for (ItemInfo inf : item.info)
-                    {
-                        if (inf instanceof NSearchable)
-                        {
-                            if (((NSearchable) inf).search())
-                            {
-                                if (!((NGItem) item).isSearched)
-                                {
-                                    if (!NUtils.getGameUI().itemsForSearch.q.isEmpty() && !searchQuality()) return;
-                                    ((NGItem) item).isSearched = true;
+                if (item.spr != null) {
+                    if (item.info != null) {
+                        for (ItemInfo inf : item.info) {
+                            if (inf instanceof NSearchable) {
+                                if (((NSearchable) inf).search()) {
+                                    if (!((NGItem) item).isSearched) {
+                                        if (!NUtils.getGameUI().itemsForSearch.q.isEmpty() && !searchQuality()) return;
+                                        ((NGItem) item).isSearched = true;
+                                    }
+                                    return;
                                 }
-                                return;
+                            }
+                        }
+                        if (!NUtils.getGameUI().itemsForSearch.q.isEmpty() && searchQuality()) {
+                            if (!((NGItem) item).isSearched) {
+                                ((NGItem) item).isSearched = true;
                             }
                         }
                     }
-                    if (!NUtils.getGameUI().itemsForSearch.q.isEmpty() && searchQuality())
-                    {
-                        if (!((NGItem) item).isSearched)
-                        {
-                            ((NGItem) item).isSearched = true;
-                        }
-                    }
                 }
             }
-        }
 
-        if (((NGItem) item).isSearched)
-        {
-            if (NUtils.getGameUI().itemsForSearch != null && !NUtils.getGameUI().itemsForSearch.q.isEmpty() && searchQuality())
-                return;
-            ((NGItem) item).isSearched = false;
+            if (((NGItem) item).isSearched) {
+                if (NUtils.getGameUI().itemsForSearch != null && !NUtils.getGameUI().itemsForSearch.q.isEmpty() && searchQuality())
+                    return;
+                ((NGItem) item).isSearched = false;
+            }
         }
     }
 
