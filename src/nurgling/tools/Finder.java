@@ -281,7 +281,9 @@ public class Finder
         }
         else
         {
-            return NUtils.getGameUI().ui.sess.glob.oc.getgob(gobid);
+            if(NUtils.getGameUI()!=null)
+                return NUtils.getGameUI().ui.sess.glob.oc.getgob(gobid);
+            return null;
         }
     }
 

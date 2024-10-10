@@ -1,6 +1,7 @@
 package mapv4;
 
 import haven.Config;
+import haven.Coord;
 
 import java.io.*;
 import java.net.HttpURLConnection;

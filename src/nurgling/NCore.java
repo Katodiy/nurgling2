@@ -1,8 +1,7 @@
 package nurgling;
 
 import haven.*;
-import mapv4.MappingClient;
-import nurgling.pf.*;
+import mapv4.NMappingClient;
 import nurgling.tasks.*;
 
 import java.util.*;
@@ -12,6 +11,7 @@ public class NCore extends Widget
 {
     public boolean debug = false;
     boolean isinspect = false;
+    public NMappingClient mappingClient;
     public boolean isInspectMode()
     {
         if(debug)
@@ -132,6 +132,7 @@ public class NCore extends Widget
         config = new NConfig();
         config.read();
         mode = (Boolean) NConfig.get(NConfig.Key.show_drag_menu) ? Mode.DRAG : Mode.IDLE;
+        mappingClient = new NMappingClient();
     }
 
     @Override
@@ -169,6 +170,7 @@ public class NCore extends Widget
             tasks.removeAll(for_remove);
             for_remove.clear();
         }
+        mappingClient.tick(dt);
     }
 
 
@@ -197,18 +199,5 @@ public class NCore extends Widget
 
             }
         }
-    }
-
-    public void initAutomapper(String playername) {
-        if (MappingClient.initialized()) {
-            MappingClient.destroy();
-        }
-        MappingClient.init(ui.sess.glob);
-        MappingClient automapper = MappingClient.getInstance();
-        automapper.SetPlayerName(playername);
-        automapper.SetEndpoint((String) NConfig.get(NConfig.Key.endpoint));
-        automapper.EnableGridUploads((Boolean)NConfig.get(NConfig.Key.autoMapper));
-        automapper.EnableTracking((Boolean) NConfig.get(NConfig.Key.automaptrack));
-        MappingClient.getInstance().CheckEndpoint();
     }
 }

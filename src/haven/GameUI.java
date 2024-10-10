@@ -27,17 +27,13 @@
 package haven;
 
 import java.util.*;
-import java.util.concurrent.atomic.*;
-import java.util.function.*;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.image.WritableRaster;
 import haven.render.Location;
 import static haven.Inventory.invsq;
 
-import mapv4.MappingClient;
 import nurgling.*;
-import nurgling.conf.*;
 import nurgling.widgets.*;
 
 public class GameUI extends ConsoleHost implements Console.Directory, UI.MessageWidget {
@@ -584,8 +580,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		MapFile file;
 		try {
 		    file = MapFile.load(mapstore, mapfilename());
-			if((Boolean) NConfig.get(NConfig.Key.autoMapper)) {
-				MappingClient.getInstance().ProcessMap(file, (m) -> {
+			if(!(Boolean) NConfig.get(NConfig.Key.autoMapper)) {
+				NUtils.getUI().core.mappingClient.requestor.processMap(file, (m) -> {
 					if(m instanceof MapFile.PMarker) {
 						return (Boolean) NConfig.get(NConfig.Key.unloadgreen) && ((MapFile.PMarker)m).color.equals(Color.GREEN);
 					}

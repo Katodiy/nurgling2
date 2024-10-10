@@ -10,6 +10,7 @@ import nurgling.nattrib.*;
 import nurgling.overlays.*;
 import nurgling.pf.*;
 import nurgling.tools.*;
+import nurgling.widgets.NAlarmWdg;
 import nurgling.widgets.NQuestInfo;
 
 import java.util.*;
@@ -59,11 +60,13 @@ public class NGob {
                         if(a instanceof ResDrawable && ((ResDrawable) a).spr instanceof Consobj)
                         {
                             Consobj consobj = (Consobj) ((ResDrawable) a).spr;
-                            for (Resource.Layer lay : ((Session.CachedRes.Ref)consobj.built.res).res.getLayers()) {
-                                if (lay instanceof Resource.Neg) {
-                                    hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
-                                } else if (lay instanceof Resource.Obstacle) {
-                                    hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                            if((((Session.CachedRes.Ref)consobj.built.res).res)!=null) {
+                                for (Resource.Layer lay : ((Session.CachedRes.Ref) consobj.built.res).res.getLayers()) {
+                                    if (lay instanceof Resource.Neg) {
+                                        hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                    } else if (lay instanceof Resource.Obstacle) {
+                                        hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                    }
                                 }
                             }
                         }
@@ -81,6 +84,10 @@ public class NGob {
                         {
                             //TODO трюфель
                             parent.setattr(new GobIcon(parent,NStyle.iconMap.get(name),new byte[0]));
+                        }
+
+                        if (NParser.checkName(name, new NAlias("borka")) && parent.id!=NUtils.playerID()) {
+                            NAlarmWdg.addBorka(parent.id);
                         }
 
                         if (NParser.checkName(name, new NAlias("plants"))) {

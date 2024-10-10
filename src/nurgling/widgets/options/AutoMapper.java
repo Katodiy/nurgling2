@@ -1,7 +1,6 @@
 package nurgling.widgets.options;
 
 import haven.*;
-import mapv4.MappingClient;
 import nurgling.NConfig;
 import nurgling.NUtils;
 
@@ -21,10 +20,6 @@ public class AutoMapper extends Widget {
                 a = val;
                 if(!a)
                     NUtils.setAutoMapperState(a);
-                else
-                {
-                    NUtils.setAutoMapperState(MappingClient.getInstance().CheckEndpoint());
-                }
             }
         }, prev.pos("bl").adds(5, 5));
         prev = add(new Label("Server URL:"), prev.pos("bl").adds(0, 5));
@@ -46,10 +41,6 @@ public class AutoMapper extends Widget {
             public void set(boolean val) {
                 NConfig.set(NConfig.Key.automaptrack, val);
                 a = val;
-                if(NUtils.getGameUI()!=null)
-                {
-                    MappingClient.getInstance().EnableTracking(a);
-                }
 
             }
         }, prev.pos("bl").adds(0, 5));

@@ -35,6 +35,7 @@ public class NGameUI extends GameUI
     {
         super(chrid, plid, genus, nui);
         itemsForSearch = new NSearchItem();
+        add(new NDraggableWidget(alarmWdg = new NAlarmWdg(),"alarm",NStyle.alarm[0].sz().add(NDraggableWidget.delta)));
         add(new NDraggableWidget(nep = new NEquipProxy(NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT, NEquipory.Slots.BELT), "EquipProxy",  UI.scale(138, 55)));
         for(int i = 0; i<(Integer)NConfig.get(NConfig.Key.numbelts); i++)
         {

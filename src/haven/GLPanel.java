@@ -40,7 +40,7 @@ public interface GLPanel extends UIPanel, UI.Context {
     public void glswap(GL gl);
 
     public static class Loop implements Console.Directory {
-	public static boolean gldebug = false;
+	public static boolean gldebug = true;
 	public final GLPanel p;
 	public final CPUProfile uprof = new CPUProfile(300), rprof = new CPUProfile(300);
 	public final GPUProfile gprof = new GPUProfile(300);
