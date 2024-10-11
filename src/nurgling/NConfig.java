@@ -48,7 +48,6 @@ public class NConfig
         pigsprop,
         discordNotification,
         showGrid,
-        disableMenugridKeys,
         showView,
         disableWinAnim,
         disableMenugridKeys,
@@ -84,7 +83,6 @@ public class NConfig
         conf.put(Key.show_drag_menu, true);
         conf.put(Key.showGrid, false);
         conf.put(Key.showView, false);
-        conf.put(Key.disableMenugridKeys, true);
         conf.put(Key.disableWinAnim, true);
         conf.put(Key.disableMenugridKeys, false);
         conf.put(Key.baseurl," https://raw.githubusercontent.com/Katodiy/nurgling-release/master/ver");
