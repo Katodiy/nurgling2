@@ -326,7 +326,7 @@ public class NPFMap
     public static Window wnd = null;
     public static void print(int size, Cell[][] cells)
     {
-        if(false)
+        if(NUtils.getUI().core.debug)
         {
             Coord csz = new Coord(UI.scale(10), UI.scale(10));
             if(wnd!=null)
