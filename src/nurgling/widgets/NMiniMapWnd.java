@@ -1,7 +1,6 @@
 package nurgling.widgets;
 
 import haven.*;
-import mapv4.MappingClient;
 import mapv4.StatusWdg;
 import nurgling.NConfig;
 import nurgling.NMapView;
@@ -85,7 +84,7 @@ public class NMiniMapWnd extends Widget{
         geoloc = toggle_panel.add(new IButton(Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/d"), Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/u"), Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/h"), new Runnable() {
             @Override
             public void run() {
-                MappingClient.getInstance().OpenMap(MappingClient.getInstance().GetMapRef());
+                NUtils.getUI().core.mappingClient.OpenMap();
             }
         }), (first.sz.x+UI.scale(3))*shift++, 0);
 

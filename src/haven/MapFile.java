@@ -1133,9 +1133,9 @@ public class MapFile {
 
 	public MapFile file() {return(MapFile.this);}
 
-	private class Cached implements Indir<Grid> {
-	    Grid loaded;
-	    Future<Grid> loading;
+	public class Cached implements Indir<Grid> {
+	    public Grid loaded;
+	    public Future<Grid> loading;
 
 	    Cached(Future<Grid> loading) {
 		this.loading = loading;
@@ -1170,9 +1170,9 @@ public class MapFile {
 	}
 	public Indir<Grid> grid(long id) {return(grid0(id));}
 
-	private class ByCoord implements Indir<Grid> {
+	public class ByCoord implements Indir<Grid> {
 	    final Coord sc;
-	    Cached cur;
+	    public Cached cur;
 
 	    ByCoord(Coord sc, Cached cur) {
 		this.sc = sc;

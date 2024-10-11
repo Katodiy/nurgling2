@@ -29,7 +29,6 @@ package haven;
 import java.util.*;
 import java.util.function.*;
 import haven.render.*;
-import mapv4.MappingClient;
 import nurgling.*;
 import nurgling.tools.NParser;
 
@@ -578,12 +577,8 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	if(m != null)
 	    m.move(c);
 	this.rc = c;
-
-	if(ngob.name!=null && NParser.checkName(ngob.name,"gfx/borka/body") )  {
+	if(NUtils.playerID()!=-1 && id == NUtils.playerID())  {
 		NUtils.CheckGridCoord(c);
-		if ((Boolean) NConfig.get(NConfig.Key.autoMapper) && (Boolean) NConfig.get(NConfig.Key.automaptrack)) {
-			MappingClient.getInstance().Track(id, c);
-		}
 	}
 	this.a = a;
     }
