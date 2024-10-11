@@ -18,6 +18,7 @@ import static haven.Inventory.invsq;
 public class UsingTools extends Widget {
     public static class Tools {
         public static ArrayList<Tool> axes = new ArrayList<>();
+        public static ArrayList<Tool> pickaxe = new ArrayList<>();
         public static ArrayList<Tool> shovels = new ArrayList<>();
         public static ArrayList<Tool> saw= new ArrayList<>();
 
@@ -33,6 +34,14 @@ public class UsingTools extends Widget {
             shovels.add(new Tool("gfx/invobjs/small/shovel-t", "Tinker's Shovel"));
             saw.add(new Tool("gfx/invobjs/small/bonesaw", "Bonesaw"));
             saw.add(new Tool("gfx/invobjs/small/saw-m", "Metal Saw"));
+
+            pickaxe.add(new Tool("gfx/invobjs/woodsmansaxe", "Woodsman's Axe", "gfx/invobjs/small/woodsmansaxe"));
+            pickaxe.add(new Tool("gfx/invobjs/stoneaxe", "Stone Axe"));
+            pickaxe.add(new Tool("gfx/invobjs/butcherscleaver", "Butcher's cleaver"));
+            pickaxe.add(new Tool("gfx/invobjs/axe-m", "Metal Axe"));
+            pickaxe.add(new Tool("gfx/invobjs/tinkersthrowingaxe", "Tinker's Axe"));
+            pickaxe.add(new Tool("gfx/invobjs/b12axe", "Battle Axe of the Twelfth Bay", "gfx/invobjs/small/b12axe"));
+            pickaxe.add(new Tool("gfx/invobjs/pickaxe", "Pickaxe", "gfx/invobjs/small/pickaxe"));
         }
     }
 

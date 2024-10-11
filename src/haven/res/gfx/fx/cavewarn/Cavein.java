@@ -1,18 +1,19 @@
-package haven.res.gfx.fx.cavewarn;
 /* Preprocessed source code */
 /* $use: lib/bollar */
+
+package haven.res.gfx.fx.cavewarn;
 
 import haven.*;
 import haven.render.*;
 import haven.res.lib.bollar.*;
-import nurgling.overlays.*;
+import nurgling.overlays.NMiningNumber;
 
 import java.util.*;
 import java.nio.*;
 import java.awt.Color;
 
 /* >spr: Cavein */
-@haven.FromResource(name = "gfx/fx/cavewarn", version = 6)
+@haven.FromResource(name = "gfx/fx/cavewarn", version = 8)
 public class Cavein extends Sprite implements Sprite.CDel {
     static final Pipe.Op mat = new Light.PhongLight(false,
 						    new Color(255, 255, 255), new Color(255, 255, 255),

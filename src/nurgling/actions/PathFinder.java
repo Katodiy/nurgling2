@@ -171,7 +171,7 @@ public class PathFinder implements Action {
                     path = getPath(pfmap, res.path);
                 else
                     path = res.path;
-                NPFMap.print(pfmap.getSize(), res.getVert());
+//                NPFMap.print(pfmap.getSize(), res.getVert());
                 if (!path.isEmpty()) {
                     return path;
                 }

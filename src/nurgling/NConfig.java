@@ -57,7 +57,20 @@ public class NConfig
         debug,
         claydiggerprop,
         miningol,
-        q_pattern, q_range, q_visitor, q_door, petals, singlePetal, asenable, autoMapper, endpoint, automaptrack, unloadgreen, showInventoryNums, hidecredo
+        q_pattern,
+        q_range,
+        q_visitor,
+        q_door,
+        petals,
+        singlePetal,
+        asenable,
+        autoMapper,
+        endpoint,
+        automaptrack,
+        unloadgreen,
+        showInventoryNums,
+        hidecredo,
+        chipperprop
     }
 
 
@@ -225,6 +238,9 @@ public class NConfig
                             break;
                         case "NChopperProp":
                             res.add(new NChopperProp(obj));
+                            break;
+                        case "NChipperProp":
+                            res.add(new NChipperProp(obj));
                             break;
                         case "NPrepBProp":
                             res.add(new NPrepBlocksProp(obj));
