@@ -122,6 +122,16 @@ public class QoL extends Widget {
             }
 
         }, prev.pos("bl").adds(0, 5));
+        prev = add(new CheckBox("Disable menugrid keys:") {
+            {
+                a = (Boolean) NConfig.get(NConfig.Key.disableMenugridKeys);
+            }
+
+            public void set(boolean val) {
+                NConfig.set(NConfig.Key.disableMenugridKeys, val);
+                a = val;
+            }
+        },prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("DEBUG") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.debug);
