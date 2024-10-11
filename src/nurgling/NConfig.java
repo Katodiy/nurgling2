@@ -50,6 +50,7 @@ public class NConfig
         showGrid,
         showView,
         disableWinAnim,
+        disableMenugridKeys,
         crime,
         tracking,
         swimming,
@@ -83,6 +84,7 @@ public class NConfig
         conf.put(Key.showGrid, false);
         conf.put(Key.showView, false);
         conf.put(Key.disableWinAnim, true);
+        conf.put(Key.disableMenugridKeys, false);
         conf.put(Key.baseurl," https://raw.githubusercontent.com/Katodiy/nurgling-release/master/ver");
         conf.put(Key.miningol,true);
         conf.put(Key.crime,false);
