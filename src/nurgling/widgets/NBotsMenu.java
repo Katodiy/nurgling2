@@ -56,6 +56,7 @@ public class NBotsMenu extends Widget
         addLayout(utils);
         NLayout build = new NLayout("build");
         build.elements.add(new NButton("dframe", new BuildDryingFrame()));
+        build.elements.add(new NButton("cellar", new BuildCellar()));
         addLayout(build);
         if(NUtils.getUI().core.debug)
         {

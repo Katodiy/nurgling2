@@ -24,6 +24,8 @@ public class NChipperProp implements JConf
         this.chrid = chrid;
     }
 
+
+
     public NChipperProp(HashMap<String, Object> values)
     {
         chrid = (String) values.get("chrid");

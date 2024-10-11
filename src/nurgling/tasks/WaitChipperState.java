@@ -15,6 +15,14 @@ public class WaitChipperState implements NTask
         this.prop = prop;
     }
 
+    public WaitChipperState(Gob bumling)
+    {
+        this.player = NUtils.player();
+        this.bumling = bumling;
+        this.prop = null;
+    }
+
+
 
     Gob player;
     Gob bumling;
@@ -39,7 +47,7 @@ public class WaitChipperState implements NTask
         }
         else if(NUtils.getEnergy()<0.36)
         {
-            if(prop.autoeat)
+            if(prop!=null && prop.autoeat)
                 state = State.BUMLINGFOREAT;
             if(NUtils.getEnergy()<0.22)
                 state = State.DANGER;

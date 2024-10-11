@@ -23,7 +23,7 @@ import static haven.OCache.posres;
 
 public class Chipper implements Action {
 
-    private static final NAlias stones = new NAlias(new ArrayList<>(List.of(
+    public static final NAlias stones = new NAlias(new ArrayList<>(List.of(
             "Alabaster", "Apatite", "Arkose", "Basalt", "Bat Rock", "Black Coal", "Black Ore",
             "Bloodstone", "Breccia", "Cassiterite", "Cat Gold", "Chalcopyrite", "Chert", "Cinnabar",
             "Diabase", "Diorite", "Direvein", "Dolomite", "Dross", "Eclogite", "Feldspar", "Flint",
