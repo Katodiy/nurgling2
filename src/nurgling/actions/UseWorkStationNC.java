@@ -4,6 +4,7 @@ import haven.Coord;
 import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.NUtils;
+import nurgling.tasks.Follow;
 import nurgling.tasks.FollowAndPose;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
@@ -30,7 +31,7 @@ public class UseWorkStationNC implements Action
             new PathFinder(ws).run(gui);
             gui.map.wdgmsg ( "click", Coord.z, ws.rc.floor ( posres ), 3, 0, 0, ( int ) ws.id,
                     ws.rc.floor ( posres ), 0, -1 );
-            //NUtils.getUI().core.addTask(new FollowAndPose(NUtils.player(), new Context().workstation));
+            NUtils.getUI().core.addTask(new Follow(NUtils.player()));
         }
         return Results.SUCCESS();
     }

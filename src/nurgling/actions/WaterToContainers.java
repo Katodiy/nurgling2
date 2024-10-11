@@ -38,9 +38,9 @@ public class WaterToContainers implements Action
         }
         for (Container cont : conts) {
             Container.WaterLvl watLvl = cont.getattr(Container.WaterLvl.class);
-            while (watLvl.neededWater() != 0) {
+            if (watLvl.neededWater() != 0) {
 
-                new PathFinder(cont.gob).run(gui);
+                new UseWorkStationNC(cont.gob).run(gui);
                 new OpenTargetContainer(cont).run(gui);
                 watLvl = cont.getattr(Container.WaterLvl.class);
 
@@ -49,6 +49,7 @@ public class WaterToContainers implements Action
 
                 Gob cistern = Finder.findGob(NArea.findSpec(Specialisation.SpecName.water_refiller.toString()), new NAlias("cistern"));
                 Gob barrel = Finder.findGob(NArea.findSpec(Specialisation.SpecName.water_refiller.toString()), new NAlias("barrel"));
+                //gui.msg("Watered the container!");
                 //найти зону с водой
                 //найти в зоне с водой бочку
                 //заглянуть в бочку
