@@ -21,7 +21,7 @@ public class WaitPoseOrNoGob implements NTask
     @Override
     public boolean check()
     {
-        if(Finder.findGob(gob.id)==null && Finder.findGob(target.id)==null)
+        if(Finder.findGob(gob.id)==null || Finder.findGob(target.id)==null)
             return true;
         String cpose = gob.pose();
         return cpose != null && cpose.contains(pose);

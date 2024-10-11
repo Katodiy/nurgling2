@@ -46,6 +46,9 @@ public class BuildCellar implements Action {
                             return Results.ERROR("SOMETHING WRONG, STOP WORKING");
                         }
                         case TIMEFORPILE: {
+                            if(NUtils.getGameUI().vhand!=null) {
+                                NUtils.drop(NUtils.getGameUI().vhand);
+                            }
                             for (WItem item : NUtils.getGameUI().getInventory().getItems(Chipper.stones)) {
                                 NUtils.drop(item);
                             }
