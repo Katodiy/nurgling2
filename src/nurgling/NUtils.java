@@ -97,6 +97,13 @@ public class NUtils
         return fnf.getResult();
     }
 
+    public static NFlowerMenu getFlowerMenuT() throws InterruptedException
+    {
+        FindNFlowerMenuT fnf = new FindNFlowerMenuT();
+        getUI().core.addTask(fnf);
+        return fnf.getResult();
+    }
+
     public static NFlowerMenu findFlowerMenu() throws InterruptedException
     {
         FindOrWaitNFlowerMenu fnf = new FindOrWaitNFlowerMenu();

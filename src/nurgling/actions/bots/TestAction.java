@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.tasks.FindNInventory;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
@@ -15,7 +16,7 @@ import nurgling.widgets.Specialisation;
 import java.util.ArrayList;
 
 public class TestAction implements Action {
-
+    String cap = "Cauldron";
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NArea cauldrons = NArea.findSpec(Specialisation.SpecName.boiler.toString());
@@ -24,7 +25,7 @@ public class TestAction implements Action {
         for (Gob cm : Finder.findGobs(cauldrons, new NAlias("gfx/terobjs/cauldron"))) {
             Container cand = new Container();
             cand.gob = cm;
-            cand.cap = "Cauldron";
+            cand.cap = cap;
 
             cand.initattr(Container.Space.class);
             cand.initattr(Container.FuelLvl.class);
@@ -37,8 +38,9 @@ public class TestAction implements Action {
         }
 
         for(Container current_container: containers ) {
-            new UseWorkStationNC(current_container.gob).run(gui);
-            new OpenTargetContainer(current_container).run(gui);
+            //new UseWorkStationNC(current_container.gob).run(gui);
+            new SelectFlowerAction("Open", current_container.gob, true).run(gui);
+            NUtils.getUI().core.addTask(new FindNInventory(cap));
             new CloseTargetContainer(current_container).run(gui);
             gui.msg(Boolean.toString((current_container.gob.ngob.getModelAttribute() & 4) == 0));
         }
