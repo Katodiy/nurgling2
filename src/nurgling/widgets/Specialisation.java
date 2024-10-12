@@ -40,7 +40,8 @@ public class Specialisation extends Window
         fuel,
         ovens,
         gardenpot, barrel,
-        leafs, htable
+        leafs, htable,
+        rawhides, dframe
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -66,6 +67,8 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.gardenpot.toString()));
         specialisation.add(new SpecialisationItem(SpecName.leafs.toString()));
         specialisation.add(new SpecialisationItem(SpecName.htable.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.dframe.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.rawhides.toString()));
     }
 
     public class SpecialisationList extends SListBox<SpecialisationItem, Widget> {

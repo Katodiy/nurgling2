@@ -460,7 +460,7 @@ public class NInventory extends Inventory
         toggles.pack();
     }
 
-    private short[][] containerMatrix()
+    public short[][] containerMatrix()
     {
         short[][] ret = new short[isz.y][isz.x];
         for (int x = 0; x < isz.x; x++)
