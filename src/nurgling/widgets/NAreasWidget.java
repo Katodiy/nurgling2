@@ -11,7 +11,9 @@ import nurgling.areas.*;
 import nurgling.overlays.map.*;
 import nurgling.tools.*;
 import org.json.*;
-
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Comparator;
 import javax.swing.*;
 import javax.swing.colorchooser.*;
 import java.awt.*;
@@ -22,6 +24,7 @@ import java.util.concurrent.*;
 
 public class NAreasWidget extends Window
 {
+    GroupBy groupBy;
     public IngredientContainer in_items;
     public IngredientContainer out_items;
     CurrentSpecialisationList csl;
@@ -37,15 +40,19 @@ public class NAreasWidget extends Window
             {
                 super.click();
                 NUtils.getGameUI().msg("Please, select area");
-                new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE)).start();
+                String selectedDir = null;
+                if (groupBy.sel != null && !groupBy.sel.equals("Все папки") && !groupBy.sel.equals("Без папки")) {
+                    selectedDir = groupBy.sel;
+                }
+                new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE, selectedDir)).start();
             }
-        },new Coord(0,UI.scale(5)));
+        },new Coord(180,UI.scale(5)));
         create.settip("Create new area");
-
-        prev = add(al = new AreaList(UI.scale(new Coord(400,170))), prev.pos("bl").adds(0, 10));
+        Widget prev = add(groupBy = new GroupBy(UI.scale(160)), new Coord(UI.scale(15), UI.scale(5)));
+        prev = add(al = new AreaList(UI.scale(new Coord(400,270))), prev.pos("bl").adds(0, 10));
         Widget lab = add(new Label("Specialisation",NStyle.areastitle), prev.pos("bl").add(UI.scale(0,5)));
 
-        add(csl = new CurrentSpecialisationList(UI.scale(164,190)),lab.pos("bl").add(UI.scale(0,5)));
+        add(csl = new CurrentSpecialisationList(UI.scale(164,90)),lab.pos("bl").add(UI.scale(0,5)));
         add(new IButton(NStyle.add[0].back,NStyle.add[1].back,NStyle.add[2].back){
             @Override
             public void click()
@@ -83,12 +90,50 @@ public class NAreasWidget extends Window
             }
         },prev.pos("br").sub(UI.scale(17,-5)));
 
-        prev = add(Frame.with(in_items = new IngredientContainer("in"),true), prev.pos("ur").add(UI.scale(5,-5)));
+        prev = add(Frame.with(in_items = new IngredientContainer("in"),true), prev.pos("ur").add(UI.scale(25,-5)));
         add(new Label("Take:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
         prev = add(Frame.with(out_items = new IngredientContainer("out"),true), prev.pos("ur").adds(UI.scale(5, 0)));
         add(new Label("Put:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
         pack();
     }
+    public class GroupBy extends SDropBox<String, Widget> {
+        public String sel = "Все папки"; // Устанавливаем начальное значение
+
+        public GroupBy(int w) {
+            super(w, UI.scale(160), UI.scale(20));
+        }
+
+        protected List<String> items() {
+            List<String> items = new ArrayList<>();
+            items.add("Все папки"); // Опция для отображения всех зон
+
+            // Получаем уникальные значения dir из списка зон
+            Set<String> dirs = new HashSet<>();
+            for (AreaItem areaItem : areas.values()) {
+                if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
+                    dirs.add(areaItem.area.dir);
+                } else {
+                    dirs.add("Без папки");
+                }
+            }
+
+            items.addAll(dirs);
+            return items;
+        }
+
+        protected Widget makeitem(String item, int idx, Coord sz) {
+            return SListWidget.TextItem.of(sz, Text.std, () -> item);
+        }
+
+        public void change(String item) {
+            super.change(item);
+            this.sel = item; // Сохраняем выбранный элемент
+            // Обновляем список зон при изменении выбранной папки
+            al.updateList();
+        }
+
+    }
+
 
     public void removeArea(int id)
     {
@@ -292,48 +337,73 @@ public class NAreasWidget extends Window
             super(sz, UI.scale(15));
         }
 
-        protected List<AreaItem> items() {return new ArrayList<>(areas.values());}
+        protected List<AreaItem> items() {
+            List<AreaItem> list = new ArrayList<>(areas.values());
 
-        @Override
-        public void resize(Coord sz) {
-            super.resize(new Coord(UI.scale(170)-UI.scale(6), sz.y));
+            // Фильтруем список зон по выбранной папке
+            if (groupBy != null && groupBy.sel != null && !groupBy.sel.equals("Все папки")) {
+                String selectedDir = groupBy.sel.equals("Без папки") ? null : groupBy.sel;
+                list.removeIf(item -> {
+                    String itemDir = item.area.dir;
+                    if (itemDir == null || itemDir.isEmpty()) {
+                        return selectedDir != null;
+                    } else {
+                        return !itemDir.equals(selectedDir);
+                    }
+                });
+            }
+
+            // Сортируем список зон по dir
+            list.sort(Comparator.comparing(item -> item.area.dir == null ? "" : item.area.dir));
+
+            return list;
         }
 
+        // Реализуем метод makeitem с правильной сигнатурой
+        @Override
         protected Widget makeitem(AreaItem item, int idx, Coord sz) {
-            return(new ItemWidget<AreaItem>(this, sz, item) {
+            return new ItemWidget<AreaItem>(this, sz, item) {
                 {
-                    //item.resize(new Coord(searchF.sz.x - removei[0].sz().x  + UI.scale(4), item.sz.y));
                     add(item);
                 }
 
                 public boolean mousedown(Coord c, int button) {
                     boolean psel = sel == item;
                     super.mousedown(c, button);
-                    if(!psel) {
+                    if (!psel) {
                         String value = item.text.text();
                     }
-                    return(true);
+                    return true;
                 }
-            });
+            };
+        }
+
+        // Добавляем метод для обновления списка зон
+        public void updateList() {
+            super.reset();
         }
 
         @Override
-        public void wdgmsg(String msg, Object... args)
-        {
+        public void resize(Coord sz) {
+            super.resize(new Coord(UI.scale(170) - UI.scale(6), sz.y));
+        }
+
+        @Override
+        public void wdgmsg(String msg, Object... args) {
             super.wdgmsg(msg, args);
         }
 
-        Color bg = new Color(30,40,40,160);
+        Color bg = new Color(30, 40, 40, 160);
+
         @Override
-        public void draw(GOut g)
-        {
+        public void draw(GOut g) {
             g.chcolor(bg);
             g.frect(Coord.z, g.sz());
             super.draw(g);
         }
-
-
     }
+
+
     List<SpecialisationItem> specItems = new ArrayList<>();
     @Override
     public void wdgmsg(Widget sender, String msg, Object... args)
