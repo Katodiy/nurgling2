@@ -400,4 +400,17 @@ public class NUtils
             }
         }
     }
+    public static boolean isOverlay(
+            Gob gob,
+            NAlias name
+    ) {
+        for (Gob.Overlay ol : gob.ols) {
+            if(ol.spr instanceof StaticSprite) {
+                if(NParser.checkName((ol.spr).res.name,name))
+                    return true;
+            }
+        }
+        return false;
+    }
+
 }
