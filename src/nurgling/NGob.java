@@ -1,6 +1,8 @@
 package nurgling;
 
 import haven.*;
+import haven.render.Location;
+import haven.render.Transform;
 import haven.render.sl.InstancedUniform;
 import haven.res.gfx.fx.eq.Equed;
 import haven.res.gfx.terobjs.consobj.Consobj;
@@ -71,6 +73,31 @@ public class NGob {
                                     } else if (lay instanceof Resource.Obstacle) {
                                         hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
                                     }
+                                }
+                            }
+                            else
+                            {
+                                Coord2d ur = null;
+                                Coord2d bl = null;
+                                for(Location loc: consobj.poles)
+                                {
+                                    if(bl == null) {
+                                        bl = new Coord2d(((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[12],((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[13]);
+                                    }
+                                    else
+                                    {
+                                        bl = new Coord2d(Math.min(bl.x,((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[12]),Math.min(bl.y,((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[13]));
+                                    }
+                                    if(ur == null) {
+                                        ur = new Coord2d(((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[12],((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[13]);
+                                    }
+                                    else
+                                    {
+                                        ur = new Coord2d(Math.max(ur.x,((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[12]),Math.max(ur.y,((Matrix4f)(((Transform.ByMatrix)loc.xf).xf)).m[13]));
+                                    }
+                                }
+                                if(bl!=null && ur!=null) {
+                                    hitBox = new NHitBox(bl, ur);
                                 }
                             }
                         }

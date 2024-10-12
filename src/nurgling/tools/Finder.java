@@ -453,8 +453,8 @@ public class Finder
         return pos;
     }
 
-    public static Gob findGobByPatterns(ArrayList<Pattern> qaPatterns, double dist) {
-        Gob result = null;
+    public static ArrayList<Gob> findGobByPatterns(ArrayList<Pattern> qaPatterns, double dist) {
+        ArrayList<Gob> result = new ArrayList<>();
         synchronized (NUtils.getGameUI().ui.sess.glob.oc)
         {
             for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
@@ -467,11 +467,7 @@ public class Finder
                                 double new_dist;
                                 if (gob.id != NUtils.playerID() && (new_dist = gob.rc.dist(NUtils.player().rc)) < dist) {
                                     if(!(Boolean)NConfig.get(NConfig.Key.q_visitor) || (!(NParser.checkName(gob.ngob.name, new NAlias("palisadebiggate","palisadegate"))) || gob.findol(Equed.class)==null)) {
-                                        Following fol;
-                                        if(!(NParser.checkName(gob.ngob.name,"horse") && (fol = NUtils.player().getattr(Following.class))!=null && fol.tgt == gob.id)) {
-                                            dist = new_dist;
-                                            result = gob;
-                                        }
+                                        result.add(gob);
                                     }
                                 }
                             }

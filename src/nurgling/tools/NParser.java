@@ -48,6 +48,8 @@ public class NParser
             final String name,
             final String... args
     ) {
+        if(name==null)
+            return false;
         return checkName(name, new NAlias(args));
     }
 

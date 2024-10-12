@@ -14,6 +14,12 @@ public class NHitBox
         this.end = new Coord2d(end);
     }
 
+    public NHitBox(Coord2d begin, Coord2d end)
+    {
+        this.begin = new Coord2d(begin.x, begin.y);
+        this.end = new Coord2d(end.x, end.y);
+    }
+
     private final static HashMap<String, NHitBox> custom = new HashMap<String, NHitBox>()
     {
         {

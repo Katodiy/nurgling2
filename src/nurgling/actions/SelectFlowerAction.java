@@ -12,7 +12,7 @@ public class SelectFlowerAction implements Action
 
     Object target;
     Sprite spr = null;
-
+    boolean ignoreErrors = false;
     public SelectFlowerAction(String opt, WItem item)
     {
         this.opt = opt;
@@ -67,7 +67,9 @@ public class SelectFlowerAction implements Action
         else
         {
             NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
-            return Results.ERROR("NO OPT:" + opt);
+            if(!ignoreErrors)
+                return Results.ERROR("NO OPT:" + opt);
+            return Results.FAIL();
         }
 
     }

@@ -26,7 +26,19 @@ public class QuickActionBot implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         double dist = (Integer) NConfig.get(NConfig.Key.q_range) * MCache.tilesz.x;
         if (!ignorePatter) {
-            Gob gob = Finder.findGobByPatterns(NUtils.getQAPatterns(), dist);
+
+            ArrayList<Gob> gobs = Finder.findGobByPatterns(NUtils.getQAPatterns(), dist);
+            gobs.sort(NUtils.d_comp);
+            Gob gob = null;
+            Following fol;
+            for(Gob cand : gobs) {
+                if (!(NParser.checkName(cand.ngob.name, "horse") && (fol = NUtils.player().getattr(Following.class)) != null && fol.tgt == cand.id)) {
+                    if(cand.getattr(Following.class) == null || !NParser.checkName(NUtils.player().pose(),"banzai") || cand.rc.dist(NUtils.player().rc)>0.01) {
+                        gob = cand;
+                        break;
+                    }
+                }
+            }
             if (gob != null) {
                 gui.map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 0, 1, (int) gob.id, gob.rc.floor(posres),
                         0, -1);
