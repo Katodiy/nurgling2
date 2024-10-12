@@ -25,6 +25,7 @@ import java.util.concurrent.*;
 public class NAreasWidget extends Window
 {
     GroupBy groupBy;
+    TextEntry folderSearch;
     public IngredientContainer in_items;
     public IngredientContainer out_items;
     CurrentSpecialisationList csl;
@@ -41,12 +42,21 @@ public class NAreasWidget extends Window
                 super.click();
                 NUtils.getGameUI().msg("Please, select area");
                 String selectedDir = null;
-                if (groupBy.sel != null && !groupBy.sel.equals("Все папки") && !groupBy.sel.equals("Без папки")) {
+                if (groupBy.sel != null && !groupBy.sel.equals("All Folders") && !groupBy.sel.equals("DefaultFolder")) {
                     selectedDir = groupBy.sel;
                 }
                 new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE, selectedDir)).start();
             }
         },new Coord(180,UI.scale(5)));
+        prev = add(folderSearch = new TextEntry(UI.scale(160), "") {
+            @Override
+            public boolean keydown(java.awt.event.KeyEvent ev) {
+                boolean result = super.keydown(ev);
+                al.updateList(); // Update the area list as the user types
+                return result;
+            }
+        }, prev.pos("ur").adds(UI.scale(10), 0));
+        folderSearch.settip("Search folders");
         create.settip("Create new area");
         Widget prev = add(groupBy = new GroupBy(UI.scale(160)), new Coord(UI.scale(15), UI.scale(5)));
         prev = add(al = new AreaList(UI.scale(new Coord(400,270))), prev.pos("bl").adds(0, 10));
@@ -90,14 +100,14 @@ public class NAreasWidget extends Window
             }
         },prev.pos("br").sub(UI.scale(17,-5)));
 
-        prev = add(Frame.with(in_items = new IngredientContainer("in"),true), prev.pos("ur").add(UI.scale(25,-5)));
+        prev = add(Frame.with(in_items = new IngredientContainer("in"),true), prev.pos("ur").add(UI.scale(5,15)));
         add(new Label("Take:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
         prev = add(Frame.with(out_items = new IngredientContainer("out"),true), prev.pos("ur").adds(UI.scale(5, 0)));
         add(new Label("Put:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
         pack();
     }
     public class GroupBy extends SDropBox<String, Widget> {
-        public String sel = "Все папки"; // Устанавливаем начальное значение
+        public String sel = "All Folders"; // Устанавливаем начальное значение
 
         public GroupBy(int w) {
             super(w, UI.scale(160), UI.scale(20));
@@ -105,7 +115,7 @@ public class NAreasWidget extends Window
 
         protected List<String> items() {
             List<String> items = new ArrayList<>();
-            items.add("Все папки"); // Опция для отображения всех зон
+            items.add("All Folders"); // Опция для отображения всех зон
 
             // Получаем уникальные значения dir из списка зон
             Set<String> dirs = new HashSet<>();
@@ -113,7 +123,7 @@ public class NAreasWidget extends Window
                 if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
                     dirs.add(areaItem.area.dir);
                 } else {
-                    dirs.add("Без папки");
+                    dirs.add("DefaultFolder");
                 }
             }
 
@@ -208,11 +218,31 @@ public class NAreasWidget extends Window
                 add("Set color");
                 add("Edit name");
                 add("Scan");
+                add("Change folder");
             }
         };
 
         NFlowerMenu menu;
+        private void changeFolder() {
+            // Получаем список существующих папок
+            Set<String> dirs = new HashSet<>();
+            for (AreaItem areaItem : NAreasWidget.this.areas.values()) {
+                if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
+                    dirs.add(areaItem.area.dir);
+                } else {
+                    dirs.add("DefaultFolder");
+                }
+            }
+            // Убираем текущую папку из списка
+            dirs.remove(area.dir != null && !area.dir.isEmpty() ? area.dir : "DefaultFolder");
+            List<String> folderList = new ArrayList<>(dirs);
+            folderList.add(0, "DefaultFolder");
+            folderList.add("New folder...");
 
+            // Показываем окно NChangeAreaFolder
+            NChangeAreaFolder changeFolderWindow = new NChangeAreaFolder(NAreasWidget.this, area, this, folderList);
+            ui.root.add(changeFolderWindow, NUtils.getGameUI().sz.div(2).sub(changeFolderWindow.sz.div(2)));
+        }
         public void opts( Coord c ) {
             if(menu == null) {
                 menu = new NFlowerMenu(opt.toArray(new String[0])) {
@@ -284,6 +314,11 @@ public class NAreasWidget extends Window
                             {
                                 Scaner.startScan(area);
                             }
+                            else if (option.name.equals("Change folder"))
+                            {
+                                // Новый код для смены папки
+                                changeFolder();
+                            }
                         }
                         uimsg("cancel");
                     }
@@ -302,6 +337,7 @@ public class NAreasWidget extends Window
 
 
     }
+
 
     private void select(int id)
     {
@@ -339,19 +375,24 @@ public class NAreasWidget extends Window
 
         protected List<AreaItem> items() {
             List<AreaItem> list = new ArrayList<>(areas.values());
-
+            String searchQuery = folderSearch.text().trim().toLowerCase();
             // Фильтруем список зон по выбранной папке
-            if (groupBy != null && groupBy.sel != null && !groupBy.sel.equals("Все папки")) {
-                String selectedDir = groupBy.sel.equals("Без папки") ? null : groupBy.sel;
-                list.removeIf(item -> {
-                    String itemDir = item.area.dir;
-                    if (itemDir == null || itemDir.isEmpty()) {
-                        return selectedDir != null;
-                    } else {
-                        return !itemDir.equals(selectedDir);
-                    }
-                });
-            }
+            list.removeIf(item -> {
+                String itemDir = item.area.dir;
+                if (itemDir == null || itemDir.isEmpty() || itemDir.equals("DefaultFolder")) {
+                    itemDir = "DefaultFolder";
+                }
+
+                boolean folderMatches = true;
+                if (groupBy != null && groupBy.sel != null && !groupBy.sel.equals("All Folders")) {
+                    String selectedDir = groupBy.sel;
+                    folderMatches = itemDir.equals(selectedDir);
+                }
+
+                boolean searchMatches = searchQuery.isEmpty() || itemDir.toLowerCase().contains(searchQuery);
+
+                return !(folderMatches && searchMatches);
+            });
 
             // Сортируем список зон по dir
             list.sort(Comparator.comparing(item -> item.area.dir == null ? "" : item.area.dir));
