@@ -23,6 +23,7 @@ public class NBotsMenu extends Widget
         resources.elements.add(new NButton("bark", new CollectBark()));
         resources.elements.add(new NButton("bough", new CollectBough()));
         resources.elements.add(new NButton("leaf", new CollectLeaf()));
+        resources.elements.add(new NButton("chipper", new Chipper()));
         addLayout(resources);
         NLayout productions = new NLayout("productions");
         productions.elements.add(new NButton("smelter", new SmelterAction()));
@@ -55,6 +56,7 @@ public class NBotsMenu extends Widget
         addLayout(utils);
         NLayout build = new NLayout("build");
         build.elements.add(new NButton("dframe", new BuildDryingFrame()));
+        build.elements.add(new NButton("cellar", new BuildCellar()));
         addLayout(build);
         if(NUtils.getUI().core.debug)
         {
@@ -310,7 +312,7 @@ public class NBotsMenu extends Widget
             for (NButton element : elements)
             {
                 element.btn.move(new Coord(w * UI.scale(34), h * UI.scale(34)));
-                if (h > 8)
+                if (h > 7)
                 {
                     w += 1;
                     h = 0;

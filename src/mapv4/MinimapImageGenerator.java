@@ -4,6 +4,7 @@ import haven.*;
 import haven.resutil.Ridges;
 import nurgling.NUtils;
 import nurgling.tasks.CheckGrid;
+import nurgling.tasks.NTask;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -15,7 +16,7 @@ import java.util.Arrays;
  */
 public class MinimapImageGenerator {
 
-    private static BufferedImage tileimg(int t, BufferedImage[] texes, MCache map) {
+    private static BufferedImage tileimg(int t, BufferedImage[] texes, MCache map) throws InterruptedException {
         BufferedImage img = texes[t];
         if (img == null) {
             Resource r = map.tilesetr(t);
@@ -35,15 +36,20 @@ public class MinimapImageGenerator {
         BufferedImage buf = TexI.mkbuf(MCache.cmaps);
         Coord c = new Coord();
 
-        for (c.y = 0; c.y < MCache.cmaps.y; c.y++) {
-            for (c.x = 0; c.x < MCache.cmaps.x; c.x++) {
-                BufferedImage tex = tileimg(grid.gettile(c), texes, map);
-                int rgb = 0;
-                if (tex != null)
-                    rgb = tex.getRGB(Utils.floormod(c.x, tex.getWidth()),
-                            Utils.floormod(c.y, tex.getHeight()));
-                buf.setRGB(c.x, c.y, rgb);
+        try {
+            for (c.y = 0; c.y < MCache.cmaps.y; c.y++) {
+                for (c.x = 0; c.x < MCache.cmaps.x; c.x++) {
+                    BufferedImage tex = tileimg(grid.gettile(c), texes, map);
+                    int rgb = 0;
+                    if (tex != null)
+                        rgb = tex.getRGB(Utils.floormod(c.x, tex.getWidth()),
+                                Utils.floormod(c.y, tex.getHeight()));
+                    buf.setRGB(c.x, c.y, rgb);
+                }
             }
+        }
+        catch (Exception e) {
+            return (null);
         }
 
         for (c.y = 1; c.y < MCache.cmaps.y - 1; c.y++) {

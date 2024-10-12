@@ -94,6 +94,12 @@ public class Requestor implements Action {
                         if(g != null && NUtils.getGameUI().map.glob != null) {
                             try {
                             BufferedImage image = MinimapImageGenerator.drawmap(NUtils.getGameUI().map.glob.map, g);
+                            if(image == null) {
+                                synchronized ( list ) {
+                                    list.add(task);
+                                }
+                                continue;
+                            }
                             JSONObject extraData = new JSONObject();
                             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                             ImageIO.write(image, "png", outputStream);

@@ -580,7 +580,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		MapFile file;
 		try {
 		    file = MapFile.load(mapstore, mapfilename());
-			if(!(Boolean) NConfig.get(NConfig.Key.autoMapper)) {
+			if((Boolean) NConfig.get(NConfig.Key.autoMapper)) {
 				NUtils.getUI().core.mappingClient.requestor.processMap(file, (m) -> {
 					if(m instanceof MapFile.PMarker) {
 						return (Boolean) NConfig.get(NConfig.Key.unloadgreen) && ((MapFile.PMarker)m).color.equals(Color.GREEN);

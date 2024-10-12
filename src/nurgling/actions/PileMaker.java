@@ -33,23 +33,21 @@ public class PileMaker implements Action{
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NHitBox hb = NHitBox.findCustom(items.getDefault());
-        if(hb == null) {
-            hb = NHitBox.findCustom(pileName.getDefault());
-        }
-        if(hb == null)
-            return Results.ERROR("Hit box not found");
-        Coord2d pos = null;
-        if((pos = Finder.getFreePlace(out,hb))==null)
-            return Results.ERROR("No free space");
+
         if (gui.hand.isEmpty()) {
             if(NUtils.takeItemToHand(NUtils.getGameUI().getInventory().getItem(items))==null)
                 
                 return Results.FAIL();
         }
-        new PathFinder( NGob.getDummy(pos, 0, hb),true).run(gui);
-        NUtils.activateItem(pos);
+        NUtils.activateItem(NUtils.player().rc);
         NUtils.getUI().core.addTask(new WaitPlob());
+        Coord2d pos = null;
+        NHitBox hitbox = NUtils.getGameUI().map.placing.get().ngob.hitBox;
+        if((pos = Finder.getFreePlace(out,hitbox))==null)
+            return Results.ERROR("No free space");
+
+        new PathFinder( NGob.getDummy(pos, 0, hitbox),true).run(gui);
+
         NUtils.getGameUI().map.wdgmsg("place", pos.floor(posres), 0, 1, 0);
         WaitPile wp = new WaitPile(pos);
         NUtils.getUI().core.addTask(wp);

@@ -228,7 +228,6 @@ public class NUtils
     }
 
     public static void hfout() throws InterruptedException {
-        //getGameUI().menu.wdgmsg("act", "travel", "hearth");
         getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "travel", "hearth", 0);
         getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/idle"));
     }
@@ -413,4 +412,23 @@ public class NUtils
         return false;
     }
 
+
+    public static Coord2d findMountain(Pair<Coord2d, Coord2d> rcArea)
+    {
+        Coord2d pos = new Coord2d ( rcArea.a.x, rcArea.a.y );
+        int count = 0;
+        while ( pos.x <= rcArea.b.x ) {
+            while ( pos.y <= rcArea.b.y ) {
+                Coord pltc = ( new Coord2d ( pos.x / 11, pos.y / 11 ) ).floor ();
+                Resource res_beg = NUtils.getGameUI().ui.sess.glob.map.tilesetr ( NUtils.getGameUI().ui.sess.glob.map.gettile ( pltc ) );
+                if ( NParser.checkName ( res_beg.name, new NAlias( "mountain" ) ) ) {
+                    return new Coord2d(pos.x, pos.y);
+                }
+                pos.y += MCache.tilesz.y;
+            }
+            pos.y = rcArea.a.y;
+            pos.x += MCache.tilesz.x;
+        }
+        return null;
+    }
 }

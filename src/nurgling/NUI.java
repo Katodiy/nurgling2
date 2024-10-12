@@ -122,5 +122,4 @@ public class NUI extends UI
     public float getDeltaZ() {
         return (float)Math.sin(tickId/10.)*1;
     }
-
 }

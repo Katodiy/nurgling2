@@ -27,7 +27,6 @@ public class GoTo implements Action
             NUtils.getUI().core.addTask(new GetCurs("arw"));
         }
 
-        gui.msg(targetCoord.toString());
         gui.map.wdgmsg("click", Coord.z, targetCoord.floor(posres), 1, 0);
         Following fl = NUtils.player().getattr(Following.class);
         if( fl!= null )

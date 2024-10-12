@@ -56,11 +56,15 @@ public class NGob {
             if (((Drawable) a).getres() != null) {
                 name = ((Drawable) a).getres().name;
 
+                if(name!=null && name.startsWith("gfx/terobjs/arch/cellardoor")) {
+                    return;
+                }
+
                 if (((Drawable) a).getres().getLayers() != null) {
-                        if(a instanceof ResDrawable && ((ResDrawable) a).spr instanceof Consobj)
+                    if(a instanceof ResDrawable && ((ResDrawable) a).spr instanceof Consobj)
                         {
                             Consobj consobj = (Consobj) ((ResDrawable) a).spr;
-                            if((((Session.CachedRes.Ref)consobj.built.res).res)!=null) {
+                            if(consobj.built!=null && (((Session.CachedRes.Ref)consobj.built.res).res)!=null) {
                                 for (Resource.Layer lay : ((Session.CachedRes.Ref) consobj.built.res).res.getLayers()) {
                                     if (lay instanceof Resource.Neg) {
                                         hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);

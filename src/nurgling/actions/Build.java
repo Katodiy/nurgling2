@@ -170,7 +170,7 @@ public class Build implements Action{
                         if(space.isReady())
                         {
                             int aval = (int) space.getRes().get(Container.Space.MAXSPACE) - (int) space.getRes().get(Container.Space.FREESPACE);
-                            if (aval != (int) space.getRes().get(Container.Space.FREESPACE)) {
+                            if (aval != 0) {
                                 new PathFinder(container.gob).run(gui);
                                 new OpenTargetContainer(container).run(gui);
                                 TakeAvailableItemsFromContainer tifc = new TakeAvailableItemsFromContainer(container,ingredient.name, ingredient.count);

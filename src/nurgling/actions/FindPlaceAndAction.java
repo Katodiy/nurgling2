@@ -45,6 +45,10 @@ public class FindPlaceAndAction implements Action {
         this.area = area.getRCArea();
     }
 
+    public Gob getPlaced() {
+        return placed;
+    }
+
     Gob placed = null;
     Pair<Coord2d, Coord2d> area = null;
 }

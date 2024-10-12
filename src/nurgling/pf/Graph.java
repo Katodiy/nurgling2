@@ -235,96 +235,96 @@ public class Graph implements Runnable
 
     public static LinkedList<Vertex> getPath(NPFMap map, LinkedList<Vertex> path)
     {
-        Coord dir = new Coord();
-        Gob player = NUtils.player();
+            Coord dir = new Coord();
+            Gob player = NUtils.player();
 
-        if (!path.isEmpty()) {
-            Iterator<Vertex> it;
-            it = path.iterator();
-            Vertex prev = it.next();
-            prev.val = 9;
-            LinkedList<Vertex> for_remove = new LinkedList<>();
-            while (it.hasNext()) {
-                Vertex cur = it.next();
-                Coord cur_dir = new Coord(cur.i, cur.j).sub(new Coord(prev.i, prev.j));
-                if (cur_dir.equals(dir.x, dir.y))
-                    for_remove.add(prev);
-                else {
-                    prev.val = 9;
-                    dir = cur_dir;
+            if (!path.isEmpty()) {
+                Iterator<Vertex> it;
+                it = path.iterator();
+                Vertex prev = it.next();
+                prev.val = 9;
+                LinkedList<Vertex> for_remove = new LinkedList<>();
+                while (it.hasNext()) {
+                    Vertex cur = it.next();
+                    Coord cur_dir = new Coord(cur.i, cur.j).sub(new Coord(prev.i, prev.j));
+                    if (cur_dir.equals(dir.x, dir.y))
+                        for_remove.add(prev);
+                    else {
+                        prev.val = 9;
+                        dir = cur_dir;
+                    }
+                    prev = cur;
                 }
-                prev = cur;
+                path.removeAll(for_remove);
             }
-            path.removeAll(for_remove);
-        }
-        if (!path.isEmpty()) {
-            LinkedList<Vertex> for_remove = new LinkedList<>();
-            int shift = 2;
-            for (int i = -1; i < path.size(); i++) {
-                int di = 0;
-                while (i + shift < path.size()) {
-                    Coord2d first = (i != -1) ? Utils.pfGridToWorld(path.get(i).pos) : NUtils.player().rc;
-                    Coord2d second = Utils.pfGridToWorld(path.get(i + shift).pos);
-                    Coord2d fsdir = second.sub(first);
-                    Coord2d center = fsdir.div(2).add(first);
-                    int hlen = (int) Math.ceil(fsdir.len() / 2);
-                    //TODO remake with beam box
-                    NHitBox hb = new NHitBox(new Coord(-hlen,-2 ), new Coord(hlen, 2));
-                    ArrayList<Coord> data;
-                    if ((data = map.checkCA(new CellsArray(hb, fsdir.curAngle(), center))).isEmpty()) {
-                        for_remove.add(path.get(i + shift - 1));
-                        shift++;
-                        di++;
-                    } else {
-                        NHitBoxD hbd = new NHitBoxD(hb.begin, hb.end, center, fsdir.curAngle());
-                        boolean isFree = true;
-                        ArrayList<Coord> corners = new ArrayList<>();
-                        for(Coord2d c2d : hbd.c)
-                        {
-                            corners.add(Utils.toPfGrid(c2d).sub(map.begin));
-                        }
-                        for(Coord datac : data)
-                        {
-                            if(corners.contains(datac))
-                            {
-                                for (long id : map.cells[datac.x][datac.y].content)
-                                {
-                                    Gob g = Finder.findGob(id);
-                                    if(g!=null) {
-                                        if (hbd.intersects(new NHitBoxD(g.ngob.hitBox.begin, g.ngob.hitBox.end, g.rc, g.a),true)) {
-                                            isFree = false;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if(!isFree)
-                                    break;
-                            }
-                            else
-                            {
-                                isFree = false;
-                                break;
-                            }
-                        }
-
-                        if(isFree)
-                        {
+            if (!path.isEmpty()) {
+                LinkedList<Vertex> for_remove = new LinkedList<>();
+                int shift = 2;
+                for (int i = -1; i < path.size(); i++) {
+                    int di = 0;
+                    while (i + shift < path.size()) {
+                        Coord2d first = (i != -1) ? Utils.pfGridToWorld(path.get(i).pos) : NUtils.player().rc;
+                        Coord2d second = Utils.pfGridToWorld(path.get(i + shift).pos);
+                        Coord2d fsdir = second.sub(first);
+                        Coord2d center = fsdir.div(2).add(first);
+                        int hlen = (int) Math.ceil(fsdir.len() / 2);
+                        //TODO remake with beam box
+                        NHitBox hb = new NHitBox(new Coord(-hlen,-2 ), new Coord(hlen, 2));
+                        ArrayList<Coord> data;
+                        if ((data = map.checkCA(new CellsArray(hb, fsdir.curAngle(), center))).isEmpty()) {
                             for_remove.add(path.get(i + shift - 1));
                             shift++;
                             di++;
-                        }
-                        else {
-                            shift = 2;
-                            i += di;
-                            break;
+                        } else {
+                            NHitBoxD hbd = new NHitBoxD(hb.begin, hb.end, center, fsdir.curAngle());
+                            boolean isFree = true;
+                            ArrayList<Coord> corners = new ArrayList<>();
+                            for(Coord2d c2d : hbd.c)
+                            {
+                                corners.add(Utils.toPfGrid(c2d).sub(map.begin));
+                            }
+                            for(Coord datac : data)
+                            {
+                                if(corners.contains(datac))
+                                {
+                                    for (long id : map.cells[datac.x][datac.y].content)
+                                    {
+                                        Gob g = Finder.findGob(id);
+                                        if(g!=null) {
+                                            if (hbd.intersects(new NHitBoxD(g.ngob.hitBox.begin, g.ngob.hitBox.end, g.rc, g.a),true)) {
+                                                isFree = false;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if(!isFree)
+                                        break;
+                                }
+                                else
+                                {
+                                    isFree = false;
+                                    break;
+                                }
+                            }
+
+                            if(isFree)
+                            {
+                                for_remove.add(path.get(i + shift - 1));
+                                shift++;
+                                di++;
+                            }
+                            else {
+                                shift = 2;
+                                i += di;
+                                break;
+                            }
                         }
                     }
                 }
-            }
-            path.removeAll(for_remove);
+                path.removeAll(for_remove);
 //                if (player != null && Utils.pfGridToWorld(path.get(0).pos).dist(player.rc) <= 1)
 //                    path.remove(0);
-        }
+            }
         return path;
     }
 

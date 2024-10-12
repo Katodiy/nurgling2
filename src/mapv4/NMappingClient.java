@@ -19,13 +19,13 @@ public class NMappingClient {
 
     Connector connector;
     public Requestor requestor;
-    AtomicBoolean done = new AtomicBoolean(false);
+    public AtomicBoolean done = new AtomicBoolean(false);
     private Boolean autoMapper = null;
     public final Map<Long, MapRef> cache = new HashMap<Long, MapRef>();
     long lastTracking = -1;
     public void tick(double dt)
     {
-        if(autoMapper!=(Boolean)NConfig.get(NConfig.Key.autoMapper))
+        if(autoMapper!=(Boolean)NConfig.get(NConfig.Key.autoMapper) && NUtils.getGameUI()!=null)
         {
             autoMapper = (Boolean)NConfig.get(NConfig.Key.autoMapper);
             if(autoMapper)
@@ -90,6 +90,7 @@ public class NMappingClient {
     public NMappingClient() {
         requestor = new Requestor(this);
         connector = new Connector(this);
+        done.set(false);
     }
 
     public static class MapRef {

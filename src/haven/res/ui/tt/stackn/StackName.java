@@ -18,7 +18,8 @@ public class StackName implements ItemInfo.InfoFactory {
 	Resource res = ((ItemInfo.ResOwner)owner).resource();
 	Resource.Tooltip tt = res.layer(Resource.tooltip);
 	if(tt == null)
-	    throw(new RuntimeException("Item resource " + res + " is missing default tooltip"));
+		return "";
+//	    throw(new RuntimeException("Item resource " + res + " is missing default tooltip"));
 	return(tt.t);
     }
 

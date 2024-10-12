@@ -56,6 +56,13 @@ public class NGameUI extends GameUI
         add(biw = new BotsInterruptWidget());
     }
 
+    @Override
+    public void dispose() {
+        if(nurgling.NUtils.getUI().core!=null)
+            NUtils.getUI().core.dispose();
+        super.dispose();
+    }
+
     public int getMaxBase(){
         return 0;
 //        return chrwdg.base.stream().max(new Comparator<CharWnd.Attr>() {
@@ -599,5 +606,7 @@ public class NGameUI extends GameUI
             }
             return false;
         }
+
+
     }
 }

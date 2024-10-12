@@ -77,10 +77,12 @@ public class PathFinder implements Action {
                         if(Math.abs(targetCoord.x-dummy.rc.x)<4)
                         {
                             targetCoord.x=dummy.rc.x;
+                            targetCoord.y+=dummy.rc.y-targetCoord.y>0?-2:2;
                         }
                         if(Math.abs(targetCoord.y-dummy.rc.y)<4)
                         {
                             targetCoord.y=dummy.rc.y;
+                            targetCoord.x+=dummy.rc.x-targetCoord.x>0?-2:2;
                         }
                     }
 

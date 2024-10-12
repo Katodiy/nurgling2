@@ -253,11 +253,15 @@ public class NQuestInfo extends Widget
         }
         if (!imgs.isEmpty()) {
             glowon = new TexI(ncatimgs(1, imgs.toArray(new QuestImage[0])));
-            resize(new Coord(glowon.sz().x, glowon.sz().y).add(UI.scale(this.margin).mul(2)).add(new Coord(0, modebtn.sz.y)));
+            Coord rsz = new Coord(glowon.sz().x, glowon.sz().y).add(UI.scale(this.margin).mul(2)).add(new Coord(0, modebtn.sz.y));
+            rsz.y = Math.min(NUtils.getGameUI().sz.y - NDraggableWidget.delta.y,rsz.y);
+            resize(rsz);
         } else {
             glowon = null;
             Coord nsz = UI.scale(this.margin).mul(2).add(new Coord(0, modebtn.sz.y));
-            resize(new Coord(Math.max(nsz.x, modebtn.sz.x + margin.x * 2), Math.max(nsz.y, modebtn.sz.y + margin.y * 2)));
+            Coord rsz = new Coord(Math.max(nsz.x, modebtn.sz.x + margin.x * 2), Math.max(nsz.y, modebtn.sz.y + margin.y * 2));
+            rsz.y = Math.min(NUtils.getGameUI().sz.y - NDraggableWidget.delta.y,rsz.y);
+            resize(rsz);
         }
         if (parent != null)
             parent.resize(sz.add(NDraggableWidget.delta));
