@@ -22,7 +22,7 @@ public class Consobj extends Sprite implements Sprite.CUpd {
     public float done;
     final Coord3f cc;
     final Sprite sign, pole;
-    final Location[] poles;
+    public final Location[] poles;
     final MCache map;
     final RenderTree.Node bound;
 

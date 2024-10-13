@@ -13,6 +13,7 @@ public class SelectFlowerAction implements Action
     Object target;
     Sprite spr = null;
     Boolean petalIgnored = false;
+    boolean ignoreErrors = false;
 
     public SelectFlowerAction(String opt, WItem item)
     {
@@ -76,7 +77,9 @@ public class SelectFlowerAction implements Action
         else
         {
             NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
-            return Results.ERROR("NO OPT:" + opt);
+            if(!ignoreErrors)
+                return Results.ERROR("NO OPT:" + opt);
+            return Results.FAIL();
         }
 
     }

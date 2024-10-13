@@ -34,7 +34,7 @@ public class CollectBough implements Action {
         trees.sort(NUtils.d_comp);
         for(Gob tree : trees)
         {
-            new CollectFromGob(tree,"Take bough", "gfx/borka/treepickan",new Coord(2,1),new NAlias("Bough", "bough"),outsa.getRCArea()).run(gui);
+            new CollectFromGob(tree,"Take bough", "gfx/borka/treepickan",new Coord(1,2),new NAlias("Bough", "bough"),outsa.getRCArea()).run(gui);
         }
         new TransferToPiles(outsa.getRCArea(), new NAlias("Bough", "bough") ).run(gui);
         return Results.SUCCESS();

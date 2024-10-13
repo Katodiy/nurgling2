@@ -31,7 +31,7 @@ import java.util.function.*;
 
 public abstract class Transform extends State {
     private static final Pair<Matrix4f, Matrix4f> NONE = new Pair<>(null, null);
-    private final Function<Matrix4f, Matrix4f> xf;
+    public final Function<Matrix4f, Matrix4f> xf;
     private Pair<Matrix4f, Matrix4f> last = NONE;
 
     public Transform(Function<Matrix4f, Matrix4f> xf) {

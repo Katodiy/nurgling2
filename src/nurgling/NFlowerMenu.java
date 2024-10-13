@@ -15,7 +15,7 @@ public class NFlowerMenu extends FlowerMenu
     public static final Tex bhm = Resource.loadtex("nurgling/hud/flower/hmid");
     public static final Tex bhr = Resource.loadtex("nurgling/hud/flower/hright");
 
-    NPetal[] nopts;
+    public NPetal[] nopts;
 
     int len = 0;
     boolean shiftMode = false;
