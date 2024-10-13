@@ -10,7 +10,6 @@ import nurgling.actions.bots.*;
 import nurgling.areas.*;
 import nurgling.overlays.map.*;
 import nurgling.tools.*;
-import org.json.*;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Comparator;
@@ -24,7 +23,8 @@ import java.util.concurrent.*;
 
 public class NAreasWidget extends Window
 {
-    GroupBy groupBy;
+    SearchableDropbox<String> groupBy;
+    List<String> folderItems = new ArrayList<>();
     TextEntry folderSearch;
     public IngredientContainer in_items;
     public IngredientContainer out_items;
@@ -48,17 +48,45 @@ public class NAreasWidget extends Window
                 new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE, selectedDir)).start();
             }
         },new Coord(180,UI.scale(5)));
-        prev = add(folderSearch = new TextEntry(UI.scale(160), "") {
+
+        initAreas();
+        updateFolderItems();
+//        List<String> folderItems = new ArrayList<>();
+//        folderItems.add("All Folders"); // Option to display all areas
+//        Set<String> dirs = new HashSet<>();
+//        for (AreaItem areaItem : areas.values()) {
+//            if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
+//                dirs.add(areaItem.area.dir);
+//            } else {
+//                dirs.add("DefaultFolder");
+//            }
+//        }
+//        folderItems.addAll(dirs);
+        prev = add(groupBy = new SearchableDropbox<String>(UI.scale(160), UI.scale(10), UI.scale(20)) {
             @Override
-            public boolean keydown(java.awt.event.KeyEvent ev) {
-                boolean result = super.keydown(ev);
-                al.updateList(); // Update the area list as the user types
-                return result;
+            protected String listitem(int i) {
+                return folderItems.get(i);
             }
-        }, prev.pos("ur").adds(UI.scale(10), 0));
-        folderSearch.settip("Search folders");
+
+            @Override
+            protected int listitems() {
+                return folderItems.size();
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int idx) {
+                g.text(item, Coord.z);
+            }
+
+            @Override
+            public void change(String item) {
+                this.sel = item;
+                al.updateList();
+            }
+        }, new Coord(UI.scale(15), UI.scale(5)));
+        groupBy.sel = "All Folders"; // Set default selection
+
         create.settip("Create new area");
-        Widget prev = add(groupBy = new GroupBy(UI.scale(160)), new Coord(UI.scale(15), UI.scale(5)));
         prev = add(al = new AreaList(UI.scale(new Coord(400,270))), prev.pos("bl").adds(0, 10));
         Widget lab = add(new Label("Specialisation",NStyle.areastitle), prev.pos("bl").add(UI.scale(0,5)));
 
@@ -106,6 +134,38 @@ public class NAreasWidget extends Window
         add(new Label("Put:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
         pack();
     }
+    // Method to initialize 'areas'
+    private void initAreas() {
+        if(areas.isEmpty() && NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+            Map<Integer, NArea> gameAreas = NUtils.getGameUI().map.glob.map.areas;
+            if (!gameAreas.isEmpty()) {
+                for (NArea area : gameAreas.values()) {
+                    addArea(area.id, area.name, area);
+                }
+            }
+        }
+    }
+    // Method to update 'folderItems'
+    private void updateFolderItems() {
+        folderItems.clear();
+        folderItems.add("All Folders"); // Option to display all areas
+        Set<String> dirs = new HashSet<>();
+        for (AreaItem areaItem : areas.values()) {
+            if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
+                dirs.add(areaItem.area.dir);
+            } else {
+                dirs.add("DefaultFolder");
+            }
+        }
+        folderItems.addAll(dirs);
+    }
+    @Override
+    public void destroy() {
+        if (groupBy != null) {
+            groupBy.destroyDroplist();
+        }
+        super.destroy();
+    }
     public class GroupBy extends SDropBox<String, Widget> {
         public String sel = "All Folders"; // Устанавливаем начальное значение
 
@@ -148,6 +208,7 @@ public class NAreasWidget extends Window
     public void removeArea(int id)
     {
         areas.remove(id);
+        updateFolderItems();
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
             NOverlay nol = NUtils.getGameUI().map.nols.get(id);
@@ -366,41 +427,77 @@ public class NAreasWidget extends Window
     public void addArea(int id, String val, NArea area)
     {
         areas.put(id, new AreaItem(val, area));
+        updateFolderItems();
     }
 
     public class AreaList extends SListBox<AreaItem, Widget> {
+        private String currentFolder = null; // Текущая папка, если null — корень
+        final Tex folderIcon = new TexI(Resource.loadsimg("nurgling/data/folder/u"));
+
         AreaList(Coord sz) {
             super(sz, UI.scale(15));
         }
 
+        // Метод для обновления текущего расположения (папки)
+        public void setCurrentFolder(String folder) {
+            currentFolder = folder;
+            updateList(); // Обновляем список при изменении папки
+        }
+
         protected List<AreaItem> items() {
-            List<AreaItem> list = new ArrayList<>(areas.values());
-            String searchQuery = folderSearch.text().trim().toLowerCase();
-            // Фильтруем список зон по выбранной папке
-            list.removeIf(item -> {
-                String itemDir = item.area.dir;
-                if (itemDir == null || itemDir.isEmpty() || itemDir.equals("DefaultFolder")) {
-                    itemDir = "DefaultFolder";
+            List<AreaItem> list = new ArrayList<>();
+
+            // Если находимся в папке, добавляем опцию выхода
+            if (currentFolder != null) {
+                list.add(new AreaItem(".. (Back to root)", null) {
+                    @Override
+                    public boolean mousedown(Coord c, int button) {
+                        // При клике возвращаемся в корень
+                        setCurrentFolder(null);
+                        return true;
+                    }
+                });
+            }
+
+            // Отображаем папки, если находимся в корне
+            if (currentFolder == null) {
+                Set<String> dirs = new HashSet<>();
+                for (AreaItem areaItem : areas.values()) {
+                    if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
+                        dirs.add(areaItem.area.dir); // Добавляем уникальные папки
+                    }
                 }
 
-                boolean folderMatches = true;
-                if (groupBy != null && groupBy.sel != null && !groupBy.sel.equals("All Folders")) {
-                    String selectedDir = groupBy.sel;
-                    folderMatches = itemDir.equals(selectedDir);
+                for (String dir : dirs) {
+                    list.add(new AreaItem(dir, null) {
+                        @Override
+                        public boolean mousedown(Coord c, int button) {
+                            // Переход внутрь папки
+                            setCurrentFolder(dir);
+                            return true;
+                        }
+                    });
                 }
+            }
 
-                boolean searchMatches = searchQuery.isEmpty() || itemDir.toLowerCase().contains(searchQuery);
-
-                return !(folderMatches && searchMatches);
-            });
-
-            // Сортируем список зон по dir
-            list.sort(Comparator.comparing(item -> item.area.dir == null ? "" : item.area.dir));
+            // Отображаем зоны, если мы находимся в корне или внутри папки
+            for (AreaItem areaItem : areas.values()) {
+                if (currentFolder == null) {
+                    // Папка пуста — отображаем зоны, которые не находятся в папке
+                    if (areaItem.area.dir == null || areaItem.area.dir.isEmpty()) {
+                        list.add(areaItem);
+                    }
+                } else {
+                    // Отображаем зоны только внутри текущей папки
+                    if (currentFolder.equals(areaItem.area.dir)) {
+                        list.add(areaItem);
+                    }
+                }
+            }
 
             return list;
         }
 
-        // Реализуем метод makeitem с правильной сигнатурой
         @Override
         protected Widget makeitem(AreaItem item, int idx, Coord sz) {
             return new ItemWidget<AreaItem>(this, sz, item) {
@@ -408,13 +505,25 @@ public class NAreasWidget extends Window
                     add(item);
                 }
 
-                public boolean mousedown(Coord c, int button) {
-                    boolean psel = sel == item;
-                    super.mousedown(c, button);
-                    if (!psel) {
-                        String value = item.text.text();
+                @Override
+                public void draw(GOut g) {
+                    if (item.area == null) {
+                        // Если это папка, рисуем иконку папки
+                        g.image(folderIcon, Coord.z);
+                        g.text(item.text.text(), new Coord(folderIcon.sz().x + 5, 0)); // Текст рядом с иконкой
+                    } else {
+                        // Если это зона, рисуем только текст
+                        super.draw(g);
                     }
-                    return true;
+                }
+
+                @Override
+                public boolean mousedown(Coord c, int button) {
+                    if (item.area != null) {
+                        // Если это зона, делаем выбор
+                        NAreasWidget.this.select(item.area.id);
+                    }
+                    return super.mousedown(c, button);
                 }
             };
         }
@@ -588,6 +697,9 @@ public class NAreasWidget extends Window
         super.hide();
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null && !createMode)
             ((NMapView)NUtils.getGameUI().map).destroyDummys();
+        if (groupBy != null) {
+            groupBy.destroyDroplist();
+        }
     }
 
     @Override
