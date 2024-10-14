@@ -94,7 +94,7 @@ public class Chipper implements Action {
                 while (Finder.findGob(bumling.id) != null) {
                     new SelectFlowerAction("Chip stone", bumling).run(gui);
                     if (prop.tool.equals("Pickaxe")) {
-                        NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/pickan"));
+                        NUtils.getUI().core.addTask(new WaitPoseOrNoGob(NUtils.player(),bumling, "gfx/borka/pickan"));
                     } else {
                         WItem item = NUtils.getEquipment().findItem(NEquipory.Slots.HAND_LEFT.idx);
                         if (item != null && NParser.checkName(((NGItem) item.item).name(), "Pickaxe"))
