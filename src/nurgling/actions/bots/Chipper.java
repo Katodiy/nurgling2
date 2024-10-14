@@ -116,7 +116,12 @@ public class Chipper implements Action {
                                         return Results.FAIL();
                                 new PathFinder(bumling).run(gui);
                             }
-                            new Drink(0.9).run(gui);
+                            if (prop.autorefill) {
+                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                    return Results.FAIL();
+                            }
+                            else
+                                return Results.FAIL();
                             break;
                         }
                         case BUMLINGFOREAT: {

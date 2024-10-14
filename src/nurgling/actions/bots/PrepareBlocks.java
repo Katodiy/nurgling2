@@ -65,7 +65,8 @@ public class PrepareBlocks implements Action {
                     case LOGNOTFOUND:
                         break;
                     case TIMEFORDRINK: {
-                        new Drink(0.9).run(gui);
+                        if(!(new Drink(0.9).run(gui)).IsSuccess())
+                            return Results.ERROR("Drink is not found");
                         break;
                     }
                     case NOFREESPACE: {

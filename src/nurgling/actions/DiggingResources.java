@@ -58,7 +58,8 @@ public class DiggingResources implements Action
                     new TransferToPiles(out, items).run(gui);
                 }
                 else if(wds.getState() == WaitDiggerState.State.TIMEFORDRINK) {
-                    new Drink(0.9).run(gui);
+                    if(!(new Drink(0.9).run(gui)).IsSuccess())
+                        return Results.ERROR("Drink is not found");
                 }
                 else if(wds.getState()== WaitDiggerState.State.DANGER)
                     return Results.ERROR("no energy");

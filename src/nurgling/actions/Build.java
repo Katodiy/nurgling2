@@ -140,7 +140,8 @@ public class Build implements Action{
                 NUtils.addTask(wbs);
                 if(wbs.getState()== WaitBuildState.State.TIMEFORDRINK)
                 {
-                    new Drink(0.9).run(gui);
+                    if(!(new Drink(0.9).run(gui)).IsSuccess())
+                        return Results.ERROR("Drink is not found");
                 }
                 else if (wbs.getState()== WaitBuildState.State.DANGER)
                 {
