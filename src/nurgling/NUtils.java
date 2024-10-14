@@ -246,6 +246,13 @@ public class NUtils
         }
     };
 
+    public static Comparator<Gob> y_min_comp = new Comparator<Gob>() {
+        @Override
+        public int compare(Gob o1, Gob o2) {
+            return Double.compare(o1.rc.y,o2.rc.y);
+        }
+    };
+
     public static Entry getAnimalEntity(Gob gob, Class<? extends Entry> cattleRoster ){
         GetAnimalEntry gae = new GetAnimalEntry(gob,cattleRoster);
         try {
