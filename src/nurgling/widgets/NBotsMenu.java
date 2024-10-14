@@ -31,6 +31,7 @@ public class NBotsMenu extends Widget
         productions.elements.add(new NButton("ugardenpot", new UnGardentPotAction()));
         productions.elements.add(new NButton("butcher", new Butcher()));
         productions.elements.add(new NButton("hides", new DFrameHidesAction()));
+        productions.elements.add(new NButton("hides", new FriedFish()));
         addLayout(productions);
         NLayout battle = new NLayout("battle");
         battle.elements.add(new NButton("reagro", new Reagro()));
