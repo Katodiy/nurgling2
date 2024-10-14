@@ -6,10 +6,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.conf.NChopperProp;
-import nurgling.tasks.WaitCheckable;
-import nurgling.tasks.WaitChopperState;
-import nurgling.tasks.WaitPos;
-import nurgling.tasks.WaitPose;
+import nurgling.tasks.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
@@ -92,7 +89,7 @@ public class Chopper implements Action {
                     if(!new Equip(new NAlias(prop.tool)).run(gui).IsSuccess())
                         return Results.ERROR("Equipment not found: " + prop.tool);
                     new SelectFlowerAction("Chop", tree).run(gui);
-                    NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/treechop"));
+                    NUtils.getUI().core.addTask(new WaitPoseOrNoGob(NUtils.player(), tree, "gfx/borka/treechop"));
                 }
                 WaitChopperState wcs = new WaitChopperState(tree, prop);
                 NUtils.getUI().core.addTask(wcs);
