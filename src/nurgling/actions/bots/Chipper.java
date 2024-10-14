@@ -41,31 +41,29 @@ public class Chipper implements Action {
         nurgling.widgets.bots.ChipperWnd w = null;
         NChipperProp prop = null;
         try {
-            NUtils.getUI().core.addTask(new WaitCheckable( NUtils.getGameUI().add((w = new nurgling.widgets.bots.ChipperWnd()), UI.scale(200,200))));
+            NUtils.getUI().core.addTask(new WaitCheckable(NUtils.getGameUI().add((w = new nurgling.widgets.bots.ChipperWnd()), UI.scale(200, 200))));
             prop = w.prop;
-        }
-        catch (InterruptedException e)
-        {
+        } catch (InterruptedException e) {
             throw e;
-        }
-        finally {
-            if(w!=null)
+        } finally {
+            if (w != null)
                 w.destroy();
         }
-        if(prop == null)
-        {
+        if (prop == null) {
             return Results.ERROR("No config");
         }
-        if((!prop.plateu && prop.tool == null))
-        {
+        if ((!prop.plateu && prop.tool == null)) {
             return Results.ERROR("Not set required tools");
         }
         SelectArea insa;
-        if(prop.plateu)
+        if (prop.plateu) {
             NUtils.getGameUI().msg("Please select plateu area for chipping");
-        else
+            (insa = new SelectArea(Resource.loadsimg("baubles/chipperAreaM"))).run(gui);
+        } else {
             NUtils.getGameUI().msg("Please select area for chipping");
-        (insa = new SelectArea()).run(gui);
+            (insa = new SelectArea(Resource.loadsimg("baubles/chipperArea"))).run(gui);
+        }
+
 
         if(prop.plateu) {
             if (!new Equip(new NAlias("Pickaxe")).run(gui).IsSuccess())
@@ -79,7 +77,7 @@ public class Chipper implements Action {
         if(!prop.nopiles)
         {
             NUtils.getGameUI().msg("Please select area for piles");
-            (psa = new SelectArea()).run(gui);
+            (psa = new SelectArea(Resource.loadsimg("baubles/chipperPiles"))).run(gui);
         }
 
         if(!prop.plateu) {
@@ -116,12 +114,15 @@ public class Chipper implements Action {
                                         return Results.FAIL();
                                 new PathFinder(bumling).run(gui);
                             }
-                            if (prop.autorefill) {
-                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                            if(!(new Drink(0.9).run(gui).IsSuccess()))
+                            {
+                                if (prop.autorefill) {
+                                    if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                        return Results.FAIL();
+                                }
+                                else
                                     return Results.FAIL();
                             }
-                            else
-                                return Results.FAIL();
                             break;
                         }
                         case BUMLINGFOREAT: {
@@ -170,7 +171,15 @@ public class Chipper implements Action {
                                     return Results.FAIL();
                             new PathFinder(mountain).run(gui);
                         }
-                        new Drink(0.9).run(gui);
+                        if(!(new Drink(0.9).run(gui).IsSuccess()))
+                        {
+                            if (prop.autorefill) {
+                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                    return Results.FAIL();
+                            }
+                            else
+                                return Results.FAIL();
+                        }
                         break;
                     }
                     case BUMLINGFOREAT: {

@@ -43,7 +43,7 @@ public class Chopper implements Action {
         }
         SelectArea insa;
         NUtils.getGameUI().msg("Please select area for deforestation");
-        (insa = new SelectArea()).run(gui);
+        (insa = new SelectArea(Resource.loadsimg("baubles/chopperArea"))).run(gui);
         NAlias pattern = prop.stumps ? new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log","oldtrunk"))) :
                 new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log", "oldtrunk", "stump")));
 

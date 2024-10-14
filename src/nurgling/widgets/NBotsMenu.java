@@ -233,6 +233,11 @@ public class NBotsMenu extends Widget
                             start(path, action);
                         }
                     });
+
+            Resource res = Resource.remote().load(dir_path + path + "/u").get();
+            if(!(res.layers(Resource.Tooltip.class).isEmpty()))
+                btn.settip(((Resource.Tooltip)res.layers(Resource.Tooltip.class)).t);
+
         }
 
         private NButton()
@@ -244,8 +249,7 @@ public class NBotsMenu extends Widget
                     showLayouts();
                 }
             };
-
-        }
+       }
 
 
 
@@ -277,6 +281,8 @@ public class NBotsMenu extends Widget
             }, path)).start();
             NUtils.getGameUI().biw.addObserve(t);
         }
+
+
     };
 
     class NLayout

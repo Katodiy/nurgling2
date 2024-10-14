@@ -7,6 +7,10 @@ import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Results;
 import nurgling.areas.NArea;
+import nurgling.overlays.NCustomBauble;
+
+import java.awt.image.BufferedImage;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SelectArea implements Action {
 
@@ -14,14 +18,24 @@ public class SelectArea implements Action {
 
     }
 
+    public SelectArea(BufferedImage image) {
+        this.image = image;
+    }
+    BufferedImage image = null;
     NArea.Space result;
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        if (!((NMapView) NUtils.getGameUI().map).isAreaSelectionMode.get()) {
-            ((NMapView) NUtils.getGameUI().map).isAreaSelectionMode.set(true);
 
+
+        if (!((NMapView) NUtils.getGameUI().map).isAreaSelectionMode.get()) {
+            Gob player = NUtils.player();
+            ((NMapView) NUtils.getGameUI().map).isAreaSelectionMode.set(true);
+            if(image!=null && player!=null)
+            {
+                player.addcustomol(new NCustomBauble(player,image,((NMapView) NUtils.getGameUI().map).isAreaSelectionMode));
+            }
             nurgling.tasks.SelectArea sa;
             NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectArea());
             if (sa.getResult() != null) {
