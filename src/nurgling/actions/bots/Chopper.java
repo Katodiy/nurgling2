@@ -6,10 +6,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.conf.NChopperProp;
-import nurgling.tasks.WaitCheckable;
-import nurgling.tasks.WaitChopperState;
-import nurgling.tasks.WaitPos;
-import nurgling.tasks.WaitPose;
+import nurgling.tasks.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
@@ -84,11 +81,19 @@ public class Chopper implements Action {
             pf.run(gui);
 
             while (Finder.findGob(tree.id) != null) {
+                boolean chopped = false;
                 if (NParser.isIt(tree, new NAlias("stump"))) {
                     if(!new Equip(new NAlias(prop.shovel)).run(gui).IsSuccess())
                         return Results.ERROR("Equipment not found: " + prop.shovel);
                     new Destroy(tree,"gfx/borka/shoveldig").run(gui);
                 } else {
+                    chopped = true;
+                    if(tree.getattr(TreeScale.class)!=null)
+                    {
+                        chopped = false;
+                    }
+                    if(tree.ngob.name.startsWith("gfx/terobjs/bushes"))
+                        chopped = false;
                     if(!new Equip(new NAlias(prop.tool)).run(gui).IsSuccess())
                         return Results.ERROR("Equipment not found: " + prop.tool);
                     new SelectFlowerAction("Chop", tree).run(gui);
@@ -117,6 +122,14 @@ public class Chopper implements Action {
                     case DANGER:
                         return Results.ERROR("SOMETHING WRONG, STOP WORKING");
 
+                }
+                if(chopped && Finder.findGob(tree.id) == null) {
+                    NUtils.addTask(new NTask() {
+                        @Override
+                        public boolean check() {
+                            return Finder.findGob(tree.rc)!=null;
+                        }
+                    });
                 }
             }
 
