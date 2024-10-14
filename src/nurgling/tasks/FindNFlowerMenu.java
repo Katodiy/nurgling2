@@ -14,10 +14,9 @@ public class FindNFlowerMenu implements NTask
     }
 
     @Override
-    public boolean check()
-    {
+    public boolean check() {
         res = (NFlowerMenu) NUtils.getUI().findInRoot(NFlowerMenu.class);
-        return res != null || ( NUtils.getTickId()- startFrame)<240 || System.currentTimeMillis() - startTime < 4000;
+        return res != null || (NUtils.getTickId() - startFrame) > 240 || System.currentTimeMillis() - startTime > 4000;
     }
 
     NFlowerMenu res = null;
