@@ -193,7 +193,8 @@ public class Chipper implements Action {
                     case TIMEFORPILE:
                     {
                         if(!prop.nopiles)
-                            new TransferToPiles(psa.getRCArea(),stones).run(gui);
+                           if(!(new TransferToPiles(psa.getRCArea(),stones).run(gui).IsSuccess()))
+                               return Results.FAIL();
                         else
                             for(WItem item : NUtils.getGameUI().getInventory().getItems(stones))
                             {

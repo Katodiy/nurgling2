@@ -26,7 +26,7 @@ public class PathFinder implements Action {
     Gob dummy;
     boolean dn = false;
     Mode mode = Mode.NEAREST;
-
+    Gob gobInStartPos = null;
     public enum Mode
     {
         NEAREST,
@@ -65,17 +65,10 @@ public class PathFinder implements Action {
                 //TODO syntetic points
                 for (Graph.Vertex vert : path) {
                     Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
-//                    if (vert == path.getFirst()) {
-//                        Coord2d playerrc = NUtils.player().rc;
-//                        double dx, dy;
-//                        if (Math.min(dx = Math.abs(targetCoord.x - playerrc.x), dy = Math.abs(targetCoord.y - playerrc.y)) < MCache.tilehsz.x)
-//
-//                            if (dx < dy) {
-//                                targetCoord.x = playerrc.x;
-//                            } else {
-//                                targetCoord.y = playerrc.y;
-//                            }
-//                    }
+                    if (vert == path.getFirst() && gobInStartPos!=null) {
+                        Coord2d playerrc = NUtils.player().rc;
+
+                    }
 //
 //                    if (target_id == -1 && vert == path.getLast()) {
 //                        if (Math.abs(targetCoord.x - end.x) < Math.abs(targetCoord.y - end.y)) {
@@ -87,16 +80,15 @@ public class PathFinder implements Action {
 //                        if (targetCoord.dist(end) < MCache.tilehsz.x)
 //                            targetCoord = end;
 //                    }
-                    if(dummy!=null && vert == path.getLast()) {
-                        if(Math.abs(targetCoord.x-dummy.rc.x)<4)
-                        {
-                            targetCoord.x=dummy.rc.x;
-                            targetCoord.y+=dummy.rc.y-targetCoord.y>0?-2:2;
+                    if(vert == path.getLast() && isHardMode || dummy!=null) {
+                        Coord2d tcord = dummy != null ? dummy.rc : Finder.findGob(target_id).rc;
+                        if (Math.abs(targetCoord.x - tcord.x) < 4) {
+                            targetCoord.x = tcord.x;
+                            targetCoord.y += tcord.y - targetCoord.y > 0 ? -2 : 2;
                         }
-                        if(Math.abs(targetCoord.y-dummy.rc.y)<4)
-                        {
-                            targetCoord.y=dummy.rc.y;
-                            targetCoord.x+=dummy.rc.x-targetCoord.x>0?-2:2;
+                        if (Math.abs(targetCoord.y - tcord.y) < 4) {
+                            targetCoord.y = tcord.y;
+                            targetCoord.x += tcord.x - targetCoord.x > 0 ? -2 : 2;
                         }
                     }
 
@@ -245,6 +237,14 @@ public class PathFinder implements Action {
             ArrayList<Coord> st_poses = findFreeNear(start_pos, true);
             if (st_poses.isEmpty())
                 return false;
+            if(cells[start_pos.x][start_pos.y].content.size()==1 || (cells[start_pos.x][start_pos.y].content.size()==2 && cells[start_pos.x][start_pos.y].content.contains((long)-1)))
+                for(Long id: cells[start_pos.x][start_pos.y].content)
+                {
+                    if(id!=-1)
+                    {
+                        gobInStartPos = Finder.findGob(id);
+                    }
+                }
             start_pos = st_poses.get(0);
         }
         if (start_pos.equals(end_pos) && dummy==null) {

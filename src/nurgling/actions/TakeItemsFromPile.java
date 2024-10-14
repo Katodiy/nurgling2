@@ -24,10 +24,11 @@ public class TakeItemsFromPile implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
+        int count = Math.min(target_size,gui.getInventory().getNumberFreeCoord(target_coord));
         while (gui.getInventory().getNumberFreeCoord(target_coord) > 0 && gui.getStockpile()!=null)
         {
-            gui.getStockpile().transfer(1);
-            WaitItemFromPile wifp = new WaitItemFromPile(gui.getInventory().getItems());
+            gui.getStockpile().transfer(count);
+            WaitItemFromPile wifp = new WaitItemFromPile(gui.getInventory().getItems(), count);
             NUtils.getUI().core.addTask(wifp);
             took += wifp.getResult().size();
             if(target_size <=took)
