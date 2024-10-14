@@ -47,44 +47,10 @@ public class NAreasWidget extends Window
                 }
                 new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE, selectedDir)).start();
             }
-        },new Coord(180,UI.scale(5)));
+        },new Coord(5,UI.scale(5)));
 
         initAreas();
         updateFolderItems();
-//        List<String> folderItems = new ArrayList<>();
-//        folderItems.add("All Folders"); // Option to display all areas
-//        Set<String> dirs = new HashSet<>();
-//        for (AreaItem areaItem : areas.values()) {
-//            if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
-//                dirs.add(areaItem.area.dir);
-//            } else {
-//                dirs.add("DefaultFolder");
-//            }
-//        }
-//        folderItems.addAll(dirs);
-        prev = add(groupBy = new SearchableDropbox<String>(UI.scale(160), UI.scale(10), UI.scale(20)) {
-            @Override
-            protected String listitem(int i) {
-                return folderItems.get(i);
-            }
-
-            @Override
-            protected int listitems() {
-                return folderItems.size();
-            }
-
-            @Override
-            protected void drawitem(GOut g, String item, int idx) {
-                g.text(item, Coord.z);
-            }
-
-            @Override
-            public void change(String item) {
-                this.sel = item;
-                al.updateList();
-            }
-        }, new Coord(UI.scale(15), UI.scale(5)));
-        groupBy.sel = "All Folders"; // Set default selection
 
         create.settip("Create new area");
         prev = add(al = new AreaList(UI.scale(new Coord(400,270))), prev.pos("bl").adds(0, 10));
@@ -166,44 +132,6 @@ public class NAreasWidget extends Window
         }
         super.destroy();
     }
-    public class GroupBy extends SDropBox<String, Widget> {
-        public String sel = "All Folders"; // Устанавливаем начальное значение
-
-        public GroupBy(int w) {
-            super(w, UI.scale(160), UI.scale(20));
-        }
-
-        protected List<String> items() {
-            List<String> items = new ArrayList<>();
-            items.add("All Folders"); // Опция для отображения всех зон
-
-            // Получаем уникальные значения dir из списка зон
-            Set<String> dirs = new HashSet<>();
-            for (AreaItem areaItem : areas.values()) {
-                if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
-                    dirs.add(areaItem.area.dir);
-                } else {
-                    dirs.add("DefaultFolder");
-                }
-            }
-
-            items.addAll(dirs);
-            return items;
-        }
-
-        protected Widget makeitem(String item, int idx, Coord sz) {
-            return SListWidget.TextItem.of(sz, Text.std, () -> item);
-        }
-
-        public void change(String item) {
-            super.change(item);
-            this.sel = item; // Сохраняем выбранный элемент
-            // Обновляем список зон при изменении выбранной папки
-            al.updateList();
-        }
-
-    }
-
 
     public void removeArea(int id)
     {
@@ -249,7 +177,7 @@ public class NAreasWidget extends Window
                     ((NMapView)NUtils.getGameUI().map).removeArea(AreaItem.this.text.text());
                     NConfig.needAreasUpdate();
                 }
-            },new Coord(al.sz.x - NStyle.removei[0].sz().x, 0).sub(UI.scale(5),UI.scale(1) ));
+            },new Coord(al.sz.x - NStyle.removei[0].sz().x+5, 0).sub(UI.scale(0),UI.scale(1) ));
             remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).t);
 
             pack();
@@ -433,6 +361,7 @@ public class NAreasWidget extends Window
     public class AreaList extends SListBox<AreaItem, Widget> {
         private String currentFolder = null; // Текущая папка, если null — корень
         final Tex folderIcon = new TexI(Resource.loadsimg("nurgling/data/folder/u"));
+        final Tex openfolderIcon = new TexI(Resource.loadsimg("nurgling/data/folder/d"));
 
         AreaList(Coord sz) {
             super(sz, UI.scale(15));
@@ -449,7 +378,7 @@ public class NAreasWidget extends Window
 
             // Если находимся в папке, добавляем опцию выхода
             if (currentFolder != null) {
-                list.add(new AreaItem(".. (Back to root)", null) {
+                list.add(new AreaItem("...", null) {
                     @Override
                     public boolean mousedown(Coord c, int button) {
                         // При клике возвращаемся в корень
@@ -463,7 +392,7 @@ public class NAreasWidget extends Window
             if (currentFolder == null) {
                 Set<String> dirs = new HashSet<>();
                 for (AreaItem areaItem : areas.values()) {
-                    if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
+                    if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty() && !areaItem.area.dir.equals("DefaultFolder")) {
                         dirs.add(areaItem.area.dir); // Добавляем уникальные папки
                     }
                 }
@@ -484,7 +413,7 @@ public class NAreasWidget extends Window
             for (AreaItem areaItem : areas.values()) {
                 if (currentFolder == null) {
                     // Папка пуста — отображаем зоны, которые не находятся в папке
-                    if (areaItem.area.dir == null || areaItem.area.dir.isEmpty()) {
+                    if (areaItem.area.dir == null || areaItem.area.dir.isEmpty() || areaItem.area.dir.equals("DefaultFolder")) {
                         list.add(areaItem);
                     }
                 } else {
@@ -507,10 +436,12 @@ public class NAreasWidget extends Window
 
                 @Override
                 public void draw(GOut g) {
-                    if (item.area == null) {
-                        // Если это папка, рисуем иконку папки
-                        g.image(folderIcon, Coord.z);
-                        g.text(item.text.text(), new Coord(folderIcon.sz().x + 5, 0)); // Текст рядом с иконкой
+                    if (item.text.text().equals("...")){
+                        g.image(openfolderIcon, Coord.z, UI.scale(16,16));
+                        g.text(item.text.text(), new Coord(UI.scale(21), 0)); // Текст рядом с иконкой
+                    }else if (item.area == null) {
+                        g.image(folderIcon, Coord.z, UI.scale(16,16));
+                        g.text(item.text.text(), new Coord(UI.scale(21), 0)); // Текст рядом с иконкой
                     } else {
                         // Если это зона, рисуем только текст
                         super.draw(g);
@@ -615,8 +546,6 @@ public class NAreasWidget extends Window
 
 
     }
-
-
 
     public class SpecialisationItem extends Widget
     {
