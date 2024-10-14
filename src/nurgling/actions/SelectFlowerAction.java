@@ -59,6 +59,8 @@ public class SelectFlowerAction implements Action
         }
 
         NFlowerMenu fm = NUtils.getFlowerMenu();
+        if(fm==null)
+            return Results.FAIL();
         if(fm.chooseOpt(opt))
         {
             NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());

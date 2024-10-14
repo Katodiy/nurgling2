@@ -70,6 +70,8 @@ public class Butcher implements Action {
                     while (Finder.findGob(gob.id)!=null) {
                         NUtils.rclickGob(gob);
                         NFlowerMenu fm = NUtils.getFlowerMenu();
+                        if(fm == null)
+                            break;
                         String optForSelect = null;
                         for(String option: order)
                         {
