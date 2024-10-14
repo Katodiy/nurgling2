@@ -97,7 +97,7 @@ public class Chopper implements Action {
                     if(!new Equip(new NAlias(prop.tool)).run(gui).IsSuccess())
                         return Results.ERROR("Equipment not found: " + prop.tool);
                     new SelectFlowerAction("Chop", tree).run(gui);
-                    NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/treechop"));
+                    NUtils.getUI().core.addTask(new WaitPoseOrNoGob(NUtils.player(), tree, "gfx/borka/treechop"));
                 }
                 WaitChopperState wcs = new WaitChopperState(tree, prop);
                 NUtils.getUI().core.addTask(wcs);
@@ -107,7 +107,8 @@ public class Chopper implements Action {
                     case TIMEFORDRINK: {
                         if (prop.autorefill) {
                             if (FillWaterskins.checkIfNeed())
-                                new FillWaterskins().run(gui);
+                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                    return Results.FAIL();
                             pf = new PathFinder(tree);
                             pf.setMode(PathFinder.Mode.Y_MAX);
                             pf.run(gui);

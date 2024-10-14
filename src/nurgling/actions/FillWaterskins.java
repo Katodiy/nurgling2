@@ -14,16 +14,21 @@ import nurgling.widgets.Specialisation;
 import java.util.ArrayList;
 
 public class FillWaterskins implements Action {
+    boolean oz;
+    public FillWaterskins(boolean only_area){oz = only_area;}
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         Pair<Coord2d,Coord2d> area = null;
-        NArea nArea = NArea.findSpec(Specialisation.SpecName.water_refiller.toString());
+        NArea nArea = NArea.findSpec(Specialisation.SpecName.water.toString());
         if(nArea!=null)
         {
             area = nArea.getRCArea();
         }
         if(area==null) {
+            if(oz)
+                return Results.ERROR("no water area");
+
             SelectArea insa;
             NUtils.getGameUI().msg("Please, select input area");
             (insa = new SelectArea()).run(gui);
