@@ -25,6 +25,16 @@ public class PathFinder implements Action {
     public boolean isDynamic = false;
     Gob dummy;
     boolean dn = false;
+    Mode mode = Mode.NEAREST;
+
+    public enum Mode
+    {
+        NEAREST,
+        Y_MAX,
+        Y_MIN,
+        X_MAX,
+        X_MIN,
+    }
 
     public PathFinder(Coord2d begin, Coord2d end) {
         this.begin = begin;
@@ -38,6 +48,10 @@ public class PathFinder implements Action {
     public PathFinder(Gob target) {
         this(target.rc);
         target_id = target.id;
+    }
+
+    public void setMode(Mode mode) {
+        this.mode = mode;
     }
 
     @Override
@@ -134,39 +148,79 @@ public class PathFinder implements Action {
             if (dca != null)
                 pfmap.setCellArray(dca);
             NPFMap.print(pfmap.getSize(), pfmap.getCells());
+
+
             Graph res = null;
             if (pfmap.getCells()[end_pos.x][end_pos.y].val == 7) {
                 Thread th = new Thread(res = new Graph(pfmap, start_pos, end_pos));
                 th.start();
                 th.join();
             } else {
-                LinkedList<Graph> graphs = new LinkedList<>();
-                for (Coord ep : end_poses) {
-                    graphs.add(new Graph(pfmap, start_pos, ep));
-                }
-                LinkedList<Thread> threads = new LinkedList<>();
-                for (Graph graph : graphs) {
-                    Thread th;
-                    threads.add(th = new Thread(graph));
-                    th.start();
-                }
-                for (Thread t : threads) {
-                    t.join();
-                }
+                switch (mode) {
+                    case NEAREST:
+                    {
+                        LinkedList<Graph> graphs = new LinkedList<>();
+                        for (Coord ep : end_poses) {
+                            graphs.add(new Graph(pfmap, start_pos, ep));
+                        }
+                        LinkedList<Thread> threads = new LinkedList<>();
+                        for (Graph graph : graphs) {
+                            Thread th;
+                            threads.add(th = new Thread(graph));
+                            th.start();
+                        }
+                        for (Thread t : threads) {
+                            t.join();
+                        }
 
-                graphs.sort(new Comparator<Graph>() {
-                    @Override
-                    public int compare(Graph o1, Graph o2) {
-                        return (Integer.compare(o1.getPathLen(), o2.getPathLen()));
+                        graphs.sort(new Comparator<Graph>() {
+                            @Override
+                            public int compare(Graph o1, Graph o2) {
+                                return (Integer.compare(o1.getPathLen(), o2.getPathLen()));
+                            }
+                        });
+                        if (!graphs.isEmpty())
+                            res = graphs.get(0);
+                        break;
                     }
-                });
-                if (!graphs.isEmpty())
-                    res = graphs.get(0);
+                    case Y_MAX:
+                    case Y_MIN:
+                    case X_MAX:
+                    case X_MIN:
+                    {
+
+                        Comparator comp = new Comparator<Coord>() {
+                            @Override
+                            public int compare(Coord o1, Coord o2) {
+                                Coord2d t01 = Utils.pfGridToWorld(pfmap.cells[o1.x][o1.y].pos);
+                                Coord2d t02 = Utils.pfGridToWorld(pfmap.cells[o2.x][o2.y].pos);
+                                switch (mode)
+                                {
+                                    case Y_MAX:
+                                        return Double.compare(t02.y, t01.y);
+                                    case Y_MIN:
+                                        return Double.compare(t01.y, t02.y);
+                                    case X_MAX:
+                                        return Double.compare(t02.x, t01.x);
+                                    case X_MIN:
+                                        return Double.compare(t01.x, t02.x);
+                                }
+                                return 0;
+                            }
+                        };
+
+                        end_poses.sort(comp);
+                        Thread th = new Thread(res = new Graph(pfmap, start_pos, end_poses.get(0)));
+                        th.start();
+                        th.join();
+                    }
+                }
+            }
 //                for (Graph g: graphs)
 //                {
 //                    NPFMap.print(pfmap.getSize(), g.getVert());
 //                }
-            }
+
 
             if (res != null) {
                 if (!isDynamic)
@@ -224,14 +278,6 @@ public class PathFinder implements Action {
         }
         return true;
     }
-
-
-    public static Comparator<Coord> c_comp = new Comparator<Coord>() {
-        @Override
-        public int compare(Coord o1, Coord o2) {
-            return Double.compare(Utils.pfGridToWorld(o1).dist(NUtils.getGameUI().map.player().rc), Utils.pfGridToWorld(o2).dist(NUtils.getGameUI().map.player().rc));
-        }
-    };
 
     private ArrayList<Coord> findFreeNear(Coord pos, boolean start) {
         if (!start) {

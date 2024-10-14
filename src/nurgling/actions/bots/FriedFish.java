@@ -45,7 +45,7 @@ public class FriedFish implements Action {
         }
         pows.sort(NUtils.d_comp);
         new FillFuelPow(pows,1).run(gui);
-        if(!new LightGob(pows, 2).run(gui).IsSuccess())
+        if(!new LightGob(pows, 4).run(gui).IsSuccess())
             return Results.ERROR("I can't start a fire");
         return Results.SUCCESS();
     }

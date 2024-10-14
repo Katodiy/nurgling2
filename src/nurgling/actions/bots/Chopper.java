@@ -60,7 +60,7 @@ public class Chopper implements Action {
         }
         ArrayList<Gob> trees;
         while (!(trees = Finder.findGobs(insa.getRCArea(),pattern)).isEmpty()) {
-            trees.sort(NUtils.d_comp);
+            trees.sort(NUtils.y_min_comp);
 
             if(prop.ngrowth)
             {
@@ -79,7 +79,9 @@ public class Chopper implements Action {
 
             Gob tree = trees.get(0);
 
-            new PathFinder(tree).run(gui);
+            PathFinder pf = new PathFinder(tree);
+            pf.setMode(PathFinder.Mode.Y_MAX);
+            pf.run(gui);
 
             while (Finder.findGob(tree.id) != null) {
                 if (NParser.isIt(tree, new NAlias("stump"))) {
@@ -101,7 +103,9 @@ public class Chopper implements Action {
                         if (prop.autorefill) {
                             if (FillWaterskins.checkIfNeed())
                                 new FillWaterskins().run(gui);
-                            new PathFinder(tree).run(gui);
+                            pf = new PathFinder(tree);
+                            pf.setMode(PathFinder.Mode.Y_MAX);
+                            pf.run(gui);
                         }
                         new Drink(0.9).run(gui);
                         break;
