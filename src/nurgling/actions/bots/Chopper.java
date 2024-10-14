@@ -113,7 +113,15 @@ public class Chopper implements Action {
                             pf.setMode(PathFinder.Mode.Y_MAX);
                             pf.run(gui);
                         }
-                        new Drink(0.9).run(gui);
+                        if(!(new Drink(0.9).run(gui).IsSuccess()))
+                        {
+                            if (prop.autorefill) {
+                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                    return Results.FAIL();
+                            }
+                            else
+                                return Results.FAIL();
+                        }
                         break;
                     }
                     case TIMEFOREAT: {
