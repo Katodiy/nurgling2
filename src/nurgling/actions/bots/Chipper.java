@@ -120,7 +120,8 @@ public class Chipper implements Action {
                             break;
                         }
                         case BUMLINGFOREAT: {
-                            new AutoEater().run(gui);
+                            if(!(new AutoEater().run(gui).IsSuccess()))
+                                return Results.FAIL();
                             break;
                         }
                         case DANGER: {
@@ -168,7 +169,8 @@ public class Chipper implements Action {
                         break;
                     }
                     case BUMLINGFOREAT: {
-                        new AutoEater().run(gui);
+                        if(!(new AutoEater().run(gui).IsSuccess()))
+                            return Results.FAIL();
                         break;
                     }
                     case DANGER: {
