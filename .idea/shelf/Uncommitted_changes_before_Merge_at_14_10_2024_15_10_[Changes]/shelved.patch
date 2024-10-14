@@ -1,0 +1,1434 @@
+Index: src/nurgling/widgets/NAreasWidget.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package nurgling.widgets;\r\n\r\nimport haven.*;\r\nimport haven.Frame;\r\nimport haven.Label;\r\nimport haven.Window;\r\nimport haven.render.*;\r\nimport nurgling.*;\r\nimport nurgling.actions.bots.*;\r\nimport nurgling.areas.*;\r\nimport nurgling.overlays.map.*;\r\nimport nurgling.tools.*;\r\nimport java.util.Set;\r\nimport java.util.HashSet;\r\nimport java.util.Comparator;\r\nimport javax.swing.*;\r\nimport javax.swing.colorchooser.*;\r\nimport java.awt.*;\r\nimport java.awt.event.*;\r\nimport java.util.*;\r\nimport java.util.List;\r\nimport java.util.concurrent.*;\r\n\r\npublic class NAreasWidget extends Window\r\n{\r\n    SearchableDropbox<String> groupBy;\r\n    List<String> folderItems = new ArrayList<>();\r\n    TextEntry folderSearch;\r\n    public IngredientContainer in_items;\r\n    public IngredientContainer out_items;\r\n    CurrentSpecialisationList csl;\r\n    public AreaList al;\r\n    public boolean createMode = false;\r\n    public NAreasWidget()\r\n    {\r\n        super(UI.scale(new Coord(700,500)), \"Areas Settings\");\r\n        IButton create;\r\n        prev = add(create = new IButton(NStyle.addarea[0].back,NStyle.addarea[1].back,NStyle.addarea[2].back){\r\n            @Override\r\n            public void click()\r\n            {\r\n                super.click();\r\n                NUtils.getGameUI().msg(\"Please, select area\");\r\n                String selectedDir = null;\r\n                if (groupBy.sel != null && !groupBy.sel.equals(\"All Folders\") && !groupBy.sel.equals(\"DefaultFolder\")) {\r\n                    selectedDir = groupBy.sel;\r\n                }\r\n                new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE, selectedDir)).start();\r\n            }\r\n        },new Coord(180,UI.scale(5)));\r\n\r\n        initAreas();\r\n        updateFolderItems();\r\n//        List<String> folderItems = new ArrayList<>();\r\n//        folderItems.add(\"All Folders\"); // Option to display all areas\r\n//        Set<String> dirs = new HashSet<>();\r\n//        for (AreaItem areaItem : areas.values()) {\r\n//            if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {\r\n//                dirs.add(areaItem.area.dir);\r\n//            } else {\r\n//                dirs.add(\"DefaultFolder\");\r\n//            }\r\n//        }\r\n//        folderItems.addAll(dirs);\r\n        prev = add(groupBy = new SearchableDropbox<String>(UI.scale(160), UI.scale(10), UI.scale(20)) {\r\n            @Override\r\n            protected String listitem(int i) {\r\n                return folderItems.get(i);\r\n            }\r\n\r\n            @Override\r\n            protected int listitems() {\r\n                return folderItems.size();\r\n            }\r\n\r\n            @Override\r\n            protected void drawitem(GOut g, String item, int idx) {\r\n                g.text(item, Coord.z);\r\n            }\r\n\r\n            @Override\r\n            public void change(String item) {\r\n                this.sel = item;\r\n                al.updateList();\r\n            }\r\n        }, new Coord(UI.scale(15), UI.scale(5)));\r\n        groupBy.sel = \"All Folders\"; // Set default selection\r\n\r\n        create.settip(\"Create new area\");\r\n        prev = add(al = new AreaList(UI.scale(new Coord(400,270))), prev.pos(\"bl\").adds(0, 10));\r\n        Widget lab = add(new Label(\"Specialisation\",NStyle.areastitle), prev.pos(\"bl\").add(UI.scale(0,5)));\r\n\r\n        add(csl = new CurrentSpecialisationList(UI.scale(164,90)),lab.pos(\"bl\").add(UI.scale(0,5)));\r\n        add(new IButton(NStyle.add[0].back,NStyle.add[1].back,NStyle.add[2].back){\r\n            @Override\r\n            public void click()\r\n            {\r\n                super.click();\r\n                if(al.sel!=null)\r\n                    Specialisation.selectSpecialisation(al.sel.area);\r\n            }\r\n        },prev.pos(\"br\").sub(UI.scale(40,-5)));\r\n\r\n        add(new IButton(NStyle.remove[0].back,NStyle.remove[1].back,NStyle.remove[2].back){\r\n            @Override\r\n            public void click()\r\n            {\r\n                super.click();\r\n                if(al.sel!=null && csl.sel!=null)\r\n                {\r\n                    for(NArea.Specialisation s: al.sel.area.spec)\r\n                    {\r\n                        if(csl.sel.item!=null && s.name.equals(csl.sel.item.name)) {\r\n                            al.sel.area.spec.remove(s);\r\n                            break;\r\n                        }\r\n                    }\r\n                    for(SpecialisationItem item : specItems)\r\n                    {\r\n                        if(csl.sel.item!=null && item.item.name.equals(csl.sel.item.name))\r\n                        {\r\n                            specItems.remove(item);\r\n                            break;\r\n                        }\r\n                    }\r\n                    NConfig.needAreasUpdate();\r\n                }\r\n            }\r\n        },prev.pos(\"br\").sub(UI.scale(17,-5)));\r\n\r\n        prev = add(Frame.with(in_items = new IngredientContainer(\"in\"),true), prev.pos(\"ur\").add(UI.scale(5,15)));\r\n        add(new Label(\"Take:\",NStyle.areastitle),prev.pos(\"ul\").sub(UI.scale(-5,20)));\r\n        prev = add(Frame.with(out_items = new IngredientContainer(\"out\"),true), prev.pos(\"ur\").adds(UI.scale(5, 0)));\r\n        add(new Label(\"Put:\",NStyle.areastitle),prev.pos(\"ul\").sub(UI.scale(-5,20)));\r\n        pack();\r\n    }\r\n    // Method to initialize 'areas'\r\n    private void initAreas() {\r\n        if(areas.isEmpty() && NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {\r\n            Map<Integer, NArea> gameAreas = NUtils.getGameUI().map.glob.map.areas;\r\n            if (!gameAreas.isEmpty()) {\r\n                for (NArea area : gameAreas.values()) {\r\n                    addArea(area.id, area.name, area);\r\n                }\r\n            }\r\n        }\r\n    }\r\n    // Method to update 'folderItems'\r\n    private void updateFolderItems() {\r\n        folderItems.clear();\r\n        folderItems.add(\"All Folders\"); // Option to display all areas\r\n        Set<String> dirs = new HashSet<>();\r\n        for (AreaItem areaItem : areas.values()) {\r\n            if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {\r\n                dirs.add(areaItem.area.dir);\r\n            } else {\r\n                dirs.add(\"DefaultFolder\");\r\n            }\r\n        }\r\n        folderItems.addAll(dirs);\r\n    }\r\n    @Override\r\n    public void destroy() {\r\n        if (groupBy != null) {\r\n            groupBy.destroyDroplist();\r\n        }\r\n        super.destroy();\r\n    }\r\n    public class GroupBy extends SDropBox<String, Widget> {\r\n        public String sel = \"All Folders\"; // Устанавливаем начальное значение\r\n\r\n        public GroupBy(int w) {\r\n            super(w, UI.scale(160), UI.scale(20));\r\n        }\r\n\r\n        protected List<String> items() {\r\n            List<String> items = new ArrayList<>();\r\n            items.add(\"All Folders\"); // Опция для отображения всех зон\r\n\r\n            // Получаем уникальные значения dir из списка зон\r\n            Set<String> dirs = new HashSet<>();\r\n            for (AreaItem areaItem : areas.values()) {\r\n                if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {\r\n                    dirs.add(areaItem.area.dir);\r\n                } else {\r\n                    dirs.add(\"DefaultFolder\");\r\n                }\r\n            }\r\n\r\n            items.addAll(dirs);\r\n            return items;\r\n        }\r\n\r\n        protected Widget makeitem(String item, int idx, Coord sz) {\r\n            return SListWidget.TextItem.of(sz, Text.std, () -> item);\r\n        }\r\n\r\n        public void change(String item) {\r\n            super.change(item);\r\n            this.sel = item; // Сохраняем выбранный элемент\r\n            // Обновляем список зон при изменении выбранной папки\r\n            al.updateList();\r\n        }\r\n\r\n    }\r\n\r\n\r\n    public void removeArea(int id)\r\n    {\r\n        areas.remove(id);\r\n        updateFolderItems();\r\n        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)\r\n        {\r\n            NOverlay nol = NUtils.getGameUI().map.nols.get(id);\r\n            nol.remove();\r\n            NUtils.getGameUI().map.nols.remove(id);\r\n        }\r\n    }\r\n\r\n    @Override\r\n    public void show()\r\n    {\r\n        if(areas.isEmpty() && !NUtils.getGameUI().map.glob.map.areas.isEmpty())\r\n        {\r\n            for (NArea area : NUtils.getGameUI().map.glob.map.areas.values())\r\n                addArea(area.id, area.name, area);\r\n        }\r\n        super.show();\r\n    }\r\n\r\n    public class AreaItem extends Widget{\r\n        Label text;\r\n        IButton remove;\r\n\r\n        public NArea area;\r\n\r\n        @Override\r\n        public void resize(Coord sz) {\r\n            remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5),  remove.c.y));\r\n            super.resize(sz);\r\n        }\r\n\r\n        public AreaItem(String text, NArea area){\r\n            this.text = add(new Label(text));\r\n            this.area = area;\r\n            remove = add(new IButton(NStyle.removei[0].back,NStyle.removei[1].back,NStyle.removei[2].back){\r\n                @Override\r\n                public void click() {\r\n                    ((NMapView)NUtils.getGameUI().map).removeArea(AreaItem.this.text.text());\r\n                    NConfig.needAreasUpdate();\r\n                }\r\n            },new Coord(al.sz.x - NStyle.removei[0].sz().x, 0).sub(UI.scale(5),UI.scale(1) ));\r\n            remove.settip(Resource.remote().loadwait(\"nurgling/hud/buttons/removeItem/u\").flayer(Resource.tooltip).t);\r\n\r\n            pack();\r\n        }\r\n\r\n\r\n\r\n        @Override\r\n        public boolean mousedown(Coord c, int button)\r\n        {\r\n            if (button == 3)\r\n            {\r\n                opts(c);\r\n                return true;\r\n            }\r\n            else if (button == 1)\r\n            {\r\n                NAreasWidget.this.select(area.id);\r\n            }\r\n            return super.mousedown(c, button);\r\n\r\n        }\r\n\r\n        final ArrayList<String> opt = new ArrayList<String>(){\r\n            {\r\n                add(\"Select area space\");\r\n                add(\"Set color\");\r\n                add(\"Edit name\");\r\n                add(\"Scan\");\r\n                add(\"Change folder\");\r\n            }\r\n        };\r\n\r\n        NFlowerMenu menu;\r\n        private void changeFolder() {\r\n            // Получаем список существующих папок\r\n            Set<String> dirs = new HashSet<>();\r\n            for (AreaItem areaItem : NAreasWidget.this.areas.values()) {\r\n                if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {\r\n                    dirs.add(areaItem.area.dir);\r\n                } else {\r\n                    dirs.add(\"DefaultFolder\");\r\n                }\r\n            }\r\n            // Убираем текущую папку из списка\r\n            dirs.remove(area.dir != null && !area.dir.isEmpty() ? area.dir : \"DefaultFolder\");\r\n            List<String> folderList = new ArrayList<>(dirs);\r\n            folderList.add(0, \"DefaultFolder\");\r\n            folderList.add(\"New folder...\");\r\n\r\n            // Показываем окно NChangeAreaFolder\r\n            NChangeAreaFolder changeFolderWindow = new NChangeAreaFolder(NAreasWidget.this, area, this, folderList);\r\n            ui.root.add(changeFolderWindow, NUtils.getGameUI().sz.div(2).sub(changeFolderWindow.sz.div(2)));\r\n        }\r\n        public void opts( Coord c ) {\r\n            if(menu == null) {\r\n                menu = new NFlowerMenu(opt.toArray(new String[0])) {\r\n                    public boolean mousedown(Coord c, int button) {\r\n                        if(super.mousedown(c, button))\r\n                            nchoose(null);\r\n                        return(true);\r\n                    }\r\n\r\n                    public void destroy() {\r\n                        menu = null;\r\n                        super.destroy();\r\n                    }\r\n\r\n                    @Override\r\n                    public void nchoose(NPetal option)\r\n                    {\r\n                        if(option!=null)\r\n                        {\r\n                            if (option.name.equals(\"Select area space\"))\r\n                            {\r\n                                ((NMapView)NUtils.getGameUI().map).changeArea(AreaItem.this.text.text());\r\n                            }\r\n                            else if (option.name.equals(\"Set color\"))\r\n                            {\r\n                                JColorChooser colorChooser = new JColorChooser();\r\n                                final AbstractColorChooserPanel[] panels = colorChooser.getChooserPanels();\r\n                                for (final AbstractColorChooserPanel accp : panels) {\r\n                                    if (!accp.getDisplayName().equals(\"RGB\")) {\r\n                                        colorChooser.removeChooserPanel(accp);\r\n                                    }\r\n                                }\r\n                                colorChooser.setPreviewPanel(new JPanel());\r\n\r\n                                colorChooser.setColor(area.color);\r\n                                new Thread(new Runnable() {\r\n                                    @Override\r\n                                    public void run() {\r\n\r\n                                        float old = NUtils.getUI().gprefs.bghz.val;\r\n                                        NUtils.getUI().gprefs.bghz.val = NUtils.getUI().gprefs.hz.val;\r\n                                        JDialog chooser = JColorChooser.createDialog(null, \"SelectColor\", true, colorChooser, new AbstractAction() {\r\n                                            @Override\r\n                                            public void actionPerformed(ActionEvent e) {\r\n                                                area.color = colorChooser.getColor();\r\n                                                if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)\r\n                                                {\r\n                                                    NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);\r\n                                                    nol.remove();\r\n                                                    NUtils.getGameUI().map.nols.remove(area.id);\r\n                                                }\r\n                                            }\r\n                                        }, new ActionListener() {\r\n                                            @Override\r\n                                            public void actionPerformed(ActionEvent e) {\r\n\r\n                                            }\r\n                                        });\r\n                                        chooser.setVisible(true);\r\n                                        NUtils.getUI().gprefs.bghz.val= old;\r\n                                    }\r\n                                }).start();\r\n                            }\r\n                            else if (option.name.equals(\"Edit name\"))\r\n                            {\r\n                                NEditAreaName.changeName(area, AreaItem.this);\r\n                            }\r\n                            else if (option.name.equals(\"Scan\"))\r\n                            {\r\n                                Scaner.startScan(area);\r\n                            }\r\n                            else if (option.name.equals(\"Change folder\"))\r\n                            {\r\n                                // Новый код для смены папки\r\n                                changeFolder();\r\n                            }\r\n                        }\r\n                        uimsg(\"cancel\");\r\n                    }\r\n\r\n                };\r\n            }\r\n            Widget par = parent;\r\n            Coord pos = c;\r\n            while(par!=null && !(par instanceof GameUI))\r\n            {\r\n                pos = pos.add(par.c);\r\n                par = par.parent;\r\n            }\r\n            ui.root.add(menu, pos.add(UI.scale(25,38)));\r\n        }\r\n\r\n\r\n    }\r\n\r\n\r\n    private void select(int id)\r\n    {\r\n        in_items.load(id);\r\n        out_items.load(id);\r\n        loadSpec(id);\r\n    }\r\n\r\n    public void set(int id)\r\n    {\r\n        al.change(areas.get(id));\r\n        select(id);\r\n    }\r\n\r\n    public void loadSpec(int id)\r\n    {\r\n        if(NUtils.getArea(id)!=null) {\r\n            specItems.clear();\r\n            for (NArea.Specialisation spec : NUtils.getArea(id).spec) {\r\n                specItems.add(new SpecialisationItem(spec));\r\n            }\r\n        }\r\n    }\r\n    private ConcurrentHashMap<Integer, AreaItem> areas = new ConcurrentHashMap<>();\r\n\r\n    public void addArea(int id, String val, NArea area)\r\n    {\r\n        areas.put(id, new AreaItem(val, area));\r\n        updateFolderItems();\r\n    }\r\n\r\n    public class AreaList extends SListBox<AreaItem, Widget> {\r\n        private String currentFolder = null; // Текущая папка, если null — корень\r\n        final Tex folderIcon = new TexI(Resource.loadsimg(\"nurgling/data/folder/u\"));\r\n\r\n        AreaList(Coord sz) {\r\n            super(sz, UI.scale(15));\r\n        }\r\n\r\n        // Метод для обновления текущего расположения (папки)\r\n        public void setCurrentFolder(String folder) {\r\n            currentFolder = folder;\r\n            updateList(); // Обновляем список при изменении папки\r\n        }\r\n\r\n        protected List<AreaItem> items() {\r\n            List<AreaItem> list = new ArrayList<>();\r\n\r\n            // Если находимся в папке, добавляем опцию выхода\r\n            if (currentFolder != null) {\r\n                list.add(new AreaItem(\".. (Back to root)\", null) {\r\n                    @Override\r\n                    public boolean mousedown(Coord c, int button) {\r\n                        // При клике возвращаемся в корень\r\n                        setCurrentFolder(null);\r\n                        return true;\r\n                    }\r\n                });\r\n            }\r\n\r\n            // Отображаем папки, если находимся в корне\r\n            if (currentFolder == null) {\r\n                Set<String> dirs = new HashSet<>();\r\n                for (AreaItem areaItem : areas.values()) {\r\n                    if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {\r\n                        dirs.add(areaItem.area.dir); // Добавляем уникальные папки\r\n                    }\r\n                }\r\n\r\n                for (String dir : dirs) {\r\n                    list.add(new AreaItem(dir, null) {\r\n                        @Override\r\n                        public boolean mousedown(Coord c, int button) {\r\n                            // Переход внутрь папки\r\n                            setCurrentFolder(dir);\r\n                            return true;\r\n                        }\r\n                    });\r\n                }\r\n            }\r\n\r\n            // Отображаем зоны, если мы находимся в корне или внутри папки\r\n            for (AreaItem areaItem : areas.values()) {\r\n                if (currentFolder == null) {\r\n                    // Папка пуста — отображаем зоны, которые не находятся в папке\r\n                    if (areaItem.area.dir == null || areaItem.area.dir.isEmpty()) {\r\n                        list.add(areaItem);\r\n                    }\r\n                } else {\r\n                    // Отображаем зоны только внутри текущей папки\r\n                    if (currentFolder.equals(areaItem.area.dir)) {\r\n                        list.add(areaItem);\r\n                    }\r\n                }\r\n            }\r\n\r\n            return list;\r\n        }\r\n\r\n        @Override\r\n        protected Widget makeitem(AreaItem item, int idx, Coord sz) {\r\n            return new ItemWidget<AreaItem>(this, sz, item) {\r\n                {\r\n                    add(item);\r\n                }\r\n\r\n                @Override\r\n                public void draw(GOut g) {\r\n                    if (item.area == null) {\r\n                        // Если это папка, рисуем иконку папки\r\n                        g.image(folderIcon, Coord.z);\r\n                        g.text(item.text.text(), new Coord(folderIcon.sz().x + 5, 0)); // Текст рядом с иконкой\r\n                    } else {\r\n                        // Если это зона, рисуем только текст\r\n                        super.draw(g);\r\n                    }\r\n                }\r\n\r\n                @Override\r\n                public boolean mousedown(Coord c, int button) {\r\n                    if (item.area != null) {\r\n                        // Если это зона, делаем выбор\r\n                        NAreasWidget.this.select(item.area.id);\r\n                    }\r\n                    return super.mousedown(c, button);\r\n                }\r\n            };\r\n        }\r\n\r\n        // Добавляем метод для обновления списка зон\r\n        public void updateList() {\r\n            super.reset();\r\n        }\r\n\r\n        @Override\r\n        public void resize(Coord sz) {\r\n            super.resize(new Coord(UI.scale(170) - UI.scale(6), sz.y));\r\n        }\r\n\r\n        @Override\r\n        public void wdgmsg(String msg, Object... args) {\r\n            super.wdgmsg(msg, args);\r\n        }\r\n\r\n        Color bg = new Color(30, 40, 40, 160);\r\n\r\n        @Override\r\n        public void draw(GOut g) {\r\n            g.chcolor(bg);\r\n            g.frect(Coord.z, g.sz());\r\n            super.draw(g);\r\n        }\r\n    }\r\n\r\n\r\n    List<SpecialisationItem> specItems = new ArrayList<>();\r\n    @Override\r\n    public void wdgmsg(Widget sender, String msg, Object... args)\r\n    {\r\n        if(msg.equals(\"close\"))\r\n            hide();\r\n        else\r\n        {\r\n            super.wdgmsg(sender, msg, args);\r\n        }\r\n    }\r\n\r\n    public class CurrentSpecialisationList extends SListBox<SpecialisationItem, Widget> {\r\n        CurrentSpecialisationList(Coord sz) {\r\n            super(sz, UI.scale(15));\r\n        }\r\n\r\n        @Override\r\n        public void change(SpecialisationItem item)\r\n        {\r\n            super.change(item);\r\n        }\r\n\r\n        protected List<SpecialisationItem> items() {return specItems;}\r\n\r\n        @Override\r\n        public void resize(Coord sz) {\r\n            super.resize(new Coord(sz.x, sz.y));\r\n        }\r\n\r\n        protected Widget makeitem(SpecialisationItem item, int idx, Coord sz) {\r\n            return(new ItemWidget<SpecialisationItem>(this, sz, item) {\r\n                {\r\n                    add(item);\r\n                }\r\n\r\n                public boolean mousedown(Coord c, int button) {\r\n                    super.mousedown(c, button);\r\n                    return(true);\r\n                }\r\n            });\r\n        }\r\n\r\n        @Override\r\n        public void wdgmsg(String msg, Object... args)\r\n        {\r\n            super.wdgmsg(msg, args);\r\n        }\r\n\r\n        Color bg = new Color(30,40,40,160);\r\n\r\n        @Override\r\n        public void draw(GOut g)\r\n        {\r\n            g.chcolor(bg);\r\n            g.frect(Coord.z, g.sz());\r\n            super.draw(g);\r\n        }\r\n\r\n\r\n    }\r\n\r\n\r\n\r\n    public class SpecialisationItem extends Widget\r\n    {\r\n        Label text;\r\n        NArea.Specialisation item;\r\n        IButton spec = null;\r\n        NFlowerMenu menu;\r\n\r\n        public SpecialisationItem(NArea.Specialisation item)\r\n        {\r\n            this.item = item;\r\n            if(item.subtype == null) {\r\n                this.text = add(new Label(item.name));\r\n            }\r\n            else\r\n            {\r\n                this.text = add(new Label(item.name + \"(\" + item.subtype + \")\"));\r\n            }\r\n            if(SpecialisationData.data.get(item.name)!=null)\r\n            {\r\n                add(spec = new IButton(\"nurgling/hud/buttons/settingsnf/\",\"u\",\"d\",\"h\"){\r\n                    @Override\r\n                    public void click() {\r\n                        super.click();\r\n                        menu = new NFlowerMenu(SpecialisationData.data.get(item.name)) {\r\n                            public boolean mousedown(Coord c, int button) {\r\n                                if(super.mousedown(c, button))\r\n                                    nchoose(null);\r\n                                return(true);\r\n                            }\r\n\r\n                            public void destroy() {\r\n                                menu = null;\r\n                                super.destroy();\r\n                            }\r\n\r\n                            @Override\r\n                            public void nchoose(NPetal option)\r\n                            {\r\n                                if(option!=null)\r\n                                {\r\n                                    SpecialisationItem.this.text.settext(item.name + \"(\" + option.name + \")\");\r\n                                    item.subtype = option.name;\r\n                                    NConfig.needAreasUpdate();\r\n                                }\r\n                                uimsg(\"cancel\");\r\n                            }\r\n\r\n                        };\r\n                        Widget par = parent;\r\n                        Coord pos = c.add(UI.scale(32,43));\r\n                        while(par!=null && !(par instanceof GameUI))\r\n                        {\r\n                            pos = pos.add(par.c);\r\n                            par = par.parent;\r\n                        }\r\n                        ui.root.add(menu, pos);\r\n                    }\r\n                },UI.scale(new Coord(135,0)));\r\n            }\r\n            pack();\r\n        }\r\n    }\r\n\r\n    @Override\r\n    public void tick(double dt)\r\n    {\r\n        super.tick(dt);\r\n        if(al.sel == null)\r\n        {\r\n            NAreasWidget.this.in_items.load(-1);\r\n            NAreasWidget.this.out_items.load(-1);\r\n        }\r\n    }\r\n\r\n    @Override\r\n    public void hide() {\r\n        super.hide();\r\n        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null && !createMode)\r\n            ((NMapView)NUtils.getGameUI().map).destroyDummys();\r\n        if (groupBy != null) {\r\n            groupBy.destroyDroplist();\r\n        }\r\n    }\r\n\r\n    @Override\r\n    public boolean show(boolean show) {\r\n        if(show)\r\n        {\r\n            ((NMapView)NUtils.getGameUI().map).initDummys();\r\n        }\r\n        return super.show(show);\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/nurgling/widgets/NAreasWidget.java b/src/nurgling/widgets/NAreasWidget.java
+--- a/src/nurgling/widgets/NAreasWidget.java	(revision 35d22ab50779dfa61ae288a7e658060be2dab901)
++++ b/src/nurgling/widgets/NAreasWidget.java	(date 1728901864366)
+@@ -4,7 +4,6 @@
+ import haven.Frame;
+ import haven.Label;
+ import haven.Window;
+-import haven.render.*;
+ import nurgling.*;
+ import nurgling.actions.bots.*;
+ import nurgling.areas.*;
+@@ -12,7 +11,6 @@
+ import nurgling.tools.*;
+ import java.util.Set;
+ import java.util.HashSet;
+-import java.util.Comparator;
+ import javax.swing.*;
+ import javax.swing.colorchooser.*;
+ import java.awt.*;
+@@ -20,105 +18,61 @@
+ import java.util.*;
+ import java.util.List;
+ import java.util.concurrent.*;
++import nurgling.widgets.settings.nareaswidget.CurrentSpecialisationList;
++import nurgling.widgets.settings.nareaswidget.SpecialisationItem;
++import nurgling.widgets.settings.nareaswidget.AreaList;
++import nurgling.widgets.settings.nareaswidget.AreaList.AreaItem;
+ 
+-public class NAreasWidget extends Window
+-{
+-    SearchableDropbox<String> groupBy;
+-    List<String> folderItems = new ArrayList<>();
+-    TextEntry folderSearch;
++public class NAreasWidget extends Window {
+     public IngredientContainer in_items;
+     public IngredientContainer out_items;
+-    CurrentSpecialisationList csl;
++    public CurrentSpecialisationList csl;
+     public AreaList al;
+     public boolean createMode = false;
+-    public NAreasWidget()
+-    {
+-        super(UI.scale(new Coord(700,500)), "Areas Settings");
++
++    public NAreasWidget() {
++        super(UI.scale(new Coord(700, 500)), "Areas Settings");
+         IButton create;
+-        prev = add(create = new IButton(NStyle.addarea[0].back,NStyle.addarea[1].back,NStyle.addarea[2].back){
++        prev = add(create = new IButton(NStyle.addarea[0].back, NStyle.addarea[1].back, NStyle.addarea[2].back) {
+             @Override
+-            public void click()
+-            {
++            public void click() {
+                 super.click();
+                 NUtils.getGameUI().msg("Please, select area");
+-                String selectedDir = null;
+-                if (groupBy.sel != null && !groupBy.sel.equals("All Folders") && !groupBy.sel.equals("DefaultFolder")) {
+-                    selectedDir = groupBy.sel;
+-                }
+-                new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE, selectedDir)).start();
++                // При создании новой зоны, она будет добавлена в текущую папку
++                String currentDir = "new";
++                new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE, currentDir)).start();
+             }
+-        },new Coord(180,UI.scale(5)));
++        }, new Coord(10, UI.scale(5)));
+ 
+         initAreas();
+-        updateFolderItems();
+-//        List<String> folderItems = new ArrayList<>();
+-//        folderItems.add("All Folders"); // Option to display all areas
+-//        Set<String> dirs = new HashSet<>();
+-//        for (AreaItem areaItem : areas.values()) {
+-//            if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
+-//                dirs.add(areaItem.area.dir);
+-//            } else {
+-//                dirs.add("DefaultFolder");
+-//            }
+-//        }
+-//        folderItems.addAll(dirs);
+-        prev = add(groupBy = new SearchableDropbox<String>(UI.scale(160), UI.scale(10), UI.scale(20)) {
+-            @Override
+-            protected String listitem(int i) {
+-                return folderItems.get(i);
+-            }
+-
+-            @Override
+-            protected int listitems() {
+-                return folderItems.size();
+-            }
+-
+-            @Override
+-            protected void drawitem(GOut g, String item, int idx) {
+-                g.text(item, Coord.z);
+-            }
+-
+-            @Override
+-            public void change(String item) {
+-                this.sel = item;
+-                al.updateList();
+-            }
+-        }, new Coord(UI.scale(15), UI.scale(5)));
+-        groupBy.sel = "All Folders"; // Set default selection
+ 
+         create.settip("Create new area");
+-        prev = add(al = new AreaList(UI.scale(new Coord(400,270))), prev.pos("bl").adds(0, 10));
+-        Widget lab = add(new Label("Specialisation",NStyle.areastitle), prev.pos("bl").add(UI.scale(0,5)));
++        prev = add(al = new AreaList(UI.scale(new Coord(400, 270)), this), prev.pos("bl").adds(0, 10));
++        Widget lab = add(new Label("Specialisation", NStyle.areastitle), prev.pos("bl").add(UI.scale(0, 5)));
+ 
+-        add(csl = new CurrentSpecialisationList(UI.scale(164,90)),lab.pos("bl").add(UI.scale(0,5)));
+-        add(new IButton(NStyle.add[0].back,NStyle.add[1].back,NStyle.add[2].back){
++        add(csl = new CurrentSpecialisationList(UI.scale(164, 90)), lab.pos("bl").add(UI.scale(0, 5)));
++        add(new IButton(NStyle.add[0].back, NStyle.add[1].back, NStyle.add[2].back) {
+             @Override
+-            public void click()
+-            {
++            public void click() {
+                 super.click();
+-                if(al.sel!=null)
++                if (al.sel != null && al.sel.area != null)
+                     Specialisation.selectSpecialisation(al.sel.area);
+             }
+-        },prev.pos("br").sub(UI.scale(40,-5)));
++        }, prev.pos("br").sub(UI.scale(40, -5)));
+ 
+-        add(new IButton(NStyle.remove[0].back,NStyle.remove[1].back,NStyle.remove[2].back){
++        add(new IButton(NStyle.remove[0].back, NStyle.remove[1].back, NStyle.remove[2].back) {
+             @Override
+-            public void click()
+-            {
++            public void click() {
+                 super.click();
+-                if(al.sel!=null && csl.sel!=null)
+-                {
+-                    for(NArea.Specialisation s: al.sel.area.spec)
+-                    {
+-                        if(csl.sel.item!=null && s.name.equals(csl.sel.item.name)) {
++                if (al.sel != null && csl.sel != null && al.sel.area != null) {
++                    for (NArea.Specialisation s : al.sel.area.spec) {
++                        if (csl.sel.item != null && s.name.equals(csl.sel.item.name)) {
+                             al.sel.area.spec.remove(s);
+                             break;
+                         }
+                     }
+-                    for(SpecialisationItem item : specItems)
+-                    {
+-                        if(csl.sel.item!=null && item.item.name.equals(csl.sel.item.name))
+-                        {
++                    for (SpecialisationItem item : specItems) {
++                        if (csl.sel.item != null && item.item.name.equals(csl.sel.item.name)) {
+                             specItems.remove(item);
+                             break;
+                         }
+@@ -126,91 +80,36 @@
+                     NConfig.needAreasUpdate();
+                 }
+             }
+-        },prev.pos("br").sub(UI.scale(17,-5)));
++        }, prev.pos("br").sub(UI.scale(17, -5)));
+ 
+-        prev = add(Frame.with(in_items = new IngredientContainer("in"),true), prev.pos("ur").add(UI.scale(5,15)));
+-        add(new Label("Take:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
+-        prev = add(Frame.with(out_items = new IngredientContainer("out"),true), prev.pos("ur").adds(UI.scale(5, 0)));
+-        add(new Label("Put:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
++        prev = add(Frame.with(in_items = new IngredientContainer("in"), true), prev.pos("ur").add(UI.scale(5, 15)));
++        add(new Label("Take:", NStyle.areastitle), prev.pos("ul").sub(UI.scale(-5, 20)));
++        prev = add(Frame.with(out_items = new IngredientContainer("out"), true), prev.pos("ur").adds(UI.scale(5, 0)));
++        add(new Label("Put:", NStyle.areastitle), prev.pos("ul").sub(UI.scale(-5, 20)));
+         pack();
+     }
+-    // Method to initialize 'areas'
++    List<SpecialisationItem> specItems = new ArrayList<>();
++
+     private void initAreas() {
+-        if(areas.isEmpty() && NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
++        if (areas.isEmpty() && NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+             Map<Integer, NArea> gameAreas = NUtils.getGameUI().map.glob.map.areas;
+             if (!gameAreas.isEmpty()) {
+                 for (NArea area : gameAreas.values()) {
+-                    addArea(area.id, area.name, area);
++                    al.addArea(area.id, area.name, area); // Добавление зон в AreaList
+                 }
++                al.updateList(); // Обновляем список после добавления зон
+             }
+         }
+     }
+-    // Method to update 'folderItems'
+-    private void updateFolderItems() {
+-        folderItems.clear();
+-        folderItems.add("All Folders"); // Option to display all areas
+-        Set<String> dirs = new HashSet<>();
+-        for (AreaItem areaItem : areas.values()) {
+-            if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
+-                dirs.add(areaItem.area.dir);
+-            } else {
+-                dirs.add("DefaultFolder");
+-            }
+-        }
+-        folderItems.addAll(dirs);
+-    }
++
+     @Override
+     public void destroy() {
+-        if (groupBy != null) {
+-            groupBy.destroyDroplist();
+-        }
+         super.destroy();
+     }
+-    public class GroupBy extends SDropBox<String, Widget> {
+-        public String sel = "All Folders"; // Устанавливаем начальное значение
+-
+-        public GroupBy(int w) {
+-            super(w, UI.scale(160), UI.scale(20));
+-        }
+-
+-        protected List<String> items() {
+-            List<String> items = new ArrayList<>();
+-            items.add("All Folders"); // Опция для отображения всех зон
+-
+-            // Получаем уникальные значения dir из списка зон
+-            Set<String> dirs = new HashSet<>();
+-            for (AreaItem areaItem : areas.values()) {
+-                if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
+-                    dirs.add(areaItem.area.dir);
+-                } else {
+-                    dirs.add("DefaultFolder");
+-                }
+-            }
+-
+-            items.addAll(dirs);
+-            return items;
+-        }
+-
+-        protected Widget makeitem(String item, int idx, Coord sz) {
+-            return SListWidget.TextItem.of(sz, Text.std, () -> item);
+-        }
+-
+-        public void change(String item) {
+-            super.change(item);
+-            this.sel = item; // Сохраняем выбранный элемент
+-            // Обновляем список зон при изменении выбранной папки
+-            al.updateList();
+-        }
+-
+-    }
+ 
+-
+-    public void removeArea(int id)
+-    {
++    public void removeArea(int id) {
+         areas.remove(id);
+-        updateFolderItems();
+-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+-        {
++        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+             NOverlay nol = NUtils.getGameUI().map.nols.get(id);
+             nol.remove();
+             NUtils.getGameUI().map.nols.remove(id);
+@@ -218,475 +117,336 @@
+     }
+ 
+     @Override
+-    public void show()
+-    {
+-        if(areas.isEmpty() && !NUtils.getGameUI().map.glob.map.areas.isEmpty())
+-        {
++    public void show() {
++        if (areas.isEmpty() && !NUtils.getGameUI().map.glob.map.areas.isEmpty()) {
+             for (NArea area : NUtils.getGameUI().map.glob.map.areas.values())
+                 addArea(area.id, area.name, area);
+         }
+         super.show();
+     }
+ 
+-    public class AreaItem extends Widget{
+-        Label text;
+-        IButton remove;
+-
+-        public NArea area;
+-
+-        @Override
+-        public void resize(Coord sz) {
+-            remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5),  remove.c.y));
+-            super.resize(sz);
+-        }
+-
+-        public AreaItem(String text, NArea area){
+-            this.text = add(new Label(text));
+-            this.area = area;
+-            remove = add(new IButton(NStyle.removei[0].back,NStyle.removei[1].back,NStyle.removei[2].back){
+-                @Override
+-                public void click() {
+-                    ((NMapView)NUtils.getGameUI().map).removeArea(AreaItem.this.text.text());
+-                    NConfig.needAreasUpdate();
+-                }
+-            },new Coord(al.sz.x - NStyle.removei[0].sz().x, 0).sub(UI.scale(5),UI.scale(1) ));
+-            remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).t);
+-
+-            pack();
+-        }
+-
+-
+-
+-        @Override
+-        public boolean mousedown(Coord c, int button)
+-        {
+-            if (button == 3)
+-            {
+-                opts(c);
+-                return true;
+-            }
+-            else if (button == 1)
+-            {
+-                NAreasWidget.this.select(area.id);
+-            }
+-            return super.mousedown(c, button);
+-
+-        }
+-
+-        final ArrayList<String> opt = new ArrayList<String>(){
+-            {
+-                add("Select area space");
+-                add("Set color");
+-                add("Edit name");
+-                add("Scan");
+-                add("Change folder");
+-            }
+-        };
+-
+-        NFlowerMenu menu;
+-        private void changeFolder() {
+-            // Получаем список существующих папок
+-            Set<String> dirs = new HashSet<>();
+-            for (AreaItem areaItem : NAreasWidget.this.areas.values()) {
+-                if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
+-                    dirs.add(areaItem.area.dir);
+-                } else {
+-                    dirs.add("DefaultFolder");
+-                }
+-            }
+-            // Убираем текущую папку из списка
+-            dirs.remove(area.dir != null && !area.dir.isEmpty() ? area.dir : "DefaultFolder");
+-            List<String> folderList = new ArrayList<>(dirs);
+-            folderList.add(0, "DefaultFolder");
+-            folderList.add("New folder...");
+-
+-            // Показываем окно NChangeAreaFolder
+-            NChangeAreaFolder changeFolderWindow = new NChangeAreaFolder(NAreasWidget.this, area, this, folderList);
+-            ui.root.add(changeFolderWindow, NUtils.getGameUI().sz.div(2).sub(changeFolderWindow.sz.div(2)));
+-        }
+-        public void opts( Coord c ) {
+-            if(menu == null) {
+-                menu = new NFlowerMenu(opt.toArray(new String[0])) {
+-                    public boolean mousedown(Coord c, int button) {
+-                        if(super.mousedown(c, button))
+-                            nchoose(null);
+-                        return(true);
+-                    }
+-
+-                    public void destroy() {
+-                        menu = null;
+-                        super.destroy();
+-                    }
+-
+-                    @Override
+-                    public void nchoose(NPetal option)
+-                    {
+-                        if(option!=null)
+-                        {
+-                            if (option.name.equals("Select area space"))
+-                            {
+-                                ((NMapView)NUtils.getGameUI().map).changeArea(AreaItem.this.text.text());
+-                            }
+-                            else if (option.name.equals("Set color"))
+-                            {
+-                                JColorChooser colorChooser = new JColorChooser();
+-                                final AbstractColorChooserPanel[] panels = colorChooser.getChooserPanels();
+-                                for (final AbstractColorChooserPanel accp : panels) {
+-                                    if (!accp.getDisplayName().equals("RGB")) {
+-                                        colorChooser.removeChooserPanel(accp);
+-                                    }
+-                                }
+-                                colorChooser.setPreviewPanel(new JPanel());
+-
+-                                colorChooser.setColor(area.color);
+-                                new Thread(new Runnable() {
+-                                    @Override
+-                                    public void run() {
+-
+-                                        float old = NUtils.getUI().gprefs.bghz.val;
+-                                        NUtils.getUI().gprefs.bghz.val = NUtils.getUI().gprefs.hz.val;
+-                                        JDialog chooser = JColorChooser.createDialog(null, "SelectColor", true, colorChooser, new AbstractAction() {
+-                                            @Override
+-                                            public void actionPerformed(ActionEvent e) {
+-                                                area.color = colorChooser.getColor();
+-                                                if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+-                                                {
+-                                                    NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
+-                                                    nol.remove();
+-                                                    NUtils.getGameUI().map.nols.remove(area.id);
+-                                                }
+-                                            }
+-                                        }, new ActionListener() {
+-                                            @Override
+-                                            public void actionPerformed(ActionEvent e) {
+-
+-                                            }
+-                                        });
+-                                        chooser.setVisible(true);
+-                                        NUtils.getUI().gprefs.bghz.val= old;
+-                                    }
+-                                }).start();
+-                            }
+-                            else if (option.name.equals("Edit name"))
+-                            {
+-                                NEditAreaName.changeName(area, AreaItem.this);
+-                            }
+-                            else if (option.name.equals("Scan"))
+-                            {
+-                                Scaner.startScan(area);
+-                            }
+-                            else if (option.name.equals("Change folder"))
+-                            {
+-                                // Новый код для смены папки
+-                                changeFolder();
+-                            }
+-                        }
+-                        uimsg("cancel");
+-                    }
++//    public class AreaItem extends Widget {
++//        Label text;
++//        IButton remove;
++//
++//        public NArea area;
++//
++//        @Override
++//        public void resize(Coord sz) {
++//            remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5), remove.c.y));
++//            super.resize(sz);
++//        }
++//
++//        public AreaItem(String text, NArea area) {
++//            this.text = add(new Label(text));
++//            this.area = area;
++//            remove = add(new IButton(NStyle.removei[0].back, NStyle.removei[1].back, NStyle.removei[2].back) {
++//                @Override
++//                public void click() {
++//                    ((NMapView) NUtils.getGameUI().map).removeArea(AreaItem.this.text.text());
++//                    NConfig.needAreasUpdate();
++//                }
++//            }, new Coord(al.sz.x - NStyle.removei[0].sz().x, 0).sub(UI.scale(5), UI.scale(1)));
++//            remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).t);
++//
++//            pack();
++//        }
++//
++//        @Override
++//        public boolean mousedown(Coord c, int button) {
++//            if (button == 3) {
++//                opts(c);
++//                return true;
++//            } else if (button == 1) {
++//                NAreasWidget.this.select(area.id);
++//            }
++//            return super.mousedown(c, button);
++//        }
++//
++//        final ArrayList<String> opt = new ArrayList<String>() {
++//            {
++//                add("Select area space");
++//                add("Set color");
++//                add("Edit name");
++//                add("Scan");
++//                add("Change folder");
++//            }
++//        };
++//
++//        NFlowerMenu menu;
++//
++//        private void changeFolder() {
++//            // Получаем список существующих папок
++//            Set<String> dirs = new HashSet<>();
++//            for (AreaItem areaItem : NAreasWidget.this.areas.values()) {
++//                if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
++//                    dirs.add(areaItem.area.dir);
++//                } else {
++//                    dirs.add("DefaultFolder");
++//                }
++//            }
++//            // Убираем текущую папку из списка
++//            dirs.remove(area.dir != null && !area.dir.isEmpty() ? area.dir : "DefaultFolder");
++//            List<String> folderList = new ArrayList<>(dirs);
++//            folderList.add(0, "DefaultFolder");
++//            folderList.add("New folder...");
++//
++//            // Показываем окно NChangeAreaFolder
++//            NChangeAreaFolder changeFolderWindow = new NChangeAreaFolder(NAreasWidget.this, area, this, folderList);
++//            ui.root.add(changeFolderWindow, NUtils.getGameUI().sz.div(2).sub(changeFolderWindow.sz.div(2)));
++//        }
++//
++//        public void opts(Coord c) {
++//            if (menu == null) {
++//                menu = new NFlowerMenu(opt.toArray(new String[0])) {
++//                    public boolean mousedown(Coord c, int button) {
++//                        if (super.mousedown(c, button))
++//                            nchoose(null);
++//                        return (true);
++//                    }
++//
++//                    public void destroy() {
++//                        menu = null;
++//                        super.destroy();
++//                    }
++//
++//                    @Override
++//                    public void nchoose(NPetal option) {
++//                        if (option != null) {
++//                            if (option.name.equals("Select area space")) {
++//                                ((NMapView) NUtils.getGameUI().map).changeArea(AreaItem.this.text.text());
++//                            } else if (option.name.equals("Set color")) {
++//                                JColorChooser colorChooser = new JColorChooser();
++//                                final AbstractColorChooserPanel[] panels = colorChooser.getChooserPanels();
++//                                for (final AbstractColorChooserPanel accp : panels) {
++//                                    if (!accp.getDisplayName().equals("RGB")) {
++//                                        colorChooser.removeChooserPanel(accp);
++//                                    }
++//                                }
++//                                colorChooser.setPreviewPanel(new JPanel());
++//
++//                                colorChooser.setColor(area.color);
++//                                new Thread(new Runnable() {
++//                                    @Override
++//                                    public void run() {
++//
++//                                        float old = NUtils.getUI().gprefs.bghz.val;
++//                                        NUtils.getUI().gprefs.bghz.val = NUtils.getUI().gprefs.hz.val;
++//                                        JDialog chooser = JColorChooser.createDialog(null, "SelectColor", true,
++//                                                colorChooser, new AbstractAction() {
++//                                                    @Override
++//                                                    public void actionPerformed(ActionEvent e) {
++//                                                        area.color = colorChooser.getColor();
++//                                                        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
++//                                                            NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
++//                                                            nol.remove();
++//                                                            NUtils.getGameUI().map.nols.remove(area.id);
++//                                                        }
++//                                                    }
++//                                                }, new ActionListener() {
++//                                                    @Override
++//                                                    public void actionPerformed(ActionEvent e) {
++//
++//                                                    }
++//                                                });
++//                                        chooser.setVisible(true);
++//                                        NUtils.getUI().gprefs.bghz.val = old;
++//                                    }
++//                                }).start();
++//                            } else if (option.name.equals("Edit name")) {
++//                                NEditAreaName.changeName(area, AreaItem.this);
++//                            } else if (option.name.equals("Scan")) {
++//                                Scaner.startScan(area);
++//                            } else if (option.name.equals("Change folder")) {
++//                                // Новый код для смены папки
++//                                changeFolder();
++//                            }
++//                        }
++//                        uimsg("cancel");
++//                    }
++//
++//                };
++//            }
++//            Widget par = parent;
++//            Coord pos = c;
++//            while (par != null && !(par instanceof GameUI)) {
++//                pos = pos.add(par.c);
++//                par = par.parent;
++//            }
++//            ui.root.add(menu, pos.add(UI.scale(25, 38)));
++//        }
++//    }
+ 
+-                };
+-            }
+-            Widget par = parent;
+-            Coord pos = c;
+-            while(par!=null && !(par instanceof GameUI))
+-            {
+-                pos = pos.add(par.c);
+-                par = par.parent;
+-            }
+-            ui.root.add(menu, pos.add(UI.scale(25,38)));
+-        }
+-
+-
+-    }
+-
+-
+-    private void select(int id)
+-    {
++    public void select(int id) {
+         in_items.load(id);
+         out_items.load(id);
+         loadSpec(id);
+     }
+ 
+-    public void set(int id)
+-    {
++    public void set(int id) {
+         al.change(areas.get(id));
+         select(id);
+     }
+ 
+-    public void loadSpec(int id)
+-    {
+-        if(NUtils.getArea(id)!=null) {
++    public void loadSpec(int id) {
++        if (NUtils.getArea(id) != null) {
+             specItems.clear();
+             for (NArea.Specialisation spec : NUtils.getArea(id).spec) {
+                 specItems.add(new SpecialisationItem(spec));
+             }
++            csl.specItems = specItems; // Передаем данные в объект CurrentSpecialisationList
++            csl.updateList();
+         }
+     }
++
+     private ConcurrentHashMap<Integer, AreaItem> areas = new ConcurrentHashMap<>();
+ 
+-    public void addArea(int id, String val, NArea area)
+-    {
+-        areas.put(id, new AreaItem(val, area));
+-        updateFolderItems();
++    public void addArea(int id, String name, NArea area) {
++        al.addArea(id, name, area);  // Передаем зоны в AreaList
++        al.updateList();             // Обновляем список после добавления зон
+     }
+-
+-    public class AreaList extends SListBox<AreaItem, Widget> {
+-        private String currentFolder = null; // Текущая папка, если null — корень
+-        final Tex folderIcon = new TexI(Resource.loadsimg("nurgling/data/folder/u"));
+-
+-        AreaList(Coord sz) {
+-            super(sz, UI.scale(15));
+-        }
+-
+-        // Метод для обновления текущего расположения (папки)
+-        public void setCurrentFolder(String folder) {
+-            currentFolder = folder;
+-            updateList(); // Обновляем список при изменении папки
+-        }
++//
++//    public class AreaList extends SListBox<AreaItem, Widget> {
++//        private String currentFolder = null; // Текущая папка, если null — корень
++//        final Tex folderIcon = new TexI(Resource.loadsimg("nurgling/data/folder/u"));
++//
++//        AreaList(Coord sz) {
++//            super(sz, UI.scale(15));
++//        }
++//
++//        // Метод для обновления текущего расположения (папки)
++//        public void setCurrentFolder(String folder) {
++//            currentFolder = folder;
++//            updateList(); // Обновляем список при изменении папки
++//        }
++//
++//        protected List<AreaItem> items() {
++//            List<AreaItem> list = new ArrayList<>();
++//
++//            // Если находимся в папке, добавляем опцию выхода
++//            if (currentFolder != null) {
++//                list.add(new AreaItem(".. (Back)", null) {
++//                    @Override
++//                    public boolean mousedown(Coord c, int button) {
++//                        // При клике возвращаемся в корень
++//                        setCurrentFolder(null);
++//                        return true;
++//                    }
++//
++//                    @Override
++//                    public void draw(GOut g) {
++//                        g.chcolor(Color.WHITE);
++//                        g.text(text.text(), Coord.z);
++//                        g.chcolor();
++//                    }
++//                });
++//            }
++//
++//            // Отображаем папки
++//            Set<String> dirs = new HashSet<>();
++//            for (AreaItem areaItem : areas.values()) {
++//                String dir = areaItem.area.dir != null && !areaItem.area.dir.isEmpty() ? areaItem.area.dir : "DefaultFolder";
++//                if (currentFolder == null) {
++//                    if (!dir.equals("DefaultFolder")) {
++//                        dirs.add(dir);
++//                    } else if (areaItem.area.dir == null || areaItem.area.dir.isEmpty()) {
++//                        // Добавляем зоны без папки, если мы в корне
++//                        list.add(areaItem);
++//                    }
++//                } else if (dir.equals(currentFolder)) {
++//                    // Отображаем зоны внутри текущей папки
++//                    list.add(areaItem);
++//                }
++//            }
++//
++//            if (currentFolder == null) {
++//                for (String dir : dirs) {
++//                    list.add(new AreaItem(dir, null) {
++//                        @Override
++//                        public boolean mousedown(Coord c, int button) {
++//                            // Переход внутрь папки
++//                            setCurrentFolder(dir);
++//                            return true;
++//                        }
++//
++//                        @Override
++//                        public void draw(GOut g) {
++//                            g.image(folderIcon, Coord.z);
++//                            g.text(text.text(), new Coord(folderIcon.sz().x + 5, 0));
++//                        }
++//                    });
++//                }
++//            }
++//
++//            return list;
++//        }
++//
++//        @Override
++//        protected Widget makeitem(AreaItem item, int idx, Coord sz) {
++//            return new ItemWidget<AreaItem>(this, sz, item) {
++//                {
++//                    add(item);
++//                }
++//
++//                @Override
++//                public void draw(GOut g) {
++//                    if (item.area == null) {
++//                        // Если это папка, рисуем иконку папки
++//                        g.image(folderIcon, Coord.z);
++//                        g.text(item.text.text(), new Coord(folderIcon.sz().x + 5, 0)); // Текст рядом с иконкой
++//                    } else {
++//                        // Если это зона, рисуем только текст
++//                        super.draw(g);
++//                    }
++//                }
++//
++//                @Override
++//                public boolean mousedown(Coord c, int button) {
++//                    if (item.area != null) {
++//                        // Если это зона, делаем выбор
++//                        NAreasWidget.this.select(item.area.id);
++//                    } else {
++//                        // Если это папка или опция ".. (Back)", вызываем mousedown у AreaItem
++//                        item.mousedown(c, button);
++//                    }
++//                    return super.mousedown(c, button);
++//                }
++//            };
++//        }
++//
++//        // Добавляем метод для обновления списка зон
++//        public void updateList() {
++//            super.reset();
++//        }
++//
++//        @Override
++//        public void resize(Coord sz) {
++//            super.resize(new Coord(UI.scale(170) - UI.scale(6), sz.y));
++//        }
++//
++//        Color bg = new Color(30, 40, 40, 160);
++//
++//        @Override
++//        public void draw(GOut g) {
++//            g.chcolor(bg);
++//            g.frect(Coord.z, g.sz());
++//            super.draw(g);
++//        }
++//    }
+ 
+-        protected List<AreaItem> items() {
+-            List<AreaItem> list = new ArrayList<>();
+-
+-            // Если находимся в папке, добавляем опцию выхода
+-            if (currentFolder != null) {
+-                list.add(new AreaItem(".. (Back to root)", null) {
+-                    @Override
+-                    public boolean mousedown(Coord c, int button) {
+-                        // При клике возвращаемся в корень
+-                        setCurrentFolder(null);
+-                        return true;
+-                    }
+-                });
+-            }
+-
+-            // Отображаем папки, если находимся в корне
+-            if (currentFolder == null) {
+-                Set<String> dirs = new HashSet<>();
+-                for (AreaItem areaItem : areas.values()) {
+-                    if (areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
+-                        dirs.add(areaItem.area.dir); // Добавляем уникальные папки
+-                    }
+-                }
+-
+-                for (String dir : dirs) {
+-                    list.add(new AreaItem(dir, null) {
+-                        @Override
+-                        public boolean mousedown(Coord c, int button) {
+-                            // Переход внутрь папки
+-                            setCurrentFolder(dir);
+-                            return true;
+-                        }
+-                    });
+-                }
+-            }
+-
+-            // Отображаем зоны, если мы находимся в корне или внутри папки
+-            for (AreaItem areaItem : areas.values()) {
+-                if (currentFolder == null) {
+-                    // Папка пуста — отображаем зоны, которые не находятся в папке
+-                    if (areaItem.area.dir == null || areaItem.area.dir.isEmpty()) {
+-                        list.add(areaItem);
+-                    }
+-                } else {
+-                    // Отображаем зоны только внутри текущей папки
+-                    if (currentFolder.equals(areaItem.area.dir)) {
+-                        list.add(areaItem);
+-                    }
+-                }
+-            }
+-
+-            return list;
+-        }
+-
+-        @Override
+-        protected Widget makeitem(AreaItem item, int idx, Coord sz) {
+-            return new ItemWidget<AreaItem>(this, sz, item) {
+-                {
+-                    add(item);
+-                }
+-
+-                @Override
+-                public void draw(GOut g) {
+-                    if (item.area == null) {
+-                        // Если это папка, рисуем иконку папки
+-                        g.image(folderIcon, Coord.z);
+-                        g.text(item.text.text(), new Coord(folderIcon.sz().x + 5, 0)); // Текст рядом с иконкой
+-                    } else {
+-                        // Если это зона, рисуем только текст
+-                        super.draw(g);
+-                    }
+-                }
+-
+-                @Override
+-                public boolean mousedown(Coord c, int button) {
+-                    if (item.area != null) {
+-                        // Если это зона, делаем выбор
+-                        NAreasWidget.this.select(item.area.id);
+-                    }
+-                    return super.mousedown(c, button);
+-                }
+-            };
+-        }
+-
+-        // Добавляем метод для обновления списка зон
+-        public void updateList() {
+-            super.reset();
+-        }
+-
+-        @Override
+-        public void resize(Coord sz) {
+-            super.resize(new Coord(UI.scale(170) - UI.scale(6), sz.y));
+-        }
+-
+-        @Override
+-        public void wdgmsg(String msg, Object... args) {
+-            super.wdgmsg(msg, args);
+-        }
+-
+-        Color bg = new Color(30, 40, 40, 160);
+-
+-        @Override
+-        public void draw(GOut g) {
+-            g.chcolor(bg);
+-            g.frect(Coord.z, g.sz());
+-            super.draw(g);
+-        }
+-    }
+-
+-
+-    List<SpecialisationItem> specItems = new ArrayList<>();
+     @Override
+-    public void wdgmsg(Widget sender, String msg, Object... args)
+-    {
+-        if(msg.equals("close"))
++    public void wdgmsg(Widget sender, String msg, Object... args) {
++        if (msg.equals("close"))
+             hide();
+-        else
+-        {
++        else {
+             super.wdgmsg(sender, msg, args);
+         }
+     }
+ 
+-    public class CurrentSpecialisationList extends SListBox<SpecialisationItem, Widget> {
+-        CurrentSpecialisationList(Coord sz) {
+-            super(sz, UI.scale(15));
+-        }
+-
+-        @Override
+-        public void change(SpecialisationItem item)
+-        {
+-            super.change(item);
+-        }
+-
+-        protected List<SpecialisationItem> items() {return specItems;}
+-
+-        @Override
+-        public void resize(Coord sz) {
+-            super.resize(new Coord(sz.x, sz.y));
+-        }
+-
+-        protected Widget makeitem(SpecialisationItem item, int idx, Coord sz) {
+-            return(new ItemWidget<SpecialisationItem>(this, sz, item) {
+-                {
+-                    add(item);
+-                }
+-
+-                public boolean mousedown(Coord c, int button) {
+-                    super.mousedown(c, button);
+-                    return(true);
+-                }
+-            });
+-        }
+-
+-        @Override
+-        public void wdgmsg(String msg, Object... args)
+-        {
+-            super.wdgmsg(msg, args);
+-        }
+-
+-        Color bg = new Color(30,40,40,160);
+-
+-        @Override
+-        public void draw(GOut g)
+-        {
+-            g.chcolor(bg);
+-            g.frect(Coord.z, g.sz());
+-            super.draw(g);
+-        }
+-
+-
+-    }
+-
+-
+-
+-    public class SpecialisationItem extends Widget
+-    {
+-        Label text;
+-        NArea.Specialisation item;
+-        IButton spec = null;
+-        NFlowerMenu menu;
+-
+-        public SpecialisationItem(NArea.Specialisation item)
+-        {
+-            this.item = item;
+-            if(item.subtype == null) {
+-                this.text = add(new Label(item.name));
+-            }
+-            else
+-            {
+-                this.text = add(new Label(item.name + "(" + item.subtype + ")"));
+-            }
+-            if(SpecialisationData.data.get(item.name)!=null)
+-            {
+-                add(spec = new IButton("nurgling/hud/buttons/settingsnf/","u","d","h"){
+-                    @Override
+-                    public void click() {
+-                        super.click();
+-                        menu = new NFlowerMenu(SpecialisationData.data.get(item.name)) {
+-                            public boolean mousedown(Coord c, int button) {
+-                                if(super.mousedown(c, button))
+-                                    nchoose(null);
+-                                return(true);
+-                            }
+-
+-                            public void destroy() {
+-                                menu = null;
+-                                super.destroy();
+-                            }
+-
+-                            @Override
+-                            public void nchoose(NPetal option)
+-                            {
+-                                if(option!=null)
+-                                {
+-                                    SpecialisationItem.this.text.settext(item.name + "(" + option.name + ")");
+-                                    item.subtype = option.name;
+-                                    NConfig.needAreasUpdate();
+-                                }
+-                                uimsg("cancel");
+-                            }
+-
+-                        };
+-                        Widget par = parent;
+-                        Coord pos = c.add(UI.scale(32,43));
+-                        while(par!=null && !(par instanceof GameUI))
+-                        {
+-                            pos = pos.add(par.c);
+-                            par = par.parent;
+-                        }
+-                        ui.root.add(menu, pos);
+-                    }
+-                },UI.scale(new Coord(135,0)));
+-            }
+-            pack();
+-        }
+-    }
+-
+     @Override
+-    public void tick(double dt)
+-    {
++    public void tick(double dt) {
+         super.tick(dt);
+-        if(al.sel == null)
+-        {
++        if (al.sel == null || (al.sel != null && al.sel.area == null)) {
+             NAreasWidget.this.in_items.load(-1);
+             NAreasWidget.this.out_items.load(-1);
+         }
+@@ -695,19 +455,15 @@
+     @Override
+     public void hide() {
+         super.hide();
+-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null && !createMode)
+-            ((NMapView)NUtils.getGameUI().map).destroyDummys();
+-        if (groupBy != null) {
+-            groupBy.destroyDroplist();
+-        }
++        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null && !createMode)
++            ((NMapView) NUtils.getGameUI().map).destroyDummys();
+     }
+ 
+     @Override
+     public boolean show(boolean show) {
+-        if(show)
+-        {
+-            ((NMapView)NUtils.getGameUI().map).initDummys();
++        if (show) {
++            ((NMapView) NUtils.getGameUI().map).initDummys();
+         }
+         return super.show(show);
+     }
+-}
+\ No newline at end of file
++}
+Index: src/nurgling/widgets/Specialisation.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package nurgling.widgets;\r\n\r\nimport haven.*;\r\nimport haven.Label;\r\nimport haven.Window;\r\nimport nurgling.*;\r\nimport nurgling.areas.*;\r\n\r\nimport java.awt.*;\r\nimport java.util.*;\r\nimport java.util.List;\r\nimport java.util.concurrent.*;\r\n\r\npublic class Specialisation extends Window\r\n{\r\n\r\n    private NArea area = null;\r\n\r\n    public Specialisation()\r\n    {\r\n        super(UI.scale(200,500), \"Specialisation\");\r\n        add(new SpecialisationList(UI.scale(200,500)));\r\n    }\r\n    public enum SpecName\r\n    {\r\n        smelter,\r\n        kiln,\r\n        water,\r\n        swill,\r\n        trough,\r\n        crop,\r\n        seed,\r\n        cows,\r\n        sheeps,\r\n        pigs,\r\n        goats,\r\n        deadkritter,\r\n        water_refiller,\r\n        ore,\r\n        fuel,\r\n        ovens,\r\n        gardenpot, barrel,\r\n        leafs, htable\r\n    }\r\n\r\n    private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();\r\n\r\n    static {\r\n        specialisation.add(new SpecialisationItem(SpecName.smelter.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.kiln.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.water.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.swill.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.trough.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.crop.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.seed.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.cows.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.goats.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.sheeps.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.deadkritter.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.pigs.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.water_refiller.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.ore.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.fuel.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.barrel.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.ovens.toString()));\r\n        specialisation.add(new SpecialisationItem(SpecName.gardenpot.toString()));\r\n    }\r\n\r\n    public class SpecialisationList extends SListBox<SpecialisationItem, Widget> {\r\n        SpecialisationList(Coord sz) {\r\n            super(sz, UI.scale(15));\r\n        }\r\n\r\n        @Override\r\n        public void change(SpecialisationItem item)\r\n        {\r\n            super.change(item);\r\n        }\r\n\r\n        protected List<SpecialisationItem> items() {return new ArrayList<>(specialisation);}\r\n\r\n        @Override\r\n        public void resize(Coord sz) {\r\n            super.resize(new Coord(sz.x, sz.y));\r\n        }\r\n\r\n        protected Widget makeitem(SpecialisationItem item, int idx, Coord sz) {\r\n            return(new ItemWidget<SpecialisationItem>(this, sz, item) {\r\n                {\r\n                    //item.resize(new Coord(searchF.sz.x - removei[0].sz().x  + UI.scale(4), item.sz.y));\r\n                    add(item);\r\n                }\r\n\r\n                public boolean mousedown(Coord c, int button) {\r\n                    super.mousedown(c, button);\r\n\r\n                    String value = item.text.text();\r\n                    boolean isFound = false;\r\n                    for(NArea.Specialisation s: area.spec)\r\n                    {\r\n                        if(s.name.equals(item.text.text()))\r\n                            isFound = true;\r\n                    }\r\n                    if(!isFound)\r\n                    {\r\n                        area.spec.add(new NArea.Specialisation(value));\r\n                        NConfig.needAreasUpdate();\r\n                        NUtils.getGameUI().areas.loadSpec(area.id);\r\n                        Specialisation.this.hide();\r\n                    }\r\n                    else\r\n                    {\r\n                        NUtils.getGameUI().error(\"Specialisation already selected.\");\r\n                    }\r\n                    return(true);\r\n                }\r\n            });\r\n        }\r\n\r\n        @Override\r\n        public void wdgmsg(String msg, Object... args)\r\n        {\r\n            super.wdgmsg(msg, args);\r\n        }\r\n\r\n        Color bg = new Color(30,40,40,160);\r\n\r\n        @Override\r\n        public void draw(GOut g)\r\n        {\r\n            g.chcolor(bg);\r\n            g.frect(Coord.z, g.sz());\r\n            super.draw(g);\r\n        }\r\n\r\n\r\n    }\r\n\r\n    @Override\r\n    public void wdgmsg(String msg, Object... args)\r\n    {\r\n        if(msg.equals(\"close\"))\r\n        {\r\n            hide();\r\n        }\r\n        else\r\n        {\r\n            super.wdgmsg(msg, args);\r\n        }\r\n    }\r\n\r\n    public static class SpecialisationItem extends Widget\r\n    {\r\n        Label text;\r\n\r\n\r\n        public SpecialisationItem(String text)\r\n        {\r\n            this.text = add(new Label(text));\r\n            pack();\r\n        }\r\n    }\r\n\r\n    public static void selectSpecialisation(NArea area)\r\n    {\r\n        NUtils.getGameUI().spec.show();\r\n        NUtils.getGameUI().setfocus(NUtils.getGameUI().spec);\r\n        NUtils.getGameUI().spec.raise();\r\n        NUtils.getGameUI().spec.area = area;\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/nurgling/widgets/Specialisation.java b/src/nurgling/widgets/Specialisation.java
+--- a/src/nurgling/widgets/Specialisation.java	(revision 35d22ab50779dfa61ae288a7e658060be2dab901)
++++ b/src/nurgling/widgets/Specialisation.java	(date 1728899258294)
+@@ -40,7 +40,7 @@
+         fuel,
+         ovens,
+         gardenpot, barrel,
+-        leafs, htable
++        htable
+     }
+ 
+     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
+@@ -64,6 +64,7 @@
+         specialisation.add(new SpecialisationItem(SpecName.barrel.toString()));
+         specialisation.add(new SpecialisationItem(SpecName.ovens.toString()));
+         specialisation.add(new SpecialisationItem(SpecName.gardenpot.toString()));
++        specialisation.add(new SpecialisationItem(SpecName.htable.toString()));
+     }
+ 
+     public class SpecialisationList extends SListBox<SpecialisationItem, Widget> {
+Index: src/nurgling/widgets/settings/nareaswidget/AreaList.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/nurgling/widgets/settings/nareaswidget/AreaList.java b/src/nurgling/widgets/settings/nareaswidget/AreaList.java
+new file mode 100644
+--- /dev/null	(date 1728907542056)
++++ b/src/nurgling/widgets/settings/nareaswidget/AreaList.java	(date 1728907542056)
+@@ -0,0 +1,196 @@
++package nurgling.widgets.settings.nareaswidget;
++
++import haven.*;
++import nurgling.NUtils;
++import nurgling.areas.NArea;
++import nurgling.widgets.NAreasWidget;
++
++import java.awt.Color;
++import java.util.*;
++import java.util.concurrent.ConcurrentHashMap;
++
++public class AreaList extends SListBox<AreaList.AreaItem, Widget> {
++    private String currentFolder = null; // Текущая папка, если null — корень
++    final Tex folderIcon = new TexI(Resource.loadsimg("nurgling/data/folder/u"));
++    private ConcurrentHashMap<Integer, AreaItem> areas = new ConcurrentHashMap<>();
++    private NAreasWidget parentWidget;
++
++    // Конструктор принимает размер и ссылку на родительский виджет
++    public AreaList(Coord sz, NAreasWidget parentWidget) {
++        super(sz, UI.scale(15));
++        this.parentWidget = parentWidget;
++    }
++
++    // Метод для обновления текущего расположения (папки)
++    public void setCurrentFolder(String folder) {
++        // Проверяем, изменилось ли состояние папки
++        if (Objects.equals(currentFolder, folder)) {
++            // Если папка не изменилась, не вызываем обновление
++            return;
++        }
++
++        currentFolder = folder;
++
++        // Обновляем список зон после смены папки
++        updateList();
++    }
++
++    protected List<AreaItem> items() {
++        List<AreaItem> list = new ArrayList<>();
++
++        // Если мы в подкаталоге, добавляем ".. (Back)"
++        if (currentFolder != null) {
++            // Добавляем кнопку ".. (Back)" для возврата в корень
++            list.add(new AreaItem(".. (Back)", null) {
++                @Override
++                public boolean mousedown(Coord c, int button) {
++                    if (button == 1) {  // Левый клик
++                        setCurrentFolder(null);
++                        return true;  // Останавливаем дальнейшую обработку события
++                    }
++                    return super.mousedown(c, button);
++                }
++
++                @Override
++                public void draw(GOut g) {
++                    g.chcolor(Color.WHITE);
++                    g.text(text.text(), Coord.z);
++                    g.chcolor();
++                }
++            });
++        }
++
++        if (currentFolder == null) {
++            // Добавляем зоны в корень
++            for (AreaItem areaItem : areas.values()) {
++                if (areaItem.area != null && (areaItem.area.dir == null || areaItem.area.dir.isEmpty())) {
++                    list.add(areaItem);  // Зоны в корне
++                }
++            }
++
++            // Отображаем папки
++            Set<String> dirs = new HashSet<>();
++            for (AreaItem areaItem : areas.values()) {
++                if (areaItem.area != null && areaItem.area.dir != null && !areaItem.area.dir.isEmpty()) {
++                    dirs.add(areaItem.area.dir);  // Собираем уникальные папки
++                }
++            }
++
++            for (String dir : dirs) {
++                list.add(new AreaItem(dir, null) {
++                    @Override
++                    public boolean mousedown(Coord c, int button) {
++                        if (button == 1) {  // Проверка, чтобы реагировать только на левую кнопку мыши
++                            setCurrentFolder(dir);  // Переход в папку
++                            return true;
++                        }
++                        return super.mousedown(c, button);
++                    }
++
++                    @Override
++                    public void draw(GOut g) {
++                        g.image(folderIcon, Coord.z);
++                        g.text(text.text(), new Coord(folderIcon.sz().x + 5, 0));
++                    }
++                });
++            }
++        } else {
++            // Если находимся в папке, показываем зоны этой папки
++            for (AreaItem areaItem : areas.values()) {
++                if (areaItem.area != null && currentFolder.equals(areaItem.area.dir)) {
++                    list.add(areaItem);  // Зоны в папке
++                }
++            }
++        }
++
++        return list;
++    }
++
++    // Метод для обновления списка зон
++    public void updateList() {
++        super.reset(); // Сбрасываем текущий список
++    }
++
++    // Добавляем зоны
++    public void addArea(int id, String val, NArea area) {
++        areas.put(id, new AreaItem(val, area));
++    }
++
++    // Метод для смены выбранной зоны
++    public void change(AreaItem item) {
++        if (item.area != null) {
++            // Если это не папка, а зона, вызываем метод выбора зоны
++            parentWidget.select(item.area.id);
++        } else {
++            // Если это папка, вызываем метод для обновления текущей папки
++            setCurrentFolder(item.text.text()); // Переход внутрь папки
++        } // Вызываем метод выбора зоны в родительском виджете
++    }
++
++    @Override
++    protected Widget makeitem(AreaItem item, int idx, Coord sz) {
++        return new ItemWidget<AreaItem>(this, sz, item) {
++            {
++                add(item);
++            }
++
++            @Override
++            public void draw(GOut g) {
++                if (item.area == null) {
++                    // Если это папка, рисуем иконку папки
++                    g.image(folderIcon, Coord.z);
++                    g.text(item.text.text(), new Coord(folderIcon.sz().x + 5, 0)); // Текст рядом с иконкой
++                } else {
++                    // Если это зона, рисуем только текст
++                    // Если это зона, рисуем текст зоны
++                    g.chcolor(Color.WHITE);  // Устанавливаем белый цвет для текста
++                    g.text(item.text.text(), Coord.z);  // Рисуем текст зоны
++                    g.chcolor();  // Сбрасываем цвет
++                    super.draw(g);  // Вызов родительского метода
++                }
++            }
++
++            @Override
++            public boolean mousedown(Coord c, int button) {
++                if (item.area != null) {
++                    // Если это зона, делаем выбор
++                    parentWidget.select(item.area.id);
++                } else {
++                    // Если это папка или опция ".. (Back)", вызываем mousedown у AreaItem
++                    item.mousedown(c, button);
++                }
++                return super.mousedown(c, button);
++            }
++        };
++    }
++
++    // Внутренний класс для элементов зоны
++    public static class AreaItem extends Widget {
++        Label text;
++        public NArea area;
++
++        public AreaItem(String text, NArea area) {
++            this.text = add(new Label(text));
++            this.area = area;
++        }
++
++        @Override
++        public void resize(Coord sz) {
++            super.resize(sz);
++        }
++    }
++
++    @Override
++    public void resize(Coord sz) {
++        super.resize(new Coord(UI.scale(170) - UI.scale(6), sz.y));
++    }
++
++    Color bg = new Color(30, 40, 40, 160);
++
++    @Override
++    public void draw(GOut g) {
++        g.chcolor(bg);
++        g.frect(Coord.z, g.sz());
++        super.draw(g);
++    }
++}
+Index: src/nurgling/widgets/settings/nareaswidget/CurrentSpecialisationList.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/nurgling/widgets/settings/nareaswidget/CurrentSpecialisationList.java b/src/nurgling/widgets/settings/nareaswidget/CurrentSpecialisationList.java
+new file mode 100644
+--- /dev/null	(date 1728899832108)
++++ b/src/nurgling/widgets/settings/nareaswidget/CurrentSpecialisationList.java	(date 1728899832108)
+@@ -0,0 +1,55 @@
++package nurgling.widgets.settings.nareaswidget;
++
++import haven.*;
++
++import java.awt.*;
++import java.util.ArrayList;
++import java.util.List;
++
++public class CurrentSpecialisationList extends SListBox<SpecialisationItem, Widget> {
++    public List<SpecialisationItem> specItems;
++
++    public CurrentSpecialisationList(Coord sz) {
++        super(sz, UI.scale(15));
++        this.specItems = new ArrayList<>();
++    }
++
++    @Override
++    public void change(SpecialisationItem item) {
++        super.change(item);
++    }
++
++    protected List<SpecialisationItem> items() {
++        return specItems;
++    }
++
++    @Override
++    public void resize(Coord sz) {
++        super.resize(new Coord(sz.x, sz.y));
++    }
++
++    protected Widget makeitem(SpecialisationItem item, int idx, Coord sz) {
++        return (new ItemWidget<SpecialisationItem>(this, sz, item) {
++            {
++                add(item);
++            }
++
++            public boolean mousedown(Coord c, int button) {
++                super.mousedown(c, button);
++                return (true);
++            }
++        });
++    }
++
++    Color bg = new Color(30, 40, 40, 160);
++
++    @Override
++    public void draw(GOut g) {
++        g.chcolor(bg);
++        g.frect(Coord.z, g.sz());
++        super.draw(g);
++    }
++    public void updateList() {
++        super.reset(); // Сбрасываем старый список
++    }
++}
+Index: src/nurgling/widgets/settings/nareaswidget/SpecialisationItem.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/nurgling/widgets/settings/nareaswidget/SpecialisationItem.java b/src/nurgling/widgets/settings/nareaswidget/SpecialisationItem.java
+new file mode 100644
+--- /dev/null	(date 1728899832117)
++++ b/src/nurgling/widgets/settings/nareaswidget/SpecialisationItem.java	(date 1728899832117)
+@@ -0,0 +1,62 @@
++package nurgling.widgets.settings.nareaswidget;
++
++import haven.*;
++import nurgling.NConfig;
++import nurgling.NFlowerMenu;
++import nurgling.areas.NArea;
++import nurgling.tools.SpecialisationData;
++
++public class SpecialisationItem extends Widget {
++    Label text;
++    public NArea.Specialisation item;
++    IButton spec = null;
++    NFlowerMenu menu;
++
++    public SpecialisationItem(NArea.Specialisation item) {
++        this.item = item;
++        if (item.subtype == null) {
++            this.text = add(new Label(item.name));
++        } else {
++            this.text = add(new Label(item.name + "(" + item.subtype + ")"));
++        }
++        if (SpecialisationData.data.get(item.name) != null) {
++            add(spec = new IButton("nurgling/hud/buttons/settingsnf/", "u", "d", "h") {
++                @Override
++                public void click() {
++                    super.click();
++                    menu = new NFlowerMenu(SpecialisationData.data.get(item.name)) {
++                        public boolean mousedown(Coord c, int button) {
++                            if (super.mousedown(c, button))
++                                nchoose(null);
++                            return (true);
++                        }
++
++                        public void destroy() {
++                            menu = null;
++                            super.destroy();
++                        }
++
++                        @Override
++                        public void nchoose(NPetal option) {
++                            if (option != null) {
++                                SpecialisationItem.this.text.settext(item.name + "(" + option.name + ")");
++                                item.subtype = option.name;
++                                NConfig.needAreasUpdate();
++                            }
++                            uimsg("cancel");
++                        }
++
++                    };
++                    Widget par = parent;
++                    Coord pos = c.add(UI.scale(32, 43));
++                    while (par != null && !(par instanceof GameUI)) {
++                        pos = pos.add(par.c);
++                        par = par.parent;
++                    }
++                    ui.root.add(menu, pos);
++                }
++            }, UI.scale(new Coord(135, 0)));
++        }
++        pack();
++    }
++}

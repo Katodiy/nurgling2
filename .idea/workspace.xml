@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="1f23a910-d110-4334-b231-5d43d0b46be3" name="Changes" comment="чистка" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="masterOk" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 3
+}]]></component>
+  <component name="ProjectId" id="2n4EqEEH19VfJbL32rV3OYhnFNH" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "TCommander",
+    "jdk.selected.JAVA_MODULE": "corretto-21",
+    "last_opened_file_path": "F:/GitHub/nurgling2-lanfir/lib/ext/steamworks",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="F:\GitHub\nurgling2-lanfir\src\nurgling\actions\bots" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="nurgling.widgets.settings.nareaswidget" />
+      <recent name="nurgling.widgets" />
+      <recent name="nurgling.widgets.bots" />
+      <recent name="nurgling.actions.bots" />
+      <recent name="nurgling.actions" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="Start" type="JarApplication">
+      <option name="JAR_PATH" value="$PROJECT_DIR$/bin/hafen.jar" />
+      <option name="VM_PARAMETERS" value="--add-exports=java.base/java.lang=ALL-UNNAMED --add-exports=java.desktop/sun.awt=ALL-UNNAMED --add-exports=java.desktop/sun.java2d=ALL-UNNAMED -Dsun.java2d.uiScale.enabled=false" />
+      <option name="WORKING_DIRECTORY" value="F:\GitHub\nurgling2-lanfir" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <method v="2">
+        <option name="AntTarget" enabled="true" antfile="file://$PROJECT_DIR$/build.xml" target="bin" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1f23a910-d110-4334-b231-5d43d0b46be3" name="Changes" comment="" />
+      <created>1728224136959</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1728224136959</updated>
+      <workItem from="1728224138131" duration="455000" />
+      <workItem from="1728224625767" duration="112859000" />
+      <workItem from="1728551143217" duration="7779000" />
+      <workItem from="1728568499131" duration="200000" />
+      <workItem from="1728568715843" duration="103024000" />
+    </task>
+    <task id="LOCAL-00001" summary="map fail">
+      <option name="closed" value="true" />
+      <created>1728247672852</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1728247672852</updated>
+    </task>
+    <task id="LOCAL-00002" summary="CollectDream">
+      <option name="closed" value="true" />
+      <created>1728378729594</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1728378729594</updated>
+    </task>
+    <task id="LOCAL-00003" summary="LeafsHerb">
+      <option name="closed" value="true" />
+      <created>1728406637423</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1728406637423</updated>
+    </task>
+    <task id="LOCAL-00004" summary="FreeContainers">
+      <option name="closed" value="true" />
+      <created>1728468252649</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1728468252649</updated>
+    </task>
+    <task id="LOCAL-00005" summary="CollectStone">
+      <option name="closed" value="true" />
+      <created>1728477476117</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1728477476117</updated>
+    </task>
+    <task id="LOCAL-00006" summary="FreeContainersInArea work with pile">
+      <option name="closed" value="true" />
+      <created>1728489990304</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1728489990304</updated>
+    </task>
+    <task id="LOCAL-00007" summary="FreeContainersInArea work with pile">
+      <option name="closed" value="true" />
+      <created>1728495782026</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1728495782026</updated>
+    </task>
+    <task id="LOCAL-00008" summary="FreeContainersInArea work with pile">
+      <option name="closed" value="true" />
+      <created>1728558824227</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1728558824227</updated>
+    </task>
+    <task id="LOCAL-00009" summary="MoveStockpiles">
+      <option name="closed" value="true" />
+      <created>1728578683335</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1728578683335</updated>
+    </task>
+    <task id="LOCAL-00010" summary="MoveStockpiles">
+      <option name="closed" value="true" />
+      <created>1728626292871</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1728626292871</updated>
+    </task>
+    <task id="LOCAL-00011" summary="pushArea">
+      <option name="closed" value="true" />
+      <created>1728631981537</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1728631981537</updated>
+    </task>
+    <task id="LOCAL-00012" summary="MiningMaster начало">
+      <option name="closed" value="true" />
+      <created>1728674171831</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1728674171831</updated>
+    </task>
+    <task id="LOCAL-00013" summary="папки зон">
+      <option name="closed" value="true" />
+      <created>1728765693286</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1728765693286</updated>
+    </task>
+    <task id="LOCAL-00014" summary="try create SearchableDropbox">
+      <option name="closed" value="true" />
+      <created>1728771803055</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1728771803055</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Рабочий &quot;проводник&quot;">
+      <option name="closed" value="true" />
+      <created>1728852759565</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1728852759565</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Рабочий &quot;проводник&quot;">
+      <option name="closed" value="true" />
+      <created>1728920013046</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1728920013046</updated>
+    </task>
+    <task id="LOCAL-00017" summary="чистка">
+      <option name="closed" value="true" />
+      <created>1728920888116</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1728920888116</updated>
+    </task>
+    <task id="LOCAL-00018" summary="папки зон&#10;&#10;(cherry picked from commit fe8d3bae5b341d8f34c6b9880ae056d0a2639ea0)">
+      <option name="closed" value="true" />
+      <created>1728921479450</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1728921479450</updated>
+    </task>
+    <task id="LOCAL-00019" summary="чистка">
+      <option name="closed" value="true" />
+      <created>1728921708427</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1728921708427</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="CUSTOM_BOOLEAN_PROPERTIES">
+                <map>
+                  <entry key="Show.Git.Branches" value="true" />
+                </map>
+              </option>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="map fail" />
+    <MESSAGE value="CollectDream" />
+    <MESSAGE value="LeafsHerb" />
+    <MESSAGE value="FreeContainers" />
+    <MESSAGE value="CollectStone" />
+    <MESSAGE value="FreeContainersInArea work with pile" />
+    <MESSAGE value="MoveStockpiles" />
+    <MESSAGE value="pushArea" />
+    <MESSAGE value="MiningMaster начало" />
+    <MESSAGE value="папки зон" />
+    <MESSAGE value="try create SearchableDropbox" />
+    <MESSAGE value="Рабочий &quot;проводник&quot;" />
+    <MESSAGE value="папки зон&#10;&#10;(cherry picked from commit fe8d3bae5b341d8f34c6b9880ae056d0a2639ea0)" />
+    <MESSAGE value="чистка" />
+    <option name="LAST_COMMIT_MESSAGE" value="чистка" />
+  </component>
+</project>

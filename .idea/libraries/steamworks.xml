@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="steamworks">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/lib/ext/steamworks" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/lib/ext/steamworks" recursive="false" />
+  </library>
+</component>
