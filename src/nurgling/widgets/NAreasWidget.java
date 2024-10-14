@@ -23,7 +23,6 @@ import java.util.concurrent.*;
 
 public class NAreasWidget extends Window
 {
-    SearchableDropbox<String> groupBy;
     List<String> folderItems = new ArrayList<>();
     TextEntry folderSearch;
     public IngredientContainer in_items;
@@ -41,11 +40,7 @@ public class NAreasWidget extends Window
             {
                 super.click();
                 NUtils.getGameUI().msg("Please, select area");
-                String selectedDir = null;
-                if (groupBy.sel != null && !groupBy.sel.equals("All Folders") && !groupBy.sel.equals("DefaultFolder")) {
-                    selectedDir = groupBy.sel;
-                }
-                new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE, selectedDir)).start();
+                new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE, "DefaultFolder")).start();
             }
         },new Coord(5,UI.scale(5)));
 
@@ -125,13 +120,7 @@ public class NAreasWidget extends Window
         }
         folderItems.addAll(dirs);
     }
-    @Override
-    public void destroy() {
-        if (groupBy != null) {
-            groupBy.destroyDroplist();
-        }
-        super.destroy();
-    }
+
 
     public void removeArea(int id)
     {
@@ -626,9 +615,7 @@ public class NAreasWidget extends Window
         super.hide();
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null && !createMode)
             ((NMapView)NUtils.getGameUI().map).destroyDummys();
-        if (groupBy != null) {
-            groupBy.destroyDroplist();
-        }
+
     }
 
     @Override
