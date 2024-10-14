@@ -51,7 +51,7 @@ public class NBotsMenu extends Widget
         addLayout(farming);
         NLayout utils = new NLayout("utils");
         utils.elements.add(new NButton("shieldsword", new EquipShieldSword()));
-        utils.elements.add(new NButton("filwater", new FillWaterskins()));
+        utils.elements.add(new NButton("filwater", new FillWaterskins(false)));
         utils.elements.add(new NButton("unbox", new FreeContainersInArea()));
         utils.elements.add(new NButton("water_cheker", new CheckWater()));
         utils.elements.add(new NButton("clay_cheker", new CheckClay()));

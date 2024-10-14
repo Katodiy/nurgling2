@@ -112,7 +112,8 @@ public class Chipper implements Action {
                         case BUMLINGFORDRINK: {
                             if (prop.autorefill) {
                                 if (FillWaterskins.checkIfNeed())
-                                    new FillWaterskins().run(gui);
+                                    if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                        return Results.FAIL();
                                 new PathFinder(bumling).run(gui);
                             }
                             new Drink(0.9).run(gui);
@@ -159,7 +160,8 @@ public class Chipper implements Action {
                     case BUMLINGFORDRINK: {
                         if (prop.autorefill) {
                             if (FillWaterskins.checkIfNeed())
-                                new FillWaterskins().run(gui);
+                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                    return Results.FAIL();
                             new PathFinder(mountain).run(gui);
                         }
                         new Drink(0.9).run(gui);

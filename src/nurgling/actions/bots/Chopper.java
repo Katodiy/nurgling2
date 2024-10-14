@@ -100,7 +100,8 @@ public class Chopper implements Action {
                     case TIMEFORDRINK: {
                         if (prop.autorefill) {
                             if (FillWaterskins.checkIfNeed())
-                                new FillWaterskins().run(gui);
+                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                    return Results.FAIL();
                             new PathFinder(tree).run(gui);
                         }
                         new Drink(0.9).run(gui);
