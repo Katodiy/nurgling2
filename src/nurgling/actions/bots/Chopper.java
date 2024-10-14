@@ -125,7 +125,8 @@ public class Chopper implements Action {
                         break;
                     }
                     case TIMEFOREAT: {
-                        new AutoEater().run(gui);
+                        if(!(new AutoEater().run(gui).IsSuccess()))
+                            return Results.FAIL();
                         break;
                     }
                     case DANGER:

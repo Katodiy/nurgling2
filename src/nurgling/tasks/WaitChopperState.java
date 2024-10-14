@@ -29,24 +29,23 @@ public class WaitChopperState implements NTask
 
     State state = State.WORKING;
     @Override
-    public boolean check()
-    {
-        if(Finder.findGob(tree.id)==null)
-        {
+    public boolean check() {
+        if (Finder.findGob(tree.id) == null) {
             state = State.TREENOTFOUND;
+        } else {
+            if (NUtils.getEnergy() < 0.36) {
+                if (prop.autoeat)
+                    state = State.TIMEFOREAT;
+                if (NUtils.getEnergy() < 0.23)
+                    state = State.DANGER;
+            }
+            if (NUtils.getStamina() <= 0.45) {
+                state = State.TIMEFORDRINK;
+            }
         }
-        else if(NUtils.getEnergy()<0.36)
-        {
-            if(prop.autoeat)
-                state = State.TIMEFOREAT;
-            if(NUtils.getEnergy()<0.22)
-                state = State.DANGER;
-        }
-        else if(NUtils.getStamina()<=0.45)
-        {
-            state = State.TIMEFORDRINK;
-        }
-        return state!=State.WORKING;
+
+
+        return state != State.WORKING;
     }
 
     public State getState() {
