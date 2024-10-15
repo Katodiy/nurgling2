@@ -176,6 +176,8 @@ public class Chipper implements Action {
                             if (prop.autorefill) {
                                 if (!(new FillWaterskins(true).run(gui).IsSuccess()))
                                     return Results.FAIL();
+                                else
+                                    new PathFinder( mountain ).run (gui);
                             }
                             else
                                 return Results.FAIL();

@@ -45,7 +45,7 @@ public class WaitChipperState implements NTask
         {
             state = State.BUMLINGNOTFOUND;
         }
-        else if(NUtils.getGameUI().getInventory().calcFreeSpace() == 0)
+        else if(NUtils.getGameUI().getInventory().calcFreeSpace() <= 1)
         {
             state = State.TIMEFORPILE;
         }

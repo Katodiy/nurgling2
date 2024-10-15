@@ -21,7 +21,7 @@ public class Drink implements Action
         {
             Gob player = NUtils.player();
             if(withStop && player!=null) {
-                NUtils.rclickGob(player);
+                NUtils.lclick(player.rc);
                 NUtils.addTask(new WaitPose(player, "gfx/borka/idle"));
             }
             NUtils.getUI().dropLastError();
