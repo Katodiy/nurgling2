@@ -24,7 +24,7 @@ public class NPFMap
     int dsize;
     public int size;
     long currentTransport = -1;
-
+    public boolean bad = false;
     public CellsArray addGob(Gob gob) {
         CellsArray ca;
 
@@ -205,20 +205,18 @@ public class NPFMap
         dsize = Math.max(8,((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul);
         size = 2 * dsize + 1;
         if(dsize>120) {
-            NUtils.getGameUI().error("Unable to build grid of required size");
-            throw new InterruptedException();
+            bad = true;
         }
-
-        cells = new Cell[size][size];
-        begin = center.sub(dsize,dsize);
-        end = center.add(dsize,dsize);
-        for (int i = 0; i < size; i++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-                cells[i][j] = new Cell( begin.add(i,j));
-                if(i == 0 || j == 0 || i == size-1 || j == size-1)
-                    cells[i][j].val=2;
+        else {
+            cells = new Cell[size][size];
+            begin = center.sub(dsize, dsize);
+            end = center.add(dsize, dsize);
+            for (int i = 0; i < size; i++) {
+                for (int j = 0; j < size; j++) {
+                    cells[i][j] = new Cell(begin.add(i, j));
+                    if (i == 0 || j == 0 || i == size - 1 || j == size - 1)
+                        cells[i][j].val = 2;
+                }
             }
         }
     }

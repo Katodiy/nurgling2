@@ -5,6 +5,8 @@ import nurgling.*;
 import nurgling.pf.*;
 import nurgling.pf.Utils;
 import nurgling.tools.Finder;
+import nurgling.tools.NAlias;
+import nurgling.tools.NParser;
 
 import java.util.*;
 import java.util.concurrent.atomic.*;
@@ -27,6 +29,7 @@ public class PathFinder implements Action {
     boolean dn = false;
     Mode mode = Mode.NEAREST;
     Gob gobInStartPos = null;
+    double badDir = Double.MAX_VALUE;
     public enum Mode
     {
         NEAREST,
@@ -48,6 +51,14 @@ public class PathFinder implements Action {
     public PathFinder(Gob target) {
         this(target.rc);
         target_id = target.id;
+        Gob targetg;
+        if((targetg = Finder.findGob(target_id))!=null)
+        {
+            if(NParser.checkName(targetg.ngob.name,new NAlias("primsmelter")))
+            {
+                badDir = targetg.a;
+            }
+        }
     }
 
     public void setMode(Mode mode) {
@@ -121,7 +132,14 @@ public class PathFinder implements Action {
         int mul = 1;
         while (path.size() == 0 && mul < 1000) {
             pfmap = new NPFMap(begin, end, mul);
-
+            if(pfmap.bad) {
+                if (test) {
+                    return null;
+                } else {
+                    NUtils.getGameUI().error("Unable to build grid of required size");
+                    throw new InterruptedException();
+                }
+            }
             pfmap.waterMode = waterMode;
             pfmap.build();
             CellsArray dca = null;
@@ -268,6 +286,20 @@ public class PathFinder implements Action {
                 if(!best_poses.isEmpty())
                     end_poses = best_poses;
             }
+
+            if(badDir!=Double.MAX_VALUE && target_id>0)
+            {
+                Coord2d orientation = new Coord2d(1,0).rot(badDir);
+                Coord2d tcoord = Finder.findGob(target_id).rc;
+                ArrayList<Coord> best_poses = new ArrayList<>();
+                for(Coord coord : end_poses)
+                {
+                    Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos).sub(tcoord).norm();
+                    if(coord2d.dot(orientation)<0)
+                        best_poses.add(coord);
+                }
+                end_poses = best_poses;
+            }
             for (Coord coord : end_poses) {
                 if (start_pos.equals(coord) && target_id >= 0)
                     return false;
@@ -347,7 +379,7 @@ public class PathFinder implements Action {
 
     public static boolean isAvailable(Gob target) throws InterruptedException {
         PathFinder pf = new PathFinder(target);
-        LinkedList<Graph.Vertex> res = pf.construct();
+        LinkedList<Graph.Vertex> res = pf.construct(true);
         return res != null || pf.dn;
     }
 
