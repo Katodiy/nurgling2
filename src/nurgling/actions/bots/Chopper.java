@@ -78,6 +78,7 @@ public class Chopper implements Action {
 
             PathFinder pf = new PathFinder(tree);
             pf.setMode(PathFinder.Mode.Y_MAX);
+            pf.isHardMode = true;
             pf.run(gui);
 
             while (Finder.findGob(tree.id) != null) {
@@ -111,6 +112,7 @@ public class Chopper implements Action {
                                     return Results.FAIL();
                             pf = new PathFinder(tree);
                             pf.setMode(PathFinder.Mode.Y_MAX);
+                            pf.isHardMode = true;
                             pf.run(gui);
                         }
                         if(!(new Drink(0.9, false).run(gui).IsSuccess()))
