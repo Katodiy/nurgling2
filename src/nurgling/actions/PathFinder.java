@@ -444,20 +444,23 @@ public class PathFinder implements Action {
 
         if(isStart) {
             Coord2d player = NUtils.player().rc;
-            Coord2d targerc = (dummy == null) ? Finder.findGob(target_id).rc : dummy.rc;
-            Coord2d playerdir = player.sub(targerc).norm();
+            if(Finder.findGob(target_id)!=null) {
+                Coord2d targerc = Finder.findGob(target_id).rc;
+                Coord2d playerdir = player.sub(targerc).norm();
 
-            Comparator comp = new Comparator<Coord>() {
-                @Override
-                public int compare(Coord o1, Coord o2) {
-                    Coord2d t01 = Utils.pfGridToWorld(pfmap.cells[o1.x][o1.y].pos).sub(targerc).norm();
-                    Coord2d t02 = Utils.pfGridToWorld(pfmap.cells[o2.x][o2.y].pos).sub(targerc).norm();
 
-                    return Double.compare(t02.dot(playerdir), t01.dot(playerdir));
-                }
-            };
+                Comparator comp = new Comparator<Coord>() {
+                    @Override
+                    public int compare(Coord o1, Coord o2) {
+                        Coord2d t01 = Utils.pfGridToWorld(pfmap.cells[o1.x][o1.y].pos).sub(targerc).norm();
+                        Coord2d t02 = Utils.pfGridToWorld(pfmap.cells[o2.x][o2.y].pos).sub(targerc).norm();
 
-            res.sort(comp);
+                        return Double.compare(t02.dot(playerdir), t01.dot(playerdir));
+                    }
+                };
+
+                res.sort(comp);
+            }
 //            Gob target = (dummy==null|| target_id!=-1)?Finder.findGob(target_id):dummy;
 //            System.out.println("+++++++++++++++++++++++");
 //            System.out.println("Target" + ((target!=dummy)?target.ngob.name:"") + "rc" + target.rc.toString() + " id " + target.id);

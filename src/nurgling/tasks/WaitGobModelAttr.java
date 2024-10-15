@@ -7,6 +7,7 @@ import nurgling.NUtils;
 public class WaitGobModelAttr implements NTask {
     Gob gob;
     int flag;
+    int count =0;
     public WaitGobModelAttr(Gob gob, int flag) {
         this.gob = gob;
         this.flag = flag;
@@ -15,7 +16,9 @@ public class WaitGobModelAttr implements NTask {
 
     @Override
     public boolean check() {
-        return ((gob.ngob!=null) && (gob.ngob.getModelAttribute()&flag)!=0);
+        count++;
+        return (((gob.ngob!=null) && (gob.ngob.getModelAttribute()&flag)!=0)) || count>100;
+
     }
 
 }

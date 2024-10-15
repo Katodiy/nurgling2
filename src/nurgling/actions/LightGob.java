@@ -34,8 +34,8 @@ public class LightGob implements Action
             for (Gob gob : gobs) {
                 if ((gob.ngob.getModelAttribute() & flame_flag) == 0) {
                     new PathFinder(gob).run(gui);
-//                    NUtils.activateGob ( gob );
-//                    NUtils.getUI().core.addTask(new WaitGobModelAttr(gob,flame_flag));
+                    NUtils.activateGob ( gob );
+                    NUtils.getUI().core.addTask(new WaitGobModelAttr(gob,flame_flag));
                 }
             }
             new PlaceObject(candelabrum, pos, 0).run(gui);
