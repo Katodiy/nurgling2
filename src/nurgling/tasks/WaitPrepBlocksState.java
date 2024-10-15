@@ -40,7 +40,8 @@ public class WaitPrepBlocksState implements NTask
         } else if (NUtils.getStamina() <= 0.45) {
             state = State.TIMEFORDRINK;
         } else if (space <= 1 && space >=0) {
-            state = State.NOFREESPACE;
+            if(NUtils.getGameUI().getInventory().calcFreeSpace()<=2 || space==0)
+                state = State.NOFREESPACE;
         }
         return state != State.WORKING;
     }

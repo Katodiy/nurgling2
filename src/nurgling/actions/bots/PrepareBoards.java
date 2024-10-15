@@ -75,6 +75,8 @@ public class PrepareBoards implements Action {
                 }
             }
         }
+        if(!(new TransferToPiles(outsa.getRCArea(),new NAlias("board")).run(gui).IsSuccess()))
+            return Results.FAIL();
         return Results.SUCCESS();
     }
 }

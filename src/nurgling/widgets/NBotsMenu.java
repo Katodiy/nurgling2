@@ -17,9 +17,9 @@ public class NBotsMenu extends Widget
         NLayout resources = new NLayout("resources");
         resources.elements.add(new NButton("choper", new Chopper()));
         resources.elements.add(new NButton("chipper", new Chipper()));
+        resources.elements.add(new NButton("pblocks", new PrepareBlocks()));
+        resources.elements.add(new NButton("pboards", new PrepareBoards()));
         if((Boolean)NConfig.get(NConfig.Key.debug)) {
-            resources.elements.add(new NButton("pblocks", new PrepareBlocks()));
-            resources.elements.add(new NButton("pboards", new PrepareBoards()));
             resources.elements.add(new NButton("log", new TransferLog()));
             resources.elements.add(new NButton("clay", new ClayDigger()));
             resources.elements.add(new NButton("bark", new CollectBark()));

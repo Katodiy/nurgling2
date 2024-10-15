@@ -81,7 +81,8 @@ public class PrepareBlocks implements Action {
                 }
             }
         }
-        new TransferToPiles(outsa.getRCArea(),new NAlias("block")).run(gui);
+        if(!(new TransferToPiles(outsa.getRCArea(),new NAlias("block")).run(gui).IsSuccess()))
+            return Results.FAIL();
         return Results.SUCCESS();
     }
 }
