@@ -37,10 +37,18 @@ public class WaitItemInHand implements NTask
             else
                 name = ((NGItem) item).name();
             WItem res;
-            return (res = NUtils.getGameUI().vhand) != null &&
+            if ((res = NUtils.getGameUI().vhand) != null &&
                     res.item.info != null &&
-                    ((NGItem) res.item).name() != null &&
-                    NParser.checkName(((NGItem) res.item).name(), name);
+                    ((NGItem) res.item).name() != null) {
+                if (name.contains("Traveller's Sack")) {
+                    name = "Traveler's Sack";
+                } else if (name.contains("Traveler's Sack")) {
+                    name = "Traveller's Sack";
+                }
+                return NParser.checkName(((NGItem) res.item).name(), name);
+            }
+            else
+                return false;
         } else {
             WItem res;
             return (res = NUtils.getGameUI().vhand) != null &&
