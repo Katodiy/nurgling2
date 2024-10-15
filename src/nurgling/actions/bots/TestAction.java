@@ -31,21 +31,24 @@ public class TestAction implements Action {
             cand.initattr(Container.FuelLvl.class);
             cand.initattr(Container.WaterLvl.class);
             cand.getattr(Container.WaterLvl.class).setMaxlvl(30);
-            cand.getattr(Container.FuelLvl.class).setMaxlvl(4);
+            cand.getattr(Container.FuelLvl.class).setAbsMaxlvl(50);
+            cand.getattr(Container.FuelLvl.class).setMaxlvl(20);
+            cand.getattr(Container.FuelLvl.class).setFuelmod(5);
             cand.getattr(Container.FuelLvl.class).setFueltype("branch");
 
             containers.add(cand);
         }
 
         for(Container current_container: containers ) {
-            //new UseWorkStationNC(current_container.gob).run(gui);
             new SelectFlowerAction("Open", current_container.gob, true).run(gui);
+            //TODO: change SelectFlowerAction to OpenContainer
             NUtils.getUI().core.addTask(new FindNInventory(cap));
             new CloseTargetContainer(current_container).run(gui);
-            gui.msg(Boolean.toString((current_container.gob.ngob.getModelAttribute() & 4) == 0));
+            //gui.msg(Boolean.toString((current_container.gob.ngob.getModelAttribute() & 4) == 0));
         }
         new WaterToContainers(containers).run(gui);
-        //FuelToCOntainers
+        if(!new FuelToContainers(containers).run(gui).IsSuccess())
+            return Results.ERROR("NO FUEL");
         //LightGob with getAttribute
         return Results.SUCCESS();
     }

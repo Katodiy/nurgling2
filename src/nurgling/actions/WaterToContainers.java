@@ -50,7 +50,7 @@ public class WaterToContainers implements Action
         }
         for (Container cont : conts) {
             Container.WaterLvl waterLvl = cont.getattr(Container.WaterLvl.class);
-            gui.msg("waterLvl:" + String.valueOf(waterLvl.neededWater()));
+            //gui.msg("waterLvl:" + String.valueOf(waterLvl.neededWater()));
             if(waterLvl.neededWater() >=1 ){// <29.0
                 new PathFinder(cont.gob).run(gui);
                 NUtils.activateGob(cont.gob);

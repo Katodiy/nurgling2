@@ -174,12 +174,18 @@ public class Container {
         public static final String MAXLVL = "maxlvl";
         public static final String CREDOLVL = "credolvl";
         public static final String FUELTYPE = "fueltype";
-        public static final String READY = "ready";
         public static final String NOCREDO = "nocredo";
+        public static final String ABSMAXLVL = "absmaxlvl";
+
+        public static final String FUELMOD = "flmod";
+
+        public FuelLvl(){
+            res.put(FUELMOD, (int) 1);
+        }
 
         @Override
         public void update()  throws InterruptedException{
-            res.put(FUELLVL,(int)(30 * NUtils.getFuelLvl(cap, new Color(255, 128, 0))));
+            res.put(FUELLVL,(int)((double) (int) res.get(ABSMAXLVL) * NUtils.getFuelLvl(cap, new Color(255, 128, 0))));
             res.remove(NOCREDO);
             if(res.containsKey(CREDOLVL))
             {
@@ -200,6 +206,8 @@ public class Container {
             res.put(MAXLVL,maxLvl);
         }
 
+        public void setAbsMaxlvl(int maxlvl) { res.put(ABSMAXLVL,maxlvl);}
+
         public void setCredolvl(int credolvl){
             res.put(CREDOLVL,credolvl);
         }
@@ -208,9 +216,11 @@ public class Container {
             res.put(FUELTYPE,fueltype);
         }
 
+        public void setFuelmod(int fuelmod) { res.put(FUELMOD, fuelmod);}
+
         public int neededFuel() {
             if (!res.containsKey(NOCREDO) || (boolean) res.get(NOCREDO))
-                return (int) res.get(MAXLVL) - (int) res.get(FUELLVL);
+                return ((int) res.get(MAXLVL) - (int) res.get(FUELLVL)) / (int) res.get(FUELMOD);
             else
                 return (int) res.get(CREDOLVL) - (int) res.get(FUELLVL);
         }
