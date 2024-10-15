@@ -161,6 +161,11 @@ public class NUtils
         getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres),3, 0, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
     }
 
+    public static void lclick(Coord2d pos) {
+        getGameUI().map.wdgmsg("click", Coord.z, pos.floor(posres),1, 0);
+    }
+
+
 
     public static void activateItem(Gob gob, boolean shift) {
         getGameUI().map.wdgmsg("itemact", Coord.z, gob.rc.floor(posres), shift ? 1 : 0, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
@@ -255,6 +260,13 @@ public class NUtils
         @Override
         public int compare(Gob o1, Gob o2) {
             return Double.compare(o1.rc.dist(NUtils.getGameUI().map.player().rc),o2.rc.dist(NUtils.getGameUI().map.player().rc));
+        }
+    };
+
+    public static Comparator<Gob> y_min_comp = new Comparator<Gob>() {
+        @Override
+        public int compare(Gob o1, Gob o2) {
+            return Double.compare(o1.rc.y,o2.rc.y);
         }
     };
 

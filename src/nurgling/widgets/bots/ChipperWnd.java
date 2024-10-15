@@ -19,31 +19,21 @@ public class ChipperWnd extends Window implements Checkable {
         NChipperProp startprop = NChipperProp.get(NUtils.getUI().sessInfo);
         prev = add(new Label("Chipper Settings:"));
 
-        prev = add(usingTools = new UsingTools(UsingTools.Tools.pickaxe), prev.pos("bl").add(UI.scale(0,5)));
-        if(startprop.tool!=null)
-        {
-            for(UsingTools.Tool tl : UsingTools.Tools.pickaxe)
-            {
-                if (tl.name.equals(startprop.tool)) {
-                    usingTools.s = tl;
-                    break;
-                }
-            }
-        }
-
         prev = add(plateu = new CheckBox("Dig on a mountain plateau"){
             {
                 a = startprop.plateu;
-                usingTools.visible = !a;
-                ChipperWnd.this.pack();
             }
             @Override
             public void set(boolean a) {
                 super.set(a);
+                if(!a)
+                    usingTools.show();
+                else
+                    usingTools.hide();
             }
 
         }, prev.pos("bl").add(UI.scale(0,5)));
-        usingTools.visible = !startprop.plateu;
+
 
         prev = add(nopiles = new CheckBox("Drop stones"){
             {
@@ -80,6 +70,19 @@ public class ChipperWnd extends Window implements Checkable {
 
         }, prev.pos("bl").add(UI.scale(0,5)));
 
+        prev = add(usingTools = new UsingTools(UsingTools.Tools.pickaxe), prev.pos("bl").add(UI.scale(0,5)));
+        if(startprop.tool!=null)
+        {
+            for(UsingTools.Tool tl : UsingTools.Tools.pickaxe)
+            {
+                if (tl.name.equals(startprop.tool)) {
+                    usingTools.s = tl;
+                    break;
+                }
+            }
+        }
+        usingTools.visible = !startprop.plateu;
+
 
         prev = add(new Button(UI.scale(150), "Start"){
             @Override
@@ -88,6 +91,10 @@ public class ChipperWnd extends Window implements Checkable {
                 prop = NChipperProp.get(NUtils.getUI().sessInfo);
                 if(usingTools.s!=null)
                     prop.tool = usingTools.s.name;
+                prop.autoeat = autoeat.a;
+                prop.plateu = plateu.a;
+                prop.autorefill = autorefill.a;
+                prop.nopiles = nopiles.a;
                 NChipperProp.set(prop);
                 isReady = true;
             }

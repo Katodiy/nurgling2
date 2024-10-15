@@ -6,10 +6,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.conf.NChopperProp;
-import nurgling.tasks.WaitCheckable;
-import nurgling.tasks.WaitChopperState;
-import nurgling.tasks.WaitPos;
-import nurgling.tasks.WaitPose;
+import nurgling.tasks.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
@@ -46,7 +43,7 @@ public class Chopper implements Action {
         }
         SelectArea insa;
         NUtils.getGameUI().msg("Please select area for deforestation");
-        (insa = new SelectArea()).run(gui);
+        (insa = new SelectArea(Resource.loadsimg("baubles/chopperArea"))).run(gui);
         NAlias pattern = prop.stumps ? new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log","oldtrunk"))) :
                 new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log", "oldtrunk", "stump")));
 
@@ -60,7 +57,7 @@ public class Chopper implements Action {
         }
         ArrayList<Gob> trees;
         while (!(trees = Finder.findGobs(insa.getRCArea(),pattern)).isEmpty()) {
-            trees.sort(NUtils.d_comp);
+            trees.sort(NUtils.y_min_comp);
 
             if(prop.ngrowth)
             {
@@ -79,18 +76,28 @@ public class Chopper implements Action {
 
             Gob tree = trees.get(0);
 
-            new PathFinder(tree).run(gui);
+            PathFinder pf = new PathFinder(tree);
+            pf.setMode(PathFinder.Mode.Y_MAX);
+            pf.run(gui);
 
             while (Finder.findGob(tree.id) != null) {
+                boolean chopped = false;
                 if (NParser.isIt(tree, new NAlias("stump"))) {
                     if(!new Equip(new NAlias(prop.shovel)).run(gui).IsSuccess())
                         return Results.ERROR("Equipment not found: " + prop.shovel);
                     new Destroy(tree,"gfx/borka/shoveldig").run(gui);
                 } else {
+                    chopped = true;
+                    if(tree.getattr(TreeScale.class)!=null)
+                    {
+                        chopped = false;
+                    }
+                    if(tree.ngob.name.startsWith("gfx/terobjs/bushes"))
+                        chopped = false;
                     if(!new Equip(new NAlias(prop.tool)).run(gui).IsSuccess())
                         return Results.ERROR("Equipment not found: " + prop.tool);
                     new SelectFlowerAction("Chop", tree).run(gui);
-                    NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/treechop"));
+                    NUtils.getUI().core.addTask(new WaitPoseOrNoGob(NUtils.player(), tree, "gfx/borka/treechop"));
                 }
                 WaitChopperState wcs = new WaitChopperState(tree, prop);
                 NUtils.getUI().core.addTask(wcs);
@@ -100,19 +107,39 @@ public class Chopper implements Action {
                     case TIMEFORDRINK: {
                         if (prop.autorefill) {
                             if (FillWaterskins.checkIfNeed())
-                                new FillWaterskins().run(gui);
-                            new PathFinder(tree).run(gui);
+                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                    return Results.FAIL();
+                            pf = new PathFinder(tree);
+                            pf.setMode(PathFinder.Mode.Y_MAX);
+                            pf.run(gui);
                         }
-                        new Drink(0.9).run(gui);
+                        if(!(new Drink(0.9, false).run(gui).IsSuccess()))
+                        {
+                            if (prop.autorefill) {
+                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                    return Results.FAIL();
+                            }
+                            else
+                                return Results.FAIL();
+                        }
                         break;
                     }
                     case TIMEFOREAT: {
-                        new AutoEater().run(gui);
+                        if(!(new AutoEater().run(gui).IsSuccess()))
+                            return Results.FAIL();
                         break;
                     }
                     case DANGER:
                         return Results.ERROR("SOMETHING WRONG, STOP WORKING");
 
+                }
+                if(chopped && Finder.findGob(tree.id) == null) {
+                    NUtils.addTask(new NTask() {
+                        @Override
+                        public boolean check() {
+                            return Finder.findGob(tree.rc)!=null;
+                        }
+                    });
                 }
             }
 

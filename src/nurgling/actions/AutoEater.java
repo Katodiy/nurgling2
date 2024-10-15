@@ -31,6 +31,8 @@ public class AutoEater implements Action {
         NUtils.clickGob(pl);
         NUtils.getUI().core.addTask(new WaitPose(pl,"gfx/borka/idle"));
 
+        if(witems.isEmpty())
+            return Results.ERROR("no food left");
         while (!witems.isEmpty()) {
             double cEnrj = NUtils.getEnergy();
             NFoodInfo fi = ((NGItem) witems.get(0).item).getInfo(NFoodInfo.class);

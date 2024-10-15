@@ -47,10 +47,7 @@ public class MinimapImageGenerator {
                     buf.setRGB(c.x, c.y, rgb);
                 }
             }
-        }
-        catch (Exception e) {
-            return (null);
-        }
+
 
         for (c.y = 1; c.y < MCache.cmaps.y - 1; c.y++) {
             for (c.x = 1; c.x < MCache.cmaps.x - 1; c.x++) {
@@ -99,6 +96,10 @@ public class MinimapImageGenerator {
                     buf.setRGB(c.x, c.y, Color.BLACK.getRGB());
                 }
             }
+        }
+        }
+        catch (Exception e) {
+            return (null);
         }
         return buf;
     }

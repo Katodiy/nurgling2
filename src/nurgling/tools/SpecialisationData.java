@@ -11,7 +11,7 @@ public class SpecialisationData {
         ArrayList<String> crops = new ArrayList<>(Arrays.asList("Flax", "Turnip", "Carrot", "Hemp"));
         data.put("crop",crops);
         data.put("seed",crops);
-        ArrayList<String> fuel = new ArrayList<>(Arrays.asList("Branch", "Coal"));
+        ArrayList<String> fuel = new ArrayList<>(Arrays.asList("Branch", "Coal", "Block"));
         data.put("fuel",fuel);
         ArrayList<String> barrel = new ArrayList<>(Arrays.asList("Quicksilver"));
         data.put("barrel",barrel);

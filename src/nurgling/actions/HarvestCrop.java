@@ -154,7 +154,7 @@ public class HarvestCrop implements Action{
             }
         }
         if(NUtils.getStamina()<0.35)
-            new Drink(0.9).run(gui);
+            new Drink(0.9,false).run(gui);
         Gob plant;
         plant = Finder.findGob(target_coord.div(MCache.tilesz).floor(),crop, stage);
         if(plant == null)

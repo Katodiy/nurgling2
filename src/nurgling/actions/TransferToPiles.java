@@ -34,7 +34,9 @@ public class TransferToPiles implements Action{
                     if (gob.ngob.getModelAttribute() != 31) {
                         if(PathFinder.isAvailable(gob)) {
                             target = gob;
-                            new PathFinder(target).run(gui);
+                            PathFinder pf = new PathFinder(target);
+                            pf.isHardMode = true;
+                            pf.run(gui);
                             witems = gui.getInventory().getItems(items);
                             int size = witems.size();
                             new OpenTargetContainer("Stockpile", target).run(gui);
@@ -55,7 +57,8 @@ public class TransferToPiles implements Action{
                 while(!(gui.getInventory().getItems(items)).isEmpty()) {
                     PileMaker pm;
 
-                    (pm = new PileMaker(out, items, pileName)).run(gui);
+                    if(!(pm = new PileMaker(out, items, pileName)).run(gui).IsSuccess())
+                        return Results.FAIL();
                     Gob pile = pm.getPile();
                     witems = gui.getInventory().getItems(items);
                     int size = witems.size();

@@ -35,7 +35,6 @@ public class Specialisation extends Window
         pigs,
         goats,
         deadkritter,
-        water_refiller,
         ore,
         boiler,
         fuel,
@@ -60,7 +59,6 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.sheeps.toString()));
         specialisation.add(new SpecialisationItem(SpecName.deadkritter.toString()));
         specialisation.add(new SpecialisationItem(SpecName.pigs.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.water_refiller.toString()));
         specialisation.add(new SpecialisationItem(SpecName.ore.toString()));
         specialisation.add(new SpecialisationItem(SpecName.boiler.toString()));
         specialisation.add(new SpecialisationItem(SpecName.fuel.toString()));
