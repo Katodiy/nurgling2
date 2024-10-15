@@ -102,7 +102,6 @@ public class PathFinder implements Action {
                     return Results.SUCCESS();
             } else {
                 if (dn) {
-                    if(isHardMode)
 //                    if(start_pos == end_poses.get(0) && NUtils.player().rc.dist(Utils.pfGridToWorld(pfmap.cells[start_pos]))
                     return Results.SUCCESS();
                 }
