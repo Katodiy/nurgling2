@@ -421,6 +421,7 @@ public class NArea
     {
         this.name = (String) obj.get("name");
         this.id = (Integer) obj.get("id");
+        this.dir = obj.has("dir") ? obj.getString("dir") : "DefaultFolder";
         if(obj.has("color"))
         {
             JSONObject color = (JSONObject) obj.get("color");
@@ -464,6 +465,7 @@ public class NArea
     public Space space;
     public String name;
     public int id;
+    public String dir;
     public Color color = new Color(194,194,65,56);
     public final ArrayList<Long> grids_id = new ArrayList<>();
 
@@ -535,6 +537,7 @@ public class NArea
         JSONObject res = new JSONObject();
         res.put("name", name);
         res.put("id", id);
+        res.put("dir", dir);
         JSONObject jcolor = new JSONObject();
         jcolor.put("r", color.getRed());
         jcolor.put("g", color.getGreen());

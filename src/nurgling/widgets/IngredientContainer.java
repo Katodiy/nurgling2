@@ -32,7 +32,7 @@ public class IngredientContainer extends Widget implements NDTarget
     public IngredientContainer(String type)
     {
         this.type = type;
-        this.sz = UI.scale(new Coord(200,400));
+        this.sz = UI.scale(new Coord(200,380));
     }
 
     String type;
