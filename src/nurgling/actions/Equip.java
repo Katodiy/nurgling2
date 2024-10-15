@@ -34,7 +34,11 @@ public class Equip implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-
+        if(target_name.keys.contains("Traveller's Sack")) {
+            target_name.keys.add("Traveler's Sack");
+        } else if (target_name.keys.contains("Traveler's Sack")) {
+            target_name.keys.add("Traveller's Sack");
+        }
         WItem lhand = NUtils.getEquipment().findItem (NEquipory.Slots.HAND_LEFT.idx);
 
         WItem rhand = NUtils.getEquipment().findItem (NEquipory.Slots.HAND_RIGHT.idx);
