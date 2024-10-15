@@ -39,7 +39,7 @@ public class BuildCellar implements Action {
                         case BUMLINGNOTFOUND:
                             break;
                         case BUMLINGFORDRINK: {
-                            new Drink(0.9).run(gui);
+                            new Drink(0.9,false).run(gui);
                             break;
                         }
                         case DANGER: {

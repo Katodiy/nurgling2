@@ -21,7 +21,6 @@ import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static haven.OCache.posres;
-import static nurgling.actions.PathFinder.pfmdelta;
 
 public class DynamicPf implements Action
 {

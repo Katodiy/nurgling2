@@ -98,7 +98,7 @@ public class Craft implements Action
 
 
 
-            new Drink(0.9).run(gui);
+            new Drink(0.9, false).run(gui);
             if(context.workstation!=null)
             {
                 new UseWorkStation(context).run(gui);
