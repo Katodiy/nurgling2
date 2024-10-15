@@ -102,6 +102,7 @@ public class PathFinder implements Action {
                     return Results.SUCCESS();
             } else {
                 if (dn) {
+                    if(isHardMode)
 //                    if(start_pos == end_poses.get(0) && NUtils.player().rc.dist(Utils.pfGridToWorld(pfmap.cells[start_pos]))
                     return Results.SUCCESS();
                 }
@@ -254,14 +255,15 @@ public class PathFinder implements Action {
 //        cells[start_pos.x][start_pos.y].val = 7;
         if (cells[end_pos.x][end_pos.y].val != 0) {
             end_poses = findFreeNear(end_pos, false);
-            if(dummy!=null)
+            if(dummy!=null || (isHardMode&&target_id!=-2 && Finder.findGob(target_id)!=null))
             {
+                Coord2d tcoord = (dummy!=null)?dummy.rc:Finder.findGob(target_id).rc;
                 ArrayList<Coord> best_poses = new ArrayList<>();
                 for(Coord coord : end_poses)
                 {
                     Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos);
-                    if(coord2d.x+MCache.tileqsz.x > dummy.rc.x && coord2d.x-MCache.tileqsz.x< dummy.rc.x ||
-                            coord2d.y+MCache.tileqsz.y > dummy.rc.y && coord2d.y-MCache.tileqsz.y< dummy.rc.y)
+                    if(coord2d.x+MCache.tileqsz.x > tcoord.x && coord2d.x-MCache.tileqsz.x< tcoord.x ||
+                            coord2d.y+MCache.tileqsz.y > tcoord.y && coord2d.y-MCache.tileqsz.y< tcoord.y)
                         best_poses.add(coord);
                 }
                 if(!best_poses.isEmpty())
