@@ -41,11 +41,12 @@ public class WaitChipperState implements NTask
     @Override
     public boolean check()
     {
+        int space = NUtils.getGameUI().getInventory().calcFreeSpace();
         if(Finder.findGob(bumling.id)==null)
         {
             state = State.BUMLINGNOTFOUND;
         }
-        else if(NUtils.getGameUI().getInventory().calcFreeSpace() <= 1)
+        else if(space <= 1 && space >= 0)
         {
             state = State.TIMEFORPILE;
         }

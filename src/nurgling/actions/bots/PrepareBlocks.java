@@ -2,6 +2,7 @@ package nurgling.actions.bots;
 
 import haven.Coord;
 import haven.Gob;
+import haven.Resource;
 import haven.UI;
 import nurgling.NGameUI;
 import nurgling.NUtils;
@@ -39,11 +40,11 @@ public class PrepareBlocks implements Action {
         }
         SelectArea insa;
         NUtils.getGameUI().msg("Please select area with logs");
-        (insa = new SelectArea()).run(gui);
+        (insa = new SelectArea(Resource.loadsimg("baubles/prepLogs"))).run(gui);
 
         SelectArea outsa;
         NUtils.getGameUI().msg("Please select area for piles");
-        (outsa = new SelectArea()).run(gui);
+        (outsa = new SelectArea(Resource.loadsimg("baubles/prepBlockP"))).run(gui);
 
         ArrayList<Gob> logs;
         while (!(logs = Finder.findGobs(insa.getRCArea(),new NAlias("log"))).isEmpty())
@@ -70,7 +71,8 @@ public class PrepareBlocks implements Action {
                         break;
                     }
                     case NOFREESPACE: {
-                        new TransferToPiles(outsa.getRCArea(),new NAlias("block")).run(gui);
+                        if(!(new TransferToPiles(outsa.getRCArea(),new NAlias("block")).run(gui).IsSuccess()))
+                            return Results.FAIL();
                         break;
                     }
                     case DANGER:

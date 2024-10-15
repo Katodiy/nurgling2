@@ -32,13 +32,14 @@ public class WaitPrepBlocksState implements NTask
     State state = State.WORKING;
     @Override
     public boolean check() {
+        int space = NUtils.getGameUI().getInventory().calcNumberFreeCoord(new Coord(1, 2));
         if (Finder.findGob(log.id) == null) {
             state = State.LOGNOTFOUND;
         } else if (NUtils.getEnergy() < 0.22) {
             state = State.DANGER;
         } else if (NUtils.getStamina() <= 0.45) {
             state = State.TIMEFORDRINK;
-        } else if (NUtils.getGameUI().getInventory().calcNumberFreeCoord(new Coord(1, 2)) == 0) {
+        } else if (space <= 1 && space >=0) {
             state = State.NOFREESPACE;
         }
         return state != State.WORKING;
