@@ -22,7 +22,7 @@ public class TESTfreeStockpilesAndTransfer extends Test
 {
     public static final NAlias ores = new NAlias(new ArrayList<>(Arrays.asList("rit", "Ore", "ore")));
 
-    NAlias transferedItems = new NAlias("flax");
+    NAlias transferedItems = new NAlias("clay");
     public TESTfreeStockpilesAndTransfer()
     {
         this.container = "Stockpile";
