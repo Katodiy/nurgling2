@@ -3,6 +3,9 @@ package nurgling.actions;
 import haven.*;
 import nurgling.*;
 import nurgling.tasks.*;
+import nurgling.tools.NParser;
+
+import static haven.OCache.posres;
 
 public class Drink implements Action
 {
@@ -21,6 +24,10 @@ public class Drink implements Action
         {
             Gob player = NUtils.player();
             if(withStop && player!=null) {
+                if(!NParser.checkName(NUtils.getCursorName(), "arw")) {
+                    NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),3, 0);
+                    NUtils.getUI().core.addTask(new GetCurs("arw"));
+                }
                 NUtils.lclick(player.rc);
                 NUtils.addTask(new WaitPose(player, "gfx/borka/idle"));
             }
