@@ -437,9 +437,9 @@ public class Finder
 
         Coord inchMax = area.b.sub(area.a).floor();
         Coord margin =  hitBox.end.sub(hitBox.begin).floor(2,2);
-        for (int i = margin.x; i < inchMax.x - margin.x; i++)
+        for (int i = margin.x; i <= inchMax.x - margin.x; i++)
         {
-            for (int j = margin.y; j < inchMax.y - margin.y; j++)
+            for (int j = margin.y; j <= inchMax.y - margin.y; j++)
             {
                 boolean passed = true;
                 NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, area.a.add(i,j),0);
