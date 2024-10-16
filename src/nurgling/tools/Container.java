@@ -176,11 +176,11 @@ public class Container {
         public static final String FUELTYPE = "fueltype";
         public static final String NOCREDO = "nocredo";
         public static final String ABSMAXLVL = "absmaxlvl";
-
         public static final String FUELMOD = "flmod";
 
         public FuelLvl(){
             res.put(FUELMOD, (int) 1);
+            res.put(ABSMAXLVL, (int) 30);
         }
 
         @Override
@@ -222,7 +222,7 @@ public class Container {
             if (!res.containsKey(NOCREDO) || (boolean) res.get(NOCREDO))
                 return ((int) res.get(MAXLVL) - (int) res.get(FUELLVL)) / (int) res.get(FUELMOD);
             else
-                return (int) res.get(CREDOLVL) - (int) res.get(FUELLVL);
+                return ((int) res.get(CREDOLVL) - (int) res.get(FUELLVL)) / (int) res.get(FUELMOD);
         }
 
     }
