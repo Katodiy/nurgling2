@@ -269,7 +269,7 @@ public class NConfig
         current = this;
         StringBuilder contentBuilder = new StringBuilder();
 
-        try (Stream<String> stream = (new BufferedReader(new InputStreamReader(new FileInputStream("a.txt"),"utf-8"))).lines())
+        try (Stream<String> stream = Files.lines(Paths.get(path), StandardCharsets.UTF_8))
         {
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
         }
