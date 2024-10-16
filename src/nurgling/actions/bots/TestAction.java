@@ -40,11 +40,8 @@ public class TestAction implements Action {
         }
 
         for(Container current_container: containers ) {
-            new SelectFlowerAction("Open", current_container.gob, true).run(gui);
-            //TODO: change SelectFlowerAction to OpenContainer
-            NUtils.getUI().core.addTask(new FindNInventory(cap));
+            new OpenTargetContainer(current_container).run(gui);
             new CloseTargetContainer(current_container).run(gui);
-            //gui.msg(Boolean.toString((current_container.gob.ngob.getModelAttribute() & 4) == 0));
         }
         new WaterToContainers(containers).run(gui);
         if(!new FuelToContainers(containers).run(gui).IsSuccess())

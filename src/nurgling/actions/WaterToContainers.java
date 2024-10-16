@@ -50,10 +50,11 @@ public class WaterToContainers implements Action
         }
         for (Container cont : conts) {
             Container.WaterLvl waterLvl = cont.getattr(Container.WaterLvl.class);
-            if(waterLvl.neededWater() >=1 ){// <29.0
+            if(waterLvl.neededWater() >=2 ){// <29.1
                 new PathFinder(cont.gob).run(gui);
                 NUtils.activateGob(cont.gob);
                 NUtils.getUI().core.addTask(new WaitGobModelAttr(cont.gob,4));
+                //TODO: change task from modelAttr to sound
             }
 
             if(!NUtils.isOverlay(barrel, new NAlias("water"))){

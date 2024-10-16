@@ -69,13 +69,14 @@ public class SelectFlowerAction implements Action
 
         NFlowerMenu fm = NUtils.getFlowerMenu();
         if(fm==null)
-            return Results.FAIL();
+            if(!petalIgnored)
+                return Results.FAIL();
+            else return Results.SUCCESS();
         if(fm.chooseOpt(opt))
         {
             NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
             return Results.SUCCESS();
-        } else if (petalIgnored)
-            return Results.SUCCESS();
+        }
         else
         {
             NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
