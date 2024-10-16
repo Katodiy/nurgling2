@@ -5,7 +5,6 @@ import haven.res.gfx.terobjs.roastspit.Roastspit;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
-import nurgling.tasks.HandIsFree;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitCarveState;
 import nurgling.tasks.WaitPose;

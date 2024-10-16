@@ -1,6 +1,7 @@
 package nurgling.tools;
 
 import haven.*;
+import haven.res.ui.barterbox.Shopbox;
 import nurgling.*;
 import nurgling.tasks.*;
 
@@ -88,5 +89,50 @@ public class NParser
                 return checkName(res_beg.name, name);
             }
             return false;
+    }
+
+
+    public static boolean checkName(
+            Shopbox.ShopItem price,
+            final NAlias regEx
+    ) { if (regEx!=null) {
+        if(regEx.keys.size()==1)
+        {
+            if ( NParser.checkName ( regEx.keys.get(0), new NAlias ( "Raw Wild Beef" ) ) ) {
+                regEx.keys.add ( "Raw Beef" );
+            }
+            else if ( NParser.checkName ( regEx.keys.get(0), new NAlias ( "Raw Wild Pork" ) ) ) {
+                regEx.keys.add ( "Raw Pork" );
+            }
+            else if ( NParser.checkName ( regEx.keys.get(0), new NAlias ( "Raw Wild Horse" ) ) ) {
+                regEx.keys.add ( "Raw Horse" );
+            }
+            else if ( NParser.checkName ( regEx.keys.get(0), new NAlias ( "Raw Wild Mutton" ) ) ) {
+                regEx.keys.add ( "Raw Mutton" );
+            }
+        }
+
+        /// Проверяем имя на соответствие
+        for (String key : regEx.keys) {
+            if (key!=null && price.name.toLowerCase().contains(key.toLowerCase())) {
+                for (String ex : regEx.exceptions) {
+                    if (price.name.toLowerCase().contains(ex.toLowerCase())) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        if(regEx.keys.isEmpty())
+        {
+            for (String ex : regEx.exceptions) {
+                if (price.name.toLowerCase().contains(ex.toLowerCase())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+        return false;
     }
 }

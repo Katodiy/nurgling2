@@ -3,24 +3,15 @@ package nurgling.actions.bots;
 import haven.Coord2d;
 import haven.Gob;
 import haven.Pair;
-import haven.WItem;
-import nurgling.NGItem;
 import nurgling.NGameUI;
-import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.FreeContainers;
-import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
-import nurgling.areas.NArea;
-import nurgling.tasks.HandIsFree;
-import nurgling.tasks.WaitItemContent;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.widgets.NEquipory;
-import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 

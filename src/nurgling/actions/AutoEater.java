@@ -5,17 +5,8 @@ import haven.Gob;
 import haven.Pair;
 import haven.WItem;
 import nurgling.*;
-import nurgling.actions.bots.SelectArea;
-import nurgling.areas.NArea;
 import nurgling.iteminfo.NFoodInfo;
-import nurgling.tasks.HandIsFree;
-import nurgling.tasks.WaitItemContent;
-import nurgling.tasks.WaitPos;
 import nurgling.tasks.WaitPose;
-import nurgling.tools.Finder;
-import nurgling.tools.NAlias;
-import nurgling.widgets.NEquipory;
-import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 

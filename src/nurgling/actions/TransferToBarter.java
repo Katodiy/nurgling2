@@ -44,7 +44,7 @@ public class TransferToBarter implements Action{
                 Shopbox.ShopItem price = sb.getPrice();
                 if (price != null)
                 {
-                    if (NParser.checkName(price.name, items))
+                    if (NParser.checkName(price, items))
                     {
                         while (!wItems.isEmpty()) {
                             int startSize = gui.getInventory().getItems("Branch").size();

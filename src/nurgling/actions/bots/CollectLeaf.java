@@ -35,9 +35,9 @@ public class CollectLeaf implements Action {
         for(Gob tree : trees)
         {
 
-            new CollectFromGob(tree,"Pick leaf", "gfx/borka/treepickan",new Coord(1,1),new NAlias("Leaf", "leaf"),outsa.getRCArea()).run(gui);
+            new CollectFromGob(tree,"Pick leaf", "gfx/borka/treepickan",new Coord(1,1),new NAlias("Leaf", "leaf", "Leaves"),outsa.getRCArea()).run(gui);
         }
-        new TransferToPiles(outsa.getRCArea(), new NAlias("Leaf", "leaf") ).run(gui);
+        new TransferToPiles(outsa.getRCArea(), new NAlias("Leaf", "leaf", "Leaves") ).run(gui);
         return Results.SUCCESS();
     }
 }

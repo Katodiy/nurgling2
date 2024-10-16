@@ -9,7 +9,6 @@ import nurgling.areas.NArea;
 import nurgling.tasks.HandIsFree;
 import nurgling.tasks.WaitTargetSize;
 import nurgling.tools.Container;
-import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;

@@ -7,8 +7,6 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.tasks.HandIsFree;
-import nurgling.tasks.WaitTargetSize;
-import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
