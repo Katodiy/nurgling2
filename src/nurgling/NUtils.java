@@ -258,6 +258,13 @@ public class NUtils
         }
     };
 
+    public static Comparator<Gob> x_min_comp = new Comparator<Gob>() {
+        @Override
+        public int compare(Gob o1, Gob o2) {
+            return Double.compare(o1.rc.x,o2.rc.x);
+        }
+    };
+
     public static Entry getAnimalEntity(Gob gob, Class<? extends Entry> cattleRoster ){
         GetAnimalEntry gae = new GetAnimalEntry(gob,cattleRoster);
         try {
@@ -424,5 +431,10 @@ public class NUtils
             pos.x += MCache.tilesz.x;
         }
         return null;
+    }
+
+    public static void activateRoastspit(Gob.Overlay ol) {
+        getGameUI().map.wdgmsg("itemact", Coord.z, ol.gob.rc.floor(posres), 0, 1, (int)  ol.gob.id,
+                ol.gob.rc.floor(posres), ol.id, -1);
     }
 }

@@ -2,6 +2,7 @@ package nurgling.actions;
 
 import haven.Coord2d;
 import haven.Gob;
+import haven.MenuSearch;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.tasks.WaitGobModelAttr;
@@ -25,6 +26,17 @@ public class LightGob implements Action
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        boolean timeFoWork = false;
+        for (Gob gob : gobs) {
+            if ((gob.ngob.getModelAttribute() & flame_flag) == 0) {
+                timeFoWork = true;
+                break;
+            }
+        }
+        if(!timeFoWork) {
+            return Results.SUCCESS();
+        }
+
         Gob candelabrum = Finder.findGob(new NAlias("gfx/terobjs/candelabrum"));
         if(candelabrum == null || candelabrum.ngob.getModelAttribute() !=3 )
             candelabrum = null;

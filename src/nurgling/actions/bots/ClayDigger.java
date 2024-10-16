@@ -1,6 +1,7 @@
 package nurgling.actions.bots;
 
 import haven.Gob;
+import haven.Resource;
 import haven.UI;
 import haven.res.lib.tree.TreeScale;
 import nurgling.NGameUI;
@@ -46,7 +47,7 @@ public class ClayDigger implements Action {
         }
         NUtils.getGameUI().msg("Please select area for dig clay");
         SelectArea insa;
-        (insa = new SelectArea()).run(gui);
+        (insa = new SelectArea(Resource.loadsimg("baubles/clayTime"))).run(gui);
 
 
         NArea area = NArea.findOut(new NAlias("clay"),1);
@@ -54,7 +55,7 @@ public class ClayDigger implements Action {
         {
             NUtils.getGameUI().msg("Please select area for output clay");
             SelectArea onsa;
-            (onsa = new SelectArea()).run(gui);
+            (onsa = new SelectArea(Resource.loadsimg("baubles/clayPiles"))).run(gui);
             new DiggingResources(insa.getRCArea(),onsa.getRCArea(),new NAlias("clay"), prop.shovel).run(gui);
         }
         else {

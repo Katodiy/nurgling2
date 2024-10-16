@@ -1,6 +1,8 @@
 package nurgling.actions.bots;
 
+import haven.Coord2d;
 import haven.Gob;
+import haven.Resource;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
@@ -14,11 +16,11 @@ public class TransferLog implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         SelectArea insa;
         NUtils.getGameUI().msg("Please, select input area");
-        (insa = new SelectArea()).run(gui);
+        (insa = new SelectArea(Resource.loadsimg("baubles/inputArea"))).run(gui);
 
         SelectArea outsa;
         NUtils.getGameUI().msg("Please, select output area");
-        (outsa = new SelectArea()).run(gui);
+        (outsa = new SelectArea(Resource.loadsimg("baubles/outputArea"))).run(gui);
         ArrayList<Gob> logs;
         while (!(logs = Finder.findGobs(insa.getRCArea(), new NAlias("log"))).isEmpty()) {
             ArrayList<Gob> availableLogs = new ArrayList<>();
@@ -34,6 +36,8 @@ public class TransferLog implements Action {
             Gob log = availableLogs.get(0);
             new LiftObject(log).run(gui);
             new FindPlaceAndAction(log, outsa.getRCArea()).run(gui);
+            Coord2d shift = log.rc.sub(NUtils.player().rc).norm().mul(2);
+            new GoTo(NUtils.player().rc.sub(shift)).run(gui);
         }
 
         return Results.SUCCESS();

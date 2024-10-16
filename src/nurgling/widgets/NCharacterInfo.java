@@ -31,20 +31,23 @@ public class NCharacterInfo extends Widget {
 
     void read() {
 
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(Files.newInputStream(Paths.get(path)), StandardCharsets.UTF_8))) {
-            while (reader.ready()) {
-                String line = reader.readLine();
-                if (line.contains("varity")) {
-                    synchronized (varity) {
-                        for (int i = 0; i < Integer.parseInt(line.split("\t")[1]); i++) {
-                            varity.add(reader.readLine());
+        try {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(Files.newInputStream(Paths.get(path)), StandardCharsets.UTF_8))) {
+                while (reader.ready()) {
+                    String line = reader.readLine();
+                    if (line.contains("varity")) {
+                        synchronized (varity) {
+                            for (int i = 0; i < Integer.parseInt(line.split("\t")[1]); i++) {
+                                varity.add(reader.readLine());
+                            }
                         }
                     }
                 }
+            } catch (IOException ignored) {
             }
-        } catch (IOException ignored) {
         }
+        catch (InvalidPathException ignored) {}
     }
 
     void write() {

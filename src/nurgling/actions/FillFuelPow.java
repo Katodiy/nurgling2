@@ -76,6 +76,9 @@ public class FillFuelPow implements Action
                 }
                 new PathFinder(gob).run(gui);
                 ArrayList<WItem> fueltitem = NUtils.getGameUI().getInventory().getItems(fuelname);
+                if (fueltitem.size()<2) {
+                    return Results.ERROR("no fuel");
+                }
                 for(int i=0; i<2;i++) {
                     NUtils.takeItemToHand(fueltitem.get(i));
                     NUtils.activateItem(gob);

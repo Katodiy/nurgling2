@@ -4,6 +4,8 @@ import haven.*;
 import nurgling.*;
 import nurgling.tasks.*;
 
+import java.util.ArrayList;
+
 public class TakeItemsFromPile implements Action
 {
     NISBox pile;
@@ -12,7 +14,7 @@ public class TakeItemsFromPile implements Action
 
     int target_size = Integer.MAX_VALUE;
     int took = 0;
-
+    ArrayList<WItem> items = new ArrayList<>();
 
     public TakeItemsFromPile(Gob gob, NISBox pile, int target_size)
     {
@@ -31,6 +33,7 @@ public class TakeItemsFromPile implements Action
             WaitItemFromPile wifp = new WaitItemFromPile(gui.getInventory().getItems(), count);
             NUtils.getUI().core.addTask(wifp);
             took += wifp.getResult().size();
+            items.addAll(wifp.getResult());
             if(target_size <=took)
                 return Results.SUCCESS();
         }
@@ -41,5 +44,9 @@ public class TakeItemsFromPile implements Action
     public int getResult()
     {
         return took;
+    }
+
+    public ArrayList<WItem> newItems(){
+        return items;
     }
 }

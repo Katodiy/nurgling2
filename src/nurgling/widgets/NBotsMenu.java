@@ -19,9 +19,9 @@ public class NBotsMenu extends Widget
         resources.elements.add(new NButton("chipper", new Chipper()));
         resources.elements.add(new NButton("pblocks", new PrepareBlocks()));
         resources.elements.add(new NButton("pboards", new PrepareBoards()));
+        resources.elements.add(new NButton("log", new TransferLog()));
+        resources.elements.add(new NButton("clay", new ClayDigger()));
         if((Boolean)NConfig.get(NConfig.Key.debug)) {
-            resources.elements.add(new NButton("log", new TransferLog()));
-            resources.elements.add(new NButton("clay", new ClayDigger()));
             resources.elements.add(new NButton("bark", new CollectBark()));
             resources.elements.add(new NButton("bough", new CollectBough()));
             resources.elements.add(new NButton("leaf", new CollectLeaf()));
@@ -34,7 +34,7 @@ public class NBotsMenu extends Widget
             productions.elements.add(new NButton("ugardenpot", new UnGardentPotAction()));
             productions.elements.add(new NButton("butcher", new Butcher()));
             productions.elements.add(new NButton("hides", new DFrameHidesAction()));
-            productions.elements.add(new NButton("hides", new FriedFish()));
+            productions.elements.add(new NButton("fishroast", new FriedFish()));
             addLayout(productions);
             NLayout battle = new NLayout("battle");
             battle.elements.add(new NButton("reagro", new Reagro()));
