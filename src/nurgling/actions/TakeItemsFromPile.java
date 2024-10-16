@@ -24,7 +24,7 @@ public class TakeItemsFromPile implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        int count = Math.min(target_size,gui.getInventory().getNumberFreeCoord(target_coord));
+        int count = Math.min(pile.calcCount(), Math.min(target_size,gui.getInventory().getNumberFreeCoord(target_coord)));
         while (gui.getInventory().getNumberFreeCoord(target_coord) > 0 && gui.getStockpile()!=null)
         {
             gui.getStockpile().transfer(count);

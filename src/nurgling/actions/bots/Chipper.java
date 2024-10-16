@@ -122,6 +122,7 @@ public class Chipper implements Action {
                                 }
                                 else
                                     return Results.FAIL();
+                                new PathFinder(bumling).run(gui);
                             }
                             break;
                         }

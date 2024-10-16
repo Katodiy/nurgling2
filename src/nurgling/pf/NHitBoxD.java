@@ -24,6 +24,7 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     public Coord2d[] checkPoints;
     boolean ortho = true;
     boolean primitive = false;
+    boolean asymmetric = false;
 
     private static final boolean intersection_by_points = false;
 
@@ -60,6 +61,7 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
         double kPi = ((2 * angle) / Math.PI);
         this.ul = Coord2d.of(Math.min(ul.x, br.x), Math.min(ul.y, br.y));
         this.br = Coord2d.of(Math.max(ul.x, br.x), Math.max(ul.y, br.y));
+        asymmetric = (ul.x != -br.x)/* || (ul.y != -br.y)*/;
 
         if (((kPi < 0) ? ((kPi % 1.0) + 1.0) : (kPi % 1.0)) > 0.0001)
             move(r, angle);
@@ -92,12 +94,16 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
         }
         this.ul = Coord2d.of(Math.min(ul.x, br.x) - ((r == null) ? rc.x : 0), Math.min(ul.y, br.y) - ((r == null) ? rc.y : 0));
         this.br = Coord2d.of(Math.max(ul.x, br.x) - ((r == null) ? rc.x : 0), Math.max(ul.y, br.y) - ((r == null) ? rc.y : 0));
+        asymmetric = (ul.x != -br.x) /*|| (ul.y != -br.y)*/;
+
         move_ortho(rc, quarterTurns);
     }
 
     public void move_ortho(Coord2d new_rc, int quarterTurns) {
         rc.x = new_rc.x;
         rc.y = new_rc.y;
+        if(asymmetric)
+            quarterTurns += 2;
         angle = quarterTurns * Math.PI / 2.0;
 
         switch (quarterTurns % 4) {
@@ -134,8 +140,8 @@ public class NHitBoxD implements Comparable<NHitBoxD>, java.io.Serializable {
     }
 
     public boolean move(Coord2d NewShift, double newAngle) {
-        if ((angle != newAngle) || (NewShift != rc)) {
-            angle = newAngle;
+        if ((angle != ((asymmetric)? Math.PI + newAngle : newAngle)) || (NewShift != rc)) {
+            angle = (asymmetric)? Math.PI + newAngle : newAngle;
             rc.x = NewShift.x;
             rc.y = NewShift.y;
 
