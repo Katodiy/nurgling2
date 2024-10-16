@@ -37,6 +37,15 @@ public class TransferToPiles implements Action{
                             PathFinder pf = new PathFinder(target);
                             pf.isHardMode = true;
                             pf.run(gui);
+                            if(NUtils.getGameUI().vhand!=null) {
+                                NUtils.activateItem(target, false);
+                                NUtils.addTask(new NTask() {
+                                    @Override
+                                    public boolean check() {
+                                        return NUtils.getGameUI().vhand == null;
+                                    }
+                                });
+                            }
                             witems = gui.getInventory().getItems(items);
                             int size = witems.size();
                             new OpenTargetContainer("Stockpile", target).run(gui);

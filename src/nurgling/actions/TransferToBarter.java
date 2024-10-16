@@ -47,15 +47,16 @@ public class TransferToBarter implements Action{
                     if (NParser.checkName(price.name, items))
                     {
                         while (!wItems.isEmpty()) {
+                            int startSize = gui.getInventory().getItems("Branch").size();
                             int target_size = (sb.leftNum != 0) ? Math.min(wItems.size(), sb.leftNum) : wItems.size();
                             for (int i = 0; i < target_size; i++) {
                                 sb.wdgmsg("buy", new Object[0]);
                             }
-                            NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), items, wItems.size() - target_size));
+                            NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias("Branch"), target_size + startSize));
                             new PathFinder(barter.chest).run(gui);
                             new OpenTargetContainer("Chest", barter.chest).run(gui);
-                            ArrayList<WItem> items = gui.getInventory("Chest").getItems("Branch");
-                            new SimpleTransferToContainer(gui.getInventory("Chest"), gui.getInventory().getItems("Branch"), items.size()).run(gui);
+                            ArrayList<WItem> items = gui.getInventory().getItems("Branch");
+                            new SimpleTransferToContainer(gui.getInventory("Chest"), gui.getInventory().getItems("Branch"), items.size()-startSize).run(gui);
                         }
                     }
                 }
