@@ -265,12 +265,11 @@ public class NConfig
         return new ArrayList<>();
     }
 
-    public void read()
-    {
+    public void read() {
         current = this;
         StringBuilder contentBuilder = new StringBuilder();
 
-        try (Stream<String> stream = Files.lines(Paths.get(path), StandardCharsets.UTF_8))
+        try (Stream<String> stream = (new BufferedReader(new InputStreamReader(new FileInputStream("a.txt"),"utf-8"))).lines())
         {
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
         }

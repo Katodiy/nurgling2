@@ -55,8 +55,9 @@ public class TransferToBarter implements Action{
                             NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias("Branch"), target_size + startSize));
                             new PathFinder(barter.chest).run(gui);
                             new OpenTargetContainer("Chest", barter.chest).run(gui);
-                            ArrayList<WItem> items = gui.getInventory().getItems("Branch");
-                            new SimpleTransferToContainer(gui.getInventory("Chest"), gui.getInventory().getItems("Branch"), items.size()-startSize).run(gui);
+                            ArrayList<WItem> branchitems = gui.getInventory().getItems("Branch");
+                            new SimpleTransferToContainer(gui.getInventory("Chest"), gui.getInventory().getItems("Branch"), branchitems.size()-startSize).run(gui);
+                            wItems = NUtils.getGameUI().getInventory().getItems(items);
                         }
                     }
                 }
