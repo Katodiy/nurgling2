@@ -30,6 +30,7 @@ public class WaitDiggerState implements NTask
     {
         String lastMsg = NUtils.getUI().getLastError();
         String cpose = NUtils.player().pose();
+        int space = NUtils.getGameUI().getInventory().calcFreeSpace();
         state = State.WORKING;
         if(lastMsg!=null && lastMsg.contains(msg))
         {
@@ -39,6 +40,10 @@ public class WaitDiggerState implements NTask
         {
             state = State.MSG;
         }
+        else if(space>=0 && space <=1)
+        {
+            state = State.NOFREESPACE;
+        }
         else if(NUtils.getEnergy()<0.22)
         {
             state = State.DANGER;
@@ -46,10 +51,6 @@ public class WaitDiggerState implements NTask
         else if(NUtils.getStamina()<=0.45)
         {
             state = State.TIMEFORDRINK;
-        }
-        else if(NUtils.getGameUI().getInventory().calcFreeSpace()==0)
-        {
-            state = State.NOFREESPACE;
         }
         return state!= State.WORKING;
     }

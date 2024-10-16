@@ -1,9 +1,6 @@
 package nurgling.actions.bots;
 
-import haven.Coord;
-import haven.Following;
-import haven.Gob;
-import haven.WItem;
+import haven.*;
 import haven.res.gfx.terobjs.roastspit.Roastspit;
 import nurgling.NGameUI;
 import nurgling.NUtils;
@@ -31,15 +28,15 @@ public class FriedFish implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         SelectArea insa;
         NUtils.getGameUI().msg("Please select area with raw fish");
-        (insa = new SelectArea()).run(gui);
+        (insa = new SelectArea(Resource.loadsimg("baubles/rawFish"))).run(gui);
 
         SelectArea outsa;
         NUtils.getGameUI().msg("Please select area for results");
-        (outsa = new SelectArea()).run(gui);
+        (outsa = new SelectArea(Resource.loadsimg("baubles/prepFish"))).run(gui);
 
         SelectArea powsa;
         NUtils.getGameUI().msg("Please select area with fireplaces");
-        (powsa = new SelectArea()).run(gui);
+        (powsa = new SelectArea(Resource.loadsimg("baubles/fireplace"))).run(gui);
 
         Context context = new Context();
         ArrayList<Container> containers = new ArrayList<>();
