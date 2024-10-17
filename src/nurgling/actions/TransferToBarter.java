@@ -17,10 +17,17 @@ public class TransferToBarter implements Action{
 
     NAlias items;
     Context.OutputBarter barter;
+    int th = 1;
 
     public TransferToBarter(Context.OutputBarter barter, NAlias items) {
         this.barter = barter;
         this.items = items;
+    }
+
+    public TransferToBarter(Context.OutputBarter barter, NAlias items, int th) {
+        this.barter = barter;
+        this.items = items;
+        this.th = th;
     }
 
 
@@ -35,7 +42,7 @@ public class TransferToBarter implements Action{
         {
             return Results.ERROR("No Barter window");
         }
-        ArrayList<WItem> wItems = NUtils.getGameUI().getInventory().getItems(items);
+        ArrayList<WItem> wItems = NUtils.getGameUI().getInventory().getItems(items,th);
         for(Widget ch = barter_wnd.child; ch != null; ch = ch.next)
         {
             if (ch instanceof Shopbox)
@@ -57,7 +64,7 @@ public class TransferToBarter implements Action{
                             new OpenTargetContainer("Chest", barter.chest).run(gui);
                             ArrayList<WItem> branchitems = gui.getInventory().getItems("Branch");
                             new SimpleTransferToContainer(gui.getInventory("Chest"), gui.getInventory().getItems("Branch"), branchitems.size()-startSize).run(gui);
-                            wItems = NUtils.getGameUI().getInventory().getItems(items);
+                            wItems = NUtils.getGameUI().getInventory().getItems(items,th);
                         }
                     }
                 }
