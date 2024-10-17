@@ -252,7 +252,7 @@ public class Context {
         {
             for(Integer val: output.get(name).keySet())
             {
-                if(th>=val)
+                if(th<=val)
                     return output.get(name).get(val);
             }
         }

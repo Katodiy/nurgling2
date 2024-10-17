@@ -21,12 +21,11 @@ public class NBotsMenu extends Widget
         resources.elements.add(new NButton("pboards", new PrepareBoards()));
         resources.elements.add(new NButton("log", new TransferLog()));
         resources.elements.add(new NButton("clay", new ClayDigger()));
-        if((Boolean)NConfig.get(NConfig.Key.debug)) {
-            resources.elements.add(new NButton("bark", new CollectBark()));
-            resources.elements.add(new NButton("bough", new CollectBough()));
-            resources.elements.add(new NButton("leaf", new CollectLeaf()));
-        }
-            addLayout(resources);
+        resources.elements.add(new NButton("bark", new CollectBark()));
+        resources.elements.add(new NButton("bough", new CollectBough()));
+        resources.elements.add(new NButton("leaf", new CollectLeaf()));
+        addLayout(resources);
+
         if((Boolean)NConfig.get(NConfig.Key.debug)) {
             NLayout productions = new NLayout("productions");
             productions.elements.add(new NButton("smelter", new SmelterAction()));
