@@ -515,37 +515,32 @@ public class NInventory extends Inventory
         return ret;
     }
 
-    public int calcNumberFreeCoord(Coord target_size)
-    {
+    public int calcNumberFreeCoord(Coord target_size) {
+        if (target_size.x < 1 || target_size.y < 1)
+            return 0;
+
         int count = 0;
         short[][] inventory = containerMatrix();
-        if(inventory == null)
+        if (inventory == null)
             return -1;
-        for (int i = 0; i < isz.y; i++) {
-            for (int j = 0; j < isz.x; j++) {
-                if (inventory[i][j] == 0) {
-                    if (i + target_size.x - 1 < isz.y && j + target_size.y - 1 < isz.x) {
-                        boolean isFree = true;
-                        for (int k = i; k < i + target_size.x; k++) {
-                            for (int n = j; n < j + target_size.y; n++) {
-                                if (inventory[k][n]!=0) {
-                                    isFree = false;
-                                    break;
-                                }
-                            }
+        for (int i = 0; i <= inventory.length - target_size.x; i++)
+            for (int j = 0; j <= inventory[i].length - target_size.y; j++) {
+                boolean isFree = true;
+                for (int k = i; k < i + target_size.x; k++)
+                    for (int n = j; n < j + target_size.y; n++)
+                        if (inventory[k][n] != 0) {
+                            isFree = false;
+                            break;
                         }
-                        if (isFree) {
-                            count += 1;
-                            for (int k = i; k < i + target_size.x; k++) {
-                                for (int n = j; n < j + target_size.y; n++) {
-                                    inventory[k][n] = 1;
-                                }
-                            }
-                        }
-                    }
+
+                if (isFree) {
+                    count++;
+                    for (int k = i; k < i + target_size.x; k++)
+                        for (int n = j; n < j + target_size.y; n++)
+                            inventory[k][n] = 1;
                 }
             }
-        }
+
         return count;
     }
 
