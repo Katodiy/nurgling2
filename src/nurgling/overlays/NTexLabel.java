@@ -18,7 +18,9 @@ public class NTexLabel extends Sprite implements RenderTree.Node, PView.Render2D
 
     @Override
     public boolean tick(double dt) {
-        return NUtils.findGob(((Gob)owner).id)==null;
+        if(NUtils.getGameUI()!=null)
+            return NUtils.findGob(((Gob)owner).id)==null;
+        return true;
     }
 
     @Override

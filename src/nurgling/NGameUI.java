@@ -28,6 +28,7 @@ public class NGameUI extends GameUI
     public NSearchItem itemsForSearch = null;
     public NCraftWindow craftwnd;
     public NEditAreaName nean;
+    public NEditFolderName nefn;
     public Specialisation spec;
     public BotsInterruptWidget biw;
     public NEquipProxy nep;
@@ -51,6 +52,8 @@ public class NGameUI extends GameUI
             guiinfo.hide();
         add(nean = new NEditAreaName());
         nean.hide();
+        add(nefn = new NEditFolderName(areas));
+        nefn.hide();
         add(spec = new Specialisation());
         spec.hide();
         add(biw = new BotsInterruptWidget());
