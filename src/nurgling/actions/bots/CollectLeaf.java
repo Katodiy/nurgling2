@@ -2,6 +2,7 @@ package nurgling.actions.bots;
 
 import haven.Coord;
 import haven.Gob;
+import haven.Resource;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.Action;
@@ -23,12 +24,12 @@ public class CollectLeaf implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         SelectArea insa;
-        NUtils.getGameUI().msg("Please select area with trees");
-        (insa = new SelectArea()).run(gui);
+        NUtils.getGameUI().msg("Please select area with trees or bushes");
+        (insa = new SelectArea(Resource.loadsimg("baubles/liefStart"))).run(gui);
 
         SelectArea outsa;
         NUtils.getGameUI().msg("Please select area for piles");
-        (outsa = new SelectArea()).run(gui);
+        (outsa = new SelectArea(Resource.loadsimg("baubles/liefPiles"))).run(gui);
 
         ArrayList<Gob> trees = Finder.findGobs(insa.getRCArea(),ntrees);
         trees.sort(NUtils.d_comp);
