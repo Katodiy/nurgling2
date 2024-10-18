@@ -34,6 +34,8 @@ public class WaterToContainer implements Action
 
         Gob cistern = Finder.findGob(NArea.findSpec(Specialisation.SpecName.water.toString()), new NAlias("cistern"));
         Gob barrel = Finder.findGob(NArea.findSpec(Specialisation.SpecName.water.toString()), new NAlias("barrel"));
+        if(cistern == null || barrel == null)
+            return Results.ERROR("No barrel or cistern.");
         Coord2d pos = new Coord2d(barrel.rc.x, barrel.rc.y);
         new LiftObject(barrel).run(gui);
         NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/banzai"));
