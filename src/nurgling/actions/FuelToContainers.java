@@ -48,7 +48,10 @@ public class FuelToContainers implements Action
 
                     int target_size = neededFuel.get(ftype);
                     while (target_size != 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord) != 0) {
-                        ArrayList<Gob> piles = Finder.findGobs(NArea.findSpec(Specialisation.SpecName.fuel.toString(), ftype), new NAlias("stockpile"));
+                        NArea fuel = NArea.findSpec(Specialisation.SpecName.fuel.toString(), ftype);
+                        if(fuel == null)
+                            return Results.ERROR("No specialisation \"FUEL\" set.");
+                        ArrayList<Gob> piles = Finder.findGobs(fuel, new NAlias("stockpile"));
                         if (piles.isEmpty()) {
                             if (gui.getInventory().getItems(ftype).isEmpty())
                                 return Results.ERROR("no items");
