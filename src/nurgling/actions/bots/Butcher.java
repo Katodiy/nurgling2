@@ -56,11 +56,11 @@ public class Butcher implements Action {
         req.add(kritter_corpse);
 
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
-
+        Context context = new Context();
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
             ArrayList<Gob> gobs = getGobs(area);
-            Context context = new Context();
+
             while (!gobs.isEmpty())
             {
                 gobs.sort(NUtils.d_comp);
@@ -93,6 +93,7 @@ public class Butcher implements Action {
 
                             if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
                                 new FreeInventory(context).run(gui);
+                                new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(),new NAlias("Fresh")).run(gui);
                             }
                             if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
                                 return Results.ERROR("No free coord found for: " + optForSelect + "|" + options.get(optForSelect).size.toString() + "| target size: " + options.get(optForSelect).num);
@@ -118,6 +119,7 @@ public class Butcher implements Action {
                                         NUtils.drop(gui.vhand);
                                         NUtils.addTask(new WaitFreeHand());
                                         new FreeInventory(context).run(gui);
+                                        new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(),new NAlias("Fresh")).run(gui);
                                     }
                                     optFound = false;
                                 }
@@ -127,6 +129,8 @@ public class Butcher implements Action {
                 }
                 gobs = getGobs(area);
             }
+            new FreeInventory(context).run(gui);
+            new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(),new NAlias("Fresh")).run(gui);
         }
 
         return Results.SUCCESS();

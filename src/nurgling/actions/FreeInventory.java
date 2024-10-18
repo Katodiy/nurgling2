@@ -33,10 +33,7 @@ public class FreeInventory implements Action
             }
         }
 
-        for(String name: targets)
-        {
-            new TransferItems(context, name).run(gui);
-        }
+        new TransferItems(context, targets).run(gui);
 
         return Results.SUCCESS();
     }

@@ -2,6 +2,7 @@ package nurgling.actions.bots;
 
 import haven.Coord;
 import haven.Gob;
+import haven.Resource;
 import haven.UI;
 import nurgling.NGameUI;
 import nurgling.NUtils;
@@ -26,11 +27,11 @@ public class CollectBark implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         SelectArea insa;
         NUtils.getGameUI().msg("Please select area with trees");
-        (insa = new SelectArea()).run(gui);
+        (insa = new SelectArea(Resource.loadsimg("baubles/barkStart"))).run(gui);
 
         SelectArea outsa;
         NUtils.getGameUI().msg("Please select area for piles");
-        (outsa = new SelectArea()).run(gui);
+        (outsa = new SelectArea(Resource.loadsimg("baubles/barkPiles"))).run(gui);
 
         ArrayList<Gob> trees = Finder.findGobs(insa.getRCArea(),ntrees);
         trees.sort(NUtils.d_comp);

@@ -468,9 +468,9 @@ public class Finder
 
         Coord inchMax = area.b.sub(area.a).floor();
         Coord margin =  hitBox.end.sub(hitBox.begin).floor(2,2);
-        for (int i = margin.x; i < inchMax.x - margin.x; i++)
+        for (int i = margin.x; i <= inchMax.x - margin.x; i++)
         {
-            for (int j = margin.y; j < inchMax.y - margin.y; j++)
+            for (int j = margin.y; j <= inchMax.y - margin.y; j++)
             {
                 boolean passed = true;
                 NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, area.a.add(i,j),0);
@@ -503,6 +503,21 @@ public class Finder
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public static ArrayList<Gob> findGobs(NAlias alias) {
+        ArrayList<Gob> result = new ArrayList<>();
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc) {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc) {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector"))) {
+                    if (gob.ngob != null && gob.ngob.name != null && NParser.checkName(gob.ngob.name, alias))
+                    {
+                        result.add(gob);
                     }
                 }
             }
