@@ -17,7 +17,7 @@ import java.util.List;
 
 public class CollectLeaf implements Action {
 
-    NAlias ntrees = new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log", "oldtrunk", "stump")));
+    NAlias ntrees = new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree", "gfx/terobjs/bushes/teabush")),new ArrayList<String>(Arrays.asList("log", "oldtrunk", "stump")));
 
 
     @Override
@@ -34,10 +34,10 @@ public class CollectLeaf implements Action {
         trees.sort(NUtils.d_comp);
         for(Gob tree : trees)
         {
-
-            new CollectFromGob(tree,"Pick leaf", "gfx/borka/treepickan",new Coord(1,1),new NAlias("Leaf", "leaf", "Leaves"),outsa.getRCArea()).run(gui);
+            String pickAction = tree.ngob.name.contains("tree") ? "gfx/borka/treepickan" : "gfx/borka/bushpickan";
+            new CollectFromGob(tree,"Pick leaf", pickAction,new Coord(1,1),new NAlias("Leaf", "leaf", "Leaves", "leaves"),outsa.getRCArea()).run(gui);
         }
-        new TransferToPiles(outsa.getRCArea(), new NAlias("Leaf", "leaf", "Leaves") ).run(gui);
+        new TransferToPiles(outsa.getRCArea(), new NAlias("Leaf", "leaf","Leaves", "leaves") ).run(gui);
         return Results.SUCCESS();
     }
 }
