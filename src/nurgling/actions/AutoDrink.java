@@ -25,8 +25,6 @@ public class AutoDrink implements Action
         waitBot.set(false);
         stop.set(false);
     }
-    double lvl;
-    boolean withStop;
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException

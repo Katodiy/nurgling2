@@ -29,14 +29,10 @@ package haven;
 import haven.render.*;
 import nurgling.*;
 import nurgling.conf.*;
-import nurgling.widgets.options.AutoMapper;
-import nurgling.widgets.options.AutoSelection;
-import nurgling.widgets.options.QoL;
-import nurgling.widgets.options.QuickActions;
+import nurgling.widgets.options.*;
 
 import java.awt.event.KeyEvent;
 import java.util.*;
-import java.util.regex.Pattern;
 
 public class OptWnd extends Window {
     public final Panel main;
@@ -830,8 +826,8 @@ public class OptWnd extends Window {
 	}
     }
 	public Panel nquickAct;
-	public Panel autosel;
 	public Panel nautomap;
+	public Panel nringsettings;
     public OptWnd(boolean gopts) {
 	super(Coord.z, "Options", true);
 	main = add(new Panel());
@@ -841,8 +837,8 @@ public class OptWnd extends Window {
 	Panel keybind = add(new BindingPanel(main));
 	Panel noptwnd = add(new NQolPanel(main));
 	nautomap = add( new NAutoMapperPanel(main));
-	autosel = add(new NAutoSelectPanel(main));
 	nquickAct = add(new NQuickActionsPanel(main));
+	nringsettings = add(new NRingSettingsPanel(main));
 
 	int y = 0;
 	int x = 0;
@@ -851,11 +847,11 @@ public class OptWnd extends Window {
 	x = prev.pos("ur").adds(10, 0).x;
 	main.add(new PButton(UI.scale(200), "Quality of Life", 'k', noptwnd), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Video settings", 'v', video), 0, y)).pos("bl").adds(0, 5).y;
-	main.add(new PButton(UI.scale(200), "Quick actions", 'k', nquickAct), x, prev.pos("ur").y);
+	main.add(new PButton(UI.scale(200), "Quick Actions and Selections", 'k', nquickAct), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Audio settings", 'a', audio), 0, y)).pos("bl").adds(0, 5).y;
 	main.add(new PButton(UI.scale(200), "Auto mapper", 'k', nautomap), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Keybindings", 'k', keybind), 0, y)).pos("bl").adds(0, 5).y;
-	main.add(new PButton(UI.scale(200), "Automatic selection", 'k', autosel), x, prev.pos("ur").y);
+	main.add(new PButton(UI.scale(200), "Animal rings settings", 'k', nringsettings), x, prev.pos("ur").y);
 
 	y += UI.scale(60);
 	if(gopts) {
@@ -938,13 +934,14 @@ public class OptWnd extends Window {
 		private final Widget back;
 
 		public QuickActions qol_p;
-
+		public AutoSelection autosel_p;
 
 		public NQuickActionsPanel(Panel prev1) {
 			super();
 
 			qol_p = add(new QuickActions(),Coord.z);
 
+			autosel_p = add(new AutoSelection(),qol_p.pos("ur").adds(UI.scale(10,0)));
 			save = add(new Button(UI.scale(200), "Save") {
 				@Override
 				public void click() {
@@ -982,37 +979,22 @@ public class OptWnd extends Window {
 		}
 	}
 
-
-	public class NAutoSelectPanel extends Panel  {
+	public class NRingSettingsPanel extends Panel  {
 		private final Widget save;
 		private final Widget back;
 
-		public AutoSelection autosel_p;
+		public NRingSettings ring_set;
 
-
-		public NAutoSelectPanel(Panel prev1) {
+		public NRingSettingsPanel(Panel prev1) {
 			super();
 
-			autosel_p = add(new AutoSelection(),Coord.z);
-
+			ring_set = add(new NRingSettings(),Coord.z);
 			save = add(new Button(UI.scale(200), "Save") {
 				@Override
 				public void click() {
-					ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
-
-					for(AutoSelection.AutoSelectItem actionsItem: autosel_p.petals)
-					{
-						HashMap<String, Object> res = new HashMap<>();
-						res.put("type", "NPetal");
-						res.put("name", actionsItem.text());
-						res.put("enabled", actionsItem.isEnabled.a);
-						qpattern.add(res);
-					}
-
-					NConfig.set(NConfig.Key.petals, qpattern);
 					NConfig.needUpdate();
 				}
-			}, autosel_p.pos("bl").adds(0, UI.scale(5)));
+			}, ring_set.pos("bl").adds(0, UI.scale(5)));
 			back = add(new Button(UI.scale(200), "Back")
 			{
 				@Override
@@ -1027,10 +1009,12 @@ public class OptWnd extends Window {
 					}
 					return(false);
 				}
-			}, autosel_p.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
+			}, ring_set.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
 			pack();
 		}
 	}
+
+
 
 	public class NAutoMapperPanel extends Panel  {
 		private final Widget save;

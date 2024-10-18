@@ -71,7 +71,8 @@ public class NConfig
         showInventoryNums,
         hidecredo,
         autoDrink,
-        chipperprop
+        chipperprop,
+        animalrad
     }
 
 
@@ -164,6 +165,23 @@ public class NConfig
         dragprop.add(new NDragProp(new Coord(428, -4), false, true, "bufflist"));
         dragprop.add(new NDragProp(new Coord(60, 244), false, true, "party"));
         conf.put(Key.dragprop, dragprop);
+
+        ArrayList<NAreaRad> arearadprop = new ArrayList<>();
+        arearadprop.add(new NAreaRad("gfx/kritter/bat/bat", 50));
+        arearadprop.add(new NAreaRad("gfx/kritter/boar/boar", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/bear/bear", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/adder/adder", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/wildgoat/wildgoat", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/badger/badger", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/lynx/lynx", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/mammoth/mammoth", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/moose/moose", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/wolf/wolf", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/walrus/walrus", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/orca/orca", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/wolverine/wolverine", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/troll/troll", 200));
+        conf.put(Key.animalrad, arearadprop);
     }
 
 
@@ -272,6 +290,9 @@ public class NConfig
                             break;
                         case "NClayDiggerProp":
                             res.add(new NClayDiggerProp(obj));
+                            break;
+                        case "NAreaRad":
+                            res.add(new NAreaRad(obj));
                             break;
                         default:
                             res.add(obj);

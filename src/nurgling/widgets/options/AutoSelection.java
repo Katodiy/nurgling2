@@ -17,6 +17,7 @@ public class AutoSelection extends Widget {
     TextEntry newPetall;
     int width = UI.scale(210);
     public AutoSelection() {
+        prev = add(new Label("Auto selection:"));
         prev = add(new CheckBox("Auto selection enabled") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.asenable);
@@ -26,7 +27,7 @@ public class AutoSelection extends Widget {
                 NConfig.set(NConfig.Key.asenable, val);
                 a = val;
             }
-        });
+        }, prev.pos("bl").adds(0,5));
         prev = add(new Label("Auto selected petals:"), prev.pos("bl").adds(0, 5));
         prev = add( al = new ActionList(new Coord(width,UI.scale(300))), prev.pos("bl").add(0,UI.scale(10)));
         prev = add(newPetall = new TextEntry(UI.scale(150), ""), prev.pos("bl").add(0,UI.scale(10)));
