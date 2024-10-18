@@ -24,10 +24,14 @@ public class TESTselectfloweraction extends Test
     @Override
     public void body(NGameUI gui) throws InterruptedException
     {
-        ArrayList<WItem> items = gui.getInventory().getItems(name);
-        for(WItem item : items)
-        {
-            new SelectFlowerAction("Split", (NWItem) item).run(gui);
-        }
+        NUtils.getGameUI().msg("(1,1)" + String.valueOf(NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(1,1))));
+        NUtils.getGameUI().msg("(2,1)" + String.valueOf(NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(2,1))));
+        NUtils.getGameUI().msg("(2,2)" + String.valueOf(NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(2,2))));
+        NUtils.getGameUI().msg("(1,2)" + String.valueOf(NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(1,2))));
+//        ArrayList<WItem> items = gui.getInventory().getItems(name);
+//        for(WItem item : items)
+//        {
+//            new SelectFlowerAction("Split", (NWItem) item).run(gui);
+//        }
     }
 }

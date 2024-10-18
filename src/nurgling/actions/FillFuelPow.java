@@ -7,8 +7,6 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.tasks.HandIsFree;
-import nurgling.tasks.WaitTargetSize;
-import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
@@ -76,6 +74,9 @@ public class FillFuelPow implements Action
                 }
                 new PathFinder(gob).run(gui);
                 ArrayList<WItem> fueltitem = NUtils.getGameUI().getInventory().getItems(fuelname);
+                if (fueltitem.size()<2) {
+                    return Results.ERROR("no fuel");
+                }
                 for(int i=0; i<2;i++) {
                     NUtils.takeItemToHand(fueltitem.get(i));
                     NUtils.activateItem(gob);

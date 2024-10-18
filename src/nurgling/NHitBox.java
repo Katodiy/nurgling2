@@ -98,6 +98,7 @@ public class NHitBox
             put("gfx/kritter/reindeer/teimdeercow", new NHitBox(new Coord(-12,-2),new Coord(6,2)));
             put("gfx/kritter/reindeer/teimdeerbull", new NHitBox(new Coord(-12,-2),new Coord(6,2)));
             put("gfx/kritter/reindeer/teimdeerkid", new NHitBox(new Coord(-12,-2),new Coord(6,2)));
+            put("gfx/kritter/reindeer/reindeer", new NHitBox(new Coord(-12,-2),new Coord(6,2)));
             put("gfx/terobjs/trees/orangetree", new NHitBox(new Coord(-3,-3),new Coord(3,3)));
             put("gfx/terobjs/trees/orangetreestump", new NHitBox(new Coord(-3,-3),new Coord(3,3)));
             put("gfx/terobjs/trees/driftwood2", new NHitBox(new Coord(-10,-2),new Coord(10,2)));

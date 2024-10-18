@@ -27,6 +27,7 @@ public class Context {
         contcaps.put("gfx/terobjs/birchbasket", "Birch Basket");
         contcaps.put("gfx/terobjs/wbasket", "Basket");
         contcaps.put("gfx/terobjs/exquisitechest", "Exquisite Chest");
+        contcaps.put("gfx/terobjs/furn/table-stone", "Table");
     }
 
     public static class Workstation
@@ -251,7 +252,7 @@ public class Context {
         {
             for(Integer val: output.get(name).keySet())
             {
-                if(th>=val)
+                if(th<=val)
                     return output.get(name).get(val);
             }
         }

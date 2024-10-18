@@ -1,11 +1,14 @@
 package nurgling.actions;
 
+import haven.Coord;
+import haven.Gob;
 import haven.WItem;
 import nurgling.NGItem;
 import nurgling.NGameUI;
+import nurgling.NISBox;
+import nurgling.NUtils;
 import nurgling.areas.NArea;
-import nurgling.tools.Container;
-import nurgling.tools.Context;
+import nurgling.tools.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -44,19 +47,13 @@ public class FreeContainers implements Action
             }
             while (!new TakeItemsFromContainer(container, targets).run(gui).isSuccess)
             {
-                for(String name: targets)
-                {
-                    new TransferItems(context, name).run(gui);
-                }
+                new TransferItems(context, targets).run(gui);
                 new PathFinder(container.gob).run(gui);
                 new OpenTargetContainer(container).run(gui);
             }
             new CloseTargetContainer(container).run(gui);
         }
-        for(String name: targets)
-        {
-            new TransferItems(context, name).run(gui);
-        }
+        new TransferItems(context, targets).run(gui);
         return Results.SUCCESS();
     }
 }

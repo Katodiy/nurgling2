@@ -17,10 +17,17 @@ public class TransferToBarter implements Action{
 
     NAlias items;
     Context.OutputBarter barter;
+    int th = 1;
 
     public TransferToBarter(Context.OutputBarter barter, NAlias items) {
         this.barter = barter;
         this.items = items;
+    }
+
+    public TransferToBarter(Context.OutputBarter barter, NAlias items, int th) {
+        this.barter = barter;
+        this.items = items;
+        this.th = th;
     }
 
 
@@ -35,7 +42,7 @@ public class TransferToBarter implements Action{
         {
             return Results.ERROR("No Barter window");
         }
-        ArrayList<WItem> wItems = NUtils.getGameUI().getInventory().getItems(items);
+        ArrayList<WItem> wItems = NUtils.getGameUI().getInventory().getItems(items,th);
         for(Widget ch = barter_wnd.child; ch != null; ch = ch.next)
         {
             if (ch instanceof Shopbox)
@@ -44,18 +51,20 @@ public class TransferToBarter implements Action{
                 Shopbox.ShopItem price = sb.getPrice();
                 if (price != null)
                 {
-                    if (NParser.checkName(price.name, items))
+                    if (NParser.checkName(price, items))
                     {
                         while (!wItems.isEmpty()) {
+                            int startSize = gui.getInventory().getItems("Branch").size();
                             int target_size = (sb.leftNum != 0) ? Math.min(wItems.size(), sb.leftNum) : wItems.size();
                             for (int i = 0; i < target_size; i++) {
                                 sb.wdgmsg("buy", new Object[0]);
                             }
-                            NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), items, wItems.size() - target_size));
+                            NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias("Branch"), target_size + startSize));
                             new PathFinder(barter.chest).run(gui);
                             new OpenTargetContainer("Chest", barter.chest).run(gui);
-                            ArrayList<WItem> items = gui.getInventory("Chest").getItems("Branch");
-                            new SimpleTransferToContainer(gui.getInventory("Chest"), gui.getInventory().getItems("Branch"), items.size()).run(gui);
+                            ArrayList<WItem> branchitems = gui.getInventory().getItems("Branch");
+                            new SimpleTransferToContainer(gui.getInventory("Chest"), gui.getInventory().getItems("Branch"), branchitems.size()-startSize).run(gui);
+                            wItems = NUtils.getGameUI().getInventory().getItems(items,th);
                         }
                     }
                 }

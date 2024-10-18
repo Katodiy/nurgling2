@@ -54,7 +54,7 @@ public class PathFinder implements Action {
         Gob targetg;
         if((targetg = Finder.findGob(target_id))!=null)
         {
-            if(NParser.checkName(targetg.ngob.name,new NAlias("primsmelter")))
+            if(NParser.checkName(targetg.ngob.name,new NAlias("pow")))
             {
                 badDir = targetg.a;
             }
@@ -295,8 +295,10 @@ public class PathFinder implements Action {
                 for(Coord coord : end_poses)
                 {
                     Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos).sub(tcoord).norm();
-                    if(coord2d.dot(orientation)<0)
+                    if(coord2d.dot(orientation)>=-0.2)
                         best_poses.add(coord);
+                    else
+                        cells[coord.x][coord.y].val = 0;
                 }
                 end_poses = best_poses;
             }

@@ -50,115 +50,99 @@ public class Container {
             res.put(FREESPACE, NUtils.getGameUI().getInventory(cap).getFreeSpace());
             res.put(MAXSPACE, NUtils.getGameUI().getInventory(cap).getTotalSpace());
         }
+
+
     }
 
-    public class Tetris extends Updater{
+    public class Tetris extends Updater {
+        public static final String SRC = "src";
         public static final String DATA = "data";
         public static final String DONE = "done";
         public static final String VIRTUAL = "virtual";
         public static final String TARGET_COORD = "tc";
+
         @Override
-        public void update()  throws InterruptedException{
+        public void update() throws InterruptedException {
             res.put(DATA, NUtils.getGameUI().getInventory(cap).containerMatrix());
+            res.put(SRC, NUtils.getGameUI().getInventory(cap).containerMatrix());
             boolean done = true;
-            for(Coord coord : (ArrayList<Coord>)res.get(TARGET_COORD))
-            {
-                if(NUtils.getGameUI().getInventory(cap).getNumberFreeCoord(coord)!=0)
+            for (Coord coord : (ArrayList<Coord>) res.get(TARGET_COORD))
+                if (NUtils.getGameUI().getInventory(cap).getNumberFreeCoord(coord) != 0)
                     done = false;
-            }
+
             res.put(DONE, done);
             res.put(VIRTUAL, done);
         }
 
-        public boolean tryPlace(Coord coord)
-        {
-            if(!(Boolean) res.get(DONE) && !(Boolean)res.get(VIRTUAL) && placeItem(coord))
-            {
+        public boolean tryPlace(Coord coord) {
+            if (!((Boolean) res.get(DONE)) && !((Boolean) res.get(VIRTUAL)) && placeItem(coord)) {
                 boolean done = true;
-                for(Coord cand : (ArrayList<Coord>)res.get(TARGET_COORD))
-                {
-                    if(calcNumberFreeCoord(cand)!=0) {
+                for (Coord cand : (ArrayList<Coord>) res.get(TARGET_COORD))
+                    if (calcNumberFreeCoord(DATA ,cand) != 0) {
                         done = false;
                         break;
                     }
-                }
-                if(done)
+                if (done)
                     res.put(VIRTUAL, done);
                 return true;
             }
             return false;
         }
 
-        boolean placeItem(Coord coord)
-        {
-            short[][] grid = (short[][])res.get(DATA);
-            for (int i = 0; i < grid.length; i++) {
-                for (int j = 0; j <  grid[0].length; j++) {
-                    if (grid[i][j] == 0) {
-                        boolean isFree = true;
-                        if (i + coord.x - 1 < grid.length && j + coord.y - 1 < grid[0].length) {
-                            for (int k = i; k < i + coord.x; k++) {
-                                for (int n = j; n < j + coord.y; n++) {
-                                    if (grid[k][n]!=0) {
-                                        isFree = false;
-                                        break;
-                                    }
-                                }
+        private boolean placeItem(Coord coord) {
+            if (coord.x < 1 || coord.y < 1)
+                return false;
+            short[][] grid = (short[][]) res.get(DATA);
+
+            for (int i = 0; i <= grid.length - coord.x; i++)
+                for (int j = 0; j <= grid[i].length - coord.y; j++) {
+                    boolean isFree = true;
+                    for (int k = i; k < i + coord.x; k++)
+                        for (int n = j; n < j + coord.y; n++)
+                            if (grid[k][n] != 0) {
+                                isFree = false;
+                                break;
                             }
-                            if (isFree) {
-                                for (int k = i; k < i + coord.x; k++) {
-                                    for (int n = j; n < j + coord.y; n++) {
-                                        grid[k][n] = 1;
-                                    }
-                                }
-                                return true;
-                            }
-                        }
+
+                    if (isFree) {
+                        for (int k = i; k < i + coord.x; k++)
+                            for (int n = j; n < j + coord.y; n++)
+                                grid[k][n] = 1;
+                        return true;
                     }
                 }
-            }
             return false;
         }
 
-        public int calcNumberFreeCoord(Coord target_size)
-        {
+        public int calcNumberFreeCoord(String key, Coord target_size) {
+            if (target_size.x < 1 || target_size.y < 1)
+                return 0;
             int count = 0;
-            short[][] oldData = (short[][])res.get(DATA);
-            short[][] grid = new short[oldData.length][oldData[0].length];
-            for (int i = 0; i < grid.length; i++) {
-                for (int j = 0; j < grid[0].length; j++) {
-                    grid[i][j] = oldData[i][j];
-                }
-            }
+            short[][] oldData = (short[][]) res.get(key);
+            short[][] tempGrid = new short[oldData.length][oldData[0].length];
+            for (int i = 0; i < tempGrid.length; i++)
+                System.arraycopy(oldData[i], 0, tempGrid[i], 0, tempGrid[0].length);
 
-            for (int i = 0; i < grid.length; i++) {
-                for (int j = 0; j < grid[0].length; j++) {
-                    if (grid[i][j] == 0) {
-                        if (i + target_size.x - 1 < grid.length && j + target_size.y - 1 < grid[0].length) {
-                            boolean isFree = true;
-                            for (int k = i; k < i + target_size.x; k++) {
-                                for (int n = j; n < j + target_size.y; n++) {
-                                    if (grid[k][n]!=0) {
-                                        isFree = false;
-                                        break;
-                                    }
-                                }
+            for (int i = 0; i <= tempGrid.length - target_size.x; i++)
+                for (int j = 0; j <= tempGrid[i].length - target_size.y; j++) {
+                    boolean isFree = true;
+                    for (int k = i; k < i + target_size.x; k++)
+                        for (int n = j; n < j + target_size.y; n++)
+                            if (tempGrid[k][n] != 0) {
+                                isFree = false;
+                                break;
                             }
-                            if (isFree) {
-                                count += 1;
-                                for (int k = i; k < i + target_size.x; k++) {
-                                    for (int n = j; n < j + target_size.y; n++) {
-                                        grid[k][n] = 1;
-                                    }
-                                }
-                            }
-                        }
+                    if (isFree) {
+                        count++;
+                        for (int k = i; k < i + target_size.x; k++)
+                            for (int n = j; n < j + target_size.y; n++)
+                                tempGrid[k][n] = 1;
                     }
                 }
-            }
             return count;
         }
     }
+
 
     static NAlias ores = new NAlias ( new ArrayList<> (
             Arrays.asList ( "Cassiterite", "Lead Glance", "Wine Glance", "Chalcopyrite", "Malachite", "Peacock Ore", "Cinnabar", "Heavy Earth", "Iron Ochre",
