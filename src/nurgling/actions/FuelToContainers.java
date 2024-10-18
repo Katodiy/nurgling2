@@ -70,8 +70,8 @@ public class FuelToContainers implements Action
                 new OpenTargetContainer(cont).run(gui);
                 fuelLvl = cont.getattr(Container.FuelLvl.class);
                 ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(ftype);
-                int fueled = fuelLvl.neededFuel();
-                int aftersize = gui.getInventory().getItems().size() - fuelLvl.neededFuel();
+                int fueled = Math.min(fuelLvl.neededFuel(), items.size());
+                int aftersize = gui.getInventory().getItems().size() - fueled;
                 for (int i = 0; i < fueled; i++) {
                     NUtils.takeItemToHand(items.get(i));
                     NUtils.activateItem(cont.gob);
