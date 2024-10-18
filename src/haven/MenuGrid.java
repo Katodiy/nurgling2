@@ -99,7 +99,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 		    button = new PagButton(this);
 		else
 		    button = f.make(this);
-			if (res.name.contains("paginae/act/itemcomb")) {
+			if (NUtils.getGameUI()!=null && res.name.contains("paginae/act/itemcomb")) {
 				((NInventory) NUtils.getGameUI().maininv).pagBundle = button;
 				((NInventory) NUtils.getGameUI().maininv).bundle.a = ((Toggle)button).a;
 			}

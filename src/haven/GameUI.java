@@ -69,6 +69,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public WItem vhand;
     public ChatUI chat;
     public ChatUI.Channel syslog;
+	public Cal calendar;
     public Progress prog = null;
     private boolean afk = false;
     public BeltSlot[] belt = new BeltSlot[144];
@@ -77,6 +78,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	public NMiniMapWnd mmapw = null;
     public static abstract class BeltSlot {
 	public final int idx;
+
 
 	public BeltSlot(int idx) {
 	    this.idx = idx;
@@ -282,7 +284,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	menubuttons(rbtnimg);
 	portrait = add(new NDraggableWidget(Frame.with(new Avaview(Avaview.dasz, plid, "avacam"), false),"portrait", UI.scale(120, 108)));
 	add(new NDraggableWidget(buffs = new Bufflist(),"bufflist",Coord.z));
-	add(new NDraggableWidget(new Cal(),"Calendar",UI.scale(160,90)));
+	add(new NDraggableWidget(calendar = new Cal(),"Calendar",UI.scale(240,90)));
 	syslog = chat.add(new ChatUI.Log("System"));
 	opts = add(new OptWnd());
 	opts.hide();
