@@ -16,24 +16,24 @@ public class NBotsMenu extends Widget
     {
         NLayout resources = new NLayout("resources");
         resources.elements.add(new NButton("choper", new Chopper()));
-        resources.elements.add(new NButton("chipper", new Chipper()));
+        resources.elements.add(new NButton("chipper", new Chipper(), true));
         resources.elements.add(new NButton("pblocks", new PrepareBlocks()));
         resources.elements.add(new NButton("pboards", new PrepareBoards()));
         resources.elements.add(new NButton("log", new TransferLog()));
-        resources.elements.add(new NButton("clay", new ClayDigger()));
-        resources.elements.add(new NButton("bark", new CollectBark()));
-        resources.elements.add(new NButton("bough", new CollectBough()));
-        resources.elements.add(new NButton("leaf", new CollectLeaf()));
+        resources.elements.add(new NButton("clay", new ClayDigger(), true));
+        resources.elements.add(new NButton("bark", new CollectBark(), true));
+        resources.elements.add(new NButton("bough", new CollectBough(), true));
+        resources.elements.add(new NButton("leaf", new CollectLeaf(), true));
         addLayout(resources);
 
         if((Boolean)NConfig.get(NConfig.Key.debug)) {
             NLayout productions = new NLayout("productions");
-            productions.elements.add(new NButton("smelter", new SmelterAction()));
-            productions.elements.add(new NButton("backer", new BackerAction()));
-            productions.elements.add(new NButton("ugardenpot", new UnGardentPotAction()));
-            productions.elements.add(new NButton("butcher", new Butcher()));
-            productions.elements.add(new NButton("hides", new DFrameHidesAction()));
-            productions.elements.add(new NButton("fishroast", new FriedFish()));
+            productions.elements.add(new NButton("smelter", new SmelterAction(), true));
+            productions.elements.add(new NButton("backer", new BackerAction(),true));
+            productions.elements.add(new NButton("ugardenpot", new UnGardentPotAction(), true));
+            productions.elements.add(new NButton("butcher", new Butcher(), true));
+            productions.elements.add(new NButton("hides", new DFrameHidesAction(), true));
+            productions.elements.add(new NButton("fishroast", new FriedFish(),true));
             addLayout(productions);
             NLayout battle = new NLayout("battle");
             battle.elements.add(new NButton("reagro", new Reagro()));
@@ -44,8 +44,8 @@ public class NBotsMenu extends Widget
             addLayout(battle);
             NLayout farming = new NLayout("farming");
             farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
-            farming.elements.add(new NButton("hemp", new HempFarmer()));
-            farming.elements.add(new NButton("flax", new FlaxFarmer()));
+            farming.elements.add(new NButton("hemp", new HempFarmer(),true));
+            farming.elements.add(new NButton("flax", new FlaxFarmer(),true));
             farming.elements.add(new NButton("goats", new GoatsAction()));
             farming.elements.add(new NButton("sheeps", new SheepsAction()));
             farming.elements.add(new NButton("pigs", new PigsAction()));
@@ -54,13 +54,13 @@ public class NBotsMenu extends Widget
             NLayout utils = new NLayout("utils");
             utils.elements.add(new NButton("shieldsword", new EquipShieldSword()));
             utils.elements.add(new NButton("filwater", new FillWaterskins(false)));
-            utils.elements.add(new NButton("unbox", new FreeContainersInArea()));
+            utils.elements.add(new NButton("unbox", new FreeContainersInArea(),true));
             utils.elements.add(new NButton("water_cheker", new CheckWater()));
-            utils.elements.add(new NButton("clay_cheker", new CheckClay()));
-            utils.elements.add(new NButton("clover", new FeedClover()));
+            utils.elements.add(new NButton("clay_cheker", new CheckClay(),true));
+            utils.elements.add(new NButton("clover", new FeedClover(),true));
             addLayout(utils);
             NLayout build = new NLayout("build");
-            build.elements.add(new NButton("dframe", new BuildDryingFrame()));
+            build.elements.add(new NButton("dframe", new BuildDryingFrame(),true));
             build.elements.add(new NButton("cellar", new BuildCellar()));
             addLayout(build);
             if (NUtils.getUI().core.debug) {
@@ -224,6 +224,7 @@ public class NBotsMenu extends Widget
     {
         public final IButton btn;
         public String path;
+        public boolean disStacks;
         NButton(String path, Action action)
         {
             this.path = path;
@@ -243,6 +244,12 @@ public class NBotsMenu extends Widget
 
         }
 
+        NButton(String path, Action action, Boolean disStacks)
+        {
+            this(path, action);
+            this.disStacks = disStacks;
+        }
+
         private NButton()
         {
             btn = new IButton(Resource.loadsimg(dir_path + "back" + "/u"), Resource.loadsimg(dir_path +  "back" + "/d"), Resource.loadsimg(dir_path +  "back" + "/h")){
@@ -259,7 +266,7 @@ public class NBotsMenu extends Widget
         void start(String path, Action action)
         {
             Thread t;
-            (t = new Thread(new Runnable()
+            t = new Thread(new Runnable()
             {
                 @Override
                 public void run()
@@ -281,8 +288,12 @@ public class NBotsMenu extends Widget
                         }
                     }
                 }
-            }, path)).start();
-            NUtils.getGameUI().biw.addObserve(t);
+            }, path);
+            if(disStacks)
+                NUtils.getGameUI().biw.addObserve(t, true);
+            else
+                NUtils.getGameUI().biw.addObserve(t);
+            t.start();
         }
 
 

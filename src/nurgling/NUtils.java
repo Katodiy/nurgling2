@@ -450,4 +450,15 @@ public class NUtils
         getGameUI().map.wdgmsg("itemact", Coord.z, ol.gob.rc.floor(posres), 0, 1, (int)  ol.gob.id,
                 ol.gob.rc.floor(posres), ol.id, -1);
     }
+
+    public static void stackSwitch(boolean state)
+    {
+        NInventory inv = (NInventory) NUtils.getGameUI().maininv;
+        if (inv.bundle.a != state) {
+            MenuGrid.PagButton but = inv.pagBundle;
+            if (but != null) {
+                but.use(new MenuGrid.Interaction(1, 0));
+            }
+        }
+    }
 }

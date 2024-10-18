@@ -70,6 +70,7 @@ public class NConfig
         unloadgreen,
         showInventoryNums,
         hidecredo,
+        autoDrink,
         chipperprop
     }
 
@@ -113,6 +114,7 @@ public class NConfig
         conf.put(Key.automaptrack, false);
         conf.put(Key.unloadgreen, false);
         conf.put(Key.showInventoryNums, true);
+        conf.put(Key.autoDrink, false);
         conf.put(Key.endpoint, "");
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
