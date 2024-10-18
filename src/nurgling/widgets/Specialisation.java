@@ -26,6 +26,7 @@ public class Specialisation extends Window
         smelter,
         kiln,
         water,
+        boiler,
         swill,
         trough,
         crop,
@@ -49,6 +50,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.smelter.toString()));
         specialisation.add(new SpecialisationItem(SpecName.kiln.toString()));
         specialisation.add(new SpecialisationItem(SpecName.water.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.boiler.toString()));
         specialisation.add(new SpecialisationItem(SpecName.swill.toString()));
         specialisation.add(new SpecialisationItem(SpecName.trough.toString()));
         specialisation.add(new SpecialisationItem(SpecName.crop.toString()));

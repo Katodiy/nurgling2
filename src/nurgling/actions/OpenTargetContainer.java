@@ -25,6 +25,11 @@ public class OpenTargetContainer implements Action
             case "Barrel":
                 gui.ui.core.addTask(new FindBarrel());
                 break;
+            case "Cauldron":
+                if((gob.ngob.getModelAttribute() & 2) != 0)//"lit"
+                    new SelectFlowerAction("Open", gob, true).run(gui);
+                gui.ui.core.addTask(new FindNInventory(name));
+                break;
             default:
                 gui.ui.core.addTask(new FindNInventory(name));
         }
