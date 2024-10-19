@@ -304,7 +304,7 @@ public class NArea
                             NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
                             if(test.isVisible()) {
                                 Pair<Coord2d, Coord2d> testrc = test.getRCArea();
-                                if(testrc == null) {
+                                if(testrc != null) {
                                     double testdist;
                                     if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
                                         res = test;
