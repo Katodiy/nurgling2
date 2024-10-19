@@ -133,11 +133,11 @@ public class Inventory extends Widget implements DTarget {
     }
 	
     public void uimsg(String msg, Object... args) {
-	if(msg.equals("sz")) {
+	if(msg == "sz") {
 	    isz = (Coord)args[0];
 	    resize(invsq.sz().add(UI.scale(new Coord(-1, -1))).mul(isz).add(UI.scale(new Coord(1, 1))));
 	    sqmask = null;
-	} else if(msg.equals("mask")) {
+	} else if(msg == "mask") {
 	    boolean[] nmask;
 	    if(args[0] == null) {
 		nmask = null;
@@ -148,7 +148,7 @@ public class Inventory extends Widget implements DTarget {
 		    nmask[i] = (raw[i >> 3] & (1 << (i & 7))) != 0;
 	    }
 	    this.sqmask = nmask;
-	} else if(msg.equals("mode")) {
+	} else if(msg == "mode") {
 	    dropul = !Utils.bv(args[0]);
 	} else {
 	    super.uimsg(msg, args);
