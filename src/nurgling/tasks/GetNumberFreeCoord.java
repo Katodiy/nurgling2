@@ -33,8 +33,10 @@ public class GetNumberFreeCoord implements NTask
         if(item!=null)
             if(item.spr == null)
                 return false;
-            else
-                size = item.spr.sz().div(UI.scale(32));
+            else {
+                Coord lc = item.spr.sz().div(UI.scale(32));
+                size = new Coord(lc.y,lc.x);
+            }
         freeCoord = inv.calcNumberFreeCoord(size);
         return freeCoord>=0;
     }

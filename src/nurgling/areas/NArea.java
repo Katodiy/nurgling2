@@ -304,10 +304,12 @@ public class NArea
                             NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
                             if(test.isVisible()) {
                                 Pair<Coord2d, Coord2d> testrc = test.getRCArea();
-                                double testdist;
-                                if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
-                                    res = test;
-                                    dist = testdist;
+                                if(testrc != null) {
+                                    double testdist;
+                                    if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                                        res = test;
+                                        dist = testdist;
+                                    }
                                 }
                             }
                         }
@@ -504,6 +506,7 @@ public class NArea
         {
             Coord begin = null;
             Coord end = null;
+
             for (Long id : space.space.keySet())
             {
                 MCache.Grid grid = NUtils.getGameUI().map.glob.map.findGrid(id);
@@ -515,8 +518,12 @@ public class NArea
                 begin = (begin != null) ? new Coord(Math.min(begin.x, b.x), Math.min(begin.y, b.y)) : b;
                 end = (end != null) ? new Coord(Math.max(end.x, e.x), Math.max(end.y, e.y)) : e;
             }
-            if (begin != null)
-                return new Pair<Coord2d, Coord2d>(begin.mul(MCache.tilesz), end.sub(1,1).mul(MCache.tilesz).add(MCache.tilesz));
+            if (begin != null) {
+                if (begin.mul(MCache.tilesz).dist(NUtils.player().rc) > 1000 && end.mul(MCache.tilesz).dist(NUtils.player().rc) > 1000) {
+                    return null;
+                }
+                return new Pair<Coord2d, Coord2d>(begin.mul(MCache.tilesz), end.sub(1, 1).mul(MCache.tilesz).add(MCache.tilesz));
+            }
         }
         return null;
     }

@@ -38,7 +38,7 @@ public class PrepareBoards implements Action {
         }
         SelectArea insa;
         NUtils.getGameUI().msg("Please select area with logs");
-        (insa = new SelectArea()).run(gui);
+        (insa = new SelectArea(Resource.loadsimg("baubles/prepLogs"))).run(gui);
 
         SelectArea outsa;
         NUtils.getGameUI().msg("Please select area for piles");

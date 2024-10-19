@@ -56,7 +56,7 @@ public class AutoDrink implements Action
                     NUtils.addTask(new NTask() {
                         @Override
                         public boolean check() {
-                            return !NParser.checkName(NUtils.player().pose(),"gfx/borka/drinkan");
+                            return NUtils.player()==null || !NParser.checkName(NUtils.player().pose(),"gfx/borka/drinkan");
                         }
                     });
                     if (wops.isError())

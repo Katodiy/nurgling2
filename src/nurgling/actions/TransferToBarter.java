@@ -33,7 +33,9 @@ public class TransferToBarter implements Action{
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-
+        ArrayList<WItem> wItems = NUtils.getGameUI().getInventory().getItems(items,th);
+        if(wItems.isEmpty())
+            return Results.SUCCESS();
         new PathFinder(barter.barter).run(gui);
         new OpenTargetContainer("Barter Stand", barter.barter).run(gui);
 
@@ -42,7 +44,7 @@ public class TransferToBarter implements Action{
         {
             return Results.ERROR("No Barter window");
         }
-        ArrayList<WItem> wItems = NUtils.getGameUI().getInventory().getItems(items,th);
+
         for(Widget ch = barter_wnd.child; ch != null; ch = ch.next)
         {
             if (ch instanceof Shopbox)

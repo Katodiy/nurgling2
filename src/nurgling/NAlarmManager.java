@@ -7,26 +7,9 @@ import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class NAlarmManager {
-    static long startTick = 0;
+    static long startTick = -1000;
     static final long duration = 1000;
     static private final ReentrantLock mutex = new ReentrantLock();
-
-    private static void init(){
-//        alarms.put(NGob.Tags.bear,"alarm/bear");
-//        alarms.put(NGob.Tags.wolf,"alarm/wolf");
-//        alarms.put(NGob.Tags.greyseal,"alarm/greyseal");
-//        alarms.put(NGob.Tags.mammoth,"alarm/mammoth");
-//        alarms.put(NGob.Tags.orca,"alarm/orca");
-//        alarms.put(NGob.Tags.spermwhale,"alarm/spermwhale");
-//        alarms.put(NGob.Tags.quest,"alarm/quest");
-//        alarms.put(NGob.Tags.foe,"alarm/white");
-//        alarms.put(NGob.Tags.notmarked,"alarm/alarm");
-//        alarms.put(NGob.Tags.winter_stoat,"alarm/stoat");
-//        alarms.put(NGob.Tags.stalagoomba,"alarm/stalagoomba");
-//        alarms.put(NGob.Tags.troll,"alarm/troll");
-//        alarms.put(NGob.Tags.looserock,"alarm/looserock");
-
-    }
 
     private static String last = null;
 
