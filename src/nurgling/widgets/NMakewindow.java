@@ -728,14 +728,14 @@ public class NMakewindow extends Widget {
             for(Ingredient ing: data)
             {
                 GOut sg = g.reclip(pos, invsq.sz());
-                sg.image(ing.img, Coord.z);
+                sg.image(new TexI(ing.img), Coord.z,UI.scale(32,32));
                 if(ing.logistic)
                 {
-                    sg.image(aready, Coord.z);
+                    sg.image(aready, Coord.z,UI.scale(32,32));
                 }
                 else
                 {
-                    sg.image(anotfound, Coord.z);
+                    sg.image(anotfound, Coord.z,UI.scale(32,32));
                 }
                 if(shift.x<5)
                 {
@@ -745,6 +745,7 @@ public class NMakewindow extends Widget {
                 else
                 {
                     pos.x = UI.scale(8);
+                    shift.x = 0;
                     pos = pos.add(0, Inventory.sqsz.y + UI.scale(1));
                 }
             }

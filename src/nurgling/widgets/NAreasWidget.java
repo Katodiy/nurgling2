@@ -505,7 +505,7 @@ public class NAreasWidget extends Window
 
         @Override
         public void change(AreaItem item) {
-            if(!item.isDir && item.area==null && item.rootPath != null) {
+            if(item != null && !item.isDir && item.area==null && item.rootPath != null) {
                 showPath(item.rootPath);
             }
             else
