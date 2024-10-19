@@ -550,31 +550,23 @@ public class NInventory extends Inventory
     }
 
 
-    public Coord findFreeCoord(Coord target_size)
-    {
+    public Coord findFreeCoord(Coord target_size) {
         short[][] inventory = containerMatrix();
-        if(inventory == null)
+        if ((inventory == null) || (target_size.y < 1) || (target_size.x < 1))
             return null;
-        for (int i = 0; i < isz.y; i++) {
-            for (int j = 0; j < isz.x; j++) {
+        for (int i = 0; i <= isz.y - target_size.y; i++)
+            for (int j = 0; j <= isz.x - target_size.x; j++)
                 if (inventory[i][j] == 0) {
-                    if (i + target_size.x - 1 < isz.y && j + target_size.y - 1 < isz.x) {
-                        boolean isFree = true;
-                        for (int k = i; k < i + target_size.x; k++) {
-                            for (int n = j; n < j + target_size.y; n++) {
-                                if (inventory[k][n]!=0) {
-                                    isFree = false;
-                                    break;
-                                }
+                    boolean isFree = true;
+                    for (int k = i; k < i + target_size.x; k++)
+                        for (int n = j; n < j + target_size.y; n++)
+                            if (inventory[k][n] != 0) {
+                                isFree = false;
+                                break;
                             }
-                        }
-                        if (isFree) {
-                            return new Coord(j,i);
-                        }
-                    }
+                    if (isFree)
+                        return new Coord(j, i);
                 }
-            }
-        }
         return null;
     }
 
@@ -584,12 +576,10 @@ public class NInventory extends Inventory
         short[][] inventory = containerMatrix();
         if(inventory == null)
             return -1;
-        for (int i = 0; i < isz.y; i++) {
-            for (int j = 0; j < isz.x; j++) {
+        for (int i = 0; i < isz.y; i++)
+            for (int j = 0; j < isz.x; j++)
                 if (inventory[i][j] == 0)
                     freespace++;
-            }
-        }
         return freespace;
     }
 
@@ -599,12 +589,10 @@ public class NInventory extends Inventory
         short[][] inventory = containerMatrix();
         if(inventory == null)
             return -1;
-        for (int i = 0; i < isz.y; i++) {
-            for (int j = 0; j < isz.x; j++) {
+        for (int i = 0; i < isz.y; i++)
+            for (int j = 0; j < isz.x; j++)
                 if (inventory[i][j] != 2)
                     totalSpace++;
-            }
-        }
         return totalSpace;
     }
 
