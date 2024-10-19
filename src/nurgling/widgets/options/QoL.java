@@ -11,7 +11,7 @@ public class QoL extends Widget {
     public QoL() {
 
         prev = add(new Label("Other:"), new Coord(0, 0));
-        prev = add(new CheckBox("Show crop stage:") {
+        prev = add(new CheckBox("Show crop stage") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.showCropStage);
             }
@@ -21,7 +21,7 @@ public class QoL extends Widget {
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-        prev = add(new CheckBox("Night vision:") {
+        prev = add(new CheckBox("Night vision") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.nightVision);
             }
@@ -32,7 +32,18 @@ public class QoL extends Widget {
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = add(new CheckBox("Bounding Boxes:") {
+        prev = add(new CheckBox("Auto-drink") {
+            {
+                a = (Boolean) NConfig.get(NConfig.Key.autoDrink);
+            }
+
+            public void set(boolean val) {
+                NConfig.set(NConfig.Key.autoDrink, val);
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+
+        prev = add(new CheckBox("Bounding Boxes") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.showBB);
             }
@@ -43,7 +54,7 @@ public class QoL extends Widget {
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = add(new CheckBox("Flat surface (need reboot):") {
+        prev = add(new CheckBox("Flat surface (need reboot)") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.nextflatsurface);
             }
@@ -54,7 +65,7 @@ public class QoL extends Widget {
             }
 
         }, prev.pos("bl").adds(0, 5));
-        prev = add(new CheckBox("Show decorative objects (need reboot):") {
+        prev = add(new CheckBox("Show decorative objects (need reboot)") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.nextshowCSprite);
             }
@@ -66,7 +77,7 @@ public class QoL extends Widget {
 
         }, prev.pos("bl").adds(0, 5));
 
-        prev = add(new CheckBox("Hide nature objects:") {
+        prev = add(new CheckBox("Hide nature objects") {
             {
                 a = !(Boolean) NConfig.get(NConfig.Key.hideNature);
             }
@@ -122,7 +133,7 @@ public class QoL extends Widget {
             }
 
         }, prev.pos("bl").adds(0, 5));
-        prev = add(new CheckBox("Disable menugrid keys:") {
+        prev = add(new CheckBox("Disable menugrid keys") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.disableMenugridKeys);
             }

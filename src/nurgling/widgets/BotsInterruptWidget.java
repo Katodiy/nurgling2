@@ -1,12 +1,15 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.NInventory;
 import nurgling.NStyle;
 import nurgling.NUtils;
+import nurgling.actions.AutoDrink;
 
 import java.util.ArrayList;
 
 public class BotsInterruptWidget extends Widget {
+    boolean oldStackState = false;
     public class Gear extends Widget
     {
         final Thread t;
@@ -59,6 +62,11 @@ public class BotsInterruptWidget extends Widget {
 
     public void addObserve(Thread t)
     {
+        if(obs.isEmpty())
+        {
+            AutoDrink.waitBot.set(true);
+        }
+
         if(obs.size()>=6)
             NUtils.getGameUI().error("Too many running bots!");
         else {
@@ -66,6 +74,24 @@ public class BotsInterruptWidget extends Widget {
         }
         repack();
     }
+
+    public void addObserve(Thread t, boolean disStack)
+    {
+        if(disStack)
+        {
+            if(stackObs.isEmpty())
+            {
+                 if(((NInventory) NUtils.getGameUI().maininv).bundle.a) {
+                     oldStackState = true;
+                     NUtils.stackSwitch(false);
+                 }
+            }
+            if(oldStackState)
+                stackObs.add(t);
+        }
+        addObserve(t);
+    }
+
 
     void repack()
     {
@@ -87,6 +113,15 @@ public class BotsInterruptWidget extends Widget {
             for(Gear g: obs)
             {
                 if(g.t == t) {
+                    if(stackObs.contains(g.t))
+                    {
+                        stackObs.remove(g.t);
+                        if(stackObs.isEmpty() && oldStackState)
+                        {
+                            NUtils.stackSwitch(true);
+                        }
+
+                    }
                     g.remove();
                     obs.remove(g);
                     break;
@@ -94,6 +129,8 @@ public class BotsInterruptWidget extends Widget {
             }
         }
         repack();
+        if(obs.isEmpty())
+            AutoDrink.waitBot.set(false);
     }
 
     @Override
@@ -105,8 +142,19 @@ public class BotsInterruptWidget extends Widget {
             {
                 if(g.t.isInterrupted() || !g.t.isAlive())
                 {
+                    if(stackObs.contains(g.t))
+                    {
+                        stackObs.remove(g.t);
+                        if(stackObs.isEmpty() && oldStackState)
+                        {
+                            NUtils.stackSwitch(true);
+                        }
+
+                    }
                     g.remove();
                     obs.remove(g);
+                    if(obs.isEmpty())
+                        AutoDrink.waitBot.set(false);
                     break;
                 }
             }
@@ -115,6 +163,7 @@ public class BotsInterruptWidget extends Widget {
     }
 
     final ArrayList<Gear> obs = new ArrayList<>();
+    final ArrayList<Thread> stackObs = new ArrayList<>();
 
 //    @Override
 //    public void draw(GOut g) {

@@ -17,7 +17,7 @@ public class QuickActions extends Widget {
     TextEntry newPattern;
     int width = UI.scale(210);
     public QuickActions() {
-        prev = add(new Label("Patterns:"), Coord.z);
+        prev = add(new Label("Quick Actions:"), Coord.z);
         prev = add( al = new ActionList(new Coord(width,UI.scale(300))), prev.pos("bl").add(0,UI.scale(10)));
         prev = add(newPattern = new TextEntry(UI.scale(150), ""), prev.pos("bl").add(0,UI.scale(10)));
         add(new Button(UI.scale(45),"Add"){

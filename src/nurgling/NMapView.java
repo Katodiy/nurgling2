@@ -345,8 +345,9 @@ public class NMapView extends MapView
             newArea.id = id;
             newArea.space = result;
             newArea.grids_id.addAll(newArea.space.space.keySet());
+            newArea.path = NUtils.getGameUI().areas.currentPath;
             glob.map.areas.put(id, newArea);
-            NUtils.getGameUI().areas.addArea(id, newArea.name, newArea);
+//            NUtils.getGameUI().areas.addArea(id, newArea.name, newArea);
             createAreaLabel(id);
         }
         return key;

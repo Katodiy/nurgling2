@@ -14,6 +14,7 @@ import java.util.*;
 public class NArea
 {
     public long gid = Long.MIN_VALUE;
+    public String path = "";
     public static class Specialisation
     {
         public String name;
@@ -421,6 +422,14 @@ public class NArea
     {
         this.name = (String) obj.get("name");
         this.id = (Integer) obj.get("id");
+        if(obj.has("path"))
+        {
+            this.path = obj.getString("path");
+        }
+        else if(obj.has("dir"))
+        {
+            this.path = "/" + obj.getString("path");
+        }
         if(obj.has("color"))
         {
             JSONObject color = (JSONObject) obj.get("color");
@@ -535,6 +544,7 @@ public class NArea
         JSONObject res = new JSONObject();
         res.put("name", name);
         res.put("id", id);
+        res.put("path", path);
         JSONObject jcolor = new JSONObject();
         jcolor.put("r", color.getRed());
         jcolor.put("g", color.getGreen());

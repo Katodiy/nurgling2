@@ -30,7 +30,6 @@ public class OpenTargetContainer implements Action
                     new SelectFlowerAction("Open", gob, true).run(gui);
                 gui.ui.core.addTask(new FindNInventory(name));
                 break;
-
             default:
                 gui.ui.core.addTask(new FindNInventory(name));
         }

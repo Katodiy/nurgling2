@@ -31,6 +31,8 @@ import nurgling.widgets.*;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Cal extends Widget {
     public static final double hbr = UI.scale(20.0);
@@ -42,6 +44,17 @@ public class Cal extends Widget {
     static final Resource.Anim sun = Resource.local().loadwait("gfx/hud/calendar/sun").layer(Resource.animc);
     static final Resource.Anim moon = Resource.local().loadwait("gfx/hud/calendar/moon").layer(Resource.animc);
 
+	static final HashMap<String,TexI> events = new HashMap<>();
+	static {
+	events.put("dawn",new TexI(Resource.loadimg("nurgling/hud/cal/dawn")));
+	events.put("mantle",new TexI(Resource.loadimg("nurgling/hud/cal/mantle")));
+	events.put("wolf",new TexI(Resource.loadimg("nurgling/hud/cal/wolf")));
+	events.put("rain",new TexI(Resource.loadimg("nurgling/hud/cal/rain")));
+	}
+
+	ArrayList<String> eventNames = new ArrayList<>();
+	String weather = null;
+
     static {
 	for(int i = 0; i < dlnd.length; i++) {
 	    dlnd[i] = Resource.loadtex(String.format("gfx/hud/calendar/dayscape-%d", i));
@@ -50,13 +63,14 @@ public class Cal extends Widget {
     }
 
     public Cal() {
-	super(bg.sz());
+	super(bg.sz().mul(2));
     }
 
     public void draw(GOut g) {
 	Astronomy a = ui.sess.glob.ast;
 	long now = System.currentTimeMillis();
-	g.image(a.night ? nsky : dsky, Coord.z);
+	Coord center = sz.div(2).sub(bg.sz().div(2));
+	g.image(a.night ? nsky : dsky, center);
 	int mp = (int)Math.round(a.mp * (double)moon.f.length) % moon.f.length;
 	Resource.Image moon = Cal.moon.f[mp][0];
 	Resource.Image sun = Cal.sun.f[(int)((now / Cal.sun.d) % Cal.sun.f.length)][0];
@@ -66,8 +80,22 @@ public class Cal extends Widget {
 	g.image(moon, mc);
 	g.chcolor();
 	g.image(sun, sc);
-	g.image((a.night ? nlnd : dlnd)[a.is], Coord.z);
-	g.image(bg, Coord.z);
+
+	g.image((a.night ? nlnd : dlnd)[a.is], center);
+	g.image(bg, center);
+
+	Coord2d dir = UI.scale(new Coord2d(50,-15));
+	int count = 0;
+	for(String key : eventNames) {
+		g.aimage(events.get(key), dir.floor().add(sz.div(2)),0.5,0.5);
+		count +=1;
+		if(count>1)
+		{
+			count = 0;
+			dir.y +=30;
+		}
+		dir = UI.scale(new Coord2d(50+(30*count),dir.y));
+	}
     }
 
     public boolean checkhit(Coord c) {
@@ -86,11 +114,43 @@ public class Cal extends Widget {
 	return(i + "th");
     }
 
-    public Object tooltip(Coord c, Widget prev) {
-	if(checkhit(c)) {
-	    Astronomy a = ui.sess.glob.ast;
-	    return(String.format("%s day of the %s month of the %s year", ord((int)Math.floor(a.md) + 1), ord((int)Math.floor(a.ym) + 1), ord((int)Math.floor(a.years) + 1)));
+	@Override
+	public void tick(double dt) {
+		super.tick(dt);
+		eventNames.clear();
+		Astronomy a = ui.sess.glob.ast;
+		int mp = (int)Math.round(a.mp * (double)moon.f.length) % moon.f.length;
+		if(Astronomy.phase[mp].equals("Full Moon"))
+			eventNames.add("wolf");
+		int curinmin = a.hh*60+a.mm;
+		if(curinmin>=285&&curinmin<=435)
+		{
+			eventNames.add("mantle");
+			eventNames.add("dawn");
+		}
+		if(weather!=null && weather.contains("rain"))
+			eventNames.add("rain");
+
 	}
-	return(super.tooltip(c, prev));
-    }
+
+	private String tip = null;
+	public Object tooltip(Coord c, Widget prev) {
+		if(checkhit(c)) {
+			Astronomy a = ui.sess.glob.ast;
+			int mp = (int)Math.round(a.mp * (double)moon.f.length) % moon.f.length;
+			String season = String.format("Season: %s, day %d of %d", a.season(), a.scday + 1, a.season().length);
+			int day = (int) Math.floor(a.md) + 1, month = (int) Math.floor(a.ym) + 1, year = (int) Math.floor(a.years) + 1;
+			String tt = String.format("%02d-%02d-%02d, %02d:%02d\n%s\nMoon: %s", day, month, year, a.hh, a.mm, season, Astronomy.phase[mp]);
+			if(!tt.equals(tip)) {
+				tip = tt;
+				tooltip = RichText.render(tt, UI.scale(250));
+			}
+			return tooltip;
+		}
+		return(super.tooltip(c, prev));
+	}
+
+	public void setWeather(String resnm) {
+		weather = resnm;
+	}
 }

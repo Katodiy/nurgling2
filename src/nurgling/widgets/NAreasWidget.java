@@ -27,11 +27,38 @@ public class NAreasWidget extends Window
     CurrentSpecialisationList csl;
     public AreaList al;
     public boolean createMode = false;
+    public String currentPath = "";
+    final static Tex folderIcon = new TexI(Resource.loadsimg("nurgling/hud/folder/d"));
+    final static Tex openfolderIcon = new TexI(Resource.loadsimg("nurgling/hud/folder/u"));
+
+    class Folder
+    {
+        public String name;
+        public String rootPath;
+
+        public Folder(String name, String path) {
+            this.name = name;
+            this.rootPath = path;
+        }
+    }
+
     public NAreasWidget()
     {
         super(UI.scale(new Coord(700,500)), "Areas Settings");
+
+        IButton createNewFolder;
+        prev = add(createNewFolder = new IButton(NStyle.addfolder[0].back,NStyle.addfolder[1].back,NStyle.addfolder[2].back){
+            @Override
+            public void click()
+            {
+                super.click();
+                NEditFolderName.createFolder(currentPath);
+            }
+        },new Coord(0,UI.scale(5)));
+        createNewFolder.settip("Create new folder");
+
         IButton create;
-        prev = add(create = new IButton(NStyle.addarea[0].back,NStyle.addarea[1].back,NStyle.addarea[2].back){
+        add(create = new IButton(NStyle.addarea[0].back,NStyle.addarea[1].back,NStyle.addarea[2].back){
             @Override
             public void click()
             {
@@ -39,8 +66,10 @@ public class NAreasWidget extends Window
                 NUtils.getGameUI().msg("Please, select area");
                 new Thread(new NAreaSelector(NAreaSelector.Mode.CREATE)).start();
             }
-        },new Coord(0,UI.scale(5)));
+        },prev.pos("ur").adds(UI.scale(5,0)));
         create.settip("Create new area");
+
+
 
         prev = add(al = new AreaList(UI.scale(new Coord(400,170))), prev.pos("bl").adds(0, 10));
         Widget lab = add(new Label("Specialisation",NStyle.areastitle), prev.pos("bl").add(UI.scale(0,5)));
@@ -92,24 +121,73 @@ public class NAreasWidget extends Window
 
     public void removeArea(int id)
     {
-        areas.remove(id);
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
             NOverlay nol = NUtils.getGameUI().map.nols.get(id);
             nol.remove();
             NUtils.getGameUI().map.nols.remove(id);
         }
+        showPath(currentPath);
     }
 
     @Override
     public void show()
     {
-        if(areas.isEmpty() && !NUtils.getGameUI().map.glob.map.areas.isEmpty())
-        {
-            for (NArea area : NUtils.getGameUI().map.glob.map.areas.values())
-                addArea(area.id, area.name, area);
-        }
+        showPath(currentPath);
         super.show();
+    }
+
+    public void changePath(String newpath, String path) {
+        for(NArea area : ((NMapView)NUtils.getGameUI().map).glob.map.areas.values())
+        {
+            if(area.path.startsWith(path))
+            {
+                area.path = area.path.replace(path,newpath);
+            }
+        }
+    }
+
+    public void showPath(String path) {
+        synchronized (items) {
+            items.clear();
+            currentPath = path;
+            HashMap<String, Folder> folders = new HashMap<>();
+            ArrayList<AreaItem> areas = new ArrayList<>();
+            for (NArea area : ((NMapView) NUtils.getGameUI().map).glob.map.areas.values()) {
+                if (area.path.equals(path)) {
+                    areas.add(new AreaItem(area.name, area));
+                }
+                else if(area.path.startsWith(path))
+                {
+                    String cand = area.path.substring(path.length());
+                    String fname = cand.split("/")[1];
+                    folders.put(fname, new Folder(fname,path));
+                }
+            }
+
+
+            if(!currentPath.isEmpty())
+            {
+                if(currentPath.contains("/"))
+                {
+                    String subPath = currentPath.substring(0, currentPath.lastIndexOf("/"));
+                    items.add(new AreaItem(subPath));
+                }
+                else
+                {
+                    items.add(new AreaItem(""));
+                }
+
+            }
+
+            for (Folder folder : folders.values()) {
+                if (folder.rootPath.equals(path)) {
+                    items.add(new AreaItem(folder.name, true));
+                }
+            }
+            items.addAll(areas);
+        }
+
     }
 
     public class AreaItem extends Widget{
@@ -118,9 +196,14 @@ public class NAreasWidget extends Window
 
         public NArea area;
 
+        boolean isDir = false;
+        private String rootPath = null;
+        final ArrayList<String> opt;
         @Override
         public void resize(Coord sz) {
-            remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5),  remove.c.y));
+            if(remove!=null) {
+                remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5), remove.c.y));
+            }
             super.resize(sz);
         }
 
@@ -135,11 +218,62 @@ public class NAreasWidget extends Window
                 }
             },new Coord(al.sz.x - NStyle.removei[0].sz().x, 0).sub(UI.scale(5),UI.scale(1) ));
             remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).t);
+            opt = new ArrayList<String>(){
+                {
+                    add("Select area space");
+                    add("Set color");
+                    add("Edit name");
+                    add("Scan");
+                }
+            };
 
             pack();
         }
 
+        public AreaItem(String text, boolean isDir){
+            this.text = add(new Label(text));
+            this.area = null;
+            this.isDir = isDir;
+            remove = add(new IButton(NStyle.removei[0].back,NStyle.removei[1].back,NStyle.removei[2].back){
+                @Override
+                public void click() {
+                }
+            },new Coord(al.sz.x - NStyle.removei[0].sz().x, 0).sub(UI.scale(5),UI.scale(1) ));
+            opt = new ArrayList<String>(){
+                {
+                    add("Edit folder name");
+                    add("Remove with content");
+                }
+            };
+            pack();
+        }
 
+        public AreaItem(String rootPath) {
+            this.text = add(new Label(".."));
+            this.area = null;
+            this.isDir = false;
+            this.rootPath = rootPath;
+            remove = add(new IButton(NStyle.removei[0].back,NStyle.removei[1].back,NStyle.removei[2].back){
+                @Override
+                public void click() {
+                }
+            },new Coord(al.sz.x - NStyle.removei[0].sz().x, 0).sub(UI.scale(5),UI.scale(1) ));
+            opt = new ArrayList<>();
+            pack();
+        }
+
+        @Override
+        public void draw(GOut g) {
+            if (rootPath!=null) {
+                g.image(openfolderIcon, Coord.z, UI.scale(16,16));
+                g.text(text.text(), new Coord(UI.scale(21), 0)); // Текст рядом с иконкой
+            }else if (area == null) {
+                g.image(folderIcon, Coord.z, UI.scale(16,16));
+                g.text(text.text(), new Coord(UI.scale(21), 0)); // Текст рядом с иконкой
+            } else {
+                super.draw(g);
+            }
+        }
 
         @Override
         public boolean mousedown(Coord c, int button)
@@ -149,22 +283,25 @@ public class NAreasWidget extends Window
                 opts(c);
                 return true;
             }
-            else if (button == 1)
-            {
-                NAreasWidget.this.select(area.id);
+            else if (button == 1) {
+                if (!isDir)
+                    if(area != null)
+                    {
+                        NAreasWidget.this.select(area.id);
+                    }
+                    else
+                    {
+                        NAreasWidget.this.showPath(rootPath);
+                    }
+
+                else
+                    showPath(currentPath + "/" + text.text());
             }
             return super.mousedown(c, button);
 
         }
 
-        final ArrayList<String> opt = new ArrayList<String>(){
-            {
-                add("Select area space");
-                add("Set color");
-                add("Edit name");
-                add("Scan");
-            }
-        };
+
 
         NFlowerMenu menu;
 
@@ -239,6 +376,37 @@ public class NAreasWidget extends Window
                             {
                                 Scaner.startScan(area);
                             }
+                            else if (option.name.equals("Edit folder name"))
+                            {
+                                NEditFolderName.changeName(currentPath, AreaItem.this.text.text());
+                            }
+                            else if (option.name.equals("Remove with content"))
+                            {
+                                ArrayList<Integer> forRemove = new ArrayList<>();
+                                for (NArea area : ((NMapView) NUtils.getGameUI().map).glob.map.areas.values()) {
+                                    if(area.path.startsWith(currentPath + "/" + text.text())) {
+                                        forRemove.add(area.id);
+                                    }
+                                }
+                                synchronized (((NMapView) NUtils.getGameUI().map).glob.map.areas)
+                                {
+                                    for(Integer key:forRemove)
+                                    {
+                                        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+                                        {
+                                            NOverlay nol = NUtils.getGameUI().map.nols.get(key);
+                                            nol.remove();
+                                            NUtils.getGameUI().map.nols.remove(key);
+                                            Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(((NMapView) NUtils.getGameUI().map).glob.map.areas.get(key).gid);
+                                            NUtils.getGameUI().map.glob.oc.remove(dummy);
+                                            ((NMapView) NUtils.getGameUI().map).dummys.remove(dummy.id);
+                                            ((NMapView) NUtils.getGameUI().map).glob.map.areas.remove(key);
+                                        }
+                                    }
+                                    NConfig.needAreasUpdate();
+                                    NAreasWidget.this.showPath(NAreasWidget.this.currentPath);
+                                }
+                            }
                         }
                         uimsg("cancel");
                     }
@@ -255,7 +423,10 @@ public class NAreasWidget extends Window
             ui.root.add(menu, pos.add(UI.scale(25,38)));
         }
 
-
+        @Override
+        public void draw(GOut g, boolean strict) {
+            super.draw(g, strict);
+        }
     }
 
     private void select(int id)
@@ -267,7 +438,6 @@ public class NAreasWidget extends Window
 
     public void set(int id)
     {
-        al.change(areas.get(id));
         select(id);
     }
 
@@ -280,19 +450,20 @@ public class NAreasWidget extends Window
             }
         }
     }
-    private ConcurrentHashMap<Integer, AreaItem> areas = new ConcurrentHashMap<>();
+//    private ConcurrentHashMap<Integer, AreaItem> areas = new ConcurrentHashMap<>();
 
-    public void addArea(int id, String val, NArea area)
-    {
-        areas.put(id, new AreaItem(val, area));
-    }
+    private final ArrayList<AreaItem> items = new ArrayList<>();
 
     public class AreaList extends SListBox<AreaItem, Widget> {
         AreaList(Coord sz) {
             super(sz, UI.scale(15));
         }
 
-        protected List<AreaItem> items() {return new ArrayList<>(areas.values());}
+        protected List<AreaItem> items() {
+            synchronized (items) {
+                return items;
+            }
+        }
 
         @Override
         public void resize(Coord sz) {
@@ -332,7 +503,14 @@ public class NAreasWidget extends Window
             super.draw(g);
         }
 
-
+        @Override
+        public void change(AreaItem item) {
+            if(!item.isDir && item.area==null && item.rootPath != null) {
+                showPath(item.rootPath);
+            }
+            else
+                super.change(item);
+        }
     }
     List<SpecialisationItem> specItems = new ArrayList<>();
     @Override
@@ -483,6 +661,7 @@ public class NAreasWidget extends Window
     public boolean show(boolean show) {
         if(show)
         {
+            showPath(currentPath);
             ((NMapView)NUtils.getGameUI().map).initDummys();
         }
         return super.show(show);

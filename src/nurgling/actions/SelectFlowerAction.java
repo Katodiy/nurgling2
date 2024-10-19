@@ -71,7 +71,8 @@ public class SelectFlowerAction implements Action
         if(fm==null)
             if(!petalIgnored)
                 return Results.FAIL();
-            else return Results.SUCCESS();
+            else
+                return Results.SUCCESS();
         if(fm.chooseOpt(opt))
         {
             NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
