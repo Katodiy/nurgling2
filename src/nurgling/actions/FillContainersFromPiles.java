@@ -36,6 +36,7 @@ public class FillContainersFromPiles implements Action {
 
         while (!(containers = allDone(conts)).isEmpty())
         {
+            ArrayList<WItem> oldItems = gui.getInventory().getItems(transferedItems);
             for (Container cont : containers) {
                 Container.Space space = cont.getattr(Container.Space.class);
                 while ((Integer) space.getRes().get(Container.Space.FREESPACE) != 0) {
@@ -92,13 +93,19 @@ public class FillContainersFromPiles implements Action {
                                     hole = true;
                                     break;
                                 }
-                            if (!hole)
+                            if (!hole) {
                                 break;
+                            }
                         }
                     }
                     new TransferToContainer(new Context(), cont, transferedItems).run(gui);
                 }
                 new CloseTargetContainer(cont).run(gui);
+            }
+            if(!oldItems.isEmpty()) {
+                if (NUtils.getGameUI().getInventory().getItems(transferedItems).containsAll(oldItems)) {
+                    break;
+                }
             }
         }
         return Results.SUCCESS();
