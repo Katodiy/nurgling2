@@ -65,7 +65,7 @@ public class TakeItemsByTetris implements Action
                 return Results.SUCCESS();
             }
         }
-        if (!(gui.getInventory().getNumberFreeCoord(target_coord) > 0 && gui.getStockpile() != null))
+        if ((gui.getInventory().getNumberFreeCoord(target_coord) == 0))
             isDone = true;
         return Results.SUCCESS();
     }

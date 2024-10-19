@@ -546,7 +546,8 @@ public class NInventory extends Inventory
 
     public Coord findFreeCoord(WItem wItem)
     {
-        return findFreeCoord(wItem.item.spr.sz().div(UI.scale(32)));
+        Coord sz = wItem.item.spr.sz().div(UI.scale(32));
+        return findFreeCoord(new Coord(sz.y,sz.x));
     }
 
 
