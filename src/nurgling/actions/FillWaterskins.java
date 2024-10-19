@@ -30,8 +30,8 @@ public class FillWaterskins implements Action {
                 return Results.ERROR("no water area");
 
             SelectArea insa;
-            NUtils.getGameUI().msg("Please, select input area");
-            (insa = new SelectArea()).run(gui);
+            NUtils.getGameUI().msg("Please, select area with cistern or barrel");
+            (insa = new SelectArea(Resource.loadsimg("baubles/waterRefiller"))).run(gui);
             area = insa.getRCArea();
         }
         Gob target = null;
@@ -62,6 +62,7 @@ public class FillWaterskins implements Action {
                     }
                 }
             }
+            AutoDrink.waitRefil.set(false);
         }
         return Results.SUCCESS();
     }

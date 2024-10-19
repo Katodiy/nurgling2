@@ -70,19 +70,20 @@ public class NConfig
         unloadgreen,
         showInventoryNums,
         hidecredo,
-        chipperprop
+        autoDrink,
+        chipperprop,
+        animalrad
     }
 
 
-    public NConfig()
-    {
+    public NConfig() {
         conf = new HashMap<>();
         conf.put(Key.showVarity, false);
         conf.put(Key.autoFlower, false);
         conf.put(Key.autoSplitter, false);
         conf.put(Key.autoDropper, false);
         conf.put(Key.is_real_time, true);
-        conf.put(Key.numbelts, 1);
+        conf.put(Key.numbelts, 3);
         conf.put(Key.showCropStage, false);
         conf.put(Key.nightVision, false);
         conf.put(Key.showBB, false);
@@ -98,23 +99,24 @@ public class NConfig
         conf.put(Key.showView, false);
         conf.put(Key.disableWinAnim, true);
         conf.put(Key.disableMenugridKeys, false);
-        conf.put(Key.baseurl," https://raw.githubusercontent.com/Katodiy/nurgling-release/master/ver");
-        conf.put(Key.miningol,true);
-        conf.put(Key.crime,false);
-        conf.put(Key.tracking,false);
-        conf.put(Key.swimming,false);
-        conf.put(Key.debug,false);
-        conf.put(Key.hidecredo,false);
-        conf.put(Key.q_visitor,false);
-        conf.put(Key.q_door,true);
-        conf.put(Key.q_range,2);
-        conf.put(Key.singlePetal,false);
-        conf.put(Key.asenable,true);
-        conf.put(Key.autoMapper,false);
-        conf.put(Key.automaptrack,false);
-        conf.put(Key.unloadgreen,false);
-        conf.put(Key.showInventoryNums,true);
-        conf.put(Key.endpoint,"");
+        conf.put(Key.baseurl, " https://raw.githubusercontent.com/Katodiy/nurgling-release/master/ver");
+        conf.put(Key.miningol, true);
+        conf.put(Key.crime, false);
+        conf.put(Key.tracking, false);
+        conf.put(Key.swimming, false);
+        conf.put(Key.debug, false);
+        conf.put(Key.hidecredo, true);
+        conf.put(Key.q_visitor, false);
+        conf.put(Key.q_door, true);
+        conf.put(Key.q_range, 2);
+        conf.put(Key.singlePetal, false);
+        conf.put(Key.asenable, true);
+        conf.put(Key.autoMapper, false);
+        conf.put(Key.automaptrack, false);
+        conf.put(Key.unloadgreen, false);
+        conf.put(Key.showInventoryNums, true);
+        conf.put(Key.autoDrink, false);
+        conf.put(Key.endpoint, "");
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -141,8 +143,46 @@ public class NConfig
         pres1.put("enabled", true);
         petal.add(pres1);
         conf.put(Key.petals, petal);
-    }
 
+        ArrayList<NDragProp> dragprop = new ArrayList<>();
+        dragprop.add(new NDragProp(new Coord(570, 108), false, true, "Fightview"));
+        dragprop.add(new NDragProp(new Coord(549, -12), false, true, "minimap"));
+        dragprop.add(new NDragProp(new Coord(524, 84), false, true, "quests"));
+        dragprop.add(new NDragProp(new Coord(493, 441), false, true, "menugrid"));
+        dragprop.add(new NDragProp(new Coord(-4, 84), false, true, "speedmeter"));
+        dragprop.add(new NDragProp(new Coord(-4, 400), false, true, "ChatUI"));
+        dragprop.add(new NDragProp(new Coord(-4, 348), false, true, "belt0"));
+        dragprop.add(new NDragProp(new Coord(-4, 318), false, true, "belt1"));
+        dragprop.add(new NDragProp(new Coord(-4, 288), false, true, "belt2"));
+        dragprop.add(new NDragProp(new Coord(508, 396), false, true, "mainmenu"));
+        dragprop.add(new NDragProp(new Coord(-4, 124), false, true, "metergfx/hud/meter/hp"));
+        dragprop.add(new NDragProp(new Coord(-4, 164), false, true, "metergfx/hud/meter/stam"));
+        dragprop.add(new NDragProp(new Coord(-4, 204), false, true, "metergfx/hud/meter/nrj"));
+        dragprop.add(new NDragProp(new Coord(-4, 244), false, true, "botsmenu"));
+        dragprop.add(new NDragProp(new Coord(-4, 300), false, true, "EquipProxy"));
+        dragprop.add(new NDragProp(new Coord(620, 212), false, true, "alarm"));
+        dragprop.add(new NDragProp(new Coord(156, -4), false, true, "Calendar"));
+        dragprop.add(new NDragProp(new Coord(428, -4), false, true, "bufflist"));
+        dragprop.add(new NDragProp(new Coord(60, 244), false, true, "party"));
+        conf.put(Key.dragprop, dragprop);
+
+        ArrayList<NAreaRad> arearadprop = new ArrayList<>();
+        arearadprop.add(new NAreaRad("gfx/kritter/bat/bat", 50));
+        arearadprop.add(new NAreaRad("gfx/kritter/boar/boar", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/bear/bear", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/adder/adder", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/wildgoat/wildgoat", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/badger/badger", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/lynx/lynx", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/mammoth/mammoth", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/moose/moose", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/wolf/wolf", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/walrus/walrus", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/orca/orca", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/wolverine/wolverine", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/troll/troll", 200));
+        conf.put(Key.animalrad, arearadprop);
+    }
 
 
     HashMap<Key, Object> conf = new HashMap<>();
@@ -250,6 +290,9 @@ public class NConfig
                             break;
                         case "NClayDiggerProp":
                             res.add(new NClayDiggerProp(obj));
+                            break;
+                        case "NAreaRad":
+                            res.add(new NAreaRad(obj));
                             break;
                         default:
                             res.add(obj);
@@ -382,7 +425,7 @@ public class NConfig
             main.put("areas",jareas);
             try
             {
-                FileWriter f = new FileWriter(path_areas);
+                FileWriter f = new FileWriter(path_areas,StandardCharsets.UTF_8);
                 main.write(f);
                 f.close();
                 current.isAreasUpd = false;

@@ -79,7 +79,7 @@ public class NUtils
 
     public static boolean isNatureObject(String name)
     {
-        return NParser.checkName(name, "gfx/terobjs/tree", "gfx/terobjs/bumlings","gfx/terobjs/bushes","gfx/terobjs/stonepillar" );
+        return NParser.checkName(name, new NAlias(new ArrayList<>(Arrays.asList("gfx/terobjs/tree", "gfx/terobjs/bumlings","gfx/terobjs/bushes","gfx/terobjs/stonepillar")), new ArrayList<>(Arrays.asList("log", "oldtrunk"))));
     }
 
     public static WItem takeItemToHand(WItem item) throws InterruptedException
@@ -359,7 +359,7 @@ public class NUtils
 
     public static ArrayList<String> getPetals() {
         ArrayList<String> vals = new ArrayList<>();
-        for(AutoSelection.AutoSelectItem ai : ((OptWnd.NAutoSelectPanel)getGameUI ().opts.autosel).autosel_p.petals)
+        for(AutoSelection.AutoSelectItem ai : ((OptWnd.NQuickActionsPanel)getGameUI ().opts.nquickAct).autosel_p.petals)
         {
             if(ai.isEnabled.a)
                 vals.add(ai.text());
@@ -414,6 +414,19 @@ public class NUtils
         }
     }
 
+    public static boolean isOverlay(
+            Gob gob,
+            NAlias name
+    ) {
+        for (Gob.Overlay ol : gob.ols) {
+            if(ol.spr instanceof StaticSprite) {
+                if(NParser.checkName((ol.spr).res.name,name))
+                    return true;
+            }
+        }
+        return false;
+    }
+
     public static Coord2d findMountain(Pair<Coord2d, Coord2d> rcArea)
     {
         Coord2d pos = new Coord2d ( rcArea.a.x, rcArea.a.y );
@@ -436,5 +449,25 @@ public class NUtils
     public static void activateRoastspit(Gob.Overlay ol) {
         getGameUI().map.wdgmsg("itemact", Coord.z, ol.gob.rc.floor(posres), 0, 1, (int)  ol.gob.id,
                 ol.gob.rc.floor(posres), ol.id, -1);
+    }
+
+    public static void stackSwitch(boolean state)
+    {
+        NInventory inv = (NInventory) NUtils.getGameUI().maininv;
+        if (inv.bundle.a != state) {
+            MenuGrid.PagButton but = inv.pagBundle;
+            if (but != null) {
+                but.use(new MenuGrid.Interaction(1, 0));
+            }
+        }
+    }
+
+    public static boolean barrelHasContent(Gob barrel) {
+        for (Gob.Overlay ol : barrel.ols) {
+            if(ol.spr instanceof StaticSprite) {
+                return true;
+            }
+        }
+        return false;
     }
 }

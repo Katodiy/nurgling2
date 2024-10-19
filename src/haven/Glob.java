@@ -30,6 +30,7 @@ import java.util.*;
 import java.awt.Color;
 import haven.render.*;
 import haven.render.sl.*;
+import nurgling.NUtils;
 
 public class Glob {
     public final OCache oc = new OCache(this);
@@ -263,6 +264,10 @@ public class Glob {
 			Object[] args = (Object[])a[n++];
 			Object curv = wmap.get(res);
 			if(curv instanceof Weather) {
+				if(res instanceof Session.CachedRes.Ref) {
+					Session.CachedRes.Ref ref = ((Session.CachedRes.Ref) res);
+					NUtils.getGameUI().calendar.setWeather(ref.resnm());
+				}
 			    Weather cur = (Weather)curv;
 			    cur.update(args);
 			} else {

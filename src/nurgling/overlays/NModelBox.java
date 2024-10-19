@@ -158,9 +158,9 @@ public class NModelBox extends Sprite implements RenderTree.Node
     @Override
     public boolean tick(double dt)
     {
-        if (((Boolean) NConfig.get(NConfig.Key.showBB) || !(Boolean) NConfig.get(NConfig.Key.hideNature)) != isShow)
+        if (((Boolean) NConfig.get(NConfig.Key.showBB) || (!(Boolean) NConfig.get(NConfig.Key.hideNature) && NUtils.isNatureObject(gob.ngob.name)) != isShow))
         {
-            isShow = ((Boolean) NConfig.get(NConfig.Key.showBB) || !(Boolean) NConfig.get(NConfig.Key.hideNature));
+            isShow = ((Boolean) NConfig.get(NConfig.Key.showBB) || (!(Boolean) NConfig.get(NConfig.Key.hideNature) && NUtils.isNatureObject(gob.ngob.name)));
             if (isShow && slot.parent()!=null)
             {
                 if(!isVisible)

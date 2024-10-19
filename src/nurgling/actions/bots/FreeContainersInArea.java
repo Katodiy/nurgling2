@@ -17,8 +17,8 @@ public class FreeContainersInArea implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
 
         SelectArea insa;
-        NUtils.getGameUI().msg("Please, select input area");
-        (insa = new SelectArea()).run(gui);
+        NUtils.getGameUI().msg("Please, select area with piles or containers");
+        (insa = new SelectArea(Resource.loadsimg("baubles/inputArea"))).run(gui);
         Pair<Coord2d,Coord2d> area = insa.getRCArea();
         ArrayList<Container> containers = new ArrayList<>();
         if(area!=null) {

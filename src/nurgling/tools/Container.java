@@ -153,12 +153,18 @@ public class Container {
         public static final String MAXLVL = "maxlvl";
         public static final String CREDOLVL = "credolvl";
         public static final String FUELTYPE = "fueltype";
-        public static final String READY = "ready";
         public static final String NOCREDO = "nocredo";
+        public static final String ABSMAXLVL = "absmaxlvl";
+        public static final String FUELMOD = "flmod";
+
+        public FuelLvl(){
+            res.put(FUELMOD, (int) 1);
+            res.put(ABSMAXLVL, (int) 30);
+        }
 
         @Override
         public void update()  throws InterruptedException{
-            res.put(FUELLVL,(int)(30 * NUtils.getFuelLvl(cap, new Color(255, 128, 0))));
+            res.put(FUELLVL,(int)((double) (int) res.get(ABSMAXLVL) * NUtils.getFuelLvl(cap, new Color(255, 128, 0))));
             res.remove(NOCREDO);
             if(res.containsKey(CREDOLVL))
             {
@@ -179,6 +185,8 @@ public class Container {
             res.put(MAXLVL,maxLvl);
         }
 
+        public void setAbsMaxlvl(int maxlvl) { res.put(ABSMAXLVL,maxlvl);}
+
         public void setCredolvl(int credolvl){
             res.put(CREDOLVL,credolvl);
         }
@@ -187,32 +195,46 @@ public class Container {
             res.put(FUELTYPE,fueltype);
         }
 
+        public void setFuelmod(int fuelmod) { res.put(FUELMOD, fuelmod);}
+
         public int neededFuel() {
             if (!res.containsKey(NOCREDO) || (boolean) res.get(NOCREDO))
-                return (int) res.get(MAXLVL) - (int) res.get(FUELLVL);
+                return ((int) res.get(MAXLVL) - (int) res.get(FUELLVL)) / (int) res.get(FUELMOD);
             else
-                return (int) res.get(CREDOLVL) - (int) res.get(FUELLVL);
+                return ((int) res.get(CREDOLVL) - (int) res.get(FUELLVL)) / (int) res.get(FUELMOD);
         }
 
     }
 
+    public class WaterLvl extends Updater{
+        public static final String WATERLVL = "wlvl";
+        public static final String MAXWATERLVL = "maxwatlvl";
+
+        @Override
+        public void update()  throws InterruptedException{
+            res.put(WATERLVL,(int)(30 * NUtils.getFuelLvl(cap, new Color(71, 101, 153))));
+        }
+
+        public void setMaxlvl(int maxLvl){
+            res.put(MAXWATERLVL,maxLvl);
+        }
+
+        public int neededWater() {
+            return (int) res.get(MAXWATERLVL) - (int) res.get(WATERLVL);
+        }
+    }
 
     public class TestAttr extends Updater{
         public static final String ATTR = "attr";
 
         public void SetAttr(String attr){
-
         }
 
         @Override
         public void update() throws InterruptedException {
 
         }
-
-
     }
-
-
 
     public class TargetItems extends Updater{
         public static final String TARGETS = "targets";
@@ -287,6 +309,8 @@ public class Container {
             updaters.put(c,new FuelLvl());
         else if(c == TargetItems.class)
             updaters.put(c,new TargetItems());
+        else if(c == WaterLvl.class)
+            updaters.put(c,new WaterLvl());
         else if(c == Tetris.class)
             updaters.put(c,new Tetris());
     }

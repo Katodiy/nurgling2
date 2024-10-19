@@ -12,7 +12,9 @@ public class SelectFlowerAction implements Action
 
     Object target;
     Sprite spr = null;
+    Boolean petalIgnored = false;
     boolean ignoreErrors = false;
+
     public SelectFlowerAction(String opt, WItem item)
     {
         this.opt = opt;
@@ -23,6 +25,13 @@ public class SelectFlowerAction implements Action
     {
         this.opt = opt;
         this.target = gob;
+    }
+
+    public SelectFlowerAction(String opt, Gob gob, Boolean petalIgnored)
+    {
+        this.opt = opt;
+        this.target = gob;
+        this.petalIgnored = petalIgnored;
     }
 
     public SelectFlowerAction(String opt, Gob gob, Roastspit spr)
@@ -60,7 +69,10 @@ public class SelectFlowerAction implements Action
 
         NFlowerMenu fm = NUtils.getFlowerMenu();
         if(fm==null)
-            return Results.FAIL();
+            if(!petalIgnored)
+                return Results.FAIL();
+            else
+                return Results.SUCCESS();
         if(fm.chooseOpt(opt))
         {
             NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());

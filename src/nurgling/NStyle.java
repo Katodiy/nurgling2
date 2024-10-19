@@ -92,6 +92,11 @@ public class NStyle {
             new TexI(Resource.loadsimg("nurgling/hud/buttons/addarea/d")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/addarea/h"))};
 
+    public static final TexI[] addfolder = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/addfolder/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/addfolder/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/addfolder/h"))};
+
     public static final TexI[] add = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/add/u")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/add/d")),
