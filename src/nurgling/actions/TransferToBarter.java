@@ -7,6 +7,7 @@ import haven.res.ui.barterbox.Shopbox;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.tasks.WaitItems;
+import nurgling.tasks.WindowIsClosed;
 import nurgling.tools.Context;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
@@ -59,8 +60,13 @@ public class TransferToBarter implements Action{
                             new PathFinder(barter.chest).run(gui);
                             new OpenTargetContainer("Chest", barter.chest).run(gui);
                             ArrayList<WItem> branchitems = gui.getInventory().getItems("Branch");
-                            new SimpleTransferToContainer(gui.getInventory("Chest"), gui.getInventory().getItems("Branch"), branchitems.size() - startSize).run(gui);
-                            wItems = NUtils.getGameUI().getInventory().getItems(items, th);
+                            new SimpleTransferToContainer(gui.getInventory("Chest"), gui.getInventory().getItems("Branch"), branchitems.size()-startSize).run(gui);
+                            wItems = NUtils.getGameUI().getInventory().getItems(items,th);
+                            Window wnd = NUtils.getGameUI().getWindow("Chest");
+                            if(wnd!=null) {
+                                wnd.wdgmsg("close");
+                                gui.ui.core.addTask(new WindowIsClosed(wnd));
+                            }
                         }
                     }
                 }
