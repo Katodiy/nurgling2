@@ -12,6 +12,8 @@ public class WaitItems implements NTask
     NAlias name = null;
     Widget inventory;
 
+    int count = 0;
+
     GItem target = null;
     public WaitItems(NInventory inventory, NAlias name, int size)
     {
@@ -42,7 +44,7 @@ public class WaitItems implements NTask
     @Override
     public boolean check()
     {
-
+        count++;
         if (target != null)
             if (((NGItem) target).name() != null)
                 name = new NAlias(((NGItem) target).name());
@@ -71,6 +73,10 @@ public class WaitItems implements NTask
                         }
                     }
                 }
+            }
+            if(count == 1000) {
+                NUtils.getGameUI().error("WAIT ITEMS ERROR result.size():" + String.valueOf(result.size()) + " req target size:" + String.valueOf(target_size) + " WITEMS: " + ((name != null && name.keys.size() > 0) ? name.keys.get(0) : "null"));
+                return true;
             }
             return result.size() == target_size;
         }
