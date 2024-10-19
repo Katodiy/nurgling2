@@ -32,14 +32,14 @@ public class FeedClover implements Action {
         Gob gob = Finder.findGob(krtters);
         if(gob!=null) {
             NUtils.activateItem(gob, false);
-            WaitPoseOrMsg wpom1 = new WaitPoseOrMsg(NUtils.player(),"gfx/borka/animaltease", "The animal eye");
+            WaitPoseOrMsg wpom1 = new WaitPoseOrMsg(NUtils.player(),"gfx/borka/animaltease", new NAlias("The animal eye"));
             NUtils.addTask(wpom1);
             if(wpom1.isError())
             {
                 gui.getInventory().dropOn(pos, clover);
             }
             else {
-                WaitPoseOrMsg wpom2 = new WaitPoseOrMsg(NUtils.player(), "gfx/borka/idle", "The animal loses");
+                WaitPoseOrMsg wpom2 = new WaitPoseOrMsg(NUtils.player(), "gfx/borka/idle", new NAlias("The animal loses"));
                 NUtils.addTask(wpom2);
                 if (wpom2.isError()) {
                     gui.getInventory().dropOn(pos, clover);
