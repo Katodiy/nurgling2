@@ -97,7 +97,7 @@ public class TransferItems implements Action
                         }
                         if (output instanceof Context.Barter) {
                             if (((Context.OutputBarter) output).getArea() != null)
-                                new TransferToBarter(((Context.OutputBarter) output), new NAlias(item)).run(gui);
+                                new TransferToBarter(((Context.OutputBarter) output), new NAlias(item), th).run(gui);
                         }
                     }
                 }
