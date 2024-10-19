@@ -3,6 +3,7 @@ package nurgling.overlays;
 
 import haven.*;
 import haven.render.*;
+import haven.res.ui.obj.buddy.Buddy;
 import nurgling.*;
 import nurgling.conf.*;
 
@@ -37,13 +38,13 @@ public class NKinRing extends Sprite implements RenderTree.Node
     public static final ColorTex сt = new TexI(Resource.loadimg("marks/kintears/white")).st();
     public void added(RenderTree.Slot slot)
     {
-//        KinInfo inf = gob.getattr(KinInfo.class);
-//        if((inf!=null && NKinProp.get(inf.group).ring) || unknown)
-//        {
-//            Pipe.Op rmat = Pipe.Op.compose(сt, Rendered.postpfx);
-//            slot.add(emod, rmat);
-//            _slot = slot;
-//        }
+        Buddy buddy = gob.getattr(Buddy.class);
+        if((buddy!=null && buddy.b!=null && NKinProp.get(buddy.b.group).ring) || unknown)
+        {
+            Pipe.Op rmat = Pipe.Op.compose(сt, Rendered.postpfx);
+            slot.add(emod, rmat);
+            _slot = slot;
+        }
     }
 
     RenderTree.Slot _slot;
@@ -54,41 +55,41 @@ public class NKinRing extends Sprite implements RenderTree.Node
         String posename = gob.pose();
         if((posename != null && posename.contains("knocked")) || NUtils.playerID() == gob.id)
             return true;
-//        KinInfo inf = gob.getattr(KinInfo.class);
-//        if(inf == null)
-//        {
-//            unknown = true;
-//            if (_slot == null)
-//            {
-//                if (NKinProp.get(0).ring)
-//                {
-//                    RUtils.multiadd(gob.slots, this);
-//                }
-//            }
-//        }
-//        else
-//        {
-//            if (NKinProp.get(inf.group).ring)
-//            {
-//                if(unknown)
-//                {
-//                    unknown = false;
-//                }
-//                if (_slot == null)
-//                {
-//                    unknown = false;
-//                    RUtils.multiadd(gob.slots, this);
-//                }
-//            }
-//            else
-//            {
-//                if (_slot != null)
-//                {
-//                    _slot.remove();
-//                    _slot = null;
-//                }
-//            }
-//        }
+        Buddy buddy = gob.getattr(Buddy.class);
+        if(buddy == null)
+        {
+            unknown = true;
+            if (_slot == null)
+            {
+                if (NKinProp.get(0).ring)
+                {
+                    RUtils.multiadd(gob.slots, this);
+                }
+            }
+        }
+        else
+        {
+            if (buddy.b!=null && NKinProp.get(buddy.b.group).ring)
+            {
+                if(unknown)
+                {
+                    unknown = false;
+                }
+                if (_slot == null)
+                {
+                    unknown = false;
+                    RUtils.multiadd(gob.slots, this);
+                }
+            }
+            else
+            {
+                if (_slot != null)
+                {
+                    _slot.remove();
+                    _slot = null;
+                }
+            }
+        }
         return false;
     }
 

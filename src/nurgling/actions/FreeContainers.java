@@ -35,7 +35,9 @@ public class FreeContainers implements Action
                 if(space.getRes().get(Container.Space.FREESPACE) == space.getRes().get(Container.Space.MAXSPACE))
                     continue;
             }
-            new PathFinder(container.gob).run(gui);
+            PathFinder pf = new PathFinder(container.gob);
+            pf.isHardMode = true;
+            pf.run(gui);
             new OpenTargetContainer(container).run(gui);
             for(WItem item : gui.getInventory(container.cap).getItems())
             {
@@ -48,7 +50,9 @@ public class FreeContainers implements Action
             while (!new TakeItemsFromContainer(container, targets).run(gui).isSuccess)
             {
                 new TransferItems(context, targets).run(gui);
-                new PathFinder(container.gob).run(gui);
+                pf = new PathFinder(container.gob);
+                pf.isHardMode = true;
+                pf.run(gui);
                 new OpenTargetContainer(container).run(gui);
             }
             new CloseTargetContainer(container).run(gui);
