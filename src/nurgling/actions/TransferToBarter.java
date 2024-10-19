@@ -34,8 +34,6 @@ public class TransferToBarter implements Action{
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<WItem> wItems = NUtils.getGameUI().getInventory().getItems(items,th);
-        if(wItems.isEmpty())
-            return Results.SUCCESS();
         while (!wItems.isEmpty()) {
             new PathFinder(barter.barter).run(gui);
             new OpenTargetContainer("Barter Stand", barter.barter).run(gui);
