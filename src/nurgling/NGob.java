@@ -144,7 +144,7 @@ public class NGob {
                                 parent.addcustomol(new NBarrelOverlay(parent));
                             }
 
-                            if (NUtils.playerID() != -1 && name.equals("gfx/borka/body") && NUtils.playerID() != parent.id) {
+                            if (name.equals("gfx/borka/body")) {
                                 parent.addcustomol(new NKinRing(parent));
                                 parent.setattr(new NKinTex(parent));
                             }

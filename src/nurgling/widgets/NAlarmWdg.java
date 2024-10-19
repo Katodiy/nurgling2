@@ -5,6 +5,7 @@ import haven.res.ui.obj.buddy.Buddy;
 import nurgling.NAlarmManager;
 import nurgling.NStyle;
 import nurgling.NUtils;
+import nurgling.conf.NKinProp;
 import nurgling.overlays.NDirArrow;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -33,41 +34,48 @@ public class NAlarmWdg extends Widget
         super.tick(dt);
         synchronized (borkas) {
             ArrayList<Long> forRemove = new ArrayList();
-            for(Long id: borkas) {
+            for (Long id : borkas) {
                 Gob gob;
-                if((gob = Finder.findGob(id))==null) {
+                if ((gob = Finder.findGob(id)) == null) {
                     forRemove.add(id);
-                }
-                else
-                {
-                    if(NUtils.playerID()!=-1)
-                    {
-                        if(id == NUtils.playerID())
+                } else {
+                    if (NUtils.playerID() != -1) {
+                        if (id == NUtils.playerID())
                             forRemove.add(id);
                     }
                     String pose = gob.pose();
-                    if(pose!=null) {
-                        if(NParser.checkName(pose, new NAlias("dead")))
+                    if (pose != null) {
+                        if (NParser.checkName(pose, new NAlias("dead")))
                             forRemove.add(id);
                     }
                 }
             }
             borkas.removeAll(forRemove);
             Gob player = NUtils.player();
-            if(player!=null) {
+            if (player != null) {
                 for (Long id : borkas) {
                     if (!alarms.contains(id)) {
                         Gob gob = Finder.findGob(id);
+
                         Buddy buddy = gob.getattr(Buddy.class);
                         if (buddy == null) {
-                            addAlarm(id);
-                            synchronized (player.ols) {
-                                player.addol(new NDirArrow(NUtils.player(), Color.WHITE, 50, gob, null));
+                            NKinProp kinProp = NKinProp.get(0);
+                            if (kinProp.alarm) {
+                                addAlarm(id);
+
+                            }
+                            if (kinProp.arrow) {
+                                synchronized (player.ols) {
+                                    player.addol(new NDirArrow(NUtils.player(), Color.WHITE, 50, gob, null));
+                                }
                             }
                         } else {
                             if (buddy.b != null) {
-                                if (BuddyWnd.gc[buddy.b.group] == Color.WHITE || BuddyWnd.gc[buddy.b.group] == Color.RED) {
+                                NKinProp kinProp = NKinProp.get(buddy.b.group);
+                                if (kinProp.alarm) {
                                     addAlarm(id);
+                                }
+                                if (kinProp.arrow) {
                                     synchronized (player.ols) {
                                         player.addol(new NDirArrow(NUtils.player(), BuddyWnd.gc[buddy.b.group], 50, gob, null));
                                     }
@@ -78,15 +86,15 @@ public class NAlarmWdg extends Widget
                 }
             }
             forRemove.clear();
-            for(Long id: alarms) {
-                if(Finder.findGob(id)==null) {
+            for (Long id : alarms) {
+                if (Finder.findGob(id) == null) {
                     forRemove.add(id);
                 }
             }
-            for(Long id: forRemove) {
+            for (Long id : forRemove) {
                 alarms.remove(id);
             }
-            if(!alarms.isEmpty()) {
+            if (!alarms.isEmpty()) {
                 numberAlarm = new TexI(active_title.render(String.valueOf(alarms.size())).img);
             }
         }
