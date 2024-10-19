@@ -22,6 +22,8 @@ public class NMapView extends MapView
     public static final KeyBinding kb_quickignaction = KeyBinding.get("quickignaction", KeyMatch.forchar('q',1));
     public static final int MINING_OVERLAY = - 1;
     public Coord lastGC = null;
+
+
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
         super(sz, glob, cc, plgob);
@@ -34,7 +36,9 @@ public class NMapView extends MapView
     final ArrayList<String> tlays = new ArrayList<>();
 
     public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
+    public AtomicBoolean isGobSelectionMode = new AtomicBoolean(false);
     public NArea.Space areaSpace = null;
+    public Gob selectedGob = null;
 
     public HashMap<Long, Gob> dummys = new HashMap<>();
 
@@ -409,6 +413,11 @@ public class NMapView extends MapView
                 selection = new NSelector();
             }
         }
+        if ( isGobSelectionMode.get() )
+        {
+            getGob(c);
+            return false;
+        }
         return super.mousedown(c, button);
     }
 
@@ -563,5 +572,20 @@ public class NMapView extends MapView
     {
         glob.map.areas.get(id).name = new_name;
         NConfig.needAreasUpdate();
+    }
+
+    void getGob(Coord c) {
+        new Hittest(c) {
+            @Override
+            protected void hit(Coord pc, Coord2d mc, ClickData inf) {
+                if (inf != null) {
+                    Gob gob = Gob.from(inf.ci);
+                    if (gob != null) {
+                        selectedGob = gob;
+                    }
+                    isGobSelectionMode.set(false);
+                }
+            }
+        }.run();
     }
 }

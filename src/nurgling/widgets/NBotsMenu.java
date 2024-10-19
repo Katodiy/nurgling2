@@ -12,8 +12,7 @@ import java.util.*;
 public class NBotsMenu extends Widget
 {
     final static String dir_path = "nurgling/bots/icons/";
-    public NBotsMenu()
-    {
+    public NBotsMenu() {
         NLayout resources = new NLayout("resources");
         resources.elements.add(new NButton("choper", new Chopper()));
         resources.elements.add(new NButton("chipper", new Chipper(), true));
@@ -26,55 +25,54 @@ public class NBotsMenu extends Widget
         resources.elements.add(new NButton("leaf", new CollectLeaf(), true));
         addLayout(resources);
 
-        if((Boolean)NConfig.get(NConfig.Key.debug)) {
-            NLayout productions = new NLayout("productions");
-            productions.elements.add(new NButton("smelter", new SmelterAction(), true));
-            productions.elements.add(new NButton("backer", new BackerAction(),true));
-            productions.elements.add(new NButton("ugardenpot", new UnGardentPotAction(), true));
-            productions.elements.add(new NButton("butcher", new Butcher(), true));
-            productions.elements.add(new NButton("hides", new DFrameHidesAction(), true));
-            productions.elements.add(new NButton("fishroast", new FriedFish(),true));
-            addLayout(productions);
-            NLayout battle = new NLayout("battle");
-            battle.elements.add(new NButton("reagro", new Reagro()));
-            battle.elements.add(new NButton("attacknearcurs", new AggroNearCurs()));
-            battle.elements.add(new NButton("attacknear", new AggroNearest()));
-            battle.elements.add(new NButton("attacknearborka", new AggroNearestBorka()));
-            battle.elements.add(new NButton("attackall", new AttackAll()));
-            addLayout(battle);
-            NLayout farming = new NLayout("farming");
-            farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
-            farming.elements.add(new NButton("hemp", new HempFarmer(),true));
-            farming.elements.add(new NButton("flax", new FlaxFarmer(),true));
-            farming.elements.add(new NButton("goats", new GoatsAction()));
-            farming.elements.add(new NButton("sheeps", new SheepsAction()));
-            farming.elements.add(new NButton("pigs", new PigsAction()));
-            farming.elements.add(new NButton("cows", new nurgling.actions.bots.CowsAction()));
-            addLayout(farming);
-            NLayout utils = new NLayout("utils");
-            utils.elements.add(new NButton("shieldsword", new EquipShieldSword()));
-            utils.elements.add(new NButton("filwater", new FillWaterskins(false)));
-            utils.elements.add(new NButton("unbox", new FreeContainersInArea(),true));
-            utils.elements.add(new NButton("water_cheker", new CheckWater()));
-            utils.elements.add(new NButton("clay_cheker", new CheckClay(),true));
-            utils.elements.add(new NButton("clover", new FeedClover(),true));
-            addLayout(utils);
-            NLayout build = new NLayout("build");
-            build.elements.add(new NButton("dframe", new BuildDryingFrame(),true));
-            build.elements.add(new NButton("cellar", new BuildCellar()));
-            addLayout(build);
-            if (NUtils.getUI().core.debug) {
-                NLayout tests = new NLayout("tools");
-                tests.elements.add(new NButton("test1", new TESTLiftDrop()));
-                tests.elements.add(new NButton("test2", new TESTFillCauldron()));
-                tests.elements.add(new NButton("test4", new TESTbranchinvtransferpacks()));
-                tests.elements.add(new NButton("test5", new TESTfreeStockpilesAndTransfer()));
-                tests.elements.add(new NButton("test7", new TESTselectfloweraction()));
-                tests.elements.add(new NButton("test8", new TESTpf()));
+        NLayout productions = new NLayout("productions");
+        productions.elements.add(new NButton("smelter", new SmelterAction(), true));
+        productions.elements.add(new NButton("backer", new BackerAction(), true));
+        productions.elements.add(new NButton("ugardenpot", new UnGardentPotAction(), true));
+        productions.elements.add(new NButton("butcher", new Butcher(), true));
+        productions.elements.add(new NButton("hides", new DFrameHidesAction(), true));
+        productions.elements.add(new NButton("fishroast", new FriedFish(), true));
+        addLayout(productions);
+        NLayout battle = new NLayout("battle");
+        battle.elements.add(new NButton("reagro", new Reagro()));
+        battle.elements.add(new NButton("attacknearcurs", new AggroNearCurs()));
+        battle.elements.add(new NButton("attacknear", new AggroNearest()));
+        battle.elements.add(new NButton("attacknearborka", new AggroNearestBorka()));
+        battle.elements.add(new NButton("attackall", new AttackAll()));
+        addLayout(battle);
+        NLayout farming = new NLayout("farming");
+        farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
+        farming.elements.add(new NButton("hemp", new HempFarmer(), true));
+        farming.elements.add(new NButton("flax", new FlaxFarmer(), true));
+        farming.elements.add(new NButton("goats", new GoatsAction()));
+        farming.elements.add(new NButton("sheeps", new SheepsAction()));
+        farming.elements.add(new NButton("pigs", new PigsAction()));
+        farming.elements.add(new NButton("cows", new nurgling.actions.bots.CowsAction()));
+        addLayout(farming);
+        NLayout utils = new NLayout("utils");
+        utils.elements.add(new NButton("shieldsword", new EquipShieldSword()));
+        utils.elements.add(new NButton("filwater", new FillWaterskins(false)));
+        utils.elements.add(new NButton("unbox", new FreeContainersInArea(), true));
+        utils.elements.add(new NButton("water_cheker", new CheckWater()));
+        utils.elements.add(new NButton("clay_cheker", new CheckClay(), true));
+        utils.elements.add(new NButton("clover", new FeedClover(), true));
+        utils.elements.add(new NButton("collectalltopile", new CollectSameItemsFromEarth(), true));
+        addLayout(utils);
+        NLayout build = new NLayout("build");
+        build.elements.add(new NButton("dframe", new BuildDryingFrame(), true));
+        build.elements.add(new NButton("cellar", new BuildCellar()));
+        addLayout(build);
+        if (NUtils.getUI().core.debug) {
+            NLayout tests = new NLayout("tools");
+            tests.elements.add(new NButton("test1", new TESTLiftDrop()));
+            tests.elements.add(new NButton("test2", new TESTFillCauldron()));
+            tests.elements.add(new NButton("test4", new TESTbranchinvtransferpacks()));
+            tests.elements.add(new NButton("test5", new TESTfreeStockpilesAndTransfer()));
+            tests.elements.add(new NButton("test7", new TESTselectfloweraction()));
+            tests.elements.add(new NButton("test8", new TESTpf()));
 //            tests.elements.add(new NButton("chop", new TESTfindallchest()));
-                tests.elements.add(new NButton("test9", new TESTAvalaible()));
-                addLayout(tests);
-            }
+            tests.elements.add(new NButton("test9", new TESTAvalaible()));
+            addLayout(tests);
         }
         showLayouts();
         pack();

@@ -461,4 +461,13 @@ public class NUtils
             }
         }
     }
+
+    public static boolean barrelHasContent(Gob barrel) {
+        for (Gob.Overlay ol : barrel.ols) {
+            if(ol.spr instanceof StaticSprite) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
