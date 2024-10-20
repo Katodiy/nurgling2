@@ -64,8 +64,21 @@ public class UnGardentPotAction implements Action {
             NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 1));
             new FreeKIlnGP(containers).run(gui);
             res = new FillContainersFromAreas(containers, new NAlias("Unfired Garden Pot"), icontext).run(gui);
-            new FuelToContainers(containers).run(gui);
-            new LightGob(lighted, 1).run(gui);
+
+            ArrayList<Container> forFuel = new ArrayList<>();
+            for(Container container: containers) {
+                Container.Space space = container.getattr(Container.Space.class);
+                if(!space.isEmpty())
+                    forFuel.add(container);
+            }
+            new FuelToContainers(forFuel).run(gui);
+
+            ArrayList<Gob> flighted = new ArrayList<>();
+            for (Container cont : forFuel) {
+                flighted.add(cont.gob);
+            }
+            if (!new LightGob(flighted, 1).run(gui).IsSuccess())
+                return Results.ERROR("I can't start a fire");
         }
         return Results.SUCCESS();
     }
