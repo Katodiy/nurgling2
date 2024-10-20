@@ -48,7 +48,7 @@ public class TakeItemsByTetris implements Action
             for(WItem item: wifp.getResult()) {
                 for (Container container: conts) {
                     Container.Tetris tetris = container.getattr(Container.Tetris.class);
-                    if(tetris.tryPlace(item.item.spr.sz().div(UI.scale(32))))
+                    if(tetris.tryPlace(item.item.spr.sz().div(UI.scale(32)).swapXY()))
                         break;
                 }
             }

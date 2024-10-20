@@ -96,7 +96,7 @@ public class Container {
         private boolean placeItem(Coord coord) {
             if (coord.x < 1 || coord.y < 1)
                 return false;
-            short[][] grid = (short[][]) res.get(DATA);
+                short[][] grid = (short[][]) res.get(DATA);
 
             for (int i = 0; i <= grid.length - coord.x; i++)
                 for (int j = 0; j <= grid[i].length - coord.y; j++) {

@@ -33,7 +33,7 @@ public class IsOverlay implements NTask
                 }
             }
         }
-        return count > 200;
+        return count > 500;
     }
 
     public boolean getResult(){

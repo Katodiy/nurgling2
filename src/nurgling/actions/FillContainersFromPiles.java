@@ -89,7 +89,7 @@ public class FillContainersFromPiles implements Action {
                             ArrayList<WItem> witems = gui.getInventory().getItems(transferedItems);
                             boolean hole = false;
                             for (WItem witem : witems)
-                                if (tetr.calcNumberFreeCoord(Container.Tetris.SRC, witem.item.spr.sz().div(UI.scale(32))) > 0) {
+                                if (tetr.calcNumberFreeCoord(Container.Tetris.SRC, witem.item.spr.sz().div(UI.scale(32)).swapXY()) > 0) {
                                     hole = true;
                                     break;
                                 }

@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.NUtils;
+
 import java.util.*;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
@@ -37,7 +39,7 @@ public class RootWidget extends ConsoleHost implements UI.MessageWidget, Console
     Profile guprof, grprof, ggprof;
     private Text lastmsg;
     private double msgtime;
-	
+	public String lastSfx = null;
     public RootWidget(UI ui, Coord sz) {
 	super(ui, new Coord(0, 0), sz);
 	setfocusctl(true);
@@ -109,6 +111,7 @@ public class RootWidget extends ConsoleHost implements UI.MessageWidget, Console
 	    }
 	} else if(msg == "sfx") {
 	    int a = 0;
+		lastSfx = NUtils.getUI().sess.getResName((Integer) args[0]);
 	    Indir<Resource> resid = ui.sess.getresv(args[a++]);
 	    double vol = (args.length > a) ? Utils.dv(args[a++]) : 1.0;
 	    double spd = (args.length > a) ? Utils.dv(args[a++]) : 1.0;
