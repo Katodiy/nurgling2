@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import haven.Coord;
 import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.NUtils;
@@ -30,9 +31,13 @@ public class UnGardentPotAction implements Action {
             cand.initattr(Container.FuelLvl.class);
             cand.getattr(Container.FuelLvl.class).setMaxlvl(23);
             cand.getattr(Container.FuelLvl.class).setFueltype("branch");
-            cand.initattr(Container.TargetItems.class);
-            cand.getattr(Container.TargetItems.class).setMaxNum(4);
-            cand.getattr(Container.TargetItems.class).addTarget("Unfired Garden Pot");
+            cand.initattr(Container.Tetris.class);
+            Container.Tetris tetris = cand.getattr(Container.Tetris.class);
+            ArrayList<Coord> coords = new ArrayList<>();
+            coords.add(new Coord(2, 2));
+
+            tetris.getRes().put(Container.Tetris.TARGET_COORD, coords);
+
             containers.add(cand);
         }
 

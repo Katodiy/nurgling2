@@ -85,6 +85,8 @@ public class SmelterAction implements Action {
                 lighted.add(cont.gob);
 
             }
+            if(containers.isEmpty())
+                return Results.ERROR("NO SMELTERS");
 
             Results res = null;
             while (res == null || res.IsSuccess()) {
