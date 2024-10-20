@@ -58,8 +58,20 @@ public class BackerAction implements Action {
             }
             new FreeContainers(containers).run(gui);
             res = new FillContainersFromAreas(containers, new NAlias("Dough", "Unbaked"), icontext).run(gui);
-            new FuelToContainers(containers).run(gui);
-            new LightGob(lighted, 4).run(gui);
+
+            ArrayList<Container> forFuel = new ArrayList<>();
+            for(Container container: containers) {
+                Container.Space space = container.getattr(Container.Space.class);
+                if(!space.isEmpty())
+                    forFuel.add(container);
+            }
+            new FuelToContainers(forFuel).run(gui);
+
+            ArrayList<Gob> flighted = new ArrayList<>();
+            for (Container cont : forFuel) {
+                flighted.add(cont.gob);
+            }
+            new LightGob(flighted, 4).run(gui);
         }
         return Results.SUCCESS();
     }

@@ -51,6 +51,10 @@ public class Container {
             res.put(MAXSPACE, NUtils.getGameUI().getInventory(cap).getTotalSpace());
         }
 
+        public boolean isEmpty()
+        {
+            return ((Integer) res.get(FREESPACE)).equals((Integer) res.get(MAXSPACE));
+        }
 
     }
 
