@@ -7,6 +7,7 @@ import nurgling.NCore;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.tasks.*;
+import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,7 +52,7 @@ public class AutoDrink implements Action
                 {
 
                     pag.button().use(new MenuGrid.Interaction(1, 0));
-                    WaitPoseOrMsg wops = new WaitPoseOrMsg(NUtils.player(),"gfx/borka/drinkan","You have nothing on your hotbelt to drink.");
+                    WaitPoseOrMsg wops = new WaitPoseOrMsg(NUtils.player(),"gfx/borka/drinkan",new NAlias("You have nothing on your hotbelt to drink."));
                     NUtils.getUI().core.addTask(wops);
                     NUtils.addTask(new NTask() {
                         @Override

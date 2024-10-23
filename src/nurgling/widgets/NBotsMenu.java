@@ -32,6 +32,7 @@ public class NBotsMenu extends Widget
         productions.elements.add(new NButton("butcher", new Butcher(), true));
         productions.elements.add(new NButton("hides", new DFrameHidesAction(), true));
         productions.elements.add(new NButton("fishroast", new FriedFish(), true));
+        productions.elements.add(new NButton("leather", new LeatherAction(), true));
         addLayout(productions);
         NLayout battle = new NLayout("battle");
         battle.elements.add(new NButton("reagro", new Reagro()));
@@ -61,6 +62,7 @@ public class NBotsMenu extends Widget
         NLayout build = new NLayout("build");
         build.elements.add(new NButton("dframe", new BuildDryingFrame(), true));
         build.elements.add(new NButton("cellar", new BuildCellar()));
+        build.elements.add(new NButton("ttub", new BuildTtub()));
         addLayout(build);
         if (NUtils.getUI().core.debug) {
             NLayout tests = new NLayout("tools");

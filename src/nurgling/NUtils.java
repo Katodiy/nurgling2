@@ -488,4 +488,8 @@ public class NUtils
         }
         return false;
     }
+
+    public static void dropLastSfx() {
+        getUI().root.lastSfx = null;
+    }
 }

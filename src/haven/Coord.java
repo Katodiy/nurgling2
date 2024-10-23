@@ -92,6 +92,10 @@ public class Coord implements Comparable<Coord>, java.io.Serializable {
 	return(((y & 0xffff) * 31) + (x & 0xffff));
     }
 
+	public Coord swapXY() {
+		return(of(y, x));
+	}
+
     public Coord add(int ax, int ay) {
 	return(of(x + ax, y + ay));
     }

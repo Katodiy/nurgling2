@@ -85,6 +85,8 @@ public class SmelterAction implements Action {
                 lighted.add(cont.gob);
 
             }
+            if(containers.isEmpty())
+                return Results.ERROR("NO SMELTERS");
 
             Results res = null;
             while (res == null || res.IsSuccess()) {
@@ -93,9 +95,23 @@ public class SmelterAction implements Action {
                 new CollectQuickSilver(containers).run(gui);
                 new DropTargets(containers, new NAlias("Slag")).run(gui);
                 res = new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.ore.toString()), ores).run(gui);
-                if (!new FuelToContainers(containers).run(gui).IsSuccess())
+                ArrayList<Container> forFuel = new ArrayList<>();
+
+                for(Container container: containers) {
+                    Container.Space space = container.getattr(Container.Space.class);
+                    if(!space.isEmpty())
+                        forFuel.add(container);
+                }
+
+                if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
                     return Results.ERROR("NO FUEL");
-                if (!new LightGob(lighted, 2).run(gui).IsSuccess())
+
+                ArrayList<Gob> flighted = new ArrayList<>();
+                for (Container cont : forFuel) {
+                    flighted.add(cont.gob);
+                }
+
+                if (!new LightGob(flighted, 2).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");
             }
             return Results.SUCCESS();

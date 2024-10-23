@@ -49,8 +49,8 @@ public class DiggingResources implements Action
             do {
                 new PathFinder(pos).run(gui);
                 NUtils.dig();
-                NUtils.addTask(new WaitPoseOrMsg(NUtils.player(), "gfx/borka/shoveldig", "no clay left"));
-                wds = new WaitDiggerState("no clay left");
+                NUtils.addTask(new WaitPoseOrMsg(NUtils.player(), "gfx/borka/shoveldig", new NAlias("no clay left", "The area is too steep")));
+                wds = new WaitDiggerState( new NAlias("no clay left", "The area is too steep"));
                 NUtils.addTask(wds);
                 if (wds.getState() == WaitDiggerState.State.NOFREESPACE) {
                     new TransferToPiles(out, items).run(gui);

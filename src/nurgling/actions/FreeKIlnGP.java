@@ -10,15 +10,17 @@ import nurgling.tasks.WaitLifted;
 import nurgling.tasks.WaitPose;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
+import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 
 public class FreeKIlnGP implements Action
 {
     ArrayList<Container> containers;
-
+    NAlias gp = new NAlias(new ArrayList<>(Arrays.asList("Garden Pot")),new ArrayList<>(Arrays.asList("Unfired")));
     public FreeKIlnGP(ArrayList<Container> containers) {
         this.containers = containers;
     }
@@ -38,15 +40,16 @@ public class FreeKIlnGP implements Action
             }
             new PathFinder(container.gob).run(gui);
             new OpenTargetContainer(container).run(gui);
-            int total = gui.getInventory(container.cap).getItems("Garden Pot").size();
+            int total = gui.getInventory(container.cap).getItems(gp).size();
             for (int i = 0; i < total; i++)
             {
                 new PathFinder(container.gob).run(gui);
                 new OpenTargetContainer(container).run(gui);
-                gui.getInventory(container.cap).getItem("Garden Pot").item.wdgmsg("take", Coord.z);
+                gui.getInventory(container.cap).getItem(gp).item.wdgmsg("take", Coord.z);
                 NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/banzai"));
                 new FindPlaceAndAction(null,NArea.findSpec(new NArea.Specialisation(Specialisation.SpecName.gardenpot.toString()))).run(gui);
             }
+            new CloseTargetContainer(container).run(gui);
         }
         return Results.SUCCESS();
     }

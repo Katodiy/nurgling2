@@ -68,7 +68,9 @@ public class NArea
                 if(id>0) {
                     if (NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
                         NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
-                        results.add(test);
+                        if(test.getRCArea()!=null) {
+                            results.add(test);
+                        }
                     }
                 }
             }

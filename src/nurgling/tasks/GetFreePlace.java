@@ -34,7 +34,10 @@ public class GetFreePlace implements NTask
             if(item.spr == null)
                 return false;
             else
-                size = item.spr.sz().div(UI.scale(32));
+            {
+                Coord sz = item.spr.sz().div(UI.scale(32));
+                size = new Coord(sz.y,sz.x);
+            }
         freeCoord = inv.findFreeCoord(size);
         return freeCoord!=null;
     }

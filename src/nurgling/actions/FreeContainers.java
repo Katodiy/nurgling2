@@ -16,10 +16,18 @@ import java.util.HashSet;
 public class FreeContainers implements Action
 {
     ArrayList<Container> containers;
+    NAlias pattern = null;
 
     public FreeContainers(ArrayList<Container> containers) {
         this.containers = containers;
     }
+
+    public FreeContainers(ArrayList<Container> containers, NAlias pattern) {
+        this.containers = containers;
+        this.pattern = pattern;
+    }
+
+
 
     HashSet<String> targets = new HashSet<>();
 
@@ -39,7 +47,7 @@ public class FreeContainers implements Action
             pf.isHardMode = true;
             pf.run(gui);
             new OpenTargetContainer(container).run(gui);
-            for(WItem item : gui.getInventory(container.cap).getItems())
+            for(WItem item : (pattern==null)?gui.getInventory(container.cap).getItems():gui.getInventory(container.cap).getItems(pattern))
             {
                 String name = ((NGItem)item.item).name();
                 NArea area = NArea.findOut(name, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1);

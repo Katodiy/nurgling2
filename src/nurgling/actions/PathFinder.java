@@ -76,21 +76,7 @@ public class PathFinder implements Action {
                 //TODO syntetic points
                 for (Graph.Vertex vert : path) {
                     Coord2d targetCoord = Utils.pfGridToWorld(vert.pos);
-                    if (vert == path.getFirst() && gobInStartPos!=null) {
-                        Coord2d playerrc = NUtils.player().rc;
 
-                    }
-//
-//                    if (target_id == -1 && vert == path.getLast()) {
-//                        if (Math.abs(targetCoord.x - end.x) < Math.abs(targetCoord.y - end.y)) {
-//                            targetCoord.x = end.x;
-//                        } else {
-//                            targetCoord.y = end.y;
-//                        }
-//                    } else if (vert == path.getLast()) {
-//                        if (targetCoord.dist(end) < MCache.tilehsz.x)
-//                            targetCoord = end;
-//                    }
                     if(vert == path.getLast() && isHardMode || dummy!=null) {
                         Coord2d tcord = dummy != null ? dummy.rc : Finder.findGob(target_id).rc;
                         if (Math.abs(targetCoord.x - tcord.x) < 4) {

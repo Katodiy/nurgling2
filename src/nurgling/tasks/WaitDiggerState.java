@@ -4,16 +4,20 @@ import haven.Gob;
 import nurgling.NUtils;
 import nurgling.conf.NChopperProp;
 import nurgling.tools.Finder;
+import nurgling.tools.NAlias;
+import nurgling.tools.NParser;
+
+import javax.print.attribute.standard.MediaSize;
 
 public class WaitDiggerState implements NTask
 {
-    public WaitDiggerState(String msg)
+    public WaitDiggerState(NAlias msg)
     {
         this.player = NUtils.player();
         this.msg = msg;
     }
 
-    String msg;
+    NAlias msg;
     Gob player;
     public enum State
     {
@@ -32,7 +36,7 @@ public class WaitDiggerState implements NTask
         String cpose = NUtils.player().pose();
         int space = NUtils.getGameUI().getInventory().calcFreeSpace();
         state = State.WORKING;
-        if(lastMsg!=null && lastMsg.contains(msg))
+        if(lastMsg!=null &&  NParser.checkName(lastMsg, msg))
         {
             state = State.MSG;
         }
