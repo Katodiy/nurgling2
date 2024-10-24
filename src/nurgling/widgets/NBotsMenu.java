@@ -226,22 +226,46 @@ public class NBotsMenu extends Widget
         public final IButton btn;
         public String path;
         public boolean disStacks;
-        NButton(String path, Action action)
-        {
+        NButton(String path, Action action) {
             this.path = path;
-            btn = new IButton(Resource.loadsimg(dir_path + path + "/u"), Resource.loadsimg(dir_path + path + "/d"), Resource.loadsimg(dir_path + path + "/h")).action(
-                    new Runnable()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            start(path, action);
-                        }
-                    });
-
             Resource res = Resource.remote().load(dir_path + path + "/u").get();
-            if(!(res.layers(Resource.Tooltip.class).isEmpty()))
-                btn.settip(Resource.remote().loadwait(dir_path + path + "/u").flayer(Resource.tooltip).t);
+            btn = new IButton(Resource.loadsimg(dir_path + path + "/u"), Resource.loadsimg(dir_path + path + "/d"), Resource.loadsimg(dir_path + path + "/h")) {
+                TexI rtip;
+
+                @Override
+                public Object tooltip(Coord c, Widget prev) {
+                    if (rtip == null && res.layers(Resource.Tooltip.class) != null) {
+                        List<ItemInfo> info = new ArrayList<>();
+                        int count = 0;
+                        for (Resource.Tooltip tt : res.layers(Resource.Tooltip.class)) {
+                            if(count == 0)
+                            {
+                                info.add(new ItemInfo.Tip(null) {
+                                    @Override
+                                    public BufferedImage tipimg() {
+                                        return Text.render(tt.t).img;
+                                    }
+                                });
+                            }
+                            else {
+                                info.add(new ItemInfo.Pagina(null, tt.t));
+                            }
+                            count++;
+                        }
+                        BufferedImage img = ItemInfo.longtip(info);
+                        if(img!=null)
+                            rtip = new TexI(img);
+                    }
+                    return (rtip);
+                }
+            }
+                    .action(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    start(path, action);
+                                }
+                            });
 
         }
 
@@ -261,6 +285,8 @@ public class NBotsMenu extends Widget
                 }
             };
        }
+
+
 
 
 

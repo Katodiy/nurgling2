@@ -18,33 +18,45 @@ public class LeatherAction implements Action {
     NAlias notraw = new NAlias(new ArrayList<>(Arrays.asList("hide", "Scale", "skin", "Hide")), new ArrayList<>(Arrays.asList("Fresh", "Raw", "water")));
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        ArrayList<Container> containers = new ArrayList<>();
+        NArea.Specialisation rdframe = new NArea.Specialisation(Specialisation.SpecName.ttub.toString());
+        NArea.Specialisation rrawhides = new NArea.Specialisation(Specialisation.SpecName.readyHides.toString());
 
-        for (Gob ttube : Finder.findGobs(NArea.findSpec(Specialisation.SpecName.ttub.toString()),
-                new NAlias("gfx/terobjs/ttub"))) {
-            Container cand = new Container();
-            cand.gob = ttube;
-            cand.cap = "Tub";
+        ArrayList<NArea.Specialisation> req = new ArrayList<>();
+        req.add(rdframe);
+        req.add(rrawhides);
+        ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+        if (new Validator(req, opt).run(gui).IsSuccess()) {
 
-            cand.initattr(Container.Space.class);
-            cand.initattr(Container.Tetris.class);
-            Container.Tetris tetris = cand.getattr(Container.Tetris.class);
-            ArrayList<Coord> coords = new ArrayList<>();
 
-            coords.add(new Coord(2, 2));
-            coords.add(new Coord(2, 1));
-            coords.add(new Coord(1, 1));
+            ArrayList<Container> containers = new ArrayList<>();
 
-            tetris.getRes().put(Container.Tetris.TARGET_COORD, coords);
+            for (Gob ttube : Finder.findGobs(NArea.findSpec(Specialisation.SpecName.ttub.toString()),
+                    new NAlias("gfx/terobjs/ttub"))) {
+                Container cand = new Container();
+                cand.gob = ttube;
+                cand.cap = "Tub";
 
-            containers.add(cand);
+                cand.initattr(Container.Space.class);
+                cand.initattr(Container.Tetris.class);
+                Container.Tetris tetris = cand.getattr(Container.Tetris.class);
+                ArrayList<Coord> coords = new ArrayList<>();
+
+                coords.add(new Coord(2, 2));
+                coords.add(new Coord(2, 1));
+                coords.add(new Coord(1, 1));
+
+                tetris.getRes().put(Container.Tetris.TARGET_COORD, coords);
+
+                containers.add(cand);
+            }
+
+            new FillFluid(containers, NArea.findSpec(Specialisation.SpecName.tanning.toString()).getRCArea(), new NAlias("tanfluid"), 2).run(gui);
+            new FreeContainers(containers, new NAlias("Leather")).run(gui);
+            new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.readyHides.toString()), notraw).run(gui);
+            new TransferToPiles(NArea.findSpec(Specialisation.SpecName.readyHides.toString()).getRCArea(), notraw).run(gui);
+
+            return Results.SUCCESS();
         }
-
-        new FillFluid(containers,NArea.findSpec(Specialisation.SpecName.tanning.toString()).getRCArea(),new NAlias("tanfluid"),2).run(gui);
-        new FreeContainers(containers, new NAlias("Leather")).run(gui);
-        new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.readyHides.toString()), notraw).run(gui);
-        new TransferToPiles(NArea.findSpec(Specialisation.SpecName.readyHides.toString()).getRCArea(),notraw).run(gui);
-
-        return Results.SUCCESS();
+        return Results.FAIL();
     }
 }
