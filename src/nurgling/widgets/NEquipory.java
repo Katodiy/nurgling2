@@ -1,20 +1,33 @@
 package nurgling.widgets;
 
 import haven.*;
+import haven.res.ui.tt.gast.Gast;
+import haven.res.ui.tt.wear.Wear;
 import nurgling.*;
 import nurgling.tasks.GetItem;
 import nurgling.tasks.WaitItemSpr;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.*;
 
 public class NEquipory extends Equipory
 {
+    public static Text.Furnace fnd = new PUtils.BlurFurn(new Text.Foundry(Text.sans.deriveFont(java.awt.Font.BOLD), 12).aa(true), UI.scale(1), UI.scale(1), Color.BLACK);
+    final TexI eye = new TexI(Resource.loadsimg("nurgling/hud/eye"));
+    final TexI armor = new TexI(Resource.loadsimg("nurgling/hud/armor"));
+    int percExp = -1;
+    int hardArmor = -1;
+    int softArmor = -1;
     public NEquipory(long gobid)
     {
         super(gobid);
     }
+
+    BufferedImage percExpText = null;
+    BufferedImage hardSoft = null;
 
     public enum Slots {
         HEAD(0),       //00: Headgear
@@ -44,6 +57,61 @@ public class NEquipory extends Equipory
     }
 
     public WItem[] quickslots = new NWItem[ecoords.length];
+
+    private void updatePercExpText() {
+        int perceptionValue = 0;
+        int explorationValue = 0;
+        GameUI gui = getparent(GameUI.class);
+        if (gui != null && gui.chrwdg != null) {
+            if (gui.chrwdg.battr != null) {
+                for (BAttrWnd.Attr attr : gui.chrwdg.battr.attrs) {
+                    if (attr.nm.equals("prc")) {
+                        perceptionValue = attr.attr.comp;
+                        break;
+                    }
+                }
+            }
+            if (gui.chrwdg.sattr != null) {
+                for (SAttrWnd.SAttr attr : gui.chrwdg.sattr.attrs) {
+                    if (attr.nm.equals("explore")) {
+                        explorationValue = attr.attr.comp;
+                        break;
+                    }
+                }
+            }
+
+            int percExp = perceptionValue * explorationValue;
+            if(this.percExp!=percExp) {
+                this.percExp = percExp;
+                percExpText = fnd.render(String.valueOf(percExp)).img;
+            }
+        }
+    }
+
+    public void updateTotalArmor() {
+        int hardArmor = 0;
+        int softArmor = 0;
+
+        for (Slots slot : Slots.values()) {
+            WItem item = quickslots[slot.idx];
+            if (item != null) {
+                NGItem gitem = (NGItem) item.item;
+                Wear wear = gitem.getInfo(Wear.class);
+                if(wear!=null) {
+                    if(wear.d!=wear.m) {
+                        hardArmor += gitem.hardArmor;
+                        softArmor += gitem.softArmor;
+                    }
+                }
+            }
+        }
+        if(hardArmor!=this.hardArmor || softArmor!=this.softArmor) {
+            this.hardArmor = hardArmor;
+            this.softArmor = softArmor;
+            hardSoft = fnd.render(String.format("%d/%d",hardArmor,softArmor)).img;
+        }
+    }
+
 
     @Override
     public void addchild (
@@ -79,6 +147,30 @@ public class NEquipory extends Equipory
                     }
                 }
             }
+        }
+    }
+
+
+    @Override
+    public void tick(double dt) {
+        super.tick(dt);
+        updatePercExpText();
+        updateTotalArmor();
+    }
+
+    @Override
+    public void draw(GOut g) {
+        super.draw(g);
+        Coord textCoord = new Coord(sz.x - percExpText.getWidth() - UI.scale(65), UI.scale(3));
+        if (percExpText != null) {
+
+            g.image(eye, textCoord, UI.scale(20,20));
+            g.image(percExpText, textCoord.add(UI.scale(21, -1)));
+        }
+        if(hardSoft!=null) {
+            textCoord = textCoord.add(UI.scale(0, 18));
+            g.image(armor, textCoord, UI.scale(20, 20));
+            g.image(hardSoft, textCoord.add(UI.scale(21, -1)));
         }
     }
 

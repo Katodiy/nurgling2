@@ -21,6 +21,8 @@ public class NGItem extends GItem
     String name = null;
     public Float quality = null;
     public long meterUpdated = 0;
+    public int hardArmor = 0;
+    public int softArmor = 0;
 
     public NGItem(Indir<Resource> res, Message sdt)
     {
@@ -173,6 +175,12 @@ public class NGItem extends GItem
                                 switch (resName) {
                                     case "ui/tt/q/quality":
                                         if (a.length >= 2) quality = (Float) a[1];
+                                        break;
+                                    case "ui/tt/armor":
+                                        if (a.length >= 3) {
+                                            hardArmor = (Integer) a[1];  // Жесткая броня
+                                            softArmor = (Integer) a[2];  // Мягкая броня
+                                        }
                                         break;
                                     case "ui/tt/cont":
                                         double q = -1;
