@@ -820,6 +820,7 @@ public class NMakewindow extends Widget {
                     {
                         pos.x = UI.scale(8);
                         pos = pos.add(0, Inventory.sqsz.y + UI.scale(1));
+                        shift.x = 0;
                     }
                 }
                 return true;
