@@ -25,19 +25,20 @@ public class Validator implements Action{
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-
+        NArea test;
         for(NArea.Specialisation s: req)
         {
             if(s.subtype!=null)
             {
-                if(NArea.findSpec(s.name,s.subtype)==null)
+                if((test = NArea.findSpec(s.name,s.subtype))==null || test.getRCArea() == null)
                 {
                     return Results.ERROR("Area " + s.name + " ( " + s.subtype + " ) required, but not found!");
                 }
             }
             else
             {
-                if(NArea.findSpec(s.name)==null)
+
+                if((test = NArea.findSpec(s.name))==null || test.getRCArea() == null)
                 {
                     return Results.ERROR("Area " + s.name + " required, but not found!");
                 }
@@ -47,13 +48,13 @@ public class Validator implements Action{
         for(NArea.Specialisation s: opt)
         {
             if(s.subtype!=null) {
-                if (NArea.findSpec(s.name, s.subtype) == null) {
+                if ((test = NArea.findSpec(s.name,s.subtype))==null || test.getRCArea() == null) {
                     NUtils.getGameUI().msg("Optional area " + s.name + " ( " + s.subtype + " ) not found.");
                 }
             }
             else
             {
-                if(NArea.findSpec(s.name)==null)
+                if((test = NArea.findSpec(s.name))==null || test.getRCArea() == null)
                 {
                     NUtils.getGameUI().msg("Optional area " + s.name +" not found.");
                 }

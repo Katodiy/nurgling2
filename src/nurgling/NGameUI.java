@@ -32,6 +32,7 @@ public class NGameUI extends GameUI
     public Specialisation spec;
     public BotsInterruptWidget biw;
     public NEquipProxy nep;
+    public NCatSelection ncatSel;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -56,6 +57,7 @@ public class NGameUI extends GameUI
         nefn.hide();
         add(spec = new Specialisation());
         spec.hide();
+//        add(new NCatSelection(-1));
         add(biw = new BotsInterruptWidget());
     }
 

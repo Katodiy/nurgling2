@@ -21,15 +21,16 @@ public class WaitPoseOrMsg implements NTask
     String pose;
     NAlias msg;
     boolean isError = false;
-
+    int count = 0;
     @Override
     public boolean check()
     {
+        count++;
         String cpose = gob.pose();
         String lastMsg = NUtils.getUI().getLastError();
         if((cpose != null && cpose.contains(pose)) )
             return true;
-        if(lastMsg!=null && NParser.checkName(lastMsg, msg))
+        if((lastMsg!=null && NParser.checkName(lastMsg, msg)) || count > 300)
         {
             isError = true;
             return true;

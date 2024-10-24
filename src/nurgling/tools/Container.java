@@ -56,6 +56,20 @@ public class Container {
             return ((Integer) res.get(FREESPACE)).equals((Integer) res.get(MAXSPACE));
         }
 
+        public int getFreeSpace()
+        {
+            if(!res.containsKey(FREESPACE))
+                return -1;
+            return (Integer) res.get(FREESPACE);
+        }
+
+        public int getMaxSpace()
+        {
+            if(!res.containsKey(FREESPACE))
+                return -1;
+            return (Integer) res.get(MAXSPACE);
+        }
+
     }
 
     public class Tetris extends Updater {

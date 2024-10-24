@@ -27,6 +27,9 @@ public class TakeItems implements Action
     public Results run(NGameUI gui) throws InterruptedException
     {
         AtomicInteger left = new AtomicInteger(count);
+        ArrayList<Context.Input> inputs = cnt.getInputs(item);
+        if(inputs == null || inputs.isEmpty())
+            return Results.SUCCESS();
         for(Context.Input input: cnt.getInputs(item))
         {
             if(input instanceof Context.Barter)
@@ -37,7 +40,7 @@ public class TakeItems implements Action
             }
             else if (input instanceof Context.InputContainer)
             {
-                //new TakeItemsFromContainer(input)
+                takeFromContainer(left, gui, (Context.InputContainer) input);
             }
             if(left.get() == 0) {
                 return Results.SUCCESS();
@@ -95,6 +98,18 @@ public class TakeItems implements Action
         (tifp = new TakeItemsFromPile(pile.pile, gui.getStockpile(), left.get())).run(gui);
         new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
         left.set(left.get()-tifp.getResult());
+        return Results.SUCCESS();
+    }
+
+    public Results takeFromContainer(AtomicInteger left, NGameUI gui, Container cont) throws InterruptedException
+    {
+        new PathFinder(cont.gob).run(gui);
+        new OpenTargetContainer(cont).run(gui);
+        TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont,new HashSet<>(Arrays.asList(item)));
+        tifc.minSize = left.get();
+        tifc.run(gui);
+        new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
+        left.set(left.get()-tifc.getTarget_size());
         return Results.SUCCESS();
     }
 }

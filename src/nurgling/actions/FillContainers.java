@@ -1,29 +1,24 @@
 package nurgling.actions;
 
 import haven.Coord;
-import haven.Gob;
-import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
-import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
-import java.io.InterruptedIOException;
-import java.lang.annotation.Target;
 import java.util.ArrayList;
-import java.util.HashSet;
 
-public class FillContainersFromAreas implements Action
+public class FillContainers implements Action
 {
     ArrayList<Container> conts;
-    NAlias transferedItems;
+    String transferedItems;
     Context context;
     ArrayList<Container> currentContainers = new ArrayList<>();
+    Coord targetCoord = new Coord(1,1);
 
-    public FillContainersFromAreas(ArrayList<Container> conts, NAlias transferedItems, Context context) {
+    public FillContainers(ArrayList<Container> conts, String transferedItems, Context context) {
         this.conts = conts;
         this.context = context;
         this.transferedItems = transferedItems;
@@ -31,28 +26,19 @@ public class FillContainersFromAreas implements Action
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        NArea area = NArea.findIn(transferedItems);
+        if (area == null)
+            return Results.ERROR("NO area for: " + transferedItems);
+        context.addInput(transferedItems, Context.GetInput(transferedItems, area));
         for (Container cont : conts) {
             while(!isReady(cont)) {
                 if (gui.getInventory().getItems(transferedItems).isEmpty()) {
-                    if(context.icontainers.isEmpty())
-                        return Results.ERROR("NO INPUT CONTAINERS");
                     int target_size = calculateTargetSize();
-                    for (Container container : context.icontainers) {
-                        if (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.TargetItems.class).getTargets(transferedItems) > 0) {
-                            new PathFinder(container.gob).run(gui);
-                            new OpenTargetContainer(container).run(gui);
-                            TakeAvailableItemsFromContainer tifc = new TakeAvailableItemsFromContainer(container, transferedItems, target_size);
-                            tifc.run(gui);
-                            target_size -= tifc.getCount();
-                            new CloseTargetContainer(container).run(gui);
-                            if (target_size == 0 || !tifc.getResult())
-                                break;
-                        }
-                    }
+                    new TakeItems(context,transferedItems,Math.min(target_size,NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord))).run(gui);
                     if (gui.getInventory().getItems(transferedItems).isEmpty())
                         return Results.ERROR("NO ITEMS");
                 }
-                TransferToContainer ttc = new TransferToContainer(context, cont, transferedItems);
+                TransferToContainer ttc = new TransferToContainer(context, cont, new NAlias(transferedItems));
                 ttc.run(gui);
                 new CloseTargetContainer(cont).run(gui);
             }

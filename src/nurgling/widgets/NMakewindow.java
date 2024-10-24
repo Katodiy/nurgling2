@@ -80,7 +80,7 @@ public class NMakewindow extends Widget {
                 }
                 else
                 {
-                    g.image(ing.img, Coord.z);
+                    g.image(new TexI(ing.img), Coord.z, UI.scale(32,32));
                 }
             } catch(Loading e) {}
             if(num != null)

@@ -18,12 +18,13 @@ public class TakeItemsFromContainer implements Action
     Coord target_coord = new Coord(1,1);
     Container cont;
     HashSet<String> names;
+    int minSize = Integer.MAX_VALUE;
     public TakeItemsFromContainer(Container cont, HashSet<String> names)
     {
         this.cont = cont;
         this.names = names;
     }
-
+    int target_size = 0;
     boolean took = false;
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -36,7 +37,7 @@ public class TakeItemsFromContainer implements Action
                 target_coord = inv.getItem(name).sz.div(Inventory.sqsz);
                 int oldSpace = gui.getInventory().getItems(name).size();
                 ArrayList<WItem> items = gui.getInventory(cont.cap).getItems(name,aras.firstEntry().getKey());
-                int target_size = Math.min(gui.getInventory().getNumberFreeCoord(target_coord), items.size());
+                target_size = Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord), items.size()));
 
 
                 for (int i = 0; i < target_size; i++) {
@@ -58,5 +59,9 @@ public class TakeItemsFromContainer implements Action
     public boolean getResult()
     {
         return took;
+    }
+
+    public int getTarget_size() {
+        return target_size;
     }
 }

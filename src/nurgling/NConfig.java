@@ -72,7 +72,8 @@ public class NConfig
         hidecredo,
         autoDrink,
         chipperprop,
-        animalrad
+        animalrad,
+        smokeprop
     }
 
 
@@ -294,6 +295,9 @@ public class NConfig
                         case "NAreaRad":
                             res.add(new NAreaRad(obj));
                             break;
+                        case "NSmokeProp":
+                            res.add(new NSmokProp(obj));
+                            break;
                         default:
                             res.add(obj);
                     }
@@ -301,6 +305,10 @@ public class NConfig
                 else if (jobj instanceof String) {
                     res.addAll(objs);
                     break;
+                }
+                else
+                {
+                    int a = 0;
                 }
             }
             return res;
