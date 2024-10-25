@@ -130,7 +130,7 @@ public class NBotsMenu extends Widget
         NButton h = bhit(c);
         if((button == 1) && (grab != null)) {
             if(dragging != null) {
-                ui.dropthing(ui.root, ui.mc, dragging);
+//                ui.dropthing(ui.root, ui.mc, dragging);
                 pressed = null;
                 dragging = null;
             } else if(pressed != null) {

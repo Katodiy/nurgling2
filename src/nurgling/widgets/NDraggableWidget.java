@@ -172,18 +172,18 @@ public class NDraggableWidget extends Widget
                     !btnFlip.mousedown(c.add(xlate(btnFlip.c, true).inv()), button))
             {
                 if (c.isect(Coord.z, sz))
-                    if (ui.mousegrab.isEmpty())
-                    {
-                        if (!btnLock.a)
-                        {
-                            if (button == 1)
-                            {
-                                dm = ui.grabmouse(this);
-                                doff = c;
-                            }
-                        }
-                    }
-                    else
+//                    if (ui.mousegrab.isEmpty())
+//                    {
+//                        if (!btnLock.a)
+//                        {
+//                            if (button == 1)
+//                            {
+//                                dm = ui.grabmouse(this);
+//                                doff = c;
+//                            }
+//                        }
+//                    }
+//                    else
                     {
                         if (button == 1)
                         {

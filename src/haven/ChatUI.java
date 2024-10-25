@@ -1467,7 +1467,7 @@ public class ChatUI extends Widget
 	}
 
 	public boolean mouseup(MouseUpEvent ev) {
-        if(!super.mousedown(ev))
+        if(!super.mouseup(ev))
         {
 	    Channel chan = bypos(ev.c);
 	    if(chan != null) {

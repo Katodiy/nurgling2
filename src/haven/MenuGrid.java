@@ -548,7 +548,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	    pressed = h;
 	    grab = ui.grabmouse(this);
 	}
-	return(super.mousedown(c,button));
+	return(super.mousedown(ev));
     }
 
     public void mousemove(MouseMoveEvent ev) {
@@ -607,7 +607,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	    grab.remove();
 	    grab = null;
 	}
-	return(super.mouseup(c,button));
+	return(super.mouseup(ev));
     }
 	boolean criminalIsInstall = false;
 	boolean trackingIsInstall = false;

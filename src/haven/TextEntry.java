@@ -30,6 +30,7 @@ import nurgling.*;
 import nurgling.actions.bots.*;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
@@ -241,10 +242,10 @@ public class TextEntry extends Widget implements ReadLine.Owner {
 		}
 
 		@Override
-		public boolean keydown(KeyEvent ev) {
-			int keyCode = ev.getKeyCode();
+		public boolean keydown(KeyDownEvent ev) {
+			int keyCode = ev.code;
 			if(keyCode == 0){
-				keyCode = ev.getKeyChar();
+				keyCode = ev.c;
 			}
 			if (ALLOWED_KEYS.contains(keyCode)) {
 				return super.keydown(ev);
