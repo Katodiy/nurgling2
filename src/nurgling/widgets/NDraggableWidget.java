@@ -163,47 +163,34 @@ public class NDraggableWidget extends Widget
     }
 
     @Override
-    public boolean mousedown(Coord c, int button)
-    {
-        if (ui.core.mode == NCore.Mode.DRAG)
-        {
-            if (    !btnLock.mousedown(c.add(xlate(btnLock.c, true).inv()), button) &&
-                    !btnVis.mousedown(c.add(xlate(btnVis.c, true).inv()), button) &&
-                    !btnFlip.mousedown(c.add(xlate(btnFlip.c, true).inv()), button))
-            {
-                if (c.isect(Coord.z, sz))
-//                    if (ui.mousegrab.isEmpty())
-//                    {
-//                        if (!btnLock.a)
-//                        {
-//                            if (button == 1)
-//                            {
-//                                dm = ui.grabmouse(this);
-//                                doff = c;
-//                            }
-//                        }
-//                    }
-//                    else
-                    {
-                        if (button == 1)
-                        {
+    public boolean mousedown(MouseDownEvent ev) {
+        if (ui.core.mode == NCore.Mode.DRAG) {
+            if (!btnLock.mousedown(ev) &&
+                    !btnVis.mousedown(ev) &&
+                    !btnFlip.mousedown(ev)) {
+                if (ev.c.isect(Coord.z, sz))
+                    if (ui.grabs.isEmpty()) {
+                        if (!btnLock.a) {
+                            if (ev.b == 1) {
+                                dm = ui.grabmouse(this);
+                                doff = ev.c;
+                            }
+                        }
+                    } else {
+                        if (ev.b == 1) {
                             dm = ui.grabmouse(this);
-                            doff = c;
+                            doff = ev.c;
                         }
                         parent.setfocus(this);
                     }
             }
-            return true;
         }
-        else
-        {
-            return super.mousedown(c, button);
-        }
+        return super.mousedown(ev);
     }
 
+
     @Override
-    public boolean mouseup(Coord c, int button)
-    {
+    public boolean mouseup(MouseUpEvent ev) {
         if (dm != null && ui.core.mode == NCore.Mode.DRAG)
         {
             NDragProp res = new NDragProp(NDraggableWidget.this.c, btnLock.a, name);
@@ -217,38 +204,38 @@ public class NDraggableWidget extends Widget
         }
         else
         {
-            return super.mouseup(c, button);
+            return super.mouseup(ev);
         }
     }
 
+
     @Override
-    public void mousemove(Coord c)
-    {
+    public void mousemove(MouseMoveEvent ev) {
         if (ui.core.mode == NCore.Mode.DRAG)
         {
 
             if (dm != null)
             {
-                Coord prepc = this.c.add(c.add(doff.inv()));
+                Coord prepc = this.c.add(ev.c.add(doff.inv()));
                 this.c = prepc.div(UI.scale(8)).mul(UI.scale(8)).sub(UI.scale(4),UI.scale(4));
             }
             else
             {
-                if (c.isect(Coord.z, sz))
+                if (ev.c.isect(Coord.z, sz))
                 {
-                    btnLock.mousemove(c.add(xlate(btnLock.c, true).inv()));
-                    btnVis.mousemove(c.add(xlate(btnVis.c, true).inv()));
+                    btnLock.mousemove(ev);
+                    btnVis.mousemove(ev);
                     if(isFlipped)
-                        btnFlip.mousemove(c.add(xlate(btnFlip.c, true).inv()));
+                        btnFlip.mousemove(ev);
                 }
             }
         }
         else
         {
-            super.mousemove(c);
+            super.mousemove(ev);
         }
-    }
 
+    }
 
     @Override
     public void tick(double dt)

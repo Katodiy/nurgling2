@@ -276,14 +276,13 @@ public class NAreasWidget extends Window
         }
 
         @Override
-        public boolean mousedown(Coord c, int button)
-        {
-            if (button == 3)
+        public boolean mousedown(MouseDownEvent ev) {
+            if (ev.b == 3)
             {
                 opts(c);
                 return true;
             }
-            else if (button == 1) {
+            else if (ev.b == 1) {
                 if (!isDir)
                     if(area != null)
                     {
@@ -297,10 +296,8 @@ public class NAreasWidget extends Window
                 else
                     showPath(currentPath + "/" + text.text());
             }
-            return super.mousedown(c, button);
-
+            return super.mousedown(ev);
         }
-
 
 
         NFlowerMenu menu;
@@ -308,10 +305,11 @@ public class NAreasWidget extends Window
         public void opts( Coord c ) {
             if(menu == null) {
                 menu = new NFlowerMenu(opt.toArray(new String[0])) {
-                    public boolean mousedown(Coord c, int button) {
-                        if(super.mousedown(c, button))
+                    @Override
+                    public boolean mousedown(MouseDownEvent ev) {
+                        if(super.mousedown(ev))
                             nchoose(null);
-                        return(true);
+                        return true;
                     }
 
                     public void destroy() {
@@ -477,14 +475,16 @@ public class NAreasWidget extends Window
                     add(item);
                 }
 
-                public boolean mousedown(Coord c, int button) {
+                @Override
+                public boolean mousedown(MouseDownEvent ev) {
                     boolean psel = sel == item;
-                    super.mousedown(c, button);
+                    super.mousedown(ev);
                     if(!psel) {
                         String value = item.text.text();
                     }
-                    return(true);
+                    return super.mousedown(ev);
                 }
+
             });
         }
 
@@ -548,10 +548,11 @@ public class NAreasWidget extends Window
                     add(item);
                 }
 
-                public boolean mousedown(Coord c, int button) {
-                    super.mousedown(c, button);
-                    return(true);
+                @Override
+                public boolean mousedown(MouseDownEvent ev) {
+                    return super.mousedown(ev);
                 }
+
             });
         }
 
@@ -600,10 +601,12 @@ public class NAreasWidget extends Window
                     public void click() {
                         super.click();
                         menu = new NFlowerMenu(SpecialisationData.data.get(item.name)) {
-                            public boolean mousedown(Coord c, int button) {
-                                if(super.mousedown(c, button))
+
+                            @Override
+                            public boolean mousedown(MouseDownEvent ev) {
+                                if(super.mousedown(ev))
                                     nchoose(null);
-                                return(true);
+                                return true;
                             }
 
                             public void destroy() {

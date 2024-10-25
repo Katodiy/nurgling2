@@ -86,9 +86,8 @@ public class IconItem extends Widget
     }
 
     @Override
-    public boolean mousedown(Coord c, int button)
-    {
-        if(button==3)
+    public boolean mousedown(MouseDownEvent ev) {
+        if(ev.b==3)
         {
             if(!noOpts)
                 opts(c);
@@ -96,8 +95,9 @@ public class IconItem extends Widget
         }
         else
         {
-            return super.mousedown(c, button);
+            return super.mousedown(ev);
         }
+
     }
 
     final ArrayList<String> opt = new ArrayList<String>(){

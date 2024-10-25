@@ -18,8 +18,8 @@ import java.util.concurrent.atomic.*;
 
 public class NMapView extends MapView
 {
-    public static final KeyBinding kb_quickaction = KeyBinding.get("quickaction", KeyMatch.forchar('q',0));
-    public static final KeyBinding kb_quickignaction = KeyBinding.get("quickignaction", KeyMatch.forchar('q',1));
+    public static final KeyBinding kb_quickaction = KeyBinding.get("quickaction", KeyMatch.forcode(KeyEvent.VK_Q, 0));
+    public static final KeyBinding kb_quickignaction = KeyBinding.get("quickignaction", KeyMatch.forcode(KeyEvent.VK_Q, 1));
     public static final int MINING_OVERLAY = - 1;
     public Coord lastGC = null;
 

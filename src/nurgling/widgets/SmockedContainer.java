@@ -2,20 +2,13 @@ package nurgling.widgets;
 
 import haven.*;
 import haven.res.lib.itemtex.ItemTex;
-import nurgling.NConfig;
 import nurgling.NGItem;
-import nurgling.NStyle;
-import nurgling.NUtils;
 import nurgling.areas.NArea;
-import nurgling.tools.NDTarget;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 
-public class SmockedContainer extends Widget implements NDTarget
+public class SmockedContainer extends Widget implements DTarget
 {
     static Color bg = new Color(30,40,40,160);
     IngredientContainer.Ingredient ing;
@@ -53,16 +46,12 @@ public class SmockedContainer extends Widget implements NDTarget
         }
     }
 
-
     @Override
-    public boolean drop(WItem item, Coord cc, Coord ul)
-    {
-
-        String name = ((NGItem) item.item).name();
-        JSONObject res = ItemTex.save(item.item.spr);
+    public boolean drop(Drop ev) {
+        String name = ((NGItem) ev.src.item).name();
+        JSONObject res = ItemTex.save(((NGItem) ev.src.item).spr);
         addItem(name, res);
-
-        return true;
+        return DTarget.super.drop(ev);
     }
 
     public void addItem(String name, JSONObject res)

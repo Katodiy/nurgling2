@@ -555,9 +555,9 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	if((dragging == null) && (pressed != null)) {
 	    PagButton h = bhit(ev.c);
 	    if(h != pressed)
-		dragging = pressed.pag;
+			dragging = pressed.pag;
 	}
-	super.mousemove(c);
+	super.mousemove(ev);
     }
 
     public void change(Pagina dst) {

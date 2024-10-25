@@ -241,9 +241,10 @@ public class NSearchWidget extends Widget {
                     add(item);
                 }
 
-                public boolean mousedown(Coord c, int button) {
+                @Override
+                public boolean mousedown(MouseDownEvent ev) {
                     boolean psel = sel == item;
-                    super.mousedown(c, button);
+                    super.mousedown(ev);
                     if(!psel) {
                         String value = item.text.text();
                         searchF.settext(value);

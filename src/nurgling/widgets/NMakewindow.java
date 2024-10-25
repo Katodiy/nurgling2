@@ -209,8 +209,7 @@ public class NMakewindow extends Widget {
     }
 
     @Override
-    public boolean mousedown(Coord c, int button)
-    {
+    public boolean mousedown(MouseDownEvent ev) {
         if(autoMode)
         {
             Coord sc = new Coord(xoff, 0);
@@ -222,7 +221,7 @@ public class NMakewindow extends Widget {
                     sc = sc.add(10, 0);
                 if(s.categories)
                 {
-                    if(c.isect(sc, Inventory.sqsz))
+                    if(ev.c.isect(sc, Inventory.sqsz))
                     {
                         if(cat==null)
                         {
@@ -235,7 +234,7 @@ public class NMakewindow extends Widget {
                 popt = opt;
             }
         }
-        return super.mousedown(c, button);
+        return super.mousedown(ev);
     }
 
     TextEntry craft_num;
@@ -790,10 +789,9 @@ public class NMakewindow extends Widget {
         }
 
         @Override
-        public boolean mousedown(Coord c, int button)
-        {
+        public boolean mousedown(MouseDownEvent ev) {
             Coord pos = new Coord(catoff);
-            if(!c.isect(pos, sz.sub(catend)))
+            if(!ev.c.isect(pos, sz.sub(catend)))
             {
                 destroy();
                 cat = null;
@@ -804,7 +802,7 @@ public class NMakewindow extends Widget {
                 Coord shift = new Coord(0,0);
                 for(Ingredient ing: data)
                 {
-                    if(c.isect(pos, invsq.sz()))
+                    if(ev.c.isect(pos, invsq.sz()))
                     {
                         s.ing = ing;
                         destroy();
@@ -826,6 +824,7 @@ public class NMakewindow extends Widget {
                 return true;
             }
         }
+
 
         @Override
         public void tick(double dt)

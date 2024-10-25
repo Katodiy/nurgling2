@@ -255,11 +255,10 @@ public class NLoginScreen extends LoginScreen
                     add(item);
                 }
 
-                public boolean mousedown(Coord c, int button)
-                {
+                @Override
+                public boolean mousedown(MouseDownEvent ev) {
                     boolean psel = sel == item;
-                    super.mousedown(c, button);
-                    return (true);
+                    return super.mousedown(ev);
                 }
             });
         }
@@ -301,9 +300,8 @@ public class NLoginScreen extends LoginScreen
         }
 
         @Override
-        public boolean mousedown(Coord c, int button)
-        {
-            boolean res = super.mousedown(c, button);
+        public boolean mousedown(MouseDownEvent ev) {
+            boolean res = super.mousedown(ev);
             if (!res)
             {
                 msgMode = true;

@@ -30,36 +30,33 @@ public class NMenuGridWdg extends Widget
     }
 
     @Override
-    public boolean mousedown(Coord c, int button)
-    {
+    public boolean mousedown(MouseDownEvent ev) {
         if(ui.core.mode!= NCore.Mode.DRAG)
         {
-            menuGrid.mousedown(c,button);
+            menuGrid.mousedown(ev);
             return true;
         }
         else
         {
-            return super.mousedown(c, button);
+            return super.mousedown(ev);
         }
     }
 
     @Override
-    public boolean mouseup(Coord c, int button)
-    {
+    public boolean mouseup(MouseUpEvent ev) {
         if(ui.core.mode!= NCore.Mode.DRAG)
         {
-            return menuGrid.mouseup(c,button);
+            return menuGrid.mouseup(ev);
         }
         else
         {
-            return super.mouseup(c, button);
+            return super.mouseup(ev);
         }
     }
 
     @Override
-    public void mousemove(Coord c)
-    {
-        super.mousemove(c);
+    public void mousemove(MouseMoveEvent ev) {
+        super.mousemove(ev);
     }
 
     @Override

@@ -144,8 +144,8 @@ public class NCatSelection extends Window {
         }
 
         @Override
-        public boolean mousedown(Coord c, int button) {
-            int idx = (c.y + sb.val * itemh()) / itemh();
+        public boolean mousedown(MouseDownEvent ev) {
+            int idx = (ev.c.y + sb.val * itemh()) / itemh();
             if (idx >= 0 && idx < internalCategories.size()) {
                 Category selectedCategory = internalCategories.get(idx);
                 if (onCategorySelected != null) {
@@ -153,7 +153,7 @@ public class NCatSelection extends Window {
                 }
                 NUtils.getGameUI().msg("Selected category: " + selectedCategory.getName());
             }
-            return super.mousedown(c, button);
+            return super.mousedown(ev);
         }
 
         @Override
@@ -203,16 +203,17 @@ public class NCatSelection extends Window {
                 onElementSelected.accept(item);
             }
         }
+
         @Override
-        public boolean mousedown(Coord c, int button) {
-            int idx = (c.y / UI.scale(32)) + sb.val;
+        public boolean mousedown(MouseDownEvent ev) {
+            int idx = (ev.c.y / UI.scale(32)) + sb.val;
             if (idx >= 0 && idx < internalElements.size()) {
                 Element selectedElement = internalElements.get(idx);
                 if (selectedElement != null) {
                     addElementToArea(areaId, selectedElement);
                 }
             }
-            return super.mousedown(c, button);
+            return super.mousedown(ev);
         }
     }
 

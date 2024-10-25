@@ -109,15 +109,17 @@ public class SmokingSettings extends Window implements Checkable {
                     add(item);
                 }
 
-                public boolean mousedown(Coord c, int button) {
+                @Override
+                public boolean mousedown(MouseDownEvent ev) {
                     boolean psel = sel == item;
-                    boolean res = super.mousedown(c, button);
+                    boolean res = super.mousedown(ev);
                     if (!psel ) {
                         textEntry.settext(item.fuel);
                         sc.addItem(item.iconItem.name, item.iconItem.src);
                     }
                     return (res);
                 }
+
             });
         }
 

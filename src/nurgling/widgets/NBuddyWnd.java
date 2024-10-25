@@ -89,7 +89,7 @@ public class NBuddyWnd extends BuddyWnd
             }
             if(lastSet!=-1)
             {
-                if(msg.equals("i-atime") && lastSet!=-1)
+                if(msg.equals("i-atime"))
                 {
                     for(Buddy b : buddies)
                     {
