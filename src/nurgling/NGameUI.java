@@ -510,7 +510,7 @@ public class NGameUI extends GameUI
         }
 
         @Override
-        public boolean gkeytype(GlobKeyEvent ev) {
+        public boolean globtype(GlobKeyEvent ev) {
             if (!visible) {
                 return false;
             }
