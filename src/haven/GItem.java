@@ -405,37 +405,36 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 	    return((c.x >= hovermarg.x) && (c.y >= hovermarg.y));
 	}
 
-	public boolean mousedown(Coord c, int btn) {
-	    if(super.mousedown(c, btn))
+	public boolean mousedown(MouseDownEvent ev) {
+	    if(ev.propagate(this))
 		return(true);
-	    if(checkhit(c) && (btn == 1)) {
+	    if(checkhit(ev.c) && (ev.b == 1)) {
 		dm = ui.grabmouse(this);
-		doff = c;
+		doff = ev.c;
 		return(true);
 	    }
-	    return(false);
+	    return(super.mousedown(ev));
 	}
 
-	public boolean mouseup(Coord c, int btn) {
-	    if((dm != null) && (btn == 1)) {
+	public boolean mouseup(MouseUpEvent ev) {
+	    if((dm != null) && (ev.b == 1)) {
 		dm.remove();
 		dm = null;
 		return(true);
 	    }
-	    return(super.mouseup(c, btn));
+	    return(super.mouseup(ev));
 	}
 
-	public void mousemove(Coord c) {
+	public void mousemove(MouseMoveEvent ev) {
+	    super.mousemove(ev);
 	    if(dm != null) {
-		if(c.dist(doff) > 10) {
+		if(ev.c.dist(doff) > 10) {
 		    dm.remove();
 		    dm = null;
 		    ContentsWindow wnd = (ContentsWindow)parent;
 		    wnd.drag(doff);
 		    wnd.chstate("wnd");
 		}
-	    } else {
-		super.mousemove(c);
 	    }
 	}
     }
@@ -561,9 +560,9 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 	    }
 	}
 
-	public boolean mousehover(Coord c, boolean on) {
+	public boolean mousehover(MouseHoverEvent ev, boolean on) {
 	    hovering = on;
-	    return(super.mousehover(c, on));
+	    return(true);
 	}
 
 	public void wndshow(boolean show) {
