@@ -118,7 +118,7 @@ public class Craft implements Action
             new Drink(0.9, false).run(gui);
             if(context.workstation!=null)
             {
-                if(!new PrepareWorkStation(context.workstation.station).run(gui).IsSuccess() || !new UseWorkStation(context).run(gui).IsSuccess())
+                if(!new PrepareWorkStation(context, context.workstation.station).run(gui).IsSuccess() || !new UseWorkStation(context).run(gui).IsSuccess())
                     return Results.ERROR("NO WORKSTATION");
             }
             mwnd.wdgmsg("make", 1);

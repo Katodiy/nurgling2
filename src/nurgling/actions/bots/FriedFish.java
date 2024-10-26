@@ -14,7 +14,6 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -189,7 +188,7 @@ public class FriedFish implements Action {
                 }
             }
 
-            if(!new FillFuelPow(pows, 1).run(gui).IsSuccess())
+            if(!new FillFuelPowOrCauldron(pows, 1).run(gui).IsSuccess())
                 return Results.FAIL();
             if (!new LightGob(pows, 4).run(gui).IsSuccess())
                 return Results.ERROR("I can't start a fire");

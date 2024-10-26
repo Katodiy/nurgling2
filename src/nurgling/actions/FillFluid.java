@@ -23,12 +23,21 @@ public class FillFluid implements Action
     NAlias content;
     int mask;
     boolean forced = false;
+    Gob target = null;
 
     public FillFluid(ArrayList<Container> conts, Pair<Coord2d, Coord2d> area, NAlias content, int mask) {
         this.conts = conts;
         this.area = area;
         this.content = content;
         this.mask = mask;
+    }
+
+    public FillFluid(Gob target,  Pair<Coord2d, Coord2d> area, NAlias content, int mask) {
+        this.conts = null;
+        this.area = area;
+        this.content = content;
+        this.mask = mask;
+        this.target = target;
     }
 
     @Override
@@ -46,22 +55,41 @@ public class FillFluid implements Action
         }
 
         if(!forced) {
-            for (Container cont : conts) {
-                while ((cont.gob.ngob.getModelAttribute()&mask)!=mask)
-                {
-                    new PathFinder(cont.gob).run(gui);
-                    NUtils.activateGob(cont.gob);
+            if(target==null) {
+                for (Container cont : conts) {
+                    while ((cont.gob.ngob.getModelAttribute() & mask) != mask) {
+                        new PathFinder(cont.gob).run(gui);
+                        NUtils.activateGob(cont.gob);
+                        NUtils.addTask(new NTask() {
+                            @Override
+                            public boolean check() {
+                                if (!NUtils.isOverlay(barrel, content))
+                                    return true;
+                                return (cont.gob.ngob.getModelAttribute() & mask) == mask;
+                            }
+                        });
+                        if (!NUtils.isOverlay(barrel, content)) {
+                            if (!new RefillInCistern(area, content).run(gui).IsSuccess())
+                                return Results.FAIL();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                while ((target.ngob.getModelAttribute() & mask) != mask) {
+                    new PathFinder(target).run(gui);
+                    NUtils.activateGob(target);
                     NUtils.addTask(new NTask() {
                         @Override
                         public boolean check() {
-                            if(!NUtils.isOverlay(barrel,content))
+                            if (!NUtils.isOverlay(barrel, content))
                                 return true;
-                            return (cont.gob.ngob.getModelAttribute()&mask)==mask;
+                            return (target.ngob.getModelAttribute() & mask) == mask;
                         }
                     });
-                    if(!NUtils.isOverlay(barrel,content))
-                    {
-                        if(!new RefillInCistern(area,content).run(gui).IsSuccess())
+                    if (!NUtils.isOverlay(barrel, content)) {
+                        if (!new RefillInCistern(area, content).run(gui).IsSuccess())
                             return Results.FAIL();
                     }
                 }

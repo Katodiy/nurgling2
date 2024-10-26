@@ -15,7 +15,7 @@ import java.util.Arrays;
 
 public class LeatherAction implements Action {
 
-    NAlias notraw = new NAlias(new ArrayList<>(Arrays.asList("hide", "Scale", "skin", "Hide")), new ArrayList<>(Arrays.asList("Fresh", "Raw", "water")));
+    NAlias notraw = new NAlias(new ArrayList<>(Arrays.asList("hide", "Scale", "skin", "Hide", "Fur", "fur")), new ArrayList<>(Arrays.asList("Fresh", "Raw", "water")));
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NArea.Specialisation rdframe = new NArea.Specialisation(Specialisation.SpecName.ttub.toString());

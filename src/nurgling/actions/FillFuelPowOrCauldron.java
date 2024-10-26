@@ -11,20 +11,17 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
-import java.awt.*;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 
-public class FillFuelPow implements Action
+public class FillFuelPowOrCauldron implements Action
 {
 
     ArrayList<Gob> pows;
     int marker;
     Coord targetCoord = new Coord(2, 1);
 
-    public FillFuelPow(ArrayList<Gob> pows, int marker) {
-        this.pows = pows;
+    public FillFuelPowOrCauldron(ArrayList<Gob> gobs, int marker) {
+        this.pows = gobs;
         this.marker = marker;
     }
     NAlias fuelname = new NAlias("block", "Block");

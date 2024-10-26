@@ -1,13 +1,12 @@
 package nurgling.actions;
 
-import haven.Coord;
 import haven.Gob;
 import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
-import nurgling.tasks.FollowAndPose;
 import nurgling.tasks.HandIsFree;
+import nurgling.tasks.NTask;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -16,28 +15,71 @@ import nurgling.widgets.Specialisation;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static haven.OCache.posres;
-
 public class PrepareWorkStation implements Action
 {
-    public PrepareWorkStation(String name)
+    public PrepareWorkStation(Context context, String name)
     {
         this.name = name;
+        this.context = context;
     }
 
     String name;
+    Context context;
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        Gob ws = Finder.findGob(new NAlias(name));
+        Gob ws = null;
+        if(name.startsWith("gfx/terobjs/pow"))
+        {
+            ArrayList<Gob> gobs = Finder.findGobs(new NAlias("gfx/terobjs/pow"));
+            gobs.sort(NUtils.d_comp);
+            for(Gob gob: gobs)
+            {
+                if ((gob.ngob.getModelAttribute() & 48) == 0) {
+                    ws = gob;
+                    break;
+                }
+            }
+        }
+        else {
+            ws = Finder.findGob(new NAlias(name));
+        }
         if(ws == null)
             return Results.ERROR("NO WORKSTATION");
         else
         {
+            context.workstation.selected = ws;
             if(name.contains("crucible"))
             {
                 if(fillCrucible(ws,gui))
                     new LightGob(new ArrayList<>(Arrays.asList(ws)),4).run(gui);
+            }
+            else if(name.startsWith("gfx/terobjs/pow"))
+            {
+                ArrayList<Gob> pows = new ArrayList<>(Arrays.asList(ws));
+                if(!new FillFuelPowOrCauldron(pows, 1).run(gui).IsSuccess())
+                    return Results.FAIL();
+                if (!new LightGob(pows, 4).run(gui).IsSuccess())
+                    return Results.ERROR("I can't start a fire");
+            }
+            else if(name.startsWith("gfx/terobjs/cauldron"))
+            {
+                ArrayList<Gob> pows = new ArrayList<>(Arrays.asList(ws));
+                if(!new FillFuelPowOrCauldron(pows, 1).run(gui).IsSuccess())
+                    return Results.FAIL();
+                if (!new LightGob(pows, 2).run(gui).IsSuccess())
+                    return Results.ERROR("I can't start a fire");
+                if((context.workstation.selected.ngob.getModelAttribute()&4)==0)
+                {
+                    new FillFluid(context.workstation.selected, NArea.findSpec(Specialisation.SpecName.water.toString())!=null ? NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea():null,new NAlias("water"),4).run(gui);
+                }
+                NUtils.addTask(new NTask() {
+                    @Override
+                    public boolean check() {
+                        return (context.workstation.selected.ngob.getModelAttribute()&8)==8;
+                    }
+                });
+
             }
         }
         return Results.SUCCESS();
