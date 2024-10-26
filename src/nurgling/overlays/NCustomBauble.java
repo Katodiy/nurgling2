@@ -24,7 +24,8 @@ public class NCustomBauble extends NObjectTexLabel {
         gob = (Gob) owner;
         pos = new Coord3f(0,0, 25);
         this.img = new TexI(image);
-        this.img2 = new TexI(image2);
+        if(image2!=null)
+            this.img2 = new TexI(image2);
         this.result = result;
     }
 
