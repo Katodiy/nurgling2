@@ -20,8 +20,8 @@ public class FlaxFarmer implements Action {
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
         req.add(seed);
-        req.add(trough);
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+        req.add(trough);
         opt.add(swill);
 
         if(new Validator(req, opt).run(gui).IsSuccess())
@@ -32,8 +32,6 @@ public class FlaxFarmer implements Action {
             new SeedCrop(NArea.findSpec(field),NArea.findSpec(seed),new NAlias("plants/flax"),new NAlias("Flax")).run(gui);
             return Results.SUCCESS();
         }
-
-
 
         return Results.FAIL();
     }
