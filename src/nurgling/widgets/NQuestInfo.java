@@ -707,11 +707,13 @@ public class NQuestInfo extends Widget
 
     public static MarkerInfo getMarkerInfo(Gob gob)
     {
-        synchronized (markers) {
-            for (MarkerInfo mi : markers) {
-                if (NUtils.getGameUI().mapfile.playerSegmentId() == mi.seg) {
-                    if (gob.rc.dist(mi.coord) < 1)
-                        return (mi);
+        if(NUtils.getGameUI()!=null) {
+            synchronized (markers) {
+                for (MarkerInfo mi : markers) {
+                    if (NUtils.getGameUI().mapfile.playerSegmentId() == mi.seg) {
+                        if (gob.rc.dist(mi.coord) < 1)
+                            return (mi);
+                    }
                 }
             }
         }

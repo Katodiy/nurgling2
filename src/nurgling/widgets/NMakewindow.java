@@ -20,13 +20,15 @@ import java.util.List;
 import java.util.*;
 
 public class NMakewindow extends Widget {
-    public static final Text.Foundry fnd = new Text.Foundry(Text.sans, 12);
-    public static final Text qmodl = Text.render(("Quality:"));
+//    public static final Text.Foundry fnd = new Text.Foundry(Text.sans, 12);
 
+    public static Text.Furnace fnd = new PUtils.BlurFurn(new Text.Foundry(Text.sans.deriveFont(java.awt.Font.BOLD), 12).aa(true), UI.scale(1), UI.scale(1), Color.BLACK);
+    public static Text.Furnace fnd2 = new Text.Foundry(Text.sans, 12).aa(true);
+    public static final Text qmodl = fnd.render(("Quality:"));
     public static final TexI aready = new TexI(Resource.loadsimg("nurgling/hud/autocraft/ready"));
     public static final TexI anotfound = new TexI(Resource.loadsimg("nurgling/hud/autocraft/notfound"));
     public static final TexI categories = new TexI(Resource.loadsimg("nurgling/hud/autocraft/spec"));
-    public static final Text tooll = Text.render(("Tools:"));
+    public static final Text tooll = fnd.render(("Tools:"));
     public static final Coord boff = UI.scale(new Coord(7, 9));
     public String rcpnm;
     public List<Spec> inputs = Collections.emptyList();
@@ -37,6 +39,7 @@ public class NMakewindow extends Widget {
     public static final Text.Foundry nmf = new Text.Foundry(Text.serif, 20).aa(true);
     private static double softcap = 0;
     private static Tex softTex = null;
+    private static Tex softTexLabel = null;
 
     boolean autoMode = false;
 
@@ -49,7 +52,7 @@ public class NMakewindow extends Widget {
         public Tex num;
         public String name;
         public int count;
-        private GSprite spr;
+        public GSprite spr;
         private Object[] rawinfo;
         private List<ItemInfo> info;
 
@@ -80,7 +83,7 @@ public class NMakewindow extends Widget {
                 }
                 else
                 {
-                    g.image(ing.img, Coord.z);
+                    g.image(new TexI(ing.img), Coord.z, UI.scale(32,32));
                 }
             } catch(Loading e) {}
             if(num != null)
@@ -201,8 +204,10 @@ public class NMakewindow extends Widget {
                 s.spr.tick(dt);
             s.tick(dt);
         }
-        if(cat!=null)
+        if(cat!=null) {
+            cat.raise();
             cat.tick(dt);
+        }
     }
 
     @Override
@@ -223,8 +228,11 @@ public class NMakewindow extends Widget {
                     {
                         if(cat==null)
                         {
-                            add(cat = new Categories(VSpec.categories.get(s.name),s), sc.add(UI.scale(0, sqsz.y)).sub(UI.scale(5,5)));
+                            NUtils.getGameUI().add(cat = new Categories(VSpec.categories.get(s.name),s),sc.add(this.parent.c).add(this.c).add(Inventory.sqsz.x/2, Inventory.sqsz.y*2).add(UI.scale(2,2)));
                             pack();
+                            NUtils.getGameUI().craftwnd.lower();
+                            cat.raise();
+                            return true;
                         }
                     }
                 }
@@ -355,7 +363,6 @@ public class NMakewindow extends Widget {
         {
             int x = 0;
             if(!qmod.isEmpty()) {
-//                g.aimage(qmodl.tex(), new Coord(x, qmy + (qmodsz.y / 2)), 0, 0.5);
                 x += qmodl.sz().x + UI.scale(5);
                 x = Math.max(x, xoff);
                 qmx = x;
@@ -367,11 +374,31 @@ public class NMakewindow extends Widget {
                         g.image(t, new Coord(x, qmy));
                         x += t.sz().x + UI.scale(1);
 
-//                        Glob.CAttr attr = NUtils.getGameUI().chrwdg.findattr(qm.get().basename());
-//                        if(attr != null) {
-//                            count++;
-//                            product = product * attr.comp;
-//                        }
+                        for(BAttrWnd.Attr attr: ui.gui.chrwdg.battr.attrs)
+                        {
+                            if(attr.attr.nm.equals(qm.get().basename()))
+                            {
+                                count++;
+                                product = product * attr.attr.comp;
+
+                                BufferedImage texVal = fnd2.render(String.valueOf(attr.attr.comp)).img;
+                                g.image(texVal,new Coord(x, qmy + UI.scale(1)));
+                                x += texVal.getWidth() + UI.scale(1);
+                                break;
+                            }
+                        }
+                        for(SAttrWnd.SAttr attr: ui.gui.chrwdg.sattr.attrs)
+                        {
+                            if(attr.attr.nm.equals(qm.get().basename()))
+                            {
+                                count++;
+                                product = product * attr.attr.comp;
+                                BufferedImage texVal = fnd2.render(String.valueOf(attr.attr.comp)).img;
+                                g.image(texVal,new Coord(x, qmy + UI.scale(1)));
+                                x += texVal.getWidth() + UI.scale(1);
+                                break;
+                            }
+                        }
                     } catch(Loading l) {
                     }
                 }
@@ -379,9 +406,10 @@ public class NMakewindow extends Widget {
                     x += drawSoftcap(g, new Coord(x, qmy), product, count);
                 }
                 x += UI.scale(25);
+
             }
             if(!tools.isEmpty()) {
-                g.aimage(tooll.tex(), new Coord(x, qmy + (qmodsz.y / 2)), 0, 0.5);
+                g.aimage(tooll.tex(), new Coord(x, qmy + (qmodsz.y / 2) - UI.scale(2)), 0, 0.5);
                 x += tooll.sz().x + UI.scale(5);
                 x = Math.max(x, xoff);
                 toolx = x;
@@ -420,17 +448,18 @@ public class NMakewindow extends Widget {
     private int drawSoftcap(GOut g, Coord p, double product, int count) {
         if(count > 0) {
             double current = Math.pow(product, 1.0 / count);
-            if(current != softcap || softTex == null) {
+            if (current != softcap || softTex == null) {
                 softcap = current;
-                String format = String.format("%s %.1f", "Softcap:", softcap);
-//                Text txt = Text.renderstroked(format, Color.WHITE, Color.BLACK, fnd);
-                if(softTex != null) {
+                String format = String.format("%.1f", softcap);
+                if (softTex != null) {
                     softTex.dispose();
                 }
-//                softTex = new TexI(txt.img);
+                softTexLabel = new TexI(fnd.render("Softcap:").img);
+                softTex = new TexI(fnd2.render(format).img);
             }
-            g.image(softTex, p.add(UI.scale(5), 0));
-            return softTex.sz().x + UI.scale(6);
+            g.image(softTexLabel, p.add(UI.scale(5), UI.scale(-2)));
+            g.image(softTex, p.add(UI.scale(5) + softTexLabel.sz().x + UI.scale(3), UI.scale(1)));
+            return softTex.sz().x + softTexLabel.sz().x + UI.scale(9);
         }
         return 0;
     }
@@ -681,7 +710,7 @@ public class NMakewindow extends Widget {
     Categories cat = null;
 
     public class Ingredient{
-        BufferedImage img;
+        public BufferedImage img;
         public String name;
         boolean logistic;
 
@@ -699,6 +728,7 @@ public class NMakewindow extends Widget {
 
     final static Coord catoff = UI.scale(8,8);
     final static Coord catend = UI.scale(15,15);
+    static final int width = 9;
     public class Categories extends Widget
     {
 
@@ -706,21 +736,25 @@ public class NMakewindow extends Widget {
         ArrayList<Ingredient> data = new ArrayList<>();
         Frame fr;
 
+
         Spec s;
         public Categories(ArrayList<JSONObject> objs, Spec s)
         {
-            super(new Coord(Math.max((Inventory.sqsz.x+UI.scale(1))*((objs.size()/6>=1)?6:0),(Inventory.sqsz.x+UI.scale(1))*(objs.size()%6))- UI.scale(2),(Inventory.sqsz.x+UI.scale(1))*(objs.size()/6+(objs.size()%6!=0?1:0))).add(UI.scale(20,18)));
+            super(new Coord(Math.max((Inventory.sqsz.x+UI.scale(1))*((objs.size()/width>=1)?width:0),(Inventory.sqsz.x+UI.scale(1))*(objs.size()%width))- UI.scale(2),(Inventory.sqsz.x+UI.scale(1))*(objs.size()/width+(objs.size()%width!=0?1:0))).add(UI.scale(20,18)));
             this.s = s;
             add(fr = new Frame(sz.sub(catend),true));
             for(JSONObject obj: objs)
             {
                 data.add(new Ingredient(obj));
             }
+            setfocustab(true);
+            autofocus =true;
         }
 
         @Override
         public void draw(GOut g)
         {
+            super.draw(g);
             g.chcolor(bg);
             g.frect(UI.scale(4,4), fr.inner());
             Coord pos = new Coord(catoff);
@@ -737,7 +771,7 @@ public class NMakewindow extends Widget {
                 {
                     sg.image(anotfound, Coord.z,UI.scale(32,32));
                 }
-                if(shift.x<5)
+                if(shift.x<width-1)
                 {
                     pos = pos.add(Inventory.sqsz.x + UI.scale(1), 0);
                     shift.x+=1;
@@ -749,7 +783,7 @@ public class NMakewindow extends Widget {
                     pos = pos.add(0, Inventory.sqsz.y + UI.scale(1));
                 }
             }
-            super.draw(g);
+
         }
         UI.Grab mg;
         @Override
@@ -787,7 +821,7 @@ public class NMakewindow extends Widget {
                         cat = null;
                         return false;
                     }
-                    if(shift.x<5)
+                    if(shift.x<width-1)
                     {
                         pos = pos.add(Inventory.sqsz.x + UI.scale(1), 0);
                         shift.x+=1;
@@ -796,6 +830,7 @@ public class NMakewindow extends Widget {
                     {
                         pos.x = UI.scale(8);
                         pos = pos.add(0, Inventory.sqsz.y + UI.scale(1));
+                        shift.x = 0;
                     }
                 }
                 return true;

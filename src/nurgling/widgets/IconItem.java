@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.*;
 import nurgling.areas.*;
+import org.json.JSONObject;
 
 import java.awt.image.*;
 import java.util.*;
@@ -12,12 +13,12 @@ public class IconItem extends Widget
     public static final TexI frame = new TexI(Resource.loadimg("nurgling/hud/iconframe"));
     public static final TexI framet = new TexI(Resource.loadimg("nurgling/hud/iconframet"));
     public static final TexI bm = new TexI(Resource.loadimg("nurgling/hud/bartermark"));
-
-    Tex tex = null;
+    public JSONObject src;
+    TexI tex = null;
 
     TexI tip;
     TexI q;
-
+    boolean noOpts = false;
     boolean isThreshold = false;
 
     NArea.Ingredient.Type type = NArea.Ingredient.Type.CONTAINER;
@@ -33,6 +34,22 @@ public class IconItem extends Widget
 
         tex = new TexI(img);
         this.sz = UI.scale(new Coord(32, 42));
+    }
+
+    public IconItem(String name, TexI img)
+    {
+        this.name = name;
+        tip = new TexI(RichText.render(name).img);
+
+        tex = img;
+        this.sz = UI.scale(new Coord(32, 42));
+    }
+
+    void update(String name, BufferedImage img)
+    {
+        this.name = name;
+        tip = new TexI(RichText.render(name).img);
+        tex = new TexI(img);
     }
 
     public IconItem()
@@ -73,7 +90,8 @@ public class IconItem extends Widget
     {
         if(button==3)
         {
-            opts(c);
+            if(!noOpts)
+                opts(c);
             return true;
         }
         else
@@ -160,6 +178,9 @@ public class IconItem extends Widget
         }
     }
 
+    public JSONObject toJson() {
+        return src;
+    }
 
 
     class SetThreshold extends Window

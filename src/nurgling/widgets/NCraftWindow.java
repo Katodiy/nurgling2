@@ -9,6 +9,8 @@ import java.util.Map;
 
 import nurgling.*;
 
+import static nurgling.widgets.NTabStrip.frame;
+
 public class NCraftWindow extends GameUI.Hidewnd {
     public static final KeyBinding kb_make = KeyBinding.get("make/one", KeyMatch.forcode(java.awt.event.KeyEvent.VK_ENTER, 0));
     public static final KeyBinding kb_makeall = KeyBinding.get("make/all", KeyMatch.forcode(java.awt.event.KeyEvent.VK_ENTER, KeyMatch.C));
@@ -73,7 +75,7 @@ public class NCraftWindow extends GameUI.Hidewnd {
 
     @Override
     public void cdraw(GOut g) {
-        super.cdraw(g);
+//        super.cdraw(g);
 //        frame.draw(g, new Coord(0, Math.max(0, tabStrip.sz.y - 1)), csz().sub(0, tabStrip.sz.y));
     }
 

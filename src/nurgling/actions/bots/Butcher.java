@@ -50,10 +50,13 @@ public class Butcher implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+
         NArea.Specialisation kritter_corpse = new NArea.Specialisation(Specialisation.SpecName.deadkritter.toString());
+        NArea.Specialisation rawhides = new NArea.Specialisation(Specialisation.SpecName.rawhides.toString());
         NArea area = NArea.findSpec(kritter_corpse);
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(kritter_corpse);
+        req.add(rawhides);
 
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         Context context = new Context();

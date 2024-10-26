@@ -222,6 +222,7 @@
       <file name="lib/ext/builtin-res.jar" />
       <file name="lib/ext/hafen-res.jar" />
       <file name="etc/json-java.jar" />
+      <file name="etc/icon.png" />
     </copy>
     <copy todir="steam">
       <fileset dir="lib/ext/jogl">

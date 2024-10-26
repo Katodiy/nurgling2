@@ -58,7 +58,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
     public static double plobpgran = Utils.getprefd("plobpgran", 8);
     public static double plobagran = Utils.getprefd("plobagran", 12);
     protected static final Map<String, Class<? extends Camera>> camtypes = new HashMap<String, Class<? extends Camera>>();
-
+	public Gob clickedGob = null;
 	public HashMap<Integer, NOverlay> nols = new HashMap<>();
     public interface Delayed {
 	public void run(GOut g);
@@ -2017,6 +2017,21 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	    Object[] args = {pc, mc.floor(posres), clickb, ui.modflags()};
 	    if(inf != null)
 		args = Utils.extend(args, inf.clickargs());
+		if(inf!=null)
+		{
+			if(inf.ci instanceof Composited.CompositeClick)
+			{
+				clickedGob = ((Composited.CompositeClick)inf.ci).gi.gob;
+			}
+			else if (inf.ci instanceof Gob.GobClick)
+			{
+				clickedGob = ((Gob.GobClick)inf.ci).gob;
+			}
+			else
+				clickedGob = null;
+		}
+		else
+			clickedGob = null;
 	    wdgmsg("click", args);
 	}
     }

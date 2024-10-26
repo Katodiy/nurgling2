@@ -131,7 +131,7 @@ public class NTabStrip<T> extends Widget {
                 g.frect(Coord.z, sz);
                 g.chcolor();
             }
-            frame.draw(g, Coord.z, sz);
+//            frame.draw(g, Coord.z, sz);
             if(image != null) {g.image(image, padding);}
         }
 

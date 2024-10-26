@@ -1,0 +1,3 @@
+#TOOLTIP LAYER FOR RES src/nurgling/wnd/search.res//
+#String tooltip
+Bot Baker bakes cakes and pies in automatic mode. You need to specify at least one area where the 'Take' section contains ANY pie dough. You must also specify a area with the specialisation 'Oven'. You need to specify a zone with the specialisation 'fuel(branch)' and also create areas where the finished pies can be unloaded (otherwise the bot will burn them to ash). A candelabra with a candle is used for ignition.

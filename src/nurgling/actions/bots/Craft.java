@@ -1,5 +1,7 @@
 package nurgling.actions.bots;
 
+import haven.Resource;
+import haven.StaticGSprite;
 import nurgling.*;
 import nurgling.actions.*;
 import nurgling.areas.*;
@@ -55,18 +57,32 @@ public class Craft implements Action
         {
             if(!s.categories) {
                 NArea area = NArea.findIn(s.name);
-                if (area == null)
-                    return Results.ERROR("NO area for: " + s.name);
-                context.addInput(s.name, Context.GetInput(s.name, area));
-                size += s.count;
+                if (area == null) {
+                    SelectArea insa;
+                    NUtils.getGameUI().msg("Please select area with:" + s.name);
+                    (insa = new SelectArea(Resource.loadsimg("baubles/custom"),((StaticGSprite)s.spr).img.img)).run(gui);
+                    context.addInput(s.name, Context.GetInput(s.name, insa.getRCArea()));
+                    size += s.count;
+                }
+                else {
+                    context.addInput(s.name, Context.GetInput(s.name, area));
+                    size += s.count;
+                }
             }
             else if(s.ing!=null)
             {
                 NArea area = NArea.findIn(s.ing.name);
-                if (area == null)
-                    return Results.ERROR("NO area for: " + s.ing.name);
-                context.addInput(s.ing.name, Context.GetInput(s.ing.name, area));
-                size += s.count;
+                if (area == null) {
+                    SelectArea insa;
+                    NUtils.getGameUI().msg("Please select area with:" + s.ing.name);
+                    (insa = new SelectArea(Resource.loadsimg("baubles/custom"),s.ing.img)).run(gui);
+                    context.addInput(s.ing.name, Context.GetInput(s.ing.name, insa.getRCArea()));
+                    size += s.count;
+                }
+                else {
+                    context.addInput(s.ing.name, Context.GetInput(s.ing.name, area));
+                    size += s.count;
+                }
             }
         }
 
@@ -93,7 +109,8 @@ public class Craft implements Action
             int for_craft = Math.min(left,NUtils.getGameUI().getInventory().getFreeSpace()/size);
             for(NMakewindow.Spec s: mwnd.inputs)
             {
-                new TakeItems(context, s.ing==null?s.name:s.ing.name, s.count * for_craft).run(gui);
+                if(!new TakeItems(context, s.ing==null?s.name:s.ing.name, s.count * for_craft).run(gui).IsSuccess())
+                    return Results.FAIL();
             }
 
 
@@ -101,25 +118,49 @@ public class Craft implements Action
             new Drink(0.9, false).run(gui);
             if(context.workstation!=null)
             {
-                new UseWorkStation(context).run(gui);
+                if(!new PrepareWorkStation(context, context.workstation.station).run(gui).IsSuccess() || !new UseWorkStation(context).run(gui).IsSuccess())
+                    return Results.ERROR("NO WORKSTATION");
             }
             mwnd.wdgmsg("make", 1);
             HashMap<String, Integer> oldSize = new HashMap<>();
+            NUtils.addTask(new NTask() {
+                @Override
+                public boolean check() {
+                    return gui.prog!=null && gui.prog.prog>0;
+                }
+            });
+            NUtils.addTask(new NTask() {
+                @Override
+                public boolean check() {
+                    return  gui.prog==null || !gui.prog.visible;
+                }
+            });
+            int resfc = for_craft;
             for(NMakewindow.Spec s: mwnd.outputs)
             {
-                oldSize.put(s.name,NUtils.getGameUI().getInventory().getItems(s.name).size());
+                resfc = s.count*for_craft;
             }
             for(NMakewindow.Spec s: mwnd.outputs)
             {
-                NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(s.name), oldSize.get(s.name) + for_craft));
+                if(s.name.contains("nugget"))
+                {
+                    NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias("nugget"), 10*for_craft));
+                }
+                else {
+                    NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(s.name), resfc));
+                }
             }
+            HashSet<String> targets = new HashSet<>();
             for(NMakewindow.Spec s: mwnd.outputs)
             {
                 GetItems gi;
                 NUtils.getUI().core.addTask(gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(s.name)));
-                if(!gi.getResult().isEmpty() && context.getOutputs(s.name, 1)!=null)
-                    new TransferItems(context,new HashSet<>(Arrays.asList(s.name))).run(gui);
+                NArea area = NArea.findOut(s.name, 1);
+                if(area != null) {
+                    targets.add(s.name);
+                }
             }
+            new TransferItems(context,targets).run(gui);
             left -=for_craft;
         }
 

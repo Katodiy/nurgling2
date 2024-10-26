@@ -128,7 +128,7 @@ public class Cal extends Widget {
 			eventNames.add("mantle");
 			eventNames.add("dawn");
 		}
-		if(weather!=null && weather.contains("rain"))
+		if(weather!=null && (weather.contains("rain") || weather.contains("wet")))
 			eventNames.add("rain");
 
 	}

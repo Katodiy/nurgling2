@@ -94,7 +94,7 @@ public class FillContainersFromAreas implements Action
         else
         {
             Container.Space space = container.getattr(Container.Space.class);
-            return (Integer)space.getRes().get(Container.Space.FREESPACE)==0;
+            return (Integer)space.getRes().get(Container.Space.FREESPACE) != null && (Integer)space.getRes().get(Container.Space.FREESPACE)==0;
         }
     };
 }

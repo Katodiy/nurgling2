@@ -16,7 +16,7 @@ public class IngredientContainer extends Widget implements NDTarget
     static Color bg = new Color(30,40,40,160);
 
 
-    public class Ingredient{
+    public static class Ingredient{
         public String name;
         public BufferedImage image;
 

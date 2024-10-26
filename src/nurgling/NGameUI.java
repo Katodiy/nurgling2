@@ -8,6 +8,7 @@ import haven.res.ui.rbuff.*;
 import haven.res.ui.relcnt.RelCont;
 import nurgling.conf.*;
 import nurgling.notifications.*;
+import nurgling.overlays.QualityOl;
 import nurgling.tools.*;
 import nurgling.widgets.*;
 
@@ -16,6 +17,8 @@ import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static haven.Inventory.invsq;
 
@@ -32,6 +35,7 @@ public class NGameUI extends GameUI
     public Specialisation spec;
     public BotsInterruptWidget biw;
     public NEquipProxy nep;
+    public NCatSelection ncatSel;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -56,6 +60,7 @@ public class NGameUI extends GameUI
         nefn.hide();
         add(spec = new Specialisation());
         spec.hide();
+//        add(new NCatSelection(-1));
         add(biw = new BotsInterruptWidget());
     }
 
@@ -611,5 +616,24 @@ public class NGameUI extends GameUI
         }
 
 
+    }
+
+    @Override
+    public void msg(String msg, Color color, Color logcol) {
+        if (msg.contains("Quality")) {
+            if(map.clickedGob!=null)
+            {
+                Matcher m = Pattern.compile("Quality: (\\d+)").matcher(msg);
+                if(m.matches()) {
+                    try {
+                        map.clickedGob.addcustomol(new QualityOl(map.clickedGob, Integer.parseInt(m.group(1))));
+                    } catch (NumberFormatException ignored) {
+                    } finally {
+                        map.clickedGob = null;
+                    }
+                }
+            }
+        }
+        super.msg(msg, color, logcol);
     }
 }
