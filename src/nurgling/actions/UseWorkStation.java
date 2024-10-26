@@ -26,7 +26,12 @@ public class UseWorkStation implements Action
             new PathFinder(ws).run(gui);
             gui.map.wdgmsg ( "click", Coord.z, ws.rc.floor ( posres ), 3, 0, 0, ( int ) ws.id,
                     ws.rc.floor ( posres ), 0, -1 );
-            NUtils.getUI().core.addTask(new FollowAndPose(NUtils.player(),cnt.workstation.pose));
+            if(cnt.workstation.pose!=null)
+                NUtils.getUI().core.addTask(new FollowAndPose(NUtils.player(),cnt.workstation.pose));
+            else {
+                NUtils.getUI().core.addTask(new IsMoving(ws.rc, 50));
+                NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/idle"));
+            }
         }
         return Results.SUCCESS();
     }

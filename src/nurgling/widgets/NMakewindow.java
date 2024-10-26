@@ -52,7 +52,7 @@ public class NMakewindow extends Widget {
         public Tex num;
         public String name;
         public int count;
-        private GSprite spr;
+        public GSprite spr;
         private Object[] rawinfo;
         private List<ItemInfo> info;
 
@@ -204,8 +204,10 @@ public class NMakewindow extends Widget {
                 s.spr.tick(dt);
             s.tick(dt);
         }
-        if(cat!=null)
+        if(cat!=null) {
+            cat.raise();
             cat.tick(dt);
+        }
     }
 
     @Override
@@ -226,8 +228,11 @@ public class NMakewindow extends Widget {
                     {
                         if(cat==null)
                         {
-                            add(cat = new Categories(VSpec.categories.get(s.name),s), sc.add(UI.scale(0, sqsz.y)).sub(UI.scale(5,5)));
+                            NUtils.getGameUI().add(cat = new Categories(VSpec.categories.get(s.name),s),sc.add(this.parent.c).add(this.c).add(Inventory.sqsz.x/2, Inventory.sqsz.y*2).add(UI.scale(2,2)));
                             pack();
+                            NUtils.getGameUI().craftwnd.lower();
+                            cat.raise();
+                            return true;
                         }
                     }
                 }
@@ -705,7 +710,7 @@ public class NMakewindow extends Widget {
     Categories cat = null;
 
     public class Ingredient{
-        BufferedImage img;
+        public BufferedImage img;
         public String name;
         boolean logistic;
 
@@ -723,6 +728,7 @@ public class NMakewindow extends Widget {
 
     final static Coord catoff = UI.scale(8,8);
     final static Coord catend = UI.scale(15,15);
+    static final int width = 9;
     public class Categories extends Widget
     {
 
@@ -730,21 +736,25 @@ public class NMakewindow extends Widget {
         ArrayList<Ingredient> data = new ArrayList<>();
         Frame fr;
 
+
         Spec s;
         public Categories(ArrayList<JSONObject> objs, Spec s)
         {
-            super(new Coord(Math.max((Inventory.sqsz.x+UI.scale(1))*((objs.size()/6>=1)?6:0),(Inventory.sqsz.x+UI.scale(1))*(objs.size()%6))- UI.scale(2),(Inventory.sqsz.x+UI.scale(1))*(objs.size()/6+(objs.size()%6!=0?1:0))).add(UI.scale(20,18)));
+            super(new Coord(Math.max((Inventory.sqsz.x+UI.scale(1))*((objs.size()/width>=1)?width:0),(Inventory.sqsz.x+UI.scale(1))*(objs.size()%width))- UI.scale(2),(Inventory.sqsz.x+UI.scale(1))*(objs.size()/width+(objs.size()%width!=0?1:0))).add(UI.scale(20,18)));
             this.s = s;
             add(fr = new Frame(sz.sub(catend),true));
             for(JSONObject obj: objs)
             {
                 data.add(new Ingredient(obj));
             }
+            setfocustab(true);
+            autofocus =true;
         }
 
         @Override
         public void draw(GOut g)
         {
+            super.draw(g);
             g.chcolor(bg);
             g.frect(UI.scale(4,4), fr.inner());
             Coord pos = new Coord(catoff);
@@ -761,7 +771,7 @@ public class NMakewindow extends Widget {
                 {
                     sg.image(anotfound, Coord.z,UI.scale(32,32));
                 }
-                if(shift.x<5)
+                if(shift.x<width-1)
                 {
                     pos = pos.add(Inventory.sqsz.x + UI.scale(1), 0);
                     shift.x+=1;
@@ -773,7 +783,7 @@ public class NMakewindow extends Widget {
                     pos = pos.add(0, Inventory.sqsz.y + UI.scale(1));
                 }
             }
-            super.draw(g);
+
         }
         UI.Grab mg;
         @Override
@@ -811,7 +821,7 @@ public class NMakewindow extends Widget {
                         cat = null;
                         return false;
                     }
-                    if(shift.x<5)
+                    if(shift.x<width-1)
                     {
                         pos = pos.add(Inventory.sqsz.x + UI.scale(1), 0);
                         shift.x+=1;

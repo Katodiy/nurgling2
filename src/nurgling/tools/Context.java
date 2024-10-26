@@ -1,8 +1,6 @@
 package nurgling.tools;
 
-import haven.Gob;
-import haven.Indir;
-import haven.Resource;
+import haven.*;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
 
@@ -54,6 +52,7 @@ public class Context {
         workstation_map.put("paginae/bld/meatgrinder",new Workstation("gfx/terobjs/meatgrinder", "gfx/borka/idle"));
         workstation_map.put("paginae/bld/loom",new Workstation("gfx/terobjs/loom", "gfx/borka/loomsit"));
         workstation_map.put("paginae/bld/ropewalk",new Workstation("gfx/terobjs/ropewalk", "gfx/borka/idle"));
+        workstation_map.put("paginae/bld/crucible",new Workstation("gfx/terobjs/crucible", null));
     }
     public void addTools(List<Indir<Resource>> tools)
     {
@@ -211,6 +210,29 @@ public class Context {
 
             }
         }
+        inputs.sort(new Comparator<Input>() {
+            @Override
+            public int compare(Input o1, Input o2) {
+                if (o1 instanceof InputPile && o2 instanceof InputPile)
+                    return NUtils.d_comp.compare(((InputPile)o1).pile,((InputPile)o2).pile);
+                return 0;
+            }
+        });
+        return inputs;
+    }
+
+    public static ArrayList<Input> GetInput(String item, Pair<Coord2d,Coord2d> area ) throws InterruptedException
+    {
+        ArrayList<Input> inputs = new ArrayList<>();
+        for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
+        {
+            inputs.add(new InputContainer(gob, contcaps.get(gob.ngob.name)));
+        }
+        for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
+        {
+            inputs.add(new InputPile(gob));
+        }
+
         inputs.sort(new Comparator<Input>() {
             @Override
             public int compare(Input o1, Input o2) {

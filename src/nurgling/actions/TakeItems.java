@@ -29,7 +29,7 @@ public class TakeItems implements Action
         AtomicInteger left = new AtomicInteger(count);
         ArrayList<Context.Input> inputs = cnt.getInputs(item);
         if(inputs == null || inputs.isEmpty())
-            return Results.SUCCESS();
+            return Results.FAIL();
         for(Context.Input input: cnt.getInputs(item))
         {
             if(input instanceof Context.Barter)

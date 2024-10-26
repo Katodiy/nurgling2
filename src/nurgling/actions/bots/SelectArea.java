@@ -10,7 +10,6 @@ import nurgling.areas.NArea;
 import nurgling.overlays.NCustomBauble;
 
 import java.awt.image.BufferedImage;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SelectArea implements Action {
 
@@ -21,7 +20,13 @@ public class SelectArea implements Action {
     public SelectArea(BufferedImage image) {
         this.image = image;
     }
+
+    public SelectArea(BufferedImage image, BufferedImage Spr) {
+        this.image = image;
+        this.spr = Spr;
+    }
     BufferedImage image = null;
+    BufferedImage spr = null;
     NArea.Space result;
 
     @Override
@@ -34,7 +39,7 @@ public class SelectArea implements Action {
             ((NMapView) NUtils.getGameUI().map).isAreaSelectionMode.set(true);
             if(image!=null && player!=null)
             {
-                player.addcustomol(new NCustomBauble(player,image,((NMapView) NUtils.getGameUI().map).isAreaSelectionMode));
+                player.addcustomol(new NCustomBauble(player,image, spr,((NMapView) NUtils.getGameUI().map).isAreaSelectionMode));
             }
             nurgling.tasks.SelectArea sa;
             NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectArea());
