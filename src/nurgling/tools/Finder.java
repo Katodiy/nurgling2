@@ -83,11 +83,6 @@ public class Finder
         return result;
     }
 
-    public static ArrayList<Gob> findGobs(NAlias name) throws InterruptedException
-    {
-        return findGobs(name, 10000);
-    }
-
     public static ArrayList<Gob> findGobs(NAlias name, double distance) throws InterruptedException
     {
         NUtils.getUI().core.addTask(new FindPlayer());
