@@ -152,13 +152,29 @@ public class Craft implements Action {
             }
 
             for (NMakewindow.Spec s : mwnd.outputs) {
-                NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(s.name), resfc));
+                if(s.ing!=null)
+                {
+                    NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(s.ing.name), resfc));
+                }
+                else
+                {
+                    NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(s.name), resfc));
+                }
             }
             HashSet<String> targets = new HashSet<>();
             for (NMakewindow.Spec s : mwnd.outputs) {
                 GetItems gi;
-                NUtils.getUI().core.addTask(gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(s.name)));
-                targets.add(s.name);
+                if(s.ing!=null)
+                {
+                    NUtils.getUI().core.addTask(gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(s.ing.name)));
+                    targets.add(s.ing.name);
+                }
+                else
+                {
+                    NUtils.getUI().core.addTask(gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(s.name)));
+                    targets.add(s.name);
+                }
+
 
             }
             if (!mwnd.noTransfer.a) {

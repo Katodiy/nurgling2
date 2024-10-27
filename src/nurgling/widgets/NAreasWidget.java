@@ -16,9 +16,12 @@ import javax.swing.*;
 import javax.swing.colorchooser.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+
+import static nurgling.widgets.Specialisation.findSpecialisation;
 
 public class NAreasWidget extends Window
 {
@@ -412,9 +415,12 @@ public class NAreasWidget extends Window
                                             nol.remove();
                                             NUtils.getGameUI().map.nols.remove(key);
                                             Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(((NMapView) NUtils.getGameUI().map).glob.map.areas.get(key).gid);
-                                            NUtils.getGameUI().map.glob.oc.remove(dummy);
-                                            ((NMapView) NUtils.getGameUI().map).dummys.remove(dummy.id);
+                                            if(dummy!=null) {
+                                                NUtils.getGameUI().map.glob.oc.remove(dummy);
+                                                ((NMapView) NUtils.getGameUI().map).dummys.remove(dummy.id);
+                                            }
                                             ((NMapView) NUtils.getGameUI().map).glob.map.areas.remove(key);
+
                                         }
                                     }
                                     NConfig.needAreasUpdate();
@@ -540,7 +546,7 @@ public class NAreasWidget extends Window
 
     public class CurrentSpecialisationList extends SListBox<SpecialisationItem, Widget> {
         CurrentSpecialisationList(Coord sz) {
-            super(sz, UI.scale(15));
+            super(sz, UI.scale(24));
         }
 
         @Override
@@ -596,16 +602,20 @@ public class NAreasWidget extends Window
         NArea.Specialisation item;
         IButton spec = null;
         NFlowerMenu menu;
-
+        TexI icon;
         public SpecialisationItem(NArea.Specialisation item)
         {
             this.item = item;
+            Specialisation.SpecialisationItem specialisationItem = findSpecialisation(item.name);
             if(item.subtype == null) {
-                this.text = add(new Label(item.name));
+                this.text = add(new Label(specialisationItem == null ? "???" + item.name + "???":specialisationItem.prettyName), new Coord(UI.scale(30,4)));
             }
             else
             {
-                this.text = add(new Label(item.name + "(" + item.subtype + ")"));
+                this.text = add(new Label((specialisationItem == null ? "???" + item.name + "???":specialisationItem.prettyName) + "(" + item.subtype + ")"), new Coord(UI.scale(30,4)));
+            }
+            if(specialisationItem != null) {
+                icon = new TexI(specialisationItem.image);
             }
             if(SpecialisationData.data.get(item.name)!=null)
             {
@@ -647,9 +657,16 @@ public class NAreasWidget extends Window
                         }
                         ui.root.add(menu, pos);
                     }
-                },UI.scale(new Coord(135,0)));
+                },UI.scale(new Coord(135,4)));
             }
             pack();
+            sz.y = UI.scale(24);
+        }
+
+        @Override
+        public void draw(GOut g) {
+            super.draw(g);
+            g.image(icon,Coord.z,UI.scale(24,24));
         }
     }
 
