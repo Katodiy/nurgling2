@@ -30,7 +30,7 @@ public class NAreasWidget extends Window
     public String currentPath = "";
     final static Tex folderIcon = new TexI(Resource.loadsimg("nurgling/hud/folder/d"));
     final static Tex openfolderIcon = new TexI(Resource.loadsimg("nurgling/hud/folder/u"));
-
+    NCatSelection catSelection;
     class Folder
     {
         public String name;
@@ -69,7 +69,21 @@ public class NAreasWidget extends Window
         },prev.pos("ur").adds(UI.scale(5,0)));
         create.settip("Create new area");
 
-
+        IButton showCat;
+        add(showCat = new IButton(NStyle.catmenu[0].back,NStyle.catmenu[1].back,NStyle.catmenu[2].back){
+            @Override
+            public void click()
+            {
+                super.click();
+                if(al.sel!=null) {
+                    if(catSelection == null) {
+                        ui.gui.add(catSelection = new NCatSelection(), NAreasWidget.this.c.add(0, NAreasWidget.this.sz.y));
+                    }
+                    catSelection.visible = true;
+                }
+            }
+        },create.pos("ur").adds(UI.scale(5,0)));
+        showCat.settip("Show all categories");
 
         prev = add(al = new AreaList(UI.scale(new Coord(400,170))), prev.pos("bl").adds(0, 10));
         Widget lab = add(new Label("Specialisation",NStyle.areastitle), prev.pos("bl").add(UI.scale(0,5)));
