@@ -28,6 +28,29 @@ public class Context {
         contcaps.put("gfx/terobjs/furn/table-stone", "Table");
     }
 
+    public static HashMap<String, String> customTool = new HashMap<>();
+    static {
+        customTool.put("Clay Jar", "paginae/bld/potterswheel");
+        customTool.put("Garden Pot", "paginae/bld/potterswheel");
+        customTool.put("Pot", "paginae/bld/potterswheel");
+        customTool.put("Treeplanter's Pot", "paginae/bld/potterswheel");
+        customTool.put("Urn", "paginae/bld/potterswheel");
+        customTool.put("Teapot", "paginae/bld/potterswheel");
+        customTool.put("Mug", "paginae/bld/potterswheel");
+        customTool.put("Stoneware Vase", "paginae/bld/potterswheel");
+    }
+
+    public void addCustomTool(String resName) {
+        String cust = customTool.get(resName);
+        if(cust != null) {
+            Workstation workstation_cand = workstation_map.get(cust);
+            if(workstation_cand!=null)
+            {
+                workstation = workstation_cand;
+            }
+        }
+    }
+
     public static class Workstation
     {
         public String station;
@@ -45,6 +68,8 @@ public class Context {
     static {
         equip_map = new HashMap<>();
         equip_map.put("gfx/invobjs/small/fryingpan", "Frying Pan");
+        equip_map.put("gfx/invobjs/small/glassrod", "Glass Blowing Rod");
+        equip_map.put("gfx/invobjs/smithshammer", "Smithy's Hammer");
     }
 
     static HashMap<String, Workstation> workstation_map;
@@ -58,6 +83,7 @@ public class Context {
         workstation_map.put("gfx/invobjs/fire",new Workstation("gfx/terobjs/pow", null));
         workstation_map.put("gfx/invobjs/cauldron",new Workstation("gfx/terobjs/cauldron", null));
         workstation_map.put("paginae/bld/potterswheel",new Workstation("gfx/terobjs/potterswheel", "gfx/borka/pwheelidle"));
+        workstation_map.put("paginae/bld/anvil",new Workstation("gfx/terobjs/anvil", null));
     }
     public void addTools(List<Indir<Resource>> tools)
     {
@@ -81,7 +107,7 @@ public class Context {
 
     public interface Output
     {
-        NArea getArea();
+        Pair<Coord2d,Coord2d>  getArea();
 
         int getTh();
     }
@@ -125,7 +151,7 @@ public class Context {
             super(gob);
         }
 
-        public OutputPile(Gob gob, NArea area, int th)
+        public OutputPile(Gob gob, Pair<Coord2d,Coord2d> area, int th)
         {
             super(gob);
             this.area = area;
@@ -133,11 +159,11 @@ public class Context {
         }
 
         @Override
-        public NArea getArea() {
+        public Pair<Coord2d,Coord2d> getArea() {
             return area;
         }
 
-        NArea area = null;
+        Pair<Coord2d,Coord2d> area = null;
 
         @Override
         public int getTh()
@@ -167,27 +193,48 @@ public class Context {
         {
             case BARTER:
                 outputs.add(new OutputBarter( Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
-                        Finder.findGob(area, new NAlias("gfx/terobjs/chest")),area, ingredient.th));
+                        Finder.findGob(area, new NAlias("gfx/terobjs/chest")), area.getRCArea(), ingredient.th));
                 break;
             case CONTAINER:
             {
                 for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
                 {
-                    OutputContainer container = new OutputContainer(gob,area, ingredient.th);
+                    OutputContainer container = new OutputContainer(gob, area.getRCArea(), ingredient.th);
                     container.initattr(Container.Space.class);
                     outputs.add(container);
                 }
                 for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
                 {
-                    outputs.add(new OutputPile(gob, area, ingredient.th));
+                    outputs.add(new OutputPile(gob, area.getRCArea(), ingredient.th));
                 }
                 if(outputs.isEmpty())
                 {
-                    outputs.add(new OutputPile(null, area, ingredient.th));
+                    outputs.add(new OutputPile(null, area.getRCArea(), ingredient.th));
                 }
 
             }
         }
+        return outputs;
+    }
+
+    public static ArrayList<Output> GetOutput(String item, Pair<Coord2d,Coord2d> area ) throws InterruptedException
+    {
+        ArrayList<Output> outputs = new ArrayList<>();
+        if(area == null)
+            return outputs;
+        for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
+        {
+            outputs.add(new OutputContainer(gob, area ,1));
+        }
+        for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
+        {
+            outputs.add(new OutputPile(gob, area, 1));
+        }
+        if(outputs.isEmpty())
+        {
+            outputs.add(new OutputPile(null, area, 1));
+        }
+
         return outputs;
     }
 
@@ -252,7 +299,7 @@ public class Context {
 
     public static class OutputBarter extends Barter implements Output
     {
-        public OutputBarter(Gob barter, Gob chest, NArea area, int th)
+        public OutputBarter(Gob barter, Gob chest,  Pair<Coord2d,Coord2d> area, int th)
         {
             super(barter, chest);
             this.area = area;
@@ -260,11 +307,11 @@ public class Context {
         }
 
         @Override
-        public NArea getArea() {
+        public Pair<Coord2d,Coord2d> getArea() {
             return area;
         }
 
-        NArea area = null;
+        Pair<Coord2d,Coord2d> area = null;
         @Override
         public int getTh()
         {
@@ -302,7 +349,7 @@ public class Context {
     public static class OutputContainer extends Container implements Output
     {
 
-        public OutputContainer(Gob gob, NArea area, int th)
+        public OutputContainer(Gob gob, Pair<Coord2d,Coord2d> area, int th)
         {
             this.gob = gob;
             this.cap = contcaps.get(gob.ngob.name);
@@ -311,11 +358,11 @@ public class Context {
         }
 
         @Override
-        public NArea getArea() {
+        public  Pair<Coord2d,Coord2d> getArea() {
             return area;
         }
 
-        NArea area = null;
+        Pair<Coord2d,Coord2d> area = null;
 
         @Override
         public int getTh()

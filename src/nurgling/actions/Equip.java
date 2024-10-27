@@ -106,6 +106,7 @@ public class Equip implements Action {
         HashSet<String> items = new HashSet<>();
         items.add("Scythe");
         items.add("Pickaxe");
+        items.add("Glass Blowing Rod");
         items.add("Boar Spear");
         items.add("Metal Shovel");
         items.add("Tinker's Shovel");

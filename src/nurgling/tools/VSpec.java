@@ -10,6 +10,9 @@ public class VSpec
     public static HashMap<String,ArrayList<JSONObject>> categories = new HashMap<>();
     static {
         ArrayList<JSONObject> spices = new ArrayList<>();
+//        gfx/invobjs/ambergris
+//        gfx/invobjs/blackpepper
+        spices.add(new JSONObject("{\"static\":\"gfx/invobjs/propolis\",\"name\":\"Propolis\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/kvann\",\"name\":\"Kvann\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-juniper\",\"name\":\"Juniper Berries\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/chives\",\"name\":\"Chives\"}"));
@@ -68,8 +71,13 @@ public class VSpec
         maltedGrains.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-wheatmalt\",\"name\":\"Malted Wheat\"}"));
         categories.put("Malted Grains", maltedGrains);
 
+        ArrayList<JSONObject> millableSeed = new ArrayList<>();
+        millableSeed.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-barley\",\"name\":\"Barley Seed\"}"));
+        millableSeed.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-wheat\",\"name\":\"Wheat Seed\"}"));
+        millableSeed.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-millet\",\"name\":\"Millet Seed\"}"));
+        categories.put("Millable Seed", millableSeed);
+
         ArrayList<JSONObject> seeds = new ArrayList<>();
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-barley\",\"name\":\"Barley Seed\"}"));
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-carrot\",\"name\":\"Carrot Seed\"}"));
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-cucumber\",\"name\":\"Cucumber Seed\"}"));
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-flax\",\"name\":\"Flax Seed\"}"));
@@ -77,13 +85,12 @@ public class VSpec
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-hemp\",\"name\":\"Hemp Seed\"}"));
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-leek\",\"name\":\"Leek Seed\"}"));
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-lettuce\",\"name\":\"Lettuce Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-millet\",\"name\":\"Millet Seed\"}"));
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-pipeweed\",\"name\":\"Pipeweed Seed\"}"));
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-poppy\",\"name\":\"Poppy Seed\"}"));
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-pumpkin\",\"name\":\"Pumpkin Seed\"}"));
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-turnip\",\"name\":\"Turnip Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-wheat\",\"name\":\"Wheat Seed\"}"));
         seeds.addAll(maltedGrains);
+        seeds.addAll(millableSeed);
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-wheatgerm\",\"name\":\"Sprouted Wheat\"}"));
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-barleygerm\",\"name\":\"Sprouted Barley\"}"));
         categories.put("Crop Seeds", seeds);
@@ -412,65 +419,134 @@ public class VSpec
         mollusksAndSnails.add(new JSONObject("{\"static\":\"gfx/invobjs/roundclam\",\"name\":\"Round Clam\"}"));
         categories.put("Edible Seashell", mollusksAndSnails);
 
-        ArrayList<JSONObject> rawMeat = new ArrayList<>();
-        rawMeat.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-bat\",\"gfx/invobjs/meat-raw\"],\"name\":\"Raw Bat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-ant\",\"name\":\"Ant Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-bee\",\"name\":\"Bee Meat\"}"));
-////        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-bollock\",\"name\":\"Bollock\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-boreworm\",\"name\":\"Boreworm Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-bullfinch\",\"name\":\"Bullfinch Meat\"}"));
-        rawMeat.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-cavelouse\",\"gfx/invobjs/meat-weird\"],\"name\":\"Cave Louse Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-chasmconch\",\"name\":\"Chasm Conch Meat\"}"));
-        rawMeat.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-chicken\",\"gfx/invobjs/meat-poultry\"],\"name\":\"Chicken Meat\"}"));
-        rawMeat.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-salmon\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Salmon\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-eagleowl\",\"name\":\"Eagle Owl Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-goldeneagle\",\"name\":\"Golden Eagle Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-magpie\",\"name\":\"Magpie Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-mallard\",\"name\":\"Mallard Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-mammoth\",\"name\":\"Mammoth Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-pelican\",\"name\":\"Pelican Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-ptarmigan\",\"name\":\"Ptarmigan Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-quail\",\"name\":\"Quail Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-adder\",\"name\":\"Raw Adder\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-badger\",\"name\":\"Raw Badger\"}"));
+        ArrayList<JSONObject> poultry = new ArrayList<>();//13
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-chicken\"], \"name\": \"Chicken Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-eagleowl\"], \"name\": \"Eagle Owl Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-goldeneagle\"], \"name\": \"Golden Eagle Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-magpie\"], \"name\": \"Magpie Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-mallard\"], \"name\": \"Mallard Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-bullfinch\"], \"name\": \"Mammoth Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-pelican\"], \"name\": \"Pelican Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-ptarmigan\"], \"name\": \"Ptarmigan Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-quail\"], \"name\": \"Quail Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-rockdove\"], \"name\": \"Rock Dove Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-seagull\"], \"name\": \"Seagull Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-swan\"], \"name\": \"Swan Meat\"}"));
+        poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-woodgrouse\"], \"name\": \"Wood Grouse Meat\"}"));
+        categories.put("Poultry", poultry);
 
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-bear\",\"name\":\"Raw Bear\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-beaver\",\"name\":\"Raw Beaver\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-beef\",\"name\":\"Raw Beef\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-bogturtle\",\"name\":\"Raw Bog Turtle\"}"));
-////        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-cachalot\",\"name\":\"Raw Cachalot\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-caverat\",\"name\":\"Raw Caverat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-chevon\",\"name\":\"Raw Chevon\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-fox\",\"name\":\"Raw Fox\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-greyseal\",\"name\":\"Raw Grey Seal\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-hedgehog\",\"name\":\"Raw Hedgehog\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-horse\",\"name\":\"Raw Horse\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-lynx\",\"name\":\"Raw Lynx\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-mole\",\"name\":\"Raw Mole\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-moose\",\"name\":\"Raw Moose\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-mutton\",\"name\":\"Raw Mutton\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-orca\",\"name\":\"Raw Orca\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-otter\",\"name\":\"Raw Otter\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-pork\",\"name\":\"Raw Pork\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-rabbit\",\"name\":\"Raw Rabbit\"}"));
-////        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-reindeervenison\",\"name\":\"Raw Reindeer Venison\"}"));
-////        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-roe\",\"name\":\"Raw Roe Venison\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-squirrel\",\"name\":\"Raw Squirrel\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-stoat\",\"name\":\"Raw Stoat\"}"));
-////        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-venison\",\"name\":\"Raw Venison\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-walrus\",\"name\":\"Raw Walrus\"}"));
-////        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-wildbeef\",\"name\":\"Raw Wild Beef\"}"));
-////        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-wildmutton\",\"name\":\"Raw Wild Mutton\"}"));
-////        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-wildpork\",\"name\":\"Raw Wild Pork\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-wildgoat\",\"name\":\"Raw Wildgoat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-wolf\",\"name\":\"Raw Wolf\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-wolverine\",\"name\":\"Raw Wolverine\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-rockdove\",\"name\":\"Rock Dove Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-seagull\",\"name\":\"Seagull Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-swan\",\"name\":\"Swan Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-troll\",\"name\":\"Troll Meat\"}"));
-//        rawMeat.add(new JSONObject("{\"static\":\"gfx/invobjs/meat-woodgrouse\",\"name\":\"Wood Grouse Meat\"}"));
+        ArrayList<JSONObject> weirdMeat = new ArrayList<>();//6
+        weirdMeat.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-weird\", \"gfx/invobjs/meat-troll\"], \"name\": \"Troll Meat\"}"));
+        weirdMeat.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-weird\", \"gfx/invobjs/meat-bee\"], \"name\": \"Bee Meat\"}"));
+        weirdMeat.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-weird\", \"gfx/invobjs/meat-boreworm\"], \"name\": \"Boreworm Meat\"}"));
+        weirdMeat.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-weird\", \"gfx/invobjs/meat-ant\"], \"name\": \"Ant Meat\"}"));
+        weirdMeat.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-weird\", \"gfx/invobjs/meat-cavelouse\"], \"name\": \"Cave Louse Meat\"}"));
+        weirdMeat.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-weird\", \"gfx/invobjs/meat-chasmconch\"], \"name\": \"Chasm Conch Meat\"}"));
+        categories.put("Weird Meat", weirdMeat);
+
+
+        ArrayList<JSONObject> bollock = new ArrayList<>();//5
+        bollock.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-testis\", \"gfx/invobjs/meat-horse\"], \"name\": \"Bee Meat\"}"));
+        bollock.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-testis\", \"gfx/invobjs/meat-sheep\"], \"name\": \"Boreworm Meat\"}"));
+        bollock.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-testis\", \"gfx/invobjs/meat-goat\"], \"name\": \"Ant Meat\"}"));
+        bollock.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-testis\", \"gfx/invobjs/meat-pig\"], \"name\": \"Cave Louse Meat\"}"));
+        bollock.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-testis\", \"gfx/invobjs/meat-cow\"], \"name\": \"Chasm Conch Meat\"}"));
+        categories.put("Bollock", bollock);
+
+        ArrayList<JSONObject> fishFilet = new ArrayList<>();//39
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-abyssgazer\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Abyss Gazer\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-asp\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Asp\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-bass\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Bass\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-bream\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Bream\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-brill\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Brill\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-burbot\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Burbot\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-carp\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Carp\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-catfish\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Catfish\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-caveangler\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Cave Angler\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-cavesculpin\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Cave Sculpin\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-cavelacanth\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Cavelacanth\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-chub\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Chub\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-cod\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Cod\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-eel\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Eel\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-grayling\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Grayling\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-haddock\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Haddock\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-herring\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Herring\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-ide\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Ide\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-lavaret\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Lavaret\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-mackerel\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Mackerel\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-mullet\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Mullet\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-paleghostfish\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Pale Ghostfish\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-perch\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Perch\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-pike\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Pike\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-plaice\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Plaice\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-pomfret\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Pomfret\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-roach\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Roach\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-rosefish\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Rose Fish\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-ruffe\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Ruffe\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-saithe\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Saithe\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-salmon\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Salmon\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-silverbream\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Silver Bream\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-smelt\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Smelt\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-sturgeon\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Sturgeon\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-tench\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Tench\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-trout\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Trout\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-whiting\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Whiting\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-zander\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Zander\"}"));
+        fishFilet.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-zope\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Zope\"}"));
+        categories.put("Filet of ", fishFilet);
+
+
+        ArrayList<JSONObject> raw = new ArrayList<>();//
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-mammoth\"], \"name\": \"Mammoth Meat\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-adder\"], \"name\": \"Raw Adder\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-badger\"], \"name\": \"Raw Badger\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-bat\"], \"name\": \"Raw Bat\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-bear\"], \"name\": \"Raw Bear\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-beaver\"], \"name\": \"Raw Beaver\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-cow\"], \"name\": \"Raw Beef\"}"));//beef
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-bogturtle\"], \"name\": \"Raw Bog Turtle\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-spermwhale\"], \"name\": \"Raw Cachalot\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-caverat\"], \"name\": \"Raw Caverat\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-goat\"], \"name\": \"Raw Chevon\"}"));//Chevon
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-fox\"], \"name\": \"Raw Fox\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-greyseal\"], \"name\": \"Raw Grey Seal\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-hedgehog\"], \"name\": \"Raw Hedgehog\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-horse\"], \"name\": \"Raw Horse\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-lynx\"], \"name\": \"Raw Lynx\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-mole\"], \"name\": \"Raw Mole\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-moose\"], \"name\": \"Raw Moose\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-sheep\"], \"name\": \"Raw Mutton\"}"));//mutton
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-orca\"], \"name\": \"Raw Orca\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-otter\"], \"name\": \"Raw Otter\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-pig\"], \"name\": \"Raw Pork\"}"));//pork
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-rabbit\"], \"name\": \"Raw Rabbit\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-reindeer\"], \"name\": \"Raw Reindeer Venison\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-roedeer\"], \"name\": \"Raw Roe Venison\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-squirrel\"], \"name\": \"Raw Squirrel\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-stoat\"], \"name\": \"Raw Stoat\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-reddeer\"], \"name\": \"Raw Venison\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-walrus\"], \"name\": \"Raw Walrus\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-aurochs\"], \"name\": \"Raw Wild Beef\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-mouflon\"], \"name\": \"Raw Wild Mutton\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-boar\"], \"name\": \"Raw Wild Pork\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-wildgoat\"], \"name\": \"Raw Wildgoat\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-wildhorse\"], \"name\": \"Raw Wildhorse\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-wolf\"], \"name\": \"Raw Wolf\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-wolverine\"], \"name\": \"Raw Wolverine\"}"));
+        categories.put("Raw ", raw);
+
+        ArrayList<JSONObject> rawMeat = new ArrayList<>();
+        rawMeat.addAll(raw);
+        rawMeat.addAll(fishFilet);
+        rawMeat.addAll(poultry);
+        rawMeat.addAll(weirdMeat);
+        rawMeat.addAll(bollock);
         categories.put("Raw Meat", rawMeat);
+
+        ArrayList<JSONObject> candles = new ArrayList<>();
+        candles.add(new JSONObject("{\"static\":\"gfx/invobjs/tallowcandle\",\"name\":\"Tallow Candle\"}"));
+        candles.add(new JSONObject("{\"static\":\"gfx/invobjs/beeswaxcandle\",\"name\":\"Wax Candle\"}"));
+        categories.put("Candle", candles);
 
         ArrayList<JSONObject> giantAntItems = new ArrayList<>();
         giantAntItems.add(new JSONObject("{\"static\":\"gfx/invobjs/ants-larvae\",\"name\":\"Ant Larvae\"}"));
@@ -672,6 +748,51 @@ public class VSpec
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-potters\",\"name\":\"Potter's Clay\"}"));
         categories.put("Clay", clays);
 
+        ArrayList<JSONObject> glass = new ArrayList<>();
+        glass.add(new JSONObject("{\"static\":\"gfx/invobjs/moltenglass\",\"name\":\"Molten Glass\"}"));
+        glass.add(new JSONObject("{\"static\":\"gfx/invobjs/rawglass\",\"name\":\"Raw Glass\"}"));
+        categories.put("Glass", glass);
+
+        ArrayList<JSONObject> hidesFresh = new ArrayList<>();
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/adderhide-blood\",\"name\":\"Fresh Adder Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/aurochshide-blood\",\"name\":\"Fresh Aurochs Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/badgerhide-blood\",\"name\":\"Fresh Badger Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/bathide-blood\",\"name\":\"Fresh Bat Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/bearhide-blood\",\"name\":\"Fresh Bear Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/beaverhide-blood\",\"name\":\"Fresh Beaver Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/boarhide-blood\",\"name\":\"Fresh Boarhide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/borewormhide-blood\",\"name\":\"Fresh Boreworm Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/cowhide-blood\",\"name\":\"Fresh Cattle Hide\"}"));  // отсутствует
+//        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/caveanglerscales-blood\",\"name\":\"Fresh Cave Angler Scales\"}"));  // отсутствует
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/caverathide-blood\",\"name\":\"Fresh Caverat Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/stoathide-winter-blood\",\"name\":\"Fresh Winter Stoat Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/goathide-blood\",\"name\":\"Fresh Goat Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/greysealhide-blood\",\"name\":\"Fresh Grey Seal Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehoghide-blood\",\"name\":\"Fresh Hedgehog Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/horsehide-blood\",\"name\":\"Fresh Horse Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/lynxhide-blood\",\"name\":\"Fresh Lynx Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/mammothhide-blood\",\"name\":\"Fresh Mammoth Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/molehide-blood\",\"name\":\"Fresh Mole Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/moosehide-blood\",\"name\":\"Fresh Moose Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/mouflonhide-blood\",\"name\":\"Fresh Mouflon Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/otterhide-blood\",\"name\":\"Fresh Otter Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/pighide-blood\",\"name\":\"Fresh Pig Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/rabbithide-blood\",\"name\":\"Fresh Rabbit Fur\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/reddeerhide-blood\",\"name\":\"Fresh Red Deer Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/reindeerhide-blood\",\"name\":\"Fresh Reindeer Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/roedeerhide-blood\",\"name\":\"Fresh Roe Deer Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/sheephide-blood\",\"name\":\"Fresh Sheepskin\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/squirrelhide-blood\",\"name\":\"Fresh Squirrel Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/squirreltail-blood\",\"name\":\"Fresh Squirrel Tail\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/stoathide-blood\",\"name\":\"Fresh Stoat Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/trollhide-blood\",\"name\":\"Fresh Troll Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/walrushide-blood\",\"name\":\"Fresh Walrus Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wildgoathide-blood\",\"name\":\"Fresh Wildgoat Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wildhorsehide-blood\",\"name\":\"Fresh Wildhorse Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wolfhide-blood\",\"name\":\"Fresh Wolf Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wolverinehide-blood\",\"name\":\"Fresh Wolverine Hide\"}"));
+        categories.put("Hide Fresh", hidesFresh);
+
         ArrayList<JSONObject> preparedAnimalHides = new ArrayList<>();
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/adderhide\",\"name\":\"Adder Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/aurochshide\",\"name\":\"Aurochs Hide\"}"));
@@ -679,12 +800,12 @@ public class VSpec
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/bathide\",\"name\":\"Bat Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/bearhide\",\"name\":\"Bear Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/beaverhide\",\"name\":\"Beaver Hide\"}"));
-        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/boarhide\",\"name\":\"Boar Hide\"}"));
+        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/boarhide\",\"name\":\"Boarhide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/borewormhide\",\"name\":\"Boreworm Hide\"}"));
-//        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/cattlehide\",\"name\":\"Cattle Hide\"}"));  // Missing resource
+        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/cowhide\",\"name\":\"Cattle Hide\"}"));  // Missing resource
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/caveanglerscales\",\"name\":\"Cave Angler Scales\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/caverathide\",\"name\":\"Caverat Hide\"}"));
-//        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/erminehide\",\"name\":\"Ermine\"}"));  // Missing resource
+        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/stoathide-winter\",\"name\":\"Ermine\"}"));  // Missing resource
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/foxhide\",\"name\":\"Fox Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/goathide\",\"name\":\"Goat Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/greysealhide\",\"name\":\"Grey Seal Hide\"}"));
@@ -890,7 +1011,7 @@ public class VSpec
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-wychelm\",\"name\":\"Wych Elm Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-yew\",\"name\":\"Yew Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-zelkova\",\"name\":\"Zelkova Block\"}"));
-        categories.put("Block", blocks);
+        categories.put("Block of Wood", blocks);
 
         ArrayList<JSONObject> stones = new ArrayList<>();
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/alabaster\",\"name\":\"Alabaster\"}"));
@@ -900,7 +1021,7 @@ public class VSpec
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/batrock\",\"name\":\"Bat Rock\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/blackcoal\",\"name\":\"Black Coal\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/magnetite\",\"name\":\"Magnetite\"}"));
-//        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/bloodore\",\"name\":\"Blood Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Blood Ore\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/breccia\",\"name\":\"Breccia\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/cassiterite\",\"name\":\"Cassiterite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/catgold\",\"name\":\"Cat Gold\"}"));
