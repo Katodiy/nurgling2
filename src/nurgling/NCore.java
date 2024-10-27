@@ -127,7 +127,7 @@ public class NCore extends Widget
         return botmod;
     }
 
-    NConfig config;
+    public NConfig config;
 
     public NCore()
     {
@@ -166,7 +166,7 @@ public class NCore extends Widget
         }
         if( config.isAreasUpdated())
         {
-            config.writeAreas();
+            config.writeAreas(null);
         }
         synchronized (tasks)
         {

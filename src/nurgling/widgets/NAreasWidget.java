@@ -14,6 +14,7 @@ import org.json.*;
 
 import javax.swing.*;
 import javax.swing.colorchooser.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -87,6 +88,46 @@ public class NAreasWidget extends Window
             }
         },create.pos("ur").adds(UI.scale(5,0)));
         showCat.settip("Show all categories");
+
+        IButton importbt;
+        add(importbt = new IButton(NStyle.importb[0].back,NStyle.importb[1].back,NStyle.importb[2].back){
+            @Override
+            public void click()
+            {
+                super.click();
+                java.awt.EventQueue.invokeLater(() -> {
+                    JFileChooser fc = new JFileChooser();
+                    fc.setFileFilter(new FileNameExtensionFilter("Areas setting file", "json"));
+                    if(fc.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
+                        return;
+                    if(fc.getSelectedFile()!=null)
+                    {
+                        NUtils.getUI().core.config.mergeAreas(fc.getSelectedFile());
+                    }
+                    NAreasWidget.this.hide();
+                    NAreasWidget.this.show();
+                    NConfig.needAreasUpdate();
+                });
+            }
+        },showCat.pos("ur").adds(UI.scale(25,0)));
+        importbt.settip("Import");
+
+        IButton exportbt;
+        add(exportbt = new IButton(NStyle.exportb[0].back,NStyle.exportb[1].back,NStyle.exportb[2].back){
+            @Override
+            public void click()
+            {
+                super.click();
+                java.awt.EventQueue.invokeLater(() -> {
+                    JFileChooser fc = new JFileChooser();
+                    fc.setFileFilter(new FileNameExtensionFilter("Areas setting file", "json"));
+                    if(fc.showSaveDialog(null) != JFileChooser.APPROVE_OPTION)
+                        return;
+                    NUtils.getUI().core.config.writeAreas(fc.getSelectedFile().getAbsolutePath()+".json");
+                });
+            }
+        },importbt.pos("ur").adds(UI.scale(5,0)));
+        exportbt.settip("Export");
 
         prev = add(al = new AreaList(UI.scale(new Coord(400,170))), prev.pos("bl").adds(0, 10));
         Widget lab = add(new Label("Specialisation",NStyle.areastitle), prev.pos("bl").add(UI.scale(0,5)));
