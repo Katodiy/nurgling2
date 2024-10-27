@@ -3,10 +3,14 @@ package haven.res.ui.rchan;
 
 import haven.*;
 import nurgling.*;
+import space.dynomake.libretranslate.Language;
+import space.dynomake.libretranslate.Translator;
+import space.dynomake.libretranslate.type.TranslateResponse;
 
 import java.util.*;
 import java.awt.Color;
 import java.awt.font.TextAttribute;
+import java.util.concurrent.CountDownLatch;
 
 /* >wdg: RealmChannel */
 @haven.FromResource(name = "ui/rchan", version = 21)
@@ -69,8 +73,33 @@ public class RealmChannel extends ChatUI.MultiChat {
 		this.nm = nm;
 	    }
 	    public Text get() {
-		return(ChatUI.fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s",NUtils.timestamp(), nm, text)), w, TextAttribute.FOREGROUND, from.color));
-	    }
+			if (true)//todo: a toggle in the config
+				return (ChatUI.fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s", NUtils.timestamp(), nm, text)), w, TextAttribute.FOREGROUND, from.color));
+			else {
+				final CountDownLatch latch = new CountDownLatch(1);
+				final RichText[] value = new RichText[1];
+				Thread translateThread = new Thread("ChatTranslate") {
+					@Override
+					public void run() {
+						TranslateResponse r = Translator.translateDetect(Language.ENGLISH, text);
+						System.out.println(r.getDetectedLanguage().getLanguage());
+						if (!r.getDetectedLanguage().getLanguage().equals("en")) {
+							if (!r.getTranslatedText().isEmpty())
+								value[0] = (ChatUI.fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s", NUtils.timestamp(), nm, text + "(" + r.getTranslatedText() + ")")), w, TextAttribute.FOREGROUND, from.color));
+						} else
+							value[0] = (ChatUI.fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s", NUtils.timestamp(), nm, text)), w, TextAttribute.FOREGROUND, from.color));
+						latch.countDown(); // Release await() in the main thread.
+					}
+				};
+				translateThread.start();
+				try {
+					latch.await();
+					return value[0];
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
 	}
 
 	private String nm() {
