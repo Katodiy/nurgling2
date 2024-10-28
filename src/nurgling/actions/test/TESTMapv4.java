@@ -48,5 +48,6 @@ public class TESTMapv4 extends Test
                 NUtils.getGameUI().msg(msg.toString());
             }
         }
+        NUtils.getGameUI().msg("Current tasks in system: " + NUtils.getUI().core.toString());
     }
 }
