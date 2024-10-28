@@ -329,6 +329,31 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 	return(ret);
     }
 
+	public static BufferedImage catimgsh(int margin, BufferedImage src, Coord scale, BufferedImage... imgs) {
+		int w = -margin, h = 0;
+		for(BufferedImage img : imgs) {
+			if(img == null)
+				continue;
+			if(img.getHeight() > h)
+				h = img.getHeight();
+			w += scale.x + margin;
+		}
+		w += src.getWidth() + margin;
+		h = src.getHeight();
+		BufferedImage ret = TexI.mkbuf(new Coord(w, h));
+		Graphics g = ret.getGraphics();
+		g.drawImage(src, 0, 0, null);
+		int x = src.getWidth() + margin;
+		for(BufferedImage img : imgs) {
+			if(img == null)
+				continue;
+			g.drawImage(img, x, 0, scale.x, scale.y, null);
+			x += img.getWidth() + margin;
+		}
+		g.dispose();
+		return(ret);
+	}
+
     public static BufferedImage longtip(List<ItemInfo> info) {
 	Layout l = new Layout();
 	for(ItemInfo ii : info) {

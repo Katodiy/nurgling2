@@ -92,10 +92,36 @@ public class NStyle {
             new TexI(Resource.loadsimg("nurgling/hud/buttons/addarea/d")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/addarea/h"))};
 
+    public static final TexI[] catmenu = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/catmenu/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/catmenu/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/catmenu/h"))};
+
+    public static final TexI[] importb = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/importb/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/importb/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/importb/h"))};
+
+    public static final TexI[] exportb = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/exportb/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/exportb/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/exportb/h"))};
+
+
     public static final TexI[] addfolder = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/addfolder/u")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/addfolder/d")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/addfolder/h"))};
+
+    public static final TexI[] toTake = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/toTake/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/toTake/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/toTake/h"))};
+
+    public static final TexI[] toPut = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/toPut/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/toPut/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/toPut/h"))};
 
     public static final TexI[] add = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/add/u")),

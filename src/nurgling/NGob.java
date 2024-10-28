@@ -6,6 +6,7 @@ import haven.render.Transform;
 import haven.render.sl.InstancedUniform;
 import haven.res.gfx.fx.eq.Equed;
 import haven.res.gfx.terobjs.consobj.Consobj;
+import haven.res.lib.tree.TreeScale;
 import haven.res.lib.vmat.Mapping;
 import haven.res.lib.vmat.Materials;
 import nurgling.nattrib.*;
@@ -168,8 +169,18 @@ public class NGob {
                             }
                         }
                     }
+                    if(parent.getattr(TreeScale.class)!=null)
+                    {
+                        if(name!=null)
+                            parent.addcustomol(new NTreeScaleOl(parent));
+                    }
                 }
             }
+        }
+        else if(a instanceof TreeScale)
+        {
+            if(name!=null)
+                parent.addcustomol(new NTreeScaleOl(parent));
         }
     }
 

@@ -73,7 +73,8 @@ public class NConfig
         autoDrink,
         chipperprop,
         animalrad,
-        smokeprop
+        smokeprop,
+        worldexplorerprop
     }
 
 
@@ -298,6 +299,9 @@ public class NConfig
                         case "NSmokeProp":
                             res.add(new NSmokProp(obj));
                             break;
+                        case "NWorldExplorerProp":
+                            res.add(new NWorldExplorerProp(obj));
+                            break;
                         default:
                             res.add(obj);
                     }
@@ -420,7 +424,7 @@ public class NConfig
     }
 
 
-    public void writeAreas()
+    public void writeAreas(String customPath)
     {
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
@@ -433,7 +437,7 @@ public class NConfig
             main.put("areas",jareas);
             try
             {
-                FileWriter f = new FileWriter(path_areas,StandardCharsets.UTF_8);
+                FileWriter f = new FileWriter(customPath==null?path_areas:customPath,StandardCharsets.UTF_8);
                 main.write(f);
                 f.close();
                 current.isAreasUpd = false;
@@ -444,4 +448,38 @@ public class NConfig
             }
         }
     }
+
+
+    public void mergeAreas(File file) {
+
+        StringBuilder contentBuilder = new StringBuilder();
+        try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
+        {
+            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+        }
+        catch (IOException ignore)
+        {
+        }
+
+        if (!contentBuilder.toString().isEmpty()) {
+            JSONObject main = new JSONObject(contentBuilder.toString());
+            JSONArray array = (JSONArray) main.get("areas");
+            for (int i = 0; i < array.length(); i++) {
+                NArea a = new NArea((JSONObject) array.get(i));
+                int id = 1;
+                for (NArea area : ((NMapView) NUtils.getGameUI().map).glob.map.areas.values()) {
+                    if (area.name.equals(a.name)) {
+                        a.name = "Other_" + a.name;
+                    }
+                    if (area.id >= id) {
+                        id = area.id + 1;
+                    }
+                }
+                a.id = id;
+                ((NMapView) NUtils.getGameUI().map).glob.map.areas.put(a.id, a);
+            }
+        }
+    }
+
+
 }

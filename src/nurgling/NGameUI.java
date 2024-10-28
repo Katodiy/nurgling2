@@ -60,7 +60,6 @@ public class NGameUI extends GameUI
         nefn.hide();
         add(spec = new Specialisation());
         spec.hide();
-//        add(new NCatSelection(-1));
         add(biw = new BotsInterruptWidget());
     }
 

@@ -3,14 +3,18 @@ package nurgling;
 import haven.*;
 import static haven.MCache.tilesz;
 
+import haven.Composite;
 import haven.render.*;
 import nurgling.actions.ActionWithFinal;
 import nurgling.actions.QuickActionBot;
 import nurgling.areas.*;
+import nurgling.overlays.NAreaLabel;
 import nurgling.overlays.NTexLabel;
 import nurgling.overlays.map.*;
 import nurgling.tools.*;
+import nurgling.widgets.Specialisation;
 
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.*;
 import java.util.*;
@@ -73,9 +77,7 @@ public class NMapView extends MapView
             OCache.Virtual dummy = glob.oc.new Virtual(pos, 0);
             dummy.virtual = true;
             area.gid = dummy.id;
-            NTexLabel notl = new NTexLabel(dummy);
-            notl.label = new TexI(NStyle.openings.render(area.name).img);
-            dummy.addcustomol(notl);
+            dummy.addcustomol(new NAreaLabel(dummy, area));
             dummys.put(dummy.id, dummy);
             glob.oc.add(dummy);
         }
