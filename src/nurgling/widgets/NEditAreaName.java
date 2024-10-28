@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.*;
 import nurgling.areas.*;
+import nurgling.overlays.NAreaLabel;
 import nurgling.overlays.NTexLabel;
 
 public class NEditAreaName extends Window
@@ -26,8 +27,8 @@ public class NEditAreaName extends Window
                     NConfig.needAreasUpdate();
                     Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(area.gid);
                     if(dummy != null) {
-                        NTexLabel tl = (NTexLabel) dummy.findol(NTexLabel.class).spr;
-                        tl.label = new TexI(NStyle.openings.render(area.name).img);
+                        NAreaLabel tl = (NAreaLabel) dummy.findol(NAreaLabel.class).spr;
+                        tl.update();
                     }
                 }
             }
