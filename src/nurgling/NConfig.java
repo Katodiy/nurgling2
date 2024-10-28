@@ -299,7 +299,7 @@ public class NConfig
                         case "NSmokeProp":
                             res.add(new NSmokProp(obj));
                             break;
-                        case "NWorldExplorerProp":
+                        case "NWorldExplorer":
                             res.add(new NWorldExplorerProp(obj));
                             break;
                         default:

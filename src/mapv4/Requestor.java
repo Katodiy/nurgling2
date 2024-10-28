@@ -126,7 +126,14 @@ public class Requestor implements Action {
                         Gob player = NUtils.player();
 
                         if(player != null) {
-                            MCache.Grid g = NUtils.getGameUI().map.glob.map.getgrid(NUtils.toGC(player.rc));
+                            MCache.Grid g = null;
+                            try {
+                                g = NUtils.getGameUI().map.glob.map.getgrid(NUtils.toGC(player.rc));
+
+                            }
+                            catch (MCache.LoadingMap e) {
+                            }
+
                             if(g == null) {
                                 continue;
                             }
@@ -262,6 +269,13 @@ public class Requestor implements Action {
 
     public void track() {
         synchronized ( list ) {
+            for(MapperTask task : list )
+            {
+                if(task.type.equals("track"))
+                {
+                    return;
+                }
+            }
             list.add(new MapperTask("track", null));
         }
     }
