@@ -17,12 +17,12 @@ public class NMappingClient {
     final HashSet<String> requestedGrid = new HashSet<>();
     Coord lastGC = Coord.z;
 
-    Connector connector;
+    public Connector connector;
     public Requestor requestor;
     public AtomicBoolean done = new AtomicBoolean(false);
     private Boolean autoMapper = null;
     public final Map<Long, MapRef> cache = new HashMap<Long, MapRef>();
-    Thread reqTread = null;
+    public Thread reqTread = null;
     Thread conTread = null;
     long lastTracking = -1;
     public void tick(double dt)

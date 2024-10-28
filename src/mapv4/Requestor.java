@@ -28,7 +28,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Requestor implements Action {
-    final LinkedList<MapperTask> list = new LinkedList<MapperTask>();
+    public final LinkedList<MapperTask> list = new LinkedList<MapperTask>();
     NMappingClient parent;
     public Requestor(NMappingClient parent) {
         this.parent = parent;
@@ -36,7 +36,7 @@ public class Requestor implements Action {
 
 
 
-    class MapperTask
+    public class MapperTask
     {
         String type;
         Object[] args;
@@ -45,7 +45,15 @@ public class Requestor implements Action {
             this.type = type;
             this.args = args;
         }
+
+        @Override
+        public String toString() {
+            return "MapperTask{" +
+                    "type='" + type + '\'' +
+                    '}';
+        }
     }
+
 
 
 
