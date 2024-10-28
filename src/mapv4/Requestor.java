@@ -223,42 +223,52 @@ public class Requestor implements Action {
                             }).collect(Collectors.toList());
                             mapfile.lock.readLock().unlock();
                             ArrayList<JSONObject> loadedMarkers = new ArrayList<>();
-                            for (MarkerData md : markers)
+                            for (int i = 0; i < markers.size(); i++)
                             {
-                                Coord mgc = new Coord(Math.floorDiv(md.m.tc.x, 100), Math.floorDiv(md.m.tc.y, 100));
-                                NUtils.addTask(new NTask() {
-                                    int count = 0;
-                                    @Override
-                                    public boolean check() {
-                                        if(count++>=200)
-                                            return true;
-                                        return ((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done();
-                                    }
+                                try
+                                {
+                                    MarkerData md = markers.get(i);
+                                    if (md.indirGrid.get() == null)
+                                        continue;
+                                    Coord mgc = new Coord(Math.floorDiv(md.m.tc.x, 100), Math.floorDiv(md.m.tc.y, 100));
+                                    NUtils.addTask(new NTask() {
+                                        int count = 0;
+                                        @Override
+                                        public boolean check() {
+                                            if(count++>=200)
+                                                return true;
+                                            return ((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done();
+                                        }
 
-                                    @Override
-                                    public String toString() {
-                                        return "Requester2: ((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()" + String.valueOf(((MapFile.Segment.ByCoord)md.indirGrid).cur!=null) +String.valueOf( ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()) ;
-                                    }
-                                });
-                                if(!(((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()))
-                                    continue;
-                                long gridId = ((MapFile.Segment.ByCoord)md.indirGrid).cur.get().id;
-                                JSONObject o = new JSONObject();
-                                o.put("name", md.m.nm);
-                                o.put("gridID", String.valueOf(gridId));
-                                Coord gridOffset = md.m.tc.sub(mgc.mul(100));
-                                o.put("x", gridOffset.x);
-                                o.put("y", gridOffset.y);
+                                        @Override
+                                        public String toString() {
+                                            return "Requester2: ((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()" + String.valueOf(((MapFile.Segment.ByCoord)md.indirGrid).cur!=null) +String.valueOf( ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()) ;
+                                        }
+                                    });
+                                    if(!(((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()))
+                                        continue;
+                                    long gridId = ((MapFile.Segment.ByCoord)md.indirGrid).cur.get().id;
+                                    JSONObject o = new JSONObject();
+                                    o.put("name", md.m.nm);
+                                    o.put("gridID", String.valueOf(gridId));
+                                    Coord gridOffset = md.m.tc.sub(mgc.mul(100));
+                                    o.put("x", gridOffset.x);
+                                    o.put("y", gridOffset.y);
 
-                                if(md.m instanceof MapFile.SMarker) {
-                                    o.put("type", "shared");
-                                    o.put("id", ((MapFile.SMarker) md.m).oid);
-                                    o.put("image", ((MapFile.SMarker) md.m).res.name);
-                                } else if(md.m instanceof MapFile.PMarker) {
-                                    o.put("type", "player");
-                                    o.put("color", ((MapFile.PMarker) md.m).color);
+                                    if(md.m instanceof MapFile.SMarker) {
+                                        o.put("type", "shared");
+                                        o.put("id", ((MapFile.SMarker) md.m).oid);
+                                        o.put("image", ((MapFile.SMarker) md.m).res.name);
+                                    } else if(md.m instanceof MapFile.PMarker) {
+                                        o.put("type", "player");
+                                        o.put("color", ((MapFile.PMarker) md.m).color);
+                                    }
+                                    loadedMarkers.add(o);
                                 }
-                                loadedMarkers.add(o);
+                                catch (Exception ex)
+                                {
+                                    // maybe some logging here someday...
+                                }
                             }
                             JSONObject msg = new JSONObject();
                             msg.put("data", new JSONArray(loadedMarkers.toArray()));
