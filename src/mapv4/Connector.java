@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class Connector implements Action {
     NMappingClient parent;
-    final LinkedList<JSONObject> msgs = new LinkedList<>();
+    public final LinkedList<JSONObject> msgs = new LinkedList<>();
     public Connector(NMappingClient parent) {
         this.parent = parent;
     }

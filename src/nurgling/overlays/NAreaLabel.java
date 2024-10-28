@@ -28,7 +28,7 @@ public class NAreaLabel extends Sprite implements RenderTree.Node, PView.Render2
     }
 
 
-    void update()
+    public void update()
     {
         BufferedImage img = NStyle.openings.render(area.name).img;
         if(!area.spec.isEmpty()) {

@@ -227,4 +227,15 @@ public class NCore extends Widget
         mappingClient.done.set(true);
         super.dispose();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder res = new StringBuilder();
+        synchronized (tasks) {
+            for (NTask task : tasks) {
+                res.append(task.toString() + "|");
+            }
+        }
+        return res.toString();
+    }
 }
