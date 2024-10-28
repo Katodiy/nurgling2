@@ -44,14 +44,48 @@ public class WorldExplorer implements Action {
 
         Coord[] dirs = (prop.clockwise)?clockwise:counterclockwise;
         Coord[][] neardirs = (prop.clockwise)?nearest:counternearest;
-        String targetTile = (prop.deeper)?"odeep":"owater";
-        String nearestTile = (prop.deeper)?"odeeper":"odeep";
+        String targetTile = "odeep";
+        String nearestTile = (prop.deeper)?"odeeper":"owater";
+
+        if(!prop.deeper)
+        {
+            dirs = (prop.clockwise)?counterclockwise:clockwise;
+            neardirs = (prop.clockwise)?counternearest:nearest;
+        }
 
         boolean deepFound = false;
 
         Coord[] buffer = new Coord[100];
         int counter = 0;
-        Coord pltc;
+        Coord  pltc = NUtils.player().rc.div(MCache.tilesz).floor();
+        boolean isStart = false;
+        for(int j = 0; j<50;j++) {
+            for (int i = 0; i < 4; i++) {
+                Coord cand = pltc.add(dirs[i].mul(j));
+                Resource res_beg = NUtils.getGameUI().ui.sess.glob.map.tilesetr(NUtils.getGameUI().ui.sess.glob.map.gettile(cand));
+                if (res_beg != null) {
+                    if (res_beg.name.endsWith(targetTile)) {
+                        boolean isCorrect = false;
+                        for (Coord test : neardirs[i]) {
+                            Resource testr = NUtils.getGameUI().ui.sess.glob.map.tilesetr(NUtils.getGameUI().ui.sess.glob.map.gettile(cand.add(test)));
+                            if (testr != null && testr.name.endsWith(nearestTile)) {
+                                deepFound = true;
+                                isCorrect = true;
+                            }
+                        }
+                        if (isCorrect) {
+                            new GoTo(cand.mul(MCache.tilesz).add(MCache.tilehsz)).run(gui);
+                            isStart = true;
+                        }
+                        if (isStart)
+                            break;
+                    }
+                }
+            }
+            if(isStart)
+                break;
+        }
+
         Coord last = null;
         while (true) {
             pltc = NUtils.player().rc.div(MCache.tilesz).floor();
