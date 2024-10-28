@@ -66,6 +66,12 @@ public class Requestor implements Action {
                     synchronized (list) {
                         return !list.isEmpty() || parent.done.get();
                     }
+
+                }
+
+                @Override
+                public String toString() {
+                    return "Requester1: !list.isEmpty() || parent.done.get()" + String.valueOf(!list.isEmpty()) +String.valueOf(parent.done.get()) ;
                 }
             });
             if(parent.done.get())
@@ -224,6 +230,11 @@ public class Requestor implements Action {
                                     @Override
                                     public boolean check() {
                                         return ((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done();
+                                    }
+
+                                    @Override
+                                    public String toString() {
+                                        return "Requester2: ((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()" + String.valueOf(((MapFile.Segment.ByCoord)md.indirGrid).cur!=null) +String.valueOf( ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()) ;
                                     }
                                 });
                                 long gridId = ((MapFile.Segment.ByCoord)md.indirGrid).cur.get().id;
