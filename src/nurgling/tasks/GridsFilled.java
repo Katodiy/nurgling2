@@ -9,8 +9,11 @@ public class GridsFilled implements NTask {
     }
     Coord coord;
 
+    int count = 0;
     @Override
     public boolean check() {
+        if(count++ >= 200)
+            return true;
         if(NUtils.getGameUI().map.glob.map.grids.size()==9)
         {
             if(NUtils.getGameUI().map.glob.map.grids.get(coord)==null)
