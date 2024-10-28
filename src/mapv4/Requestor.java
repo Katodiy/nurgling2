@@ -227,8 +227,11 @@ public class Requestor implements Action {
                             {
                                 Coord mgc = new Coord(Math.floorDiv(md.m.tc.x, 100), Math.floorDiv(md.m.tc.y, 100));
                                 NUtils.addTask(new NTask() {
+                                    int count = 0;
                                     @Override
                                     public boolean check() {
+                                        if(count++>=200)
+                                            return true;
                                         return ((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done();
                                     }
 
@@ -237,6 +240,8 @@ public class Requestor implements Action {
                                         return "Requester2: ((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()" + String.valueOf(((MapFile.Segment.ByCoord)md.indirGrid).cur!=null) +String.valueOf( ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()) ;
                                     }
                                 });
+                                if(!(((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()))
+                                    continue;
                                 long gridId = ((MapFile.Segment.ByCoord)md.indirGrid).cur.get().id;
                                 JSONObject o = new JSONObject();
                                 o.put("name", md.m.nm);
