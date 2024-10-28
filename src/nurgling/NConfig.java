@@ -73,7 +73,8 @@ public class NConfig
         autoDrink,
         chipperprop,
         animalrad,
-        smokeprop
+        smokeprop,
+        worldexplorerprop
     }
 
 
@@ -297,6 +298,9 @@ public class NConfig
                             break;
                         case "NSmokeProp":
                             res.add(new NSmokProp(obj));
+                            break;
+                        case "NWorldExplorerProp":
+                            res.add(new NWorldExplorerProp(obj));
                             break;
                         default:
                             res.add(obj);

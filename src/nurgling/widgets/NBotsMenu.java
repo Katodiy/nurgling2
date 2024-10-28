@@ -59,6 +59,7 @@ public class NBotsMenu extends Widget
         utils.elements.add(new NButton("clay_cheker", new CheckClay(), true));
         utils.elements.add(new NButton("clover", new FeedClover(), true));
         utils.elements.add(new NButton("collectalltopile", new CollectSameItemsFromEarth(), true));
+        utils.elements.add(new NButton("worldexplorer", new WorldExplorer(), true));
         addLayout(utils);
         NLayout build = new NLayout("build");
         build.elements.add(new NButton("dframe", new BuildDryingFrame(), true));
