@@ -74,7 +74,8 @@ public class NConfig
         chipperprop,
         animalrad,
         smokeprop,
-        worldexplorerprop
+        worldexplorerprop,
+        fishingsettings
     }
 
 
@@ -301,6 +302,9 @@ public class NConfig
                             break;
                         case "NWorldExplorer":
                             res.add(new NWorldExplorerProp(obj));
+                            break;
+                        case "NFishingSettings":
+                            res.add(new NFishingSettings(obj));
                             break;
                         default:
                             res.add(obj);
