@@ -325,6 +325,7 @@ public class VSpec {
         categories.put("Bug", bugs);
 
         ArrayList<JSONObject> fishlines = new ArrayList<>();
+        fishlines.add(new JSONObject("{\"static\":\"gfx/invobjs/fline-bush\",\"name\":\"Bushcraft Fishline\"}"));
         fishlines.add(new JSONObject("{\"static\":\"gfx/invobjs/fline-farmers\",\"name\":\"Farmer's Fishline\"}"));
         fishlines.add(new JSONObject("{\"static\":\"gfx/invobjs/fline-fine\",\"name\":\"Fine Fishline\"}"));
         fishlines.add(new JSONObject("{\"static\":\"gfx/invobjs/fline-macabre\",\"name\":\"Macabre Fishline\"}"));
@@ -1488,6 +1489,16 @@ public class VSpec {
         }
 
         return new NAlias(names.toArray(new String[0]));
+    }
+
+    public static NAlias getAllFish()
+    {
+        NAlias res = new NAlias();
+        for(JSONObject object : categories.get("Fish"))
+        {
+            res.keys.add(object.optString("name"));
+        }
+        return res;
     }
 
     public static HashMap<NStyle.Container, Integer> chest_state = new HashMap<>();

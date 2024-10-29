@@ -18,7 +18,7 @@ import java.util.List;
 
 public class FishingTarget extends Window {
     public static Text.Foundry fnd = new Text.Foundry(Text.sans.deriveFont(java.awt.Font.BOLD), 14).aa(true);
-    FishList fishList;
+    public FishList fishList;
     NFishingSettings settings;
     public FishingTarget(NFishingSettings settings) {
         super(UI.scale(300,400), "Fish");
@@ -34,7 +34,6 @@ public class FishingTarget extends Window {
     }
 
     private final ArrayList<JSONObject> items = new ArrayList<>();
-    public final ArrayList<FishItem> fitems = new ArrayList<>();
 
     public class FishList extends SListBox<JSONObject, Widget> {
         FishList(Coord sz) {
@@ -53,7 +52,6 @@ public class FishingTarget extends Window {
                     FishItem fi;
                     add(fi = new FishItem(item), Coord.z);
                     fi.enabled.a = settings.targets.contains(item.getString("name"));
-                    fitems.add(fi);
                 }
             });
         }
@@ -78,10 +76,25 @@ public class FishingTarget extends Window {
         TexI icon;
         public FishItem(JSONObject fishObj){
             super(UI.scale(300,32));
-            this.enabled = add(new CheckBox(""), UI.scale(0,9));
+            this.enabled = add(new CheckBox(""){
+                @Override
+                public void set(boolean a) {
+                    super.set(a);
+                    if(a)
+                    {
+                        if(!settings.targets.contains(text.text()))
+                            settings.targets.add(text.text());
+                    }
+                    else {
+                        settings.targets.remove(text.text());
+                    }
+                }
+            }, UI.scale(0,9));
             this.text = add(new Label(fishObj.getString("name"), fnd),enabled.pos("ur").adds(UI.scale(100,-4)));
             this.icon = new TexI(ItemTex.create(fishObj));
         }
+
+
 
         @Override
         public void draw(GOut g) {

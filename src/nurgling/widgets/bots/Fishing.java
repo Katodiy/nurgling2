@@ -14,6 +14,7 @@ public class Fishing extends Window implements Checkable {
     UsingTools hooks;
     Label baitLab;
     Label targLab;
+    CheckBox repFromCont;
     public NFishingSettings prop;
     private FishingTarget fishwnd = null;
     public Fishing() {
@@ -71,7 +72,7 @@ public class Fishing extends Window implements Checkable {
                 }
             }
         }
-        prev = add(new CheckBox("Repair from container")
+        prev = add(repFromCont = new CheckBox("Repair from container")
         {
             {
                 a = fishSet.repfromcont;
@@ -164,13 +165,8 @@ public class Fishing extends Window implements Checkable {
                     prop.hook = hooks.s.name;
                 if(baits.s!=null)
                     prop.bait = baits.s.name;
-                ArrayList<String> fish = new ArrayList<>();
-                for(FishingTarget.FishItem item : fishwnd.fitems)
-                {
-                    if(item.enabled.a)
-                        fish.add(item.text.text());
-                }
-                prop.targets = fish;
+                prop.targets = fishwnd.settings.targets;
+                prop.repfromcont = repFromCont.a;
                 NFishingSettings.set(prop);
                 isReady = true;
                 fishwnd.destroy();

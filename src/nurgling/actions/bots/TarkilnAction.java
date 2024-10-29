@@ -36,13 +36,13 @@ public class TarkilnAction implements Action {
         {
             NUtils.getGameUI().msg("Please select area for output coal");
             SelectArea onsa;
-            (onsa = new SelectArea(Resource.loadsimg("baubles/clayPiles"))).run(gui);
+            (onsa = new SelectArea(Resource.loadsimg("baubles/coalPiles"))).run(gui);
             pile_area = onsa.getRCArea();
         }
 
         NUtils.getGameUI().msg("Please select area for fuel");
         SelectArea insa;
-        (insa = new SelectArea(Resource.loadsimg("baubles/clayPiles"))).run(gui);
+        (insa = new SelectArea(Resource.loadsimg("baubles/fuel"))).run(gui);
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {

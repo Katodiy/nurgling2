@@ -182,17 +182,28 @@ public class NEquipory extends Equipory
         return null;
     }
 
+    public WItem findItem(String name) throws InterruptedException {
+        for(int i = 0; i < ecoords.length;i++) {
+            if (quickslots[i] != null) {
+                if (((NGItem) quickslots[i].item).name().endsWith(name)) {
+                    return quickslots[i];
+                }
+            }
+        }
+        return null;
+    }
+
     public WItem findBucket (String content) throws InterruptedException {
         if (quickslots[Slots.HAND_RIGHT.idx] != null) {
             NUtils.getUI().core.addTask(new WaitItemSpr(quickslots[Slots.HAND_RIGHT.idx]));
             if (NParser.checkName("Bucket", ((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).name())) {
-                if (((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content() == null || NParser.checkName(((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content().name(), content))
+                if (((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content().isEmpty() || NParser.checkName(((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content().get(0).name(), content))
                     return quickslots[Slots.HAND_RIGHT.idx];
             }
         }
         if (quickslots[Slots.HAND_LEFT.idx] != null) {
             if (NParser.checkName("Bucket", ((NGItem) quickslots[Slots.HAND_LEFT.idx].item).name())) {
-                if (((NGItem) quickslots[Slots.HAND_LEFT.idx].item).content() == null || NParser.checkName(((NGItem) quickslots[Slots.HAND_LEFT.idx].item).content().name(), content))
+                if (((NGItem) quickslots[Slots.HAND_LEFT.idx].item).content().isEmpty() || NParser.checkName(((NGItem) quickslots[Slots.HAND_LEFT.idx].item).content().get(0).name(), content))
                     return quickslots[Slots.HAND_LEFT.idx];
             }
         }
