@@ -94,7 +94,7 @@ public class SmelterAction implements Action {
                 new FreeContainers(containers).run(gui);
                 new CollectQuickSilver(containers).run(gui);
                 new DropTargets(containers, new NAlias("Slag")).run(gui);
-                res = new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.ore.toString()), ores).run(gui);
+                res = new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.ore.toString()).getRCArea(), ores).run(gui);
                 ArrayList<Container> forFuel = new ArrayList<>();
 
                 for(Container container: containers) {
