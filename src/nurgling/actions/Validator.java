@@ -3,6 +3,7 @@ package nurgling.actions;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
@@ -32,7 +33,7 @@ public class Validator implements Action{
             {
                 if((test = NArea.findSpec(s.name,s.subtype))==null || test.getRCArea() == null)
                 {
-                    return Results.ERROR("Area " + s.name + " ( " + s.subtype + " ) required, but not found!");
+                    return Results.ERROR("Area " + Specialisation.findSpecialisation(s.name).prettyName + " ( " + s.subtype + " ) required, but not found!");
                 }
             }
             else
@@ -40,7 +41,7 @@ public class Validator implements Action{
 
                 if((test = NArea.findSpec(s.name))==null || test.getRCArea() == null)
                 {
-                    return Results.ERROR("Area " + s.name + " required, but not found!");
+                    return Results.ERROR("Area " + Specialisation.findSpecialisation(s.name).prettyName + " required, but not found!");
                 }
             }
         }
@@ -49,14 +50,14 @@ public class Validator implements Action{
         {
             if(s.subtype!=null) {
                 if ((test = NArea.findSpec(s.name,s.subtype))==null || test.getRCArea() == null) {
-                    NUtils.getGameUI().msg("Optional area " + s.name + " ( " + s.subtype + " ) not found.");
+                    NUtils.getGameUI().msg("Optional area " + Specialisation.findSpecialisation(s.name).prettyName + " ( " + s.subtype + " ) not found.");
                 }
             }
             else
             {
                 if((test = NArea.findSpec(s.name))==null || test.getRCArea() == null)
                 {
-                    NUtils.getGameUI().msg("Optional area " + s.name +" not found.");
+                    NUtils.getGameUI().msg("Optional area " + Specialisation.findSpecialisation(s.name).prettyName +" not found.");
                 }
             }
         }

@@ -50,7 +50,7 @@ public class Specialisation extends Window
         tanning,
         logs,
         smokshed,
-        readyHides
+        tarkiln, readyHides
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -82,6 +82,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.ttub.toString(),"Tanning tubs",Resource.loadsimg("nurgling/categories/ttub")));
         specialisation.add(new SpecialisationItem(SpecName.tanning.toString(),"Source of tanning fluid",Resource.loadsimg("nurgling/categories/tanning")));
         specialisation.add(new SpecialisationItem(SpecName.smokshed.toString(),"Smoked sheds",Resource.loadsimg("nurgling/categories/smokshed")));
+        specialisation.add(new SpecialisationItem(SpecName.tarkiln.toString(),"Tarkilns",Resource.loadsimg("nurgling/categories/tarkiln")));
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
             public int compare(SpecialisationItem o1, SpecialisationItem o2) {
