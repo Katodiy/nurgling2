@@ -13,6 +13,6 @@ public class WaitItemContent implements NTask{
 
     @Override
     public boolean check() {
-        return item.item.spr!=null && ((NGItem)item.item).content()!=null;
+        return item.item.spr!=null && !((NGItem)item.item).content().isEmpty();
     }
 }

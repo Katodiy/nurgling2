@@ -668,6 +668,7 @@ public class NInventory extends Inventory
     public static final Comparator<NGItem> ITEM_COMPARATOR_ASC = new Comparator<NGItem>() {
         @Override
         public int compare(NGItem o1, NGItem o2) {
+
             if(o1.quality!=null && o2.quality!=null)
                 return Double.compare(o1.quality, o2.quality);
             else

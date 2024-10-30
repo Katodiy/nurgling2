@@ -10,6 +10,6 @@ public class HandWithoutContent implements NTask
     @Override
     public boolean check() {
         WItem res;
-        return (res = NUtils.getGameUI().vhand) != null && ((NGItem)NUtils.getGameUI().vhand.item).content() == null;
+        return (res = NUtils.getGameUI().vhand) != null && ((NGItem)NUtils.getGameUI().vhand.item).content().isEmpty();
     }
 }

@@ -1,8 +1,13 @@
 package nurgling.widgets;
 
 import haven.*;
+import haven.Window;
 import nurgling.*;
 import nurgling.conf.*;
+
+import java.awt.*;
+
+import static nurgling.widgets.NCatSelection.fnd;
 
 public class NDraggableWidget extends Widget
 {
@@ -19,7 +24,8 @@ public class NDraggableWidget extends Widget
     public final static Coord off = new Coord(UI.scale(10,10));
     public final static Coord delta = new Coord(UI.scale(35,20));
     public Widget content = null;
-
+    TexI label = null;
+    public static Text.Furnace fnd = new PUtils.BlurFurn(new Text.Foundry(Text.sans.deriveFont(java.awt.Font.BOLD), 14, Color.YELLOW).aa(true), UI.scale(1), UI.scale(2), Color.BLACK);
     public NDraggableWidget(Widget content, String name, Coord sz)
     {
         this(name,sz);
@@ -31,6 +37,7 @@ public class NDraggableWidget extends Widget
 
     public NDraggableWidget(String name, Coord sz)
     {
+        label = new TexI(fnd.render(name).img);
         this.sz = sz;
         this.name = name;
         add(btnLock = new ICheckBox(NStyle.locki[0], NStyle.locki[1], NStyle.locki[2], NStyle.locki[3])
@@ -130,8 +137,12 @@ public class NDraggableWidget extends Widget
         {
             drawBg(g,sz);
             box.draw(g, Coord.z, sz);
+
         }
         super.draw(g);
+        if (ui.core.mode == NCore.Mode.DRAG) {
+            g.aimage(label, sz.div(2), 0.5, 0.5);
+        }
     }
 
     public static void drawBg(GOut g, Coord sz) {

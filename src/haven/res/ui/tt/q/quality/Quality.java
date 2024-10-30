@@ -37,9 +37,9 @@ public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
 
     public Tex overlay() {
         BufferedImage text = null;
-        if (ownitem != null && ownitem.content()!=null) {
+        if (ownitem != null && !ownitem.content().isEmpty()) {
             withContent = true;
-            text = GItem.NumberInfo.numrender((int) Math.round(ownitem.content().quality()), new Color(97, 121, 227, 255));
+            text = GItem.NumberInfo.numrender((int) Math.round(ownitem.content().get(0).quality()), new Color(97, 121, 227, 255));
         } else {
             withContent = false;
             text = GItem.NumberInfo.numrender((int) Math.round(q), new Color(35, 245, 245, 255));

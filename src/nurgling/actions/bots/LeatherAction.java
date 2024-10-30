@@ -52,7 +52,7 @@ public class LeatherAction implements Action {
 
             new FillFluid(containers, NArea.findSpec(Specialisation.SpecName.tanning.toString()).getRCArea(), new NAlias("tanfluid"), 2).run(gui);
             new FreeContainers(containers, new NAlias("Leather")).run(gui);
-            new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.readyHides.toString()), notraw).run(gui);
+            new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.readyHides.toString()).getRCArea(), notraw).run(gui);
             new TransferToPiles(NArea.findSpec(Specialisation.SpecName.readyHides.toString()).getRCArea(), notraw).run(gui);
 
             return Results.SUCCESS();

@@ -53,7 +53,7 @@ public class DFrameHidesAction implements Action {
 
 
             new FreeContainers(containers).run(gui);
-            new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.rawhides.toString()), raw).run(gui);
+            new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), raw).run(gui);
             new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
 
             return Results.SUCCESS();

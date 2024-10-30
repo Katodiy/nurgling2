@@ -10,6 +10,7 @@ import nurgling.iteminfo.NFoodInfo;
 import nurgling.iteminfo.NQuestItem;
 import nurgling.widgets.NQuestInfo;
 
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,8 +56,20 @@ public class NGItem extends GItem
         return false;
     }
 
-    public NContent content(){
+    public ArrayList<NContent> content(){
         return content;
+    }
+
+    public boolean findContent(String item) {
+        for(NGItem.NContent content : content())
+        {
+            if(content.name().endsWith(item))
+            {
+                return true;
+            }
+
+        }
+        return false;
     }
 
     public static class NContent
@@ -93,7 +106,7 @@ public class NGItem extends GItem
 
     }
 
-    private NContent content = null;
+    private ArrayList<NContent> content = new ArrayList<>();
 
     public Coord sprsz()
     {
@@ -161,7 +174,7 @@ public class NGItem extends GItem
     {
         if (rawinfo != null)
         {
-            content = null;
+            content.clear();
             for (Object o : rawinfo.data)
             {
                 if (o instanceof Object[])
@@ -206,7 +219,7 @@ public class NGItem extends GItem
                                             }
                                         }
                                         if (name != null && q != -1) {
-                                            content = new NContent(q, name);
+                                            content.add(new NContent(q, name));
                                         }
                                         break;
                                     case "ui/tt/coin":

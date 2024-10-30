@@ -28,13 +28,13 @@ public class CheckWater implements Action {
         NUtils.takeItemToHand(item);
         gui.map.wdgmsg("itemact", Coord.z, NUtils.player().rc.floor(posres), 3, 0);
         NUtils.addTask(new WaitItemContent(gui.vhand));
-        String water = ((NGItem)gui.vhand.item).content().type();
-        double quality = ((NGItem)gui.vhand.item).content().quality();
+        String water = ((NGItem)gui.vhand.item).content().get(0).type();
+        double quality = ((NGItem)gui.vhand.item).content().get(0).quality();
         NUtils.player().addcustomol(new NCheckResult(NUtils.player(),quality,water));
         gui.getInventory().dropOn(pos,cups);
         for(WItem titem : gui.getInventory().getItems(cups))
         {
-            if(((NGItem)titem.item).content()!=null && ((NGItem)titem.item).content().type().equals(water))
+            if(!((NGItem)titem.item).content().isEmpty() && ((NGItem)titem.item).content().get(0).type().equals(water))
             {
                 new SelectFlowerAction("Empty",titem).run(gui);
             }
