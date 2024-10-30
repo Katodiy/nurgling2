@@ -65,7 +65,7 @@ public class Fishing implements Action {
 
 
         Coord2d currentPos = NUtils.player().rc;
-        if(!new RepairFishingRot(context, prop, repArea).run(gui).IsSuccess())
+        if(!new RepairFishingRot(context, prop, repArea, baitsa.getRCArea()).run(gui).IsSuccess())
             return Results.FAIL();
         new PathFinder(currentPos).run(gui);
         for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae) {
@@ -123,7 +123,7 @@ public class Fishing implements Action {
                 }
                 case NEEDREP:
                 {
-                    if(!new RepairFishingRot(context, prop, repArea).run(gui).IsSuccess())
+                    if(!new RepairFishingRot(context, prop, repArea, baitsa.getRCArea()).run(gui).IsSuccess())
                         return Results.FAIL();
                 }
                 case NOFREESPACE: {

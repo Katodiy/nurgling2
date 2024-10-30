@@ -11,12 +11,14 @@ public class RepairFishingRot implements Action {
 
     NFishingSettings prop;
     Pair<Coord2d, Coord2d> repArea;
+    Pair<Coord2d, Coord2d> baitArea;
     Context context;
 
 
-    public RepairFishingRot(Context context, NFishingSettings prop, Pair<Coord2d, Coord2d> repArea) {
+    public RepairFishingRot(Context context, NFishingSettings prop, Pair<Coord2d, Coord2d> repArea, Pair<Coord2d, Coord2d> bait) {
         this.prop = prop;
         this.repArea = repArea;
+        this.baitArea = bait;
         this.context = context;
     }
 
@@ -28,26 +30,26 @@ public class RepairFishingRot implements Action {
         }
 
         if(!((NGItem)rod.item).findContent(prop.fishline)) {
-            Results repRes = repItem(gui, rod,  prop.fishline, 1);
+            Results repRes = repItem(gui, rod,  prop.fishline, 1, repArea);
             if (!repRes.IsSuccess()) return repRes;
         }
 
         if(!((NGItem)rod.item).findContent(prop.hook)) {
-            Results repRes = repItem(gui, rod,  prop.hook, 1);
+            Results repRes = repItem(gui, rod,  prop.hook, 1, repArea);
             if (!repRes.IsSuccess()) return repRes;
         }
 
         if(!((NGItem)rod.item).findContent(prop.bait)) {
-            Results repRes = repItem(gui, rod,  prop.bait, prop.tool.endsWith("Primitive Casting-Rod")?1:5);
+            Results repRes = repItem(gui, rod,  prop.bait, prop.tool.endsWith("Primitive Casting-Rod")?1:5, baitArea);
             if (!repRes.IsSuccess()) return repRes;
         }
         return Results.SUCCESS();
     }
 
-    private Results repItem(NGameUI gui, WItem rod, String item, int count) throws InterruptedException {
+    private Results repItem(NGameUI gui, WItem rod, String item, int count, Pair<Coord2d, Coord2d> area) throws InterruptedException {
         WItem fl = NUtils.getGameUI().getInventory().getItem(item);
         if(fl == null) {
-            if(repArea!=null) {
+            if(area!=null) {
                 new TakeItems(context,item,count).run(gui);
             }
             fl = NUtils.getGameUI().getInventory().getItem(item);
