@@ -1498,6 +1498,8 @@ public class VSpec {
         {
             res.keys.add(object.optString("name"));
         }
+        res.exceptions.add("Filet");
+        res.exceptions.add("Roe");
         return res;
     }
 
