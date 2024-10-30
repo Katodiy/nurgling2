@@ -37,7 +37,7 @@ public class NBotsMenu extends Widget
         productions.elements.add(new NButton("smoking", new Smoking(), true));
         productions.elements.add(new NButton("tarkiln", new TarkilnAction(), true));
         productions.elements.add(new NButton("tabaco", new TabacoAction(), true));
-        productions.elements.add(new NButton("tabaco", new LyeBoiler(), true));
+//        productions.elements.add(new NButton("tabaco", new LyeBoiler(), true));
         addLayout(productions);
         NLayout battle = new NLayout("battle");
         battle.elements.add(new NButton("reagro", new Reagro()));
@@ -69,6 +69,13 @@ public class NBotsMenu extends Widget
         build.elements.add(new NButton("dframe", new BuildDryingFrame(), true));
         build.elements.add(new NButton("cellar", new BuildCellar()));
         build.elements.add(new NButton("ttub", new BuildTtub()));
+        build.elements.add(new NButton("cupboard", new BuildCupboard()));
+        build.elements.add(new NButton("cheese_rack", new BuildCheeseRack()));
+        build.elements.add(new NButton("kiln", new BuildKiln()));
+        build.elements.add(new NButton("barrel", new BuildBarrel()));
+        build.elements.add(new NButton("chest", new BuildChest()));
+        build.elements.add(new NButton("tarkilnb", new BuildTarKiln()));
+        build.elements.add(new NButton("smoke_shed", new BuildSmokeShed()));
         addLayout(build);
         if (NUtils.getUI().core.debug) {
             NLayout tests = new NLayout("tools");

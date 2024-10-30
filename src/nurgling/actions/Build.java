@@ -206,7 +206,7 @@ public class Build implements Action{
                         new PathFinder(pile).run(NUtils.getGameUI());
                         new OpenTargetContainer("Stockpile", pile).run(NUtils.getGameUI());
                         TakeItemsFromPile tifp;
-                        (tifp = new TakeItemsFromPile(pile, NUtils.getGameUI().getStockpile(), Math.min(ingredient.count, NUtils.getGameUI().getInventory().getFreeSpace()))).run(gui);
+                        (tifp = new TakeItemsFromPile(pile, NUtils.getGameUI().getStockpile(), Math.min(ingredient.count, NUtils.getGameUI().getInventory().getNumberFreeCoord(ingredient.coord)))).run(gui);
                         new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
                         ingredient.count = ingredient.count - tifp.getResult();
                     }
