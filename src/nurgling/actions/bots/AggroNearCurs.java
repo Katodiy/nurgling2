@@ -19,6 +19,7 @@ import nurgling.tools.NParser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 
 import static haven.OCache.posres;
 
@@ -45,7 +46,12 @@ public class AggroNearCurs implements Action {
                 targets.add(cand);
         }
         if(!targets.isEmpty()) {
-            targets.sort(NUtils.d_comp);
+            targets.sort(new Comparator<Gob>() {
+                @Override
+                public int compare(Gob o1, Gob o2) {
+                    return Double.compare(o1.rc.dist(lc),o2.rc.dist(lc));
+                }
+            });
             Gob target = targets.get(0);
             if (target != null) {
                 NUtils.attack(target, false);
