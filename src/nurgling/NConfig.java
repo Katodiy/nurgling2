@@ -314,10 +314,6 @@ public class NConfig
                     res.addAll(objs);
                     break;
                 }
-                else
-                {
-                    int a = 0;
-                }
             }
             return res;
         }
