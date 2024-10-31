@@ -25,7 +25,7 @@ public class NCharacterInfo extends Widget {
 
     public NCharacterInfo(String chrid, NUI nui) {
         this.chrid = chrid;
-        path = ((HashDirCache) ResCache.global).base + "\\..\\" + nui.sessInfo.username + "_" + chrid.trim() + ".dat";
+        path = ((HashDirCache) ResCache.global).base + "\\..\\" + (nui.sessInfo==null?"":nui.sessInfo.username) + "_" + chrid.trim() + ".dat";
         read();
     }
 
