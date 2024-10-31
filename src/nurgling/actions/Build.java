@@ -136,6 +136,14 @@ public class Build implements Action{
                 }
 
                 NUtils.startBuild(NUtils.getGameUI().getWindow(cmd.name));
+
+                NUtils.addTask(new NTask() {
+                    int count = 0;
+                    @Override
+                    public boolean check() {
+                        return NUtils.getGameUI().prog!=null || count++>100;
+                    }
+                });
                 WaitBuildState wbs = new WaitBuildState();
                 NUtils.addTask(wbs);
                 if(wbs.getState()== WaitBuildState.State.TIMEFORDRINK)
@@ -212,7 +220,8 @@ public class Build implements Action{
                                 return false;
                         }
                         piles.sort(NUtils.d_comp);
-
+                        if(piles.isEmpty())
+                            return false;
                         Gob pile = piles.get(0);
                         new PathFinder(pile).run(NUtils.getGameUI());
                         new OpenTargetContainer("Stockpile", pile).run(NUtils.getGameUI());

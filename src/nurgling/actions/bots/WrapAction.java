@@ -20,7 +20,7 @@ public class WrapAction implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NAlias wraps = new NAlias("Fishwrap", "Fruitroast", "Burst Glutton", "Nutjerky", "Stuffed Bird", "Hand Impression", "Toy Chariot");
+        NAlias wraps = new NAlias("Fishwrap", "Fruitroast", "Mushroom Burst Glutton", "Nutjerky", "Stuffed Bird");
         NArea.Specialisation rkilns = new NArea.Specialisation(Specialisation.SpecName.kiln.toString());
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
@@ -43,7 +43,7 @@ public class WrapAction implements Action {
                 cand.cap = "Kiln";
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
-                cand.getattr(Container.FuelLvl.class).setMaxlvl(5);
+                cand.getattr(Container.FuelLvl.class).setMaxlvl(4);
                 cand.getattr(Container.FuelLvl.class).setFueltype("branch");
                 containers.add(cand);
             }
