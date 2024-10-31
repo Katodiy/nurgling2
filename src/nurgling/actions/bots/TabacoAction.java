@@ -17,7 +17,7 @@ public class TabacoAction implements Action {
     NAlias raw = new NAlias("Fresh Leaf of Pipeweed");
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NArea.Specialisation rtables = new NArea.Specialisation(Specialisation.SpecName.htable.toString());
+        NArea.Specialisation rtables = new NArea.Specialisation(Specialisation.SpecName.htable.toString(), "Pipeweed");
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(rtables);
@@ -33,7 +33,7 @@ public class TabacoAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
 
-            for (Gob htable : Finder.findGobs(NArea.findSpec(Specialisation.SpecName.htable.toString()),
+            for (Gob htable : Finder.findGobs(NArea.findSpec(rtables.name),
                     new NAlias("gfx/terobjs/htable"))) {
                 Container cand = new Container();
                 cand.gob = htable;
