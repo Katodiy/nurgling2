@@ -75,7 +75,7 @@ public class NConfig
         animalrad,
         smokeprop,
         worldexplorerprop,
-        fishingsettings
+        questNotified, fishingsettings
     }
 
 
@@ -120,6 +120,7 @@ public class NConfig
         conf.put(Key.showInventoryNums, true);
         conf.put(Key.autoDrink, false);
         conf.put(Key.endpoint, "");
+        conf.put(Key.questNotified, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

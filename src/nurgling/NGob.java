@@ -238,13 +238,12 @@ public class NGob {
             {
                 parent.addcustomol(new NQuestGiver(parent, markerInfo));
             }
-            if(NQuestInfo.isForageTarget(name))
-            {
-                parent.addcustomol(new NQuestTarget(parent,false));
-            }
-            else if(NQuestInfo.isHuntingTarget(name))
-            {
-                parent.addcustomol(new NQuestTarget(parent,true));
+            if((Boolean)NConfig.get(NConfig.Key.questNotified)) {
+                if (NQuestInfo.isForageTarget(name)) {
+                    parent.addcustomol(new NQuestTarget(parent, false));
+                } else if (NQuestInfo.isHuntingTarget(name)) {
+                    parent.addcustomol(new NQuestTarget(parent, true));
+                }
             }
             lastUpdate = nlu;
         }

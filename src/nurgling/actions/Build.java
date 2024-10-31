@@ -148,7 +148,18 @@ public class Build implements Action{
                     return Results.ERROR("Low energy");
                 }
             }while ((gob = Finder.findGob(pos))!=null && NParser.checkName(gob.ngob.name, "gfx/terobjs/consobj"));
-
+            Coord2d finalPos = pos;
+            final Gob[] targetGob = {null};
+            NUtils.addTask(new NTask() {
+                @Override
+                public boolean check() {
+                    return (targetGob[0] = Finder.findGob(finalPos))!=null;
+                }
+            });
+            if(targetGob[0]!=null) {
+                Coord2d shift = targetGob[0].rc.sub(NUtils.player().rc).norm().mul(4);
+                new GoTo(NUtils.player().rc.sub(shift)).run(gui);
+            }
             for(Ingredient ingredient: curings)
             {
                 NUtils.addTask(new WaitItems(NUtils.getGameUI().getInventory(),ingredient.name,ingredient.left));

@@ -143,6 +143,16 @@ public class QoL extends Widget {
                 a = val;
             }
         },prev.pos("bl").adds(0, 5));
+        prev = add(new CheckBox("Enable quest notified") {
+            {
+                a = (Boolean) NConfig.get(NConfig.Key.questNotified);
+            }
+
+            public void set(boolean val) {
+                NConfig.set(NConfig.Key.questNotified, val);
+                a = val;
+            }
+        },prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("DEBUG") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.debug);
