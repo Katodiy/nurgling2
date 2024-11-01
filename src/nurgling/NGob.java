@@ -53,6 +53,11 @@ public class NGob {
                     return;
                 }
 
+                if(name!=null && name.contains("bumlings"))
+                {
+                    name = name.replaceAll("\\d+$", "");
+                }
+
                 if (((Drawable) a).getres().getLayers() != null) {
                     if(a instanceof ResDrawable && ((ResDrawable) a).spr instanceof Consobj)
                         {
