@@ -60,7 +60,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
 
     double calcExpectedFep()
     {
-        if (NUtils.getGameUI().chrwdg != null && NUtils.getUI().sessInfo != null)
+        if (NUtils.getGameUI().chrwdg != null && NUtils.getUI().sessInfo != null && NUtils.getGameUI().chrwdg.battr != null)
         {
             return (((NUtils.getUI().sessInfo.isSubscribed) ? coefSubscribe : (NUtils.getUI().sessInfo.isVerified) ? coefVerif : 1) * fepSum * NUtils.getGameUI().chrwdg.battr.glut.gmod * NUtils.getGameUI().getTableMod() + fepSum * NUtils.getGameUI().chrwdg.battr.glut.gmod * NUtils.getGameUI().getTableMod() * NUtils.getGameUI().getRealmMod()) * efficiency / 100;
         }
@@ -69,7 +69,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
 
     double calcNeededFep()
     {
-        if (nurgling.NUtils.getGameUI().chrwdg != null)
+        if (nurgling.NUtils.getGameUI().chrwdg != null && NUtils.getGameUI().chrwdg.battr!=null)
         {
             double cur_fep = 0;
             for (BAttrWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.battr.feps.els)
@@ -310,7 +310,6 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                         }
                     }
                 }
-
             }
             calcData();
         }
