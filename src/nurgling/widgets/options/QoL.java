@@ -153,6 +153,16 @@ public class QoL extends Widget {
                 a = val;
             }
         },prev.pos("bl").adds(0, 5));
+        prev = add(new CheckBox("Enable LP assistant") {
+            {
+                a = (Boolean) NConfig.get(NConfig.Key.lpassistent);
+            }
+
+            public void set(boolean val) {
+                NConfig.set(NConfig.Key.lpassistent, val);
+                a = val;
+            }
+        },prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("DEBUG") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.debug);

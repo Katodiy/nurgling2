@@ -3,7 +3,6 @@ package nurgling;
 import haven.*;
 import haven.render.Location;
 import haven.render.Transform;
-import haven.render.sl.InstancedUniform;
 import haven.res.gfx.fx.eq.Equed;
 import haven.res.gfx.terobjs.consobj.Consobj;
 import haven.res.lib.tree.TreeScale;
@@ -17,9 +16,6 @@ import nurgling.widgets.NAlarmWdg;
 import nurgling.widgets.NQuestInfo;
 
 import java.util.*;
-
-import static haven.MCache.cmaps;
-import static haven.MCache.tilesz;
 
 public class NGob {
     public NHitBox hitBox = null;
@@ -155,6 +151,7 @@ public class NGob {
                                 hitBox = custom;
                             }
                         }
+
                     }
                     if (hitBox != null) {
                         if (NParser.checkName(name, new NAlias("gfx/terobjs/moundbed"))) {
@@ -219,33 +216,40 @@ public class NGob {
     }
 
     public void tick(double dt) {
-        for (NAttrib attrib : nattr.values()) {
-            attrib.tick(dt);
-        }
-        if(name!=null && name.contains("kritter") && (parent.pose()==null || !NParser.checkName(parent.pose(),"dead","knock")) && parent.findol(NAreaRad.class)==null)
-        {
-            nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
-            if(rad!=null && rad.vis)
-                parent.addcustomol(new NAreaRange(parent,rad));
-        }
-        int nlu = NQuestInfo.lastUpdate.get();
-        if (NQuestInfo.lastUpdate.get() > lastUpdate)
-        {
-
-
-            NQuestInfo.MarkerInfo markerInfo;
-            if((markerInfo = NQuestInfo.getMarkerInfo(parent))!=null)
-            {
-                parent.addcustomol(new NQuestGiver(parent, markerInfo));
+        if(NUtils.getGameUI()!=null) {
+            for (NAttrib attrib : nattr.values()) {
+                attrib.tick(dt);
             }
-            if((Boolean)NConfig.get(NConfig.Key.questNotified)) {
-                if (NQuestInfo.isForageTarget(name)) {
-                    parent.addcustomol(new NQuestTarget(parent, false));
-                } else if (NQuestInfo.isHuntingTarget(name)) {
-                    parent.addcustomol(new NQuestTarget(parent, true));
+            if (name != null && name.contains("kritter") && (parent.pose() == null || !NParser.checkName(parent.pose(), "dead", "knock")) && parent.findol(NAreaRad.class) == null) {
+                nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
+                if (rad != null && rad.vis)
+                    parent.addcustomol(new NAreaRange(parent, rad));
+            }
+            int nlu = NQuestInfo.lastUpdate.get();
+            if (NQuestInfo.lastUpdate.get() > lastUpdate) {
+
+
+                NQuestInfo.MarkerInfo markerInfo;
+                if ((markerInfo = NQuestInfo.getMarkerInfo(parent)) != null) {
+                    parent.addcustomol(new NQuestGiver(parent, markerInfo));
+                }
+                if ((Boolean) NConfig.get(NConfig.Key.questNotified)) {
+                    if (NQuestInfo.isForageTarget(name)) {
+                        parent.addcustomol(new NQuestTarget(parent, false));
+                    } else if (NQuestInfo.isHuntingTarget(name)) {
+                        parent.addcustomol(new NQuestTarget(parent, true));
+                    }
+                }
+                lastUpdate = nlu;
+            }
+            if ((Boolean) NConfig.get(NConfig.Key.lpassistent)) {
+                if (name != null && name.startsWith("gfx/terobjs")) {
+                    if (VSpec.object.containsKey(name))
+                        if (VSpec.object.get(name).size() != NUtils.getGameUI().getCharInfo().LpExplorerGetSize(name)) {
+                            parent.addcustomol(new NLPassistant(parent));
+                        }
                 }
             }
-            lastUpdate = nlu;
         }
     }
 

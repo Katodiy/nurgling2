@@ -75,7 +75,7 @@ public class NConfig
         animalrad,
         smokeprop,
         worldexplorerprop,
-        questNotified, fishingsettings
+        questNotified, lpassistent, fishingsettings
     }
 
 
@@ -121,6 +121,7 @@ public class NConfig
         conf.put(Key.autoDrink, false);
         conf.put(Key.endpoint, "");
         conf.put(Key.questNotified, false);
+        conf.put(Key.lpassistent, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

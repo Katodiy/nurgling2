@@ -1,5 +1,6 @@
 package nurgling.tools;
 
+import haven.Gob;
 import nurgling.*;
 import org.json.*;
 
@@ -7,6 +8,561 @@ import java.util.*;
 
 public class VSpec {
     public static HashMap<String, ArrayList<JSONObject>> categories = new HashMap<>();
+    public static HashMap<String,ArrayList<String>> object = new HashMap<>();
+    static {
+        // Acacia Tree
+        ArrayList<String> acaciaOp = new ArrayList<>();
+        acaciaOp.add("Acacia Pod"); // Семена
+        object.put("gfx/terobjs/trees/acacia", acaciaOp);
+
+        // Alder Tree
+        ArrayList<String> alderOp = new ArrayList<>();
+        alderOp.add("Alder Bough"); // Ветки
+        alderOp.add("Alder Catkin"); // Семена
+        object.put("gfx/terobjs/trees/alder", alderOp);
+
+        // Almond Tree
+        ArrayList<String> almondtreeOp = new ArrayList<>();
+        almondtreeOp.add("Almond"); // Семена
+        object.put("gfx/terobjs/trees/almondtree", almondtreeOp);
+
+        // Apple Tree
+        ArrayList<String> appletreeOp = new ArrayList<>();
+        appletreeOp.add("Red Apple"); // Семена
+        object.put("gfx/terobjs/trees/appletree", appletreeOp);
+
+        // Ash Tree
+        ArrayList<String> ashOp = new ArrayList<>();
+        ashOp.add("Ash Samaras"); // Семена
+        object.put("gfx/terobjs/trees/ash", ashOp);
+
+        // Aspen Tree
+        ArrayList<String> aspenOp = new ArrayList<>();
+        aspenOp.add("Aspen Catkin"); // Семена
+        object.put("gfx/terobjs/trees/aspen", aspenOp);
+
+        // Bay Willow Tree
+        ArrayList<String> baywillowOp = new ArrayList<>();
+        baywillowOp.add("Bay Willow Catkins"); // Семена
+        object.put("gfx/terobjs/trees/baywillow", baywillowOp);
+
+        // Beech Tree
+        ArrayList<String> beechOp = new ArrayList<>();
+        beechOp.add("Beech Nuts"); // Семена
+        object.put("gfx/terobjs/trees/beech", beechOp);
+
+        // Birch Tree
+        ArrayList<String> birchOp = new ArrayList<>();
+        birchOp.add("Birch Catkin"); // Семена
+        object.put("gfx/terobjs/trees/birch", birchOp);
+
+        // Bird Cherry Tree
+        ArrayList<String> birdcherryOp = new ArrayList<>();
+        birdcherryOp.add("Birdcherries"); // Семена
+        object.put("gfx/terobjs/trees/birdcherrytree", birdcherryOp);
+
+        // Black Pine Tree
+        ArrayList<String> blackpineOp = new ArrayList<>();
+        blackpineOp.add("Black Pine Cone"); // Семена
+        object.put("gfx/terobjs/trees/blackpine", blackpineOp);
+
+        // Black Poplar Tree
+        ArrayList<String> blackpoplarOp = new ArrayList<>();
+        blackpoplarOp.add("Black Poplar Catkin"); // Семена
+        object.put("gfx/terobjs/trees/blackpoplar", blackpoplarOp);
+
+        // Buckthorn Tree
+        ArrayList<String> buckthornOp = new ArrayList<>();
+        buckthornOp.add("Buckthorn Drupes"); // Семена
+        object.put("gfx/terobjs/trees/buckthorn", buckthornOp);
+
+        // Carob Tree
+        ArrayList<String> carobOp = new ArrayList<>();
+        carobOp.add("Carob Pod"); // Семена
+        object.put("gfx/terobjs/trees/carobtree", carobOp);
+
+        // Cedar Tree
+        ArrayList<String> cedarOp = new ArrayList<>();
+        cedarOp.add("Cedar Cone"); // Семена
+        object.put("gfx/terobjs/trees/cedar", cedarOp);
+
+        // Chaste Tree
+        ArrayList<String> chasteOp = new ArrayList<>();
+        chasteOp.add("Chastetree Seeds"); // Семена
+        object.put("gfx/terobjs/trees/chastetree", chasteOp);
+
+        // Checker Tree
+        ArrayList<String> checkerOp = new ArrayList<>();
+        checkerOp.add("Checker Tree Fruits"); // Семена
+        object.put("gfx/terobjs/trees/checkertree", checkerOp);
+
+        // Cherry Tree
+        ArrayList<String> cherryOp = new ArrayList<>();
+        cherryOp.add("Cherries"); // Плоды
+        object.put("gfx/terobjs/trees/cherry", cherryOp);
+
+        // Chestnut Tree
+        ArrayList<String> chestnutOp = new ArrayList<>();
+        chestnutOp.add("Chestnut"); // Семена
+        object.put("gfx/terobjs/trees/chestnuttree", chestnutOp);
+
+        // Conker Tree
+        ArrayList<String> conkerOp = new ArrayList<>();
+        conkerOp.add("Conker Leaf"); // Листья
+        conkerOp.add("Conker"); // Семена
+        object.put("gfx/terobjs/trees/conkertree", conkerOp);
+
+        // Cork Oak Tree
+        ArrayList<String> corkoakOp = new ArrayList<>();
+        corkoakOp.add("Cork"); // Семена
+        object.put("gfx/terobjs/trees/corkoak", corkoakOp);
+
+        // Cypress Tree
+        ArrayList<String> cypressOp = new ArrayList<>();
+        cypressOp.add("Cypress Cone"); // Семена
+        object.put("gfx/terobjs/trees/cypress", cypressOp);
+
+        // Dogwood Tree
+        ArrayList<String> dogwoodOp = new ArrayList<>();
+        dogwoodOp.add("Dogwood Seeds"); // Семена
+        object.put("gfx/terobjs/trees/dogwood", dogwoodOp);
+
+        // Elm Tree
+        ArrayList<String> elmOp = new ArrayList<>();
+        elmOp.add("Elm Bough"); // Ветки
+        elmOp.add("Elm Seeds"); // Семена
+        object.put("gfx/terobjs/trees/elm", elmOp);
+
+        // Fir Tree
+        ArrayList<String> firOp = new ArrayList<>();
+        firOp.add("Fir Bough"); // Ветки
+        firOp.add("Fir Cone"); // Семена
+        object.put("gfx/terobjs/trees/fir", firOp);
+
+        // Fig Tree
+        ArrayList<String> figOp = new ArrayList<>();
+        figOp.add("Fig Leaf"); // Листья
+        figOp.add("Fig"); // Семена
+        object.put("gfx/terobjs/trees/figtree", figOp);
+
+        // Gray Alder Tree
+        ArrayList<String> grayalderOp = new ArrayList<>();
+        grayalderOp.add("Gray Alder Bough"); // Ветки
+        grayalderOp.add("Gray Alder Cones"); // Семена
+        object.put("gfx/terobjs/trees/grayalder", grayalderOp);
+
+        // Hazel Tree
+        ArrayList<String> hazelOp = new ArrayList<>();
+        hazelOp.add("Hazelnut"); // Семена
+        object.put("gfx/terobjs/trees/hazel", hazelOp);
+
+        // Hornbeam Tree
+        ArrayList<String> hornbeamOp = new ArrayList<>();
+        hornbeamOp.add("Hornbeam Catkin"); // Семена
+        object.put("gfx/terobjs/trees/hornbeam", hornbeamOp);
+
+        // Juniper Tree
+        ArrayList<String> juniperOp = new ArrayList<>();
+        juniperOp.add("Juniper Berries"); // Семена
+        object.put("gfx/terobjs/trees/juniper", juniperOp);
+
+        // King's Oak Tree
+        ArrayList<String> kingsoakOp = new ArrayList<>();
+        kingsoakOp.add("King's Acorn"); // Семена
+        object.put("gfx/terobjs/trees/kingsoak", kingsoakOp);
+
+        // Larch Tree
+        ArrayList<String> larchOp = new ArrayList<>();
+        larchOp.add("Larch Cones"); // Семена
+        object.put("gfx/terobjs/trees/larch", larchOp);
+
+        // Laurel Tree
+        ArrayList<String> laurelOp = new ArrayList<>();
+        laurelOp.add("Laurel Leaves"); // Листья
+        laurelOp.add("Laurel Seeds"); // Семена
+        object.put("gfx/terobjs/trees/laurel", laurelOp);
+
+        // Lemon Tree
+        ArrayList<String> lemonOp = new ArrayList<>();
+        lemonOp.add("Lemon"); // Плоды
+        object.put("gfx/terobjs/trees/lemontree", lemonOp);
+
+        // Linden Tree
+        ArrayList<String> lindenOp = new ArrayList<>();
+        lindenOp.add("Linden Bough"); // Ветки
+        lindenOp.add("Linden Fruits"); // Семена
+        object.put("gfx/terobjs/trees/linden", lindenOp);
+
+        // Lote Tree
+        ArrayList<String> loteOp = new ArrayList<>();
+        loteOp.add("Lote Tree Drupes"); // Семена
+        object.put("gfx/terobjs/trees/lotetree", loteOp);
+
+        // Maple Tree
+        ArrayList<String> mapleOp = new ArrayList<>();
+        mapleOp.add("Maple Samara"); // Семена
+        mapleOp.add("Maple Leaf"); // Листья
+        object.put("gfx/terobjs/trees/maple", mapleOp);
+
+        // Mayflower Tree
+        ArrayList<String> mayflowerOp = new ArrayList<>();
+        mayflowerOp.add("Mayflower Pomes"); // Семена
+        object.put("gfx/terobjs/trees/mayflower", mayflowerOp);
+
+        // Medlar Tree
+        ArrayList<String> medlarOp = new ArrayList<>();
+        medlarOp.add("Medlar Seed"); // Семена
+        object.put("gfx/terobjs/trees/medlartree", medlarOp);
+
+        // Mound Tree
+        ArrayList<String> moundOp = new ArrayList<>();
+        moundOp.add("Mound Beans"); // Семена
+        object.put("gfx/terobjs/trees/moundtree", moundOp);
+
+        // Mulberry Tree
+        ArrayList<String> mulberryOp = new ArrayList<>();
+        mulberryOp.add("Mulberry"); // Семена
+        mulberryOp.add("Mulberry Leaf"); // Листья
+        object.put("gfx/terobjs/trees/mulberry", mulberryOp);
+
+        // Oak Tree
+        ArrayList<String> oakOp = new ArrayList<>();
+        oakOp.add("Oak Acorn"); // Семена
+        object.put("gfx/terobjs/trees/oak", oakOp);
+
+        // Olive Tree
+        ArrayList<String> oliveOp = new ArrayList<>();
+        oliveOp.add("Olive Branch"); // Ветки
+        oliveOp.add("Olive"); // Семена
+        object.put("gfx/terobjs/trees/olivetree", oliveOp);
+
+        // Orange Tree
+        ArrayList<String> orangeOp = new ArrayList<>();
+        orangeOp.add("Orange"); // Плоды
+        object.put("gfx/terobjs/trees/orangetree", orangeOp);
+
+        // Osier Tree
+        ArrayList<String> osierOp = new ArrayList<>();
+        osierOp.add("Osier Catkin"); // Семена
+        object.put("gfx/terobjs/trees/osier", osierOp);
+
+        // Pear Tree
+        ArrayList<String> pearOp = new ArrayList<>();
+        pearOp.add("Pear"); // Плоды
+        object.put("gfx/terobjs/trees/peartree", pearOp);
+
+        // Persimmon Tree
+        ArrayList<String> persimmonOp = new ArrayList<>();
+        persimmonOp.add("Persimmon"); // Плоды
+        object.put("gfx/terobjs/trees/persimmontree", persimmonOp);
+
+        // Pine Tree
+        ArrayList<String> pineOp = new ArrayList<>();
+        pineOp.add("Pine Cone"); // Семена
+        object.put("gfx/terobjs/trees/pine", pineOp);
+
+        // Plane Tree
+        ArrayList<String> planeOp = new ArrayList<>();
+        planeOp.add("Plane Seedpods"); // Семена
+        object.put("gfx/terobjs/trees/planetree", planeOp);
+
+        // Plum Tree
+        ArrayList<String> plumOp = new ArrayList<>();
+        plumOp.add("Plum"); // Плоды
+        object.put("gfx/terobjs/trees/plumtree", plumOp);
+
+        // Poplar Tree
+        ArrayList<String> poplarOp = new ArrayList<>();
+        poplarOp.add("Poplar Catkin"); // Семена
+        object.put("gfx/terobjs/trees/poplar", poplarOp);
+
+        // Quince Tree
+        ArrayList<String> quinceOp = new ArrayList<>();
+        quinceOp.add("Quince"); // Плоды
+        object.put("gfx/terobjs/trees/quincetree", quinceOp);
+
+        // Rowan Tree
+        ArrayList<String> rowanOp = new ArrayList<>();
+        rowanOp.add("Rowan Berries"); // Семена
+        object.put("gfx/terobjs/trees/rowan", rowanOp);
+
+        // Sallow Tree
+        ArrayList<String> sallowOp = new ArrayList<>();
+        sallowOp.add("Sallow Catkin"); // Семена
+        object.put("gfx/terobjs/trees/sallow", sallowOp);
+
+        // Silver Fir Tree
+        ArrayList<String> silverfirOp = new ArrayList<>();
+        silverfirOp.add("Silverfir Cone"); // Семена
+        object.put("gfx/terobjs/trees/silverfir", silverfirOp);
+
+        // Sorb Tree
+        ArrayList<String> sorbOp = new ArrayList<>();
+        sorbOp.add("Sorb Apple"); // Семена
+        object.put("gfx/terobjs/trees/sorbtree", sorbOp);
+
+        // Spruce Tree
+        ArrayList<String> spruceOp = new ArrayList<>();
+        spruceOp.add("Spruce Bough"); // Ветки
+        spruceOp.add("Spruce Cone"); // Семена
+        object.put("gfx/terobjs/trees/spruce", spruceOp);
+
+        // Stone Pine Tree
+        ArrayList<String> stonepineOp = new ArrayList<>();
+        stonepineOp.add("Stone Pine Cone"); // Семена
+        object.put("gfx/terobjs/trees/stonepine", stonepineOp);
+
+        // Sweetgum Tree
+        ArrayList<String> sweetgumOp = new ArrayList<>();
+        sweetgumOp.add("Sweetgum Bough"); // Ветки
+        sweetgumOp.add("Sweetgum Seedpod"); // Семена
+        object.put("gfx/terobjs/trees/sweetgum", sweetgumOp);
+
+        // Sycamore Tree
+        ArrayList<String> sycamoreOp = new ArrayList<>();
+        sycamoreOp.add("Sycamore Seed"); // Семена
+        object.put("gfx/terobjs/trees/sycamore", sycamoreOp);
+
+        // Tamarisk Tree
+        ArrayList<String> tamariskOp = new ArrayList<>();
+        tamariskOp.add("Tamarisk Seeds"); // Семена
+        object.put("gfx/terobjs/trees/tamarisk", tamariskOp);
+
+        // Wood Strawberry Tree
+        ArrayList<String> woodstrawberryOp = new ArrayList<>();
+        woodstrawberryOp.add("Wood Strawberry"); // Плоды
+        object.put("gfx/terobjs/trees/strawberrytree", woodstrawberryOp);
+
+        // Terebinth Tree
+        ArrayList<String> terebinthOp = new ArrayList<>();
+        terebinthOp.add("Terebinth Seed"); // Семена
+        object.put("gfx/terobjs/trees/terebinth", terebinthOp);
+
+        // Tree Heath Tree
+        ArrayList<String> treeheathOp = new ArrayList<>();
+        treeheathOp.add("Tree Heath Seed"); // Семена
+        object.put("gfx/terobjs/trees/treeheath", treeheathOp);
+
+        // Walnut Tree
+        ArrayList<String> walnutOp = new ArrayList<>();
+        walnutOp.add("Walnut"); // Семена
+        object.put("gfx/terobjs/trees/walnuttree", walnutOp);
+
+        // Warty Birch Tree
+        ArrayList<String> wartybirchOp = new ArrayList<>();
+        wartybirchOp.add("Warty Birch Catkin"); // Семена
+        object.put("gfx/terobjs/trees/wartybirch", wartybirchOp);
+
+        // Whitebeam Tree
+        ArrayList<String> whitebeamOp = new ArrayList<>();
+        whitebeamOp.add("Whitebeam Fruits"); // Семена
+        object.put("gfx/terobjs/trees/whitebeam", whitebeamOp);
+
+        // Willow Tree
+        ArrayList<String> willowOp = new ArrayList<>();
+        willowOp.add("Willow Catkin"); // Семена
+        object.put("gfx/terobjs/trees/willow", willowOp);
+
+        // Wych Elm Tree
+        ArrayList<String> wychelmOp = new ArrayList<>();
+        wychelmOp.add("Wych Elm Samara"); // Семена
+        object.put("gfx/terobjs/trees/wychelm", wychelmOp);
+
+        // Yew Tree
+        ArrayList<String> yewOp = new ArrayList<>();
+        yewOp.add("Yew Bough"); // Ветки
+        yewOp.add("Yew Cones"); // Семена
+        object.put("gfx/terobjs/trees/yew", yewOp);
+
+        // Zelkova Tree
+        ArrayList<String> zelkovaOp = new ArrayList<>();
+        zelkovaOp.add("Zelkova Catkin"); // Семена
+        object.put("gfx/terobjs/trees/zelkova", zelkovaOp);
+
+        // Gloomcap Tree
+        ArrayList<String> gloomcapOp = new ArrayList<>();
+        gloomcapOp.add("Gloomcap Spores"); // Семена
+        object.put("gfx/terobjs/trees/gloomcap", gloomcapOp);
+
+        // Gnome's Cap Tree
+        ArrayList<String> gnomescapOp = new ArrayList<>();
+        gnomescapOp.add("Gnome's Cap Spore"); // Семена
+        object.put("gfx/terobjs/trees/gnomeshat", gnomescapOp);
+
+        // Goldenchain Tree
+        ArrayList<String> goldenchainOp = new ArrayList<>();
+        goldenchainOp.add("Goldenchain Seeds"); // Семена
+        object.put("gfx/terobjs/trees/goldenchain", goldenchainOp);
+
+        // Towercap Tree
+        ArrayList<String> towercapOp = new ArrayList<>();
+        towercapOp.add("Towercap Spore"); // Семена
+        object.put("gfx/terobjs/trees/towercap", towercapOp);
+
+        // Trumpet Chantrelle Tree
+        ArrayList<String> trumpetchantrelleOp = new ArrayList<>();
+        trumpetchantrelleOp.add("Trombone Chantrelle Spore"); // Семена
+        object.put("gfx/terobjs/trees/trombonechantrelle", trumpetchantrelleOp);
+
+        // Crabapple Tree
+        ArrayList<String> crabappleOp = new ArrayList<>();
+        crabappleOp.add("Crabapple"); // Плоды
+        object.put("gfx/terobjs/trees/crabappletree", crabappleOp);
+
+        // Dwarf Pine Tree
+        ArrayList<String> dwarfpineOp = new ArrayList<>();
+        dwarfpineOp.add("Dwarf Pine Cone"); // Семена
+        object.put("gfx/terobjs/trees/dwarfpine", dwarfpineOp);
+
+
+        // Arrowwood Bush
+        ArrayList<String> arrowwoodOp = new ArrayList<>();
+        arrowwoodOp.add("Arrowwood Berries"); // Плоды
+        object.put("gfx/terobjs/bushes/arrowwood", arrowwoodOp);
+
+        // Bittersweet Nightshade Bush
+        ArrayList<String> bittersweetnightshadeOp = new ArrayList<>();
+        bittersweetnightshadeOp.add("Bittersweet Nightshade Berries"); // Плоды
+        object.put("gfx/terobjs/bushes/bsnightshade", bittersweetnightshadeOp);
+
+        // Blackberry Bush
+        ArrayList<String> blackberryOp = new ArrayList<>();
+        blackberryOp.add("Blackberry"); // Плоды
+        object.put("gfx/terobjs/bushes/blackberrybush", blackberryOp);
+
+        // Blackcurrant Bush
+        ArrayList<String> blackcurrantOp = new ArrayList<>();
+        blackcurrantOp.add("Blackcurrant"); // Плоды
+        object.put("gfx/terobjs/bushes/blackcurrant", blackcurrantOp);
+
+        // Blackthorn Bush
+        ArrayList<String> blackthornOp = new ArrayList<>();
+        blackthornOp.add("Sloan Berries"); // Плоды
+        object.put("gfx/terobjs/bushes/blackthorn", blackthornOp);
+
+        // Bog-Myrtle Bush
+        ArrayList<String> bogmyrtleOp = new ArrayList<>();
+        bogmyrtleOp.add("Bog-Myrtle Cones"); // Семена
+        object.put("gfx/terobjs/bushes/bogmyrtle", bogmyrtleOp);
+
+        // Caprifole Bush
+        ArrayList<String> caprifoleOp = new ArrayList<>();
+        caprifoleOp.add("Caprifole Berries"); // Плоды
+        object.put("gfx/terobjs/bushes/caprifole", caprifoleOp);
+
+        // Cave Fern
+        ArrayList<String> cavefernOp = new ArrayList<>();
+        cavefernOp.add("Cave Fern Spores"); // Семена
+        object.put("gfx/terobjs/bushes/cavefern", cavefernOp);
+
+        // Crampbark Bush
+        ArrayList<String> crampbarkOp = new ArrayList<>();
+        crampbarkOp.add("Crampbark Berries"); // Плоды
+        object.put("gfx/terobjs/bushes/crampbark", crampbarkOp);
+
+        // Dog Rose Bush
+        ArrayList<String> dogroseOp = new ArrayList<>();
+        dogroseOp.add("Dog Rose Hips"); // Плоды
+        object.put("gfx/terobjs/bushes/dogrose", dogroseOp);
+
+        // Elderberry Bush
+        ArrayList<String> elderberryOp = new ArrayList<>();
+        elderberryOp.add("Elderberries"); // Плоды
+        object.put("gfx/terobjs/bushes/elderberrybush", elderberryOp);
+
+        // Fly Woodbine Bush
+        ArrayList<String> flywoodbineOp = new ArrayList<>();
+        flywoodbineOp.add("Fly Woodbine Berries"); // Плоды
+        object.put("gfx/terobjs/bushes/woodbine", flywoodbineOp);
+
+        // Ghostpipe
+        ArrayList<String> ghostpipeOp = new ArrayList<>();
+        ghostpipeOp.add("Ghostpipe"); // Семена
+        object.put("gfx/terobjs/bushes/ghostpipe", ghostpipeOp);
+
+        // Gooseberry Bush
+        ArrayList<String> gooseberryOp = new ArrayList<>();
+        gooseberryOp.add("Gooseberry"); // Плоды
+        object.put("gfx/terobjs/bushes/gooseberrybush", gooseberryOp);
+
+        // Gorse Bush
+        ArrayList<String> gorseOp = new ArrayList<>();
+        gorseOp.add("Gorse"); // Плоды
+        object.put("gfx/terobjs/bushes/gorse", gorseOp);
+
+        // Hawthorn Bush
+        ArrayList<String> hawthornOp = new ArrayList<>();
+        hawthornOp.add("Hawthorn Fruits"); // Плоды
+        object.put("gfx/terobjs/bushes/hawthorn", hawthornOp);
+
+        // Hoarwithy Bush
+        ArrayList<String> hoarwithyOp = new ArrayList<>();
+        hoarwithyOp.add("Hoarwithy Berries"); // Плоды
+        object.put("gfx/terobjs/bushes/hoarwithy", hoarwithyOp);
+
+        // Holly Bush
+        ArrayList<String> hollyOp = new ArrayList<>();
+        hollyOp.add("Hollyberries"); // Плоды
+        object.put("gfx/terobjs/bushes/holly", hollyOp);
+
+        // Mastic Bush
+        ArrayList<String> masticOp = new ArrayList<>();
+        masticOp.add("Mastic Fruit"); // Плоды
+        object.put("gfx/terobjs/bushes/mastic", masticOp);
+
+        // Poppycaps
+        ArrayList<String> poppycapsOp = new ArrayList<>();
+        poppycapsOp.add("Poppycaps"); // Плоды
+        object.put("gfx/terobjs/bushes/poppycaps", poppycapsOp);
+
+        // Raspberry Bush
+        ArrayList<String> raspberryOp = new ArrayList<>();
+        raspberryOp.add("Raspberry"); // Плоды
+        object.put("gfx/terobjs/bushes/raspberrybush", raspberryOp);
+
+        // Sandthorn Bush
+        ArrayList<String> sandthornOp = new ArrayList<>();
+        sandthornOp.add("Seaberry"); // Плоды
+        object.put("gfx/terobjs/bushes/sandthorn", sandthornOp);
+
+        // Spindle Bush
+        ArrayList<String> spindleOp = new ArrayList<>();
+        spindleOp.add("Spindleberries"); // Плоды
+        object.put("gfx/terobjs/bushes/spindlebush", spindleOp);
+
+        // Tea Bush
+        ArrayList<String> teabushOp = new ArrayList<>();
+        teabushOp.add("Teabush Seedpod"); // Семена
+        teabushOp.add("Fresh Tea Leaves"); // Листья
+        object.put("gfx/terobjs/bushes/teabush", teabushOp);
+
+        // Tibast Bush
+        ArrayList<String> tibastOp = new ArrayList<>();
+        tibastOp.add("Tibast Fruits"); // Плоды
+        object.put("gfx/terobjs/bushes/tibast", tibastOp);
+
+        // Tundra Rose Bush
+        ArrayList<String> tundraroseOp = new ArrayList<>();
+        tundraroseOp.add("Tundra Rose Fruit"); // Плоды
+        object.put("gfx/terobjs/bushes/tundrarose", tundraroseOp);
+
+        // Witherstand Bush
+        ArrayList<String> witherstandOp = new ArrayList<>();
+        witherstandOp.add("Withercorn"); // Плоды
+        object.put("gfx/terobjs/bushes/witherstand", witherstandOp);
+
+        // Redcurrant Bush
+        ArrayList<String> redcurrantOp = new ArrayList<>();
+        redcurrantOp.add("Redcurrant"); // Плоды
+        object.put("gfx/terobjs/bushes/redcurrant", redcurrantOp);
+
+        // Boxwood Bush
+        ArrayList<String> boxwoodOp = new ArrayList<>();
+        boxwoodOp.add("Boxwood Seeds"); // Плоды
+        object.put("gfx/terobjs/bushes/boxwood", boxwoodOp);
+
+
+    }
 
     static {
         ArrayList<JSONObject> spices = new ArrayList<>();
@@ -1508,5 +2064,28 @@ public class VSpec {
     static {
         chest_state.put(NStyle.Container.FREE, 3);
         chest_state.put(NStyle.Container.FULL, 28);
+    }
+
+    public static void checkLpExplorer(Gob clickedGob, String name) {
+        if(clickedGob!=null) {
+            if (clickedGob.ngob.name != null && object.containsKey(clickedGob.ngob.name)) {
+                if (object.get(clickedGob.ngob.name).contains(name)) {
+                    if (!NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name)) {
+
+                        NUtils.getGameUI().getCharInfo().LpExplorerAdd(clickedGob.ngob.name,name);
+                        NUtils.getGameUI().getCharInfo().newLpExplorer = true;
+
+                    } else {
+                        if (NUtils.getGameUI().getCharInfo().LpExplorerGetSize(clickedGob.ngob.name) != object.get(clickedGob.ngob.name).size()) {
+                            if (object.get(clickedGob.ngob.name).contains(name) && !NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name, name)) {
+                                NUtils.getGameUI().getCharInfo().LpExplorerAdd(clickedGob.ngob.name,name);
+                                NUtils.getGameUI().getCharInfo().newLpExplorer = true;
+                            }
+                        }
+                    }
+                }
+            }
+            NUtils.getGameUI().map.clickedGob = null;
+        }
     }
 }

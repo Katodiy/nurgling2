@@ -8,6 +8,7 @@ import haven.res.ui.tt.stackn.StackName;
 import nurgling.iteminfo.NCuriosity;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.iteminfo.NQuestItem;
+import nurgling.tools.VSpec;
 import nurgling.widgets.NQuestInfo;
 
 import java.util.ArrayList;
@@ -133,6 +134,13 @@ public class NGItem extends GItem
             else
             {
                 name = StackName.getname(this);
+            }
+            if(name!=null)
+            {
+                if(NUtils.getGameUI().map.clickedGob!=null)
+                {
+                    VSpec.checkLpExplorer(NUtils.getGameUI().map.clickedGob, name);
+                }
             }
 
         }
