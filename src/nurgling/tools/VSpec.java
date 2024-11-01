@@ -23,7 +23,7 @@ public class VSpec {
 
         // Almond Tree
         ArrayList<String> almondtreeOp = new ArrayList<>();
-        almondtreeOp.add("Almond"); // Семена
+        almondtreeOp.add("Almonds"); // Семена
         object.put("gfx/terobjs/trees/almondtree", almondtreeOp);
 
         // Apple Tree
@@ -58,7 +58,7 @@ public class VSpec {
 
         // Bird Cherry Tree
         ArrayList<String> birdcherryOp = new ArrayList<>();
-        birdcherryOp.add("Birdcherries"); // Семена
+        birdcherryOp.add("Bird Cherries"); // Семена
         object.put("gfx/terobjs/trees/birdcherrytree", birdcherryOp);
 
         // Black Pine Tree
@@ -68,7 +68,7 @@ public class VSpec {
 
         // Black Poplar Tree
         ArrayList<String> blackpoplarOp = new ArrayList<>();
-        blackpoplarOp.add("Black Poplar Catkin"); // Семена
+        blackpoplarOp.add("Blackpoplar Catkin"); // Семена
         object.put("gfx/terobjs/trees/blackpoplar", blackpoplarOp);
 
         // Buckthorn Tree
@@ -158,7 +158,7 @@ public class VSpec {
 
         // Hornbeam Tree
         ArrayList<String> hornbeamOp = new ArrayList<>();
-        hornbeamOp.add("Hornbeam Catkin"); // Семена
+        hornbeamOp.add("Hornbeam Catkins"); // Семена
         object.put("gfx/terobjs/trees/hornbeam", hornbeamOp);
 
         // Juniper Tree
@@ -406,7 +406,7 @@ public class VSpec {
 
         // Crabapple Tree
         ArrayList<String> crabappleOp = new ArrayList<>();
-        crabappleOp.add("Crabapple"); // Плоды
+        crabappleOp.add("Crabapples"); // Плоды
         object.put("gfx/terobjs/trees/crabappletree", crabappleOp);
 
         // Dwarf Pine Tree
@@ -522,7 +522,7 @@ public class VSpec {
 
         // Sandthorn Bush
         ArrayList<String> sandthornOp = new ArrayList<>();
-        sandthornOp.add("Seaberry"); // Плоды
+        sandthornOp.add("Seaberries"); // Плоды
         object.put("gfx/terobjs/bushes/sandthorn", sandthornOp);
 
         // Spindle Bush
@@ -538,7 +538,7 @@ public class VSpec {
 
         // Tibast Bush
         ArrayList<String> tibastOp = new ArrayList<>();
-        tibastOp.add("Tibast Fruits"); // Плоды
+        tibastOp.add("Tibast Berries"); // Плоды
         object.put("gfx/terobjs/bushes/tibast", tibastOp);
 
         // Tundra Rose Bush
@@ -704,7 +704,7 @@ public class VSpec {
         categories.put("Edible Mushroom", mushrooms);
 
         ArrayList<JSONObject> nuts = new ArrayList<>();
-        nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/almond\",\"name\":\"Almond\"}"));
+        nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/almond\",\"name\":\"Almonds\"}"));
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-beech\",\"name\":\"Beech Seed\"}"));
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/carobfruit\",\"name\":\"Carob Pod\"}"));
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/chestnut\",\"name\":\"Chestnut\"}"));
@@ -741,7 +741,7 @@ public class VSpec {
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/mulberry\",\"name\":\"Mulberry\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-raspberrybush\",\"name\":\"Raspberry Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-redcurrant\",\"name\":\"Redcurrant Seed\"}"));
-        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-sandthorn\",\"name\":\"Seaberry Seed\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-sandthorn\",\"name\":\"Seaberries\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackthorn\",\"name\":\"Sloan Berries Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/strawberry\",\"name\":\"Strawberry\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/woodstrawberry\",\"name\":\"Wood Strawberry\"}"));
