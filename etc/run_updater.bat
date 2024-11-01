@@ -1,2 +1,2 @@
-java -jar nurgling_launcher.jar update https://raw.githubusercontent.com/Katodiy/nurgling-release/master/ --add-exports=java.desktop/sun.awt=ALL-UNNAMED -jar ./hafen.jar
+java -jar nurgling_launcher.jar update https://raw.githubusercontent.com/Katodiy/nurgling-release/master/ -Dsun.java2d.uiScale.enabled=false -Dsun.java2d.win.uiScaleX=1.0 -Dsun.java2d.win.uiScaleY=1.0 --add-exports=java.desktop/sun.awt=ALL-UNNAMED -Xss8m -Xms1024m -Xmx4096m -jar ./hafen.jar
 pause

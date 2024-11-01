@@ -40,7 +40,7 @@ public class NMakewindow extends Widget {
     private static double softcap = 0;
     private static Tex softTex = null;
     private static Tex softTexLabel = null;
-
+    public CheckBox noTransfer = null;
     boolean autoMode = false;
 
     private static final OwnerContext.ClassResolver<NMakewindow> ctxr = new OwnerContext.ClassResolver<NMakewindow>()
@@ -52,7 +52,7 @@ public class NMakewindow extends Widget {
         public Tex num;
         public String name;
         public int count;
-        private GSprite spr;
+        public GSprite spr;
         private Object[] rawinfo;
         private List<ItemInfo> info;
 
@@ -178,6 +178,12 @@ public class NMakewindow extends Widget {
                         s.ing.logistic = (NArea.findIn(s.ing.name) != null);
                     }
                 }
+                for(Spec s : outputs) {
+                    if(s.categories && s.ing!=null)
+                    {
+                        s.ing.logistic = (NArea.findOut(s.ing.name, 1) != null);
+                    }
+                }
             }
         }
 
@@ -204,8 +210,10 @@ public class NMakewindow extends Widget {
                 s.spr.tick(dt);
             s.tick(dt);
         }
-        if(cat!=null)
+        if(cat!=null) {
+            cat.raise();
             cat.tick(dt);
+        }
     }
 
     @Override
@@ -214,28 +222,35 @@ public class NMakewindow extends Widget {
         {
             Coord sc = new Coord(xoff, 0);
             boolean popt = false;
-            for(Spec s: inputs)
-            {
-                boolean opt = s.opt();
-                if(opt != popt)
-                    sc = sc.add(10, 0);
-                if(s.categories)
-                {
-                    if(ev.c.isect(sc, Inventory.sqsz))
-                    {
-                        if(cat==null)
-                        {
-                            add(cat = new Categories(VSpec.categories.get(s.name),s), sc.add(UI.scale(0, sqsz.y)).sub(UI.scale(5,5)));
-                            pack();
-                        }
-                    }
-                }
-                sc = sc.add(Inventory.sqsz.x, 0);
-                popt = opt;
-            }
+            if (clickForCategories(inputs, popt, sc, c)) return true;
+            sc = new Coord(xoff, outy);
+            if (clickForCategories(outputs, popt, sc, c)) return true;
         }
         return super.mousedown(ev);
     }
+
+    private boolean clickForCategories(List<Spec> outputs, boolean popt, Coord sc, Coord c) {
+        for (Spec s : outputs) {
+            boolean opt = s.opt();
+            if (opt != popt)
+                sc = sc.add(10, 0);
+            if (s.categories) {
+                if (c.isect(sc, Inventory.sqsz)) {
+                    if (cat == null) {
+                        NUtils.getGameUI().add(cat = new Categories(VSpec.categories.get(s.name), s), sc.add(this.parent.c).add(this.c).add(Inventory.sqsz.x / 2, Inventory.sqsz.y * 2).add(UI.scale(2, 2)));
+                        pack();
+                        NUtils.getGameUI().craftwnd.lower();
+                        cat.raise();
+                        return true;
+                    }
+                }
+            }
+            sc = sc.add(Inventory.sqsz.x, 0);
+            popt = opt;
+        }
+        return false;
+    }
+
 
     TextEntry craft_num;
     public static final KeyBinding kb_make = KeyBinding.get("make/one", KeyMatch.forcode(java.awt.event.KeyEvent.VK_ENTER, 0));
@@ -254,8 +269,18 @@ public class NMakewindow extends Widget {
             {
                 super.changed(val);
                 autoMode = val;
+                noTransfer.visible = val;
             }
         }, UI.scale(new Coord(365, 5)));
+
+        add(noTransfer = new CheckBox("No transfer")
+        {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+            }
+        }, new Coord(336, 35));
+        noTransfer.visible = false;
         pack();
         this.rcpnm = rcpnm;
     }
@@ -432,7 +457,26 @@ public class NMakewindow extends Widget {
                 }
                 else
                 {
-                    sg.image(anotfound, Coord.z);
+                    if(s.categories)
+                    {
+                        if(s.ing==null)
+                            sg.image(categories, Coord.z);
+                        else
+                        {
+                            if(s.ing.logistic)
+                            {
+                                sg.image(aready, Coord.z);
+                            }
+                            else
+                            {
+                                sg.image(anotfound, Coord.z);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        sg.image(anotfound, Coord.z);
+                    }
                 }
             }
         }
@@ -704,7 +748,7 @@ public class NMakewindow extends Widget {
     Categories cat = null;
 
     public class Ingredient{
-        BufferedImage img;
+        public BufferedImage img;
         public String name;
         boolean logistic;
 
@@ -722,6 +766,7 @@ public class NMakewindow extends Widget {
 
     final static Coord catoff = UI.scale(8,8);
     final static Coord catend = UI.scale(15,15);
+    static final int width = 9;
     public class Categories extends Widget
     {
 
@@ -729,21 +774,25 @@ public class NMakewindow extends Widget {
         ArrayList<Ingredient> data = new ArrayList<>();
         Frame fr;
 
+
         Spec s;
         public Categories(ArrayList<JSONObject> objs, Spec s)
         {
-            super(new Coord(Math.max((Inventory.sqsz.x+UI.scale(1))*((objs.size()/6>=1)?6:0),(Inventory.sqsz.x+UI.scale(1))*(objs.size()%6))- UI.scale(2),(Inventory.sqsz.x+UI.scale(1))*(objs.size()/6+(objs.size()%6!=0?1:0))).add(UI.scale(20,18)));
+            super(new Coord(Math.max((Inventory.sqsz.x+UI.scale(1))*((objs.size()/width>=1)?width:0),(Inventory.sqsz.x+UI.scale(1))*(objs.size()%width))- UI.scale(2),(Inventory.sqsz.x+UI.scale(1))*(objs.size()/width+(objs.size()%width!=0?1:0))).add(UI.scale(20,18)));
             this.s = s;
             add(fr = new Frame(sz.sub(catend),true));
             for(JSONObject obj: objs)
             {
                 data.add(new Ingredient(obj));
             }
+            setfocustab(true);
+            autofocus =true;
         }
 
         @Override
         public void draw(GOut g)
         {
+            super.draw(g);
             g.chcolor(bg);
             g.frect(UI.scale(4,4), fr.inner());
             Coord pos = new Coord(catoff);
@@ -760,7 +809,7 @@ public class NMakewindow extends Widget {
                 {
                     sg.image(anotfound, Coord.z,UI.scale(32,32));
                 }
-                if(shift.x<5)
+                if(shift.x<width-1)
                 {
                     pos = pos.add(Inventory.sqsz.x + UI.scale(1), 0);
                     shift.x+=1;
@@ -772,7 +821,7 @@ public class NMakewindow extends Widget {
                     pos = pos.add(0, Inventory.sqsz.y + UI.scale(1));
                 }
             }
-            super.draw(g);
+
         }
         UI.Grab mg;
         @Override
@@ -809,7 +858,7 @@ public class NMakewindow extends Widget {
                         cat = null;
                         return false;
                     }
-                    if(shift.x<5)
+                    if(shift.x<width-1)
                     {
                         pos = pos.add(Inventory.sqsz.x + UI.scale(1), 0);
                         shift.x+=1;
@@ -834,6 +883,38 @@ public class NMakewindow extends Widget {
                 ing.tick(dt);
             }
             super.tick(dt);
+        }
+
+        @Override
+        public Object tooltip(Coord c, Widget prev) {
+            Coord pos = new Coord(catoff);
+            if(!c.isect(pos, sz.sub(catend)))
+            {
+                return null;
+            }
+            else
+            {
+                Coord shift = new Coord(0,0);
+                for(Ingredient ing: data)
+                {
+                    if(c.isect(pos, invsq.sz()))
+                    {
+                        return ing.name;
+                    }
+                    if(shift.x<width-1)
+                    {
+                        pos = pos.add(Inventory.sqsz.x + UI.scale(1), 0);
+                        shift.x+=1;
+                    }
+                    else
+                    {
+                        pos.x = UI.scale(8);
+                        pos = pos.add(0, Inventory.sqsz.y + UI.scale(1));
+                        shift.x = 0;
+                    }
+                }
+                return true;
+            }
         }
     }
 }

@@ -205,4 +205,27 @@ public class NMiniMap extends MiniMap implements Console.Directory {
     public Map<String, Console.Command> findcmds() {
         return(cmdmap);
     }
+
+    @Override
+    public Object tooltip(Coord c, Widget prev) {
+        if (dloc != null) {
+            DisplayIcon icon = iconat(c);
+            if (icon != null) {
+                Resource res = icon.icon.res;
+                if(res == null)
+                    return null;
+                Resource.Tooltip tt = res.layer(Resource.tooltip);
+                if (tt != null) {
+                    String name = tt.t;
+                    return Text.render(name).tex();
+                }
+            }
+            Coord tc = c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
+            DisplayMarker mark = markerat(tc);
+            if (mark != null) {
+                return (mark.tip);
+            }
+        }
+        return (super.tooltip(c, prev));
+    }
 }

@@ -14,11 +14,15 @@ import org.json.*;
 
 import javax.swing.*;
 import javax.swing.colorchooser.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+
+import static nurgling.widgets.Specialisation.findSpecialisation;
 
 public class NAreasWidget extends Window
 {
@@ -30,7 +34,7 @@ public class NAreasWidget extends Window
     public String currentPath = "";
     final static Tex folderIcon = new TexI(Resource.loadsimg("nurgling/hud/folder/d"));
     final static Tex openfolderIcon = new TexI(Resource.loadsimg("nurgling/hud/folder/u"));
-
+    NCatSelection catSelection;
     class Folder
     {
         public String name;
@@ -69,7 +73,61 @@ public class NAreasWidget extends Window
         },prev.pos("ur").adds(UI.scale(5,0)));
         create.settip("Create new area");
 
+        IButton showCat;
+        add(showCat = new IButton(NStyle.catmenu[0].back,NStyle.catmenu[1].back,NStyle.catmenu[2].back){
+            @Override
+            public void click()
+            {
+                super.click();
+                if(al.sel!=null) {
+                    if(catSelection == null) {
+                        ui.gui.add(catSelection = new NCatSelection(), NAreasWidget.this.c.add(0, NAreasWidget.this.sz.y));
+                    }
+                    catSelection.visible = true;
+                }
+            }
+        },create.pos("ur").adds(UI.scale(5,0)));
+        showCat.settip("Show all categories");
 
+        IButton importbt;
+        add(importbt = new IButton(NStyle.importb[0].back,NStyle.importb[1].back,NStyle.importb[2].back){
+            @Override
+            public void click()
+            {
+                super.click();
+                java.awt.EventQueue.invokeLater(() -> {
+                    JFileChooser fc = new JFileChooser();
+                    fc.setFileFilter(new FileNameExtensionFilter("Areas setting file", "json"));
+                    if(fc.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
+                        return;
+                    if(fc.getSelectedFile()!=null)
+                    {
+                        NUtils.getUI().core.config.mergeAreas(fc.getSelectedFile());
+                    }
+                    NAreasWidget.this.hide();
+                    NAreasWidget.this.show();
+                    NConfig.needAreasUpdate();
+                });
+            }
+        },showCat.pos("ur").adds(UI.scale(25,0)));
+        importbt.settip("Import");
+
+        IButton exportbt;
+        add(exportbt = new IButton(NStyle.exportb[0].back,NStyle.exportb[1].back,NStyle.exportb[2].back){
+            @Override
+            public void click()
+            {
+                super.click();
+                java.awt.EventQueue.invokeLater(() -> {
+                    JFileChooser fc = new JFileChooser();
+                    fc.setFileFilter(new FileNameExtensionFilter("Areas setting file", "json"));
+                    if(fc.showSaveDialog(null) != JFileChooser.APPROVE_OPTION)
+                        return;
+                    NUtils.getUI().core.config.writeAreas(fc.getSelectedFile().getAbsolutePath()+".json");
+                });
+            }
+        },importbt.pos("ur").adds(UI.scale(5,0)));
+        exportbt.settip("Export");
 
         prev = add(al = new AreaList(UI.scale(new Coord(400,170))), prev.pos("bl").adds(0, 10));
         Widget lab = add(new Label("Specialisation",NStyle.areastitle), prev.pos("bl").add(UI.scale(0,5)));
@@ -156,25 +214,19 @@ public class NAreasWidget extends Window
             for (NArea area : ((NMapView) NUtils.getGameUI().map).glob.map.areas.values()) {
                 if (area.path.equals(path)) {
                     areas.add(new AreaItem(area.name, area));
-                }
-                else if(area.path.startsWith(path))
-                {
+                } else if (area.path.startsWith(path)) {
                     String cand = area.path.substring(path.length());
                     String fname = cand.split("/")[1];
-                    folders.put(fname, new Folder(fname,path));
+                    folders.put(fname, new Folder(fname, path));
                 }
             }
 
 
-            if(!currentPath.isEmpty())
-            {
-                if(currentPath.contains("/"))
-                {
+            if (!currentPath.isEmpty()) {
+                if (currentPath.contains("/")) {
                     String subPath = currentPath.substring(0, currentPath.lastIndexOf("/"));
                     items.add(new AreaItem(subPath));
-                }
-                else
-                {
+                } else {
                     items.add(new AreaItem(""));
                 }
 
@@ -187,6 +239,16 @@ public class NAreasWidget extends Window
             }
             items.addAll(areas);
         }
+            if(!items.isEmpty()) {
+                al.sel = items.get(items.size() - 1);
+                if (al.sel.area != null) {
+                    select(al.sel.area.id);
+                }
+                else
+                {
+                    select();
+                }
+            }
 
     }
 
@@ -396,9 +458,12 @@ public class NAreasWidget extends Window
                                             nol.remove();
                                             NUtils.getGameUI().map.nols.remove(key);
                                             Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(((NMapView) NUtils.getGameUI().map).glob.map.areas.get(key).gid);
-                                            NUtils.getGameUI().map.glob.oc.remove(dummy);
-                                            ((NMapView) NUtils.getGameUI().map).dummys.remove(dummy.id);
+                                            if(dummy!=null) {
+                                                NUtils.getGameUI().map.glob.oc.remove(dummy);
+                                                ((NMapView) NUtils.getGameUI().map).dummys.remove(dummy.id);
+                                            }
                                             ((NMapView) NUtils.getGameUI().map).glob.map.areas.remove(key);
+
                                         }
                                     }
                                     NConfig.needAreasUpdate();
@@ -432,6 +497,13 @@ public class NAreasWidget extends Window
         in_items.load(id);
         out_items.load(id);
         loadSpec(id);
+    }
+
+    private void select()
+    {
+        in_items.items.clear();
+        out_items.items.clear();
+        specItems.clear();
     }
 
     public void set(int id)
@@ -526,7 +598,7 @@ public class NAreasWidget extends Window
 
     public class CurrentSpecialisationList extends SListBox<SpecialisationItem, Widget> {
         CurrentSpecialisationList(Coord sz) {
-            super(sz, UI.scale(15));
+            super(sz, UI.scale(24));
         }
 
         @Override
@@ -583,16 +655,20 @@ public class NAreasWidget extends Window
         NArea.Specialisation item;
         IButton spec = null;
         NFlowerMenu menu;
-
+        TexI icon;
         public SpecialisationItem(NArea.Specialisation item)
         {
             this.item = item;
+            Specialisation.SpecialisationItem specialisationItem = findSpecialisation(item.name);
             if(item.subtype == null) {
-                this.text = add(new Label(item.name));
+                this.text = add(new Label(specialisationItem == null ? "???" + item.name + "???":specialisationItem.prettyName), new Coord(UI.scale(30,4)));
             }
             else
             {
-                this.text = add(new Label(item.name + "(" + item.subtype + ")"));
+                this.text = add(new Label((specialisationItem == null ? "???" + item.name + "???":specialisationItem.prettyName) + "(" + item.subtype + ")"), new Coord(UI.scale(30,4)));
+            }
+            if(specialisationItem != null) {
+                icon = new TexI(specialisationItem.image);
             }
             if(SpecialisationData.data.get(item.name)!=null)
             {
@@ -636,9 +712,16 @@ public class NAreasWidget extends Window
                         }
                         ui.root.add(menu, pos);
                     }
-                },UI.scale(new Coord(135,0)));
+                },UI.scale(new Coord(135,4)));
             }
             pack();
+            sz.y = UI.scale(24);
+        }
+
+        @Override
+        public void draw(GOut g) {
+            super.draw(g);
+            g.image(icon,Coord.z,UI.scale(24,24));
         }
     }
 

@@ -55,7 +55,6 @@ public class Window extends Widget {
     public static final Coord tlm = UI.scale(18, 30);
     public static final Coord brm = UI.scale(13, 22);
 	public static final Coord cpo = UI.rscale(24, 12.4);
-	public static final int capo = 7, capio = 2;
     public static final Coord dlmrgn = UI.scale(23, 14);
     public static final Coord dsmrgn = UI.scale(9, 9);
     public static final BufferedImage ctex = Resource.loadimg("nurgling/hud/fonttex");

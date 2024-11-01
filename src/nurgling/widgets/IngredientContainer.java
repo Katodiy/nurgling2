@@ -15,6 +15,8 @@ public class IngredientContainer extends Widget implements DTarget
 {
     static Color bg = new Color(30,40,40,160);
 
+    private static TexI freeLabel = new TexI(Text.render("Drag and drop an item here").img);
+    private static TexI freeLabel2 = new TexI(Text.render("or select it from the categories").img);
 
     public static class Ingredient{
         public String name;
@@ -40,9 +42,14 @@ public class IngredientContainer extends Widget implements DTarget
     @Override
     public void draw(GOut g)
     {
-
         g.chcolor(bg);
         g.frect(Coord.z, g.sz());
+        if(items.isEmpty())
+        {
+            g.chcolor(Color.WHITE);
+            g.image(freeLabel,UI.scale(5,5));
+            g.image(freeLabel2,UI.scale(5,20));
+        }
         super.draw(g);
     }
 

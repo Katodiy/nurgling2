@@ -1,9 +1,6 @@
 package nurgling.actions;
 
-import haven.Coord;
-import haven.Gob;
-import haven.UI;
-import haven.WItem;
+import haven.*;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
@@ -17,13 +14,13 @@ import java.util.ArrayList;
 public class FillContainersFromPiles implements Action {
     ArrayList<Container> conts;
     NAlias transferedItems;
-    NArea area;
+    Pair<Coord2d,Coord2d> area;
     Coord targetCoord = new Coord(1, 1);
     boolean tetris = false;
     boolean tetris_done = true;
 
 
-    public FillContainersFromPiles(ArrayList<Container> conts, NArea area, NAlias transferedItems) {
+    public FillContainersFromPiles(ArrayList<Container> conts, Pair<Coord2d,Coord2d> area, NAlias transferedItems) {
         this.conts = conts;
         this.area = area;
         this.transferedItems = transferedItems;

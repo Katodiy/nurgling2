@@ -2,11 +2,16 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.*;
+import nurgling.areas.NArea;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class NCharacterInfo extends Widget {
 
@@ -21,48 +26,141 @@ public class NCharacterInfo extends Widget {
     boolean needFEPreset = false;
 
     boolean isStarted = false;
+    public boolean newLpExplorer = false;
     String varCand = null;
+    private final HashMap<String,ArrayList<String>> lpExplorer = new HashMap<>();
+
+    public boolean IsLpExplorerContains(String name)
+    {
+        synchronized(lpExplorer) {
+            return lpExplorer.containsKey(name);
+        }
+    }
+
+    public boolean IsLpExplorerContains(String name, String var)
+    {
+        synchronized(lpExplorer) {
+            if(lpExplorer.containsKey(name))
+            {
+                return lpExplorer.get(name).contains(var);
+            }
+            return false;
+        }
+    }
+
+    public void LpExplorerAdd(String name, String var)
+    {
+        synchronized(lpExplorer) {
+            if(lpExplorer.containsKey(name))
+            {
+                lpExplorer.get(name).add(var);
+            }
+            else
+            {
+                lpExplorer.put(name,new ArrayList<>());
+                lpExplorer.get(name).add(var);
+            }
+        }
+    }
+
+    public int LpExplorerGetSize(String name)
+    {
+        synchronized(lpExplorer) {
+            if(lpExplorer.containsKey(name))
+                return lpExplorer.get(name).size();
+        }
+        return 0;
+    }
 
     public NCharacterInfo(String chrid, NUI nui) {
         this.chrid = chrid;
-        path = ((HashDirCache) ResCache.global).base + "\\..\\" + nui.sessInfo.username + "_" + chrid.trim() + ".dat";
+        path = ((HashDirCache) ResCache.global).base + "\\..\\" + (nui.sessInfo==null?"":nui.sessInfo.username) + "_" + chrid.trim() + ".dat";
         read();
     }
 
     void read() {
+        StringBuilder contentBuilder = new StringBuilder();
+        try (Stream<String> stream = Files.lines(Paths.get(path), StandardCharsets.UTF_8))
+        {
+            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+        }
+        catch (IOException ignore)
+        {
+        }
 
-        try {
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(Files.newInputStream(Paths.get(path)), StandardCharsets.UTF_8))) {
-                while (reader.ready()) {
-                    String line = reader.readLine();
-                    if (line.contains("varity")) {
-                        synchronized (varity) {
-                            for (int i = 0; i < Integer.parseInt(line.split("\t")[1]); i++) {
-                                varity.add(reader.readLine());
+        if (!contentBuilder.toString().isEmpty()) {
+            try {
+                JSONObject main = new JSONObject(contentBuilder.toString());
+                JSONArray vararr = (JSONArray) main.get("varity");
+                if (vararr != null) {
+                    synchronized (varity) {
+                        for (int i = 0; i < vararr.length(); i++) {
+                            JSONObject jvarity = (JSONObject) vararr.get(i);
+                            varity.add(jvarity.getString("name"));
+                        }
+                    }
+                }
+                JSONArray lpexplorerarr = (JSONArray) main.get("lpexplorer");
+                if (lpexplorerarr != null) {
+                    synchronized (lpExplorer) {
+                        for (int i = 0; i < lpexplorerarr.length(); i++) {
+                            JSONObject jlp = (JSONObject) lpexplorerarr.get(i);
+
+                            if (lpExplorer.containsKey(jlp.getString("name"))) {
+                                lpExplorer.get(jlp.getString("name")).add(jlp.getString("key"));
+                            } else {
+                                lpExplorer.put(jlp.getString("name"), new ArrayList<>());
+                                lpExplorer.get(jlp.getString("name")).add(jlp.getString("key"));
                             }
                         }
                     }
                 }
-            } catch (IOException ignored) {
+            }
+            catch (JSONException ignore)
+            {
+
             }
         }
-        catch (InvalidPathException ignored) {}
     }
 
     void write() {
-        OutputStreamWriter file;
-        try  {
-            file = new OutputStreamWriter(Files.newOutputStream(Paths.get(path)), StandardCharsets.UTF_8);
-            if (!varity.isEmpty()) {
-                file.write("varity\t" + String.valueOf(varity.size()) +"\n");
-                for (String var : varity) {
-                    file.write(var+"\n");
-                }
-                file.close();
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            JSONObject main = new JSONObject();
+            JSONArray jvararr = new JSONArray();
+            for (String var : varity) {
+                JSONObject jvarity = new JSONObject();
+                jvarity.put("name",var);
+                jvararr.put(jvarity);
             }
-        }  catch (IOException e) {
-            e.printStackTrace();
+            main.put("varity",jvararr);
+
+            JSONArray jlpexplore = new JSONArray();
+            synchronized (lpExplorer) {
+                if (!lpExplorer.isEmpty()) {
+                    for (String key : lpExplorer.keySet()) {
+                        ArrayList<String> vals = lpExplorer.get(key);
+                        for (String val : vals) {
+                            JSONObject jlp = new JSONObject();
+                            jlp.put("name",key);
+                            jlp.put("key",val);
+                            jlpexplore.put(jlp);
+                        }
+                    }
+                }
+            }
+            main.put("lpexplorer",jlpexplore);
+
+            try
+            {
+                FileWriter f = new FileWriter(path,StandardCharsets.UTF_8);
+                main.write(f);
+                f.close();
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -112,6 +210,11 @@ public class NCharacterInfo extends Widget {
                 needFEPreset = false;
                 oldFEPSsize = fepssize;
             }
+        }
+        if(newLpExplorer)
+        {
+            write();
+            newLpExplorer = false;
         }
     }
 

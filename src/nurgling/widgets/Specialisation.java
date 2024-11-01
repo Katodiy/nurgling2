@@ -7,6 +7,7 @@ import nurgling.*;
 import nurgling.areas.*;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
@@ -39,48 +40,68 @@ public class Specialisation extends Window
         ore,
         fuel,
         ovens,
-        gardenpot, barrel,
-        leafs, htable,
-        rawhides, dframe,
-        ttub, tanning,
-        logs, smokshed, readyHides
+        gardenpot,
+        barrel,
+        leafs,
+        htable,
+        rawhides,
+        dframe,
+        ttub,
+        tanning,
+        logs,
+        smokshed,
+        tarkiln, readyHides
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
 
     static {
-        specialisation.add(new SpecialisationItem(SpecName.smelter.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.kiln.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.water.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.boiler.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.swill.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.trough.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.crop.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.seed.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.cows.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.goats.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.sheeps.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.deadkritter.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.pigs.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.ore.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.fuel.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.barrel.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.ovens.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.gardenpot.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.leafs.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.htable.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.dframe.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.rawhides.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.readyHides.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.ttub.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.tanning.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.logs.toString()));
-        specialisation.add(new SpecialisationItem(SpecName.smokshed.toString()));
+        specialisation.add(new SpecialisationItem(SpecName.smelter.toString(),"Smelters",Resource.loadsimg("nurgling/categories/smelter")));
+        specialisation.add(new SpecialisationItem(SpecName.kiln.toString(),"Kilns",Resource.loadsimg("nurgling/categories/kiln")));
+        specialisation.add(new SpecialisationItem(SpecName.water.toString(),"Source of water",Resource.loadsimg("nurgling/categories/water")));
+        specialisation.add(new SpecialisationItem(SpecName.boiler.toString(),"Cauldron",Resource.loadsimg("nurgling/categories/boiler")));
+        specialisation.add(new SpecialisationItem(SpecName.swill.toString(),"Swill",Resource.loadsimg("nurgling/categories/swill")));
+        specialisation.add(new SpecialisationItem(SpecName.trough.toString(),"Trough for swill",Resource.loadsimg("nurgling/categories/trough")));
+        specialisation.add(new SpecialisationItem(SpecName.crop.toString(),"Crop",Resource.loadsimg("nurgling/categories/crop")));
+        specialisation.add(new SpecialisationItem(SpecName.seed.toString(),"Seeds of crop",Resource.loadsimg("nurgling/categories/seed")));
+        specialisation.add(new SpecialisationItem(SpecName.cows.toString(),"Cows",Resource.loadsimg("nurgling/categories/cows")));
+        specialisation.add(new SpecialisationItem(SpecName.goats.toString(),"Goats",Resource.loadsimg("nurgling/categories/goats")));
+        specialisation.add(new SpecialisationItem(SpecName.sheeps.toString(),"Sheep",Resource.loadsimg("nurgling/categories/sheeps")));
+        specialisation.add(new SpecialisationItem(SpecName.deadkritter.toString(),"Animal carcasses",Resource.loadsimg("nurgling/categories/deadkritter")));
+        specialisation.add(new SpecialisationItem(SpecName.pigs.toString(),"Pigs",Resource.loadsimg("nurgling/categories/pigs")));
+        specialisation.add(new SpecialisationItem(SpecName.ore.toString(),"Piles of ore",Resource.loadsimg("nurgling/categories/ores")));
+        specialisation.add(new SpecialisationItem(SpecName.fuel.toString(),"Fuel",Resource.loadsimg("nurgling/categories/fuel")));
+        specialisation.add(new SpecialisationItem(SpecName.barrel.toString(),"Barrel",Resource.loadsimg("nurgling/categories/barrel")));
+        specialisation.add(new SpecialisationItem(SpecName.ovens.toString(),"Ovens",Resource.loadsimg("nurgling/categories/ovens")));
+        specialisation.add(new SpecialisationItem(SpecName.gardenpot.toString(),"Ready Garden pots",Resource.loadsimg("nurgling/categories/gardenpot")));
+        specialisation.add(new SpecialisationItem(SpecName.leafs.toString(),"Piles of leaf",Resource.loadsimg("nurgling/categories/leafs")));
+        specialisation.add(new SpecialisationItem(SpecName.htable.toString(),"Herbalist tables",Resource.loadsimg("nurgling/categories/htable")));
+        specialisation.add(new SpecialisationItem(SpecName.dframe.toString(),"Drying frames",Resource.loadsimg("nurgling/categories/dframe")));
+        specialisation.add(new SpecialisationItem(SpecName.rawhides.toString(),"Piles of raw hides",Resource.loadsimg("nurgling/categories/rawhide")));
+        specialisation.add(new SpecialisationItem(SpecName.readyHides.toString(),"Piles of ready hides",Resource.loadsimg("nurgling/categories/readyhides")));
+        specialisation.add(new SpecialisationItem(SpecName.ttub.toString(),"Tanning tubs",Resource.loadsimg("nurgling/categories/ttub")));
+        specialisation.add(new SpecialisationItem(SpecName.tanning.toString(),"Source of tanning fluid",Resource.loadsimg("nurgling/categories/tanning")));
+        specialisation.add(new SpecialisationItem(SpecName.smokshed.toString(),"Smoked sheds",Resource.loadsimg("nurgling/categories/smokshed")));
+        specialisation.add(new SpecialisationItem(SpecName.tarkiln.toString(),"Tarkilns",Resource.loadsimg("nurgling/categories/tarkiln")));
+        specialisation.sort(new Comparator<SpecialisationItem>() {
+            @Override
+            public int compare(SpecialisationItem o1, SpecialisationItem o2) {
+                return o1.prettyName.compareTo(o2.prettyName);
+            }
+        });
+    }
+
+    public static SpecialisationItem findSpecialisation(String name)
+    {
+        for(SpecialisationItem specialisationItem : specialisation)
+            if(specialisationItem.name.contains(name))
+                return specialisationItem;
+        return null;
     }
 
     public class SpecialisationList extends SListBox<SpecialisationItem, Widget> {
         SpecialisationList(Coord sz) {
-            super(sz, UI.scale(15));
+            super(sz, UI.scale(24));
         }
 
         @Override
@@ -106,11 +127,11 @@ public class Specialisation extends Window
                 public boolean mousedown(Coord c, int button) {
                     super.mousedown(c, button);
 
-                    String value = item.text.text();
+                    String value = item.name;
                     boolean isFound = false;
                     for(NArea.Specialisation s: area.spec)
                     {
-                        if(s.name.equals(item.text.text()))
+                        if(s.name.equals(item.name))
                             isFound = true;
                     }
                     if(!isFound)
@@ -163,13 +184,26 @@ public class Specialisation extends Window
 
     public static class SpecialisationItem extends Widget
     {
-        Label text;
-
-
-        public SpecialisationItem(String text)
+        public Label text;
+        public String name;
+        public String prettyName;
+        public BufferedImage image;
+        private TexI tex;
+        public SpecialisationItem(String text, String prettyName, BufferedImage image)
         {
-            this.text = add(new Label(text));
+            this.text = add(new Label(prettyName), UI.scale(30, 4));
+            this.name = text;
+            this.prettyName = prettyName;
+            this.image = image;
+            tex = new TexI(image);
             pack();
+            sz.y = UI.scale(24);
+        }
+
+        @Override
+        public void draw(GOut g) {
+            super.draw(g);
+            g.image(tex,Coord.z,UI.scale(24,24));
         }
     }
 

@@ -58,7 +58,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
     public static double plobpgran = Utils.getprefd("plobpgran", 8);
     public static double plobagran = Utils.getprefd("plobagran", 12);
     protected static final Map<String, Class<? extends Camera>> camtypes = new HashMap<String, Class<? extends Camera>>();
-
+	public Gob clickedGob = null;
 	public HashMap<Integer, NOverlay> nols = new HashMap<>();
     public interface Delayed {
 	public void run(GOut g);
@@ -107,6 +107,14 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	public abstract void tick(double dt);
 
 	public String stats() {return("N/A");}
+
+
+	protected Coord inversion(Coord c, Coord o) {
+		return c.add(
+				(Boolean)NConfig.get(NConfig.Key.invert_hor) ? (o.x - c.x) * 2 : 0,
+				(Boolean)NConfig.get(NConfig.Key.invert_ver) ? (o.y - c.y) * 2 : 0
+		);
+	}
     }
     
     public class FollowCam extends Camera {
@@ -135,6 +143,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	}
 	
 	public void drag(Coord c) {
+		c = inversion(c, dragorig);
 	    tangl = anglorig + ((float)(c.x - dragorig.x) / 100.0f);
 	    tangl = tangl % ((float)Math.PI * 2.0f);
 	}
@@ -236,6 +245,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	}
 	
 	public void drag(Coord c) {
+		c = inversion(c, dragorig);
 	    elev = elevorig - ((float)(c.y - dragorig.y) / 100.0f);
 	    if(elev < 0.0f) elev = 0.0f;
 	    if(elev > (Math.PI / 2.0)) elev = (float)Math.PI / 2.0f;
@@ -295,6 +305,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	}
 
 	public void drag(Coord c) {
+		c = inversion(c, dragorig);
 	    telev = elevorig - ((float)(c.y - dragorig.y) / 100.0f);
 	    if(telev < 0.0f) telev = 0.0f;
 	    if(telev > (Math.PI / 2.0)) telev = (float)Math.PI / 2.0f;
@@ -354,6 +365,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	}
 
 	public void drag(Coord c) {
+		c = inversion(c, dragorig);
 	    angl = anglorig + ((float)(c.x - dragorig.x) / 100.0f);
 	    angl = angl % ((float)Math.PI * 2.0f);
 	}
@@ -434,6 +446,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	}
 
 	public void drag(Coord c) {
+		c = inversion(c, dragorig);
 	    tangl = anglorig + ((float)(c.x - dragorig.x) / 100.0f);
 	}
 
@@ -2015,6 +2028,21 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	    Object[] args = {pc, mc.floor(posres), clickb, ui.modflags()};
 	    if(inf != null)
 		args = Utils.extend(args, inf.clickargs());
+		if(inf!=null)
+		{
+			if(inf.ci instanceof Composited.CompositeClick)
+			{
+				clickedGob = ((Composited.CompositeClick)inf.ci).gi.gob;
+			}
+			else if (inf.ci instanceof Gob.GobClick)
+			{
+				clickedGob = ((Gob.GobClick)inf.ci).gob;
+			}
+			else
+				clickedGob = null;
+		}
+		else
+			clickedGob = null;
 	    wdgmsg("click", args);
 	}
     }

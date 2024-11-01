@@ -77,31 +77,53 @@ public class TransferItems implements Action
         resitems.addAll(after);
         for(String item : resitems) {
             TreeMap<Integer, NArea> areas = NArea.findOuts(new NAlias(item));
-            ArrayList<Integer> ths = new ArrayList<>(areas.keySet());
-            ListIterator<Integer> listIter = ths.listIterator(areas.size());
-            while (listIter.hasPrevious()) {
-                int th = listIter.previous();
-                NArea area = areas.get(th);
-                for (Context.Output out : Context.GetOutput(item, area))
-                    cnt.addOutput(item, th, out);
+            if(!areas.isEmpty()) {
+                ArrayList<Integer> ths = new ArrayList<>(areas.keySet());
+                ListIterator<Integer> listIter = ths.listIterator(areas.size());
+                while (listIter.hasPrevious()) {
+                    int th = listIter.previous();
+                    NArea area = areas.get(th);
+                    for (Context.Output out : Context.GetOutput(item, area))
+                        cnt.addOutput(item, th, out);
 
-                if (cnt.getOutputs(item, th) != null) {
-                    for (Context.Output output : cnt.getOutputs(item, th)) {
-                        if (output instanceof Context.Pile) {
-                            if (((Context.OutputPile) output).getArea() != null)
-                                new TransferToPiles(((Context.OutputPile) output).getArea().getRCArea(), new NAlias(item), th).run(gui);
-                        }
-                        if (output instanceof Container) {
-                            if (((Context.OutputContainer) output).getArea() != null)
-                                new TransferToContainer(cnt, (Context.OutputContainer) output, new NAlias(item), th).run(gui);
-                        }
-                        if (output instanceof Context.Barter) {
-                            if (((Context.OutputBarter) output).getArea() != null)
-                                new TransferToBarter(((Context.OutputBarter) output), new NAlias(item), th).run(gui);
+                    if (cnt.getOutputs(item, th) != null) {
+                        for (Context.Output output : cnt.getOutputs(item, th)) {
+                            if (output instanceof Context.Pile) {
+                                if (((Context.OutputPile) output).getArea() != null)
+                                    new TransferToPiles(((Context.OutputPile) output).getArea(), new NAlias(item), th).run(gui);
+                            }
+                            if (output instanceof Container) {
+                                if (((Context.OutputContainer) output).getArea() != null)
+                                    new TransferToContainer(cnt, (Context.OutputContainer) output, new NAlias(item), th).run(gui);
+                            }
+                            if (output instanceof Context.Barter) {
+                                if (((Context.OutputBarter) output).getArea() != null)
+                                    new TransferToBarter(((Context.OutputBarter) output), new NAlias(item), th).run(gui);
+                            }
                         }
                     }
                 }
             }
+            else
+            {
+                if (cnt.getOutputs(item, 1) != null) {
+                    for (Context.Output output : cnt.getOutputs(item, 1)) {
+                        if (output instanceof Context.Pile) {
+                            if (((Context.OutputPile) output).getArea() != null)
+                                new TransferToPiles(((Context.OutputPile) output).getArea(), new NAlias(item), 1).run(gui);
+                        }
+                        if (output instanceof Container) {
+                            if (((Context.OutputContainer) output).getArea() != null)
+                                new TransferToContainer(cnt, (Context.OutputContainer) output, new NAlias(item), 1).run(gui);
+                        }
+                        if (output instanceof Context.Barter) {
+                            if (((Context.OutputBarter) output).getArea() != null)
+                                new TransferToBarter(((Context.OutputBarter) output), new NAlias(item), 1).run(gui);
+                        }
+                    }
+                }
+            }
+
         }
 
 

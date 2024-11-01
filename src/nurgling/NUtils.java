@@ -265,6 +265,14 @@ public class NUtils
         }
     };
 
+    public static Comparator<Gob> grid_comp = new Comparator<Gob>() {
+        @Override
+        public int compare(Gob o1, Gob o2) {
+            int res = Double.compare(o1.rc.x, o2.rc.x);
+            return res == 0 ? Double.compare(o1.rc.y, o2.rc.y) : res;
+        }
+    };
+
     public static Entry getAnimalEntity(Gob gob, Class<? extends Entry> cattleRoster ){
         GetAnimalEntry gae = new GetAnimalEntry(gob,cattleRoster);
         try {

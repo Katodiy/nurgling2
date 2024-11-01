@@ -15,7 +15,7 @@ import java.util.Arrays;
 
 public class LeatherAction implements Action {
 
-    NAlias notraw = new NAlias(new ArrayList<>(Arrays.asList("hide", "Scale", "skin", "Hide")), new ArrayList<>(Arrays.asList("Fresh", "Raw", "water")));
+    NAlias notraw = new NAlias(new ArrayList<>(Arrays.asList("hide", "Scale", "skin", "Hide", "Fur", "fur")), new ArrayList<>(Arrays.asList("Fresh", "Raw", "water")));
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NArea.Specialisation rdframe = new NArea.Specialisation(Specialisation.SpecName.ttub.toString());
@@ -52,7 +52,7 @@ public class LeatherAction implements Action {
 
             new FillFluid(containers, NArea.findSpec(Specialisation.SpecName.tanning.toString()).getRCArea(), new NAlias("tanfluid"), 2).run(gui);
             new FreeContainers(containers, new NAlias("Leather")).run(gui);
-            new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.readyHides.toString()), notraw).run(gui);
+            new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.readyHides.toString()).getRCArea(), notraw).run(gui);
             new TransferToPiles(NArea.findSpec(Specialisation.SpecName.readyHides.toString()).getRCArea(), notraw).run(gui);
 
             return Results.SUCCESS();

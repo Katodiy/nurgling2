@@ -52,7 +52,7 @@ public class FillWaterskins implements Action {
                 for(WItem item : witems)
                 {
                     NGItem ngItem = ((NGItem)item.item);
-                    if(ngItem.content()==null)
+                    if(ngItem.content().isEmpty())
                     {
                         NUtils.takeItemToHand(item);
                         NUtils.activateItem(target);
@@ -75,8 +75,8 @@ public class FillWaterskins implements Action {
                 if (!witems.isEmpty()) {
                     for (WItem item : witems) {
                         NGItem ngItem = ((NGItem) item.item);
-                        if (ngItem.content() != null) {
-                            if (ngItem.content().name().contains("Water"))
+                        if (!ngItem.content().isEmpty()) {
+                            if (ngItem.content().get(0).name().contains("Water"))
                                 return false;
                         }
                     }

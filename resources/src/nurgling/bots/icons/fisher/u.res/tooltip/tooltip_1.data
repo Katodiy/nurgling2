@@ -1,0 +1,3 @@
+#TOOLTIP LAYER FOR RES src/nurgling/wnd/search.res//
+#String tooltip
+For a normal fishing rod: Select the area to be fished (the middle is selected). Optionally, select if there is a special extra container (fishing lines and hooks).Select the area with bait. And select the area where you want to put the fish. The bot will repair the rod, refill the bait and place the fish in piles. For casting-rod you can specify which of the fish the bot should catch and it will select only those fish when fishing

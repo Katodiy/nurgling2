@@ -32,11 +32,10 @@ public class TakeItemsFromContainer implements Action
         for(String name: names) {
             WItem item = inv.getItem(name);
             if (item != null) {
-                TreeMap<Integer, NArea> aras = NArea.findOuts(new NAlias(name));
 
                 target_coord = inv.getItem(name).sz.div(Inventory.sqsz);
                 int oldSpace = gui.getInventory().getItems(name).size();
-                ArrayList<WItem> items = gui.getInventory(cont.cap).getItems(name,aras.firstEntry().getKey());
+                ArrayList<WItem> items = gui.getInventory(cont.cap).getItems(name,1);
                 target_size = Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord), items.size()));
 
 

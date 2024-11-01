@@ -136,6 +136,14 @@ public class Build implements Action{
                 }
 
                 NUtils.startBuild(NUtils.getGameUI().getWindow(cmd.name));
+
+                NUtils.addTask(new NTask() {
+                    int count = 0;
+                    @Override
+                    public boolean check() {
+                        return NUtils.getGameUI().prog!=null || count++>100;
+                    }
+                });
                 WaitBuildState wbs = new WaitBuildState();
                 NUtils.addTask(wbs);
                 if(wbs.getState()== WaitBuildState.State.TIMEFORDRINK)
@@ -148,7 +156,18 @@ public class Build implements Action{
                     return Results.ERROR("Low energy");
                 }
             }while ((gob = Finder.findGob(pos))!=null && NParser.checkName(gob.ngob.name, "gfx/terobjs/consobj"));
-
+            Coord2d finalPos = pos;
+            final Gob[] targetGob = {null};
+            NUtils.addTask(new NTask() {
+                @Override
+                public boolean check() {
+                    return (targetGob[0] = Finder.findGob(finalPos))!=null;
+                }
+            });
+            if(targetGob[0]!=null) {
+                Coord2d shift = targetGob[0].rc.sub(NUtils.player().rc).norm().mul(4);
+                new GoTo(NUtils.player().rc.sub(shift)).run(gui);
+            }
             for(Ingredient ingredient: curings)
             {
                 NUtils.addTask(new WaitItems(NUtils.getGameUI().getInventory(),ingredient.name,ingredient.left));
@@ -201,12 +220,13 @@ public class Build implements Action{
                                 return false;
                         }
                         piles.sort(NUtils.d_comp);
-
+                        if(piles.isEmpty())
+                            return false;
                         Gob pile = piles.get(0);
                         new PathFinder(pile).run(NUtils.getGameUI());
                         new OpenTargetContainer("Stockpile", pile).run(NUtils.getGameUI());
                         TakeItemsFromPile tifp;
-                        (tifp = new TakeItemsFromPile(pile, NUtils.getGameUI().getStockpile(), Math.min(ingredient.count, NUtils.getGameUI().getInventory().getFreeSpace()))).run(gui);
+                        (tifp = new TakeItemsFromPile(pile, NUtils.getGameUI().getStockpile(), Math.min(ingredient.count, NUtils.getGameUI().getInventory().getNumberFreeCoord(ingredient.coord)))).run(gui);
                         new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
                         ingredient.count = ingredient.count - tifp.getResult();
                     }

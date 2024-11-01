@@ -17,22 +17,24 @@ public class NMappingClient {
     final HashSet<String> requestedGrid = new HashSet<>();
     Coord lastGC = Coord.z;
 
-    Connector connector;
+    public Connector connector;
     public Requestor requestor;
     public AtomicBoolean done = new AtomicBoolean(false);
     private Boolean autoMapper = null;
     public final Map<Long, MapRef> cache = new HashMap<Long, MapRef>();
+    public Thread reqTread = null;
+    Thread conTread = null;
     long lastTracking = -1;
     public void tick(double dt)
     {
-        if(autoMapper!=(Boolean)NConfig.get(NConfig.Key.autoMapper) && NUtils.getGameUI()!=null)
+        if(NUtils.getGameUI()!=null && (autoMapper!=(Boolean)NConfig.get(NConfig.Key.autoMapper) || autoMapper && ((reqTread == null || !reqTread.isAlive()) && (conTread == null || !conTread.isAlive()))))
         {
             autoMapper = (Boolean)NConfig.get(NConfig.Key.autoMapper);
             if(autoMapper)
             {
                 done.set(false);
 
-                new Thread(new Runnable()
+                (reqTread = new Thread(new Runnable()
                 {
                     @Override
                     public void run()
@@ -45,9 +47,9 @@ public class NMappingClient {
                         {
                         }
                     }
-                }, "requestor").start();
+                }, "requestor")).start();
 
-                new Thread(new Runnable()
+                (conTread = new Thread(new Runnable()
                 {
                     @Override
                     public void run()
@@ -60,7 +62,7 @@ public class NMappingClient {
                         {
                         }
                     }
-                }, "connector").start();
+                }, "connector")).start();
             }
             else
             {

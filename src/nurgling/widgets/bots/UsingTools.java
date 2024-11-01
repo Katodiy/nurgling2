@@ -6,6 +6,7 @@ import haven.Label;
 import haven.res.lib.itemtex.ItemTex;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.tools.VSpec;
 import nurgling.widgets.NMakewindow;
 import org.json.JSONObject;
 
@@ -18,6 +19,7 @@ import static haven.Inventory.invsq;
 public class UsingTools extends Widget {
     public static class Tools {
         public static ArrayList<Tool> axes = new ArrayList<>();
+        public static ArrayList<Tool> fishrot = new ArrayList<>();
         public static ArrayList<Tool> pickaxe = new ArrayList<>();
         public static ArrayList<Tool> shovels = new ArrayList<>();
         public static ArrayList<Tool> saw= new ArrayList<>();
@@ -42,7 +44,25 @@ public class UsingTools extends Widget {
             pickaxe.add(new Tool("gfx/invobjs/tinkersthrowingaxe", "Tinker's Axe"));
             pickaxe.add(new Tool("gfx/invobjs/b12axe", "Battle Axe of the Twelfth Bay", "gfx/invobjs/small/b12axe"));
             pickaxe.add(new Tool("gfx/invobjs/pickaxe", "Pickaxe", "gfx/invobjs/small/pickaxe"));
+
+            fishrot.add(new Tool("gfx/invobjs/primrod-l", "Primitive Casting-Rod", "gfx/invobjs/small/primrod-l"));
+            fishrot.add(new Tool("gfx/invobjs/bushpole", "Bushcraft Fishingpole", "gfx/invobjs/small/bushpole"));
+
+
         }
+    }
+
+    public static ArrayList<Tool> initByCategories(String categories) {
+        ArrayList<Tool> tools = new ArrayList<>();
+        ArrayList<JSONObject> data = VSpec.categories.get(categories);
+        if(data!=null)
+        {
+            for(JSONObject obj : data)
+            {
+                tools.add(new Tool(obj.getString("static"), obj.getString("name"), obj.getString("static")));
+            }
+        }
+        return tools;
     }
 
     public static final TexI frame = new TexI(Resource.loadimg("nurgling/hud/iconframe"));
@@ -51,7 +71,7 @@ public class UsingTools extends Widget {
         prev = add(l = new Label("Tool:"));
         if(!showLabel)
             l.hide();
-        sz = prev.sz.add(0,Inventory.sqsz.y).add(UI.scale(0,5));
+        sz = prev.sz.add(0,showLabel?Inventory.sqsz.y:25).add(UI.scale(0,5));
         sz.x = Math.max(Inventory.sqsz.x,sz.x);
     }
 
@@ -59,22 +79,25 @@ public class UsingTools extends Widget {
         this(tools,true);
     }
 
-    final ArrayList<Tool> tools;
+    public void update()
+    {}
+
+    public ArrayList<Tool> tools;
     Label l;
     @Override
     public void draw(GOut g) {
         super.draw(g);
-        g.image(frame, new Coord(0,l.sz.y+UI.scale(5)), UI.scale(32, 32));
+        g.image(frame, new Coord(0,(l.visible?l.sz.y:0)+UI.scale(5)), UI.scale(32, 32));
         if(s!=null)
-            g.image(s.img, new Coord(0,l.sz.y+UI.scale(5)), UI.scale(32, 32));
+            g.image(s.img, new Coord(0,(l.visible?l.sz.y:0)+UI.scale(5)), UI.scale(32, 32));
     }
 
     @Override
     public boolean mousedown(Coord c, int button) {
-        if(c.isect(new Coord(0,l.sz.y+UI.scale(5)),new Coord(sz)))
+        if(c.isect(new Coord(0,(l.visible?l.sz.y:0)+UI.scale(5)),new Coord(sz)))
         {
             avTools = NUtils.getUI().root.add(new AvTools(tools));
-            Coord pos = new Coord(0,l.sz.y+UI.scale(5));
+            Coord pos = new Coord(0,(l.visible?l.sz.y:0)+UI.scale(5));
             Widget par = this;
             while (par!=null && par!=NUtils.getGameUI()) {
                 pos = pos.add(par.c);
@@ -146,6 +169,7 @@ public class UsingTools extends Widget {
                 {
                     pos.x = UI.scale(8);
                     pos = pos.add(0, Inventory.sqsz.y + UI.scale(1));
+                    shift.x = 0;
                 }
             }
             super.draw(g);
@@ -182,6 +206,7 @@ public class UsingTools extends Widget {
                     if(c.isect(pos, invsq.sz()))
                     {
                         s = ing;
+                        update();
                         destroy();
                         avTools = null;
                         return true;
@@ -195,6 +220,7 @@ public class UsingTools extends Widget {
                     {
                         pos.x = UI.scale(8);
                         pos = pos.add(0, Inventory.sqsz.y + UI.scale(1));
+                        shift.x = 0;
                     }
                 }
                 return true;
