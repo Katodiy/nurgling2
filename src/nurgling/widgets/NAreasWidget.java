@@ -214,25 +214,19 @@ public class NAreasWidget extends Window
             for (NArea area : ((NMapView) NUtils.getGameUI().map).glob.map.areas.values()) {
                 if (area.path.equals(path)) {
                     areas.add(new AreaItem(area.name, area));
-                }
-                else if(area.path.startsWith(path))
-                {
+                } else if (area.path.startsWith(path)) {
                     String cand = area.path.substring(path.length());
                     String fname = cand.split("/")[1];
-                    folders.put(fname, new Folder(fname,path));
+                    folders.put(fname, new Folder(fname, path));
                 }
             }
 
 
-            if(!currentPath.isEmpty())
-            {
-                if(currentPath.contains("/"))
-                {
+            if (!currentPath.isEmpty()) {
+                if (currentPath.contains("/")) {
                     String subPath = currentPath.substring(0, currentPath.lastIndexOf("/"));
                     items.add(new AreaItem(subPath));
-                }
-                else
-                {
+                } else {
                     items.add(new AreaItem(""));
                 }
 
@@ -245,6 +239,16 @@ public class NAreasWidget extends Window
             }
             items.addAll(areas);
         }
+            if(!items.isEmpty()) {
+                al.sel = items.get(items.size() - 1);
+                if (al.sel.area != null) {
+                    select(al.sel.area.id);
+                }
+                else
+                {
+                    select();
+                }
+            }
 
     }
 
@@ -495,6 +499,13 @@ public class NAreasWidget extends Window
         in_items.load(id);
         out_items.load(id);
         loadSpec(id);
+    }
+
+    private void select()
+    {
+        in_items.items.clear();
+        out_items.items.clear();
+        specItems.clear();
     }
 
     public void set(int id)

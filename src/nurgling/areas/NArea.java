@@ -57,6 +57,34 @@ public class NArea
         return res;
     }
 
+
+    public static NArea findIn(NAlias name)
+    {
+        double dist = 10000;
+        NArea res = null;
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids)
+            {
+                if(id>0) {
+                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
+                        NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
+                        Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                        if(test.getRCArea()!=null) {
+                            double testdist;
+                            if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                                res = test;
+                                dist = testdist;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
     public static ArrayList<NArea> findAllIn(NAlias name)
     {
         ArrayList<NArea> results = new ArrayList<>();

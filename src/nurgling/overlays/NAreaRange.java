@@ -25,4 +25,9 @@ public class NAreaRange extends NAreaRad {
         if(oldState)
             super.gtick(g);
     }
+
+    @Override
+    public boolean tick(double dt) {
+        return prop.vis;
+    }
 }

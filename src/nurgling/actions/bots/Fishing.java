@@ -125,20 +125,26 @@ public class Fishing implements Action {
                 {
                     if(!new RepairFishingRot(context, prop, repArea, baitsa.getRCArea()).run(gui).IsSuccess())
                         return Results.FAIL();
+                    startFishing(gui, currentPos, fishPlace);
+                    break;
                 }
                 case NOFREESPACE: {
                     new TransferToPiles(outsa.getRCArea(), VSpec.getAllFish()).run(gui);
-                    new PathFinder(currentPos).run(gui);
-                    for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae) {
-                        if (pag.button() != null && pag.button().name().equals("Fish")) {
-                            pag.button().use(new MenuGrid.Interaction(1, 0));
-                        }
-                    }
-                    NUtils.addTask(new GetCurs("fish"));
-                    NUtils.lclick(fishPlace);
-                    NUtils.addTask(new WaitPose(NUtils.player(),"fish"));
+                    startFishing(gui, currentPos, fishPlace);
                 }
             }
         }
+    }
+
+    private void startFishing(NGameUI gui, Coord2d currentPos, Coord2d fishPlace) throws InterruptedException {
+        new PathFinder(currentPos).run(gui);
+        for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae) {
+            if (pag.button() != null && pag.button().name().equals("Fish")) {
+                pag.button().use(new MenuGrid.Interaction(1, 0));
+            }
+        }
+        NUtils.addTask(new GetCurs("fish"));
+        NUtils.lclick(fishPlace);
+        NUtils.addTask(new WaitPose(NUtils.player(),"fish"));
     }
 }

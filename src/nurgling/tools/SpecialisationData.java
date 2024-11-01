@@ -13,6 +13,8 @@ public class SpecialisationData {
         data.put("seed",crops);
         ArrayList<String> fuel = new ArrayList<>(Arrays.asList("Branch", "Coal", "Block", "Log"));
         data.put("fuel",fuel);
+        ArrayList<String> htable = new ArrayList<>(Arrays.asList("Pipeweed", "Green Tea Leaves", "Black Tea Leaves"));
+        data.put("htable",htable);
         ArrayList<String> barrel = new ArrayList<>(Arrays.asList("Quicksilver"));
         data.put("barrel",barrel);
     }

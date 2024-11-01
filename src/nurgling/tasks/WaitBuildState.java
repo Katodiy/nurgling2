@@ -31,7 +31,7 @@ public class WaitBuildState implements NTask
             state = State.DANGER;
         } else if (NUtils.getStamina() <= 0.45) {
             state = State.TIMEFORDRINK;
-        } else if (NParser.checkName(player.pose(), "gfx/borka/idle")) {
+        } else if (NUtils.getGameUI().prog==null) {
             state = State.READY;
         }
         return state != State.WORKING;
