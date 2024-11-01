@@ -300,17 +300,17 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             }
             if (NUtils.getGameUI().chrwdg != null)
             {
-                if (NUtils.getGameUI().chrwdg.battr.cons.els.size() > 0)
+
+                for (int type : types)
                 {
-                    for (int type : types)
-                    {
+                    if(NUtils.getGameUI().chrwdg.battr.cons.els.size()>type) {
                         BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(type);
-                        if (c != null)
-                        {
+                        if (c != null) {
                             efficiency = c.a * 100;
                         }
                     }
                 }
+
             }
             calcData();
         }
