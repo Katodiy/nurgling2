@@ -561,7 +561,400 @@ public class VSpec {
         boxwoodOp.add("Boxwood Seeds"); // Плоды
         object.put("gfx/terobjs/bushes/boxwood", boxwoodOp);
 
+        ArrayList<String> acaciaOp_log = new ArrayList<>();
+        acaciaOp_log.add("Acacia Board"); // Доска
+        acaciaOp_log.add("Acacia Block"); // Блок
+        object.put("gfx/terobjs/trees/acacialog", acaciaOp_log);
 
+        ArrayList<String> alderOp_log = new ArrayList<>();
+        alderOp_log.add("Alder Board"); // Доска
+        alderOp_log.add("Alder Block"); // Блок
+        object.put("gfx/terobjs/trees/alderlog", alderOp_log);
+
+        ArrayList<String> almondOp_log = new ArrayList<>();
+        almondOp_log.add("Almond Board"); // Доска
+        almondOp_log.add("Almond Block"); // Блок
+        object.put("gfx/terobjs/trees/almondtreelog", almondOp_log);
+
+        ArrayList<String> appleOp_log = new ArrayList<>();
+        appleOp_log.add("Apple Board"); // Доска
+        appleOp_log.add("Apple Block"); // Блок
+        object.put("gfx/terobjs/trees/appletreelog", appleOp_log);
+
+        ArrayList<String> ashOp_log = new ArrayList<>();
+        ashOp_log.add("Ash Board"); // Доска
+        ashOp_log.add("Ash Block"); // Блок
+        object.put("gfx/terobjs/trees/ashlog", ashOp_log);
+
+        ArrayList<String> aspenOp_log = new ArrayList<>();
+        aspenOp_log.add("Aspen Board"); // Доска
+        aspenOp_log.add("Aspen Block"); // Блок
+        object.put("gfx/terobjs/trees/aspenlog", aspenOp_log);
+
+        ArrayList<String> baywillowOp_log = new ArrayList<>();
+        baywillowOp_log.add("Bay Willow Board"); // Доска
+        baywillowOp_log.add("Bay Willow Block"); // Блок
+        object.put("gfx/terobjs/trees/baywillowlog", baywillowOp_log);
+
+        ArrayList<String> beechOp_log = new ArrayList<>();
+        beechOp_log.add("Beech Board"); // Доска
+        beechOp_log.add("Beech Block"); // Блок
+        object.put("gfx/terobjs/trees/beechlog", beechOp_log);
+
+        ArrayList<String> birchOp_log = new ArrayList<>();
+        birchOp_log.add("Birch Board"); // Доска
+        birchOp_log.add("Birch Block"); // Блок
+        object.put("gfx/terobjs/trees/birchlog", birchOp_log);
+
+        ArrayList<String> birdcherryOp_log = new ArrayList<>();
+        birdcherryOp_log.add("Birdcherry Board"); // Доска
+        birdcherryOp_log.add("Bird Cherry Block"); // Блок
+        object.put("gfx/terobjs/trees/birdcherrytreelog", birdcherryOp_log);
+
+        ArrayList<String> blackpineOp_log = new ArrayList<>();
+        blackpineOp_log.add("Black Pine Board"); // Доска
+        blackpineOp_log.add("Black Pine Block"); // Блок
+        object.put("gfx/terobjs/trees/blackpinelog", blackpineOp_log);
+
+        ArrayList<String> blackpOp_loglarOp_log = new ArrayList<>();
+        blackpOp_loglarOp_log.add("Black POp_loglar Board"); // Доска
+        blackpOp_loglarOp_log.add("Black POp_loglar Block"); // Блок
+        object.put("gfx/terobjs/trees/blackpOp_loglarlog", blackpOp_loglarOp_log);
+
+        ArrayList<String> briarwoodOp_log = new ArrayList<>();
+        briarwoodOp_log.add("Briarwood Board (Heath)"); // Доска
+        briarwoodOp_log.add("Tree Heath Block"); // Блок
+        object.put("gfx/terobjs/trees/treeheathlog", briarwoodOp_log);
+
+        ArrayList<String> buckthornOp_log = new ArrayList<>();
+        buckthornOp_log.add("Buckthorn Board"); // Доска
+        buckthornOp_log.add("Buckthorn Block"); // Блок
+        object.put("gfx/terobjs/trees/buckthornlog", buckthornOp_log);
+
+        ArrayList<String> carobOp_log = new ArrayList<>();
+        carobOp_log.add("Carob Board"); // Доска
+        carobOp_log.add("Carob Block"); // Блок
+        object.put("gfx/terobjs/trees/carobtreelog", carobOp_log);
+
+        ArrayList<String> cedarOp_log = new ArrayList<>();
+        cedarOp_log.add("Cedar Board"); // Доска
+        cedarOp_log.add("Cedar Block"); // Блок
+        object.put("gfx/terobjs/trees/cedarlog", cedarOp_log);
+
+        ArrayList<String> charredOp_log = new ArrayList<>();
+        charredOp_log.add("Charred Board (Valhalla)"); // Доска
+        charredOp_log.add("Charred Block"); // Блок
+        object.put("gfx/terobjs/trees/charredtreelog", charredOp_log);
+
+        ArrayList<String> chasteOp_log = new ArrayList<>();
+        chasteOp_log.add("Chaste Board"); // Доска
+        chasteOp_log.add("Chaste Tree Block"); // Блок
+        object.put("gfx/terobjs/trees/chastetreelog", chasteOp_log);
+
+        ArrayList<String> checkerOp_log = new ArrayList<>();
+        checkerOp_log.add("Checker Board"); // Доска
+        checkerOp_log.add("Checker Tree Block"); // Блок
+        object.put("gfx/terobjs/trees/checkertreelog", checkerOp_log);
+
+        ArrayList<String> cherryOp_log = new ArrayList<>();
+        cherryOp_log.add("Cherry Board"); // Доска
+        cherryOp_log.add("Cherry Block"); // Блок
+        object.put("gfx/terobjs/trees/cherrylog", cherryOp_log);
+
+        ArrayList<String> chestnutOp_log = new ArrayList<>();
+        chestnutOp_log.add("Chestnut Board"); // Доска
+        chestnutOp_log.add("Chestnut Block"); // Блок
+        object.put("gfx/terobjs/trees/chestnuttreelog", chestnutOp_log);
+
+        ArrayList<String> conkerOp_log = new ArrayList<>();
+        conkerOp_log.add("Conker Board"); // Доска
+        conkerOp_log.add("Conker Block"); // Блок
+        object.put("gfx/terobjs/trees/conkertreelog", conkerOp_log);
+
+        ArrayList<String> corkOakOp_log = new ArrayList<>();
+        corkOakOp_log.add("Cork Oak Board"); // Доска
+        corkOakOp_log.add("Cork Oak Block"); // Блок
+        object.put("gfx/terobjs/trees/corkoaklog", corkOakOp_log);
+
+        ArrayList<String> crabappleOp_log = new ArrayList<>();
+        crabappleOp_log.add("Crabapple Board"); // Доска
+        crabappleOp_log.add("Crabapple Block"); // Блок
+        object.put("gfx/terobjs/trees/crabappletreelog", crabappleOp_log);
+
+        ArrayList<String> cypressOp_log = new ArrayList<>();
+        cypressOp_log.add("Cypress Board"); // Доска
+        cypressOp_log.add("Cypress Block"); // Блок
+        object.put("gfx/terobjs/trees/cypresslog", cypressOp_log);
+
+        ArrayList<String> dogwoodOp_log = new ArrayList<>();
+        dogwoodOp_log.add("Dogwood Board"); // Доска
+        dogwoodOp_log.add("Dogwood Block"); // Блок
+        object.put("gfx/terobjs/trees/dogwoodlog", dogwoodOp_log);
+
+        ArrayList<String> dwarfpineOp_log = new ArrayList<>();
+        dwarfpineOp_log.add("Dwarf Pine Board"); // Доска
+        dwarfpineOp_log.add("Dwarf Pine Block"); // Блок
+        object.put("gfx/terobjs/trees/dwarfpinelog", dwarfpineOp_log);
+
+        ArrayList<String> elmOp_log = new ArrayList<>();
+        elmOp_log.add("Elm Board"); // Доска
+        elmOp_log.add("Elm Block"); // Блок
+        object.put("gfx/terobjs/trees/elmlog", elmOp_log);
+
+        ArrayList<String> figOp_log = new ArrayList<>();
+        figOp_log.add("Fig Board"); // Доска
+        figOp_log.add("Fig Block"); // Блок
+        object.put("gfx/terobjs/trees/figtreelog", figOp_log);
+
+        ArrayList<String> firOp_log = new ArrayList<>();
+        firOp_log.add("Fir Board"); // Доска
+        firOp_log.add("Fir Block"); // Блок
+        object.put("gfx/terobjs/trees/firlog", firOp_log);
+
+        ArrayList<String> gloomcapOp_log = new ArrayList<>();
+        gloomcapOp_log.add("Gloomcap Board"); // Доска
+        gloomcapOp_log.add("Gloomcap Block"); // Блок
+        object.put("gfx/terobjs/trees/gloomcaplog", gloomcapOp_log);
+
+        ArrayList<String> gnomeshatOp_log = new ArrayList<>();
+        gnomeshatOp_log.add("Gnome's Hat Board"); // Доска
+        gnomeshatOp_log.add("Gnome's Hat Block"); // Блок
+        object.put("gfx/terobjs/trees/gnomeshatlog", gnomeshatOp_log);
+
+        ArrayList<String> goldenchainOp_log = new ArrayList<>();
+        goldenchainOp_log.add("Golden-chain Board"); // Доска
+        goldenchainOp_log.add("Golden Chain Block"); // Блок
+        object.put("gfx/terobjs/trees/goldenchainlog", goldenchainOp_log);
+
+        ArrayList<String> grayalderOp_log = new ArrayList<>();
+        grayalderOp_log.add("Gray Alder Board"); // Доска
+        grayalderOp_log.add("Gray Alder Block"); // Блок
+        object.put("gfx/terobjs/trees/grayalderlog", grayalderOp_log);
+
+        ArrayList<String> hazelOp_log = new ArrayList<>();
+        hazelOp_log.add("Hazel Board"); // Доска
+        hazelOp_log.add("Hazel Block"); // Блок
+        object.put("gfx/terobjs/trees/hazellog", hazelOp_log);
+
+        ArrayList<String> hornbeamOp_log = new ArrayList<>();
+        hornbeamOp_log.add("Hornbeam Board"); // Доска
+        hornbeamOp_log.add("Hornbeam Block"); // Блок
+        object.put("gfx/terobjs/trees/hornbeamlog", hornbeamOp_log);
+
+        ArrayList<String> juniperOp_log = new ArrayList<>();
+        juniperOp_log.add("Juniper Board"); // Доска
+        juniperOp_log.add("Juniper Block"); // Блок
+        object.put("gfx/terobjs/trees/juniperlog", juniperOp_log);
+
+        ArrayList<String> kingsoakOp_log = new ArrayList<>();
+        kingsoakOp_log.add("King's Oak Board"); // Доска
+        kingsoakOp_log.add("King's Oak Block"); // Блок
+        object.put("gfx/terobjs/trees/kingsoaklog", kingsoakOp_log);
+
+        ArrayList<String> larchOp_log = new ArrayList<>();
+        larchOp_log.add("Larch Board"); // Доска
+        larchOp_log.add("Larch Block"); // Блок
+        object.put("gfx/terobjs/trees/larchlog", larchOp_log);
+
+        ArrayList<String> laurelOp_log = new ArrayList<>();
+        laurelOp_log.add("Laurel Board"); // Доска
+        laurelOp_log.add("Laurel Block"); // Блок
+        object.put("gfx/terobjs/trees/laurellog", laurelOp_log);
+
+        ArrayList<String> lemonOp_log = new ArrayList<>();
+        lemonOp_log.add("Lemon Board"); // Доска
+        lemonOp_log.add("Lemon Block"); // Блок
+        object.put("gfx/terobjs/trees/lemontreelog", lemonOp_log);
+
+        ArrayList<String> lindenOp_log = new ArrayList<>();
+        lindenOp_log.add("Linden Board"); // Доска
+        lindenOp_log.add("Linden Block"); // Блок
+        object.put("gfx/terobjs/trees/lindenlog", lindenOp_log);
+
+        ArrayList<String> loteOp_log = new ArrayList<>();
+        loteOp_log.add("Lote Board"); // Доска
+        loteOp_log.add("Lote Tree Block"); // Блок
+        object.put("gfx/terobjs/trees/lotetreelog", loteOp_log);
+
+        ArrayList<String> mapleOp_log = new ArrayList<>();
+        mapleOp_log.add("Maple Board"); // Доска
+        mapleOp_log.add("Maple Block"); // Блок
+        object.put("gfx/terobjs/trees/maplelog", mapleOp_log);
+
+        ArrayList<String> mayflowerOp_log = new ArrayList<>();
+        mayflowerOp_log.add("Mayflower Board"); // Доска
+        mayflowerOp_log.add("Mayflower Block"); // Блок
+        object.put("gfx/terobjs/trees/mayflowerlog", mayflowerOp_log);
+
+        ArrayList<String> medlarOp_log = new ArrayList<>();
+        medlarOp_log.add("Medlar Board"); // Доска
+        medlarOp_log.add("Medlar Block"); // Блок
+        object.put("gfx/terobjs/trees/medlartreelog", medlarOp_log);
+
+        ArrayList<String> moundOp_log = new ArrayList<>();
+        moundOp_log.add("Mound Board"); // Доска
+        moundOp_log.add("Mound Block"); // Блок
+        object.put("gfx/terobjs/trees/moundtreelog", moundOp_log);
+
+        ArrayList<String> mulberryOp_log = new ArrayList<>();
+        mulberryOp_log.add("Mulberry Board"); // Доска
+        mulberryOp_log.add("Mulberry Block"); // Блок
+        object.put("gfx/terobjs/trees/mulberrylog", mulberryOp_log);
+
+        ArrayList<String> oakOp_log = new ArrayList<>();
+        oakOp_log.add("Oak Board"); // Доска
+        oakOp_log.add("Oak Block"); // Блок
+        object.put("gfx/terobjs/trees/oaklog", oakOp_log);
+
+        ArrayList<String> oliveOp_log = new ArrayList<>();
+        oliveOp_log.add("Olive Board"); // Доска
+        oliveOp_log.add("Olive Block"); // Блок
+        object.put("gfx/terobjs/trees/olivetreelog", oliveOp_log);
+
+        ArrayList<String> orangeOp_log = new ArrayList<>();
+        orangeOp_log.add("Orange Board"); // Доска
+        orangeOp_log.add("Orange Block"); // Блок
+        object.put("gfx/terobjs/trees/orangetreelog", orangeOp_log);
+
+        ArrayList<String> osierOp_log = new ArrayList<>();
+        osierOp_log.add("Osier Board"); // Доска
+        osierOp_log.add("Osier Block"); // Блок
+        object.put("gfx/terobjs/trees/osierlog", osierOp_log);
+
+        ArrayList<String> pearOp_log = new ArrayList<>();
+        pearOp_log.add("Pear Board"); // Доска
+        pearOp_log.add("Pear Block"); // Блок
+        object.put("gfx/terobjs/trees/peartreelog", pearOp_log);
+
+        ArrayList<String> persimmonOp_log = new ArrayList<>();
+        persimmonOp_log.add("Persimmon Board"); // Доска
+        persimmonOp_log.add("Persimmon Block"); // Блок
+        object.put("gfx/terobjs/trees/persimmontreelog", persimmonOp_log);
+
+        ArrayList<String> pineOp_log = new ArrayList<>();
+        pineOp_log.add("Pine Board"); // Доска
+        pineOp_log.add("Pine Block"); // Блок
+        object.put("gfx/terobjs/trees/pinelog", pineOp_log);
+
+        ArrayList<String> planeOp_log = new ArrayList<>();
+        planeOp_log.add("Plane Board"); // Доска
+        planeOp_log.add("Plane Block"); // Блок
+        object.put("gfx/terobjs/trees/planetreelog", planeOp_log);
+
+        ArrayList<String> plumOp_log = new ArrayList<>();
+        plumOp_log.add("Plum Board"); // Доска
+        plumOp_log.add("Plum Block"); // Блок
+        object.put("gfx/terobjs/trees/plumtreelog", plumOp_log);
+
+        ArrayList<String> pOp_loglarOp_log = new ArrayList<>();
+        pOp_loglarOp_log.add("POp_loglar Board"); // Доска
+        pOp_loglarOp_log.add("POp_loglar Block"); // Блок
+        object.put("gfx/terobjs/trees/pOp_loglarlog", pOp_loglarOp_log);
+
+        ArrayList<String> quinceOp_log = new ArrayList<>();
+        quinceOp_log.add("Quince Board"); // Доска
+        quinceOp_log.add("Quince Block"); // Блок
+        object.put("gfx/terobjs/trees/quincetreelog", quinceOp_log);
+
+        ArrayList<String> rowanOp_log = new ArrayList<>();
+        rowanOp_log.add("Rowan Board"); // Доска
+        rowanOp_log.add("Rowan Block"); // Блок
+        object.put("gfx/terobjs/trees/rowanlog", rowanOp_log);
+
+        ArrayList<String> sallowOp_log = new ArrayList<>();
+        sallowOp_log.add("Sallow Board"); // Доска
+        sallowOp_log.add("Sallow Block"); // Блок
+        object.put("gfx/terobjs/trees/sallowlog", sallowOp_log);
+
+        ArrayList<String> silverfirOp_log = new ArrayList<>();
+        silverfirOp_log.add("Silver Fir Board"); // Доска
+        silverfirOp_log.add("Silver Fir Block"); // Блок
+        object.put("gfx/terobjs/trees/silverfirlog", silverfirOp_log);
+
+        ArrayList<String> sorbOp_log = new ArrayList<>();
+        sorbOp_log.add("Sorb Board"); // Доска
+        sorbOp_log.add("Sorb Block"); // Блок
+        object.put("gfx/terobjs/trees/sorbtreelog", sorbOp_log);
+
+        ArrayList<String> spruceOp_log = new ArrayList<>();
+        spruceOp_log.add("Spruce Board"); // Доска
+        spruceOp_log.add("Spruce Block"); // Блок
+        object.put("gfx/terobjs/trees/sprucelog", spruceOp_log);
+
+        ArrayList<String> stonepineOp_log = new ArrayList<>();
+        stonepineOp_log.add("Stone Pine Board"); // Доска
+        stonepineOp_log.add("Stone Pine Block"); // Блок
+        object.put("gfx/terobjs/trees/stonepinelog", stonepineOp_log);
+
+        ArrayList<String> sweetgumOp_log = new ArrayList<>();
+        sweetgumOp_log.add("Sweetgum Board"); // Доска
+        sweetgumOp_log.add("Sweetgum Block"); // Блок
+        object.put("gfx/terobjs/trees/sweetgumlog", sweetgumOp_log);
+
+        ArrayList<String> sycamoreOp_log = new ArrayList<>();
+        sycamoreOp_log.add("Sycamore Board"); // Доска
+        sycamoreOp_log.add("Sycamore Block"); // Блок
+        object.put("gfx/terobjs/trees/sycamorelog", sycamoreOp_log);
+
+        ArrayList<String> tamariskOp_log = new ArrayList<>();
+        tamariskOp_log.add("Tamarisk Board"); // Доска
+        tamariskOp_log.add("Tamarisk Block"); // Блок
+        object.put("gfx/terobjs/trees/tamarisklog", tamariskOp_log);
+
+        ArrayList<String> terebinthOp_log = new ArrayList<>();
+        terebinthOp_log.add("Terebinth Board"); // Доска
+        terebinthOp_log.add("Terebinth Block"); // Блок
+        object.put("gfx/terobjs/trees/terebinthlog", terebinthOp_log);
+
+        ArrayList<String> towercapOp_log = new ArrayList<>();
+        towercapOp_log.add("Towercap Board"); // Доска
+        towercapOp_log.add("Towercap Block"); // Блок
+        object.put("gfx/terobjs/trees/towercaplog", towercapOp_log);
+
+        ArrayList<String> trombonechantrelleOp_log = new ArrayList<>();
+        trombonechantrelleOp_log.add("Trumpet Chantrelle Board"); // Доска
+        trombonechantrelleOp_log.add("Trombone Chantrelle Block"); // Блок
+        object.put("gfx/terobjs/trees/trombonechantrellelog", trombonechantrelleOp_log);
+
+        ArrayList<String> walnutOp_log = new ArrayList<>();
+        walnutOp_log.add("Walnut Board"); // Доска
+        walnutOp_log.add("Walnut Block"); // Блок
+        object.put("gfx/terobjs/trees/walnuttreelog", walnutOp_log);
+
+        ArrayList<String> wartybirchOp_log = new ArrayList<>();
+        wartybirchOp_log.add("Warty Birch Board"); // Доска
+        wartybirchOp_log.add("Warty Birch Block"); // Блок
+        object.put("gfx/terobjs/trees/wartybirchlog", wartybirchOp_log);
+
+        ArrayList<String> whitebeamOp_log = new ArrayList<>();
+        whitebeamOp_log.add("Whitebeam Board"); // Доска
+        whitebeamOp_log.add("Whitebeam Block"); // Блок
+        object.put("gfx/terobjs/trees/whitebeamlog", whitebeamOp_log);
+
+        ArrayList<String> willowOp_log = new ArrayList<>();
+        willowOp_log.add("Willow Board"); // Доска
+        willowOp_log.add("Willow Block"); // Блок
+        object.put("gfx/terobjs/trees/willowlog", willowOp_log);
+
+        ArrayList<String> woodStrawberryOp_log = new ArrayList<>();
+        woodStrawberryOp_log.add("Wood Strawberry Board"); // Доска
+        woodStrawberryOp_log.add("Wood Strawberry Block"); // Блок
+        object.put("gfx/terobjs/trees/strawberrytreelog", woodStrawberryOp_log);
+
+        ArrayList<String> wychelmOp_log = new ArrayList<>();
+        wychelmOp_log.add("Wych Elm Board"); // Доска
+        wychelmOp_log.add("Wych Elm Block"); // Блок
+        object.put("gfx/terobjs/trees/wychelmlog", wychelmOp_log);
+
+        ArrayList<String> yewOp_log = new ArrayList<>();
+        yewOp_log.add("Yew Board"); // Доска
+        yewOp_log.add("Yew Block"); // Блок
+        object.put("gfx/terobjs/trees/yewlog", yewOp_log);
+
+        ArrayList<String> zelkovaOp_log = new ArrayList<>();
+        zelkovaOp_log.add("Zelkova Board"); // Доска
+        zelkovaOp_log.add("Zelkova Block"); // Блок
+        object.put("gfx/terobjs/trees/zelkovalog", zelkovaOp_log);
     }
 
     static {
