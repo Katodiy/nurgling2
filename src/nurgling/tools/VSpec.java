@@ -955,6 +955,242 @@ public class VSpec {
         zelkovaOp_log.add("Zelkova Board"); // Доска
         zelkovaOp_log.add("Zelkova Block"); // Блок
         object.put("gfx/terobjs/trees/zelkovalog", zelkovaOp_log);
+        ArrayList<String> alabasterOp = new ArrayList<>();
+        alabasterOp.add("Alabaster"); // Камень
+        object.put("gfx/terobjs/bumlings/alabaster", alabasterOp);
+
+        ArrayList<String> apatiteOp = new ArrayList<>();
+        apatiteOp.add("Apatite"); // Камень
+        object.put("gfx/terobjs/bumlings/apatite", apatiteOp);
+
+        ArrayList<String> arkoseOp = new ArrayList<>();
+        arkoseOp.add("Arkose"); // Камень
+        object.put("gfx/terobjs/bumlings/arkose", arkoseOp);
+
+        ArrayList<String> basaltOp = new ArrayList<>();
+        basaltOp.add("Basalt"); // Камень
+        object.put("gfx/terobjs/bumlings/basalt", basaltOp);
+
+        ArrayList<String> blackcoalOp = new ArrayList<>();
+        blackcoalOp.add("Black Coal"); // Камень
+        object.put("gfx/terobjs/bumlings/blackcoal", blackcoalOp);
+
+        ArrayList<String> magnetiteOp = new ArrayList<>();
+        magnetiteOp.add("Magnetite"); // Камень
+        object.put("gfx/terobjs/bumlings/magnetite", magnetiteOp);
+
+        ArrayList<String> hematiteOp = new ArrayList<>();
+        hematiteOp.add("Blood Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/hematite", hematiteOp);
+
+        ArrayList<String> brecciaOp = new ArrayList<>();
+        brecciaOp.add("Breccia"); // Камень
+        object.put("gfx/terobjs/bumlings/breccia", brecciaOp);
+
+        ArrayList<String> cassiteriteOp = new ArrayList<>();
+        cassiteriteOp.add("Cassiterite"); // Камень
+        object.put("gfx/terobjs/bumlings/cassiterite", cassiteriteOp);
+
+        ArrayList<String> chalcopyriteOp = new ArrayList<>();
+        chalcopyriteOp.add("Chalcopyrite"); // Камень
+        object.put("gfx/terobjs/bumlings/chalcopyrite", chalcopyriteOp);
+
+        ArrayList<String> chertOp = new ArrayList<>();
+        chertOp.add("Chert"); // Камень
+        object.put("gfx/terobjs/bumlings/chert", chertOp);
+
+        ArrayList<String> cinnabarOp = new ArrayList<>();
+        cinnabarOp.add("Cinnabar"); // Камень
+        object.put("gfx/terobjs/bumlings/cinnabar", cinnabarOp);
+
+        ArrayList<String> diabaseOp = new ArrayList<>();
+        diabaseOp.add("Diabase"); // Камень
+        object.put("gfx/terobjs/bumlings/diabase", diabaseOp);
+
+        ArrayList<String> dioriteOp = new ArrayList<>();
+        dioriteOp.add("Diorite"); // Камень
+        object.put("gfx/terobjs/bumlings/diorite", dioriteOp);
+
+        ArrayList<String> petziteOp = new ArrayList<>();
+        petziteOp.add("Direvein Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/petzite", petziteOp);
+
+        ArrayList<String> dolomiteOp = new ArrayList<>();
+        dolomiteOp.add("Dolomite"); // Камень
+        object.put("gfx/terobjs/bumlings/dolomite", dolomiteOp);
+
+        ArrayList<String> eclogiteOp = new ArrayList<>();
+        eclogiteOp.add("Eclogite"); // Камень
+        object.put("gfx/terobjs/bumlings/eclogite", eclogiteOp);
+
+        ArrayList<String> feldsparOp = new ArrayList<>();
+        feldsparOp.add("Feldspar"); // Камень
+        object.put("gfx/terobjs/bumlings/feldspar", feldsparOp);
+
+        ArrayList<String> flintOp = new ArrayList<>();
+        flintOp.add("Flint"); // Камень
+        object.put("gfx/terobjs/bumlings/flint", flintOp);
+
+        ArrayList<String> fluorosparOp = new ArrayList<>();
+        fluorosparOp.add("Fluorospar"); // Камень
+        object.put("gfx/terobjs/bumlings/fluorospar", fluorosparOp);
+
+        ArrayList<String> gabbroOp = new ArrayList<>();
+        gabbroOp.add("Gabbro"); // Камень
+        object.put("gfx/terobjs/bumlings/gabbro", gabbroOp);
+
+        ArrayList<String> galenaOp = new ArrayList<>();
+        galenaOp.add("Galena"); // Камень
+        object.put("gfx/terobjs/bumlings/galena", galenaOp);
+
+        ArrayList<String> gneissOp = new ArrayList<>();
+        gneissOp.add("Gneiss"); // Камень
+        object.put("gfx/terobjs/bumlings/gneiss", gneissOp);
+
+        ArrayList<String> graniteOp = new ArrayList<>();
+        graniteOp.add("Granite"); // Камень
+        object.put("gfx/terobjs/bumlings/granite", graniteOp);
+
+        ArrayList<String> graywackeOp = new ArrayList<>();
+        graywackeOp.add("Graywacke"); // Камень
+        object.put("gfx/terobjs/bumlings/graywacke", graywackeOp);
+
+        ArrayList<String> greenschistOp = new ArrayList<>();
+        greenschistOp.add("Greenschist"); // Камень
+        object.put("gfx/terobjs/bumlings/greenschist", greenschistOp);
+
+        ArrayList<String> ilmeniteOp = new ArrayList<>();
+        ilmeniteOp.add("Heavy Earth Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/ilmenite", ilmeniteOp);
+
+//        ArrayList<String> hornsilverOp = new ArrayList<>();
+//        hornsilverOp.add("Horn Silver"); // Камень
+//        object.put("gfx/terobjs/bumlings/hornsilver", hornsilverOp);
+
+        ArrayList<String> hornblendeOp = new ArrayList<>();
+        hornblendeOp.add("Hornblende"); // Камень
+        object.put("gfx/terobjs/bumlings/hornblende", hornblendeOp);
+
+//        ArrayList<String> limoniteOp = new ArrayList<>();
+//        limoniteOp.add("Iron Ochre Ore"); // Камень
+//        object.put("gfx/terobjs/bumlings/limonite", limoniteOp);
+
+        ArrayList<String> jasperOp = new ArrayList<>();
+        jasperOp.add("Jasper"); // Камень
+        object.put("gfx/terobjs/bumlings/jasper", jasperOp);
+
+        ArrayList<String> kyaniteOp = new ArrayList<>();
+        kyaniteOp.add("Kyanite"); // Камень
+        object.put("gfx/terobjs/bumlings/kyanite", kyaniteOp);
+
+        ArrayList<String> lavarockOp = new ArrayList<>();
+        lavarockOp.add("Lava Rock"); // Камень
+        object.put("gfx/terobjs/bumlings/lavarock", lavarockOp);
+
+        ArrayList<String> leadglanceOp = new ArrayList<>();
+        leadglanceOp.add("Lead Glance"); // Камень
+        object.put("gfx/terobjs/bumlings/leadglance", leadglanceOp);
+
+//        ArrayList<String> nagyagiteOp = new ArrayList<>();
+//        nagyagiteOp.add("Leaf Ore"); // Камень
+//        object.put("gfx/terobjs/bumlings/nagyagite", nagyagiteOp);
+
+        ArrayList<String> limestoneOp = new ArrayList<>();
+        limestoneOp.add("Limestone"); // Камень
+        object.put("gfx/terobjs/bumlings/limestone", limestoneOp);
+
+        ArrayList<String> malachiteOp = new ArrayList<>();
+        malachiteOp.add("Malachite"); // Камень
+        object.put("gfx/terobjs/bumlings/malachite", malachiteOp);
+
+        ArrayList<String> marbleOp = new ArrayList<>();
+        marbleOp.add("Marble"); // Камень
+        object.put("gfx/terobjs/bumlings/marble", marbleOp);
+
+        ArrayList<String> micaOp = new ArrayList<>();
+        micaOp.add("Mica"); // Камень
+        object.put("gfx/terobjs/bumlings/mica", micaOp);
+
+        ArrayList<String> microliteOp = new ArrayList<>();
+        microliteOp.add("Microlite"); // Камень
+        object.put("gfx/terobjs/bumlings/microlite", microliteOp);
+
+        ArrayList<String> olivineOp = new ArrayList<>();
+        olivineOp.add("Olivine"); // Камень
+        object.put("gfx/terobjs/bumlings/olivine", olivineOp);
+
+        ArrayList<String> orthoclaseOp = new ArrayList<>();
+        orthoclaseOp.add("Orthoclase"); // Камень
+        object.put("gfx/terobjs/bumlings/orthoclase", orthoclaseOp);
+
+        ArrayList<String> peacockoreOp = new ArrayList<>();
+        peacockoreOp.add("Peacock Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/peacockore", peacockoreOp);
+
+        ArrayList<String> pegmatiteOp = new ArrayList<>();
+        pegmatiteOp.add("Pegmatite"); // Камень
+        object.put("gfx/terobjs/bumlings/pegmatite", pegmatiteOp);
+
+        ArrayList<String> porphyryOp = new ArrayList<>();
+        porphyryOp.add("Porphyry"); // Камень
+        object.put("gfx/terobjs/bumlings/porphyry", porphyryOp);
+
+        ArrayList<String> pumiceOp = new ArrayList<>();
+        pumiceOp.add("Pumice"); // Камень
+        object.put("gfx/terobjs/bumlings/pumice", pumiceOp);
+
+        ArrayList<String> quartzOp = new ArrayList<>();
+        quartzOp.add("Quartz"); // Камень
+        object.put("gfx/terobjs/bumlings/quartz", quartzOp);
+
+        ArrayList<String> rhyoliteOp = new ArrayList<>();
+        rhyoliteOp.add("Rhyolite"); // Камень
+        object.put("gfx/terobjs/bumlings/rhyolite", rhyoliteOp);
+
+        ArrayList<String> sandstoneOp = new ArrayList<>();
+        sandstoneOp.add("Sandstone"); // Камень
+        object.put("gfx/terobjs/bumlings/sandstone", sandstoneOp);
+
+        ArrayList<String> schistOp = new ArrayList<>();
+        schistOp.add("Schist"); // Камень
+        object.put("gfx/terobjs/bumlings/schist", schistOp);
+
+//        ArrayList<String> sylvaniteOp = new ArrayList<>();
+//        sylvaniteOp.add("Schrifterz Ore"); // Камень
+//        object.put("gfx/terobjs/bumlings/sylvanite", sylvaniteOp);
+
+        ArrayList<String> serpentineOp = new ArrayList<>();
+        serpentineOp.add("Serpentine"); // Камень
+        object.put("gfx/terobjs/bumlings/serpentine", serpentineOp);
+
+        ArrayList<String> argentiteOp = new ArrayList<>();
+        argentiteOp.add("Silvershine Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/argentite", argentiteOp);
+
+        ArrayList<String> slateOp = new ArrayList<>();
+        slateOp.add("Slate"); // Камень
+        object.put("gfx/terobjs/bumlings/slate", slateOp);
+
+        ArrayList<String> soapstoneOp = new ArrayList<>();
+        soapstoneOp.add("Soapstone"); // Камень
+        object.put("gfx/terobjs/bumlings/soapstone", soapstoneOp);
+
+        ArrayList<String> sodaliteOp = new ArrayList<>();
+        sodaliteOp.add("Sodalite"); // Камень
+        object.put("gfx/terobjs/bumlings/sodalite", sodaliteOp);
+
+        ArrayList<String> sunstoneOp = new ArrayList<>();
+        sunstoneOp.add("Sunstone"); // Камень
+        object.put("gfx/terobjs/bumlings/sunstone", sunstoneOp);
+
+        ArrayList<String> cupriteOp = new ArrayList<>();
+        cupriteOp.add("Wine Glance Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/cuprite", cupriteOp);
+
+        ArrayList<String> zincsparOp = new ArrayList<>();
+        zincsparOp.add("Zincspar"); // Камень
+        object.put("gfx/terobjs/bumlings/zincspar", zincsparOp);
+
     }
 
     static {
