@@ -2083,7 +2083,7 @@ public class VSpec {
         categories.put("Fine Clay", fineClays);
 
         ArrayList<JSONObject> anyBricks = new ArrayList<>();
-        anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-ball\",\"name\":\"Ball Brick\"}"));
+        anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-ball\",\"name\":\"Brick\"}"));
         anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-acre\",\"name\":\"Acre Brick\"}"));
         anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-gray\",\"name\":\"Gray Brick\"}"));
         anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-cave\",\"name\":\"Cave Brick\"}"));

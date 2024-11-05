@@ -323,11 +323,12 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         {
             if(NUtils.getGameUI().chrwdg.battr.cons.els.isEmpty())
                 return null;
-            BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(type);
-            if (c != null)
-            {
-                efficiency = c.a * 100;
-                imgs.add(catimgsh(5, getConsImg(type), RichText.render(String.format("\tEfficiency: $col[255,%d,0]{%s}%%", Math.round(255 * efficiency / 100), Utils.odformat2(efficiency, 2)), 0).img));
+            if(NUtils.getGameUI().chrwdg.battr.cons.els.size()>type) {
+                BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(type);
+                if (c != null) {
+                    efficiency = c.a * 100;
+                    imgs.add(catimgsh(5, getConsImg(type), RichText.render(String.format("\tEfficiency: $col[255,%d,0]{%s}%%", Math.round(255 * efficiency / 100), Utils.odformat2(efficiency, 2)), 0).img));
+                }
             }
         }
         imgs.add(RichText.render(String.format("FEP Sum: $col[128,255,0]{%s}, FEP/Hunger: $col[128,255,0]{%s}", Utils.odformat2(fepSum, 2), Utils.odformat2(fepSum / (100 * glut), 2)), 0).img);

@@ -23,7 +23,7 @@ public class NHitBox
     private final static HashMap<String, NHitBox> custom = new HashMap<String, NHitBox>()
     {
         {
-            put("log", new NHitBox(new Coord(-10,-2),new Coord(10,2)));
+            put("log", new NHitBox(new Coord2d(-10,-2.5),new Coord2d(10,2.5)));
             put("gfx/terobjs/vehicle/dugout", new NHitBox(new Coord(-10,-2),new Coord(10,2)));
             put("gfx/terobjs/trough", new NHitBox(new Coord(-4,-13),new Coord(4,13)));
             put("gfx/terobjs/minehole", new NHitBox(new Coord(-15,-15),new Coord(15,15)));
@@ -40,7 +40,7 @@ public class NHitBox
             put("gfx/terobjs/iconsign", new NHitBox(new Coord(-2,-2),new Coord(2,2)));
             put("gfx/terobjs/candelabrum", new NHitBox(new Coord(-2,-2),new Coord(2,2)));
             put("gfx/terobjs/gardenpot", new NHitBox(new Coord(-2,-2),new Coord(2,2)));
-            put("gfx/terobjs/cupboard", new NHitBox(new Coord(-5,-5),new Coord(5,5)));
+            put("gfx/terobjs/cupboard", new NHitBox(new Coord2d(-5.5,-5.5),new Coord2d(5.5,5.5)));
             put("gfx/terobjs/lanternpost", new NHitBox(new Coord(-2,-2),new Coord(2,2)));
             put("gfx/terobjs/cistern", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
             put("gfx/terobjs/oven", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
@@ -59,7 +59,7 @@ public class NHitBox
             put("gfx/terobjs/pow", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/stockpile-cloth", new NHitBox(new Coord(-5,-5),new Coord(5,5)));
             put("stockpile", new NHitBox(new Coord(-5,-5),new Coord(5,5)));
-            put("gfx/terobjs/smokeshed", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
+            put("gfx/terobjs/smokeshed", new NHitBox(new Coord2d(-7,-8),new Coord2d(7,8)));
             put("gfx/terobjs/vehicle/cart", new NHitBox(new Coord(-6,-6),new Coord(6,6)));
             put("gfx/terobjs/knarrdock", new NHitBox(new Coord(-62,-14),new Coord(60,14)));
             put("gfx/terobjs/furn/bed-sturdy", new NHitBox(new Coord(-9,-6),new Coord(9,6)));

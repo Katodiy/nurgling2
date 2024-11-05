@@ -40,7 +40,7 @@ public class BuildSmokeShed implements Action {
         if (Finder.findGob(thatchingarea.getRCArea(), new NAlias("stockpile-bough"))!= null) {
             command.ingredients.add(new Build.Ingredient(new Coord(2, 1), thatchingarea.getRCArea(), new NAlias("Bough"), 6));
         }else{
-            command.ingredients.add(new Build.Ingredient(new Coord(1, 1), thatchingarea.getRCArea(), new NAlias("Straw", "Reeds", "Glimmermoss", "Tarsticks"), 6));
+            command.ingredients.add(new Build.Ingredient(new Coord(1, 1), thatchingarea.getRCArea(), new NAlias("Straw", "Reeds", "Glimmermoss", "Tarsticks", "Brown Kelp"), 6));
         }
         NUtils.getGameUI().msg("Please, select area for brick");
         SelectArea brickarea = new SelectArea(Resource.loadsimg("baubles/bricks"));
