@@ -20,9 +20,11 @@ public class LeatherAction implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         NArea.Specialisation rdframe = new NArea.Specialisation(Specialisation.SpecName.ttub.toString());
         NArea.Specialisation rrawhides = new NArea.Specialisation(Specialisation.SpecName.readyHides.toString());
+        NArea.Specialisation rtanning = new NArea.Specialisation(Specialisation.SpecName.tanning.toString());
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(rdframe);
+        req.add(rtanning);
         req.add(rrawhides);
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         if (new Validator(req, opt).run(gui).IsSuccess()) {
