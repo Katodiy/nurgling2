@@ -125,10 +125,12 @@ public class NGob {
                         else {
                             if (NParser.checkName(name, new NAlias(new ArrayList<String>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<String>(Arrays.asList("stump", "wrack", "log"))))) {
                                 switch (name) {
+                                    case "gfx/terobjs/map/naturalminesupport":
+                                        parent.addcustomol(new NMiningSupport(parent, 92));
+                                        break;
                                     case "gfx/terobjs/ladder":
                                     case "gfx/terobjs/minesupport":
                                     case "gfx/terobjs/trees/towercap":
-                                    case "gfx/terobjs/map/naturalminesupport":
                                         parent.addcustomol(new NMiningSupport(parent, 100));
                                         break;
                                     case "gfx/terobjs/minebeam":
