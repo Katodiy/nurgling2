@@ -66,12 +66,12 @@ public class SmelterAction implements Action {
             for (Gob sm : Finder.findGobs(smelters, new NAlias("gfx/terobjs/primsmelter"))) {
                 Container cand = new Container();
                 cand.gob = sm;
-                cand.cap = "Furnace";
+                cand.cap = "Stack furnace";
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
-                cand.getattr(Container.FuelLvl.class).setMaxlvl(30);
-                cand.getattr(Container.FuelLvl.class).setCredolvl(24);
+                cand.getattr(Container.FuelLvl.class).setMaxlvl(23);
+                cand.getattr(Container.FuelLvl.class).setCredolvl(18);
                 cand.getattr(Container.FuelLvl.class).setFueltype("branch");
 
                 cand.initattr(Container.TargetItems.class);

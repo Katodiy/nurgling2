@@ -11,6 +11,7 @@ public class Context {
     static {
         contcaps.put("gfx/terobjs/chest", "Chest");
         contcaps.put("gfx/terobjs/crate", "Crate");
+        contcaps.put("gfx/terobjs/kiln", "Kiln");
         contcaps.put("gfx/terobjs/cupboard", "Cupboard");
         contcaps.put("gfx/terobjs/shed", "Shed");
         contcaps.put("gfx/terobjs/largechest", "Large Chest");
