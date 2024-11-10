@@ -105,7 +105,7 @@ public class TakeItems implements Action
     {
         new PathFinder(cont.gob).run(gui);
         new OpenTargetContainer(cont).run(gui);
-        TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont,new HashSet<>(Arrays.asList(item)));
+        TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont,new HashSet<>(Arrays.asList(item)), null);
         tifc.minSize = left.get();
         tifc.run(gui);
         new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
