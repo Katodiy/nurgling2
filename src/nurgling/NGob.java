@@ -49,7 +49,7 @@ public class NGob {
             if (((Drawable) a).getres() != null) {
                 name = ((Drawable) a).getres().name;
 
-                if(name!=null && name.startsWith("gfx/terobjs/arch/cellardoor")) {
+                if(name!=null && name.startsWith("gfx/terobjs/arch/cellardoor") || name.startsWith("gfx/terobjs/herbs/standinggrass")) {
                     return;
                 }
 

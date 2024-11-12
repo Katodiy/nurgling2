@@ -208,7 +208,7 @@ public class NGameUI extends GameUI
     }
 
     public void tickmsg(String msg) {
-        msg("TICK#" + NUtils.getTickId() + " MSG: " + msg, Color.WHITE, Color.WHITE);
+        msg("TICK#" + NUtils.getTickId() + " MSG: " + msg);
     }
 
     public NInventory getInventory ( String name ) {
@@ -617,12 +617,12 @@ public class NGameUI extends GameUI
 
     }
 
-    @Override
-    public void msg(String msg, Color color, Color logcol) {
-        if (msg.contains("Quality")) {
+
+    public void msg(UI.Notice msg) {
+        if (msg.message().contains("Quality")) {
             if(map.clickedGob!=null)
             {
-                Matcher m = Pattern.compile("Quality: (\\d+)").matcher(msg);
+                Matcher m = Pattern.compile("Quality: (\\d+)").matcher(msg.message());
                 if(m.matches()) {
                     try {
                         map.clickedGob.addcustomol(new QualityOl(map.clickedGob, Integer.parseInt(m.group(1))));
@@ -633,6 +633,6 @@ public class NGameUI extends GameUI
                 }
             }
         }
-        super.msg(msg, color, logcol);
+        super.msg(msg);
     }
 }
