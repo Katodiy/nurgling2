@@ -83,9 +83,8 @@ public class NFlowerMenu extends FlowerMenu
         }
         if(!NUtils.getUI().core.isBotmod() && (Boolean)NConfig.get(NConfig.Key.autoFlower))
         {
-            if (option != null)
+            if (option != null && NUtils.getUI().core.getLastActions()!=null)
             {
-
                 if (NUtils.getUI().core.getLastActions().item != null && NUtils.getUI().core.getLastActions().item.parent instanceof NInventory && ((NGItem)NUtils.getUI().core.getLastActions().item.item).name()!=null) {
                     if (!option.name.equals("Split") || ((NGItem)NUtils.getUI().core.getLastActions().item.item).name().startsWith("Block")) {
                         AutoChooser.enable((NInventory) NUtils.getUI().core.getLastActions().item.parent, option.name);

@@ -62,7 +62,6 @@ public class FillWaterskins implements Action {
                     }
                 }
             }
-            AutoDrink.waitRefil.set(false);
         }
         return Results.SUCCESS();
     }
