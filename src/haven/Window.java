@@ -97,7 +97,7 @@ public class Window extends Widget implements DTarget {
 		if(dwdg!=null)
 		{
 			dwdg.hide();
-			NUtils.getUI().core.resetTasks();
+//			NUtils.getUI().core.resetTasks();
 		}
 	}
 
