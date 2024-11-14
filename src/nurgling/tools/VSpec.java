@@ -2097,6 +2097,7 @@ public class VSpec {
         ArrayList<JSONObject> clays = new ArrayList<>();
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-acre\",\"name\":\"Acre Clay\"}"));
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-ball\",\"name\":\"Ball Clay\"}"));
+        clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-sea\",\"name\":\"Sea Clay\"}"));
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-gray\",\"name\":\"Gray Clay\"}"));
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-cave\",\"name\":\"Cave Clay\"}"));
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-pit\",\"name\":\"Pit Clay\"}"));

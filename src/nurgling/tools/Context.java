@@ -27,6 +27,7 @@ public class Context {
         contcaps.put("gfx/terobjs/wbasket", "Basket");
         contcaps.put("gfx/terobjs/exquisitechest", "Exquisite Chest");
         contcaps.put("gfx/terobjs/furn/table-stone", "Table");
+        contcaps.put("gfx/terobjs/map/jotunclam", "Jotun Clam");
     }
 
     public static HashMap<String, String> customTool = new HashMap<>();
