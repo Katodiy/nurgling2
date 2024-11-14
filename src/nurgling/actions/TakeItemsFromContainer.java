@@ -41,7 +41,7 @@ public class TakeItemsFromContainer implements Action
                 if(pattern!=null) {
                     for(WItem item1: items)
                     {
-                        if(NParser.checkName(((NGItem)item1.item).name(), pattern))
+                        if(!NParser.checkName(((NGItem)item1.item).name(), pattern))
                         {
                             forRemove.add(item1);
                         }
