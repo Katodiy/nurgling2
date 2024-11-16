@@ -49,8 +49,12 @@ public class PatrolArea implements Action {
                 pos.y += MCache.tilesz.y;
                 gui.map.wdgmsg ( "click", Coord.z, pos.floor ( posres ), 1, 0 );
                 NUtils.addTask(new NTask() {
+                    int count = 0;
                     @Override
                     public boolean check() {
+                        if(count++ > 200 && !NUtils.player().pose().contains("walking")) {
+                            return true;
+                        }
                         return Math.sqrt(Math.pow(vehicle.rc.x - pos.x, 2) +
                                 Math.pow(vehicle.rc.y - pos.y, 2)) <= 1;
                     }
@@ -66,8 +70,12 @@ public class PatrolArea implements Action {
             if ( pos.x < area.b.x ) {
                 gui.map.wdgmsg ( "click", Coord.z, pos.floor ( posres ), 1, 0 );
                 NUtils.addTask(new NTask() {
+                    int count = 0;
                     @Override
                     public boolean check() {
+                        if(count++ > 200 && !NUtils.player().pose().contains("walking")) {
+                            return true;
+                        }
                         return Math.sqrt ( Math.pow ( vehicle.rc.x - pos.x, 2 ) +
                                 Math.pow ( vehicle.rc.y - pos.y, 2 ) ) <= 1 ;
                     }
@@ -86,8 +94,12 @@ public class PatrolArea implements Action {
                 pos.y -= MCache.tilesz.y;
                 gui.map.wdgmsg ( "click", Coord.z, pos.floor ( posres ), 1, 0 );
                 NUtils.addTask(new NTask() {
+                    int count = 0;
                     @Override
                     public boolean check() {
+                        if(count++ > 200 && !NUtils.player().pose().contains("walking")) {
+                            return true;
+                        }
                         return  Math.sqrt ( Math.pow ( vehicle.rc.x - pos.x, 2 ) +
                                 Math.pow ( vehicle.rc.y - pos.y, 2 ) ) <= 1 ;
                     }
@@ -102,8 +114,12 @@ public class PatrolArea implements Action {
             if ( pos.x < area.b.x ) {
                 gui.map.wdgmsg ( "click", Coord.z, pos.floor ( posres ), 1, 0 );
                 NUtils.addTask(new NTask() {
+                    int count = 0;
                     @Override
                     public boolean check() {
+                        if(count++ > 200 && !NUtils.player().pose().contains("walking")) {
+                            return true;
+                        }
                         return  Math.sqrt ( Math.pow ( vehicle.rc.x - pos.x, 2 ) +
                                 Math.pow ( vehicle.rc.y - pos.y, 2 ) ) <= 1 ;
                     }
