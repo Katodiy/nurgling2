@@ -190,29 +190,26 @@ public class Context {
         if(area == null)
             return outputs;
         NArea.Ingredient ingredient = area.getOutput(item);
-        switch (ingredient.type)
-        {
-            case BARTER:
-                outputs.add(new OutputBarter( Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
-                        Finder.findGob(area, new NAlias("gfx/terobjs/chest")), area.getRCArea(), ingredient.th));
-                break;
-            case CONTAINER:
-            {
-                for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
-                {
-                    OutputContainer container = new OutputContainer(gob, area.getRCArea(), ingredient.th);
-                    container.initattr(Container.Space.class);
-                    outputs.add(container);
-                }
-                for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
-                {
-                    outputs.add(new OutputPile(gob, area.getRCArea(), ingredient.th));
-                }
-                if(outputs.isEmpty())
-                {
-                    outputs.add(new OutputPile(null, area.getRCArea(), ingredient.th));
-                }
+        if(ingredient != null) {
+            switch (ingredient.type) {
+                case BARTER:
+                    outputs.add(new OutputBarter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
+                            Finder.findGob(area, new NAlias("gfx/terobjs/chest")), area.getRCArea(), ingredient.th));
+                    break;
+                case CONTAINER: {
+                    for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
+                        OutputContainer container = new OutputContainer(gob, area.getRCArea(), ingredient.th);
+                        container.initattr(Container.Space.class);
+                        outputs.add(container);
+                    }
+                    for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
+                        outputs.add(new OutputPile(gob, area.getRCArea(), ingredient.th));
+                    }
+                    if (outputs.isEmpty()) {
+                        outputs.add(new OutputPile(null, area.getRCArea(), ingredient.th));
+                    }
 
+                }
             }
         }
         return outputs;
