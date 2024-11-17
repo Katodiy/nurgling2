@@ -49,7 +49,7 @@ public class TakeItemsFromContainer implements Action
 
                 }
                 items.removeAll(forRemove);
-                target_size = Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord), items.size()));
+                target_size = Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY()), items.size()));
 
 
                 for (int i = 0; i < target_size; i++) {
