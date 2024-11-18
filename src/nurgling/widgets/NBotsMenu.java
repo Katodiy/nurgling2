@@ -18,7 +18,6 @@ public class NBotsMenu extends Widget
         resources.elements.add(new NButton("chipper", new Chipper(), true));
         resources.elements.add(new NButton("pblocks", new PrepareBlocks()));
         resources.elements.add(new NButton("pboards", new PrepareBoards()));
-        resources.elements.add(new NButton("log", new TransferLog()));
         resources.elements.add(new NButton("clay", new ClayDigger(), true));
         resources.elements.add(new NButton("bark", new CollectBark(), true));
         resources.elements.add(new NButton("bough", new CollectBough(), true));
@@ -67,6 +66,7 @@ public class NBotsMenu extends Widget
         utils.elements.add(new NButton("clover", new FeedClover(), true));
         utils.elements.add(new NButton("collectalltopile", new CollectSameItemsFromEarth(), true));
         utils.elements.add(new NButton("worldexplorer", new WorldExplorer(), true));
+        utils.elements.add(new NButton("lift", new TransferLiftable()));
         addLayout(utils);
         NLayout build = new NLayout("build");
         build.elements.add(new NButton("dframe", new BuildDryingFrame(), true));

@@ -409,6 +409,13 @@ public class Context {
     {
         output.computeIfAbsent(name, k -> new TreeMap<>());
         output.get(name).computeIfAbsent(th, k -> new ArrayList<>());
+        for(Output testOut: output.get(name).get(th))
+        {
+            if(out.getArea().a.equals(testOut.getArea().a) && out.getTh() == th && out.getArea().b.equals(testOut.getArea().b))
+            {
+                return true;
+            }
+        }
         output.get(name).get(th).add(out);
         return true;
     }
