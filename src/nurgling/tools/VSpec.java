@@ -2132,7 +2132,7 @@ public class VSpec {
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/stoathide-winter-blood\",\"name\":\"Fresh Winter Stoat Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/goathide-blood\",\"name\":\"Fresh Goat Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/greysealhide-blood\",\"name\":\"Fresh Grey Seal Hide\"}"));
-        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehoghide-blood\",\"name\":\"Fresh Hedgehog Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehoghide-blood\",\"name\":\"Fresh Hedgehog Skin\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/horsehide-blood\",\"name\":\"Fresh Horse Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/lynxhide-blood\",\"name\":\"Fresh Lynx Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/mammothhide-blood\",\"name\":\"Fresh Mammoth Hide\"}"));
@@ -2173,7 +2173,7 @@ public class VSpec {
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/foxhide\",\"name\":\"Fox Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/goathide\",\"name\":\"Goat Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/greysealhide\",\"name\":\"Grey Seal Hide\"}"));
-        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehoghide\",\"name\":\"Hedgehog Hide\"}"));
+        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehoghide\",\"name\":\"Hedgehog Skin\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/horsehide\",\"name\":\"Horse Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/lynxhide\",\"name\":\"Lynx Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/mammothhide\",\"name\":\"Mammoth Hide\"}"));

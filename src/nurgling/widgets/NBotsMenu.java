@@ -40,6 +40,7 @@ public class NBotsMenu extends Widget
         productions.elements.add(new NButton("brick", new BricksAction(), true));
         productions.elements.add(new NButton("branch", new BranchAction(), true));
         productions.elements.add(new NButton("wrap", new WrapAction(), true));
+//        productions.elements.add(new NButton("bonestoash", new BoneAshAction(),true));
         addLayout(productions);
         NLayout battle = new NLayout("battle");
         battle.elements.add(new NButton("reagro", new Reagro()));
@@ -67,6 +68,9 @@ public class NBotsMenu extends Widget
         utils.elements.add(new NButton("collectalltopile", new CollectSameItemsFromEarth(), true));
         utils.elements.add(new NButton("worldexplorer", new WorldExplorer(), true));
         utils.elements.add(new NButton("lift", new TransferLiftable()));
+        utils.elements.add(new NButton("loading", new TransferToVeh()));
+        utils.elements.add(new NButton("unloading", new TransferFromVeh()));
+        utils.elements.add(new NButton("swap", new TransferFromVehToVeh()));
         addLayout(utils);
         NLayout build = new NLayout("build");
         build.elements.add(new NButton("dframe", new BuildDryingFrame(), true));
