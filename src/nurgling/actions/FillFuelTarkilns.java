@@ -36,11 +36,11 @@ public class FillFuelTarkilns implements Action
         int num = 0;
         if (piles.get(0).ngob.name.contains("block")) {
             fuelname = new NAlias("block", "Block");
-            targetCoord = new Coord(2, 1);
+            targetCoord = new Coord(1, 2);
             num = 80;
         } else if (piles.get(0).ngob.name.contains("board")) {
             fuelname = new NAlias("board", "Board");
-            targetCoord = new Coord(1, 4);
+            targetCoord = new Coord(4, 1);
             num = 40;
         }
         if (fuelname == null) {
@@ -89,8 +89,6 @@ public class FillFuelTarkilns implements Action
                         }
                     }
                     ArrayList<WItem> fueltitem = NUtils.getGameUI().getInventory().getItems(fuelname);
-                    if (fueltitem.isEmpty())
-                        return Results.ERROR("no fuel items");
                     int val = Math.min(needFuel.get(gob), fueltitem.size());
                     if (needFuel.get(gob) != 0) {
                         new PathFinder(gob).run(gui);
