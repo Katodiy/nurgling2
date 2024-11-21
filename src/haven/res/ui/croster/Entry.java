@@ -11,7 +11,7 @@ import nurgling.NStyle;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-@haven.FromResource(name = "ui/croster", version = 74)
+@haven.FromResource(name = "ui/croster", version = 75)
 public class Entry extends Widget {
     public static final int WIDTH = CattleRoster.WIDTH;
     public static final int HEIGHT = UI.scale(20);
@@ -41,22 +41,18 @@ public class Entry extends Widget {
     public static final Tex ownedo = Loading.waitfor(Resource.classres(Entry.class).pool.load("gfx/hud/rosters/owned-o", 1)::get).layer(Resource.imgc).tex();
     public static final Tex ownedm = Loading.waitfor(Resource.classres(Entry.class).pool.load("gfx/hud/rosters/owned-m", 1)::get).layer(Resource.imgc).tex();
     public static final Function<Integer, Tex> ownrend = v -> ((v == 3) ? ownedm : ((v == 1) ? ownedo : ownedn));
-    public final long id;
+    public final UID id;
     public String name;
     public int grp;
     public double q;
     public int idx;
     public CheckBox mark;
 
-
-
-    public Entry(Coord sz, long id, String name) {
+    public Entry(Coord sz, UID id, String name) {
 	super(sz);
 	this.id = id;
 	this.name = name;
 	this.mark = adda(new CheckBox(""), UI.scale(5), sz.y / 2, 0, 0.5);
-
-
     }
 
     protected void drawbg(GOut g) {
@@ -90,7 +86,7 @@ public class Entry extends Widget {
     public boolean mousedown(Coord c, int button) {
 	if(super.mousedown(c, button))
 	    return(true);
-	getparent(CattleRoster.class).wdgmsg("click", (int)(id & 0x00000000ffffffffl), (int)((id & 0xffffffff00000000l) >> 32), button, ui.modflags(), ui.mc);
+	getparent(CattleRoster.class).wdgmsg("click", id, button, ui.modflags(), ui.mc);
 	return(true);
     }
 
@@ -100,6 +96,4 @@ public class Entry extends Widget {
 		ent.mark.click();
 	}
     }
-
-
 }

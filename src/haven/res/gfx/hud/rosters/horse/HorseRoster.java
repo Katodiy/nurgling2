@@ -7,7 +7,7 @@ import haven.*;
 import haven.res.ui.croster.*;
 import java.util.*;
 
-@haven.FromResource(name = "gfx/hud/rosters/horse", version = 62)
+@haven.FromResource(name = "gfx/hud/rosters/horse", version = 63)
 public class HorseRoster extends CattleRoster<Horse> {
     public static List<Column> cols = initcols(
 	new Column<Entry>("Name", Comparator.comparing((Entry e) -> e.name), 200),
@@ -42,7 +42,7 @@ public class HorseRoster extends CattleRoster<Horse> {
 
     public Horse parse(Object... args) {
 	int n = 0;
-	long id = ((Number)args[n++]).longValue();
+	UID id = (UID)args[n++];
 	String name = (String)args[n++];
 	Horse ret = new Horse(id, name);
 	ret.grp = (Integer)args[n++];
