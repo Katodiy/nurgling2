@@ -27,6 +27,7 @@ public class Context {
         contcaps.put("gfx/terobjs/wbasket", "Basket");
         contcaps.put("gfx/terobjs/exquisitechest", "Exquisite Chest");
         contcaps.put("gfx/terobjs/furn/table-stone", "Table");
+        contcaps.put("gfx/terobjs/map/jotunclam", "Jotun Clam");
     }
 
     public static HashMap<String, String> customTool = new HashMap<>();
@@ -190,29 +191,26 @@ public class Context {
         if(area == null)
             return outputs;
         NArea.Ingredient ingredient = area.getOutput(item);
-        switch (ingredient.type)
-        {
-            case BARTER:
-                outputs.add(new OutputBarter( Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
-                        Finder.findGob(area, new NAlias("gfx/terobjs/chest")), area.getRCArea(), ingredient.th));
-                break;
-            case CONTAINER:
-            {
-                for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
-                {
-                    OutputContainer container = new OutputContainer(gob, area.getRCArea(), ingredient.th);
-                    container.initattr(Container.Space.class);
-                    outputs.add(container);
-                }
-                for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
-                {
-                    outputs.add(new OutputPile(gob, area.getRCArea(), ingredient.th));
-                }
-                if(outputs.isEmpty())
-                {
-                    outputs.add(new OutputPile(null, area.getRCArea(), ingredient.th));
-                }
+        if(ingredient != null) {
+            switch (ingredient.type) {
+                case BARTER:
+                    outputs.add(new OutputBarter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
+                            Finder.findGob(area, new NAlias("gfx/terobjs/chest")), area.getRCArea(), ingredient.th));
+                    break;
+                case CONTAINER: {
+                    for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
+                        OutputContainer container = new OutputContainer(gob, area.getRCArea(), ingredient.th);
+                        container.initattr(Container.Space.class);
+                        outputs.add(container);
+                    }
+                    for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
+                        outputs.add(new OutputPile(gob, area.getRCArea(), ingredient.th));
+                    }
+                    if (outputs.isEmpty()) {
+                        outputs.add(new OutputPile(null, area.getRCArea(), ingredient.th));
+                    }
 
+                }
             }
         }
         return outputs;
@@ -412,6 +410,13 @@ public class Context {
     {
         output.computeIfAbsent(name, k -> new TreeMap<>());
         output.get(name).computeIfAbsent(th, k -> new ArrayList<>());
+        for(Output testOut: output.get(name).get(th))
+        {
+            if(out.getArea().a.equals(testOut.getArea().a) && out.getTh() == th && out.getArea().b.equals(testOut.getArea().b))
+            {
+                return true;
+            }
+        }
         output.get(name).get(th).add(out);
         return true;
     }

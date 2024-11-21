@@ -67,27 +67,26 @@ public class NFlowerMenu extends FlowerMenu
         if (option == null)
         {
             wdgmsg("cl", -1);
+            NUtils.getUI().core.setLastAction();
         }
         else
         {
             wdgmsg("cl", option.num, ui.modflags());
             NCore.LastActions actions = NUtils.getUI().core.getLastActions();
-            if (actions.item != null)
-            {
-                NUtils.getUI().core.setLastAction(option.name, actions.item);
-            }
-            else if (actions.gob != null)
-            {
-                NUtils.getUI().core.setLastAction(option.name, actions.gob);
+            if(actions!=null) {
+                if (actions.item != null) {
+                    NUtils.getUI().core.setLastAction(option.name, actions.item);
+                } else if (actions.gob != null) {
+                    NUtils.getUI().core.setLastAction(option.name, actions.gob);
+                }
             }
         }
         if(!NUtils.getUI().core.isBotmod() && (Boolean)NConfig.get(NConfig.Key.autoFlower))
         {
-            if (option != null)
+            if (option != null && NUtils.getUI().core.getLastActions()!=null)
             {
-
                 if (NUtils.getUI().core.getLastActions().item != null && NUtils.getUI().core.getLastActions().item.parent instanceof NInventory && ((NGItem)NUtils.getUI().core.getLastActions().item.item).name()!=null) {
-                    if (!option.name.equals("Split") || ((NGItem)NUtils.getUI().core.getLastActions().item.item).name().startsWith("Block")) {
+                    if (!option.name.equals("Split") || ((NGItem)NUtils.getUI().core.getLastActions().item.item).name().startsWith("Block") || ((NGItem)NUtils.getUI().core.getLastActions().item.item).name().startsWith("Head of")) {
                         AutoChooser.enable((NInventory) NUtils.getUI().core.getLastActions().item.parent, option.name);
                     }
                 }

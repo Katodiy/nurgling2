@@ -111,7 +111,7 @@ public class FriedFish implements Action {
                 Gob.Overlay ol = (gob.findol(Roastspit.class));
                 String content = ((Roastspit) ol.spr).getContent();
                 if (content != null) {
-                    while (content!=null && !content.contains("raw")) {
+                    while (!content.contains("raw")) {
                         new PathFinder(gob).run(gui);
                         new SelectFlowerAction("Carve", gob, ((Roastspit) ol.spr)).run(gui);
                         NUtils.addTask(new WaitPose(NUtils.player(),"gfx/borka/carving"));
@@ -179,7 +179,7 @@ public class FriedFish implements Action {
                             NUtils.addTask(new NTask() {
                                 @Override
                                 public boolean check() {
-                                    return NUtils.getGameUI().vhand == null;
+                                    return NUtils.getGameUI().vhand == null && ((Roastspit) ol.spr).getContent()!=null;
                                 }
                             });
                             count--;

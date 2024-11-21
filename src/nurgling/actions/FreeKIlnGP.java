@@ -6,10 +6,12 @@ import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.tasks.NTask;
 import nurgling.tasks.WaitLifted;
 import nurgling.tasks.WaitPose;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
+import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
@@ -47,6 +49,12 @@ public class FreeKIlnGP implements Action
                 new OpenTargetContainer(container).run(gui);
                 gui.getInventory(container.cap).getItem(gp).item.wdgmsg("take", Coord.z);
                 NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/banzai"));
+                NUtils.addTask(new NTask() {
+                    @Override
+                    public boolean check() {
+                        return Finder.findLiftedbyPlayer()!=null;
+                    }
+                });
                 new FindPlaceAndAction(null,NArea.findSpec(new NArea.Specialisation(Specialisation.SpecName.gardenpot.toString()))).run(gui);
             }
             new CloseTargetContainer(container).run(gui);

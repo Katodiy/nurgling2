@@ -138,6 +138,9 @@ public class ResDrawable extends Drawable implements EquipTarget {
 			res += ((sdt.rbuf[1] << 8) + sdt.rbuf[0]);
 			return res;
 		}
+		if (sdt.rbuf.length == 3) {
+			return ((sdt.rbuf[2] << 16) + (sdt.rbuf[1] << 8) + sdt.rbuf[0]);
+		}
 		if (sdt.rbuf.length == 2) {
 			return ((sdt.rbuf[1] << 8) + sdt.rbuf[0]);
 		} else if (sdt.rbuf.length - 1 < 0) {

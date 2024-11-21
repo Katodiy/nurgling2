@@ -46,6 +46,6 @@ public class NCustomBauble extends NObjectTexLabel {
 
         g.aimage(img, sc, 0.5,0.5);
         if(img2 != null)
-            g.aimage(img2, sc.sub(UI.scale(40,7)), 0.5,0.5);
+            g.aimage(img2, sc.sub(UI.scale(40,7)), 0.5,0.5, UI.scale(32,32));
     }
 }

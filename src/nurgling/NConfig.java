@@ -42,6 +42,7 @@ public class NConfig
         cowsprop,
         goatsprop,
         chopperprop,
+        carrierprop,
         prepblockprop,
         prepboardprop,
         sheepsprop,
@@ -307,6 +308,9 @@ public class NConfig
                             break;
                         case "NFishingSettings":
                             res.add(new NFishingSettings(obj));
+                            break;
+                        case "NCarrierProp":
+                            res.add(new NCarrierProp(obj));
                             break;
                         default:
                             res.add(obj);
