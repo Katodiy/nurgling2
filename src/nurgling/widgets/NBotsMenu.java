@@ -40,7 +40,8 @@ public class NBotsMenu extends Widget
         productions.elements.add(new NButton("brick", new BricksAction(), true));
         productions.elements.add(new NButton("branch", new BranchAction(), true));
         productions.elements.add(new NButton("wrap", new WrapAction(), true));
-//        productions.elements.add(new NButton("bonestoash", new BoneAshAction(),true));
+        productions.elements.add(new NButton("bonestoash", new BoneAshAction(),true));
+        productions.elements.add(new NButton("ash", new BlockAshAction(),true));
         addLayout(productions);
         NLayout battle = new NLayout("battle");
         battle.elements.add(new NButton("reagro", new Reagro()));
@@ -58,6 +59,9 @@ public class NBotsMenu extends Widget
         farming.elements.add(new NButton("sheeps", new SheepsAction()));
         farming.elements.add(new NButton("pigs", new PigsAction()));
         farming.elements.add(new NButton("cows", new nurgling.actions.bots.CowsAction()));
+        farming.elements.add(new NButton("barley", new BarleyFarmer(), true));
+        farming.elements.add(new NButton("millet", new MilletFarmer(), true));
+        farming.elements.add(new NButton("wheat", new WheatFarmer(), true));
         addLayout(farming);
         NLayout utils = new NLayout("utils");
         utils.elements.add(new NButton("shieldsword", new EquipShieldSword()));

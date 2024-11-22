@@ -8,7 +8,7 @@ public class SpecialisationData {
     public final static HashMap<String, ArrayList<String>> data = new HashMap<>();
     static
     {
-        ArrayList<String> crops = new ArrayList<>(Arrays.asList("Flax", "Turnip", "Carrot", "Hemp"));
+        ArrayList<String> crops = new ArrayList<>(Arrays.asList("Flax", "Turnip", "Carrot", "Hemp", "Millet", "Wheat", "Barley"));
         data.put("crop",crops);
         data.put("seed",crops);
         ArrayList<String> fuel = new ArrayList<>(Arrays.asList("Branch", "Coal", "Block", "Log"));

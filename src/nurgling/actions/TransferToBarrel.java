@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.*;
+import haven.res.ui.tt.cn.CustomName;
 import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
@@ -43,12 +44,12 @@ public class TransferToBarrel implements Action{
 
             ArrayList<WItem> witems = gui.getInventory().getItems(items);
             ArrayList<WItem> targetItems = new ArrayList<>();
-            int sum = 0;
+            double sum = 0;
             for (WItem item : witems) {
                 if (sum + barrelCont > th) {
                     break;
                 }
-                for (ItemInfo inf : item.item.info)
+                for (ItemInfo inf : item.item.info) {
                     if (inf instanceof GItem.Amount) {
                         sum += ((GItem.Amount) inf).itemnum();
                         targetItems.add(item);
@@ -56,6 +57,15 @@ public class TransferToBarrel implements Action{
                             break;
                         }
                     }
+                    if (inf instanceof CustomName)
+                    {
+                        sum+=((CustomName)inf).count;
+                        targetItems.add(item);
+                        if (sum + barrelCont > th) {
+                            break;
+                        }
+                    }
+                }
             }
             total+=sum;
 
