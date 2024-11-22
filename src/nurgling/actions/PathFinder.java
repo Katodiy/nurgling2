@@ -371,6 +371,12 @@ public class PathFinder implements Action {
         return res != null || pf.dn;
     }
 
+    public static boolean isAvailable(Coord2d target) throws InterruptedException {
+        PathFinder pf = new PathFinder(target);
+        LinkedList<Graph.Vertex> res = pf.construct(true);
+        return res != null || pf.dn;
+    }
+
     public static boolean isAvailable(Gob target, boolean hardMode) throws InterruptedException {
         PathFinder pf = new PathFinder(target);
         pf.isHardMode = true;

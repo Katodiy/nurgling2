@@ -48,6 +48,7 @@ public class NHitBox
             put("gfx/terobjs/kiln", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
             put("gfx/terobjs/leanto", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
             put("gfx/terobjs/stonepillar", new NHitBox(new Coord(-12,-12),new Coord(12,12)));
+            put("gfx/terobjs/vehicle/plow", new NHitBox(new Coord(-7,-4),new Coord(3,4)));
 //            put("gfx/terobjs/fineryforge", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
             put("gfx/terobjs/smelter", new NHitBox(new Coord(-11,-20),new Coord(11,11)));
             put("gfx/terobjs/charterstone", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
