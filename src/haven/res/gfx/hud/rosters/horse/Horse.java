@@ -7,7 +7,7 @@ import haven.*;
 import haven.res.ui.croster.*;
 import java.util.*;
 
-@haven.FromResource(name = "gfx/hud/rosters/horse", version = 62)
+@haven.FromResource(name = "gfx/hud/rosters/horse", version = 63)
 public class Horse extends Entry {
     public int meat, milk;
     public int meatq, milkq, hideq;
@@ -15,7 +15,7 @@ public class Horse extends Entry {
     public int end, stam, mb;
     public boolean stallion, foal, dead, pregnant, lactate, owned, mine;
 
-    public Horse(long id, String name) {
+    public Horse(UID id, String name) {
 	super(SIZE, id, name);
     }
 

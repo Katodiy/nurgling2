@@ -89,8 +89,7 @@ public class AnimalAction <C extends Entry> implements Action {
         new LiftObject(target).run(gui);
         new FindPlaceAndAction(target,NArea.findSpec("deadkritter")).run(gui);
         Collection<Object> args = new ArrayList<>();
-        args.add(Integer.valueOf((int) (((CattleId) target.getattr(CattleId.class)).entry().id & 0x00000000ffffffffl)));
-        args.add(Integer.valueOf((int) ((((CattleId) target.getattr(CattleId.class)).entry().id & 0xffffffff00000000l) >> 32)));
+        args.add(((CattleId) target.getattr(CattleId.class)).entry().id);
         NUtils.getRosterWindow(cattleRoster).roster(cattleRoster).wdgmsg("rm", args.toArray(new Object[0]));
         forkill.remove(target);
     }

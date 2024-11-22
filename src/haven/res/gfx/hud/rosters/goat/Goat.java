@@ -10,14 +10,14 @@ import nurgling.conf.GoatsHerd;
 
 import java.util.*;
 
-@haven.FromResource(name = "gfx/hud/rosters/goat", version = 64)
+@haven.FromResource(name = "gfx/hud/rosters/goat", version = 65)
 public class Goat extends Entry {
     public int meat, milk, wool;
     public int meatq, milkq, woolq, hideq;
     public int seedq;
     public boolean billy, kid, dead, pregnant, lactate, owned, mine;
 
-    public Goat(long id, String name) {
+    public Goat(UID id, String name) {
 	super(SIZE, id, name);
     }
 

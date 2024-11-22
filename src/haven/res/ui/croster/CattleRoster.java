@@ -23,12 +23,12 @@ import nurgling.widgets.settings.Sheeps;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-@haven.FromResource(name = "ui/croster", version = 74)
+@haven.FromResource(name = "ui/croster", version = 75)
 public abstract class CattleRoster <T extends Entry> extends Widget {
     public static final int WIDTH = UI.scale(900);
     public static final Comparator<Entry> namecmp = (a, b) -> a.name.compareTo(b.name);
     public static final int HEADH = UI.scale(40);
-    public final Map<Long, T> entries = new HashMap<>();
+    public final Map<UID, T> entries = new HashMap<>();
     public final Scrollbar sb;
     public final Widget entrycont;
     public int entryseq = 0;
@@ -60,10 +60,8 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	adda(new Button(UI.scale(150), "Remove selected", false).action(() -> {
 	    Collection<Object> args = new ArrayList<>();
 	    for(Entry entry : this.entries.values()) {
-		if(entry.mark.a) {
-		    args.add(Integer.valueOf((int)(entry.id & 0x00000000ffffffffl)));
-		    args.add(Integer.valueOf((int)((entry.id & 0xffffffff00000000l) >> 32)));
-		}
+		if(entry.mark.a)
+		    args.add(entry.id);
 	    }
 	    wdgmsg("rm", args.toArray(new Object[0]));
 	}), entrycont.pos("br").adds(0, 5), 1, 0);
@@ -296,7 +294,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	entryseq++;
     }
 
-    public void delentry(long id) {
+    public void delentry(UID id) {
 	T entry = entries.remove(id);
 	entry.destroy();
 	dirty = true;
@@ -317,7 +315,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	    delentry(entry.id);
 	    addentry(entry);
 	} else if(msg == "rm") {
-	    delentry(((Number)args[0]).longValue());
+	    delentry((UID)args[0]);
 	} else if(msg == "addto") {
 	    GameUI gui = (GameUI)ui.getwidget((Integer)args[0]);
 	    Pagina pag = gui.menu.paginafor(ui.sess.getres((Integer)args[1]));

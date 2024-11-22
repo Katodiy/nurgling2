@@ -9,14 +9,14 @@ import nurgling.conf.SheepsHerd;
 
 import java.util.*;
 
-@haven.FromResource(name = "gfx/hud/rosters/sheep", version = 64)
+@haven.FromResource(name = "gfx/hud/rosters/sheep", version = 65)
 public class Sheep extends Entry {
     public int meat, milk, wool;
     public int meatq, milkq, woolq, hideq;
     public int seedq;
     public boolean ram, lamb, dead, pregnant, lactate, owned, mine;
 
-    public Sheep(long id, String name) {
+    public Sheep(UID id, String name) {
 	super(SIZE, id, name);
     }
 
