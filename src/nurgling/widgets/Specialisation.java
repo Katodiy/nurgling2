@@ -46,6 +46,7 @@ public class Specialisation extends Window
         htable,
         rawhides,
         dframe,
+        horses,
         ttub,
         tanning,
         logs,
@@ -69,6 +70,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.sheeps.toString(),"Sheep",Resource.loadsimg("nurgling/categories/sheeps")));
         specialisation.add(new SpecialisationItem(SpecName.deadkritter.toString(),"Animal carcasses",Resource.loadsimg("nurgling/categories/deadkritter")));
         specialisation.add(new SpecialisationItem(SpecName.pigs.toString(),"Pigs",Resource.loadsimg("nurgling/categories/pigs")));
+        specialisation.add(new SpecialisationItem(SpecName.horses.toString(),"Horses",Resource.loadsimg("nurgling/categories/horses")));
         specialisation.add(new SpecialisationItem(SpecName.ore.toString(),"Piles of ore",Resource.loadsimg("nurgling/categories/ores")));
         specialisation.add(new SpecialisationItem(SpecName.fuel.toString(),"Fuel",Resource.loadsimg("nurgling/categories/fuel")));
         specialisation.add(new SpecialisationItem(SpecName.barrel.toString(),"Barrel",Resource.loadsimg("nurgling/categories/barrel")));

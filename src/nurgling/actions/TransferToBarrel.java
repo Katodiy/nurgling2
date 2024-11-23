@@ -100,6 +100,7 @@ public class TransferToBarrel implements Action{
                 }
             }
         }
+        new CloseTargetContainer ( "Barrel" ).run ( gui );
         return Results.SUCCESS();
     }
 

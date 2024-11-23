@@ -40,6 +40,7 @@ public class NConfig
         kinprop,
         show_drag_menu,
         cowsprop,
+        horseprop,
         goatsprop,
         chopperprop,
         carrierprop,
@@ -272,6 +273,9 @@ public class NConfig
                             break;
                         case "CowsHerd":
                             res.add(new CowsHerd(obj));
+                            break;
+                        case "HorseHerd":
+                            res.add(new HorseHerd(obj));
                             break;
                         case "GoatsHerd":
                             res.add(new GoatsHerd(obj));

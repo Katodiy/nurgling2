@@ -173,7 +173,7 @@ public class SeedCrop implements Action {
                 for (int i = 0; i <= area.br.x - area.ul.x; i++) {
                     for (int j = 0; j <= area.br.y - area.ul.y; j++) {
                         if (NParser.checkName(tiles[i][j].name, "field")) {
-                            new PathFinder(new Coord(area.ul.x+i,area.ul.y+j).mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y).add(0, MCache.tileqsz.y)).run(gui);
+                            new PathFinder(new Coord(area.ul.x+i,area.ul.y+j).mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y)).run(gui);
                         }
                     }
                 }

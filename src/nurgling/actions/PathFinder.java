@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.*;
 import static nurgling.pf.Graph.getPath;
 
 public class PathFinder implements Action {
-    public static double pfmdelta = 1;
+    public static double pfmdelta = 1.5;
     NPFMap pfmap = null;
     Coord start_pos = null;
     Coord end_pos = null;

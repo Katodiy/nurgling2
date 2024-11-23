@@ -39,7 +39,7 @@ public class FillWaterskins implements Action {
         Gob target = null;
         if(area!=null)
         {
-            target = Finder.findGob(area,new NAlias("barrel", "cistern"));
+            target = Finder.findGob(area,new NAlias("barrel", "cistern", "well"));
             if(target==null)
                 return Results.ERROR("No containers with water");
         }

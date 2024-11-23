@@ -58,6 +58,7 @@ public class NBotsMenu extends Widget
         farming.elements.add(new NButton("goats", new GoatsAction()));
         farming.elements.add(new NButton("sheeps", new SheepsAction()));
         farming.elements.add(new NButton("pigs", new PigsAction()));
+        farming.elements.add(new NButton("horses", new HorsesAction()));
         farming.elements.add(new NButton("cows", new nurgling.actions.bots.CowsAction()));
         farming.elements.add(new NButton("barley", new BarleyFarmer(), true));
         farming.elements.add(new NButton("millet", new MilletFarmer(), true));
