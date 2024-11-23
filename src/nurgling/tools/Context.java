@@ -138,7 +138,7 @@ public class Context {
 
     public static class InputBarrel extends Barrel implements Input
     {
-        public InputBarrel(Gob barrel, Gob chest)
+        public InputBarrel(Gob barrel)
         {
             super(barrel);
         }
