@@ -1,9 +1,11 @@
 package nurgling.actions;
 
 import haven.*;
+import haven.res.ui.relcnt.RelCont;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.tasks.*;
+import nurgling.tools.Context;
 import nurgling.tools.NAlias;
 
 public class TakeFromBarrel implements Action{
@@ -37,6 +39,31 @@ public class TakeFromBarrel implements Action{
         if(count==-1) {
             NUtils.takeAllGob(barrel);
             NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), items, 3));
+        }
+        else
+        {
+            this.count = Math.min(NUtils.getGameUI().getInventory().getFreeSpace(),count);
+            new OpenTargetContainer("Barrel", barrel).run(gui);
+            Window bwnd = NUtils.getGameUI().getWindow("Barrel");
+            for(Widget child : bwnd.children())
+            {
+                if(child instanceof RelCont)
+                {
+                    for(Widget child2 : child.children()) {
+                        if(child2 instanceof Button) {
+                            Button b = (Button) child2;
+                            if (b.text.text.equals("Take")) {
+                                for (int i = 0; i < count; i++) {
+                                    b.click();
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), items, count));
         }
 
         if(!gui.hand.isEmpty()) {

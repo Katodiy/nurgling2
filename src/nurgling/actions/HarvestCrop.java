@@ -176,13 +176,19 @@ public class HarvestCrop implements Action{
             plant = Finder.findGob(target_coord.div(MCache.tilesz).floor(),new NAlias("gfx/terobjs/plants/fallowplant"), 0);
         }
         if(plant!=null) {
-            new PathFinder(target_coord).run(gui);
-            if (setDir.get()) {
-                if(rev)
-                    new SetDir(new Coord2d(0, 1)).run(gui);
-                else
-                    new SetDir(new Coord2d(0, -1)).run(gui);
-                setDir.set(false);
+            if(PathFinder.isAvailable(target_coord)) {
+                new PathFinder(target_coord).run(NUtils.getGameUI());
+                if (setDir.get()) {
+                    if (rev)
+                        new SetDir(new Coord2d(0, 1)).run(gui);
+                    else
+                        new SetDir(new Coord2d(0, -1)).run(gui);
+                    setDir.set(false);
+                }
+            }
+            else
+            {
+                new PathFinder(plant).run(NUtils.getGameUI());
             }
             new SelectFlowerAction("Harvest", plant).run(gui);
             NUtils.getUI().core.addTask(new NoGob(plant.id));

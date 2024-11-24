@@ -42,6 +42,7 @@ public class NBotsMenu extends Widget
         productions.elements.add(new NButton("wrap", new WrapAction(), true));
         productions.elements.add(new NButton("bonestoash", new BoneAshAction(),true));
         productions.elements.add(new NButton("ash", new BlockAshAction(),true));
+        productions.elements.add(new NButton("lye", new LyeBoiler(),true));
         addLayout(productions);
         NLayout battle = new NLayout("battle");
         battle.elements.add(new NButton("reagro", new Reagro()));
@@ -58,6 +59,7 @@ public class NBotsMenu extends Widget
         farming.elements.add(new NButton("goats", new GoatsAction()));
         farming.elements.add(new NButton("sheeps", new SheepsAction()));
         farming.elements.add(new NButton("pigs", new PigsAction()));
+        farming.elements.add(new NButton("horses", new HorsesAction()));
         farming.elements.add(new NButton("cows", new nurgling.actions.bots.CowsAction()));
         farming.elements.add(new NButton("barley", new BarleyFarmer(), true));
         farming.elements.add(new NButton("millet", new MilletFarmer(), true));

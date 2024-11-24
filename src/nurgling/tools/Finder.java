@@ -479,6 +479,63 @@ public class Finder
         return pos;
     }
 
+
+//    public static Coord2d getFreePlace (
+//            NHitBox hitBox,
+//            NArea area,
+//            String exep
+//    )
+//    {
+//        NHitBox worked = new NHitBox ( hitBox );
+//        double shift_x = worked.end.x - worked.begin.x;
+//        double shift_y = worked.end.y - worked.begin.y;
+//        worked.begin.x += 0.05;
+//        worked.begin.y += 0.05;
+//        worked.end.x -= 0.05;
+//        worked.end.y -= 0.05;
+//        double x_pos = area.begin.x;
+//        double y_pos = area.begin.y;
+//        while ( x_pos < area.end.x ) {
+//            while ( y_pos < area.end.y ) {
+//                Coord tile = new Coord2d ( x_pos + 5.5, y_pos + 5.5 ).floor ( MCache.tilesz );
+//                Coord2d test_c = new Coord2d ( tile.x * MCache.tilesz.x + 5.5, tile.y * MCache.tilesz.y + 5.5 );
+//                if ( shift_x < shift_y ) {
+//                    test_c.x -= shift_x;
+//                }
+//                else {
+//                    test_c.y -= shift_y;
+//                }
+//                Coord ftext_c = test_c.floor ( MCache.tilesz );
+//                while ( ftext_c.x == tile.x && ftext_c.y == tile.y ) {
+//                    worked.correct ( test_c, worked.orientation );
+//                    if ( exep.length () == 0 ) {
+//                        if ( !Finder.isGobInAreaEx ( worked,
+//                                new NAlias ( new ArrayList<String> ( Arrays.asList ( "plant", "item" ) ),
+//                                        new ArrayList<String> ( Arrays.asList ( "trellis" ) ) ) ) ) {
+//                            return worked.center;
+//                        }
+//                    }
+//                    else if ( !Finder.isGobInAreaEx ( worked,
+//                            new NAlias ( new ArrayList<String> ( Arrays.asList ( exep, "plant", "item" ) ),
+//                                    new ArrayList<String> ( Arrays.asList ( "trellis" ) ) ) ) ) {
+//                        return worked.center;
+//                    }
+//                    if ( shift_x < shift_y ) {
+//                        test_c.x += shift_x;
+//                    }
+//                    else {
+//                        test_c.y += shift_y;
+//                    }
+//                    ftext_c = test_c.floor ( MCache.tilesz );
+//                }
+//                y_pos += 11;
+//            }
+//            y_pos = area.begin.y;
+//            x_pos += 11;
+//        }
+//        throw new NoFreeSpace ();
+//    }
+
     public static ArrayList<Gob> findGobByPatterns(ArrayList<Pattern> qaPatterns, double dist) {
         ArrayList<Gob> result = new ArrayList<>();
         synchronized (NUtils.getGameUI().ui.sess.glob.oc)
@@ -519,4 +576,6 @@ public class Finder
         }
         return result;
     }
+
+
 }

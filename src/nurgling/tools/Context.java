@@ -139,7 +139,7 @@ public class Context {
 
     public static class InputBarrel extends Barrel implements Input
     {
-        public InputBarrel(Gob barrel, Gob chest)
+        public InputBarrel(Gob barrel)
         {
             super(barrel);
         }
@@ -236,7 +236,9 @@ public class Context {
             return outputs;
         for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
         {
-            outputs.add(new OutputContainer(gob, area ,1));
+            OutputContainer container = new OutputContainer(gob, area ,1);
+            container.initattr(Container.Space.class);
+            outputs.add(container);
         }
         for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
         {

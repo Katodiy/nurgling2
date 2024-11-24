@@ -56,21 +56,27 @@ public class TakeFromVehicle implements Action {
                                 }
                             });
                             return Results.SUCCESS();
-//                            for(Widget target : widget.children()) {
-//                                if(target instanceof InvSquare) {
-//                                    if(target.c.equals(child.c.x-1,child.c.y-1)) {
-//                                        target.wdgmsg("click", UI.scale(15,15),1,0);
-//                                        NUtils.addTask(new NTask() {
-//                                            @Override
-//                                            public boolean check() {
-//                                                return Finder.findLiftedbyPlayer() != null;
-//                                            }
-//                                        });
-//                                        return Results.SUCCESS();
-//                                    }
-//                                }
-//                            }
-
+                        }
+                    }
+                }
+            }
+        }
+        else if(vehicle.ngob.name.contains("wagon")) {
+            new PathFinder(vehicle).run(gui);
+            new SelectFlowerAction("Open", vehicle).run(gui);
+            NUtils.addTask(new WaitWindow("Wagon"));
+            for (Widget widget : NUtils.getGameUI().getWindow("Wagon").children()) {
+                if (widget.children().size() >= 20) {
+                    for (Widget child : widget.children()) {
+                        if (!(child instanceof InvSquare)) {
+                            child.wdgmsg("click", UI.scale(15,15),1,0);
+                            NUtils.addTask(new NTask() {
+                                @Override
+                                public boolean check() {
+                                    return Finder.findLiftedbyPlayer() != null;
+                                }
+                            });
+                            return Results.SUCCESS();
                         }
                     }
                 }

@@ -49,6 +49,21 @@ public class IsVehicleFull implements Action
                 }
                 count = 16 - obj;
             }
+            else if(gob.ngob.name.contains("wagon")) {
+                new PathFinder(gob).run(gui);
+                new SelectFlowerAction("Open", gob).run(gui);
+                NUtils.addTask(new WaitWindow("Wagon"));
+                for (Widget widget : NUtils.getGameUI().getWindow("Wagon").children()) {
+                    if (widget.children().size() >= 20) {
+                        for (Widget child : widget.children()) {
+                            if (!(child instanceof InvSquare)) {
+                                obj++;
+                            }
+                        }
+                    }
+                }
+                count = 20 - obj;
+            }
         }
         return Results.SUCCESS();
     }

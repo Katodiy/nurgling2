@@ -51,17 +51,17 @@ public class TransferToBarrel implements Action{
                 }
                 for (ItemInfo inf : item.item.info) {
                     if (inf instanceof GItem.Amount) {
-                        sum += ((GItem.Amount) inf).itemnum();
-                        targetItems.add(item);
-                        if (sum + barrelCont > th) {
+                        if(sum + ((GItem.Amount) inf).itemnum()<10000) {
+                            sum += ((GItem.Amount) inf).itemnum();
+                            targetItems.add(item);
                             break;
                         }
                     }
                     if (inf instanceof CustomName)
                     {
-                        sum+=((CustomName)inf).count;
-                        targetItems.add(item);
-                        if (sum + barrelCont > th) {
+                        if(((CustomName) inf).count>0 && sum + ((CustomName) inf).count<100) {
+                            sum+=((CustomName)inf).count;
+                            targetItems.add(item);
                             break;
                         }
                     }
@@ -100,6 +100,7 @@ public class TransferToBarrel implements Action{
                 }
             }
         }
+        new CloseTargetContainer ( "Barrel" ).run ( gui );
         return Results.SUCCESS();
     }
 

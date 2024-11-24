@@ -46,7 +46,6 @@ public class TransferItems implements Action
         orderList.add("Walrus Tusk");
         orderList.add("Troll Tusks");
         orderList.add("Whale Bone Material");
-        orderList.add("Whale Bone Material");
         orderList.add("Wishbone");
     }
 

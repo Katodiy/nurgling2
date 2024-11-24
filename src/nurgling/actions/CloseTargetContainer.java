@@ -8,25 +8,34 @@ import nurgling.tools.Container;
 
 public class CloseTargetContainer implements Action
 {
-    Container cnt;
+    Container cnt = null;
+
+    String cap;
 
     public CloseTargetContainer(Container cnt)
     {
         this.cnt = cnt;
+        cap = cnt.cap;
+    }
+
+    public CloseTargetContainer(String cap)
+    {
+        this.cap = cap;
     }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        if(cnt!=null)
-        {
+        if(cnt!=null) {
             cnt.update();
-            Window wnd = NUtils.getGameUI().getWindow(cnt.cap);
-            if(wnd!=null) {
-                wnd.wdgmsg("close");
-                gui.ui.core.addTask(new WindowIsClosed(wnd));
-            }
         }
+
+        Window wnd = NUtils.getGameUI().getWindow(cap);
+        if(wnd!=null) {
+            wnd.wdgmsg("close");
+            gui.ui.core.addTask(new WindowIsClosed(wnd));
+        }
+
         return Results.SUCCESS();
     }
 }

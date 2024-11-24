@@ -10,15 +10,13 @@ import java.util.function.*;
 import haven.MenuGrid.Pagina;
 import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.gfx.hud.rosters.goat.Goat;
+import haven.res.gfx.hud.rosters.horse.Horse;
 import haven.res.gfx.hud.rosters.pig.Pig;
 import haven.res.gfx.hud.rosters.sheep.Sheep;
 import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.widgets.NKinSettings;
-import nurgling.widgets.settings.Cows;
-import nurgling.widgets.settings.Goats;
-import nurgling.widgets.settings.Pigs;
-import nurgling.widgets.settings.Sheeps;
+import nurgling.widgets.settings.*;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -135,6 +133,22 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 					pset.hide();
 				}
 			}
+			else if(type == Horse.class)
+			{
+				if(val) {
+					if (hset == null) {
+						hset = new Horses();
+						ui.root.add(hset, this.rootpos());
+					}
+					hset.show();
+					hset.raise();
+					hset.move(this.rootpos());
+				}
+				else
+				{
+					hset.hide();
+				}
+			}
 		}
 
 		@Override
@@ -169,6 +183,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	Goats gset = null;
 	Sheeps sset = null;
 	Pigs pset = null;
+	Horses hset = null;
 
     public static <E extends Entry>  List<Column> initcols(Column... attrs) {
 	for(int i = 0, x = CheckBox.sbox.sz().x + UI.scale(10); i < attrs.length; i++) {
