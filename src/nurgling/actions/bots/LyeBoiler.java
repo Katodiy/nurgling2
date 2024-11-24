@@ -85,13 +85,13 @@ public class LyeBoiler implements Action {
                             forFuel.add(container);
                     }
 
-                    new FillFluid(containers, NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
-                    if (!new FuelToContainers(containers).run(gui).IsSuccess())
+                    new FillFluid(forFuel, NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
+                    if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
                         return Results.ERROR("NO FUEL");
 
                     ArrayList<Gob> flighted = new ArrayList<>();
                     for (Container cont : containers) {
-                        if ((cont.gob.ngob.getModelAttribute() & 2) != 2)
+                        if (((cont.gob.ngob.getModelAttribute() & 1) == 1) && (cont.gob.ngob.getModelAttribute() & 2) != 2)
                             flighted.add(cont.gob);
                     }
                     new LightGob(flighted, 2).run(gui);
