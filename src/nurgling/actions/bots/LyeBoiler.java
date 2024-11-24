@@ -85,7 +85,7 @@ public class LyeBoiler implements Action {
                             forFuel.add(container);
                     }
 
-                    new FillFluid(forFuel, NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
+                    new FillFluid(containers, NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
                     if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
                         return Results.ERROR("NO FUEL");
 
