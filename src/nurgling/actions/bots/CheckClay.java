@@ -31,20 +31,26 @@ public class CheckClay implements Action {
         }
 
         new Equip(shovel_tools).run(gui);
+        WaitItemsOrError waitItemsOrError;
         NUtils.dig();
-        NUtils.addTask(new WaitItemsOrError((NInventory) NUtils.getGameUI().maininv,new NAlias("clay", "Clay", "Soil", "Moss", "Ash", "Sand"),1,"no clay left"));
+        NUtils.addTask(waitItemsOrError = new WaitItemsOrError((NInventory) NUtils.getGameUI().maininv,new NAlias("clay", "Clay", "Soil", "Moss", "Ash", "Sand"),1,"no clay left", ((NInventory) NUtils.getGameUI().maininv).getItems()));
 
-        NWItem item = (NWItem) NUtils.getGameUI().getInventory().getItem(new NAlias("clay", "Clay", "Soil", "Moss", "Ash", "Sand"));
+        if(!waitItemsOrError.getResult().isEmpty()) {
 
-        if(item!=null) {
-            NUtils.player().addcustomol(new NCheckResult(NUtils.player(),((NGItem) item.item).quality,((NGItem) item.item).name(),((StaticGSprite)item.lspr).img.img));
-            NUtils.drop(item);
+            WItem item = waitItemsOrError.getResult().get(0);
+
+            if (item != null) {
+                NUtils.getGameUI().msg(((NGItem) item.item).name() + " " + ((NGItem) item.item).quality);
+                NUtils.player().addcustomol(new NCheckResult(NUtils.player(), ((NGItem) item.item).quality, ((NGItem) item.item).name(), ((StaticGSprite) item.lspr).img.img));
+                NUtils.drop(item);
+            }
+            if (!NParser.checkName(NUtils.getCursorName(), "arw")) {
+                NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 3, 0);
+                NUtils.getUI().core.addTask(new GetCurs("arw"));
+            }
+            gui.map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 1, 0);
         }
-        if(!NParser.checkName(NUtils.getCursorName(), "arw")) {
-            NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),3, 0);
-            NUtils.getUI().core.addTask(new GetCurs("arw"));
-        }
-        gui.map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 1, 0);
+
 
         return Results.SUCCESS();
     }
