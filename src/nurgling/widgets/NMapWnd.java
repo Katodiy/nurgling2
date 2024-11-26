@@ -82,4 +82,17 @@ public class NMapWnd extends MapWnd {
         }
         return null;
     }
+
+
+
+    public void addMarker(Coord at, String name) {
+//        at = at.add(view.sessloc.tc);
+//        MapFile.Marker nm = new MapFile.PMarker(view.sessloc.seg.id, at, name, BuddyWnd.gc[new Random().nextInt(BuddyWnd.gc.length)]);
+//        file.add(nm);
+//        focus(nm);
+//        if(ui.modctrl) {
+//            ui.gui.track(nm);
+//        }
+//        domark = false;
+    }
 }

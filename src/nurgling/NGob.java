@@ -13,6 +13,7 @@ import nurgling.overlays.*;
 import nurgling.pf.*;
 import nurgling.tools.*;
 import nurgling.widgets.NAlarmWdg;
+import nurgling.widgets.NProspecting;
 import nurgling.widgets.NQuestInfo;
 
 import java.util.*;
@@ -307,7 +308,18 @@ public class NGob {
                     ResDrawable dr = ((ResDrawable) parent.getattr(Drawable.class));
                     parent.setattr(new ResDrawable(parent, dr.res, dr.sdt, false));
                 }
+
+
             }
+        Sprite spr = ol.spr;
+        if(spr != null) {
+            Resource res = spr.res;
+            if(res != null) {
+                if(res.name.equals("gfx/fx/dowse")) {
+                    NProspecting.overlay(parent, ol);
+                }
+            }
+        }
     }
 
     public void removeol(Gob.Overlay ol) {

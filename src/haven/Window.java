@@ -32,6 +32,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import static haven.PUtils.*;
 import nurgling.*;
+import nurgling.widgets.NProspecting;
 
 public class Window extends Widget implements DTarget {
     public static final Pipe.Op bgblend = FragColor.blend.nil;
@@ -112,6 +113,10 @@ public class Window extends Widget implements DTarget {
 	    Coord sz = UI.scale((Coord)args[0]);
 	    String cap = (args.length > 1) ? (String)args[1] : null;
 	    boolean lg = (args.length > 2) ? Utils.bv(args[2]) : false;
+		if(cap!=null && cap.equals("Prospecting"))
+		{
+			return new NProspecting(sz,cap);
+		}
 	    return(new Window(sz, cap, lg));
 	}
     }
