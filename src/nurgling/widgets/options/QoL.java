@@ -6,8 +6,11 @@ import haven.Label;
 import haven.Widget;
 import nurgling.NConfig;
 import nurgling.NUtils;
+import nurgling.widgets.NMiniMapWnd;
 
 public class QoL extends Widget {
+    final public CheckBox natura;
+    final public CheckBox night;
     public QoL() {
 
         prev = add(new Label("Other:"), new Coord(0, 0));
@@ -21,13 +24,24 @@ public class QoL extends Widget {
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-        prev = add(new CheckBox("Night vision") {
+        prev = add(new CheckBox("Simple crops") {
+            {
+                a = (Boolean) NConfig.get(NConfig.Key.simplecrops);
+            }
+
+            public void set(boolean val) {
+                NConfig.set(NConfig.Key.simplecrops, val);
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+        prev = night = add(new CheckBox("Night vision") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.nightVision);
             }
 
             public void set(boolean val) {
                 NConfig.set(NConfig.Key.nightVision, val);
+                NUtils.getGameUI().mmapw.nightvision.a = a;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
@@ -77,7 +91,7 @@ public class QoL extends Widget {
 
         }, prev.pos("bl").adds(0, 5));
 
-        prev = add(new CheckBox("Hide nature objects") {
+        prev = natura = add(new CheckBox("Hide nature objects") {
             {
                 a = !(Boolean) NConfig.get(NConfig.Key.hideNature);
             }
@@ -85,6 +99,7 @@ public class QoL extends Widget {
             public void set(boolean val) {
                 NConfig.set(NConfig.Key.hideNature, !val);
                 a = val;
+                NUtils.getGameUI().mmapw.natura.a = a;
                 NUtils.showHideNature();
             }
 

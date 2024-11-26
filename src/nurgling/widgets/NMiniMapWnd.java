@@ -6,6 +6,7 @@ import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
 
+import java.awt.event.KeyEvent;
 import java.net.MalformedURLException;
 
 public class NMiniMapWnd extends Widget{
@@ -14,7 +15,8 @@ public class NMiniMapWnd extends Widget{
     public IButton geoloc;
     public static final KeyBinding kb_claim = KeyBinding.get("ol-claim", KeyMatch.nil);
     public static final KeyBinding kb_vil = KeyBinding.get("ol-vil", KeyMatch.nil);
-
+    public static final KeyBinding kb_night = KeyBinding.get("mwnd_night", KeyMatch.nil);
+    public static final KeyBinding kb_nature = KeyBinding.get("mwnd_nature", KeyMatch.nil);
     public static class NMenuCheckBox extends ICheckBox {
         public NMenuCheckBox(String base, KeyBinding gkey, String tooltip) {
             super(base, "/u", "/d", "/h", "/dh");
@@ -22,7 +24,8 @@ public class NMiniMapWnd extends Widget{
             settip(tooltip);
         }
     }
-
+    public ACheckBox nightvision;
+    public ACheckBox natura;
     ACheckBox map_box;
     Widget toggle_panel;
     public StatusWdg swdg;
@@ -88,6 +91,12 @@ public class NMiniMapWnd extends Widget{
             }
         }), (first.sz.x+UI.scale(3))*shift++, 0);
 
+        natura = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/natura", kb_nature, "Show/hides natural objects"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("natura", !a));
+        natura.a = !(Boolean) NConfig.get(NConfig.Key.hideNature);
+
+        nightvision = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/daynight", kb_night, "Night vision"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("night", a));
+        nightvision.a = (Boolean) NConfig.get(NConfig.Key.nightVision);
+
 //        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
 //        path.a = NConfiguration.getInstance().isPaths;
 
@@ -117,6 +126,17 @@ public class NMiniMapWnd extends Widget{
             }
             case "miningol": {
                 NConfig.set(NConfig.Key.miningol,a);
+                break;
+            }
+            case "natura": {
+                NConfig.set(NConfig.Key.hideNature,a);
+                NUtils.showHideNature();
+                ((OptWnd.NQolPanel)NUtils.getGameUI().opts.nqolwnd).qol_p.natura.a = !a;
+                break;
+            }
+            case "night": {
+                NConfig.set(NConfig.Key.nightVision,a);
+                ((OptWnd.NQolPanel)NUtils.getGameUI().opts.nqolwnd).qol_p.night.a = a;
                 break;
             }
         }
