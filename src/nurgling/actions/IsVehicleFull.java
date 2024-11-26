@@ -6,6 +6,7 @@ import haven.Img;
 import haven.Widget;
 import haven.res.ui.invsq.InvSquare;
 import nurgling.NGameUI;
+import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.tasks.*;
 import nurgling.tools.Container;
@@ -39,7 +40,7 @@ public class IsVehicleFull implements Action
                 new SelectFlowerAction("Cargo", gob).run(gui);
                 NUtils.addTask(new WaitWindow("Snekkja"));
                 for (Widget widget : NUtils.getGameUI().getWindow("Snekkja").children()) {
-                    if (widget.children().size() >= 16) {
+                    if (widget.children().size() >= 16 && !(widget instanceof NInventory)) {
                         for (Widget child : widget.children()) {
                             if (!(child instanceof InvSquare)) {
                                 obj++;
