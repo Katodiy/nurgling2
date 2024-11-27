@@ -91,12 +91,14 @@ public class NCore extends Widget
     {
         actions = new LastActions();
         actions.gob = gob;
+        actions.gob = null;
     }
 
     public void setLastAction(WItem item)
     {
         actions = new LastActions();
         actions.item = item;
+        actions.gob = null;
     }
     public void resetLastAction()
     {

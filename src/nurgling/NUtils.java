@@ -16,6 +16,7 @@ import nurgling.widgets.options.QuickActions;
 import java.awt.*;
 import java.text.*;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static haven.OCache.posres;
@@ -487,5 +488,16 @@ public class NUtils
         getUI().root.lastSfx = null;
     }
 
+    private static final Pattern RESID = Pattern.compile(".*\\[([^,]*),?.*]");
 
+    public static Object prettyResName(String resname) {
+        Matcher m = RESID.matcher(resname);
+        if(m.matches()) {
+            resname = m.group(1);
+        }
+        int k = resname.lastIndexOf("/");
+        resname = resname.substring(k + 1);
+        resname = resname.substring(0, 1).toUpperCase() + resname.substring(1);
+        return resname;
+    }
 }

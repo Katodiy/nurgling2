@@ -2,6 +2,7 @@ package nurgling;
 
 import haven.*;
 import nurgling.actions.bots.*;
+import nurgling.widgets.NProspecting;
 
 import java.util.*;
 
@@ -43,7 +44,7 @@ public class NFlowerMenu extends FlowerMenu
     public void tick(double dt) {
         super.tick(dt);
         if(!shiftMode && (Boolean) NConfig.get(NConfig.Key.asenable)) {
-            if ((Boolean) NConfig.get(NConfig.Key.singlePetal) && nopts.length == 1) {
+            if ((Boolean) NConfig.get(NConfig.Key.singlePetal) && nopts.length == 1 && (NUtils.getUI().core.getLastActions()==null || NUtils.getUI().core.getLastActions().item == null)) {
                 nchoose(nopts[0]);
             } else {
                 ArrayList<String> autoPetal = NUtils.getPetals();
@@ -92,6 +93,10 @@ public class NFlowerMenu extends FlowerMenu
                 }
             }
         }
+        if(option != null && NUtils.getUI().core.getLastActions()!=null && NUtils.getUI().core.getLastActions().item!=null && option.name.contains("Prospect")) {
+            NProspecting.item(NUtils.getUI().core.getLastActions().item);
+        }
+        NUtils.getUI().core.resetLastAction();
     }
 
     public boolean hasOpt(String action) {

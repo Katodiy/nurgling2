@@ -3,10 +3,7 @@ package nurgling.tasks;
 import haven.GItem;
 import haven.WItem;
 import haven.Widget;
-import nurgling.NGItem;
-import nurgling.NISBox;
-import nurgling.NInventory;
-import nurgling.NUtils;
+import nurgling.*;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
@@ -18,14 +15,15 @@ public class WaitItemsOrError implements NTask
     NAlias name = null;
     Widget inventory;
     String errmsg;
-
+    ArrayList<WItem> items;
     GItem target = null;
-    public WaitItemsOrError(NInventory inventory, NAlias name, int size, String errmsg)
+    public WaitItemsOrError(NInventory inventory, NAlias name, int size, String errmsg, ArrayList<WItem> items)
     {
         this.name = name;
         this.inventory = inventory;
         this.target_size = size;
         this.errmsg = errmsg;
+        this.items = items;
     }
 
 
@@ -57,7 +55,8 @@ public class WaitItemsOrError implements NTask
                     {
                         if (name == null || NParser.checkName(item_name, name))
                         {
-                            result.add(item);
+                            if(!items.contains(item))
+                                result.add(item);
                         }
                     }
                 }
