@@ -33,7 +33,14 @@ public class BlockAshAction implements Action {
             Pair<Coord2d,Coord2d> rca = NArea.findSpec(Specialisation.SpecName.blockforash.toString()).getRCArea();
             if(rca==null)
             {
-                return Results.ERROR("Blocks not found");
+                return Results.ERROR("Input area not found");
+            }
+
+            Gob testGob;
+            boolean isBoard = false;
+            if((testGob = Finder.findGob(rca,new NAlias("stockpile")))!=null)
+            {
+               isBoard = testGob.ngob.name.contains("board");
             }
 
             ArrayList<Container> containers = new ArrayList<>();
@@ -50,7 +57,13 @@ public class BlockAshAction implements Action {
                 cand.initattr(Container.Tetris.class);
                 Container.Tetris tetris = cand.getattr(Container.Tetris.class);
                 ArrayList<Coord> coords = new ArrayList<>();
-                coords.add(new Coord(1, 2));
+                if(isBoard)
+                {
+                    coords.add(new Coord(4, 1));
+                }
+                else {
+                    coords.add(new Coord(1, 2));
+                }
 
                 tetris.getRes().put(Container.Tetris.TARGET_COORD, coords);
                 containers.add(cand);
@@ -65,7 +78,7 @@ public class BlockAshAction implements Action {
             while (res == null || res.IsSuccess()) {
                 NUtils.getUI().core.addTask(new WaitForBurnout(flighted, 1));
                 new FreeContainers(containers).run(gui);
-                res = new FillContainersFromPiles(containers, rca, new NAlias("Block")).run(gui);
+                res = new FillContainersFromPiles(containers, rca, isBoard?new NAlias("Board"):new NAlias("Block")).run(gui);
 
                 ArrayList<Container> forFuel = new ArrayList<>();
                 for (Container container : containers) {

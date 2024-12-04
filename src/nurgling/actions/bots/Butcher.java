@@ -32,6 +32,7 @@ public class Butcher implements Action {
         order.add("Butcher");
         order.add("Collect bones");
         options.put("Skin", new Req(new Coord(2,2),1));
+        options.put("Scale", new Req(new Coord(1,1),3));
         options.put("Clean", new Req(new Coord(1,1),1));
         options.put("Butcher", new Req(new Coord(1,1),2));
         options.put("Collect bones", new Req(new Coord(2,2),1));
