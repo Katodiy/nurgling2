@@ -147,6 +147,20 @@ public class NUtils
         return null;
     }
 
+    public static NEquipory getEquipmentOthers(){
+        if( getGameUI()!=null){
+            Window wnd = NUtils.getGameUI().getWindowContains("equipment");
+            for(Widget w2 = wnd.lchild ; w2 !=null ; w2= w2.prev )
+            {
+                if ( w2 instanceof Equipory ) {
+                    return ( NEquipory ) w2;
+                }
+            }
+        }
+        return null;
+
+    }
+
     public static void clickGob(Gob gob) {
         getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres),1, 0, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
     }

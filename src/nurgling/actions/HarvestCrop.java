@@ -152,7 +152,7 @@ public class HarvestCrop implements Action{
 
 
     void harvest(NGameUI gui, HashMap<Gob,AtomicBoolean> barrelInfo, Gob trough, Gob cistern, Area area, boolean rev, Coord2d target_coord, AtomicBoolean setDir) throws InterruptedException {
-        if (gui.getInventory().getFreeSpace() < 3) {
+        if (gui.getInventory().getFreeSpace() <= 4) {
             for(Gob barrel : barrelInfo.keySet()) {
                 if (!gui.getInventory().getItems(iseed).isEmpty()) {
                     if (!barrelInfo.get(barrel).get()) {

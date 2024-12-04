@@ -17,6 +17,7 @@ import static haven.OCache.posres;
 
 public class PileMaker implements Action{
     Pair<Coord2d, Coord2d> out;
+    Coord2d startFrom;
     NAlias items;
     NAlias pileName;
 
@@ -25,6 +26,13 @@ public class PileMaker implements Action{
     }
 
     Gob pile = null;
+
+    public PileMaker(Pair<Coord2d, Coord2d> out, NAlias items, NAlias pileName, Coord2d startFrom) {
+        this.out = out;
+        this.items = items;
+        this.pileName = pileName;
+        this.startFrom = startFrom;
+    }
     public PileMaker(Pair<Coord2d, Coord2d> out, NAlias items, NAlias pileName) {
         this.out = out;
         this.items = items;
@@ -39,7 +47,10 @@ public class PileMaker implements Action{
                 
                 return Results.FAIL();
         }
-        NUtils.activateItem(NUtils.player().rc);
+        if(startFrom != null)
+            NUtils.activateItem(startFrom);
+        else
+            NUtils.activateItem(NUtils.player().rc);
         NUtils.getUI().core.addTask(new WaitPlob());
         Coord2d pos = null;
         NHitBox hitbox = NUtils.getGameUI().map.placing.get().ngob.hitBox;

@@ -15,6 +15,7 @@ public class CollectItemsToPile implements Action{
 
     Pair<Coord2d,Coord2d> out;
     Pair<Coord2d,Coord2d> in;
+    Coord2d playerc;
 
     NAlias items;
     public CollectItemsToPile(Pair<Coord2d, Coord2d> input, Pair<Coord2d, Coord2d> output, NAlias items)
@@ -22,6 +23,14 @@ public class CollectItemsToPile implements Action{
         this.out = output;
         this.in = input;
         this.items = items;
+    }
+
+    public CollectItemsToPile(Pair<Coord2d, Coord2d> input, Pair<Coord2d, Coord2d> output, NAlias items, Coord2d playerc)
+    {
+        this.out = output;
+        this.in = input;
+        this.items = items;
+        this.playerc = playerc;
     }
 
     CollectItemsToPile(NArea input, NArea output, NAlias items)
@@ -38,11 +47,11 @@ public class CollectItemsToPile implements Action{
             ArrayList<WItem> testItems = null;
             if(!(testItems = gui.getInventory ().getItems(items)).isEmpty()) {
                 if (gui.getInventory().getNumberFreeCoord(testItems.get(0)) == 0) {
-                    new TransferToPiles(out, items ).run(gui);
+                    new TransferToPiles(out, items, playerc ).run(gui);
                 }
             }
 
-            Gob item = Finder.findGob ( collected_items );
+            Gob item = Finder.findGob ( in, collected_items );
             if(item == null)
                 break;
             if(item.rc.dist(gui.map.player().rc)> MCache.tilesz2.x) {
@@ -52,7 +61,7 @@ public class CollectItemsToPile implements Action{
             NUtils.takeFromEarth ( item );
         }
 
-        new TransferToPiles(out, items ).run ( gui );
+        new TransferToPiles(out, items, playerc ).run ( gui );
         return Results.SUCCESS();
     }
 }

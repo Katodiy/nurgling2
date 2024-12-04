@@ -19,10 +19,17 @@ public class TransferToPiles implements Action{
     Pair<Coord2d,Coord2d> out;
 
     int th = 0;
+    Coord2d playerc;
 
     public TransferToPiles(Pair<Coord2d,Coord2d> out, NAlias items) {
         this.out = out;
         this.items = items;
+    }
+
+    public TransferToPiles(Pair<Coord2d,Coord2d> out, NAlias items, Coord2d playerc) {
+        this.out = out;
+        this.items = items;
+        this.playerc = playerc;
     }
 
     public TransferToPiles(Pair<Coord2d,Coord2d> out, NAlias items, int th) {
@@ -73,7 +80,7 @@ public class TransferToPiles implements Action{
                 while(!(gui.getInventory().getItems(items,th)).isEmpty()) {
                     PileMaker pm;
 
-                    if(!(pm = new PileMaker(out, items, pileName)).run(gui).IsSuccess())
+                    if(!(pm = new PileMaker(out, items, pileName, playerc)).run(gui).IsSuccess())
                         return Results.FAIL();
                     Gob pile = pm.getPile();
                     witems = gui.getInventory().getItems(items,th);

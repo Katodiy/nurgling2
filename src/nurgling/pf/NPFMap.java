@@ -204,7 +204,7 @@ public class NPFMap
         Coord center = Utils.toPfGrid((a.add(b)).div(2));
         dsize = Math.max(8,((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul);
         size = 2 * dsize + 1;
-        if(dsize>120) {
+        if(dsize>150) {
             bad = true;
         }
         else {

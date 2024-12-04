@@ -1,9 +1,6 @@
 package nurgling.actions.bots;
 
-import haven.Coord;
-import haven.Gob;
-import haven.Resource;
-import haven.WItem;
+import haven.*;
 import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
@@ -23,6 +20,7 @@ public class CollectSameItemsFromEarth implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        Coord2d playerc = NUtils.player().rc;
         SelectGob selgob;
         NUtils.getGameUI().msg("Please select item for pile");
         (selgob = new SelectGob(Resource.loadsimg("baubles/selectItem"))).run(gui);
@@ -52,7 +50,7 @@ public class CollectSameItemsFromEarth implements Action {
                 break;
             }
         }
-        new CollectItemsToPile(insa.getRCArea(),outsa.getRCArea(),itemName).run(gui);
+        new CollectItemsToPile(insa.getRCArea(),outsa.getRCArea(),itemName, playerc).run(gui);
         return Results.SUCCESS();
     }
 }

@@ -24,6 +24,7 @@ public class Specialisation extends Window
     }
     public enum SpecName
     {
+        swamp,
         smelter,
         kiln,
         water,
@@ -57,6 +58,7 @@ public class Specialisation extends Window
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
 
     static {
+        specialisation.add(new SpecialisationItem(SpecName.swamp.toString(),"Swamp",Resource.loadsimg("nurgling/categories/water")));
         specialisation.add(new SpecialisationItem(SpecName.smelter.toString(),"Smelters",Resource.loadsimg("nurgling/categories/smelter")));
         specialisation.add(new SpecialisationItem(SpecName.kiln.toString(),"Kilns",Resource.loadsimg("nurgling/categories/kiln")));
         specialisation.add(new SpecialisationItem(SpecName.water.toString(),"Source of water",Resource.loadsimg("nurgling/categories/water")));

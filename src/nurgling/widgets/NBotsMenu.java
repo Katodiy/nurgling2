@@ -106,7 +106,7 @@ public class NBotsMenu extends Widget
         if (NUtils.getUI().core.debug) {
             NLayout tests = new NLayout("toolsNords");
             tests.elements.add(new NButton("nords1", new TestAction()));
-            tests.elements.add(new NButton("nords2", new NomadWalker()));
+            tests.elements.add(new NButton("nords2", new PiAction()));
             tests.elements.add(new NButton("nords3", new NomadCalibration()));
             addLayout(tests);
         }

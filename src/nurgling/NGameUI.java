@@ -96,6 +96,18 @@ public class NGameUI extends GameUI
         return null;
     }
 
+    public Window getWindowContains ( String cap ) {
+        for ( Widget w = lchild ; w != null ; w = w.prev ) {
+            if ( w instanceof Window ) {
+                Window wnd = ( Window ) w;
+                if ( wnd.cap != null && wnd.cap.contains(cap)) {
+                    return wnd;
+                }
+            }
+        }
+        return null;
+    }
+
     public Window getWindowWithButton ( String cap, String button ) {
         for ( Widget w = lchild ; w != null ; w = w.prev ) {
             if ( w instanceof Window ) {
