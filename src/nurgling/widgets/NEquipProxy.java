@@ -36,7 +36,7 @@ public class NEquipProxy extends Widget implements DTarget {
         if(e != null) {
             WItem w = NUtils.getEquipment().quickslots[slot(ev.c).idx];
             if(w != null) {
-                w.mousedown(Coord.z, ev.b);
+                w.mousedown(ev);
                 return true;
             }
         }

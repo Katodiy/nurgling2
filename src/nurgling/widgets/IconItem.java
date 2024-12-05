@@ -127,8 +127,8 @@ public class IconItem extends Widget
     public void opts( Coord c ) {
         if(menu == null) {
             menu = new NFlowerMenu((type==NArea.Ingredient.Type.CONTAINER)?opt.toArray(new String[0]):uopt.toArray(new String[0])) {
-                public boolean mousedown(Coord c, int button) {
-                    if(super.mousedown(c, button))
+                public boolean mousedown(MouseDownEvent ev) {
+                    if(super.mousedown(ev))
                         nchoose(null);
                     return(true);
                 }

@@ -108,7 +108,7 @@ public class NWItem extends WItem
     }
 
     @Override
-    public boolean mousedown(Coord c, int btn)
+    public boolean mousedown(MouseDownEvent ev)
     {
         if(ui.modshift)
         {
@@ -116,12 +116,12 @@ public class NWItem extends WItem
             {
                 if (parent instanceof NInventory)
                 {
-                    wdgmsg("transfer-same", item, btn == 3);
+                    wdgmsg("transfer-same", item, ev.b == 3);
                     return true;
                 }
             }
         }
-        return super.mousedown(c, btn);
+        return super.mousedown(ev);
 //        if(res)
 //        {
 //            JSONObject res_obj = ItemTex.save(item.spr);

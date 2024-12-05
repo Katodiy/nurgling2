@@ -534,7 +534,7 @@ public class Window extends Widget {
         Coord cc = xlate(dwdg.c, true);
         if(ev.c.isect(cc, dwdg.sz))
         {
-            dwdg.mousedown(ev.c.add(cc.inv()), ev.b);
+            dwdg.mousedown(new MouseDownEvent(ev.c.add(cc.inv()), ev.b));
         }
         return true;
     }
@@ -552,7 +552,7 @@ public class Window extends Widget {
         Coord cc = xlate(dwdg.c, true);
         if(ev.c.isect(cc, dwdg.sz))
         {
-            dwdg.mouseup(ev.c.add(cc.inv()), ev.b);
+            dwdg.mouseup(new MouseUpEvent(ev.c.add(cc.inv()), ev.b));
         }
         return(true);
     }

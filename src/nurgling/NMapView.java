@@ -409,7 +409,7 @@ public class NMapView extends MapView
     }
 
     @Override
-    public boolean mousedown(Coord c, int button)
+    public boolean mousedown(MouseDownEvent ev)
     {
         if ( isAreaSelectionMode.get() )
         {
@@ -420,18 +420,18 @@ public class NMapView extends MapView
         }
         if ( isGobSelectionMode.get() )
         {
-            getGob(c);
+            getGob(ev.c);
             return false;
         }
-        return super.mousedown(c, button);
+        return super.mousedown(ev);
     }
 
     private Coord lastCoord = null;
     private Coord2d lastCoord2d = new Coord2d();
     @Override
-    public void mousemove(Coord c) {
-        lastCoord = c;
-        super.mousemove(c);
+    public void mousemove(MouseMoveEvent ev) {
+        lastCoord = ev.c;
+        super.mousemove(ev);
     }
 
     public Coord2d getLCoord() {
@@ -447,15 +447,15 @@ public class NMapView extends MapView
     public boolean shiftPressed = false;
 
     @Override
-    public boolean keyup(KeyEvent ev) {
-        if(ev.getKeyCode() == 16)
+    public boolean keyup(KeyUpEvent ev) {
+        if(ev.code == 16)
             shiftPressed = false;
         return super.keyup(ev);
     }
 
     @Override
-    public boolean keydown(KeyEvent ev) {
-        if(ev.getKeyCode() == 16)
+    public boolean keydown(KeyDownEvent ev) {
+        if(ev.code == 16)
             shiftPressed = true;
         if(kb_quickaction.key().match(ev) || kb_quickignaction.key().match(ev)) {
             Thread t;

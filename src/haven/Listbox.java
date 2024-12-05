@@ -42,8 +42,8 @@ public abstract class Listbox<T> extends ListWidget<T> {
         super.draw(g);
     }
 
-    public boolean mousewheel(Coord c, int amount) {
-        sb.ch(amount);
+    public boolean mousewheel(MouseWheelEvent ev) {
+        sb.ch(ev.a);
         return(true);
     }
 
@@ -71,15 +71,15 @@ public abstract class Listbox<T> extends ListWidget<T> {
         return(listitem(idx));
     }
 
-    public boolean mousedown(Coord c, int button) {
-        if(super.mousedown(c, button))
+    public boolean mousedown(MouseDownEvent ev) {
+        if(super.mousedown(ev))
             return(true);
-        int idx = idxat(c);
+        int idx = idxat(ev.c);
         T item = (idx >= listitems()) ? null : listitem(idx);
-        if((item == null) && (button == 1))
+        if((item == null) && (ev.b == 1))
             change(null);
         else if(item != null)
-            itemclick(item, c.sub(idxc(idx)), button);
+            itemclick(item, ev.c.sub(idxc(idx)), ev.b);
         return(true);
     }
 

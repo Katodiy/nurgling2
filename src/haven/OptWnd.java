@@ -919,8 +919,8 @@ public class OptWnd extends Window {
 					chpanel(prev1);
 				}
 
-				public boolean keydown(KeyEvent ev) {
-					if((ev.getKeyChar() == 27)) {
+				public boolean keydown(KeyDownEvent ev) {
+					if((ev.c == 27)) {
 						chpanel(prev1);
 						return(true);
 					}
@@ -969,8 +969,8 @@ public class OptWnd extends Window {
 					chpanel(prev1);
 				}
 
-				public boolean keydown(KeyEvent ev) {
-					if((ev.getKeyChar() == 27)) {
+				public boolean keydown(KeyDownEvent ev) {
+					if((ev.c == 27)) {
 						chpanel(prev1);
 						return(true);
 					}
@@ -1004,8 +1004,8 @@ public class OptWnd extends Window {
 					chpanel(prev1);
 				}
 
-				public boolean keydown(KeyEvent ev) {
-					if((ev.getKeyChar() == 27)) {
+				public boolean keydown(KeyDownEvent ev) {
+					if((ev.c == 27)) {
 						chpanel(prev1);
 						return(true);
 					}

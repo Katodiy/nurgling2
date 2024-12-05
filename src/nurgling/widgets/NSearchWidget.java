@@ -49,7 +49,7 @@ public class NSearchWidget extends Widget {
         super(sz);
         searchF = new TextEntry(sz.x, "") {
             @Override
-            public boolean keydown(KeyEvent e) {
+            public boolean keydown(KeyDownEvent e) {
                 boolean res = super.keydown(e);
                 NUtils.getGameUI().itemsForSearch.install(text());
                 return res;

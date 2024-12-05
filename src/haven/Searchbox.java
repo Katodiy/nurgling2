@@ -45,14 +45,12 @@ public abstract class Searchbox<T> extends Listbox<T> {
         setcanfocus(true);
     }
 
-    public boolean keydown(KeyEvent ev) {
+    public boolean keydown(KeyDownEvent ev) {
         int mod = 0;
-        if((ev.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0) mod |= C;
-        if((ev.getModifiersEx() & (InputEvent.META_DOWN_MASK | InputEvent.ALT_DOWN_MASK)) != 0) mod |= M;
-        char c = ev.getKeyChar();
-        if(c == ev.CHAR_UNDEFINED)
-            c = '\0';
-        int code = ev.getKeyCode();
+        if((ev.mods & InputEvent.CTRL_DOWN_MASK) != 0) mod |= C;
+        if((ev.mods & (InputEvent.META_DOWN_MASK | InputEvent.ALT_DOWN_MASK)) != 0) mod |= M;
+        char c = ev.c;
+        int code = ev.code;
         if(mod == 0) {
             if(c == 8) {
                 if(searching != null) {
@@ -156,9 +154,9 @@ public abstract class Searchbox<T> extends Listbox<T> {
         return((searching != null) && (i >= 0) && (i < found.length) && found[i]);
     }
 
-    public boolean mousedown(Coord c, int button) {
+    public boolean mousedown(MouseDownEvent ev) {
         parent.setfocus(this);
         stopsearch();
-        return(super.mousedown(c, button));
+        return(super.mousedown(ev));
     }
 }

@@ -141,16 +141,16 @@ public class NFlowerMenu extends FlowerMenu
         }
 
         @Override
-        public boolean mousedown(Coord c, int button) {
+        public boolean mousedown(MouseDownEvent ev) {
             nchoose(this);
             return(true);
         }
 
         @Override
-        public void mousemove(Coord c)
+        public void mousemove(MouseMoveEvent ev)
         {
-            isHighligted = c.isect(Coord.z, sz);
-            super.mousemove(c);
+            isHighligted = ev.c.isect(Coord.z, sz);
+            super.mousemove(ev);
         }
 
         boolean isHighligted = false;
@@ -181,8 +181,8 @@ public class NFlowerMenu extends FlowerMenu
         super.destroy();
     }
 
-    public boolean keydown(java.awt.event.KeyEvent ev) {
-        char key = ev.getKeyChar();
+    public boolean keydown(KeyDownEvent ev) {
+        char key = ev.c;
         if((key >= '0') && (key <= '9')) {
             int opt = (key == '0')?10:(key - '1');
             if(opt < nopts.length) {

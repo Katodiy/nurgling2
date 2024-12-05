@@ -618,7 +618,7 @@ public class NGameUI extends GameUI
     }
 
 
-    public void msg(UI.Notice msg) {
+    public boolean msg(UI.Notice msg) {
         if (msg.message().contains("Quality")) {
             if(map.clickedGob!=null)
             {
@@ -633,6 +633,6 @@ public class NGameUI extends GameUI
                 }
             }
         }
-        super.msg(msg);
+        return super.msg(msg);
     }
 }

@@ -619,8 +619,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 		    }
 
 			@Override
-			public boolean keydown(KeyEvent ev) {
-				if(ev.getKeyCode() == KeyEvent.VK_TAB)
+			public boolean keydown(KeyDownEvent ev) {
+				if(ev.code == KeyEvent.VK_TAB)
 				{
 						return false;
 				}
