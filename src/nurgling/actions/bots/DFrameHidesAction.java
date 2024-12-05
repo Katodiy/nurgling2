@@ -1,7 +1,9 @@
 package nurgling.actions.bots;
 
 import haven.Coord;
+import haven.Coord2d;
 import haven.Gob;
+import haven.Pair;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
@@ -14,6 +16,7 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 
 public class DFrameHidesAction implements Action {
 
@@ -50,9 +53,32 @@ public class DFrameHidesAction implements Action {
 
                 containers.add(cand);
             }
+            Pair<Coord2d,Coord2d> rca = NArea.findSpec(Specialisation.SpecName.dframe.toString()).getRCArea();
+            boolean dir = rca.b.x - rca.a.x > rca.b.y - rca.a.y;
+            containers.sort(new Comparator<Container>() {
+                @Override
+                public int compare(Container o1, Container o2) {
+                    if(dir)
+                    {
+                        int res = Double.compare(o1.gob.rc.y,o2.gob.rc.y);
+                        if(res == 0)
+                            return Double.compare(o1.gob.rc.x,o2.gob.rc.x);
+                        else
+                            return res;
+                    }
+                    else
+                    {
+                        int res = Double.compare(o1.gob.rc.x,o2.gob.rc.x);
+                        if(res == 0)
+                            return Double.compare(o1.gob.rc.y,o2.gob.rc.y);
+                        else
+                            return res;
+                    }
+                }
+            });
 
 
-            new FreeContainers(containers).run(gui);
+            new FreeContainers(containers, new NAlias(new ArrayList<>(Arrays.asList("Fur", "Hide", "Scale", "Tail", "skin", "hide")), new ArrayList<>(Arrays.asList("Fresh", "Raw")))).run(gui);
             new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), raw).run(gui);
             new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
 

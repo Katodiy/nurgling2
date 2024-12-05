@@ -1,4 +1,6 @@
-package haven.res.ui.locptr;/* Preprocessed source code */
+/* Preprocessed source code */
+package haven.res.ui.locptr;
+
 import haven.*;
 import haven.render.*;
 import nurgling.NUtils;
@@ -11,18 +13,9 @@ import static haven.MCache.tilesz;
 import static java.lang.Math.*;
 
 /* >wdg: Pointer */
-@haven.FromResource(name = "ui/locptr", version = 20)
+@haven.FromResource(name = "ui/locptr", version = 21)
 public class Pointer extends Widget {
-	private static final Color TRIANGULATION_COLOR = new Color(100, 100, 100);
-	public static final BaseColor[] colors = new BaseColor[]{
-			new BaseColor(new Color(241, 227, 157, 255)),
-			new BaseColor(new Color(189, 157, 241, 255)),
-			new BaseColor(new Color(209, 241, 157, 255)),
-			new BaseColor(new Color(157, 212, 241, 255)),
-			new BaseColor(new Color(241, 157, 196, 255)),
-			new BaseColor(new Color(157, 241, 205, 255)),
-			new BaseColor(new Color(241, 193, 157, 255)),
-	};
+    public static final BaseColor col = new BaseColor(new Color(241, 227, 157, 255));
     public Indir<Resource> icon;
     public Coord2d tc, mc;
     public Coord lc;
@@ -41,7 +34,7 @@ public class Pointer extends Widget {
 	Indir<Resource> icon = (iconid < 0) ? null : ui.sess.getres(iconid);
 	return(new Pointer(icon));
     }
-
+	
     public void presize() {
 	resize(parent.sz);
     }
@@ -76,7 +69,7 @@ public class Pointer extends Widget {
 	sc = sc.add(hsz);
 
 	// gl.glEnable(GL2.GL_POLYGON_SMOOTH); XXXRENDER
-	g.usestate(colors[0]);
+	g.usestate(col);
 	g.drawp(Model.Mode.TRIANGLES, new float[] {
 		sc.x, sc.y,
 		sc.x + ad.x - (ad.y / 3), sc.y + ad.y + (ad.x / 3),

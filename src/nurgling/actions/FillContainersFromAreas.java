@@ -34,19 +34,30 @@ public class FillContainersFromAreas implements Action
         for (Container cont : conts) {
             while(!isReady(cont)) {
                 if (gui.getInventory().getItems(transferedItems).isEmpty()) {
-                    if(context.icontainers.isEmpty())
-                        return Results.ERROR("NO INPUT CONTAINERS");
                     int target_size = calculateTargetSize();
-                    for (Container container : context.icontainers) {
-                        if (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.TargetItems.class).getTargets(transferedItems) > 0) {
-                            new PathFinder(container.gob).run(gui);
-                            new OpenTargetContainer(container).run(gui);
-                            TakeAvailableItemsFromContainer tifc = new TakeAvailableItemsFromContainer(container, transferedItems, target_size);
-                            tifc.run(gui);
-                            target_size -= tifc.getCount();
-                            new CloseTargetContainer(container).run(gui);
-                            if (target_size == 0 || !tifc.getResult())
-                                break;
+                    if(context.icontainers.isEmpty()) {
+                        if(!context.getInputs(transferedItems.getDefault()).isEmpty())
+                        {
+                            for(Context.Input input : context.getInputs(transferedItems.getDefault())) {
+                                if(input instanceof Context.Barrel)
+                                {
+                                    new TakeFromBarrel(((Context.Barrel) input).barrel,transferedItems,target_size).run(gui);
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        for (Container container : context.icontainers) {
+                            if (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.TargetItems.class).getTargets(transferedItems) > 0) {
+                                new PathFinder(container.gob).run(gui);
+                                new OpenTargetContainer(container).run(gui);
+                                TakeAvailableItemsFromContainer tifc = new TakeAvailableItemsFromContainer(container, transferedItems, target_size);
+                                tifc.run(gui);
+                                target_size -= tifc.getCount();
+                                new CloseTargetContainer(container).run(gui);
+                                if (target_size == 0 || !tifc.getResult())
+                                    break;
+                            }
                         }
                     }
                     if (gui.getInventory().getItems(transferedItems).isEmpty())

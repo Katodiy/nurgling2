@@ -17,13 +17,11 @@ import static haven.OCache.posres;
 
 public class AutoDrink implements Action
 {
-    public final static AtomicBoolean waitRefil = new AtomicBoolean(false);
     public final static AtomicBoolean waitBot = new AtomicBoolean(false);
     public final static AtomicBoolean stop = new AtomicBoolean(false);
 
     public AutoDrink()
     {
-        waitRefil.set(false);
         waitBot.set(false);
         stop.set(false);
     }
@@ -46,51 +44,43 @@ public class AutoDrink implements Action
                 return Results.SUCCESS();
             }
 
-            NUtils.getUI().dropLastError();
-            for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae)
-            {
-                if(pag.button()!=null && pag.button().name().equals("Drink"))
-                {
+            if(checkWater()) {
+                NUtils.getUI().dropLastError();
+                for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae) {
+                    if (pag.button() != null && pag.button().name().equals("Drink")) {
 
-                    pag.button().use(new MenuGrid.Interaction(1, 0));
-                    WaitPoseOrMsg wops = new WaitPoseOrMsg(NUtils.player(),"gfx/borka/drinkan",new NAlias("You have nothing on your hotbelt to drink."));
-                    NUtils.getUI().core.addTask(wops);
-                    NUtils.addTask(new NTask() {
-                        @Override
-                        public boolean check() {
-                            return NUtils.player()==null || !NParser.checkName(NUtils.player().pose(),"gfx/borka/drinkan");
-                        }
-                    });
-                    if (wops.isError())
-                    {
-                        waitRefil.set(true);
-                        WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
-                        ArrayList<WItem> witems = ((NInventory) wbelt.item.contents).getItems(new NAlias("Waterskin"));
+                        pag.button().use(new MenuGrid.Interaction(1, 0));
+                        WaitPoseOrMsg wops = new WaitPoseOrMsg(NUtils.player(), "gfx/borka/drinkan", new NAlias("You have nothing on your hotbelt to drink."));
+                        NUtils.getUI().core.addTask(wops);
                         NUtils.addTask(new NTask() {
                             @Override
                             public boolean check() {
-                                if (!witems.isEmpty()) {
-                                    for (WItem item : witems) {
-                                        NGItem ngItem = ((NGItem) item.item);
-                                        if (!ngItem.content().isEmpty()) {
-                                            if (ngItem.content().get(0).name().contains("Water"))
-                                            {
-                                                return true;
-                                            }
-                                        }
-                                    }
-                                }
-                                return !waitRefil.get();
+                                return NUtils.player() == null || !NParser.checkName(NUtils.player().pose(), "gfx/borka/drinkan");
                             }
                         });
-                        break;
                     }
-
-                    break;
                 }
             }
         }
         NUtils.getUI().core.autoDrink = null;
         return Results.SUCCESS();
+    }
+
+    boolean checkWater() throws InterruptedException
+    {
+        WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
+        ArrayList<WItem> witems = ((NInventory) wbelt.item.contents).getItems(new NAlias("Waterskin"));
+        if (!witems.isEmpty()) {
+            for (WItem item : witems) {
+                NGItem ngItem = ((NGItem) item.item);
+                if (!ngItem.content().isEmpty()) {
+                    if (ngItem.content().get(0).name().contains("Water"))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

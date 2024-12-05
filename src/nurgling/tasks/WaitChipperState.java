@@ -52,7 +52,7 @@ public class WaitChipperState implements NTask
         }
         else {
             if (NUtils.getEnergy() < 0.36) {
-                if (prop.autoeat)
+                if (prop!=null && prop.autoeat)
                     state = State.BUMLINGFOREAT;
                 if (NUtils.getEnergy() < 0.23)
                     state = State.DANGER;

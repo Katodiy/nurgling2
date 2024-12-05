@@ -10,25 +10,23 @@ import java.util.function.*;
 import haven.MenuGrid.Pagina;
 import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.gfx.hud.rosters.goat.Goat;
+import haven.res.gfx.hud.rosters.horse.Horse;
 import haven.res.gfx.hud.rosters.pig.Pig;
 import haven.res.gfx.hud.rosters.sheep.Sheep;
 import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.widgets.NKinSettings;
-import nurgling.widgets.settings.Cows;
-import nurgling.widgets.settings.Goats;
-import nurgling.widgets.settings.Pigs;
-import nurgling.widgets.settings.Sheeps;
+import nurgling.widgets.settings.*;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-@haven.FromResource(name = "ui/croster", version = 74)
+@haven.FromResource(name = "ui/croster", version = 75)
 public abstract class CattleRoster <T extends Entry> extends Widget {
     public static final int WIDTH = UI.scale(900);
     public static final Comparator<Entry> namecmp = (a, b) -> a.name.compareTo(b.name);
     public static final int HEADH = UI.scale(40);
-    public final Map<Long, T> entries = new HashMap<>();
+    public final Map<UID, T> entries = new HashMap<>();
     public final Scrollbar sb;
     public final Widget entrycont;
     public int entryseq = 0;
@@ -60,10 +58,8 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	adda(new Button(UI.scale(150), "Remove selected", false).action(() -> {
 	    Collection<Object> args = new ArrayList<>();
 	    for(Entry entry : this.entries.values()) {
-		if(entry.mark.a) {
-		    args.add(Integer.valueOf((int)(entry.id & 0x00000000ffffffffl)));
-		    args.add(Integer.valueOf((int)((entry.id & 0xffffffff00000000l) >> 32)));
-		}
+		if(entry.mark.a)
+		    args.add(entry.id);
 	    }
 	    wdgmsg("rm", args.toArray(new Object[0]));
 	}), entrycont.pos("br").adds(0, 5), 1, 0);
@@ -137,6 +133,22 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 					pset.hide();
 				}
 			}
+			else if(type == Horse.class)
+			{
+				if(val) {
+					if (hset == null) {
+						hset = new Horses();
+						ui.root.add(hset, this.rootpos());
+					}
+					hset.show();
+					hset.raise();
+					hset.move(this.rootpos());
+				}
+				else
+				{
+					hset.hide();
+				}
+			}
 		}
 
 		@Override
@@ -171,6 +183,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	Goats gset = null;
 	Sheeps sset = null;
 	Pigs pset = null;
+	Horses hset = null;
 
     public static <E extends Entry>  List<Column> initcols(Column... attrs) {
 	for(int i = 0, x = CheckBox.sbox.sz().x + UI.scale(10); i < attrs.length; i++) {
@@ -296,7 +309,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	entryseq++;
     }
 
-    public void delentry(long id) {
+    public void delentry(UID id) {
 	T entry = entries.remove(id);
 	entry.destroy();
 	dirty = true;
@@ -317,7 +330,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	    delentry(entry.id);
 	    addentry(entry);
 	} else if(msg == "rm") {
-	    delentry(((Number)args[0]).longValue());
+	    delentry((UID)args[0]);
 	} else if(msg == "addto") {
 	    GameUI gui = (GameUI)ui.getwidget((Integer)args[0]);
 	    Pagina pag = gui.menu.paginafor(ui.sess.getres((Integer)args[1]));

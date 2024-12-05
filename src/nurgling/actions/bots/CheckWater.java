@@ -30,6 +30,7 @@ public class CheckWater implements Action {
         NUtils.addTask(new WaitItemContent(gui.vhand));
         String water = ((NGItem)gui.vhand.item).content().get(0).type();
         double quality = ((NGItem)gui.vhand.item).content().get(0).quality();
+        NUtils.getGameUI().msg(water + " " + quality);
         NUtils.player().addcustomol(new NCheckResult(NUtils.player(),quality,water));
         gui.getInventory().dropOn(pos,cups);
         for(WItem titem : gui.getInventory().getItems(cups))

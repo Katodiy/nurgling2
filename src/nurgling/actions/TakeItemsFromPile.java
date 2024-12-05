@@ -21,6 +21,14 @@ public class TakeItemsFromPile implements Action
         this.pile = pile;
         this.target_size = target_size;
         this.gpile = gob;
+        if(gob.ngob.name.contains("block"))
+        {
+            target_coord = new Coord(1,2);
+        }
+        else if(gob.ngob.name.contains("board"))
+        {
+            target_coord = new Coord(4,1);
+        }
     }
 
     @Override

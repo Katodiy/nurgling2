@@ -2,8 +2,12 @@
 package haven.res.ui.croster;
 
 import haven.*;
-
+import haven.render.*;
 import java.util.*;
+import java.util.function.*;
+import haven.MenuGrid.Pagina;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 
 import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.gfx.hud.rosters.goat.Goat;
@@ -11,18 +15,16 @@ import haven.res.gfx.hud.rosters.horse.Horse;
 import haven.res.gfx.hud.rosters.pig.Pig;
 import haven.res.gfx.hud.rosters.sheep.Sheep;
 
-@haven.FromResource(name = "ui/croster", version = 74)
+@haven.FromResource(name = "ui/croster", version = 75)
 public class RosterWindow extends Window {
     public static final Map<Glob, RosterWindow> rosters = new HashMap<>();
     public static int rmseq = 0;
     public int btny = 0;
     public List<TypeButton> buttons = new ArrayList<>();
 
-
-
     RosterWindow() {
 	super(Coord.z, "Cattle Roster", true);
-	}
+    }
 
     public void show(CattleRoster rost) {
 	for(CattleRoster ch : children(CattleRoster.class))

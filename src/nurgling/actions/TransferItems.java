@@ -46,7 +46,6 @@ public class TransferItems implements Action
         orderList.add("Walrus Tusk");
         orderList.add("Troll Tusks");
         orderList.add("Whale Bone Material");
-        orderList.add("Whale Bone Material");
         orderList.add("Wishbone");
     }
 
@@ -99,6 +98,10 @@ public class TransferItems implements Action
                             if (output instanceof Context.Barter) {
                                 if (((Context.OutputBarter) output).getArea() != null)
                                     new TransferToBarter(((Context.OutputBarter) output), new NAlias(item), th).run(gui);
+                            }
+                            if (output instanceof Context.Barrel) {
+                                if (((Context.OutputBarrel) output).getArea() != null)
+                                    new TransferToBarrel(((Context.OutputBarrel) output).barrel, new NAlias(item)).run(gui);
                             }
                         }
                     }

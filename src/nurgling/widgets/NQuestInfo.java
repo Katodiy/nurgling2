@@ -722,9 +722,11 @@ public class NQuestInfo extends Widget
 
     void setMarkersProp(String name, HashSet<String> props)
     {
+        if(name==null)
+            return;
         synchronized (markers) {
             for (MarkerInfo mi : markers) {
-                if (mi.name.equals(name)) {
+                if (mi.name!=null && mi.name.equals(name)) {
                     mi.prop = props;
                     return;
                 }

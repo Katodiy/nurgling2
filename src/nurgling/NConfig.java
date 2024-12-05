@@ -40,8 +40,10 @@ public class NConfig
         kinprop,
         show_drag_menu,
         cowsprop,
+        horseprop,
         goatsprop,
         chopperprop,
+        carrierprop,
         prepblockprop,
         prepboardprop,
         sheepsprop,
@@ -75,7 +77,8 @@ public class NConfig
         animalrad,
         smokeprop,
         worldexplorerprop,
-        questNotified, lpassistent, fishingsettings
+        questNotified, lpassistent, fishingsettings,
+        simplecrops
     }
 
 
@@ -122,6 +125,7 @@ public class NConfig
         conf.put(Key.endpoint, "");
         conf.put(Key.questNotified, false);
         conf.put(Key.lpassistent, false);
+        conf.put(Key.simplecrops, true);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -272,6 +276,9 @@ public class NConfig
                         case "CowsHerd":
                             res.add(new CowsHerd(obj));
                             break;
+                        case "HorseHerd":
+                            res.add(new HorseHerd(obj));
+                            break;
                         case "GoatsHerd":
                             res.add(new GoatsHerd(obj));
                             break;
@@ -307,6 +314,9 @@ public class NConfig
                             break;
                         case "NFishingSettings":
                             res.add(new NFishingSettings(obj));
+                            break;
+                        case "NCarrierProp":
+                            res.add(new NCarrierProp(obj));
                             break;
                         default:
                             res.add(obj);

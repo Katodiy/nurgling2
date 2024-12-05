@@ -955,6 +955,242 @@ public class VSpec {
         zelkovaOp_log.add("Zelkova Board"); // Доска
         zelkovaOp_log.add("Zelkova Block"); // Блок
         object.put("gfx/terobjs/trees/zelkovalog", zelkovaOp_log);
+        ArrayList<String> alabasterOp = new ArrayList<>();
+        alabasterOp.add("Alabaster"); // Камень
+        object.put("gfx/terobjs/bumlings/alabaster", alabasterOp);
+
+        ArrayList<String> apatiteOp = new ArrayList<>();
+        apatiteOp.add("Apatite"); // Камень
+        object.put("gfx/terobjs/bumlings/apatite", apatiteOp);
+
+        ArrayList<String> arkoseOp = new ArrayList<>();
+        arkoseOp.add("Arkose"); // Камень
+        object.put("gfx/terobjs/bumlings/arkose", arkoseOp);
+
+        ArrayList<String> basaltOp = new ArrayList<>();
+        basaltOp.add("Basalt"); // Камень
+        object.put("gfx/terobjs/bumlings/basalt", basaltOp);
+
+        ArrayList<String> blackcoalOp = new ArrayList<>();
+        blackcoalOp.add("Black Coal"); // Камень
+        object.put("gfx/terobjs/bumlings/blackcoal", blackcoalOp);
+
+        ArrayList<String> magnetiteOp = new ArrayList<>();
+        magnetiteOp.add("Magnetite"); // Камень
+        object.put("gfx/terobjs/bumlings/magnetite", magnetiteOp);
+
+        ArrayList<String> hematiteOp = new ArrayList<>();
+        hematiteOp.add("Blood Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/hematite", hematiteOp);
+
+        ArrayList<String> brecciaOp = new ArrayList<>();
+        brecciaOp.add("Breccia"); // Камень
+        object.put("gfx/terobjs/bumlings/breccia", brecciaOp);
+
+        ArrayList<String> cassiteriteOp = new ArrayList<>();
+        cassiteriteOp.add("Cassiterite"); // Камень
+        object.put("gfx/terobjs/bumlings/cassiterite", cassiteriteOp);
+
+        ArrayList<String> chalcopyriteOp = new ArrayList<>();
+        chalcopyriteOp.add("Chalcopyrite"); // Камень
+        object.put("gfx/terobjs/bumlings/chalcopyrite", chalcopyriteOp);
+
+        ArrayList<String> chertOp = new ArrayList<>();
+        chertOp.add("Chert"); // Камень
+        object.put("gfx/terobjs/bumlings/chert", chertOp);
+
+        ArrayList<String> cinnabarOp = new ArrayList<>();
+        cinnabarOp.add("Cinnabar"); // Камень
+        object.put("gfx/terobjs/bumlings/cinnabar", cinnabarOp);
+
+        ArrayList<String> diabaseOp = new ArrayList<>();
+        diabaseOp.add("Diabase"); // Камень
+        object.put("gfx/terobjs/bumlings/diabase", diabaseOp);
+
+        ArrayList<String> dioriteOp = new ArrayList<>();
+        dioriteOp.add("Diorite"); // Камень
+        object.put("gfx/terobjs/bumlings/diorite", dioriteOp);
+
+        ArrayList<String> petziteOp = new ArrayList<>();
+        petziteOp.add("Direvein Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/petzite", petziteOp);
+
+        ArrayList<String> dolomiteOp = new ArrayList<>();
+        dolomiteOp.add("Dolomite"); // Камень
+        object.put("gfx/terobjs/bumlings/dolomite", dolomiteOp);
+
+        ArrayList<String> eclogiteOp = new ArrayList<>();
+        eclogiteOp.add("Eclogite"); // Камень
+        object.put("gfx/terobjs/bumlings/eclogite", eclogiteOp);
+
+        ArrayList<String> feldsparOp = new ArrayList<>();
+        feldsparOp.add("Feldspar"); // Камень
+        object.put("gfx/terobjs/bumlings/feldspar", feldsparOp);
+
+        ArrayList<String> flintOp = new ArrayList<>();
+        flintOp.add("Flint"); // Камень
+        object.put("gfx/terobjs/bumlings/flint", flintOp);
+
+        ArrayList<String> fluorosparOp = new ArrayList<>();
+        fluorosparOp.add("Fluorospar"); // Камень
+        object.put("gfx/terobjs/bumlings/fluorospar", fluorosparOp);
+
+        ArrayList<String> gabbroOp = new ArrayList<>();
+        gabbroOp.add("Gabbro"); // Камень
+        object.put("gfx/terobjs/bumlings/gabbro", gabbroOp);
+
+        ArrayList<String> galenaOp = new ArrayList<>();
+        galenaOp.add("Galena"); // Камень
+        object.put("gfx/terobjs/bumlings/galena", galenaOp);
+
+        ArrayList<String> gneissOp = new ArrayList<>();
+        gneissOp.add("Gneiss"); // Камень
+        object.put("gfx/terobjs/bumlings/gneiss", gneissOp);
+
+        ArrayList<String> graniteOp = new ArrayList<>();
+        graniteOp.add("Granite"); // Камень
+        object.put("gfx/terobjs/bumlings/granite", graniteOp);
+
+        ArrayList<String> graywackeOp = new ArrayList<>();
+        graywackeOp.add("Graywacke"); // Камень
+        object.put("gfx/terobjs/bumlings/graywacke", graywackeOp);
+
+        ArrayList<String> greenschistOp = new ArrayList<>();
+        greenschistOp.add("Greenschist"); // Камень
+        object.put("gfx/terobjs/bumlings/greenschist", greenschistOp);
+
+        ArrayList<String> ilmeniteOp = new ArrayList<>();
+        ilmeniteOp.add("Heavy Earth Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/ilmenite", ilmeniteOp);
+
+//        ArrayList<String> hornsilverOp = new ArrayList<>();
+//        hornsilverOp.add("Horn Silver"); // Камень
+//        object.put("gfx/terobjs/bumlings/hornsilver", hornsilverOp);
+
+        ArrayList<String> hornblendeOp = new ArrayList<>();
+        hornblendeOp.add("Hornblende"); // Камень
+        object.put("gfx/terobjs/bumlings/hornblende", hornblendeOp);
+
+//        ArrayList<String> limoniteOp = new ArrayList<>();
+//        limoniteOp.add("Iron Ochre Ore"); // Камень
+//        object.put("gfx/terobjs/bumlings/limonite", limoniteOp);
+
+        ArrayList<String> jasperOp = new ArrayList<>();
+        jasperOp.add("Jasper"); // Камень
+        object.put("gfx/terobjs/bumlings/jasper", jasperOp);
+
+        ArrayList<String> kyaniteOp = new ArrayList<>();
+        kyaniteOp.add("Kyanite"); // Камень
+        object.put("gfx/terobjs/bumlings/kyanite", kyaniteOp);
+
+        ArrayList<String> lavarockOp = new ArrayList<>();
+        lavarockOp.add("Lava Rock"); // Камень
+        object.put("gfx/terobjs/bumlings/lavarock", lavarockOp);
+
+        ArrayList<String> leadglanceOp = new ArrayList<>();
+        leadglanceOp.add("Lead Glance"); // Камень
+        object.put("gfx/terobjs/bumlings/leadglance", leadglanceOp);
+
+//        ArrayList<String> nagyagiteOp = new ArrayList<>();
+//        nagyagiteOp.add("Leaf Ore"); // Камень
+//        object.put("gfx/terobjs/bumlings/nagyagite", nagyagiteOp);
+
+        ArrayList<String> limestoneOp = new ArrayList<>();
+        limestoneOp.add("Limestone"); // Камень
+        object.put("gfx/terobjs/bumlings/limestone", limestoneOp);
+
+        ArrayList<String> malachiteOp = new ArrayList<>();
+        malachiteOp.add("Malachite"); // Камень
+        object.put("gfx/terobjs/bumlings/malachite", malachiteOp);
+
+        ArrayList<String> marbleOp = new ArrayList<>();
+        marbleOp.add("Marble"); // Камень
+        object.put("gfx/terobjs/bumlings/marble", marbleOp);
+
+        ArrayList<String> micaOp = new ArrayList<>();
+        micaOp.add("Mica"); // Камень
+        object.put("gfx/terobjs/bumlings/mica", micaOp);
+
+        ArrayList<String> microliteOp = new ArrayList<>();
+        microliteOp.add("Microlite"); // Камень
+        object.put("gfx/terobjs/bumlings/microlite", microliteOp);
+
+        ArrayList<String> olivineOp = new ArrayList<>();
+        olivineOp.add("Olivine"); // Камень
+        object.put("gfx/terobjs/bumlings/olivine", olivineOp);
+
+        ArrayList<String> orthoclaseOp = new ArrayList<>();
+        orthoclaseOp.add("Orthoclase"); // Камень
+        object.put("gfx/terobjs/bumlings/orthoclase", orthoclaseOp);
+
+        ArrayList<String> peacockoreOp = new ArrayList<>();
+        peacockoreOp.add("Peacock Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/peacockore", peacockoreOp);
+
+        ArrayList<String> pegmatiteOp = new ArrayList<>();
+        pegmatiteOp.add("Pegmatite"); // Камень
+        object.put("gfx/terobjs/bumlings/pegmatite", pegmatiteOp);
+
+        ArrayList<String> porphyryOp = new ArrayList<>();
+        porphyryOp.add("Porphyry"); // Камень
+        object.put("gfx/terobjs/bumlings/porphyry", porphyryOp);
+
+        ArrayList<String> pumiceOp = new ArrayList<>();
+        pumiceOp.add("Pumice"); // Камень
+        object.put("gfx/terobjs/bumlings/pumice", pumiceOp);
+
+        ArrayList<String> quartzOp = new ArrayList<>();
+        quartzOp.add("Quartz"); // Камень
+        object.put("gfx/terobjs/bumlings/quartz", quartzOp);
+
+        ArrayList<String> rhyoliteOp = new ArrayList<>();
+        rhyoliteOp.add("Rhyolite"); // Камень
+        object.put("gfx/terobjs/bumlings/rhyolite", rhyoliteOp);
+
+        ArrayList<String> sandstoneOp = new ArrayList<>();
+        sandstoneOp.add("Sandstone"); // Камень
+        object.put("gfx/terobjs/bumlings/sandstone", sandstoneOp);
+
+        ArrayList<String> schistOp = new ArrayList<>();
+        schistOp.add("Schist"); // Камень
+        object.put("gfx/terobjs/bumlings/schist", schistOp);
+
+//        ArrayList<String> sylvaniteOp = new ArrayList<>();
+//        sylvaniteOp.add("Schrifterz Ore"); // Камень
+//        object.put("gfx/terobjs/bumlings/sylvanite", sylvaniteOp);
+
+        ArrayList<String> serpentineOp = new ArrayList<>();
+        serpentineOp.add("Serpentine"); // Камень
+        object.put("gfx/terobjs/bumlings/serpentine", serpentineOp);
+
+        ArrayList<String> argentiteOp = new ArrayList<>();
+        argentiteOp.add("Silvershine Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/argentite", argentiteOp);
+
+        ArrayList<String> slateOp = new ArrayList<>();
+        slateOp.add("Slate"); // Камень
+        object.put("gfx/terobjs/bumlings/slate", slateOp);
+
+        ArrayList<String> soapstoneOp = new ArrayList<>();
+        soapstoneOp.add("Soapstone"); // Камень
+        object.put("gfx/terobjs/bumlings/soapstone", soapstoneOp);
+
+        ArrayList<String> sodaliteOp = new ArrayList<>();
+        sodaliteOp.add("Sodalite"); // Камень
+        object.put("gfx/terobjs/bumlings/sodalite", sodaliteOp);
+
+        ArrayList<String> sunstoneOp = new ArrayList<>();
+        sunstoneOp.add("Sunstone"); // Камень
+        object.put("gfx/terobjs/bumlings/sunstone", sunstoneOp);
+
+        ArrayList<String> cupriteOp = new ArrayList<>();
+        cupriteOp.add("Wine Glance Ore"); // Камень
+        object.put("gfx/terobjs/bumlings/cuprite", cupriteOp);
+
+        ArrayList<String> zincsparOp = new ArrayList<>();
+        zincsparOp.add("Zincspar"); // Камень
+        object.put("gfx/terobjs/bumlings/zincspar", zincsparOp);
+
     }
 
     static {
@@ -964,6 +1200,7 @@ public class VSpec {
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/propolis\",\"name\":\"Propolis\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/kvann\",\"name\":\"Kvann\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-juniper\",\"name\":\"Juniper Berries\"}"));
+        spices.add(new JSONObject("{\"static\":\"gfx/invobjs/clove-garlic\",\"name\":\"Clove of Garlic\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/chives\",\"name\":\"Chives\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/leaf-laurel\",\"name\":\"Laurel Leaves\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/salvia\",\"name\":\"Sage\"}"));
@@ -984,6 +1221,7 @@ public class VSpec {
         ArrayList<JSONObject> onions = new ArrayList<>();
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/yellowonion\",\"name\":\"Yellow Onion\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/redonion\",\"name\":\"Red Onion\"}"));
+        onions.add(new JSONObject("{\"static\":\"gfx/invobjs/garlic\",\"name\":\"Garlic\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/small/leek\",\"name\":\"Leek\",\"x\":2,\"y\":1}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledonion\",\"name\":\"Pickled Onion\"}"));
         categories.put("Onion", onions);
@@ -1011,6 +1249,7 @@ public class VSpec {
         salads.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/greenkelp\",\"name\":\"Green Kelp\"}"));
         salads.add(new JSONObject("{\"static\":\"gfx/invobjs/leaf-heartwood\",\"name\":\"Heartwood Leaves\"}"));
         salads.add(new JSONObject("{\"static\":\"gfx/invobjs/lettuceleaf\",\"name\":\"Lettuce Leaf\"}"));
+        salads.add(new JSONObject("{\"static\":\"gfx/invobjs/greenkale\",\"name\":\"Green Kale\"}"));
         salads.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/marshmallow\",\"name\":\"Marsh-Mallow\"}"));
         salads.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/stingingnettle\",\"name\":\"Stinging Nettle\"}"));
         categories.put("Salad Greens", salads);
@@ -1847,7 +2086,7 @@ public class VSpec {
         categories.put("Fine Clay", fineClays);
 
         ArrayList<JSONObject> anyBricks = new ArrayList<>();
-        anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-ball\",\"name\":\"Ball Brick\"}"));
+        anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-ball\",\"name\":\"Brick\"}"));
         anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-acre\",\"name\":\"Acre Brick\"}"));
         anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-gray\",\"name\":\"Gray Brick\"}"));
         anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-cave\",\"name\":\"Cave Brick\"}"));
@@ -1861,6 +2100,7 @@ public class VSpec {
         ArrayList<JSONObject> clays = new ArrayList<>();
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-acre\",\"name\":\"Acre Clay\"}"));
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-ball\",\"name\":\"Ball Clay\"}"));
+        clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-sea\",\"name\":\"Sea Clay\"}"));
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-gray\",\"name\":\"Gray Clay\"}"));
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-cave\",\"name\":\"Cave Clay\"}"));
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-pit\",\"name\":\"Pit Clay\"}"));
@@ -1895,14 +2135,14 @@ public class VSpec {
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/stoathide-winter-blood\",\"name\":\"Fresh Winter Stoat Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/goathide-blood\",\"name\":\"Fresh Goat Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/greysealhide-blood\",\"name\":\"Fresh Grey Seal Hide\"}"));
-        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehoghide-blood\",\"name\":\"Fresh Hedgehog Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehoghide-blood\",\"name\":\"Fresh Hedgehog Skin\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/horsehide-blood\",\"name\":\"Fresh Horse Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/lynxhide-blood\",\"name\":\"Fresh Lynx Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/mammothhide-blood\",\"name\":\"Fresh Mammoth Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/molehide-blood\",\"name\":\"Fresh Mole Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/moosehide-blood\",\"name\":\"Fresh Moose Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/mouflonhide-blood\",\"name\":\"Fresh Mouflon Hide\"}"));
-        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/otterhide-blood\",\"name\":\"Fresh Otter Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/otterhide-blood\",\"name\":\"Fresh Otterhide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/pighide-blood\",\"name\":\"Fresh Pig Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/rabbithide-blood\",\"name\":\"Fresh Rabbit Fur\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/reddeerhide-blood\",\"name\":\"Fresh Red Deer Hide\"}"));
@@ -1936,14 +2176,14 @@ public class VSpec {
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/foxhide\",\"name\":\"Fox Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/goathide\",\"name\":\"Goat Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/greysealhide\",\"name\":\"Grey Seal Hide\"}"));
-        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehoghide\",\"name\":\"Hedgehog Hide\"}"));
+        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehoghide\",\"name\":\"Hedgehog Skin\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/horsehide\",\"name\":\"Horse Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/lynxhide\",\"name\":\"Lynx Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/mammothhide\",\"name\":\"Mammoth Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/molehide\",\"name\":\"Mole Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/moosehide\",\"name\":\"Moose Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/mouflonhide\",\"name\":\"Mouflon Hide\"}"));
-        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/otterhide\",\"name\":\"Otter Hide\"}"));
+        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/otterhide\",\"name\":\"Otterhide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/pighide\",\"name\":\"Pigskin\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/rabbithide\",\"name\":\"Rabbit Fur\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/reddeerhide\",\"name\":\"Red Deer Hide\"}"));

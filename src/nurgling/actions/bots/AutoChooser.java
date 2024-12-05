@@ -11,11 +11,13 @@ public class AutoChooser implements Action
 {
     String value;
     NInventory inv;
+    String item;
 
-    public AutoChooser(NInventory inv, String value)
+    public AutoChooser(NInventory inv,String item, String value)
     {
         this.value = value;
         this.inv = inv;
+        this.item = item;
     }
 
     @Override
@@ -24,22 +26,18 @@ public class AutoChooser implements Action
         if(inv!=null && (Window)inv.parent!=null)
         {
             NUtils.getUI().core.enableBotMod();
-            NCore.LastActions actions = NUtils.getUI().core.getLastActions();
-            if (actions.item != null && actions.petal != null)
+            NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
+            ArrayList<WItem> items = inv.getItems(item);
+            if (items.size() > 0)
+                ((Window) inv.parent).disable();
+            for (WItem item : items)
             {
-                NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
-                ArrayList<WItem> items = inv.getItems(actions.item.item);
-                if (items.size() > 0)
-                    ((Window) inv.parent).disable();
-                for (WItem item : items)
+                if (!((Window) inv.parent).isDisabled())
                 {
-                    if (!((Window) inv.parent).isDisabled())
-                    {
-                        NUtils.getUI().core.disableBotMod();
-                        return Results.SUCCESS();
-                    }
-                    new SelectFlowerAction(actions.petal, (NWItem) item).run(gui);
+                    NUtils.getUI().core.disableBotMod();
+                    return Results.SUCCESS();
                 }
+                new SelectFlowerAction(value, (NWItem) item).run(gui);
             }
             NUtils.getUI().core.disableBotMod();
             ((Window) inv.parent).enable();
@@ -47,7 +45,7 @@ public class AutoChooser implements Action
         return Results.SUCCESS();
     }
 
-    public static void enable(NInventory inventory, String value){
+    public static void enable(NInventory inventory, String item, String value){
         if(inventory.parent instanceof Window)
         {
             new Thread(new Runnable()
@@ -57,7 +55,7 @@ public class AutoChooser implements Action
                 {
                     try
                     {
-                        new AutoChooser(inventory, value).run(NUtils.getGameUI());
+                        new AutoChooser(inventory, item, value).run(NUtils.getGameUI());
                     }
                     catch (InterruptedException e)
                     {

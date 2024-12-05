@@ -94,7 +94,7 @@ public class Fightsess extends Widget {
 	if(raw == null)
 	    return;
 	//pcc = map.screenxf(raw).round2();
-	pcc = new Coord(NUtils.getGameUI().sz.div(2));
+	pcc = new Coord(ui.gui.sz.div(2));
 	pho = (int)(map.screenxf(raw.add(0, 0, UI.scale(20))).round2().sub(pcc).y) - UI.scale(20);
     }
 

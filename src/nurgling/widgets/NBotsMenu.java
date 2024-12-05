@@ -18,12 +18,12 @@ public class NBotsMenu extends Widget
         resources.elements.add(new NButton("chipper", new Chipper(), true));
         resources.elements.add(new NButton("pblocks", new PrepareBlocks()));
         resources.elements.add(new NButton("pboards", new PrepareBoards()));
-        resources.elements.add(new NButton("log", new TransferLog()));
         resources.elements.add(new NButton("clay", new ClayDigger(), true));
         resources.elements.add(new NButton("bark", new CollectBark(), true));
         resources.elements.add(new NButton("bough", new CollectBough(), true));
         resources.elements.add(new NButton("leaf", new CollectLeaf(), true));
         resources.elements.add(new NButton("fisher", new Fishing(), true));
+        resources.elements.add(new NButton("plower", new Plower(), true));
         addLayout(resources);
 
         NLayout productions = new NLayout("productions");
@@ -38,7 +38,11 @@ public class NBotsMenu extends Widget
         productions.elements.add(new NButton("tarkiln", new TarkilnAction(), true));
         productions.elements.add(new NButton("tabaco", new TabacoAction(), true));
         productions.elements.add(new NButton("brick", new BricksAction(), true));
+        productions.elements.add(new NButton("branch", new BranchAction(), true));
         productions.elements.add(new NButton("wrap", new WrapAction(), true));
+        productions.elements.add(new NButton("bonestoash", new BoneAshAction(),true));
+        productions.elements.add(new NButton("ash", new BlockAshAction(),true));
+        productions.elements.add(new NButton("lye", new LyeBoiler(),true));
         addLayout(productions);
         NLayout battle = new NLayout("battle");
         battle.elements.add(new NButton("reagro", new Reagro()));
@@ -49,12 +53,17 @@ public class NBotsMenu extends Widget
         addLayout(battle);
         NLayout farming = new NLayout("farming");
         farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
+        farming.elements.add(new NButton("carrot", new CarrotFarmer()));
         farming.elements.add(new NButton("hemp", new HempFarmer(), true));
         farming.elements.add(new NButton("flax", new FlaxFarmer(), true));
         farming.elements.add(new NButton("goats", new GoatsAction()));
         farming.elements.add(new NButton("sheeps", new SheepsAction()));
         farming.elements.add(new NButton("pigs", new PigsAction()));
+        farming.elements.add(new NButton("horses", new HorsesAction()));
         farming.elements.add(new NButton("cows", new nurgling.actions.bots.CowsAction()));
+        farming.elements.add(new NButton("barley", new BarleyFarmer(), true));
+        farming.elements.add(new NButton("millet", new MilletFarmer(), true));
+        farming.elements.add(new NButton("wheat", new WheatFarmer(), true));
         addLayout(farming);
         NLayout utils = new NLayout("utils");
         utils.elements.add(new NButton("shieldsword", new EquipShieldSword()));
@@ -65,6 +74,10 @@ public class NBotsMenu extends Widget
         utils.elements.add(new NButton("clover", new FeedClover(), true));
         utils.elements.add(new NButton("collectalltopile", new CollectSameItemsFromEarth(), true));
         utils.elements.add(new NButton("worldexplorer", new WorldExplorer(), true));
+        utils.elements.add(new NButton("lift", new TransferLiftable()));
+        utils.elements.add(new NButton("loading", new TransferToVeh()));
+        utils.elements.add(new NButton("unloading", new TransferFromVeh()));
+        utils.elements.add(new NButton("swap", new TransferFromVehToVeh()));
         addLayout(utils);
         NLayout build = new NLayout("build");
         build.elements.add(new NButton("dframe", new BuildDryingFrame(), true));

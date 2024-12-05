@@ -70,6 +70,12 @@ public class FreeContainersInArea implements Action {
                                 tifp.run(gui);
                                 for(WItem item : tifp.newItems())
                                     targets.add(((NGItem)item.item).name());
+                                if(Finder.findGob(pile.id) != null) {
+                                    new TransferItems(context, targets).run(gui);
+                                    targets.clear();
+                                    new PathFinder(pile).run(gui);
+                                    new OpenTargetContainer("Stockpile", pile).run(gui);
+                                }
                             }
                         }
                     else

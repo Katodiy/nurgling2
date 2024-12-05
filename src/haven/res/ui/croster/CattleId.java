@@ -9,17 +9,17 @@ import haven.MenuGrid.Pagina;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-@haven.FromResource(name = "ui/croster", version = 74)
+@haven.FromResource(name = "ui/croster", version = 75)
 public class CattleId extends GAttrib implements RenderTree.Node, PView.Render2D {
-    public final long id;
+    public final UID id;
 
-    public CattleId(Gob gob, long id) {
+    public CattleId(Gob gob, UID id) {
 	super(gob);
 	this.id = id;
     }
 
     public static void parse(Gob gob, Message dat) {
-	long id = dat.int64();
+	UID id = UID.of(dat.int64());
 	gob.setattr(new CattleId(gob, id));
     }
 

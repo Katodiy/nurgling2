@@ -29,6 +29,7 @@ package haven;
 import haven.render.*;
 import nurgling.*;
 import nurgling.conf.*;
+import nurgling.widgets.NMiniMapWnd;
 import nurgling.widgets.options.*;
 
 import java.awt.event.KeyEvent;
@@ -663,6 +664,8 @@ public class OptWnd extends Window {
 		y = cont.adda(new Label("Special ability"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
 		y = addbtn(cont, "Quick action", NMapView.kb_quickaction, y);
 		y = addbtn(cont, "Quick action (Alt.)", NMapView.kb_quickignaction, y);
+		y = addbtn(cont, "Show/hide nature objects", NMiniMapWnd.kb_nature, y);
+		y = addbtn(cont, "Night vision", NMiniMapWnd.kb_night, y);
 
 		y = cont.adda(new Label("Tool belt"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
 		for(int i = 0 ; i < (Integer)NConfig.get(NConfig.Key.numbelts); i++)
@@ -825,6 +828,7 @@ public class OptWnd extends Window {
     }
 	public Panel nquickAct;
 	public Panel nautomap;
+	public Panel nqolwnd;
 	public Panel nringsettings;
     public OptWnd(boolean gopts) {
 	super(Coord.z, "Options", true);
@@ -833,7 +837,7 @@ public class OptWnd extends Window {
 	Panel audio = add(new AudioPanel(main));
 	Panel iface = add(new InterfacePanel(main));
 	Panel keybind = add(new BindingPanel(main));
-	Panel noptwnd = add(new NQolPanel(main));
+	nqolwnd = add(new NQolPanel(main));
 	nautomap = add( new NAutoMapperPanel(main));
 	nquickAct = add(new NQuickActionsPanel(main));
 	nringsettings = add(new NRingSettingsPanel(main));
@@ -843,7 +847,7 @@ public class OptWnd extends Window {
 	Widget prev;
 	y = (prev = main.add(new PButton(UI.scale(200), "Interface settings", 'v', iface), 0, y)).pos("bl").adds(0, 5).y;
 	x = prev.pos("ur").adds(10, 0).x;
-	main.add(new PButton(UI.scale(200), "Quality of Life", 'k', noptwnd), x, prev.pos("ur").y);
+	main.add(new PButton(UI.scale(200), "Quality of Life", 'k', nqolwnd), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Video settings", 'v', video), 0, y)).pos("bl").adds(0, 5).y;
 	main.add(new PButton(UI.scale(200), "Quick Actions and Selections", 'k', nquickAct), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Audio settings", 'a', audio), 0, y)).pos("bl").adds(0, 5).y;
@@ -894,7 +898,7 @@ public class OptWnd extends Window {
 		private final Widget save;
 		private final Widget back;
 
-		private QoL qol_p;
+		public QoL qol_p;
 
 
 		public NQolPanel(Panel prev1) {

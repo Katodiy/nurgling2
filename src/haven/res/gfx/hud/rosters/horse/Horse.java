@@ -5,9 +5,12 @@ package haven.res.gfx.hud.rosters.horse;
 
 import haven.*;
 import haven.res.ui.croster.*;
+import nurgling.conf.HorseHerd;
+import nurgling.conf.SheepsHerd;
+
 import java.util.*;
 
-@haven.FromResource(name = "gfx/hud/rosters/horse", version = 62)
+@haven.FromResource(name = "gfx/hud/rosters/horse", version = 63)
 public class Horse extends Entry {
     public int meat, milk;
     public int meatq, milkq, hideq;
@@ -15,7 +18,7 @@ public class Horse extends Entry {
     public int end, stam, mb;
     public boolean stallion, foal, dead, pregnant, lactate, owned, mine;
 
-    public Horse(long id, String name) {
+    public Horse(UID id, String name) {
 	super(SIZE, id, name);
     }
 
@@ -39,6 +42,7 @@ public class Horse extends Entry {
 	drawcol(g, HorseRoster.cols.get(i), 1, milkq, percent, i++);
 	drawcol(g, HorseRoster.cols.get(i), 1, hideq, percent, i++);
 	drawcol(g, HorseRoster.cols.get(i), 1, seedq, null, i++);
+	drawcol(g, HorseRoster.cols.get(i), 1, rang(), null, i++);
 	super.draw(g);
     }
 
@@ -69,6 +73,24 @@ public class Horse extends Entry {
 	}
 	return(super.mousedown(c, button));
     }
+
+	public double rang() {
+
+
+		HorseHerd herd = HorseHerd.getCurrent();
+		if(herd==null)
+			return 0;
+
+		double ql = (!herd.ignoreBD || stallion)?(q > (seedq - herd.breedingGap)) ? (q + seedq - herd.breedingGap) / 2. : q + ((seedq - herd.breedingGap) - q) * herd.coverbreed:q;
+		double m = ql * herd.meatq * meatq / 100.;
+		double qm = meat * herd.meatquan1 + ((meat > herd.meatquanth) ? ((meat - herd.meatquanth) * (herd.meatquan2 - herd.meatquan1)) : 0);
+		double _stam = stam * herd.stam1 + ((stam > herd.stamth) ? ((stam - herd.stamth) * (herd.stam2 - herd.stam1)) : 0);
+		double hide = ql * herd.hideq * hideq / 100.;
+		double _end = herd.enduran * end;
+		double _meta = herd.meta * mb;
+
+		return Math.round((m + qm + _stam + _meta + _end + hide) * 10) / 10.;
+	}
 }
 
 /* >wdg: HorseRoster */

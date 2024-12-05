@@ -98,7 +98,7 @@ public class GetItems implements NTask
                     {
                         if(th == -1)
                             result.add(item);
-                        else if( ((quality == QualityType.High || quality ==null) && ((NGItem) item.item).quality >= th) || (quality == QualityType.Low && ((NGItem) item.item).quality <= th))
+                        else if((((NGItem) item.item).quality)!=null && ((quality == QualityType.High || quality ==null) && ((NGItem) item.item).quality >= th) || (quality == QualityType.Low && ((NGItem) item.item).quality <= th))
                             result.add(item);
                     }
                 }

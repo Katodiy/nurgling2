@@ -137,6 +137,7 @@ public class Container {
                 return 0;
             int count = 0;
             short[][] oldData = (short[][]) res.get(key);
+
             short[][] tempGrid = new short[oldData.length][oldData[0].length];
             for (int i = 0; i < tempGrid.length; i++)
                 System.arraycopy(oldData[i], 0, tempGrid[i], 0, tempGrid[0].length);

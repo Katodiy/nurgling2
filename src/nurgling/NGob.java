@@ -13,6 +13,7 @@ import nurgling.overlays.*;
 import nurgling.pf.*;
 import nurgling.tools.*;
 import nurgling.widgets.NAlarmWdg;
+import nurgling.widgets.NProspecting;
 import nurgling.widgets.NQuestInfo;
 
 import java.util.*;
@@ -49,8 +50,13 @@ public class NGob {
             if (((Drawable) a).getres() != null) {
                 name = ((Drawable) a).getres().name;
 
-                if(name!=null && name.startsWith("gfx/terobjs/arch/cellardoor")) {
+                if(name!=null && name.startsWith("gfx/terobjs/arch/cellardoor") || name.startsWith("gfx/terobjs/herbs/standinggrass")) {
                     return;
+                }
+
+                if(name!=null && name.contains("bumlings"))
+                {
+                    name = name.replaceAll("\\d+$", "");
                 }
 
                 if (((Drawable) a).getres().getLayers() != null) {
@@ -120,10 +126,12 @@ public class NGob {
                         else {
                             if (NParser.checkName(name, new NAlias(new ArrayList<String>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<String>(Arrays.asList("stump", "wrack", "log"))))) {
                                 switch (name) {
+                                    case "gfx/terobjs/map/naturalminesupport":
+                                        parent.addcustomol(new NMiningSupport(parent, 92));
+                                        break;
                                     case "gfx/terobjs/ladder":
                                     case "gfx/terobjs/minesupport":
                                     case "gfx/terobjs/trees/towercap":
-                                    case "gfx/terobjs/map/naturalminesupport":
                                         parent.addcustomol(new NMiningSupport(parent, 100));
                                         break;
                                     case "gfx/terobjs/minebeam":
@@ -300,7 +308,18 @@ public class NGob {
                     ResDrawable dr = ((ResDrawable) parent.getattr(Drawable.class));
                     parent.setattr(new ResDrawable(parent, dr.res, dr.sdt, false));
                 }
+
+
             }
+        Sprite spr = ol.spr;
+        if(spr != null) {
+            Resource res = spr.res;
+            if(res != null) {
+                if(res.name.equals("gfx/fx/dowse")) {
+                    NProspecting.overlay(parent, ol);
+                }
+            }
+        }
     }
 
     public void removeol(Gob.Overlay ol) {

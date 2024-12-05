@@ -55,7 +55,7 @@ public class FreeContainers implements Action
                     targets.add(name);
                 }
             }
-            while (!new TakeItemsFromContainer(container, targets).run(gui).isSuccess)
+            while (!new TakeItemsFromContainer(container, targets, pattern).run(gui).isSuccess)
             {
                 new TransferItems(context, targets).run(gui);
                 pf = new PathFinder(container.gob);

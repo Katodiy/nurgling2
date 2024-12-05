@@ -158,13 +158,25 @@ public class SeedCrop implements Action {
             return;
         }
         if (count > 0) {
-            new PathFinder(target_coord).run(NUtils.getGameUI());
-            if (setDir.get()) {
-                if (rev)
-                    new SetDir(new Coord2d(0, 1)).run(gui);
-                else
-                    new SetDir(new Coord2d(0, -1)).run(gui);
-                setDir.set(false);
+            if(PathFinder.isAvailable(target_coord)) {
+                new PathFinder(target_coord).run(NUtils.getGameUI());
+                if (setDir.get()) {
+                    if (rev)
+                        new SetDir(new Coord2d(0, 1)).run(gui);
+                    else
+                        new SetDir(new Coord2d(0, -1)).run(gui);
+                    setDir.set(false);
+                }
+            }
+            else
+            {
+                for (int i = 0; i <= area.br.x - area.ul.x; i++) {
+                    for (int j = 0; j <= area.br.y - area.ul.y; j++) {
+                        if (NParser.checkName(tiles[i][j].name, "field")) {
+                            new PathFinder(new Coord(area.ul.x+i,area.ul.y+j).mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y)).run(gui);
+                        }
+                    }
+                }
             }
             int stacks_size = NUtils.getGameUI().getInventory().getTotalAmountItems(iseed);
             NUtils.getGameUI().getInventory().activateItem(iseed);
