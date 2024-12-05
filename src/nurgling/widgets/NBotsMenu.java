@@ -290,6 +290,23 @@ public class NBotsMenu extends Widget
                     }
                     return (rtip);
                 }
+
+                @Override
+                public boolean mouseup(MouseUpEvent ev) {
+                    if((ev.b == 1) && (grab != null)) {
+                        if(dragging != null) {
+                            DropTarget.dropthing(ui.root, ui.mc, dragging);
+                            pressed = null;
+                            dragging = null;
+                        } else if(pressed != null) {
+                            click();
+                            pressed = null;
+                        }
+                        grab.remove();
+                        grab = null;
+                    }
+                    return super.mouseup(ev);
+                }
             }
                     .action(
                             new Runnable() {
@@ -314,6 +331,22 @@ public class NBotsMenu extends Widget
                 public void click() {
                     super.click();
                     showLayouts();
+                }
+
+                @Override
+                public boolean mouseup(MouseUpEvent ev) {
+                    if((ev.b == 1) && (grab != null)) {
+                        if(dragging != null) {
+                            pressed = null;
+                            dragging = null;
+                        } else if(pressed != null) {
+                            click();
+                            pressed = null;
+                        }
+                        grab.remove();
+                        grab = null;
+                    }
+                    return super.mouseup(ev);
                 }
             };
        }
