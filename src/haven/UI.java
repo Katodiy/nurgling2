@@ -28,6 +28,7 @@ package haven;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.concurrent.*;
 import haven.Widget.*;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
@@ -52,7 +53,7 @@ public class UI {
 	}
     public static int MOD_SHIFT = KeyMatch.S, MOD_CTRL = KeyMatch.C, MOD_META = KeyMatch.M, MOD_SUPER = KeyMatch.SUPER;
     public RootWidget root;
-    public final LinkedList<Grab> grabs = new LinkedList<Grab>();
+    public final List<Grab> grabs = new CopyOnWriteArrayList<Grab>();
     protected final Map<Integer, Widget> widgets = new TreeMap<Integer, Widget>();
     protected final Map<Widget, Integer> rwidgets = new HashMap<Widget, Integer>();
     public Environment env;
@@ -532,7 +533,7 @@ public class UI {
 
     public <E extends Event>  Grab<E> grab(Widget owner, Class<E> etype, EventHandler<? super E> handler) {
 	Grab<E> g = new Grab<>(owner, etype, handler);
-	grabs.addFirst(g);
+	grabs.add(0, g);
 	return(g);
     }
 
@@ -586,10 +587,9 @@ public class UI {
     }
 	
     public void removed(Widget wdg) {
-	for(Iterator<Grab> i = grabs.iterator(); i.hasNext();) {
-	    Grab g = i.next();
+	for(Grab g : grabs) {
 	    if(g.owner.hasparent(wdg))
-		i.remove();
+		grabs.remove(g);
 	}
     }
 
@@ -697,6 +697,18 @@ public class UI {
 	public String message();
 	public default Color color() {return(Color.WHITE);}
 	public default Audio.Clip sfx() {return(null);}
+	public default boolean handle(Widget w) {return(false);}
+
+	public static interface Handler {
+	    public default boolean msg(Notice msg) {
+		return(false);
+	    }
+	    public default boolean msg(NoticeEvent ev) {
+		if(ev.propagate((Widget)this))
+		    return(true);
+		return(msg(ev.msg));
+	    }
+	}
 
 	public static class FactMaker extends Resource.PublishedCode.Instancer.Chain<Factory> {
 	    public FactMaker() {super(Factory.class);}
@@ -709,7 +721,7 @@ public class UI {
 	    }
 	}
 
-	@Resource.PublishedCode(name = "msg")
+	@Resource.PublishedCode(name = "msg", instancer = FactMaker.class)
 	public static interface Factory {
 	    public Notice format(OwnerContext owner, Object... args);
 	}
@@ -763,25 +775,32 @@ public class UI {
 	protected Audio.Clip defsfx() {return(sfx);}
     }
 
-    public static interface MessageWidget {
-	public void msg(Notice msg);
+    public static class NoticeEvent extends Widget.Event {
+	public final Notice msg;
 
-	public static MessageWidget find(Widget w) {
-	    for(Widget ch = w.child; ch != null; ch = ch.next) {
-		MessageWidget ret = find(ch);
-		if(ret != null)
-		    return(ret);
+	public NoticeEvent(Notice msg) {
+	    this.msg = msg;
+	}
+
+	protected boolean propagation(Widget from) {
+	    for(Widget wdg = from.child; wdg != null; wdg = wdg.next) {
+		if(dispatch(wdg))
+		    return(true);
 	    }
-	    if(w instanceof MessageWidget)
-		return((MessageWidget)w);
-	    return(null);
+	    return(false);
+	}
+
+	protected boolean shandle(Widget w) {
+	    if(msg.handle(w))
+		return(true);
+	    if((w instanceof Notice.Handler) && ((Notice.Handler)w).msg(this))
+		return(true);
+	    return(false);
 	}
     }
 
     public void msg(Notice msg) {
-	MessageWidget h = MessageWidget.find(root);
-	if(h != null)
-	    h.msg(msg);
+	dispatch(root, new NoticeEvent(msg));
     }
 
     public void msg(String msg, Color color, Audio.Clip sfx) {
