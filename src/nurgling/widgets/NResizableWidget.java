@@ -31,7 +31,7 @@ public class NResizableWidget extends NDraggableWidget
     @Override
     public boolean mousedown(MouseDownEvent ev) {
         if (!btnLock.a) {
-            int d = (ev.c.x - (sz.x - sizeru.sz().x/2 - UI.scale(15))) * ( - sizeru.sz().x/2) - (c.y - (sz.y - sizeru.sz().y/2)) * ( sizeru.sz().y/2);
+            int d = (ev.c.x - (sz.x - sizeru.sz().x/2 - UI.scale(15))) * ( - sizeru.sz().x/2) - (ev.c.y - (sz.y - sizeru.sz().y/2)) * ( sizeru.sz().y/2);
             if ((ev.b == 1) && d <= 0) {
                 if (drag == null) {
                     drag = ui.grabmouse(this);
