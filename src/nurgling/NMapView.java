@@ -2,6 +2,7 @@ package nurgling;
 
 import haven.*;
 import static haven.MCache.tilesz;
+import static haven.OCache.posres;
 
 import haven.Composite;
 import haven.render.*;
@@ -593,4 +594,41 @@ public class NMapView extends MapView
             }
         }.run();
     }
+//
+//    @Override
+//    public boolean drop(final Coord cc, Coord ul) {
+//        if(!ui.modctrl) {
+//            new Hittest(cc) {
+//                public void hit(Coord pc, Coord2d mc, ClickData inf) {
+//                    click(mc, 1, ui.mc, mc.floor(posres), 1, ui.modflags());
+//                }
+//            }.run();
+//            return true;
+//        }
+//        new Hittest(cc) {
+//            public void hit(Coord pc, Coord2d mc, ClickData inf) {
+//                wdgmsg("drop", pc, mc.floor(posres), ui.modflags());
+//            }
+//        }.run();
+//        return(true);
+//    }
+//
+//    public void click(Coord2d mc, int button, Object... args) {
+////        boolean send = true;
+////        if(button == 1 ) {
+////            if(ui.modmeta) {
+////                args[3] = 0;
+////                send = NUtils.getGameUI().pathQueue.add(mc);
+////            } else {
+////                if(NUtils.isIdleCurs())
+////                    NUtils.getGameUI().pathQueue.start(mc);
+////            }
+////        }
+////        if(button == 3){
+////            if(NUtils.getGameUI().pathQueue.size()<=1)
+////                NUtils.getGameUI().pathQueue.clear();
+////        }
+////        if(send && !NUtils.getGameUI().nomadMod)
+//            wdgmsg("click", args);
+//    }
 }

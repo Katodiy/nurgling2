@@ -53,7 +53,7 @@ public class ItemDrag extends NWItem
     public boolean mousedown(MouseDownEvent ev) {
 	if(!ev.grabbed)
 	    return(false);
-	if(ui.modctrl && !ui.modshift && !ui.modmeta) {
+	if((ui.modctrl && ev.b!=1) && !ui.modshift && !ui.modmeta) {
 	    /* XXX */
 	    GameUI gui = getparent(GameUI.class);
 	    if((gui != null) && (gui.map != null)) {
@@ -61,7 +61,7 @@ public class ItemDrag extends NWItem
 		return(ev.derive(gui.map.rootxlate(ev.c.add(rootpos()))).dispatch(gui.map));
 	    }
 	}
-	if(ev.b == 1) {
+	if(ev.b == 1 && ui.modctrl) {
 	    if(ui.dispatchq(parent, new Drop(ev.c.add(this.c), this)).handled)
 		return(true);
 	} else if(ev.b == 3) {
