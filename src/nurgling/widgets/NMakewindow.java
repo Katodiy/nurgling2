@@ -222,9 +222,9 @@ public class NMakewindow extends Widget {
         {
             Coord sc = new Coord(xoff, 0);
             boolean popt = false;
-            if (clickForCategories(inputs, popt, sc, c)) return true;
+            if (clickForCategories(inputs, popt, sc, ev.c)) return true;
             sc = new Coord(xoff, outy);
-            if (clickForCategories(outputs, popt, sc, c)) return true;
+            if (clickForCategories(outputs, popt, sc, ev.c)) return true;
         }
         return super.mousedown(ev);
     }

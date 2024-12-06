@@ -299,7 +299,6 @@ public class NBotsMenu extends Widget
                             pressed = null;
                             dragging = null;
                         } else if(pressed != null) {
-                            click();
                             pressed = null;
                         }
                         grab.remove();
@@ -340,7 +339,6 @@ public class NBotsMenu extends Widget
                             pressed = null;
                             dragging = null;
                         } else if(pressed != null) {
-                            click();
                             pressed = null;
                         }
                         grab.remove();
