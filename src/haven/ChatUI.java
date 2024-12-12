@@ -35,7 +35,6 @@ import space.dynomake.libretranslate.Translator;
 import java.util.*;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.event.KeyEvent;
 import java.awt.font.TextAttribute;
 import java.awt.font.TextHitInfo;
 import java.awt.image.BufferedImage;
@@ -447,8 +446,8 @@ public class ChatUI extends Widget
 	    dy = ty + (Math.pow(2, -dt * 40) * (dy - ty));
 	}
 
-	public boolean mousewheel(Coord c, int amount) {
-	    sb.ch(amount * 45);
+	public boolean mousewheel(MouseWheelEvent ev) {
+	    sb.ch(ev.a * 45);
 	    return(true);
 	}
 
@@ -566,18 +565,18 @@ public class ChatUI extends Widget
 	private CharPos selorig, lasthit, selstart, selend;
 	private UI.Grab grab;
 	private boolean dragging;
-	public boolean mousedown(Coord c, int btn) {
-	    if(super.mousedown(c, btn))
+	public boolean mousedown(MouseDownEvent ev) {
+	    if(ev.propagate(this) || super.mousedown(ev))
 		return(true);
 	    if(grab != null)
 		return(true);
-	    CharPos ch = charat(c);
+	    CharPos ch = charat(ev.c);
 	    selorig = ch;
 	    if(ch != null) {
-		if(ch.rm.msg.mousedown(this, ch, c, btn))
+		if(ch.rm.msg.mousedown(this, ch, ev.c, ev.b))
 		    return(true);
 	    }
-	    if(btn == 1) {
+	    if(ev.b == 1) {
 		selstart = selend = null;
 		if(ch != null) {
 		    lasthit = ch;
@@ -589,9 +588,10 @@ public class ChatUI extends Widget
 	    return(true);
 	}
 
-	public void mousemove(Coord c) {
+	public void mousemove(MouseMoveEvent ev) {
+	    super.mousemove(ev);
 	    if(grab != null) {
-		CharPos ch = charat(c);
+		CharPos ch = charat(ev.c);
 		if((ch != null) && !ch.equals(lasthit)) {
 		    lasthit = ch;
 		    if(!dragging && !ch.equals(selorig))
@@ -605,15 +605,13 @@ public class ChatUI extends Widget
 			selstart = selend = null;
 		    }
 		}
-	    } else {
-		super.mousemove(c);
 	    }
 	}
 
-	public boolean mouseup(Coord c, int btn) {
-	    if(super.mouseup(c, btn))
+	public boolean mouseup(MouseUpEvent ev) {
+	    if(ev.propagate(this) || super.mouseup(ev))
 		return(true);
-	    if((btn == 1) && (grab != null)) {
+	    if((ev.b == 1) && (grab != null)) {
 		grab.remove();
 		grab = null;
 		dragging = false;
@@ -622,14 +620,14 @@ public class ChatUI extends Widget
 		    return(true);
 		}
 	    }
-	    CharPos ch = charat(c);
+	    CharPos ch = charat(ev.c);
 	    if(ch != null) {
-		if(ch.rm.msg.mouseup(this, ch, c, btn))
+		if(ch.rm.msg.mouseup(this, ch, ev.c, ev.b))
 		    return(true);
 		if(!dragging && (selorig != null) && ch.equals(selorig)) {
-		    if(ch.rm.msg.clicked(this, ch, c, btn))
+		    if(ch.rm.msg.clicked(this, ch, ev.c, ev.b))
 			return(true);
-		    if(clicked(selorig, btn))
+		    if(clicked(selorig, ev.b))
 			return(true);
 		}
 	    }
@@ -818,7 +816,7 @@ public class ChatUI extends Widget
 			hpos = history.size();
 		    }
 
-		    public boolean keydown(KeyEvent ev) {
+		    public boolean keydown(KeyDownEvent ev) {
 			if(ConsoleHost.kb_histprev.key().match(ev)) {
 			    if(hpos > 0) {
 				if(hpos == history.size())
@@ -1473,31 +1471,31 @@ public class ChatUI extends Widget
 		return (null);
 	}
 
-	public boolean mousedown(Coord c, int button) {
-		if(!super.mousedown(c,button))
-		{
-	    Channel chan = bypos(c);
+	public boolean mousedown(MouseDownEvent ev) {
+        if(!super.mousedown(ev))
+        {
+        Channel chan = bypos(ev.c);
 	    cstart = chan;
 	    if(chan != null) {
-		if(button == 1) {
+		if(ev.b == 1) {
 		    select(chan);
 		} else {
-		    chan.selmousedown(c, button);
+		    chan.selmousedown(ev.c, ev.b);
 		}
 	    }
 		}
 		return(true);
 	}
 
-	public boolean mouseup(Coord c, int button) {
-		if(!super.mousedown(c,button))
-		{
-	    Channel chan = bypos(c);
+	public boolean mouseup(MouseUpEvent ev) {
+        if(!super.mouseup(ev))
+        {
+	    Channel chan = bypos(ev.c);
 	    if(chan != null) {
-		if(button != 1) {
-		    chan.selmouseup(c, button);
+		if(ev.b != 1) {
+		    chan.selmouseup(ev.c, ev.b);
 		    if(cstart == chan)
-			chan.selclicked(c, button);
+			chan.selclicked(ev.c, ev.b);
 		}
 	    }
 	    cstart = null;
@@ -1509,12 +1507,10 @@ public class ChatUI extends Widget
 	    int maxh = (chls.size() * offset) - sz.y ;
 	    return(Math.max(Math.min(s, maxh), 0));
 	}
-
-	private int s = 0;
-
-	public boolean mousewheel(Coord c, int amount) {
+    private int s = 0;
+	public boolean mousewheel(MouseWheelEvent ev) {
 	    if(!ui.modshift) {
-			s += amount;
+			s += ev.a;
 			if (s >= chls.size()-1)
 			{
 				s = chls.size()-1;
@@ -1524,9 +1520,9 @@ public class ChatUI extends Widget
 				s = 0;
 			}
 	    } else {
-		if(amount < 0)
+		if(ev.a < 0)
 		    up();
-		else if(amount > 0)
+		else if(ev.a > 0)
 		    down();
 	    }
 	    return(true);
@@ -1734,12 +1730,12 @@ public class ChatUI extends Widget
 	    cancel();
 	}
 
-	public boolean key(KeyEvent ev) {
+	public boolean key(KbdEvent ev) {
 	    if(key_esc.match(ev)) {
 		cancel();
 		return(true);
 	    } else {
-		return(buf.key(ev));
+		return(buf.key(ev.awt));
 	    }
 	}
     }
@@ -1747,33 +1743,31 @@ public class ChatUI extends Widget
     private UI.Grab dm = null;
     private Coord doff;
     private static final int minh = 111;
-    public boolean mousedown(Coord c, int button) {
-	    return(super.mousedown(c, button));
+    public boolean mousedown(MouseDownEvent ev) {
+        return(super.mousedown(ev));
     }
 
-    public void mousemove(Coord c) {
-	if(dm != null) {
-	    resize(sz.x, Math.max(UI.scale(minh), Math.min(parent.sz.y - UI.scale(100), sz.y + doff.y - c.y)));
-	} else {
-	    super.mousemove(c);
-	}
+    public void mousemove(MouseMoveEvent ev) {
+	super.mousemove(ev);
+	if(dm != null)
+	    resize(sz.x, Math.max(UI.scale(minh), Math.min(parent.sz.y - UI.scale(100), sz.y + doff.y - ev.c.y)));
     }
 
-    public boolean mouseup(Coord c, int button) {
+    public boolean mouseup(MouseUpEvent ev) {
 	if(dm != null) {
 	    dm.remove();
 	    dm = null;
 	    Utils.setprefi("chatsize", UI.unscale(sz.y));
 	    return(true);
 	} else {
-	    return(super.mouseup(c, button));
+	    return(super.mouseup(ev));
 	}
     }
 
-    public boolean keydown(KeyEvent ev) {
-	boolean M = (ev.getModifiersEx() & (KeyEvent.META_DOWN_MASK | KeyEvent.ALT_DOWN_MASK)) != 0;
+    public boolean keydown(KeyDownEvent ev) {
+	boolean M = (ev.mods & KeyMatch.M) != 0;
 	if(qline != null) {
-	    if(M && (ev.getKeyCode() == KeyEvent.VK_UP)) {
+	    if(M && (ev.code == ev.awt.VK_UP)) {
 		Channel prev = this.sel;
 		while(chansel.up()) {
 		    if(this.sel instanceof EntryChannel)
@@ -1785,7 +1779,7 @@ public class ChatUI extends Widget
 		}
 		qline = new QuickLine((EntryChannel)sel);
 		return(true);
-	    } else if(M && (ev.getKeyCode() == KeyEvent.VK_DOWN)) {
+	    } else if(M && (ev.code == ev.awt.VK_DOWN)) {
 		Channel prev = this.sel;
 		while(chansel.down()) {
 		    if(this.sel instanceof EntryChannel)
@@ -1801,10 +1795,10 @@ public class ChatUI extends Widget
 	    qline.key(ev);
 	    return(true);
 	} else {
-	    if(M && (ev.getKeyCode() == KeyEvent.VK_UP)) {
+	    if(M && (ev.code == ev.awt.VK_UP)) {
 		chansel.up();
 		return(true);
-	    } else if(M && (ev.getKeyCode() == KeyEvent.VK_DOWN)) {
+	    } else if(M && (ev.code == ev.awt.VK_DOWN)) {
 		chansel.down();
 		return(true);
 	    }
@@ -1812,8 +1806,8 @@ public class ChatUI extends Widget
 	}
     }
 
-    public static final KeyBinding kb_quick = KeyBinding.get("chat-quick", KeyMatch.forcode(KeyEvent.VK_ENTER, 0));
-    public boolean globtype(char key, KeyEvent ev) {
+    public static final KeyBinding kb_quick = KeyBinding.get("chat-quick", KeyMatch.forcode(java.awt.event.KeyEvent.VK_ENTER, 0));
+    public boolean globtype(GlobKeyEvent ev) {
 	if(kb_quick.key().match(ev)) {
 	    if(!visible && (sel instanceof EntryChannel)) {
 		qgrab = ui.grabkeys(this);
@@ -1821,6 +1815,6 @@ public class ChatUI extends Widget
 		return(true);
 	    }
 	}
-	return(super.globtype(key, ev));
+	return(super.globtype(ev));
     }
 }

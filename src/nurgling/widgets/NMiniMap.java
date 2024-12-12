@@ -168,8 +168,8 @@ public class NMiniMap extends MiniMap implements Console.Directory {
     }
 
     @Override
-    public boolean mousewheel(Coord c, int amount) {
-        if(amount > 0) {
+    public boolean mousewheel(MouseWheelEvent ev) {
+        if(ev.a > 0) {
             if(scale > 1) {
                 scale--;
             } else

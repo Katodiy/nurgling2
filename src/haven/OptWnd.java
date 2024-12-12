@@ -68,12 +68,12 @@ public class OptWnd extends Window {
 	    chpanel(tgt);
 	}
 
-	public boolean keydown(java.awt.event.KeyEvent ev) {
-	    if((this.key != -1) && (ev.getKeyChar() == this.key)) {
+	public boolean keydown(KeyDownEvent ev) {
+	    if((this.key != -1) && (ev.c == this.key)) {
 		click();
 		return(true);
 	    }
-	    return(false);
+	    return(super.keydown(ev));
 	}
     }
 
@@ -723,7 +723,7 @@ public class OptWnd extends Window {
     }
 
 
-    public static class PointBind extends Button {
+    public static class PointBind extends Button implements CursorQuery.Handler {
 	public static final String msg = "Bind other elements...";
 	public static final Resource curs = Resource.local().loadwait("gfx/hud/curs/wrench");
 	private UI.Grab mg, kg;
@@ -772,15 +772,15 @@ public class OptWnd extends Window {
 	    return(true);
 	}
 
-	public boolean mousedown(Coord c, int btn) {
-	    if(mg == null)
-		return(super.mousedown(c, btn));
+	public boolean mousedown(MouseDownEvent ev) {
+	    if(!ev.grabbed)
+		return(super.mousedown(ev));
 	    Coord gc = ui.mc;
-	    if(btn == 1) {
+	    if(ev.b == 1) {
 		this.cmd = KeyBinding.Bindable.getbinding(ui.root, gc);
 		return(true);
 	    }
-	    if(btn == 3) {
+	    if(ev.b == 3) {
 		mg.remove();
 		mg = null;
 		change(msg);
@@ -789,11 +789,11 @@ public class OptWnd extends Window {
 	    return(false);
 	}
 
-	public boolean mouseup(Coord c, int btn) {
+	public boolean mouseup(MouseUpEvent ev) {
 	    if(mg == null)
-		return(super.mouseup(c, btn));
+		return(super.mouseup(ev));
 	    Coord gc = ui.mc;
-	    if(btn == 1) {
+	    if(ev.b == 1) {
 		if((this.cmd != null) && (KeyBinding.Bindable.getbinding(ui.root, gc) == this.cmd)) {
 		    mg.remove();
 		    mg = null;
@@ -804,21 +804,19 @@ public class OptWnd extends Window {
 		}
 		return(true);
 	    }
-	    if(btn == 3)
+	    if(ev.b == 3)
 		return(true);
 	    return(false);
 	}
 
-	public Resource getcurs(Coord c) {
-	    if(mg == null)
-		return(null);
-	    return(curs);
+	public boolean getcurs(CursorQuery ev) {
+	    return(ev.grabbed ? ev.set(curs) : false);
 	}
 
-	public boolean keydown(KeyEvent ev) {
-	    if(kg == null)
+	public boolean keydown(KeyDownEvent ev) {
+	    if(!ev.grabbed)
 		return(super.keydown(ev));
-	    if(handle(ev)) {
+	    if(handle(ev.awt)) {
 		kg.remove();
 		kg = null;
 		cmd = null;
@@ -921,8 +919,8 @@ public class OptWnd extends Window {
 					chpanel(prev1);
 				}
 
-				public boolean keydown(KeyEvent ev) {
-					if((ev.getKeyChar() == 27)) {
+				public boolean keydown(KeyDownEvent ev) {
+					if((ev.c == 27)) {
 						chpanel(prev1);
 						return(true);
 					}
@@ -971,8 +969,8 @@ public class OptWnd extends Window {
 					chpanel(prev1);
 				}
 
-				public boolean keydown(KeyEvent ev) {
-					if((ev.getKeyChar() == 27)) {
+				public boolean keydown(KeyDownEvent ev) {
+					if((ev.c == 27)) {
 						chpanel(prev1);
 						return(true);
 					}
@@ -1006,8 +1004,8 @@ public class OptWnd extends Window {
 					chpanel(prev1);
 				}
 
-				public boolean keydown(KeyEvent ev) {
-					if((ev.getKeyChar() == 27)) {
+				public boolean keydown(KeyDownEvent ev) {
+					if((ev.c == 27)) {
 						chpanel(prev1);
 						return(true);
 					}

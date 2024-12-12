@@ -2,6 +2,7 @@ package nurgling;
 
 import haven.*;
 import static haven.MCache.tilesz;
+import static haven.OCache.posres;
 
 import haven.Composite;
 import haven.render.*;
@@ -22,8 +23,8 @@ import java.util.concurrent.atomic.*;
 
 public class NMapView extends MapView
 {
-    public static final KeyBinding kb_quickaction = KeyBinding.get("quickaction", KeyMatch.forchar('q',0));
-    public static final KeyBinding kb_quickignaction = KeyBinding.get("quickignaction", KeyMatch.forchar('q',1));
+    public static final KeyBinding kb_quickaction = KeyBinding.get("quickaction", KeyMatch.forcode(KeyEvent.VK_Q, 0));
+    public static final KeyBinding kb_quickignaction = KeyBinding.get("quickignaction", KeyMatch.forcode(KeyEvent.VK_Q, 1));
     public static final int MINING_OVERLAY = - 1;
     public Coord lastGC = null;
 
@@ -409,7 +410,7 @@ public class NMapView extends MapView
     }
 
     @Override
-    public boolean mousedown(Coord c, int button)
+    public boolean mousedown(MouseDownEvent ev)
     {
         if ( isAreaSelectionMode.get() )
         {
@@ -420,18 +421,18 @@ public class NMapView extends MapView
         }
         if ( isGobSelectionMode.get() )
         {
-            getGob(c);
+            getGob(ev.c);
             return false;
         }
-        return super.mousedown(c, button);
+        return super.mousedown(ev);
     }
 
     private Coord lastCoord = null;
     private Coord2d lastCoord2d = new Coord2d();
     @Override
-    public void mousemove(Coord c) {
-        lastCoord = c;
-        super.mousemove(c);
+    public void mousemove(MouseMoveEvent ev) {
+        lastCoord = ev.c;
+        super.mousemove(ev);
     }
 
     public Coord2d getLCoord() {
@@ -447,15 +448,15 @@ public class NMapView extends MapView
     public boolean shiftPressed = false;
 
     @Override
-    public boolean keyup(KeyEvent ev) {
-        if(ev.getKeyCode() == 16)
+    public boolean keyup(KeyUpEvent ev) {
+        if(ev.code == 16)
             shiftPressed = false;
         return super.keyup(ev);
     }
 
     @Override
-    public boolean keydown(KeyEvent ev) {
-        if(ev.getKeyCode() == 16)
+    public boolean keydown(KeyDownEvent ev) {
+        if(ev.code == 16)
             shiftPressed = true;
         if(kb_quickaction.key().match(ev) || kb_quickignaction.key().match(ev)) {
             Thread t;
@@ -593,4 +594,41 @@ public class NMapView extends MapView
             }
         }.run();
     }
+//
+//    @Override
+//    public boolean drop(final Coord cc, Coord ul) {
+//        if(!ui.modctrl) {
+//            new Hittest(cc) {
+//                public void hit(Coord pc, Coord2d mc, ClickData inf) {
+//                    click(mc, 1, ui.mc, mc.floor(posres), 1, ui.modflags());
+//                }
+//            }.run();
+//            return true;
+//        }
+//        new Hittest(cc) {
+//            public void hit(Coord pc, Coord2d mc, ClickData inf) {
+//                wdgmsg("drop", pc, mc.floor(posres), ui.modflags());
+//            }
+//        }.run();
+//        return(true);
+//    }
+//
+//    public void click(Coord2d mc, int button, Object... args) {
+////        boolean send = true;
+////        if(button == 1 ) {
+////            if(ui.modmeta) {
+////                args[3] = 0;
+////                send = NUtils.getGameUI().pathQueue.add(mc);
+////            } else {
+////                if(NUtils.isIdleCurs())
+////                    NUtils.getGameUI().pathQueue.start(mc);
+////            }
+////        }
+////        if(button == 3){
+////            if(NUtils.getGameUI().pathQueue.size()<=1)
+////                NUtils.getGameUI().pathQueue.clear();
+////        }
+////        if(send && !NUtils.getGameUI().nomadMod)
+//            wdgmsg("click", args);
+//    }
 }

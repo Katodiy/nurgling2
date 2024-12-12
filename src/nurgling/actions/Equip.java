@@ -110,6 +110,7 @@ public class Equip implements Action {
         items.add("Boar Spear");
         items.add("Metal Shovel");
         items.add("Tinker's Shovel");
+        items.add("Wooden Shovel");
         items.add("Dowsing Rod");
         items.add("Battle Axe of the Twelfth Bay");
         items.add("Cutblade");

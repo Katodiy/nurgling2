@@ -148,9 +148,10 @@ public class NKinSettings extends Window
             g.chcolor();
         }
 
-        public boolean mousedown(Coord c, int button) {
+        @Override
+        public boolean mousedown(MouseDownEvent ev) {
             selector.select(group);
-            return (true);
+            return super.mousedown(ev);
         }
 
         public void select() {

@@ -331,8 +331,8 @@ public class NQuestInfo extends Widget
     }
 
     @Override
-    public boolean mousedown(Coord c, int button) {
-        Coord pos = new Coord(c.x, c.y).sub(UI.scale(this.margin)).sub(new Coord(0,modebtn.sz.y));
+    public boolean mousedown(MouseDownEvent ev) {
+        Coord pos = new Coord(ev.c.x, ev.c.y).sub(UI.scale(this.margin)).sub(new Coord(0,modebtn.sz.y));
         if (imgs != null) {
             for (QuestImage img : imgs) {
                 if (img.id >= 0) {
@@ -345,7 +345,7 @@ public class NQuestInfo extends Widget
                 }
             }
         }
-        return super.mousedown(c, button);
+        return super.mousedown(ev);
     }
 
     AtomicBoolean needUpdate = new AtomicBoolean(false);

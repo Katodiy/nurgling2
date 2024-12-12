@@ -459,12 +459,11 @@ public class NGameUI extends GameUI
             }
         }
 
-
         @Override
-        public boolean mousedown(Coord c, int button) {
+        public boolean mousedown(MouseDownEvent ev) {
             NToolBeltProp prop = NToolBeltProp.get(name);
-            int slot = beltslot(c);
-            if(button == 3)
+            int slot = beltslot(ev.c);
+            if(ev.b == 3)
             {
                 if(prop.custom.get(slot)!=null) {
                     prop.custom.remove(slot);
@@ -472,7 +471,7 @@ public class NGameUI extends GameUI
                     return true;
                 }
             }
-            else if (button == 1)
+            else if (ev.b == 1)
             {
                 String path;
                 if((path = prop.custom.get(slot))!=null) {
@@ -483,8 +482,9 @@ public class NGameUI extends GameUI
                     }
                 }
             }
-            return super.mousedown(c, button);
+            return super.mousedown(ev);
         }
+
 
         private Object belt(int slot) {
             if(slot < 0) {return null;}
@@ -524,12 +524,12 @@ public class NGameUI extends GameUI
         }
 
         @Override
-        public boolean globtype(char key, KeyEvent ev) {
+        public boolean globtype(GlobKeyEvent ev) {
             if (!visible) {
                 return false;
             }
             for (int i = 0; i < beltkeys.size(); i++) {
-                if ((beltkeys.get(i).key != null && ev.getKeyCode() == beltkeys.get(i).key.code && ui.modflags() == beltkeys.get(i).key.modmatch)) {
+                if ((beltkeys.get(i).key != null && ev.code == beltkeys.get(i).key.code && ui.modflags() == beltkeys.get(i).key.modmatch)) {
                     keyact(slot(i));
                     return true;
                 }
@@ -630,7 +630,7 @@ public class NGameUI extends GameUI
     }
 
 
-    public void msg(UI.Notice msg) {
+    public boolean msg(UI.Notice msg) {
         if (msg.message().contains("Quality")) {
             if(map.clickedGob!=null)
             {
@@ -645,6 +645,6 @@ public class NGameUI extends GameUI
                 }
             }
         }
-        super.msg(msg);
+        return super.msg(msg);
     }
 }

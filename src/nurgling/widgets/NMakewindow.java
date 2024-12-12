@@ -217,17 +217,16 @@ public class NMakewindow extends Widget {
     }
 
     @Override
-    public boolean mousedown(Coord c, int button)
-    {
+    public boolean mousedown(MouseDownEvent ev) {
         if(autoMode)
         {
             Coord sc = new Coord(xoff, 0);
             boolean popt = false;
-            if (clickForCategories(inputs, popt, sc, c)) return true;
+            if (clickForCategories(inputs, popt, sc, ev.c)) return true;
             sc = new Coord(xoff, outy);
-            if (clickForCategories(outputs, popt, sc, c)) return true;
+            if (clickForCategories(outputs, popt, sc, ev.c)) return true;
         }
-        return super.mousedown(c, button);
+        return super.mousedown(ev);
     }
 
     private boolean clickForCategories(List<Spec> outputs, boolean popt, Coord sc, Coord c) {
@@ -647,12 +646,12 @@ public class NMakewindow extends Widget {
         return false;
     }
 
-    public boolean globtype(char ch, java.awt.event.KeyEvent ev) {
-        if(ch == '\n') {
+    public boolean globtype(GlobKeyEvent ev) {
+        if(ev.c == '\n') {
             wdgmsg("make", ui.modctrl?1:0);
             return(true);
         }
-        return(super.globtype(ch, ev));
+        return(super.globtype(ev));
     }
 
     void craft()
@@ -839,10 +838,9 @@ public class NMakewindow extends Widget {
         }
 
         @Override
-        public boolean mousedown(Coord c, int button)
-        {
+        public boolean mousedown(MouseDownEvent ev) {
             Coord pos = new Coord(catoff);
-            if(!c.isect(pos, sz.sub(catend)))
+            if(!ev.c.isect(pos, sz.sub(catend)))
             {
                 destroy();
                 cat = null;
@@ -853,7 +851,7 @@ public class NMakewindow extends Widget {
                 Coord shift = new Coord(0,0);
                 for(Ingredient ing: data)
                 {
-                    if(c.isect(pos, invsq.sz()))
+                    if(ev.c.isect(pos, invsq.sz()))
                     {
                         s.ing = ing;
                         destroy();
@@ -875,6 +873,7 @@ public class NMakewindow extends Widget {
                 return true;
             }
         }
+
 
         @Override
         public void tick(double dt)

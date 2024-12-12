@@ -527,8 +527,8 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	    boolean ttl = (now - hoverstart) > 0.5;
 	    if((pag != curttp) || (ttl != curttl)) {
 		try {
-		    BufferedImage ti = pag.rendertt(ttl);
-		    curtt = (ti == null) ? null : new TexI(ti);
+			BufferedImage ti = pag.rendertt(ttl);
+			curtt = (ti == null) ? null : new TexI(ti);
 		} catch(Loading l) {
 		    return("...");
 		}
@@ -550,22 +550,22 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	    return(null);
     }
 
-    public boolean mousedown(Coord c, int button) {
-	PagButton h = bhit(c);
-	if((button == 1) && (h != null)) {
+    public boolean mousedown(MouseDownEvent ev) {
+	PagButton h = bhit(ev.c);
+	if((ev.b == 1) && (h != null)) {
 	    pressed = h;
 	    grab = ui.grabmouse(this);
 	}
-	return(super.mousedown(c,button));
+	return(super.mousedown(ev));
     }
 
-    public void mousemove(Coord c) {
+    public void mousemove(MouseMoveEvent ev) {
 	if((dragging == null) && (pressed != null)) {
-	    PagButton h = bhit(c);
+	    PagButton h = bhit(ev.c);
 	    if(h != pressed)
-		dragging = pressed.pag;
+			dragging = pressed.pag;
 	}
-	super.mousemove(c);
+	super.mousemove(ev);
     }
 
     public void change(Pagina dst) {
@@ -600,11 +600,11 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	}
     }
 
-    public boolean mouseup(Coord c, int button) {
-	PagButton h = bhit(c);
-	if((button == 1) && (grab != null)) {
+    public boolean mouseup(MouseUpEvent ev) {
+	PagButton h = bhit(ev.c);
+	if((ev.b == 1) && (grab != null)) {
 	    if(dragging != null) {
-		ui.dropthing(ui.root, ui.mc, dragging);
+		DropTarget.dropthing(ui.root, ui.mc, dragging);
 		pressed = null;
 		dragging = null;
 	    } else if(pressed != null) {
@@ -615,7 +615,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	    grab.remove();
 	    grab = null;
 	}
-	return(super.mouseup(c,button));
+	return(super.mouseup(ev));
     }
 	boolean criminalIsInstall = false;
 	boolean trackingIsInstall = false;
@@ -697,8 +697,8 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
     public static final KeyBinding kb_root = KeyBinding.get("scm-root", KeyMatch.forcode(KeyEvent.VK_ESCAPE, 0));
     public static final KeyBinding kb_back = KeyBinding.get("scm-back", KeyMatch.forcode(KeyEvent.VK_BACK_SPACE, 0));
     public static final KeyBinding kb_next = KeyBinding.get("scm-next", KeyMatch.forchar('N', KeyMatch.S | KeyMatch.C | KeyMatch.M, KeyMatch.S));
-    public boolean globtype(char k, KeyEvent ev) {
-	if((Boolean) NConfig.get(NConfig.Key.disableMenugridKeys)) return false;
+    public boolean globtype(GlobKeyEvent ev) {
+    if((Boolean) NConfig.get(NConfig.Key.disableMenugridKeys)) return false;
 	if(ev.isAltDown() || ev.isShiftDown() || ev.isControlDown())
 		return false;
 	if(kb_root.key().match(ev) && (this.cur != null)) {
@@ -723,12 +723,12 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	    }
 	}
 	if(pag != null) {
-	    use(pag, new Interaction(), (KeyMatch.mods(ev) & KeyMatch.S) == 0);
+	    use(pag, new Interaction(), (ev.mods & KeyMatch.S) == 0);
 	    if(this.cur != null)
 		showkeys = true;
 	    return(true);
 	}
-	return(false);
+	return(super.globtype(ev));
     }
 
     public KeyBinding getbinding(Coord cc) {

@@ -85,13 +85,13 @@ public class NCraftWindow extends GameUI.Hidewnd {
     }
 
     @Override
-    public boolean globtype(char ch, java.awt.event.KeyEvent ev) {
-        if(visible && ch == 9 && ev.isShiftDown()) {
+    public boolean gkeytype(GlobKeyEvent ev) {
+        if(visible && ev.code == 9 && (ev.mods & KeyMatch.S)!=0) {
             int nextIndex = (tabStrip.getSelectedButtonIndex() + 1) % tabStrip.getButtonCount();
             tabStrip.select(nextIndex);
             return true;
         }
-        return super.globtype(ch, ev);
+        return super.gkeytype(ev);
     }
 
     @Override

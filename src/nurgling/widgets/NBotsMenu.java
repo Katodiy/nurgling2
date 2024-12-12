@@ -142,9 +142,11 @@ public class NBotsMenu extends Widget
         }
         return(null);
     }
-    public void mousemove(Coord c) {
+
+    @Override
+    public void mousemove(MouseMoveEvent ev) {
         if((dragging == null) && (pressed != null)) {
-            NButton h = bhit(c);
+            NButton h = bhit(ev.c);
             if(h != pressed) {
                 dragging = pressed;
                 if(dragging.btn.d!=null)
@@ -154,16 +156,19 @@ public class NBotsMenu extends Widget
                 }
             }
         }
-        super.mousemove(c);
+        super.mousemove(ev);
     }
+
 
     private NButton pressed = null;
     private UI.Grab grab = null;
-    public boolean mouseup(Coord c, int button) {
-        NButton h = bhit(c);
-        if((button == 1) && (grab != null)) {
+
+    @Override
+    public boolean mouseup(MouseUpEvent ev) {
+        NButton h = bhit(ev.c);
+        if((ev.b == 1) && (grab != null)) {
             if(dragging != null) {
-                ui.dropthing(ui.root, ui.mc, dragging);
+                DropTarget.dropthing(ui.root, ui.mc, dragging);
                 pressed = null;
                 dragging = null;
             } else if(pressed != null) {
@@ -175,16 +180,17 @@ public class NBotsMenu extends Widget
             grab.remove();
             grab = null;
         }
-        return(super.mouseup(c,button));
+        return super.mouseup(ev);
     }
 
-    public boolean mousedown(Coord c, int button) {
-        NButton h = bhit(c);
-        if((button == 1) && (h != null)) {
+    @Override
+    public boolean mousedown(MouseDownEvent ev) {
+        NButton h = bhit(ev.c);
+        if((ev.b == 1) && (h != null)) {
             pressed = h;
             grab = ui.grabmouse(this);
         }
-        boolean res = super.mousedown(c,button);
+        boolean res = super.mousedown(ev);
         if(pressed!=null)
         {
             if(pressed.btn.d!=null)
@@ -291,6 +297,22 @@ public class NBotsMenu extends Widget
                     }
                     return (rtip);
                 }
+
+                @Override
+                public boolean mouseup(MouseUpEvent ev) {
+                    if((ev.b == 1) && (grab != null)) {
+                        if(dragging != null) {
+                            DropTarget.dropthing(ui.root, ui.mc, dragging);
+                            pressed = null;
+                            dragging = null;
+                        } else if(pressed != null) {
+                            pressed = null;
+                        }
+                        grab.remove();
+                        grab = null;
+                    }
+                    return super.mouseup(ev);
+                }
             }
                     .action(
                             new Runnable() {
@@ -315,6 +337,21 @@ public class NBotsMenu extends Widget
                 public void click() {
                     super.click();
                     showLayouts();
+                }
+
+                @Override
+                public boolean mouseup(MouseUpEvent ev) {
+                    if((ev.b == 1) && (grab != null)) {
+                        if(dragging != null) {
+                            pressed = null;
+                            dragging = null;
+                        } else if(pressed != null) {
+                            pressed = null;
+                        }
+                        grab.remove();
+                        grab = null;
+                    }
+                    return super.mouseup(ev);
                 }
             };
        }

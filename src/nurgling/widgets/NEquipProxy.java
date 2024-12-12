@@ -31,16 +31,16 @@ public class NEquipProxy extends Widget implements DTarget {
     }
 
     @Override
-    public boolean mousedown(Coord c, int button) {
+    public boolean mousedown(MouseDownEvent ev) {
         Equipory e = NUtils.getEquipment();
         if(e != null) {
-            WItem w = NUtils.getEquipment().quickslots[slot(c).idx];
+            WItem w = NUtils.getEquipment().quickslots[slot(ev.c).idx];
             if(w != null) {
-                w.mousedown(Coord.z, button);
+                w.mousedown(ev);
                 return true;
             }
         }
-        return super.mousedown(c, button);
+        return super.mousedown(ev);
     }
 
 
@@ -80,12 +80,13 @@ public class NEquipProxy extends Widget implements DTarget {
         return super.tooltip(c, prev);
     }
 
-    public boolean mousehover(Coord c, boolean on) {
-        boolean ret = super.mousehover(c, on);
-        NEquipory.Slots slot = slot(c);
+    @Override
+    public boolean mousehover(MouseHoverEvent ev, boolean hovering) {
+        boolean ret =  super.mousehover(ev, hovering);
+        NEquipory.Slots slot = slot(ev.c);
         if(NUtils.getEquipment()!=null) {
             WItem w = NUtils.getEquipment().quickslots[slot.idx];
-            if (w!=null && on && (w.item.contents != null)) {
+            if (w!=null && hovering && (w.item.contents != null)) {
                 w.item.hovering(this);
                 return (true);
             }
@@ -116,23 +117,6 @@ public class NEquipProxy extends Widget implements DTarget {
         return false;
     }
 
-//    public void activate(NEquipory.Slots slot, int button) {
-//        for (int i = 0; i < slots.length; i++) {
-//            if(slots[i] == slot) {
-//                activate(i, button);
-//                return;
-//            }
-//        }
-//    }
-
-
-//    private void activate(int i, int button) {
-//        Coord mc = ui.mc;
-//        Coord c = sqoff(new Coord(i, 0)).add(rootpos());
-////	ui.mousedown(new MouseEvent(), c, button);
-////	ui.mouseup(c, button);
-////	ui.mousemove(mc);
-//    }
 
     public static Coord sqoff(Coord c){
         return c.mul(invsq.sz());

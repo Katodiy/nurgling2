@@ -269,7 +269,6 @@ public class NInventory extends Inventory
         if(searchwdg!=null && searchwdg.history!=null) {
             searchwdg.history.move(new Coord(c.x  + ((Window)parent).ca().ul.x + UI.scale(7), c.y + parent.sz.y- UI.scale(37)));
         }
-        super.mousemove(c);
     }
 
     @Override

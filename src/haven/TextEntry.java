@@ -177,36 +177,36 @@ public class TextEntry extends Widget implements ReadLine.Owner {
 	TextEntry.this.changed();
     }
 
-    public boolean gkeytype(KeyEvent ev) {
+    public boolean gkeytype(GlobKeyEvent ev) {
 	activate(buf.line());
 	return(true);
     }
 
-    public boolean keydown(KeyEvent e) {
-	return(buf.key(e));
+    public boolean keydown(KeyDownEvent e) {
+	return(buf.key(e.awt));
     }
 
-    public void mousemove(Coord c) {
+    public void mousemove(MouseMoveEvent ev) {
 	if((d != null) && (tcache != null)) {
-	    int p = tcache.charat(c.x + sx - toffx);
+	    int p = tcache.charat(ev.c.x + sx - toffx);
 	    if(buf.mark() < 0)
 		buf.mark(buf.point());
 	    buf.point(p);
 	}
     }
 
-    public boolean mousedown(Coord c, int button) {
+    public boolean mousedown(MouseDownEvent ev) {
 	parent.setfocus(this);
-	if((button == 1) && (tcache != null)) {
-	    buf.point(tcache.charat(c.x + sx - toffx));
+	if((ev.b == 1) && (tcache != null)) {
+	    buf.point(tcache.charat(ev.c.x + sx - toffx));
 	    buf.mark(-1);
 	    d = ui.grabmouse(this);
 	}
 	return(true);
     }
 
-    public boolean mouseup(Coord c, int button) {
-	if((button == 1) && (d != null)) {
+    public boolean mouseup(MouseUpEvent ev) {
+	if((ev.b == 1) && (d != null)) {
 	    d.remove();
 	    d = null;
 	    return(true);
@@ -242,10 +242,10 @@ public class TextEntry extends Widget implements ReadLine.Owner {
 		}
 
 		@Override
-		public boolean keydown(KeyEvent ev) {
-			int keyCode = ev.getKeyCode();
+		public boolean keydown(KeyDownEvent ev) {
+			int keyCode = ev.code;
 			if(keyCode == 0){
-				keyCode = ev.getKeyChar();
+				keyCode = ev.c;
 			}
 			if (ALLOWED_KEYS.contains(keyCode)) {
 				return super.keydown(ev);

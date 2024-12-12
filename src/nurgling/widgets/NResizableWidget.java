@@ -28,23 +28,25 @@ public class NResizableWidget extends NDraggableWidget
 
     boolean isHighlighted = false;
 
-    public boolean mousedown(Coord c, int button) {
+    @Override
+    public boolean mousedown(MouseDownEvent ev) {
         if (!btnLock.a) {
-            int d = (c.x - (sz.x - sizeru.sz().x/2 - UI.scale(15))) * ( - sizeru.sz().x/2) - (c.y - (sz.y - sizeru.sz().y/2)) * ( sizeru.sz().y/2);
-            if ((button == 1) && d <= 0) {
+            int d = (ev.c.x - (sz.x - sizeru.sz().x/2 - UI.scale(15))) * ( - sizeru.sz().x/2) - (ev.c.y - (sz.y - sizeru.sz().y/2)) * ( sizeru.sz().y/2);
+            if ((ev.b == 1) && d <= 0) {
                 if (drag == null) {
                     drag = ui.grabmouse(this);
-                    dragc = sz.sub(c);
+                    dragc = sz.sub(ev.c);
                     return (true);
                 }
             }
         }
-        return (super.mousedown(c, button));
+        return super.mousedown(ev);
     }
 
-    public void mousemove(Coord c) {
+    @Override
+    public void mousemove(MouseMoveEvent ev) {
         if(drag != null) {
-            Coord nsz = c.add(dragc);
+            Coord nsz = ev.c.add(dragc);
             nsz.x = Math.max(nsz.x, UI.scale(minSize.x));
             nsz.y = Math.max(nsz.y, UI.scale(minSize.y));
             resize(nsz);
@@ -52,21 +54,24 @@ public class NResizableWidget extends NDraggableWidget
         }
         else
         {
-            Coord cc = xlate(c, true);
-            isHighlighted = ((c.x - (sz.x - sizeru.sz().x/2 - UI.scale(15))) * ( - sizeru.sz().x/2) - (c.y - (sz.y - sizeru.sz().y/2)) * ( sizeru.sz().y/2))<0 && c.isect(Coord.z, sz);
+            Coord cc = xlate(ev.c, true);
+            isHighlighted = ((ev.c.x - (sz.x - sizeru.sz().x/2 - UI.scale(15))) * ( - sizeru.sz().x/2) - (ev.c.y - (sz.y - sizeru.sz().y/2)) * ( sizeru.sz().y/2))<0 && ev.c.isect(Coord.z, sz);
 
         }
-        super.mousemove(c);
+        super.mousemove(ev);
     }
 
-    public boolean mouseup(Coord c, int button) {
-        if((button == 1) && (drag != null)) {
+
+    @Override
+    public boolean mouseup(MouseUpEvent ev) {
+        if((ev.b == 1) && (drag != null)) {
             drag.remove();
             drag = null;
             return(true);
         }
-        return(super.mouseup(c, button));
+        return super.mouseup(ev);
     }
+
 
     @Override
     public void resize(Coord sz)

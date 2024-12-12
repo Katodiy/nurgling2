@@ -130,8 +130,8 @@ public class Specialisation extends Window
                     add(item);
                 }
 
-                public boolean mousedown(Coord c, int button) {
-                    super.mousedown(c, button);
+                public boolean mousedown(MouseDownEvent ev) {
+                    super.mousedown(ev);
 
                     String value = item.name;
                     boolean isFound = false;

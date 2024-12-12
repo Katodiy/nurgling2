@@ -91,9 +91,8 @@ public class IconItem extends Widget
     }
 
     @Override
-    public boolean mousedown(Coord c, int button)
-    {
-        if(button==3)
+    public boolean mousedown(MouseDownEvent ev) {
+        if(ev.b==3)
         {
             if(!noOpts)
                 opts(c);
@@ -101,8 +100,9 @@ public class IconItem extends Widget
         }
         else
         {
-            return super.mousedown(c, button);
+            return super.mousedown(ev);
         }
+
     }
 
     final ArrayList<String> opt = new ArrayList<String>(){
@@ -127,8 +127,8 @@ public class IconItem extends Widget
     public void opts( Coord c ) {
         if(menu == null) {
             menu = new NFlowerMenu((type==NArea.Ingredient.Type.CONTAINER)?opt.toArray(new String[0]):uopt.toArray(new String[0])) {
-                public boolean mousedown(Coord c, int button) {
-                    if(super.mousedown(c, button))
+                public boolean mousedown(MouseDownEvent ev) {
+                    if(super.mousedown(ev))
                         nchoose(null);
                     return(true);
                 }

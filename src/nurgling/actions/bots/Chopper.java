@@ -108,18 +108,27 @@ public class Chopper implements Action {
                     case TIMEFORDRINK: {
                         if (prop.autorefill) {
                             if (FillWaterskins.checkIfNeed())
-                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                if (!(new FillWaterskins(true).run(gui).IsSuccess())) {
                                     return Results.FAIL();
-                            pf = new PathFinder(tree);
-                            pf.setMode(PathFinder.Mode.Y_MAX);
-                            pf.isHardMode = true;
-                            pf.run(gui);
+                                } else {
+                                    pf = new PathFinder(tree);
+                                    pf.setMode(PathFinder.Mode.Y_MAX);
+                                    pf.isHardMode = true;
+                                    pf.run(gui);
+                                }
                         }
                         if(!(new Drink(0.9, false).run(gui).IsSuccess()))
                         {
                             if (prop.autorefill) {
                                 if (!(new FillWaterskins(true).run(gui).IsSuccess()))
                                     return Results.FAIL();
+                                else
+                                {
+                                    pf = new PathFinder(tree);
+                                    pf.setMode(PathFinder.Mode.Y_MAX);
+                                    pf.isHardMode = true;
+                                    pf.run(gui);
+                                }
                             }
                             else
                                 return Results.FAIL();

@@ -36,7 +36,7 @@ import static haven.Inventory.invsq;
 import nurgling.*;
 import nurgling.widgets.*;
 
-public class GameUI extends ConsoleHost implements Console.Directory, UI.MessageWidget {
+public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.Handler {
     private static final int blpw = UI.scale(142), brpw = UI.scale(142);
     public final String chrid, genus;
     public final long plid;
@@ -205,16 +205,16 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 
 	public abstract int beltslot(Coord c);
 
-	public boolean mousedown(Coord c, int button) {
-	    int slot = beltslot(c);
+	public boolean mousedown(MouseDownEvent ev) {
+	    int slot = beltslot(ev.c);
 	    if(slot != -1) {
-		if(button == 1)
+		if(ev.b == 1)
 		    act(slot, new MenuGrid.Interaction(1, ui.modflags()));
-		if(button == 3)
+		if(ev.b == 3)
 		    GameUI.this.wdgmsg("setbelt", slot, null);
 		return(true);
 	    }
-	    return(super.mousedown(c, button));
+	    return(super.mousedown(ev));
 	}
 
 	public boolean drop(Coord c, Coord ul) {
@@ -619,8 +619,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		    }
 
 			@Override
-			public boolean keydown(KeyEvent ev) {
-				if(ev.getKeyCode() == KeyEvent.VK_TAB)
+			public boolean keydown(KeyDownEvent ev) {
+				if(ev.code == KeyEvent.VK_TAB)
 				{
 						return false;
 				}
@@ -822,7 +822,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	private static final Resource.Anim progt = Resource.local().loadwait("gfx/hud/prog").layer(Resource.animc);
 	public double prog;
 	private TexI curi;
-	private String tip;
 
 	public Progress(double prog) {
 	    super(progt.f[0][0].ssz);
@@ -841,7 +840,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 
 	    double d = Math.abs(prog - this.prog);
 	    int dec = Math.max(0, (int)Math.round(-Math.log10(d)) - 2);
-	    this.tip = String.format("%." + dec + "f%%", prog * 100);
+	    this.tooltip = String.format("%." + dec + "f%%", prog * 100);
 	    this.prog = prog;
 	}
 
@@ -854,12 +853,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 
 	public boolean checkhit(Coord c) {
 	    return(Utils.checkhit(curi.back, c, 10));
-	}
-
-	public Object tooltip(Coord c, Widget prev) {
-	    if(checkhit(c))
-		return(tip);
-	    return(super.tooltip(c, prev));
 	}
     }
 
@@ -1294,8 +1287,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public static final KeyBinding kb_hide = KeyBinding.get("ui-toggle", KeyMatch.nil);
     public static final KeyBinding kb_logout = KeyBinding.get("logout", KeyMatch.nil);
     public static final KeyBinding kb_switchchr = KeyBinding.get("logout-cs", KeyMatch.nil);
-    public boolean globtype(char key, KeyEvent ev) {
-	if(key == ':') {
+    public boolean globtype(GlobKeyEvent ev) {
+	if(ev.c == ':') {
 	    entercmd();
 	    return(true);
 	} else if(kb_shoot.key().match(ev) && (Screenshooter.screenurl.get() != null)) {
@@ -1310,15 +1303,11 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	} else if(kb_switchchr.key().match(ev)) {
 	    act("lo", "cs");
 	    return(true);
-	} else if((key == 27) && (map != null) && !map.hasfocus) {
+	} else if((ev.c == 27) && (map != null) && !map.hasfocus) {
 	    setfocus(map);
 	    return(true);
 	}
-	return(super.globtype(key, ev));
-    }
-    
-    public boolean mousedown(Coord c, int button) {
-	return(super.mousedown(c, button));
+	return(super.globtype(ev));
     }
 
     private int uimode = 1;
@@ -1368,7 +1357,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	public ChatUI.Channel.Message logmessage();
     }
 
-    public void msg(UI.Notice msg) {
+    public boolean msg(UI.Notice msg) {
 	ChatUI.Channel.Message logged;
 	if(msg instanceof LogMessage)
 	    logged = ((LogMessage)msg).logmessage();
@@ -1378,6 +1367,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	lastmsg = RootWidget.msgfoundry.render(msg.message(), msg.color());
 	syslog.append(logged);
 	ui.sfxrl(msg.sfx());
+	return(true);
     }
 
     public void msg(String msg, Color color) {
@@ -1455,10 +1445,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	    }
 	}
 	
-	public boolean globtype(char key, KeyEvent ev) {
-	    boolean M = (ev.getModifiersEx() & (KeyEvent.META_DOWN_MASK | KeyEvent.ALT_DOWN_MASK)) != 0;
+	public boolean globtype(GlobKeyEvent ev) {
+	    boolean M = (ev.mods & KeyMatch.M) != 0;
 	    for(int i = 0; i < beltkeys.length; i++) {
-		if(ev.getKeyCode() == beltkeys[i]) {
+		if(ev.code == beltkeys[i]) {
 		    if(M) {
 			curbelt = i;
 			return(true);
@@ -1468,7 +1458,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		    }
 		}
 	    }
-	    return(false);
+	    return(super.globtype(ev));
 	}
     }
     
@@ -1511,12 +1501,11 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 	    super.draw(g);
 	}
 	
-	public boolean globtype(char key, KeyEvent ev) {
-	    int c = ev.getKeyCode();
-	    if((c < KeyEvent.VK_0) || (c > KeyEvent.VK_9))
-		return(false);
-	    int i = Utils.floormod(c - KeyEvent.VK_0 - 1, 10);
-	    boolean M = (ev.getModifiersEx() & (KeyEvent.META_DOWN_MASK | KeyEvent.ALT_DOWN_MASK)) != 0;
+	public boolean globtype(GlobKeyEvent ev) {
+	    if((ev.code < KeyEvent.VK_0) || (ev.code > KeyEvent.VK_9))
+		return(super.globtype(ev));
+	    int i = Utils.floormod(ev.code - KeyEvent.VK_0 - 1, 10);
+	    boolean M = (ev.mods & KeyMatch.M) != 0;
 	    if(M) {
 		curbelt = i;
 	    } else {

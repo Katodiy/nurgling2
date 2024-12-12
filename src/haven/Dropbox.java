@@ -59,10 +59,10 @@ public abstract class Dropbox<T> extends ListWidget<T> {
         super.draw(g);
     }
 
-    public boolean mousedown(Coord c, int btn) {
-        if(super.mousedown(c, btn))
+    public boolean mousedown(MouseDownEvent ev) {
+        if(super.mousedown(ev))
             return(true);
-        if((dl == null) && (btn == 1)) {
+        if((dl == null) && (ev.b == 1)) {
             dl = new Droplist();
             return(true);
         }
