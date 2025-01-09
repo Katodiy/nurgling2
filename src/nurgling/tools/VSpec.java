@@ -2700,6 +2700,13 @@ public class VSpec {
         chest_state.put(NStyle.Container.FULL, 28);
     }
 
+    public static HashMap<NStyle.Container, Integer> jotun_state = new HashMap<>();
+
+    static {
+        jotun_state.put(NStyle.Container.FREE, 3);
+        jotun_state.put(NStyle.Container.FULL, 112);
+    }
+
     public static void checkLpExplorer(Gob clickedGob, String name) {
         if(clickedGob!=null) {
             if (clickedGob.ngob.name != null && object.containsKey(clickedGob.ngob.name)) {
