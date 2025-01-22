@@ -40,7 +40,10 @@ public class Area implements Iterable<Coord>, java.io.Serializable {
 	this.ul = ul;
 	this.br = br;
     }
-
+    public Area(Pair<Coord2d,Coord2d> pair) {
+        this.ul = new Coord(pair.a);
+        this.br = new Coord(pair.b);
+    }
     public Area(Coord ul, Coord br, boolean forced) {
         this.ul = new Coord(Math.min(ul.x,br.x),Math.min(ul.y,br.y));
         this.br = new Coord(Math.max(ul.x,br.x),Math.max(ul.y,br.y));

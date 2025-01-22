@@ -191,6 +191,19 @@ public class QoL extends Widget {
 
         }, prev.pos("bl").adds(0, 5));
 
+        prev = add(new CheckBox("PF DEBUG") {
+            {
+                a = (Boolean) NConfig.get(NConfig.Key.pfdebug);
+            }
+
+            public void set(boolean val) {
+                NConfig.set(NConfig.Key.pfdebug, val);
+                NUtils.getUI().core.pfdebug = val;
+                a = val;
+            }
+
+        }, prev.pos("bl").adds(0, 5));
+
         pack();
     }
 }

@@ -170,6 +170,11 @@ public class Finder
     public static ArrayList<Gob> findGobs(NArea area, NAlias name, int mattr) throws InterruptedException
     {
         Pair<Coord2d,Coord2d> space = area.getRCArea();
+        return findGobs(space, name, mattr);
+    }
+
+    public static ArrayList<Gob> findGobs(Pair<Coord2d,Coord2d> space, NAlias name, int mattr) throws InterruptedException
+    {
         ArrayList<Gob> result = new ArrayList<> ();
         synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
             for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {

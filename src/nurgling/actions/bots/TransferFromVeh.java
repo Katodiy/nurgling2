@@ -23,15 +23,16 @@ public class TransferFromVeh implements Action {
         (outsa = new SelectArea(Resource.loadsimg("baubles/outputArea"))).run(gui);
 
         SelectGob selgob;
-        NUtils.getGameUI().msg("Please select output cart or vehicle");
-        (selgob = new SelectGob(Resource.loadsimg("baubles/outputVeh"))).run(gui);
-        Gob target = selgob.result;
+//        NUtils.getGameUI().msg("Please select output cart or vehicle");
+//        (selgob = new SelectGob(Resource.loadsimg("baubles/outputVeh"))).run(gui);
+        Gob s = Finder.findGob(new NAlias("cart"));
+        Gob target = s;//selgob.result;
         if(target==null)
         {
             return Results.ERROR("Vehicle not found");
         }
 
-        while (new TakeFromVehicle(selgob.result).run(gui).IsSuccess()) {
+        while (new TakeFromVehicle(s).run(gui).IsSuccess()) {
             Gob gob = Finder.findLiftedbyPlayer();
             new FindPlaceAndAction(gob, outsa.getRCArea()).run(gui);
             Coord2d shift = gob.rc.sub(NUtils.player().rc).norm().mul(2);

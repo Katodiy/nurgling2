@@ -8,6 +8,7 @@ import nurgling.areas.NArea;
 import nurgling.tasks.GetCurs;
 import nurgling.tasks.WaitAnotherAmount;
 import nurgling.tasks.WaitGobsInField;
+import nurgling.tasks.WaitGobsInFieldT;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
@@ -42,6 +43,7 @@ public class SeedCrop implements Action {
 
 
         ArrayList<Coord2d> tiles = field.getTiles(new NAlias("field"));
+        ArrayList<Coord2d> current_tiles;
 
         Coord start = gui.map.player().rc.dist(field.getArea().br.mul(MCache.tilesz)) < gui.map.player().rc.dist(field.getArea().ul.mul(MCache.tilesz)) ? field.getArea().br.sub(1, 1) : field.getArea().ul;
         Coord pos = new Coord(start);
@@ -103,7 +105,9 @@ public class SeedCrop implements Action {
                     pos.x += 2;
                 }
             }
-        } while (Finder.findGobs(field, crop).size() != tiles.size());
+            //ArrayList<Coord2d> tiles = field.getTiles(new NAlias("field"));
+            current_tiles = field.getTiles(new NAlias("field"));
+        } while (Finder.findGobs(field, crop).size() != current_tiles.size());
         if (!gui.getInventory().getItems(iseed).isEmpty()) {
             for (Gob barrel : barrels) {
                 TransferToBarrel tb;
@@ -179,16 +183,24 @@ public class SeedCrop implements Action {
                 }
             }
             int stacks_size = NUtils.getGameUI().getInventory().getTotalAmountItems(iseed);
-            NUtils.getGameUI().getInventory().activateItem(iseed);
-            NUtils.getUI().core.addTask(new GetCurs("harvest"));
+            if(stacks_size >=20){
+                NUtils.getGameUI().getInventory().activateItem(iseed);
+                NUtils.getUI().core.addTask(new GetCurs("harvest"));
 
-            if (rev) {
-                NUtils.getGameUI().map.wdgmsg("sel", area.ul, area.br, 1);
-            } else {
-                NUtils.getGameUI().map.wdgmsg("sel", area.br, area.ul, 1);
+                if (rev) {
+                    NUtils.getGameUI().map.wdgmsg("sel", area.ul, area.br, 1);
+                } else {
+                    NUtils.getGameUI().map.wdgmsg("sel", area.br, area.ul, 1);
+                }
+                NUtils.getUI().core.addTask(new WaitGobsInField(area, total));
+                NUtils.getUI().core.addTask(new WaitAnotherAmount(NUtils.getGameUI().getInventory(),iseed,stacks_size));
+            }else{
+                ArrayList<WItem> seed_stacks = gui.getInventory().getItems(iseed);
+                for(WItem seed: seed_stacks){
+                    NUtils.drop(seed);
+                }
+                //count--;
             }
-            NUtils.getUI().core.addTask(new WaitGobsInField(area, total));
-            NUtils.getUI().core.addTask(new WaitAnotherAmount(NUtils.getGameUI().getInventory(),iseed,stacks_size));
         }
 
     }

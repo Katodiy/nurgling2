@@ -37,7 +37,7 @@ public class NMiniMapWnd extends Widget{
     public static final KeyBinding kb_minesup = KeyBinding.get("ol-minesup", KeyMatch.nil);
     final Coord marg = UI.scale(new Coord(5,5));
     public NMiniMapWnd(String name, NMapView map, MapFile file) {
-        super(new Coord(UI.scale(133),UI.scale(133)));
+        super(new Coord(UI.scale(90),UI.scale(90)));
         this.map = map;
         ResCache mapstore = ResCache.global;
         if(MapFile.mapbase.get() != null) {

@@ -11,6 +11,7 @@ import java.util.concurrent.*;
 public class NCore extends Widget
 {
     public boolean debug = true;
+    public boolean pfdebug = false;
     boolean isinspect = false;
     public NMappingClient mappingClient;
     public AutoDrink autoDrink = null;

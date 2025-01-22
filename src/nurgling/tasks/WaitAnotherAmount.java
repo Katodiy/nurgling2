@@ -16,6 +16,7 @@ public class WaitAnotherAmount implements NTask
     private final int target_size;
     NAlias name = null;
     Widget inventory;
+    int timer = 0;
 
     public WaitAnotherAmount(NInventory inventory, NAlias name, int size)
     {
@@ -30,6 +31,7 @@ public class WaitAnotherAmount implements NTask
     public boolean check() {
 
         int count = 0;
+        //timer++;
 
         for (Widget widget = inventory.child; widget != null; widget = widget.next) {
             if (widget instanceof WItem) {
@@ -50,7 +52,7 @@ public class WaitAnotherAmount implements NTask
             }
         }
 
-        return count != target_size;
+        return count != target_size || timer > 50;
     }
 
 }

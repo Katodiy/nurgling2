@@ -62,6 +62,7 @@ public class NBotsMenu extends Widget
         farming.elements.add(new NButton("horses", new HorsesAction()));
         farming.elements.add(new NButton("cows", new nurgling.actions.bots.CowsAction()));
         farming.elements.add(new NButton("barley", new BarleyFarmer(), true));
+        farming.elements.add(new NButton("barley", new BarleyFarmerBarrels(), true));
         farming.elements.add(new NButton("millet", new MilletFarmer(), true));
         farming.elements.add(new NButton("wheat", new WheatFarmer(), true));
         addLayout(farming);
@@ -108,6 +109,7 @@ public class NBotsMenu extends Widget
             tests.elements.add(new NButton("nords1", new TestAction()));
             tests.elements.add(new NButton("nords2", new PiAction()));
             tests.elements.add(new NButton("nords3", new NomadCalibration()));
+            tests.elements.add(new NButton("nords3", new CountGobs()));
             addLayout(tests);
         }
         showLayouts();

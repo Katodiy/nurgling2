@@ -699,7 +699,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
     public static final KeyBinding kb_next = KeyBinding.get("scm-next", KeyMatch.forchar('N', KeyMatch.S | KeyMatch.C | KeyMatch.M, KeyMatch.S));
     public boolean globtype(GlobKeyEvent ev) {
     if((Boolean) NConfig.get(NConfig.Key.disableMenugridKeys)) return false;
-	if(ev.isAltDown() || ev.isShiftDown() || ev.isControlDown())
+	if(ev.awt.isAltDown() || ev.awt.isShiftDown() || ev.awt.isControlDown())
 		return false;
 	if(kb_root.key().match(ev) && (this.cur != null)) {
 	    change(null);

@@ -18,7 +18,7 @@ public class NAreaRad extends Sprite {
 	final VertexBuf.VertexData posa;
 	final VertexBuf vbuf;
 	final Model smod, emod;
-	private Coord2d lc;
+	private Coord2d lc = ((Gob)owner).rc;
 	int n;
 
 	public NAreaRad(Owner owner, float r) {

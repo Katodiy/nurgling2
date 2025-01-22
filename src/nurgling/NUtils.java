@@ -80,7 +80,7 @@ public class NUtils
 
     public static boolean isNatureObject(String name)
     {
-        return NParser.checkName(name, new NAlias(new ArrayList<>(Arrays.asList("gfx/terobjs/tree", "gfx/terobjs/bumlings","gfx/terobjs/bushes","gfx/terobjs/stonepillar")), new ArrayList<>(Arrays.asList("log", "oldtrunk"))));
+        return NParser.checkName(name, new NAlias(new ArrayList<>(Arrays.asList("gfx/terobjs/tree", "gfx/terobjs/bumlings","gfx/terobjs/bushes","gfx/terobjs/stonepillar", "gfx/terobjs/plants/trellis")), new ArrayList<>(Arrays.asList("log", "oldtrunk"))));
     }
 
     public static WItem takeItemToHand(WItem item) throws InterruptedException

@@ -13,6 +13,7 @@ import nurgling.tools.NParser;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -45,7 +46,7 @@ public class NAlarmWdg extends Widget
                     }
                     String pose = gob.pose();
                     if (pose != null) {
-                        if (NParser.checkName(pose, new NAlias("dead")))
+                        if (NParser.checkName(pose, new NAlias(new ArrayList<String>(Arrays.asList("dead", "mannequinlift")))))
                             forRemove.add(id);
                     }
                 }

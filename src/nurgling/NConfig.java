@@ -57,6 +57,7 @@ public class NConfig
         tracking,
         swimming,
         debug,
+        pfdebug,
         claydiggerprop,
         miningol,
         q_pattern,
@@ -111,6 +112,7 @@ public class NConfig
         conf.put(Key.tracking, false);
         conf.put(Key.swimming, false);
         conf.put(Key.debug, false);
+        conf.put(Key.pfdebug, false);
         conf.put(Key.hidecredo, true);
         conf.put(Key.q_visitor, false);
         conf.put(Key.q_door, true);

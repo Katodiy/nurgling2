@@ -28,6 +28,7 @@ public class NUI extends UI
             root.add(core = new NCore());
             bind(core, 7001);
             core.debug = (Boolean) NConfig.get(NConfig.Key.debug);
+            core.pfdebug = (Boolean) NConfig.get(NConfig.Key.pfdebug);
             dataTables = new NDataTables();
         }
     }
