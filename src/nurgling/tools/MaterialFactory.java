@@ -16,11 +16,41 @@ public class MaterialFactory {
         switch (name){
             case "gfx/terobjs/cupboard":
             case "gfx/terobjs/cheeserack":
+            case "gfx/terobjs/map/jotunclam":
+                switch (status)
+                {
+                    case FREE: {
+                        TexR rt0 = Resource.local().loadwait("nurgling/tex/pinefree-tex").layer(TexR.class, 0);
+                        TexR rt1 = Resource.local().loadwait("nurgling/tex/pinefree-tex").layer(TexR.class, 2);
+                        Map<Integer, Material> result = new HashMap<>();
+                        result.put(0, constructMaterial(rt0,mat));
+                        result.put(1, constructMaterial(rt1,mat));
+                        return result;
+                    }
+                    case FULL: {
+                        TexR rt0 = Resource.local().loadwait("nurgling/tex/pinefull-tex").layer(TexR.class, 0);
+                        TexR rt1 = Resource.local().loadwait("nurgling/tex/pinefree-tex").layer(TexR.class, 2);
+                        Map<Integer, Material> result = new HashMap<>();
+                        result.put(0, constructMaterial(rt0,mat));
+                        result.put(1, constructMaterial(rt1,mat));
+                        return result;
+                    }
+                    case NOTFREE: {
+                        TexR rt0 = Resource.local().loadwait("nurgling/tex/pinenf-tex").layer(TexR.class, 0);
+                        TexR rt1 = Resource.local().loadwait("nurgling/tex/pinefree-tex").layer(TexR.class, 2);
+                        Map<Integer, Material> result = new HashMap<>();
+                        result.put(0, constructMaterial(rt0,mat));
+                        result.put(1, constructMaterial(rt1,mat));
+                        return result;
+                    }
+                }
+                break;
+            case "gfx/terobjs/chest":
                     switch (status)
                     {
                         case FREE: {
                             TexR rt0 = Resource.local().loadwait("nurgling/tex/pinefree-tex").layer(TexR.class, 0);
-                            TexR rt1 = Resource.local().loadwait("nurgling/tex/pinefree-tex").layer(TexR.class, 2);
+                            TexR rt1 = Resource.remote().loadwait("gfx/terobjs/subst/wroughtiron").layer(TexR.class, 0);
                             Map<Integer, Material> result = new HashMap<>();
                             result.put(0, constructMaterial(rt0,mat));
                             result.put(1, constructMaterial(rt1,mat));
@@ -28,7 +58,7 @@ public class MaterialFactory {
                         }
                         case FULL: {
                             TexR rt0 = Resource.local().loadwait("nurgling/tex/pinefull-tex").layer(TexR.class, 0);
-                            TexR rt1 = Resource.local().loadwait("nurgling/tex/pinefull-tex").layer(TexR.class, 2);
+                            TexR rt1 = Resource.remote().loadwait("gfx/terobjs/subst/wroughtiron").layer(TexR.class, 0);
                             Map<Integer, Material> result = new HashMap<>();
                             result.put(0, constructMaterial(rt0,mat));
                             result.put(1, constructMaterial(rt1,mat));
@@ -36,7 +66,7 @@ public class MaterialFactory {
                         }
                         case NOTFREE: {
                             TexR rt0 = Resource.local().loadwait("nurgling/tex/pinenf-tex").layer(TexR.class, 0);
-                            TexR rt1 = Resource.local().loadwait("nurgling/tex/pinenf-tex").layer(TexR.class, 2);
+                            TexR rt1 = Resource.remote().loadwait("gfx/terobjs/subst/wroughtiron").layer(TexR.class, 0);
                             Map<Integer, Material> result = new HashMap<>();
                             result.put(0, constructMaterial(rt0,mat));
                             result.put(1, constructMaterial(rt1,mat));
@@ -94,7 +124,7 @@ public class MaterialFactory {
         {
             return resolver.toString().contains("mlink");
         }
-        else if(name.equals("gfx/terobjs/chest"))
+        else if(name.equals("gfx/terobjs/map/jotunclam"))
         {
             return !resolver.toString().contains("mlink");
         }
@@ -111,6 +141,20 @@ public class MaterialFactory {
                     return Status.FREE;
                 }
                 else if((mask & VSpec.chest_state.get(NStyle.Container.FULL)) == VSpec.chest_state.get(NStyle.Container.FULL))
+                {
+                    return Status.FULL;
+                }
+                else
+                {
+                    return Status.NOTFREE;
+                }
+            }
+            case "gfx/terobjs/map/jotunclam":
+            {
+                if((mask & ~VSpec.jotun_state.get(NStyle.Container.FREE)) == 0) {
+                    return Status.FREE;
+                }
+                else if((mask & VSpec.jotun_state.get(NStyle.Container.FULL)) == VSpec.jotun_state.get(NStyle.Container.FULL))
                 {
                     return Status.FULL;
                 }
@@ -155,22 +199,6 @@ public class MaterialFactory {
             if (materialCashe.get(name) == null)
                 materialCashe.put(name, new HashMap<Status, Map<Integer,TexR>>());
             switch (name) {
-                case "gfx/terobjs/chest":
-                switch (status)
-                {
-                    case FREE:
-                        materialCashe.get(name).put(status,new HashMap<>());
-                        materialCashe.get(name).get(status).put(0,Resource.local().loadwait("alttex/chest/free").layer(TexR.class));
-                        return materialCashe.get(name).get(status);
-                    case FULL:
-                        materialCashe.get(name).put(status,new HashMap<>());
-                        materialCashe.get(name).get(status).put(0,Resource.local().loadwait("alttex/chest/full").layer(TexR.class));
-                        return materialCashe.get(name).get(status);
-                    case NOTFREE:
-                        materialCashe.get(name).put(status,new HashMap<>());
-                        materialCashe.get(name).get(status).put(0,Resource.local().loadwait("alttex/chest/notfree").layer(TexR.class));
-                        return materialCashe.get(name).get(status);
-                }
                 case "gfx/terobjs/barrel":
                     switch (status)
                     {
@@ -197,6 +225,25 @@ public class MaterialFactory {
                         case NOTFREE:
                             materialCashe.get(name).put(status,new HashMap<>());
                             materialCashe.get(name).get(status).put(0,Resource.local().loadwait("alttex/dframe/notfree").layer(TexR.class));
+                            return materialCashe.get(name).get(status);
+                    }
+                case "gfx/terobjs/map/jotunclam":
+                    switch (status)
+                    {
+                        case FREE:
+                            materialCashe.get(name).put(status,new HashMap<>());
+                            materialCashe.get(name).get(status).put(0,Resource.local().loadwait("alttex/jotun/free").layer(TexR.class));
+                            materialCashe.get(name).get(status).put(2,Resource.local().loadwait("alttex/jotun/free").layer(TexR.class));
+                            return materialCashe.get(name).get(status);
+                        case FULL:
+                            materialCashe.get(name).put(status,new HashMap<>());
+                            materialCashe.get(name).get(status).put(0,Resource.local().loadwait("alttex/jotun/full").layer(TexR.class));
+                            materialCashe.get(name).get(status).put(2,Resource.local().loadwait("alttex/jotun/free").layer(TexR.class));
+                            return materialCashe.get(name).get(status);
+                        case NOTFREE:
+                            materialCashe.get(name).put(status,new HashMap<>());
+                            materialCashe.get(name).get(status).put(0,Resource.local().loadwait("alttex/jotun/notfree").layer(TexR.class));
+                            materialCashe.get(name).get(status).put(2,Resource.local().loadwait("alttex/jotun/free").layer(TexR.class));
                             return materialCashe.get(name).get(status);
                     }
                 case "gfx/terobjs/ttub":

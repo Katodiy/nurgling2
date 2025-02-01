@@ -55,8 +55,8 @@ public class LoginScreen extends Widget {
 	add(new Img(bg), Coord.z);
 	optbtn = adda(new Button(UI.scale(100), "Options"), pos("cbl").add(10, -10), 0, 1);
 	optbtn.setgkey(GameUI.kb_opt);
-	if(HttpStatus.mond.get() != null)
-	    adda(new StatusLabel(HttpStatus.mond.get(), 1.0), sz.x - UI.scale(10), UI.scale(10), 1.0, 0.0);
+//	if(HttpStatus.mond.get() != null)
+//	    adda(new StatusLabel(HttpStatus.mond.get(), 1.0), sz.x - UI.scale(10), UI.scale(10), 1.0, 0.0);
 	switch(authmech.get()) {
 	case "native":
 	    login = new Credbox();
@@ -300,9 +300,9 @@ public class LoginScreen extends Widget {
 		} else if(stat.status == "up") {
 		    buf[0] = "Server status: Up";
 		    buf[1] = String.format("Hearthlings playing: %,d", stat.users);
-		} else if(stat.status == "down") {
-		    buf[0] = "Server status: Down";
 		} else if(stat.status == "shutdown") {
+		    buf[0] = "Server status: Down";
+		} else if(stat.status == "terminating") {
 		    buf[0] = "Server status: Shutting down";
 		} else if(stat.status == "crashed") {
 		    buf[0] = "Server status: Crashed";
