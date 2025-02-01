@@ -88,6 +88,7 @@ public class NBotsMenu extends Widget
         build.elements.add(new NButton("kiln", new BuildKiln()));
         build.elements.add(new NButton("barrel", new BuildBarrel()));
         build.elements.add(new NButton("chest", new BuildChest()));
+        build.elements.add(new NButton("lchest", new BuildLargeChest()));
         build.elements.add(new NButton("tarkilnb", new BuildTarKiln()));
         build.elements.add(new NButton("smoke_shed", new BuildSmokeShed()));
         addLayout(build);
