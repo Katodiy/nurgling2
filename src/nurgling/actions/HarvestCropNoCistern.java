@@ -12,21 +12,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HarvestCropBarrel implements Action{
+public class HarvestCropNoCistern implements Action{
+
+    final NArea field;
+    final NArea seed;
+
+    final NArea trougha;
 
     final NAlias crop;
     final NAlias iseed;
 
-    final Pair<Coord2d,Coord2d> fieldC;
-    final Pair<Coord2d,Coord2d> seedC;
-    final Pair<Coord2d,Coord2d> troughC;
-
     int stage;
 
-    public HarvestCropBarrel(Pair<Coord2d,Coord2d> field, Pair<Coord2d,Coord2d> seed, NAlias crop, NAlias iseed, int stage) {
-        this.fieldC = field;
-        this.seedC = seed;
-        this.troughC = seed;
+    public HarvestCropNoCistern(NArea field, NArea seedtrough, NAlias crop, NAlias iseed, int stage) {
+        this.field = field;
+        this.seed = seedtrough;
+        this.trougha = seedtrough;
         this.crop = crop;
         this.iseed = iseed;
         this.stage = stage;
@@ -35,9 +36,8 @@ public class HarvestCropBarrel implements Action{
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
 
-        ArrayList<Gob> barrels = Finder.findGobs(seedC, new NAlias("barrel"));
-        Gob trough = Finder.findGob(troughC, new NAlias("gfx/terobjs/trough"));
-        Gob cistern = null;
+        ArrayList<Gob> barrels = Finder.findGobs(seed, new NAlias("barrel"));
+        Gob trough = Finder.findGob(trougha, new NAlias("gfx/terobjs/trough"));
 
         if (barrels.isEmpty())
             return Results.ERROR("No barrel for seed");
@@ -50,65 +50,62 @@ public class HarvestCropBarrel implements Action{
             barrelInfo.put(barrel, new AtomicBoolean(tb.isFull()));
         }
         if (!gui.getInventory().getItems(iseed).isEmpty()) {
-            new TransferToTrough(trough, iseed, cistern).run(gui);
+            new TransferToTrough(trough, iseed).run(gui);
         }
 
-        Area fieldA = new Area(fieldC);
-        //Coord start = gui.map.player().rc.dist(field.getArea().br.mul(MCache.tilesz)) < gui.map.player().rc.dist(field.getArea().ul.mul(MCache.tilesz)) ? field.getArea().br.sub(1, 1) : field.getArea().ul;
-          Coord start = gui.map.player().rc.dist(fieldA.br.mul(MCache.tilesz)) < gui.map.player().rc.dist(fieldA.ul.mul(MCache.tilesz)) ? fieldA.br.sub(1, 1) : fieldA.ul;
+        Coord start = gui.map.player().rc.dist(field.getArea().br.mul(MCache.tilesz)) < gui.map.player().rc.dist(field.getArea().ul.mul(MCache.tilesz)) ? field.getArea().br.sub(1, 1) : field.getArea().ul;
         Coord pos = new Coord(start);
-        new PathFinder(Coord2d.of(start)).run(NUtils.getGameUI());
-        boolean rev = (pos.equals(fieldA.ul));
+        boolean rev = (pos.equals(field.getArea().ul));
 
         boolean revdir = rev;
 
-        while (!Finder.findGobs(fieldC, crop, stage).isEmpty() || !Finder.findGobs(fieldC, new NAlias("gfx/terobjs/plants/fallowplant"), 0).isEmpty() ) {
+        while (!Finder.findGobs(field, crop, stage).isEmpty() || !Finder.findGobs(field, new NAlias("gfx/terobjs/plants/fallowplant"), 0).isEmpty() ) {
                 if (!rev) {
-                    while (pos.x >= fieldA.ul.x) {
+                    while (pos.x >= field.getArea().ul.x) {
                         AtomicBoolean setDir = new AtomicBoolean(true);
                         if (revdir) {
-                            while (pos.y <= fieldA.br.y - 1) {
-                                Coord endPos = new Coord(Math.max(pos.x - 2, fieldA.ul.x), Math.min(pos.y + 1, fieldA.br.y - 1));
+                            while (pos.y <= field.getArea().br.y - 1) {
+                                Coord endPos = new Coord(Math.max(pos.x - 2, field.getArea().ul.x), Math.min(pos.y + 1, field.getArea().br.y - 1));
                                 Area harea = new Area(pos, endPos, true);
                                 Coord2d endp = harea.ul.mul(MCache.tilesz).add( MCache.tilesz.x + MCache.tilehsz.x, MCache.tilehsz.y).sub(0,MCache.tileqsz.y);
-                                harvest(gui, barrelInfo, trough, cistern, harea, revdir, endp, setDir);
+                                harvest(gui, barrelInfo, trough, harea, revdir, endp, setDir);
                                 pos.y += 2;
                             }
-                            pos.y = fieldA.br.y - 1;
+                            pos.y = field.getArea().br.y - 1;
                         } else {
-                            while (pos.y >= fieldA.ul.y) {
-                                Coord endPos = new Coord(Math.max(pos.x - 2, fieldA.ul.x), Math.max(pos.y - 1, fieldA.ul.y));
+                            while (pos.y >= field.getArea().ul.y) {
+                                Coord endPos = new Coord(Math.max(pos.x - 2, field.getArea().ul.x), Math.max(pos.y - 1, field.getArea().ul.y));
                                 Area harea = new Area(pos, endPos, true);
                                 Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y).sub(MCache.tilesz.x, 0).add(0,MCache.tileqsz.y);
-                                harvest(gui, barrelInfo, trough, cistern, harea, revdir,endp , setDir);
+                                harvest(gui, barrelInfo, trough, harea, revdir,endp , setDir);
                                 pos.y -= 2;
                             }
-                            pos.y = fieldA.ul.y;
+                            pos.y = field.getArea().ul.y;
                         }
                         revdir = !revdir;
                         pos.x -= 3;
                     }
                 } else {
-                    while (pos.x <= fieldA.br.x - 1) {
+                    while (pos.x <= field.getArea().br.x - 1) {
                         AtomicBoolean setDir = new AtomicBoolean(true);
                         if (revdir) {
-                            while (pos.y <= fieldA.br.y - 1) {
-                                Coord endPos = new Coord(Math.min(pos.x + 2, fieldA.br.x - 1), Math.min(pos.y + 1, fieldA.br.y - 1));
+                            while (pos.y <= field.getArea().br.y - 1) {
+                                Coord endPos = new Coord(Math.min(pos.x + 2, field.getArea().br.x - 1), Math.min(pos.y + 1, field.getArea().br.y - 1));
                                 Area harea = new Area(pos, endPos, true);
                                 Coord2d endp = harea.ul.mul(MCache.tilesz).add(MCache.tilehsz.x+MCache.tilesz.x, MCache.tilehqsz.y + MCache.tileqsz.y);
-                                harvest(gui, barrelInfo, trough, cistern, harea, revdir, endp, setDir);
+                                harvest(gui, barrelInfo, trough, harea, revdir, endp, setDir);
                                 pos.y += 2;
                             }
-                            pos.y = fieldA.br.y - 1;
+                            pos.y = field.getArea().br.y - 1;
                         } else {
-                            while (pos.y >= fieldA.ul.y) {
-                                Coord endPos = new Coord(Math.min(pos.x + 2, fieldA.br.x - 1), Math.max(pos.y - 1, fieldA.ul.y));
+                            while (pos.y >= field.getArea().ul.y) {
+                                Coord endPos = new Coord(Math.min(pos.x + 2, field.getArea().br.x - 1), Math.max(pos.y - 1, field.getArea().ul.y));
                                 Area harea = new Area(pos, endPos, true);
                                 Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz).sub(MCache.tilesz.x, 0).add(0,MCache.tileqsz.y);
-                                harvest(gui, barrelInfo, trough, cistern, harea, revdir, endp, setDir);
+                                harvest(gui, barrelInfo, trough, harea, revdir, endp, setDir);
                                 pos.y -= 2;
                             }
-                            pos.y = fieldA.ul.y;
+                            pos.y = field.getArea().ul.y;
                         }
                         revdir = !revdir;
                         pos.x += 3;
@@ -130,15 +127,15 @@ public class HarvestCropBarrel implements Action{
                 }
             }
             if (!gui.getInventory().getItems(iseed).isEmpty()) {
-                new TransferToTrough(trough, iseed, cistern).run(gui);
+                new TransferToTrough(trough, iseed).run(gui);
             }
         }
         return Results.SUCCESS();
     }
 
 
-    void harvest(NGameUI gui, HashMap<Gob,AtomicBoolean> barrelInfo, Gob trough, Gob cistern, Area area, boolean rev, Coord2d target_coord, AtomicBoolean setDir) throws InterruptedException {
-        if (gui.getInventory().getFreeSpace() <= 4) {
+    private Results harvest(NGameUI gui, HashMap<Gob,AtomicBoolean> barrelInfo, Gob trough, Area area, boolean rev, Coord2d target_coord, AtomicBoolean setDir) throws InterruptedException {
+        if (gui.getInventory().getFreeSpace() <= 5) {
             for(Gob barrel : barrelInfo.keySet()) {
                 if (!gui.getInventory().getItems(iseed).isEmpty()) {
                     if (!barrelInfo.get(barrel).get()) {
@@ -149,7 +146,7 @@ public class HarvestCropBarrel implements Action{
                 }
             }
             if (!gui.getInventory().getItems(iseed).isEmpty()) {
-                new TransferToTrough(trough, iseed, cistern).run(gui);
+                return Results.ERROR("");
             }
         }
         if(NUtils.getStamina()<0.35)
@@ -195,5 +192,6 @@ public class HarvestCropBarrel implements Action{
             new SelectFlowerAction("Harvest", plant).run(gui);
             NUtils.getUI().core.addTask(new NoGob(plant.id));
         }
+        return Results.SUCCESS();
     }
 }

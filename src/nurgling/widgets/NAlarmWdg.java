@@ -46,7 +46,7 @@ public class NAlarmWdg extends Widget
                     }
                     String pose = gob.pose();
                     if (pose != null) {
-                        if (NParser.checkName(pose, new NAlias(new ArrayList<String>(Arrays.asList("dead", "mannequinlift")))))
+                        if (NParser.checkName(pose, new NAlias(new ArrayList<String>(Arrays.asList("dead", "mannequin")))))
                             forRemove.add(id);
                     }
                 }

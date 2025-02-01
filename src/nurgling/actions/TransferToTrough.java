@@ -26,6 +26,10 @@ public class TransferToTrough implements Action {
                 new PathFinder(trough).run(gui);
                 if(trough.ngob.getModelAttribute()==7 )
                 {
+                    if(NUtils.getGameUI().vhand != null){
+                        NUtils.drop(NUtils.getGameUI().vhand);
+                        return Results.SUCCESS();
+                    }
                     if(cistern!=null) {
                         if (NUtils.getGameUI().vhand != null) {
                             gui.getInventory().dropOn(gui.getInventory().findFreeCoord(NUtils.getGameUI().vhand));
@@ -41,7 +45,8 @@ public class TransferToTrough implements Action {
                 }
                 NUtils.takeItemToHand(witems.get(0));
                 NUtils.dropsame(trough);
-                NUtils.getUI().core.addTask(new FilledTrough(trough, items));
+                FilledTrough ft = new FilledTrough(trough, items);
+                NUtils.getUI().core.addTask(ft);
             }
         return Results.SUCCESS();
         }
@@ -65,6 +70,13 @@ public class TransferToTrough implements Action {
     {
         this(gob,items);
         this.cistern = cistern;
+    }
+
+    public boolean isFull(){
+        if(trough != null){
+            return (trough.ngob.getModelAttribute()==7 );
+        }
+        return false;
     }
 
     Gob trough;

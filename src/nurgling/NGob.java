@@ -117,7 +117,11 @@ public class NGob {
 
 
                         if (NParser.checkName(name, new NAlias("borka")) && parent.id!=NUtils.playerID()) {
-                            NAlarmWdg.addBorka(parent.id);
+                            String pose = parent.pose();
+                            if(pose != null)
+                                if (!NParser.checkName(pose, new NAlias(new ArrayList<String>(Arrays.asList("dead", "mannequin"))))){
+                                    NAlarmWdg.addBorka(parent.id);
+                                }
                         }
 
                         if (NParser.checkName(name, new NAlias("plants"))) {

@@ -47,4 +47,10 @@ public class FilledTrough implements NTask
 
     }
 
+    public boolean result(){
+        if (trough.ngob.getModelAttribute() == 7 && NUtils.getGameUI().vhand != null)
+            return false;
+        else
+            return true;
+    }
 }

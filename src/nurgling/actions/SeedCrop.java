@@ -24,6 +24,7 @@ public class SeedCrop implements Action {
 
     final NAlias crop;
     final NAlias iseed;
+     private int counter = 0;
 
 
     public SeedCrop(NArea field, NArea seed, NAlias crop, NAlias iseed) {
@@ -61,6 +62,7 @@ public class SeedCrop implements Action {
                             Area harea = new Area(pos, endPos, true);
                             Coord2d endp = harea.ul.mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y).sub(0, MCache.tileqsz.y);
                             seedCrop(gui, barrels, harea, revdir, endp, setDir);
+                            counter = 0;
                             pos.y += 2;
 
                         }
@@ -71,6 +73,7 @@ public class SeedCrop implements Action {
                             Area harea = new Area(pos, endPos, true);
                             Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y).add(0, MCache.tileqsz.y);
                             seedCrop(gui, barrels, harea, revdir, endp, setDir);
+                            counter = 0;
                             pos.y -= 2;
                         }
                         pos.y = field.getArea().ul.y;
@@ -87,6 +90,7 @@ public class SeedCrop implements Action {
                             Area harea = new Area(pos, endPos, true);
                             Coord2d endp = harea.ul.mul(MCache.tilesz).sub(-MCache.tilehsz.x, -MCache.tilehsz.y).sub(0, MCache.tileqsz.y);
                             seedCrop(gui, barrels, harea, revdir, endp, setDir);
+                            counter = 0;
                             pos.y += 2;
 
                         }
@@ -97,6 +101,7 @@ public class SeedCrop implements Action {
                             Area harea = new Area(pos, endPos, true);
                             Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz).add(0, MCache.tileqsz.y);
                             seedCrop(gui, barrels, harea, revdir, endp, setDir);
+                            counter = 0;
                             pos.y -= 2;
                         }
                         pos.y = field.getArea().ul.y;
@@ -106,8 +111,9 @@ public class SeedCrop implements Action {
                 }
             }
             //ArrayList<Coord2d> tiles = field.getTiles(new NAlias("field"));
+            counter ++;
             current_tiles = field.getTiles(new NAlias("field"));
-        } while (Finder.findGobs(field, crop).size() != current_tiles.size());
+        } while ((Finder.findGobs(field, crop).size() != current_tiles.size()) || counter <= 40);
         if (!gui.getInventory().getItems(iseed).isEmpty()) {
             for (Gob barrel : barrels) {
                 TransferToBarrel tb;
