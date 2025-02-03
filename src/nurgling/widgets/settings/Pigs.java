@@ -45,6 +45,8 @@ public class Pigs extends Window {
                     meatq2.setVal(gh.meatquan2);
                     ic.set(gh.ignoreChildren);
                     dk.set(gh.disable_killing);
+                    ignorebd.set(gh.ignoreBD);
+
                 }
             }
             @Override
@@ -63,7 +65,9 @@ public class Pigs extends Window {
                     gh.trufquan1 = truf1.get();
                     gh.trufquanth = trufth.get();
                     gh.trufquan2 = truf2.get();
-                   
+                    gh.disable_killing = dk.a;
+                    gh.ignoreBD = ignorebd.a;
+                    gh.ignoreChildren = ic.a;
 
                 }
                 PigsHerd.set(gh);
@@ -83,6 +87,9 @@ public class Pigs extends Window {
                 truf1.setVal(gh.trufquan1);
                 trufth.setVal(gh.trufquanth);
                 truf2.setVal(gh.trufquan2);
+                ic.set(gh.ignoreChildren);
+                dk.set(gh.disable_killing);
+                ignorebd.set(gh.ignoreBD);
                 PigsHerd.setCurrent(name.text());
             }
 
