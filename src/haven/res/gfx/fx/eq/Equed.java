@@ -9,7 +9,7 @@ import java.util.function.*;
   >spr: Equed
   >rlink: Equed
 */
-@haven.FromResource(name = "gfx/fx/eq", version = 19)
+@haven.FromResource(name = "gfx/fx/eq", version = 20)
 public class Equed extends Sprite {
     private final Sprite espr;
     private final RenderTree.Node eqd;
@@ -47,7 +47,7 @@ public class Equed extends Sprite {
     public static RenderLink mkrlink(Resource res, Object... args) {
 	String epn = (String)args[0];
 	String fl = (String)args[1];
-	Resource eres = res.pool.load((String)args[2], (Integer)args[3]).get();
+	Resource eres = res.pool.load((String)args[2], Utils.iv(args[3])).get();
 	Function<Owner, Skeleton.BoneOffset> ep;
 	if(fl.indexOf('l') >= 0) {
 	    Skeleton.BoneOffset bo = eres.flayer(Skeleton.BoneOffset.class, epn);
