@@ -10,7 +10,7 @@ public class EquipTSacks implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         new Equip(new NAlias("Traveller's Sack")).run(gui);
-        new Equip(new NAlias("Traveller's Sack")).run(gui);
+        new Equip(new NAlias("Traveller's Sack"), true).run(gui);
         return Results.SUCCESS();
     }
 }

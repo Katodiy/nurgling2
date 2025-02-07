@@ -22,9 +22,14 @@ public class Equip implements Action {
 
     NAlias target_name;
     NAlias exception = null;
+    private boolean equip_double = false;
 
     public Equip(NAlias target_name) {
         this.target_name = target_name;
+    }
+    public Equip(NAlias target_name, boolean equip_double) {
+        this.target_name = target_name;
+        this.equip_double = equip_double;
     }
 
     public Equip(NAlias target_name, NAlias exception) {
@@ -42,7 +47,10 @@ public class Equip implements Action {
         WItem lhand = NUtils.getEquipment().findItem (NEquipory.Slots.HAND_LEFT.idx);
 
         WItem rhand = NUtils.getEquipment().findItem (NEquipory.Slots.HAND_RIGHT.idx);
-        if((lhand!=null && NParser.checkName(((NGItem)lhand.item).name(), target_name) || (rhand!=null && NParser.checkName(((NGItem)rhand.item).name(),target_name))))
+        if(
+                !equip_double && (lhand!=null && NParser.checkName(((NGItem)lhand.item).name(), target_name) ||
+                (rhand!=null && NParser.checkName(((NGItem)rhand.item).name(),target_name)))
+        )
         {
             return Results.SUCCESS();
         }
