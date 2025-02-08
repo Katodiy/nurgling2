@@ -417,8 +417,8 @@ public class NGameUI extends GameUI
                 try {
                     Object item = belt(slot);
                     if (item != null) {
-                        if(item instanceof PagBeltSlot)
-                            ((PagBeltSlot)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
+                        if(item instanceof BeltSlot)
+                            ((BeltSlot)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                         else if (item instanceof NBotsMenu.NButton)
                             ((NBotsMenu.NButton)item).btn.draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                     }
@@ -478,11 +478,9 @@ public class NGameUI extends GameUI
             if(slot < 0) {return null;}
             String path;
             if((path = NToolBeltProp.get(name).custom.get(slot) )== null) {
-                GameUI.PagBeltSlot res = null;
+                GameUI.BeltSlot res = null;
                 if (ui != null && belt[slot] != null)
-                    if (belt[slot] instanceof GameUI.PagBeltSlot) {
-                        res = (GameUI.PagBeltSlot) belt[slot];
-                    }
+                    res = belt[slot];
                 return res;
             }
             else
@@ -599,6 +597,8 @@ public class NGameUI extends GameUI
                 if ((mode & KeyMatch.M) != 0)
                     hotKey = "A" + hotKey;
                 tex = NStyle.hotkey.render(hotKey).tex();
+            } else {
+                tex = null;
             }
         }
 
