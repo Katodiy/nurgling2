@@ -6,7 +6,7 @@ import nurgling.NUtils;
 import nurgling.conf.NPrepBlocksProp;
 import nurgling.tools.Finder;
 
-public class WaitCollectState implements NTask
+public class WaitCollectState extends NTask
 {
     public WaitCollectState(Gob target,Coord targetCoord)
     {

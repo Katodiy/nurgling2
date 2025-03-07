@@ -5,7 +5,7 @@ import nurgling.NUtils;
 import nurgling.conf.NChopperProp;
 import nurgling.tools.Finder;
 
-public class WaitChopperState implements NTask
+public class WaitChopperState extends NTask
 {
     public WaitChopperState(Gob tree, NChopperProp prop)
     {

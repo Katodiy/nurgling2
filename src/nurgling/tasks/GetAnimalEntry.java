@@ -12,7 +12,7 @@ import nurgling.NUtils;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-public class GetAnimalEntry implements NTask
+public class GetAnimalEntry extends NTask
 {
     Gob gob;
     Class<? extends Entry> cattleRoster;

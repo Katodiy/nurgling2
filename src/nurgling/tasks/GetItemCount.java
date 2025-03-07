@@ -4,7 +4,7 @@ import haven.*;
 import haven.res.ui.tt.cn.*;
 import nurgling.iteminfo.*;
 
-public class GetItemCount implements NTask
+public class GetItemCount extends NTask
 {
 
     WItem item;

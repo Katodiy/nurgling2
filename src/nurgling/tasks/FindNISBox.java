@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.*;
 import nurgling.*;
 
-public class FindNISBox implements NTask
+public class FindNISBox extends NTask
 {
     public FindNISBox(String name)
     {

@@ -4,7 +4,7 @@ import haven.WItem;
 import nurgling.NGItem;
 import nurgling.NUtils;
 
-public class HandWithoutContent implements NTask
+public class HandWithoutContent extends NTask
 {
 
     @Override

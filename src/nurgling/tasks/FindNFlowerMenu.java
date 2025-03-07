@@ -2,7 +2,7 @@ package nurgling.tasks;
 
 import nurgling.*;
 
-public class FindNFlowerMenu implements NTask
+public class FindNFlowerMenu extends NTask
 {
     final long startTime;
     final long startFrame;

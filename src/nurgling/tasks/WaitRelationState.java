@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.Fightview;
 import nurgling.NUtils;
 
-public class WaitRelationState implements NTask
+public class WaitRelationState extends NTask
 {
     public WaitRelationState(long id, int state)
     {

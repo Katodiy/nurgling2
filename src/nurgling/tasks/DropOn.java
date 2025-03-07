@@ -4,7 +4,7 @@ import haven.*;
 import nurgling.*;
 import nurgling.tools.*;
 
-public class DropOn implements NTask
+public class DropOn extends NTask
 {
     public DropOn(NInventory inventory, Coord coord, NAlias name)
     {

@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.*;
 import nurgling.*;
 
-public class FindNInventory implements NTask
+public class FindNInventory extends NTask
 {
     public FindNInventory(String name)
     {

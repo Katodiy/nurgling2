@@ -12,7 +12,7 @@ import nurgling.tools.NParser;
 
 import java.util.ArrayList;
 
-public class WaitForBurnout implements NTask
+public class WaitForBurnout extends NTask
 {
     ArrayList<Gob> gobs;
     int flame_flag;

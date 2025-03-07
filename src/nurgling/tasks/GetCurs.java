@@ -10,7 +10,7 @@ import nurgling.NUtils;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-public class GetCurs implements NTask
+public class GetCurs extends NTask
 {
     String name;
     String cursname;

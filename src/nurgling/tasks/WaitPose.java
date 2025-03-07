@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.Following;
 import haven.Gob;
 
-public class WaitPose implements NTask
+public class WaitPose extends NTask
 {
     public WaitPose(Gob gob, String pose)
     {

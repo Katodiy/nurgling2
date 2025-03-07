@@ -4,7 +4,7 @@ import haven.Following;
 import haven.Gob;
 import nurgling.NUtils;
 
-public class WaitGobModelAttr implements NTask {
+public class WaitGobModelAttr extends NTask {
     Gob gob;
     int flag;
     public WaitGobModelAttr(Gob gob, int flag) {

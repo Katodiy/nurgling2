@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.WItem;
 import nurgling.NUtils;
 
-public class WaitFreeHand implements NTask
+public class WaitFreeHand extends NTask
 {
 
     public WaitFreeHand()

@@ -5,7 +5,7 @@ import haven.Following;
 import haven.Gob;
 import nurgling.NUtils;
 
-public class WaitLifted implements NTask {
+public class WaitLifted extends NTask {
     Gob gob;
 
     public WaitLifted(Gob gob) {

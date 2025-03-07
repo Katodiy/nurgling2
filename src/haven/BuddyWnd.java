@@ -443,7 +443,7 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	public void opts(final Buddy b, Coord c) {
 	    if(menu == null) {
 		Map<String, Runnable> bopts = b.opts();
-		menu = new FlowerMenu(bopts.keySet().toArray(new String[0])) {
+		menu = new NFlowerMenu(bopts.keySet().toArray(new String[0])) {
 			public void destroy() {
 			    menu = null;
 			    super.destroy();

@@ -6,12 +6,13 @@ import haven.res.ui.croster.CattleId;
 import nurgling.NUtils;
 import nurgling.tools.NParser;
 
-public class AnimalIsDead implements NTask
+public class AnimalIsDead extends NTask
 {
     Gob animal;
     public AnimalIsDead(Gob animal)
     {
         this.animal = animal;
+        this.infinite = true;
     }
 
     boolean res = false;

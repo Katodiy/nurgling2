@@ -2,7 +2,7 @@ package nurgling.tasks;
 
 import haven.WItem;
 
-public class WaitItemSpr implements NTask{
+public class WaitItemSpr extends NTask{
 
     WItem item;
 

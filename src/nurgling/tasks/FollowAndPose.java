@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.*;
 import nurgling.*;
 
-public class FollowAndPose implements NTask
+public class FollowAndPose extends NTask
 {
     public FollowAndPose(Gob gob, String pose)
     {

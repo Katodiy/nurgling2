@@ -4,7 +4,7 @@ import haven.Coord2d;
 import haven.Gob;
 import nurgling.tools.Finder;
 
-public class WaitConstructionObject implements NTask {
+public class WaitConstructionObject extends NTask {
     Coord2d position;
 
     public WaitConstructionObject(Coord2d position) {

@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.*;
 import nurgling.*;
 
-public class FindSplitWnd implements NTask
+public class FindSplitWnd extends NTask
 {
     public FindSplitWnd()
     {

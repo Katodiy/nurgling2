@@ -6,7 +6,7 @@ import nurgling.*;
 import static nurgling.actions.PathFinder.pfmdelta;
 import nurgling.tools.*;
 
-public class IsMoving implements NTask
+public class IsMoving extends NTask
 {
 
     Coord2d coord;

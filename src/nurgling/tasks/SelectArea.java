@@ -3,7 +3,7 @@ package nurgling.tasks;
 import nurgling.*;
 import nurgling.areas.*;
 
-public class SelectArea implements NTask
+public class SelectArea extends NTask
 {
 
     public SelectArea()

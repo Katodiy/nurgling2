@@ -7,7 +7,7 @@ import nurgling.conf.NPrepBlocksProp;
 import nurgling.tools.Finder;
 import nurgling.tools.NParser;
 
-public class WaitBuildState implements NTask
+public class WaitBuildState extends NTask
 {
     public WaitBuildState()
     {

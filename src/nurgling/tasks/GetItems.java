@@ -7,7 +7,7 @@ import nurgling.tools.*;
 
 import java.util.*;
 
-public class GetItems implements NTask
+public class GetItems extends NTask
 {
     NAlias name = null;
     NInventory inventory;

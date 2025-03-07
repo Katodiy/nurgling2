@@ -4,7 +4,7 @@ import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import nurgling.NUtils;
 
-public class WaitRosterLoad implements NTask {
+public class WaitRosterLoad extends NTask {
     Class<? extends Entry> cattleRoster;
     public WaitRosterLoad(Class<? extends Entry> cattleRoster) {
         this.cattleRoster = cattleRoster;

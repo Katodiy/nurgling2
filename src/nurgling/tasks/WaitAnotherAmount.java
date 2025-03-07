@@ -11,7 +11,7 @@ import nurgling.tools.NParser;
 
 import java.util.ArrayList;
 
-public class WaitAnotherAmount implements NTask
+public class WaitAnotherAmount extends NTask
 {
     private final int target_size;
     NAlias name = null;

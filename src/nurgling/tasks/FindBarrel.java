@@ -6,7 +6,7 @@ import haven.res.ui.barterbox.Shopbox;
 import haven.res.ui.relcnt.RelCont;
 import nurgling.NUtils;
 
-public class FindBarrel implements NTask
+public class FindBarrel extends NTask
 {
     public FindBarrel()
     {

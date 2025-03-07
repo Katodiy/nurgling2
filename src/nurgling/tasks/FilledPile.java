@@ -5,7 +5,7 @@ import nurgling.NUtils;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
-public class FilledPile implements NTask
+public class FilledPile extends NTask
 {
 
     final Gob gob;

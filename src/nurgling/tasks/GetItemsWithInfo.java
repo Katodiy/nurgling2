@@ -11,7 +11,7 @@ import nurgling.tools.NParser;
 
 import java.util.ArrayList;
 
-public class GetItemsWithInfo implements NTask
+public class GetItemsWithInfo extends NTask
 {
     NInventory inventory = null;
     Class<? extends ItemInfo> c;

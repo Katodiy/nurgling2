@@ -4,7 +4,7 @@ import haven.*;
 import nurgling.*;
 import nurgling.tools.*;
 
-public class GetGobName implements NTask
+public class GetGobName extends NTask
 {
 
     Gob gob;

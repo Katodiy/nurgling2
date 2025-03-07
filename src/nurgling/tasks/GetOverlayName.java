@@ -2,7 +2,7 @@ package nurgling.tasks;
 
 import haven.*;
 
-public class GetOverlayName implements NTask
+public class GetOverlayName extends NTask
 {
 
     Gob gob;

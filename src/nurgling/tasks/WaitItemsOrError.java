@@ -9,7 +9,7 @@ import nurgling.tools.NParser;
 
 import java.util.ArrayList;
 
-public class WaitItemsOrError implements NTask
+public class WaitItemsOrError extends NTask
 {
     private final int target_size;
     NAlias name = null;

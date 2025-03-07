@@ -6,7 +6,7 @@ import nurgling.conf.NChipperProp;
 import nurgling.conf.NChopperProp;
 import nurgling.tools.Finder;
 
-public class WaitChipperState implements NTask
+public class WaitChipperState extends NTask
 {
     public WaitChipperState(Gob bumling, NChipperProp prop)
     {

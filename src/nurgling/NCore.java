@@ -214,6 +214,10 @@ public class NCore extends Widget
             {
                 try {
                     task.wait();
+                    if(task.criticalExit)
+                    {
+                        ui.gui.error("Incorrect final of task " + task.getClass().toString());
+                    }
                 }
                 catch (InterruptedException e)
                 {
@@ -225,6 +229,10 @@ public class NCore extends Widget
                 }
 
             }
+        }
+        if(task.criticalExit)
+        {
+            new InterruptedException();
         }
     }
 

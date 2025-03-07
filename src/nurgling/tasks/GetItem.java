@@ -4,7 +4,7 @@ import haven.*;
 import nurgling.*;
 import nurgling.tools.*;
 
-public class GetItem implements NTask
+public class GetItem extends NTask
 {
     NAlias name;
     NInventory inventory;

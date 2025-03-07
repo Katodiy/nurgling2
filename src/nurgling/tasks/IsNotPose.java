@@ -8,7 +8,7 @@ import nurgling.NUtils;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-public class IsNotPose implements NTask
+public class IsNotPose extends NTask
 {
     Gob gob;
     NAlias poses;

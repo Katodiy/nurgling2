@@ -48,7 +48,8 @@ public class WItem extends Widget implements DTarget {
 	this.item = item;
     }
 
-    public void drawmain(GOut g, GSprite spr) {
+
+	public void drawmain(GOut g, GSprite spr) {
 	spr.draw(g);
     }
 

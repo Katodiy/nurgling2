@@ -6,7 +6,7 @@ import nurgling.tools.*;
 
 import java.util.*;
 
-public class WaitItems implements NTask
+public class WaitItems extends NTask
 {
     private final int target_size;
     NAlias name = null;

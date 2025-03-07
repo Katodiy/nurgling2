@@ -6,7 +6,7 @@ import haven.Gob;
 import nurgling.NUtils;
 import nurgling.tools.NParser;
 
-public class WaitButcherState implements NTask
+public class WaitButcherState extends NTask
 {
     public WaitButcherState(Coord itemSize)
     {

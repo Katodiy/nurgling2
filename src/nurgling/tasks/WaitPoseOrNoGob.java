@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.Gob;
 import nurgling.tools.Finder;
 
-public class WaitPoseOrNoGob implements NTask
+public class WaitPoseOrNoGob extends NTask
 {
     public WaitPoseOrNoGob(Gob gob,Gob target, String pose)
     {

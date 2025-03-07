@@ -4,7 +4,7 @@ import haven.Coord2d;
 import haven.Gob;
 import nurgling.tasks.NTask;
 
-public class WaitDir implements NTask {
+public class WaitDir extends NTask {
     double angle;
     Gob gob;
     public WaitDir(Gob gob, Coord2d dir) {

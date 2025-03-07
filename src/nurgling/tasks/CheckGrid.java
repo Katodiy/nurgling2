@@ -4,18 +4,16 @@ package nurgling.tasks;
 import haven.Coord;
 import nurgling.NUtils;
 
-public class CheckGrid implements NTask {
+public class CheckGrid extends NTask {
 
     Coord current;
     boolean aborted = false;
-    long startFrame;
 
     public CheckGrid(Coord current) {
         if(current.x == 0 && current.y == 0) {
             int a = 0;
         }
         this.current = current;
-        startFrame = NUtils.getTickId();
     }
 
     @Override
@@ -30,10 +28,6 @@ public class CheckGrid implements NTask {
                 aborted = true;
                 return true;
             }
-        }
-        if(NUtils.getTickId() - startFrame > 200) {
-            aborted = true;
-            return true;
         }
         return false;
     }

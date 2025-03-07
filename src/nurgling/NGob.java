@@ -8,7 +8,7 @@ import haven.res.gfx.terobjs.consobj.Consobj;
 import haven.res.lib.tree.TreeScale;
 import haven.res.lib.vmat.Mapping;
 import haven.res.lib.vmat.Materials;
-import nurgling.nattrib.*;
+import nurgling.gattrr.NCustomScale;
 import nurgling.overlays.*;
 import nurgling.pf.*;
 import nurgling.tools.*;
@@ -31,7 +31,6 @@ public class NGob {
     final Gob parent;
     public long seq;
     public int lastUpdate = 0;
-    public Map<Class<? extends NAttrib>, NAttrib> nattr = new HashMap<Class<? extends NAttrib>, NAttrib>();
 
     public NGob(Gob parent) {
         this.parent = parent;
@@ -50,13 +49,24 @@ public class NGob {
             if (((Drawable) a).getres() != null) {
                 name = ((Drawable) a).getres().name;
 
-                if(name!=null && name.startsWith("gfx/terobjs/arch/cellardoor") || name.startsWith("gfx/terobjs/herbs/standinggrass")) {
-                    return;
-                }
+                if(name!=null) {
+                    if (name.startsWith("gfx/terobjs/arch/cellardoor") || name.startsWith("gfx/terobjs/herbs/standinggrass")) {
+                        return;
+                    }
 
-                if(name!=null && name.contains("bumlings"))
-                {
-                    name = name.replaceAll("\\d+$", "");
+                    if (name.contains("bumlings")) {
+                        name = name.replaceAll("\\d+$", "");
+                    }
+
+                    if (name.contains("bumlings")) {
+                        name = name.replaceAll("\\d+$", "");
+                    }
+
+                    if(name.contains("palisade"))
+                    {
+                        if(parent.getattr(NCustomScale.class)==null)
+                            parent.setattr(new NCustomScale(parent));
+                    }
                 }
 
                 if (((Drawable) a).getres().getLayers() != null) {
@@ -225,9 +235,6 @@ public class NGob {
 
     public void tick(double dt) {
         if(NUtils.getGameUI()!=null) {
-            for (NAttrib attrib : nattr.values()) {
-                attrib.tick(dt);
-            }
             if (name != null && name.contains("kritter") && (parent.pose() == null || !NParser.checkName(parent.pose(), "dead", "knock")) && parent.findol(NAreaRad.class) == null) {
                 nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
                 if (rad != null && rad.vis)

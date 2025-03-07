@@ -5,7 +5,7 @@ import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
 
-public class SelectGob implements NTask
+public class SelectGob extends NTask
 {
 
     public SelectGob()

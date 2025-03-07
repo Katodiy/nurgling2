@@ -5,7 +5,7 @@ import haven.StaticSprite;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-public class IsOverlay implements NTask
+public class IsOverlay extends NTask
 {
 
     Gob gob;
@@ -18,12 +18,12 @@ public class IsOverlay implements NTask
     {
         this.gob = gob;
         this.name = name;
+        this.maxCounter = 500;
     }
 
     @Override
     public boolean check()
     {
-        count++;
 
         for (Gob.Overlay ol : gob.ols) {
             if(ol.spr instanceof StaticSprite) {
@@ -33,7 +33,7 @@ public class IsOverlay implements NTask
                 }
             }
         }
-        return count > 500;
+        return false;
     }
 
     public boolean getResult(){

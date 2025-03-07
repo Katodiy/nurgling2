@@ -7,7 +7,7 @@ import nurgling.NUtils;
 
 import java.util.ArrayList;
 
-public class WaitItemFromPile implements NTask
+public class WaitItemFromPile extends NTask
 {
     ArrayList<WItem> inventoryItems;
     int target_size = 1;

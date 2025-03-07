@@ -5,7 +5,7 @@ import haven.Widget;
 import nurgling.NGItem;
 import nurgling.NInventory;
 
-public class WaitTargetSize implements NTask
+public class WaitTargetSize extends NTask
 {
     private final int target_size;
     Widget inventory;

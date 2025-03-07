@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.Coord2d;
 import haven.Gob;
 
-public class WaitPos implements NTask {
+public class WaitPos extends NTask {
     Coord2d pos;
     Gob gob;
     public WaitPos(Gob gob, Coord2d pos) {
