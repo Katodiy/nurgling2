@@ -149,8 +149,17 @@ public class NGItem extends GItem
             isQuested = NUtils.getGameUI().questinfo.isQuestedItem(this);
             lastQuestUpdate = NQuestInfo.lastUpdate.get();
         }
+        if(isSearched){
+            if ((Boolean) NConfig.get(NConfig.Key.autoDropper))
+                if(parent instanceof NInventory && parent == NUtils.getGameUI().maininv)
+                    if(Math.abs(NUtils.getTickId()-idTickOfDrop)>60) {
+                        wdgmsg("drop", sz, NUtils.getGameUI().map.player().rc, 0);
+                        idTickOfDrop = NUtils.getTickId();
+                    }
+        }
     }
 
+    private long idTickOfDrop = 0;
 
     @Override
     public void wdgmsg(String msg, Object... args)

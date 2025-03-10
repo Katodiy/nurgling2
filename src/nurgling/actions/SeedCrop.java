@@ -14,6 +14,7 @@ import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SeedCrop implements Action {
@@ -150,7 +151,8 @@ public class SeedCrop implements Action {
             }
         }
 
-        Area.Tile[][] tiles = area.getTiles(area, new NAlias("gfx/terobjs/moundbed"));
+        //Area.Tile[][] tiles = area.getTiles(area, new NAlias("gfx/terobjs/moundbed"));
+        Area.Tile[][] tiles = area.getTiles(area, new NAlias(new ArrayList<String>(Arrays.asList("gfx/terobjs/moundbed", "straw"))));
         int count;
         int total = 0;
         count = 0;
