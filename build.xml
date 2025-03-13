@@ -88,6 +88,7 @@
 	<pathelement path="lib/ext/lwjgl/lwjgl-opengl-fat.jar" />
 	<pathelement path="lib/ext/steamworks/steamworks4j.jar" />
     <pathelement path="etc/json-java.jar" />
+    <pathelement path="etc/postgresql-42.7.5.jar" />
 	<pathelement path="lib/jglob.jar" />
       </classpath>
       <compilerarg value="-Xlint:unchecked" />
@@ -118,7 +119,7 @@
       <fileset dir="build/classes-lib" />
       <manifest>
 	<attribute name="Main-Class" value="haven.MainFrame" />
-	<attribute name="Class-Path" value="jogl-all.jar gluegen-rt.jar lwjgl-fat.jar lwjgl-awt.jar lwjgl-opengl-fat.jar steamworks4j.jar builtin-res.jar hafen-res.jar nurgling-res.jar json-java.jar" />
+	<attribute name="Class-Path" value="jogl-all.jar gluegen-rt.jar lwjgl-fat.jar lwjgl-awt.jar lwjgl-opengl-fat.jar steamworks4j.jar builtin-res.jar hafen-res.jar nurgling-res.jar json-java.jar postgresql-42.7.5.jar" />
       </manifest>
     </jar>
     <chmod file="build/hafen.jar" perm="a+x" />
@@ -189,6 +190,7 @@
     </jar>
     <copy todir="bin/" file="build/nurgling-res.jar" />
     <copy todir="bin/" file="etc/json-java.jar" />
+    <copy todir="bin/" file="etc/postgresql-42.7.5.jar" />
   </target>
 
   <target name="pre-release" depends="build-env, jar, extlib/jogl">
@@ -196,6 +198,7 @@
       <file name="lib/ext/builtin-res.jar" />
       <file name="lib/ext/hafen-res.jar" />
       <file name="etc/json-java.jar" />
+      <file name="etc/postgresql-42.7.5.jar" />
     </copy>
     <copy todir="release">
       <fileset dir="lib/ext/jogl">
@@ -220,6 +223,7 @@
       <file name="lib/ext/builtin-res.jar" />
       <file name="lib/ext/hafen-res.jar" />
       <file name="etc/json-java.jar" />
+      <file name="etc/postgresql-42.7.5.jar"  />
       <file name="etc/icon.png" />
     </copy>
     <copy todir="steam">
