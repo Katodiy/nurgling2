@@ -1,5 +1,6 @@
 CREATE TABLE recipes (
     id SERIAL PRIMARY KEY,
+    recipe_hash VARCHAR(64),
     item_name VARCHAR(255) NOT NULL,
     resource_name VARCHAR(255) NOT NULL,
     hunger FLOAT NOT NULL,

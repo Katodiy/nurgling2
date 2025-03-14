@@ -8,6 +8,9 @@ import org.json.JSONTokener;
 import java.io.FileReader;
 import java.sql.*;
 
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
+
 public class ReadJsonAction implements Action {
 
     // JDBC URL, username и password для подключения к PostgreSQL
@@ -44,27 +47,41 @@ public class ReadJsonAction implements Action {
     }
 
     private static void loadDataIntoDatabase(Connection connection, JSONArray foodItems) throws SQLException {
-        // SQL-запросы для вставки данных
-        String insertRecipeSQL = "INSERT INTO recipes (item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?) RETURNING id";
+        String insertRecipeSQL = "INSERT INTO recipes (item_name, resource_name, hunger, energy, recipe_hash) VALUES (?, ?, ?, ?, ?) RETURNING id";
         String insertIngredientSQL = "INSERT INTO ingredients (recipe_id, name, percentage) VALUES (?, ?, ?)";
         String insertFepsSQL = "INSERT INTO feps (recipe_id, name, value) VALUES (?, ?, ?)";
 
-        // Подготовка statement'ов
         PreparedStatement recipeStatement = connection.prepareStatement(insertRecipeSQL);
         PreparedStatement ingredientStatement = connection.prepareStatement(insertIngredientSQL);
         PreparedStatement fepsStatement = connection.prepareStatement(insertFepsSQL);
 
-        // Обработка каждого объекта в JSONArray
         for (int i = 0; i < foodItems.length(); i++) {
             JSONObject foodItem = foodItems.getJSONObject(i);
 
-            // Вставка данных в таблицу recipes
-            recipeStatement.setString(1, foodItem.getString("itemName"));
-            recipeStatement.setString(2, foodItem.getString("resourceName"));
-            recipeStatement.setDouble(3, foodItem.getDouble("hunger"));
-            recipeStatement.setInt(4, foodItem.getInt("energy"));
+            // Получаем данные для хэширования
+            String resourceName = foodItem.getString("resourceName");
+            double hunger = foodItem.getDouble("hunger");
+            int energy = foodItem.getInt("energy");
+            JSONArray ingredients = foodItem.getJSONArray("ingredients");
 
-            // Выполнение запроса и получение ID вставленного рецепта
+            // Создаем строку для хэширования
+            StringBuilder hashInput = new StringBuilder();
+            hashInput.append(resourceName).append(hunger).append(energy);
+            for (int j = 0; j < ingredients.length(); j++) {
+                JSONObject ingredient = ingredients.getJSONObject(j);
+                hashInput.append(ingredient.getString("name")).append(ingredient.getDouble("percentage"));
+            }
+
+            // Вычисляем хэш
+            String recipeHash = calculateSHA256(hashInput.toString());
+
+            // Вставляем данные в таблицу recipes
+            recipeStatement.setString(1, foodItem.getString("itemName"));
+            recipeStatement.setString(2, resourceName);
+            recipeStatement.setDouble(3, hunger);
+            recipeStatement.setInt(4, energy);
+            recipeStatement.setString(5, recipeHash);
+
             try {
                 recipeStatement.execute();
             }
@@ -73,14 +90,14 @@ public class ReadJsonAction implements Action {
                 System.out.println(foodItem.toString());
                 continue;
             }
+
             ResultSet resultSet = recipeStatement.getResultSet();
             int recipeId = -1;
             if (resultSet.next()) {
                 recipeId = resultSet.getInt(1);
             }
 
-            // Вставка ингредиентов
-            JSONArray ingredients = foodItem.getJSONArray("ingredients");
+            // Вставляем ингредиенты
             for (int j = 0; j < ingredients.length(); j++) {
                 JSONObject ingredient = ingredients.getJSONObject(j);
                 ingredientStatement.setInt(1, recipeId);
@@ -89,7 +106,7 @@ public class ReadJsonAction implements Action {
                 ingredientStatement.executeUpdate();
             }
 
-            // Вставка эффектов (FEPS)
+            // Вставляем эффекты (FEPS)
             JSONArray feps = foodItem.getJSONArray("feps");
             for (int j = 0; j < feps.length(); j++) {
                 JSONObject fep = feps.getJSONObject(j);
@@ -100,10 +117,27 @@ public class ReadJsonAction implements Action {
             }
         }
 
-        // Закрытие statement'ов
         recipeStatement.close();
         ingredientStatement.close();
         fepsStatement.close();
+    }
+
+    private static String calculateSHA256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при вычислении хэша SHA-256", e);
+        }
     }
 }
 
