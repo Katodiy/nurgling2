@@ -148,7 +148,8 @@ public class NGItem extends GItem
         }
         if(name!= null) {
             if (!sent && info != null && getInfo(NFoodInfo.class) != null) {
-                sent = ReadJsonAction.writeNGItem(this);
+                ui.core.writeNGItem(this);
+                sent = true;
             }
             if (lastQuestUpdate < NQuestInfo.lastUpdate.get()) {
                 isQuested = NUtils.getGameUI().questinfo.isQuestedItem(this);

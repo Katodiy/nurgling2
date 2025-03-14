@@ -1,10 +1,19 @@
 package nurgling;
 
 import haven.*;
+import haven.res.ui.tt.ingred.Ingredient;
+import haven.resutil.FoodInfo;
 import mapv4.NMappingClient;
 import nurgling.actions.AutoDrink;
+import nurgling.iteminfo.NFoodInfo;
 import nurgling.tasks.*;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -14,6 +23,8 @@ public class NCore extends Widget
     boolean isinspect = false;
     public NMappingClient mappingClient;
     public AutoDrink autoDrink = null;
+
+    public DBPoolManager poolManager = null;
     public boolean isInspectMode()
     {
         if(debug)
@@ -141,11 +152,22 @@ public class NCore extends Widget
         config.read();
         mode = (Boolean) NConfig.get(NConfig.Key.show_drag_menu) ? Mode.DRAG : Mode.IDLE;
         mappingClient = new NMappingClient();
+
     }
 
     @Override
     public void tick(double dt)
     {
+        if(poolManager == null)
+        {
+            try {
+                poolManager = new DBPoolManager(10);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
         if(autoDrink == null && (Boolean)NConfig.get(NConfig.Key.autoDrink))
         {
             new Thread(new Runnable() {
@@ -239,6 +261,10 @@ public class NCore extends Widget
     @Override
     public void dispose() {
         mappingClient.done.set(true);
+        if(poolManager!=null)
+        {
+            poolManager.shutdown();
+        }
         super.dispose();
     }
 
@@ -252,4 +278,99 @@ public class NCore extends Widget
         }
         return res.toString();
     }
+
+
+    public static class NGItemWriter implements Runnable {
+        NGItem item;
+        java.sql.Connection connection;
+
+        public NGItemWriter(NGItem item) {
+            this.item = item;
+        }
+
+        final private static String insertRecipeSQL =  "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
+        final private static String insertIngredientSQL = "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
+        final private static String insertFepsSQL = "INSERT INTO feps (recipe_hash, name, value) VALUES (?, ?, ?)";
+
+        @Override
+        public void run() {
+            try {
+                PreparedStatement recipeStatement = connection.prepareStatement(insertRecipeSQL);
+                PreparedStatement ingredientStatement = connection.prepareStatement(insertIngredientSQL);
+                PreparedStatement fepsStatement = connection.prepareStatement(insertFepsSQL);
+                NFoodInfo fi = item.getInfo(NFoodInfo.class);
+                String hunger = Utils.odformat2(2 * fi.glut / (1 + Math.sqrt(item.quality / 10)) * 100, 2);
+                StringBuilder hashInput = new StringBuilder();
+                hashInput.append(item.getres().name).append((int) (100 * fi.energy()));
+
+                for (ItemInfo info : item.info) {
+                    if (info instanceof Ingredient) {
+                        Ingredient ing = ((Ingredient) info);
+                        hashInput.append(ing.name).append(ing.val * 100);
+                    }
+                }
+
+                String recipeHash = calculateSHA256(hashInput.toString());
+
+                recipeStatement.setString(1, recipeHash);
+                recipeStatement.setString(2, item.name());
+                recipeStatement.setString(3, item.getres().name);
+                recipeStatement.setDouble(4, Double.parseDouble(hunger));
+                recipeStatement.setInt(5, (int) (fi.energy() * 100));
+
+
+                recipeStatement.execute();
+
+                // Вставляем ингредиенты
+                for (ItemInfo info : item.info) {
+                    if (info instanceof Ingredient) {
+                        ingredientStatement.setString(1, recipeHash);
+                        ingredientStatement.setString(2, ((Ingredient) info).name);
+                        ingredientStatement.setDouble(3, ((Ingredient) info).val * 100);
+                        ingredientStatement.executeUpdate();
+                    }
+                }
+
+                // Вставляем эффекты (FEPS)
+
+                for (FoodInfo.Event ef : fi.evs) {
+                    fepsStatement.setString(1, recipeHash);
+                    fepsStatement.setString(2, ef.ev.nm);
+                    fepsStatement.setDouble(3, ef.a / fi.cons);
+                    fepsStatement.executeUpdate();
+                }
+
+            } catch (SQLException e) {
+                if (!e.getSQLState().equals("23505")) {  // Код ошибки для нарушения уникальности
+                    e.printStackTrace();
+                }
+            }
+
+        }
+
+        private static String calculateSHA256(String input) {
+            try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+                StringBuilder hexString = new StringBuilder();
+
+                for (byte b : hashBytes) {
+                    String hex = Integer.toHexString(0xff & b);
+                    if (hex.length() == 1) hexString.append('0');
+                    hexString.append(hex);
+                }
+
+                return hexString.toString();
+            } catch (Exception e) {
+                throw new RuntimeException("Ошибка при вычислении хэша SHA-256", e);
+            }
+        }
+    }
+
+    public void writeNGItem(NGItem item) {
+        NGItemWriter ngItemWriter = new NGItemWriter(item);
+        ngItemWriter.connection = poolManager.connection;
+        poolManager.submitTask(ngItemWriter);
+    }
+
 }

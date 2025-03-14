@@ -143,71 +143,7 @@ public class ReadJsonAction implements Action {
         }
     }
 
-    public static boolean writeNGItem(NGItem item) {
-        try {
-            // Подключение к базе данных
-            Connection connection = DriverManager.getConnection("jdbc:postgresql://" + NConfig.get(NConfig.Key.serverNode) +"/nurgling_db", (String) NConfig.get(NConfig.Key.serverUser), (String) NConfig.get(NConfig.Key.serverPass));
-            PreparedStatement recipeStatement = connection.prepareStatement(insertRecipeSQL);
-            PreparedStatement ingredientStatement = connection.prepareStatement(insertIngredientSQL);
-            PreparedStatement fepsStatement = connection.prepareStatement(insertFepsSQL);
-            NFoodInfo fi = item.getInfo(NFoodInfo.class);
-            if (fi == null) {
-                connection.close();
-                return false;
-            }
-            String hunger = Utils.odformat2(2*fi.glut/(1 + Math.sqrt(item.quality/10))*100, 2);
-            StringBuilder hashInput = new StringBuilder();
-            hashInput.append(item.getres().name).append((int)(100* fi.energy()));
-
-            for (ItemInfo info : item.info) {
-                if (info instanceof Ingredient) {
-                    Ingredient ing = ((Ingredient) info);
-                    hashInput.append(ing.name).append(ing.val * 100);
-                }
-            }
-
-            String recipeHash = calculateSHA256(hashInput.toString());
-
-            recipeStatement.setString(1, recipeHash);
-            recipeStatement.setString(2, item.name());
-            recipeStatement.setString(3, item.getres().name);
-            recipeStatement.setDouble(4, Double.parseDouble(hunger));
-            recipeStatement.setInt(5, (int) (fi.energy()*100));
 
 
-            recipeStatement.execute();
-
-            // Вставляем ингредиенты
-            for (ItemInfo info : item.info) {
-                if (info instanceof Ingredient) {
-                    ingredientStatement.setString(1, recipeHash);
-                    ingredientStatement.setString(2, ((Ingredient) info).name);
-                    ingredientStatement.setDouble(3, ((Ingredient) info).val*100);
-                    ingredientStatement.executeUpdate();
-                }
-            }
-
-            // Вставляем эффекты (FEPS)
-
-            for (FoodInfo.Event ef : fi.evs) {
-                fepsStatement.setString(1, recipeHash);
-                fepsStatement.setString(2, ef.ev.nm);
-                fepsStatement.setDouble(3, ef.a/fi.cons);
-                fepsStatement.executeUpdate();
-            }
-            connection.close();
-            return true;
-
-        } catch (SQLException e) {
-            if (!e.getSQLState().equals("23505")) {  // Код ошибки для нарушения уникальности
-                e.printStackTrace();
-            }
-            else
-            {
-                return true;
-            }
-        }
-        return false;
-    }
 }
 
