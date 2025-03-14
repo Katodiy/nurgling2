@@ -288,7 +288,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     @Override
     public void layout(Layout l) {
 
-        if (owner instanceof GItem)
+        if (owner instanceof GItem && NUtils.getGameUI()!=null)
         {
             name = ((NGItem) owner).name();
             if (name == null)

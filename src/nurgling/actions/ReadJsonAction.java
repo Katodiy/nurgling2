@@ -1,6 +1,12 @@
 package nurgling.actions;
 
+import haven.ItemInfo;
+import haven.Utils;
+import haven.res.ui.tt.ingred.Ingredient;
+import haven.resutil.FoodInfo;
+import nurgling.NGItem;
 import nurgling.NGameUI;
+import nurgling.iteminfo.NFoodInfo;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -27,7 +33,6 @@ public class ReadJsonAction implements Action {
         try {
             // Подключение к базе данных
             Connection connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
-
             // Чтение JSON-файла
             FileReader fileReader = new FileReader(jsonFilePath);
             JSONTokener tokener = new JSONTokener(fileReader);
@@ -46,10 +51,12 @@ public class ReadJsonAction implements Action {
         return Results.SUCCESS();
     }
 
+    final private static String insertRecipeSQL =  "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
+    final private static String insertIngredientSQL = "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
+    final private static String insertFepsSQL = "INSERT INTO feps (recipe_hash, name, value) VALUES (?, ?, ?)";
+
+
     private static void loadDataIntoDatabase(Connection connection, JSONArray foodItems) throws SQLException {
-        String insertRecipeSQL = "INSERT INTO recipes (item_name, resource_name, hunger, energy, recipe_hash) VALUES (?, ?, ?, ?, ?) RETURNING id";
-        String insertIngredientSQL = "INSERT INTO ingredients (recipe_id, name, percentage) VALUES (?, ?, ?)";
-        String insertFepsSQL = "INSERT INTO feps (recipe_id, name, value) VALUES (?, ?, ?)";
 
         PreparedStatement recipeStatement = connection.prepareStatement(insertRecipeSQL);
         PreparedStatement ingredientStatement = connection.prepareStatement(insertIngredientSQL);
@@ -66,7 +73,7 @@ public class ReadJsonAction implements Action {
 
             // Создаем строку для хэширования
             StringBuilder hashInput = new StringBuilder();
-            hashInput.append(resourceName).append(hunger).append(energy);
+            hashInput.append(resourceName).append(energy);
             for (int j = 0; j < ingredients.length(); j++) {
                 JSONObject ingredient = ingredients.getJSONObject(j);
                 hashInput.append(ingredient.getString("name")).append(ingredient.getDouble("percentage"));
@@ -76,17 +83,16 @@ public class ReadJsonAction implements Action {
             String recipeHash = calculateSHA256(hashInput.toString());
 
             // Вставляем данные в таблицу recipes
-            recipeStatement.setString(1, foodItem.getString("itemName"));
-            recipeStatement.setString(2, resourceName);
-            recipeStatement.setDouble(3, hunger);
-            recipeStatement.setInt(4, energy);
-            recipeStatement.setString(5, recipeHash);
+            recipeStatement.setString(1, recipeHash);
+            recipeStatement.setString(2, foodItem.getString("itemName"));
+            recipeStatement.setString(3, resourceName);
+            recipeStatement.setDouble(4, hunger);
+            recipeStatement.setInt(5, energy);
 
             try {
-                recipeStatement.execute();
+                recipeStatement.executeUpdate();
             }
-            catch (org.postgresql.util.PSQLException e)
-            {
+            catch (org.postgresql.util.PSQLException e) {
                 System.out.println(foodItem.toString());
                 continue;
             }
@@ -138,6 +144,73 @@ public class ReadJsonAction implements Action {
         } catch (Exception e) {
             throw new RuntimeException("Ошибка при вычислении хэша SHA-256", e);
         }
+    }
+
+    public static boolean writeNGItem(NGItem item) {
+        try {
+            // Подключение к базе данных
+            Connection connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
+            PreparedStatement recipeStatement = connection.prepareStatement(insertRecipeSQL);
+            PreparedStatement ingredientStatement = connection.prepareStatement(insertIngredientSQL);
+            PreparedStatement fepsStatement = connection.prepareStatement(insertFepsSQL);
+            NFoodInfo fi = item.getInfo(NFoodInfo.class);
+            if (fi == null) {
+                connection.close();
+                return false;
+            }
+            String hunger = Utils.odformat2(2*fi.glut/(1 + Math.sqrt(item.quality/10))*100, 2);
+            StringBuilder hashInput = new StringBuilder();
+            hashInput.append(item.getres().name).append((int)(100* fi.energy()));
+
+            for (ItemInfo info : item.info) {
+                if (info instanceof Ingredient) {
+                    Ingredient ing = ((Ingredient) info);
+                    hashInput.append(ing.name).append(ing.val * 100);
+                }
+            }
+
+            String recipeHash = calculateSHA256(hashInput.toString());
+
+            recipeStatement.setString(1, recipeHash);
+            recipeStatement.setString(2, item.name());
+            recipeStatement.setString(3, item.getres().name);
+            recipeStatement.setDouble(4, Double.parseDouble(hunger));
+            recipeStatement.setInt(5, (int) (fi.energy()*100));
+
+
+            recipeStatement.execute();
+
+            // Вставляем ингредиенты
+            for (ItemInfo info : item.info) {
+                if (info instanceof Ingredient) {
+                    ingredientStatement.setString(1, recipeHash);
+                    ingredientStatement.setString(2, ((Ingredient) info).name);
+                    ingredientStatement.setDouble(3, ((Ingredient) info).val*100);
+                    ingredientStatement.executeUpdate();
+                }
+            }
+
+            // Вставляем эффекты (FEPS)
+
+            for (FoodInfo.Event ef : fi.evs) {
+                fepsStatement.setString(1, recipeHash);
+                fepsStatement.setString(2, ef.ev.nm);
+                fepsStatement.setDouble(3, ef.a/fi.cons);
+                fepsStatement.executeUpdate();
+            }
+            connection.close();
+            return true;
+
+        } catch (SQLException e) {
+            if (!e.getSQLState().equals("23505")) {  // Код ошибки для нарушения уникальности
+                e.printStackTrace();
+            }
+            else
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
 

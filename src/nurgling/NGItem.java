@@ -5,6 +5,7 @@ import static haven.Inventory.sqsz;
 
 import haven.res.ui.tt.slots.ISlots;
 import haven.res.ui.tt.stackn.StackName;
+import nurgling.actions.ReadJsonAction;
 import nurgling.iteminfo.NCuriosity;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.iteminfo.NQuestItem;
@@ -26,6 +27,7 @@ public class NGItem extends GItem
     public int hardArmor = 0;
     public int softArmor = 0;
 
+    boolean sent = false;
     public NGItem(Indir<Resource> res, Message sdt)
     {
         super(res, sdt);
@@ -144,10 +146,14 @@ public class NGItem extends GItem
             }
 
         }
-        if(name!= null && lastQuestUpdate< NQuestInfo.lastUpdate.get())
-        {
-            isQuested = NUtils.getGameUI().questinfo.isQuestedItem(this);
-            lastQuestUpdate = NQuestInfo.lastUpdate.get();
+        if(name!= null) {
+            if (!sent && info != null && getInfo(NFoodInfo.class) != null) {
+                sent = ReadJsonAction.writeNGItem(this);
+            }
+            if (lastQuestUpdate < NQuestInfo.lastUpdate.get()) {
+                isQuested = NUtils.getGameUI().questinfo.isQuestedItem(this);
+                lastQuestUpdate = NQuestInfo.lastUpdate.get();
+            }
         }
     }
 
