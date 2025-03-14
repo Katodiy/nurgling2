@@ -4,6 +4,7 @@ import haven.ItemInfo;
 import haven.Utils;
 import haven.res.ui.tt.ingred.Ingredient;
 import haven.resutil.FoodInfo;
+import nurgling.NConfig;
 import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.iteminfo.NFoodInfo;
@@ -19,10 +20,6 @@ import java.nio.charset.StandardCharsets;
 
 public class ReadJsonAction implements Action {
 
-    // JDBC URL, username и password для подключения к PostgreSQL
-    private static final String JDBC_URL = "jdbc:postgresql://localhost:5436/nurgling_db";
-    private static final String USERNAME = "postgres";
-    private static final String PASSWORD = "postgres";
 
     @Override
     public Results run(NGameUI gui)
@@ -32,7 +29,7 @@ public class ReadJsonAction implements Action {
 
         try {
             // Подключение к базе данных
-            Connection connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
+            Connection connection = DriverManager.getConnection("jdbc:postgresql://" + NConfig.get(NConfig.Key.serverNode) +"/nurgling_db", (String) NConfig.get(NConfig.Key.serverUser), (String) NConfig.get(NConfig.Key.serverPass));
             // Чтение JSON-файла
             FileReader fileReader = new FileReader(jsonFilePath);
             JSONTokener tokener = new JSONTokener(fileReader);
@@ -149,7 +146,7 @@ public class ReadJsonAction implements Action {
     public static boolean writeNGItem(NGItem item) {
         try {
             // Подключение к базе данных
-            Connection connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
+            Connection connection = DriverManager.getConnection("jdbc:postgresql://" + NConfig.get(NConfig.Key.serverNode) +"/nurgling_db", (String) NConfig.get(NConfig.Key.serverUser), (String) NConfig.get(NConfig.Key.serverPass));
             PreparedStatement recipeStatement = connection.prepareStatement(insertRecipeSQL);
             PreparedStatement ingredientStatement = connection.prepareStatement(insertIngredientSQL);
             PreparedStatement fepsStatement = connection.prepareStatement(insertFepsSQL);

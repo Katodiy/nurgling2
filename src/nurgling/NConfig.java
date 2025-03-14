@@ -78,7 +78,7 @@ public class NConfig
         smokeprop,
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
-        simplecrops
+        serverNode, serverUser, serverPass, simplecrops
     }
 
 
