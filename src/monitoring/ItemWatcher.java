@@ -1,6 +1,7 @@
 package monitoring;
 
 import haven.Coord;
+import haven.Utils;
 import nurgling.NInventory;
 import nurgling.NUtils;
 
@@ -20,7 +21,7 @@ public class ItemWatcher implements Runnable {
 
         public ItemInfo(String name, double q, Coord c, String container) {
             this.name = name;
-            this.q = q;
+            this.q = Double.parseDouble(Utils.odformat2(q,2));
             this.c = c;
             this.container = container;
         }
@@ -90,7 +91,7 @@ public class ItemWatcher implements Runnable {
     // Метод для генерации хэша предмета
     private String generateItemHash(ItemInfo item) {
         // Пример: хэш на основе имени, координат и контейнера
-        String data = item.name + item.toString() + item.container;
+        String data = item.name + item.c.toString() + item.q;
         return NUtils.calculateSHA256(data);  // Используем SHA-256 для генерации хэша
     }
 }

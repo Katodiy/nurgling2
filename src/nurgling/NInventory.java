@@ -33,6 +33,7 @@ public class NInventory extends Inventory
     short[][] oldinv = null;
     public ParentGob parentGob = null;
 
+    long lastUpdate = 0;
     public static class ParentGob
     {
         public Gob gob;
@@ -301,6 +302,14 @@ public class NInventory extends Inventory
 
     @Override
     public void tick(double dt) {
+        if(lastUpdate==0)
+        {
+            lastUpdate = NUtils.getTickId();
+        }
+        if(!iis.isEmpty() && NUtils.getTickId() - lastUpdate > 20)
+        {
+            iis.clear();
+        }
         if(NUtils.getGameUI() == null)
             return;
         super.tick(dt);
