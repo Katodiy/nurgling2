@@ -14,6 +14,8 @@ import nurgling.widgets.options.AutoSelection;
 import nurgling.widgets.options.QuickActions;
 
 import java.awt.*;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.text.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -495,5 +497,23 @@ public class NUtils
         resname = resname.substring(k + 1);
         resname = resname.substring(0, 1).toUpperCase() + resname.substring(1);
         return resname;
+    }
+
+    public static String calculateSHA256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при вычислении хэша SHA-256", e);
+        }
     }
 }

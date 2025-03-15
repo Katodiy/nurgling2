@@ -19,3 +19,17 @@ CREATE TABLE feps (
                       name VARCHAR(255) NOT NULL,
                       value FLOAT NOT NULL
 );
+
+CREATE TABLE containers (
+                            hash VARCHAR(64) PRIMARY KEY,
+                            grid_id BIGINT,
+                            coord VARCHAR(255)
+);
+
+CREATE TABLE storageitems (
+                              item_hash VARCHAR(64) PRIMARY KEY,
+                              name VARCHAR(255) NOT NULL,
+                              quality DOUBLE PRECISION,
+                              coordinates VARCHAR(255),
+                              container VARCHAR(64) NOT NULL
+);

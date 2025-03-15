@@ -5,6 +5,7 @@ import static haven.Inventory.sqsz;
 
 import haven.res.ui.tt.slots.ISlots;
 import haven.res.ui.tt.stackn.StackName;
+import monitoring.ItemWatcher;
 import nurgling.actions.ReadJsonAction;
 import nurgling.iteminfo.NCuriosity;
 import nurgling.iteminfo.NFoodInfo;
@@ -141,7 +142,7 @@ public class NGItem extends GItem
             {
                 if(NUtils.getGameUI().map.clickedGob!=null)
                 {
-                    VSpec.checkLpExplorer(NUtils.getGameUI().map.clickedGob, name);
+                    VSpec.checkLpExplorer(NUtils.getGameUI().map.clickedGob.gob, name);
                 }
             }
 
@@ -259,5 +260,16 @@ public class NGItem extends GItem
             }
         }
         return null;
+    }
+
+    @Override
+    public void destroy() {
+        if(parent!=null && parent instanceof NInventory && (((NInventory) parent).parentGob).gob!=null) {
+            if(ui.queue.isDestroyed(parent.wdgid()))
+            {
+                ((NInventory) parent).iis.add(new ItemWatcher.ItemInfo(name,quality!=null?quality:-1,wi!=null?wi.c:Coord.z, (((NInventory) parent).parentGob).hash));
+            }
+        }
+        super.destroy();
     }
 }

@@ -4,6 +4,8 @@ import haven.*;
 import haven.res.ui.tt.ingred.Ingredient;
 import haven.resutil.FoodInfo;
 import mapv4.NMappingClient;
+import monitoring.ContainerWatcher;
+import monitoring.ItemWatcher;
 import nurgling.actions.AutoDrink;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.tasks.*;
@@ -102,7 +104,6 @@ public class NCore extends Widget
     {
         actions = new LastActions();
         actions.gob = gob;
-        actions.gob = null;
     }
 
     public void setLastAction(WItem item)
@@ -288,16 +289,19 @@ public class NCore extends Widget
             this.item = item;
         }
 
-        final private static String insertRecipeSQL =  "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
+        final private static String insertRecipeSQL = "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
         final private static String insertIngredientSQL = "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
         final private static String insertFepsSQL = "INSERT INTO feps (recipe_hash, name, value) VALUES (?, ?, ?)";
 
         @Override
         public void run() {
             try {
+
+
                 PreparedStatement recipeStatement = connection.prepareStatement(insertRecipeSQL);
                 PreparedStatement ingredientStatement = connection.prepareStatement(insertIngredientSQL);
                 PreparedStatement fepsStatement = connection.prepareStatement(insertFepsSQL);
+
                 NFoodInfo fi = item.getInfo(NFoodInfo.class);
                 String hunger = Utils.odformat2(2 * fi.glut / (1 + Math.sqrt(item.quality / 10)) * 100, 2);
                 StringBuilder hashInput = new StringBuilder();
@@ -310,14 +314,13 @@ public class NCore extends Widget
                     }
                 }
 
-                String recipeHash = calculateSHA256(hashInput.toString());
+                String recipeHash = NUtils.calculateSHA256(hashInput.toString());
 
                 recipeStatement.setString(1, recipeHash);
                 recipeStatement.setString(2, item.name());
                 recipeStatement.setString(3, item.getres().name);
                 recipeStatement.setDouble(4, Double.parseDouble(hunger));
                 recipeStatement.setInt(5, (int) (fi.energy() * 100));
-
 
                 recipeStatement.execute();
 
@@ -332,7 +335,6 @@ public class NCore extends Widget
                 }
 
                 // Вставляем эффекты (FEPS)
-
                 for (FoodInfo.Event ef : fi.evs) {
                     fepsStatement.setString(1, recipeHash);
                     fepsStatement.setString(2, ef.ev.nm);
@@ -340,29 +342,22 @@ public class NCore extends Widget
                     fepsStatement.executeUpdate();
                 }
 
+                // Фиксируем транзакцию
+                connection.commit();
+
             } catch (SQLException e) {
+                try {
+                    // В случае ошибки откатываем транзакцию
+                    if (connection != null) {
+                        connection.rollback();
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+
                 if (!e.getSQLState().equals("23505")) {  // Код ошибки для нарушения уникальности
                     e.printStackTrace();
                 }
-            }
-
-        }
-
-        private static String calculateSHA256(String input) {
-            try {
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-                StringBuilder hexString = new StringBuilder();
-
-                for (byte b : hashBytes) {
-                    String hex = Integer.toHexString(0xff & b);
-                    if (hex.length() == 1) hexString.append('0');
-                    hexString.append(hex);
-                }
-
-                return hexString.toString();
-            } catch (Exception e) {
-                throw new RuntimeException("Ошибка при вычислении хэша SHA-256", e);
             }
         }
     }
@@ -373,4 +368,20 @@ public class NCore extends Widget
         poolManager.submitTask(ngItemWriter);
     }
 
+    public void writeContainerInfo(NInventory.ParentGob gob)
+    {
+        if(gob.gob!=null) {
+            ContainerWatcher cw = new ContainerWatcher(gob);
+            cw.connection = poolManager.connection;
+            poolManager.submitTask(cw);
+        }
+    }
+
+    public void writeItemInfoForContainer(ArrayList<ItemWatcher.ItemInfo> iis) {
+
+        ItemWatcher itemWatcher = new ItemWatcher(iis);
+        itemWatcher.connection = poolManager.connection;
+        poolManager.submitTask(itemWatcher);
+
+    }
 }

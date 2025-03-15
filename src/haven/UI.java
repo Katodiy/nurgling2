@@ -330,7 +330,13 @@ public class UI {
 	    for(Command next : ready)
 		execute(next);
 	}
+
+	public boolean isDestroyed(int id)
+	{
+		UI.Command cmd = score.get(id);
+		return cmd!=null && cmd.action instanceof DstWidget;
     }
+	}
 
     public void setreceiver(Receiver rcvr) {
 	this.rcvr = rcvr;

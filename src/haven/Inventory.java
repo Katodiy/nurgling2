@@ -27,7 +27,9 @@
 package haven;
 
 import nurgling.NInventory;
+import nurgling.NUtils;
 import nurgling.NWItem;
+import org.json.JSONObject;
 
 import java.util.*;
 import java.awt.image.WritableRaster;
@@ -62,7 +64,12 @@ public class Inventory extends Widget implements DTarget {
     @RName("inv")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-	    return(new NInventory((Coord)args[0]));
+		NInventory ni = new NInventory((Coord) args[0]);
+		if(ui.core.getLastActions()!=null) {
+			ni.parentGob = new NInventory.ParentGob(ui.core.getLastActions().gob);
+			ui.core.writeContainerInfo(ni.parentGob);
+		}
+		return ni;
 	}
     }
 

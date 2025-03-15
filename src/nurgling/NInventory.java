@@ -4,6 +4,7 @@ import haven.*;
 import haven.Window;
 import haven.res.ui.tt.slot.Slotted;
 import haven.res.ui.tt.stackn.Stack;
+import monitoring.ItemWatcher;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.tasks.*;
 import nurgling.tools.*;
@@ -30,6 +31,28 @@ public class NInventory extends Inventory
     boolean showPopup = false;
     BufferedImage numbers = null;
     short[][] oldinv = null;
+    public ParentGob parentGob = null;
+
+    public static class ParentGob
+    {
+        public Gob gob;
+        public long grid_id;
+        public Coord coord;
+        public String hash;
+
+        public ParentGob(Gob gob) {
+            this.gob = gob;
+            if(gob!=null) {
+                Coord pltc = (new Coord2d(gob.rc.x / MCache.tilesz.x, gob.rc.y / MCache.tilesz.y)).floor();
+                MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
+                this.grid_id = g.id;
+                this.coord = pltc.sub(g.ul);
+                StringBuilder hashInput = new StringBuilder();
+                hashInput.append(gob.ngob.name).append(g.id).append(coord.toString());
+                hash = NUtils.calculateSHA256(hashInput.toString());
+            }
+        }
+    }
     public NInventory(Coord sz)
     {
         super(sz);
@@ -84,6 +107,11 @@ public class NInventory extends Inventory
         }
         g.dispose();
         numbers = tgt;
+    }
+
+    @Override
+    public void addchild(Widget child, Object... args) {
+        super.addchild(child, args);
     }
 
     public int getNumberFreeCoord(Coord coord) throws InterruptedException
@@ -694,6 +722,14 @@ public class NInventory extends Inventory
         return gi.getResult();
     }
 
+    public ArrayList<ItemWatcher.ItemInfo> iis = new ArrayList<>();
 
-
+    @Override
+    public void reqdestroy() {
+        if(parentGob.gob!=null)
+        {
+            ui.core.writeItemInfoForContainer(iis);
+        }
+        super.reqdestroy();
+    }
 }

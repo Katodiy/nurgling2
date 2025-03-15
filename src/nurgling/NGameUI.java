@@ -625,7 +625,7 @@ public class NGameUI extends GameUI
                 Matcher m = Pattern.compile("Quality: (\\d+)").matcher(msg.message());
                 if(m.matches()) {
                     try {
-                        map.clickedGob.addcustomol(new QualityOl(map.clickedGob, Integer.parseInt(m.group(1))));
+                        map.clickedGob.gob.addcustomol(new QualityOl(map.clickedGob.gob, Integer.parseInt(m.group(1))));
                     } catch (NumberFormatException ignored) {
                     } finally {
                         map.clickedGob = null;

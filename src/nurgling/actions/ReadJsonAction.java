@@ -7,6 +7,7 @@ import haven.resutil.FoodInfo;
 import nurgling.NConfig;
 import nurgling.NGItem;
 import nurgling.NGameUI;
+import nurgling.NUtils;
 import nurgling.iteminfo.NFoodInfo;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -77,7 +78,7 @@ public class ReadJsonAction implements Action {
             }
 
             // Вычисляем хэш
-            String recipeHash = calculateSHA256(hashInput.toString());
+            String recipeHash = NUtils.calculateSHA256(hashInput.toString());
 
             // Вставляем данные в таблицу recipes
             recipeStatement.setString(1, recipeHash);
@@ -119,30 +120,11 @@ public class ReadJsonAction implements Action {
                 fepsStatement.executeUpdate();
             }
         }
-
+        connection.commit();
         recipeStatement.close();
         ingredientStatement.close();
         fepsStatement.close();
     }
-
-    private static String calculateSHA256(String input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-
-            for (byte b : hashBytes) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
-            }
-
-            return hexString.toString();
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка при вычислении хэша SHA-256", e);
-        }
-    }
-
 
 
 }
