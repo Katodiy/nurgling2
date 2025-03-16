@@ -6,9 +6,11 @@ import haven.resutil.FoodInfo;
 import mapv4.NMappingClient;
 import monitoring.ContainerWatcher;
 import monitoring.ItemWatcher;
+import monitoring.NGlobalSearchItems;
 import nurgling.actions.AutoDrink;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.tasks.*;
+import nurgling.tools.NSearchItem;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -382,6 +384,16 @@ public class NCore extends Widget
         ItemWatcher itemWatcher = new ItemWatcher(iis);
         itemWatcher.connection = poolManager.connection;
         poolManager.submitTask(itemWatcher);
+
+    }
+
+    final ArrayList<String> targetGobs = new ArrayList<>();
+
+    public void searchContainer(NSearchItem item) {
+
+        NGlobalSearchItems gsi = new NGlobalSearchItems(item);
+        gsi.connection = poolManager.connection;
+        poolManager.submitTask(gsi);
 
     }
 }

@@ -48,9 +48,7 @@ public class NInventory extends Inventory
                 MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
                 this.grid_id = g.id;
                 this.coord = pltc.sub(g.ul);
-                StringBuilder hashInput = new StringBuilder();
-                hashInput.append(gob.ngob.name).append(g.id).append(coord.toString());
-                hash = NUtils.calculateSHA256(hashInput.toString());
+                this.hash = gob.ngob.hash;
             }
         }
     }
@@ -735,7 +733,7 @@ public class NInventory extends Inventory
 
     @Override
     public void reqdestroy() {
-        if(parentGob.gob!=null)
+        if(parentGob!=null && parentGob.gob!=null)
         {
             ui.core.writeItemInfoForContainer(iis);
         }

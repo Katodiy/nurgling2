@@ -78,7 +78,7 @@ public class NConfig
         smokeprop,
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
-        serverNode, serverUser, serverPass, simplecrops
+        serverNode, serverUser, serverPass, globalsearch, simplecrops
     }
 
 
@@ -126,6 +126,7 @@ public class NConfig
         conf.put(Key.questNotified, false);
         conf.put(Key.lpassistent, false);
         conf.put(Key.simplecrops, true);
+        conf.put(Key.globalsearch, true);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
