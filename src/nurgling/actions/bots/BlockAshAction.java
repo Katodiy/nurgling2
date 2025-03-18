@@ -52,7 +52,7 @@ public class BlockAshAction implements Action {
                 cand.cap = "Kiln";
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
-                cand.getattr(Container.FuelLvl.class).setMaxlvl(8);
+                cand.getattr(Container.FuelLvl.class).setMaxlvl(isBoard ? 3 : 8);
                 cand.getattr(Container.FuelLvl.class).setFueltype("Branch");
                 cand.initattr(Container.Tetris.class);
                 Container.Tetris tetris = cand.getattr(Container.Tetris.class);
