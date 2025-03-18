@@ -43,6 +43,7 @@ public class NBotsMenu extends Widget
         productions.elements.add(new NButton("bonestoash", new BoneAshAction(),true));
         productions.elements.add(new NButton("ash", new BlockAshAction(),true));
         productions.elements.add(new NButton("lye", new LyeBoiler(),true));
+        productions.elements.add(new NButton("steel", new SteelAction(), true));
         addLayout(productions);
         NLayout battle = new NLayout("battle");
         battle.elements.add(new NButton("reagro", new Reagro()));
