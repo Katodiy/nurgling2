@@ -243,13 +243,15 @@ public class NGob {
             if(hash==null)
             {
                 Coord pltc = (new Coord2d(parent.rc.x / MCache.tilesz.x, parent.rc.y / MCache.tilesz.y)).floor();
-                if(NUtils.getGameUI().ui.sess.glob.map.grids.containsKey(pltc.div(cmaps))) {
-                    MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
-                    StringBuilder hashInput = new StringBuilder();
-                    Coord coord = pltc.sub(g.ul);
-                    hashInput.append(name).append(g.id).append(coord.toString());
-                    hash = NUtils.calculateSHA256(hashInput.toString());
-                    parent.setattr(new NGlobalSearch(parent));
+                synchronized (NUtils.getGameUI().ui.sess.glob.map.grids) {
+                    if (NUtils.getGameUI().ui.sess.glob.map.grids.containsKey(pltc.div(cmaps))) {
+                        MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
+                        StringBuilder hashInput = new StringBuilder();
+                        Coord coord = pltc.sub(g.ul);
+                        hashInput.append(name).append(g.id).append(coord.toString());
+                        hash = NUtils.calculateSHA256(hashInput.toString());
+                        parent.setattr(new NGlobalSearch(parent));
+                    }
                 }
             }
             if (name != null && name.contains("kritter") && (parent.pose() == null || !NParser.checkName(parent.pose(), "dead", "knock")) && parent.findol(NAreaRad.class) == null) {

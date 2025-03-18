@@ -1,11 +1,12 @@
 package nurgling.widgets;
 
 import haven.*;
+import haven.Button;
 import haven.Scrollbar;
+import haven.Window;
 import haven.res.lib.itemtex.*;
 import nurgling.*;
 import nurgling.areas.*;
-import nurgling.tools.*;
 import org.json.*;
 
 import java.awt.*;
@@ -14,6 +15,136 @@ import java.util.*;
 
 public class IngredientContainer extends Widget implements DTarget, Scrollable
 {
+
+    public static class RuleButton extends Button
+    {
+        NFlowerMenu menu;
+
+        final IngredientContainer ic;
+        public RuleButton(IngredientContainer ing) {
+            super(UI.scale(30), Resource.loadsimg("nurgling/hud/buttons/settings/u"));
+            this.ic = ing;
+        }
+
+        @Override
+        public void click() {
+            super.click();
+            opts(this.c);
+        }
+
+        final ArrayList<String> opt = new ArrayList<String>(){
+            {
+                add("Set Thresholds");
+                add("Delete Thresholds");
+                add("Clear");
+            }
+        };
+
+        public void draw(BufferedImage img) {
+            Graphics g = img.getGraphics();
+            Coord tc = sz.sub(Utils.imgsz(cont)).div(2);
+            g.drawImage(cont, tc.x, tc.y, null);
+            g.dispose();
+        }
+
+        class SetThreshold extends Window
+        {
+            public SetThreshold(int val)
+            {
+                super(UI.scale(140,25), "Threshold");
+                TextEntry te;
+                prev = add(te = new TextEntry(UI.scale(80),String.valueOf(val)));
+                add(new Button(UI.scale(50),"Set"){
+                    @Override
+                    public void click() {
+                        super.click();
+                        try {
+                            int val = Integer.parseInt(te.text());
+                            for (IconItem item : ic.icons) {
+
+                                item.isThreshold = true;
+                                item.val = val;
+                                item.q = new TexI(NStyle.iiqual.render(te.text()).img);
+                                ic.setThreshold(item.name, item.val);
+                            }
+                        } catch (NumberFormatException ignored) {
+                        }
+                        ui.destroy(SetThreshold.this);
+
+                    }
+                },prev.pos("ur").add(5,-5));
+            }
+
+            @Override
+            public void wdgmsg(String msg, Object... args)
+            {
+                if(msg.equals("close"))
+                {
+                    destroy();
+                }
+                else
+                {
+                    super.wdgmsg(msg, args);
+                }
+            }
+        }
+
+        public void opts( Coord c ) {
+            if(menu == null) {
+                menu = new NFlowerMenu(opt.toArray(new String[0])) {
+                    public boolean mousedown(MouseDownEvent ev) {
+                        if(super.mousedown(ev))
+                            nchoose(null);
+                        return(true);
+                    }
+
+                    public void destroy() {
+                        menu = null;
+                        super.destroy();
+                    }
+
+                    @Override
+                    public void nchoose(NPetal option)
+                    {
+                        if(option!=null)
+                        {
+                            if (option.name.equals("Set Thresholds"))
+                            {
+                                SetThreshold st = new SetThreshold(0);
+                                ui.root.add(st, c);
+
+                            }
+                            else if(option.name.equals("Delete Thresholds"))
+                            {
+                                for (IconItem item : ic.icons) {
+
+                                    item.isThreshold = false;
+                                    item.val = 1;
+                                    item.q = null;
+                                    ic.delThreshold(item.name);
+                                }
+                            }
+                            else if(option.name.equals("Clear")) {
+                                ic.deleteAll();
+                            }
+                        }
+                        uimsg("cancel");
+                    }
+
+                };
+                Widget par = parent;
+                Coord pos = c;
+                while(par!=null && !(par instanceof GameUI))
+                {
+                    pos = c.add(par.c);
+                    par = par.parent;
+                }
+                ui.root.add(menu, pos);
+            }
+        }
+    }
+
+
     static Color bg = new Color(30,40,40,160);
 
     private static TexI freeLabel = new TexI(Text.render("Drag and drop an item here").img);
@@ -194,6 +325,27 @@ public class IngredientContainer extends Widget implements DTarget, Scrollable
         }
     }
 
+    public void delThreshold(String name)
+    {
+        JSONArray data;
+        if(NUtils.getArea(id)==null)
+            return;
+        if(type.equals("in"))
+            data = NUtils.getArea(id).jin;
+        else
+            data = NUtils.getArea(id).jout;
+
+        for (int i = 0; i < data.length(); i++)
+        {
+            if (((JSONObject) data.get(i)).get("name").equals(name))
+            {
+                ((JSONObject) data.get(i)).remove("th");
+                NConfig.needAreasUpdate();
+                return;
+            }
+        }
+    }
+
     public void setType(String name, NArea.Ingredient.Type val)
     {
         JSONArray data;
@@ -237,5 +389,20 @@ public class IngredientContainer extends Widget implements DTarget, Scrollable
                 return;
             }
         }
+    }
+
+    public void deleteAll()
+    {
+        JSONArray data;
+        if(NUtils.getArea(id)==null)
+            return;
+        if(type.equals("in"))
+            data = NUtils.getArea(id).jin;
+        else
+            data = NUtils.getArea(id).jout;
+
+        data.clear();
+        NConfig.needAreasUpdate();
+        load(id);
     }
 }

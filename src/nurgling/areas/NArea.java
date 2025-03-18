@@ -568,9 +568,11 @@ public class NArea
 
     private boolean isVisible() {
         for (Long id : space.space.keySet()) {
-            for (MCache.Grid g : NUtils.getGameUI().map.glob.map.grids.values()) {
-                if (g.id == id)
-                    return true;
+            synchronized (NUtils.getGameUI().map.glob.map.grids) {
+                for (MCache.Grid g : NUtils.getGameUI().map.glob.map.grids.values()) {
+                    if (g.id == id)
+                        return true;
+                }
             }
         }
         return false;
