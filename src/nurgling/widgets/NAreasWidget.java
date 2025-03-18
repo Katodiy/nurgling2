@@ -257,6 +257,7 @@ public class NAreasWidget extends Window
     public class AreaItem extends Widget{
         Label text;
         IButton remove;
+        CheckBox hide;
 
         public NArea area;
 
@@ -274,6 +275,16 @@ public class NAreasWidget extends Window
         public AreaItem(String text, NArea area){
             this.text = add(new Label(text));
             this.area = area;
+            hide = add(new CheckBox(""){
+                @Override
+                public void changed(boolean val) {
+                    ((NMapView)NUtils.getGameUI().map).disableArea(AreaItem.this.text.text(), val);
+                    al.sel = AreaItem.this;
+                    super.changed(val);
+                }
+            },new Coord(al.sz.x - 2*NStyle.removei[0].sz().x-UI.scale(2), 0).sub(UI.scale(5),0 ));
+            hide.a = area.hide;
+            hide.settip("Disable this area");
             remove = add(new IButton(NStyle.removei[0].back,NStyle.removei[1].back,NStyle.removei[2].back){
                 @Override
                 public void click() {
@@ -543,7 +554,7 @@ public class NAreasWidget extends Window
         }
 
         protected Widget makeitem(AreaItem item, int idx, Coord sz) {
-            return(new ItemWidget<AreaItem>(this, sz, item) {
+            return(new ItemWidget<AreaItem>(this, sz.add(UI.scale(0,5)), item) {
                 {
                     //item.resize(new Coord(searchF.sz.x - removei[0].sz().x  + UI.scale(4), item.sz.y));
                     add(item);

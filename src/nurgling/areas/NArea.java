@@ -15,6 +15,8 @@ public class NArea
 {
     public long gid = Long.MIN_VALUE;
     public String path = "";
+    public boolean hide = false;
+
     public static class Specialisation
     {
         public String name;
@@ -462,6 +464,9 @@ public class NArea
         {
             this.path = "/" + obj.getString("path");
         }
+        if(obj.has("hide")) {
+            this.hide = obj.getBoolean("hide");
+        }
         if(obj.has("color"))
         {
             JSONObject color = (JSONObject) obj.get("color");
@@ -540,7 +545,7 @@ public class NArea
             for (Long id : space.space.keySet())
             {
                 MCache.Grid grid = NUtils.getGameUI().map.glob.map.findGrid(id);
-                if(grid==null)
+                if(grid==null || hide)
                     return null;
                 Area area = space.space.get(id).area;
                 Coord b = area.ul.add(grid.ul);
@@ -604,6 +609,7 @@ public class NArea
         res.put("space",jspaces);
         res.put("in",jin);
         res.put("out",jout);
+        res.put("hide",hide);
         JSONArray jspec = new JSONArray();
         for(Specialisation s: spec)
         {
