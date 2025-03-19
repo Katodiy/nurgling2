@@ -93,6 +93,14 @@ public class NUtils
         return getGameUI().vhand;
     }
 
+    public static WItem takeItemToHand(GItem item) throws InterruptedException
+    {
+        item.wdgmsg("take", Coord.z);
+        WaitItemInHand tith = new WaitItemInHand(item);
+        getUI().core.addTask(tith);
+        return getGameUI().vhand;
+    }
+
     public static NFlowerMenu getFlowerMenu() throws InterruptedException
     {
         FindNFlowerMenu fnf = new FindNFlowerMenu();

@@ -173,6 +173,13 @@ public class NInventory extends Inventory
         return gi.getResult();
     }
 
+    public WItem getItem(NAlias name, Float q) throws InterruptedException
+    {
+        GetItem gi = new GetItem(this, name, q);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
     public WItem getItem(String name) throws InterruptedException
     {
         return getItem(new NAlias(name));
