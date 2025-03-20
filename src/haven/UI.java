@@ -330,7 +330,7 @@ public class UI {
 	    for(Command next : ready)
 		execute(next);
 	}
-    }
+	}
 
     public void setreceiver(Receiver rcvr) {
 	this.rcvr = rcvr;

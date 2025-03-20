@@ -46,6 +46,7 @@ public class WItem extends Widget implements DTarget {
     public WItem(GItem item) {
 	super(sqsz);
 	this.item = item;
+	this.item.wi = this;
     }
 
 

@@ -1,5 +1,6 @@
 package nurgling.widgets;
 
+import com.jcraft.jorbis.Comment;
 import haven.*;
 import haven.Label;
 import haven.Window;
@@ -51,7 +52,7 @@ public class Specialisation extends Window
         tanning,
         logs,
         smokshed,
-        tarkiln, boneforash, blockforash, readyHides
+        tarkiln, boneforash, blockforash, readyHides, crucibles, chicken, incubator;
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -75,6 +76,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.fuel.toString(),"Fuel",Resource.loadsimg("nurgling/categories/fuel")));
         specialisation.add(new SpecialisationItem(SpecName.barrel.toString(),"Barrel",Resource.loadsimg("nurgling/categories/barrel")));
         specialisation.add(new SpecialisationItem(SpecName.ovens.toString(),"Ovens",Resource.loadsimg("nurgling/categories/ovens")));
+        specialisation.add(new SpecialisationItem(SpecName.crucibles.toString(),"Steelbox",Resource.loadsimg("nurgling/categories/stell")));
         specialisation.add(new SpecialisationItem(SpecName.gardenpot.toString(),"Ready Garden pots",Resource.loadsimg("nurgling/categories/gardenpot")));
         specialisation.add(new SpecialisationItem(SpecName.leafs.toString(),"Piles of leaf",Resource.loadsimg("nurgling/categories/leafs")));
         specialisation.add(new SpecialisationItem(SpecName.htable.toString(),"Herbalist tables",Resource.loadsimg("nurgling/categories/htable")));
@@ -87,6 +89,8 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.tarkiln.toString(),"Tarkilns",Resource.loadsimg("nurgling/categories/tarkiln")));
         specialisation.add(new SpecialisationItem(SpecName.boneforash.toString(),"Bones for Ash",Resource.loadsimg("nurgling/categories/boneash")));
         specialisation.add(new SpecialisationItem(SpecName.blockforash.toString(),"Block for Ash",Resource.loadsimg("nurgling/categories/block")));
+        specialisation.add(new SpecialisationItem(SpecName.chicken.toString(),"Chicken",Resource.loadsimg("nurgling/categories/chicken")));
+        specialisation.add(new SpecialisationItem(SpecName.incubator.toString(),"Chick Incubator",Resource.loadsimg("nurgling/categories/cincub")));
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
             public int compare(SpecialisationItem o1, SpecialisationItem o2) {

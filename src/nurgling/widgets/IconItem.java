@@ -22,6 +22,7 @@ public class IconItem extends Widget
     boolean noOpts = false;
     boolean isThreshold = false;
 
+    Coord basec = null;
     NArea.Ingredient.Type type = NArea.Ingredient.Type.CONTAINER;
 
     int val;
@@ -178,7 +179,7 @@ public class IconItem extends Widget
 
             };
             Widget par = parent;
-            Coord pos = c.add(IconItem.this.c).add(UI.scale(32,38));
+            Coord pos = IconItem.this.c.add(UI.scale(60,60));
             while(par!=null && !(par instanceof GameUI))
             {
                 pos = pos.add(par.c);

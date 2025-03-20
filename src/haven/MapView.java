@@ -58,7 +58,18 @@ public class MapView extends PView implements DTarget, Console.Directory {
     public static double plobpgran = Utils.getprefd("plobpgran", 8);
     public static double plobagran = Utils.getprefd("plobagran", 12);
     protected static final Map<String, Class<? extends Camera>> camtypes = new HashMap<String, Class<? extends Camera>>();
-	public Gob clickedGob = null;
+
+
+	public static class ClickedGob{
+		public Gob gob;
+		int btn;
+
+		public ClickedGob(Gob gob, int btn) {
+			this.gob = gob;
+			this.btn = btn;
+		}
+	}
+	public ClickedGob clickedGob = null;
 	public HashMap<Integer, NOverlay> nols = new HashMap<>();
     public interface Delayed {
 	public void run(GOut g);
@@ -2032,17 +2043,21 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		{
 			if(inf.ci instanceof Composited.CompositeClick)
 			{
-				clickedGob = ((Composited.CompositeClick)inf.ci).gi.gob;
+				clickedGob = new ClickedGob(((Composited.CompositeClick)inf.ci).gi.gob,clickb);
 			}
 			else if (inf.ci instanceof Gob.GobClick)
 			{
-				clickedGob = ((Gob.GobClick)inf.ci).gob;
+				clickedGob =  new ClickedGob(((Gob.GobClick)inf.ci).gob,clickb);
 			}
 			else
 				clickedGob = null;
 		}
 		else
 			clickedGob = null;
+		if(clickb==3 && clickedGob!=null)
+		{
+			NUtils.getUI().core.setLastAction(clickedGob.gob);
+		}
 	    wdgmsg("click", args);
 	}
     }

@@ -37,11 +37,11 @@ public class FuelToContainers implements Action
             if (!neededFuel.containsKey(ftype)) {
                 neededFuel.put(ftype, 0);
             }
-            neededFuel.put(ftype, neededFuel.get(ftype) + fuelLvl.neededFuel());
+            neededFuel.put(ftype, neededFuel.get(ftype) + Math.max(0,fuelLvl.neededFuel()));
         }
         for (Container cont : conts) {
             Container.FuelLvl fuelLvl = cont.getattr(Container.FuelLvl.class);
-            while (fuelLvl.neededFuel() != 0) {
+            while (fuelLvl.neededFuel() > 0) {
                 String ftype = (String) fuelLvl.getRes().get(Container.FuelLvl.FUELTYPE);
                 if (gui.getInventory().getItems(ftype).isEmpty()) {
 
@@ -73,7 +73,7 @@ public class FuelToContainers implements Action
                 new OpenTargetContainer(cont).run(gui);
                 fuelLvl = cont.getattr(Container.FuelLvl.class);
                 ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(ftype);
-                int fueled = Math.min(fuelLvl.neededFuel(), items.size());
+                int fueled = Math.max(0,Math.min(fuelLvl.neededFuel(), items.size()));
                 int aftersize = gui.getInventory().getItems().size() - fueled;
                 for (int i = 0; i < fueled; i++) {
                     NUtils.takeItemToHand(items.get(i));

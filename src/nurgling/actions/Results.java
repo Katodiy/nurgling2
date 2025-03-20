@@ -4,7 +4,7 @@ import nurgling.NUtils;
 
 public class Results {
     String msg;
-    boolean isSuccess = false;
+    public boolean isSuccess = false;
     public static Results SUCCESS()
     {
         Results res =new Results(null);

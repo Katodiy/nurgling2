@@ -14,6 +14,8 @@ import nurgling.widgets.options.AutoSelection;
 import nurgling.widgets.options.QuickActions;
 
 import java.awt.*;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.text.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -86,6 +88,14 @@ public class NUtils
     public static WItem takeItemToHand(WItem item) throws InterruptedException
     {
         item.item.wdgmsg("take", Coord.z);
+        WaitItemInHand tith = new WaitItemInHand(item);
+        getUI().core.addTask(tith);
+        return getGameUI().vhand;
+    }
+
+    public static WItem takeItemToHand(GItem item) throws InterruptedException
+    {
+        item.wdgmsg("take", Coord.z);
         WaitItemInHand tith = new WaitItemInHand(item);
         getUI().core.addTask(tith);
         return getGameUI().vhand;
@@ -495,5 +505,23 @@ public class NUtils
         resname = resname.substring(k + 1);
         resname = resname.substring(0, 1).toUpperCase() + resname.substring(1);
         return resname;
+    }
+
+    public static String calculateSHA256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при вычислении хэша SHA-256", e);
+        }
     }
 }

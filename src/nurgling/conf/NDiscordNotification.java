@@ -27,7 +27,6 @@ public class NDiscordNotification implements JConf{
         return "NDiscordNotification[" + settingsName + "," + webhookUrl + "," + webhookUsername + "," + webhookIcon + "]";
     }
 
-
     public NDiscordNotification(HashMap<String, Object> values) {
         if(values.get("settingsName") != null)
             settingsName = (String) values.get("settingsName");
@@ -88,4 +87,5 @@ public class NDiscordNotification implements JConf{
         }
         return null;
     }
+
 }

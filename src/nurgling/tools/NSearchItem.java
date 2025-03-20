@@ -1,5 +1,9 @@
 package nurgling.tools;
 
+import monitoring.NGlobalSearchItems;
+import nurgling.NConfig;
+import nurgling.NUtils;
+
 import java.util.ArrayList;
 
 public class NSearchItem
@@ -50,6 +54,12 @@ public class NSearchItem
         q.clear();
         fgs = false;
         name = "";
+        if((Boolean) NConfig.get(NConfig.Key.ndbenable))
+        {
+            synchronized (NGlobalSearchItems.containerHashes) {
+                NGlobalSearchItems.containerHashes.clear();
+            }
+        }
     }
     public void install(String value)
     {
@@ -146,6 +156,10 @@ public class NSearchItem
             } else {
                 name = value.toLowerCase();
             }
+        }
+        if((Boolean) NConfig.get(NConfig.Key.ndbenable))
+        {
+            NUtils.getUI().core.searchContainer(this);
         }
     }
 

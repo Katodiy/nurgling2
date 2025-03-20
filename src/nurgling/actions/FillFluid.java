@@ -17,7 +17,6 @@ import java.util.HashMap;
 
 public class FillFluid implements Action
 {
-
     ArrayList<Container> conts;
     Pair<Coord2d,Coord2d> area;
     NAlias content;
@@ -43,10 +42,31 @@ public class FillFluid implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         Gob barrel = Finder.findGob(area, new NAlias("barrel"));
-        Coord2d pos = barrel.rc;
         if(barrel == null) {
             return Results.ERROR("barrel not found");
         }
+
+        // Проверка, нужно ли вообще наполнять контейнеры
+        boolean needToFill = false;
+        if (target == null) {
+            for (Container cont : conts) {
+                if ((cont.gob.ngob.getModelAttribute() & mask) != mask) {
+                    needToFill = true;
+                    break;
+                }
+            }
+        } else {
+            if ((target.ngob.getModelAttribute() & mask) != mask) {
+                needToFill = true;
+            }
+        }
+
+        // Если наполнять не нужно, возвращаем успех без взаимодействия с бочкой
+        if (!needToFill) {
+            return Results.SUCCESS();
+        }
+
+        Coord2d pos = barrel.rc;
         new LiftObject(barrel).run(gui);
         if(!NUtils.isOverlay(barrel,content))
         {

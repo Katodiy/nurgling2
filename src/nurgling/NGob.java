@@ -8,6 +8,7 @@ import haven.res.gfx.terobjs.consobj.Consobj;
 import haven.res.lib.tree.TreeScale;
 import haven.res.lib.vmat.Mapping;
 import haven.res.lib.vmat.Materials;
+import monitoring.NGlobalSearchItems;
 import nurgling.gattrr.NCustomScale;
 import nurgling.overlays.*;
 import nurgling.pf.*;
@@ -17,6 +18,8 @@ import nurgling.widgets.NProspecting;
 import nurgling.widgets.NQuestInfo;
 
 import java.util.*;
+
+import static haven.MCache.cmaps;
 
 public class NGob {
     public NHitBox hitBox = null;
@@ -31,6 +34,8 @@ public class NGob {
     final Gob parent;
     public long seq;
     public int lastUpdate = 0;
+
+    public String hash;
 
     public NGob(Gob parent) {
         this.parent = parent;
@@ -235,6 +240,20 @@ public class NGob {
 
     public void tick(double dt) {
         if(NUtils.getGameUI()!=null) {
+            if(hash==null)
+            {
+                Coord pltc = (new Coord2d(parent.rc.x / MCache.tilesz.x, parent.rc.y / MCache.tilesz.y)).floor();
+                synchronized (NUtils.getGameUI().ui.sess.glob.map.grids) {
+                    if (NUtils.getGameUI().ui.sess.glob.map.grids.containsKey(pltc.div(cmaps))) {
+                        MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
+                        StringBuilder hashInput = new StringBuilder();
+                        Coord coord = pltc.sub(g.ul);
+                        hashInput.append(name).append(g.id).append(coord.toString());
+                        hash = NUtils.calculateSHA256(hashInput.toString());
+                        parent.setattr(new NGlobalSearch(parent));
+                    }
+                }
+            }
             if (name != null && name.contains("kritter") && (parent.pose() == null || !NParser.checkName(parent.pose(), "dead", "knock")) && parent.findol(NAreaRad.class) == null) {
                 nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
                 if (rad != null && rad.vis)
@@ -265,6 +284,15 @@ public class NGob {
                         }
                 }
             }
+            if(hash!=null && !NGlobalSearchItems.containerHashes.isEmpty())
+            {
+                synchronized (NGlobalSearchItems.containerHashes) {
+                    if (NGlobalSearchItems.containerHashes.contains(hash)) {
+
+                    }
+                }
+            }
+
         }
     }
 
