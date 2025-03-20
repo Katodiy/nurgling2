@@ -7,7 +7,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
-import nurgling.tasks.WaitForBurnout;
+import nurgling.tasks.WaitForFirstBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
@@ -73,7 +73,7 @@ public class LyeBoiler implements Action {
 
 
             while (res == null || res.IsSuccess()) {
-                NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 8));
+                NUtils.getUI().core.addTask(new WaitForFirstBurnout(lighted, 12));
                 synchronized (NUtils.getGameUI()) {
                     new FreeContainers(containers, new NAlias("Lye")).run(gui);
                     res = new FillContainersFromAreas(containers, new NAlias("Ashes"), icontext).run(gui);
