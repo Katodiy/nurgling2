@@ -6,10 +6,8 @@ import static haven.Inventory.sqsz;
 import haven.res.ui.tt.slots.ISlots;
 import haven.res.ui.tt.stackn.StackName;
 import monitoring.ItemWatcher;
-import nurgling.actions.ReadJsonAction;
 import nurgling.iteminfo.NCuriosity;
 import nurgling.iteminfo.NFoodInfo;
-import nurgling.iteminfo.NQuestItem;
 import nurgling.tools.VSpec;
 import nurgling.widgets.NQuestInfo;
 
@@ -148,9 +146,11 @@ public class NGItem extends GItem
 
         }
         if(name!= null) {
-            if (!sent && info != null && getInfo(NFoodInfo.class) != null) {
-                ui.core.writeNGItem(this);
-                sent = true;
+            if((Boolean)NConfig.get(NConfig.Key.ndbenable)) {
+                if (!sent && info != null && getInfo(NFoodInfo.class) != null) {
+                    ui.core.writeNGItem(this);
+                    sent = true;
+                }
             }
             if (lastQuestUpdate < NQuestInfo.lastUpdate.get()) {
                 isQuested = NUtils.getGameUI().questinfo.isQuestedItem(this);

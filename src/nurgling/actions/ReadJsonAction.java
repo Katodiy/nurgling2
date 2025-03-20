@@ -25,23 +25,18 @@ public class ReadJsonAction implements Action {
     @Override
     public Results run(NGameUI gui)
     {
-        // Путь к JSON-файлу
-        String jsonFilePath = "C://work//food-info2.json";
+        String jsonFilePath = "";
 
         try {
-            // Подключение к базе данных
             Connection connection = DriverManager.getConnection("jdbc:postgresql://" + NConfig.get(NConfig.Key.serverNode) +"/nurgling_db", (String) NConfig.get(NConfig.Key.serverUser), (String) NConfig.get(NConfig.Key.serverPass));
-            // Чтение JSON-файла
             FileReader fileReader = new FileReader(jsonFilePath);
             JSONTokener tokener = new JSONTokener(fileReader);
             JSONArray foodItems = new JSONArray(tokener);
 
-            // Загрузка данных в базу
             loadDataIntoDatabase(connection, foodItems);
 
-            // Закрытие соединения
             connection.close();
-            System.out.println("Данные успешно загружены в базу данных.");
+            System.out.println("SUCCESS");
         } catch (Exception e) {
             e.printStackTrace();
         }

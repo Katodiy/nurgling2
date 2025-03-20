@@ -54,7 +54,7 @@ public class NSearchItem
         q.clear();
         fgs = false;
         name = "";
-        if((Boolean) NConfig.get(NConfig.Key.globalsearch))
+        if((Boolean) NConfig.get(NConfig.Key.ndbenable))
         {
             synchronized (NGlobalSearchItems.containerHashes) {
                 NGlobalSearchItems.containerHashes.clear();
@@ -157,7 +157,7 @@ public class NSearchItem
                 name = value.toLowerCase();
             }
         }
-        if((Boolean) NConfig.get(NConfig.Key.globalsearch))
+        if((Boolean) NConfig.get(NConfig.Key.ndbenable))
         {
             NUtils.getUI().core.searchContainer(this);
         }

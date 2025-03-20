@@ -20,8 +20,6 @@ import java.awt.image.WritableRaster;
 import java.util.*;
 import java.util.List;
 
-import static haven.TexI.glcm;
-
 public class NInventory extends Inventory
 {
     public NSearchWidget searchwdg;
@@ -742,7 +740,9 @@ public class NInventory extends Inventory
     public void reqdestroy() {
         if(parentGob!=null && parentGob.gob!=null)
         {
-            ui.core.writeItemInfoForContainer(iis);
+            if((Boolean)NConfig.get(NConfig.Key.ndbenable)) {
+                ui.core.writeItemInfoForContainer(iis);
+            }
         }
         super.reqdestroy();
     }

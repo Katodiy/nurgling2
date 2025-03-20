@@ -161,15 +161,19 @@ public class NCore extends Widget
     @Override
     public void tick(double dt)
     {
-        if(poolManager == null)
+        if((Boolean) NConfig.get(NConfig.Key.ndbenable) && poolManager == null)
         {
             try {
-                poolManager = new DBPoolManager(10);
+                poolManager = new DBPoolManager(1);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         }
 
+        if(!(Boolean) NConfig.get(NConfig.Key.ndbenable) && poolManager != null)
+        {
+            poolManager.shutdown();
+        }
 
         if(autoDrink == null && (Boolean)NConfig.get(NConfig.Key.autoDrink))
         {

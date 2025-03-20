@@ -13,7 +13,7 @@ public class DBPoolManager {
     public final Connection connection;
 
     public DBPoolManager(int poolSize) throws SQLException {
-        this.executorService = Executors.newFixedThreadPool(1);
+        this.executorService = Executors.newFixedThreadPool(poolSize);
         this.connection = DriverManager.getConnection("jdbc:postgresql://" + NConfig.get(NConfig.Key.serverNode) +"/nurgling_db", (String) NConfig.get(NConfig.Key.serverUser), (String) NConfig.get(NConfig.Key.serverPass));
         connection.setAutoCommit(false);
     }
