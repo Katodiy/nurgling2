@@ -58,27 +58,32 @@ public class NAlarmWdg extends Widget
                     if (!alarms.contains(id)) {
                         Gob gob = Finder.findGob(id);
                         if(gob!=null) {
-                            Buddy buddy = gob.getattr(Buddy.class);
-                            if (buddy == null) {
-                                NKinProp kinProp = NKinProp.get(0);
-                                if (kinProp.alarm) {
-                                    addAlarm(id);
+                            String pose = gob.pose();
+                            if (pose != null) {
+                                if (NParser.checkName(pose, new NAlias("dead"))) {
+                                    Buddy buddy = gob.getattr(Buddy.class);
+                                    if (buddy == null) {
+                                        NKinProp kinProp = NKinProp.get(0);
+                                        if (kinProp.alarm) {
+                                            addAlarm(id);
 
-                                }
-                                if (kinProp.arrow) {
-                                    synchronized (player.ols) {
-                                        player.addol(new NDirArrow(NUtils.player(), Color.WHITE, 50, gob, null));
-                                    }
-                                }
-                            } else {
-                                if (buddy.b != null) {
-                                    NKinProp kinProp = NKinProp.get(buddy.b.group);
-                                    if (kinProp.alarm) {
-                                        addAlarm(id);
-                                    }
-                                    if (kinProp.arrow) {
-                                        synchronized (player.ols) {
-                                            player.addol(new NDirArrow(NUtils.player(), BuddyWnd.gc[buddy.b.group], 50, gob, null));
+                                        }
+                                        if (kinProp.arrow) {
+                                            synchronized (player.ols) {
+                                                player.addol(new NDirArrow(NUtils.player(), Color.WHITE, 50, gob, null));
+                                            }
+                                        }
+                                    } else {
+                                        if (buddy.b != null) {
+                                            NKinProp kinProp = NKinProp.get(buddy.b.group);
+                                            if (kinProp.alarm) {
+                                                addAlarm(id);
+                                            }
+                                            if (kinProp.arrow) {
+                                                synchronized (player.ols) {
+                                                    player.addol(new NDirArrow(NUtils.player(), BuddyWnd.gc[buddy.b.group], 50, gob, null));
+                                                }
+                                            }
                                         }
                                     }
                                 }

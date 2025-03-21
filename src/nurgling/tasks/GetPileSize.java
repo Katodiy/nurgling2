@@ -6,7 +6,7 @@ import nurgling.tools.*;
 
 import java.util.*;
 
-public class GetPileSize implements NTask
+public class GetPileSize extends NTask
 {
     NISBox pile;
 

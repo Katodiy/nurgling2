@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.Widget;
 import nurgling.NInventory;
 
-public class GetTotalSpace implements NTask
+public class GetTotalSpace extends NTask
 {
     NInventory target;
 

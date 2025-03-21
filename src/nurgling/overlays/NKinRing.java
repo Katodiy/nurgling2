@@ -53,7 +53,7 @@ public class NKinRing extends Sprite implements RenderTree.Node
     public boolean tick(double dt)
     {
         String posename = gob.pose();
-        if((posename != null && posename.contains("knocked")) || NUtils.playerID() == gob.id)
+        if((posename != null && (posename.contains("knocked") || posename.contains("dead"))) || NUtils.playerID() == gob.id)
             return true;
         Buddy buddy = gob.getattr(Buddy.class);
         if(buddy == null)

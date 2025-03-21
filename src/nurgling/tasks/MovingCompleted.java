@@ -6,7 +6,7 @@ import nurgling.*;
 import static nurgling.actions.PathFinder.pfmdelta;
 import nurgling.tools.*;
 
-public class MovingCompleted implements NTask
+public class MovingCompleted extends NTask
 {
     Coord2d target;
 

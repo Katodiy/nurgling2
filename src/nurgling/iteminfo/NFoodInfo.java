@@ -15,9 +15,9 @@ import java.util.*;
 
 public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSearchable
 {
-    public NFoodInfo(Owner owner, double end, double glut, Event[] evs, Effect[] efs, int[] types)
+    public NFoodInfo(Owner owner, double end, double glut, double sev, Event[] evs, Effect[] efs, int[] types)
     {
-        this(owner, end, glut, 0, evs, efs, types);
+        this(owner, end, glut, sev, 0, evs, efs, types);
     }
 
     public static boolean show;
@@ -39,9 +39,9 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     HashMap<String, Double> searchImage = new HashMap<>();
 
     double energy;
-    public NFoodInfo(Owner owner, double end, double glut, double cons, Event[] evs, Effect[] efs, int[] types)
+    public NFoodInfo(Owner owner, double end, double glut, double sev, double cons, Event[] evs, Effect[] efs, int[] types)
     {
-        super(owner, end, glut, cons, evs, efs, types);
+        super(owner, end, glut, sev, cons, evs, efs, types);
         s_end = Utils.odformat2(end * 100, 2);
         this.energy = end;
         s_glut = Utils.odformat2(glut * 100, 2);
@@ -285,14 +285,15 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             delta = expeted_fep - needed;
         }
     }
-
     @Override
-    public BufferedImage tipimg(int w)
-    {
-        if (owner instanceof GItem)
+    public void layout(Layout l) {
+
+        if (owner instanceof GItem && NUtils.getGameUI()!=null)
         {
             name = ((NGItem) owner).name();
-            if (name == null) return null;
+            if (name == null)
+                return;
+
             NCharacterInfo ci = NUtils.getGameUI().getCharInfo();
             if (ci != null)
             {
@@ -313,56 +314,58 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             }
             calcData();
         }
-        needToolTip = false;
-        Collection<BufferedImage> imgs = new LinkedList<BufferedImage>();
-        imgs.add(headImg());
-        imgs.addAll(fepImg());
-        imgs.addAll(effImg());
-        imgs.add(extentTitle());
-        for (int type : types)
-        {
-            if(NUtils.getGameUI().chrwdg.battr.cons.els.isEmpty())
-                return null;
-            if(NUtils.getGameUI().chrwdg.battr.cons.els.size()>type) {
-                BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(type);
-                if (c != null) {
-                    efficiency = c.a * 100;
-                    imgs.add(catimgsh(5, getConsImg(type), RichText.render(String.format("\tEfficiency: $col[255,%d,0]{%s}%%", Math.round(255 * efficiency / 100), Utils.odformat2(efficiency, 2)), 0).img));
-                }
-            }
+
+
+        String head = String.format("Energy: $col[128,128,255]{%s%%}, Hunger: $col[255,192,128]{%s\u2030}", Utils.odformat2(end * 100, 2), Utils.odformat2(glut * 1000, 2));
+        if(cons != 0)
+            head += String.format(", Satiation: $col[192,192,128]{%s%%}", Utils.odformat2(cons * 100, 2));
+        l.cmp.add(RichText.render(head, 0).img, Coord.of(0, l.cmp.sz.y));
+        l.cmp.add(RichText.render(String.format("FEP Sum: $col[128,255,0]{%s}, FEP/Hunger: $col[128,255,128]{%s}", Utils.odformat2(fepSum, 2), Utils.odformat2(fepSum / (100 * glut), 2)), 0).img,Coord.of(0, l.cmp.sz.y));
+
+        for(int i = 0; i < evs.length; i++) {
+            Color col = Utils.blendcol(evs[i].ev.col, Color.WHITE, 0.5);
+            l.cmp.add(catimgsh(5, evs[i].img, RichText.render(String.format("%s: %s{%s} (%s%%)", evs[i].ev.nm, RichText.Parser.col2a(col), Utils.odformat2(evs[i].a, 2), Utils.odformat2(evs[i].a/fepSum*100, 0)), 0).img),
+                    Coord.of(UI.scale(5), l.cmp.sz.y));
         }
-        imgs.add(RichText.render(String.format("FEP Sum: $col[128,255,0]{%s}, FEP/Hunger: $col[128,255,0]{%s}", Utils.odformat2(fepSum, 2), Utils.odformat2(fepSum / (100 * glut), 2)), 0).img);
+        if(sev > 0)
+            l.cmp.add(RichText.render(String.format("Total: $col[128,192,255]{%s} ($col[128,192,255]{%s}/\u2030 hunger)", Utils.odformat2(sev, 2), Utils.odformat2(sev / (1000 * glut), 2)), 0).img,
+                    Coord.of(UI.scale(5), l.cmp.sz.y));
+        for(int i = 0; i < efs.length; i++) {
+            BufferedImage efi = ItemInfo.longtip(efs[i].info);
+            if(efs[i].p != 1)
+                efi = catimgsh(5, efi, RichText.render(String.format("$i{($col[192,192,255]{%d%%} chance)}", (int)Math.round(efs[i].p * 100)), 0).img);
+            l.cmp.add(efi, Coord.of(UI.scale(5), l.cmp.sz.y));
+        }
 
-        if (name != null)
+
+        l.cmp.add(RichText.render(String.format("$col[205,125,255]{%s}:", "Calculation"), 0).img,Coord.of(0, l.cmp.sz.y));
+
+
+        double error = expeted_fep * 0.005;
+        if (delta < 0)
+            l.cmp.add(RichText.render(String.format("Expected FEP: $col[128,255,0]{%.2f} $col[0,196,255]{(%.2f \u00B1 %.2f)}", expeted_fep, delta, error), 0).img,Coord.of(UI.scale(5), l.cmp.sz.y));
+        else
+            l.cmp.add(RichText.render(String.format("Expected FEP: $col[128,255,0]{%.2f} $col[255,0,0]{(+%.2f \u00B1 %.2f)} ", expeted_fep, delta, error), 0).img,Coord.of(UI.scale(5), l.cmp.sz.y));
+        double cur_fep = 0;
+        for (BAttrWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.battr.feps.els)
         {
-            calcData();
-            imgs.add(RichText.render(String.format("$col[205,125,255]{%s}:", "Calculation"), 0).img);
+            cur_fep += el.a;
+        }
+        l.cmp.add(RichText.render(String.format("Expected total: $col[128,255,0]{%.2f}", expeted_fep + cur_fep), 0).img,Coord.of(UI.scale(5), l.cmp.sz.y));
 
-
-            double error = expeted_fep * 0.005;
-            if (delta < 0)
-                imgs.add(RichText.render(String.format("Expected FEP: $col[128,255,0]{%.2f} $col[0,196,255]{(%.2f \u00B1 %.2f)}", expeted_fep, delta, error), 0).img);
-            else
-                imgs.add(RichText.render(String.format("Expected FEP: $col[128,255,0]{%.2f} $col[255,0,0]{(+%.2f \u00B1 %.2f)} ", expeted_fep, delta, error), 0).img);
-            double cur_fep = 0;
-            for (BAttrWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.battr.feps.els)
+        if (NUtils.getUI().dataTables.data_food != null && NUtils.getUI().dataTables.data_food.containsKey(name))
+        {
+            drinkImg = drinkImg();
+            if (drinkImg!= null && !drinkImg.isEmpty())
             {
-                cur_fep += el.a;
-            }
-            imgs.add(RichText.render(String.format("Expected total: $col[128,255,0]{%.2f}", expeted_fep + cur_fep), 0).img);
+                l.cmp.add(RichText.render(String.format("$col[175,175,255]{%s}:", "Drink info"), 0).img,Coord.of(0, l.cmp.sz.y));
 
-            if (NUtils.getUI().dataTables.data_food != null && NUtils.getUI().dataTables.data_food.containsKey(name))
-            {
-                drinkImg = drinkImg();
-                if (!drinkImg.isEmpty())
+                for(BufferedImage cand : drinkImg)
                 {
-                    imgs.add(RichText.render(String.format("$col[175,175,255]{%s}:", "Drink info"), 0).img);
+                    l.cmp.add(cand,Coord.of(UI.scale(5), l.cmp.sz.y));
                 }
-                imgs.addAll(drinkImg());
             }
         }
-
-        return (catimgs(0, imgs.toArray(new BufferedImage[0])));
     }
 
     ArrayList<BufferedImage> drinkImg = null;

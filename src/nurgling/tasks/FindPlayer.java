@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.*;
 import nurgling.*;
 
-public class FindPlayer implements NTask
+public class FindPlayer extends NTask
 {
     public FindPlayer()
     {

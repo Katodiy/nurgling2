@@ -5,9 +5,9 @@ import static haven.Inventory.sqsz;
 
 import haven.res.ui.tt.slots.ISlots;
 import haven.res.ui.tt.stackn.StackName;
+import monitoring.ItemWatcher;
 import nurgling.iteminfo.NCuriosity;
 import nurgling.iteminfo.NFoodInfo;
-import nurgling.iteminfo.NQuestItem;
 import nurgling.tools.VSpec;
 import nurgling.widgets.NQuestInfo;
 
@@ -26,6 +26,7 @@ public class NGItem extends GItem
     public int hardArmor = 0;
     public int softArmor = 0;
 
+    boolean sent = false;
     public NGItem(Indir<Resource> res, Message sdt)
     {
         super(res, sdt);
@@ -139,15 +140,22 @@ public class NGItem extends GItem
             {
                 if(NUtils.getGameUI().map.clickedGob!=null)
                 {
-                    VSpec.checkLpExplorer(NUtils.getGameUI().map.clickedGob, name);
+                    VSpec.checkLpExplorer(NUtils.getGameUI().map.clickedGob.gob, name);
                 }
             }
 
         }
-        if(name!= null && lastQuestUpdate< NQuestInfo.lastUpdate.get())
-        {
-            isQuested = NUtils.getGameUI().questinfo.isQuestedItem(this);
-            lastQuestUpdate = NQuestInfo.lastUpdate.get();
+        if(name!= null) {
+            if((Boolean)NConfig.get(NConfig.Key.ndbenable)) {
+                if (!sent && info != null && getInfo(NFoodInfo.class) != null) {
+                    ui.core.writeNGItem(this);
+                    sent = true;
+                }
+            }
+            if (lastQuestUpdate < NQuestInfo.lastUpdate.get()) {
+                isQuested = NUtils.getGameUI().questinfo.isQuestedItem(this);
+                lastQuestUpdate = NQuestInfo.lastUpdate.get();
+            }
         }
         if(isSearched){
             if ((Boolean) NConfig.get(NConfig.Key.autoDropper))
@@ -261,5 +269,14 @@ public class NGItem extends GItem
             }
         }
         return null;
+    }
+
+    @Override
+    public void destroy() {
+        if(parent!=null && parent instanceof NInventory && (((NInventory) parent).parentGob)!=null && (((NInventory) parent).parentGob).gob!=null && name!=null) {
+            ((NInventory) parent).iis.add(new ItemWatcher.ItemInfo(name, quality != null ? quality : -1, wi != null ? wi.c : Coord.z, (((NInventory) parent).parentGob).hash));
+            ((NInventory) parent).lastUpdate = NUtils.getTickId();
+        }
+        super.destroy();
     }
 }

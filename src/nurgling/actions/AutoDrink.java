@@ -69,14 +69,15 @@ public class AutoDrink implements Action
     boolean checkWater() throws InterruptedException
     {
         WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
-        ArrayList<WItem> witems = ((NInventory) wbelt.item.contents).getItems(new NAlias("Waterskin"));
-        if (!witems.isEmpty()) {
-            for (WItem item : witems) {
-                NGItem ngItem = ((NGItem) item.item);
-                if (!ngItem.content().isEmpty()) {
-                    if (ngItem.content().get(0).name().contains("Water"))
-                    {
-                        return true;
+        if((NInventory) wbelt.item.contents!=null) {
+            ArrayList<WItem> witems = ((NInventory) wbelt.item.contents).getItems(new NAlias("Waterskin"));
+            if (!witems.isEmpty()) {
+                for (WItem item : witems) {
+                    NGItem ngItem = ((NGItem) item.item);
+                    if (!ngItem.content().isEmpty()) {
+                        if (ngItem.content().get(0).name().contains("Water")) {
+                            return true;
+                        }
                     }
                 }
             }

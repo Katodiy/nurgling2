@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.*;
 import nurgling.*;
 
-public class GetFreePlace implements NTask
+public class GetFreePlace extends NTask
 {
     public GetFreePlace(NInventory inv, Coord size)
     {

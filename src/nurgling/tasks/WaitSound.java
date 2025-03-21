@@ -5,7 +5,7 @@ import nurgling.NUtils;
 import nurgling.actions.DynamicPf;
 import nurgling.tools.NParser;
 
-public class WaitSound implements NTask
+public class WaitSound extends NTask
 {
     String name;
     long count;

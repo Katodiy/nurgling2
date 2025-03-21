@@ -9,7 +9,7 @@ import nurgling.tools.NParser;
 
 import javax.print.attribute.standard.MediaSize;
 
-public class WaitDiggerState implements NTask
+public class WaitDiggerState extends NTask
 {
     public WaitDiggerState(NAlias msg)
     {

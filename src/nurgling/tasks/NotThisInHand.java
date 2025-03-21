@@ -7,7 +7,7 @@ import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.tools.NParser;
 
-public class NotThisInHand implements NTask
+public class NotThisInHand extends NTask
 {
     WItem item = null;
 

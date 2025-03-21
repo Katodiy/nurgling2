@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.WItem;
 import nurgling.NGItem;
 
-public class WaitItemContent implements NTask{
+public class WaitItemContent extends NTask{
 
     WItem item;
 

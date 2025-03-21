@@ -2,14 +2,17 @@
 package haven.res.ui.tt.slots;
 
 import haven.*;
+import haven.res.ui.tt.attrmod.AttrMod;
+import haven.res.ui.tt.attrmod.Entry;
+import haven.res.ui.tt.attrmod.Mod;
+import nurgling.NGItem;
+
 import static haven.PUtils.*;
 import java.awt.image.*;
 import java.awt.Graphics;
 import java.awt.Font;
 import java.awt.Color;
 import java.util.*;
-import haven.res.ui.tt.attrmod.AttrMod;
-import nurgling.NGItem;
 
 /* >tt: Fac */
 @haven.FromResource(name = "ui/tt/slots", version = 31)
@@ -35,8 +38,6 @@ public class ISlots extends ItemInfo.Tip implements GItem.NumberInfo {
 
     public static final String chc = "192,192,255";
     public void layout(Layout l) {
-	if(owner instanceof NGItem)
-		isShifted = ((NGItem)owner).ui.modshift;
 	l.cmp.add(ch.img, new Coord(0, l.cmp.sz.y));
 	if(attrs.length > 0) {
 	    BufferedImage head = RichText.render(String.format("Chance: $col[%s]{%d%%} to $col[%s]{%d%%}", chc, Math.round(100 * pmin), chc, Math.round(100 * pmax)), 0).img;
@@ -58,16 +59,18 @@ public class ISlots extends ItemInfo.Tip implements GItem.NumberInfo {
 			si.layout(l);
 	}
 	else {
-		HashMap<String, AttrMod.Mod> mods = new HashMap<>();
+		HashMap<String, Mod> mods = new HashMap<>();
 		for(SItem si: s){
 			for(ItemInfo info : si.info) {
 				if (info instanceof AttrMod)
-					for (AttrMod.Mod mod : ((AttrMod) info).mods) {
-						if (mods.get(mod.attr.name) == null) {
-							mods.put(mod.attr.name, mod);
-						} else {
-							AttrMod.Mod val = mods.get(mod.attr.name);
-							mods.put(mod.attr.name, new AttrMod.Mod(mod.attr,mod.mod + val.mod));
+					for (Entry mod : ((AttrMod) info).tab) {
+						if(mod instanceof Mod) {
+							if (mods.get(mod.attr.name()) == null) {
+								mods.put(mod.attr.name(), (Mod)mod);
+							} else {
+								Mod val = mods.get(mod.attr.name());
+								mods.put(mod.attr.name(), new Mod(mod.attr, ((Mod)mod).mod + val.mod));
+							}
 						}
 					}
 			}

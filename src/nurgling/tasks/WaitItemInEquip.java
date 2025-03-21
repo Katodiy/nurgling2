@@ -10,7 +10,7 @@ import nurgling.widgets.NEquipory;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class WaitItemInEquip implements NTask
+public class WaitItemInEquip extends NTask
 {
     String name;
     GItem item = null;

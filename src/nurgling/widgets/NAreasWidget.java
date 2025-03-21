@@ -172,8 +172,10 @@ public class NAreasWidget extends Window
 
         prev = add(Frame.with(in_items = new IngredientContainer("in"),true), prev.pos("ur").add(UI.scale(5,-5)));
         add(new Label("Take:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
+        add(new IngredientContainer.RuleButton(in_items ),prev.pos("ur").sub(UI.scale(30,20)));
         prev = add(Frame.with(out_items = new IngredientContainer("out"),true), prev.pos("ur").adds(UI.scale(5, 0)));
         add(new Label("Put:",NStyle.areastitle),prev.pos("ul").sub(UI.scale(-5,20)));
+        add(new IngredientContainer.RuleButton(out_items ),prev.pos("ur").sub(UI.scale(30,20)));
         pack();
     }
 
@@ -255,6 +257,7 @@ public class NAreasWidget extends Window
     public class AreaItem extends Widget{
         Label text;
         IButton remove;
+        CheckBox hide;
 
         public NArea area;
 
@@ -272,6 +275,16 @@ public class NAreasWidget extends Window
         public AreaItem(String text, NArea area){
             this.text = add(new Label(text));
             this.area = area;
+            hide = add(new CheckBox(""){
+                @Override
+                public void changed(boolean val) {
+                    ((NMapView)NUtils.getGameUI().map).disableArea(AreaItem.this.text.text(), val);
+                    al.sel = AreaItem.this;
+                    super.changed(val);
+                }
+            },new Coord(al.sz.x - 2*NStyle.removei[0].sz().x-UI.scale(2), 0).sub(UI.scale(5),0 ));
+            hide.a = area.hide;
+            hide.settip("Disable this area");
             remove = add(new IButton(NStyle.removei[0].back,NStyle.removei[1].back,NStyle.removei[2].back){
                 @Override
                 public void click() {
@@ -541,7 +554,7 @@ public class NAreasWidget extends Window
         }
 
         protected Widget makeitem(AreaItem item, int idx, Coord sz) {
-            return(new ItemWidget<AreaItem>(this, sz, item) {
+            return(new ItemWidget<AreaItem>(this, sz.add(UI.scale(0,5)), item) {
                 {
                     //item.resize(new Coord(searchF.sz.x - removei[0].sz().x  + UI.scale(4), item.sz.y));
                     add(item);

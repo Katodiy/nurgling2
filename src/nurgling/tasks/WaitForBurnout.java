@@ -1,18 +1,14 @@
 package nurgling.tasks;
 
-import haven.GItem;
 import haven.Gob;
-import haven.WItem;
-import haven.Widget;
-import nurgling.NGItem;
-import nurgling.NISBox;
-import nurgling.NInventory;
-import nurgling.tools.NAlias;
-import nurgling.tools.NParser;
 
 import java.util.ArrayList;
 
-public class WaitForBurnout implements NTask
+/*
+ * Waits until ALL of the gobs in the list have a set of attributes which diverges from ALL of the flags passed as a mask
+ * Typically used to wait until a group of utilities have all finished burning through their respective tasks before setting them all up again together
+ */
+public class WaitForBurnout extends NTask
 {
     ArrayList<Gob> gobs;
     int flame_flag;

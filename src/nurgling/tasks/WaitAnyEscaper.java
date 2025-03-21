@@ -5,7 +5,7 @@ import nurgling.NUtils;
 
 import java.util.ArrayList;
 
-public class WaitAnyEscaper implements NTask
+public class WaitAnyEscaper extends NTask
 {
     public WaitAnyEscaper(ArrayList<Long> ids)
     {

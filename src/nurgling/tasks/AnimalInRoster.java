@@ -7,7 +7,7 @@ import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import nurgling.NUtils;
 
-public class AnimalInRoster implements NTask
+public class AnimalInRoster extends NTask
 {
     Gob animal;
     Class<? extends Entry> cattleRoster;

@@ -429,8 +429,8 @@ public class NGameUI extends GameUI
                 try {
                     Object item = belt(slot);
                     if (item != null) {
-                        if(item instanceof PagBeltSlot)
-                            ((PagBeltSlot)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
+                        if(item instanceof BeltSlot)
+                            ((BeltSlot)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                         else if (item instanceof NBotsMenu.NButton)
                             ((NBotsMenu.NButton)item).btn.draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                     }
@@ -490,11 +490,9 @@ public class NGameUI extends GameUI
             if(slot < 0) {return null;}
             String path;
             if((path = NToolBeltProp.get(name).custom.get(slot) )== null) {
-                GameUI.PagBeltSlot res = null;
+                GameUI.BeltSlot res = null;
                 if (ui != null && belt[slot] != null)
-                    if (belt[slot] instanceof GameUI.PagBeltSlot) {
-                        res = (GameUI.PagBeltSlot) belt[slot];
-                    }
+                    res = belt[slot];
                 return res;
             }
             else
@@ -611,6 +609,8 @@ public class NGameUI extends GameUI
                 if ((mode & KeyMatch.M) != 0)
                     hotKey = "A" + hotKey;
                 tex = NStyle.hotkey.render(hotKey).tex();
+            } else {
+                tex = null;
             }
         }
 
@@ -637,7 +637,7 @@ public class NGameUI extends GameUI
                 Matcher m = Pattern.compile("Quality: (\\d+)").matcher(msg.message());
                 if(m.matches()) {
                     try {
-                        map.clickedGob.addcustomol(new QualityOl(map.clickedGob, Integer.parseInt(m.group(1))));
+                        map.clickedGob.gob.addcustomol(new QualityOl(map.clickedGob.gob, Integer.parseInt(m.group(1))));
                     } catch (NumberFormatException ignored) {
                     } finally {
                         map.clickedGob = null;

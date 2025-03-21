@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.*;
 import nurgling.*;
 
-public class GetFreeSpace implements NTask
+public class GetFreeSpace extends NTask
 {
     Widget target;
 

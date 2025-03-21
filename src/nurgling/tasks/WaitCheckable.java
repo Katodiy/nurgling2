@@ -2,7 +2,7 @@ package nurgling.tasks;
 
 import nurgling.widgets.bots.Checkable;
 
-public class WaitCheckable implements NTask{
+public class WaitCheckable extends NTask{
     Checkable widget;
 
     public WaitCheckable(Checkable widget) {

@@ -11,7 +11,7 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-public class WaitPrepSmokingState implements NTask
+public class WaitPrepSmokingState extends NTask
 {
     public WaitPrepSmokingState(Gob log, int target_size)
     {

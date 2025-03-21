@@ -8,7 +8,8 @@ import haven.res.gfx.terobjs.consobj.Consobj;
 import haven.res.lib.tree.TreeScale;
 import haven.res.lib.vmat.Mapping;
 import haven.res.lib.vmat.Materials;
-import nurgling.nattrib.*;
+import monitoring.NGlobalSearchItems;
+import nurgling.gattrr.NCustomScale;
 import nurgling.overlays.*;
 import nurgling.pf.*;
 import nurgling.tools.*;
@@ -17,6 +18,8 @@ import nurgling.widgets.NProspecting;
 import nurgling.widgets.NQuestInfo;
 
 import java.util.*;
+
+import static haven.MCache.cmaps;
 
 public class NGob {
     public NHitBox hitBox = null;
@@ -31,7 +34,8 @@ public class NGob {
     final Gob parent;
     public long seq;
     public int lastUpdate = 0;
-    public Map<Class<? extends NAttrib>, NAttrib> nattr = new HashMap<Class<? extends NAttrib>, NAttrib>();
+
+    public String hash;
 
     public NGob(Gob parent) {
         this.parent = parent;
@@ -50,13 +54,24 @@ public class NGob {
             if (((Drawable) a).getres() != null) {
                 name = ((Drawable) a).getres().name;
 
-                if(name!=null && name.startsWith("gfx/terobjs/arch/cellardoor") || name.startsWith("gfx/terobjs/herbs/standinggrass")) {
-                    return;
-                }
+                if(name!=null) {
+                    if (name.startsWith("gfx/terobjs/arch/cellardoor") || name.startsWith("gfx/terobjs/herbs/standinggrass")) {
+                        return;
+                    }
 
-                if(name!=null && name.contains("bumlings"))
-                {
-                    name = name.replaceAll("\\d+$", "");
+                    if (name.contains("bumlings")) {
+                        name = name.replaceAll("\\d+$", "");
+                    }
+
+                    if (name.contains("bumlings")) {
+                        name = name.replaceAll("\\d+$", "");
+                    }
+
+                    if(name.contains("palisade"))
+                    {
+                        if(parent.getattr(NCustomScale.class)==null)
+                            parent.setattr(new NCustomScale(parent));
+                    }
                 }
 
                 if (((Drawable) a).getres().getLayers() != null) {
@@ -229,8 +244,19 @@ public class NGob {
 
     public void tick(double dt) {
         if(NUtils.getGameUI()!=null) {
-            for (NAttrib attrib : nattr.values()) {
-                attrib.tick(dt);
+            if(hash==null)
+            {
+                Coord pltc = (new Coord2d(parent.rc.x / MCache.tilesz.x, parent.rc.y / MCache.tilesz.y)).floor();
+                synchronized (NUtils.getGameUI().ui.sess.glob.map.grids) {
+                    if (NUtils.getGameUI().ui.sess.glob.map.grids.containsKey(pltc.div(cmaps))) {
+                        MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
+                        StringBuilder hashInput = new StringBuilder();
+                        Coord coord = pltc.sub(g.ul);
+                        hashInput.append(name).append(g.id).append(coord.toString());
+                        hash = NUtils.calculateSHA256(hashInput.toString());
+                        parent.setattr(new NGlobalSearch(parent));
+                    }
+                }
             }
             if (name != null && name.contains("kritter") && (parent.pose() == null || !NParser.checkName(parent.pose(), "dead", "knock")) && parent.findol(NAreaRad.class) == null) {
                 nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
@@ -262,6 +288,15 @@ public class NGob {
                         }
                 }
             }
+            if(hash!=null && !NGlobalSearchItems.containerHashes.isEmpty())
+            {
+                synchronized (NGlobalSearchItems.containerHashes) {
+                    if (NGlobalSearchItems.containerHashes.contains(hash)) {
+
+                    }
+                }
+            }
+
         }
     }
 

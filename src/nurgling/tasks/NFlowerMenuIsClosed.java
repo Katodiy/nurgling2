@@ -2,7 +2,7 @@ package nurgling.tasks;
 
 import nurgling.*;
 
-public class NFlowerMenuIsClosed implements NTask
+public class NFlowerMenuIsClosed extends NTask
 {
 
     public NFlowerMenuIsClosed()

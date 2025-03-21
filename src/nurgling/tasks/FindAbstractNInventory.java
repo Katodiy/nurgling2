@@ -7,7 +7,7 @@ import nurgling.NUtils;
 
 import java.util.ArrayList;
 
-public class FindAbstractNInventory implements NTask
+public class FindAbstractNInventory extends NTask
 {
     public FindAbstractNInventory(ArrayList<String> candidates)
     {

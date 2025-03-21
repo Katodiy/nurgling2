@@ -10,7 +10,7 @@ import nurgling.tools.NParser;
 
 import java.util.ArrayList;
 
-public class GetTotalAmountItems implements NTask
+public class GetTotalAmountItems extends NTask
 {
     NAlias name = null;
     NInventory inventory;

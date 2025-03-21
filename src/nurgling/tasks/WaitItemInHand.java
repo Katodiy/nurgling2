@@ -4,7 +4,7 @@ import haven.*;
 import nurgling.*;
 import nurgling.tools.*;
 
-public class WaitItemInHand implements NTask
+public class WaitItemInHand extends NTask
 {
     String name;
     GItem item = null;

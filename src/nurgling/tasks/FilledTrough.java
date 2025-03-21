@@ -9,7 +9,7 @@ import nurgling.NUtils;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-public class FilledTrough implements NTask
+public class FilledTrough extends NTask
 {
     NAlias name = null;
     Gob trough;

@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.*;
 import nurgling.*;
 
-public class DrinkToLvl implements NTask
+public class DrinkToLvl extends NTask
 {
     public DrinkToLvl(double lvl)
     {

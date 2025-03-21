@@ -50,6 +50,8 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
     protected ItemInfo.Raw rawinfo;
     public List<ItemInfo> info = Collections.emptyList();
 
+	public WItem wi = null;
+
 	protected abstract void updateraw();
 
 	@RName("item")

@@ -5,7 +5,7 @@ import nurgling.NUtils;
 import nurgling.conf.NChipperProp;
 import nurgling.tools.Finder;
 
-public class WaitPlateuState implements NTask
+public class WaitPlateuState extends NTask
 {
     public WaitPlateuState( NChipperProp prop)
     {

@@ -6,7 +6,7 @@ import nurgling.NUtils;
 
 import java.util.LinkedList;
 
-public class WaitBattleWindow implements NTask
+public class WaitBattleWindow extends NTask
 {
     public WaitBattleWindow(long id, boolean noWait)
     {
@@ -20,11 +20,9 @@ public class WaitBattleWindow implements NTask
 
     long id;
 
-    int counter = 0;
     @Override
     public boolean check()
     {
-        counter++;
         if(id==-1)
         {
             return !NUtils.getGameUI().fv.lsrel.isEmpty();
@@ -36,10 +34,6 @@ public class WaitBattleWindow implements NTask
                 if(rel.gobid == id)
                     return true;
             }
-        }
-        if(counter>=30)
-        {
-           return true;
         }
         return false;
     }

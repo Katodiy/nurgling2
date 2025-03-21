@@ -8,7 +8,7 @@ import nurgling.conf.NPrepBlocksProp;
 import nurgling.tools.Finder;
 import nurgling.tools.NParser;
 
-public class FishingTask implements NTask
+public class FishingTask extends NTask
 {
     public FishingTask(NFishingSettings prop)
     {

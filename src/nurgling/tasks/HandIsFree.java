@@ -3,7 +3,7 @@ package nurgling.tasks;
 import nurgling.NInventory;
 import nurgling.NUtils;
 
-public class HandIsFree implements NTask
+public class HandIsFree extends NTask
 {
     public HandIsFree(NInventory inventory)
     {

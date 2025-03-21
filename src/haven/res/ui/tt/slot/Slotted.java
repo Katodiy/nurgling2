@@ -4,6 +4,9 @@ package haven.res.ui.tt.slot;
 import haven.*;
 import haven.res.ui.tt.attrmod.AttrMod;
 
+import haven.res.ui.tt.attrmod.Entry;
+import haven.res.ui.tt.attrmod.Mod;
+import java.util.concurrent.ConcurrentHashMap;
 import nurgling.NGItem;
 import nurgling.NUtils;
 import nurgling.iteminfo.NSearchable;
@@ -11,15 +14,13 @@ import nurgling.tools.NSearchItem;
 
 import java.awt.image.BufferedImage;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static haven.PUtils.convolvedown;
 
 /* >tt: Slotted */
-@FromResource(name = "ui/tt/slot", version = 18)
-public class Slotted extends ItemInfo.Tip implements GItem.OverlayInfo<Tex>, NSearchable
-{
-	public static boolean show = true;
+@haven.FromResource(name = "ui/tt/slot", version = 18)
+public class Slotted extends ItemInfo.Tip implements GItem.OverlayInfo<Tex>, NSearchable{
+	public static boolean show = false;
 
 	public static final Coord size = UI.scale(new Coord(33,33));
     public static final Text.Line ch = Text.render("As gilding:");
@@ -85,11 +86,11 @@ public class Slotted extends ItemInfo.Tip implements GItem.OverlayInfo<Tex>, NSe
 			if (info instanceof AttrMod)
 			{
 				AttrMod mod = (AttrMod) info;
-				for ( AttrMod.Mod m: mod.mods) {
-					Coord scale = size.div(2 * (1 + (mod.mods.size() - 1) / 4.));
-					String name = m.attr.name+scale.toString();
+				for ( Entry m: mod.tab) {
+					Coord scale = size.div(2 * (1 + (mod.tab.size() - 1) / 4.));
+					String name = m.attr.name()+scale.toString();
 					if (modCache.get(name) == null) {
-						modCache.put(name, convolvedown(m.attr.layer(Resource.imgc).img, scale, CharWnd.iconfilter));
+						modCache.put(name, convolvedown(m.attr.icon(), scale, CharWnd.iconfilter));
 					}
 					imgs.add(modCache.get(name));
 				}
@@ -168,8 +169,10 @@ public class Slotted extends ItemInfo.Tip implements GItem.OverlayInfo<Tex>, NSe
 			for(ItemInfo info: sub) {
 				if (info instanceof AttrMod) {
 					AttrMod mod = (AttrMod) info;
-					for (AttrMod.Mod m : mod.mods) {
-						searchImage.put(stat_map.get(m.attr.name),m.mod);
+					for (Entry m : mod.tab) {
+						if(m instanceof Mod) {
+							searchImage.put(stat_map.get(m.attr.name()), (int) ((Mod)m).mod);
+						}
 					}
 				}
 			}

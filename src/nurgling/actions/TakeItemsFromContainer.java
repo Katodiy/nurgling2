@@ -25,6 +25,15 @@ public class TakeItemsFromContainer implements Action
         this.names = names;
         this.pattern = pattern;
     }
+
+    double targetq = -1;
+    public TakeItemsFromContainer(Container cont, HashSet<String> names, NAlias pattern, double q)
+    {
+        this.cont = cont;
+        this.names = names;
+        this.pattern = pattern;
+        this.targetq = q;
+    }
     int target_size = 0;
     boolean took = false;
     @Override
@@ -37,17 +46,22 @@ public class TakeItemsFromContainer implements Action
                 target_coord = inv.getItem(name).sz.div(Inventory.sqsz);
                 int oldSpace = gui.getInventory().getItems(name).size();
                 ArrayList<WItem> items = gui.getInventory(cont.cap).getItems(name,1);
-                ArrayList<WItem> forRemove = new ArrayList<>();
-                if(pattern!=null) {
-                    for(WItem item1: items)
-                    {
-                        if(!NParser.checkName(((NGItem)item1.item).name(), pattern))
+                HashSet<WItem> forRemove = new HashSet<>();
+
+                    for(WItem item1: items) {
+                        if (pattern != null) {
+                            if (!NParser.checkName(((NGItem) item1.item).name(), pattern)) {
+                                forRemove.add(item1);
+                            }
+                        }
+                        if(targetq!=-1)
                         {
-                            forRemove.add(item1);
+                            if(((NGItem) item1.item).quality>targetq)
+                            {
+                                forRemove.add(item1);
+                            }
                         }
                     }
-
-                }
                 items.removeAll(forRemove);
                 target_size = Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY()), items.size()));
 

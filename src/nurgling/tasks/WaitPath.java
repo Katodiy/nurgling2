@@ -5,7 +5,7 @@ import nurgling.NUtils;
 import nurgling.actions.DynamicPf;
 import nurgling.tools.NParser;
 
-public class WaitPath implements NTask
+public class WaitPath extends NTask
 {
     DynamicPf.WorkerPf wpf;
 

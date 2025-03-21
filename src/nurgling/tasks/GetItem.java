@@ -4,15 +4,26 @@ import haven.*;
 import nurgling.*;
 import nurgling.tools.*;
 
-public class GetItem implements NTask
+import java.util.Objects;
+
+public class GetItem extends NTask
 {
     NAlias name;
     NInventory inventory;
+
+    float q = -1;
 
     public GetItem(NInventory inventory, NAlias name)
     {
         this.name = name;
         this.inventory = inventory;
+    }
+
+    public GetItem(NInventory inventory, NAlias name, float q)
+    {
+        this.name = name;
+        this.inventory = inventory;
+        this.q = q;
     }
 
     @Override
@@ -32,6 +43,10 @@ public class GetItem implements NTask
                 {
                     if(NParser.checkName(item_name, name))
                     {
+                        if(q !=-1) {
+                            if (((NGItem) item.item).quality != q)
+                                continue;
+                        }
                         result = item;
                         return true;
                     }

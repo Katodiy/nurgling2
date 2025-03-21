@@ -4,7 +4,7 @@ import haven.*;
 import haven.res.ui.barterbox.*;
 import nurgling.*;
 
-public class FindBarterStand implements NTask
+public class FindBarterStand extends NTask
 {
     public FindBarterStand()
     {

@@ -12,7 +12,7 @@ import nurgling.tools.NParser;
 
 import java.util.ArrayList;
 
-public class WaitWindow implements NTask
+public class WaitWindow extends NTask
 {
     String name = null;
 

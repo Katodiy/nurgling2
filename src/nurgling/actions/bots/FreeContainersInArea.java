@@ -48,34 +48,29 @@ public class FreeContainersInArea implements Action {
                             NISBox spbox = gui.getStockpile();
                             if (spbox != null) {
                                 int target_size = 0;
-                                if (size == null) {
-                                    int fs = NUtils.getGameUI().getInventory().getFreeSpace();
-                                    target_size = Math.min(fs, spbox.calcCount());
-
-
-                                } else {
-                                    int fs = NUtils.getGameUI().getInventory().getNumberFreeCoord(size);
-                                    target_size = Math.min(fs, spbox.calcCount());
-                                }
-                                if(target_size == 0) {
-                                    new TransferItems(context, targets).run(gui);
-                                    targets.clear();
-                                    if(Finder.findGob(pile.id) != null) {
-                                        new PathFinder(pile).run(gui);
-                                        new OpenTargetContainer("Stockpile", pile).run(gui);
+                                do {
+                                    if (size == null) {
+                                        int fs = NUtils.getGameUI().getInventory().getFreeSpace();
+                                        target_size = Math.min(fs, spbox.calcCount());
+                                    } else {
+                                        int fs = NUtils.getGameUI().getInventory().getNumberFreeCoord(size);
+                                        target_size = Math.min(fs, spbox.calcCount());
                                     }
-                                    else break;
+                                    if (target_size == 0) {
+                                        new TransferItems(context, targets).run(gui);
+                                        targets.clear();
+                                        if (Finder.findGob(pile.id) != null) {
+                                            new PathFinder(pile).run(gui);
+                                            new OpenTargetContainer("Stockpile", pile).run(gui);
+                                        } else break;
+                                    } else {
+                                        TakeItemsFromPile tifp = new TakeItemsFromPile(pile, spbox, target_size);
+                                        tifp.run(gui);
+                                        for (WItem item : tifp.newItems())
+                                            targets.add(((NGItem) item.item).name());
+                                    }
                                 }
-                                TakeItemsFromPile tifp = new TakeItemsFromPile(pile, spbox, target_size);
-                                tifp.run(gui);
-                                for(WItem item : tifp.newItems())
-                                    targets.add(((NGItem)item.item).name());
-                                if(Finder.findGob(pile.id) != null) {
-                                    new TransferItems(context, targets).run(gui);
-                                    targets.clear();
-                                    new PathFinder(pile).run(gui);
-                                    new OpenTargetContainer("Stockpile", pile).run(gui);
-                                }
+                                while (target_size!=0);
                             }
                         }
                     else

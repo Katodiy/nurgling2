@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.*;
 import nurgling.*;
 
-public class WindowIsClosed implements NTask
+public class WindowIsClosed extends NTask
 {
     Window wnd;
 

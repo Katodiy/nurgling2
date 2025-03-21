@@ -7,7 +7,7 @@ import nurgling.NUtils;
 import nurgling.conf.NPrepBlocksProp;
 import nurgling.tools.Finder;
 
-public class WaitCarveState implements NTask
+public class WaitCarveState extends NTask
 {
     public WaitCarveState(Gob pow)
     {

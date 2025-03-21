@@ -5,7 +5,7 @@ import nurgling.NUtils;
 import nurgling.actions.DynamicPf;
 import nurgling.tools.NParser;
 
-public class DynMovingCompleted implements NTask
+public class DynMovingCompleted extends NTask
 {
     Gob gob;
     Coord2d old;
@@ -17,6 +17,7 @@ public class DynMovingCompleted implements NTask
         this.gob = target;
         this.old = new Coord2d(gob.rc.x, gob.rc.y);
         this.targetCoord = new Coord2d(targetCoord.x, targetCoord.y);
+        this.infinite = true;
         (t = new Thread(wpf)).start();
     }
 

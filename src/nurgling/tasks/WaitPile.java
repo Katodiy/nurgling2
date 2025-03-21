@@ -7,7 +7,7 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-public class WaitPile implements NTask {
+public class WaitPile extends NTask {
     Coord2d pos;
 
     public WaitPile(Coord2d pos) {

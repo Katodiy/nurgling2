@@ -3,7 +3,7 @@ package nurgling.tasks;
 import nurgling.NFlowerMenu;
 import nurgling.NUtils;
 
-public class FindOrWaitNFlowerMenu implements NTask
+public class FindOrWaitNFlowerMenu extends NTask
 {
 
     int count = 0;

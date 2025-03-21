@@ -549,6 +549,19 @@ public class NMapView extends MapView
             }
         }
     }
+
+    public void disableArea(String name, boolean val) {
+        for(NArea area : glob.map.areas.values())
+        {
+            if(area.name.equals(name))
+            {
+                area.hide = val;
+                NConfig.needAreasUpdate();
+                return;
+            }
+        }
+    }
+
     public void changeArea(String name)
     {
         for(NArea area : glob.map.areas.values())

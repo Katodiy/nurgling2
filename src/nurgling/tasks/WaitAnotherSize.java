@@ -8,7 +8,7 @@ import nurgling.NInventory;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-public class WaitAnotherSize implements NTask
+public class WaitAnotherSize extends NTask
 {
     private final int target_size;
     Widget inventory;

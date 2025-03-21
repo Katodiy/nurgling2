@@ -4,7 +4,7 @@ import haven.Following;
 import haven.Gob;
 import nurgling.NUtils;
 
-public class ChangeModelAtrib implements NTask {
+public class ChangeModelAtrib extends NTask {
     Gob gob;
     long old;
 

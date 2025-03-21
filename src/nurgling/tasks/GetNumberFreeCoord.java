@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.*;
 import nurgling.*;
 
-public class GetNumberFreeCoord implements NTask
+public class GetNumberFreeCoord extends NTask
 {
     public GetNumberFreeCoord(NInventory inv, Coord size)
     {
