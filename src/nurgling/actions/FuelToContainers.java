@@ -37,21 +37,12 @@ public class FuelToContainers implements Action
             }
             int needed = Math.max(0, fuelLvl.neededFuel());
             neededFuel.put(ftype, neededFuel.get(ftype) + needed);
-            System.out.println("Container " + cont.gob.id + " needs " + needed + " of " + ftype);
         }
-
-        int total = 0;
-        for (String ftype : neededFuel.keySet()) {
-            total += neededFuel.get(ftype);
-        }
-        System.out.println("Total: " + total);
 
         for (Container cont : conts) {
             Container.FuelLvl fuelLvl = cont.getattr(Container.FuelLvl.class);
             while (fuelLvl.neededFuel() > 0) {
                 String ftype = (String) fuelLvl.getRes().get(Container.FuelLvl.FUELTYPE);
-                new PathFinder(cont.gob).run(gui);
-                new OpenTargetContainer(cont).run(gui);
                 if (gui.getInventory().getItems(ftype).isEmpty()) {
                     neededFuel.clear();
                     for (Container tcont : conts) {
@@ -62,7 +53,6 @@ public class FuelToContainers implements Action
                         }
                         int needed = Math.max(0, tfuelLvl.neededFuel());
                         neededFuel.put(ftype, neededFuel.get(ftype) + needed);
-                        System.out.println("Container " + cont.gob.id + " needs " + needed + " of " + ftype);
                     }
                     int target_size = neededFuel.get(ftype);
                     while (target_size != 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord) != 0) {
@@ -85,10 +75,11 @@ public class FuelToContainers implements Action
                         (tifp = new TakeItemsFromPile(pile, gui.getStockpile(), Math.min(target_size, gui.getInventory().getFreeSpace()))).run(gui);
                         new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
                         target_size = target_size - tifp.getResult();
-                        System.out.println("Taken " + tifp.getResult() + " of " + ftype + " from pile. Remaining to take: " + target_size);
                     }
                     neededFuel.put(ftype, target_size);
                 }
+                new PathFinder(cont.gob).run(gui);
+                new OpenTargetContainer(cont).run(gui);
                 fuelLvl = cont.getattr(Container.FuelLvl.class);
                 ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(ftype);
                 int fueled = Math.max(0, Math.min(fuelLvl.neededFuel(), items.size()));
@@ -99,8 +90,8 @@ public class FuelToContainers implements Action
                     NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
                 }
                 NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), aftersize));
+                new OpenTargetContainer(cont).run(gui);
                 new CloseTargetContainer(cont).run(gui);
-                System.out.println("Fueled " + fueled + " of " + ftype + " into container " + cont.gob.id + ". Remaining in inventory: " + aftersize);
             }
         }
         return Results.SUCCESS();
