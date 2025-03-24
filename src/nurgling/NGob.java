@@ -79,11 +79,17 @@ public class NGob {
                         {
                             Consobj consobj = (Consobj) ((ResDrawable) a).spr;
                             if(consobj.built!=null && (((Session.CachedRes.Ref)consobj.built.res).res)!=null) {
-                                for (Resource.Layer lay : ((Session.CachedRes.Ref) consobj.built.res).res.getLayers()) {
-                                    if (lay instanceof Resource.Neg) {
-                                        hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
-                                    } else if (lay instanceof Resource.Obstacle) {
-                                        hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                NHitBox custom = NHitBox.findCustom(((Session.CachedRes.Ref)consobj.built.res).res.name);
+                                if (custom != null) {
+                                    hitBox = custom;
+                                }
+                                else {
+                                    for (Resource.Layer lay : ((Session.CachedRes.Ref) consobj.built.res).res.getLayers()) {
+                                        if (lay instanceof Resource.Neg) {
+                                            hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                        } else if (lay instanceof Resource.Obstacle) {
+                                            hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                        }
                                     }
                                 }
                             }
