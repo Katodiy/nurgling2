@@ -71,13 +71,12 @@ public class NGameUI extends GameUI
     }
 
     public int getMaxBase(){
-        return 0;
-//        return chrwdg.base.stream().max(new Comparator<CharWnd.Attr>() {
-//            @Override
-//            public int compare(CharWnd.Attr o1, CharWnd.Attr o2) {
-//                return Integer.compare(o1.attr.base,o2.attr.base);
-//            }
-//        }).get().attr.base;
+        return chrwdg.battr.attrs.stream().max(new Comparator<BAttrWnd.Attr>() {
+                    @Override
+                    public int compare(BAttrWnd.Attr o1, BAttrWnd.Attr o2) {
+                        return Integer.compare(o1.attr.base,o2.attr.base);
+                    }
+                }).get().attr.base;
     }
 
     public NCharacterInfo getCharInfo() {
