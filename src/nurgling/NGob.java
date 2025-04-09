@@ -20,6 +20,7 @@ import nurgling.widgets.NQuestInfo;
 import java.util.*;
 
 import static haven.MCache.cmaps;
+import static haven.OCache.posres;
 
 public class NGob {
     public NHitBox hitBox = null;
@@ -253,7 +254,7 @@ public class NGob {
                     if (NUtils.getGameUI().ui.sess.glob.map.grids.containsKey(pltc.div(cmaps))) {
                         MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
                         StringBuilder hashInput = new StringBuilder();
-                        Coord coord = pltc.sub(g.ul);
+                        Coord coord = (parent.rc.sub(g.ul.mul(Coord2d.of(11, 11)))).floor();
                         hashInput.append(name).append(g.id).append(coord.toString());
                         hash = NUtils.calculateSHA256(hashInput.toString());
                         parent.setattr(new NGlobalSearch(parent));

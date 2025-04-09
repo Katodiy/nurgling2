@@ -191,7 +191,9 @@ public class Context {
         }
     }
 
-    public static ArrayList<Output> GetOutput(String item, NArea area)  throws InterruptedException
+    HashMap<String, OutputContainer> containersInContext = new HashMap<>();
+
+    public ArrayList<Output> GetOutput(String item, NArea area)  throws InterruptedException
     {
 
         ArrayList<Output> outputs = new ArrayList<>();
@@ -206,9 +208,16 @@ public class Context {
                     break;
                 case CONTAINER: {
                     for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
-                        OutputContainer container = new OutputContainer(gob, area.getRCArea(), ingredient.th);
-                        container.initattr(Container.Space.class);
-                        outputs.add(container);
+                        if(!containersInContext.containsKey(gob.ngob.hash)) {
+                            OutputContainer container = new OutputContainer(gob, area.getRCArea(), ingredient.th);
+                            container.initattr(Container.Space.class);
+                            containersInContext.put(gob.ngob.hash,container);
+                            outputs.add(container);
+                        }
+                        else
+                        {
+                            outputs.add(containersInContext.get(gob.ngob.hash));
+                        }
                     }
                     for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
                         outputs.add(new OutputPile(gob, area.getRCArea(), ingredient.th));

@@ -88,6 +88,8 @@ public class KFC implements Action {
         }
     };
 
+    Context context = new Context();
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<Container> containers = new ArrayList<>();
@@ -195,7 +197,6 @@ public class KFC implements Action {
             return henResult;
         }
 
-        Context chickCnt = new Context();
         ArrayList<Context.Output> outputs = new ArrayList<>();
         for (Container cc :ccontainers) {
             Context.OutputContainer container = new Context.OutputContainer(cc.gob, NArea.findSpec(Specialisation.SpecName.incubator.toString()).getRCArea(), 1);
@@ -204,10 +205,10 @@ public class KFC implements Action {
             outputs.add(container);
         }
 
-        chickCnt.addOutput("Chick",outputs);
+        context.addOutput("Chick",outputs);
         HashSet<String> chicks = new HashSet<>();
         chicks.add("Chick");
-        new TransferTargetItemsFromContainers(chickCnt,containers,chicks, new NAlias(new ArrayList<>(), new ArrayList<>(List.of("Egg", "Feather", "Meat", "Bone")))).run(gui);
+        new TransferTargetItemsFromContainers(context,containers,chicks, new NAlias(new ArrayList<>(), new ArrayList<>(List.of("Egg", "Feather", "Meat", "Bone")))).run(gui);
 
 
 
@@ -231,7 +232,6 @@ public class KFC implements Action {
         double chicken_th = qtop.get(0);
 
 
-        Context eggCnt = new Context();
         HashSet<String> eggs = new HashSet<>();
         eggs.add("Chicken Egg");
         for(Container container: containers)
@@ -244,7 +244,7 @@ public class KFC implements Action {
 
             while (!new TakeItemsFromContainer(container, eggs, null, chicken_th).run(gui).isSuccess)
             {
-                new TransferItems(eggCnt, eggs).run(gui);
+                new TransferItems(context, eggs).run(gui);
                 pf = new PathFinder(container.gob);
                 pf.isHardMode = true;
                 pf.run(gui);
@@ -252,7 +252,7 @@ public class KFC implements Action {
             }
             new CloseTargetContainer(container).run(gui);
         }
-        new TransferItems(eggCnt, eggs).run(gui);
+        new TransferItems(context, eggs).run(gui);
         return Results.SUCCESS();
     }
 
@@ -355,10 +355,8 @@ public class KFC implements Action {
                 }
             });
 
-            Context context = new Context();
             new FreeInventory(context).run(gui);
         }
-        Context context = new Context();
         new FreeInventory(context).run(gui);
         return Results.SUCCESS();
     }
@@ -459,10 +457,8 @@ public class KFC implements Action {
                 }
             });
 
-            Context context = new Context();
             new FreeInventory(context).run(gui);
         }
-        Context context = new Context();
         new FreeInventory(context).run(gui);
         return Results.SUCCESS();
     }
