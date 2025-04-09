@@ -400,7 +400,9 @@ public class RichText extends Text {
 	else
 	    a = new HashMap<Attribute, Object>(def);
 	for(int i = 0; i < attrs.length; i += 2)
-	    a.put((Attribute)attrs[i], attrs[i + 1]);
+		if(attrs[i] instanceof java.text.AttributedCharacterIterator.Attribute) {
+			a.put((Attribute) attrs[i], attrs[i + 1]);
+		}
 	return(a);
     }
     
