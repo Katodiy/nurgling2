@@ -335,10 +335,11 @@ public class MapView extends PView implements DTarget, Console.Directory {
     
     public class OrthoCam extends Camera {
 	public boolean exact = true;
+	protected float dfield = (float)(100 * Math.sqrt(2));
 	protected float dist = 500.0f;
 	protected float elev = (float)Math.PI / 6.0f;
 	protected float angl = -(float)Math.PI / 4.0f;
-	public float field = (float)(100 * Math.sqrt(2));
+    public float field = dfield;
 	private Coord dragorig = null;
 	private float anglorig;
 	protected Coord3f cc, jc;
@@ -420,7 +421,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		    tf = Double.parseDouble(opt.arg);
 		    break;
 		case 'Z':
-		    field = tfield = Float.parseFloat(opt.arg);
+		    field = tfield = dfield = Float.parseFloat(opt.arg);
 		    break;
 		}
 	    }
@@ -493,7 +494,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		return(true);
 	    } else if(kb_camreset.key().match(ev)) {
 		tangl = angl + (float)Utils.cangle(-(float)Math.PI * 0.25f - angl);
-		chfield((float)(100 * Math.sqrt(2)));
+		chfield(dfield);
 		return(true);
 	    }
 	    return(false);
