@@ -178,6 +178,17 @@ public class QoL extends Widget {
                 a = val;
             }
         },prev.pos("bl").adds(0, 5));
+        prev = add(new CheckBox("Refill water from waters containers for farmers") {
+            {
+                a = (Boolean) NConfig.get(NConfig.Key.harvestautorefill);
+            }
+
+            public void set(boolean val) {
+                NConfig.set(NConfig.Key.harvestautorefill, val);
+                a = val;
+            }
+
+        }, prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("DEBUG") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.debug);

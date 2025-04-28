@@ -78,7 +78,7 @@ public class NConfig
         smokeprop,
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
-        serverNode, serverUser, serverPass, ndbenable, simplecrops
+        serverNode, serverUser, serverPass, ndbenable, harvestautorefill, simplecrops
     }
 
 
@@ -127,6 +127,7 @@ public class NConfig
         conf.put(Key.lpassistent, false);
         conf.put(Key.simplecrops, true);
         conf.put(Key.ndbenable, false);
+        conf.put(Key.harvestautorefill, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
