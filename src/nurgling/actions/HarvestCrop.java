@@ -4,20 +4,15 @@ import haven.*;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
-import nurgling.tasks.GetCurs;
+import nurgling.conf.NHarvestCropProp;
 import nurgling.tasks.NoGob;
-import nurgling.tasks.WaitGobsInField;
+import nurgling.tasks.WaitCheckable;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.tools.NParser;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static haven.OCache.posres;
 
 public class HarvestCrop implements Action{
 
@@ -31,6 +26,8 @@ public class HarvestCrop implements Action{
     final NAlias iseed;
 
     int stage;
+
+    NHarvestCropProp prop = null;
 
     public HarvestCrop(NArea field, NArea seed, NArea trough, NAlias crop, NAlias iseed, int stage) {
         this.field = field;
@@ -48,6 +45,22 @@ public class HarvestCrop implements Action{
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        nurgling.widgets.bots.HarvestCropWnd w = null;
+
+
+        try {
+            NUtils.getUI().core.addTask(new WaitCheckable(NUtils.getGameUI().add((w = new nurgling.widgets.bots.HarvestCropWnd()), UI.scale(200, 200))));
+            prop = w.prop;
+        } catch (InterruptedException e) {
+            throw e;
+        } finally {
+            if (w != null)
+                w.destroy();
+        }
+
+        if (prop == null) {
+            return Results.ERROR("No config");
+        }
 
         ArrayList<Gob> barrels = Finder.findGobs(seed, new NAlias("barrel"));
         Gob trough = Finder.findGob(trougha, new NAlias("gfx/terobjs/trough"));
@@ -166,9 +179,16 @@ public class HarvestCrop implements Action{
                 new TransferToTrough(trough, iseed, cistern).run(gui);
             }
         }
-        if(NUtils.getStamina()<0.35)
+        if(NUtils.getStamina()<0.35) {
+            if (prop.autorefill) {
+                if (FillWaterskins.checkIfNeed())
+                    if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                        throw new InterruptedException();
+            }
+
             if(!new Drink(0.9,false).run(gui).isSuccess)
                 throw new InterruptedException();
+        }
         Gob plant;
         plant = Finder.findGob(target_coord.div(MCache.tilesz).floor(),crop, stage);
         if(plant == null)

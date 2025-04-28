@@ -78,7 +78,8 @@ public class NConfig
         smokeprop,
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
-        serverNode, serverUser, serverPass, ndbenable, simplecrops
+        serverNode, serverUser, serverPass, ndbenable, simplecrops,
+        harvestCropProp
     }
 
 
@@ -318,6 +319,9 @@ public class NConfig
                             break;
                         case "NCarrierProp":
                             res.add(new NCarrierProp(obj));
+                            break;
+                        case "NHarvestCropProp":
+                            res.add(new NHarvestCropProp(obj));
                             break;
                         default:
                             res.add(obj);
