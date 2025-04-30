@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.text.*;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -283,6 +284,30 @@ public class NUtils
             return res == 0 ? Double.compare(o1.rc.y, o2.rc.y) : res;
         }
     };
+
+    public static List<Gob> sortByNearest(List<Gob> gobs, Coord2d start) {
+        List<Gob> sorted = new ArrayList<>();
+        List<Gob> remaining = new ArrayList<>(gobs);
+
+        Coord2d current = start;
+
+        while (!remaining.isEmpty()) {
+            Coord2d finalCurrent = current;
+            Gob closest = remaining.stream()
+                    .min(Comparator.comparingDouble(g -> g.rc.dist(finalCurrent)))
+                    .orElse(null);
+
+            if (closest != null) {
+                sorted.add(closest);
+                remaining.remove(closest);
+                current = closest.rc;
+            } else {
+                break;
+            }
+        }
+
+        return sorted;
+    }
 
     public static Entry getAnimalEntity(Gob gob, Class<? extends Entry> cattleRoster ){
         GetAnimalEntry gae = new GetAnimalEntry(gob,cattleRoster);

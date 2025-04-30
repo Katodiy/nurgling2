@@ -15,7 +15,7 @@ public class SpecialisationData {
         data.put("fuel",fuel);
         ArrayList<String> htable = new ArrayList<>(Arrays.asList("Pipeweed", "Green Tea Leaves", "Black Tea Leaves"));
         data.put("htable",htable);
-        ArrayList<String> barrel = new ArrayList<>(Arrays.asList("Quicksilver"));
+        ArrayList<String> barrel = new ArrayList<>(Arrays.asList("Quicksilver", "Honey"));
         data.put("barrel",barrel);
     }
 }

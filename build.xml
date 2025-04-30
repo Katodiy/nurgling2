@@ -79,6 +79,7 @@
   <target name="hafen-client" depends="build-env, extlib/jogl, extlib/lwjgl-gl, extlib/steamworks, resources">
     <javac srcdir="src" destdir="build/classes" debug="on"
 	   source="1.8" target="1.8" includeantruntime="no"
+           encoding="UTF-8"
 	   bootclasspath="${boot-classpath}">
       <classpath>
 	<pathelement path="lib/ext/jogl/jogl-all.jar" />
