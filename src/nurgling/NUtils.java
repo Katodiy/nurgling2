@@ -447,6 +447,10 @@ public class NUtils
             ((NMapView) NUtils.getGameUI().map).destroyDummys();
             ((NMapView) NUtils.getGameUI().map).initDummys();
         }
+
+        if (NUtils.getGameUI().routes.visible) {
+            ((NMapView) NUtils.getGameUI().map).initRouteDummys(NUtils.getGameUI().routes.getSelectedRouteId());
+        }
     }
 
     public static void startBuild(Window window) {

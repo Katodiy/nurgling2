@@ -1,0 +1,356 @@
+package nurgling.widgets;
+
+import haven.*;
+import haven.Label;
+import haven.Window;
+import nurgling.*;
+import nurgling.actions.Action;
+import nurgling.actions.ActionWithFinal;
+import nurgling.actions.PathFinder;
+import nurgling.actions.bots.AutoChooser;
+import nurgling.actions.bots.Craft;
+import nurgling.routes.Route;
+import nurgling.routes.RoutePoint;
+import nurgling.tools.RouteCreator;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+public class RoutesWidget extends Window {
+    public String currentPath = "";
+
+    public RouteList routeList;
+    private final List<RouteItem> routeItems = new ArrayList<>();
+    private WaypointList waypointList;
+    private Widget actionContainer;
+
+    public RoutesWidget() {
+        super(UI.scale(new Coord(300, 400)), "Routes");
+
+        Coord p = new Coord(0, UI.scale(5));
+
+        IButton createBtn = add(new IButton(NStyle.add[0].back, NStyle.add[1].back, NStyle.add[2].back) {
+            @Override
+            public void click() {
+                NUtils.getGameUI().msg("Creating Route");
+                new Thread(new RouteCreator()).start();
+            }
+        }, p);
+        createBtn.settip("Create new route");
+
+        IButton importBtn = add(new IButton(NStyle.importb[0].back, NStyle.importb[1].back, NStyle.importb[2].back) {
+            @Override
+            public void click() {
+                JFileChooser fc = new JFileChooser();
+                fc.setFileFilter(new FileNameExtensionFilter("Route files", "json"));
+                if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                    File file = fc.getSelectedFile();
+                    if (file != null) {
+                        NUtils.getGameUI().msg("Loaded route: " + file.getName());
+                        // TODO: Actual loading logic
+                    }
+                }
+            }
+        }, createBtn.pos("ur").adds(UI.scale(5, 0)));
+        importBtn.settip("Import route");
+
+        IButton deleteBtn = add(new IButton(NStyle.remove[0].back, NStyle.remove[1].back, NStyle.remove[2].back) {
+            @Override
+            public void click() {
+                if (routeList.sel != null) {
+                    Route toRemove = routeList.sel.route;
+                    ((NMapView) NUtils.getGameUI().map).glob.map.routes.remove(toRemove.id);
+                    NConfig.needRoutesUpdate();
+                    showRoutes();
+                }
+            }
+        }, importBtn.pos("ur").adds(UI.scale(5, 0)));
+        deleteBtn.settip("Delete selected route");
+
+        routeList = add(new RouteList(UI.scale(new Coord(150, 120))), createBtn.pos("bl").adds(0, 10));
+
+        add(new Label("Actions:", NStyle.areastitle), routeList.pos("ur").add(UI.scale(20, 0)));
+        actionContainer = add(new Widget(UI.scale(new Coord(20, 120))), routeList.pos("ur").add(UI.scale(20, 20)));
+
+        Label routeInfoLabel = add(new Label("Route Info:", NStyle.areastitle), routeList.pos("bl").adds(0, UI.scale(10)));
+        waypointList = add(new WaypointList(UI.scale(new Coord(250, 120))), routeInfoLabel.pos("bl").adds(0, UI.scale(5)));
+
+        pack();
+    }
+
+    @Override
+    public void show() {
+        showRoutes();
+        super.show();
+    }
+
+    @Override
+    public boolean show(boolean show) {
+        if (!show && NUtils.getGameUI() != null && NUtils.getGameUI().map != null)
+            ((NMapView) NUtils.getGameUI().map).destroyRouteDummys();
+        return super.show(show);
+    }
+
+    public void showRoutes() {
+        synchronized (routeItems) {
+            routeItems.clear();
+            for (Route route : ((NMapView) NUtils.getGameUI().map).glob.map.routes.values()) {
+                routeItems.add(new RouteItem(route));
+            }
+        }
+
+        if (!routeItems.isEmpty()) {
+            routeList.change(routeItems.get(routeItems.size() - 1));
+        }
+    }
+
+    @Override
+    public void wdgmsg(Widget sender, String msg, Object... args) {
+        if (msg.equals("close")) {
+            hide();
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null)
+                ((NMapView) NUtils.getGameUI().map).destroyRouteDummys();
+        } else {
+            super.wdgmsg(sender, msg, args);
+        }
+    }
+
+    private void select(int id) {
+        Route route = ((NMapView) NUtils.getGameUI().map).glob.map.routes.get(id);
+        ((NMapView) NUtils.getGameUI().map).initRouteDummys(id);
+
+        if (route == null) return;
+
+        actionContainer.add(new IButton(NStyle.add[0].back, NStyle.add[1].back, NStyle.add[2].back) {
+            @Override
+            public void click() {
+                NUtils.getGameUI().msg("Recording position for: " + route.name);
+                route.addWaypoint();
+                waypointList.update(route.waypoints);
+            }
+        }, Coord.z).settip("Record Position");
+
+        waypointList.update(route.waypoints);
+    }
+
+    public int getSelectedRouteId() {
+        return this.routeList.selectedRouteId;
+    }
+
+    public void updateWaypoints() {
+        int routeId = this.routeList.selectedRouteId;
+        this.waypointList.update(((NMapView) NUtils.getGameUI().map).glob.map.routes.get(routeId).waypoints);
+    }
+
+    public class RouteList extends SListBox<RouteItem, Widget> {
+        private int selectedRouteId;
+
+        public RouteList(Coord sz) {
+            super(sz, UI.scale(20));
+        }
+
+        @Override
+        protected List<RouteItem> items() {
+            synchronized (routeItems) {
+                return routeItems;
+            }
+        }
+
+        @Override
+        public void resize(Coord sz) {
+            super.resize(new Coord(UI.scale(150) - UI.scale(6), sz.y));
+        }
+
+        @Override
+        protected Widget makeitem(RouteItem item, int idx, Coord sz) {
+            return new ItemWidget<RouteItem>(this, sz, item) {{
+                add(item);
+            }
+                @Override
+                public boolean mousedown(MouseDownEvent ev) {
+                    if (ev.b == 3) {
+                        // Right-click anywhere on the line triggers context menu
+                        routeList.change(item);
+                        item.opts(ev.c);
+                        return true;
+                    } else if (ev.b == 1) {
+                        list.change(item);
+                        return true;
+                    }
+                    return super.mousedown(ev);
+                }
+            };
+        }
+
+        Color bg = new Color(30, 40, 40, 160);
+
+        @Override
+        public void draw(GOut g) {
+            g.chcolor(bg);
+            g.frect(Coord.z, g.sz());
+            super.draw(g);
+        }
+
+        @Override
+        public void change(RouteItem item) {
+            super.change(item);
+            if (item != null) {
+                this.selectedRouteId = item.route.id;
+                RoutesWidget.this.select(selectedRouteId);
+            }
+        }
+    }
+
+    public class RouteItem extends Widget {
+        Label label;
+        Route route;
+        NFlowerMenu menu;
+
+        public RouteItem(Route route) {
+            this.route = route;
+            this.label = add(new Label(route.name));
+            sz = label.sz.add(UI.scale(6), UI.scale(4));
+        }
+
+        @Override
+        public void draw(GOut g) {
+            if (routeList.sel == this) {
+                g.chcolor(0, 0, 0, 0);
+                g.frect(Coord.z, sz);
+                g.chcolor();
+            }
+            super.draw(g);
+        }
+
+        public void opts(Coord c) {
+            if (menu == null) {
+                menu = new NFlowerMenu(new String[]{"Edit name", "Delete"}) {
+                    @Override
+                    public boolean mousedown(MouseDownEvent ev) {
+                        if (super.mousedown(ev))
+                            nchoose(null);
+                        return true;
+                    }
+
+                    @Override
+                    public void nchoose(NPetal option) {
+                        if (option != null) {
+                            if (option.name.equals("Edit name")) {
+                                NEditRouteName.openChangeName(route, RouteItem.this);
+                            } else if (option.name.equals("Delete")) {
+                                ((NMapView) NUtils.getGameUI().map).glob.map.routes.remove(route.id);
+                                NConfig.needRoutesUpdate();
+                                showRoutes();
+                            }
+                        }
+                        uimsg("cancel");
+                    }
+
+                    @Override
+                    public void destroy() {
+                        menu = null;
+                        super.destroy();
+                    }
+                };
+            }
+
+            Widget par = parent;
+            Coord pos = c;
+            while (par != null && !(par instanceof GameUI)) {
+                pos = pos.add(par.c);
+                par = par.parent;
+            }
+            ui.root.add(menu, pos.add(UI.scale(25, 38)));
+        }
+    }
+
+    public class WaypointList extends SListBox<CoordItem, Widget> {
+        private final List<CoordItem> items = new ArrayList<>();
+
+        WaypointList(Coord sz) {
+            super(sz, UI.scale(16));
+        }
+
+        public void update(List<RoutePoint> points) {
+            synchronized (items) {
+                items.clear();
+                for (RoutePoint point : points) {
+                    items.add(new CoordItem(point.gridId, point.toCoord2d(NUtils.getGameUI().map.glob.map), point));
+                }
+                NConfig.needRoutesUpdate();
+            }
+        }
+
+        @Override
+        protected List<CoordItem> items() {
+            return items;
+        }
+
+        @Override
+        protected Widget makeitem(CoordItem item, int idx, Coord sz) {
+            return new ItemWidget<CoordItem>(this, sz, item) {{ add(item); }
+                @Override
+                public boolean mousedown(MouseDownEvent ev) {
+                    if (ev.b == 1) {
+                        Thread t;
+                        (t = new Thread(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                try
+                                {
+                                    if (NUtils.getGameUI() != null) {
+                                        Coord2d coord = item.routePoint.toCoord2d(NUtils.getGameUI().map.glob.map);
+                                        if (coord != null) {
+                                            new PathFinder(item.localCoord).run(NUtils.getGameUI());
+                                        } else {
+                                            NUtils.getGameUI().msg("Coordinates not found. Likely too far.");
+                                        }
+                                    }
+                                }
+                                catch (InterruptedException e)
+                                {
+                                    NUtils.getGameUI().msg("Interrupted");
+                                }
+                            }
+                        }, "Auto craft(BOT)")).start();
+
+                        NUtils.getGameUI().biw.addObserve(t);
+                        return true;
+                    }
+                    return super.mousedown(ev);
+                }
+            };
+        }
+
+        @Override
+        public void draw(GOut g) {
+            g.chcolor(new Color(30, 40, 40, 160));
+            g.frect(Coord.z, g.sz());
+            super.draw(g);
+        }
+    }
+
+    public class CoordItem extends Widget {
+        private final Label label;
+        private final Coord2d localCoord;
+        private final RoutePoint routePoint;
+
+        public CoordItem(long gridid, Coord2d coord, RoutePoint routePoint) {
+            this.label = add(new Label(String.valueOf(gridid)));
+            this.sz = label.sz.add(UI.scale(4), UI.scale(4));
+            this.localCoord = coord;
+            this.routePoint = routePoint;
+        }
+
+        @Override
+        public void draw(GOut g) {
+            super.draw(g);
+        }
+    }
+}

@@ -25,20 +25,6 @@ public class HoneyAndWaxCollector implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         boolean needToFindBucket = false;
 
-        // Find Bee Skeps
-        ArrayList<Gob> beeSkeps = Finder.findGobs(new NAlias("gfx/terobjs/beehive"));
-        if (beeSkeps.isEmpty())
-            return fail("No bee skeps found!");
-
-        List<Gob> honeyAndWaxSkeps = NUtils.sortByNearest(
-                beeSkeps.stream().filter(this::hasHoneyOrWax).toList(),
-                NUtils.player().rc
-        );
-        if (honeyAndWaxSkeps.isEmpty()) {
-            getGameUI().msg("No bee skeps containing wax or honey found!");
-            return Results.SUCCESS();
-        }
-
         // Check if bucket is equipped or in inventory
         if (!hasBucketEquipped()) {
             if (hasBucketInInventory()) {
@@ -46,6 +32,15 @@ public class HoneyAndWaxCollector implements Action {
             } else {
                 needToFindBucket = true;
             }
+        }
+
+        // If no bucket, fetch one from container
+        if (needToFindBucket) {
+            Container bucketContainer = findContainer(NArea.findOut("Bucket", 1));
+            if (bucketContainer == null)
+                return fail("No bucket container found!");
+
+            takeBucketFromContainer(bucketContainer, gui);
         }
 
         // Find Honey Barrel
@@ -58,13 +53,19 @@ public class HoneyAndWaxCollector implements Action {
         if (waxContainer == null)
             return fail("No wax container found!");
 
-        // If no bucket, fetch one from container
-        if (needToFindBucket) {
-            Container bucketContainer = findContainer(NArea.findOut("Bucket", 1));
-            if (bucketContainer == null)
-                return fail("No bucket container found!");
+        // Find Bee Skeps
+        ArrayList<Gob> beeSkeps = Finder.findGobs(new NAlias("gfx/terobjs/beehive"));
+        if (beeSkeps.isEmpty())
+            return fail("No bee skeps found!");
 
-            takeBucketFromContainer(bucketContainer, gui);
+        List<Gob> honeyAndWaxSkeps = NUtils.sortByNearest(
+                beeSkeps.stream().filter(this::hasHoneyOrWax).toList(),
+                NUtils.player().rc
+        );
+
+        if (honeyAndWaxSkeps.isEmpty()) {
+            getGameUI().msg("No bee skeps containing wax or honey found!");
+            return Results.SUCCESS();
         }
 
         for (Gob skep : honeyAndWaxSkeps) {

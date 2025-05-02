@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
+import nurgling.routes.Route;
 import org.json.*;
 
 import java.io.*;
@@ -199,8 +200,10 @@ public class NConfig
     HashMap<Key, Object> conf = new HashMap<>();
     private boolean isUpd = false;
     private boolean isAreasUpd = false;
+    private boolean isRoutesUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
     public String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
+    public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
 
     public boolean isUpdated()
     {
@@ -210,6 +213,10 @@ public class NConfig
     public boolean isAreasUpdated()
     {
         return isAreasUpd;
+    }
+
+    public boolean isRoutesUpdated() {
+        return isRoutesUpd;
     }
 
     public static Object get(Key key)
@@ -242,6 +249,14 @@ public class NConfig
         if (current != null)
         {
             current.isAreasUpd = true;
+        }
+    }
+
+    public static void needRoutesUpdate()
+    {
+        if (current != null)
+        {
+            current.isRoutesUpd = true;
         }
     }
 
@@ -495,5 +510,60 @@ public class NConfig
         }
     }
 
+    public void writeRoutes(String customPath)
+    {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            JSONObject main = new JSONObject();
+            JSONArray jroutes = new JSONArray();
+            for(Route route : ((NMapView)NUtils.getGameUI().map).glob.map.routes.values())
+            {
+                jroutes.put(route.toJson());
+            }
+            main.put("routes",jroutes);
+            try
+            {
+                FileWriter f = new FileWriter(customPath==null?path_routes:customPath,StandardCharsets.UTF_8);
+                main.write(f);
+                f.close();
+                current.isRoutesUpd = false;
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public void mergeRoutes(File file) {
+
+        StringBuilder contentBuilder = new StringBuilder();
+        try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
+        {
+            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+        }
+        catch (IOException ignore)
+        {
+        }
+
+        if (!contentBuilder.toString().isEmpty()) {
+            JSONObject main = new JSONObject(contentBuilder.toString());
+            JSONArray array = (JSONArray) main.get("routes");
+            for (int i = 0; i < array.length(); i++) {
+                Route a = new Route((JSONObject) array.get(i));
+                int id = 1;
+                for (Route route : ((NMapView) NUtils.getGameUI().map).glob.map.routes.values()) {
+                    if (route.name.equals(a.name)) {
+                        a.name = "Other_" + a.name;
+                    }
+                    if (route.id >= id) {
+                        id = route.id + 1;
+                    }
+                }
+                a.id = id;
+                ((NMapView) NUtils.getGameUI().map).glob.map.routes.put(a.id, a);
+            }
+        }
+    }
 
 }
