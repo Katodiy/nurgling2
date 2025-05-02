@@ -405,7 +405,7 @@ public class NMapView extends MapView
         synchronized (glob.map.routes)
         {
             HashSet<String> names = new HashSet<String>();
-            int id = 1;
+            int id = 0;
             for(Route route : glob.map.routes.values())
             {
                 if(route.id >= id)

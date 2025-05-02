@@ -4,11 +4,8 @@ import haven.*;
 import haven.Label;
 import haven.Window;
 import nurgling.*;
-import nurgling.actions.Action;
-import nurgling.actions.ActionWithFinal;
 import nurgling.actions.PathFinder;
-import nurgling.actions.bots.AutoChooser;
-import nurgling.actions.bots.Craft;
+import nurgling.actions.bots.RouteAutoRecorder;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.RouteCreator;
@@ -64,6 +61,7 @@ public class RoutesWidget extends Window {
                 if (routeList.sel != null) {
                     Route toRemove = routeList.sel.route;
                     ((NMapView) NUtils.getGameUI().map).glob.map.routes.remove(toRemove.id);
+                    updateWaypoints();
                     NConfig.needRoutesUpdate();
                     showRoutes();
                 }
@@ -143,7 +141,20 @@ public class RoutesWidget extends Window {
 
     public void updateWaypoints() {
         int routeId = this.routeList.selectedRouteId;
-        this.waypointList.update(((NMapView) NUtils.getGameUI().map).glob.map.routes.get(routeId).waypoints);
+        NMapView map = (NMapView) NUtils.getGameUI().map;
+        Route route = map.glob.map.routes.get(routeId);
+
+        if (route == null) {
+            this.waypointList.update(new ArrayList<>());
+            return;
+        }
+
+        ArrayList<RoutePoint> waypoints = map.glob.map.routes.get(routeId).waypoints;
+        if (waypoints != null) {
+            this.waypointList.update(waypoints);
+        } else {
+            this.waypointList.update(new ArrayList<>());
+        }
     }
 
     public class RouteList extends SListBox<RouteItem, Widget> {
