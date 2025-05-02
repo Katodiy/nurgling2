@@ -119,10 +119,12 @@ public class RoutesWidget extends Window {
 
     private void select(int id) {
         Route route = ((NMapView) NUtils.getGameUI().map).glob.map.routes.get(id);
-        ((NMapView) NUtils.getGameUI().map).initRouteDummys(id);
 
         if (route == null) return;
 
+        ((NMapView) NUtils.getGameUI().map).initRouteDummys(id);
+
+        // Button: Manual waypoint recording
         actionContainer.add(new IButton(NStyle.add[0].back, NStyle.add[1].back, NStyle.add[2].back) {
             @Override
             public void click() {
@@ -132,8 +134,34 @@ public class RoutesWidget extends Window {
             }
         }, Coord.z).settip("Record Position");
 
+        // Button: Auto waypoint recorder bot
+        final RouteAutoRecorder[] recorder = {null};
+        final Thread[] thread = {null};
+        final boolean[] active = {false};
+
+        actionContainer.add(new IButton(NStyle.flipi[0].back, NStyle.flipi[1].back, NStyle.flipi[2].back) {
+            @Override
+            public void click() {
+                if (!active[0]) {
+                    recorder[0] = new RouteAutoRecorder(route);
+                    thread[0] = new Thread(recorder[0], "RouteAutoRecorder");
+                    thread[0].start();
+                    NUtils.getGameUI().biw.addObserve(thread[0]);
+                    NUtils.getGameUI().msg("Started route recording for: " + route.name);
+                } else {
+                    if (recorder[0] != null) {
+                        recorder[0].stop();
+                        thread[0].interrupt();
+                        NUtils.getGameUI().msg("Stopped route recording for: " + route.name);
+                    }
+                }
+                active[0] = !active[0];
+            }
+        }, new Coord(0, UI.scale(25))).settip("Start/Stop Auto Waypoint Bot");
+
         waypointList.update(route.waypoints);
     }
+
 
     public int getSelectedRouteId() {
         return this.routeList.selectedRouteId;
