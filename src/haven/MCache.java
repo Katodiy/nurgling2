@@ -38,8 +38,6 @@ import haven.render.*;
 import nurgling.*;
 import nurgling.areas.*;
 import nurgling.overlays.map.*;
-import nurgling.routes.Route;
-import nurgling.tasks.GridsFilled;
 import nurgling.tasks.NTask;
 import org.json.*;
 
@@ -69,7 +67,6 @@ public class MCache implements MapSource {
     Map<Coord, Request> req = new HashMap<Coord, Request>();
     public Map<Coord, Grid> grids = new HashMap<Coord, Grid>();
     public final HashMap<Integer, NArea> areas = new HashMap<>();
-	public final HashMap<Integer, Route> routes = new HashMap<>();
     Session sess;
     Set<Overlay> ols = new HashSet<Overlay>();
     public int olseq = 0, chseq = 0;
@@ -97,29 +94,6 @@ public class MCache implements MapSource {
 				{
 					NArea a = new NArea((JSONObject) array.get(i));
 					areas.put(a.id, a);
-				}
-			}
-		}
-
-		if(new File(NConfig.current.path_routes).exists())
-		{
-			StringBuilder contentBuilder = new StringBuilder();
-			try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_routes), StandardCharsets.UTF_8))
-			{
-				stream.forEach(s -> contentBuilder.append(s).append("\n"));
-			}
-			catch (IOException ignore)
-			{
-			}
-
-			if (!contentBuilder.toString().isEmpty())
-			{
-				JSONObject main = new JSONObject(contentBuilder.toString());
-				JSONArray array = (JSONArray) main.get("routes");
-				for (int i = 0; i < array.length(); i++)
-				{
-					Route route = new Route((JSONObject) array.get(i));
-					routes.put(route.id, route);
 				}
 			}
 		}

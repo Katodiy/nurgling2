@@ -516,7 +516,7 @@ public class NConfig
         {
             JSONObject main = new JSONObject();
             JSONArray jroutes = new JSONArray();
-            for(Route route : ((NMapView)NUtils.getGameUI().map).glob.map.routes.values())
+            for(Route route : NUtils.getGameUI().routesWidget.routes.values())
             {
                 jroutes.put(route.toJson());
             }
@@ -552,7 +552,7 @@ public class NConfig
             for (int i = 0; i < array.length(); i++) {
                 Route a = new Route((JSONObject) array.get(i));
                 int id = 1;
-                for (Route route : ((NMapView) NUtils.getGameUI().map).glob.map.routes.values()) {
+                for (Route route : NUtils.getGameUI().routesWidget.routes.values()) {
                     if (route.name.equals(a.name)) {
                         a.name = "Other_" + a.name;
                     }
@@ -561,7 +561,7 @@ public class NConfig
                     }
                 }
                 a.id = id;
-                ((NMapView) NUtils.getGameUI().map).glob.map.routes.put(a.id, a);
+                NUtils.getGameUI().routesWidget.routes.put(a.id, a);
             }
         }
     }

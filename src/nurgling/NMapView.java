@@ -2,12 +2,8 @@ package nurgling;
 
 import haven.*;
 import static haven.MCache.tilesz;
-import static haven.OCache.posres;
-import static nurgling.overlays.NModelBox.NBoundingBox.getBoundingBox;
 
 import haven.Composite;
-import haven.render.*;
-import nurgling.actions.ActionWithFinal;
 import nurgling.actions.QuickActionBot;
 import nurgling.areas.*;
 import nurgling.overlays.*;
@@ -15,9 +11,7 @@ import nurgling.overlays.map.*;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
-import nurgling.widgets.Specialisation;
 
-import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.*;
 import java.util.*;
@@ -93,8 +87,8 @@ public class NMapView extends MapView
     }
 
     public void createRouteLabel(Integer id) {
-        Route route = glob.map.routes.get(id);
-        NUtils.getGameUI().routes.updateWaypoints();
+        Route route = NUtils.getGameUI().routesWidget.routes.get(id);
+        NUtils.getGameUI().routesWidget.updateWaypoints();
 
         if (route != null && route.waypoints != null) {
             for (RoutePoint point : route.waypoints) {
@@ -402,11 +396,11 @@ public class NMapView extends MapView
     public String addRoute()
     {
         String key;
-        synchronized (glob.map.routes)
+        synchronized (NUtils.getGameUI().routesWidget.routes)
         {
             HashSet<String> names = new HashSet<String>();
             int id = 0;
-            for(Route route : glob.map.routes.values())
+            for(Route route : NUtils.getGameUI().routesWidget.routes.values())
             {
                 if(route.id >= id)
                 {
@@ -414,15 +408,15 @@ public class NMapView extends MapView
                 }
                 names.add(route.name);
             }
-            key = ("New Route" + glob.map.routes.size());
+            key = ("New Route" + NUtils.getGameUI().routesWidget.routes.size());
             while(names.contains(key))
             {
                 key = key+"(1)";
             }
             Route newRoute = new Route(key);
             newRoute.id = id;
-            newRoute.path = NUtils.getGameUI().routes.currentPath;
-            glob.map.routes.put(id, newRoute);
+            newRoute.path = NUtils.getGameUI().routesWidget.currentPath;
+            NUtils.getGameUI().routesWidget.routes.put(id, newRoute);
             createRouteLabel(id);
         }
         return key;
@@ -660,7 +654,7 @@ public class NMapView extends MapView
 
     public void changeRouteName(Integer id, String new_name)
     {
-        glob.map.routes.get(id).name = new_name;
+        NUtils.getGameUI().routesWidget.routes.get(id).name = new_name;
         NConfig.needRoutesUpdate();
     }
 

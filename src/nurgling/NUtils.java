@@ -448,8 +448,8 @@ public class NUtils
             ((NMapView) NUtils.getGameUI().map).initDummys();
         }
 
-        if (NUtils.getGameUI().routes.visible) {
-            ((NMapView) NUtils.getGameUI().map).initRouteDummys(NUtils.getGameUI().routes.getSelectedRouteId());
+        if (NUtils.getGameUI().routesWidget.visible) {
+            ((NMapView) NUtils.getGameUI().map).initRouteDummys(NUtils.getGameUI().routesWidget.getSelectedRouteId());
         }
     }
 

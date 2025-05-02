@@ -9,13 +9,21 @@ import nurgling.actions.bots.RouteAutoRecorder;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.RouteCreator;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class RoutesWidget extends Window {
     public String currentPath = "";
@@ -24,6 +32,7 @@ public class RoutesWidget extends Window {
     private final List<RouteItem> routeItems = new ArrayList<>();
     private WaypointList waypointList;
     private Widget actionContainer;
+    public final HashMap<Integer, Route> routes = new HashMap<>();
 
     public RoutesWidget() {
         super(UI.scale(new Coord(300, 400)), "Routes");
@@ -60,7 +69,7 @@ public class RoutesWidget extends Window {
             public void click() {
                 if (routeList.sel != null) {
                     Route toRemove = routeList.sel.route;
-                    ((NMapView) NUtils.getGameUI().map).glob.map.routes.remove(toRemove.id);
+                    routes.remove(toRemove.id);
                     updateWaypoints();
                     NConfig.needRoutesUpdate();
                     showRoutes();
@@ -82,6 +91,7 @@ public class RoutesWidget extends Window {
 
     @Override
     public void show() {
+        loadRoutes();
         showRoutes();
         super.show();
     }
@@ -96,13 +106,38 @@ public class RoutesWidget extends Window {
     public void showRoutes() {
         synchronized (routeItems) {
             routeItems.clear();
-            for (Route route : ((NMapView) NUtils.getGameUI().map).glob.map.routes.values()) {
+            for (Route route : routes.values()) {
                 routeItems.add(new RouteItem(route));
             }
         }
 
         if (!routeItems.isEmpty()) {
             routeList.change(routeItems.get(routeItems.size() - 1));
+        }
+    }
+
+    public void loadRoutes() {
+        if(new File(NConfig.current.path_routes).exists())
+        {
+            StringBuilder contentBuilder = new StringBuilder();
+            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_routes), StandardCharsets.UTF_8))
+            {
+                stream.forEach(s -> contentBuilder.append(s).append("\n"));
+            }
+            catch (IOException ignore)
+            {
+            }
+
+            if (!contentBuilder.toString().isEmpty())
+            {
+                JSONObject main = new JSONObject(contentBuilder.toString());
+                JSONArray array = (JSONArray) main.get("routes");
+                for (int i = 0; i < array.length(); i++)
+                {
+                    Route route = new Route((JSONObject) array.get(i));
+                    routes.put(route.id, route);
+                }
+            }
         }
     }
 
@@ -118,7 +153,7 @@ public class RoutesWidget extends Window {
     }
 
     private void select(int id) {
-        Route route = ((NMapView) NUtils.getGameUI().map).glob.map.routes.get(id);
+        Route route = routes.get(id);
 
         if (route == null) return;
 
@@ -170,14 +205,14 @@ public class RoutesWidget extends Window {
     public void updateWaypoints() {
         int routeId = this.routeList.selectedRouteId;
         NMapView map = (NMapView) NUtils.getGameUI().map;
-        Route route = map.glob.map.routes.get(routeId);
+        Route route = routes.get(routeId);
 
         if (route == null) {
             this.waypointList.update(new ArrayList<>());
             return;
         }
 
-        ArrayList<RoutePoint> waypoints = map.glob.map.routes.get(routeId).waypoints;
+        ArrayList<RoutePoint> waypoints = routes.get(routeId).waypoints;
         if (waypoints != null) {
             this.waypointList.update(waypoints);
         } else {
@@ -281,7 +316,7 @@ public class RoutesWidget extends Window {
                             if (option.name.equals("Edit name")) {
                                 NEditRouteName.openChangeName(route, RouteItem.this);
                             } else if (option.name.equals("Delete")) {
-                                ((NMapView) NUtils.getGameUI().map).glob.map.routes.remove(route.id);
+                                routes.remove(route.id);
                                 NConfig.needRoutesUpdate();
                                 showRoutes();
                             }

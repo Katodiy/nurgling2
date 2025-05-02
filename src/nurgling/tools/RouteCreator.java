@@ -10,6 +10,6 @@ public class RouteCreator implements Runnable {
         NUtils.getGameUI().msg("Adding route");
         ((NMapView) NUtils.getGameUI().map).addRoute();
         NConfig.needRoutesUpdate();
-        NUtils.getGameUI().routes.show();
+        NUtils.getGameUI().routesWidget.show();
     }
 }
