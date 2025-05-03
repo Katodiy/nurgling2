@@ -69,10 +69,7 @@ public class RoutesWidget extends Window {
             public void click() {
                 if (routeList.sel != null) {
                     Route toRemove = routeList.sel.route;
-                    routes.remove(toRemove.id);
-                    updateWaypoints();
-                    NConfig.needRoutesUpdate();
-                    showRoutes();
+                    routeList.sel.deleteSelectedRoute();
                 }
             }
         }, importBtn.pos("ur").adds(UI.scale(5, 0)));
@@ -204,7 +201,6 @@ public class RoutesWidget extends Window {
 
     public void updateWaypoints() {
         int routeId = this.routeList.selectedRouteId;
-        NMapView map = (NMapView) NUtils.getGameUI().map;
         Route route = routes.get(routeId);
 
         if (route == null) {
@@ -273,6 +269,8 @@ public class RoutesWidget extends Window {
         public void change(RouteItem item) {
             super.change(item);
             if (item != null) {
+                actionContainer.show();
+                waypointList.show();
                 this.selectedRouteId = item.route.id;
                 RoutesWidget.this.select(selectedRouteId);
             }
@@ -316,9 +314,7 @@ public class RoutesWidget extends Window {
                             if (option.name.equals("Edit name")) {
                                 NEditRouteName.openChangeName(route, RouteItem.this);
                             } else if (option.name.equals("Delete")) {
-                                routes.remove(route.id);
-                                NConfig.needRoutesUpdate();
-                                showRoutes();
+                                deleteSelectedRoute();
                             }
                         }
                         uimsg("cancel");
@@ -339,6 +335,16 @@ public class RoutesWidget extends Window {
                 par = par.parent;
             }
             ui.root.add(menu, pos.add(UI.scale(25, 38)));
+        }
+
+        public void deleteSelectedRoute() {
+            routes.remove(routeList.sel.route.id);
+            NConfig.needRoutesUpdate();
+            showRoutes();
+            if (routes.isEmpty()) {
+                actionContainer.hide();
+                waypointList.hide();
+            }
         }
     }
 

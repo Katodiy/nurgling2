@@ -56,12 +56,6 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
     }
 
     @Override
-    public boolean tick(double dt) {
-        // Remove sprite if the gob was removed
-        return haven.Utils.eq(NUtils.findGob(((Gob) owner).id), null);
-    }
-
-    @Override
     public void draw(GOut g, Pipe state) {
         Coord sc = Homo3D.obj2view(Coord3f.o, state, Area.sized(Coord.z, g.sz())).round2();
         if(sc == null)

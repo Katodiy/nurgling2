@@ -1,20 +1,10 @@
 package nurgling.actions.bots;
 
-import haven.Gob;
 import haven.Resource;
-import haven.Widget;
-import haven.Window;
-import haven.res.lib.itemtex.ItemTex;
-import haven.res.ui.barterbox.Shopbox;
-import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
-import nurgling.areas.NArea;
-import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 public class Plower implements Action
 {

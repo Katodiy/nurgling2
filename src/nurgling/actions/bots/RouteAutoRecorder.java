@@ -3,7 +3,6 @@ package nurgling.actions.bots;
 import haven.Coord2d;
 import nurgling.NUtils;
 import nurgling.routes.Route;
-import nurgling.tasks.WaitAnotherAmount;
 import nurgling.tasks.WaitDistance;
 
 public class RouteAutoRecorder implements Runnable {
@@ -29,6 +28,7 @@ public class RouteAutoRecorder implements Runnable {
                     NUtils.getUI().core.addTask( new WaitDistance(last, interval));
                 } catch (InterruptedException e) {
                     NUtils.getGameUI().msg("Stopped route recording for: " + route.name);
+                    running = false;
                 }
 
                 if (!running) break;
