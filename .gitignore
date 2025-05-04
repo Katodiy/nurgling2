@@ -4,6 +4,6 @@
 /local-boot.properties
 /build.properties
 /out
-/resources
+/resources/compiled
 /.idea
 *~

@@ -10,12 +10,14 @@ import nurgling.routes.Route;
 
 import java.awt.image.BufferedImage;
 
+import static haven.Resource.imgc;
+
 public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2D {
     private static final Coord3f Z_OFFSET = new Coord3f(0, 0, 0); // Slightly above the ground
     private TexI label;
     public static final double floaty = UI.scale(5.0);
     Route route;
-    public final Tex tex = Resource.loadtex("gfx/hud/chkmarks");
+    public final Tex tex = Resource.loadtex("nurgling/hud/point");
     double a = 0;
     final int sy;
 
