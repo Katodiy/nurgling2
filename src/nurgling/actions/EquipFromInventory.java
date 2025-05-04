@@ -6,6 +6,7 @@ import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
+import nurgling.tasks.WaitFreeHand;
 import nurgling.tasks.WaitItemInEquip;
 import nurgling.tools.NAlias;
 import nurgling.widgets.NEquipory;
@@ -51,6 +52,7 @@ public class EquipFromInventory implements Action {
             }
 
             NUtils.getEquipment().wdgmsg("drop", -1);
+            NUtils.getUI().core.addTask(new WaitFreeHand());
         }
 
         WItem item;

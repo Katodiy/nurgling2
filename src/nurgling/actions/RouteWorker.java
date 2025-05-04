@@ -22,7 +22,7 @@ public class RouteWorker implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         if (route == null || route.waypoints == null || route.waypoints.isEmpty())
             return Results.ERROR("No route or waypoints defined.");
-        
+
         for (RoutePoint rp : route.waypoints) {
             Coord2d target = rp.toCoord2d(gui.map.glob.map);
             if (target == null)

@@ -8,8 +8,7 @@ import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
-import nurgling.tasks.WaitItemInEquip;
-import nurgling.tasks.WaitPose;
+import nurgling.tasks.*;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
@@ -197,7 +196,6 @@ public class HoneyAndWaxCollector implements Action {
         if (bucket == null) return;
 
         NUtils.takeItemToHand(bucket);
-        Thread.sleep(500);
         NUtils.activateItem(target);
         Thread.sleep(500);
 
@@ -207,10 +205,9 @@ public class HoneyAndWaxCollector implements Action {
 
     private void harvestWax(Gob skep, NGameUI gui) throws InterruptedException {
         new PathFinder(skep).run(gui);
-        NUtils.activateGob(skep);
-        Thread.sleep(400);
         new SelectFlowerAction("Harvest wax", skep).run(gui);
-        Thread.sleep(500);
+        NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/bushpickan"));
+        NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/idle"));
     }
 
     private void dropOffWax(Container container, NGameUI gui) throws InterruptedException {
