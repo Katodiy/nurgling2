@@ -197,7 +197,8 @@ public class HoneyAndWaxCollector implements Action {
 
         NUtils.takeItemToHand(bucket);
         NUtils.activateItem(target);
-        Thread.sleep(500);
+
+        NUtils.getUI().core.addTask(new WaitBucketInHandContentQuantityChange(bucket));
 
         NUtils.getEquipment().wdgmsg("drop", -1);
         NUtils.getUI().core.addTask(new WaitItemInEquip(bucket, new NEquipory.Slots[]{NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT}));

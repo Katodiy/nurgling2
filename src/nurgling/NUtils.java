@@ -519,6 +519,16 @@ public class NUtils
         return false;
     }
 
+    public static String getContentsOfBucket(WItem bucket) {
+        for(NGItem.NContent content : ((NGItem) bucket.item).content()) {
+            if (content.name().contains("l of")) {
+                return content.name();
+            }
+        }
+
+        return "";
+    }
+
     public static void dropLastSfx() {
         getUI().root.lastSfx = null;
     }
