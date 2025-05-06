@@ -71,6 +71,7 @@ public class MCache implements MapSource {
     Set<Overlay> ols = new HashSet<Overlay>();
     public int olseq = 0, chseq = 0;
     Map<Integer, Defrag> fragbufs = new TreeMap<Integer, Defrag>();
+	public boolean loadingMapData = false;
 
 
 	void init()
@@ -1226,6 +1227,7 @@ public class MCache implements MapSource {
     }
 
     public void mapdata(Message msg) {
+		loadingMapData = true;
 	long now = System.currentTimeMillis();
 	int pktid = msg.int32();
 	int off = msg.uint16();
@@ -1242,7 +1244,7 @@ public class MCache implements MapSource {
 		mapdata2(fragbuf.msg());
 		fragbufs.remove(pktid);
 	    }
-	
+
 	    /* Clean up old buffers */
 	    for(Iterator<Map.Entry<Integer, Defrag>> i = fragbufs.entrySet().iterator(); i.hasNext();) {
 		Map.Entry<Integer, Defrag> e = i.next();
@@ -1251,6 +1253,14 @@ public class MCache implements MapSource {
 		    i.remove();
 	    }
 	}
+
+		// I'm just taking a guess here, 9 sounds maybe right? If we don't check this will be called 9 times.
+		if (grids.size() == 9) {
+			loadingMapData = false;
+			if (NUtils.getGameUI().routesWidget.visible) {
+				((NMapView) NUtils.getGameUI().map).initRouteDummys(NUtils.getGameUI().routesWidget.getSelectedRouteId());
+			}
+		}
     }
 
     public Resource.Spec tilesetn(int i) {

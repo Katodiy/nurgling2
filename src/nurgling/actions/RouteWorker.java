@@ -16,6 +16,7 @@ public class RouteWorker implements Action {
     private NTask predicate = null;
     // What to do when you come back to first waypoint (Optional);
     private Action returnAction = null;
+    private Action finalAction = null;
 
     public RouteWorker(Action action, Route route, boolean backtrack) {
         this.route = route;
@@ -23,12 +24,13 @@ public class RouteWorker implements Action {
         this.backtrack = backtrack;
     }
 
-    public RouteWorker(Action action, Route route, boolean backtrack, NTask predicate, Action returnAction) {
+    public RouteWorker(Action action, Route route, boolean backtrack, NTask predicate, Action returnAction, Action finalAction) {
         this.route = route;
         this.action = action;
         this.backtrack = backtrack;
         this.predicate = predicate;
         this.returnAction = returnAction;
+        this.finalAction = finalAction;
     }
 
     @Override
@@ -65,6 +67,10 @@ public class RouteWorker implements Action {
 
         if (backtrack) {
             goToStart(gui, lastVisited);
+        }
+
+        if (finalAction != null) {
+            finalAction.run(gui);
         }
 
         return Results.SUCCESS();
