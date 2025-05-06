@@ -18,6 +18,21 @@ public class Route {
     public ArrayList<RoutePoint> waypoints = new ArrayList<>();
     public String hash;
     public Color color = Color.BLACK;
+    public ArrayList<RouteSpecialization> spec = new ArrayList<>();
+
+    public static class RouteSpecialization {
+        public String name;
+        public String subtype = null;
+
+        public RouteSpecialization(String name, String subtype) {
+            this.name = name;
+            this.subtype = subtype;
+        }
+
+        public RouteSpecialization(String name) {
+            this.name = name;
+        }
+    }
 
     public Route(String name) {
         this.name = name;
@@ -59,6 +74,17 @@ public class Route {
                 waypoints.add(new RoutePoint(gridId, new Coord(x, y)));
             }
         }
+
+        this.spec = new ArrayList<>();
+        if (obj.has("specializations")) {
+            JSONArray arr = obj.getJSONArray("specializations");
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject spec = arr.getJSONObject(i);
+                String name = spec.getString("name");
+                String subtype = spec.has("subtype") ? spec.getString("subtype") : null;
+                this.spec.add(new RouteSpecialization(name, subtype));
+            }
+        }
     }
 
     public JSONObject toJson() {
@@ -77,6 +103,36 @@ public class Route {
         }
         obj.put("waypoints", wpArray);
 
+        JSONArray specArray = new JSONArray();
+        for (RouteSpecialization s : spec) {
+            JSONObject specObj = new JSONObject();
+            specObj.put("name", s.name);
+            if (s.subtype != null) {
+                specObj.put("subtype", s.subtype);
+            }
+            specArray.put(specObj);
+        }
+        obj.put("specializations", specArray);
+
         return obj;
+    }
+
+    public boolean hasSpecialization(String name) {
+        for (RouteSpecialization s : spec) {
+            if (s.name.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean removeSpecialization(String name) {
+        for (int i = 0; i < spec.size(); i++) {
+            if (spec.get(i).name.equals(name)) {
+                spec.remove(i);
+                return true;
+            }
+        }
+        return false;
     }
 }

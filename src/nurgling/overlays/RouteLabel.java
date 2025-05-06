@@ -5,12 +5,9 @@ import haven.render.Homo3D;
 import haven.render.Pipe;
 import haven.render.RenderTree;
 import nurgling.NStyle;
-import nurgling.NUtils;
 import nurgling.routes.Route;
 
 import java.awt.image.BufferedImage;
-
-import static haven.Resource.imgc;
 
 public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2D {
     private static final Coord3f Z_OFFSET = new Coord3f(0, 0, 0); // Slightly above the ground

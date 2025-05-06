@@ -34,6 +34,8 @@ public class RoutesWidget extends Window {
     private Widget actionContainer;
     public final HashMap<Integer, Route> routes = new HashMap<>();
 
+    private SpecList specList;
+
     public RoutesWidget() {
         super(UI.scale(new Coord(300, 400)), "Routes");
 
@@ -82,15 +84,24 @@ public class RoutesWidget extends Window {
 
         Label routeInfoLabel = add(new Label("Route Info:", NStyle.areastitle), routeList.pos("bl").adds(0, UI.scale(10)));
         waypointList = add(new WaypointList(UI.scale(new Coord(250, 120))), routeInfoLabel.pos("bl").adds(0, UI.scale(5)));
+        
+        Label specLabel = add(new Label("Specializations:", NStyle.areastitle), waypointList.pos("bl").adds(0, UI.scale(10)));
+        specList = add(new SpecList(UI.scale(new Coord(250, 60))), specLabel.pos("bl").adds(0, UI.scale(5)));
 
         pack();
     }
 
     @Override
     public void show() {
+        super.show();
+        // Center the window on screen
+        if (parent != null) {
+            Coord sz = parent.sz;
+            Coord c = sz.div(2).sub(this.sz.div(2));
+            this.c = c;
+        }
         loadRoutes();
         showRoutes();
-        super.show();
     }
 
     @Override
@@ -192,6 +203,7 @@ public class RoutesWidget extends Window {
         }, new Coord(0, UI.scale(25))).settip("Start/Stop Auto Waypoint Bot");
 
         waypointList.update(route.waypoints);
+        specList.update(route);
     }
 
 
@@ -300,7 +312,7 @@ public class RoutesWidget extends Window {
 
         public void opts(Coord c) {
             if (menu == null) {
-                menu = new NFlowerMenu(new String[]{"Edit name", "Delete"}) {
+                menu = new NFlowerMenu(new String[]{"Edit name", "Delete", "Add Specialization"}) {
                     @Override
                     public boolean mousedown(MouseDownEvent ev) {
                         if (super.mousedown(ev))
@@ -315,6 +327,8 @@ public class RoutesWidget extends Window {
                                 NEditRouteName.openChangeName(route, RouteItem.this);
                             } else if (option.name.equals("Delete")) {
                                 deleteSelectedRoute();
+                            } else if (option.name.equals("Add Specialization")) {
+                                RouteSpecialization.selectSpecialization(route);
                             }
                         }
                         uimsg("cancel");
@@ -430,6 +444,71 @@ public class RoutesWidget extends Window {
 
         @Override
         public void draw(GOut g) {
+            super.draw(g);
+        }
+    }
+
+    public class SpecList extends SListBox<Route.RouteSpecialization, Widget> {
+        private Route currentRoute;
+
+        public SpecList(Coord sz) {
+            super(sz, UI.scale(24));
+        }
+
+        public void update(Route route) {
+            this.currentRoute = route;
+            change(null);
+        }
+
+        @Override
+        protected List<Route.RouteSpecialization> items() {
+            return currentRoute != null ? currentRoute.spec : new ArrayList<>();
+        }
+
+        @Override
+        protected Widget makeitem(Route.RouteSpecialization item, int idx, Coord sz) {
+            return new ItemWidget<Route.RouteSpecialization>(this, sz, item) {
+                {
+                    RouteSpecialization.RouteSpecializationItem specItem = RouteSpecialization.findSpecialization(item.name);
+                    if (specItem != null) {
+                        add(specItem);
+                    }
+                }
+
+                @Override
+                public boolean mousedown(MouseDownEvent ev) {
+                    if (ev.b == 3) { // Right click
+                        NFlowerMenu menu = new NFlowerMenu(new String[]{"Delete"}) {
+                            @Override
+                            public void nchoose(NPetal option) {
+                                if (option != null && option.name.equals("Delete")) {
+                                    currentRoute.removeSpecialization(item.name);
+                                    NConfig.needRoutesUpdate();
+                                    RoutesWidget.this.showRoutes();
+                                }
+                                uimsg("cancel");
+                            }
+                        };
+                        Widget par = parent;
+                        Coord pos = ev.c;
+                        while (par != null && !(par instanceof GameUI)) {
+                            pos = pos.add(par.c);
+                            par = par.parent;
+                        }
+                        ui.root.add(menu, pos.add(UI.scale(25, 38)));
+                        return true;
+                    }
+                    return super.mousedown(ev);
+                }
+            };
+        }
+
+        Color bg = new Color(30,40,40,160);
+
+        @Override
+        public void draw(GOut g) {
+            g.chcolor(bg);
+            g.frect(Coord.z, g.sz());
             super.draw(g);
         }
     }

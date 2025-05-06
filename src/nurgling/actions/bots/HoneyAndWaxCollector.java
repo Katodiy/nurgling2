@@ -42,14 +42,14 @@ public class HoneyAndWaxCollector implements Action {
         loadRoutes();
 
         for (Route route : routes.values()) {
-            if (route.name.contains("bee")) {
+            if (route.hasSpecialization("honey")) {
                 this.route = route;
                 break;
             }
         }
 
         if (this.route == null) {
-            getGameUI().msg("No route found!");
+            getGameUI().msg("No honey route found!");
             return Results.FAIL();
         }
 

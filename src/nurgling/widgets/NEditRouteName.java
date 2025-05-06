@@ -7,9 +7,9 @@ import nurgling.routes.Route;
 public class NEditRouteName extends Window
 {
     private final TextEntry te;
-    public NEditRouteName()
+    public NEditRouteName(Coord sz, String title)
     {
-        super(UI.scale(new Coord(260, 25)), "Edit name");
+        super(sz, title);
         prev = add(te = new TextEntry(UI.scale(200), ""));
         add(new Button(UI.scale(60), "Save")
         {
@@ -41,14 +41,26 @@ public class NEditRouteName extends Window
         }
     }
 
+    @Override
+    public void show() {
+        super.show();
+        // Center the window on screen
+        if (parent != null) {
+            Coord sz = parent.sz;
+            Coord c = sz.div(2).sub(this.sz.div(2));
+            this.c = c;
+        }
+    }
+
     public static void openChangeName(Route route, RoutesWidget.RouteItem item)
     {
-        NUtils.getGameUI().nern.show();
-        NUtils.getGameUI().nern.raise();
-        NUtils.getGameUI().nern.route = route;
-        NUtils.getGameUI().nern.item = item;
-        NUtils.getGameUI().nern.te.settext(route.name);
-
+        NEditRouteName nern = new NEditRouteName(UI.scale(new Coord(260, 25)), "Edit name");
+        NUtils.getGameUI().add(nern);
+        nern.show();
+        nern.raise();
+        nern.route = route;
+        nern.item = item;
+        nern.te.settext(route.name);
     }
 
     public Route route;

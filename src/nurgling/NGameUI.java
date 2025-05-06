@@ -32,8 +32,8 @@ public class NGameUI extends GameUI
     public NCraftWindow craftwnd;
     public NEditAreaName nean;
     public NEditFolderName nefn;
-    public NEditRouteName nern;
     public Specialisation spec;
+    public RouteSpecialization routespec;
     public BotsInterruptWidget biw;
     public NEquipProxy nep;
     public NCatSelection ncatSel;
@@ -61,9 +61,9 @@ public class NGameUI extends GameUI
         nefn.hide();
         add(spec = new Specialisation());
         spec.hide();
+        add(routespec = new RouteSpecialization());
+        routespec.hide();
         add(biw = new BotsInterruptWidget());
-        add(nern = new NEditRouteName());
-        nern.hide();
     }
 
     @Override
