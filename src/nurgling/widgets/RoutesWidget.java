@@ -84,7 +84,7 @@ public class RoutesWidget extends Window {
 
         Label routeInfoLabel = add(new Label("Route Info:", NStyle.areastitle), routeList.pos("bl").adds(0, UI.scale(10)));
         waypointList = add(new WaypointList(UI.scale(new Coord(250, 120))), routeInfoLabel.pos("bl").adds(0, UI.scale(5)));
-        
+
         Label specLabel = add(new Label("Specializations:", NStyle.areastitle), waypointList.pos("bl").adds(0, UI.scale(10)));
         specList = add(new SpecList(UI.scale(new Coord(250, 60))), specLabel.pos("bl").adds(0, UI.scale(5)));
 
