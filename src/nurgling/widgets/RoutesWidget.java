@@ -4,9 +4,10 @@ import haven.*;
 import haven.Label;
 import haven.Window;
 import nurgling.*;
-import nurgling.actions.PathFinder;
 import nurgling.actions.bots.RouteAutoRecorder;
+import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.routes.Route;
+import nurgling.routes.RouteGraphManager;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.RouteCreator;
 import org.json.JSONArray;
@@ -33,7 +34,6 @@ public class RoutesWidget extends Window {
     private WaypointList waypointList;
     private Widget actionContainer;
     public final HashMap<Integer, Route> routes = new HashMap<>();
-
     private SpecList specList;
 
     public RoutesWidget() {
@@ -145,6 +145,9 @@ public class RoutesWidget extends Window {
                     Route route = new Route((JSONObject) array.get(i));
                     routes.put(route.id, route);
                 }
+
+                // Update the graph after loading routes
+                RouteGraphManager.getInstance().updateGraph();
             }
         }
     }
@@ -206,7 +209,6 @@ public class RoutesWidget extends Window {
         specList.update(route);
     }
 
-
     public int getSelectedRouteId() {
         return this.routeList.selectedRouteId;
     }
@@ -223,6 +225,8 @@ public class RoutesWidget extends Window {
         ArrayList<RoutePoint> waypoints = routes.get(routeId).waypoints;
         if (waypoints != null) {
             this.waypointList.update(waypoints);
+            RouteGraphManager.getInstance().updateRoute(route);
+            RouteGraphManager.getInstance().updateGraph();
         } else {
             this.waypointList.update(new ArrayList<>());
         }
@@ -369,6 +373,76 @@ public class RoutesWidget extends Window {
             super(sz, UI.scale(16));
         }
 
+        NFlowerMenu menu;
+
+        @Override
+        protected Widget makeitem(CoordItem item, int idx, Coord sz) {
+            return new ItemWidget<CoordItem>(this, sz, item) {{
+                add(item);
+            }
+                @Override
+                public boolean mousedown(MouseDownEvent ev) {
+                    if (ev.b == 3) {
+                        RoutePoint rp = item.routePoint;
+                        String label = rp.special ? "Unmark as Special" : "Mark as Special";
+                        menu = new NFlowerMenu(new String[]{label, "Navigate To", "Delete"}) {
+                            @Override
+                            public boolean mousedown(MouseDownEvent ev) {
+                                if(super.mousedown(ev))
+                                    nchoose(null);
+                                return true;
+                            }
+
+                            public void destroy() {
+                                menu = null;
+                                super.destroy();
+                            }
+
+                            @Override
+                            public void nchoose(NPetal option) {
+                                if (option != null) {
+                                    if (option.name.equals(label)) {
+                                        rp.special = !rp.special;
+                                        WaypointList.this.update(WaypointList.this.items.stream().map(ci -> ci.routePoint).toList());
+                                    } else if (option.name.equals("Navigate To")) {
+                                        new Thread(() -> {
+                                            try {
+                                                new RoutePointNavigator(rp).run(NUtils.getGameUI());
+                                            } catch (InterruptedException e) {
+                                                NUtils.getGameUI().error("Navigation interrupted: " + e.getMessage());
+                                            }
+                                        }, "RoutePointNavigator").start();
+                                    } else if (option.name.equals("Delete")) {
+                                        routeList.sel.route.deleteWaypoint(rp);
+                                        waypointList.update(routeList.sel.route.waypoints);
+                                    }
+                                }
+                                uimsg("cancel");
+                            }
+                        };
+                        Widget par = parent;
+                        Coord pos = ev.c;
+                        while (par != null && !(par instanceof GameUI)) {
+                            pos = pos.add(par.c);
+                            par = par.parent;
+                        }
+                        ui.root.add(menu, pos.add(UI.scale(25, 38)));
+                        return true;
+                    } else if (ev.b == 1) {
+                        new Thread(() -> {
+                            try {
+                                new RoutePointNavigator(item.routePoint).run(NUtils.getGameUI());
+                            } catch (InterruptedException e) {
+                                NUtils.getGameUI().error("Navigation interrupted: " + e.getMessage());
+                            }
+                        }, "RoutePointNavigator").start();
+                        return true;
+                    }
+                    return super.mousedown(ev);
+                }
+            };
+        }
+
         public void update(List<RoutePoint> points) {
             synchronized (items) {
                 items.clear();
@@ -384,47 +458,11 @@ public class RoutesWidget extends Window {
             return items;
         }
 
-        @Override
-        protected Widget makeitem(CoordItem item, int idx, Coord sz) {
-            return new ItemWidget<CoordItem>(this, sz, item) {{ add(item); }
-                @Override
-                public boolean mousedown(MouseDownEvent ev) {
-                    if (ev.b == 1) {
-                        Thread t;
-                        (t = new Thread(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                try
-                                {
-                                    if (NUtils.getGameUI() != null) {
-                                        Coord2d coord = item.routePoint.toCoord2d(NUtils.getGameUI().map.glob.map);
-                                        if (coord != null) {
-                                            new PathFinder(item.localCoord).run(NUtils.getGameUI());
-                                        } else {
-                                            NUtils.getGameUI().msg("Coordinates not found. Likely too far.");
-                                        }
-                                    }
-                                }
-                                catch (InterruptedException e)
-                                {
-                                    NUtils.getGameUI().msg("Interrupted");
-                                }
-                            }
-                        }, "Auto craft(BOT)")).start();
-
-                        NUtils.getGameUI().biw.addObserve(t);
-                        return true;
-                    }
-                    return super.mousedown(ev);
-                }
-            };
-        }
+        Color bg = new Color(30, 40, 40, 160);
 
         @Override
         public void draw(GOut g) {
-            g.chcolor(new Color(30, 40, 40, 160));
+            g.chcolor(bg);
             g.frect(Coord.z, g.sz());
             super.draw(g);
         }
@@ -436,10 +474,10 @@ public class RoutesWidget extends Window {
         private final RoutePoint routePoint;
 
         public CoordItem(long gridid, Coord2d coord, RoutePoint routePoint) {
-            this.label = add(new Label(String.valueOf(gridid)));
+            this.routePoint = routePoint;
+            this.label = add(new Label((routePoint.special ? "★ " : "") + String.valueOf(gridid)));
             this.sz = label.sz.add(UI.scale(4), UI.scale(4));
             this.localCoord = coord;
-            this.routePoint = routePoint;
         }
 
         @Override
@@ -467,43 +505,12 @@ public class RoutesWidget extends Window {
 
         @Override
         protected Widget makeitem(Route.RouteSpecialization item, int idx, Coord sz) {
-            return new ItemWidget<Route.RouteSpecialization>(this, sz, item) {
-                {
-                    RouteSpecialization.RouteSpecializationItem specItem = RouteSpecialization.findSpecialization(item.name);
-                    if (specItem != null) {
-                        add(specItem);
-                    }
-                }
-
-                @Override
-                public boolean mousedown(MouseDownEvent ev) {
-                    if (ev.b == 3) { // Right click
-                        NFlowerMenu menu = new NFlowerMenu(new String[]{"Delete"}) {
-                            @Override
-                            public void nchoose(NPetal option) {
-                                if (option != null && option.name.equals("Delete")) {
-                                    currentRoute.removeSpecialization(item.name);
-                                    NConfig.needRoutesUpdate();
-                                    RoutesWidget.this.showRoutes();
-                                }
-                                uimsg("cancel");
-                            }
-                        };
-                        Widget par = parent;
-                        Coord pos = ev.c;
-                        while (par != null && !(par instanceof GameUI)) {
-                            pos = pos.add(par.c);
-                            par = par.parent;
-                        }
-                        ui.root.add(menu, pos.add(UI.scale(25, 38)));
-                        return true;
-                    }
-                    return super.mousedown(ev);
-                }
-            };
+            return new ItemWidget<Route.RouteSpecialization>(this, sz, item) {{
+                add(new Label(item.name));
+            }};
         }
 
-        Color bg = new Color(30,40,40,160);
+        Color bg = new Color(30, 40, 40, 160);
 
         @Override
         public void draw(GOut g) {
