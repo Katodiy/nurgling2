@@ -14,7 +14,7 @@ public class DBPoolManager {
 
     public DBPoolManager(int poolSize) throws SQLException {
         this.executorService = Executors.newFixedThreadPool(poolSize);
-        this.connection = DriverManager.getConnection("jdbc:postgresql://" + NConfig.get(NConfig.Key.serverNode) +"/nurgling_db", (String) NConfig.get(NConfig.Key.serverUser), (String) NConfig.get(NConfig.Key.serverPass));
+        this.connection = DriverManager.getConnection("jdbc:postgresql://" + NConfig.get(NConfig.Key.serverNode) +"/nurgling_db" +"?sql_mode=ANSI", (String) NConfig.get(NConfig.Key.serverUser), (String) NConfig.get(NConfig.Key.serverPass));
         connection.setAutoCommit(false);
     }
 

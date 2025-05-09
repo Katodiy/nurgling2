@@ -80,9 +80,9 @@ public class NAreasWidget extends Window
             {
                 super.click();
                 if(al.sel!=null) {
-                    if(catSelection == null) {
+//                    if(catSelection == null) {
                         ui.gui.add(catSelection = new NCatSelection(), NAreasWidget.this.c.add(0, NAreasWidget.this.sz.y));
-                    }
+//                    }
                     catSelection.visible = true;
                 }
             }

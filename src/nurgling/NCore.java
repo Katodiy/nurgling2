@@ -301,7 +301,7 @@ public class NCore extends Widget
 
         final private static String insertRecipeSQL = "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
         final private static String insertIngredientSQL = "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
-        final private static String insertFepsSQL = "INSERT INTO feps (recipe_hash, name, value) VALUES (?, ?, ?)";
+        final private static String insertFepsSQL = "INSERT INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
 
         @Override
         public void run() {
@@ -343,12 +343,13 @@ public class NCore extends Widget
                         ingredientStatement.executeUpdate();
                     }
                 }
-
+                double multiplier = Math.sqrt(item.quality / 10.0);
                 // Вставляем эффекты (FEPS)
                 for (FoodInfo.Event ef : fi.evs) {
                     fepsStatement.setString(1, recipeHash);
                     fepsStatement.setString(2, ef.ev.nm);
-                    fepsStatement.setDouble(3, ef.a / fi.cons);
+                    fepsStatement.setDouble(3, Double.parseDouble(Utils.odformat2(ef.a / multiplier, 2)));
+                    fepsStatement.setDouble(4, Double.parseDouble(Utils.odformat2(ef.a / fi.fepSum, 2)));
                     fepsStatement.executeUpdate();
                 }
 
