@@ -48,7 +48,7 @@ public class Route {
                 lastRoutePoint.addNeighbor(newWaypoint.id);
             }
 
-            RouteGraphManager.getInstance().getGraph().generateNeighboringConnections(newWaypoint);
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(newWaypoint);
             this.waypoints.add(newWaypoint);
 
             NUtils.getGameUI().msg("Waypoint added: " + newWaypoint);
@@ -76,7 +76,7 @@ public class Route {
 
         waypoints.removeAll(toRemove);
 
-        RouteGraphManager.getInstance().getGraph().deleteWaypoint(waypoint);
+        ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().deleteWaypoint(waypoint);
     }
 
 
@@ -95,16 +95,12 @@ public class Route {
             JSONArray arr = obj.getJSONArray("waypoints");
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject point = arr.getJSONObject(i);
-                int id = 0;
-                if(point.has("id")) {
-                    id = point.getInt("id");
-                }
                 long gridId = point.getLong("gridId");
                 JSONObject localCoord = point.getJSONObject("localCoord");
                 int x = localCoord.getInt("x");
                 int y = localCoord.getInt("y");
                 boolean special = point.getBoolean("special");
-                RoutePoint waypoint = new RoutePoint(id, gridId, new Coord(x, y), special);
+                RoutePoint waypoint = new RoutePoint(gridId, new Coord(x, y), special);
                 
                 // Load neighbors if they exist
                 if (point.has("neighbors")) {
@@ -140,7 +136,6 @@ public class Route {
         JSONArray waypointsArray = new JSONArray();
         for (RoutePoint waypoint : waypoints) {
             JSONObject waypointJson = new JSONObject();
-            waypointJson.put("id", waypoint.id);
             waypointJson.put("gridId", waypoint.gridId);
             waypointJson.put("localCoord", new JSONObject()
                 .put("x", waypoint.localCoord.x)

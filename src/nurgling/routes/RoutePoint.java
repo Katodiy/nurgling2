@@ -24,9 +24,9 @@ public class RoutePoint {
         this.id = hashCode();
     }
 
-    public RoutePoint(int id, long gridId, Coord localCoord, boolean special) {
+    public RoutePoint(long gridId, Coord localCoord, boolean special) {
         this.name = "";
-        this.id = id;
+        this.id = hashCode();
         this.gridId = gridId;
         this.localCoord = localCoord;
         this.special = special;

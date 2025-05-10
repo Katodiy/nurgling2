@@ -147,7 +147,7 @@ public class RoutesWidget extends Window {
                 }
 
                 // Update the graph after loading routes
-                RouteGraphManager.getInstance().updateGraph();
+                ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateGraph();
             }
         }
     }
@@ -225,8 +225,8 @@ public class RoutesWidget extends Window {
         ArrayList<RoutePoint> waypoints = routes.get(routeId).waypoints;
         if (waypoints != null) {
             this.waypointList.update(waypoints);
-            RouteGraphManager.getInstance().updateRoute(route);
-            RouteGraphManager.getInstance().updateGraph();
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateRoute(route);
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateGraph();
         } else {
             this.waypointList.update(new ArrayList<>());
         }

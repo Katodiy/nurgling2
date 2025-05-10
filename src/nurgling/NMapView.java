@@ -9,6 +9,7 @@ import nurgling.areas.*;
 import nurgling.overlays.*;
 import nurgling.overlays.map.*;
 import nurgling.routes.Route;
+import nurgling.routes.RouteGraphManager;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 
@@ -43,6 +44,8 @@ public class NMapView extends MapView
 
     public HashMap<Long, Gob> dummys = new HashMap<>();
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
+
+    public RouteGraphManager routeGraphManager = new RouteGraphManager();
 
     @Override
     public void draw(GOut g) {

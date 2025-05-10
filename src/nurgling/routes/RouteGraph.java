@@ -55,7 +55,11 @@ public class RouteGraph {
         // If no points found in the same grid, check all points
         if (nearestPoint == null) {
             for (RoutePoint point : points.values()) {
-                double dist = point.localCoord.dist(localCoord);
+                Coord2d pointCoords = new Coord2d(point.localCoord);
+                Coord2d playerCoords = NUtils.player().rc;
+
+                double dist = pointCoords.dist(playerCoords);
+
                 if (dist < currentDistanceToClosestPoint) {
                     currentDistanceToClosestPoint = dist;
                     nearestPoint = point;
@@ -105,9 +109,7 @@ public class RouteGraph {
         points.remove(waypoint.id);
 
         for(RoutePoint point : points.values()) {
-            if (point.getNeighbors().contains(waypoint.id)) {
-                point.getNeighbors().remove(waypoint);
-            }
+            point.getNeighbors().remove(Integer.valueOf(waypoint.id));
         }
     }
 

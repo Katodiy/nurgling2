@@ -23,7 +23,7 @@ public class RoutePointNavigator implements Action {
 
     public RoutePointNavigator(RoutePoint targetPoint) {
         this.targetPoint = targetPoint;
-        this.graph = RouteGraphManager.getInstance().getGraph();
+        this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
     }
 
     @Override
