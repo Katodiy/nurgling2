@@ -11,7 +11,7 @@ public class RoutePoint {
     public int id;
     public long gridId;
     public Coord localCoord;
-    public boolean special = false;
+    public boolean isDoor = false;
 
     private ArrayList<Integer> neighbors = new ArrayList<>();
 
@@ -24,12 +24,12 @@ public class RoutePoint {
         this.id = hashCode();
     }
 
-    public RoutePoint(long gridId, Coord localCoord, boolean special) {
+    public RoutePoint(long gridId, Coord localCoord, boolean isDoor) {
         this.name = "";
         this.id = hashCode();
         this.gridId = gridId;
         this.localCoord = localCoord;
-        this.special = special;
+        this.isDoor = isDoor;
     }
 
     public void addNeighbor(int id) {

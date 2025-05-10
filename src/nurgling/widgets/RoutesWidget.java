@@ -7,7 +7,6 @@ import nurgling.*;
 import nurgling.actions.bots.RouteAutoRecorder;
 import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.routes.Route;
-import nurgling.routes.RouteGraphManager;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.RouteCreator;
 import org.json.JSONArray;
@@ -384,7 +383,7 @@ public class RoutesWidget extends Window {
                 public boolean mousedown(MouseDownEvent ev) {
                     if (ev.b == 3) {
                         RoutePoint rp = item.routePoint;
-                        String label = rp.special ? "Unmark as Special" : "Mark as Special";
+                        String label = rp.isDoor ? "Unmark as Special" : "Mark as Special";
                         menu = new NFlowerMenu(new String[]{label, "Navigate To", "Delete"}) {
                             @Override
                             public boolean mousedown(MouseDownEvent ev) {
@@ -402,7 +401,7 @@ public class RoutesWidget extends Window {
                             public void nchoose(NPetal option) {
                                 if (option != null) {
                                     if (option.name.equals(label)) {
-                                        rp.special = !rp.special;
+                                        rp.isDoor = !rp.isDoor;
                                         WaypointList.this.update(WaypointList.this.items.stream().map(ci -> ci.routePoint).toList());
                                     } else if (option.name.equals("Navigate To")) {
                                         new Thread(() -> {
@@ -475,7 +474,7 @@ public class RoutesWidget extends Window {
 
         public CoordItem(long gridid, Coord2d coord, RoutePoint routePoint) {
             this.routePoint = routePoint;
-            this.label = add(new Label((routePoint.special ? "★ " : "") + String.valueOf(gridid)));
+            this.label = add(new Label((routePoint.isDoor ? "★ " : "") + String.valueOf(gridid)));
             this.sz = label.sz.add(UI.scale(4), UI.scale(4));
             this.localCoord = coord;
         }

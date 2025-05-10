@@ -6,7 +6,6 @@ import nurgling.actions.Action;
 import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.routes.RouteGraph;
-import nurgling.routes.RouteGraphManager;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.WaitForMapLoad;
 import nurgling.tools.Finder;
@@ -77,7 +76,7 @@ public class RoutePointNavigator implements Action {
 
 
             // We open the door only when the current point is special and the next point in the path is unreachable
-            if(currentPoint.special && nextPoint != null && nextPoint.toCoord2d(gui.map.glob.map) == null) {
+            if(currentPoint.isDoor && nextPoint != null && nextPoint.toCoord2d(gui.map.glob.map) == null) {
                 openDoor(gui);
                 // Wait until we can safely get coordinates for the next waypoint
                 NUtils.getUI().core.addTask(new WaitForMapLoad(nextPoint, gui));

@@ -99,8 +99,8 @@ public class Route {
                 JSONObject localCoord = point.getJSONObject("localCoord");
                 int x = localCoord.getInt("x");
                 int y = localCoord.getInt("y");
-                boolean special = point.getBoolean("special");
-                RoutePoint waypoint = new RoutePoint(gridId, new Coord(x, y), special);
+                boolean isDoor = point.getBoolean("isDoor");
+                RoutePoint waypoint = new RoutePoint(gridId, new Coord(x, y), isDoor);
                 
                 // Load neighbors if they exist
                 if (point.has("neighbors")) {
@@ -140,7 +140,7 @@ public class Route {
             waypointJson.put("localCoord", new JSONObject()
                 .put("x", waypoint.localCoord.x)
                 .put("y", waypoint.localCoord.y));
-            waypointJson.put("special", waypoint.special);
+            waypointJson.put("isDoor", waypoint.isDoor);
             
             // Save neighbors
             JSONArray neighborsArray = new JSONArray();
