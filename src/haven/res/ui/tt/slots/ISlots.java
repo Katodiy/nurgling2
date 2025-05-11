@@ -77,7 +77,7 @@ public class ISlots extends ItemInfo.Tip implements GItem.NumberInfo {
 		}
 		if(mods.size()>0)
 		{
-		l.cmp.add(AttrMod.modimg(mods.values()), new Coord(10, l.cmp.sz.y));
+//		l.cmp.add(AttrMod.modimg(mods.values()), new Coord(10, l.cmp.sz.y));
 		l.cmp.add(RichText.render("$col[168,168,168]{[Press SHIFT for details]}", 0).img, new Coord(10, l.cmp.sz.y));
 		}
 	}

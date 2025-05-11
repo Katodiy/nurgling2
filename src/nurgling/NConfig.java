@@ -566,4 +566,14 @@ public class NConfig
         }
     }
 
+    public static Set<NPathVisualizer.PathCategory> getPathCategories() {
+        HashSet<NPathVisualizer.PathCategory> res = new HashSet<>();
+        res.add(NPathVisualizer.PathCategory.ME);
+        res.add(NPathVisualizer.PathCategory.FOE);
+        res.add(NPathVisualizer.PathCategory.OTHER);
+        res.add(NPathVisualizer.PathCategory.FRIEND);
+        res.add(NPathVisualizer.PathCategory.GPF);
+        return res;
+    }
+
 }

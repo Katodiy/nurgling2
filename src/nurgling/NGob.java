@@ -42,7 +42,31 @@ public class NGob {
         this.parent = parent;
     }
 
-    public void checkattr(GAttrib a, long id) {
+    public static Gob from(Clickable ci) {
+        if (ci instanceof Gob.GobClick) {
+            return ((Gob.GobClick) ci).gob;
+        } else if (ci instanceof Composited.CompositeClick) {
+            Gob.GobClick gi = ((Composited.CompositeClick) ci).gi;
+            return gi != null ? gi.gob : null;
+        }
+        return null;
+    }
+
+    protected void updateMovingInfo(GAttrib a, GAttrib prev) {
+        boolean me = (parent.id == NUtils.playerID());
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+            if (prev instanceof Moving) {
+                NUtils.getGameUI().map.glob.oc.paths.removePath((Moving) prev);
+            }
+            if (a instanceof LinMove || a instanceof Homing) {
+                NUtils.getGameUI().map.glob.oc.paths.addPath((Moving) a);
+            }
+//            if (NUtils.getGameUI() != null && (me))
+//                NUtils.getGameUI().pathQueue().ifPresent(pathQueue -> pathQueue.movementChange((Gob) this, prev, a));
+        }
+    }
+
+    public void checkattr(GAttrib a, long id, GAttrib prev) {
 
         if (a instanceof ResDrawable) {
             modelAttribute = ((ResDrawable) a).calcMarker();
@@ -208,6 +232,9 @@ public class NGob {
         {
             if(name!=null)
                 parent.addcustomol(new NTreeScaleOl(parent));
+        }
+        if (a instanceof Moving || prev instanceof Moving) {
+            updateMovingInfo(a, prev);
         }
     }
 

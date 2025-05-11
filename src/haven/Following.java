@@ -115,4 +115,10 @@ public class Following extends Moving {
 	    }
 	}
     }
+
+	@Override
+	public Coord3f gett() {
+		Gob tgt = tgt();
+		return tgt == null ? Coord3f.o : tgt.getc();
+	}
 }

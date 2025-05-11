@@ -124,4 +124,12 @@ public class RouteGraph {
         
         return path;
     }
-} 
+
+    public Collection<RoutePoint> getPoints() {
+        return points.values();
+    }
+
+    public RoutePoint getPoint(Integer id) {
+        return points.get(id);
+    }
+}

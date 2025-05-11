@@ -131,7 +131,7 @@ public class ResDrawable extends Drawable implements Sprite.Owner, EquipTarget {
 	    if((d != null) && (d.res == res) && !d.sdt.equals(sdt) && (d.spr != null) && (d.spr instanceof Sprite.CUpd)) {
 		((Sprite.CUpd)d.spr).update(sdt);
 		d.sdt = sdt;
-		g.ngob.checkattr(d,g.id);
+		g.ngob.checkattr(d,g.id,null);
 	    } else if((d == null) || (d.res != res) || !d.sdt.equals(sdt)) {
 		g.setattr(new ResDrawable(g, res, sdt, msg.old));
 	    }

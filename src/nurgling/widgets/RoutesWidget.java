@@ -155,8 +155,10 @@ public class RoutesWidget extends Window {
     public void wdgmsg(Widget sender, String msg, Object... args) {
         if (msg.equals("close")) {
             hide();
-            if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null)
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
                 ((NMapView) NUtils.getGameUI().map).destroyRouteDummys();
+                NUtils.getGameUI().map.glob.oc.paths.pflines = null;
+            }
         } else {
             super.wdgmsg(sender, msg, args);
         }

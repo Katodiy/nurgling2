@@ -24,6 +24,7 @@ import static haven.Inventory.invsq;
 
 public class NGameUI extends GameUI
 {
+    public boolean nomadMod = false;
     NBotsMenu botsMenu;
     public NAlarmWdg alarmWdg;
     public NQuestInfo questinfo;
