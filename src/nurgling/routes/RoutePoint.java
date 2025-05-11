@@ -26,10 +26,10 @@ public class RoutePoint {
 
     public RoutePoint(long gridId, Coord localCoord, boolean isDoor) {
         this.name = "";
-        this.id = hashCode();
         this.gridId = gridId;
         this.localCoord = localCoord;
         this.isDoor = isDoor;
+        this.id = hashCode();
     }
 
     public void addNeighbor(int id) {
