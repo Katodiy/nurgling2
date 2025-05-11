@@ -28,7 +28,7 @@ public class PoppyFarmer implements Action {
         {
             new HarvestCrop(NArea.findSpec(field),NArea.findSpec(seed),NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/poppy"),new NAlias("Poppy"),4).run(gui);
 
-            if(NArea.findOut("Poppy", 1)!=null)
+            if(NArea.findOut("Poppy Flower", 1)!=null)
                 new CollectItemsToPile(NArea.findSpec(field).getRCArea(),NArea.findOut("Poppy Flower", 1).getRCArea(),new NAlias("flower-poppy", "Poppy Flower")).run(gui);
             new SeedCrop(NArea.findSpec(field),NArea.findSpec(seed),new NAlias("plants/poppy"),new NAlias("Poppy")).run(gui);
             return Results.SUCCESS();

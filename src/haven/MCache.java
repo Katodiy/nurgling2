@@ -329,6 +329,11 @@ public class MCache implements MapSource {
 	    private T val;
 	    private boolean inited = false;
 
+		public boolean isReady()
+		{
+			return val!=null || (val == null && def!=null && def.done());
+		}
+
 	    public T get() {
 		T ret = this.val;
 		if((ret == null) || (this.def != null)) {
