@@ -2,20 +2,17 @@ package nurgling;
 
 import haven.*;
 import static haven.MCache.tilesz;
-import static haven.OCache.posres;
 
 import haven.Composite;
-import haven.render.*;
-import nurgling.actions.ActionWithFinal;
 import nurgling.actions.QuickActionBot;
 import nurgling.areas.*;
-import nurgling.overlays.NAreaLabel;
-import nurgling.overlays.NTexLabel;
+import nurgling.overlays.*;
 import nurgling.overlays.map.*;
+import nurgling.routes.Route;
+import nurgling.routes.RouteGraphManager;
+import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
-import nurgling.widgets.Specialisation;
 
-import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.*;
 import java.util.*;
@@ -46,6 +43,9 @@ public class NMapView extends MapView
     public Gob selectedGob = null;
 
     public HashMap<Long, Gob> dummys = new HashMap<>();
+    public HashMap<Long, Gob> routeDummys = new HashMap<>();
+
+    public RouteGraphManager routeGraphManager = new RouteGraphManager();
 
     @Override
     public void draw(GOut g) {
@@ -67,6 +67,11 @@ public class NMapView extends MapView
         }
     }
 
+    public void initRouteDummys(int id) {
+        destroyRouteDummys();
+        createRouteLabel(id);
+    }
+
     public void createAreaLabel(Integer id) {
         NArea area = glob.map.areas.get(id);
         Pair<Coord2d,Coord2d> space = area.getRCArea();
@@ -84,6 +89,24 @@ public class NMapView extends MapView
         }
     }
 
+    public void createRouteLabel(Integer id) {
+        Route route = NUtils.getGameUI().routesWidget.routes.get(id);
+        NUtils.getGameUI().routesWidget.updateWaypoints();
+
+        if (route != null && route.waypoints != null) {
+            for (RoutePoint point : route.waypoints) {
+                Coord2d absCoord = point.toCoord2d(glob.map);
+                if (absCoord != null) {
+                    OCache.Virtual dummy = glob.oc.new Virtual(absCoord, 0);
+                    dummy.virtual = true;
+                    dummy.addcustomol(new RouteLabel(dummy, route));
+                    routeDummys.put(dummy.id, dummy);
+                    glob.oc.add(dummy);
+                }
+            }
+        }
+    }
+
     public void destroyDummys()
     {
         for(Gob d: dummys.values())
@@ -92,6 +115,16 @@ public class NMapView extends MapView
                 glob.oc.remove(d);
         }
         dummys.clear();
+    }
+
+    public void destroyRouteDummys()
+    {
+        for(Gob d: routeDummys.values())
+        {
+            if(glob.oc.getgob(d.id)!=null)
+                glob.oc.remove(d);
+        }
+        routeDummys.clear();
     }
 
     public static NMiningOverlay getMiningOl()
@@ -363,6 +396,35 @@ public class NMapView extends MapView
         return key;
     }
 
+    public String addRoute()
+    {
+        String key;
+        synchronized (NUtils.getGameUI().routesWidget.routes)
+        {
+            HashSet<String> names = new HashSet<String>();
+            int id = 0;
+            for(Route route : NUtils.getGameUI().routesWidget.routes.values())
+            {
+                if(route.id >= id)
+                {
+                    id = route.id + 1;
+                }
+                names.add(route.name);
+            }
+            key = ("New Route" + NUtils.getGameUI().routesWidget.routes.size());
+            while(names.contains(key))
+            {
+                key = key+"(1)";
+            }
+            Route newRoute = new Route(key);
+            newRoute.id = id;
+            newRoute.path = NUtils.getGameUI().routesWidget.currentPath;
+            NUtils.getGameUI().routesWidget.routes.put(id, newRoute);
+            createRouteLabel(id);
+        }
+        return key;
+    }
+
 
     @Override
     public void tick(double dt)
@@ -591,6 +653,12 @@ public class NMapView extends MapView
     {
         glob.map.areas.get(id).name = new_name;
         NConfig.needAreasUpdate();
+    }
+
+    public void changeRouteName(Integer id, String new_name)
+    {
+        NUtils.getGameUI().routesWidget.routes.get(id).name = new_name;
+        NConfig.needRoutesUpdate();
     }
 
     void getGob(Coord c) {

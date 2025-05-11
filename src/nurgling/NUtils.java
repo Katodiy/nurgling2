@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.text.*;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -303,6 +304,30 @@ public class NUtils
         }
     };
 
+    public static List<Gob> sortByNearest(List<Gob> gobs, Coord2d start) {
+        List<Gob> sorted = new ArrayList<>();
+        List<Gob> remaining = new ArrayList<>(gobs);
+
+        Coord2d current = start;
+
+        while (!remaining.isEmpty()) {
+            Coord2d finalCurrent = current;
+            Gob closest = remaining.stream()
+                    .min(Comparator.comparingDouble(g -> g.rc.dist(finalCurrent)))
+                    .orElse(null);
+
+            if (closest != null) {
+                sorted.add(closest);
+                remaining.remove(closest);
+                current = closest.rc;
+            } else {
+                break;
+            }
+        }
+
+        return sorted;
+    }
+
     public static Entry getAnimalEntity(Gob gob, Class<? extends Entry> cattleRoster ){
         GetAnimalEntry gae = new GetAnimalEntry(gob,cattleRoster);
         try {
@@ -441,6 +466,10 @@ public class NUtils
             ((NMapView) NUtils.getGameUI().map).destroyDummys();
             ((NMapView) NUtils.getGameUI().map).initDummys();
         }
+
+        if (NUtils.getGameUI().routesWidget.visible) {
+            ((NMapView) NUtils.getGameUI().map).initRouteDummys(NUtils.getGameUI().routesWidget.getSelectedRouteId());
+        }
     }
 
     public static void startBuild(Window window) {
@@ -508,6 +537,16 @@ public class NUtils
         return false;
     }
 
+    public static String getContentsOfBucket(WItem bucket) {
+        for(NGItem.NContent content : ((NGItem) bucket.item).content()) {
+            if (content.name().contains("l of")) {
+                return content.name();
+            }
+        }
+
+        return "";
+    }
+
     public static void dropLastSfx() {
         getUI().root.lastSfx = null;
     }
@@ -540,6 +579,32 @@ public class NUtils
             return hexString.toString();
         } catch (Exception e) {
             throw new RuntimeException("Ошибка при вычислении хэша SHA-256", e);
+        }
+    }
+
+    public static void openDoor(NGameUI gui) throws InterruptedException {
+        Gob arch = Finder.findGob(player().rc, new NAlias("gfx/terobjs/arch/stonestead", "gfx/terobjs/arch/stonemansion", "gfx/terobjs/arch/greathall", "gfx/terobjs/arch/primitivetent", "gfx/terobjs/arch/windmill", "gfx/terobjs/arch/stonetower", "gfx/terobjs/arch/logcabin", "gfx/terobjs/arch/timberhouse", "gfx/terobjs/minehole", "gfx/terobjs/ladder"), null, 100);
+        if (arch != null) {
+            if (NParser.checkName(arch.ngob.name, "gfx/terobjs/arch/greathall")) {
+                Coord2d A = new Coord2d(arch.ngob.hitBox.end.x, arch.ngob.hitBox.begin.y).rot(arch.a).add(arch.rc);
+                Coord2d B = new Coord2d(arch.ngob.hitBox.end.x, arch.ngob.hitBox.end.y).rot(arch.a).add(arch.rc);
+                Coord2d C = B.sub(A).div(2).add(A);
+                double a = A.add(B.sub(A).div(4)).dist(player().rc);
+                double b = B.add(A.sub(B).div(4)).dist(player().rc);
+                double c = C.dist(player().rc);
+                if (a < b && a < c)
+                    gui.map.wdgmsg("click", Coord.z, arch.rc.floor(posres), 3, 0, 1, (int) arch.id, arch.rc.floor(posres),
+                            0, 18);
+                else if (b < c && b < a)
+                    gui.map.wdgmsg("click", Coord.z, arch.rc.floor(posres), 3, 0, 1, (int) arch.id, arch.rc.floor(posres),
+                            0, 16);
+                else
+                    gui.map.wdgmsg("click", Coord.z, arch.rc.floor(posres), 3, 0, 1, (int) arch.id, arch.rc.floor(posres),
+                            0, 17);
+            } else {
+                gui.map.wdgmsg("click", Coord.z, arch.rc.floor(posres), 3, 0, 1, (int) arch.id, arch.rc.floor(posres),
+                        0, 16);
+            }
         }
     }
 }

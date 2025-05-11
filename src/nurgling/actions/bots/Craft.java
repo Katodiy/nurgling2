@@ -87,7 +87,7 @@ public class Craft implements Action {
                         context.addOutput(s.name, Context.GetOutput(s.name, outsa.getRCArea()));
                         size += s.count;
                     } else {
-                        context.addOutput(s.name, Context.GetOutput(s.name, area));
+                        context.addOutput(s.name, context.GetOutput(s.name, area));
                         size += s.count;
                     }
                 } else if (s.ing != null) {
@@ -99,7 +99,7 @@ public class Craft implements Action {
                         context.addOutput(s.ing.name, Context.GetOutput(s.ing.name, outsa.getRCArea()));
                         size += s.count;
                     } else {
-                        context.addOutput(s.name, Context.GetOutput(s.name, area));
+                        context.addOutput(s.name, context.GetOutput(s.name, area));
                         size += s.count;
                     }
                 }

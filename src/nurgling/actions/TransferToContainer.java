@@ -43,7 +43,9 @@ public class TransferToContainer implements Action{
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<WItem> witems;
         if (!(witems = gui.getInventory().getItems(items)).isEmpty() && (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.Space.class).getFreeSpace()!=0)) {
-            new PathFinder(container.gob).run(gui);
+            PathFinder pf = new PathFinder(container.gob);
+            pf.isHardMode = true;
+            pf.run(gui);
             if (th == -1)
                 witems = gui.getInventory().getItems(items);
             else
@@ -80,18 +82,19 @@ public class TransferToContainer implements Action{
                 }
 
             } else {
+                if(!witems.isEmpty()) {
+                    transfer_size = Math.min(gui.getInventory().getItems(items).size(), Math.min(witems.size(), gui.getInventory(container.cap).getNumberFreeCoord(witems.get(0))));
+                    if (container.getattr(Container.TargetItems.class) != null && container.getattr(Container.TargetItems.class).getRes().containsKey(Container.TargetItems.MAXNUM)) {
+                        int need = (Integer) container.getattr(Container.TargetItems.class).getRes().get(Container.TargetItems.MAXNUM) - (Integer) container.getattr(Container.TargetItems.class).getTargets(items);
+                        transfer_size = Math.min(transfer_size, need);
+                    }
 
-                transfer_size = Math.min(gui.getInventory().getItems(items).size(), Math.min(witems.size(), gui.getInventory(container.cap).getNumberFreeCoord(witems.get(0))));
-                if (container.getattr(Container.TargetItems.class) != null && container.getattr(Container.TargetItems.class).getRes().containsKey(Container.TargetItems.MAXNUM)) {
-                    int need = (Integer) container.getattr(Container.TargetItems.class).getRes().get(Container.TargetItems.MAXNUM) - (Integer) container.getattr(Container.TargetItems.class).getTargets(items);
-                    transfer_size = Math.min(transfer_size, need);
+                    int oldSpace = gui.getInventory(container.cap).getItems(items).size();
+                    for (int i = 0; i < transfer_size; i++) {
+                        witems.get(i).item.wdgmsg("transfer", Coord.z);
+                    }
+                    NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(container.cap), items, oldSpace + transfer_size));
                 }
-
-                int oldSpace = gui.getInventory(container.cap).getItems(items).size();
-                for (int i = 0; i < transfer_size; i++) {
-                    witems.get(i).item.wdgmsg("transfer", Coord.z);
-                }
-                NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(container.cap), items, oldSpace + transfer_size));
             }
             container.update();
         }

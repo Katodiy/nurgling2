@@ -200,9 +200,13 @@ public class NCore extends Widget
         {
             config.write();
         }
-        if( config.isAreasUpdated())
+        if (config.isAreasUpdated())
         {
             config.writeAreas(null);
+        }
+        if (config.isRoutesUpdated())
+        {
+            config.writeRoutes(null);
         }
         synchronized (tasks)
         {

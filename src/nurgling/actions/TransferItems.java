@@ -82,7 +82,7 @@ public class TransferItems implements Action
                 while (listIter.hasPrevious()) {
                     int th = listIter.previous();
                     NArea area = areas.get(th);
-                    for (Context.Output out : Context.GetOutput(item, area))
+                    for (Context.Output out : cnt.GetOutput(item, area))
                         cnt.addOutput(item, th, out);
 
                     if (cnt.getOutputs(item, th) != null) {
@@ -93,7 +93,9 @@ public class TransferItems implements Action
                             }
                             if (output instanceof Container) {
                                 if (((Context.OutputContainer) output).getArea() != null)
-                                    new TransferToContainer(cnt, (Context.OutputContainer) output, new NAlias(item), th).run(gui);
+                                    if(((Container.Space)((Context.OutputContainer) output).getattr(Container.Space.class))==null || !((Container.Space)((Context.OutputContainer) output).getattr(Container.Space.class)).isReady() || ((Container.Space)((Context.OutputContainer) output).getattr(Container.Space.class)).getFreeSpace()!=0) {
+                                        new TransferToContainer(cnt, (Context.OutputContainer) output, new NAlias(item), th).run(gui);
+                                    }
                             }
                             if (output instanceof Context.Barter) {
                                 if (((Context.OutputBarter) output).getArea() != null)

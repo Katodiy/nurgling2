@@ -13,7 +13,7 @@ public class GetItems extends NTask
     NInventory inventory;
     QualityType quality = null;
 
-    float th = -1;
+    float th = 1;
     boolean eq = false;
     GItem target = null;
 
@@ -96,7 +96,7 @@ public class GetItems extends NTask
                 {
                     if (name == null || (eq && !name.keys.isEmpty() ? item_name.equals(name.getDefault()) : NParser.checkName(item_name, name)))
                     {
-                        if(th == -1)
+                        if(th == 1)
                             result.add(item);
                         else if((((NGItem) item.item).quality)!=null && ((quality == QualityType.High || quality ==null) && ((NGItem) item.item).quality >= th) || (quality == QualityType.Low && ((NGItem) item.item).quality <= th))
                             result.add(item);

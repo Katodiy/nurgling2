@@ -67,6 +67,8 @@ public class NBotsMenu extends Widget
         farming.elements.add(new NButton("barley", new BarleyFarmerBarrels(), true));
         farming.elements.add(new NButton("millet", new MilletFarmer(), true));
         farming.elements.add(new NButton("wheat", new WheatFarmer(), true));
+        farming.elements.add(new NButton("poppy", new PoppyFarmer(), true));
+        farming.elements.add(new NButton("bee", new HoneyAndWaxCollector(), true));
         farming.elements.add(new NButton("chicken", new KFC(), true));
         addLayout(farming);
         NLayout utils = new NLayout("utils");
@@ -99,7 +101,7 @@ public class NBotsMenu extends Widget
         addLayout(build);
         if (NUtils.getUI().core.debug) {
             NLayout tests = new NLayout("tools");
-            tests.elements.add(new NButton("test1", new ReadJsonAction()));
+            //   tests.elements.add(new NButton("test1", new ReadJsonAction()));
             tests.elements.add(new NButton("test1", new TESTMapv4()));
             tests.elements.add(new NButton("test2", new TESTFillCauldron()));
             tests.elements.add(new NButton("test4", new TESTbranchinvtransferpacks()));

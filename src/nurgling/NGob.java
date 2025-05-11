@@ -20,6 +20,7 @@ import nurgling.widgets.NQuestInfo;
 import java.util.*;
 
 import static haven.MCache.cmaps;
+import static haven.OCache.posres;
 
 public class NGob {
     public NHitBox hitBox = null;
@@ -79,11 +80,17 @@ public class NGob {
                         {
                             Consobj consobj = (Consobj) ((ResDrawable) a).spr;
                             if(consobj.built!=null && (((Session.CachedRes.Ref)consobj.built.res).res)!=null) {
-                                for (Resource.Layer lay : ((Session.CachedRes.Ref) consobj.built.res).res.getLayers()) {
-                                    if (lay instanceof Resource.Neg) {
-                                        hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
-                                    } else if (lay instanceof Resource.Obstacle) {
-                                        hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                NHitBox custom = NHitBox.findCustom(((Session.CachedRes.Ref)consobj.built.res).res.name);
+                                if (custom != null) {
+                                    hitBox = custom;
+                                }
+                                else {
+                                    for (Resource.Layer lay : ((Session.CachedRes.Ref) consobj.built.res).res.getLayers()) {
+                                        if (lay instanceof Resource.Neg) {
+                                            hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                        } else if (lay instanceof Resource.Obstacle) {
+                                            hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                        }
                                     }
                                 }
                             }
@@ -251,7 +258,7 @@ public class NGob {
                     if (NUtils.getGameUI().ui.sess.glob.map.grids.containsKey(pltc.div(cmaps))) {
                         MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
                         StringBuilder hashInput = new StringBuilder();
-                        Coord coord = pltc.sub(g.ul);
+                        Coord coord = (parent.rc.sub(g.ul.mul(Coord2d.of(11, 11)))).floor();
                         hashInput.append(name).append(g.id).append(coord.toString());
                         hash = NUtils.calculateSHA256(hashInput.toString());
                         parent.setattr(new NGlobalSearch(parent));

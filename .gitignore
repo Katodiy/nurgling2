@@ -6,4 +6,6 @@
 /.idea
 /resources/compiled
 /out
+/resources/compiled
+/.idea
 *~

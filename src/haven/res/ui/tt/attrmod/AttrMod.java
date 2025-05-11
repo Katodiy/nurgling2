@@ -6,14 +6,11 @@ import static haven.PUtils.*;
 import java.util.*;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Resource.PublishedCode(name = "attrmod")
-@haven.FromResource(name = "ui/tt/attrmod", version = 11)
+@haven.FromResource(name = "ui/tt/attrmod", version = 12)
 public class AttrMod extends ItemInfo.Tip {
     public final Collection<Entry> tab;
-
-	public static final ConcurrentHashMap<String, BufferedImage> attrResCache = new ConcurrentHashMap<>();
 
     public AttrMod(Owner owner, Collection<Entry> tab) {
 	super(owner);
@@ -71,22 +68,4 @@ public class AttrMod extends ItemInfo.Tip {
 	    tablayout(l, tab);
 	}
     }
-
-	public static String buff = "128,255,128";
-	public static String debuff = "255,128,128";
-	public static BufferedImage modimg(Collection<Mod> mods) {
-		Collection<BufferedImage> lines = new ArrayList<BufferedImage>(mods.size());
-		for(Mod mod : mods) {
-			BufferedImage line = RichText.render(String.format("%s $col[%s]{%s%d}", mod.attr.name(),
-							(mod.mod < 0)?debuff:buff, (mod.mod < 0)?'-':'+', Math.abs((int)mod.mod)),
-					0).img;
-			if(attrResCache.get(mod.attr.name())==null) {
-				attrResCache.put(mod.attr.name(), convolvedown(mod.attr.icon(),
-						new Coord(line.getHeight(), line.getHeight()),
-						CharWnd.iconfilter));
-			}
-			lines.add(catimgsh(0, attrResCache.get(mod.attr.name()), line));
-		}
-		return(catimgs(0, lines.toArray(new BufferedImage[0])));
-	}
 }

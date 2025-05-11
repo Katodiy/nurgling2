@@ -8,7 +8,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 
 @Resource.PublishedCode(name = "attrmod")
-@haven.FromResource(name = "ui/tt/attrmod", version = 11)
+@haven.FromResource(name = "ui/tt/attrmod", version = 12)
 public abstract class Entry {
     public final Attribute attr;
 

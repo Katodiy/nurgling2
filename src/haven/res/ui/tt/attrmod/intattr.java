@@ -8,7 +8,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 
 @Resource.PublishedCode(name = "attrmod")
-@haven.FromResource(name = "ui/tt/attrmod", version = 11)
+@haven.FromResource(name = "ui/tt/attrmod", version = 12)
 public class intattr extends resattr {
     public intattr(Resource res) {
 	super(res);

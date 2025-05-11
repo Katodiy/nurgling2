@@ -8,7 +8,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 
 @Resource.PublishedCode(name = "attrmod")
-@haven.FromResource(name = "ui/tt/attrmod", version = 11)
+@haven.FromResource(name = "ui/tt/attrmod", version = 12)
 public class normattr extends resattr {
     public final int dec;
 
@@ -18,8 +18,11 @@ public class normattr extends resattr {
     }
 
     public String format(double val) {
-	return(String.format("%s{%s%s%%}",
+	String bval = (Math.abs(val) >= 10) ?
+	    String.format("%s\u00d7", Utils.odformat2(Math.abs(val), dec)) :
+	    String.format("%s%%", Utils.odformat2(Math.abs(val) * 100, dec));
+	return(String.format("%s{%s%s}",
 			     RichText.Parser.col2a((val < 0) ? debuff : buff),
-			     (val < 0) ? "-" : "+", Utils.odformat2(Math.abs(val) * 100, dec)));
+			     (val < 0) ? "-" : "+", bval));
     }
 }
