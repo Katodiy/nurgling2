@@ -489,10 +489,10 @@ public class NCookBook extends Window {
             recName = recipe.getName();
             this.text = add(new Label(recName),UI.scale(45,y_pos));
             icon = new TexI(Resource.remote().loadwait(recipe.getResourceName()).layer(Resource.imgc).img);
-            BufferedImage bi = new BufferedImage(x_shift,UI.scale(60), BufferedImage.TYPE_INT_ARGB);
+            BufferedImage bi = new BufferedImage(x_shift, UI.scale(60), BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = bi.createGraphics();
             int len = UI.scale(120);
-            BufferedImage wi = new BufferedImage(UI.scale(len),UI.scale(32), BufferedImage.TYPE_INT_ARGB);
+            BufferedImage wi = new BufferedImage(UI.scale(len), UI.scale(32), BufferedImage.TYPE_INT_ARGB);
             Graphics2D weight = wi.createGraphics();
             double cur = 0;
             double total = 0;
@@ -500,19 +500,40 @@ public class NCookBook extends Window {
                 graphics.setColor(fstyle.get(fep).color);
                 graphics.fillRect(fstyle.get(fep).pos.x, fstyle.get(fep).pos.y, UI.scale(40), UI.scale(30));
                 if (fep.contains("2")) {
-                    graphics.drawImage(NStyle.gmeter.render(String.format("%.2f", recipe.getFeps().get(fep).val)).img, fstyle.get(fep).pos.x + UI.scale(1), fstyle.get(fep).pos.y, null);
+                    BufferedImage textImage = NStyle.gmeter.render(String.format("%.2f", recipe.getFeps().get(fep).val)).img;
+
+                    int rectWidth = UI.scale(40);
+                    int rectHeight = UI.scale(24);
+
+                    int rectX = fstyle.get(fep).pos.x;
+                    int rectY = fstyle.get(fep).pos.y;
+
+                    int textX = rectX + (rectWidth - textImage.getWidth()) / 2;
+                    int textY = rectY + (rectHeight - textImage.getHeight()) / 2;
+
+                    graphics.drawImage(textImage, textX, textY, null);
                 } else {
-                    graphics.drawImage(NStyle.meter.render(String.format("%.2f", recipe.getFeps().get(fep).val)).img, fstyle.get(fep).pos.x + UI.scale(1), fstyle.get(fep).pos.y + UI.scale(1), null);
+                    BufferedImage textImage = NStyle.meter.render(String.format("%.2f", recipe.getFeps().get(fep).val)).img;
+
+                    int rectWidth = UI.scale(40);
+                    int rectHeight = UI.scale(30);
+
+                    int rectX = fstyle.get(fep).pos.x;
+                    int rectY = fstyle.get(fep).pos.y;
+
+                    int textX = rectX + (rectWidth - textImage.getWidth()) / 2;
+                    int textY = rectY + (rectHeight - textImage.getHeight()) / 2;
+
+                    graphics.drawImage(textImage, textX, textY, null);
                 }
                 weight.setColor(fstyle.get(fep).color);
-                weight.fillRect((int)Math.floor(cur*len),0,(int)Math.ceil(recipe.getFeps().get(fep).weigth*len),UI.scale(32));
-                cur+=recipe.getFeps().get(fep).weigth;
-                total +=recipe.getFeps().get(fep).val;
+                weight.fillRect((int)Math.floor(cur*len), 0, (int)Math.ceil(recipe.getFeps().get(fep).weigth*len), UI.scale(32));
+                cur += recipe.getFeps().get(fep).weigth;
+                total += recipe.getFeps().get(fep).val;
             }
             weightscale = new TexI(wi);
             StringBuilder str = new StringBuilder();
-            for(String ing: recipe.getIngredients().keySet())
-            {
+            for(String ing: recipe.getIngredients().keySet()) {
                 str.append(ing).append(": ").append(Utils.odformat2(recipe.getIngredients().get(ing),2)).append("%").append("\040");
             }
             ing = new TexI(ingfnd.render(str.toString(), UI.scale(250)).img);
@@ -524,7 +545,7 @@ public class NCookBook extends Window {
 
             feps = new TexI(bi);
 
-            sz =UI.scale(1285,60);
+            sz = UI.scale(1285,60);
         }
 
         @Override

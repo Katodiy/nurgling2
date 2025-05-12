@@ -122,7 +122,7 @@ public class Text implements Disposable {
     }
 
     public static class Foundry extends Forge {
-	private FontMetrics m;
+	public FontMetrics m;
 	public final Font font;
 	public final Color defcol;
 	public boolean aa = false;
