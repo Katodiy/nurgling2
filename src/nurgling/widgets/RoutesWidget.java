@@ -430,6 +430,7 @@ public class RoutesWidget extends Window {
                                                         rp.gobHash = selgob.getResult().ngob.hash;
                                                         rp.isDoor = !rp.isDoor;
                                                         NConfig.needRoutesUpdate();
+                                                        WaypointList.this.update(WaypointList.this.items.stream().map(ci -> ci.routePoint).toList());
                                                     }
                                                 } catch (Exception e) {
                                                     NUtils.getGameUI().error("Failed to select item: " + e.getMessage());
