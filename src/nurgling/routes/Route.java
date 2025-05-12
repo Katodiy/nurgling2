@@ -100,7 +100,11 @@ public class Route {
                 int x = localCoord.getInt("x");
                 int y = localCoord.getInt("y");
                 boolean isDoor = point.getBoolean("isDoor");
-                RoutePoint waypoint = new RoutePoint(gridId, new Coord(x, y), isDoor);
+                String gobHash = "";
+                if(point.has("gobHash")) {
+                    gobHash = point.getString("gobHash");
+                }
+                RoutePoint waypoint = new RoutePoint(gridId, new Coord(x, y), isDoor, gobHash);
                 
                 // Load neighbors if they exist
                 if (point.has("neighbors")) {
@@ -141,6 +145,7 @@ public class Route {
                 .put("x", waypoint.localCoord.x)
                 .put("y", waypoint.localCoord.y));
             waypointJson.put("isDoor", waypoint.isDoor);
+            waypointJson.put("gobHash", waypoint.gobHash);
             
             // Save neighbors
             JSONArray neighborsArray = new JSONArray();
