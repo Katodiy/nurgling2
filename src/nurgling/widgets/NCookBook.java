@@ -331,7 +331,25 @@ public class NCookBook extends Window {
                         Resource.loadsimg("nurgling/hud/buttons/cookbook/download/h")) {
             @Override
             public void click() {
-                // ... существующий код импорта ...
+                java.awt.EventQueue.invokeLater(() -> {
+                    JFileChooser fc = new JFileChooser();
+                    fc.setFileFilter(new FileNameExtensionFilter("food-info2 file", "json"));
+                    if(fc.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
+                        return;
+                    if(fc.getSelectedFile()!=null)
+                    {
+                        Thread t;
+                        (t = new Thread(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                new ReadJsonAction(fc.getSelectedFile().getAbsolutePath()).run(NUtils.getGameUI());
+                            }
+                        }, "food-info2_download")).start();
+                        NUtils.getGameUI().biw.addObserve(t);
+                    }
+                });
             }
         }, new Coord(rl.pos("ur").x - UI.scale(32), searchF.pos("br").y+UI.scale(10)));
         imp.settip("Import");
