@@ -830,6 +830,7 @@ public class OptWnd extends Window {
 	public Panel nautomap;
 	public Panel nqolwnd;
 	public Panel nringsettings;
+	public Panel ndatabase;
     public OptWnd(boolean gopts) {
 	super(Coord.z, "Options", true);
 	main = add(new Panel());
@@ -841,6 +842,7 @@ public class OptWnd extends Window {
 	nautomap = add( new NAutoMapperPanel(main));
 	nquickAct = add(new NQuickActionsPanel(main));
 	nringsettings = add(new NRingSettingsPanel(main));
+	ndatabase = add(new NDatabasePanel(main));
 
 	int y = 0;
 	int x = 0;
@@ -854,6 +856,7 @@ public class OptWnd extends Window {
 	main.add(new PButton(UI.scale(200), "Auto mapper", 'k', nautomap), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Keybindings", 'k', keybind), 0, y)).pos("bl").adds(0, 5).y;
 	main.add(new PButton(UI.scale(200), "Animal rings settings", 'k', nringsettings), x, prev.pos("ur").y);
+	y = (prev = main.add(new PButton(UI.scale(200), "Database settings", 'd', ndatabase), 0, y)).pos("bl").adds(0, 5).y;
 
 	y += UI.scale(60);
 	if(gopts) {
@@ -893,6 +896,44 @@ public class OptWnd extends Window {
 	chpanel(main);
 	super.show();
     }
+
+	public class NDatabasePanel extends Panel {
+		private final Widget save;
+		private final Widget back;
+
+		public DatabaseSettings dbSettings;
+
+		public NDatabasePanel(Panel prev1) {
+			super();
+
+			dbSettings = add(new DatabaseSettings(), Coord.z);
+
+			save = add(new Button(UI.scale(200), "Save") {
+				@Override
+				public void click() {
+					dbSettings.save();
+					NConfig.needUpdate();
+				}
+			}, dbSettings.pos("bl").adds(0, UI.scale(5)));
+
+			back = add(new Button(UI.scale(200), "Back") {
+				@Override
+				public void click() {
+					chpanel(prev1);
+				}
+
+				public boolean keydown(KeyDownEvent ev) {
+					if((ev.c == 27)) {
+						chpanel(prev1);
+						return(true);
+					}
+					return(false);
+				}
+			}, dbSettings.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
+
+			pack();
+		}
+	}
 
 	public class NQolPanel extends Panel  {
 		private final Widget save;

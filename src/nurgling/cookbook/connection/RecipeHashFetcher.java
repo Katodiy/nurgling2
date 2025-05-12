@@ -1,5 +1,6 @@
 package nurgling.cookbook.connection;
 
+import nurgling.NConfig;
 import nurgling.cookbook.Recipe;
 
 import java.sql.*;
@@ -22,15 +23,26 @@ public class RecipeHashFetcher implements Runnable {
 
     public void run() {
         try {
-            // Оптимизированный запрос с JOIN для загрузки всех данных за один проход
-            String query = "SELECT " +
-                    "r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
-                    "f.name as fep_name, f.value as fep_value, f.weight as fep_weight, " +
-                    "i.name as ing_name, i.percentage as ing_percentage " +
-                    "FROM recipes r " +
-                    "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash " +
-                    "LEFT JOIN ingredients i ON r.recipe_hash = i.recipe_hash " +
-                    "WHERE " + extractWhereClause(sql);
+            String query;
+            if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
+                query = "SELECT " +
+                        "r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
+                        "f.name as fep_name, f.value as fep_value, f.weight as fep_weight, " +
+                        "i.name as ing_name, i.percentage as ing_percentage " +
+                        "FROM recipes r " +
+                        "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash " +
+                        "LEFT JOIN ingredients i ON r.recipe_hash = i.recipe_hash " +
+                        "WHERE " + extractWhereClause(sql);
+            } else { // SQLite
+                query = "SELECT " +
+                        "r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
+                        "f.name as fep_name, f.value as fep_value, f.weight as fep_weight, " +
+                        "i.name as ing_name, i.percentage as ing_percentage " +
+                        "FROM recipes r " +
+                        "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash " +
+                        "LEFT JOIN ingredients i ON r.recipe_hash = i.recipe_hash " +
+                        "WHERE " + extractWhereClause(sql);
+            }
 
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(query);
@@ -88,15 +100,19 @@ public class RecipeHashFetcher implements Runnable {
     }
 
     private String extractWhereClause(String inputSql) {
+        if ((Boolean) NConfig.get(NConfig.Key.sqlite)) {
+            inputSql = inputSql.replace("ILIKE", "LIKE");
+        }
+
         // Если строка уже содержит SQL-ключевые слова (старый формат)
         if (inputSql.toLowerCase().contains("where") ||
                 inputSql.toLowerCase().contains("join") ||
                 inputSql.toLowerCase().contains("order by")) {
-            return extractWhereFromSql(inputSql);
+            return ((Boolean) NConfig.get(NConfig.Key.sqlite))?extractWhereFromSql(inputSql).replace("ILIKE", "LIKE"):extractWhereFromSql(inputSql);
         }
         // Если строка использует новый фильтрующий синтаксис
         else {
-            return parseFilterSyntax(inputSql);
+            return ((Boolean) NConfig.get(NConfig.Key.sqlite))?parseFilterSyntax(inputSql).replace("ILIKE", "LIKE"):parseFilterSyntax(inputSql);
         }
     }
 
@@ -216,10 +232,17 @@ public class RecipeHashFetcher implements Runnable {
     }
 
     public static String genFep(String type, boolean desc) {
-        return "FROM recipes r " +
-                "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash AND f.name = '" + type + "' " +
-                "GROUP BY r.recipe_hash, f.name, r.resource_name, r.hunger, r.energy, f.value " +
-                "ORDER BY COALESCE(f.value, 0) " + (desc ? "DESC" : "ASC");
+        if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
+            return "FROM recipes r " +
+                    "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash AND f.name = '" + type + "' " +
+                    "GROUP BY r.recipe_hash, f.name, r.resource_name, r.hunger, r.energy, f.value " +
+                    "ORDER BY COALESCE(f.value, 0) " + (desc ? "DESC" : "ASC");
+        } else { // SQLite
+            return "FROM recipes r " +
+                    "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash AND f.name = '" + type + "' " +
+                    "GROUP BY r.recipe_hash, r.resource_name, r.hunger, r.energy " +
+                    "ORDER BY IFNULL(f.value, 0) " + (desc ? "DESC" : "ASC");
+        }
     }
 
     public ArrayList<Recipe> getRecipes() {

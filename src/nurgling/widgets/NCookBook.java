@@ -19,6 +19,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -43,7 +44,6 @@ public class NCookBook extends Window {
     private TextEntry searchF;
     RecipeHashFetcher rhf = null;
 
-    RecipeHashFetcher currentRhf = null;
     static class Sort {
         String num;
         boolean desc;
@@ -71,10 +71,15 @@ public class NCookBook extends Window {
                 boolean res = super.keydown(e);
                 if(e.code==10)
                 {
-                    rhf = new RecipeHashFetcher(ui.core.poolManager.connection,
-                            searchF.text());
-                    ui.core.poolManager.submitTask(rhf);
-                    disable();
+                    try {
+                        rhf = new RecipeHashFetcher(ui.core.poolManager.getConnection(),
+                                searchF.text());
+                        ui.core.poolManager.submitTask(rhf);
+                        disable();
+                    }catch (SQLException err)
+                    {
+                        err.printStackTrace();
+                    }
                 }
                 return res;
             }
@@ -238,10 +243,16 @@ public class NCookBook extends Window {
     @Override
     public boolean show(boolean show) {
         if (show) {
-            rhf = new RecipeHashFetcher(ui.core.poolManager.connection,
-                    RecipeHashFetcher.genFep(currentSortType, currentSortDesc));
-            ui.core.poolManager.submitTask(rhf);
-            disable();
+            try {
+                rhf = new RecipeHashFetcher(ui.core.poolManager.getConnection(),
+                        RecipeHashFetcher.genFep(currentSortType, currentSortDesc));
+                ui.core.poolManager.submitTask(rhf);
+                disable();
+            }catch (SQLException e)
+            {
+                e.printStackTrace();
+            }
+
         }
         return super.show(show);
     }
