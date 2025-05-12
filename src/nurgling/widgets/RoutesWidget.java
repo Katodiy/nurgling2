@@ -401,7 +401,7 @@ public class RoutesWidget extends Window {
                 public boolean mousedown(MouseDownEvent ev) {
                     if (ev.b == 3) {
                         RoutePoint rp = item.routePoint;
-                        String label = rp.isDoor ? "Unmark as Special" : "Mark as Special";
+                        String label = rp.isDoor ? "Unmark as Door" : "Mark as Door";
                         menu = new NFlowerMenu(new String[]{label, "Navigate To", "Delete"}) {
                             @Override
                             public boolean mousedown(MouseDownEvent ev) {
