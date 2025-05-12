@@ -7,7 +7,10 @@ import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
+import nurgling.tasks.WaitForGobWithHash;
 import nurgling.tasks.WaitForMapLoad;
+import nurgling.tasks.WaitForPlayer;
+import nurgling.tools.Finder;
 
 import java.util.List;
 
@@ -66,12 +69,12 @@ public class RoutePointNavigator implements Action {
 
             new PathFinder(target).run(gui);
 
-
             // We open the door only when the current point is special and the next point in the path is unreachable
-            if(currentPoint.isDoor && nextPoint != null && nextPoint.toCoord2d(gui.map.glob.map) == null) {
-                NUtils.openDoor(gui);
+            if(currentPoint.isDoor && nextPoint != null && (nextPoint.toCoord2d(gui.map.glob.map) == null || nextPoint.isDoor)) {
+                NUtils.openDoorOnAGob(gui, Finder.findGob(currentPoint.gobHash));
                 // Wait until we can safely get coordinates for the next waypoint
                 NUtils.getUI().core.addTask(new WaitForMapLoad(nextPoint, gui));
+                NUtils.getUI().core.addTask(new WaitForGobWithHash(nextPoint.gobHash));
             }
         }
 

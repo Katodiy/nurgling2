@@ -6,6 +6,7 @@ import haven.Window;
 import nurgling.*;
 import nurgling.actions.bots.RouteAutoRecorder;
 import nurgling.actions.bots.RoutePointNavigator;
+import nurgling.actions.bots.SelectGob;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
 import org.json.JSONArray;
@@ -417,7 +418,23 @@ public class RoutesWidget extends Window {
                             public void nchoose(NPetal option) {
                                 if (option != null) {
                                     if (option.name.equals(label)) {
-                                        rp.isDoor = !rp.isDoor;
+                                        Thread t = new Thread(() -> {
+                                            try {
+                                                SelectGob selgob;
+                                                (selgob = new SelectGob(Resource.loadsimg("baubles/selectItem"))).run(NUtils.getGameUI());
+                                                if (selgob != null) {
+                                                    // Do something with the selected Gob
+                                                    NUtils.getGameUI().msg("Selected: " + selgob.getResult());
+                                                    rp.gobHash = selgob.getResult().ngob.hash;
+                                                    rp.isDoor = !rp.isDoor;
+                                                    NConfig.needRoutesUpdate();
+                                                }
+                                            } catch (Exception e) {
+                                                NUtils.getGameUI().error("Failed to select item: " + e.getMessage());
+                                            }
+                                        }, "SelectGob");
+                                        t.start();
+                                        NUtils.getGameUI().biw.addObserve(t);
                                         WaypointList.this.update(WaypointList.this.items.stream().map(ci -> ci.routePoint).toList());
                                     } else if (option.name.equals("Navigate To")) {
                                         startNavigation(rp);
