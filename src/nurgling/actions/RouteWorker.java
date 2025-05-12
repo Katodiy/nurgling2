@@ -11,6 +11,7 @@ public class RouteWorker implements Action {
     private final Route route;
     private final Action action;
     private final boolean backtrack;
+    private Thread workerThread;
 
     // When to come back to the start (Optional);
     private NTask predicate = null;
