@@ -10,6 +10,7 @@ import java.util.*;
 public class NStyle {
     public static Text.Foundry fcomboitems = new Text.Foundry(Text.sans, 16).aa(true);
     public static Text.Furnace meter = new PUtils.BlurFurn(new Text.Foundry(Text.sans, 12, Color.WHITE).aa(true), 2, 1, new Color(60, 30, 30));
+    public static Text.Furnace gmeter = new PUtils.BlurFurn(new Text.Foundry(Text.sans, 12, new Color(102, 178, 12)).aa(true), 2, 1, new Color(60, 30, 30));
     public static Text.Foundry areastitle = new Text.Foundry(Text.serif, 15, Color.WHITE);
     public static Text.Foundry flower = new Text.Foundry(Text.sans, 12, new Color(255, 250, 205)).aa(true);
     public static Text.Foundry iiqual = new Text.Foundry(Text.sans, 12, new Color(0, 0, 0)).aa(true);
