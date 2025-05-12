@@ -2,11 +2,13 @@ package nurgling.routes;
 
 import haven.*;
 import nurgling.NUtils;
+import nurgling.actions.PathFinder;
 
 import java.util.*;
 
 public class RouteGraph {
     private final int MAX_DISTANCE_FOR_NEIGHBORS = 250;
+    private final int MAX_UNRELATED_DISTANCE_FOR_NEIGHBORS = 1;
     private final Map<Integer, RoutePoint> points = new HashMap<>();
     private final Map<Long, ArrayList<RoutePoint>> pointsByGridId = new HashMap<>();
 
@@ -21,7 +23,7 @@ public class RouteGraph {
         points.clear();
     }
 
-    public void generateNeighboringConnections(RoutePoint waypoint) {
+    public void generateNeighboringConnections(RoutePoint waypoint) throws InterruptedException {
         MCache cache = NUtils.getGameUI().ui.sess.glob.map;
         Coord2d waypointRelativeCoords = waypoint.toCoord2d(cache);
 
@@ -29,7 +31,8 @@ public class RouteGraph {
             Coord2d pointRelativeCoords = point.toCoord2d(cache);
             if (pointRelativeCoords != null) {
                 double distanceToAVisibleNode = waypointRelativeCoords.dist(pointRelativeCoords);
-                if (distanceToAVisibleNode <= MAX_DISTANCE_FOR_NEIGHBORS) {
+                boolean isReachable = PathFinder.isAvailableInRange(pointRelativeCoords, MAX_UNRELATED_DISTANCE_FOR_NEIGHBORS);
+                if (distanceToAVisibleNode <= MAX_DISTANCE_FOR_NEIGHBORS && isReachable) {
                     waypoint.addNeighbor(point.id);
                     point.addNeighbor(waypoint.id);
                 }

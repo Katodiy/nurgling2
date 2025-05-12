@@ -8,7 +8,6 @@ import nurgling.actions.bots.RouteAutoRecorder;
 import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
-import nurgling.tools.RouteCreator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -43,8 +42,9 @@ public class RoutesWidget extends Window {
         IButton createBtn = add(new IButton(NStyle.add[0].back, NStyle.add[1].back, NStyle.add[2].back) {
             @Override
             public void click() {
-                NUtils.getGameUI().msg("Creating Route");
-                new Thread(new RouteCreator()).start();
+                ((NMapView) NUtils.getGameUI().map).addRoute();
+                NConfig.needRoutesUpdate();
+                showRoutes();
             }
         }, p);
         createBtn.settip("Create new route");

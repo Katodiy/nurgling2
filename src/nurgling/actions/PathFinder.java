@@ -383,6 +383,50 @@ public class PathFinder implements Action {
         return pf.construct(true) != null;
     }
 
+    public static boolean isAvailableInRange(Coord2d target, int maxGridSize) throws InterruptedException {
+        PathFinder pf = new PathFinder(target);
+        LinkedList<Graph.Vertex> path = new LinkedList<>();
+        int mul = 1;
+        NUtils.getGameUI().msg("Starting path check to target at " + target);
+        while (path.size() == 0 && mul <= maxGridSize) {
+            NUtils.getGameUI().msg("Trying grid size: " + mul);
+            pf.pfmap = new NPFMap(pf.begin, pf.end, mul);
+            if(pf.pfmap.bad) {
+                NUtils.getGameUI().msg("Grid build failed at size " + mul);
+                return false;
+            }
+            pf.pfmap.build();
+            pf.start_pos = Utils.toPfGrid(pf.begin).sub(pf.pfmap.getBegin());
+            pf.end_pos = Utils.toPfGrid(pf.end).sub(pf.pfmap.getBegin());
+            
+            NUtils.getGameUI().msg("Start pos: " + pf.start_pos + ", End pos: " + pf.end_pos);
+            
+            if (!pf.fixStartEnd(true)) {
+                NUtils.getGameUI().msg("Failed to fix start/end positions");
+                return false;
+            }
+
+            if (pf.pfmap.getCells()[pf.end_pos.x][pf.end_pos.y].val == 7) {
+                NUtils.getGameUI().msg("End position is valid, trying to find path");
+                Graph res = new Graph(pf.pfmap, pf.start_pos, pf.end_pos);
+                Thread th = new Thread(res);
+                th.start();
+                th.join();
+                if (res.path != null && !res.path.isEmpty()) {
+                    NUtils.getGameUI().msg("Found valid path!");
+                    return true;
+                } else {
+                    NUtils.getGameUI().msg("No path found at current grid size");
+                }
+            } else {
+                NUtils.getGameUI().msg("End position is not valid (val: " + pf.pfmap.getCells()[pf.end_pos.x][pf.end_pos.y].val + ")");
+            }
+            mul++;
+        }
+        NUtils.getGameUI().msg("Exhausted all grid sizes up to " + maxGridSize + ", no path found");
+        return false;
+    }
+
     public PathFinder(Gob dummy, boolean virtual) {
         this(dummy);
         this.dummy = dummy;
