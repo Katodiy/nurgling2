@@ -13,6 +13,7 @@ public class RoutePoint {
     public long gridId;
     public Coord localCoord;
     public boolean isDoor = false;
+    public String gobHash = "";
 
     private ArrayList<Integer> neighbors = new ArrayList<>();
 
@@ -25,11 +26,12 @@ public class RoutePoint {
         this.id = hashCode();
     }
 
-    public RoutePoint(long gridId, Coord localCoord, boolean isDoor) {
+    public RoutePoint(long gridId, Coord localCoord, boolean isDoor, String gobHash) {
         this.name = "";
         this.gridId = gridId;
         this.localCoord = localCoord;
         this.isDoor = isDoor;
+        this.gobHash = gobHash;
         this.id = hashCode();
     }
 

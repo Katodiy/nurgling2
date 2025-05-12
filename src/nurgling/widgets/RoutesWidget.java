@@ -6,9 +6,9 @@ import haven.Window;
 import nurgling.*;
 import nurgling.actions.bots.RouteAutoRecorder;
 import nurgling.actions.bots.RoutePointNavigator;
+import nurgling.actions.bots.SelectGob;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
-import nurgling.tools.RouteCreator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -43,8 +43,9 @@ public class RoutesWidget extends Window {
         IButton createBtn = add(new IButton(NStyle.add[0].back, NStyle.add[1].back, NStyle.add[2].back) {
             @Override
             public void click() {
-                NUtils.getGameUI().msg("Creating Route");
-                new Thread(new RouteCreator()).start();
+                ((NMapView) NUtils.getGameUI().map).addRoute();
+                NConfig.needRoutesUpdate();
+                showRoutes();
             }
         }, p);
         createBtn.settip("Create new route");
@@ -364,6 +365,9 @@ public class RoutesWidget extends Window {
                 actionContainer.hide();
                 waypointList.hide();
             }
+            waypointList.update(route.waypoints);
+            specList.update(routeList.sel.route);
+            ((NMapView) NUtils.getGameUI().map).initRouteDummys(routeList.sel.route.id);
         }
     }
 
@@ -376,6 +380,18 @@ public class RoutesWidget extends Window {
 
         NFlowerMenu menu;
 
+        private void startNavigation(RoutePoint point) {
+            Thread t = new Thread(() -> {
+                try {
+                    new RoutePointNavigator(point).run(NUtils.getGameUI());
+                } catch (InterruptedException e) {
+                    NUtils.getGameUI().error("Navigation interrupted by the user");
+                }
+            }, "RoutePointNavigator");
+            t.start();
+            NUtils.getGameUI().biw.addObserve(t);
+        }
+
         @Override
         protected Widget makeitem(CoordItem item, int idx, Coord sz) {
             return new ItemWidget<CoordItem>(this, sz, item) {{
@@ -385,7 +401,7 @@ public class RoutesWidget extends Window {
                 public boolean mousedown(MouseDownEvent ev) {
                     if (ev.b == 3) {
                         RoutePoint rp = item.routePoint;
-                        String label = rp.isDoor ? "Unmark as Special" : "Mark as Special";
+                        String label = rp.isDoor ? "Unmark as Door" : "Mark as Door";
                         menu = new NFlowerMenu(new String[]{label, "Navigate To", "Delete"}) {
                             @Override
                             public boolean mousedown(MouseDownEvent ev) {
@@ -403,7 +419,28 @@ public class RoutesWidget extends Window {
                             public void nchoose(NPetal option) {
                                 if (option != null) {
                                     if (option.name.equals(label)) {
-                                        rp.isDoor = !rp.isDoor;
+                                        if(!rp.isDoor) {
+                                            Thread t = new Thread(() -> {
+                                                try {
+                                                    SelectGob selgob;
+                                                    (selgob = new SelectGob(Resource.loadsimg("baubles/selectItem"))).run(NUtils.getGameUI());
+                                                    if (selgob != null) {
+                                                        // Do something with the selected Gob
+                                                        NUtils.getGameUI().msg("Selected: " + selgob.getResult());
+                                                        rp.gobHash = selgob.getResult().ngob.hash;
+                                                        rp.isDoor = !rp.isDoor;
+                                                        NConfig.needRoutesUpdate();
+                                                        WaypointList.this.update(WaypointList.this.items.stream().map(ci -> ci.routePoint).toList());
+                                                    }
+                                                } catch (Exception e) {
+                                                    NUtils.getGameUI().error("Failed to select item: " + e.getMessage());
+                                                }
+                                            }, "SelectGob");
+                                            t.start();
+                                            NUtils.getGameUI().biw.addObserve(t);
+                                        } else {
+                                            rp.isDoor = !rp.isDoor;
+                                        }
                                         WaypointList.this.update(WaypointList.this.items.stream().map(ci -> ci.routePoint).toList());
                                     } else if (option.name.equals("Navigate To")) {
                                         new Thread(() -> {
@@ -416,6 +453,8 @@ public class RoutesWidget extends Window {
                                     } else if (option.name.equals("Delete")) {
                                         routeList.sel.route.deleteWaypoint(rp);
                                         waypointList.update(routeList.sel.route.waypoints);
+                                        specList.update(routeList.sel.route);
+                                        ((NMapView) NUtils.getGameUI().map).initRouteDummys(routeList.sel.route.id);
                                     }
                                 }
                                 uimsg("cancel");
@@ -430,13 +469,7 @@ public class RoutesWidget extends Window {
                         ui.root.add(menu, pos.add(UI.scale(25, 38)));
                         return true;
                     } else if (ev.b == 1) {
-                        new Thread(() -> {
-                            try {
-                                new RoutePointNavigator(item.routePoint).run(NUtils.getGameUI());
-                            } catch (InterruptedException e) {
-                                NUtils.getGameUI().error("Navigation interrupted: " + e.getMessage());
-                            }
-                        }, "RoutePointNavigator").start();
+                        startNavigation(item.routePoint);
                         return true;
                     }
                     return super.mousedown(ev);
