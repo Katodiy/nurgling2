@@ -334,9 +334,9 @@ public class NCore extends Widget
                 PreparedStatement fepsStatement = connection.prepareStatement(getInsertFepsSQL());
 
                 NFoodInfo fi = item.getInfo(NFoodInfo.class);
-                String hunger = Utils.odformat2(2 * fi.glut / (1 + Math.sqrt(item.quality / 10)) * 100, 2);
+                String hunger = Utils.odformat2(2 * fi.glut / (1 + Math.sqrt(item.quality / 10)) * 1000, 2);
                 StringBuilder hashInput = new StringBuilder();
-                hashInput.append(item.getres().name).append((int) (100 * fi.energy()));
+                hashInput.append(item.name).append((int) (100 * fi.energy()));
 
                 for (ItemInfo info : item.info) {
                     if (info instanceof Ingredient) {

@@ -22,7 +22,7 @@ public class ReadJsonAction implements Action {
     public Results run(NGameUI gui) {
         try (FileReader fileReader = new FileReader(path)) {
             JSONArray foodItems = new JSONArray(new JSONTokener(fileReader));
-            loadDataIntoDatabase(gui.ui.core.poolManager.connection, foodItems);
+            loadDataIntoDatabase(gui.ui.core.poolManager.getConnection(), foodItems);
             System.out.println("Data imported successfully");
         } catch (Exception e) {
             e.printStackTrace();

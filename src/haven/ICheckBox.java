@@ -103,4 +103,6 @@ public class ICheckBox extends ACheckBox {
     public void mousemove(MouseMoveEvent ev) {
 	this.h = checkhit(ev.c);
     }
+
+	public void action(){}
 }

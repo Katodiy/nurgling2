@@ -255,8 +255,6 @@ public class NGob {
                         MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
                         StringBuilder hashInput = new StringBuilder();
                         Coord coord = (parent.rc.sub(g.ul.mul(Coord2d.of(11, 11)))).floor(posres);
-                        if(name!=null && name.contains("borka"))
-                            NUtils.getGameUI().msg(coord.toString());
                         hashInput.append(name).append(g.id).append(coord.toString());
                         hash = NUtils.calculateSHA256(hashInput.toString());
                         parent.setattr(new NGlobalSearch(parent));

@@ -29,7 +29,7 @@ import static haven.CharWnd.ifnd;
 public class NCookBook extends Window {
 
     public static int x_shift = UI.scale(360);
-    public static int btnx_shift = UI.scale(12);
+    public static int btnx_shift = UI.scale(8);
     private ReceiptsList rl;
     public static final RichText.Foundry ingfnd = new RichText.Foundry(RichText.ImageSource.res(Resource.remote()),
             java.awt.font.TextAttribute.FAMILY, "SansSerif", java.awt.font.TextAttribute.SIZE, UI.scale(12)).aa(true);
@@ -44,6 +44,9 @@ public class NCookBook extends Window {
     private TextEntry searchF;
     RecipeHashFetcher rhf = null;
 
+    private ICheckBox onetwo; // Добавляем поле для хранения кнопки onetwo
+    private ICheckBox[] statButtons; // Массив для хранения кнопок статов
+    private ICheckBox activeStatButton = null;
     static class Sort {
         String num;
         boolean desc;
@@ -56,16 +59,22 @@ public class NCookBook extends Window {
 
     static ArrayList<Sort> sorting = new ArrayList<>();
     static {
-        sorting.add(new Sort("2", true));
-        sorting.add(new Sort("1", true));
-        sorting.add(new Sort("1", false));
-        sorting.add(new Sort("2", false));
+        sorting.add(new Sort("2", true)); // Только по убыванию
+        sorting.add(new Sort("1", true)); // Только по убыванию
     }
 
-    public NCookBook() {
-        super(UI.scale(new Coord(1200, 510)), "Cook Book");
+    static int col1 = UI.scale(45);    // Name
+    static int col2 = UI.scale(555);   // Ingredients
+    static int col3 = UI.scale(855);   // FEP/Hunger (расширен с 555+250)
+    static int col4 = UI.scale(935);   // Total FEP (расширен)
+    static int col5 = UI.scale(1015);  // Hunger (расширен)
+    static int col6 = UI.scale(1095);  // Energy (расширен)
 
-        searchF = add(new TextEntry(UI.scale(1190), "") {
+    public NCookBook() {
+        super(UI.scale(new Coord(1300, 550)), "Cook Book");
+        statButtons = new ICheckBox[9];
+
+        searchF = add(new TextEntry(UI.scale(1290), "") {
             @Override
             public boolean keydown(KeyDownEvent e) {
                 boolean res = super.keydown(e);
@@ -85,103 +94,252 @@ public class NCookBook extends Window {
             }
         },UI.scale(3,0));
 
+        int headerY = searchF.pos("br").y + UI.scale(25); // Подняли выше для выравнивания с кнопками
+
+
+        Coord headerPos = new Coord(0, searchF.pos("br").y + UI.scale(35));
+        add(new Label("Name"), new Coord(col1, headerY));
+        add(new Label("Ingredients"), new Coord(col2, headerY));
+        add(new Label("FEP/Hunger"), new Coord(col3, headerY));
+        add(new Label("Total FEP"), new Coord(col4, headerY));
+        add(new Label("Hunger"), new Coord(col5, headerY));
+        add(new Label("Energy"), new Coord(col6, headerY));
+
+
         // Кнопки сортировки
-        Widget prev = add(new Button(30, "Str") {
-            int id = 0;
+        prev = add(statButtons[0] = new ICheckBox(new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/str/u")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/str/d")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/str/h")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/str/dh"))) {
             @Override
             public void click() {
-                Sort sr = sorting.get(id++ % 4);
-                sortRecipes("Strength +" + sr.num, sr.desc);
+                super.click();
+                action();
             }
-        },new Coord(x_shift/2+UI.scale(7),searchF.pos("br").y+UI.scale(10)));
 
-        prev = add(new Button(30, "Agi") {
-            int id = 0;
-            @Override
-            public void click() {
-                Sort sr = sorting.get(id++ % 4);
-                sortRecipes("Agility +" + sr.num, sr.desc);
+            public void action()
+            {
+                // Деактивируем все другие кнопки
+                for (ICheckBox btn : statButtons) {
+                    if (btn != this) btn.set(false);
+                }
+                activeStatButton = this;
+                // Получаем значение для сортировки из состояния onetwo
+                String num = onetwo.state() ? "2" : "1";
+                sortRecipes("Strength +" + num, true);
             }
-        }, prev.pos("ur").add(btnx_shift, 0));
 
-        prev = add(new Button(30, "Int") {
-            int id = 0;
+        }, new Coord(x_shift/2+UI.scale(5),searchF.pos("br").y+UI.scale(10)));
+
+        // Аналогично для остальных кнопок статов...
+        prev = add(statButtons[1] = new ICheckBox(new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/agi/u")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/agi/d")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/agi/h")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/agi/dh"))) {
             @Override
             public void click() {
-                Sort sr = sorting.get(id++ % 4);
-                sortRecipes("Intelligence +" + sr.num, sr.desc);
+                super.click();
+                action();
             }
-        }, prev.pos("ur").add(btnx_shift, 0));
 
-        prev = add(new Button(30, "Con") {
-            int id = 0;
-            @Override
-            public void click() {
-                Sort sr = sorting.get(id++ % 4);
-                sortRecipes("Constitution +" + sr.num, sr.desc);
-            }
-        }, prev.pos("ur").add(btnx_shift, 0));
-
-        prev = add(new Button(30, "Per") {
-            int id = 0;
-            @Override
-            public void click() {
-                Sort sr = sorting.get(id++ % 4);
-                sortRecipes("Perception +" + sr.num, sr.desc);
-            }
-        }, prev.pos("ur").add(btnx_shift, 0));
-
-        prev = add(new Button(30, "Cha") {
-            int id = 0;
-            @Override
-            public void click() {
-                Sort sr = sorting.get(id++ % 4);
-                sortRecipes("Charisma +" + sr.num, sr.desc);
+            public void action()
+            {
+                for (ICheckBox btn : statButtons) {
+                    if (btn != this) btn.set(false);
+                }
+                activeStatButton = this;
+                String num = onetwo.state() ? "2" : "1";
+                sortRecipes("Agility +" + num, true);
             }
         }, prev.pos("ur").add(btnx_shift, 0));
 
-        prev = add(new Button(30, "Dex") {
+        prev = add(statButtons[2] = new ICheckBox(new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/int/u")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/int/d")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/int/h")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/int/dh"))) {
             int id = 0;
             @Override
             public void click() {
-                Sort sr = sorting.get(id++ % 4);
-                sortRecipes("Dexterity +" + sr.num, sr.desc);
+                super.click();
+                action();
             }
-        }, prev.pos("ur").add(btnx_shift, 0));
 
-        prev = add(new Button(30, "Wil") {
-            int id = 0;
-            @Override
-            public void click() {
-                Sort sr = sorting.get(id++ % 4);
-                sortRecipes("Will +" + sr.num, sr.desc);
+            public void action()
+            {
+                for (ICheckBox btn : statButtons) {
+                    if (btn != this) btn.set(false);
+                }
+                activeStatButton = this;
+                String num = onetwo.state() ? "2" : "1";
+                sortRecipes("Intelligence +" + num, true);
             }
         }, prev.pos("ur").add(btnx_shift, 0));
 
 
-        prev = add(new Button(30, "Psy") {
+        prev = add(statButtons[3] = new ICheckBox(new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/cons/u")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/cons/d")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/cons/h")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/cons/dh"))) {
             int id = 0;
             @Override
             public void click() {
-                Sort sr = sorting.get(id++ % 4);
-                sortRecipes("Psyche +" + sr.num, sr.desc);
+                super.click();
+                action();
+            }
+
+            public void action()
+            {
+                for (ICheckBox btn : statButtons) {
+                    if (btn != this) btn.set(false);
+                }
+                activeStatButton = this;
+                String num = onetwo.state() ? "2" : "1";
+                sortRecipes("Constitution +" + num, true);
             }
         }, prev.pos("ur").add(btnx_shift, 0));
 
-        // Кнопка импорта
-        IButton imp = add(new IButton(NStyle.importb[0].back, NStyle.importb[1].back, NStyle.importb[2].back) {
+
+        prev = add(statButtons[4] = new ICheckBox(new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/per/u")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/per/d")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/per/h")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/per/dh"))) {
+            @Override
+            public void click() {
+                super.click();
+                action();
+            }
+
+            public void action()
+            {
+                for (ICheckBox btn : statButtons) {
+                    if (btn != this) btn.set(false);
+                }
+                activeStatButton = this;
+                String num = onetwo.state() ? "2" : "1";
+                sortRecipes("Perception +" + num, true);
+            }
+        }, prev.pos("ur").add(btnx_shift, 0));
+
+        prev = add(statButtons[5] = new ICheckBox(new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/cha/u")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/cha/d")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/cha/h")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/cha/dh"))) {
+            @Override
+            public void click() {
+                super.click();
+                action();
+            }
+
+            public void action()
+            {
+                for (ICheckBox btn : statButtons) {
+                    if (btn != this) btn.set(false);
+                }
+                activeStatButton = this;
+                String num = onetwo.state() ? "2" : "1";
+                sortRecipes("Charisma +" + num, true);
+            }
+        }, prev.pos("ur").add(btnx_shift, 0));
+
+        prev = add(statButtons[6] = new ICheckBox(new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/dex/u")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/dex/d")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/dex/h")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/dex/dh"))) {
+            int id = 0;
+            @Override
+            public void click() {
+                super.click();
+                action();
+            }
+
+            public void action()
+            {
+                for (ICheckBox btn : statButtons) {
+                    if (btn != this) btn.set(false);
+                }
+                activeStatButton = this;
+                String num = onetwo.state() ? "2" : "1";
+                sortRecipes("Dexterity +" + num, true);
+            }
+
+        }, prev.pos("ur").add(btnx_shift, 0));
+
+        prev = add(statButtons[7] = new ICheckBox(new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/wil/u")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/wil/d")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/wil/h")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/wil/dh"))) {
+            int id = 0;
+            @Override
+            public void click() {
+                super.click();
+                action();
+            }
+
+            public void action()
+            {
+                for (ICheckBox btn : statButtons) {
+                    if (btn != this) btn.set(false);
+                }
+                activeStatButton = this;
+                String num = onetwo.state() ? "2" : "1";
+                sortRecipes("Will +" + num, true);
+            }
+        }, prev.pos("ur").add(btnx_shift, 0));
+
+
+        prev = add(statButtons[8] = new ICheckBox(new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/psy/u")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/psy/d")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/psy/h")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/psy/dh"))) {
+            @Override
+            public void click() {
+                super.click();
+                action();
+            }
+
+            public void action()
+            {
+                for (ICheckBox btn : statButtons) {
+                    if (btn != this) btn.set(false);
+                }
+                activeStatButton = this;
+                String num = onetwo.state() ? "2" : "1";
+                sortRecipes("Psyche +" + num, true);
+            }
+        }, prev.pos("ur").add(btnx_shift, 0));
+
+        prev = add(onetwo = new ICheckBox(new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/onetwo/u")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/onetwo/d")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/onetwo/h")),
+                new TexI(Resource.loadsimg("nurgling/hud/buttons/cookbook/onetwo/dh"))) {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+                if (activeStatButton != null) {
+                    activeStatButton.action();
+                }
+            }
+        }, new Coord(x_shift/2-UI.scale(32),searchF.pos("br").y+UI.scale(10)));
+
+
+
+        // Список рецептов
+        prev = add(rl = new ReceiptsList(UI.scale(new Coord(1290,400))),UI.scale(0, headerY + UI.scale(30)));
+
+        IButton imp = add(new IButton(Resource.loadsimg("nurgling/hud/buttons/cookbook/download/u"),
+                        Resource.loadsimg("nurgling/hud/buttons/cookbook/download/d"),
+                        Resource.loadsimg("nurgling/hud/buttons/cookbook/download/h")) {
             @Override
             public void click() {
                 // ... существующий код импорта ...
             }
-        }, prev.pos("ur").adds(UI.scale(25, 0)));
+        }, new Coord(rl.pos("ur").x - UI.scale(32), searchF.pos("br").y+UI.scale(10)));
         imp.settip("Import");
 
-        // Список рецептов
-        prev = add(rl = new ReceiptsList(UI.scale(new Coord(1190,400))), UI.scale(0, 50+searchF.pos("br").y));
-
         // Кнопки пагинации
-        prev = add(new Button(UI.scale(100), "Back") {
+        prev = add(new IButton(Resource.loadsimg("nurgling/hud/buttons/cookbook/left/u"),
+                Resource.loadsimg("nurgling/hud/buttons/cookbook/left/d"),
+                Resource.loadsimg("nurgling/hud/buttons/cookbook/left/h")) {
             @Override
             public void click() {
                 if (currentPage > 0) {
@@ -189,9 +347,11 @@ public class NCookBook extends Window {
                     updateDisplayedRecipes();
                 }
             }
-        }, prev.pos("br").add(UI.scale(-220, 5)));
+        }, prev.pos("br").add(UI.scale(-74, 5)));
 
-        add(new Button(UI.scale(100), "Next") {
+        add(new IButton(Resource.loadsimg("nurgling/hud/buttons/cookbook/right/u"),
+                Resource.loadsimg("nurgling/hud/buttons/cookbook/right/d"),
+                Resource.loadsimg("nurgling/hud/buttons/cookbook/right/h")) {
             @Override
             public void click() {
                 int maxPage = (sortedRecipes.size() + PAGE_SIZE - 1) / PAGE_SIZE - 1;
@@ -313,7 +473,7 @@ public class NCookBook extends Window {
             icon = new TexI(Resource.remote().loadwait(recipe.getResourceName()).layer(Resource.imgc).img);
             BufferedImage bi = new BufferedImage(x_shift,UI.scale(60), BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = bi.createGraphics();
-            int len = UI.scale(180);
+            int len = UI.scale(120);
             BufferedImage wi = new BufferedImage(UI.scale(len),UI.scale(32), BufferedImage.TYPE_INT_ARGB);
             Graphics2D weight = wi.createGraphics();
             double cur = 0;
@@ -339,14 +499,14 @@ public class NCookBook extends Window {
             }
             ing = new TexI(ingfnd.render(str.toString(), UI.scale(250)).img);
 
-            add(new Label(Utils.odformat2(total/recipe.getHunger(),2)),UI.scale(555+250,y_pos));
-            add(new Label(Utils.odformat2(total,2)),UI.scale(595+250,y_pos));
-            add(new Label(Utils.odformat2(recipe.getHunger(),2)),UI.scale(635+250,y_pos));
-            add(new Label(Utils.odformat2(recipe.getEnergy(),2)),UI.scale(675+250,y_pos));
+            add(new Label(Utils.odformat2(total/recipe.getHunger(),2)), UI.scale(col3, y_pos));
+            add(new Label(Utils.odformat2(total,2)), UI.scale(col4, y_pos));
+            add(new Label(Utils.odformat2(recipe.getHunger(),2)), UI.scale(col5, y_pos));
+            add(new Label(Utils.odformat2(recipe.getEnergy(),2)), UI.scale(col6, y_pos));
 
             feps = new TexI(bi);
 
-            sz = UI.scale(1185,60);
+            sz =UI.scale(1285,60);
         }
 
         @Override
@@ -354,7 +514,7 @@ public class NCookBook extends Window {
             g.image(icon,UI.scale(4,12), UI.scale(32,32));
             g.image(feps,UI.scale(180,5));
             g.image(ing,UI.scale(555,0));
-            g.image(weightscale,UI.scale(745+250,12));
+            g.image(weightscale,new Coord(col6+UI.scale(50), UI.scale(12)));
             super.draw(g);
         }
 
@@ -393,7 +553,7 @@ public class NCookBook extends Window {
 
         @Override
         public void resize(Coord sz) {
-            super.resize(new Coord(UI.scale(1190, sz.y)));
+            super.resize(new Coord(UI.scale(1290, sz.y)));
         }
 
         protected Widget makeitem(RecieptItem item, int idx, Coord sz) {
