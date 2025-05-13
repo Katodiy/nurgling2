@@ -1,6 +1,8 @@
 package nurgling.tools;
 
 import haven.Coord;
+import haven.Coord2d;
+import haven.MCache;
 import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.widgets.NMiniMap;
@@ -64,7 +66,6 @@ public class FogArea {
                         rect.history = new HashSet<>();
                         rect.history.add(ul_grid_id);
                         rect.history.add(br_grid_id);
-                        rect.loading = false;
 
                         // Добавляем в список
                         rectangles.add(rect);
@@ -94,12 +95,12 @@ public class FogArea {
                 this.br = br;
                 ulgrid = miniMap.c2p(ul.sub(miniMap.dloc.tc)).floor(tilesz);
                 brgrid = miniMap.c2p(br.sub(miniMap.dloc.tc)).floor(tilesz);
+                trySetGridId();
             }
-            trySetGridId();
         }
 
         private void trySetGridId() {
-            if(NUtils.getGameUI().ui.sess.glob.map.checkGrid(ulgrid) && NUtils.getGameUI().ui.sess.glob.map.checkGrid(brgrid)) {
+            if(NUtils.getGameUI().ui.sess.glob.map.checkGrid(ulgrid.div(cmaps)) && NUtils.getGameUI().ui.sess.glob.map.checkGrid(brgrid.div(cmaps))) {
                 this.ul_id = NUtils.getGameUI().ui.sess.glob.map.getgrid(ulgrid.div(cmaps)).id;
                 this.br_id = NUtils.getGameUI().ui.sess.glob.map.getgrid(brgrid.div(cmaps)).id;
                 this.cul = ulgrid.sub(NUtils.getGameUI().ui.sess.glob.map.getgrid(ulgrid.div(cmaps)).ul);
@@ -151,7 +152,36 @@ public class FogArea {
             {
                 if(ul == null || br == null)
                 {
+                    if(miniMap.curloc!=null && miniMap.dloc!=null && miniMap.curloc.seg.id == seg_id)
+                    {
+                        if(miniMap.curloc.seg.map.containsValue(ul_id))
+                        {
+                            for(MCache.Grid grid : NUtils.getGameUI().map.glob.map.grids.values())
+                            {
+                                if(grid.id == ul_id)
+                                {
+                                    Coord2d ulc = grid.gc.mul(cmaps).add(cul).mul(tilesz);
+                                    ul = miniMap.p2c(ulc).add(miniMap.dloc.tc);
+                                    ulgrid = miniMap.c2p(ul.sub(miniMap.dloc.tc)).floor(tilesz);
+                                    break;
+                                }
+                            }
 
+                        }
+                        if(miniMap.curloc.seg.map.containsValue(br_id))
+                        {
+                            for(MCache.Grid grid : NUtils.getGameUI().map.glob.map.grids.values())
+                            {
+                                if(grid.id == br_id)
+                                {
+                                    Coord2d brc = grid.gc.mul(cmaps).add(cbr).mul(tilesz);
+                                    br = miniMap.p2c(brc).add(miniMap.dloc.tc);
+                                    brgrid = miniMap.c2p(br.sub(miniMap.dloc.tc)).floor(tilesz);
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
                 else {
                     trySetGridId();
@@ -197,9 +227,17 @@ public class FogArea {
 
     public void tick(double dt)
     {
-        if(NUtils.getGameUI()!=null && newRect!=null && newRect.loading)
-        {
-            newRect.tick(dt);
+        if(NUtils.getGameUI()!=null) {
+            if (newRect != null && newRect.loading) {
+                newRect.tick(dt);
+            }
+            for(Rectangle rect: rectangles)
+            {
+                if(rect.loading)
+                {
+                    rect.tick(dt);
+                }
+            }
         }
         updateNew();
     }
@@ -226,10 +264,12 @@ public class FogArea {
 
             // Вычитаем все существующие прямоугольники из нового
             for (Rectangle existing : rectangles) {
-                if (newRect.sameGrid(existing)) {
+                if (!existing.loading && newRect.sameGrid(existing)) {
                     List<Rectangle> temp = new ArrayList<>();
                     for (Rectangle part : nonOverlappingParts) {
-                        temp.addAll(part.subtract(existing));
+                        if(!part.loading) {
+                            temp.addAll(part.subtract(existing));
+                        }
                     }
                     nonOverlappingParts = temp;
                     if (nonOverlappingParts.isEmpty()) break;
@@ -330,7 +370,7 @@ public class FogArea {
             result.put(rectangle.toJson());
         }
         JSONObject doc = new JSONObject();
-        doc.put("rectangles",rectangles);
+        doc.put("rectangles",result);
         return doc;
     }
 }

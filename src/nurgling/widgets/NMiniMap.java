@@ -125,7 +125,7 @@ public class NMiniMap extends MiniMap implements Console.Directory {
         try(Locked lk = new Locked(file.lock.readLock())) {
             for (FogArea.Rectangle rect : fogArea.getCoveredAreas()) {
                 MapFile.GridInfo gi = file.gridinfo.get(rect.ul_id);
-                if (gi != null && curloc.seg.id == rect.seg_id) {
+                if (gi != null && curloc.seg.id == rect.seg_id && rect.ul!=null && rect.br!=null) {
                     g.frect2(rect.ul.sub(dloc.tc), rect.br.sub(dloc.tc));
                 }
             }
