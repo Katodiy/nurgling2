@@ -29,7 +29,7 @@ package haven;
 import java.awt.Color;
 
 public class Label extends Widget {
-    Text.Foundry f;
+    public Text.Foundry f;
     Text text;
     String texts;
     Color col = Color.WHITE;

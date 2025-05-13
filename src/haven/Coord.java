@@ -268,4 +268,8 @@ public class Coord implements Comparable<Coord>, java.io.Serializable {
 	return(of(Math.max(this.x, x), Math.max(this.y, y)));
     }
     public Coord max(Coord c) {return(max(c.x, c.y));}
+
+	public int manhattan2(Coord c) {
+		return Math.max(Math.abs(c.x - x), Math.abs(c.y - y));
+	}
 }

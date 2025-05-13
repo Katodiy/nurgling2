@@ -29,7 +29,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     String s_end;
     String s_glut;
     String s_end_glut;
-    double fepSum = 0;
+    public double fepSum = 0;
     double efficiency = 100;
     boolean isVarity;
     double expeted_fep;

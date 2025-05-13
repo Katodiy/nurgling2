@@ -203,17 +203,17 @@ public class NewsFeed extends SListBox<NewsFeed.Entry, Widget> {
 		}
 	    })
 	{
-		DocumentBuilderFactory conf = DocumentBuilderFactory.newInstance();
-		conf.setNamespaceAware(true);
-		List<Entry> ret = new ArrayList<>();
+	    DocumentBuilderFactory conf = DocumentBuilderFactory.newInstance();
+	    conf.setNamespaceAware(true);
+	    List<Entry> ret = new ArrayList<>();
 //	    els(conf.newDocumentBuilder().parse(fp).getDocumentElement(), ATOM, "entry").forEach(data -> ret.add(new Entry(data)));
-		return(ret);
+	    return(ret);
 	} /*catch(ParserConfigurationException e) {
 	    throw(new RuntimeException(e));
 	} catch(SAXException e) {
 	    throw(new IOException("feed syntax error", e));
 	}*/
-	}
+    }
 
     public static void main(String... args) throws IOException {
 	for(Entry ent : fetch()) {

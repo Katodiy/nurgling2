@@ -607,4 +607,29 @@ public class NUtils
             }
         }
     }
+
+    public static void openDoorOnAGob(NGameUI gui, Gob arch) throws InterruptedException {
+        if (arch != null) {
+            if (NParser.checkName(arch.ngob.name, "gfx/terobjs/arch/greathall")) {
+                Coord2d A = new Coord2d(arch.ngob.hitBox.end.x, arch.ngob.hitBox.begin.y).rot(arch.a).add(arch.rc);
+                Coord2d B = new Coord2d(arch.ngob.hitBox.end.x, arch.ngob.hitBox.end.y).rot(arch.a).add(arch.rc);
+                Coord2d C = B.sub(A).div(2).add(A);
+                double a = A.add(B.sub(A).div(4)).dist(player().rc);
+                double b = B.add(A.sub(B).div(4)).dist(player().rc);
+                double c = C.dist(player().rc);
+                if (a < b && a < c)
+                    gui.map.wdgmsg("click", Coord.z, arch.rc.floor(posres), 3, 0, 1, (int) arch.id, arch.rc.floor(posres),
+                            0, 18);
+                else if (b < c && b < a)
+                    gui.map.wdgmsg("click", Coord.z, arch.rc.floor(posres), 3, 0, 1, (int) arch.id, arch.rc.floor(posres),
+                            0, 16);
+                else
+                    gui.map.wdgmsg("click", Coord.z, arch.rc.floor(posres), 3, 0, 1, (int) arch.id, arch.rc.floor(posres),
+                            0, 17);
+            } else {
+                gui.map.wdgmsg("click", Coord.z, arch.rc.floor(posres), 3, 0, 1, (int) arch.id, arch.rc.floor(posres),
+                        0, 16);
+            }
+        }
+    }
 }

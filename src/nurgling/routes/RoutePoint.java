@@ -2,6 +2,7 @@ package nurgling.routes;
 
 import haven.Coord;
 import haven.Coord2d;
+import haven.Coord3f;
 import haven.MCache;
 
 import java.util.*;
@@ -12,6 +13,7 @@ public class RoutePoint {
     public long gridId;
     public Coord localCoord;
     public boolean isDoor = false;
+    public String gobHash = "";
 
     private ArrayList<Integer> neighbors = new ArrayList<>();
 
@@ -24,12 +26,13 @@ public class RoutePoint {
         this.id = hashCode();
     }
 
-    public RoutePoint(long gridId, Coord localCoord, boolean isDoor) {
+    public RoutePoint(long gridId, Coord localCoord, boolean isDoor, String gobHash) {
         this.name = "";
-        this.id = hashCode();
         this.gridId = gridId;
         this.localCoord = localCoord;
         this.isDoor = isDoor;
+        this.gobHash = gobHash;
+        this.id = hashCode();
     }
 
     public void addNeighbor(int id) {
@@ -45,6 +48,15 @@ public class RoutePoint {
             if (grid.id == gridId) {
                 Coord tilec = grid.ul.add(localCoord);
                 return tilec.mul(MCache.tilesz);
+            }
+        }
+        return null;
+    }
+
+    public Coord3f toCoord3f(MCache mcache) {
+        for (MCache.Grid grid : mcache.grids.values()) {
+            if (grid.id == gridId) {
+                return mcache.getzp(grid.ul.add(localCoord).mul(MCache.tilesz));
             }
         }
         return null;

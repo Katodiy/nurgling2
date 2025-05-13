@@ -164,11 +164,7 @@ public class NCore extends Widget
     {
         if((Boolean) NConfig.get(NConfig.Key.ndbenable) && poolManager == null)
         {
-            try {
-                poolManager = new DBPoolManager(1);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            poolManager = new DBPoolManager(1);
         }
 
         if(!(Boolean) NConfig.get(NConfig.Key.ndbenable) && poolManager != null)
@@ -300,23 +296,48 @@ public class NCore extends Widget
             this.item = item;
         }
 
-        final private static String insertRecipeSQL = "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
-        final private static String insertIngredientSQL = "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
-        final private static String insertFepsSQL = "INSERT INTO feps (recipe_hash, name, value) VALUES (?, ?, ?)";
+        // Заменяем константы на методы, генерирующие SQL в зависимости от СУБД
+        private String getInsertRecipeSQL() {
+            if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
+                return "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
+            } else { // SQLite
+                return "INSERT OR IGNORE INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
+            }
+        }
+
+        private String getInsertIngredientSQL() {
+            if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
+                return "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
+            } else { // SQLite
+                return "INSERT OR IGNORE INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
+            }
+        }
+
+        private String getInsertFepsSQL() {
+            if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
+                return "INSERT INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
+            } else { // SQLite
+                return "INSERT OR IGNORE INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
+            }
+        }
 
         @Override
         public void run() {
+            // Проверяем, активирована ли какая-либо СУБД
+            if (!(Boolean) NConfig.get(NConfig.Key.postgres) && !(Boolean) NConfig.get(NConfig.Key.sqlite)) {
+                return;
+            }
+
             try {
-
-
-                PreparedStatement recipeStatement = connection.prepareStatement(insertRecipeSQL);
-                PreparedStatement ingredientStatement = connection.prepareStatement(insertIngredientSQL);
-                PreparedStatement fepsStatement = connection.prepareStatement(insertFepsSQL);
+                // Создаем prepared statements с правильными SQL-запросами
+                PreparedStatement recipeStatement = connection.prepareStatement(getInsertRecipeSQL());
+                PreparedStatement ingredientStatement = connection.prepareStatement(getInsertIngredientSQL());
+                PreparedStatement fepsStatement = connection.prepareStatement(getInsertFepsSQL());
 
                 NFoodInfo fi = item.getInfo(NFoodInfo.class);
-                String hunger = Utils.odformat2(2 * fi.glut / (1 + Math.sqrt(item.quality / 10)) * 100, 2);
+                String hunger = Utils.odformat2(2 * fi.glut / (1 + Math.sqrt(item.quality / 10)) * 1000, 2);
                 StringBuilder hashInput = new StringBuilder();
-                hashInput.append(item.getres().name).append((int) (100 * fi.energy()));
+                hashInput.append(item.name).append((int) (100 * fi.energy()));
 
                 for (ItemInfo info : item.info) {
                     if (info instanceof Ingredient) {
@@ -327,6 +348,7 @@ public class NCore extends Widget
 
                 String recipeHash = NUtils.calculateSHA256(hashInput.toString());
 
+                // Устанавливаем параметры для запроса рецепта
                 recipeStatement.setString(1, recipeHash);
                 recipeStatement.setString(2, item.name());
                 recipeStatement.setString(3, item.getres().name);
@@ -345,11 +367,13 @@ public class NCore extends Widget
                     }
                 }
 
+                double multiplier = Math.sqrt(item.quality / 10.0);
                 // Вставляем эффекты (FEPS)
                 for (FoodInfo.Event ef : fi.evs) {
                     fepsStatement.setString(1, recipeHash);
                     fepsStatement.setString(2, ef.ev.nm);
-                    fepsStatement.setDouble(3, ef.a / fi.cons);
+                    fepsStatement.setDouble(3, Double.parseDouble(Utils.odformat2(ef.a / multiplier, 2)));
+                    fepsStatement.setDouble(4, Double.parseDouble(Utils.odformat2(ef.a / fi.fepSum, 2)));
                     fepsStatement.executeUpdate();
                 }
 
@@ -366,8 +390,17 @@ public class NCore extends Widget
                     ex.printStackTrace();
                 }
 
-                if (!e.getSQLState().equals("23505")) {  // Код ошибки для нарушения уникальности
-                    e.printStackTrace();
+                // Для PostgreSQL проверяем код ошибки нарушения уникальности
+                if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
+                    if (!e.getSQLState().equals("23505")) {
+                        e.printStackTrace();
+                    }
+                }
+                // Для SQLite просто игнорируем ошибки уникальности (благодаря INSERT OR IGNORE)
+                else if ((Boolean) NConfig.get(NConfig.Key.sqlite)) {
+                    if (!e.getMessage().contains("UNIQUE constraint")) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -375,7 +408,11 @@ public class NCore extends Widget
 
     public void writeNGItem(NGItem item) {
         NGItemWriter ngItemWriter = new NGItemWriter(item);
-        ngItemWriter.connection = poolManager.connection;
+        try {
+            ngItemWriter.connection = poolManager.getConnection();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         poolManager.submitTask(ngItemWriter);
     }
 
@@ -383,7 +420,11 @@ public class NCore extends Widget
     {
         if(gob.gob!=null) {
             ContainerWatcher cw = new ContainerWatcher(gob);
-            cw.connection = poolManager.connection;
+            try {
+                cw.connection = poolManager.getConnection();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             poolManager.submitTask(cw);
         }
     }
@@ -391,7 +432,11 @@ public class NCore extends Widget
     public void writeItemInfoForContainer(ArrayList<ItemWatcher.ItemInfo> iis) {
 
         ItemWatcher itemWatcher = new ItemWatcher(iis);
-        itemWatcher.connection = poolManager.connection;
+        try {
+            itemWatcher.connection = poolManager.getConnection();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         poolManager.submitTask(itemWatcher);
 
     }
@@ -401,7 +446,11 @@ public class NCore extends Widget
     public void searchContainer(NSearchItem item) {
 
         NGlobalSearchItems gsi = new NGlobalSearchItems(item);
-        gsi.connection = poolManager.connection;
+        try {
+            gsi.connection = poolManager.getConnection();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         poolManager.submitTask(gsi);
 
     }

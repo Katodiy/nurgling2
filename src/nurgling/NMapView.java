@@ -32,6 +32,7 @@ public class NMapView extends MapView
         for(int i = 0 ; i < MCache.customolssize; i++)
         toggleol("hareas", true);
         toggleol("minesup", true);
+        basic.add(glob.oc.paths);
     }
 
     final HashMap<String, String> ttip = new HashMap<>();

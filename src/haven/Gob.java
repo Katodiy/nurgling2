@@ -486,6 +486,9 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 
     void removed() {
 	removed = true;
+	for(GAttrib a : attr.values()) {
+		ngob.checkattr(null,id,a);
+	}
     }
 
     private void deferred() {
@@ -664,7 +667,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 		    if(prev instanceof RenderTree.Node) {
 			RUtils.multiadd(this.slots, (RenderTree.Node)prev);
 			attr.put(ac, prev);
-			ngob.checkattr(a, id);
+			ngob.checkattr(a, id, prev);
 		    }
 		    if(prev instanceof SetupMod)
 			setupmods.add((SetupMod)prev);
@@ -674,10 +677,14 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	    if(a instanceof SetupMod)
 		setupmods.add((SetupMod)a);
 	    attr.put(ac, a);
-		ngob.checkattr(a, id);
+		ngob.checkattr(a, id, prev);
 	}
-	if(prev != null)
-	    prev.dispose();
+	if(prev != null) {
+		if (a == null) {
+			ngob.checkattr(null, id, prev);
+		}
+		prev.dispose();
+	}
     }
 
     public void setattr(GAttrib a) {

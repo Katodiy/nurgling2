@@ -17,7 +17,8 @@ CREATE TABLE feps (
                       id SERIAL PRIMARY KEY,
                       recipe_hash VARCHAR(64) REFERENCES recipes (recipe_hash) ON DELETE CASCADE,  -- Внешний ключ
                       name VARCHAR(255) NOT NULL,
-                      value FLOAT NOT NULL
+                      value FLOAT NOT NULL,
+                      weight FLOAT NOT NULL
 );
 
 CREATE TABLE containers (

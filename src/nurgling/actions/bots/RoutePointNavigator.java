@@ -7,8 +7,12 @@ import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
+import nurgling.tasks.WaitForGobWithHash;
 import nurgling.tasks.WaitForMapLoad;
+import nurgling.tasks.WaitGobModelAttrChange;
+import nurgling.tools.Finder;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class RoutePointNavigator implements Action {
@@ -55,10 +59,15 @@ public class RoutePointNavigator implements Action {
         // Navigate the path
         for (int i = 0; i<path.size(); i++) {
             RoutePoint currentPoint = path.get(i);
+            RoutePoint previousPoint = null;
             RoutePoint nextPoint = null;
 
             if(i<path.size()-1) {
                 nextPoint = path.get(i+1);
+            }
+
+            if(i-1 >= 0) {
+                previousPoint = path.get(i-1);
             }
 
             Coord2d target = path.get(i).toCoord2d(gui.map.glob.map);
@@ -66,15 +75,60 @@ public class RoutePointNavigator implements Action {
 
             new PathFinder(target).run(gui);
 
+            if(previousPoint != null && currentPoint.isDoor && previousPoint.isDoor && previousPoint.toCoord2d(gui.map.glob.map) != null) {
+                // close door
+                Gob gob = Finder.findGob(currentPoint.gobHash);
+                if(gob != null && !isGobDoor(gob) && isDoorOpen(gob)) {
+                    NUtils.openDoorOnAGob(gui, gob);
+                    NUtils.getUI().core.addTask(new WaitGobModelAttrChange(gob, gob.ngob.getModelAttribute()));
+                }
+            }
 
-            // We open the door only when the current point is special and the next point in the path is unreachable
-            if(currentPoint.isDoor && nextPoint != null && nextPoint.toCoord2d(gui.map.glob.map) == null) {
-                NUtils.openDoor(gui);
-                // Wait until we can safely get coordinates for the next waypoint
-                NUtils.getUI().core.addTask(new WaitForMapLoad(nextPoint, gui));
+            // Open door when need to
+            if(currentPoint.isDoor && nextPoint != null && (nextPoint.toCoord2d(gui.map.glob.map) == null || nextPoint.isDoor) && needToPassDoor(currentPoint, nextPoint, gui)) {
+                Gob gob = Finder.findGob(currentPoint.gobHash);
+
+                if(gob == null) {
+                    gui.error("Door not found.");
+                    return Results.FAIL();
+                }
+
+                if (isGobDoor(gob)) {
+                    // enter through the door
+                    NUtils.openDoorOnAGob(gui, gob);
+                    // Wait until we can safely get coordinates for the next waypoint
+                    NUtils.getUI().core.addTask(new WaitForMapLoad(nextPoint, gui));
+                    NUtils.getUI().core.addTask(new WaitForGobWithHash(nextPoint.gobHash));
+                } else {
+                    // open gate if its closed
+                    if(!isDoorOpen(gob)) {
+                        NUtils.openDoorOnAGob(gui, gob);
+                        NUtils.getUI().core.addTask(new WaitGobModelAttrChange(gob, gob.ngob.getModelAttribute()));
+                    }
+                }
             }
         }
 
         return Results.SUCCESS();
+    }
+
+    private boolean isDoorOpen(Gob gob) {
+        return gob.ngob.getModelAttribute() == 1;
+    }
+
+    private boolean isGobDoor(Gob gob) {
+        List<String> listOfDoors = Arrays.asList("stonestead", "stonemansion", "greathall", "primitivetent", "windmill", "stonetower", "logcabin", "timberhouse", "minehole", "ladder", "stairs", "cellardoor");
+        for (String door : listOfDoors) {
+            if(gob.ngob.name.contains(door)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean needToPassDoor(RoutePoint currentPoint, RoutePoint nextPoint, NGameUI gui) {
+        Gob gob = Finder.findGob(currentPoint.gobHash);
+        return currentPoint.gobHash.equals(nextPoint.gobHash) || nextPoint.toCoord2d(gui.map.glob.map) == null || gob.ngob.name.contains("stairs");
     }
 } 

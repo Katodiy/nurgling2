@@ -80,7 +80,7 @@ public class NConfig
         smokeprop,
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
-        serverNode, serverUser, serverPass, ndbenable, harvestautorefill, simplecrops
+        serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops
     }
 
 
@@ -131,6 +131,9 @@ public class NConfig
         conf.put(Key.simplecrops, true);
         conf.put(Key.ndbenable, false);
         conf.put(Key.harvestautorefill, false);
+        conf.put(Key.sqlite, false);
+        conf.put(Key.postgres, false);
+        conf.put(Key.dbFilePath, "");
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -566,6 +569,16 @@ public class NConfig
                 NUtils.getGameUI().routesWidget.routes.put(a.id, a);
             }
         }
+    }
+
+    public static Set<NPathVisualizer.PathCategory> getPathCategories() {
+        HashSet<NPathVisualizer.PathCategory> res = new HashSet<>();
+        res.add(NPathVisualizer.PathCategory.ME);
+        res.add(NPathVisualizer.PathCategory.FOE);
+        res.add(NPathVisualizer.PathCategory.OTHER);
+        res.add(NPathVisualizer.PathCategory.FRIEND);
+        res.add(NPathVisualizer.PathCategory.GPF);
+        return res;
     }
 
 }

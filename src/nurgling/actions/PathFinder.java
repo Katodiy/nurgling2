@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.*;
 import static nurgling.pf.Graph.getPath;
 
 public class PathFinder implements Action {
+    private final int VISIBLE_AREA = 41;
     public static double pfmdelta = 1.5;
     NPFMap pfmap = null;
     Coord start_pos = null;
@@ -117,6 +118,9 @@ public class PathFinder implements Action {
         LinkedList<Graph.Vertex> path = new LinkedList<>();
         int mul = 1;
         while (path.size() == 0 && mul < 1000) {
+            if(test && gridIsBiggerThanVisibleArea(mul)) {
+                break;
+            }
             pfmap = new NPFMap(begin, end, mul);
             if(pfmap.bad) {
                 if (test) {
@@ -472,5 +476,13 @@ public class PathFinder implements Action {
 
     boolean getDNStatus() {
         return dn;
+    }
+
+    boolean gridIsBiggerThanVisibleArea(int mul) {
+            int size = VISIBLE_AREA;
+            Coord2d a = new Coord2d(Math.min(begin.x, end.x), Math.min(begin.y, end.y));
+            Coord2d b = new Coord2d(Math.max(begin.x, end.x), Math.max(begin.y, end.y));
+            int dsize = Math.min(size, Math.max(8,((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul));
+            return dsize == VISIBLE_AREA;
     }
 }

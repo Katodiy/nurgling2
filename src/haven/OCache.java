@@ -63,7 +63,7 @@ public class OCache implements Iterable<Gob> {
     private MultiMap<Long, Gob> objs = new HashMultiMap<Long, Gob>();
     private Glob glob;
     private final Collection<ChangeCallback> cbs = new WeakList<ChangeCallback>();
-
+	public final NPathVisualizer paths = new NPathVisualizer();
     public interface ChangeCallback {
 	public void added(Gob ob);
 	public void removed(Gob ob);
@@ -126,6 +126,7 @@ public class OCache implements Iterable<Gob> {
 	    copy.forEach(task);
 	else
 	    copy.parallelStream().forEach(task);
+	paths.tick(dt);
     }
 
     public void gtick(Render g) {

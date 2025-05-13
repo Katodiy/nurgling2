@@ -24,6 +24,7 @@ import static haven.Inventory.invsq;
 
 public class NGameUI extends GameUI
 {
+    public boolean nomadMod = false;
     NBotsMenu botsMenu;
     public NAlarmWdg alarmWdg;
     public NQuestInfo questinfo;
@@ -261,6 +262,7 @@ public class NGameUI extends GameUI
         super.resize(sz);
         guiinfo.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
         areas.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
+        cookBook.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
         nean.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
         spec.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
         biw.move(new Coord(sz.x / 2 - biw.sz.x / 2, sz.y / 2 - biw.sz.y / 2));

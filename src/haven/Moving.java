@@ -39,4 +39,11 @@ public abstract class Moving extends GAttrib {
     public Object staticp() {
 	return(null);
     }
+
+    abstract public Coord3f gett();
+
+    @Override
+    public void dispose() {
+        gob.ngob.checkattr(null,gob.id,this);
+    }
 }
