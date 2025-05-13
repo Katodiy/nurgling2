@@ -198,7 +198,7 @@ public class NPFMap
 
 
 
-    public NPFMap(Coord2d src, Coord2d tgt, int mul) throws InterruptedException {
+    public NPFMap(Coord2d src, Coord2d tgt, int mul) {
         Coord2d a = new Coord2d(Math.min(src.x, tgt.x), Math.min(src.y, tgt.y));
         Coord2d b = new Coord2d(Math.max(src.x, tgt.x), Math.max(src.y, tgt.y));
         Coord center = Utils.toPfGrid((a.add(b)).div(2));
