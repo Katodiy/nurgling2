@@ -199,6 +199,10 @@ public class NCore extends Widget
         {
             config.writeAreas(null);
         }
+        if (config.isFogUpdated())
+        {
+            config.writeFogOfWar(null);
+        }
         if (config.isRoutesUpdated())
         {
             config.writeRoutes(null);

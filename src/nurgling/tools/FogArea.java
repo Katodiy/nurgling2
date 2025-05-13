@@ -1,10 +1,19 @@
 package nurgling.tools;
 
 import haven.Coord;
+import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.widgets.NMiniMap;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
@@ -15,12 +24,59 @@ public class FogArea {
     private Coord lastUL, lastBR;
 
     Rectangle newRect = null;
+
+
     public FogArea(NMiniMap miniMap) {
-        this.miniMap = miniMap;
+        this.miniMap = miniMap; // вызов основного конструктора
+        if(new File(NConfig.current.path_fog).exists()) {
+            StringBuilder contentBuilder = new StringBuilder();
+            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_fog), StandardCharsets.UTF_8)) {
+                stream.forEach(s -> contentBuilder.append(s).append("\n"));
+            } catch (IOException ignore) {
+            }
+
+            if (!contentBuilder.toString().isEmpty()) {
+
+                JSONObject json = new JSONObject(contentBuilder.toString());
+                if (json.has("rectangles")) {
+                    JSONArray rectanglesArray = json.getJSONArray("rectangles");
+                    for (int i = 0; i < rectanglesArray.length(); i++) {
+                        JSONObject rectJson = rectanglesArray.getJSONObject(i);
+
+                        // Получаем данные из JSON
+                        JSONObject jul = rectJson.getJSONObject("ul");
+                        JSONObject jbr = rectJson.getJSONObject("br");
+                        long seg_id = rectJson.getLong("seg");
+
+                        // Восстанавливаем координаты
+                        long ul_grid_id = jul.getLong("grid_id");
+                        long br_grid_id = jbr.getLong("grid_id");
+                        Coord cul = new Coord(jul.getInt("x"), jul.getInt("y"));
+                        Coord cbr = new Coord(jbr.getInt("x"), jbr.getInt("y"));
+
+                        // Создаем временный прямоугольник
+                        Rectangle rect = new Rectangle(null, null, seg_id);
+                        // Устанавливаем поля вручную, так как нормальная инициализация требует координат
+                        rect.ul_id = ul_grid_id;
+                        rect.br_id = br_grid_id;
+                        rect.cul = cul;
+                        rect.cbr = cbr;
+                        rect.history = new HashSet<>();
+                        rect.history.add(ul_grid_id);
+                        rect.history.add(br_grid_id);
+                        rect.loading = false;
+
+                        // Добавляем в список
+                        rectangles.add(rect);
+                    }
+
+                }
+            }
+        }
     }
 
     public class Rectangle {
-        public final Coord ul, br;
+        public Coord ul, br;
         public long ul_id, br_id;
         public long seg_id;
         HashSet<Long> history = new HashSet<>();
@@ -28,23 +84,47 @@ public class FogArea {
         Coord brgrid;
         boolean loading = true;
 
+        Coord cul;
+        Coord cbr;
+
         public Rectangle(Coord ul, Coord br, long seg_id) {
-            this.ul = ul;
-            this.br = br;
             this.seg_id = seg_id;
-            ulgrid = miniMap.c2p(ul.sub(miniMap.dloc.tc)).floor(tilesz).div(cmaps);
-            brgrid = miniMap.c2p(br.sub(miniMap.dloc.tc)).floor(tilesz).div(cmaps);
+            if(ul!=null && br!=null) {
+                this.ul = ul;
+                this.br = br;
+                ulgrid = miniMap.c2p(ul.sub(miniMap.dloc.tc)).floor(tilesz);
+                brgrid = miniMap.c2p(br.sub(miniMap.dloc.tc)).floor(tilesz);
+            }
             trySetGridId();
         }
 
         private void trySetGridId() {
             if(NUtils.getGameUI().ui.sess.glob.map.checkGrid(ulgrid) && NUtils.getGameUI().ui.sess.glob.map.checkGrid(brgrid)) {
-                this.ul_id = NUtils.getGameUI().ui.sess.glob.map.getgrid(ulgrid).id;
-                this.br_id = NUtils.getGameUI().ui.sess.glob.map.getgrid(brgrid).id;
+                this.ul_id = NUtils.getGameUI().ui.sess.glob.map.getgrid(ulgrid.div(cmaps)).id;
+                this.br_id = NUtils.getGameUI().ui.sess.glob.map.getgrid(brgrid.div(cmaps)).id;
+                this.cul = ulgrid.sub(NUtils.getGameUI().ui.sess.glob.map.getgrid(ulgrid.div(cmaps)).ul);
+                this.cbr = brgrid.sub(NUtils.getGameUI().ui.sess.glob.map.getgrid(brgrid.div(cmaps)).ul);
                 history.add(ul_id);
                 history.add(br_id);
                 loading = false;
             }
+        }
+
+        JSONObject toJson()
+        {
+            JSONObject res = new JSONObject();
+            JSONObject jul = new JSONObject();
+            jul.put("x",cul.x);
+            jul.put("y",cul.y);
+            jul.put("grid_id",ul_id);
+            res.put("ul",jul);
+            JSONObject jbr = new JSONObject();
+            jbr.put("x",cbr.x);
+            jbr.put("y",cbr.y);
+            jbr.put("grid_id",br_id);
+            res.put("br",jbr);
+            res.put("seg",seg_id);
+            return res;
         }
 
         public int width()  { return br.x - ul.x; }
@@ -69,7 +149,13 @@ public class FogArea {
         {
             if(loading)
             {
-                trySetGridId();
+                if(ul == null || br == null)
+                {
+
+                }
+                else {
+                    trySetGridId();
+                }
             }
         }
 
@@ -111,7 +197,7 @@ public class FogArea {
 
     public void tick(double dt)
     {
-        if(newRect!=null && newRect.loading)
+        if(NUtils.getGameUI()!=null && newRect!=null && newRect.loading)
         {
             newRect.tick(dt);
         }
@@ -189,6 +275,7 @@ public class FogArea {
                 }
             }
         } while (merged);
+        NConfig.needFogUpdate();
     }
 
 
@@ -233,5 +320,17 @@ public class FogArea {
         rectangles.clear();
         lastUL = null;
         lastBR = null;
+    }
+
+    public JSONObject toJson()
+    {
+        JSONArray result = new JSONArray();
+        for(Rectangle rectangle: rectangles)
+        {
+            result.put(rectangle.toJson());
+        }
+        JSONObject doc = new JSONObject();
+        doc.put("rectangles",rectangles);
+        return doc;
     }
 }

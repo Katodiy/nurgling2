@@ -14,7 +14,7 @@ import static haven.MCache.tilesz;
 
 public class NMiniMap extends MiniMap implements Console.Directory {
     public int scale = 1;
-    private final FogArea fogArea = new FogArea(this);
+    public final FogArea fogArea = new FogArea(this);
     public NMiniMap(Coord sz, MapFile file) {
         super(sz, file);
         follow(new MapLocator(NUtils.getGameUI().map));
