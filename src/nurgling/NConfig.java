@@ -132,6 +132,9 @@ public class NConfig
         conf.put(Key.sqlite, false);
         conf.put(Key.postgres, false);
         conf.put(Key.dbFilePath, "");
+        conf.put(Key.serverNode, "");
+        conf.put(Key.serverPass, "");
+        conf.put(Key.serverUser, "");
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

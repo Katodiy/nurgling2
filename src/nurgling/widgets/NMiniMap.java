@@ -125,7 +125,7 @@ public class NMiniMap extends MiniMap implements Console.Directory {
         try(Locked lk = new Locked(file.lock.readLock())) {
             for (FogArea.Rectangle rect : fogArea.getCoveredAreas()) {
                 MapFile.GridInfo gi = file.gridinfo.get(rect.ul_id);
-                if (gi != null && dseg.map.containsValue(rect.ul_id)) {
+                if (gi != null && curloc.seg.id == rect.seg_id) {
                     g.frect2(rect.ul.sub(dloc.tc), rect.br.sub(dloc.tc));
                 }
             }
@@ -146,7 +146,7 @@ public class NMiniMap extends MiniMap implements Console.Directory {
             if (player != null && dloc!=null) {
                 Coord ul = p2c(player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz)).add(dloc.tc);
                 Coord br = ul.add(VIEW_SZ.div(zmult).mul(scale));
-                fogArea.addWithoutOverlaps(ul, br);
+                fogArea.addWithoutOverlaps(ul, br, curloc.seg.id);
             }
         }
     }
