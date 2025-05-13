@@ -259,6 +259,12 @@ public class FogArea {
     void updateNew()
     {
         if(newRect!=null && !newRect.loading) {
+            for(Rectangle rect : rectangles)
+            {
+                if((rect.history.contains(newRect.br_id) || rect.history.contains(newRect.ul_id) ) && rect.loading)
+                    return;
+            }
+
             List<Rectangle> nonOverlappingParts = new ArrayList<>();
             nonOverlappingParts.add(newRect);
 
