@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
 import nurgling.routes.Route;
+import nurgling.widgets.NMiniMap;
 import org.json.*;
 
 import java.io.*;
@@ -134,6 +135,9 @@ public class NConfig
         conf.put(Key.sqlite, false);
         conf.put(Key.postgres, false);
         conf.put(Key.dbFilePath, "");
+        conf.put(Key.serverNode, "");
+        conf.put(Key.serverPass, "");
+        conf.put(Key.serverUser, "");
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -205,9 +209,11 @@ public class NConfig
     HashMap<Key, Object> conf = new HashMap<>();
     private boolean isUpd = false;
     private boolean isAreasUpd = false;
+    private boolean isFogUpd = false;
     private boolean isRoutesUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
     public String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
+    public String path_fog = ((HashDirCache) ResCache.global).base + "\\..\\" + "fog.nurgling.json";
     public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
 
     public boolean isUpdated()
@@ -223,6 +229,8 @@ public class NConfig
     public boolean isRoutesUpdated() {
         return isRoutesUpd;
     }
+
+    public boolean isFogUpdated() { return isFogUpd; }
 
     public static Object get(Key key)
     {
@@ -262,6 +270,14 @@ public class NConfig
         if (current != null)
         {
             current.isRoutesUpd = true;
+        }
+    }
+
+    public static void needFogUpdate()
+    {
+        if (current != null)
+        {
+            current.isFogUpd = true;
         }
     }
 
@@ -475,6 +491,24 @@ public class NConfig
                 main.write(f);
                 f.close();
                 current.isAreasUpd = false;
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public void writeFogOfWar(String customPath)
+    {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            try
+            {
+                FileWriter f = new FileWriter(customPath==null?path_fog:customPath,StandardCharsets.UTF_8);
+                ((NMiniMap)NUtils.getGameUI().mmap).fogArea.toJson().write(f);
+                f.close();
+                current.isFogUpd = false;
             }
             catch (IOException e)
             {

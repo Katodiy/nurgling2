@@ -66,7 +66,7 @@ public class MiniMap extends Widget
     protected Area dgext, dtext;
     protected Segment dseg;
     protected int dlvl;
-    protected Location dloc;
+    public Location dloc;
 
     public MiniMap(Coord sz, MapFile file) {
 	super(sz);
@@ -513,6 +513,14 @@ public class MiniMap extends Widget
     public Coord p2c(Coord2d pc) {
 	return(st2c(pc.floor(tilesz)));
     }
+
+	public Coord c2st(Coord c) {
+		return UI.unscale((c.sub(sz.div(2)).mul(1 << dlvl)).add(dloc.tc).sub(sessloc.tc));
+	}
+
+	public Coord2d c2p(Coord c) {
+		return Coord2d.of(c2st(c)).mul(tilesz);
+	}
 
     private void redisplay(Location loc) {
 	Coord hsz = sz.div(2);

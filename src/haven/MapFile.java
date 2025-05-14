@@ -1122,7 +1122,7 @@ public class MapFile {
 
     public class Segment {
 	public final long id;
-	private final BMap<Coord, Long> map = new HashBMap<>();
+	public final BMap<Coord, Long> map = new HashBMap<>();
 	private final Map<Long, Cached> cache = new CacheMap<>(CacheMap.RefType.WEAK);
 	private final Map<Coord, ByCoord> ccache = new CacheMap<>(CacheMap.RefType.WEAK);
 	private final Map<ZoomCoord, ByZCoord> zcache = new CacheMap<>(CacheMap.RefType.WEAK);
