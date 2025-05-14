@@ -115,17 +115,20 @@ public class FogArea {
         {
             JSONObject res = new JSONObject();
             JSONObject jul = new JSONObject();
-            jul.put("x",cul.x);
-            jul.put("y",cul.y);
-            jul.put("grid_id",ul_id);
-            res.put("ul",jul);
-            JSONObject jbr = new JSONObject();
-            jbr.put("x",cbr.x);
-            jbr.put("y",cbr.y);
-            jbr.put("grid_id",br_id);
-            res.put("br",jbr);
-            res.put("seg",seg_id);
-            return res;
+            if(cul ==null || cbr == null) {
+                jul.put("x", cul.x);
+                jul.put("y", cul.y);
+                jul.put("grid_id", ul_id);
+                res.put("ul", jul);
+                JSONObject jbr = new JSONObject();
+                jbr.put("x", cbr.x);
+                jbr.put("y", cbr.y);
+                jbr.put("grid_id", br_id);
+                res.put("br", jbr);
+                res.put("seg", seg_id);
+                return res;
+            }
+            return null;
         }
 
         public int width()  { return br.x - ul.x; }
@@ -373,7 +376,10 @@ public class FogArea {
         JSONArray result = new JSONArray();
         for(Rectangle rectangle: rectangles)
         {
-            result.put(rectangle.toJson());
+            JSONObject jrect = rectangle.toJson();
+            if(jrect!=null) {
+                result.put(jrect);
+            }
         }
         JSONObject doc = new JSONObject();
         doc.put("rectangles",result);
