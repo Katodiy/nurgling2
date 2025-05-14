@@ -3,6 +3,7 @@ package nurgling.routes;
 import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
+import nurgling.NCore;
 import nurgling.NMapView;
 import nurgling.NUtils;
 import org.json.JSONArray;
@@ -16,6 +17,8 @@ public class Route {
     public String path = "";
     public ArrayList<RoutePoint> waypoints = new ArrayList<>();
     public ArrayList<RouteSpecialization> spec = new ArrayList<>();
+    public RoutePoint cachedRoutePoint = null;
+    public NCore.LastActions lastAction = null;
 
     public static class RouteSpecialization {
         public String name;
@@ -39,20 +42,34 @@ public class Route {
         Gob player = NUtils.player();
         Coord2d rc = player.rc;
 
-        try {
-            RoutePoint newWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
+        RoutePoint newWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
+        addPredefinedWaypoint(newWaypoint);
+    }
 
+    public void addWaypointWithDoor(String doorHash) {
+        Gob player = NUtils.player();
+        Coord2d rc = player.rc;
+
+        RoutePoint newWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
+        newWaypoint.isDoor = true;
+        newWaypoint.gobHash = doorHash;
+
+        addPredefinedWaypoint(newWaypoint);
+    }
+
+    public void addPredefinedWaypoint(RoutePoint routePoint) {
+        try {
             if(!waypoints.isEmpty()) {
                 RoutePoint lastRoutePoint = waypoints.get(waypoints.size() - 1);
-                newWaypoint.addNeighbor(lastRoutePoint.id);
-                lastRoutePoint.addNeighbor(newWaypoint.id);
+                routePoint.addNeighbor(lastRoutePoint.id);
+                lastRoutePoint.addNeighbor(routePoint.id);
             }
 
-            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(newWaypoint);
-            this.waypoints.add(newWaypoint);
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(routePoint);
+            this.waypoints.add(routePoint);
 
-            NUtils.getGameUI().msg("Waypoint added: " + newWaypoint);
-            NUtils.getGameUI().msg("Neighbors: " + newWaypoint.getNeighbors());
+            NUtils.getGameUI().msg("Waypoint added: " + routePoint);
+            NUtils.getGameUI().msg("Neighbors: " + routePoint.getNeighbors());
         } catch (Exception e) {
             NUtils.getGameUI().msg("Failed to add waypoint: " + e.getMessage());
         }

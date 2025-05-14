@@ -47,7 +47,7 @@ public class RoutePoint {
         for (MCache.Grid grid : mcache.grids.values()) {
             if (grid.id == gridId) {
                 Coord tilec = grid.ul.add(localCoord);
-                return tilec.mul(MCache.tilesz);
+                return tilec.mul(MCache.tilesz).add(MCache.tilehsz);
             }
         }
         return null;
@@ -56,7 +56,7 @@ public class RoutePoint {
     public Coord3f toCoord3f(MCache mcache) {
         for (MCache.Grid grid : mcache.grids.values()) {
             if (grid.id == gridId) {
-                return mcache.getzp(grid.ul.add(localCoord).mul(MCache.tilesz));
+                return mcache.getzp(grid.ul.add(localCoord).mul(MCache.tilesz).add(MCache.tilehsz));
             }
         }
         return null;
@@ -64,6 +64,6 @@ public class RoutePoint {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.gridId, this.localCoord);
+        return Objects.hash(this.gridId, this.localCoord, new Random().nextInt(10000));
     }
 }
