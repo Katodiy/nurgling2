@@ -1,9 +1,7 @@
 package nurgling.actions.bots;
 
-import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
-import haven.MCache;
 import nurgling.NUtils;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
@@ -72,16 +70,22 @@ public class RouteAutoRecorder implements Runnable {
                         NUtils.getUI().core.addTask(new WaitForNoGobWithHash(hash));
                         NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
 
-                        route.cachedRoutePoint.isDoor = true;
-                        route.cachedRoutePoint.gobHash = hash;
-
-                        route.addPredefinedWaypoint(route.cachedRoutePoint);
+                        // Add new waypoint
+                        route.addWaypoint();
+                        
+                        // Get the last two waypoints
+                        RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
+                        RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
+                        
+                        // Add connections between them
+                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
 
                         Gob arch = Finder.findGob(NUtils.player().rc, new NAlias(
                                 getPair(gobForCachedRoutePoint.ngob.name)
-                                ), null, 50);
+                                ), null, 100);
 
-                        route.addWaypointWithDoor(arch.ngob.hash);
+                        // Add connection for the arch
+                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -97,18 +101,22 @@ public class RouteAutoRecorder implements Runnable {
                         NUtils.getUI().core.addTask(new WaitForNoGobWithHash(hash));
                         NUtils.getUI().core.addTask(new WaitForDoorGob());
 
-                        route.cachedRoutePoint.isDoor = true;
-                        route.cachedRoutePoint.gobHash = hash;
-
-
-
-                        route.addPredefinedWaypoint(route.cachedRoutePoint);
+                        // Add new waypoint
+                        route.addWaypoint();
+                        
+                        // Get the last two waypoints
+                        RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
+                        RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
+                        
+                        // Add connections between them
+                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
 
                         Gob arch = Finder.findGob(NUtils.player().rc, new NAlias(
                                 getPair(gobForCachedRoutePoint.ngob.name)
                         ), null, 50);
 
-                        route.addWaypointWithDoor(arch.ngob.hash);
+                        // Add connection for the arch
+                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -135,14 +143,14 @@ public class RouteAutoRecorder implements Runnable {
 
     public static String getPair(String input) {
         String[][] pairs = {
-                {"gfx/terobjs/arch/stonestead", "gfx/terobjs/arch/stonestead"},
-                {"gfx/terobjs/arch/stonemansion", "gfx/terobjs/arch/stonemansion"},
-                {"gfx/terobjs/arch/greathall", "gfx/terobjs/arch/greathall"},
-                {"gfx/terobjs/arch/primitivetent", "gfx/terobjs/arch/primitivetent"},
-                {"gfx/terobjs/arch/windmill", "gfx/terobjs/arch/windmill"},
-                {"gfx/terobjs/arch/stonetower", "gfx/terobjs/arch/stonetower"},
-                {"gfx/terobjs/arch/logcabin", "gfx/terobjs/arch/logcabin"},
-                {"gfx/terobjs/arch/timberhouse", "gfx/terobjs/arch/timberhouse"},
+                {"gfx/terobjs/arch/stonestead-door", "gfx/terobjs/arch/stonestead"},
+                {"gfx/terobjs/arch/stonemansion-door", "gfx/terobjs/arch/stonemansion"},
+                {"gfx/terobjs/arch/greathall-door", "gfx/terobjs/arch/greathall"},
+                {"gfx/terobjs/arch/primitivetent-door", "gfx/terobjs/arch/primitivetent"},
+                {"gfx/terobjs/arch/windmill-door", "gfx/terobjs/arch/windmill"},
+                {"gfx/terobjs/arch/stonetower-door", "gfx/terobjs/arch/stonetower"},
+                {"gfx/terobjs/arch/logcabin-door", "gfx/terobjs/arch/logcabin"},
+                {"gfx/terobjs/arch/timberhouse-door", "gfx/terobjs/arch/timberhouse"},
 
                 {"gfx/terobjs/minehole", "gfx/terobjs/ladder"},
                 {"gfx/terobjs/arch/upstairs", "gfx/terobjs/arch/downstairs"},
