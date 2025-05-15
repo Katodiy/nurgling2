@@ -121,16 +121,19 @@ public class NMiniMap extends MiniMap implements Console.Directory {
         boolean playerSegment = (sessloc != null) && ((curloc == null) || (sessloc.seg == curloc.seg));
         if(zoomlevel <= 2 && (Boolean)NConfig.get(NConfig.Key.showGrid)) {drawgrid(g);}
         if(playerSegment && zoomlevel <= 1 && (Boolean)NConfig.get(NConfig.Key.showView)) {drawview(g);}
-        g.chcolor(VIEW_FOG_COLOR);
-        try(Locked lk = new Locked(file.lock.readLock())) {
-            for (FogArea.Rectangle rect : fogArea.getCoveredAreas()) {
-                MapFile.GridInfo gi = file.gridinfo.get(rect.ul_id);
-                if (gi != null && curloc.seg.id == rect.seg_id && rect.ul!=null && rect.br!=null) {
-                    g.frect2(rect.ul.sub(dloc.tc), rect.br.sub(dloc.tc));
+
+        if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
+            g.chcolor(VIEW_FOG_COLOR);
+            try (Locked lk = new Locked(file.lock.readLock())) {
+                for (FogArea.Rectangle rect : fogArea.getCoveredAreas()) {
+                    MapFile.GridInfo gi = file.gridinfo.get(rect.ul_id);
+                    if (gi != null && curloc.seg.id == rect.seg_id && rect.ul != null && rect.br != null) {
+                        g.frect2(rect.ul.sub(dloc.tc), rect.br.sub(dloc.tc));
+                    }
                 }
             }
+            g.chcolor();
         }
-        g.chcolor();
     }
 
     @Override
@@ -138,15 +141,17 @@ public class NMiniMap extends MiniMap implements Console.Directory {
         super.tick(dt);
         if(ui.gui.map==null)
             return;
-        if((sessloc != null) && ((curloc == null) || (sessloc.seg == curloc.seg))) {
-            fogArea.tick(dt);
-            int zmult = 1 << zoomlevel;
-            Coord2d sgridsz = new Coord2d(_sgridsz);
-            Gob player = ui.gui.map.player();
-            if (player != null && dloc!=null) {
-                Coord ul = p2c(player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz)).add(dloc.tc);
-                Coord br = ul.add(VIEW_SZ.div(zmult).mul(scale));
-                fogArea.addWithoutOverlaps(ul, br, curloc.seg.id);
+        if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
+            if ((sessloc != null) && ((curloc == null) || (sessloc.seg == curloc.seg))) {
+                fogArea.tick(dt);
+                int zmult = 1 << zoomlevel;
+                Coord2d sgridsz = new Coord2d(_sgridsz);
+                Gob player = ui.gui.map.player();
+                if (player != null && dloc != null) {
+                    Coord ul = p2c(player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz)).add(dloc.tc);
+                    Coord br = ul.add(VIEW_SZ.div(zmult).mul(scale));
+                    fogArea.addWithoutOverlaps(ul, br, curloc.seg.id);
+                }
             }
         }
     }
