@@ -5,15 +5,14 @@ import haven.Gob;
 import nurgling.NUtils;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
-import nurgling.tasks.WaitDistance;
-import nurgling.tasks.WaitForDoorGob;
-import nurgling.tasks.WaitForMapLoadNoCoord;
-import nurgling.tasks.WaitForNoGobWithHash;
+import nurgling.tasks.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static nurgling.NUtils.player;
 
 public class RouteAutoRecorder implements Runnable {
     private final Route route;
@@ -30,7 +29,7 @@ public class RouteAutoRecorder implements Runnable {
 
     @Override
     public void run() {
-            Coord2d playerRC = NUtils.player().rc;
+            Coord2d playerRC = player().rc;
 
             // add waypoint where the recording started
             route.addWaypoint();
@@ -48,10 +47,10 @@ public class RouteAutoRecorder implements Runnable {
                 Gob gob = null;
 
                 // update player RC to current
-                if(NUtils.player() != null) {
-                    playerRC = NUtils.player().rc;
+                if(player() != null) {
+                    playerRC = player().rc;
 
-                    gob = Finder.findGob(NUtils.player().ngob.hash);
+                    gob = Finder.findGob(player().ngob.hash);
                 } else {
                     playerRC = null;
                 }
@@ -80,7 +79,7 @@ public class RouteAutoRecorder implements Runnable {
                         // Add connections between them
                         lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
 
-                        Gob arch = Finder.findGob(NUtils.player().rc, new NAlias(
+                        Gob arch = Finder.findGob(player().rc, new NAlias(
                                 getPair(gobForCachedRoutePoint.ngob.name)
                                 ), null, 100);
 
@@ -103,20 +102,51 @@ public class RouteAutoRecorder implements Runnable {
 
                         // Add new waypoint
                         route.addWaypoint();
-                        
+
                         // Get the last two waypoints
                         RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
                         RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
-                        
+
                         // Add connections between them
                         lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
 
-                        Gob arch = Finder.findGob(NUtils.player().rc, new NAlias(
+                        Gob arch = Finder.findGob(player().rc, new NAlias(
                                 getPair(gobForCachedRoutePoint.ngob.name)
                         ), null, 50);
 
                         // Add connection for the arch
                         newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else if(veryCloseToAGate()) {
+                    // get the hash of the last clicked gob (door, minehole, ladder)
+                    String hash = route.lastAction.gob.ngob.hash;
+                    String name = route.lastAction.gob.ngob.name;
+                    Gob gobForCachedRoutePoint = route.lastAction.gob;
+                    System.out.println(hash);
+                    System.out.println(name);
+
+                    try {
+                        if(gobForCachedRoutePoint.ngob.getModelAttribute() == 1) {
+                            // Add new waypoint
+                            NUtils.getUI().core.addTask(new WaitGobModelAttr(gobForCachedRoutePoint, 1));
+                            NUtils.getUI().core.addTask(new WaitGobModelAttr(gobForCachedRoutePoint, 2));
+                            route.addWaypoint();
+                        }
+
+
+                        // Get the last two waypoints
+                        RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
+                        RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
+
+                        // Add connections between them
+                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
+
+                        // Add connection for the arch
+                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), hash, name, true);
+
+                        route.lastAction = null;
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -139,6 +169,20 @@ public class RouteAutoRecorder implements Runnable {
         }
 
         return false;
+    }
+
+    private boolean veryCloseToAGate() {
+        try {
+            String[] gateNames = {"gfx/terobjs/arch/polebiggate", "gfx/terobjs/arch/drystonewallbiggate", "gfx/terobjs/arch/polegate", "gfx/terobjs/arch/drystonewallgate"};
+            Gob gate = Finder.findGob(player().rc, new NAlias(gateNames), null, 10);
+
+            if(gate != null) {
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public static String getPair(String input) {
