@@ -8,6 +8,8 @@ import nurgling.NCore;
 import nurgling.NUtils;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
+import nurgling.tools.Finder;
+import nurgling.tools.NAlias;
 
 public class WaitDistance extends NTask {
     Coord2d last;
@@ -39,19 +41,31 @@ public class WaitDistance extends NTask {
         if (lastAction != null) {
             route.lastAction = lastAction;
         }
-        
+
         if(last == null) {
             return false;
         }
 
+        try {
+            if(veryCloseToAGate()) {
+                return true;
+            }
+
+        } catch (InterruptedException e) {
+            System.out.println("WaitDistance interrupted");
+        }
+
+
         return player.rc.dist(last) >= dist;
     }
 
-    private RoutePoint getCurrentImaginaryRoutePoint(Coord2d playerRC) {
-        Coord tilec = playerRC.div(MCache.tilesz).floor();
-        MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
-        Coord localCoord = tilec.sub(grid.ul);
+    private boolean veryCloseToAGate() throws InterruptedException {
+        String[] gateNames = {"gfx/terobjs/arch/polebiggate", "gfx/terobjs/arch/drystonewallbiggate", "gfx/terobjs/arch/polegate", "gfx/terobjs/arch/drystonewallgate"};
+        Gob gate = Finder.findGob(this.oldPlayer.rc, new NAlias(gateNames), null, 10);
 
-        return new RoutePoint(grid.id, localCoord);
+        if(gate != null) {
+            return true;
+        }
+        return false;
     }
 }
