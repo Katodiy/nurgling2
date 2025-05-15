@@ -81,7 +81,8 @@ public class NConfig
         smokeprop,
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
-        serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops
+        serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
+        fogEnable
     }
 
 
@@ -138,6 +139,7 @@ public class NConfig
         conf.put(Key.serverNode, "");
         conf.put(Key.serverPass, "");
         conf.put(Key.serverUser, "");
+        conf.put(Key.fogEnable, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
