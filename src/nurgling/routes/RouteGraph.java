@@ -32,8 +32,13 @@ public class RouteGraph {
                 double distanceToAVisibleNode = waypointRelativeCoords.dist(pointRelativeCoords);
                 boolean isReachable = PathFinder.isAvailable(pointRelativeCoords);
                 if (distanceToAVisibleNode <= MAX_DISTANCE_FOR_NEIGHBORS && isReachable) {
+                    // Add neighbors
                     waypoint.addNeighbor(point.id);
                     point.addNeighbor(waypoint.id);
+                    
+                    // Add connections
+                    waypoint.addConnection(point.id, String.valueOf(point.id), "", "", false);
+                    point.addConnection(waypoint.id, String.valueOf(waypoint.id), "", "", false);
                 }
             }
         }
@@ -112,6 +117,7 @@ public class RouteGraph {
 
         for(RoutePoint point : points.values()) {
             point.getNeighbors().remove(Integer.valueOf(waypoint.id));
+            point.removeConnection(waypoint.id);
         }
     }
 
