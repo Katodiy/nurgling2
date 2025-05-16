@@ -3,6 +3,7 @@ package nurgling.routes;
 import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
+import nurgling.NConfig;
 import nurgling.NCore;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -95,6 +96,11 @@ public class Route {
         waypoints.removeAll(toRemove);
 
         ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().deleteWaypoint(waypoint);
+    }
+
+    public void setWaypointCoord(RoutePoint waypoint, Coord newPosition) {
+        waypoint.localCoord = newPosition;
+        ((NMapView) NUtils.getGameUI().map).initRouteDummys(this.id);
     }
 
 
