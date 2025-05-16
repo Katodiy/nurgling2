@@ -1,13 +1,10 @@
 package nurgling.tasks;
 
-import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
-import haven.MCache;
 import nurgling.NCore;
 import nurgling.NUtils;
 import nurgling.routes.Route;
-import nurgling.routes.RoutePoint;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -54,7 +51,6 @@ public class WaitDistance extends NTask {
         } catch (InterruptedException e) {
             System.out.println("WaitDistance interrupted");
         }
-
 
         return player.rc.dist(last) >= dist;
     }

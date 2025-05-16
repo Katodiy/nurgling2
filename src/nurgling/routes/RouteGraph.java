@@ -30,7 +30,7 @@ public class RouteGraph {
             Coord2d pointRelativeCoords = point.toCoord2d(cache);
             if (pointRelativeCoords != null) {
                 double distanceToAVisibleNode = waypointRelativeCoords.dist(pointRelativeCoords);
-                boolean isReachable = PathFinder.isAvailable(pointRelativeCoords);
+                boolean isReachable = PathFinder.isAvailable(pointRelativeCoords, true);
                 if (distanceToAVisibleNode <= MAX_DISTANCE_FOR_NEIGHBORS && isReachable) {
                     // Add neighbors
                     waypoint.addNeighbor(point.id);
