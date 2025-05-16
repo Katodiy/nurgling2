@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
 import nurgling.NUtils;
@@ -47,111 +48,93 @@ public class RouteAutoRecorder implements Runnable {
                 Gob gob = null;
 
                 // update player RC to current
-                if(player() != null) {
-                    playerRC = player().rc;
+                Gob playerGob = player();
+                if(playerGob != null) {
+                    playerRC = playerGob.rc;
 
-                    gob = Finder.findGob(player().ngob.hash);
+                    gob = Finder.findGob(playerGob.ngob.hash);
                 } else {
                     playerRC = null;
                 }
 
-                // if player gob is not found that means we've entered a new map
-                if (gob == null && !isNonLoadingDoor()) {
-                    // get the hash of the last clicked gob (door, minehole, ladder)
-                    String hash = NUtils.getUI().core.getLastActions().gob.ngob.hash;
-                    String name = NUtils.getUI().core.getLastActions().gob.ngob.name;
-                    Gob gobForCachedRoutePoint = NUtils.getUI().core.getLastActions().gob;
+                // get the hash of the last clicked gob (door, minehole, ladder, cellar, stairs, gate)
+                String hash = route.lastAction.gob.ngob.hash;
+                String name = route.lastAction.gob.ngob.name;
+                Gob gobForCachedRoutePoint = route.lastAction.gob;
 
+                // creating one of the doors. Could be a gate, a door or stairs.
+                if(veryCloseToAGate() || (gob == null && !isNonLoadingDoor()) || isNonLoadingDoor()) {
                     System.out.println(hash);
                     System.out.println(name);
 
                     try {
-                        NUtils.getUI().core.addTask(new WaitForNoGobWithHash(hash));
-                        NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
+                         if (veryCloseToAGate()) {
+                            // gate is closed
 
-                        // Add new waypoint
-                        route.addWaypoint();
-                        
-                        // Get the last two waypoints
-                        RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
-                        RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
-                        
-                        // Add connections between them
-                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
+                             // 2 - closed; 1 - opened;
+                            if(gobForCachedRoutePoint.ngob.getModelAttribute() == 1) {
 
-                        Gob arch = Finder.findGob(player().rc, new NAlias(
-                                getPair(gobForCachedRoutePoint.ngob.name)
-                                ), null, 100);
+                                // Wait for gate to be opened
+                                NUtils.getUI().core.addTask(new WaitGobModelAttr(gobForCachedRoutePoint, 1));
 
-                        // Add connection for the arch
-                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                } else if(isNonLoadingDoor()) {
-                    // get the hash of the last clicked gob (door, minehole, ladder)
-                    String hash = NUtils.getUI().core.getLastActions().gob.ngob.hash;
-                    String name = NUtils.getUI().core.getLastActions().gob.ngob.name;
-                    Gob gobForCachedRoutePoint = NUtils.getUI().core.getLastActions().gob;
-                    System.out.println(hash);
-                    System.out.println(name);
-
-                    try {
-                        NUtils.getUI().core.addTask(new WaitForNoGobWithHash(hash));
-                        NUtils.getUI().core.addTask(new WaitForDoorGob());
-
-                        // Add new waypoint
-                        route.addWaypoint();
-
-                        // Get the last two waypoints
-                        RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
-                        RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
-
-                        // Add connections between them
-                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
-
-                        Gob arch = Finder.findGob(player().rc, new NAlias(
-                                getPair(gobForCachedRoutePoint.ngob.name)
-                        ), null, 50);
-
-                        // Add connection for the arch
-                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                } else if(veryCloseToAGate()) {
-                    // get the hash of the last clicked gob (door, minehole, ladder)
-                    String hash = route.lastAction.gob.ngob.hash;
-                    String name = route.lastAction.gob.ngob.name;
-                    Gob gobForCachedRoutePoint = route.lastAction.gob;
-                    System.out.println(hash);
-                    System.out.println(name);
-
-                    try {
-                        if(gobForCachedRoutePoint.ngob.getModelAttribute() == 1) {
-                            // Add new waypoint
-                            NUtils.getUI().core.addTask(new WaitGobModelAttr(gobForCachedRoutePoint, 1));
-                            NUtils.getUI().core.addTask(new WaitGobModelAttr(gobForCachedRoutePoint, 2));
-                            route.addWaypoint();
+                                // Wait for gate to be closed
+                                NUtils.getUI().core.addTask(new WaitGobModelAttr(gobForCachedRoutePoint, 2));
+                            } else {
+                                continue;
+                            }
+                        } else if(gob == null && !isNonLoadingDoor()) {
+                            // wait for map to load
+                             NUtils.getUI().core.addTask(new WaitForNoGobWithHash(hash));
+                            NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
+                        } else if (isNonLoadingDoor()) {
+                            // wait for down/up stairs to show up
+                            NUtils.getUI().core.addTask(new WaitForDoorGob());
                         }
 
+                        // Add new waypoint
+                        route.addWaypoint();
 
                         // Get the last two waypoints
                         RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
                         RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
 
-                        // Add connections between them
-                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
+                        if(veryCloseToAGate()) {
+                            // Add connections between them
+                            lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
 
-                        // Add connection for the arch
-                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), hash, name, true);
+                            // Add connection for the arch
+                            newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), hash, name, true);
+                        } else {
+                            // Add connections between them
+                            lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
 
-                        route.lastAction = null;
+                            Gob arch = Finder.findGob(player().rc, new NAlias(
+                                    getPair(gobForCachedRoutePoint.ngob.name)
+                            ), null, 100);
+
+                            if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
+                                double angle = arch.a;
+                                double offset = 1;
+
+                                Coord newPosition = new Coord(
+                                        (int)Math.round(newWaypoint.localCoord.x + Math.cos(angle) * offset),
+                                        (int)Math.round(newWaypoint.localCoord.y +  Math.sin(angle) * offset)
+                                );
+
+                                route.setWaypointCoord(newWaypoint, newPosition);
+                            }
+
+                            // Add connection for the arch
+                            newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
+                        }
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
+
+                    route.lastAction = null;
                 } else {
                     route.addWaypoint();
+                    route.lastAction = null;
                 }
             }
     }
@@ -174,7 +157,7 @@ public class RouteAutoRecorder implements Runnable {
     private boolean veryCloseToAGate() {
         try {
             String[] gateNames = {"gfx/terobjs/arch/polebiggate", "gfx/terobjs/arch/drystonewallbiggate", "gfx/terobjs/arch/polegate", "gfx/terobjs/arch/drystonewallgate"};
-            Gob gate = Finder.findGob(player().rc, new NAlias(gateNames), null, 10);
+            Gob gate = Finder.findGob(player().rc, new NAlias(gateNames), null, 30);
 
             if(gate != null) {
                 return true;
