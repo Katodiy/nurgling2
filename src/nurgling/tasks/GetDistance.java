@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.Coord2d;
 import nurgling.NUtils;
 
-public class GetDistance implements NTask
+public class GetDistance extends NTask
 {
     public GetDistance(Coord2d coord)
     {

@@ -115,7 +115,7 @@ public class FogArea {
         {
             JSONObject res = new JSONObject();
             JSONObject jul = new JSONObject();
-            if(cul ==null || cbr == null) {
+            if(cul != null && cbr != null) {
                 jul.put("x", cul.x);
                 jul.put("y", cul.y);
                 jul.put("grid_id", ul_id);

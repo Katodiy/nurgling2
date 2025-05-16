@@ -5,6 +5,7 @@ import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.routes.Route;
 import nurgling.tasks.GetCurs;
 import nurgling.tasks.NoGob;
 import nurgling.tasks.WaitGobsInField;
@@ -19,6 +20,7 @@ import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static haven.OCache.posres;
+import static nurgling.NUtils.getGameUI;
 
 public class HarvestCrop implements Action{
 

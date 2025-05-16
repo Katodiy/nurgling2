@@ -215,7 +215,10 @@ public class NConfig
     private boolean isRoutesUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
     public String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
-    public String path_fog = ((HashDirCache) ResCache.global).base + "\\..\\" + "fog.nurgling.json";
+    public String path_fog = Paths.get(String.valueOf(((HashDirCache) ResCache.global).base), "..", "fog.nurgling.json")
+            .normalize()
+            .toAbsolutePath()
+            .toString();
     public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
 
     public boolean isUpdated()

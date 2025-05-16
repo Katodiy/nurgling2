@@ -8,7 +8,7 @@ import nurgling.conf.NPrepBoardsProp;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
-public class WaitPrepBoardsStateD implements NTask
+public class WaitPrepBoardsStateD extends NTask
 {
     public WaitPrepBoardsStateD(Gob log, NPrepBoardsProp prop)
     {

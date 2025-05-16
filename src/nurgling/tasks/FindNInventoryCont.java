@@ -5,7 +5,7 @@ import haven.Window;
 import nurgling.NInventory;
 import nurgling.NUtils;
 
-public class FindNInventoryCont implements NTask
+public class FindNInventoryCont extends NTask
 {
     public FindNInventoryCont(String name)
     {

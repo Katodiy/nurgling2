@@ -4,7 +4,7 @@ import haven.Area;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-public class WaitGobsInFieldT implements NTask
+public class WaitGobsInFieldT extends NTask
 {
     Area area;
     int count;

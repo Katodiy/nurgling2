@@ -4,7 +4,7 @@ import haven.Gob;
 import haven.LinMove;
 import nurgling.NUtils;
 
-public class IsVesselNotMoving implements NTask
+public class IsVesselNotMoving extends NTask
 {
     Gob gob;
 

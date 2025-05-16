@@ -3,7 +3,7 @@ package nurgling.tasks;
 import haven.Following;
 import haven.Gob;
 
-public class Follow implements NTask
+public class Follow extends NTask
 {
     public Follow(Gob gob)
     {

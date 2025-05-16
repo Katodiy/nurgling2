@@ -3,7 +3,7 @@ package nurgling.tasks;
 import nurgling.NFlowerMenu;
 import nurgling.NUtils;
 
-public class FindNFlowerMenuT implements NTask
+public class FindNFlowerMenuT extends NTask
 {
     int count = 0;
     NFlowerMenu res = null;

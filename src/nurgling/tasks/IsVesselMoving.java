@@ -8,7 +8,7 @@ import nurgling.NUtils;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-public class IsVesselMoving implements NTask
+public class IsVesselMoving extends NTask
 {
     Gob gob;
 

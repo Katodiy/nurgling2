@@ -7,7 +7,7 @@ import nurgling.NUtils;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-public class WaitItemInInventory implements NTask
+public class WaitItemInInventory extends NTask
 {
     String name;
     GItem item = null;

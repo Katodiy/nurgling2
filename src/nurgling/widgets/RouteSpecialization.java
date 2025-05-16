@@ -39,6 +39,7 @@ public class RouteSpecialization extends Window {
     static {
         // Initialize with Honey specialization
         specialisation.add(new RouteSpecializationItem("honey", "Honey Route", Resource.loadsimg("nurgling/categories/bee")));
+        specialisation.add(new RouteSpecializationItem("farm1", "Farm1 Route", Resource.loadsimg("nurgling/categories/bee")));
     }
 
     public class RouteSpecializationList extends SListBox<RouteSpecializationItem, Widget> {
