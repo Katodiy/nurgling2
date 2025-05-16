@@ -58,9 +58,9 @@ public class RouteAutoRecorder implements Runnable {
                 }
 
                 // get the hash of the last clicked gob (door, minehole, ladder, cellar, stairs, gate)
-                String hash = route.lastAction.gob.ngob.hash;
-                String name = route.lastAction.gob.ngob.name;
-                Gob gobForCachedRoutePoint = route.lastAction.gob;
+                String hash = route.lastAction != null ? route.lastAction.gob.ngob.hash : null;
+                String name = route.lastAction != null ? route.lastAction.gob.ngob.name : null;
+                Gob gobForCachedRoutePoint = route.lastAction != null ? route.lastAction.gob : null;
 
                 // creating one of the doors. Could be a gate, a door or stairs.
                 if(veryCloseToAGate() || (gob == null && !isNonLoadingDoor()) || isNonLoadingDoor()) {

@@ -28,7 +28,7 @@ public class NGob {
     public boolean isQuested = true;
     public boolean customMask = false;
     public int mask = -1;
-    private CellsArray ca = null;
+    public CellsArray ca = null;
     boolean isDynamic = false;
     private boolean isGate = false;
     protected long modelAttribute = -1;
@@ -268,6 +268,10 @@ public class NGob {
         return ca;
     }
 
+    public CellsArray getTrueCA() {
+        return ca;
+    }
+
     public void markAsDynamic() {
         isDynamic = true;
     }
@@ -437,5 +441,10 @@ public class NGob {
             return 0;
         }
         return -1;
+    }
+
+
+    public void setCa(CellsArray ca) {
+        this.ca = ca;
     }
 }
