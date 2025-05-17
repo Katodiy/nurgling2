@@ -389,8 +389,8 @@ public class PathFinder implements Action {
         return pf.construct(true) != null;
     }
 
-    public static boolean isAvailable(Coord2d target, boolean gatesAlwaysClosed) throws InterruptedException {
-        PathFinder pf = new PathFinder(target);
+    public static boolean isAvailable(Coord2d begin, Coord2d target, boolean gatesAlwaysClosed) throws InterruptedException {
+        PathFinder pf = new PathFinder(begin, target);
         pf.gatesAlwaysClosed = gatesAlwaysClosed;
         LinkedList<Graph.Vertex> res = pf.construct(true);
         return res != null || pf.dn;
