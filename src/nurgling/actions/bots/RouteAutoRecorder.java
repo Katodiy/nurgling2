@@ -129,16 +129,19 @@ public class RouteAutoRecorder implements Runnable {
 
                     // For the minehole we have to add an offset, otherwise the minehole point gets created right on
                     // top of the minehole causing it to be unreachable with PF.
-                    if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
-                        double angle = arch.a;
-                        double offset = 1;
 
-                        Coord newPosition = new Coord(
-                                (int)Math.round(newWaypoint.localCoord.x + Math.cos(angle) * offset),
-                                (int)Math.round(newWaypoint.localCoord.y +  Math.sin(angle) * offset)
-                        );
+                    if(arch != null) {
+                        if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
+                            double angle = arch.a;
+                            double offset = 1;
 
-                        route.setWaypointCoord(newWaypoint, newPosition);
+                            Coord newPosition = new Coord(
+                                    (int)Math.round(newWaypoint.localCoord.x + Math.cos(angle) * offset),
+                                    (int)Math.round(newWaypoint.localCoord.y +  Math.sin(angle) * offset)
+                            );
+
+                            route.setWaypointCoord(newWaypoint, newPosition);
+                        }
                     }
 
                     // Add connection for the arch

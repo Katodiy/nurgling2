@@ -178,7 +178,7 @@ public class RoutesWidget extends Window {
             @Override
             public void click() {
                 NUtils.getGameUI().msg("Recording position for: " + route.name);
-                route.addWaypoint();
+                route.addRandomWaypoint();
                 waypointList.update(route.waypoints);
             }
         }, Coord.z).settip("Record Position");

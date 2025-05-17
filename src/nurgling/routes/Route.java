@@ -81,6 +81,32 @@ public class Route {
         ((NMapView) NUtils.getGameUI().map).createRouteLabel(this.id);
     }
 
+    public void addRandomWaypoint() {
+        Gob player = NUtils.player();
+        Coord2d rc = player.rc;
+
+        // Create a temporary waypoint to get its hash
+        RoutePoint tempWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
+
+        // Check if this waypoint already exists in the graph
+        RoutePoint existingWaypoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().getPoint(tempWaypoint.id);
+
+        // Use existing waypoint if found, otherwise use the temporary one
+        RoutePoint waypointToAdd = existingWaypoint != null ? existingWaypoint : tempWaypoint;
+
+        try {
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(waypointToAdd);
+            this.waypoints.add(waypointToAdd);
+
+            NUtils.getGameUI().msg("Waypoint added: " + waypointToAdd);
+            NUtils.getGameUI().msg("Neighbors: " + waypointToAdd.getNeighbors());
+        } catch (Exception e) {
+            NUtils.getGameUI().msg("Failed to add waypoint: " + e.getMessage());
+        }
+
+        ((NMapView) NUtils.getGameUI().map).createRouteLabel(this.id);
+    }
+
     public void deleteWaypoint(RoutePoint waypoint) {
         List<RoutePoint> toRemove = new ArrayList<>();
 
