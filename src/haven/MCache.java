@@ -1405,4 +1405,30 @@ public class MCache implements MapSource {
 	    }
 	}
     }
+
+	public Coord2d gridToScene(Coord gridCoord, long gridId) {
+		// Находим грид по ID
+		Grid grid = findGrid(gridId);
+		if(grid == null) return null;
+
+		// Преобразуем координаты внутри грида в абсолютные координаты тайлов
+		Coord tc = gridCoord.add(grid.ul);
+
+		// Преобразуем координаты тайлов в координаты сцены
+		return Coord2d.of(tc.x * tilesz.x + tilesz.x/2,
+				tc.y * tilesz.y + tilesz.y/2);
+	}
+
+	public Coord sceneToGrid(Coord2d sceneCoord, long gridId) {
+		// Находим грид по ID
+		Grid grid = findGrid(gridId);
+		if(grid == null) return null;
+
+		// Преобразуем координаты сцены в координаты тайлов
+		Coord tc = new Coord((int)(sceneCoord.x / tilesz.x),
+				(int)(sceneCoord.y / tilesz.y));
+
+		// Преобразуем абсолютные координаты тайлов в координаты внутри грида
+		return tc.sub(grid.ul);
+	}
 }

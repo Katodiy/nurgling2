@@ -1,8 +1,6 @@
 package nurgling.tools;
 
-import haven.Coord;
-import haven.Coord2d;
-import haven.MCache;
+import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.widgets.NMiniMap;
@@ -57,15 +55,8 @@ public class FogArea {
                         Coord cbr = new Coord(jbr.getInt("x"), jbr.getInt("y"));
 
                         // Создаем временный прямоугольник
-                        Rectangle rect = new Rectangle(null, null, seg_id);
-                        // Устанавливаем поля вручную, так как нормальная инициализация требует координат
-                        rect.ul_id = ul_grid_id;
-                        rect.br_id = br_grid_id;
-                        rect.cul = cul;
-                        rect.cbr = cbr;
-                        rect.history = new HashSet<>();
-                        rect.history.add(ul_grid_id);
-                        rect.history.add(br_grid_id);
+                        Rectangle rect = new Rectangle(cul, cbr, ul_grid_id,br_grid_id,seg_id);
+
 
                         // Добавляем в список
                         rectangles.add(rect);
@@ -81,8 +72,6 @@ public class FogArea {
         public long ul_id, br_id;
         public long seg_id;
         HashSet<Long> history = new HashSet<>();
-        Coord ulgrid;
-        Coord brgrid;
         boolean loading = true;
 
         Coord cul;
@@ -90,23 +79,38 @@ public class FogArea {
 
         public Rectangle(Coord ul, Coord br, long seg_id) {
             this.seg_id = seg_id;
-            if(ul!=null && br!=null) {
-                this.ul = ul;
-                this.br = br;
-                ulgrid = miniMap.c2p(ul.sub(miniMap.dloc.tc)).floor(tilesz);
-                brgrid = miniMap.c2p(br.sub(miniMap.dloc.tc)).floor(tilesz);
-                trySetGridId();
-            }
+            this.ul = ul;
+            this.br = br;
+            trySetGridId();
+        }
+
+        public Rectangle(Coord cul, Coord cbr, long ul_id, long br_id, long seg_id) {
+            this.seg_id = seg_id;
+            this.cul = cul;
+            this.cbr = cbr;
+            this.ul_id = ul_id;
+            this.br_id = br_id;
+
+            history = new HashSet<>();
+            history.add(ul_id);
+            history.add(br_id);
+
         }
 
         private void trySetGridId() {
-            if(NUtils.getGameUI().ui.sess.glob.map.checkGrid(ulgrid.div(cmaps)) && NUtils.getGameUI().ui.sess.glob.map.checkGrid(brgrid.div(cmaps))) {
-                this.ul_id = NUtils.getGameUI().ui.sess.glob.map.getgrid(ulgrid.div(cmaps)).id;
-                this.br_id = NUtils.getGameUI().ui.sess.glob.map.getgrid(brgrid.div(cmaps)).id;
-                this.cul = ulgrid.sub(NUtils.getGameUI().ui.sess.glob.map.getgrid(ulgrid.div(cmaps)).ul);
-                this.cbr = brgrid.sub(NUtils.getGameUI().ui.sess.glob.map.getgrid(brgrid.div(cmaps)).ul);
-                history.add(ul_id);
-                history.add(br_id);
+            if(ul!=null && br!=null && miniMap.getSegmentById(seg_id)!=null) {
+                Coord ul_gc = ul.div(MCache.cmaps);
+                Coord br_gc = br.div(MCache.cmaps);
+
+                ul_id = miniMap.getSegmentById(seg_id).map.getOrDefault(ul_gc, -1L);
+                br_id = miniMap.getSegmentById(seg_id).map.getOrDefault(br_gc, -1L);
+
+                cul = ul.sub(ul_gc.mul(MCache.cmaps));
+                cbr = br.sub(br_gc.mul(MCache.cmaps));
+
+                if (ul_id == -1 || br_id == -1) {
+                   return;
+                }
                 loading = false;
             }
         }
@@ -149,47 +153,41 @@ public class FogArea {
             return false;
         }
         
-        public void tick(double dt)
-        {
-            if(loading)
-            {
-                if(ul == null || br == null)
-                {
-                    if(miniMap.curloc!=null && miniMap.dloc!=null && miniMap.curloc.seg.id == seg_id)
-                    {
-                        if(miniMap.curloc.seg.map.containsValue(ul_id))
-                        {
-                            for(MCache.Grid grid : NUtils.getGameUI().map.glob.map.grids.values())
-                            {
-                                if(grid.id == ul_id)
-                                {
-                                    Coord2d ulc = grid.gc.mul(cmaps).add(cul).mul(tilesz);
-                                    ul = miniMap.p2c(ulc).add(miniMap.dloc.tc);
-                                    ulgrid = miniMap.c2p(ul.sub(miniMap.dloc.tc)).floor(tilesz);
-                                    break;
-                                }
-                            }
+        public void tick(double dt) {
+            if (loading) {
+                if (ul == null || br == null) {
+                    try (Locked lk = new Locked(miniMap.file.lock.readLock())) {
+                        MapFile.Segment seg = miniMap.file.segments.get(seg_id);
+                        if (seg == null) {
+                            throw new IllegalArgumentException("Сегмент " + seg_id + " не найден");
+                        }
 
+                        Coord ul_gc = findGridCoord(seg, ul_id);
+                        Coord br_gc = findGridCoord(seg, br_id);
+
+                        this.ul = ul_gc.mul(MCache.cmaps).add(cul);
+                        this.br = br_gc.mul(MCache.cmaps).add(cbr);
+
+                        if (this.ul == null || this.br == null) {
+                            throw new IllegalArgumentException("Координаты вне миникарты");
                         }
-                        if(miniMap.curloc.seg.map.containsValue(br_id))
-                        {
-                            for(MCache.Grid grid : NUtils.getGameUI().map.glob.map.grids.values())
-                            {
-                                if(grid.id == br_id)
-                                {
-                                    Coord2d brc = grid.gc.mul(cmaps).add(cbr).mul(tilesz);
-                                    br = miniMap.p2c(brc).add(miniMap.dloc.tc);
-                                    brgrid = miniMap.c2p(br.sub(miniMap.dloc.tc)).floor(tilesz);
-                                    break;
-                                }
-                            }
-                        }
+                        loading = false;
                     }
                 }
-                else {
+                else if (ul_id == -1 || br_id == -1) {
                     trySetGridId();
                 }
             }
+        }
+
+
+        private Coord findGridCoord(MapFile.Segment seg, long gridId) {
+            for (Map.Entry<Coord, Long> entry : seg.map.entrySet()) {
+                if (entry.getValue() == gridId) {
+                    return entry.getKey();
+                }
+            }
+            throw new IllegalArgumentException("Грид " + gridId + " не найден в сегменте " + seg.id);
         }
 
         // Разделяет текущий прямоугольник на части, не перекрывающиеся с `other`

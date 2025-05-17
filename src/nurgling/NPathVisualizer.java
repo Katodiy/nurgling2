@@ -55,12 +55,10 @@ public class NPathVisualizer implements RenderTree.Node {
     private void update() {
         Set<Moving> tmoves;
 
-        // Копируем текущие перемещения для безопасного доступа
         synchronized (moves) {
             tmoves = new HashSet<>(moves);
         }
 
-        // Категоризация путей по типам объектов
         Map<PathCategory, List<Pair<Coord3f, Coord3f>>> categorized = new HashMap<>();
 
         for (Moving m : tmoves) {
@@ -73,9 +71,9 @@ public class NPathVisualizer implements RenderTree.Node {
                         m.getc(), // Текущая позиция
                         m.gett()  // Целевая позиция
                 ));
-            }catch (Loading e)
+            }catch (Loading ignore)
             {
-                e.printStackTrace();
+//                e.printStackTrace();
             }
 
 

@@ -927,4 +927,64 @@ public class MiniMap extends Widget
 			  0, -1);
 	}
     }
+
+
+	public Coord minimapToGrid(Coord minimapCoord) {
+		// 1. Получаем глобальные координаты тайла
+		Coord tc = c2st(minimapCoord);
+		if (tc == null) return null;
+
+		// 2. Находим грид, которому принадлежит этот тайл
+		Coord gc = tc.div(MCache.cmaps); // Координаты грида в сегменте
+		MapFile.Segment seg = dseg; // Текущий сегмент миникарты
+		if (seg == null) return null;
+
+		// 3. Получаем ID грида
+		Long gridId = seg.map.get(gc);
+		if (gridId == null) return null;
+
+		// 4. Вычисляем локальные координаты внутри грида
+		return tc.sub(gc.mul(MCache.cmaps));
+	}
+
+	public Coord gridToMinimap(Coord gridCoord, long gridId) {
+		// 1. Получаем информацию о гриде из MapFile
+		MapFile.GridInfo info = file.gridinfo.get(gridId);
+		if (info == null) return null;
+
+		// 2. Вычисляем глобальные координаты тайла
+		// info.sc — координаты грида в сегменте, умноженные на cmaps (100)
+		// gridCoord — локальные координаты внутри грида (0..99)
+		Coord tc = info.sc.mul(MCache.cmaps).add(gridCoord);
+
+		// 3. Преобразуем в координаты миникарты
+		return st2c(tc);
+	}
+
+	public Coord sceneToMinimap(Coord2d sceneCoord) {
+		return p2c(sceneCoord);
+	}
+
+	public Coord2d minimapToScene(Coord minimapCoord) {
+		return c2p(minimapCoord);
+	}
+
+	public MapFile.Segment getSegmentById(long segId) {
+		if (file == null) {
+			throw new IllegalArgumentException("MiniMap или MapFile не инициализированы");
+		}
+
+		// Блокируем чтение, чтобы избежать конфликтов при многопоточном доступе
+		file.lock.readLock().lock();
+		try {
+			// Достаём сегмент из кэша сегментов MapFile
+			MapFile.Segment segment = file.segments.get(segId);
+			if (segment == null) {
+				throw new IllegalArgumentException("Сегмент " + segId + " не найден");
+			}
+			return segment;
+		} finally {
+			file.lock.readLock().unlock();
+		}
+	}
 }

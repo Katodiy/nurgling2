@@ -16,6 +16,7 @@ public class NMiniMapWnd extends Widget{
     public static final KeyBinding kb_claim = KeyBinding.get("ol-claim", KeyMatch.nil);
     public static final KeyBinding kb_vil = KeyBinding.get("ol-vil", KeyMatch.nil);
     public static final KeyBinding kb_night = KeyBinding.get("mwnd_night", KeyMatch.nil);
+    public static final KeyBinding kb_fog = KeyBinding.get("mwnd_fog", KeyMatch.nil);
     public static final KeyBinding kb_nature = KeyBinding.get("mwnd_nature", KeyMatch.nil);
     public static class NMenuCheckBox extends ICheckBox {
         public NMenuCheckBox(String base, KeyBinding gkey, String tooltip) {
@@ -25,6 +26,7 @@ public class NMiniMapWnd extends Widget{
         }
     }
     public ACheckBox nightvision;
+    public ACheckBox fog;
     public ACheckBox natura;
     ACheckBox map_box;
     Widget toggle_panel;
@@ -96,6 +98,9 @@ public class NMiniMapWnd extends Widget{
 
         nightvision = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/daynight", kb_night, "Night vision"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("night", a));
         nightvision.a = (Boolean) NConfig.get(NConfig.Key.nightVision);
+
+        fog = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/fog", kb_fog, "Fog of war"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> NConfig.set(NConfig.Key.fogEnable, a));
+        fog.a = (Boolean) NConfig.get(NConfig.Key.fogEnable);
 
 //        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
 //        path.a = NConfiguration.getInstance().isPaths;
