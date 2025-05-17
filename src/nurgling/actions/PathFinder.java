@@ -22,6 +22,7 @@ public class PathFinder implements Action {
     ArrayList<Coord> end_poses = null;
     public boolean isHardMode = false;
     public boolean waterMode = false;
+    public boolean gatesAlwaysClosed = false;
     Coord2d begin;
     Coord2d end;
     long target_id = -2;
@@ -131,6 +132,7 @@ public class PathFinder implements Action {
                 }
             }
             pfmap.waterMode = waterMode;
+            pfmap.gatesAlwaysClosed = gatesAlwaysClosed;
             pfmap.build();
             CellsArray dca = null;
             if (dummy != null)
@@ -385,6 +387,13 @@ public class PathFinder implements Action {
         PathFinder pf = new PathFinder(target);
         pf.isHardMode = true;
         return pf.construct(true) != null;
+    }
+
+    public static boolean isAvailable(Coord2d begin, Coord2d target, boolean gatesAlwaysClosed) throws InterruptedException {
+        PathFinder pf = new PathFinder(begin, target);
+        pf.gatesAlwaysClosed = gatesAlwaysClosed;
+        LinkedList<Graph.Vertex> res = pf.construct(true);
+        return res != null || pf.dn;
     }
 
     public PathFinder(Gob dummy, boolean virtual) {
