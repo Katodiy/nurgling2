@@ -9,10 +9,10 @@ import nurgling.tools.NAlias;
 
 public class GateDetector {
     private static final String[] GATE_NAMES = {
-        "gfx/terobjs/arch/polebiggate",
-        "gfx/terobjs/arch/drystonewallbiggate",
-        "gfx/terobjs/arch/polegate",
-        "gfx/terobjs/arch/drystonewallgate"
+            "gfx/terobjs/arch/polebiggate",
+            "gfx/terobjs/arch/drystonewallbiggate",
+            "gfx/terobjs/arch/polegate",
+            "gfx/terobjs/arch/drystonewallgate",
     };
 
     private static final double GATE_PROXIMITY_THRESHOLD = 10.0;

@@ -28,10 +28,10 @@ public class NPFMap
     public boolean bad = false;
 
     private static final String[] GATE_NAMES = {
-        "gfx/terobjs/arch/polegate",
-        "gfx/terobjs/arch/drystonewallgate",
-        "gfx/terobjs/arch/polebiggate",
-        "gfx/terobjs/arch/drystonewallbiggate"
+            "gfx/terobjs/arch/polegate",
+            "gfx/terobjs/arch/drystonewallgate",
+            "gfx/terobjs/arch/polebiggate",
+            "gfx/terobjs/arch/drystonewallbiggate",
     };
 
     private boolean isGate(Gob gob) {
