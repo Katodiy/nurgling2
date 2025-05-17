@@ -87,7 +87,13 @@ public class RoutePoint {
     public Coord3f toCoord3f(MCache mcache) {
         for (MCache.Grid grid : mcache.grids.values()) {
             if (grid.id == gridId) {
-                return mcache.getzp(grid.ul.add(localCoord).mul(MCache.tilesz).add(MCache.tilehsz));
+                boolean canContinue = false;
+                for(MCache.Grid.Cut cut : grid.cuts) {
+                    canContinue = cut.mesh.isReady() && cut.fo.isReady();
+                }
+                if (canContinue) {
+                    return mcache.getzp(grid.ul.add(localCoord).mul(MCache.tilesz).add(MCache.tilehsz));
+                }
             }
         }
         return null;

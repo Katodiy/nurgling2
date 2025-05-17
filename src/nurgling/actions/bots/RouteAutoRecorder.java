@@ -3,6 +3,7 @@ package nurgling.actions.bots;
 import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
+import haven.MCache;
 import nurgling.NUtils;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
@@ -19,9 +20,11 @@ public class RouteAutoRecorder implements Runnable {
     private final Route route;
     private boolean running = true;
     private final double interval = 77.0;
+    private final GateDetector gateDetector;
 
     public RouteAutoRecorder(Route route) {
         this.route = route;
+        this.gateDetector = new GateDetector();
     }
 
     public void stop() {
@@ -30,113 +33,162 @@ public class RouteAutoRecorder implements Runnable {
 
     @Override
     public void run() {
-            Coord2d playerRC = player().rc;
+        Coord2d playerRC = player().rc;
 
-            // add waypoint where the recording started
-            route.addWaypoint();
+        // add waypoint where the recording started
+        route.addWaypoint();
 
-            while (running) {
-                try {
-                    NUtils.getUI().core.addTask( new WaitDistance(playerRC, interval, this.route));
-                } catch (InterruptedException e) {
-                    NUtils.getGameUI().msg("Stopped route recording for: " + route.name);
-                    running = false;
-                }
+        while (running) {
+            try {
+                NUtils.getUI().core.addTask(new WaitDistance(playerRC, interval, this.route));
+            } catch (InterruptedException e) {
+                NUtils.getGameUI().msg("Stopped route recording for: " + route.name);
+                running = false;
+            }
 
-                if (!running) break;
+            if (!running) break;
 
-                Gob gob = null;
+            Gob gob = null;
 
-                // update player RC to current
-                Gob playerGob = player();
-                if(playerGob != null) {
-                    playerRC = playerGob.rc;
+            // update player RC to current
+            Gob playerGob = player();
+            if(playerGob != null) {
+                playerRC = playerGob.rc;
+                gob = Finder.findGob(playerGob.ngob.hash);
+            } else {
+                playerRC = null;
+            }
 
-                    gob = Finder.findGob(playerGob.ngob.hash);
-                } else {
-                    playerRC = null;
-                }
+            // get the hash of the last clicked gob (door, minehole, ladder, cellar, stairs, gate)
+            String hash = route.lastAction != null ? route.lastAction.gob.ngob.hash : null;
+            String name = route.lastAction != null ? route.lastAction.gob.ngob.name : null;
+            Gob gobForCachedRoutePoint = route.lastAction != null ? route.lastAction.gob : null;
 
-                // get the hash of the last clicked gob (door, minehole, ladder, cellar, stairs, gate)
-                String hash = route.lastAction != null ? route.lastAction.gob.ngob.hash : null;
-                String name = route.lastAction != null ? route.lastAction.gob.ngob.name : null;
-                Gob gobForCachedRoutePoint = route.lastAction != null ? route.lastAction.gob : null;
 
-                // creating one of the doors. Could be a gate, a door or stairs.
-                if(veryCloseToAGate() || (gob == null && !isNonLoadingDoor()) || isNonLoadingDoor()) {
-                    System.out.println(hash);
-                    System.out.println(name);
+            // Handle gate detection and waypoint creation
+            if(route.hasPassedGate) {
+                // We've passed through a gate, add both waypoints
+                if (route.cachedRoutePoint != null) {
+                    // Calculate position for the point before the gate
+                    Coord tilec = player().rc.div(MCache.tilesz).floor();
+                    MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
+                    Coord playerLocalCoord = tilec.sub(grid.ul);
+                    Coord preRecordedCoord = route.cachedRoutePoint.localCoord;
 
-                    try {
-                         if (veryCloseToAGate()) {
-                            // gate is closed
+                    // based on position of the player and preRecordedCoords we figure out which direction to offset
+                    // the preRecordedCoord. The reason for this is that the point gets recorded right on top of the
+                    // gate.
+                    Coord newCoordForAfterGate = preRecordedCoord.add((playerLocalCoord.x > preRecordedCoord.x ? -1 : playerLocalCoord.x < preRecordedCoord.x ? 1 : 0), (playerLocalCoord.y > preRecordedCoord.y ? -1 : playerLocalCoord.y < preRecordedCoord.y ? 1 : 0));
 
-                             // 2 - closed; 1 - opened;
-                            if(gobForCachedRoutePoint.ngob.getModelAttribute() == 1) {
+                    // Update the coords
+                    route.cachedRoutePoint.localCoord = newCoordForAfterGate;
 
-                                // Wait for gate to be opened
-                                NUtils.getUI().core.addTask(new WaitGobModelAttr(gobForCachedRoutePoint, 1));
+                    // Add the waypoint.
+                    route.addPredefinedWaypoint(route.cachedRoutePoint, "", "", false);
 
-                                // Wait for gate to be closed
-                                NUtils.getUI().core.addTask(new WaitGobModelAttr(gobForCachedRoutePoint, 2));
-                            } else {
-                                continue;
-                            }
-                        } else if(gob == null && !isNonLoadingDoor()) {
-                            // wait for map to load
-                             NUtils.getUI().core.addTask(new WaitForNoGobWithHash(hash));
-                            NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
-                        } else if (isNonLoadingDoor()) {
-                            // wait for down/up stairs to show up
-                            NUtils.getUI().core.addTask(new WaitForDoorGob());
-                        }
+                    route.addWaypoint();
+                    // Get the last two waypoints (one before gate, one after)
+                    RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
+                    RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
 
-                        // Add new waypoint
-                        route.addWaypoint();
-
-                        // Get the last two waypoints
-                        RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
-                        RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
-
-                        if(veryCloseToAGate()) {
-                            // Add connections between them
-                            lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
-
-                            // Add connection for the arch
-                            newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), hash, name, true);
-                        } else {
-                            // Add connections between them
-                            lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
-
-                            Gob arch = Finder.findGob(player().rc, new NAlias(
-                                    getPair(gobForCachedRoutePoint.ngob.name)
-                            ), null, 100);
-
-                            if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
-                                double angle = arch.a;
-                                double offset = 1;
-
-                                Coord newPosition = new Coord(
-                                        (int)Math.round(newWaypoint.localCoord.x + Math.cos(angle) * offset),
-                                        (int)Math.round(newWaypoint.localCoord.y +  Math.sin(angle) * offset)
-                                );
-
-                                route.setWaypointCoord(newWaypoint, newPosition);
-                            }
-
-                            // Add connection for the arch
-                            newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
-                        }
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+                    // Add connections between them through the gate we passed
+                    if(route.lastPassedGate != null) {
+                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id),
+                                route.lastPassedGate.ngob.hash, route.lastPassedGate.ngob.name, true);
+                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id),
+                                route.lastPassedGate.ngob.hash, route.lastPassedGate.ngob.name, true);
                     }
 
-                    route.lastAction = null;
-                } else {
-                    route.addWaypoint();
-                    route.lastAction = null;
+                    // Clear the cached point
+                    route.cachedRoutePoint = null;
+                    route.hasPassedGate = false;
+                    route.lastPassedGate = null;
+                    continue;
                 }
+            } else if(gateDetector.isNearGate()) {
+                continue;
+            } else if(gob == null && !isNonLoadingDoor()) {
+                // Handle loading doors
+                try {
+                    NUtils.getUI().core.addTask(new WaitForNoGobWithHash(hash));
+                    NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
+
+                    // Add new waypoint
+                    route.addWaypoint();
+
+                    // Get the last two waypoints
+                    RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
+                    RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
+
+                    // Add connections between them
+                    lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
+
+                    Gob arch = Finder.findGob(player().rc, new NAlias(
+                            getPair(gobForCachedRoutePoint.ngob.name)
+                    ), null, 100);
+
+                    // For the minehole we have to add an offset, otherwise the minehole point gets created right on
+                    // top of the minehole causing it to be unreachable with PF.
+                    if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
+                        double angle = arch.a;
+                        double offset = 1;
+
+                        Coord newPosition = new Coord(
+                                (int)Math.round(newWaypoint.localCoord.x + Math.cos(angle) * offset),
+                                (int)Math.round(newWaypoint.localCoord.y +  Math.sin(angle) * offset)
+                        );
+
+                        route.setWaypointCoord(newWaypoint, newPosition);
+                    }
+
+                    // Add connection for the arch
+                    newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (isNonLoadingDoor()) {
+                // Handle non-loading doors
+                try {
+                    NUtils.getUI().core.addTask(new WaitForDoorGob());
+
+                    // Add new waypoint
+                    route.addWaypoint();
+
+                    // Get the last two waypoints
+                    RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
+                    RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
+
+                    // Add connections between them
+                    lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
+
+                    Gob arch = Finder.findGob(player().rc, new NAlias(
+                            getPair(gobForCachedRoutePoint.ngob.name)
+                    ), null, 100);
+
+                    if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
+                        double angle = arch.a;
+                        double offset = 1;
+
+                        Coord newPosition = new Coord(
+                                (int)Math.round(newWaypoint.localCoord.x + Math.cos(angle) * offset),
+                                (int)Math.round(newWaypoint.localCoord.y +  Math.sin(angle) * offset)
+                        );
+
+                        route.setWaypointCoord(newWaypoint, newPosition);
+                    }
+
+                    // Add connection for the arch
+                    newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                // Regular distance-based waypoint
+                route.addWaypoint();
             }
+
+            route.lastAction = null;
+        }
     }
 
     private boolean isNonLoadingDoor() {
@@ -146,7 +198,8 @@ public class RouteAutoRecorder implements Runnable {
 
         List<String> listOfDoors = Arrays.asList("stairs");
         for (String door : listOfDoors) {
-            if(NUtils.getUI().core.getLastActions().gob.ngob.name.contains(door) && !NUtils.getUI().core.getLastActions().gob.ngob.name.contains("cellar")) {
+            if(NUtils.getUI().core.getLastActions().gob.ngob.name.contains(door) && 
+               !NUtils.getUI().core.getLastActions().gob.ngob.name.contains("cellar")) {
                 return true;
             }
         }
@@ -154,34 +207,19 @@ public class RouteAutoRecorder implements Runnable {
         return false;
     }
 
-    private boolean veryCloseToAGate() {
-        try {
-            String[] gateNames = {"gfx/terobjs/arch/polebiggate", "gfx/terobjs/arch/drystonewallbiggate", "gfx/terobjs/arch/polegate", "gfx/terobjs/arch/drystonewallgate"};
-            Gob gate = Finder.findGob(player().rc, new NAlias(gateNames), null, 30);
-
-            if(gate != null) {
-                return true;
-            }
-            return false;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     public static String getPair(String input) {
         String[][] pairs = {
-                {"gfx/terobjs/arch/stonestead-door", "gfx/terobjs/arch/stonestead"},
-                {"gfx/terobjs/arch/stonemansion-door", "gfx/terobjs/arch/stonemansion"},
-                {"gfx/terobjs/arch/greathall-door", "gfx/terobjs/arch/greathall"},
-                {"gfx/terobjs/arch/primitivetent-door", "gfx/terobjs/arch/primitivetent"},
-                {"gfx/terobjs/arch/windmill-door", "gfx/terobjs/arch/windmill"},
-                {"gfx/terobjs/arch/stonetower-door", "gfx/terobjs/arch/stonetower"},
-                {"gfx/terobjs/arch/logcabin-door", "gfx/terobjs/arch/logcabin"},
-                {"gfx/terobjs/arch/timberhouse-door", "gfx/terobjs/arch/timberhouse"},
-
-                {"gfx/terobjs/minehole", "gfx/terobjs/ladder"},
-                {"gfx/terobjs/arch/upstairs", "gfx/terobjs/arch/downstairs"},
-                {"gfx/terobjs/arch/cellardoor", "gfx/terobjs/arch/cellarstairs"}
+            {"gfx/terobjs/arch/stonestead-door", "gfx/terobjs/arch/stonestead"},
+            {"gfx/terobjs/arch/stonemansion-door", "gfx/terobjs/arch/stonemansion"},
+            {"gfx/terobjs/arch/greathall-door", "gfx/terobjs/arch/greathall"},
+            {"gfx/terobjs/arch/primitivetent-door", "gfx/terobjs/arch/primitivetent"},
+            {"gfx/terobjs/arch/windmill-door", "gfx/terobjs/arch/windmill"},
+            {"gfx/terobjs/arch/stonetower-door", "gfx/terobjs/arch/stonetower"},
+            {"gfx/terobjs/arch/logcabin-door", "gfx/terobjs/arch/logcabin"},
+            {"gfx/terobjs/arch/timberhouse-door", "gfx/terobjs/arch/timberhouse"},
+            {"gfx/terobjs/minehole", "gfx/terobjs/ladder"},
+            {"gfx/terobjs/arch/upstairs", "gfx/terobjs/arch/downstairs"},
+            {"gfx/terobjs/arch/cellardoor", "gfx/terobjs/arch/cellarstairs"}
         };
 
         for (String[] pair : pairs) {
@@ -189,7 +227,7 @@ public class RouteAutoRecorder implements Runnable {
             if (pair[1].equals(input)) return pair[0];
         }
 
-        return null; // Or handle unknown input appropriately
+        return null;
     }
 }
 

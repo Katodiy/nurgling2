@@ -3,7 +3,6 @@ package nurgling.routes;
 import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
-import nurgling.NConfig;
 import nurgling.NCore;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -19,6 +18,9 @@ public class Route {
     public ArrayList<RoutePoint> waypoints = new ArrayList<>();
     public ArrayList<RouteSpecialization> spec = new ArrayList<>();
     public NCore.LastActions lastAction = null;
+    public RoutePoint cachedRoutePoint = null;
+    public boolean hasPassedGate = false;
+    public Gob lastPassedGate = null;
 
     public static class RouteSpecialization {
         public String name;
