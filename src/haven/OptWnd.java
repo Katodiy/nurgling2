@@ -666,6 +666,9 @@ public class OptWnd extends Window {
 		y = addbtn(cont, "Quick action (Alt.)", NMapView.kb_quickignaction, y);
 		y = addbtn(cont, "Show/hide nature objects", NMiniMapWnd.kb_nature, y);
 		y = addbtn(cont, "Night vision", NMiniMapWnd.kb_night, y);
+		y = addbtn(cont, "Player grid box", NMapView.kb_displaypbox, y);
+		y = addbtn(cont, "Player FOV box", NMapView.kb_displayfov, y);
+		y = addbtn(cont, "Grid box", NMapView.kb_displaygrid, y);
 
 		y = cont.adda(new Label("Tool belt"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
 		for(int i = 0 ; i < (Integer)NConfig.get(NConfig.Key.numbelts); i++)

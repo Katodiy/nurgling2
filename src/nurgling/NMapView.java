@@ -22,6 +22,9 @@ public class NMapView extends MapView
 {
     public static final KeyBinding kb_quickaction = KeyBinding.get("quickaction", KeyMatch.forcode(KeyEvent.VK_Q, 0));
     public static final KeyBinding kb_quickignaction = KeyBinding.get("quickignaction", KeyMatch.forcode(KeyEvent.VK_Q, 1));
+    public static final KeyBinding kb_displaypbox = KeyBinding.get("pgridbox",  KeyMatch.nil);
+    public static final KeyBinding kb_displayfov = KeyBinding.get("pfovbox",  KeyMatch.nil);
+    public static final KeyBinding kb_displaygrid = KeyBinding.get("gridbox",  KeyMatch.nil);
     public static final int MINING_OVERLAY = - 1;
     public Coord lastGC = null;
 
@@ -543,6 +546,22 @@ public class NMapView extends MapView
             }, "quick action")).start();
 
 
+        }
+
+        if(kb_displaypbox.key().match(ev) ){
+            boolean val = (Boolean) NConfig.get(NConfig.Key.player_box);
+            NConfig.set(NConfig.Key.player_box, !val);
+            NUtils.getGameUI().msg("Player gridbox: " + !val);
+        }
+        if(kb_displayfov.key().match(ev) ){
+            boolean val = (Boolean) NConfig.get(NConfig.Key.player_fov);
+            NConfig.set(NConfig.Key.player_fov, !val);
+            NUtils.getGameUI().msg("Player vofbox: " + !val);
+        }
+        if(kb_displaygrid.key().match(ev) ){
+            boolean val = (Boolean) NConfig.get(NConfig.Key.gridbox);
+            NConfig.set(NConfig.Key.gridbox, !val);
+            NUtils.getGameUI().msg("Gridbox: " + !val);
         }
         return super.keydown(ev);
     }
