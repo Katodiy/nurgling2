@@ -148,8 +148,6 @@ public class NMiniMap extends MiniMap implements Console.Directory {
                 Coord2d sgridsz = new Coord2d(_sgridsz);
                 Gob player = ui.gui.map.player();
                 if (player != null && dloc != null) {
-//                    Coord2d ul2d = player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz);
-//                    p2c(ul2d).add(dloc.tc);
                     Coord ul = player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz).floor(tilesz).add(sessloc.tc);
                     Coord br = ul.add(VIEW_SZ);
                     fogArea.addWithoutOverlaps(ul, br, curloc.seg.id);

@@ -156,22 +156,23 @@ public class FogArea {
         public void tick(double dt) {
             if (loading) {
                 if (ul == null || br == null) {
-                    // 1. Получаем сегмент карты
-                    MapFile.Segment seg = miniMap.file.segments.get(seg_id);
-                    if (seg == null) {
-                        throw new IllegalArgumentException("Сегмент " + seg_id + " не найден");
+                    try (Locked lk = new Locked(miniMap.file.lock.readLock())) {
+                        MapFile.Segment seg = miniMap.file.segments.get(seg_id);
+                        if (seg == null) {
+                            throw new IllegalArgumentException("Сегмент " + seg_id + " не найден");
+                        }
+
+                        Coord ul_gc = findGridCoord(seg, ul_id);
+                        Coord br_gc = findGridCoord(seg, br_id);
+
+                        this.ul = ul_gc.mul(MCache.cmaps).add(cul);
+                        this.br = br_gc.mul(MCache.cmaps).add(cbr);
+
+                        if (this.ul == null || this.br == null) {
+                            throw new IllegalArgumentException("Координаты вне миникарты");
+                        }
+                        loading = false;
                     }
-
-                    Coord ul_gc = findGridCoord(seg, ul_id);
-                    Coord br_gc = findGridCoord(seg, br_id);
-
-                    this.ul = ul_gc.mul(MCache.cmaps).add(cul);
-                    this.br = br_gc.mul(MCache.cmaps).add(cbr);
-
-                    if (this.ul == null || this.br == null) {
-                        throw new IllegalArgumentException("Координаты вне миникарты");
-                    }
-                    loading = false;
                 }
                 else if (ul_id == -1 || br_id == -1) {
                     trySetGridId();
