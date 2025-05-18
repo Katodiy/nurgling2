@@ -7,14 +7,14 @@ import nurgling.NUtils;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
 
-public class WaitDistance extends NTask {
+public class WaitNextPointForRouteAutoRecorder extends NTask {
     Coord2d last;
     double dist;
     Route route;
     Gob oldPlayer;
     private final GateDetector gateDetector;
 
-    public WaitDistance(Coord2d last, double dist, Route route) {
+    public WaitNextPointForRouteAutoRecorder(Coord2d last, double dist, Route route) {
         this.last = last;
         this.dist = dist;
         this.route = route;

@@ -7,12 +7,12 @@ import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
+import nurgling.tasks.GateDetector;
 import nurgling.tasks.WaitForGobWithHash;
 import nurgling.tasks.WaitForMapLoad;
 import nurgling.tasks.WaitGobModelAttrChange;
 import nurgling.tools.Finder;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class RoutePointNavigator implements Action {
@@ -84,7 +84,7 @@ public class RoutePointNavigator implements Action {
                 RoutePoint.Connection prevConn = currentPoint.getConnection(previousPoint.id);
                 if(prevConn != null && prevConn.isDoor) {
                     Gob gob = Finder.findGob(prevConn.gobHash);
-                    if(gob != null && !isGobDoor(gob) && isDoorOpen(gob)) {
+                    if(gob != null && !GateDetector.isGobDoor(gob) && GateDetector.isDoorOpen(gob)) {
                         NUtils.openDoorOnAGob(gui, gob);
                         NUtils.getUI().core.addTask(new WaitGobModelAttrChange(gob, gob.ngob.getModelAttribute()));
                     }
@@ -102,7 +102,7 @@ public class RoutePointNavigator implements Action {
                         return Results.FAIL();
                     }
 
-                    if (isGobDoor(gob)) {
+                    if (GateDetector.isGobDoor(gob)) {
                         // enter through the door
                         NUtils.openDoorOnAGob(gui, gob);
                         // Wait until we can safely get coordinates for the next waypoint
@@ -110,7 +110,7 @@ public class RoutePointNavigator implements Action {
                         NUtils.getUI().core.addTask(new WaitForGobWithHash(nextPoint.getConnection(currentPoint.id).gobHash));
                     } else {
                         // open gate if its closed
-                        if(!isDoorOpen(gob)) {
+                        if(!GateDetector.isDoorOpen(gob)) {
                             NUtils.openDoorOnAGob(gui, gob);
                             NUtils.getUI().core.addTask(new WaitGobModelAttrChange(gob, gob.ngob.getModelAttribute()));
                         }
@@ -122,32 +122,7 @@ public class RoutePointNavigator implements Action {
         return Results.SUCCESS();
     }
 
-    private boolean isDoorOpen(Gob gob) {
-        return gob.ngob.getModelAttribute() == 1;
-    }
 
-    private boolean isGobDoor(Gob gob) {
-        List<String> listOfDoors = Arrays.asList(
-                "stonestead",
-                "stonemansion",
-                "greathall",
-                "primitivetent",
-                "windmill",
-                "stonetower",
-                "logcabin",
-                "timberhouse",
-                "minehole",
-                "ladder",
-                "stairs",
-                "cellardoor");
-        for (String door : listOfDoors) {
-            if(gob.ngob.name.contains(door)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     private boolean needToPassDoor(RoutePoint.Connection conn, RoutePoint nextPoint, NGameUI gui) {
         Gob gob = Finder.findGob(conn.gobHash);

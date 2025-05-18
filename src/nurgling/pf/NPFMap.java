@@ -3,6 +3,7 @@ package nurgling.pf;
 import haven.*;
 import haven.Window;
 import nurgling.*;
+import nurgling.tasks.GateDetector;
 
 import java.awt.*;
 import java.util.*;
@@ -27,16 +28,9 @@ public class NPFMap
     long currentTransport = -1;
     public boolean bad = false;
 
-    private static final String[] GATE_NAMES = {
-            "gfx/terobjs/arch/polegate",
-            "gfx/terobjs/arch/drystonewallgate",
-            "gfx/terobjs/arch/polebiggate",
-            "gfx/terobjs/arch/drystonewallbiggate",
-    };
-
     private boolean isGate(Gob gob) {
         if (gob.ngob == null || gob.ngob.name == null) return false;
-        for (String gateName : GATE_NAMES) {
+        for (String gateName : GateDetector.GATE_NAMES) {
             if (gob.ngob.name.equals(gateName)) return true;
         }
         return false;

@@ -11,9 +11,6 @@ import nurgling.tasks.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
-import java.util.Arrays;
-import java.util.List;
-
 import static nurgling.NUtils.player;
 
 public class RouteAutoRecorder implements Runnable {
@@ -40,7 +37,7 @@ public class RouteAutoRecorder implements Runnable {
 
         while (running) {
             try {
-                NUtils.getUI().core.addTask(new WaitDistance(playerRC, interval, this.route));
+                NUtils.getUI().core.addTask(new WaitNextPointForRouteAutoRecorder(playerRC, interval, this.route));
             } catch (InterruptedException e) {
                 NUtils.getGameUI().msg("Stopped route recording for: " + route.name);
                 running = false;
@@ -107,14 +104,11 @@ public class RouteAutoRecorder implements Runnable {
                 }
             } else if(gateDetector.isNearGate()) {
                 continue;
-            } else if(gob == null && !isNonLoadingDoor()) {
+            } else if(gob == null && !GateDetector.isLastActionNonLoadingDoor()) {
                 // Handle loading doors
                 try {
                     NUtils.getUI().core.addTask(new WaitForNoGobWithHash(hash));
                     NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
-
-                    // Add new waypoint
-//                    route.addWaypoint();
 
                     Gob player = NUtils.player();
                     Coord2d rc = player.rc;
@@ -123,7 +117,7 @@ public class RouteAutoRecorder implements Runnable {
                     RoutePoint predefinedWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
 
                     Gob arch = Finder.findGob(player().rc, new NAlias(
-                            getPair(gobForCachedRoutePoint.ngob.name)
+                            GateDetector.getDoorPair(gobForCachedRoutePoint.ngob.name)
                     ), null, 100);
 
                     // For the minehole we have to add an offset, otherwise the minehole point gets created right on
@@ -131,18 +125,23 @@ public class RouteAutoRecorder implements Runnable {
                     if(arch != null) {
                         if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
                             double angle = arch.a;
-                            double offset = 1;
+                            double offset = 2;
+
+                            Coord tilec = rc.div(MCache.tilesz).floor();
+                            MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
+
+                            Coord mineLocalCoord = tilec.sub(grid.ul);
 
                             Coord newPosition = new Coord(
-                                    (int)Math.round(predefinedWaypoint.localCoord.x + Math.cos(angle) * offset),
-                                    (int)Math.round(predefinedWaypoint.localCoord.y +  Math.sin(angle) * offset)
+                                    (int)Math.round(mineLocalCoord.x + Math.cos(angle) * offset),
+                                    (int)Math.round(mineLocalCoord.y +  Math.sin(angle) * offset)
                             );
 
-//                            route.setWaypointCoord(predefinedWaypoint, newPosition);
                             predefinedWaypoint.setLocalCoord(newPosition);
                         }
                     }
 
+                    // Add new waypoint
                     route.addPredefinedWaypoint(predefinedWaypoint, "", "", false);
 
                     // Get the last two waypoints
@@ -157,7 +156,7 @@ public class RouteAutoRecorder implements Runnable {
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-            } else if (isNonLoadingDoor()) {
+            } else if (GateDetector.isLastActionNonLoadingDoor()) {
                 // Handle non-loading doors
                 try {
                     NUtils.getUI().core.addTask(new WaitForDoorGob());
@@ -173,7 +172,7 @@ public class RouteAutoRecorder implements Runnable {
                     lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
 
                     Gob arch = Finder.findGob(player().rc, new NAlias(
-                            getPair(gobForCachedRoutePoint.ngob.name)
+                            GateDetector.getDoorPair(gobForCachedRoutePoint.ngob.name)
                     ), null, 100);
 
                     // Add connection for the arch
@@ -188,45 +187,6 @@ public class RouteAutoRecorder implements Runnable {
 
             route.lastAction = null;
         }
-    }
-
-    private boolean isNonLoadingDoor() {
-        if(NUtils.getUI().core.getLastActions() == null) {
-            return false;
-        }
-
-        List<String> listOfDoors = Arrays.asList("stairs");
-        for (String door : listOfDoors) {
-            if(NUtils.getUI().core.getLastActions().gob.ngob.name.contains(door) && 
-               !NUtils.getUI().core.getLastActions().gob.ngob.name.contains("cellar")) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static String getPair(String input) {
-        String[][] pairs = {
-            {"gfx/terobjs/arch/stonestead-door", "gfx/terobjs/arch/stonestead"},
-            {"gfx/terobjs/arch/stonemansion-door", "gfx/terobjs/arch/stonemansion"},
-            {"gfx/terobjs/arch/greathall-door", "gfx/terobjs/arch/greathall"},
-            {"gfx/terobjs/arch/primitivetent-door", "gfx/terobjs/arch/primitivetent"},
-            {"gfx/terobjs/arch/windmill-door", "gfx/terobjs/arch/windmill"},
-            {"gfx/terobjs/arch/stonetower-door", "gfx/terobjs/arch/stonetower"},
-            {"gfx/terobjs/arch/logcabin-door", "gfx/terobjs/arch/logcabin"},
-            {"gfx/terobjs/arch/timberhouse-door", "gfx/terobjs/arch/timberhouse"},
-            {"gfx/terobjs/minehole", "gfx/terobjs/ladder"},
-            {"gfx/terobjs/arch/upstairs", "gfx/terobjs/arch/downstairs"},
-            {"gfx/terobjs/arch/cellardoor", "gfx/terobjs/arch/cellarstairs"}
-        };
-
-        for (String[] pair : pairs) {
-            if (pair[0].equals(input)) return pair[1];
-            if (pair[1].equals(input)) return pair[0];
-        }
-
-        return null;
     }
 }
 

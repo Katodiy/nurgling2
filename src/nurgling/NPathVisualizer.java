@@ -111,27 +111,31 @@ public class NPathVisualizer implements RenderTree.Node {
             if(NUtils.getGameUI().map != null) {
                 RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
                 ArrayList<Pair<Coord3f, Coord3f>> gpf = new ArrayList<>();
-                for(RoutePoint point : graph.getPoints())
-                {
-                    if(NUtils.getGameUI().map.glob.map.findGrid(point.gridId)!=null)
+                Collection<RoutePoint> routePoints = graph.getPoints();
+
+                synchronized (routePoints) {
+                    for(RoutePoint point : graph.getPoints())
                     {
-                        Coord3f one3f = point.toCoord3f(NUtils.getGameUI().map.glob.map);
-                        for(Integer nei:point.getNeighbors())
+                        if(NUtils.getGameUI().map.glob.map.findGrid(point.gridId)!=null)
                         {
-                            Integer hash = (new Pair<>(point.hashCode(),nei.hashCode())).hashCode();
-                            if(!added.contains(hash))
+                            Coord3f one3f = point.toCoord3f(NUtils.getGameUI().map.glob.map);
+                            for(Integer nei:point.getNeighbors())
                             {
-                                if(NUtils.getGameUI().map.glob.map.findGrid(point.gridId)!=null) {
-                                    if(graph.getPoint(nei) != null) {
-                                        if(NUtils.getGameUI().map.glob.map != null) {
-                                            RoutePoint routePoint = graph.getPoint(nei);
-                                            if (routePoint != null) {
-                                                Coord3f another3f = routePoint.toCoord3f(NUtils.getGameUI().map.glob.map);
-                                                if(one3f!=null && another3f!=null)
-                                                {
-                                                    gpf.add(new Pair<>(another3f,one3f));
-                                                    added.add(hash);
-                                                    added.add((new Pair<>(nei.hashCode(), point.hashCode())).hashCode());
+                                Integer hash = (new Pair<>(point.hashCode(),nei.hashCode())).hashCode();
+                                if(!added.contains(hash))
+                                {
+                                    if(NUtils.getGameUI().map.glob.map.findGrid(point.gridId)!=null) {
+                                        if(graph.getPoint(nei) != null) {
+                                            if(NUtils.getGameUI().map.glob.map != null) {
+                                                RoutePoint routePoint = graph.getPoint(nei);
+                                                if (routePoint != null) {
+                                                    Coord3f another3f = routePoint.toCoord3f(NUtils.getGameUI().map.glob.map);
+                                                    if(one3f!=null && another3f!=null)
+                                                    {
+                                                        gpf.add(new Pair<>(another3f,one3f));
+                                                        added.add(hash);
+                                                        added.add((new Pair<>(nei.hashCode(), point.hashCode())).hashCode());
+                                                    }
                                                 }
                                             }
                                         }
