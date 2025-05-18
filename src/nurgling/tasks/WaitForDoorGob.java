@@ -31,7 +31,7 @@ public class WaitForDoorGob extends NTask {
 
         for(String name : names) {
             door = Finder.findGobs(new NAlias(name));
-            if(door.size() > 0) {
+            if(door.size() > 0 && door.get(0).ngob.hash != null) {
                 return true;
             }
         }

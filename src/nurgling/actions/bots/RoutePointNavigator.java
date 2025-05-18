@@ -126,6 +126,9 @@ public class RoutePointNavigator implements Action {
 
     private boolean needToPassDoor(RoutePoint.Connection conn, RoutePoint nextPoint, NGameUI gui) {
         Gob gob = Finder.findGob(conn.gobHash);
+        if (gob == null) {
+            return false;
+        }
         return nextPoint.toCoord2d(gui.map.glob.map) == null || gob.ngob.name.contains("stairs") || gob.ngob.name.contains("gate");
     }
 } 
