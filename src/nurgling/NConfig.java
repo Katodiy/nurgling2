@@ -82,7 +82,8 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
-        fogEnable
+        fogEnable,
+        player_box, player_fov, gridbox
     }
 
 
@@ -143,6 +144,9 @@ public class NConfig
         conf.put(Key.serverPass, "");
         conf.put(Key.serverUser, "");
         conf.put(Key.fogEnable, false);
+        conf.put(Key.player_box, false);
+        conf.put(Key.player_fov, false);
+        conf.put(Key.gridbox, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
