@@ -114,7 +114,7 @@ public class NPathVisualizer implements RenderTree.Node {
                 Collection<RoutePoint> routePoints = graph.getPoints();
 
                 synchronized (routePoints) {
-                    for(RoutePoint point : graph.getPoints())
+                    for(RoutePoint point : routePoints)
                     {
                         if(NUtils.getGameUI().map.glob.map.findGrid(point.gridId)!=null)
                         {
