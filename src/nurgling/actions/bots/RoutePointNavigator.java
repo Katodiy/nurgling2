@@ -127,7 +127,19 @@ public class RoutePointNavigator implements Action {
     }
 
     private boolean isGobDoor(Gob gob) {
-        List<String> listOfDoors = Arrays.asList("stonestead", "stonemansion", "greathall", "primitivetent", "windmill", "stonetower", "logcabin", "timberhouse", "minehole", "ladder", "stairs", "cellardoor");
+        List<String> listOfDoors = Arrays.asList(
+                "stonestead",
+                "stonemansion",
+                "greathall",
+                "primitivetent",
+                "windmill",
+                "stonetower",
+                "logcabin",
+                "timberhouse",
+                "minehole",
+                "ladder",
+                "stairs",
+                "cellardoor");
         for (String door : listOfDoors) {
             if(gob.ngob.name.contains(door)) {
                 return true;

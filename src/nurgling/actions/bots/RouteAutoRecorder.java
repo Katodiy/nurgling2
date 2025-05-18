@@ -81,7 +81,7 @@ public class RouteAutoRecorder implements Runnable {
                     Coord newCoordForAfterGate = preRecordedCoord.add((playerLocalCoord.x > preRecordedCoord.x ? -1 : playerLocalCoord.x < preRecordedCoord.x ? 1 : 0), (playerLocalCoord.y > preRecordedCoord.y ? -1 : playerLocalCoord.y < preRecordedCoord.y ? 1 : 0));
 
                     // Update the coords
-                    route.cachedRoutePoint.localCoord = newCoordForAfterGate;
+                    route.cachedRoutePoint.setLocalCoord(newCoordForAfterGate);
 
                     // Add the waypoint.
                     route.addPredefinedWaypoint(route.cachedRoutePoint, "", "", false);
@@ -114,14 +114,13 @@ public class RouteAutoRecorder implements Runnable {
                     NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
 
                     // Add new waypoint
-                    route.addWaypoint();
+//                    route.addWaypoint();
 
-                    // Get the last two waypoints
-                    RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
-                    RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
+                    Gob player = NUtils.player();
+                    Coord2d rc = player.rc;
 
-                    // Add connections between them
-                    lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
+                    // Create a temporary waypoint to get its hash
+                    RoutePoint predefinedWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
 
                     Gob arch = Finder.findGob(player().rc, new NAlias(
                             getPair(gobForCachedRoutePoint.ngob.name)
@@ -129,20 +128,29 @@ public class RouteAutoRecorder implements Runnable {
 
                     // For the minehole we have to add an offset, otherwise the minehole point gets created right on
                     // top of the minehole causing it to be unreachable with PF.
-
                     if(arch != null) {
                         if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
                             double angle = arch.a;
                             double offset = 1;
 
                             Coord newPosition = new Coord(
-                                    (int)Math.round(newWaypoint.localCoord.x + Math.cos(angle) * offset),
-                                    (int)Math.round(newWaypoint.localCoord.y +  Math.sin(angle) * offset)
+                                    (int)Math.round(predefinedWaypoint.localCoord.x + Math.cos(angle) * offset),
+                                    (int)Math.round(predefinedWaypoint.localCoord.y +  Math.sin(angle) * offset)
                             );
 
-                            route.setWaypointCoord(newWaypoint, newPosition);
+//                            route.setWaypointCoord(predefinedWaypoint, newPosition);
+                            predefinedWaypoint.setLocalCoord(newPosition);
                         }
                     }
+
+                    route.addPredefinedWaypoint(predefinedWaypoint, "", "", false);
+
+                    // Get the last two waypoints
+                    RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
+                    RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
+
+                    // Add connections between them
+                    lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
 
                     // Add connection for the arch
                     newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
@@ -167,18 +175,6 @@ public class RouteAutoRecorder implements Runnable {
                     Gob arch = Finder.findGob(player().rc, new NAlias(
                             getPair(gobForCachedRoutePoint.ngob.name)
                     ), null, 100);
-
-                    if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
-                        double angle = arch.a;
-                        double offset = 1;
-
-                        Coord newPosition = new Coord(
-                                (int)Math.round(newWaypoint.localCoord.x + Math.cos(angle) * offset),
-                                (int)Math.round(newWaypoint.localCoord.y +  Math.sin(angle) * offset)
-                        );
-
-                        route.setWaypointCoord(newWaypoint, newPosition);
-                    }
 
                     // Add connection for the arch
                     newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);

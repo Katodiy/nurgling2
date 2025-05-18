@@ -484,14 +484,14 @@ public class RoutesWidget extends Window {
 
         public CoordItem(long gridid, Coord2d coord, RoutePoint routePoint) {
             this.routePoint = routePoint;
-            String displayText = String.valueOf(gridid);
+            String displayText = String.valueOf(gridid) + " " + routePoint.id;
             
             // Check all connections for door and gobName information
             for (int neighborHash : routePoint.getConnectedNeighbors()) {
                 RoutePoint.Connection conn = routePoint.getConnection(neighborHash);
                 if (conn != null) {
                     if (!conn.gobName.isEmpty()) {
-                        displayText = conn.gobName;
+                        displayText = conn.gobName + " " + routePoint.id;
                     }
                     if (conn.isDoor) {
                         displayText = "★ " + displayText;

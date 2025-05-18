@@ -74,6 +74,11 @@ public class RoutePoint {
         connections.remove(neighborHash);
     }
 
+    public void setLocalCoord(Coord localCoord) {
+        this.localCoord = localCoord;
+        this.id = hashCode();
+    }
+
     public Coord2d toCoord2d(MCache mcache) {
         for (MCache.Grid grid : mcache.grids.values()) {
             if (grid.id == gridId) {

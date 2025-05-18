@@ -127,7 +127,7 @@ public class Route {
     }
 
     public void setWaypointCoord(RoutePoint waypoint, Coord newPosition) {
-        waypoint.localCoord = newPosition;
+        waypoint.setLocalCoord(newPosition);
         ((NMapView) NUtils.getGameUI().map).initRouteDummys(this.id);
     }
 
