@@ -131,4 +131,4 @@ public class RoutePointNavigator implements Action {
         }
         return nextPoint.toCoord2d(gui.map.glob.map) == null || gob.ngob.name.contains("stairs") || gob.ngob.name.contains("gate");
     }
-} 
+}
