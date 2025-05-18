@@ -13,8 +13,6 @@ public class NMiniMapWnd extends Widget{
     NMapView map;
     public Map miniMap;
     public IButton geoloc;
-    public static final KeyBinding kb_claim = KeyBinding.get("ol-claim", KeyMatch.nil);
-    public static final KeyBinding kb_vil = KeyBinding.get("ol-vil", KeyMatch.nil);
     public static final KeyBinding kb_night = KeyBinding.get("mwnd_night", KeyMatch.nil);
     public static final KeyBinding kb_fog = KeyBinding.get("mwnd_fog", KeyMatch.nil);
     public static final KeyBinding kb_nature = KeyBinding.get("mwnd_nature", KeyMatch.nil);
@@ -64,10 +62,19 @@ public class NMiniMapWnd extends Widget{
         }
 
         toggle_panel = new Widget();
-        ACheckBox first = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/claim", GameUI.kb_claim, "Display personal claims"), 0, 0).changed(a -> NUtils.getGameUI().toggleol("cplot", a));
-        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vil", GameUI.kb_vil, "Display village claims"), (first.sz.x+UI.scale(3)), 0).changed(a -> NUtils.getGameUI().toggleol("vlg", a));
+        ACheckBox first = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/claim", GameUI.kb_claim, "Display personal claims"), 0, 0).changed(a -> switchStatus("cplot", a));
+        first.a = (Boolean) NConfig.get(NConfig.Key.claimol);
+        switchStatus("cplot", first.a);
+
+        ACheckBox vilol = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vil", GameUI.kb_vil, "Display village claims"), (first.sz.x+UI.scale(3)), 0).changed(a -> switchStatus("vlg", a));
+        vilol.a = (Boolean) NConfig.get(NConfig.Key.vilol);
+        switchStatus("vlg", vilol.a);
+
         int shift = 2;
-        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/rlm", GameUI.kb_rlm, "Display realms"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> NUtils.getGameUI().toggleol("realm", a));
+        ACheckBox realmol = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/rlm", GameUI.kb_rlm, "Display realms"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("realm", a));
+        realmol.a = (Boolean) NConfig.get(NConfig.Key.realmol);
+        switchStatus("realm", realmol.a);
+
         toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/ico", GameUI.kb_ico, "Icon settings"), (first.sz.x+UI.scale(3))*shift++, 0).state(() -> NMiniMapWnd.this.ui.gui.wndstate(NMiniMapWnd.this.ui.gui.iconwnd)).click(() -> {
             if(NUtils.getGameUI() == null || NUtils.getGameUI().iconconf == null)
                 return;
@@ -79,13 +86,16 @@ public class NMiniMapWnd extends Widget{
                 NUtils.getGameUI().iconwnd = null;
             }
         });
+
         ACheckBox eye = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vis", kb_eye, "Display vision area"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("eye", a));
         eye.a = (Boolean)NConfig.get(NConfig.Key.showView);
 
         ACheckBox grid = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/grid", kb_grid, "Display grid"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("grid", a));
         grid.a = (Boolean) NConfig.get(NConfig.Key.showGrid);
-        ACheckBox minesup = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/minesup", kb_grid, "Display mining overlay"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("miningol", a));
+
+        ACheckBox minesup = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/minesup", kb_minesup, "Display mining overlay"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("miningol", a));
         minesup.a = (Boolean) NConfig.get(NConfig.Key.miningol);
+
         geoloc = toggle_panel.add(new IButton(Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/d"), Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/u"), Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/h"), new Runnable() {
             @Override
             public void run() {
@@ -121,6 +131,21 @@ public class NMiniMapWnd extends Widget{
 
     public void switchStatus(String val, Boolean a) {
         switch (val){
+            case "cplot": {
+                NUtils.getGameUI().toggleol("cplot", a);
+                NConfig.set(NConfig.Key.claimol,a);
+                break;
+            }
+            case "vlg": {
+                NUtils.getGameUI().toggleol("vlg", a);
+                NConfig.set(NConfig.Key.vilol,a);
+                break;
+            }
+            case "realm": {
+                NUtils.getGameUI().toggleol("realm", a);
+                NConfig.set(NConfig.Key.realmol,a);
+                break;
+            }
             case "eye": {
                 NConfig.set(NConfig.Key.showView,a);
                 break;
@@ -165,6 +190,10 @@ public class NMiniMapWnd extends Widget{
         else
             g2 = g.reclipl(cc, wdg.sz);
         wdg.draw(g2);
+    }
+
+    public void uimsg(String msg){
+
     }
 
     public static class Map extends NMiniMap {

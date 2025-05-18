@@ -18,6 +18,7 @@ public class NConfig
 
     public enum Key
     {
+        vilol, claimol, realmol,
         showVarity,
         autoFlower,
         autoSplitter,
@@ -87,6 +88,10 @@ public class NConfig
 
     public NConfig() {
         conf = new HashMap<>();
+
+        conf.put(Key.vilol, false);
+        conf.put(Key.claimol, false);
+        conf.put(Key.realmol, false);
         conf.put(Key.showVarity, false);
         conf.put(Key.autoFlower, false);
         conf.put(Key.autoSplitter, false);
