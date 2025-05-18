@@ -192,10 +192,6 @@ public class NMiniMapWnd extends Widget{
         wdg.draw(g2);
     }
 
-    public void uimsg(String msg){
-
-    }
-
     public static class Map extends NMiniMap {
         NMapView map;
         public Map(Coord sz, MapFile file,NMapView map) {
