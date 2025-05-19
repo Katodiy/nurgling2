@@ -134,7 +134,9 @@ public class RouteGraph {
     }
 
     public Collection<RoutePoint> getPoints() {
-        return points.values();
+        synchronized (points) {
+            return new ArrayList<>(points.values());
+        }
     }
 
     public RoutePoint getPoint(Integer id) {
