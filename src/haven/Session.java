@@ -125,6 +125,11 @@ public class Session implements Resource.Resolver {
 	public class Ref implements Indir<Resource> {
 	    public Resource res;
 
+		public boolean isReady()
+		{
+			return resnm!=null && res!=null;
+		}
+
 	    public Resource get() {
 		if(res == null) {
 		    synchronized(CachedRes.this) {

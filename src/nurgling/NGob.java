@@ -254,7 +254,10 @@ public class NGob {
             if (NUtils.getGameUI().map != null) {
                 if (NUtils.getGameUI().map.player() != null && parent.id == NUtils.getGameUI().map.player().id)
                     return null;
-                return new CellsArray(parent);
+                else if(hitBox!=null)
+                {
+                    return new CellsArray(parent);
+                }
             }
         } else if (isGate) {
             if (modelAttribute != 2)

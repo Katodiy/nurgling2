@@ -347,22 +347,20 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         else
             l.cmp.add(RichText.render(String.format("Expected FEP: $col[128,255,0]{%.2f} $col[255,0,0]{(+%.2f \u00B1 %.2f)} ", expeted_fep, delta, error), 0).img,Coord.of(UI.scale(5), l.cmp.sz.y));
         double cur_fep = 0;
-        for (BAttrWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.battr.feps.els)
-        {
-            cur_fep += el.a;
-        }
-        l.cmp.add(RichText.render(String.format("Expected total: $col[128,255,0]{%.2f}", expeted_fep + cur_fep), 0).img,Coord.of(UI.scale(5), l.cmp.sz.y));
+        if(NUtils.getGameUI().chrwdg.battr!=null) {
+            for (BAttrWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.battr.feps.els) {
+                cur_fep += el.a;
+            }
+            l.cmp.add(RichText.render(String.format("Expected total: $col[128,255,0]{%.2f}", expeted_fep + cur_fep), 0).img, Coord.of(UI.scale(5), l.cmp.sz.y));
 
-        if (NUtils.getUI().dataTables.data_food != null && NUtils.getUI().dataTables.data_food.containsKey(name))
-        {
-            drinkImg = drinkImg();
-            if (drinkImg!= null && !drinkImg.isEmpty())
-            {
-                l.cmp.add(RichText.render(String.format("$col[175,175,255]{%s}:", "Drink info"), 0).img,Coord.of(0, l.cmp.sz.y));
+            if (NUtils.getUI().dataTables.data_food != null && NUtils.getUI().dataTables.data_food.containsKey(name)) {
+                drinkImg = drinkImg();
+                if (drinkImg != null && !drinkImg.isEmpty()) {
+                    l.cmp.add(RichText.render(String.format("$col[175,175,255]{%s}:", "Drink info"), 0).img, Coord.of(0, l.cmp.sz.y));
 
-                for(BufferedImage cand : drinkImg)
-                {
-                    l.cmp.add(cand,Coord.of(UI.scale(5), l.cmp.sz.y));
+                    for (BufferedImage cand : drinkImg) {
+                        l.cmp.add(cand, Coord.of(UI.scale(5), l.cmp.sz.y));
+                    }
                 }
             }
         }
