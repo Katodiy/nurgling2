@@ -3,6 +3,7 @@ package nurgling.pf;
 import haven.*;
 import haven.Window;
 import nurgling.*;
+import nurgling.tasks.GateDetector;
 
 import java.awt.*;
 import java.util.*;
@@ -11,6 +12,7 @@ import java.util.*;
 public class NPFMap
 {
     public boolean waterMode = false;
+    public boolean gatesAlwaysClosed = false;
     public Cell[][] cells;
     // 1 hitbox
     // 0 have path
@@ -25,10 +27,26 @@ public class NPFMap
     public int size;
     long currentTransport = -1;
     public boolean bad = false;
+
+    private boolean isGate(Gob gob) {
+        if (gob.ngob == null || gob.ngob.name == null) return false;
+        for (String gateName : GateDetector.GATE_NAMES) {
+            if (gob.ngob.name.equals(gateName)) return true;
+        }
+        return false;
+    }
+
     public CellsArray addGob(Gob gob) {
         CellsArray ca;
 
-        if (gob.ngob != null && gob.ngob.hitBox != null && (ca = gob.ngob.getCA()) != null && NUtils.player() != null && gob.id != NUtils.player().id && gob.getattr(Following.class) == null) {
+        if(gatesAlwaysClosed && isGate(gob)) {
+            ca = gob.ngob.getTrueCA();
+        } else {
+            ca = gob.ngob.getCA();
+        }
+//        ca = gob.ngob.getCA();
+
+        if (gob.ngob != null && gob.ngob.hitBox != null && ca != null && NUtils.player() != null && gob.id != NUtils.player().id && gob.getattr(Following.class) == null) {
             CellsArray old = new CellsArray(ca.x_len, ca.y_len);
             old.begin = ca.begin;
             old.end = ca.end;

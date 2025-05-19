@@ -268,6 +268,10 @@ public class NGob {
         return ca;
     }
 
+    public CellsArray getTrueCA() {
+        return ca;
+    }
+
     public void markAsDynamic() {
         isDynamic = true;
     }

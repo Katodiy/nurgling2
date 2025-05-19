@@ -7,12 +7,12 @@ import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
+import nurgling.tasks.GateDetector;
 import nurgling.tasks.WaitForGobWithHash;
 import nurgling.tasks.WaitForMapLoad;
 import nurgling.tasks.WaitGobModelAttrChange;
 import nurgling.tools.Finder;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class RoutePointNavigator implements Action {
@@ -73,37 +73,47 @@ public class RoutePointNavigator implements Action {
             Coord2d target = path.get(i).toCoord2d(gui.map.glob.map);
             if (target == null) continue;
 
-            new PathFinder(target).run(gui);
+            try {
+                new PathFinder(target).run(gui);
+            } catch(Exception e) {
+                gui.error("There was an error trying to find path, attempting to skip a point.");
+            }
 
-            if(previousPoint != null && currentPoint.isDoor && previousPoint.isDoor && previousPoint.toCoord2d(gui.map.glob.map) != null) {
-                // close door
-                Gob gob = Finder.findGob(currentPoint.gobHash);
-                if(gob != null && !isGobDoor(gob) && isDoorOpen(gob)) {
-                    NUtils.openDoorOnAGob(gui, gob);
-                    NUtils.getUI().core.addTask(new WaitGobModelAttrChange(gob, gob.ngob.getModelAttribute()));
+            // Handle door closing
+            if(previousPoint != null) {
+                RoutePoint.Connection prevConn = currentPoint.getConnection(previousPoint.id);
+                if(prevConn != null && prevConn.isDoor) {
+                    Gob gob = Finder.findGob(prevConn.gobHash);
+                    if(gob != null && !GateDetector.isGobDoor(gob) && GateDetector.isDoorOpen(gob)) {
+                        NUtils.openDoorOnAGob(gui, gob);
+                        NUtils.getUI().core.addTask(new WaitGobModelAttrChange(gob, gob.ngob.getModelAttribute()));
+                    }
                 }
             }
 
-            // Open door when need to
-            if(currentPoint.isDoor && nextPoint != null && (nextPoint.toCoord2d(gui.map.glob.map) == null || nextPoint.isDoor) && needToPassDoor(currentPoint, nextPoint, gui)) {
-                Gob gob = Finder.findGob(currentPoint.gobHash);
+            // Handle door opening
+            if(nextPoint != null) {
+                RoutePoint.Connection nextConn = currentPoint.getConnection(nextPoint.id);
+                if(nextConn != null && nextConn.isDoor && needToPassDoor(nextConn, nextPoint, gui)) {
+                    Gob gob = Finder.findGob(nextConn.gobHash);
 
-                if(gob == null) {
-                    gui.error("Door not found.");
-                    return Results.FAIL();
-                }
+                    if(gob == null) {
+                        gui.error("Door not found.");
+                        return Results.FAIL();
+                    }
 
-                if (isGobDoor(gob)) {
-                    // enter through the door
-                    NUtils.openDoorOnAGob(gui, gob);
-                    // Wait until we can safely get coordinates for the next waypoint
-                    NUtils.getUI().core.addTask(new WaitForMapLoad(nextPoint, gui));
-                    NUtils.getUI().core.addTask(new WaitForGobWithHash(nextPoint.gobHash));
-                } else {
-                    // open gate if its closed
-                    if(!isDoorOpen(gob)) {
+                    if (GateDetector.isGobDoor(gob)) {
+                        // enter through the door
                         NUtils.openDoorOnAGob(gui, gob);
-                        NUtils.getUI().core.addTask(new WaitGobModelAttrChange(gob, gob.ngob.getModelAttribute()));
+                        // Wait until we can safely get coordinates for the next waypoint
+                        NUtils.getUI().core.addTask(new WaitForMapLoad(nextPoint, gui));
+                        NUtils.getUI().core.addTask(new WaitForGobWithHash(nextPoint.getConnection(currentPoint.id).gobHash));
+                    } else {
+                        // open gate if its closed
+                        if(!GateDetector.isDoorOpen(gob)) {
+                            NUtils.openDoorOnAGob(gui, gob);
+                            NUtils.getUI().core.addTask(new WaitGobModelAttrChange(gob, gob.ngob.getModelAttribute()));
+                        }
                     }
                 }
             }
@@ -112,23 +122,13 @@ public class RoutePointNavigator implements Action {
         return Results.SUCCESS();
     }
 
-    private boolean isDoorOpen(Gob gob) {
-        return gob.ngob.getModelAttribute() == 1;
-    }
 
-    private boolean isGobDoor(Gob gob) {
-        List<String> listOfDoors = Arrays.asList("stonestead", "stonemansion", "greathall", "primitivetent", "windmill", "stonetower", "logcabin", "timberhouse", "minehole", "ladder", "stairs", "cellardoor");
-        for (String door : listOfDoors) {
-            if(gob.ngob.name.contains(door)) {
-                return true;
-            }
+
+    private boolean needToPassDoor(RoutePoint.Connection conn, RoutePoint nextPoint, NGameUI gui) {
+        Gob gob = Finder.findGob(conn.gobHash);
+        if (gob == null) {
+            return false;
         }
-
-        return false;
+        return nextPoint.toCoord2d(gui.map.glob.map) == null || gob.ngob.name.contains("stairs") || gob.ngob.name.contains("gate");
     }
-
-    private boolean needToPassDoor(RoutePoint currentPoint, RoutePoint nextPoint, NGameUI gui) {
-        Gob gob = Finder.findGob(currentPoint.gobHash);
-        return currentPoint.gobHash.equals(nextPoint.gobHash) || nextPoint.toCoord2d(gui.map.glob.map) == null || gob.ngob.name.contains("stairs");
-    }
-} 
+}
