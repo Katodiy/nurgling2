@@ -3,6 +3,7 @@ package nurgling.routes;
 import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
+import nurgling.NCore;
 import nurgling.NMapView;
 import nurgling.NUtils;
 import org.json.JSONArray;
@@ -16,6 +17,10 @@ public class Route {
     public String path = "";
     public ArrayList<RoutePoint> waypoints = new ArrayList<>();
     public ArrayList<RouteSpecialization> spec = new ArrayList<>();
+    public NCore.LastActions lastAction = null;
+    public RoutePoint cachedRoutePoint = null;
+    public boolean hasPassedGate = false;
+    public Gob lastPassedGate = null;
 
     public static class RouteSpecialization {
         public String name;
@@ -39,20 +44,62 @@ public class Route {
         Gob player = NUtils.player();
         Coord2d rc = player.rc;
 
-        try {
-            RoutePoint newWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
+        // Create a temporary waypoint to get its hash
+        RoutePoint tempWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
+        
+        // Check if this waypoint already exists in the graph
+        RoutePoint existingWaypoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().getPoint(tempWaypoint.id);
+        
+        // Use existing waypoint if found, otherwise use the temporary one
+        RoutePoint waypointToAdd = existingWaypoint != null ? existingWaypoint : tempWaypoint;
+        
+        // Add the waypoint with default connection values
+        addPredefinedWaypoint(waypointToAdd, "", "", false);
+    }
 
+    public void addPredefinedWaypoint(RoutePoint routePoint, String doorHash, String doorName, boolean isDoor) {
+        try {
             if(!waypoints.isEmpty()) {
                 RoutePoint lastRoutePoint = waypoints.get(waypoints.size() - 1);
-                newWaypoint.addNeighbor(lastRoutePoint.id);
-                lastRoutePoint.addNeighbor(newWaypoint.id);
+                routePoint.addNeighbor(lastRoutePoint.id);
+                lastRoutePoint.addNeighbor(routePoint.id);
+
+                // Add connections between the points
+                routePoint.addConnection(lastRoutePoint.id, String.valueOf(lastRoutePoint.id), doorHash, doorName, isDoor);
+                lastRoutePoint.addConnection(routePoint.id, String.valueOf(routePoint.id), doorHash, doorName, isDoor);
             }
 
-            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(newWaypoint);
-            this.waypoints.add(newWaypoint);
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(routePoint);
+            this.waypoints.add(routePoint);
 
-            NUtils.getGameUI().msg("Waypoint added: " + newWaypoint);
-            NUtils.getGameUI().msg("Neighbors: " + newWaypoint.getNeighbors());
+            NUtils.getGameUI().msg("Waypoint added: " + routePoint);
+            NUtils.getGameUI().msg("Neighbors: " + routePoint.getNeighbors());
+        } catch (Exception e) {
+            NUtils.getGameUI().msg("Failed to add waypoint: " + e.getMessage());
+        }
+
+        ((NMapView) NUtils.getGameUI().map).createRouteLabel(this.id);
+    }
+
+    public void addRandomWaypoint() {
+        Gob player = NUtils.player();
+        Coord2d rc = player.rc;
+
+        // Create a temporary waypoint to get its hash
+        RoutePoint tempWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
+
+        // Check if this waypoint already exists in the graph
+        RoutePoint existingWaypoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().getPoint(tempWaypoint.id);
+
+        // Use existing waypoint if found, otherwise use the temporary one
+        RoutePoint waypointToAdd = existingWaypoint != null ? existingWaypoint : tempWaypoint;
+
+        try {
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(waypointToAdd);
+            this.waypoints.add(waypointToAdd);
+
+            NUtils.getGameUI().msg("Waypoint added: " + waypointToAdd);
+            NUtils.getGameUI().msg("Neighbors: " + waypointToAdd.getNeighbors());
         } catch (Exception e) {
             NUtils.getGameUI().msg("Failed to add waypoint: " + e.getMessage());
         }
@@ -79,6 +126,11 @@ public class Route {
         ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().deleteWaypoint(waypoint);
     }
 
+    public void setWaypointCoord(RoutePoint waypoint, Coord newPosition) {
+        waypoint.setLocalCoord(newPosition);
+        ((NMapView) NUtils.getGameUI().map).initRouteDummys(this.id);
+    }
+
 
     public Route(JSONObject obj) {
         this.name = obj.getString("name");
@@ -99,18 +151,26 @@ public class Route {
                 JSONObject localCoord = point.getJSONObject("localCoord");
                 int x = localCoord.getInt("x");
                 int y = localCoord.getInt("y");
-                boolean isDoor = point.getBoolean("isDoor");
-                String gobHash = "";
-                if(point.has("gobHash")) {
-                    gobHash = point.getString("gobHash");
-                }
-                RoutePoint waypoint = new RoutePoint(gridId, new Coord(x, y), isDoor, gobHash);
+                RoutePoint waypoint = new RoutePoint(gridId, new Coord(x, y));
                 
                 // Load neighbors if they exist
                 if (point.has("neighbors")) {
                     JSONArray neighbors = point.getJSONArray("neighbors");
                     for (int j = 0; j < neighbors.length(); j++) {
                         waypoint.addNeighbor(neighbors.getInt(j));
+                    }
+                }
+                
+                // Load connections if they exist
+                if (point.has("connections")) {
+                    JSONObject connections = point.getJSONObject("connections");
+                    for (String neighborHash : connections.keySet()) {
+                        JSONObject conn = connections.getJSONObject(neighborHash);
+                        String connectionTo = conn.has("connectionTo") ? conn.getString("connectionTo") : "";
+                        String connGobHash = conn.has("gobHash") ? conn.getString("gobHash") : "";
+                        String connGobName = conn.has("gobName") ? conn.getString("gobName") : "";
+                        boolean isDoor = conn.has("isDoor") ? conn.getBoolean("isDoor") : false;
+                        waypoint.addConnection(Integer.parseInt(neighborHash), connectionTo, connGobHash, connGobName, isDoor);
                     }
                 }
                 
@@ -144,8 +204,6 @@ public class Route {
             waypointJson.put("localCoord", new JSONObject()
                 .put("x", waypoint.localCoord.x)
                 .put("y", waypoint.localCoord.y));
-            waypointJson.put("isDoor", waypoint.isDoor);
-            waypointJson.put("gobHash", waypoint.gobHash);
             
             // Save neighbors
             JSONArray neighborsArray = new JSONArray();
@@ -153,6 +211,21 @@ public class Route {
                 neighborsArray.put(neighborId);
             }
             waypointJson.put("neighbors", neighborsArray);
+            
+            // Save connections
+            JSONObject connectionsJson = new JSONObject();
+            for (int neighborHash : waypoint.getConnectedNeighbors()) {
+                RoutePoint.Connection conn = waypoint.getConnection(neighborHash);
+                if (conn != null) {
+                    JSONObject connJson = new JSONObject();
+                    connJson.put("connectionTo", conn.connectionTo);
+                    connJson.put("gobHash", conn.gobHash);
+                    connJson.put("gobName", conn.gobName);
+                    connJson.put("isDoor", conn.isDoor);
+                    connectionsJson.put(String.valueOf(neighborHash), connJson);
+                }
+            }
+            waypointJson.put("connections", connectionsJson);
             
             waypointsArray.put(waypointJson);
         }

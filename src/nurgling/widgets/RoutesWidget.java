@@ -9,6 +9,7 @@ import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.actions.bots.SelectGob;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
+import nurgling.tools.Finder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -177,7 +178,7 @@ public class RoutesWidget extends Window {
             @Override
             public void click() {
                 NUtils.getGameUI().msg("Recording position for: " + route.name);
-                route.addWaypoint();
+                route.addRandomWaypoint();
                 waypointList.update(route.waypoints);
             }
         }, Coord.z).settip("Record Position");
@@ -401,8 +402,7 @@ public class RoutesWidget extends Window {
                 public boolean mousedown(MouseDownEvent ev) {
                     if (ev.b == 3) {
                         RoutePoint rp = item.routePoint;
-                        String label = rp.isDoor ? "Unmark as Door" : "Mark as Door";
-                        menu = new NFlowerMenu(new String[]{label, "Navigate To", "Delete"}) {
+                        menu = new NFlowerMenu(new String[]{"Navigate To", "Delete"}) {
                             @Override
                             public boolean mousedown(MouseDownEvent ev) {
                                 if(super.mousedown(ev))
@@ -418,31 +418,7 @@ public class RoutesWidget extends Window {
                             @Override
                             public void nchoose(NPetal option) {
                                 if (option != null) {
-                                    if (option.name.equals(label)) {
-                                        if(!rp.isDoor) {
-                                            Thread t = new Thread(() -> {
-                                                try {
-                                                    SelectGob selgob;
-                                                    (selgob = new SelectGob(Resource.loadsimg("baubles/selectItem"))).run(NUtils.getGameUI());
-                                                    if (selgob != null) {
-                                                        // Do something with the selected Gob
-                                                        NUtils.getGameUI().msg("Selected: " + selgob.getResult());
-                                                        rp.gobHash = selgob.getResult().ngob.hash;
-                                                        rp.isDoor = !rp.isDoor;
-                                                        NConfig.needRoutesUpdate();
-                                                        WaypointList.this.update(WaypointList.this.items.stream().map(ci -> ci.routePoint).toList());
-                                                    }
-                                                } catch (Exception e) {
-                                                    NUtils.getGameUI().error("Failed to select item: " + e.getMessage());
-                                                }
-                                            }, "SelectGob");
-                                            t.start();
-                                            NUtils.getGameUI().biw.addObserve(t);
-                                        } else {
-                                            rp.isDoor = !rp.isDoor;
-                                        }
-                                        WaypointList.this.update(WaypointList.this.items.stream().map(ci -> ci.routePoint).toList());
-                                    } else if (option.name.equals("Navigate To")) {
+                                    if (option.name.equals("Navigate To")) {
                                         new Thread(() -> {
                                             try {
                                                 new RoutePointNavigator(rp).run(NUtils.getGameUI());
@@ -504,14 +480,28 @@ public class RoutesWidget extends Window {
 
     public class CoordItem extends Widget {
         private final Label label;
-        private final Coord2d localCoord;
         private final RoutePoint routePoint;
 
         public CoordItem(long gridid, Coord2d coord, RoutePoint routePoint) {
             this.routePoint = routePoint;
-            this.label = add(new Label((routePoint.isDoor ? "★ " : "") + String.valueOf(gridid)));
+            String displayText = String.valueOf(gridid) + " " + routePoint.id;
+            
+            // Check all connections for door and gobName information
+            for (int neighborHash : routePoint.getConnectedNeighbors()) {
+                RoutePoint.Connection conn = routePoint.getConnection(neighborHash);
+                if (conn != null) {
+                    if (!conn.gobName.isEmpty()) {
+                        displayText = conn.gobName + " " + routePoint.id;
+                    }
+                    if (conn.isDoor) {
+                        displayText = "★ " + displayText;
+                        break; // Once we find a door connection, we can stop
+                    }
+                }
+            }
+            
+            this.label = add(new Label(displayText));
             this.sz = label.sz.add(UI.scale(4), UI.scale(4));
-            this.localCoord = coord;
         }
 
         @Override

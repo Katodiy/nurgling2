@@ -18,6 +18,7 @@ public class NConfig
 
     public enum Key
     {
+        vilol, claimol, realmol,
         showVarity,
         autoFlower,
         autoSplitter,
@@ -82,12 +83,17 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
-        fogEnable
+        fogEnable,
+        player_box, player_fov, gridbox
     }
 
 
     public NConfig() {
         conf = new HashMap<>();
+
+        conf.put(Key.vilol, false);
+        conf.put(Key.claimol, false);
+        conf.put(Key.realmol, false);
         conf.put(Key.showVarity, false);
         conf.put(Key.autoFlower, false);
         conf.put(Key.autoSplitter, false);
@@ -140,6 +146,9 @@ public class NConfig
         conf.put(Key.serverPass, "");
         conf.put(Key.serverUser, "");
         conf.put(Key.fogEnable, false);
+        conf.put(Key.player_box, false);
+        conf.put(Key.player_fov, false);
+        conf.put(Key.gridbox, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

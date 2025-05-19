@@ -123,12 +123,17 @@ public class NPathVisualizer implements RenderTree.Node {
                             {
                                 if(NUtils.getGameUI().map.glob.map.findGrid(point.gridId)!=null) {
                                     if(graph.getPoint(nei) != null) {
-                                        Coord3f another3f = graph.getPoint(nei).toCoord3f(NUtils.getGameUI().map.glob.map);
-                                        if(one3f!=null && another3f!=null)
-                                        {
-                                            gpf.add(new Pair<>(another3f,one3f));
-                                            added.add(hash);
-                                            added.add((new Pair<>(nei.hashCode(), point.hashCode())).hashCode());
+                                        if(NUtils.getGameUI().map.glob.map != null) {
+                                            RoutePoint routePoint = graph.getPoint(nei);
+                                            if (routePoint != null) {
+                                                Coord3f another3f = routePoint.toCoord3f(NUtils.getGameUI().map.glob.map);
+                                                if(one3f!=null && another3f!=null)
+                                                {
+                                                    gpf.add(new Pair<>(another3f,one3f));
+                                                    added.add(hash);
+                                                    added.add((new Pair<>(nei.hashCode(), point.hashCode())).hashCode());
+                                                }
+                                            }
                                         }
                                     }
                                 }
