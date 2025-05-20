@@ -229,4 +229,9 @@ public class Coord2d implements Comparable<Coord2d>, java.io.Serializable {
         }
         return res;
     }
+
+    public boolean isect(Coord2d ul, Coord2d br) {
+        return ((x >= ul.x) && (y >= ul.y) && (x < br.x) && (y < br.y));
+    }
+
 }

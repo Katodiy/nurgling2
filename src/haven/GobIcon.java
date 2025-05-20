@@ -44,7 +44,7 @@ public class GobIcon extends GAttrib {
     public static final PUtils.Convolution filter = new PUtils.Hanning(1);
     public final Indir<Resource> res;
     public final byte[] sdt;
-    private Icon icon;
+    public Icon icon;
 
     public GobIcon(Gob g, Indir<Resource> res, byte[] sdt) {
 	super(g);

@@ -258,7 +258,10 @@ public class NGob {
             if (NUtils.getGameUI().map != null) {
                 if (NUtils.getGameUI().map.player() != null && parent.id == NUtils.getGameUI().map.player().id)
                     return null;
-                return new CellsArray(parent);
+                else if(hitBox!=null)
+                {
+                    return new CellsArray(parent);
+                }
             }
         } else if (isGate) {
             if (modelAttribute != 2)
@@ -302,36 +305,27 @@ public class NGob {
                     parent.addcustomol(new NAreaRange(parent, rad));
             }
 
-            if((Boolean)NConfig.get(NConfig.Key.player_box)){//9*9 around player
-                if (NUtils.getGameUI().map.player() != null && parent.id == NUtils.getGameUI().map.player().id){
-                    parent.addcustomol(new NPlayerBoxOverlay(parent));
-                }
-            } else {
-                if (NUtils.getGameUI().map.player() != null && parent.id == NUtils.getGameUI().map.player().id){
+            Gob player = NUtils.player();
+            if(player!=null && parent.id == player.id) {
+                if ((Boolean) NConfig.get(NConfig.Key.player_box)) {//9*9 around player
+                        parent.addcustomol(new NPlayerBoxOverlay(parent));
+                } else {
                     Gob.Overlay col = parent.findol(NPlayerBoxOverlay.class);
-                    if(col != null) col.remove();
+                    if (col != null) col.remove();
                 }
-            }
 
-            if((Boolean)NConfig.get(NConfig.Key.player_fov)){//FOV render
-                if (NUtils.getGameUI().map.player() != null && parent.id == NUtils.getGameUI().map.player().id){
+                if ((Boolean) NConfig.get(NConfig.Key.player_fov)) {//FOV render
                     parent.addcustomol(new NRenderBoxOverlay(parent));
-                }
-            } else {
-                if (NUtils.getGameUI().map.player() != null && parent.id == NUtils.getGameUI().map.player().id){
+                } else {
                     Gob.Overlay col = parent.findol(NRenderBoxOverlay.class);
-                    if(col != null) col.remove();
+                    if (col != null) col.remove();
                 }
-            }
 
-            if((Boolean)NConfig.get(NConfig.Key.gridbox)){//grid borders
-                if (NUtils.getGameUI().map.player() != null && parent.id == NUtils.getGameUI().map.player().id){
+                if ((Boolean) NConfig.get(NConfig.Key.gridbox)) {//grid borders
                     parent.addcustomol(new NGridBoxOverlay(parent));
-                }
-            } else {
-                if (NUtils.getGameUI().map.player() != null && parent.id == NUtils.getGameUI().map.player().id){
+                } else {
                     Gob.Overlay col = parent.findol(NGridBoxOverlay.class);
-                    if(col != null) col.remove();
+                    if (col != null) col.remove();
                 }
             }
 

@@ -111,7 +111,8 @@ public class NPathVisualizer implements RenderTree.Node {
             if(NUtils.getGameUI().map != null) {
                 RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
                 ArrayList<Pair<Coord3f, Coord3f>> gpf = new ArrayList<>();
-                for(RoutePoint point : graph.getPoints())
+                ArrayList<RoutePoint> points = new ArrayList<>(graph.getPoints());
+                for(RoutePoint point : points)
                 {
                     if(NUtils.getGameUI().map.glob.map.findGrid(point.gridId)!=null)
                     {

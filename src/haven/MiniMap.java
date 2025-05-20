@@ -502,7 +502,7 @@ public class MiniMap extends Widget
 	}
     }
 
-    protected float scalef() {
+    public float scalef() {
 	return(UI.unscale((float)(1 << dlvl)));
     }
 

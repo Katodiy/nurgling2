@@ -27,4 +27,7 @@
 package haven;
 
 public interface Indir<T> extends java.util.function.Supplier<T> {
+    default public boolean isReady() {
+        return false;
+    }
 }

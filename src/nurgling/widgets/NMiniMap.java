@@ -3,9 +3,13 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
+import nurgling.tools.Finder;
 import nurgling.tools.FogArea;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -15,6 +19,34 @@ import static haven.MCache.tilesz;
 public class NMiniMap extends MiniMap implements Console.Directory {
     public int scale = 1;
     public final FogArea fogArea = new FogArea(this);
+
+    private final List<TempMark> tempMarkList = new ArrayList<TempMark>();
+
+    private static final Coord2d sgridsz = new Coord2d(new Coord(100,100));
+    public static class TempMark {
+        String name;
+        long start;
+        final long id;
+        Coord2d rc;
+        Coord gc;
+        BufferedImage icon;
+
+        MiniMap.Location loc;
+
+        public TempMark(String name, MiniMap.Location loc, long id, Coord2d rc, Coord gc, BufferedImage icon) {
+            start = System.currentTimeMillis();
+            this.name = name;
+            this.id = id;
+            this.rc = rc;
+            this.gc = gc;
+            this.icon = icon;
+            this.loc = loc;
+        }
+    }
+
+
+
+
     public NMiniMap(Coord sz, MapFile file) {
         super(sz, file);
         follow(new MapLocator(NUtils.getGameUI().map));
@@ -134,6 +166,7 @@ public class NMiniMap extends MiniMap implements Console.Directory {
             }
             g.chcolor();
         }
+        drawtempmarks(g);
     }
 
     @Override
@@ -145,7 +178,7 @@ public class NMiniMap extends MiniMap implements Console.Directory {
             if ((sessloc != null) && ((curloc == null) || (sessloc.seg == curloc.seg))) {
                 fogArea.tick(dt);
                 int zmult = 1 << zoomlevel;
-                Coord2d sgridsz = new Coord2d(_sgridsz);
+
                 Gob player = ui.gui.map.player();
                 if (player != null && dloc != null) {
                     Coord ul = player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz).floor(tilesz).add(sessloc.tc);
@@ -154,10 +187,12 @@ public class NMiniMap extends MiniMap implements Console.Directory {
                 }
             }
         }
+
+        checkTempMarks();
     }
 
     @Override
-    protected float scalef() {
+    public float scalef() {
         return(UI.unscale((float)(1 << dlvl))/scale);
     }
 
@@ -262,5 +297,68 @@ public class NMiniMap extends MiniMap implements Console.Directory {
             }
         }
         return (super.tooltip(c, prev));
+    }
+
+    private Coord texsz = UI.scale(16,16);
+    private void drawtempmarks(GOut g) {
+        for (TempMark cm : tempMarkList) {
+            if (ui.gui.mmap.curloc.seg.id == cm.loc.seg.id) {
+                if (cm.icon != null) {
+                    if (!cm.gc.equals(Coord.z)) {
+                        Coord gc =  p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
+
+                        int dsz = Math.max(cm.icon.getHeight(),cm.icon.getWidth());
+
+                        g.aimage(new TexI(cm.icon), gc, 0.5, 0.5, Coord.of(UI.scale(Math.round(cm.icon.getWidth() / (dsz * scalef()))), UI.scale(Math.round(cm.icon.getHeight() / (dsz * scalef())))).mul(texsz));
+                    }
+                }
+            }
+        }
+    }
+
+    void checkTempMarks() {
+        final Coord2d cmap = new Coord2d(cmaps);
+        if(NUtils.player()!=null) {
+            Coord2d pl = NUtils.player().rc;
+            final List<TempMark> marks = new ArrayList<>(tempMarkList);
+            for (TempMark cm : marks) {
+                Gob g = Finder.findGob(cm.id);
+                if (g == null) {
+                    if (System.currentTimeMillis() - cm.start > (int) NConfig.get(NConfig.Key.temsmarktime) * 60) {
+                        tempMarkList.remove(cm);
+                    } else {
+                        if (!cm.rc.isect(pl.sub(cmap.mul(4).mul(tilesz)), pl.add(cmap.mul(4).mul(tilesz)))) {
+                            tempMarkList.remove(cm);
+                        }
+                    }
+                }
+            }
+            synchronized (ui.sess.glob.oc) {
+                for (Gob gob : ui.sess.glob.oc) {
+                    if (tempMarkList.stream().noneMatch(m -> m.id == gob.id)) {
+                        BufferedImage tex = setTex(gob);
+                        MiniMap.Location loc = NUtils.getGameUI().mmap.curloc;
+                        if (tex != null) {
+                            tempMarkList.add(new TempMark(gob.ngob.name, loc, gob.id, gob.rc, gob.rc.floor(tilesz).add(sessloc.tc), tex));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    BufferedImage setTex(Gob gob)
+    {
+        GobIcon icon = gob.getattr(GobIcon.class);
+        if (icon!=null && ui.gui.mmap.iconconf != null && icon.res.isReady() && icon.icon!=null) {
+            if (icon.icon().image() != null) {
+                GobIcon.Setting conf = ui.gui.mmap.iconconf.get(icon.icon());
+                if (conf != null && conf.show)
+                {
+                    return icon.icon().image();
+                }
+            }
+        }
+        return null;
     }
 }
