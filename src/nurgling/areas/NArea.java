@@ -451,6 +451,10 @@ public class NArea
 
     // These visible areas DO NOT mean you are guaranteed to see gobs in the area. This only means you are able to
     // navigate to an area.
+
+    // TODO check if any gobs within the area is reachable with PF, if NOT (no gobs or no reachable gobs) check
+    // if coords of corners areareachable. If any of this is true the area is considered reachable, if none of these
+    // are true the area is not visible.
     public static ArrayList<NArea> getAllVisible() throws InterruptedException {
         double dist = 10000;
         ArrayList<NArea> res = new ArrayList<>();
@@ -465,7 +469,22 @@ public class NArea
                         Pair<Coord2d, Coord2d> testrc = test.getRCArea();
                         if(testrc != null) {
                             Coord2d playerRelativeCoord = NUtils.player().rc;
-                            boolean isReachable = PathFinder.isAvailable(testrc.a, playerRelativeCoord, false) && PathFinder.isAvailable(testrc.b, playerRelativeCoord, false);
+
+                            ArrayList<Gob> gobs = Finder.findGobs(test);
+
+                            boolean isReachable = false;
+
+                            if(gobs.isEmpty()) {
+                                isReachable = PathFinder.isAvailable(testrc.a, playerRelativeCoord, false) || PathFinder.isAvailable(testrc.b, playerRelativeCoord, false);
+                            } else {
+                                for(Gob gob : gobs) {
+                                    if (PathFinder.isAvailable(playerRelativeCoord, gob.rc, true)) {
+                                        isReachable = true;
+                                        break;
+                                    }
+                                }
+                            }
+
                             if (testrc.a.dist(playerRelativeCoord) + testrc.b.dist(playerRelativeCoord) < dist && isReachable) {
                                 res.add(test);
                             }

@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.NUtils;
 import nurgling.actions.PathFinder;
 import nurgling.areas.NArea;
+import nurgling.tools.Finder;
 
 import java.util.*;
 
@@ -150,12 +151,27 @@ public class RouteGraph {
 
     public void connectAreaToRoutePoints(NArea area) {
         ArrayList<RoutePoint> points = findNearestPoints();
+        MCache cache = NUtils.getGameUI().ui.sess.glob.map;
         for (RoutePoint point : points) {
             boolean isReachable = false;
 
             try {
-                isReachable =
-                        PathFinder.isAvailable(area.getRCArea().a, point.toCoord2d(NUtils.getGameUI().ui.sess.glob.map), false) && PathFinder.isAvailable(area.getRCArea().b, point.toCoord2d(NUtils.getGameUI().ui.sess.glob.map), false);
+                Pair<Coord2d, Coord2d> testrc = area.getRCArea();
+                if(testrc != null) {
+                    ArrayList<Gob> gobs = Finder.findGobs(area);
+
+                    if(gobs.isEmpty()) {
+                        isReachable = PathFinder.isAvailable(testrc.a, point.toCoord2d(cache), false) || PathFinder.isAvailable(testrc.b, point.toCoord2d(cache), false);
+                    } else {
+                        for(Gob gob : gobs) {
+                            if (PathFinder.isAvailable(point.toCoord2d(cache), gob.rc, true)) {
+                                isReachable = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
             } catch (InterruptedException e) {
                 NUtils.getGameUI().error("Unable to determine route point reachability from point to area. Skipping point: " + point.id);
             }
