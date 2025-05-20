@@ -1,9 +1,6 @@
 package nurgling.widgets.options;
 
-import haven.CheckBox;
-import haven.Coord;
-import haven.Label;
-import haven.Widget;
+import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.widgets.NMiniMapWnd;
@@ -200,6 +197,45 @@ public class QoL extends Widget {
                 a = val;
             }
 
+        }, prev.pos("bl").adds(0, 5));
+
+        // Add Temporary marks section
+        prev = add(new Label("Temporary marks:"), prev.pos("bl").adds(0, 15));
+        prev = add(new CheckBox("Save temporary marks") {
+            {
+                a = (Boolean) NConfig.get(NConfig.Key.tempmark);
+            }
+
+            public void set(boolean val) {
+                NConfig.set(NConfig.Key.tempmark, val);
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+        prev = add(new Label("Max distance (grids):"), prev.pos("bl").adds(0, 5));
+        prev = add(new TextEntry.NumberValue(50, String.valueOf(NConfig.get(NConfig.Key.temsmarkdist))) {
+            {
+                settext(String.valueOf(NConfig.get(NConfig.Key.temsmarkdist)));
+            }
+
+            @Override
+            public void done(ReadLine buf) {
+                super.done(buf);
+                NConfig.set(NConfig.Key.temsmarkdist,  Integer.parseInt(buf.line()));
+                NConfig.needUpdate();
+            }
+        }, prev.pos("bl").adds(0, 5));
+        prev = add(new Label("Storage duration (minutes):"), prev.pos("bl").adds(0, 5));
+
+        prev = add(new TextEntry.NumberValue(50, String.valueOf(NConfig.get(NConfig.Key.temsmarktime))) {
+            {
+                settext(String.valueOf(NConfig.get(NConfig.Key.temsmarktime)));
+            }
+            @Override
+            public void done(ReadLine buf) {
+                super.done(buf);
+                NConfig.set(NConfig.Key.temsmarktime,  Integer.parseInt(buf.line()));
+                NConfig.needUpdate();
+            }
         }, prev.pos("bl").adds(0, 5));
 
         pack();

@@ -82,7 +82,7 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, gridbox
+        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox
     }
 
 
@@ -146,7 +146,9 @@ public class NConfig
         conf.put(Key.player_box, false);
         conf.put(Key.player_fov, false);
         conf.put(Key.gridbox, false);
-        conf.put(Key.temsmarktime, 5000);
+        conf.put(Key.tempmark, false);
+        conf.put(Key.temsmarkdist, 4);
+        conf.put(Key.temsmarktime, 3);
 
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
