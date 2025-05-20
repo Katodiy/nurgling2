@@ -82,7 +82,7 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox
+        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf
     }
 
 
@@ -136,6 +136,7 @@ public class NConfig
         conf.put(Key.simplecrops, true);
         conf.put(Key.ndbenable, false);
         conf.put(Key.harvestautorefill, false);
+        conf.put(Key.useGlobalPf, false);
         conf.put(Key.sqlite, false);
         conf.put(Key.postgres, false);
         conf.put(Key.dbFilePath, "");
