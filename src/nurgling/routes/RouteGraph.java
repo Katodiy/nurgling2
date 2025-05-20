@@ -3,6 +3,7 @@ package nurgling.routes;
 import haven.*;
 import nurgling.NUtils;
 import nurgling.actions.PathFinder;
+import nurgling.areas.NArea;
 
 import java.util.*;
 
@@ -77,6 +78,20 @@ public class RouteGraph {
         return nearestPoint;
     }
 
+    public ArrayList<RoutePoint> findNearestPoints() {
+        ArrayList<RoutePoint> nearestPoints = new ArrayList<>();
+
+        for (RoutePoint point : points.values()) {
+            Coord2d pointCoords = new Coord2d(point.localCoord);
+
+            if (pointCoords != null) {
+                nearestPoints.add(point);
+            }
+        }
+
+        return nearestPoints;
+    }
+
     public List<RoutePoint> findPath(RoutePoint start, RoutePoint end) {
         if (start == null || end == null) return null;
         
@@ -118,6 +133,30 @@ public class RouteGraph {
         for(RoutePoint point : points.values()) {
             point.getNeighbors().remove(Integer.valueOf(waypoint.id));
             point.removeConnection(waypoint.id);
+        }
+    }
+
+    public void connectAreaToRoutePoints(NArea area) {
+        ArrayList<RoutePoint> points = findNearestPoints();
+        for (RoutePoint point : points) {
+            boolean isReachable = false;
+
+            try {
+                isReachable =
+                        PathFinder.isAvailable(area.getRCArea().a, point.toCoord2d(NUtils.getGameUI().ui.sess.glob.map), false) && PathFinder.isAvailable(area.getRCArea().b, point.toCoord2d(NUtils.getGameUI().ui.sess.glob.map), false);
+            } catch (InterruptedException e) {
+                NUtils.getGameUI().error("Unable to determine route point reachability from point to area. Skipping point: " + point.id);
+            }
+
+            if(isReachable) {
+                point.addReachableArea(area);
+            }
+        }
+    }
+
+    public void deleteAreaFromRoutePoints(int areaId) {
+        for(RoutePoint point : points.values()) {
+            point.deleteReachableArea(areaId);
         }
     }
 

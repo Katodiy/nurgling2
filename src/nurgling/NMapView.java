@@ -395,6 +395,8 @@ public class NMapView extends MapView
             newArea.path = NUtils.getGameUI().areas.currentPath;
             glob.map.areas.put(id, newArea);
 //            NUtils.getGameUI().areas.addArea(id, newArea.name, newArea);
+
+            routeGraphManager.getGraph().connectAreaToRoutePoints(newArea);
             createAreaLabel(id);
         }
         return key;
@@ -618,7 +620,6 @@ public class NMapView extends MapView
             if(area.name.equals(name))
             {
                 area.inWork = true;
-//                area.clearOverlayArea();
                 glob.map.areas.remove(area.id);
                 Gob dummy = dummys.get(area.gid);
                 if(dummy != null) {
@@ -626,6 +627,8 @@ public class NMapView extends MapView
                     dummys.remove(area.gid);
                 }
                 NUtils.getGameUI().areas.removeArea(area.id);
+
+                routeGraphManager.getGraph().deleteAreaFromRoutePoints(area.id);
 
                 break;
             }
@@ -662,6 +665,7 @@ public class NMapView extends MapView
                         dummys.remove(area.gid);
                     }
                     NUtils.getGameUI().map.nols.remove(area.id);
+                    routeGraphManager.getGraph().deleteAreaFromRoutePoints(area.id);
                 }
                 NAreaSelector.changeArea(area);
                 break;

@@ -4,6 +4,7 @@ import haven.*;
 import static haven.MCache.cmaps;
 import haven.render.sl.*;
 import nurgling.*;
+import nurgling.actions.PathFinder;
 import nurgling.tools.*;
 import nurgling.widgets.Specialisation;
 import org.json.*;
@@ -365,13 +366,43 @@ public class NArea
                     for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
                         if (s.name.equals(name) && s.subtype != null && s.subtype.toLowerCase().equals(sub.toLowerCase())) {
                             NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
-                            Pair<Coord2d,Coord2d> testrc = test.getRCArea();
-                            if(testrc!=null) {
-                                double testdist;
-                                if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
-                                    res = test;
-                                    dist = testdist;
+                            if(test.isVisible()) {
+                                Pair<Coord2d,Coord2d> testrc = test.getRCArea();
+                                if(testrc!=null) {
+                                    double testdist;
+                                    if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                                        res = test;
+                                        dist = testdist;
+                                    }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
+    // These visible areas DO NOT mean you are guaranteed to see gobs in the area. This only means you are able to
+    // navigate to an area.
+    public static ArrayList<NArea> getAllVisible() throws InterruptedException {
+        double dist = 10000;
+        ArrayList<NArea> res = new ArrayList<>();
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids)
+            {
+                if(id>=0) {
+                    NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
+                    if(test.isVisible()) {
+                        Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                        if(testrc != null) {
+                            Coord2d playerRelativeCoord = NUtils.player().rc;
+                            boolean isReachable = PathFinder.isAvailable(testrc.a, playerRelativeCoord, false) && PathFinder.isAvailable(testrc.b, playerRelativeCoord, false);
+                            if (testrc.a.dist(playerRelativeCoord) + testrc.b.dist(playerRelativeCoord) < dist && isReachable) {
+                                res.add(test);
                             }
                         }
                     }
