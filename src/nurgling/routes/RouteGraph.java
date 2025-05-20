@@ -127,6 +127,18 @@ public class RouteGraph {
         return null;
     }
 
+    public RoutePoint findAreaRoutePoint(NArea area) {
+        RoutePoint end = null;
+
+        for(RoutePoint point : points.values()) {
+            if(point.getReachableAreas().contains(area.id)) {
+                end = point;
+            }
+        }
+
+        return end;
+    }
+
     public void deleteWaypoint(RoutePoint waypoint) {
         points.remove(waypoint.id);
 
@@ -149,7 +161,7 @@ public class RouteGraph {
             }
 
             if(isReachable) {
-                point.addReachableArea(area);
+                point.addReachableArea(area.id);
             }
         }
     }

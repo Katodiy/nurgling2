@@ -181,6 +181,13 @@ public class Route {
                         waypoint.addConnection(Integer.parseInt(neighborHash), connectionTo, connGobHash, connGobName, isDoor);
                     }
                 }
+
+                if (point.has("reachableAreas")) {
+                    JSONArray reachableAreas = point.getJSONArray("reachableAreas");
+                    for (int j = 0; j < reachableAreas.length(); j++) {
+                        waypoint.addReachableArea(reachableAreas.getInt(j));
+                    }
+                }
                 
                 waypoints.add(waypoint);
             }
@@ -234,6 +241,13 @@ public class Route {
                 }
             }
             waypointJson.put("connections", connectionsJson);
+
+            // Save reachable areas
+            JSONArray reachableAreas = new JSONArray();
+            for (int reachableArea : waypoint.getReachableAreas()) {
+                reachableAreas.put(reachableArea);
+            }
+            waypointJson.put("reachableAreas", reachableAreas);
             
             waypointsArray.put(waypointJson);
         }

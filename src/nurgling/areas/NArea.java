@@ -227,6 +227,49 @@ public class NArea
         return res;
     }
 
+    public static NArea globalFindOut(String name, double th) {
+        NArea res = null;
+
+        ArrayList<TestedArea> areas = new ArrayList<>();
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids) {
+                if (id > 0) {
+                    NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
+                    if (cand.containOut(name, th)) {
+                        areas.add(new TestedArea(cand, th));
+                    }
+                }
+            }
+        }
+
+        areas.sort(ta_comp);
+
+        double tth = 1;
+        for (TestedArea area : areas)
+        {
+            if(area.th<=th) {
+                res = area.area;
+                tth = area.th;
+            }
+        }
+
+        ArrayList<NArea> targets = new ArrayList<>();
+        for(TestedArea area :areas)
+        {
+            if(area.th == tth)
+                targets.add(area.area);
+        }
+
+        if(targets.size()>1) {
+            for (NArea test: targets) {
+                res = test;
+            }
+        }
+        return res;
+    }
+
     public static TreeMap<Integer,NArea> findOuts(NAlias name)
     {
         TreeMap<Integer,NArea> areas = new TreeMap<>();
@@ -243,6 +286,28 @@ public class NArea
                                     Integer th = (((JSONObject) cand.jout.get(i)).has("th")) ? ((Integer) ((JSONObject) cand.jout.get(i)).get("th")) : 1;
                                     areas.put(th, cand);
                                 }
+                            }
+                        }
+                    }
+            }
+        }
+        return areas;
+    }
+
+    public static TreeMap<Integer,NArea> globalFindOuts(NAlias name)
+    {
+        TreeMap<Integer,NArea> areas = new TreeMap<>();
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids) {
+                if (id > 0)
+                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name) ) {
+                        NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
+                        for (int i = 0; i < cand.jout.length(); i++) {
+                            if (NParser.checkName((String) ((JSONObject) cand.jout.get(i)).get("name"), name)) {
+                                Integer th = (((JSONObject) cand.jout.get(i)).has("th")) ? ((Integer) ((JSONObject) cand.jout.get(i)).get("th")) : 1;
+                                areas.put(th, cand);
                             }
                         }
                     }

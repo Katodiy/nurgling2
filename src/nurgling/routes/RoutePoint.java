@@ -77,14 +77,18 @@ public class RoutePoint {
         this.id = hashCode();
     }
 
+    public ArrayList<Integer> getReachableAreas() {
+        return reachableAreas;
+    }
+
     public void addReachableAreas(ArrayList<NArea> reachableAreas) {
         for (NArea area : reachableAreas) {
             this.reachableAreas.add(area.id);
         }
     }
 
-    public void addReachableArea(NArea reachableAreas) {
-        this.reachableAreas.add(reachableAreas.id);
+    public void addReachableArea(int reachableAreas) {
+        this.reachableAreas.add(reachableAreas);
 
     }
 
