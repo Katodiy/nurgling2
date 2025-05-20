@@ -420,7 +420,7 @@ public class NCookBook extends Window {
 
     @Override
     public boolean show(boolean show) {
-        if (show) {
+        if (show && (Boolean) NConfig.get(NConfig.Key.ndbenable) && ui.core.poolManager!=null) {
             try {
                 rhf = new RecipeHashFetcher(ui.core.poolManager.getConnection(),
                         RecipeHashFetcher.genFep(currentSortType, currentSortDesc));
