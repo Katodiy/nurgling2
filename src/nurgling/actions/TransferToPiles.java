@@ -64,8 +64,10 @@ public class TransferToPiles implements Action{
                                 witems.get(i).item.wdgmsg("transfer", Coord.z);
                             }
                             NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), fullSize - target_size));
-                            if((witems = gui.getInventory().getItems(items,th)).isEmpty())
+                            if((witems = gui.getInventory().getItems(items,th)).isEmpty()) {
+                                new CloseTargetContainer("Stockpile").run(gui);
                                 return Results.SUCCESS();
+                            }
                         }
                     }
                 }

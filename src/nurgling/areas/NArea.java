@@ -451,10 +451,6 @@ public class NArea
 
     // These visible areas DO NOT mean you are guaranteed to see gobs in the area. This only means you are able to
     // navigate to an area.
-
-    // TODO check if any gobs within the area is reachable with PF, if NOT (no gobs or no reachable gobs) check
-    // if coords of corners areareachable. If any of this is true the area is considered reachable, if none of these
-    // are true the area is not visible.
     public static ArrayList<NArea> getAllVisible() throws InterruptedException {
         double dist = 10000;
         ArrayList<NArea> res = new ArrayList<>();
