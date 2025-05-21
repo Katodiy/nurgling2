@@ -2,9 +2,13 @@ package nurgling;
 
 import haven.*;
 import haven.res.lib.itemtex.*;
+import haven.res.ui.tt.drying.Drying;
 import nurgling.iteminfo.NSearchable;
 import nurgling.tools.NSearchItem;
 import org.json.*;
+
+import java.util.List;
+import java.util.Optional;
 
 public class NWItem extends WItem
 {
@@ -131,4 +135,18 @@ public class NWItem extends WItem
 //        }
 //        return res;
     }
+    public Optional<Double> getDryingProgress() {
+        try {
+            List<ItemInfo> infos = item.info();
+            for (ItemInfo info : infos) {
+                if (info instanceof Drying) {
+                    return Optional.of(((Drying) info).done);
+                }
+            }
+        } catch (Loading e) {
+            // Item info not fully loaded yet
+        }
+        return Optional.empty();
+    }
+
 }

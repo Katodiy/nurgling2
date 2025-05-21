@@ -5,6 +5,8 @@ import haven.res.ui.tt.gast.Gast;
 import haven.res.ui.tt.wear.Wear;
 import nurgling.*;
 import nurgling.tasks.GetItem;
+import nurgling.tasks.WaitINGItemName;
+import nurgling.tasks.WaitItemContent;
 import nurgling.tasks.WaitItemSpr;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
@@ -196,10 +198,19 @@ public class NEquipory extends Equipory
     }
 
     public WItem findBucket (String content) throws InterruptedException {
+        int i = 1;
         if (quickslots[Slots.HAND_RIGHT.idx] != null) {
-            NUtils.getUI().core.addTask(new WaitItemSpr(quickslots[Slots.HAND_RIGHT.idx]));
-            if (NParser.checkName("Bucket", ((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).name())) {
-                if (((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content().isEmpty() || NParser.checkName(((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content().get(0).name(), content))
+            NUtils.getUI().core.addTask(new WaitINGItemName(quickslots[Slots.HAND_RIGHT.idx]));
+            boolean cn = NParser.checkName("Bucket", ((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).name());
+            if (cn) {
+//            if (NParser.checkName("Bucket", ((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).name())) {
+                int i2 = 1;
+                boolean var1 = ((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content().isEmpty();
+                boolean var2 = false;
+                if(!var1)
+                    var2 = NParser.checkName(((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content().get(0).name(), content);
+                if (var1 || var2)
+//                if (((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content().isEmpty() || NParser.checkName(((NGItem) quickslots[Slots.HAND_RIGHT.idx].item).content().get(0).name(), content))
                     return quickslots[Slots.HAND_RIGHT.idx];
             }
         }

@@ -632,4 +632,12 @@ public class NUtils
             }
         }
     }
+
+    public static double parseStartDouble(String text) {
+        int space = text.indexOf(' ');
+        if (space != -1) {
+            return Double.parseDouble(text.substring(0, space));
+        }
+        return 0.0;
+    }
 }

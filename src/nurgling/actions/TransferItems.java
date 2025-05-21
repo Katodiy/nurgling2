@@ -71,6 +71,7 @@ public class TransferItems implements Action
                 after.add(item);
             }
         }
+
         ArrayList<String> resitems = new ArrayList<>();
         resitems.addAll(before);
         resitems.addAll(after);
