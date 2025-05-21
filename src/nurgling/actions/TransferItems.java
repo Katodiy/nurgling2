@@ -8,10 +8,7 @@ import nurgling.tools.Context;
 import nurgling.tools.Container;
 import nurgling.tools.NAlias;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.ListIterator;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TransferItems implements Action
@@ -75,7 +72,7 @@ public class TransferItems implements Action
         resitems.addAll(before);
         resitems.addAll(after);
         for(String item : resitems) {
-            TreeMap<Integer, NArea> areas = NArea.globalFindOuts(new NAlias(item));
+            TreeMap<Integer, NArea> areas = NArea.globalFindOuts(item);
             if(!areas.isEmpty()) {
                 ArrayList<Integer> ths = new ArrayList<>(areas.keySet());
                 ListIterator<Integer> listIter = ths.listIterator(areas.size());

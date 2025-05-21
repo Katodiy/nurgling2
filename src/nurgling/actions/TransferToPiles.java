@@ -105,8 +105,8 @@ public class TransferToPiles implements Action{
             return new NAlias("gfx/terobjs/stockpile-metal");
         } else if (NParser.checkName(items.getDefault(), new NAlias("brick"))) {
             return new NAlias("gfx/terobjs/stockpile-brick");
-        } else if (NParser.checkName(items.getDefault(), new NAlias("leaf"))) {
-            return new NAlias("gfx/terobjs/stockpile-leaf");
+        } else if (NParser.checkName(items.getDefault(), new NAlias("fresh leaf of pipeweed"))) {
+            return new NAlias("gfx/terobjs/stockpile-pipeleaves");
         } else if (NParser.checkName(items.getDefault(), new NAlias("Hemp Cloth"))) {
             return new NAlias("gfx/terobjs/stockpile-cloth");
         } else if (NParser.checkName(items.getDefault(), new NAlias("Linen Cloth"))) {

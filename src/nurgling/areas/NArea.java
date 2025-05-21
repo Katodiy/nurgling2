@@ -237,7 +237,7 @@ public class NArea
             for(Integer id : nids) {
                 if (id > 0) {
                     NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
-                    if (cand.containOut(name, th)) {
+                    if (cand.containOut(name)) {
                         areas.add(new TestedArea(cand, th));
                     }
                 }
@@ -294,7 +294,7 @@ public class NArea
         return areas;
     }
 
-    public static TreeMap<Integer,NArea> globalFindOuts(NAlias name)
+    public static TreeMap<Integer,NArea> globalFindOuts(String name)
     {
         TreeMap<Integer,NArea> areas = new TreeMap<>();
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
@@ -478,7 +478,7 @@ public class NArea
                                 isReachable = PathFinder.isAvailable(testrc.a, playerRelativeCoord, false) || PathFinder.isAvailable(testrc.b, playerRelativeCoord, false);
                             } else {
                                 for(Gob gob : gobs) {
-                                    if (PathFinder.isAvailable(playerRelativeCoord, gob.rc, true)) {
+                                    if (PathFinder.isAvailable(gob)) {
                                         isReachable = true;
                                         break;
                                     }
