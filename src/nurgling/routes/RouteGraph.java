@@ -3,6 +3,8 @@ package nurgling.routes;
 import haven.*;
 import nurgling.NUtils;
 import nurgling.actions.PathFinder;
+import nurgling.areas.NArea;
+import nurgling.tools.Finder;
 
 import java.util.*;
 
@@ -77,6 +79,20 @@ public class RouteGraph {
         return nearestPoint;
     }
 
+    public ArrayList<RoutePoint> findNearestPoints() {
+        ArrayList<RoutePoint> nearestPoints = new ArrayList<>();
+
+        for (RoutePoint point : points.values()) {
+            Coord2d pointCoords = new Coord2d(point.localCoord);
+
+            if (pointCoords != null) {
+                nearestPoints.add(point);
+            }
+        }
+
+        return nearestPoints;
+    }
+
     public List<RoutePoint> findPath(RoutePoint start, RoutePoint end) {
         if (start == null || end == null) return null;
         
@@ -112,12 +128,63 @@ public class RouteGraph {
         return null;
     }
 
+    public RoutePoint findAreaRoutePoint(NArea area) {
+        RoutePoint end = null;
+
+        for(RoutePoint point : points.values()) {
+            if(point.getReachableAreas().contains(area.id)) {
+                end = point;
+            }
+        }
+
+        return end;
+    }
+
     public void deleteWaypoint(RoutePoint waypoint) {
         points.remove(waypoint.id);
 
         for(RoutePoint point : points.values()) {
             point.getNeighbors().remove(Integer.valueOf(waypoint.id));
             point.removeConnection(waypoint.id);
+        }
+    }
+
+    public void connectAreaToRoutePoints(NArea area) {
+        ArrayList<RoutePoint> points = findNearestPoints();
+        MCache cache = NUtils.getGameUI().ui.sess.glob.map;
+        for (RoutePoint point : points) {
+            boolean isReachable = false;
+
+            try {
+                Pair<Coord2d, Coord2d> testrc = area.getRCArea();
+                if(testrc != null) {
+                    ArrayList<Gob> gobs = Finder.findGobs(area);
+
+                    if(gobs.isEmpty()) {
+                        isReachable = PathFinder.isAvailable(testrc.a, point.toCoord2d(cache), false) || PathFinder.isAvailable(testrc.b, point.toCoord2d(cache), false);
+                    } else {
+                        for(Gob gob : gobs) {
+                            if (PathFinder.isAvailable(point.toCoord2d(cache), gob.rc, true)) {
+                                isReachable = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+            } catch (InterruptedException e) {
+                NUtils.getGameUI().error("Unable to determine route point reachability from point to area. Skipping point: " + point.id);
+            }
+
+            if(isReachable) {
+                point.addReachableArea(area.id);
+            }
+        }
+    }
+
+    public void deleteAreaFromRoutePoints(int areaId) {
+        for(RoutePoint point : points.values()) {
+            point.deleteReachableArea(areaId);
         }
     }
 

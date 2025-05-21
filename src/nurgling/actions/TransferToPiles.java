@@ -64,8 +64,10 @@ public class TransferToPiles implements Action{
                                 witems.get(i).item.wdgmsg("transfer", Coord.z);
                             }
                             NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), fullSize - target_size));
-                            if((witems = gui.getInventory().getItems(items,th)).isEmpty())
+                            if((witems = gui.getInventory().getItems(items,th)).isEmpty()) {
+                                new CloseTargetContainer("Stockpile").run(gui);
                                 return Results.SUCCESS();
+                            }
                         }
                     }
                 }
@@ -105,14 +107,15 @@ public class TransferToPiles implements Action{
             return new NAlias("gfx/terobjs/stockpile-metal");
         } else if (NParser.checkName(items.getDefault(), new NAlias("brick"))) {
             return new NAlias("gfx/terobjs/stockpile-brick");
-        } else if (NParser.checkName(items.getDefault(), new NAlias("leaf"))) {
-            return new NAlias("gfx/terobjs/stockpile-leaf");
+        } else if (NParser.checkName(items.getDefault(), new NAlias("fresh leaf of pipeweed"))) {
+            return new NAlias("gfx/terobjs/stockpile-pipeleaves");
         } else if (NParser.checkName(items.getDefault(), new NAlias("Hemp Cloth"))) {
             return new NAlias("gfx/terobjs/stockpile-cloth");
         } else if (NParser.checkName(items.getDefault(), new NAlias("Linen Cloth"))) {
             return new NAlias("gfx/terobjs/stockpile-cloth");
-        }
-        else
+        } else if (NParser.checkName(items.getDefault(), new NAlias("coal"))) {
+            return new NAlias("gfx/terobjs/stockpile-coal");
+        } else
             return new NAlias("stockpile");
     }
 }

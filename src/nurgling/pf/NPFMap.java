@@ -39,14 +39,7 @@ public class NPFMap
     public CellsArray addGob(Gob gob) {
         CellsArray ca;
 
-        if(gatesAlwaysClosed && isGate(gob)) {
-            ca = gob.ngob.getTrueCA();
-        } else {
-            ca = gob.ngob.getCA();
-        }
-//        ca = gob.ngob.getCA();
-
-        if (gob.ngob != null && gob.ngob.hitBox != null && ca != null && NUtils.player() != null && gob.id != NUtils.player().id && gob.getattr(Following.class) == null) {
+        if (gob.ngob != null && gob.ngob.hitBox != null && (ca = getCa(gob)) != null && NUtils.player() != null && gob.id != NUtils.player().id && gob.getattr(Following.class) == null) {
             CellsArray old = new CellsArray(ca.x_len, ca.y_len);
             old.begin = ca.begin;
             old.end = ca.end;
@@ -405,6 +398,14 @@ public class NPFMap
 
             }, new Coord(UI.scale(100), UI.scale(100)));
             NUtils.getUI().bind(wnd, 7002);
+        }
+    }
+
+    private CellsArray getCa(Gob gob) {
+        if(gatesAlwaysClosed && isGate(gob)) {
+            return gob.ngob.getTrueCA();
+        } else {
+            return gob.ngob.getCA();
         }
     }
 }
