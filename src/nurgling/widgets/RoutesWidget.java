@@ -6,25 +6,17 @@ import haven.Window;
 import nurgling.*;
 import nurgling.actions.bots.RouteAutoRecorder;
 import nurgling.actions.bots.RoutePointNavigator;
-import nurgling.actions.bots.SelectGob;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
-import nurgling.tools.Finder;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Map;
 
 public class RoutesWidget extends Window {
     public String currentPath = "";
@@ -33,7 +25,6 @@ public class RoutesWidget extends Window {
     private final List<RouteItem> routeItems = new ArrayList<>();
     private WaypointList waypointList;
     private Widget actionContainer;
-    public final HashMap<Integer, Route> routes = new HashMap<>();
     private SpecList specList;
 
     public RoutesWidget() {
@@ -101,7 +92,6 @@ public class RoutesWidget extends Window {
             Coord c = sz.div(2).sub(this.sz.div(2));
             this.c = c;
         }
-        loadRoutes();
         showRoutes();
     }
 
@@ -115,41 +105,13 @@ public class RoutesWidget extends Window {
     public void showRoutes() {
         synchronized (routeItems) {
             routeItems.clear();
-            for (Route route : routes.values()) {
+            for (Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values()) {
                 routeItems.add(new RouteItem(route));
             }
         }
 
         if (!routeItems.isEmpty()) {
             routeList.change(routeItems.get(routeItems.size() - 1));
-        }
-    }
-
-    public void loadRoutes() {
-        if(new File(NConfig.current.path_routes).exists())
-        {
-            StringBuilder contentBuilder = new StringBuilder();
-            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_routes), StandardCharsets.UTF_8))
-            {
-                stream.forEach(s -> contentBuilder.append(s).append("\n"));
-            }
-            catch (IOException ignore)
-            {
-            }
-
-            if (!contentBuilder.toString().isEmpty())
-            {
-                JSONObject main = new JSONObject(contentBuilder.toString());
-                JSONArray array = (JSONArray) main.get("routes");
-                for (int i = 0; i < array.length(); i++)
-                {
-                    Route route = new Route((JSONObject) array.get(i));
-                    routes.put(route.id, route);
-                }
-
-                // Update the graph after loading routes
-                ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateGraph();
-            }
         }
     }
 
@@ -167,7 +129,7 @@ public class RoutesWidget extends Window {
     }
 
     private void select(int id) {
-        Route route = routes.get(id);
+        Route route = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(id);
 
         if (route == null) return;
 
@@ -218,14 +180,14 @@ public class RoutesWidget extends Window {
 
     public void updateWaypoints() {
         int routeId = this.routeList.selectedRouteId;
-        Route route = routes.get(routeId);
+        Route route = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(routeId);
 
         if (route == null) {
             this.waypointList.update(new ArrayList<>());
             return;
         }
 
-        ArrayList<RoutePoint> waypoints = routes.get(routeId).waypoints;
+        ArrayList<RoutePoint> waypoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(routeId).waypoints;
         if (waypoints != null) {
             this.waypointList.update(waypoints);
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateRoute(route);
@@ -359,10 +321,10 @@ public class RoutesWidget extends Window {
         }
 
         public void deleteSelectedRoute() {
-            routes.remove(routeList.sel.route.id);
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().remove(routeList.sel.route.id);
             NConfig.needRoutesUpdate();
             showRoutes();
-            if (routes.isEmpty()) {
+            if (((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().isEmpty()) {
                 actionContainer.hide();
                 waypointList.hide();
             }
