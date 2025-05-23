@@ -12,10 +12,7 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static haven.OCache.posres;
@@ -32,6 +29,7 @@ public class HarvestCrop implements Action{
     final NAlias iseed;
 
     int stage;
+    boolean allowedToPlantFromStockpiles;
 
     public HarvestCrop(NArea field, NArea seed, NArea trough, NAlias crop, NAlias iseed, int stage) {
         this.field = field;
@@ -42,33 +40,43 @@ public class HarvestCrop implements Action{
         this.stage = stage;
     }
 
-    public HarvestCrop(NArea field, NArea seed, NArea trough, NArea swill, NAlias crop, NAlias iseed, int stage) {
+    public HarvestCrop(NArea field, NArea seed, NArea trough, NArea swill, NAlias crop, NAlias iseed, int stage, boolean allowedToPlantFromStockpiles) {
         this(field,seed,trough,crop,iseed,stage);
         this.swill = swill;
+        this.allowedToPlantFromStockpiles = allowedToPlantFromStockpiles;
     }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
 
         ArrayList<Gob> barrels = Finder.findGobs(seed, new NAlias("barrel"));
+        ArrayList<Gob> stockPiles = Finder.findGobs(seed, new NAlias("stockpile"));
         Gob trough = Finder.findGob(trougha, new NAlias("gfx/terobjs/trough"));
         Gob cistern = null;
         if(this.swill!=null)
         {
             cistern = Finder.findGob(swill, new NAlias("gfx/terobjs/cistern"));
         }
-        if (barrels.isEmpty())
-            return Results.ERROR("No barrel for seed");
-//        if (trough == null)
-//            return Results.ERROR("No trough for seed");
         HashMap<Gob, AtomicBoolean> barrelInfo = new HashMap();
-        for(Gob barrel : barrels) {
-            TransferToBarrel tb;
-            (tb = new TransferToBarrel(barrel, iseed)).run(gui);
-            barrelInfo.put(barrel, new AtomicBoolean(tb.isFull()));
-        }
-        if (!gui.getInventory().getItems(iseed).isEmpty()) {
-            new TransferToTrough(trough, iseed, cistern).run(gui);
+        if (barrels.isEmpty()) {
+            if(!allowedToPlantFromStockpiles || stockPiles.isEmpty()) {
+                return Results.ERROR("No barrel for seed");
+            } else {
+                new TransferToPiles(seed.getRCArea(), crop).run(gui);
+
+                if (!gui.getInventory().getItems(crop).isEmpty()) {
+                    new TransferToTrough(trough, crop, cistern).run(gui);
+                }
+            }
+        } else {
+            for(Gob barrel : barrels) {
+                TransferToBarrel tb;
+                (tb = new TransferToBarrel(barrel, iseed)).run(gui);
+                barrelInfo.put(barrel, new AtomicBoolean(tb.isFull()));
+            }
+            if (!gui.getInventory().getItems(iseed).isEmpty()) {
+                new TransferToTrough(trough, iseed, cistern).run(gui);
+            }
         }
 
         Coord start = gui.map.player().rc.dist(field.getArea().br.mul(MCache.tilesz)) < gui.map.player().rc.dist(field.getArea().ul.mul(MCache.tilesz)) ? field.getArea().br.sub(1, 1) : field.getArea().ul;
@@ -129,44 +137,40 @@ public class HarvestCrop implements Action{
                         pos.x += 3;
                     }
                 }
-
-
-
         }
 
-        if (!gui.getInventory().getItems(iseed).isEmpty()) {
-            for(Gob barrel : barrelInfo.keySet()) {
+        if(barrels.isEmpty()) {
+            if(!gui.getInventory().getItems(iseed).isEmpty()) {
+                new TransferToPiles(seed.getRCArea(), iseed).run(gui);
+
                 if (!gui.getInventory().getItems(iseed).isEmpty()) {
-                    if (!barrelInfo.get(barrel).get()) {
-                        TransferToBarrel tb;
-                        (tb = new TransferToBarrel(barrel, iseed)).run(gui);
-                        barrelInfo.put(barrel, new AtomicBoolean(tb.isFull()));
-                    }
+                    new TransferToTrough(trough, iseed, cistern).run(gui);
                 }
             }
+        } else {
             if (!gui.getInventory().getItems(iseed).isEmpty()) {
-                new TransferToTrough(trough, iseed, cistern).run(gui);
+                for(Gob barrel : barrelInfo.keySet()) {
+                    if (!gui.getInventory().getItems(iseed).isEmpty()) {
+                        if (!barrelInfo.get(barrel).get()) {
+                            TransferToBarrel tb;
+                            (tb = new TransferToBarrel(barrel, iseed)).run(gui);
+                            barrelInfo.put(barrel, new AtomicBoolean(tb.isFull()));
+                        }
+                    }
+                }
+                if (!gui.getInventory().getItems(iseed).isEmpty()) {
+                    new TransferToTrough(trough, iseed, cistern).run(gui);
+                }
             }
         }
+
         return Results.SUCCESS();
     }
 
 
     void harvest(NGameUI gui, HashMap<Gob,AtomicBoolean> barrelInfo, Gob trough, Gob cistern, Area area, boolean rev, Coord2d target_coord, AtomicBoolean setDir) throws InterruptedException {
-        if (gui.getInventory().getFreeSpace() < 3) {
-            for(Gob barrel : barrelInfo.keySet()) {
-                if (!gui.getInventory().getItems(iseed).isEmpty()) {
-                    if (!barrelInfo.get(barrel).get()) {
-                        TransferToBarrel tb;
-                        (tb = new TransferToBarrel(barrel, iseed)).run(gui);
-                        barrelInfo.put(barrel, new AtomicBoolean(tb.isFull()));
-                    }
-                }
-            }
-            if (!gui.getInventory().getItems(iseed).isEmpty()) {
-                new TransferToTrough(trough, iseed, cistern).run(gui);
-            }
-        }
+        dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
+
         if(NUtils.getStamina()<0.35) {
             if ((Boolean) NConfig.get(NConfig.Key.harvestautorefill)) {
                 if (FillWaterskins.checkIfNeed())
@@ -204,6 +208,7 @@ public class HarvestCrop implements Action{
         ArrayList<Gob> plants;
         while (!(plants = Finder.findGobs(area,crop,stage)).isEmpty())
         {
+            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
             plant = plants.get(0);
             new PathFinder(plant).run(gui);
             new SelectFlowerAction("Harvest", plant).run(gui);
@@ -212,10 +217,31 @@ public class HarvestCrop implements Action{
 
         while (!(plants = Finder.findGobs(area,new NAlias("gfx/terobjs/plants/fallowplant"), 0)).isEmpty())
         {
+            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
             plant = plants.get(0);
             new PathFinder(plant).run(gui);
             new SelectFlowerAction("Harvest", plant).run(gui);
             NUtils.getUI().core.addTask(new NoGob(plant.id));
+        }
+    }
+
+    private void dropOffSeed(NGameUI gui, Set<Gob> barrels, Gob trough, Gob cistern) throws InterruptedException {
+        if (gui.getInventory().getFreeSpace() < 3) {
+            if(barrels.isEmpty() && allowedToPlantFromStockpiles) {
+                new TransferToPiles(seed.getRCArea(), iseed).run(gui);
+            } else {
+                if (!gui.getInventory().getItems(iseed).isEmpty()) {
+                    for (Gob barrel : barrels) {
+                        TransferToBarrel tb;
+                        (tb = new TransferToBarrel(barrel, iseed)).run(gui);
+                        if (!tb.isFull())
+                            break;
+                    }
+                }
+            }
+            if (!gui.getInventory().getItems(iseed).isEmpty()) {
+                new TransferToTrough(trough, iseed, cistern).run(gui);
+            }
         }
     }
 }
