@@ -65,7 +65,7 @@ public class SeedCrop implements Action {
                         while (pos.y <= field.getArea().br.y - 1) {
                             Coord endPos = new Coord(Math.max(pos.x - 1, field.getArea().ul.x), Math.min(pos.y + 1, field.getArea().br.y - 1));
                             Area harea = new Area(pos, endPos, true);
-                            Coord2d endp = harea.ul.mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y).sub(0, MCache.tileqsz.y);
+                            Coord2d endp = harea.ul.sub(0, 1).mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y + MCache.tileqsz.y);
                             seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir);
                             pos.y += 2;
 
@@ -91,7 +91,7 @@ public class SeedCrop implements Action {
                         while (pos.y <= field.getArea().br.y - 1) {
                             Coord endPos = new Coord(Math.min(pos.x + 1, field.getArea().br.x - 1), Math.min(pos.y + 1, field.getArea().br.y - 1));
                             Area harea = new Area(pos, endPos, true);
-                            Coord2d endp = harea.ul.mul(MCache.tilesz).sub(-MCache.tilehsz.x, -MCache.tilehsz.y).sub(0, MCache.tileqsz.y);
+                            Coord2d endp = harea.ul.sub(0, 1).mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y + MCache.tileqsz.y);
                             seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir);
                             pos.y += 2;
 

@@ -62,6 +62,7 @@ public class NBotsMenu extends Widget
 
         farming.elements.add(new NButton("hemp", new HempFarmer(), true));
         farming.elements.add(new NButton("flax", new FlaxFarmer(), true));
+        farming.elements.add(new NButton("lettuce", new LettuceFarmer(), true));
 
         farming.elements.add(new NButton("barley", new BarleyFarmer(), true));
         farming.elements.add(new NButton("millet", new MilletFarmer(), true));
