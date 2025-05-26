@@ -236,11 +236,13 @@ public class SeedCrop implements Action {
     private void fetchSeedsFromStockpiles(NGameUI gui) throws InterruptedException {
         ArrayList<Gob> stockPiles = Finder.findGobs(seed, new NAlias("stockpile"));
 
-        for (Gob stockpile : stockPiles) {
-            if (gui.getInventory().getItems(iseed).size() < 10) {
-                new PathFinder(stockpile).run(gui);
-                new OpenTargetContainer("Stockpile", stockpile).run(gui);
-                new TakeItemsFromPile(stockpile, gui.getStockpile(), gui.getInventory().getFreeSpace()).run(gui);
+        if(gui.getInventory().getItems(iseed).size() < 4) {
+            for (Gob stockpile : stockPiles) {
+                if (gui.getInventory().getFreeSpace() > 0) {
+                    new PathFinder(stockpile).run(gui);
+                    new OpenTargetContainer("Stockpile", stockpile).run(gui);
+                    new TakeItemsFromPile(stockpile, gui.getStockpile(), gui.getInventory().getFreeSpace()).run(gui);
+                }
             }
         }
 
