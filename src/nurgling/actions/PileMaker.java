@@ -47,11 +47,12 @@ public class PileMaker implements Action{
             return Results.ERROR("No free space");
 
         new PathFinder( NGob.getDummy(pos, 0, hitbox),true).run(gui);
-
+        NUtils.addTask(new WaitStockpile(false));
         NUtils.getGameUI().map.wdgmsg("place", pos.floor(posres), 0, 1, 0);
         WaitPile wp = new WaitPile(pos);
         NUtils.getUI().core.addTask(wp);
         pile = wp.getPile();
+        NUtils.addTask(new WaitStockpile(true));
         return Results.SUCCESS();
     }
 }

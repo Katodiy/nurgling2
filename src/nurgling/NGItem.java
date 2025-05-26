@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import static haven.Inventory.sqsz;
 
+import haven.res.ui.stackinv.ItemStack;
 import haven.res.ui.tt.slots.ISlots;
 import haven.res.ui.tt.stackn.StackName;
 import monitoring.ItemWatcher;
@@ -269,5 +270,17 @@ public class NGItem extends GItem
             ((NInventory) parent).lastUpdate = NUtils.getTickId();
         }
         super.destroy();
+    }
+
+    public static boolean validateItem(WItem item)
+    {
+        if ((((NGItem) item.item).name()) == null) {
+            return false;
+        }
+        if(((NGItem) item.item).quality == null && ((NGItem) item.item).getInfo(GItem.Amount.class)!=null)
+        {
+            return item.item.contents != null && !((ItemStack) item.item.contents).wmap.isEmpty();
+        }
+        return true;
     }
 }

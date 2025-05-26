@@ -77,6 +77,14 @@ public class NISBox extends ISBox
         }
     }
 
+    public void put(int amount)
+    {
+        for (int i = 0; i < amount; i++)
+        {
+            wdgmsg("xfer2", 1, 1);
+        }
+    }
+
 
 
     private class TakeButton extends Button{

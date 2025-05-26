@@ -43,19 +43,16 @@ public class FreeContainersInArea implements Action {
                     Coord size = StockpileUtils.itemMaxSize.get(pile.ngob.name);
                     new PathFinder(pile).run(gui);
                     new OpenTargetContainer("Stockpile",pile).run(gui);
+                    int target_size = 0;
                     while (Finder.findGob(pile.id) != null)
-                        if ((size != null ? NUtils.getGameUI().getInventory().getNumberFreeCoord(size) : NUtils.getGameUI().getInventory().getFreeSpace()) > 0) {
+                        if ( NUtils.getGameUI().getInventory().getNumberFreeCoord((size != null) ?size:new Coord(1,1)) > 0) {
                             NISBox spbox = gui.getStockpile();
                             if (spbox != null) {
-                                int target_size = 0;
                                 do {
-                                    if (size == null) {
-                                        int fs = NUtils.getGameUI().getInventory().getFreeSpace();
-                                        target_size = Math.min(fs, spbox.calcCount());
-                                    } else {
-                                        int fs = NUtils.getGameUI().getInventory().getNumberFreeCoord(size);
-                                        target_size = Math.min(fs, spbox.calcCount());
+                                    if (Finder.findGob(pile.id) == null&&target_size!=0) {
+                                        break;
                                     }
+                                    target_size = NUtils.getGameUI().getInventory().getNumberFreeCoord((size != null) ?size:new Coord(1,1));
                                     if (target_size == 0) {
                                         new TransferItems(context, targets).run(gui);
                                         targets.clear();
@@ -66,8 +63,8 @@ public class FreeContainersInArea implements Action {
                                     } else {
                                         TakeItemsFromPile tifp = new TakeItemsFromPile(pile, spbox, target_size);
                                         tifp.run(gui);
-                                        for (WItem item : tifp.newItems())
-                                            targets.add(((NGItem) item.item).name());
+                                        for (NGItem item : tifp.newItems())
+                                            targets.add((item).name());
                                     }
                                 }
                                 while (target_size!=0);

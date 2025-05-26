@@ -1,21 +1,12 @@
 package nurgling.actions;
 
 import haven.*;
-import haven.render.sl.InstancedUniform;
-import nurgling.NGItem;
-import nurgling.NGameUI;
-import nurgling.NInventory;
-import nurgling.NUtils;
-import nurgling.areas.NArea;
-import nurgling.tasks.FilledPile;
-import nurgling.tasks.NTask;
-import nurgling.tasks.WaitItems;
+import haven.res.ui.stackinv.ItemStack;
+import nurgling.*;
+import nurgling.tasks.*;
 import nurgling.tools.*;
 
 import java.util.ArrayList;
-import java.util.ListIterator;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 public class TransferToContainer implements Action{
 
@@ -68,12 +59,26 @@ public class TransferToContainer implements Action{
                                 }
                             }
                             for (int i = 0; i < Math.min(oldSpace, coorditems.size()); i++) {
-                                coorditems.get(i).item.wdgmsg("transfer", Coord.z);
+                                transfer(coorditems.get(i), gui.getInventory(container.cap), Math.min(oldSpace, coorditems.size()));
+
+                                i = 0;
+                                if (th == -1)
+                                    witems = gui.getInventory().getItems(items);
+                                else
+                                    witems = gui.getInventory().getItems(items, th);
+                                coorditems = new ArrayList<>();
+                                for (WItem witem : witems) {
+                                    if (witem.item.spr.sz().div(UI.scale(32)).equals(coord.y, coord.x)) {
+                                        coorditems.add(witem);
+                                    }
+                                }
+
                             }
+                            ArrayList<WItem> finalCoorditems = coorditems;
                             NUtils.getUI().core.addTask(new NTask() {
                                 @Override
                                 public boolean check() {
-                                    return gui.getInventory(container.cap).calcNumberFreeCoord(coord) == oldSpace-Math.min(oldSpace, coorditems.size());
+                                    return gui.getInventory(container.cap).calcNumberFreeCoord(coord) == oldSpace-Math.min(oldSpace, finalCoorditems.size());
                                 }
                             });
                             container.update();
@@ -83,15 +88,24 @@ public class TransferToContainer implements Action{
 
             } else {
                 if(!witems.isEmpty()) {
-                    transfer_size = Math.min(gui.getInventory().getItems(items).size(), Math.min(witems.size(), gui.getInventory(container.cap).getNumberFreeCoord(witems.get(0))));
+                    transfer_size = Math.min(gui.getInventory().getItems(items).size(), Math.min(witems.size(), gui.getInventory(container.cap).getNumberFreeCoord(witems.get(0)))*StackSupporter.getMaxStackSize(items.getDefault()));
                     if (container.getattr(Container.TargetItems.class) != null && container.getattr(Container.TargetItems.class).getRes().containsKey(Container.TargetItems.MAXNUM)) {
                         int need = (Integer) container.getattr(Container.TargetItems.class).getRes().get(Container.TargetItems.MAXNUM) - (Integer) container.getattr(Container.TargetItems.class).getTargets(items);
                         transfer_size = Math.min(transfer_size, need);
                     }
 
                     int oldSpace = gui.getInventory(container.cap).getItems(items).size();
-                    for (int i = 0; i < transfer_size; i++) {
-                        witems.get(i).item.wdgmsg("transfer", Coord.z);
+
+                    int temptr = transfer_size;
+                    for (int i = 0; i < temptr; i++) {
+                        boolean fs = transfer(witems.get(i), gui.getInventory(container.cap), transfer_size);
+                        temptr-=fs?(i+1):(i+StackSupporter.getMaxStackSize(items.getDefault()));
+                        i = -1;
+                        if (th == -1)
+                            witems = gui.getInventory().getItems(items);
+                        else
+                            witems = gui.getInventory().getItems(items, th);
+
                     }
                     NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(container.cap), items, oldSpace + transfer_size));
                 }
@@ -104,5 +118,81 @@ public class TransferToContainer implements Action{
 
     public int getResult() {
         return transfer_size;
+    }
+
+
+    public static boolean transfer(WItem item, NInventory targetInv, int transfer_size) throws InterruptedException {
+        if(!StackSupporter.isStackable(targetInv,((NGItem)item.item).name()))
+        {
+            if(item.parent instanceof ItemStack)
+            {
+                item.parent.wdgmsg("invxf", targetInv.wdgid(), 1);
+                int id = item.parent.wdgid();
+                if(((ItemStack)item.parent).wmap.size()<=2)
+                {
+                    NUtils.addTask(new ISRemoved(id));
+                }
+                else
+                {
+                    NUtils.addTask(new StackSizeChanged(((ItemStack)item.parent)));
+                }
+            }
+            else
+            {
+                item.item.wdgmsg("transfer", Coord.z);
+                int id = item.item.wdgid();
+                NUtils.addTask(new ISRemoved(id));
+            }
+        }
+        else
+        {
+            String name = ((NGItem)item.item).name();
+            if(item.parent instanceof ItemStack)
+            {
+                ItemStack is = ((ItemStack)item.parent);
+                if(StackSupporter.getMaxStackSize(name) == is.wmap.size() && transfer_size >= is.wmap.size() && targetInv.calcFreeSpace()!=0)
+                {
+                    ((GItem.ContentsWindow)is.parent).cont.wdgmsg("transfer", Coord.z);
+                    NUtils.addTask(new ISRemoved(is.wdgid()));
+                    return false;
+                }
+                else
+                {
+                    int id = is.wdgid();
+                    is.wdgmsg("invxf", targetInv.wdgid(), 1);
+                    if(is.wmap.size()<=2)
+                    {
+                        NUtils.addTask(new ISRemoved(id));
+                    }
+                    else
+                    {
+                        NUtils.addTask(new StackSizeChanged(is));
+                    }
+                }
+            }
+            else
+            {
+                ItemStack ois = targetInv.findNotFullStack(name);
+                WItem targetForActivate = null;
+                if(ois!=null)
+                {
+                    NUtils.takeItemToHand(item);
+                    ((GItem.ContentsWindow)ois.parent).cont.wdgmsg ( "itemact", 0 );
+                    NUtils.addTask(new WaitFreeHand());
+                }
+                else if((targetForActivate = targetInv.findNotStack(name))!=null)
+                {
+                    NUtils.takeItemToHand(item);
+                    NUtils.itemact(targetForActivate);
+                }
+                else
+                {
+                    item.item.wdgmsg("transfer", Coord.z);
+                    int id = item.item.wdgid();
+                    NUtils.addTask(new ISRemoved(id));
+                }
+            }
+        }
+        return true;
     }
 }

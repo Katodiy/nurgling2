@@ -3,22 +3,20 @@ package nurgling.tasks;
 import haven.WItem;
 import haven.Widget;
 import nurgling.NGItem;
+import nurgling.NUI;
 import nurgling.NUtils;
 
 import java.util.ArrayList;
 
 public class WaitItemFromPile extends NTask
 {
-    ArrayList<WItem> inventoryItems;
     int target_size = 1;
-    public WaitItemFromPile(ArrayList<WItem> inventoryItems)
+    public WaitItemFromPile()
     {
-        this.inventoryItems = inventoryItems;
     }
 
-    public WaitItemFromPile(ArrayList<WItem> inventoryItems, int target_size)
+    public WaitItemFromPile(int target_size)
     {
-        this.inventoryItems = inventoryItems;
         this.target_size = target_size;
     }
 
@@ -27,28 +25,37 @@ public class WaitItemFromPile extends NTask
     {
         result.clear();
 
-        for (Widget widget = NUtils.getGameUI().getInventory().child; widget != null; widget = widget.next)
+        for (Widget widget : NUtils.getUI().getMonitorInfo())
         {
-            if (widget instanceof WItem)
+            if (widget instanceof NGItem)
             {
-                WItem item = (WItem) widget;
-                if ((((NGItem) item.item).name()) == null)
+                NGItem item = (NGItem) widget;
+                if (item.name() == null)
                 {
                     return false;
                 }
-                else
-                {
-                    if(!inventoryItems.contains(item))
+                else {
+                    if (item.contents != null) {
+                        for (Widget cwidget = item.contents.child; cwidget != null; cwidget = cwidget.next) {
+                            if (cwidget instanceof WItem) {
+                                WItem wi = (WItem)cwidget;
+                                result.add((NGItem) wi.item);
+                            }
+                        }
+                    }
+                    else
+                    {
                         result.add(item);
+                    }
                 }
             }
         }
         return result.size() >=target_size;
     }
 
-    private ArrayList<WItem> result = new ArrayList<>();
+    private ArrayList<NGItem> result = new ArrayList<>();
 
-    public ArrayList<WItem> getResult(){
+    public ArrayList<NGItem> getResult(){
         return result;
     }
 }

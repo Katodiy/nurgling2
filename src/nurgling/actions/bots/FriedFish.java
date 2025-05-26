@@ -2,6 +2,7 @@ package nurgling.actions.bots;
 
 import haven.*;
 import haven.res.gfx.terobjs.roastspit.Roastspit;
+import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
@@ -151,7 +152,7 @@ public class FriedFish implements Action {
                     }
                 }
             }
-            LinkedList<WItem> targetItems = new LinkedList<>();
+            LinkedList<NGItem> targetItems = new LinkedList<>();
             while (count != 0) {
                 for (int i = 0; i < count; i++) {
                     if (NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(1, 3)) > 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(2, 1)) > 0) {

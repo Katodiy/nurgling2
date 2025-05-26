@@ -1,9 +1,7 @@
 package nurgling.actions;
 
 import haven.*;
-import nurgling.NGItem;
 import nurgling.NGameUI;
-import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.tasks.*;
 import nurgling.tools.Finder;
@@ -58,13 +56,11 @@ public class TransferToPiles implements Action{
                             int size = witems.size();
                             new OpenTargetContainer("Stockpile", target).run(gui);
                             int target_size = Math.min(size,gui.getStockpile().getFreeSpace());
-                            int fullSize = gui.getInventory().getItems().size();
-                            for (int i = 0; i < target_size; i++)
-                            {
-                                witems.get(i).item.wdgmsg("transfer", Coord.z);
+                            if(target_size>0) {
+                                transfer(gui, target_size);
                             }
-                            NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), fullSize - target_size));
-                            if((witems = gui.getInventory().getItems(items,th)).isEmpty()) {
+                            if((witems = gui.getInventory().getItems(items,th)).isEmpty())
+                            {
                                 new CloseTargetContainer("Stockpile").run(gui);
                                 return Results.SUCCESS();
                             }
@@ -74,7 +70,6 @@ public class TransferToPiles implements Action{
 
                 while(!(gui.getInventory().getItems(items,th)).isEmpty()) {
                     PileMaker pm;
-
                     if(!(pm = new PileMaker(out, items, pileName)).run(gui).IsSuccess())
                         return Results.FAIL();
                     Gob pile = pm.getPile();
@@ -83,17 +78,34 @@ public class TransferToPiles implements Action{
                     new OpenTargetContainer("Stockpile", pile).run(gui);
                     int target_size = Math.min(size, gui.getStockpile().getFreeSpace());
                     if(target_size>0) {
-                        int fullSize = gui.getInventory().getItems().size();
-                        for (int i = 0; i < target_size; i++) {
-                            witems.get(i).item.wdgmsg("transfer", Coord.z);
-                        }
-                        NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), fullSize - target_size));
+                        transfer(gui, target_size);
                     }
                 }
             }
         return Results.SUCCESS();
         }
 
+    private void transfer(NGameUI gui, int target_size) throws InterruptedException {
+        ArrayList<WItem> witems;
+        NUtils.addTask(new WaitStockpile(true));
+        int fullSize = gui.getInventory().getItems().size();
+        if(th>1) {
+            for (int i = 0; i < target_size; i++) {
+                {
+                    witems = gui.getInventory().getItems(items, th);
+                    NUtils.takeItemToHand(witems.get(0));
+                    gui.getStockpile().wdgmsg("drop");
+                    NUtils.addTask(new WaitFreeHand());
+                }
+            }
+        }
+        else
+        {
+            gui.getStockpile().put(target_size);
+        }
+
+        NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), fullSize - target_size));
+    }
 
 
     NAlias getStockpileName(NAlias items) {

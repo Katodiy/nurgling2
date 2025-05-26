@@ -55,34 +55,41 @@ public class WaitItems extends NTask
         {
             result.clear();
 
-            for (Widget widget = inventory.child; widget != null; widget = widget.next)
+            if (checkSize(inventory.child)) return false;
+            if(count == 1000) {
+                NUtils.getGameUI().error("WAIT ITEMS ERROR result.size():" + String.valueOf(result.size()) + " req target size:" + String.valueOf(target_size) + " WITEMS: " + ((name != null && name.keys.size() > 0) ? name.keys.get(0) : "null"));
+                return true;
+            }
+            return result.size() == target_size || ((NInventory) inventory).calcFreeSpace()==0; /*Плохое решение, надо было добить заполнение последнего стака но уже лень*/
+        }
+        else if(inventory instanceof NISBox)
+        {
+            return ((NISBox) inventory).calcFreeSpace() == target_size;
+        }
+        return false;
+    }
+
+    private boolean checkSize(Widget first) {
+        for (Widget widget = first; widget != null; widget = widget.next)
+        {
+            if (widget instanceof WItem)
             {
-                if (widget instanceof WItem)
-                {
-                    WItem item = (WItem) widget;
-                    String item_name;
-                    if ((item_name = ((NGItem) item.item).name()) == null)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        if (name == null || NParser.checkName(item_name, name))
+                WItem item = (WItem) widget;
+                if (!NGItem.validateItem(item)) {
+                    return true;
+                } else {
+                    if (NParser.checkName(((NGItem)item.item).name(), name)) {
+                        if(item.item.contents!=null)
                         {
+                            if(checkSize(item.item.contents.child))
+                                return true;
+                        }
+                        else {
                             result.add(item);
                         }
                     }
                 }
             }
-            if(count == 1000) {
-                NUtils.getGameUI().error("WAIT ITEMS ERROR result.size():" + String.valueOf(result.size()) + " req target size:" + String.valueOf(target_size) + " WITEMS: " + ((name != null && name.keys.size() > 0) ? name.keys.get(0) : "null"));
-                return true;
-            }
-            return result.size() == target_size;
-        }
-        else if(inventory instanceof NISBox)
-        {
-            return ((NISBox) inventory).calcFreeSpace() == target_size;
         }
         return false;
     }

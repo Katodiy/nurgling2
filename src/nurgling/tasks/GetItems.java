@@ -1,6 +1,7 @@
 package nurgling.tasks;
 
 import haven.*;
+import haven.res.ui.stackinv.ItemStack;
 import nurgling.*;
 import nurgling.NInventory.QualityType;
 import nurgling.tools.*;
@@ -12,7 +13,6 @@ public class GetItems extends NTask
     NAlias name = null;
     NInventory inventory;
     QualityType quality = null;
-
     float th = 1;
     boolean eq = false;
     GItem target = null;
@@ -76,38 +76,44 @@ public class GetItems extends NTask
     @Override
     public boolean check()
     {
-        if(target!=null)
+        if(target!=null && name==null)
             if(((NGItem)target).name()!=null)
                 name = new NAlias(((NGItem)target).name());
             else
                 return false;
         result.clear();
-        for (Widget widget = inventory.child; widget != null; widget = widget.next)
-        {
-            if (widget instanceof WItem)
-            {
-                WItem item = (WItem) widget;
-                String item_name;
-                if ((item_name = ((NGItem) item.item).name()) == null)
-                {
-                    return false;
-                }
-                else
-                {
-                    if (name == null || (eq && !name.keys.isEmpty() ? item_name.equals(name.getDefault()) : NParser.checkName(item_name, name)))
-                    {
-                        if(th == 1)
-                            result.add(item);
-                        else if((((NGItem) item.item).quality)!=null && ((quality == QualityType.High || quality ==null) && ((NGItem) item.item).quality >= th) || (quality == QualityType.Low && ((NGItem) item.item).quality <= th))
-                            result.add(item);
-                    }
-                }
-            }
-        }
+        if (checkContainer(inventory.child)) return false;
         if (quality != null) {
             Collections.sort(result, quality == QualityType.High ? high : low);
         }
         return true;
+    }
+
+    private boolean checkContainer(Widget first) {
+        for (Widget widget = first; widget != null; widget = widget.next)
+        {
+            if (widget instanceof WItem)
+            {
+                WItem item = (WItem) widget;
+                if (!NGItem.validateItem(item)) {
+                    return true;
+                } else {
+                    if (name == null || NParser.checkName(((NGItem)item.item).name(), name)) {
+                        if (item.item.contents != null) {
+                            if(checkContainer(item.item.contents.child))
+                                return true;
+                        }
+                        else {
+                            if (th == 1)
+                                result.add(item);
+                            else if ((((NGItem) item.item).quality) != null && ((quality == QualityType.High || quality == null) && ((NGItem) item.item).quality >= th) || (quality == QualityType.Low && ((NGItem) item.item).quality <= th))
+                                result.add(item);
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private ArrayList<WItem> result = new ArrayList<>();

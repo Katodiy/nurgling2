@@ -308,7 +308,7 @@ public class NMiniMap extends MiniMap implements Console.Directory {
                 Coord viewsz = VIEW_SZ.div(zmult).mul(scale);
 
                 for (TempMark cm : tempMarkList) {
-                    if (ui.gui.mmap.curloc.seg.id == cm.loc.seg.id) {
+                    if (cm.loc!=null && ui.gui.mmap.curloc.seg.id == cm.loc.seg.id) {
                         if (cm.icon != null) {
                             if (!cm.gc.equals(Coord.z)) {
                                 Coord gc = p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
@@ -352,7 +352,7 @@ public class NMiniMap extends MiniMap implements Console.Directory {
                         if (tempMarkList.stream().noneMatch(m -> m.id == gob.id)) {
                             BufferedImage tex = setTex(gob);
                             MiniMap.Location loc = NUtils.getGameUI().mmap.curloc;
-                            if (tex != null) {
+                            if (tex != null && sessloc!=null) {
                                 tempMarkList.add(new TempMark(gob.ngob.name, loc, gob.id, gob.rc, gob.rc.floor(tilesz).add(sessloc.tc), tex));
                             }
                         }
