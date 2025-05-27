@@ -11,9 +11,9 @@ import java.util.ArrayList;
 public class GarlicFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "garlic");
-        NArea garlic = NArea.findOut("garlic", 1);
-        NArea garlicAsSeed = NArea.findIn("garlic");
+        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Garlic");
+        NArea garlic = NArea.findOut("Garlic", 1);
+        NArea garlicAsSeed = NArea.findIn("Garlic");
         NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
         NArea.Specialisation swill = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
 
@@ -25,10 +25,10 @@ public class GarlicFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NArea.findSpec(field),garlic,NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/garlic"),new NAlias("Garlic"),3, true).run(gui);
+            new HarvestCrop(NArea.findSpec(field),garlic,NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/garlic"),new NAlias("Garlic"),4, true).run(gui);
 
-            if(NArea.findOut("garlic", 1)!=null)
-                new CollectItemsToPile(NArea.findSpec(field).getRCArea(),NArea.findOut("garlic", 1).getRCArea(),new NAlias("items/garlic", "Garlic")).run(gui);
+            if(NArea.findOut("Garlic", 1)!=null)
+                new CollectItemsToPile(NArea.findSpec(field).getRCArea(),NArea.findOut("Garlic", 1).getRCArea(),new NAlias("items/garlic", "Garlic")).run(gui);
 
             new SeedCrop(NArea.findSpec(field),garlicAsSeed,new NAlias("plants/garlic"),new NAlias("Garlic"), true).run(gui);
         }

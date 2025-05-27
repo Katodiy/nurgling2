@@ -39,7 +39,7 @@ public class PileMaker implements Action{
                 
                 return Results.FAIL();
         }
-        NUtils.activateItem(NUtils.player().rc);
+        NUtils.activateItem(out.a);
         NUtils.getUI().core.addTask(new WaitPlob());
         Coord2d pos = null;
         NHitBox hitbox = NUtils.getGameUI().map.placing.get().ngob.hitBox;
