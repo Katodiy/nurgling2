@@ -47,22 +47,10 @@ public class StackSupporter {
         size3.add("Clean Animal Carcass");
         size3.add("Edible Seashell");
         size3.add("Poultry");
-        size3.add(" Meat");
-        size3.add("Bollock");
-        size3.add("Filet of ");
-        size3.add("Raw Chevon");
-        size3.add("Raw Beef");
-        size3.add("Raw Mutton");
-        size3.add("Raw Pork");
-        size3.add("Raw Horse");
-        size3.add("Raw ");
-        size3.add("Crab Meat");
-        size3.add("Raw Meat");
+
         size3.add("Candle");
         size3.add("Pearl");
         size3.add("Wool");
-        size3.add("Feather");
-        size3.add("Fine Feather");
         size3.add("Finer Plant Fibre");
         size3.add("Wicker");
         size3.add("Cloth");
@@ -97,6 +85,23 @@ public class StackSupporter {
         size3.add("Dried Fish");
         size3.add("Medicine");
         catSize.put(size3,3);
+
+        HashSet<String> size5 = new HashSet<>();
+        size5.add("Feather");
+        size5.add("Fine Feather");
+        size5.add(" Meat");
+        size5.add("Raw Meat");
+        size5.add("Bollock");
+        size5.add("Filet of ");
+        size5.add("Raw Chevon");
+        size5.add("Raw Beef");
+        size5.add("Raw Mutton");
+        size5.add("Raw Pork");
+        size5.add("Raw Horse");
+        size5.add("Raw ");
+        size5.add("Crab Meat");
+
+        catSize.put(size5,5);
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tanning Tub", "Oven", "Steelbox");
     public static boolean isStackable(NInventory inv, String name)

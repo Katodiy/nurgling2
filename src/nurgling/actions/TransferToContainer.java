@@ -177,13 +177,14 @@ public class TransferToContainer implements Action{
                 if(ois!=null)
                 {
                     NUtils.takeItemToHand(item);
-                    ((GItem.ContentsWindow)ois.parent).cont.wdgmsg ( "itemact", 0 );
+                    NUtils.itemact(((NGItem)((GItem.ContentsWindow)ois.parent).cont).wi);
                     NUtils.addTask(new WaitFreeHand());
                 }
                 else if((targetForActivate = targetInv.findNotStack(name))!=null)
                 {
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(targetForActivate);
+                    NUtils.addTask(new WaitFreeHand());
                 }
                 else
                 {
