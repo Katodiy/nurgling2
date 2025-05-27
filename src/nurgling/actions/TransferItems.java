@@ -72,7 +72,7 @@ public class TransferItems implements Action
         resitems.addAll(before);
         resitems.addAll(after);
         for(String item : resitems) {
-            TreeMap<Integer, NArea> areas = NArea.globalFindOuts(item);
+            TreeMap<Integer, NArea> areas = NArea.findOuts(new NAlias(item));
             if(!areas.isEmpty()) {
                 ArrayList<Integer> ths = new ArrayList<>(areas.keySet());
                 ListIterator<Integer> listIter = ths.listIterator(areas.size());

@@ -17,6 +17,8 @@ public class GetNumberFreeCoord extends NTask
     private Coord size;
     private GItem item = null;
     String name = null;
+
+    int multi = 1;
     public GetNumberFreeCoord(NInventory inv, Coord size)
     {
         this.inv = inv;
@@ -24,11 +26,13 @@ public class GetNumberFreeCoord extends NTask
     }
 
 
-    public GetNumberFreeCoord(NInventory inv, GItem item)
-    {
+    public GetNumberFreeCoord(NInventory inv, GItem item) {
         this.inv = inv;
         this.item = item;
-        this.name = ((NGItem)item).name();
+        this.name = ((NGItem) item).name();
+        if (StackSupporter.isStackable(inv, name)) {
+            multi = StackSupporter.getMaxStackSize(name);
+        }
     }
 
     public GetNumberFreeCoord(NInventory inv, WItem item)
@@ -47,6 +51,7 @@ public class GetNumberFreeCoord extends NTask
                 size = new Coord(lc.y,lc.x);
             }
         freeCoord = inv.calcNumberFreeCoord(size);
+        freeCoord*=multi;
         return freeCoord>=0;
     }
 

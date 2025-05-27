@@ -56,11 +56,8 @@ public class StackSupporter {
         size3.add("Cloth");
         size3.add("Nugget of a Precious Metal");
         size3.add("Coal");
-        size3.add("Bar of Bronze, Iron or Steel");
         size3.add("Nugget of Bronze, Iron or Steel");
         size3.add("Nugget of Any Common Metal");
-        size3.add("Bar of Any Common Metal");
-        size3.add("Bar of Any Metal");
         size3.add("Nugget of Any Metal");
         size3.add("Wax");
         size3.add("Pigment");
