@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.WItem;
+import nurgling.NConfig;
 import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.areas.NArea;
@@ -73,6 +74,7 @@ public class TransferItems implements Action
         resitems.addAll(after);
         for(String item : resitems) {
             TreeMap<Integer, NArea> areas = NArea.findOuts(new NAlias(item));
+            TreeMap<Integer, NArea> outOfReachAreas = NArea.globalFindOuts(item);
             if(!areas.isEmpty()) {
                 ArrayList<Integer> ths = new ArrayList<>(areas.keySet());
                 ListIterator<Integer> listIter = ths.listIterator(areas.size());
@@ -82,58 +84,45 @@ public class TransferItems implements Action
                     for (Context.Output out : cnt.GetOutput(item, area))
                         cnt.addOutput(item, th, out);
 
-                    if (cnt.getOutputs(item, th) != null) {
-                        for (Context.Output output : cnt.getOutputs(item, th)) {
-                            if (output instanceof Context.Pile) {
-                                if (((Context.OutputPile) output).getArea() != null)
-                                    new TransferToPiles(((Context.OutputPile) output).getArea(), new NAlias(item), th).run(gui);
-                            }
-                            if (output instanceof Container) {
-                                if (((Context.OutputContainer) output).getArea() != null)
-                                    if(((Container.Space)((Context.OutputContainer) output).getattr(Container.Space.class))==null || !((Container.Space)((Context.OutputContainer) output).getattr(Container.Space.class)).isReady() || ((Container.Space)((Context.OutputContainer) output).getattr(Container.Space.class)).getFreeSpace()!=0) {
-                                        new TransferToContainer(cnt, (Context.OutputContainer) output, new NAlias(item), th).run(gui);
-                                    }
-                            }
-                            if (output instanceof Context.Barter) {
-                                if (((Context.OutputBarter) output).getArea() != null)
-                                    new TransferToBarter(((Context.OutputBarter) output), new NAlias(item), th).run(gui);
-                            }
-                            if (output instanceof Context.Barrel) {
-                                if (((Context.OutputBarrel) output).getArea() != null)
-                                    new TransferToBarrel(((Context.OutputBarrel) output).barrel, new NAlias(item)).run(gui);
-                            }
-                        }
-                    }
+                    transferItemsToAppropriateContainers(item, th, gui);
                 }
-            }
-            else
-            {
-                if (cnt.getOutputs(item, 1) != null) {
-                    for (Context.Output output : cnt.getOutputs(item, 1)) {
-                        if (output instanceof Context.Pile) {
-                            if (((Context.OutputPile) output).getArea() != null)
-                                new TransferToPiles(((Context.OutputPile) output).getArea(), new NAlias(item), 1).run(gui);
-                        }
-                        if (output instanceof Container) {
-                            if (((Context.OutputContainer) output).getArea() != null)
-                                new TransferToContainer(cnt, (Context.OutputContainer) output, new NAlias(item), 1).run(gui);
-                        }
-                        if (output instanceof Context.Barter) {
-                            if (((Context.OutputBarter) output).getArea() != null)
-                                new TransferToBarter(((Context.OutputBarter) output), new NAlias(item), 1).run(gui);
-                        }
+            } else if (!outOfReachAreas.isEmpty() && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
+                ArrayList<Integer> ths = new ArrayList<>(outOfReachAreas.keySet());
+                ListIterator<Integer> listIter = ths.listIterator(outOfReachAreas.size());
+                while (listIter.hasPrevious()) {
+                    int th = listIter.previous();
+                    NArea area = outOfReachAreas.get(th);
+                    for (Context.Output out : cnt.GetOutput(item, area)) {
+                        cnt.addOutput(item, th, out);
                     }
+                    transferItemsToAppropriateContainers(item, th, gui);
                 }
+            } else {
+                transferItemsToAppropriateContainers(item, 1, gui);
             }
 
         }
 
-
-
-
         return Results.SUCCESS();
     }
 
-
+    private void transferItemsToAppropriateContainers(String item, int th, NGameUI gui) throws InterruptedException {
+        if (cnt.getOutputs(item, th) != null) {
+            for (Context.Output output : cnt.getOutputs(item, th)) {
+                if (output instanceof Context.Pile) {
+                    if (((Context.OutputPile) output).getArea() != null)
+                        new TransferToPiles(((Context.OutputPile) output).getArea(), new NAlias(item), th).run(gui);
+                }
+                if (output instanceof Container) {
+                    if (((Context.OutputContainer) output).getArea() != null)
+                        new TransferToContainer(cnt, (Context.OutputContainer) output, new NAlias(item), th).run(gui);
+                }
+                if (output instanceof Context.Barter) {
+                    if (((Context.OutputBarter) output).getArea() != null)
+                        new TransferToBarter(((Context.OutputBarter) output), new NAlias(item), th).run(gui);
+                }
+            }
+        }
+    }
 
 }
