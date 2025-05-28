@@ -1,20 +1,20 @@
 package nurgling.actions.bots;
 
 import haven.*;
-import nurgling.NGItem;
-import nurgling.NGameUI;
-import nurgling.NISBox;
-import nurgling.NUtils;
+import nurgling.*;
 import nurgling.actions.*;
+import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
 public class FreeContainersInArea implements Action {
+    RoutePoint closestRoutePoint = null;
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        this.closestRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui);
 
         SelectArea insa;
         NUtils.getGameUI().msg("Please, select area with piles or containers");
@@ -55,6 +55,7 @@ public class FreeContainersInArea implements Action {
                                     target_size = NUtils.getGameUI().getInventory().getNumberFreeCoord((size != null) ?size:new Coord(1,1));
                                     if (target_size == 0) {
                                         new TransferItems(context, targets).run(gui);
+                                        new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
                                         targets.clear();
                                         if (Finder.findGob(pile.id) != null) {
                                             new PathFinder(pile).run(gui);
@@ -73,6 +74,7 @@ public class FreeContainersInArea implements Action {
                     else
                         {
                             new TransferItems(context, targets).run(gui);
+                            new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
                             if(Finder.findGob(pile.id) != null) {
                                 new PathFinder(pile).run(gui);
                                 new OpenTargetContainer("Stockpile", pile).run(gui);
