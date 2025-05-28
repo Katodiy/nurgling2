@@ -47,6 +47,7 @@ public class TakeItemsFromContainer implements Action
                 target_coord = inv.getItem(name).sz.div(Inventory.sqsz);
                 int oldSpace = gui.getInventory().getItems(name).size();
                 ArrayList<WItem> items = getItems(gui, name);
+                int items_size = items.size();
                 target_size = Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getMaxStackSize(name), items.size()));
 
 
@@ -60,7 +61,7 @@ public class TakeItemsFromContainer implements Action
                 WaitItems wi = new WaitItems(gui.getInventory(), new NAlias(name), oldSpace + target_size);
                 NUtils.getUI().core.addTask(wi);
                 cont.update();
-                if(items.size()>target_size) {
+                if(items_size>target_size) {
                     took = false;
                     return Results.FAIL();
                 }
