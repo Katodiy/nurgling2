@@ -1,6 +1,8 @@
 package nurgling.routes;
 
 import haven.*;
+import nurgling.NGameUI;
+import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.PathFinder;
 import nurgling.areas.NArea;
@@ -44,6 +46,18 @@ public class RouteGraph {
                 }
             }
         }
+    }
+
+    public RoutePoint findNearestPointToPlayer(NGameUI gui) {
+        Gob player = gui.map.player();
+
+        Coord playerTile = player.rc.floor(gui.map.glob.map.tilesz);
+        MCache.Grid playerGrid = gui.map.glob.map.getgridt(playerTile);
+
+        long playerGridId = playerGrid.id;
+        Coord playerLocalCoord = playerTile.sub(playerGrid.ul);
+
+        return findNearestPoint(playerGridId, playerLocalCoord);
     }
 
     public RoutePoint findNearestPoint(long gridId, Coord localCoord) {

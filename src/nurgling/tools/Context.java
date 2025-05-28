@@ -1,6 +1,7 @@
 package nurgling.tools;
 
 import haven.*;
+import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.Results;
@@ -208,7 +209,7 @@ public class Context {
         if(ingredient != null) {
             switch (ingredient.type) {
                 case BARTER:
-                    if(area.getRCArea() == null) {
+                    if(area.getRCArea() == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
                         RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
 
                         if(graph.findAreaRoutePoint(area) != null) {
@@ -222,7 +223,7 @@ public class Context {
                             Finder.findGob(area, new NAlias("gfx/terobjs/chest")), area.getRCArea(), ingredient.th));
                     break;
                 case CONTAINER: {
-                    if(area.getRCArea() == null) {
+                    if(area.getRCArea() == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
                         RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
 
                         if(graph.findAreaRoutePoint(area) != null) {
@@ -253,7 +254,7 @@ public class Context {
                     break;
                 }
                 case BARREL: {
-                    if(area.getRCArea() == null) {
+                    if(area.getRCArea() == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
                         RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
 
                         if(graph.findAreaRoutePoint(area) != null) {
