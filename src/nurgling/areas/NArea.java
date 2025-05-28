@@ -227,7 +227,7 @@ public class NArea
         return res;
     }
 
-    public static NArea globalFindOut(String name, double th) {
+    public static NArea globalFindOut(String name, double th, NGameUI gui) {
         NArea res = null;
 
         ArrayList<TestedArea> areas = new ArrayList<>();
@@ -237,7 +237,7 @@ public class NArea
             for(Integer id : nids) {
                 if (id > 0) {
                     NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
-                    if (cand.containOut(name)) {
+                    if (cand.containOut(name) && ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(cand)) != null) {
                         areas.add(new TestedArea(cand, th));
                     }
                 }
