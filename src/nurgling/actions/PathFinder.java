@@ -149,7 +149,8 @@ public class PathFinder implements Action {
 
             if (dca != null)
                 pfmap.setCellArray(dca);
-            NPFMap.print(pfmap.getSize(), pfmap.getCells());
+            if(!test)
+                NPFMap.print(pfmap.getSize(), pfmap.getCells());
 
 
             Graph res = null;
