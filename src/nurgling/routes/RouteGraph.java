@@ -1,6 +1,7 @@
 package nurgling.routes;
 
 import haven.*;
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -164,6 +165,10 @@ public class RouteGraph {
     }
 
     public void connectAreaToRoutePoints(NArea area) {
+        if(area == null) {
+            return;
+        }
+
         ArrayList<RoutePoint> points = findNearestPoints();
         MCache cache = NUtils.getGameUI().ui.sess.glob.map;
         for (RoutePoint point : points) {
@@ -175,12 +180,18 @@ public class RouteGraph {
                     ArrayList<Gob> gobs = Finder.findGobs(area);
 
                     if(gobs.isEmpty()) {
-                        isReachable = PathFinder.isAvailable(testrc.a, point.toCoord2d(cache), false) || PathFinder.isAvailable(testrc.b, point.toCoord2d(cache), false);
+                        if(point.toCoord2d(cache) != null) {
+                            isReachable = PathFinder.isAvailable(testrc.a, point.toCoord2d(cache), false) || PathFinder.isAvailable(testrc.b, point.toCoord2d(cache), false);
+                        } else {
+                            isReachable = false;
+                        }
                     } else {
                         for(Gob gob : gobs) {
-                            if (PathFinder.isAvailable(point.toCoord2d(cache), gob.rc, true)) {
-                                isReachable = true;
-                                break;
+                            if(point.toCoord2d(cache) != null) {
+                                if (PathFinder.isAvailable(point.toCoord2d(cache), gob.rc, true)) {
+                                    isReachable = true;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -194,12 +205,14 @@ public class RouteGraph {
                 point.addReachableArea(area.id);
             }
         }
+        NConfig.needRoutesUpdate();
     }
 
     public void deleteAreaFromRoutePoints(int areaId) {
         for(RoutePoint point : points.values()) {
             point.deleteReachableArea(areaId);
         }
+        NConfig.needRoutesUpdate();
     }
 
     private List<RoutePoint> reconstructPath(Integer start, Integer end, Map<Integer, Integer> cameFrom) {

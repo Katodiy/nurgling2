@@ -215,6 +215,7 @@ public class Route {
         JSONArray waypointsArray = new JSONArray();
         for (RoutePoint waypoint : waypoints) {
             JSONObject waypointJson = new JSONObject();
+            waypointJson.put("id", waypoint.id);
             waypointJson.put("gridId", waypoint.gridId);
             waypointJson.put("localCoord", new JSONObject()
                 .put("x", waypoint.localCoord.x)
