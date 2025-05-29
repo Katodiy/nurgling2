@@ -75,27 +75,30 @@ public class TransferItems implements Action
         for(String item : resitems) {
             TreeMap<Integer, NArea> areas = NArea.findOuts(new NAlias(item));
             TreeMap<Integer, NArea> outOfReachAreas = NArea.globalFindOuts(item);
-            if(!areas.isEmpty()) {
-                ArrayList<Integer> ths = new ArrayList<>(areas.keySet());
-                ListIterator<Integer> listIter = ths.listIterator(areas.size());
-                while (listIter.hasPrevious()) {
-                    int th = listIter.previous();
-                    NArea area = areas.get(th);
-                    for (Context.Output out : cnt.GetOutput(item, area))
-                        cnt.addOutput(item, th, out);
+            if(!areas.isEmpty() || !outOfReachAreas.isEmpty()) {
+                if(!areas.isEmpty()) {
+                    ArrayList<Integer> ths = new ArrayList<>(areas.keySet());
+                    ListIterator<Integer> listIter = ths.listIterator(areas.size());
+                    while (listIter.hasPrevious()) {
+                        int th = listIter.previous();
+                        NArea area = areas.get(th);
+                        for (Context.Output out : cnt.GetOutput(item, area))
+                            cnt.addOutput(item, th, out);
 
-                    transferItemsToAppropriateContainers(item, th, gui);
-                }
-            } else if (!outOfReachAreas.isEmpty() && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
-                ArrayList<Integer> ths = new ArrayList<>(outOfReachAreas.keySet());
-                ListIterator<Integer> listIter = ths.listIterator(outOfReachAreas.size());
-                while (listIter.hasPrevious()) {
-                    int th = listIter.previous();
-                    NArea area = outOfReachAreas.get(th);
-                    for (Context.Output out : cnt.GetOutput(item, area)) {
-                        cnt.addOutput(item, th, out);
+                        transferItemsToAppropriateContainers(item, th, gui);
                     }
-                    transferItemsToAppropriateContainers(item, th, gui);
+                }
+                if (!outOfReachAreas.isEmpty() && (Boolean) NConfig.get(NConfig.Key.useGlobalPf) && !gui.getInventory().getItems(item).isEmpty()) {
+                    ArrayList<Integer> ths = new ArrayList<>(outOfReachAreas.keySet());
+                    ListIterator<Integer> listIter = ths.listIterator(outOfReachAreas.size());
+                    while (listIter.hasPrevious()) {
+                        int th = listIter.previous();
+                        NArea area = outOfReachAreas.get(th);
+                        for (Context.Output out : cnt.GetOutput(item, area)) {
+                            cnt.addOutput(item, th, out);
+                        }
+                        transferItemsToAppropriateContainers(item, th, gui);
+                    }
                 }
             } else {
                 transferItemsToAppropriateContainers(item, 1, gui);

@@ -205,7 +205,6 @@ public class RouteGraph {
                 point.addReachableArea(area.id);
             }
         }
-        NConfig.needRoutesUpdate();
     }
 
     public void deleteAreaFromRoutePoints(int areaId) {
