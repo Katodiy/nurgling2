@@ -76,11 +76,7 @@ public class RoutePointNavigator implements Action {
                 continue;
             }
 
-            try {
-                new PathFinder(target).run(gui);
-            } catch(Exception e) {
-                gui.error("There was an error trying to find path, attempting to skip a point.");
-            }
+            new PathFinder(target).run(gui);
 
             // Handle door closing
             if(previousPoint != null) {

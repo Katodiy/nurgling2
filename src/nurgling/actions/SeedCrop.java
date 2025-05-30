@@ -246,7 +246,7 @@ public class SeedCrop implements Action {
             }
         }
 
-        if (gui.getInventory().getItems(iseed).size() < 5) {
+        if (gui.getInventory().getItems(iseed).size() < 2) {
             if (!gui.getInventory().getItems(iseed).isEmpty()) {
                 new TransferToPiles(seed.getRCArea(), iseed).run(gui);
             }
