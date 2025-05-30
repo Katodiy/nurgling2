@@ -278,7 +278,7 @@ public class NAreasWidget extends Window
             hide = add(new CheckBox(""){
                 @Override
                 public void changed(boolean val) {
-                    ((NMapView)NUtils.getGameUI().map).disableArea(AreaItem.this.text.text(), val);
+                    ((NMapView)NUtils.getGameUI().map).disableArea(AreaItem.this.text.text(), area.path, val);
                     al.sel = AreaItem.this;
                     super.changed(val);
                 }

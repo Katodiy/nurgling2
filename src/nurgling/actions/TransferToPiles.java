@@ -7,6 +7,7 @@ import nurgling.tasks.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
+import nurgling.tools.StackSupporter;
 
 import java.util.ArrayList;
 
@@ -89,7 +90,7 @@ public class TransferToPiles implements Action{
         ArrayList<WItem> witems;
         NUtils.addTask(new WaitStockpile(true));
         int fullSize = gui.getInventory().getItems().size();
-        if(th>1) {
+        if(th>1 || StackSupporter.isSameExist(items, gui.getInventory())) {
             for (int i = 0; i < target_size; i++) {
                 {
                     witems = gui.getInventory().getItems(items, th);

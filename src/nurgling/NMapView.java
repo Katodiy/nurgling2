@@ -635,10 +635,10 @@ public class NMapView extends MapView
         }
     }
 
-    public void disableArea(String name, boolean val) {
+    public void disableArea(String name, String path, boolean val) {
         for(NArea area : glob.map.areas.values())
         {
-            if(area.name.equals(name))
+            if(area.name.equals(name) && area.path.equals(path))
             {
                 area.hide = val;
                 NConfig.needAreasUpdate();

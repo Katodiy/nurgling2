@@ -2745,4 +2745,14 @@ public class VSpec {
         }
         return result;
     }
+
+    public static ArrayList<String> getCategoryContent(String name) {
+        ArrayList<JSONObject> jresult = categories.get(name);
+        ArrayList<String> result = new ArrayList<>();
+        for(JSONObject res: jresult)
+        {
+            result.add(res.getString("name"));
+        }
+        return result;
+    }
 }

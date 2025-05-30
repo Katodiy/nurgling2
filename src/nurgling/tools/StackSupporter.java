@@ -147,4 +147,24 @@ public class StackSupporter {
         }
         return 1;
     }
+
+    public static boolean isSameExist(NAlias items, NInventory inv) throws InterruptedException {
+        if(items.keys.size()>1)
+        {
+            return false;
+        }
+        ArrayList<String> categories = VSpec.getCategory(items.getDefault());
+        if(categories.contains("Hide Fresh"))
+            categories.add("Prepared Animal Hide");
+        else if(categories.contains("Prepared Animal Hide"))
+            categories.add("Hide Fresh");
+        for(String cat: categories)
+        {
+            NAlias same = new NAlias(VSpec.getCategoryContent(cat));
+            same.keys.removeAll(items.keys);
+            if(!inv.getItems(same).isEmpty())
+                return true;
+        }
+        return false;
+    }
 }
