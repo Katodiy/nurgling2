@@ -304,10 +304,12 @@ public class NArea
                 if (id > 0)
                     if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name) ) {
                         NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
-                        for (int i = 0; i < cand.jout.length(); i++) {
-                            if (NParser.checkName((String) ((JSONObject) cand.jout.get(i)).get("name"), name)) {
-                                Integer th = (((JSONObject) cand.jout.get(i)).has("th")) ? ((Integer) ((JSONObject) cand.jout.get(i)).get("th")) : 1;
-                                areas.put(th, cand);
+                        if(!cand.hide) {
+                            for (int i = 0; i < cand.jout.length(); i++) {
+                                if (NParser.checkName((String) ((JSONObject) cand.jout.get(i)).get("name"), name)) {
+                                    Integer th = (((JSONObject) cand.jout.get(i)).has("th")) ? ((Integer) ((JSONObject) cand.jout.get(i)).get("th")) : 1;
+                                    areas.put(th, cand);
+                                }
                             }
                         }
                     }

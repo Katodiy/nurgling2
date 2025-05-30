@@ -55,7 +55,7 @@ public class FreeContainersInArea implements Action {
                                     target_size = NUtils.getGameUI().getInventory().getNumberFreeCoord((size != null) ?size:new Coord(1,1));
                                     if (target_size == 0) {
                                         new TransferItems(context, targets).run(gui);
-                                        if((Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
+                                        if(Finder.findGob(pile.id)==null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
                                             new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
                                         }
                                         targets.clear();
@@ -76,7 +76,7 @@ public class FreeContainersInArea implements Action {
                     else
                         {
                             new TransferItems(context, targets).run(gui);
-                            if((Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
+                            if(Finder.findGob(pile.id) == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
                                 new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
                             }
                             if(Finder.findGob(pile.id) != null) {

@@ -85,6 +85,7 @@ public class StackSupporter {
         HashSet<String> size4 = new HashSet<>();
         size4.add("Hide Fresh");
         size4.add("Prepared Animal Hide");
+        size4.add("Bone Material");
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
@@ -110,7 +111,7 @@ public class StackSupporter {
         Window win = inv.getparent(Window.class);
         if(win!=null)
         {
-            if(NParser.checkName(win.cap,unstackableContainers))
+            if(NParser.checkName(win.cap,unstackableContainers) || NParser.checkName(name, new NAlias("Lynx Claws")))
             {
                 return false;
             }
