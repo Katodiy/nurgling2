@@ -82,7 +82,9 @@ public class HorsesAction implements Action {
             };
             if(HorseHerd.getCurrent()!=null) {
                 new AnimalAction<Horse>(new NAlias("horse"), "horses", comparator, Horse.class, wpred, wlpred, HorseHerd.getCurrent().adultHorse).run(gui);
+                gui.msg("Female horse cycle done!");
                 new AnimalAction<Horse>(new NAlias("horse"), "horses", comparator, Horse.class, mpred, mlpred, 1).run(gui);
+                gui.msg("Male horse cycle done!");
             }
             else
             {
