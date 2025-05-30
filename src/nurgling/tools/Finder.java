@@ -165,8 +165,6 @@ public class Finder
         return result;
     }
 
-
-
     public static ArrayList<Gob> findGobs(NArea area, NAlias name, int mattr) throws InterruptedException
     {
         Pair<Coord2d,Coord2d> space = area.getRCArea();
@@ -186,6 +184,26 @@ public class Finder
                         {
                             result.add(gob);
                         }
+                    }
+                }
+            }
+        }
+        sort(result);
+        return result;
+    }
+
+
+    public static ArrayList<Gob> findGobs(NArea area) throws InterruptedException
+    {
+        Pair<Coord2d,Coord2d> space = area.getRCArea();
+        ArrayList<Gob> result = new ArrayList<> ();
+        synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
+            for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
+                if (!(gob instanceof OCache.Virtual))
+                {
+                    if (gob.rc.x >= space.a.x && gob.rc.y >= space.a.y && gob.rc.x <= space.b.x && gob.rc.y <= space.b.y)
+                    {
+                        result.add(gob);
                     }
                 }
             }

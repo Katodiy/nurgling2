@@ -400,6 +400,7 @@ public class NPFMap
             NUtils.getUI().bind(wnd, 7002);
         }
     }
+
     private CellsArray getCa(Gob gob) {
         if(gatesAlwaysClosed && isGate(gob)) {
             return gob.ngob.getTrueCA();

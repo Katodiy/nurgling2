@@ -8,13 +8,11 @@ import nurgling.areas.NArea;
 import nurgling.tasks.GetCurs;
 import nurgling.tasks.WaitAnotherAmount;
 import nurgling.tasks.WaitGobsInField;
-import nurgling.tasks.WaitGobsInFieldT;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SeedCrop implements Action {
@@ -25,14 +23,16 @@ public class SeedCrop implements Action {
 
     final NAlias crop;
     final NAlias iseed;
-     private int counter = 0;
+
+    final boolean allowedToPlantFromStockpiles;
 
 
-    public SeedCrop(NArea field, NArea seed, NAlias crop, NAlias iseed) {
+    public SeedCrop(NArea field, NArea seed, NAlias crop, NAlias iseed, boolean allowedToPlantFromStockpiles) {
         this.field = field;
         this.seed = seed;
         this.crop = crop;
         this.iseed = iseed;
+        this.allowedToPlantFromStockpiles = allowedToPlantFromStockpiles;
     }
 
 
@@ -40,12 +40,16 @@ public class SeedCrop implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
 
         ArrayList<Gob> barrels = Finder.findGobs(seed, new NAlias("barrel"));
-        if (barrels.isEmpty())
+        ArrayList<Gob> stockPiles = Finder.findGobs(seed, new NAlias("stockpile"));
+
+        if (barrels.isEmpty() && !allowedToPlantFromStockpiles)
             return Results.ERROR("No barrel for seed");
+
+        if (stockPiles.isEmpty() && allowedToPlantFromStockpiles)
+            return Results.ERROR("No stockpiles for seed");
 
 
         ArrayList<Coord2d> tiles = field.getTiles(new NAlias("field"));
-        ArrayList<Coord2d> current_tiles;
 
         Coord start = gui.map.player().rc.dist(field.getArea().br.mul(MCache.tilesz)) < gui.map.player().rc.dist(field.getArea().ul.mul(MCache.tilesz)) ? field.getArea().br.sub(1, 1) : field.getArea().ul;
         Coord pos = new Coord(start);
@@ -61,9 +65,8 @@ public class SeedCrop implements Action {
                         while (pos.y <= field.getArea().br.y - 1) {
                             Coord endPos = new Coord(Math.max(pos.x - 1, field.getArea().ul.x), Math.min(pos.y + 1, field.getArea().br.y - 1));
                             Area harea = new Area(pos, endPos, true);
-                            Coord2d endp = harea.ul.mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y).sub(0, MCache.tileqsz.y);
-                            seedCrop(gui, barrels, harea, revdir, endp, setDir);
-                            counter = 0;
+                            Coord2d endp = harea.ul.sub(0, 1).mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y + MCache.tileqsz.y);
+                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir);
                             pos.y += 2;
 
                         }
@@ -73,8 +76,7 @@ public class SeedCrop implements Action {
                             Coord endPos = new Coord(Math.max(pos.x - 1, field.getArea().ul.x), Math.max(pos.y - 1, field.getArea().ul.y));
                             Area harea = new Area(pos, endPos, true);
                             Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y).add(0, MCache.tileqsz.y);
-                            seedCrop(gui, barrels, harea, revdir, endp, setDir);
-                            counter = 0;
+                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir);
                             pos.y -= 2;
                         }
                         pos.y = field.getArea().ul.y;
@@ -89,9 +91,8 @@ public class SeedCrop implements Action {
                         while (pos.y <= field.getArea().br.y - 1) {
                             Coord endPos = new Coord(Math.min(pos.x + 1, field.getArea().br.x - 1), Math.min(pos.y + 1, field.getArea().br.y - 1));
                             Area harea = new Area(pos, endPos, true);
-                            Coord2d endp = harea.ul.mul(MCache.tilesz).sub(-MCache.tilehsz.x, -MCache.tilehsz.y).sub(0, MCache.tileqsz.y);
-                            seedCrop(gui, barrels, harea, revdir, endp, setDir);
-                            counter = 0;
+                            Coord2d endp = harea.ul.sub(0, 1).mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y + MCache.tileqsz.y);
+                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir);
                             pos.y += 2;
 
                         }
@@ -101,8 +102,7 @@ public class SeedCrop implements Action {
                             Coord endPos = new Coord(Math.min(pos.x + 1, field.getArea().br.x - 1), Math.max(pos.y - 1, field.getArea().ul.y));
                             Area harea = new Area(pos, endPos, true);
                             Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz).add(0, MCache.tileqsz.y);
-                            seedCrop(gui, barrels, harea, revdir, endp, setDir);
-                            counter = 0;
+                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir);
                             pos.y -= 2;
                         }
                         pos.y = field.getArea().ul.y;
@@ -111,44 +111,41 @@ public class SeedCrop implements Action {
                     pos.x += 2;
                 }
             }
-            //ArrayList<Coord2d> tiles = field.getTiles(new NAlias("field"));
-            counter ++;
-            current_tiles = field.getTiles(new NAlias("field"));
-        } while ((Finder.findGobs(field, crop).size() != current_tiles.size()) || counter <= 40);
-        if (!gui.getInventory().getItems(iseed).isEmpty()) {
-            for (Gob barrel : barrels) {
-                TransferToBarrel tb;
-                (tb = new TransferToBarrel(barrel, iseed)).run(gui);
-                if (!tb.isFull())
-                    break;
-            }
-        }
+        } while (Finder.findGobs(field, crop).size() != tiles.size());
+
+        dropOffSeeds(gui, barrels);
+
         return Results.SUCCESS();
     }
 
-    void seedCrop(NGameUI gui, ArrayList<Gob> barrels, Area area, boolean rev, Coord2d target_coord, AtomicBoolean setDir) throws InterruptedException {
-        if (gui.getInventory().getItems(iseed).size() < 2) {
+    private void dropOffSeeds(NGameUI gui, ArrayList<Gob> barrels) throws InterruptedException {
+        if(barrels.isEmpty() && allowedToPlantFromStockpiles) {
+            new TransferToPiles(seed.getRCArea(), iseed).run(gui);
+        } else {
+            if (!gui.getInventory().getItems(iseed).isEmpty()) {
+                for (Gob barrel : barrels) {
+                    TransferToBarrel tb;
+                    (tb = new TransferToBarrel(barrel, iseed)).run(gui);
+                    if (!tb.isFull())
+                        break;
+                }
+            }
+        }
+    }
+
+    void seedCrop(NGameUI gui, ArrayList<Gob> barrels, ArrayList<Gob> stockpiles, Area area, boolean rev, Coord2d target_coord, AtomicBoolean setDir) throws InterruptedException {
+        if (gui.getInventory().getItems(iseed).size() < 5) {
             if (!gui.hand.isEmpty()) {
                 NUtils.dropToInv();
             }
-            for (Gob barrel : barrels) {
-                if (gui.getInventory().getItems(iseed).size() < 2 && NUtils.barrelHasContent(barrel)) {
-                    new TakeFromBarrel(barrel, iseed).run(gui);
-                }
-            }
 
-            if (gui.getInventory().getItems(iseed).size() < 2) {
-                if (!gui.getInventory().getItems(iseed).isEmpty()) {
-                    for (Gob barrel : barrels) {
-                        TransferToBarrel tb;
-                        (tb = new TransferToBarrel(barrel, iseed)).run(gui);
-                        if (!tb.isFull())
-                            break;
-                    }
-                }
-                gui.error("NO SEEDS: ABORT");
-                throw new InterruptedException();
-            }
+            if (!barrels.isEmpty() && gui.getInventory().getItems(iseed).size() < 2)
+                fetchSeedsFromBarrel(gui, barrels);
+            else if (!stockpiles.isEmpty())
+                fetchSeedsFromStockpiles(gui);
+            else
+                NUtils.getGameUI().msg("No items for seeding");
+
         }
 
         //Area.Tile[][] tiles = area.getTiles(area, new NAlias("gfx/terobjs/moundbed"));
@@ -190,27 +187,75 @@ public class SeedCrop implements Action {
                     }
                 }
             }
-            int stacks_size = NUtils.getGameUI().getInventory().getTotalAmountItems(iseed);
-            if(stacks_size >=20){
-                NUtils.getGameUI().getInventory().activateItem(iseed);
-                NUtils.getUI().core.addTask(new GetCurs("harvest"));
+//            int stacks_size = NUtils.getGameUI().getInventory().getTotalAmountItems(iseed);
+//            if(stacks_size >=20){
+            int stacks_size = 0;
+            if(!barrels.isEmpty()) {
+                stacks_size = NUtils.getGameUI().getInventory().getTotalAmountItems(iseed);
+            } else {
+                stacks_size = NUtils.getGameUI().getInventory().getItems(iseed).size();
+            }
 
-                if (rev) {
-                    NUtils.getGameUI().map.wdgmsg("sel", area.ul, area.br, 1);
-                } else {
-                    NUtils.getGameUI().map.wdgmsg("sel", area.br, area.ul, 1);
-                }
-                NUtils.getUI().core.addTask(new WaitGobsInField(area, total));
+            NUtils.getGameUI().getInventory().activateItem(iseed);
+            NUtils.getUI().core.addTask(new GetCurs("harvest"));
+
+            if (rev) {
+                NUtils.getGameUI().map.wdgmsg("sel", area.ul, area.br, 1);
+            } else {
+                NUtils.getGameUI().map.wdgmsg("sel", area.br, area.ul, 1);
+            }
+            NUtils.getUI().core.addTask(new WaitGobsInField(area, total));
+
+            if(!barrels.isEmpty()) {
                 NUtils.getUI().core.addTask(new WaitAnotherAmount(NUtils.getGameUI().getInventory(),iseed,stacks_size));
-            }else{
-                ArrayList<WItem> seed_stacks = gui.getInventory().getItems(iseed);
-                for(WItem seed: seed_stacks){
-                    NUtils.drop(seed);
-                }
-                //count--;
+            } else if (!stockpiles.isEmpty()) {
+                fetchSeedsFromStockpiles(gui);
             }
         }
 
+    }
+
+    private void fetchSeedsFromBarrel(NGameUI gui, ArrayList<Gob> barrels) throws InterruptedException {
+        for (Gob barrel : barrels) {
+            if (gui.getInventory().getItems(iseed).size() < 2 && NUtils.barrelHasContent(barrel)) {
+                new TakeFromBarrel(barrel, iseed).run(gui);
+            }
+        }
+
+        if (gui.getInventory().getItems(iseed).size() < 2) {
+            if (!gui.getInventory().getItems(iseed).isEmpty()) {
+                for (Gob barrel : barrels) {
+                    TransferToBarrel tb;
+                    (tb = new TransferToBarrel(barrel, iseed)).run(gui);
+                    if (!tb.isFull())
+                        break;
+                }
+            }
+            gui.error("NO SEEDS: ABORT");
+            throw new InterruptedException();
+        }
+    }
+
+    private void fetchSeedsFromStockpiles(NGameUI gui) throws InterruptedException {
+        ArrayList<Gob> stockPiles = Finder.findGobs(seed, new NAlias("stockpile"));
+
+        if(gui.getInventory().getItems(iseed).size() < 4) {
+            for (Gob stockpile : stockPiles) {
+                if (gui.getInventory().getFreeSpace() > 0) {
+                    new PathFinder(stockpile).run(gui);
+                    new OpenTargetContainer("Stockpile", stockpile).run(gui);
+                    new TakeItemsFromPile(stockpile, gui.getStockpile(), gui.getInventory().getFreeSpace()).run(gui);
+                }
+            }
+        }
+
+        if (gui.getInventory().getItems(iseed).size() < 5) {
+            if (!gui.getInventory().getItems(iseed).isEmpty()) {
+                new TransferToPiles(seed.getRCArea(), iseed).run(gui);
+            }
+            gui.error("NO SEEDS: ABORT");
+            throw new InterruptedException();
+        }
     }
 }
 

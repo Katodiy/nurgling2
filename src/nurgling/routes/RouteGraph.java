@@ -1,8 +1,13 @@
 package nurgling.routes;
 
 import haven.*;
+import nurgling.NConfig;
+import nurgling.NGameUI;
+import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.PathFinder;
+import nurgling.areas.NArea;
+import nurgling.tools.Finder;
 
 import java.util.*;
 
@@ -44,6 +49,18 @@ public class RouteGraph {
         }
     }
 
+    public RoutePoint findNearestPointToPlayer(NGameUI gui) {
+        Gob player = gui.map.player();
+
+        Coord playerTile = player.rc.floor(gui.map.glob.map.tilesz);
+        MCache.Grid playerGrid = gui.map.glob.map.getgridt(playerTile);
+
+        long playerGridId = playerGrid.id;
+        Coord playerLocalCoord = playerTile.sub(playerGrid.ul);
+
+        return findNearestPoint(playerGridId, playerLocalCoord);
+    }
+
     public RoutePoint findNearestPoint(long gridId, Coord localCoord) {
         RoutePoint nearestPoint = null;
         double currentDistanceToClosestPoint = Double.MAX_VALUE;
@@ -75,6 +92,20 @@ public class RouteGraph {
         }
         
         return nearestPoint;
+    }
+
+    public ArrayList<RoutePoint> findNearestPoints() {
+        ArrayList<RoutePoint> nearestPoints = new ArrayList<>();
+
+        for (RoutePoint point : points.values()) {
+            Coord2d pointCoords = new Coord2d(point.localCoord);
+
+            if (pointCoords != null) {
+                nearestPoints.add(point);
+            }
+        }
+
+        return nearestPoints;
     }
 
     public List<RoutePoint> findPath(RoutePoint start, RoutePoint end) {
@@ -112,6 +143,18 @@ public class RouteGraph {
         return null;
     }
 
+    public RoutePoint findAreaRoutePoint(NArea area) {
+        RoutePoint end = null;
+
+        for(RoutePoint point : points.values()) {
+            if(point.getReachableAreas().contains(area.id)) {
+                end = point;
+            }
+        }
+
+        return end;
+    }
+
     public void deleteWaypoint(RoutePoint waypoint) {
         points.remove(waypoint.id);
 
@@ -119,6 +162,56 @@ public class RouteGraph {
             point.getNeighbors().remove(Integer.valueOf(waypoint.id));
             point.removeConnection(waypoint.id);
         }
+    }
+
+    public void connectAreaToRoutePoints(NArea area) {
+        if(area == null) {
+            return;
+        }
+
+        ArrayList<RoutePoint> points = findNearestPoints();
+        MCache cache = NUtils.getGameUI().ui.sess.glob.map;
+        for (RoutePoint point : points) {
+            boolean isReachable = false;
+
+            try {
+                Pair<Coord2d, Coord2d> testrc = area.getRCArea();
+                if(testrc != null) {
+                    ArrayList<Gob> gobs = Finder.findGobs(area);
+
+                    if(gobs.isEmpty()) {
+                        if(point.toCoord2d(cache) != null) {
+                            isReachable = PathFinder.isAvailable(testrc.a, point.toCoord2d(cache), false) || PathFinder.isAvailable(testrc.b, point.toCoord2d(cache), false);
+                        } else {
+                            isReachable = false;
+                        }
+                    } else {
+                        for(Gob gob : gobs) {
+                            if(point.toCoord2d(cache) != null) {
+                                if (PathFinder.isAvailable(point.toCoord2d(cache), gob.rc, true)) {
+                                    isReachable = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+            } catch (InterruptedException e) {
+                NUtils.getGameUI().error("Unable to determine route point reachability from point to area. Skipping point: " + point.id);
+            }
+
+            if(isReachable) {
+                point.addReachableArea(area.id);
+            }
+        }
+    }
+
+    public void deleteAreaFromRoutePoints(int areaId) {
+        for(RoutePoint point : points.values()) {
+            point.deleteReachableArea(areaId);
+        }
+        NConfig.needRoutesUpdate();
     }
 
     private List<RoutePoint> reconstructPath(Integer start, Integer end, Map<Integer, Integer> cameFrom) {

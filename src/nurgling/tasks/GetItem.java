@@ -29,31 +29,37 @@ public class GetItem extends NTask
     @Override
     public boolean check()
     {
-        for (Widget widget = inventory.child; widget != null; widget = widget.next)
-        {
-            if (widget instanceof WItem)
-            {
+        result = null;
+        return !checkContainer(inventory.child);
+    }
+
+    private boolean checkContainer(Widget first) {
+        for (Widget widget = first; widget != null; widget = widget.next) {
+            if (widget instanceof WItem) {
                 WItem item = (WItem) widget;
-                String item_name;
-                if ((item_name = ((NGItem) item.item).name()) == null)
-                {
-                    return false;
-                }
-                else
-                {
-                    if(NParser.checkName(item_name, name))
-                    {
-                        if(q !=-1) {
-                            if (((NGItem) item.item).quality != q)
-                                continue;
+                if (!NGItem.validateItem(item)) {
+                    return true;
+                } else {
+                    if (name == null || NParser.checkName(((NGItem)item.item).name(), name)) {
+                        if (item.item.contents != null) {
+                            if(checkContainer(item.item.contents.child))
+                                return true;
+                            if (result != null)
+                                return false;
                         }
-                        result = item;
-                        return true;
+                        else {
+                            if (q != -1) {
+                                if (((NGItem) item.item).quality != q)
+                                    continue;
+                            }
+                            result = item;
+                            return false;
+                        }
                     }
                 }
             }
         }
-        return true;
+        return false;
     }
 
     private WItem result = null;

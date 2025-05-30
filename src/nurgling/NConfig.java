@@ -83,7 +83,7 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, gridbox
+        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf
     }
 
 
@@ -138,6 +138,7 @@ public class NConfig
         conf.put(Key.simplecrops, true);
         conf.put(Key.ndbenable, false);
         conf.put(Key.harvestautorefill, false);
+        conf.put(Key.useGlobalPf, false);
         conf.put(Key.sqlite, false);
         conf.put(Key.postgres, false);
         conf.put(Key.dbFilePath, "");
@@ -148,7 +149,9 @@ public class NConfig
         conf.put(Key.player_box, false);
         conf.put(Key.player_fov, false);
         conf.put(Key.gridbox, false);
-        conf.put(Key.temsmarktime, 5000);
+        conf.put(Key.tempmark, false);
+        conf.put(Key.temsmarkdist, 4);
+        conf.put(Key.temsmarktime, 3);
 
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
@@ -570,7 +573,7 @@ public class NConfig
         {
             JSONObject main = new JSONObject();
             JSONArray jroutes = new JSONArray();
-            for(Route route : NUtils.getGameUI().routesWidget.routes.values())
+            for(Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values())
             {
                 jroutes.put(route.toJson());
             }
@@ -606,7 +609,7 @@ public class NConfig
             for (int i = 0; i < array.length(); i++) {
                 Route a = new Route((JSONObject) array.get(i));
                 int id = 1;
-                for (Route route : NUtils.getGameUI().routesWidget.routes.values()) {
+                for (Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values()) {
                     if (route.name.equals(a.name)) {
                         a.name = "Other_" + a.name;
                     }
@@ -615,7 +618,7 @@ public class NConfig
                     }
                 }
                 a.id = id;
-                NUtils.getGameUI().routesWidget.routes.put(a.id, a);
+                ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().put(a.id, a);
             }
         }
     }

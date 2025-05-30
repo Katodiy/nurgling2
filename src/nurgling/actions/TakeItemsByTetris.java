@@ -4,26 +4,27 @@ import haven.Coord;
 import haven.Gob;
 import haven.UI;
 import haven.WItem;
+import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NISBox;
 import nurgling.NUtils;
 import nurgling.tasks.WaitItemFromPile;
 import nurgling.tools.Container;
+import nurgling.tools.NAlias;
+import nurgling.tools.StockpileUtils;
 
 import java.util.ArrayList;
 
 public class TakeItemsByTetris implements Action
 {
     NISBox pile;
+    Gob gpile;
     ArrayList<Container> conts;
-
-    int target_size = Integer.MAX_VALUE;
-
 
     public TakeItemsByTetris(Gob gob, NISBox pile, ArrayList<Container> conts)
     {
+        gpile = gob;
         this.pile = pile;
-        this.target_size = target_size;
         this.conts = conts;
     }
     boolean isDone = false;
@@ -43,12 +44,12 @@ public class TakeItemsByTetris implements Action
         while (gui.getInventory().getNumberFreeCoord(target_coord) > 0 && gui.getStockpile()!=null)
         {
             gui.getStockpile().transfer(1);
-            WaitItemFromPile wifp = new WaitItemFromPile(gui.getInventory().getItems());
+            WaitItemFromPile wifp = new WaitItemFromPile();
             NUtils.getUI().core.addTask(wifp);
-            for(WItem item: wifp.getResult()) {
+            for(NGItem item: wifp.getResult()) {
                 for (Container container: conts) {
                     Container.Tetris tetris = container.getattr(Container.Tetris.class);
-                    if(tetris.tryPlace(item.item.spr.sz().div(UI.scale(32)).swapXY()))
+                    if(tetris.tryPlace(item.spr.sz().div(UI.scale(32)).swapXY()))
                         break;
                 }
             }

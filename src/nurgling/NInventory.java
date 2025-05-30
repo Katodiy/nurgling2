@@ -2,6 +2,7 @@ package nurgling;
 
 import haven.*;
 import haven.Window;
+import haven.res.ui.stackinv.ItemStack;
 import haven.res.ui.tt.slot.Slotted;
 import haven.res.ui.tt.stackn.Stack;
 import monitoring.ItemWatcher;
@@ -30,7 +31,6 @@ public class NInventory extends Inventory
     BufferedImage numbers = null;
     short[][] oldinv = null;
     public ParentGob parentGob = null;
-
     long lastUpdate = 0;
     public static class ParentGob
     {
@@ -118,6 +118,7 @@ public class NInventory extends Inventory
         return gnfc.result();
     }
 
+
     public int getNumberFreeCoord(GItem item) throws InterruptedException
     {
         GetNumberFreeCoord gnfc = new GetNumberFreeCoord(this, item);
@@ -128,19 +129,6 @@ public class NInventory extends Inventory
     public int getNumberFreeCoord(WItem item) throws InterruptedException
     {
         return getNumberFreeCoord(item.item);
-    }
-
-    public Coord getFreeCoord(Coord sz) throws InterruptedException
-    {
-        GetFreePlace gfp = new GetFreePlace(this, sz);
-        NUtils.getUI().core.addTask(gfp);
-        return gfp.result();
-    }
-    public Coord getFreeCoord(GItem item) throws InterruptedException
-    {
-        GetFreePlace gfp = new GetFreePlace(this, item);
-        NUtils.getUI().core.addTask(gfp);
-        return gfp.result();
     }
 
     public Coord getFreeCoord(WItem item) throws InterruptedException
@@ -162,6 +150,13 @@ public class NInventory extends Inventory
         GetTotalSpace gts = new GetTotalSpace(this);
         NUtils.getUI().core.addTask(gts);
         return gts.result();
+    }
+
+    public int getTotalAmountItems(NAlias name) throws InterruptedException
+    {
+        GetTotalAmountItems gi = new GetTotalAmountItems(this, name);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
     }
 
     public WItem getItem(NAlias name) throws InterruptedException
@@ -205,13 +200,6 @@ public class NInventory extends Inventory
         return gi.getResult();
     }
 
-    public int getTotalAmountItems(NAlias name) throws InterruptedException
-    {
-        GetTotalAmountItems gi = new GetTotalAmountItems(this, name);
-        NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
-    }
-
     public ArrayList<WItem> getItems(NAlias name) throws InterruptedException
     {
         GetItems gi = new GetItems(this, name);
@@ -219,23 +207,11 @@ public class NInventory extends Inventory
         return gi.getResult();
     }
 
-    public ArrayList<WItem> getItemsRes(NAlias name) throws InterruptedException
-    {
-        GetItems gi = new GetItems(this, name);
-        NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
-    }
+
 
     public ArrayList<WItem> getItems(NAlias name, double th) throws InterruptedException
     {
         GetItems gi = new GetItems(this, name, (float)th);
-        NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
-    }
-
-    public ArrayList<WItem> getItemsOfType(NAlias name) throws InterruptedException
-    {
-        GetItems gi = new GetItems(this, name);
         NUtils.getUI().core.addTask(gi);
         return gi.getResult();
     }
@@ -255,6 +231,11 @@ public class NInventory extends Inventory
         GetItems gi = new GetItems(this, target);
         NUtils.getUI().core.addTask(gi);
         return gi.getResult();
+    }
+
+    public void activateItem(NAlias name) throws InterruptedException {
+        WItem it = getItem(name);
+        it.item.wdgmsg("iact", Coord.z, 1);
     }
 
     public void dropOn(Coord dc, String name) throws InterruptedException
@@ -722,11 +703,6 @@ public class NInventory extends Inventory
     };
 
 
-    public void activateItem(NAlias name) throws InterruptedException {
-        WItem it = getItem(name);
-        it.item.wdgmsg("iact", Coord.z, 1);
-    }
-
     public <C extends ItemInfo> ArrayList<WItem> getItems(Class<C> c) throws InterruptedException
     {
         GetItemsWithInfo gi = new GetItemsWithInfo(this, c);
@@ -746,4 +722,17 @@ public class NInventory extends Inventory
         }
         super.reqdestroy();
     }
+
+    public ItemStack findNotFullStack(String name) throws InterruptedException {
+        GetNotFullStack gi = new GetNotFullStack(this, new NAlias(name));
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
+    public WItem findNotStack(String name) throws InterruptedException {
+        GetNotStack gi = new GetNotStack(this, new NAlias(name));
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
 }

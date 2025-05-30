@@ -4,6 +4,9 @@ import haven.*;
 import nurgling.widgets.*;
 
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class NUI extends UI
@@ -122,5 +125,51 @@ public class NUI extends UI
 
     public float getDeltaZ() {
         return (float)Math.sin(tickId/10.)*1;
+    }
+
+    Widget monitor = null;
+
+    HashSet<Integer> statusWdg = new HashSet<>();
+
+    public void enableMonitor(Widget widget)
+    {
+        monitor = widget;
+        statusWdg = new HashSet<>();
+    }
+
+    public void disableMonitor()
+    {
+
+    }
+
+    @Override
+    public void addwidget(int id, int parent, Object... pargs) {
+        super.addwidget(id, parent, pargs);
+//        if(monitor!=null && (parent == monitor.wdgid() || (getwidget(parent)!=null && getwidget(parent).parent!=null && getwidget(parent).parent.wdgid() == monitor.wdgid()))) {
+        if(monitor!=null)
+        {
+            synchronized (statusWdg) {
+                statusWdg.add(id);
+            }
+        }
+    }
+
+    @Override
+    public void destroy(Widget wdg) {
+        synchronized (statusWdg) {
+            statusWdg.remove(wdg.wdgid());
+        }
+        super.destroy(wdg);
+    }
+
+    public ArrayList<Widget> getMonitorInfo()
+    {
+        ArrayList<Widget> res = new ArrayList<>();
+        synchronized (statusWdg) {
+            for (int id : statusWdg) {
+                res.add(getwidget(id));
+            }
+        }
+        return res;
     }
 }

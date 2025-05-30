@@ -4,6 +4,7 @@ import haven.Coord;
 import haven.Coord2d;
 import haven.Coord3f;
 import haven.MCache;
+import nurgling.areas.NArea;
 
 import java.util.*;
 
@@ -15,6 +16,7 @@ public class RoutePoint {
 
     private ArrayList<Integer> neighbors = new ArrayList<>();
     private Map<Integer, Connection> connections = new HashMap<>();
+    private ArrayList<Integer> reachableAreas = new ArrayList<>();
 
     public class Connection {
         public String connectionTo;
@@ -66,10 +68,6 @@ public class RoutePoint {
         return new HashSet<>(connections.keySet());
     }
 
-    public boolean hasConnection(int neighborHash) {
-        return connections.containsKey(neighborHash);
-    }
-
     public void removeConnection(int neighborHash) {
         connections.remove(neighborHash);
     }
@@ -77,6 +75,29 @@ public class RoutePoint {
     public void setLocalCoord(Coord localCoord) {
         this.localCoord = localCoord;
         this.id = hashCode();
+    }
+
+    public ArrayList<Integer> getReachableAreas() {
+        return reachableAreas;
+    }
+
+    public void addReachableAreas(ArrayList<NArea> reachableAreas) {
+        for (NArea area : reachableAreas) {
+            this.reachableAreas.add(area.id);
+        }
+    }
+
+    public void addReachableArea(int reachableAreas) {
+        this.reachableAreas.add(reachableAreas);
+
+    }
+
+    public void deleteReachableArea(Integer areaId) {
+        for (int i = 0; i < reachableAreas.size(); i++) {
+            if (reachableAreas.get(i) == areaId) {
+                reachableAreas.remove(i);
+            }
+        }
     }
 
     public Coord2d toCoord2d(MCache mcache) {

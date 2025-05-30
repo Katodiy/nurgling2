@@ -4,6 +4,7 @@ import haven.*;
 import static haven.MCache.cmaps;
 import haven.render.sl.*;
 import nurgling.*;
+import nurgling.actions.PathFinder;
 import nurgling.tools.*;
 import nurgling.widgets.Specialisation;
 import org.json.*;
@@ -226,6 +227,49 @@ public class NArea
         return res;
     }
 
+    public static NArea globalFindOut(String name, double th, NGameUI gui) {
+        NArea res = null;
+
+        ArrayList<TestedArea> areas = new ArrayList<>();
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids) {
+                if (id > 0) {
+                    NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
+                    if (cand.containOut(name) && ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(cand)) != null) {
+                        areas.add(new TestedArea(cand, th));
+                    }
+                }
+            }
+        }
+
+        areas.sort(ta_comp);
+
+        double tth = 1;
+        for (TestedArea area : areas)
+        {
+            if(area.th<=th) {
+                res = area.area;
+                tth = area.th;
+            }
+        }
+
+        ArrayList<NArea> targets = new ArrayList<>();
+        for(TestedArea area :areas)
+        {
+            if(area.th == tth)
+                targets.add(area.area);
+        }
+
+        if(targets.size()>1) {
+            for (NArea test: targets) {
+                res = test;
+            }
+        }
+        return res;
+    }
+
     public static TreeMap<Integer,NArea> findOuts(NAlias name)
     {
         TreeMap<Integer,NArea> areas = new TreeMap<>();
@@ -237,6 +281,30 @@ public class NArea
                     if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name) ) {
                         NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
                         if(cand.getRCArea()!=null) {
+                            for (int i = 0; i < cand.jout.length(); i++) {
+                                if (NParser.checkName((String) ((JSONObject) cand.jout.get(i)).get("name"), name)) {
+                                    Integer th = (((JSONObject) cand.jout.get(i)).has("th")) ? ((Integer) ((JSONObject) cand.jout.get(i)).get("th")) : 1;
+                                    areas.put(th, cand);
+                                }
+                            }
+                        }
+                    }
+            }
+        }
+        return areas;
+    }
+
+    public static TreeMap<Integer,NArea> globalFindOuts(String name)
+    {
+        TreeMap<Integer,NArea> areas = new TreeMap<>();
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids) {
+                if (id > 0)
+                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name) ) {
+                        NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
+                        if(!cand.hide) {
                             for (int i = 0; i < cand.jout.length(); i++) {
                                 if (NParser.checkName((String) ((JSONObject) cand.jout.get(i)).get("name"), name)) {
                                     Integer th = (((JSONObject) cand.jout.get(i)).has("th")) ? ((Integer) ((JSONObject) cand.jout.get(i)).get("th")) : 1;
@@ -365,13 +433,58 @@ public class NArea
                     for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
                         if (s.name.equals(name) && s.subtype != null && s.subtype.toLowerCase().equals(sub.toLowerCase())) {
                             NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
-                            Pair<Coord2d,Coord2d> testrc = test.getRCArea();
-                            if(testrc!=null) {
-                                double testdist;
-                                if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
-                                    res = test;
-                                    dist = testdist;
+                            if(test.isVisible()) {
+                                Pair<Coord2d,Coord2d> testrc = test.getRCArea();
+                                if(testrc!=null) {
+                                    double testdist;
+                                    if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                                        res = test;
+                                        dist = testdist;
+                                    }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
+    // These visible areas DO NOT mean you are guaranteed to see gobs in the area. This only means you are able to
+    // navigate to an area.
+    public static ArrayList<NArea> getAllVisible() throws InterruptedException {
+        double dist = 10000;
+        ArrayList<NArea> res = new ArrayList<>();
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids)
+            {
+                if(id>=0) {
+                    NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
+                    if(test.isVisible()) {
+                        Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                        if(testrc != null) {
+                            Coord2d playerRelativeCoord = NUtils.player().rc;
+
+                            ArrayList<Gob> gobs = Finder.findGobs(test);
+
+                            boolean isReachable = false;
+
+                            if(gobs.isEmpty()) {
+                                isReachable = PathFinder.isAvailable(testrc.a, playerRelativeCoord, false) || PathFinder.isAvailable(testrc.b, playerRelativeCoord, false);
+                            } else {
+                                for(Gob gob : gobs) {
+                                    if (PathFinder.isAvailable(gob)) {
+                                        isReachable = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (testrc.a.dist(playerRelativeCoord) + testrc.b.dist(playerRelativeCoord) < dist && isReachable) {
+                                res.add(test);
                             }
                         }
                     }

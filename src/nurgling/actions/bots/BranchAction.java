@@ -32,7 +32,7 @@ public class BranchAction implements Action {
 
         while(NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(2, 1))!=0 && Finder.findGob(insa.getRCArea(), new NAlias("stockpile"))!=null) {
             int count = NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(2, 1));
-            count = Math.min(count, NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(1, 1))/5);
+            count = Math.min(count, NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(1, 1)));
             while (count != 0) {
                 if (NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(2, 1)) > 0) {
                     Gob pile = Finder.findGob(insa.getRCArea(), new NAlias("stockpile"));

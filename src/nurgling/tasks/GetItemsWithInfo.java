@@ -22,39 +22,34 @@ public class GetItemsWithInfo extends NTask
         this.c = c;
     }
 
-
     @Override
     public boolean check() {
         result.clear();
-        for (Widget widget = inventory.child; widget != null; widget = widget.next) {
+        return !checkContainer(inventory.child);
+    }
+
+    private boolean checkContainer(Widget first) {
+        for (Widget widget = first; widget != null; widget = widget.next) {
             if (widget instanceof WItem) {
                 WItem item = (WItem) widget;
-                if(item.item.contents!=null) {
-                    for (Widget swidget = item.item.contents.child; swidget != null; swidget = swidget.next) {
-                        if (swidget instanceof WItem) {
-                            WItem sitem = (WItem) swidget;
-                            if (sitem.item.info != null) {
-                                for (ItemInfo inf : sitem.item.info)
-                                    if (inf.getClass() == c) {
-                                        result.add(sitem);
-                                    }
-                            }
-                        }
+                if(item.item.contents != null) {
+                    if (checkContainer(item.item.contents.child)) {
+                        return true;
                     }
                 }
                 else if (item.item.info != null) {
-                    for (ItemInfo inf : item.item.info)
+                    for (ItemInfo inf : item.item.info) {
                         if (inf.getClass() == c) {
                             result.add(item);
                         }
+                    }
                 }
-                else
-                {
-                    return false;
+                else {
+                    return true;
                 }
             }
         }
-        return true;
+        return false;
     }
 
     private ArrayList<WItem> result = new ArrayList<>();

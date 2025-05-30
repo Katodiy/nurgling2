@@ -76,9 +76,10 @@ public class Pig extends Entry {
 			double m = ql * herd.meatq * meatq / 100.;
 			double qm = meat * herd.meatquan1 + ((meat > herd.meatquanth) ? ((meat - herd.meatquanth) * (herd.meatquan2 - herd.meatquan1)) : 0);
 			double qtruf = prc * herd.trufquan1 + ((prc > herd.trufquanth) ? ((prc - herd.trufquanth) * (herd.trufquan2 - herd.trufquan1)) : 0);
-			double hide = ql * herd.hideq * hideq / 100.;
-
-			return ((m + qm + qtruf + hide) == 0) ? ql : Math.round((m + qm + qtruf + hide) * 10) / 10.;
+			double hide = (herd.disable_q_percentage ? (herd.hideq * hideq) : (ql * herd.hideq * hideq / 100.));
+			double k_res = (herd.disable_q_percentage ? (hide) : (m + qm + qtruf + hide));
+			double result = k_res == 0 ? ql : Math.round(k_res * 10) / 10.;
+			return result;
 		}
 		return 0;
 	}

@@ -6,6 +6,7 @@ import haven.Gob;
 import nurgling.NCore;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.areas.NArea;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -52,7 +53,13 @@ public class Route {
         
         // Use existing waypoint if found, otherwise use the temporary one
         RoutePoint waypointToAdd = existingWaypoint != null ? existingWaypoint : tempWaypoint;
-        
+
+        try {
+            waypointToAdd.addReachableAreas(NArea.getAllVisible());
+        } catch (InterruptedException e) {
+            NUtils.getGameUI().error("Unable to determine reachable areas.");
+        }
+
         // Add the waypoint with default connection values
         addPredefinedWaypoint(waypointToAdd, "", "", false);
     }
@@ -96,6 +103,7 @@ public class Route {
 
         try {
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(waypointToAdd);
+            waypointToAdd.addReachableAreas(NArea.getAllVisible());
             this.waypoints.add(waypointToAdd);
 
             NUtils.getGameUI().msg("Waypoint added: " + waypointToAdd);
@@ -173,6 +181,13 @@ public class Route {
                         waypoint.addConnection(Integer.parseInt(neighborHash), connectionTo, connGobHash, connGobName, isDoor);
                     }
                 }
+
+                if (point.has("reachableAreas")) {
+                    JSONArray reachableAreas = point.getJSONArray("reachableAreas");
+                    for (int j = 0; j < reachableAreas.length(); j++) {
+                        waypoint.addReachableArea(reachableAreas.getInt(j));
+                    }
+                }
                 
                 waypoints.add(waypoint);
             }
@@ -200,6 +215,7 @@ public class Route {
         JSONArray waypointsArray = new JSONArray();
         for (RoutePoint waypoint : waypoints) {
             JSONObject waypointJson = new JSONObject();
+            waypointJson.put("id", waypoint.id);
             waypointJson.put("gridId", waypoint.gridId);
             waypointJson.put("localCoord", new JSONObject()
                 .put("x", waypoint.localCoord.x)
@@ -226,6 +242,13 @@ public class Route {
                 }
             }
             waypointJson.put("connections", connectionsJson);
+
+            // Save reachable areas
+            JSONArray reachableAreas = new JSONArray();
+            for (int reachableArea : waypoint.getReachableAreas()) {
+                reachableAreas.put(reachableArea);
+            }
+            waypointJson.put("reachableAreas", reachableAreas);
             
             waypointsArray.put(waypointJson);
         }

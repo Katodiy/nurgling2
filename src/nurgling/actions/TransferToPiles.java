@@ -1,14 +1,13 @@
 package nurgling.actions;
 
 import haven.*;
-import nurgling.NGItem;
 import nurgling.NGameUI;
-import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.tasks.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
+import nurgling.tools.StackSupporter;
 
 import java.util.ArrayList;
 
@@ -65,14 +64,14 @@ public class TransferToPiles implements Action{
                             int size = witems.size();
                             new OpenTargetContainer("Stockpile", target).run(gui);
                             int target_size = Math.min(size,gui.getStockpile().getFreeSpace());
-                            int fullSize = gui.getInventory().getItems().size();
-                            for (int i = 0; i < target_size; i++)
-                            {
-                                witems.get(i).item.wdgmsg("transfer", Coord.z);
+                            if(target_size>0) {
+                                transfer(gui, target_size);
                             }
-                            NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), fullSize - target_size));
                             if((witems = gui.getInventory().getItems(items,th)).isEmpty())
+                            {
+                                new CloseTargetContainer("Stockpile").run(gui);
                                 return Results.SUCCESS();
+                            }
                         }
                     }
                 }
@@ -88,17 +87,34 @@ public class TransferToPiles implements Action{
                     new OpenTargetContainer("Stockpile", pile).run(gui);
                     int target_size = Math.min(size, gui.getStockpile().getFreeSpace());
                     if(target_size>0) {
-                        int fullSize = gui.getInventory().getItems().size();
-                        for (int i = 0; i < target_size; i++) {
-                            witems.get(i).item.wdgmsg("transfer", Coord.z);
-                        }
-                        NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), fullSize - target_size));
+                        transfer(gui, target_size);
                     }
                 }
             }
         return Results.SUCCESS();
         }
 
+    private void transfer(NGameUI gui, int target_size) throws InterruptedException {
+        ArrayList<WItem> witems;
+        NUtils.addTask(new WaitStockpile(true));
+        int fullSize = gui.getInventory().getItems().size();
+        if(th>1 || StackSupporter.isSameExist(items, gui.getInventory())) {
+            for (int i = 0; i < target_size; i++) {
+                {
+                    witems = gui.getInventory().getItems(items, th);
+                    NUtils.takeItemToHand(witems.get(0));
+                    gui.getStockpile().wdgmsg("drop");
+                    NUtils.addTask(new WaitFreeHand());
+                }
+            }
+        }
+        else
+        {
+            gui.getStockpile().put(target_size);
+        }
+
+        NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), fullSize - target_size));
+    }
 
 
     NAlias getStockpileName(NAlias items) {
@@ -112,14 +128,17 @@ public class TransferToPiles implements Action{
             return new NAlias("gfx/terobjs/stockpile-metal");
         } else if (NParser.checkName(items.getDefault(), new NAlias("brick"))) {
             return new NAlias("gfx/terobjs/stockpile-brick");
-        } else if (NParser.checkName(items.getDefault(), new NAlias("leaf"))) {
-            return new NAlias("gfx/terobjs/stockpile-leaf");
+        } else if (NParser.checkName(items.getDefault(), new NAlias("fresh leaf of pipeweed"))) {
+            return new NAlias("gfx/terobjs/stockpile-pipeleaves");
         } else if (NParser.checkName(items.getDefault(), new NAlias("Hemp Cloth"))) {
             return new NAlias("gfx/terobjs/stockpile-cloth");
         } else if (NParser.checkName(items.getDefault(), new NAlias("Linen Cloth"))) {
             return new NAlias("gfx/terobjs/stockpile-cloth");
-        }
-        else
+        } else if (NParser.checkName(items.getDefault(), new NAlias("coal"))) {
+            return new NAlias("gfx/terobjs/stockpile-coal");
+        } else if (NParser.checkName(items.getDefault(), new NAlias("onion"))) {
+            return new NAlias("gfx/terobjs/stockpile-onion");
+        } else
             return new NAlias("stockpile");
     }
 }

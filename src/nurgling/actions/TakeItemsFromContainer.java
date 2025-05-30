@@ -8,6 +8,7 @@ import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
+import nurgling.tools.StackSupporter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -45,34 +46,22 @@ public class TakeItemsFromContainer implements Action
 
                 target_coord = inv.getItem(name).sz.div(Inventory.sqsz);
                 int oldSpace = gui.getInventory().getItems(name).size();
-                ArrayList<WItem> items = gui.getInventory(cont.cap).getItems(name,1);
-                HashSet<WItem> forRemove = new HashSet<>();
-
-                    for(WItem item1: items) {
-                        if (pattern != null) {
-                            if (!NParser.checkName(((NGItem) item1.item).name(), pattern)) {
-                                forRemove.add(item1);
-                            }
-                        }
-                        if(targetq!=-1)
-                        {
-                            if(((NGItem) item1.item).quality>targetq)
-                            {
-                                forRemove.add(item1);
-                            }
-                        }
-                    }
-                items.removeAll(forRemove);
-                target_size = Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY()), items.size()));
+                ArrayList<WItem> items = getItems(gui, name);
+                int items_size = items.size();
+                target_size = Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getMaxStackSize(name), items.size()));
 
 
-                for (int i = 0; i < target_size; i++) {
-                    items.get(i).item.wdgmsg("transfer", Coord.z);
+                int temptr = target_size;
+                for (int i = 0; i < temptr; i++) {
+                    TransferToContainer.transfer(items.get(i), gui.getInventory(), target_size);
+                    items = getItems(gui, name);
+                    temptr=Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getMaxStackSize(name), items.size()));
+                    i = -1;
                 }
                 WaitItems wi = new WaitItems(gui.getInventory(), new NAlias(name), oldSpace + target_size);
                 NUtils.getUI().core.addTask(wi);
                 cont.update();
-                if(items.size()>target_size) {
+                if(items_size>target_size) {
                     took = false;
                     return Results.FAIL();
                 }
@@ -80,6 +69,29 @@ public class TakeItemsFromContainer implements Action
         }
         took = true;
         return Results.SUCCESS();
+    }
+
+    private ArrayList<WItem> getItems(NGameUI gui, String name) throws InterruptedException
+    {
+        ArrayList<WItem> items = gui.getInventory(cont.cap).getItems(name,1);
+        HashSet<WItem> forRemove = new HashSet<>();
+
+        for(WItem item1: items) {
+            if (pattern != null) {
+                if (!NParser.checkName(((NGItem) item1.item).name(), pattern)) {
+                    forRemove.add(item1);
+                }
+            }
+            if(targetq!=-1)
+            {
+                if(((NGItem) item1.item).quality>targetq)
+                {
+                    forRemove.add(item1);
+                }
+            }
+        }
+        items.removeAll(forRemove);
+        return items;
     }
 
     public boolean getResult()

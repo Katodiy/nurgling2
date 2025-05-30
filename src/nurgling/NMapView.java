@@ -94,7 +94,7 @@ public class NMapView extends MapView
     }
 
     public void createRouteLabel(Integer id) {
-        Route route = NUtils.getGameUI().routesWidget.routes.get(id);
+        Route route = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(id);
         NUtils.getGameUI().routesWidget.updateWaypoints();
 
         if (route != null && route.waypoints != null) {
@@ -395,6 +395,8 @@ public class NMapView extends MapView
             newArea.path = NUtils.getGameUI().areas.currentPath;
             glob.map.areas.put(id, newArea);
 //            NUtils.getGameUI().areas.addArea(id, newArea.name, newArea);
+
+            routeGraphManager.getGraph().connectAreaToRoutePoints(newArea);
             createAreaLabel(id);
         }
         return key;
@@ -403,11 +405,11 @@ public class NMapView extends MapView
     public String addRoute()
     {
         String key;
-        synchronized (NUtils.getGameUI().routesWidget.routes)
+        synchronized (((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes())
         {
             HashSet<String> names = new HashSet<String>();
             int id = 0;
-            for(Route route : NUtils.getGameUI().routesWidget.routes.values())
+            for(Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values())
             {
                 if(route.id >= id)
                 {
@@ -415,7 +417,7 @@ public class NMapView extends MapView
                 }
                 names.add(route.name);
             }
-            key = ("New Route" + NUtils.getGameUI().routesWidget.routes.size());
+            key = ("New Route" + ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().size());
             while(names.contains(key))
             {
                 key = key+"(1)";
@@ -423,7 +425,7 @@ public class NMapView extends MapView
             Route newRoute = new Route(key);
             newRoute.id = id;
             newRoute.path = NUtils.getGameUI().routesWidget.currentPath;
-            NUtils.getGameUI().routesWidget.routes.put(id, newRoute);
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().put(id, newRoute);
             createRouteLabel(id);
         }
         return key;
@@ -618,7 +620,6 @@ public class NMapView extends MapView
             if(area.name.equals(name))
             {
                 area.inWork = true;
-//                area.clearOverlayArea();
                 glob.map.areas.remove(area.id);
                 Gob dummy = dummys.get(area.gid);
                 if(dummy != null) {
@@ -627,15 +628,17 @@ public class NMapView extends MapView
                 }
                 NUtils.getGameUI().areas.removeArea(area.id);
 
+                routeGraphManager.getGraph().deleteAreaFromRoutePoints(area.id);
+
                 break;
             }
         }
     }
 
-    public void disableArea(String name, boolean val) {
+    public void disableArea(String name, String path, boolean val) {
         for(NArea area : glob.map.areas.values())
         {
-            if(area.name.equals(name))
+            if(area.name.equals(name) && area.path.equals(path))
             {
                 area.hide = val;
                 NConfig.needAreasUpdate();
@@ -662,6 +665,7 @@ public class NMapView extends MapView
                         dummys.remove(area.gid);
                     }
                     NUtils.getGameUI().map.nols.remove(area.id);
+                    routeGraphManager.getGraph().deleteAreaFromRoutePoints(area.id);
                 }
                 NAreaSelector.changeArea(area);
                 break;
@@ -677,7 +681,7 @@ public class NMapView extends MapView
 
     public void changeRouteName(Integer id, String new_name)
     {
-        NUtils.getGameUI().routesWidget.routes.get(id).name = new_name;
+        ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(id).name = new_name;
         NConfig.needRoutesUpdate();
     }
 

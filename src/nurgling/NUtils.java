@@ -640,4 +640,15 @@ public class NUtils
         }
         return 0.0;
     }
+
+    public static int calcStackSize(Widget stackf)
+    {
+        int res = 0;
+        for (Widget widget = stackf; widget != null; widget = widget.next) {
+            if (widget instanceof WItem) {
+                res++;
+            }
+        }
+        return res;
+    }
 }

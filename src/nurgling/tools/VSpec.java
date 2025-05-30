@@ -2729,4 +2729,30 @@ public class VSpec {
             NUtils.getGameUI().map.clickedGob = null;
         }
     }
+
+    public static ArrayList<String> getCategory(String name) {
+        ArrayList<String> result = new ArrayList<>();
+        for(String cat: categories.keySet())
+        {
+            for(int i = 0 ; i < categories.get(cat).size(); i++)
+            {
+                if(((String)(categories.get(cat).get(i)).get("name")).equals(name))
+                {
+                    result.add(cat);
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    public static ArrayList<String> getCategoryContent(String name) {
+        ArrayList<JSONObject> jresult = categories.get(name);
+        ArrayList<String> result = new ArrayList<>();
+        for(JSONObject res: jresult)
+        {
+            result.add(res.getString("name"));
+        }
+        return result;
+    }
 }

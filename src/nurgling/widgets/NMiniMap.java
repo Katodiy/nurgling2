@@ -299,17 +299,26 @@ public class NMiniMap extends MiniMap implements Console.Directory {
         return (super.tooltip(c, prev));
     }
 
-    private Coord texsz = UI.scale(16,16);
     private void drawtempmarks(GOut g) {
-        for (TempMark cm : tempMarkList) {
-            if (ui.gui.mmap.curloc.seg.id == cm.loc.seg.id) {
-                if (cm.icon != null) {
-                    if (!cm.gc.equals(Coord.z)) {
-                        Coord gc =  p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
+        if((Boolean)NConfig.get(NConfig.Key.tempmark)) {
+            Gob player = NUtils.player();
+            if (player != null) {
+                double zmult = 1 << zoomlevel;
+                Coord rc = p2c(player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz));
+                Coord viewsz = VIEW_SZ.div(zmult).mul(scale);
 
-                        int dsz = Math.max(cm.icon.getHeight(),cm.icon.getWidth());
+                for (TempMark cm : tempMarkList) {
+                    if (cm.loc!=null && ui.gui.mmap.curloc.seg.id == cm.loc.seg.id) {
+                        if (cm.icon != null) {
+                            if (!cm.gc.equals(Coord.z)) {
+                                Coord gc = p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
 
-                        g.aimage(new TexI(cm.icon), gc, 0.5, 0.5, Coord.of(UI.scale(Math.round(cm.icon.getWidth() / (dsz * scalef()))), UI.scale(Math.round(cm.icon.getHeight() / (dsz * scalef())))).mul(texsz));
+                                int dsz = Math.max(cm.icon.getHeight(), cm.icon.getWidth());
+                                if (!gc.isect(rc, viewsz)) {
+                                    g.aimage(new TexI(cm.icon), gc, 0.5, 0.5, UI.scale(18 * cm.icon.getWidth() / dsz, 18 * cm.icon.getHeight() / dsz));
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -317,29 +326,35 @@ public class NMiniMap extends MiniMap implements Console.Directory {
     }
 
     void checkTempMarks() {
-        final Coord2d cmap = new Coord2d(cmaps);
-        if(NUtils.player()!=null) {
-            Coord2d pl = NUtils.player().rc;
-            final List<TempMark> marks = new ArrayList<>(tempMarkList);
-            for (TempMark cm : marks) {
-                Gob g = Finder.findGob(cm.id);
-                if (g == null) {
-                    if (System.currentTimeMillis() - cm.start > (int) NConfig.get(NConfig.Key.temsmarktime) * 60) {
-                        tempMarkList.remove(cm);
-                    } else {
-                        if (!cm.rc.isect(pl.sub(cmap.mul(4).mul(tilesz)), pl.add(cmap.mul(4).mul(tilesz)))) {
+        if((Boolean)NConfig.get(NConfig.Key.tempmark)) {
+            final Coord2d cmap = new Coord2d(cmaps);
+            if (NUtils.player() != null) {
+                Coord2d pl = NUtils.player().rc;
+                final List<TempMark> marks = new ArrayList<>(tempMarkList);
+                for (TempMark cm : marks) {
+                    Gob g = Finder.findGob(cm.id);
+                    if (g == null) {
+                        if (System.currentTimeMillis() - cm.start > (Integer) NConfig.get(NConfig.Key.temsmarktime) * 1000 * 60 ) {
                             tempMarkList.remove(cm);
+                        } else {
+                            if (!cm.rc.isect(pl.sub(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)), pl.add(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)))) {
+                                tempMarkList.remove(cm);
+                            }
                         }
+                    } else {
+                        cm.start = System.currentTimeMillis();;
+                        cm.rc = g.rc;
+                        cm.gc = g.rc.floor(tilesz).add(sessloc.tc);
                     }
                 }
-            }
-            synchronized (ui.sess.glob.oc) {
-                for (Gob gob : ui.sess.glob.oc) {
-                    if (tempMarkList.stream().noneMatch(m -> m.id == gob.id)) {
-                        BufferedImage tex = setTex(gob);
-                        MiniMap.Location loc = NUtils.getGameUI().mmap.curloc;
-                        if (tex != null) {
-                            tempMarkList.add(new TempMark(gob.ngob.name, loc, gob.id, gob.rc, gob.rc.floor(tilesz).add(sessloc.tc), tex));
+                synchronized (ui.sess.glob.oc) {
+                    for (Gob gob : ui.sess.glob.oc) {
+                        if (tempMarkList.stream().noneMatch(m -> m.id == gob.id)) {
+                            BufferedImage tex = setTex(gob);
+                            MiniMap.Location loc = NUtils.getGameUI().mmap.curloc;
+                            if (tex != null && sessloc!=null) {
+                                tempMarkList.add(new TempMark(gob.ngob.name, loc, gob.id, gob.rc, gob.rc.floor(tilesz).add(sessloc.tc), tex));
+                            }
                         }
                     }
                 }

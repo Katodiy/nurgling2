@@ -1,31 +1,44 @@
 package nurgling.tasks;
 
 import haven.*;
+import haven.res.ui.stackinv.ItemStack;
 import nurgling.*;
+import nurgling.tools.NAlias;
+import nurgling.tools.NParser;
+import nurgling.tools.StackSupporter;
+import nurgling.tools.VSpec;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 
 public class GetNumberFreeCoord extends NTask
 {
+    private NInventory inv;
+    private Coord size;
+    private GItem item = null;
+    String name = null;
+
+    int multi = 1;
     public GetNumberFreeCoord(NInventory inv, Coord size)
     {
         this.inv = inv;
         this.size = size;
     }
 
-    public GetNumberFreeCoord(NInventory inv, GItem item)
-    {
+
+    public GetNumberFreeCoord(NInventory inv, GItem item) {
         this.inv = inv;
         this.item = item;
+        this.name = ((NGItem) item).name();
+        if (StackSupporter.isStackable(inv, name)) {
+            multi = StackSupporter.getMaxStackSize(name);
+        }
     }
 
     public GetNumberFreeCoord(NInventory inv, WItem item)
     {
         this(inv,item.item);
     }
-
-    NInventory inv;
-    Coord size;
-
-    GItem item = null;
 
     @Override
     public boolean check()
@@ -38,6 +51,7 @@ public class GetNumberFreeCoord extends NTask
                 size = new Coord(lc.y,lc.x);
             }
         freeCoord = inv.calcNumberFreeCoord(size);
+        freeCoord*=multi;
         return freeCoord>=0;
     }
 

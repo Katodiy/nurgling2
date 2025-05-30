@@ -70,10 +70,10 @@ public class Sheep extends Entry {
 	}
 	return(super.mousedown(c, button));
     }
-	public double rang() {
 
+	public double rang() {
 		SheepsHerd herd = SheepsHerd.getCurrent();
-		if(herd!=null) {
+		if(herd != null) {
 			double ql = (!herd.ignoreBD || ram) ? (q > (seedq - herd.breedingGap)) ? (q + seedq - herd.breedingGap) / 2. : q + ((seedq - herd.breedingGap) - q) * herd.coverbreed : q;
 			double m = ql * herd.meatq * meatq / 100.;
 			double qm = meat * herd.meatquan1 + ((meat > herd.meatquanth) ? ((meat - herd.meatquanth) * (herd.meatquan2 - herd.meatquan1)) : 0);
@@ -81,9 +81,10 @@ public class Sheep extends Entry {
 			double qmilk = milk * herd.milkquan1 + ((milk > herd.milkquanth) ? ((milk - herd.milkquanth) * (herd.milkquan2 - herd.milkquan1)) : 0);
 			double _wool = ql * herd.woolq * woolq / 100.;
 			double qwool = wool * herd.woolquan1 + ((wool > herd.woolquanth) ? ((wool - herd.woolquanth) * (herd.woolquan2 - herd.woolquan1)) : 0);
-			double hide = ql * herd.hideq * hideq / 100.;
-			double k_res = (m + qm + _milk + qmilk + _wool + qwool + hide);
-			return k_res == 0 ? ql : Math.round(k_res * 10) / 10.;
+			double hide = (herd.disable_q_percentage ? (herd.hideq * hideq) : (ql * herd.hideq * hideq / 100.));
+			double k_res = (herd.disable_q_percentage ? (hide) : (m + qm + _milk + qmilk + _wool + qwool + hide));
+			double result = k_res == 0 ? ql : Math.round(k_res * 10) / 10.;
+			return result;
 		}
 		return 0;
 	}

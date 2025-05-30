@@ -56,26 +56,36 @@ public class NBotsMenu extends Widget
         NLayout farming = new NLayout("farming");
         farming.elements.add(new NButton("turnip", new TurnipsFarmer()));
         farming.elements.add(new NButton("carrot", new CarrotFarmer()));
+        farming.elements.add(new NButton("beetroot", new BeetrootFarmer(), true));
+        farming.elements.add(new NButton("red_onion", new RedOnionFarmer(), true));
+        farming.elements.add(new NButton("yellow_onion", new YellowOnionFarmer(), true));
+        farming.elements.add(new NButton("garlic", new GarlicFarmer(), true));
+
         farming.elements.add(new NButton("hemp", new HempFarmer(), true));
         farming.elements.add(new NButton("flax", new FlaxFarmer(), true));
+        farming.elements.add(new NButton("lettuce", new LettuceFarmer(), true));
+
+        farming.elements.add(new NButton("barley", new BarleyFarmer(), true));
+        farming.elements.add(new NButton("millet", new MilletFarmer(), true));
+        farming.elements.add(new NButton("wheat", new WheatFarmer(), true));
+
+        farming.elements.add(new NButton("poppy", new PoppyFarmer(), true));
+        farming.elements.add(new NButton("pipeweed", new PipeweedFarmer(), true));
+
         farming.elements.add(new NButton("goats", new GoatsAction()));
         farming.elements.add(new NButton("sheeps", new SheepsAction()));
         farming.elements.add(new NButton("pigs", new PigsAction()));
         farming.elements.add(new NButton("horses", new HorsesAction()));
         farming.elements.add(new NButton("cows", new nurgling.actions.bots.CowsAction()));
-        farming.elements.add(new NButton("barley", new BarleyFarmer(), true));
-//        farming.elements.add(new NButton("barley", new BarleyFarmerBarrels(), true));
-        farming.elements.add(new NButton("millet", new MilletFarmer(), true));
-        farming.elements.add(new NButton("wheat", new WheatFarmer(), true));
-        farming.elements.add(new NButton("poppy", new PoppyFarmer(), true));
-        farming.elements.add(new NButton("bee", new HoneyAndWaxCollector(), true));
+
         farming.elements.add(new NButton("chicken", new KFC(), true));
+        farming.elements.add(new NButton("bee", new HoneyAndWaxCollector(), true));
         addLayout(farming);
         NLayout utils = new NLayout("utils");
         utils.elements.add(new NButton("tsacks", new EquipTSacks()));
         utils.elements.add(new NButton("shieldsword", new EquipShieldSword()));
         utils.elements.add(new NButton("filwater", new FillWaterskins(false)));
-        utils.elements.add(new NButton("unbox", new FreeContainersInArea(), true));
+        utils.elements.add(new NButton("unbox", new FreeContainersInArea(), false));
         utils.elements.add(new NButton("water_cheker", new CheckWater()));
         utils.elements.add(new NButton("clay_cheker", new CheckClay(), true));
         utils.elements.add(new NButton("clover", new FeedClover(), true));
