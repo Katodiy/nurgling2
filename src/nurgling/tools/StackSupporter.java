@@ -66,8 +66,7 @@ public class StackSupporter {
         size3.add("Clay");
         size3.add("Casting Material");
         size3.add("Glass");
-        size3.add("Hide Fresh");
-        size3.add("Prepared Animal Hide");
+
         size3.add("Board");
         size3.add("Block of Wood");
         size3.add("Ore");
@@ -82,6 +81,11 @@ public class StackSupporter {
         size3.add("Dried Fish");
         size3.add("Medicine");
         catSize.put(size3,3);
+
+        HashSet<String> size4 = new HashSet<>();
+        size4.add("Hide Fresh");
+        size4.add("Prepared Animal Hide");
+        catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
         size5.add("Feather");
