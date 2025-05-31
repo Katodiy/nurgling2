@@ -4,6 +4,7 @@ import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
 import haven.MCache;
+import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
@@ -43,7 +44,10 @@ public class RouteAutoRecorder implements Runnable {
                 running = false;
             }
 
-            if (!running) break;
+            if (!running) {
+                NConfig.needRoutesUpdate();
+                break;
+            }
 
             Gob gob = null;
 

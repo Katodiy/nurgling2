@@ -14,7 +14,7 @@ public class RoutePoint {
     public long gridId;
     public Coord localCoord;
 
-    private ArrayList<Integer> neighbors = new ArrayList<>();
+    private HashSet<Integer> neighbors = new HashSet<>();
     private Map<Integer, Connection> connections = new HashMap<>();
     private ArrayList<Integer> reachableAreas = new ArrayList<>();
 
