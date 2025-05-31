@@ -2,24 +2,20 @@
 package haven.res.ui.croster;
 
 import haven.*;
-import haven.render.*;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.*;
-import java.util.function.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import haven.MenuGrid.Pagina;
+import haven.Text.Foundry;
 import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.gfx.hud.rosters.goat.Goat;
 import haven.res.gfx.hud.rosters.horse.Horse;
 import haven.res.gfx.hud.rosters.pig.Pig;
 import haven.res.gfx.hud.rosters.sheep.Sheep;
 import nurgling.NStyle;
-import nurgling.NUtils;
-import nurgling.widgets.NKinSettings;
 import nurgling.widgets.settings.*;
 
-import java.awt.Color;
-import java.awt.image.BufferedImage;
 
 @haven.FromResource(name = "ui/croster", version = 75)
 public abstract class CattleRoster <T extends Entry> extends Widget {
@@ -35,6 +31,9 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
     public Comparator<? super T> order = namecmp;
     public Column mousecol, ordercol;
     public boolean revorder;
+	public Label lcounter;
+	private final AtomicInteger selectedCounter = new AtomicInteger();
+	public static final Text.Foundry textf = new Foundry(Text.sans, 16).aa(true);
 
 	ICheckBox settings;
 	final Coord shift = UI.scale(16,5);
@@ -55,6 +54,9 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 		    for(Entry entry : this.entries.values())
 			entry.mark.set(false);
 		}), prev.pos("ur").adds(5, 0));
+	lcounter = add(new Label(Integer.toString(selectedCounter.get()), textf), prev.pos("ur").adds(5, 10));
+	prev = lcounter;
+
 	adda(new Button(UI.scale(150), "Remove selected", false).action(() -> {
 	    Collection<Object> args = new ArrayList<>();
 	    for(Entry entry : this.entries.values()) {
@@ -62,6 +64,8 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 		    args.add(entry.id);
 	    }
 	    wdgmsg("rm", args.toArray(new Object[0]));
+		selectedCounter.addAndGet(-args.size());
+		lcounter.settext(Integer.toString(selectedCounter.get()));
 	}), entrycont.pos("br").adds(0, 5), 1, 0);
 	add(settings = new ICheckBox(NStyle.settingsi[0], NStyle.settingsi[1], NStyle.settingsi[2], NStyle.settingsi[3])
 	{
@@ -173,6 +177,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 				if(pset!=null)
 					a = pset.visible;
 			}
+			lcounter.settext(Integer.toString(selectedCounter.get()));
 			super.tick(dt);
 		}
 	}, new Coord(sz.x - NStyle.settingsi[0].sz().x / 2, NStyle.settingsi[0].sz().y / 2).sub(shift));
@@ -250,6 +255,9 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 		g.chcolor();
 	    }
 	    Tex head = col.head();
+		if (col.equals(cols().get(0))) {
+			head = CharWnd.attrf.render("Name " + entries.size()).tex();
+		}
 	    g.aimage(head, new Coord(col.x + (col.w / 2), HEADH / 2), 0.5, 0.5);
 	    prev = col;
 	}
@@ -295,6 +303,12 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	sb.ch(amount * UI.scale(15));
 	return(true);
     }
+
+	public void selected(boolean a) {
+		if (a) selectedCounter.incrementAndGet();
+		else selectedCounter.decrementAndGet();
+		lcounter.settext(Integer.toString(selectedCounter.get()));
+	}
 
     public Object tooltip(Coord c, Widget prev) {
 	if(mousecol != null)

@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.function.*;
 import haven.MenuGrid.Pagina;
 import nurgling.NStyle;
+import nurgling.widgets.NCheckBox;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -46,13 +47,13 @@ public class Entry extends Widget {
     public int grp;
     public double q;
     public int idx;
-    public CheckBox mark;
+    public NCheckBox mark;
 
     public Entry(Coord sz, UID id, String name) {
 	super(sz);
 	this.id = id;
 	this.name = name;
-	this.mark = adda(new CheckBox(""), UI.scale(5), sz.y / 2, 0, 0.5);
+	this.mark = adda(new NCheckBox("", this::selected, false), UI.scale(5), sz.y / 2, 0, 0.5);
     }
 
     protected void drawbg(GOut g) {
@@ -88,6 +89,10 @@ public class Entry extends Widget {
 	    return(true);
 	getparent(CattleRoster.class).wdgmsg("click", id, button, ui.modflags(), ui.mc);
 	return(true);
+    }
+
+    public void selected(boolean a) {
+        getparent(CattleRoster.class).selected(a);
     }
 
     public <T extends Entry> void markall(Class<T> type, Predicate<? super T> p) {
