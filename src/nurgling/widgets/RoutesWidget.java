@@ -7,6 +7,7 @@ import nurgling.*;
 import nurgling.actions.bots.RouteAutoRecorder;
 import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.routes.Route;
+import nurgling.routes.RouteGraphManager;
 import nurgling.routes.RoutePoint;
 
 import javax.swing.*;
@@ -321,10 +322,11 @@ public class RoutesWidget extends Window {
         }
 
         public void deleteSelectedRoute() {
-            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().remove(routeList.sel.route.id);
+            RouteGraphManager routeGraphManager = ((NMapView) NUtils.getGameUI().map).routeGraphManager;
+            routeGraphManager.deleteRoute(routeList.sel.route);
             NConfig.needRoutesUpdate();
             showRoutes();
-            if (((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().isEmpty()) {
+            if (routeGraphManager.getRoutes().isEmpty()) {
                 actionContainer.hide();
                 waypointList.hide();
             }
@@ -451,7 +453,7 @@ public class RoutesWidget extends Window {
             // Check all connections for door and gobName information
             for (int neighborHash : routePoint.getConnectedNeighbors()) {
                 RoutePoint.Connection conn = routePoint.getConnection(neighborHash);
-                if (conn != null) {
+                if (conn != null && conn.gobHash != null) {
                     if (!conn.gobName.isEmpty()) {
                         displayText = conn.gobName + " " + routePoint.id;
                     }

@@ -15,7 +15,7 @@ public class RoutePoint {
     public Coord localCoord;
 
     private ArrayList<Integer> neighbors = new ArrayList<>();
-    private Map<Integer, Connection> connections = new HashMap<>();
+    public Map<Integer, Connection> connections = new HashMap<>();
     private ArrayList<Integer> reachableAreas = new ArrayList<>();
 
     public class Connection {
@@ -123,6 +123,10 @@ public class RoutePoint {
             }
         }
         return null;
+    }
+
+    public ArrayList<Connection> getConnections() {
+        return new ArrayList<>(this.connections.values());
     }
 
     @Override
