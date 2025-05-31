@@ -41,6 +41,7 @@ public class Text implements Disposable {
     public static final Font sans  = new Font("Sans", Font.PLAIN, 10);
     public static final Font mono  = new Font("Monospaced", Font.PLAIN, 10);
 	public static final Font fraktur = Resource.local().loadwait("ui/fraktur").flayer(Resource.Font.class).font;
+//	public static final Font roboto = Resource.local().loadwait("nurgling/font/helvetica").flayer(Resource.Font.class).font;
     public static final Font dfont = sans;
     public static final Foundry std;
     public final BufferedImage img;
@@ -50,7 +51,7 @@ public class Text implements Disposable {
     public static final Color white = Color.WHITE;
 	
     static {
-	std = new Foundry(sans, 10);
+	std = new Foundry(fraktur, 10);
     }
 	
     public static abstract class Slug extends Text {

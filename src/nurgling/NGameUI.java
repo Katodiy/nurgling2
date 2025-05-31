@@ -65,6 +65,8 @@ public class NGameUI extends GameUI
         add(routespec = new RouteSpecialization());
         routespec.hide();
         add(biw = new BotsInterruptWidget());
+
+        add(new NSettingsWindow());
     }
 
     @Override

@@ -28,7 +28,7 @@ public class AutoChooser implements Action
             NUtils.getUI().core.enableBotMod();
             NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
             ArrayList<WItem> items = inv.getItems(item);
-            if (items.size() > 0)
+            if (!items.isEmpty())
                 ((Window) inv.parent).disable();
             for (WItem item : items)
             {
