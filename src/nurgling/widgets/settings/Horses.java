@@ -23,8 +23,8 @@ public class Horses extends Window {
     CheckBox ic;
     CheckBox dk;
     CheckBox ignorebd;
-
-    String current;
+    CheckBox ignoreqp;
+    
     public Horses() {
         super(new Coord(100,100), "Horses Herds");
         prev = els = add(new NEntryListSet(HorseHerd.getKeySet()) {
@@ -49,6 +49,8 @@ public class Horses extends Window {
                     stam2.setVal(gh.stam2);
                     ic.set(gh.ignoreChildren);
                     dk.set(gh.disable_killing);
+                    ignorebd.set(gh.ignoreBD);
+                    ignoreqp.set(gh.disable_q_percentage);
                 }
             }
             @Override
@@ -72,8 +74,10 @@ public class Horses extends Window {
                     gh.stam1 = stam1.get();
                     gh.stamth = stamth.get();
                     gh.stam2 = stam2.get();
-                    gh.ignoreChildren = ic.a;
                     gh.disable_killing = dk.a;
+                    gh.ignoreBD = ignorebd.a;
+                    gh.ignoreChildren = ic.a;
+                    gh.disable_q_percentage = ignoreqp.a;
                 }
                 HorseHerd.set(gh);
             }
@@ -94,6 +98,10 @@ public class Horses extends Window {
                 stam1.setVal(gh.stam1);
                 stamth.setVal(gh.stamth);
                 stam2.setVal(gh.stam2);
+                ic.set(gh.ignoreChildren);
+                dk.set(gh.disable_killing);
+                ignorebd.set(gh.ignoreBD);
+                ignoreqp.set(gh.disable_q_percentage);
                 HorseHerd.setCurrent(name.text());
             }
 
@@ -128,9 +136,17 @@ public class Horses extends Window {
             }
         }, prev.pos("bl").add(0, UI.scale(5))));
 
+        ignoreqp = (CheckBox)(prev = add (new CheckBox("Ignore quality for % score") {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+            }
+        }, prev.pos("bl").add(0, UI.scale(5))));
+
         if(HorseHerd.getCurrent()!=null) {
             ignorebd.set(HorseHerd.getCurrent().ignoreBD);
             dk.set(HorseHerd.getCurrent().disable_killing);
+            ignoreqp.set(HorseHerd.getCurrent().disable_q_percentage);
             ic.set(HorseHerd.getCurrent().ignoreChildren);
         }
 

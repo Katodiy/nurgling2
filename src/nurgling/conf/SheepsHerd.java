@@ -13,6 +13,7 @@ public class SheepsHerd implements JConf {
     public boolean ignoreChildren = false;
     public boolean ignoreBD = false;
     public boolean disable_killing = false;
+    public boolean disable_q_percentage = false;
     public int adultSheeps = 4;
     public int breedingGap = 10;
     public double milkq = 1.5;
@@ -67,6 +68,8 @@ public class SheepsHerd implements JConf {
             ignoreBD = (Boolean) values.get("bd");
         if (values.get("dk") != null)
             disable_killing = (Boolean) values.get("dk");
+        if (values.get("qp") != null)
+            disable_q_percentage = (Boolean) values.get("qp");
         if (values.get("coverbreed") != null)
             coverbreed = ((Number) values.get("coverbreed")).doubleValue();
         if (values.get("woolquan1") != null)
@@ -139,29 +142,30 @@ public class SheepsHerd implements JConf {
     @Override
     public JSONObject toJson()
     {
-        JSONObject jGoatsHerd = new JSONObject();
-        jGoatsHerd.put("type", "SheepsHerd");
-        jGoatsHerd.put("name", name);
-        jGoatsHerd.put("adult_count", adultSheeps);
-        jGoatsHerd.put("breading_gap", breedingGap);
-        jGoatsHerd.put("mq", milkq);
-        jGoatsHerd.put("meatq", meatq);
-        jGoatsHerd.put("hideq", hideq);
-        jGoatsHerd.put("milkquan1", milkquan1);
-        jGoatsHerd.put("milkquan2", milkquan2);
-        jGoatsHerd.put("milkquanth", milkquanth);
-        jGoatsHerd.put("meatquan1", meatquan1);
-        jGoatsHerd.put("meatquan2", meatquan2);
-        jGoatsHerd.put("meatquanth", meatquanth);
-        jGoatsHerd.put("ic", ignoreChildren);
-        jGoatsHerd.put("bd", ignoreBD);
-        jGoatsHerd.put("dk", disable_killing);
-        jGoatsHerd.put("woolquan1", woolquan1);
-        jGoatsHerd.put("woolquan2", woolquan2);
-        jGoatsHerd.put("woolquanth", woolquanth);
-        jGoatsHerd.put("wq", woolq);
-        jGoatsHerd.put("coverbreed", coverbreed);
-        return jGoatsHerd;
+        JSONObject jSheepsHerd = new JSONObject();
+        jSheepsHerd.put("type", "SheepsHerd");
+        jSheepsHerd.put("name", name);
+        jSheepsHerd.put("adult_count", adultSheeps);
+        jSheepsHerd.put("breading_gap", breedingGap);
+        jSheepsHerd.put("mq", milkq);
+        jSheepsHerd.put("meatq", meatq);
+        jSheepsHerd.put("hideq", hideq);
+        jSheepsHerd.put("milkquan1", milkquan1);
+        jSheepsHerd.put("milkquan2", milkquan2);
+        jSheepsHerd.put("milkquanth", milkquanth);
+        jSheepsHerd.put("meatquan1", meatquan1);
+        jSheepsHerd.put("meatquan2", meatquan2);
+        jSheepsHerd.put("meatquanth", meatquanth);
+        jSheepsHerd.put("ic", ignoreChildren);
+        jSheepsHerd.put("bd", ignoreBD);
+        jSheepsHerd.put("dk", disable_killing);
+        jSheepsHerd.put("qp", disable_q_percentage);
+        jSheepsHerd.put("woolquan1", woolquan1);
+        jSheepsHerd.put("woolquan2", woolquan2);
+        jSheepsHerd.put("woolquanth", woolquanth);
+        jSheepsHerd.put("wq", woolq);
+        jSheepsHerd.put("coverbreed", coverbreed);
+        return jSheepsHerd;
     }
 
     public static SheepsHerd get(String val)

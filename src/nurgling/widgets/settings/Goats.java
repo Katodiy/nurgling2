@@ -27,8 +27,8 @@ public class Goats extends Window {
     CheckBox ic;
     CheckBox dk;
     CheckBox ignorebd;
+    CheckBox ignoreqp;
 
-    String current;
     public Goats() {
         super(new Coord(100,100), "Goats Herds");
         prev = els = add(new NEntryListSet(GoatsHerd.getKeySet()) {
@@ -56,6 +56,8 @@ public class Goats extends Window {
                     milk2.setVal(gh.milkquan2);
                     ic.set(gh.ignoreChildren);
                     dk.set(gh.disable_killing);
+                    ignorebd.set(gh.ignoreBD);
+                    ignoreqp.set(gh.disable_q_percentage);
                 }
             }
             @Override
@@ -79,6 +81,10 @@ public class Goats extends Window {
                     gh.woolquan1 = woolq1.get();
                     gh.woolquan2 = woolq2.get();
                     gh.woolquanth = woolqth.get();
+                    gh.disable_killing = dk.a;
+                    gh.ignoreBD = ignorebd.a;
+                    gh.ignoreChildren = ic.a;
+                    gh.disable_q_percentage = ignoreqp.a;
 
                 }
                 GoatsHerd.set(gh);
@@ -103,6 +109,10 @@ public class Goats extends Window {
                 woolq1.setVal(gh.woolquan1);
                 woolq2.setVal(gh.woolquan2);
                 woolqth.setVal(gh.woolquanth);
+                ic.set(gh.ignoreChildren);
+                dk.set(gh.disable_killing);
+                ignorebd.set(gh.ignoreBD);
+                ignoreqp.set(gh.disable_q_percentage);
                 GoatsHerd.setCurrent(name.text());
             }
 
@@ -137,9 +147,17 @@ public class Goats extends Window {
             }
         }, prev.pos("bl").add(0, UI.scale(5))));
 
+        ignoreqp = (CheckBox)(prev = add (new CheckBox("Ignore quality for % score") {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+            }
+        }, prev.pos("bl").add(0, UI.scale(5))));
+
         if(GoatsHerd.getCurrent()!=null) {
             ignorebd.set(GoatsHerd.getCurrent().ignoreBD);
             dk.set(GoatsHerd.getCurrent().disable_killing);
+            ignoreqp.set(GoatsHerd.getCurrent().disable_q_percentage);
             ic.set(GoatsHerd.getCurrent().ignoreChildren);
         }
 

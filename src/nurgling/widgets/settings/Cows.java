@@ -3,10 +3,6 @@ package nurgling.widgets.settings;
 import haven.*;
 import nurgling.conf.CowsHerd;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-
 public class Cows extends Window {
     NEntryListSet els;
     NSettinsSetI totalAdult;
@@ -25,8 +21,8 @@ public class Cows extends Window {
     CheckBox ic;
     CheckBox dk;
     CheckBox ignorebd;
+    CheckBox ignoreqp;
 
-    String current;
     public Cows() {
         super(new Coord(100,100), "Cows Herds");
         prev = els = add(new NEntryListSet(CowsHerd.getKeySet()) {
@@ -50,6 +46,8 @@ public class Cows extends Window {
                     milk2.setVal(gh.milkquan2);
                     ic.set(gh.ignoreChildren);
                     dk.set(gh.disable_killing);
+                    ignorebd.set(gh.ignoreBD);
+                    ignoreqp.set(gh.disable_q_percentage);
                 }
             }
             @Override
@@ -69,6 +67,10 @@ public class Cows extends Window {
                     gh.milkquan1 = milk1.get();
                     gh.milkquanth = milkth.get();
                     gh.milkquan2 = milk2.get();
+                    gh.disable_killing = dk.a;
+                    gh.ignoreBD = ignorebd.a;
+                    gh.ignoreChildren = ic.a;
+                    gh.disable_q_percentage = ignoreqp.a;
                 }
                 CowsHerd.set(gh);
             }
@@ -88,6 +90,10 @@ public class Cows extends Window {
                 milk1.setVal(gh.milkquan1);
                 milkth.setVal(gh.milkquanth);
                 milk2.setVal(gh.milkquan2);
+                ic.set(gh.ignoreChildren);
+                dk.set(gh.disable_killing);
+                ignorebd.set(gh.ignoreBD);
+                ignoreqp.set(gh.disable_q_percentage);
                 CowsHerd.setCurrent(name.text());
             }
 
@@ -122,7 +128,15 @@ public class Cows extends Window {
             }
         }, prev.pos("bl").add(0, UI.scale(5))));
 
+        ignoreqp = (CheckBox)(prev = add (new CheckBox("Ignore quality for % score") {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+            }
+        }, prev.pos("bl").add(0, UI.scale(5))));
+
         if(CowsHerd.getCurrent()!=null) {
+            ignoreqp.set(CowsHerd.getCurrent().disable_q_percentage);
             ignorebd.set(CowsHerd.getCurrent().ignoreBD);
             dk.set(CowsHerd.getCurrent().disable_killing);
             ic.set(CowsHerd.getCurrent().ignoreChildren);

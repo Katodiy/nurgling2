@@ -13,6 +13,7 @@ public class GoatsHerd implements JConf {
     public boolean ignoreChildren = false;
     public boolean ignoreBD = false;
     public boolean disable_killing = false;
+    public boolean disable_q_percentage = false;
     public int adultGoats = 4;
     public int breedingGap = 10;
     public double milkq = 1.5;
@@ -67,6 +68,8 @@ public class GoatsHerd implements JConf {
             ignoreBD = (Boolean) values.get("bd");
         if (values.get("dk") != null)
             disable_killing = (Boolean) values.get("dk");
+        if (values.get("qp") != null)
+            disable_q_percentage = (Boolean) values.get("qp");
         if (values.get("coverbreed") != null)
             coverbreed = ((Number) values.get("coverbreed")).doubleValue();
         if (values.get("woolquan1") != null)
@@ -156,6 +159,7 @@ public class GoatsHerd implements JConf {
         jGoatsHerd.put("ic", ignoreChildren);
         jGoatsHerd.put("bd", ignoreBD);
         jGoatsHerd.put("dk", disable_killing);
+        jGoatsHerd.put("qp", disable_q_percentage);
         jGoatsHerd.put("woolquan1", woolquan1);
         jGoatsHerd.put("woolquan2", woolquan2);
         jGoatsHerd.put("woolquanth", woolquanth);

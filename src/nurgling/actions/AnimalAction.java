@@ -25,10 +25,13 @@ public class AnimalAction <C extends Entry> implements Action {
             throws InterruptedException {
         NArea current = NArea.findSpec(this.type);
         if(current==null)
-            return Results.ERROR("NO ANIMAL AREA");
+            return Results.ERROR("No animal area set. (Sheeps, Cows, Pigs, Goats in area specialization)");
 
         RosterWindow w = NUtils.getRosterWindow(cattleRoster);
-        ArrayList<Gob> gobs = Finder.findGobs(current,animal);
+        ArrayList<Gob> gobs = Finder.findGobs(current, animal);
+        if(gobs.isEmpty()){
+            return Results.ERROR("Area (" + animal.getDefault() + ") has no animals. Check that it covers animals pen.");
+        }
         ArrayList<Gob> targets = new ArrayList<>();
 
         while(memorize(gobs,gui,w,cattleRoster));
