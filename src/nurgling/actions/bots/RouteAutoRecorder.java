@@ -4,8 +4,10 @@ import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
 import haven.MCache;
+import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.routes.Route;
+import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.Finder;
@@ -148,11 +150,57 @@ public class RouteAutoRecorder implements Runnable {
                     RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
                     RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
 
-                    // Add connections between them
-                    lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
+                    RouteGraph graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
 
-                    // Add connection for the arch
-                    newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
+                    // Completely new door
+                    if(!graph.getDoors().containsKey(hash) && !graph.getDoors().containsKey(arch.ngob.hash)) {
+                        // Add connections between them
+                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
+                        // Add connection for the arch
+                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
+                    } else if (graph.getDoors().containsKey(hash) && graph.getDoors().containsKey(arch.ngob.hash)) {
+                        // Already existing door with less than 2 elements in the route. We've just started recording
+                        // before the door and entered the door. We need to simply swap points to existing points.
+//                        if (route.waypoints.size() <= 2) {
+                            route.waypoints.set(route.waypoints.size() - 1, graph.getDoors().get(arch.ngob.hash));
+                            route.waypoints.set(route.waypoints.size() - 2, graph.getDoors().get(hash));
+
+//                        } else {
+//                            // Already existing door with more than 2 elements in the route. We've started recording
+//                            // more than 1 point before the door so we have to swap the points but also connect the
+//                            // outside point to the rest of the route
+//                            graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
+//                            RoutePoint existingOutsideRoutePoint = graph.getDoors().get(hash);
+//
+//                            if(!route.waypoints.get(route.waypoints.size() - 3).connections.keySet().stream().toList().contains(existingOutsideRoutePoint.id)) {
+//                                route.waypoints.get(route.waypoints.size() - 3).addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), "", "", false);
+//                            }
+//                            if(!existingOutsideRoutePoint.connections.keySet().stream().toList().contains(route.waypoints.get(route.waypoints.size() - 3).id)) {
+//                                existingOutsideRoutePoint.addConnection(route.waypoints.get(route.waypoints.size() - 3).id, String.valueOf(route.waypoints.get(route.waypoints.size() - 3).id), "", "", false);
+//                            }
+//
+//                            route.waypoints.set(route.waypoints.size() - 1, graph.getDoors().get(arch.ngob.hash));
+//                            route.waypoints.set(route.waypoints.size() - 2, existingOutsideRoutePoint);
+//                        }
+                    } else if (graph.getDoors().containsKey(hash)) {
+                        // Entering a new door right after an existing door. We need to swap out the outside
+                        // door and create a new door point on the inside. We then connect the points the same way we
+                        // always do.
+                        if (route.waypoints.size() <= 2) {
+                            route.waypoints.set(route.waypoints.size() - 2, graph.getDoors().get(hash));
+                            newWaypoint.addConnection(graph.getDoors().get(hash).id, String.valueOf(graph.getDoors().get(hash).id), arch.ngob.hash, arch.ngob.name, true);
+                        } else {
+                            // This is the case when the route recording started more than one point before the door.
+                            RoutePoint existingOutsideRoutePoint = graph.getDoors().get(hash);
+
+                            route.waypoints.get(route.waypoints.size() - 3).addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), "", "", false);
+                            existingOutsideRoutePoint.addConnection(route.waypoints.get(route.waypoints.size() - 3).id, String.valueOf(route.waypoints.get(route.waypoints.size() - 3).id), "", "", false);
+                            route.waypoints.set(route.waypoints.size() - 2, existingOutsideRoutePoint);
+
+                            // Add connection for the arch
+                            newWaypoint.addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), arch.ngob.hash, arch.ngob.name, true);
+                        }
+                    }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -185,6 +233,7 @@ public class RouteAutoRecorder implements Runnable {
                 route.addWaypoint();
             }
 
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateGraph();
             route.lastAction = null;
         }
     }

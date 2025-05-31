@@ -72,7 +72,7 @@ public class RoutePointNavigator implements Action {
 
             Coord2d target = path.get(i).toCoord2d(gui.map.glob.map);
             if (target == null) {
-                gui.error(String.format("Target coord %s is null", path.get(i)));
+                gui.error(String.format("Target coord %s is null", path.get(i).id));
                 continue;
             }
 
@@ -85,7 +85,7 @@ public class RoutePointNavigator implements Action {
             // Handle door closing
             if(previousPoint != null) {
                 RoutePoint.Connection prevConn = currentPoint.getConnection(previousPoint.id);
-                if(prevConn != null && prevConn.isDoor) {
+                if(prevConn != null && prevConn.isDoor && previousPoint.toCoord2d(gui.map.glob.map) != null) {
                     Gob gob = Finder.findGob(prevConn.gobHash);
                     if(gob != null && !GateDetector.isGobDoor(gob) && GateDetector.isDoorOpen(gob)) {
                         NUtils.openDoorOnAGob(gui, gob);
@@ -124,8 +124,6 @@ public class RoutePointNavigator implements Action {
 
         return Results.SUCCESS();
     }
-
-
 
     private boolean needToPassDoor(RoutePoint.Connection conn, RoutePoint nextPoint, NGameUI gui) {
         Gob gob = Finder.findGob(conn.gobHash);

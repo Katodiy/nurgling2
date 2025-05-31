@@ -15,9 +15,11 @@ public class RouteGraph {
     private final int MAX_DISTANCE_FOR_NEIGHBORS = 250;
     private final Map<Integer, RoutePoint> points = new HashMap<>();
     private final Map<Long, ArrayList<RoutePoint>> pointsByGridId = new HashMap<>();
+    private final Map<String, RoutePoint> doors = new HashBMap<>();
 
     public void addRoute(Route route) {
         for (RoutePoint point : route.waypoints) {
+            generateDoors(point);
             points.put(point.id, point);
             pointsByGridId.computeIfAbsent(point.gridId, k -> new ArrayList<>()).add(point);
         }
@@ -226,6 +228,14 @@ public class RouteGraph {
         return path;
     }
 
+    public void generateDoors(RoutePoint routePoint) {
+        for(RoutePoint.Connection connection : routePoint.getConnections()) {
+            if(connection.isDoor && !doors.containsKey(connection.gobHash)) {
+                doors.put(connection.gobHash, routePoint);
+            }
+        }
+    }
+
     public Collection<RoutePoint> getPoints() {
         synchronized (points) {
             return new ArrayList<>(points.values());
@@ -234,5 +244,13 @@ public class RouteGraph {
 
     public RoutePoint getPoint(Integer id) {
         return points.get(id);
+    }
+
+    public Map<String, RoutePoint> getDoors() {
+        return this.doors;
+    }
+
+    public void deleteDoor(String door) {
+        this.doors.remove(door);
     }
 }
