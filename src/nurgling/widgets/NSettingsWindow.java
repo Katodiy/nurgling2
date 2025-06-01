@@ -4,6 +4,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.widgets.nsettings.Fonts;
 import nurgling.widgets.nsettings.Panel;
+import nurgling.widgets.nsettings.World;
 
 import java.util.*;
 
@@ -12,6 +13,7 @@ public class NSettingsWindow extends Window {
     private static TexI rbtn = new TexI(Resource.loadsimg("nurgling/hud/buttons/right/u"));
     private static TexI dbtn = new TexI(Resource.loadsimg("nurgling/hud/buttons/down/u"));
     private final SettingsList list;
+    public World world;
     Widget container;
     private Panel currentPanel = null;
     private Button saveBtn, cancelBtn;
@@ -46,7 +48,10 @@ public class NSettingsWindow extends Window {
     private void fillSettings() {
         SettingsCategory general = new SettingsCategory("General", new Panel("General"), container);
         general.addChild(new SettingsItem("Fonts", new Fonts(), container));
+        SettingsCategory gameenvironment = new SettingsCategory("Game environment", new Panel("Game environment"), container);
+        gameenvironment.addChild(new SettingsItem("World",world = new World(), container));
         list.addCategory(general);
+        list.addCategory(gameenvironment);
     }
 
 

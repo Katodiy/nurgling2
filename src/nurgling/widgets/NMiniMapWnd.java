@@ -161,7 +161,8 @@ public class NMiniMapWnd extends Widget{
             case "natura": {
                 NConfig.set(NConfig.Key.hideNature,a);
                 NUtils.showHideNature();
-                ((OptWnd.NQolPanel)NUtils.getGameUI().opts.nqolwnd).qol_p.natura.a = !a;
+                NUtils.getGameUI().nsw.world.setNatureStatus(a);
+
                 break;
             }
             case "night": {
