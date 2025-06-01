@@ -57,7 +57,10 @@ public class RoutePoint {
     }
 
     public void addConnection(int neighborHash, String connectionTo, String gobHash, String gobName, boolean isDoor) {
-        connections.put(neighborHash, new Connection(connectionTo, gobHash, gobName, isDoor));
+        if(this.id != neighborHash) {
+            connections.put(neighborHash, new Connection(connectionTo, gobHash, gobName, isDoor));
+        }
+
     }
 
     public Connection getConnection(int neighborHash) {

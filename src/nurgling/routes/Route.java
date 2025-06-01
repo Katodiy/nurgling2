@@ -67,13 +67,29 @@ public class Route {
     public void addPredefinedWaypoint(RoutePoint routePoint, String doorHash, String doorName, boolean isDoor) {
         try {
             if(!waypoints.isEmpty()) {
-                RoutePoint lastRoutePoint = waypoints.get(waypoints.size() - 1);
-                routePoint.addNeighbor(lastRoutePoint.id);
-                lastRoutePoint.addNeighbor(routePoint.id);
+                RoutePoint existingWaypoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().getPoint(routePoint.id);
 
-                // Add connections between the points
-                routePoint.addConnection(lastRoutePoint.id, String.valueOf(lastRoutePoint.id), doorHash, doorName, isDoor);
-                lastRoutePoint.addConnection(routePoint.id, String.valueOf(routePoint.id), doorHash, doorName, isDoor);
+                routePoint = existingWaypoint != null ? existingWaypoint : routePoint;
+
+                RoutePoint lastRoutePoint = waypoints.get(waypoints.size() - 1);
+
+                // Add neighbors if they do not already exist.
+                if(!routePoint.getNeighbors().contains(lastRoutePoint.id)) {
+                    routePoint.addNeighbor(lastRoutePoint.id);
+                }
+
+                if(!lastRoutePoint.getNeighbors().contains(routePoint.id)) {
+                    lastRoutePoint.addNeighbor(routePoint.id);
+                }
+
+                // Add connections between the points if connections do not already exists
+                if(!routePoint.connections.containsKey(lastRoutePoint.id)) {
+                    routePoint.addConnection(lastRoutePoint.id, String.valueOf(lastRoutePoint.id), doorHash, doorName, isDoor);
+                }
+
+                if(!lastRoutePoint.connections.containsKey(routePoint.id)) {
+                    lastRoutePoint.addConnection(routePoint.id, String.valueOf(routePoint.id), doorHash, doorName, isDoor);
+                }
             }
 
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(routePoint);
