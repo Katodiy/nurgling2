@@ -6,39 +6,51 @@ import nurgling.widgets.nsettings.Fonts;
 import nurgling.widgets.nsettings.Panel;
 
 import java.util.*;
-import java.awt.Color;
 
 public class NSettingsWindow extends Window {
+
+    private static TexI rbtn = new TexI(Resource.loadsimg("nurgling/hud/buttons/right/u"));
+    private static TexI dbtn = new TexI(Resource.loadsimg("nurgling/hud/buttons/down/u"));
     private final SettingsList list;
     Widget container;
-    private Widget currentPanel = null;
+    private Panel currentPanel = null;
+    private Button saveBtn, cancelBtn;
+
     public NSettingsWindow() {
         super(UI.scale(800, 600), "Settings", true);
 
-        // Создаем контейнер для разделения на две части
         container = add(new Widget(Coord.z));
-
-        // Левая часть - список настроек
         list = add(new SettingsList(UI.scale(200, 580)), UI.scale(10, 10));
 
+        saveBtn = add(new Button(UI.scale(100), "Save") {
+            public void click() {
+                if(currentPanel != null) {
+                    currentPanel.save();
+                }
+            }
+        }, UI.scale(680, 560));
 
-        // Наполняем список демо-настройками
-        populateDemoSettings();
-        // Ресайз контейнера
+        cancelBtn = add(new Button(UI.scale(100), "Cancel") {
+            public void click() {
+                if(currentPanel != null) {
+                    currentPanel.load();
+                }
+            }
+        }, UI.scale(580, 560));
+
+        fillSettings();
         container.resize(UI.scale(800, 600));
-
-       // pack();
     }
 
 
-    private void populateDemoSettings() {
-        // Пример структуры настроек
-        SettingsCategory general = new SettingsCategory("General",new Panel("General"),container);
-        general.addChild(new SettingsItem("Fonts",new Fonts(),container));
+    private void fillSettings() {
+        SettingsCategory general = new SettingsCategory("General", new Panel("General"), container);
+        general.addChild(new SettingsItem("Fonts", new Fonts(), container));
         list.addCategory(general);
     }
 
-    // Класс для списка настроек
+
+
     private class SettingsList extends SListBox<SettingsItem, SettingsListItem> {
         public SettingsList(Coord sz) {
             super(sz, UI.scale(24));
@@ -46,7 +58,6 @@ public class NSettingsWindow extends Window {
 
         @Override
         protected List<? extends SettingsItem> items() {
-            // Возвращаем плоский список всех элементов с учетом иерархии
             List<SettingsItem> allItems = new ArrayList<>();
             for (SettingsItem item : categories) {
                 allItems.add(item);
@@ -73,7 +84,6 @@ public class NSettingsWindow extends Window {
         }
     }
 
-    // Класс для элемента списка настроек
     private class SettingsListItem extends SListWidget.ItemWidget<SettingsItem> {
         private final Text text;
 
@@ -81,13 +91,10 @@ public class NSettingsWindow extends Window {
         public SettingsListItem(SListWidget<SettingsItem, ?> list, Coord sz, SettingsItem item) {
             super(list, sz, item);
 
-            // Определяем отступ в зависимости от уровня вложенности
             int indent = item.getLevel() * UI.scale(15);
 
-            // Создаем текст с учетом отступа
             this.text = Text.render(item.getName());
 
-            // Если есть дети, добавляем кнопку раскрытия
             if (!item.getChildren().isEmpty()) {
                 add(new Button(UI.scale(20), "+"), indent, 0).action(() -> {
                     item.expanded = !item.expanded;
@@ -98,8 +105,10 @@ public class NSettingsWindow extends Window {
 
         @Override
         public void draw(GOut g) {
-            // Рисуем текст с отступом
-            int indent = item.getLevel() * UI.scale(15);
+            if(!item.getChildren().isEmpty()) {
+                g.image(item.expanded ? dbtn : rbtn, Coord.of(UI.scale(5), (sz.y - text.sz().y) / 2));
+            }
+            int indent = item.getLevel() * UI.scale(5);
             g.image(text.tex(), Coord.of(indent + UI.scale(25), (sz.y - text.sz().y) / 2));
         }
 
@@ -114,7 +123,6 @@ public class NSettingsWindow extends Window {
         }
     }
 
-    // Базовый класс для элемента настроек
     private static class SettingsItem {
         public Widget panel;
         private boolean expanded = false;
@@ -142,20 +150,18 @@ public class NSettingsWindow extends Window {
         }
     }
 
-    // Категория настроек (может содержать подкатегории)
     private static class SettingsCategory extends SettingsItem {
         public SettingsCategory(String name, Widget panel, Widget container) {
             super(name, panel, container);
         }
     }
 
-    // Метод для отображения выбранных настроек
     private void showSettings(SettingsItem item) {
-        if(currentPanel!=null)
+        if(currentPanel != null)
             currentPanel.hide();
-        currentPanel = item.panel;
+        currentPanel = (Panel)item.panel;
         currentPanel.show();
-
+        currentPanel.load();
     }
 
 

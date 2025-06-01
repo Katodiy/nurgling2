@@ -82,7 +82,7 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf
+        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, fonts
     }
 
 
@@ -150,6 +150,7 @@ public class NConfig
         conf.put(Key.tempmark, false);
         conf.put(Key.temsmarkdist, 4);
         conf.put(Key.temsmarktime, 3);
+        conf.put(Key.fonts, new FontSettings());
 
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
@@ -369,6 +370,7 @@ public class NConfig
                         case "NCarrierProp":
                             res.add(new NCarrierProp(obj));
                             break;
+
                         default:
                             res.add(obj);
                     }
@@ -410,6 +412,10 @@ public class NConfig
                             switch (type) {
                                 case "NLoginData":
                                     conf.put(Key.valueOf(entry.getKey()), new NLoginData(hobj));
+                                    break;
+                                case "FontSettings":
+                                    conf.put(Key.fonts, new FontSettings(hobj));
+                                    break;
                             }
                         }
                     } else if (Key.valueOf(entry.getKey()) != null && entry.getValue() instanceof ArrayList<?>) {

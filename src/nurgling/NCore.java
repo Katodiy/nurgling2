@@ -151,8 +151,7 @@ public class NCore extends Widget
 
     public NCore()
     {
-        config = new NConfig();
-        config.read();
+        config = MainFrame.config;
         mode = (Boolean) NConfig.get(NConfig.Key.show_drag_menu) ? Mode.DRAG : Mode.IDLE;
         mappingClient = new NMappingClient();
 

@@ -85,6 +85,9 @@ public class Tabs {
 	    old.hide();
 	if((curtab = tab) != null)
 	    curtab.show();
+	if(tab!=null) {
+		tab.resize(tab.contentsz());
+	}
 	changed(old, tab);
     }
 

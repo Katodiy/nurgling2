@@ -1,6 +1,9 @@
 package nurgling.overlays;
 
 import haven.*;
+import nurgling.NConfig;
+import nurgling.conf.FontSettings;
+import nurgling.widgets.nsettings.Fonts;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -10,8 +13,7 @@ public class NBarrelOverlay extends NObjectTexLabel
     String text = null;
 
 
-    public static final Font bsans  = new Font("Sans", Font.BOLD, 10);
-    private static final Text.Furnace active_title = new PUtils.BlurFurn(new Text.Foundry(bsans, 15, Color.YELLOW).aa(true), 2, 1, new Color(36, 25, 25));
+    private static final Text.Furnace active_title = new PUtils.BlurFurn(((FontSettings) NConfig.get(NConfig.Key.fonts)).getFoundary(Fonts.FontType.BARRELS).aa(true), 2, 1, new Color(36, 25, 25));
 
     Gob gob;
     public NBarrelOverlay(Owner owner)

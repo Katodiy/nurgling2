@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.NConfig;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -34,6 +36,7 @@ import java.util.*;
 import java.lang.reflect.*;
 
 public class MainFrame extends java.awt.Frame implements Console.Directory {
+	public static NConfig config;
     public static final Config.Variable<Boolean> initfullscreen = Config.Variable.propb("haven.fullscreen", false);
     public static final Config.Variable<String> renderer = Config.Variable.prop("haven.renderer", "jogl");
     public static final Config.Variable<Boolean> status = Config.Variable.propb("haven.status", false);
@@ -471,6 +474,8 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
     }
     
     public static void main(final String[] args) {
+	config = new NConfig();
+	config.read();
 	/* Set up the error handler as early as humanly possible. */
 	ThreadGroup g = new ThreadGroup("Haven main group");
 	String ed = Utils.getprop("haven.errorurl", "");
