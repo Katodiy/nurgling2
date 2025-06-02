@@ -44,14 +44,9 @@ public class RouteGraph {
                 boolean isReachable = PathFinder.isAvailable(waypointRelativeCoords, pointRelativeCoords, true);
                 if (distanceToAVisibleNode <= MAX_DISTANCE_FOR_NEIGHBORS && isReachable && waypoint.id != point.id) {
 
-                    // Add neighbors if they do not already exist.
-                    if(!waypoint.getNeighbors().contains(point.id)) {
-                        waypoint.addNeighbor(point.id);
-                    }
-
-                    if(!point.getNeighbors().contains(waypoint.id)) {
-                        point.addNeighbor(waypoint.id);
-                    }
+                    // Add neighbors
+                    waypoint.addNeighbor(point.id);
+                    point.addNeighbor(waypoint.id);
                     
                     // Add connections
                     waypoint.addConnection(point.id, String.valueOf(point.id), "", "", false);
@@ -207,7 +202,6 @@ public class RouteGraph {
             if(isReachable) {
                 point.addReachableArea(area.id);
             }
-            NConfig.needRoutesUpdate();
         }
     }
 
