@@ -204,6 +204,7 @@ public class RouteGraph {
             if(isReachable) {
                 point.addReachableArea(area.id);
             }
+            NConfig.needRoutesUpdate();
         }
     }
 

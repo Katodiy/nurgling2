@@ -46,7 +46,6 @@ public class StackSupporter {
         size3.add("Snail");
         size3.add("Clean Animal Carcass");
         size3.add("Edible Seashell");
-        size3.add("Poultry");
 
         size3.add("Candle");
         size3.add("Pearl");
@@ -102,6 +101,7 @@ public class StackSupporter {
         size5.add("Raw Horse");
         size5.add("Raw ");
         size5.add("Crab Meat");
+        size5.add("Poultry");
 
         catSize.put(size5,5);
     }
