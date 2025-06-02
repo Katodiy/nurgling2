@@ -75,21 +75,20 @@ public class Horse extends Entry {
     }
 
 	public double rang() {
-
-
 		HorseHerd herd = HorseHerd.getCurrent();
-		if(herd==null)
-			return 0;
-
-		double ql = (!herd.ignoreBD || stallion)?(q > (seedq - herd.breedingGap)) ? (q + seedq - herd.breedingGap) / 2. : q + ((seedq - herd.breedingGap) - q) * herd.coverbreed:q;
-		double m = ql * herd.meatq * meatq / 100.;
-		double qm = meat * herd.meatquan1 + ((meat > herd.meatquanth) ? ((meat - herd.meatquanth) * (herd.meatquan2 - herd.meatquan1)) : 0);
-		double _stam = stam * herd.stam1 + ((stam > herd.stamth) ? ((stam - herd.stamth) * (herd.stam2 - herd.stam1)) : 0);
-		double hide = ql * herd.hideq * hideq / 100.;
-		double _end = herd.enduran * end;
-		double _meta = herd.meta * mb;
-
-		return Math.round((m + qm + _stam + _meta + _end + hide) * 10) / 10.;
+		if(herd != null) {
+			double ql = (!herd.ignoreBD || stallion) ? (q > (seedq - herd.breedingGap)) ? (q + seedq - herd.breedingGap) / 2. : q + ((seedq - herd.breedingGap) - q) * herd.coverbreed : q;
+			double m = (herd.disable_q_percentage ? (herd.meatq * meatq) : (ql * herd.meatq * meatq / 100.));
+			double qm = meat * herd.meatquan1 + ((meat > herd.meatquanth) ? ((meat - herd.meatquanth) * (herd.meatquan2 - herd.meatquan1)) : 0);
+			double _stam = stam * herd.stam1 + ((stam > herd.stamth) ? ((stam - herd.stamth) * (herd.stam2 - herd.stam1)) : 0);
+			double hide = (herd.disable_q_percentage ? (herd.hideq * hideq) : (ql * herd.hideq * hideq / 100.));
+			double _end = herd.enduran * end;
+			double _meta = herd.meta * mb;
+			double k_res = m + qm + _stam + _end + _meta  + hide;
+			double result = k_res == 0 ? ql : Math.round(k_res * 10) / 10.;
+			return result;
+		}
+		return 0;
 	}
 }
 
