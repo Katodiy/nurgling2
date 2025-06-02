@@ -152,7 +152,6 @@ public class RouteAutoRecorder implements Runnable {
                     // Completely new door
                     if(!graph.getDoors().containsKey(hash) && !graph.getDoors().containsKey(arch.ngob.hash)) {
                         // Add new waypoint
-//                        route.addPredefinedWaypoint(predefinedWaypoint, "", "", false);
                         route.addPredefinedWaypointNoConnections(predefinedWaypoint);
 
                         // Get the last two waypoints
@@ -187,8 +186,6 @@ public class RouteAutoRecorder implements Runnable {
 
                                 RoutePoint firstPointToAdd = graph.getDoors().get(hash);
                                 RoutePoint secondPointToadd = graph.getDoors().get(arch.ngob.hash);
-//                                route.addPredefinedWaypoint(firstPointToAdd, arch.ngob.hash, arch.ngob.name, true);
-//                                route.addPredefinedWaypoint(secondPointToadd, hash, name, true);
 
                                 route.addPredefinedWaypointNoConnections(firstPointToAdd);
                                 route.addPredefinedWaypointNoConnections(secondPointToadd);
@@ -200,7 +197,6 @@ public class RouteAutoRecorder implements Runnable {
                             } else {
                                 RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
                                 RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
-//                                route.addPredefinedWaypoint(secondPointToadd, hash, name, true);
 
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
@@ -240,9 +236,6 @@ public class RouteAutoRecorder implements Runnable {
                                     firstPointToAdd.addConnection(route.waypoints.get(route.waypoints.size() - 3).id, String.valueOf(route.waypoints.get(route.waypoints.size() - 3).id), "", "", false);
                                 }
 
-//                                route.addPredefinedWaypoint(firstPointToAdd, arch.ngob.hash, arch.ngob.name, true);
-//                                route.addPredefinedWaypoint(secondPointToAdd, hash, name, true);
-
                                 route.addPredefinedWaypointNoConnections(firstPointToAdd);
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
@@ -252,7 +245,6 @@ public class RouteAutoRecorder implements Runnable {
                                 RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
                                 RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
 
-//                                route.addPredefinedWaypoint(secondPointToAdd, hash, name, true);
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
                                 existingOutsideRoutePoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
@@ -289,9 +281,6 @@ public class RouteAutoRecorder implements Runnable {
                                     firstPointToAdd.addConnection(route.waypoints.get(route.waypoints.size() - 3).id, String.valueOf(route.waypoints.get(route.waypoints.size() - 3).id), "", "", false);
                                 }
 
-//                                route.addPredefinedWaypoint(firstPointToAdd, arch.ngob.hash, arch.ngob.name, true);
-//                                route.addPredefinedWaypoint(secondPointToAdd, hash, name, true);
-
                                 route.addPredefinedWaypointNoConnections(firstPointToAdd);
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
@@ -301,7 +290,6 @@ public class RouteAutoRecorder implements Runnable {
                             } else {
                                 RoutePoint secondPointToAdd = predefinedWaypoint;
 
-//                                route.addPredefinedWaypoint(secondPointToAdd, hash, name, true);
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
                                 predefinedWaypoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
@@ -334,9 +322,6 @@ public class RouteAutoRecorder implements Runnable {
                                     firstPointToAdd.addConnection(route.waypoints.get(route.waypoints.size() - 2).id, String.valueOf(route.waypoints.get(route.waypoints.size() - 3).id), "", "", false);
                                 }
 
-//                                route.addPredefinedWaypoint(firstPointToAdd, arch.ngob.hash, arch.ngob.name, true);
-//                                route.addPredefinedWaypoint(secondPointToAdd, hash, name, true);
-
                                 route.addPredefinedWaypointNoConnections(firstPointToAdd);
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
@@ -345,8 +330,6 @@ public class RouteAutoRecorder implements Runnable {
                             } else {
                                 RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
                                 RoutePoint secondPointToAdd = predefinedWaypoint;
-
-//                                route.addPredefinedWaypoint(secondPointToAdd, hash, name, true);
 
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
