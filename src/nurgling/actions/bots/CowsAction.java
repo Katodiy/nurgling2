@@ -84,7 +84,9 @@ public class CowsAction implements Action {
             };
             if(CowsHerd.getCurrent()!=null) {
                 new AnimalAction<Ochs>(new NAlias("cattle"), "cows", comparator, Ochs.class, wpred, wlpred, CowsHerd.getCurrent().adultCows).run(gui);
+                gui.msg("Female cows cycle done!");
                 new AnimalAction<Ochs>(new NAlias("cattle"), "cows", comparator, Ochs.class, mpred, mlpred, 1).run(gui);
+                gui.msg("Male cows cycle done!");
             }
             else
             {

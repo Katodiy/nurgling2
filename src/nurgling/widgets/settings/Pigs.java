@@ -21,8 +21,8 @@ public class Pigs extends Window {
     CheckBox ic;
     CheckBox dk;
     CheckBox ignorebd;
+    CheckBox ignoreqp;
 
-    String current;
     public Pigs() {
         super(new Coord(100,100), "Pigs Herds");
         prev = els = add(new NEntryListSet(PigsHerd.getKeySet()) {
@@ -46,6 +46,7 @@ public class Pigs extends Window {
                     ic.set(gh.ignoreChildren);
                     dk.set(gh.disable_killing);
                     ignorebd.set(gh.ignoreBD);
+                    ignoreqp.set(gh.disable_q_percentage);
 
                 }
             }
@@ -68,6 +69,7 @@ public class Pigs extends Window {
                     gh.disable_killing = dk.a;
                     gh.ignoreBD = ignorebd.a;
                     gh.ignoreChildren = ic.a;
+                    gh.disable_q_percentage = ignoreqp.a;
 
                 }
                 PigsHerd.set(gh);
@@ -90,6 +92,7 @@ public class Pigs extends Window {
                 ic.set(gh.ignoreChildren);
                 dk.set(gh.disable_killing);
                 ignorebd.set(gh.ignoreBD);
+                ignoreqp.set(gh.disable_q_percentage);
                 PigsHerd.setCurrent(name.text());
             }
 
@@ -124,7 +127,16 @@ public class Pigs extends Window {
             }
         }, prev.pos("bl").add(0, UI.scale(5))));
 
+        ignoreqp = (CheckBox)(prev = add (new CheckBox("Ignore quality for % score") {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+            }
+        }, prev.pos("bl").add(0, UI.scale(5))));
+
+
         if(PigsHerd.getCurrent()!=null) {
+            ignoreqp.set(PigsHerd.getCurrent().disable_q_percentage);
             ignorebd.set(PigsHerd.getCurrent().ignoreBD);
             dk.set(PigsHerd.getCurrent().disable_killing);
             ic.set(PigsHerd.getCurrent().ignoreChildren);

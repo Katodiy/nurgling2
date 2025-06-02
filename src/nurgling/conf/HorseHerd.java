@@ -13,6 +13,7 @@ public class HorseHerd implements JConf {
     public boolean ignoreChildren = false;
     public boolean ignoreBD = false;
     public boolean disable_killing = false;
+    public boolean disable_q_percentage = false;
     public int adultHorse = 4;
     public int breedingGap = 10;
     public double stam1 = 1.5;
@@ -68,6 +69,8 @@ public class HorseHerd implements JConf {
             ignoreBD = (Boolean) values.get("bd");
         if (values.get("dk") != null)
             disable_killing = (Boolean) values.get("dk");
+        if (values.get("qp") != null)
+            disable_q_percentage = (Boolean) values.get("qp");
         if(current==null)
             current = name;
     }
@@ -149,6 +152,7 @@ public class HorseHerd implements JConf {
         jHorseHerd.put("ic", ignoreChildren);
         jHorseHerd.put("bd", ignoreBD);
         jHorseHerd.put("dk", disable_killing);
+        jHorseHerd.put("qp", disable_q_percentage);
         return jHorseHerd;
     }
 

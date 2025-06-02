@@ -4,6 +4,8 @@ import haven.Coord;
 import haven.Coord2d;
 import haven.Coord3f;
 import haven.MCache;
+import nurgling.NMapView;
+import nurgling.NUtils;
 import nurgling.areas.NArea;
 
 import java.util.*;
@@ -14,8 +16,8 @@ public class RoutePoint {
     public long gridId;
     public Coord localCoord;
 
-    private HashSet<Integer> neighbors = new HashSet<>();
-    private Map<Integer, Connection> connections = new HashMap<>();
+    public ArrayList<Integer> neighbors = new ArrayList<>();
+    public Map<Integer, Connection> connections = new HashMap<>();
     private ArrayList<Integer> reachableAreas = new ArrayList<>();
 
     public class Connection {
@@ -123,6 +125,10 @@ public class RoutePoint {
             }
         }
         return null;
+    }
+
+    public Collection<Connection> getConnections() {
+        return this.connections.values();
     }
 
     @Override

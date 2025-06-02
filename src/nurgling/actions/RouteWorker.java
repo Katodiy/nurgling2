@@ -62,6 +62,7 @@ public class RouteWorker implements Action {
                 if (lastVisited > 0) {
                     returnToLastVisited(gui, lastVisited);
                 }
+                i=i-1;
             }
         }
 

@@ -4,9 +4,11 @@ import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
 import haven.MCache;
+import nurgling.NMapView;
 import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.routes.Route;
+import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.Finder;
@@ -145,18 +147,201 @@ public class RouteAutoRecorder implements Runnable {
                         }
                     }
 
-                    // Add new waypoint
-                    route.addPredefinedWaypoint(predefinedWaypoint, "", "", false);
+                    RouteGraph graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
 
-                    // Get the last two waypoints
-                    RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
-                    RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
+                    if(graph.points.containsKey(predefinedWaypoint.id)) {
+                        predefinedWaypoint = graph.points.get(predefinedWaypoint.id);
+                    }
 
-                    // Add connections between them
-                    lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
+                    // Completely new door
+                    if(!graph.getDoors().containsKey(hash) && !graph.getDoors().containsKey(arch.ngob.hash)) {
+                        // Add new waypoint
+                        route.addPredefinedWaypointNoConnections(predefinedWaypoint);
 
-                    // Add connection for the arch
-                    newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
+                        // Get the last two waypoints
+                        RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
+                        RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
+
+                        // Add connections between them
+                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
+                        // Add connection for the arch
+                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
+                    } else if (graph.getDoors().containsKey(hash) && graph.getDoors().containsKey(arch.ngob.hash)) {
+                        // Already existing door with less than 2 elements in the route. We've just started recording
+                        // before the door and entered the door. We need to simply swap points to existing points.
+                        if (route.waypoints.size() <= 1) {
+
+                            // We need to make sure that the outside point is not an actual door that is stored in the
+                            // graph. If it is we cannot use delete and have to simply swap. If it's a new
+                            // point that does not exist in graph doors we can safely delete it.
+                            boolean needToDeleteLastPoint = true;
+
+                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
+
+                            for(RoutePoint routePoint : graph.getDoors().values()) {
+                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
+                                    needToDeleteLastPoint = false;
+                                    break;
+                                }
+                            }
+
+                            if(needToDeleteLastPoint) {
+                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
+
+                                RoutePoint firstPointToAdd = graph.getDoors().get(hash);
+                                RoutePoint secondPointToadd = graph.getDoors().get(arch.ngob.hash);
+
+                                route.addPredefinedWaypointNoConnections(firstPointToAdd);
+                                route.addPredefinedWaypointNoConnections(secondPointToadd);
+
+
+
+                                firstPointToAdd.addConnection(secondPointToadd.id, String.valueOf(secondPointToadd.id), hash, name, true);
+                                secondPointToadd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
+                            } else {
+                                RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
+                                RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
+
+                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
+
+                                existingOutsideRoutePoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
+                                secondPointToAdd.addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), arch.ngob.hash, arch.ngob.name, true);
+                            }
+                        } else {
+                            // Already existing door with more than 2 elements in the route. We've started recording
+                            // more than 1 point before the door so we have to swap the points but also connect the
+                            // outside point to the rest of the route
+
+                            // We need to make sure that the outside point is not an actual door that is stored in the
+                            // graph. If it is we cannot use delete and have to simply swap. If it's a new
+                            // point that does not exist in graph doors we can safely delete it.
+                            boolean needToDeleteLastPoint = true;
+
+                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
+
+                            for(RoutePoint routePoint : graph.getDoors().values()) {
+                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
+                                    needToDeleteLastPoint = false;
+                                    break;
+                                }
+                            }
+
+                            if(needToDeleteLastPoint) {
+                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
+
+                                RoutePoint firstPointToAdd = graph.getDoors().get(hash);
+                                RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
+
+                                if(!route.waypoints.get(route.waypoints.size() - 1).connections.keySet().stream().toList().contains(firstPointToAdd.id)) {
+                                    route.waypoints.get(route.waypoints.size() - 1).addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), "", "", false);
+                                }
+
+                                if(!firstPointToAdd.connections.keySet().stream().toList().contains(route.waypoints.get(route.waypoints.size() - 2).id)) {
+                                    firstPointToAdd.addConnection(route.waypoints.get(route.waypoints.size() - 3).id, String.valueOf(route.waypoints.get(route.waypoints.size() - 3).id), "", "", false);
+                                }
+
+                                route.addPredefinedWaypointNoConnections(firstPointToAdd);
+                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
+
+                                firstPointToAdd.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
+                                secondPointToAdd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
+                            } else {
+                                RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
+                                RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
+
+                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
+
+                                existingOutsideRoutePoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
+                                secondPointToAdd.addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), arch.ngob.hash, arch.ngob.name, true);
+                            }
+                        }
+                    } else if (graph.getDoors().containsKey(hash)) {
+                        // Entering a new door right after an existing door. We need to swap out the outside
+                        // door and create a new door point on the inside. We then connect the points the same way we
+                        // always do.
+                        if (route.waypoints.size() <= 1) {
+                            boolean needToDeleteLastPoint = true;
+
+                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
+
+                            for(RoutePoint routePoint : graph.getDoors().values()) {
+                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
+                                    needToDeleteLastPoint = false;
+                                    break;
+                                }
+                            }
+
+                            if(needToDeleteLastPoint) {
+                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
+
+                                RoutePoint firstPointToAdd = graph.getDoors().get(hash);
+                                RoutePoint secondPointToAdd = predefinedWaypoint;
+
+                                if(!route.waypoints.get(route.waypoints.size() - 1).connections.keySet().stream().toList().contains(firstPointToAdd.id)) {
+                                    route.waypoints.get(route.waypoints.size() - 1).addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), "", "", false);
+                                }
+
+                                if(!firstPointToAdd.connections.keySet().stream().toList().contains(route.waypoints.get(route.waypoints.size() - 2).id)) {
+                                    firstPointToAdd.addConnection(route.waypoints.get(route.waypoints.size() - 3).id, String.valueOf(route.waypoints.get(route.waypoints.size() - 3).id), "", "", false);
+                                }
+
+                                route.addPredefinedWaypointNoConnections(firstPointToAdd);
+                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
+
+
+                                firstPointToAdd.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
+                                secondPointToAdd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
+                            } else {
+                                RoutePoint secondPointToAdd = predefinedWaypoint;
+
+                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
+
+                                predefinedWaypoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
+                                secondPointToAdd.addConnection(graph.getDoors().get(hash).id, String.valueOf(graph.getDoors().get(hash).id), arch.ngob.hash, arch.ngob.name, true);
+                            }
+                        } else {
+
+                            boolean needToDeleteLastPoint = true;
+
+                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
+
+                            for(RoutePoint routePoint : graph.getDoors().values()) {
+                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
+                                    needToDeleteLastPoint = false;
+                                    break;
+                                }
+                            }
+
+                            if(needToDeleteLastPoint) {
+                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
+
+                                RoutePoint firstPointToAdd = graph.getDoors().get(hash);
+                                RoutePoint secondPointToAdd = predefinedWaypoint;
+
+                                if(!route.waypoints.get(route.waypoints.size() - 1).connections.keySet().stream().toList().contains(firstPointToAdd.id)) {
+                                    route.waypoints.get(route.waypoints.size() - 1).addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), "", "", false);
+                                }
+
+                                if(!firstPointToAdd.connections.keySet().stream().toList().contains(route.waypoints.get(route.waypoints.size() - 1).id)) {
+                                    firstPointToAdd.addConnection(route.waypoints.get(route.waypoints.size() - 2).id, String.valueOf(route.waypoints.get(route.waypoints.size() - 3).id), "", "", false);
+                                }
+
+                                route.addPredefinedWaypointNoConnections(firstPointToAdd);
+                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
+
+                                firstPointToAdd.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
+                                secondPointToAdd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
+                            } else {
+                                RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
+                                RoutePoint secondPointToAdd = predefinedWaypoint;
+
+                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
+
+                                existingOutsideRoutePoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
+                                secondPointToAdd.addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), arch.ngob.hash, arch.ngob.name, true);
+                            }
+                        }
+                    }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }

@@ -13,6 +13,7 @@ public class PigsHerd implements JConf {
     public boolean ignoreChildren = false;
     public boolean ignoreBD = false;
     public boolean disable_killing = false;
+    public boolean disable_q_percentage = false;
     public int adultPigs = 4;
     public int breedingGap = 10;
     public double meatq = 0.;
@@ -54,6 +55,8 @@ public class PigsHerd implements JConf {
             ignoreBD = (Boolean) values.get("bd");
         if (values.get("dk") != null)
             disable_killing = (Boolean) values.get("dk");
+        if (values.get("qp") != null)
+            disable_q_percentage = (Boolean) values.get("qp");
         if (values.get("coverbreed") != null)
             coverbreed = ((Number) values.get("coverbreed")).doubleValue();
         if (values.get("trufquan1") != null)
@@ -138,6 +141,7 @@ public class PigsHerd implements JConf {
         jPigsHerd.put("ic", ignoreChildren);
         jPigsHerd.put("bd", ignoreBD);
         jPigsHerd.put("dk", disable_killing);
+        jPigsHerd.put("qp", disable_q_percentage);
         jPigsHerd.put("trufquan1", trufquan1);
         jPigsHerd.put("trufquan2", trufquan2);
         jPigsHerd.put("trufquanth", trufquanth);
