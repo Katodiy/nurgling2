@@ -40,6 +40,8 @@ public class RouteGraphManager {
             graph.addRoute(route);
         }
 
+        refreshDoors();
+
         needsUpdate = false;
     }
 
@@ -51,23 +53,17 @@ public class RouteGraphManager {
     }
 
     public void loadRoutes() {
-        if(new File(NConfig.current.path_routes).exists())
-        {
+        if (new File(NConfig.current.path_routes).exists()) {
             StringBuilder contentBuilder = new StringBuilder();
-            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_routes), StandardCharsets.UTF_8))
-            {
+            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_routes), StandardCharsets.UTF_8)) {
                 stream.forEach(s -> contentBuilder.append(s).append("\n"));
-            }
-            catch (IOException ignore)
-            {
+            } catch (IOException ignore) {
             }
 
-            if (!contentBuilder.toString().isEmpty())
-            {
+            if (!contentBuilder.toString().isEmpty()) {
                 JSONObject main = new JSONObject(contentBuilder.toString());
                 JSONArray array = (JSONArray) main.get("routes");
-                for (int i = 0; i < array.length(); i++)
-                {
+                for (int i = 0; i < array.length(); i++) {
                     Route route = new Route((JSONObject) array.get(i));
                     routes.put(route.id, route);
                 }
@@ -82,4 +78,49 @@ public class RouteGraphManager {
     public Map<Integer, Route> getRoutes() {
         return routes;
     }
-} 
+
+    private void refreshDoors() {
+        for (Route route : this.routes.values()) {
+            for (RoutePoint routePoint : route.waypoints) {
+                graph.generateDoors(routePoint);
+            }
+        }
+    }
+
+    public void deleteRoute(Route route) {
+        ArrayList<String> doorsInRoute = new ArrayList<>();
+
+        for (RoutePoint routePoint : route.waypoints) {
+            for (RoutePoint.Connection connection : routePoint.getConnections()) {
+                if (connection.isDoor) {
+                    doorsInRoute.add(connection.gobHash);
+                }
+            }
+        }
+
+        for (Route remainingRoute : routes.values()) {
+            for (RoutePoint routePoint : remainingRoute.waypoints) {
+                for (RoutePoint.Connection connection : routePoint.getConnections()) {
+                    // Technically don't have to check contains, but its better performance if you have a lot of connections.
+                    if (connection.isDoor && doorsInRoute.contains(connection.gobHash)) {
+                        doorsInRoute.remove(connection.gobHash);
+                    }
+                }
+            }
+        }
+
+        for (String door : doorsInRoute) {
+            graph.deleteDoor(door);
+        }
+        ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().remove(route.id);
+    }
+
+    public void deleteRoutePointFromNeighborsAndConnections(RoutePoint routePoint) {
+        for (RoutePoint point : graph.points.values()) {
+            if (point.neighbors != null && point.neighbors.contains(routePoint.id)) {
+                point.neighbors.remove(Integer.valueOf(routePoint.id));
+                point.removeConnection(routePoint.id);
+            }
+        }
+    }
+}
