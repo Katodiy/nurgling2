@@ -3,6 +3,7 @@ package nurgling.routes;
 import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
+import haven.MCache;
 import nurgling.NCore;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -44,9 +45,14 @@ public class Route {
     public void addWaypoint() {
         Gob player = NUtils.player();
         Coord2d rc = player.rc;
+        MCache cache = NUtils.getGameUI().ui.sess.glob.map;
+
+        if(player == null || rc == null || cache == null) {
+            return;
+        }
 
         // Create a temporary waypoint to get its hash
-        RoutePoint tempWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
+        RoutePoint tempWaypoint = new RoutePoint(rc, cache);
         
         // Check if this waypoint already exists in the graph
         RoutePoint existingWaypoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().getPoint(tempWaypoint.id);

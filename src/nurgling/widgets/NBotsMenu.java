@@ -118,6 +118,7 @@ public class NBotsMenu extends Widget
             tests.elements.add(new NButton("test8", new TESTpf()));
 //            tests.elements.add(new NButton("chop", new TESTfindallchest()));
             tests.elements.add(new NButton("test9", new TESTAvalaible()));
+            tests.elements.add(new NButton("test10", new TESTGlobalPf()));
             addLayout(tests);
         }
         showLayouts();

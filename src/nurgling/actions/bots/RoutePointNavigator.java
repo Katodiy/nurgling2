@@ -7,10 +7,7 @@ import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
-import nurgling.tasks.GateDetector;
-import nurgling.tasks.WaitForGobWithHash;
-import nurgling.tasks.WaitForMapLoad;
-import nurgling.tasks.WaitGobModelAttrChange;
+import nurgling.tasks.*;
 import nurgling.tools.Finder;
 
 import java.util.List;
@@ -76,11 +73,12 @@ public class RoutePointNavigator implements Action {
                 continue;
             }
 
-            try {
-                new PathFinder(target).run(gui);
-            } catch(Exception e) {
-                gui.error("There was an error trying to find path, attempting to skip a point.");
+            if (NUtils.getGameUI().map.player() == null) {
+                gui.error("Player was null, waiting for player");
+                NUtils.getUI().core.addTask(new WaitPlayerNotNull());
             }
+
+            new PathFinder(target).run(gui);
 
             // Handle door closing
             if(previousPoint != null) {
