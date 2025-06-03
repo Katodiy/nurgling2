@@ -37,7 +37,7 @@ public class NGameUI extends GameUI
     public RouteSpecialization routespec;
     public BotsInterruptWidget biw;
     public NEquipProxy nep;
-    public NCatSelection ncatSel;
+    public NSettingsWindow nsw;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -65,6 +65,8 @@ public class NGameUI extends GameUI
         add(routespec = new RouteSpecialization());
         routespec.hide();
         add(biw = new BotsInterruptWidget());
+
+        add(nsw = new NSettingsWindow());
     }
 
     @Override

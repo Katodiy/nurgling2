@@ -26,6 +26,10 @@
 
 package haven;
 
+import nurgling.NConfig;
+import nurgling.conf.FontSettings;
+import nurgling.widgets.nsettings.Fonts;
+
 import java.awt.*;
 import java.awt.Graphics;
 import java.awt.font.TextAttribute;
@@ -40,7 +44,7 @@ public class Text implements Disposable {
     public static final Font serif = new Font("Serif", Font.PLAIN, 10);
     public static final Font sans  = new Font("Sans", Font.PLAIN, 10);
     public static final Font mono  = new Font("Monospaced", Font.PLAIN, 10);
-	public static final Font fraktur = Resource.local().loadwait("ui/fraktur").flayer(Resource.Font.class).font;
+	public static Font fraktur;
     public static final Font dfont = sans;
     public static final Foundry std;
     public final BufferedImage img;
@@ -50,7 +54,8 @@ public class Text implements Disposable {
     public static final Color white = Color.WHITE;
 	
     static {
-	std = new Foundry(sans, 10);
+	std = ((FontSettings)NConfig.get(NConfig.Key.fonts)).getFoundary(Fonts.FontType.DEFAULT);
+	fraktur = ((FontSettings)NConfig.get(NConfig.Key.fonts)).getFoundary(Fonts.FontType.UI).font;
     }
 	
     public static abstract class Slug extends Text {

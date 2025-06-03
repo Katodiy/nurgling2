@@ -1,17 +1,15 @@
 package nurgling.overlays;
 
-
 import haven.*;
 import haven.render.*;
 import nurgling.*;
+import nurgling.widgets.nsettings.World;
 
+import java.awt.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-
-public class NModelBox extends Sprite implements RenderTree.Node
-{
-
+public class NModelBox extends Sprite implements RenderTree.Node {
     public static class NBoundingBox
     {
 
@@ -64,51 +62,51 @@ public class NModelBox extends Sprite implements RenderTree.Node
         }
     }
 
-    public static class HidePol extends Sprite implements RenderTree.Node
-    {
-        public static Pipe.Op lmat = Pipe.Op.compose(Rendered.last, States.Depthtest.none, States.maskdepth,new States.Facecull(),new States.LineWidth(4), new BaseColor(new java.awt.Color(227, 28, 1, 195)));
-        public static Pipe.Op emat = Pipe.Op.compose(new BaseColor(new java.awt.Color(224, 193, 79, 255)));
+
+    public static class HidePol extends Sprite implements RenderTree.Node {
+        private Pipe.Op lmat;
+        private Pipe.Op emat;
         final Model emod;
         final Model lmod;
         private NBoundingBox.Polygon pol;
 
         static final VertexArray.Layout pfmt = new VertexArray.Layout(
-                new VertexArray.Layout.Input(Homo3D.vertex, new VectorFormat(3, NumberFormat.FLOAT32), 0, 0,
-                        12));
+                new VertexArray.Layout.Input(Homo3D.vertex, new VectorFormat(3, NumberFormat.FLOAT32), 0, 0, 12));
 
-        public HidePol(NBoundingBox.Polygon pol)
-        {
+        public HidePol(NBoundingBox.Polygon pol) {
             super(null, null);
             this.pol = pol;
+            updateMaterials();
 
             VertexArray va = new VertexArray(pfmt,
                     new VertexArray.Buffer((4) * pfmt.inputs[0].stride, DataBuffer.Usage.STATIC,
                             this::fill));
-            short [] iarr = {0,1,2,3,0};
+            short[] iarr = {0,1,2,3,0};
             Model.Indices indb = new Model.Indices(5, NumberFormat.UINT16, DataBuffer.Usage.STATIC, DataBuffer.Filler.of(iarr));
             this.emod = new Model(Model.Mode.TRIANGLE_FAN, va, null);
             this.lmod = new Model(Model.Mode.LINE_STRIP, va, indb);
         }
 
-        private FillBuffer fill(
-                VertexArray.Buffer dst,
-                Environment env
-        )
-        {
+        public void updateMaterials() {
+            Color fillColor = NConfig.getColor(NConfig.Key.boxFillColor, new Color(227, 28, 1, 195));
+            Color edgeColor = NConfig.getColor(NConfig.Key.boxEdgeColor, new Color(224, 193, 79, 255));
+
+            this.lmat = Pipe.Op.compose(Rendered.last, States.Depthtest.none, States.maskdepth,
+                    new States.Facecull(), new States.LineWidth(4),
+                    new BaseColor(fillColor));
+            this.emat = Pipe.Op.compose(new BaseColor(edgeColor));
+        }
+
+        private FillBuffer fill(VertexArray.Buffer dst, Environment env) {
             FillBuffer ret = env.fillbuf(dst);
             ByteBuffer buf = ret.push();
-            if (pol.neg)
-            {
-                for (int i = 3; i >= 0; i--)
-                {
+            if (pol.neg) {
+                for (int i = 3; i >= 0; i--) {
                     buf.putFloat((float) pol.vertices[i].x).putFloat((float) -pol.vertices[i].y)
                             .putFloat(1.0f);
                 }
-            }
-            else
-            {
-                for (int i = 0; i < 4; i++)
-                {
+            } else {
+                for (int i = 0; i < 4; i++) {
                     buf.putFloat((float) pol.vertices[i].x).putFloat((float) pol.vertices[i].y)
                             .putFloat(1.0f);
                 }
@@ -116,10 +114,9 @@ public class NModelBox extends Sprite implements RenderTree.Node
             return (ret);
         }
 
-        public void added(RenderTree.Slot slot)
-        {
-            slot.add(emod,emat);
-            slot.add(lmod,lmat);
+        public void added(RenderTree.Slot slot) {
+            slot.add(emod, emat);
+            slot.add(lmod, lmat);
         }
     }
 
@@ -156,36 +153,34 @@ public class NModelBox extends Sprite implements RenderTree.Node
     }
 
     @Override
-    public boolean tick(double dt)
-    {
-        if (((Boolean) NConfig.get(NConfig.Key.showBB) || (!(Boolean) NConfig.get(NConfig.Key.hideNature) && NUtils.isNatureObject(gob.ngob.name)) != isShow))
-        {
-            isShow = ((Boolean) NConfig.get(NConfig.Key.showBB) || (!(Boolean) NConfig.get(NConfig.Key.hideNature) && NUtils.isNatureObject(gob.ngob.name)));
-            if (isShow && slot.parent()!=null)
-            {
-                if(!isVisible)
-                {
-                isVisible = true;
-                for (RenderTree.Node n : nodes)
-                {
-                    try {
-                        slot.add(n);
-                    }
-                    catch (RenderTree.SlotRemoved e)
-                    {
-                        return true;
+    public boolean tick(double dt) {
+        boolean newShowState = ((Boolean) NConfig.get(NConfig.Key.showBB) ||
+                (!(Boolean) NConfig.get(NConfig.Key.hideNature) && NUtils.isNatureObject(gob.ngob.name)));
+
+        if (newShowState != isShow) {
+            isShow = newShowState;
+            if (isShow && slot.parent() != null) {
+                if (!isVisible) {
+                    isVisible = true;
+                    for (RenderTree.Node n : nodes) {
+                        try {
+                            if (n instanceof HidePol) {
+                                ((HidePol)n).updateMaterials();
+                            }
+                            slot.add(n);
+                        } catch (RenderTree.SlotRemoved e) {
+                            return true;
+                        }
                     }
                 }
-                }
-            }
-            else
-            {
+            } else {
                 isVisible = false;
                 slot.clear();
             }
         }
         return super.tick(dt);
     }
+
 
     @Override
     public void draw(GOut g)

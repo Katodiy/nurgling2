@@ -72,20 +72,16 @@ public class RoutePointNavigator implements Action {
 
             Coord2d target = path.get(i).toCoord2d(gui.map.glob.map);
             if (target == null) {
-                gui.error(String.format("Target coord %s is null", path.get(i)));
+                gui.error(String.format("Target coord %s is null", path.get(i).id));
                 continue;
             }
 
-            try {
-                new PathFinder(target).run(gui);
-            } catch(Exception e) {
-                gui.error("There was an error trying to find path, attempting to skip a point.");
-            }
+            new PathFinder(target).run(gui);
 
             // Handle door closing
             if(previousPoint != null) {
                 RoutePoint.Connection prevConn = currentPoint.getConnection(previousPoint.id);
-                if(prevConn != null && prevConn.isDoor) {
+                if(prevConn != null && prevConn.isDoor && previousPoint.toCoord2d(gui.map.glob.map) != null) {
                     Gob gob = Finder.findGob(prevConn.gobHash);
                     if(gob != null && !GateDetector.isGobDoor(gob) && GateDetector.isDoorOpen(gob)) {
                         NUtils.openDoorOnAGob(gui, gob);

@@ -7,6 +7,7 @@ import nurgling.routes.Route;
 import nurgling.widgets.NMiniMap;
 import org.json.*;
 
+import java.awt.*;
 import java.io.*;
 import java.nio.charset.*;
 import java.nio.file.*;
@@ -83,7 +84,7 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf
+        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, boxFillColor, boxEdgeColor, fonts
     }
 
 
@@ -152,6 +153,7 @@ public class NConfig
         conf.put(Key.tempmark, false);
         conf.put(Key.temsmarkdist, 4);
         conf.put(Key.temsmarktime, 3);
+        conf.put(Key.fonts, new FontSettings());
 
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
@@ -374,6 +376,7 @@ public class NConfig
                         case "NCarrierProp":
                             res.add(new NCarrierProp(obj));
                             break;
+
                         default:
                             res.add(obj);
                     }
@@ -415,6 +418,10 @@ public class NConfig
                             switch (type) {
                                 case "NLoginData":
                                     conf.put(Key.valueOf(entry.getKey()), new NLoginData(hobj));
+                                    break;
+                                case "FontSettings":
+                                    conf.put(Key.fonts, new FontSettings(hobj));
+                                    break;
                             }
                         }
                     } else if (Key.valueOf(entry.getKey()) != null && entry.getValue() instanceof ArrayList<?>) {
@@ -631,6 +638,31 @@ public class NConfig
         res.add(NPathVisualizer.PathCategory.FRIEND);
         res.add(NPathVisualizer.PathCategory.GPF);
         return res;
+    }
+
+    public static Color getColor(Key key, Color defaultColor) {
+        Object colorObj = get(key);
+        if (colorObj instanceof Color) {
+            return (Color) colorObj;
+        } else if (colorObj instanceof Map) {
+            Map<String, Object> colorMap = (Map<String, Object>) colorObj;
+            return new Color(
+                    ((Number)colorMap.get("red")).intValue(),
+                    ((Number)colorMap.get("green")).intValue(),
+                    ((Number)colorMap.get("blue")).intValue(),
+                    ((Number)colorMap.get("alpha")).intValue()
+            );
+        }
+        return defaultColor;
+    }
+
+    public static void setColor(Key key, Color color) {
+        Map<String, Object> colorMap = new HashMap<>();
+        colorMap.put("red", color.getRed());
+        colorMap.put("green", color.getGreen());
+        colorMap.put("blue", color.getBlue());
+        colorMap.put("alpha", color.getAlpha());
+        set(key, colorMap);
     }
 
 }

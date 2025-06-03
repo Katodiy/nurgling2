@@ -547,6 +547,16 @@ public class NUtils
         return "";
     }
 
+    public static boolean bucketIsFull(WItem bucket) {
+        for(NGItem.NContent content : ((NGItem) bucket.item).content()) {
+            if (content.name().contains("10")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static void dropLastSfx() {
         getUI().root.lastSfx = null;
     }

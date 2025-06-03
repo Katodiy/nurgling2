@@ -17,13 +17,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import static nurgling.overlays.NBarrelOverlay.bsans;
+import static haven.Text.sans;
 
 public class NAlarmWdg extends Widget
 {
     final public static ArrayList<Long> borkas = new ArrayList();
     final ArrayList<Long> alarms = new ArrayList<>();
-    private static final Text.Furnace active_title = new PUtils.BlurFurn(new Text.Foundry(bsans, 15, Color.WHITE).aa(true), 2, 1, new Color(36, 25, 25));
+    private static final Text.Furnace active_title = new PUtils.BlurFurn(new Text.Foundry(sans, 15, Color.WHITE).aa(true), 2, 1, new Color(36, 25, 25));
     TexI numberAlarm = null;
     public NAlarmWdg() {
         super();

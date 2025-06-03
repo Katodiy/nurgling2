@@ -41,7 +41,7 @@ public class CharWnd extends Window {
     public static final RichText.Foundry ifnd = new RichText.Foundry(RichText.ImageSource.res(Resource.remote()), java.awt.font.TextAttribute.FAMILY, "SansSerif", java.awt.font.TextAttribute.SIZE, UI.scale(9)).aa(true);
     public static final Text.Furnace catf = new BlurFurn(new TexFurn(new Text.Foundry(Text.fraktur, 25).aa(true), Window.ctex), UI.scale(3), UI.scale(2), new Color(96, 48, 0));
     public static final Text.Furnace failf = new BlurFurn(new TexFurn(new Text.Foundry(Text.fraktur, 25).aa(true), Resource.loadimg("gfx/hud/fontred")), UI.scale(3), UI.scale(2), new Color(96, 48, 0));
-    public static final Text.Foundry attrf = new Text.Foundry(Text.fraktur.deriveFont((float)Math.floor(UI.scale(18.0)))).aa(true);
+    public static final Text.Foundry attrf = new Text.Foundry(Text.fraktur.deriveFont((float)Math.floor(UI.scale(16.0)))).aa(true);
     public static final PUtils.Convolution iconfilter = new PUtils.Lanczos(3);
     public static final int attrw = BAttrWnd.FoodMeter.frame.sz().x - wbox.bisz().x;
     public static final Color debuff = new Color(255, 128, 128);
@@ -57,8 +57,8 @@ public class CharWnd extends Window {
     public WoundWnd wound;
     public QuestWnd quest;
     public final Tabs.Tab battrtab, sattrtab, skilltab, fighttab, woundtab, questtab;
+    public final Widget tbbattrtab, tbsattrtab, tbskilltab, tbfighttab, tbwoundtab, tbquesttab;
     public int exp, enc;
-
     public static class TabProxy extends AWidget {
 	public final Class<? extends Widget> tcl;
 	public final String id;
@@ -347,8 +347,8 @@ public class CharWnd extends Window {
 	super(UI.scale(new Coord(300, 290)), "Character Sheet");
 
 	Tabs tabs = new Tabs(new Coord(15, 10), UI.scale(506, 315), this);
-        battrtab = tabs.add();
-        sattrtab = tabs.add();
+	battrtab = tabs.add();
+	sattrtab = tabs.add();
 	skilltab = tabs.add();
 	fighttab = tabs.add();
 	woundtab = tabs.add();
@@ -367,6 +367,13 @@ public class CharWnd extends Window {
 
 		public void click() {
 		    tabs.showtab(tab);
+			tbbattrtab.c.y = tab.sz.y + UI.scale(10) + tbbattrtab.sz.y/2;
+			tbsattrtab.c.y = tbbattrtab.c.y;
+			tbskilltab.c.y = tbbattrtab.c.y;
+			tbfighttab.c.y = tbbattrtab.c.y;
+			tbwoundtab.c.y = tbbattrtab.c.y;
+			tbquesttab.c.y = tbbattrtab.c.y;
+			CharWnd.this.resize(CharWnd.this.contentsz().add(UI.scale(15, 10)));
 		}
 
 		protected void depress() {
@@ -379,19 +386,32 @@ public class CharWnd extends Window {
 	    }
 
 	    this.addhl(new Coord(tabs.c.x, tabs.c.y + tabs.sz.y + UI.scale(10)), tabs.sz.x,
-		new TB("battr", battrtab, "Base Attributes"),
-		new TB("sattr", sattrtab, "Abilities"),
-		new TB("skill", skilltab, "Lore & Skills"),
-		new TB("fgt",   fighttab, "Martial Arts & Combat Schools"),
-		new TB("wound", woundtab, "Health & Wounds"),
-		new TB("quest", questtab, "Quest Log")
+		tbbattrtab = new TB("battr", battrtab, "Base Attributes"),
+		tbsattrtab = new TB("sattr", sattrtab, "Abilities"),
+		tbskilltab =new TB("skill", skilltab, "Lore & Skills"),
+		tbfighttab = new TB("fgt",   fighttab, "Martial Arts & Combat Schools"),
+		tbwoundtab = new TB("wound", woundtab, "Health & Wounds"),
+		tbquesttab = new TB("quest", questtab, "Quest Log")
 	    );
 	}
 
 	resize(contentsz().add(UI.scale(15, 10)));
     }
 
-    public void addchild(Widget child, Object... args) {
+	@Override
+	public void show() {
+		super.show();
+		battrtab.resize(battrtab.contentsz());
+		tbbattrtab.c.y = battr.sz.y + UI.scale(10) + tbbattrtab.sz.y/2;
+		tbsattrtab.c.y = tbbattrtab.c.y;
+		tbskilltab.c.y = tbbattrtab.c.y;
+		tbfighttab.c.y = tbbattrtab.c.y;
+		tbwoundtab.c.y = tbbattrtab.c.y;
+		tbquesttab.c.y = tbbattrtab.c.y;
+		CharWnd.this.resize(CharWnd.this.contentsz().add(UI.scale(15, 10)));
+	}
+
+	public void addchild(Widget child, Object... args) {
 	String place = (args[0] instanceof String) ? (((String)args[0]).intern()) : null;
 	if((place == "tab") || /* XXX: Remove me! */ Utils.eq(args[0], Coord.of(47, 47))) {
 	    if(child instanceof BAttrWnd) {
