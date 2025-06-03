@@ -62,6 +62,10 @@ public class RoutePoint {
         connections.put(neighborHash, new Connection(connectionTo, gobHash, gobName, isDoor));
     }
 
+    public void addConnection(int neighborHash, Connection connection) {
+        connections.put(neighborHash, connection);
+    }
+
     public Connection getConnection(int neighborHash) {
         return connections.get(neighborHash);
     }
@@ -134,5 +138,17 @@ public class RoutePoint {
     @Override
     public int hashCode() {
         return Objects.hash(this.gridId, this.localCoord);
+    }
+
+    public int updateHashCode() {
+        int newHashCode = Objects.hash(this.gridId, this.localCoord);
+
+        System.out.println("Old hash code: " + id);
+        System.out.println("New hash code: " + newHashCode);
+        if(this.id != newHashCode) {
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateConnections(this, newHashCode);
+            this.id = newHashCode;
+        }
+        return newHashCode;
     }
 }

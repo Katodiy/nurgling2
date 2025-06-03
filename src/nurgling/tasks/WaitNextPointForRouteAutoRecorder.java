@@ -1,8 +1,11 @@
 package nurgling.tasks;
 
+import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
+import haven.MCache;
 import nurgling.NCore;
+import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
@@ -34,7 +37,22 @@ public class WaitNextPointForRouteAutoRecorder extends NTask {
         if (player != this.oldPlayer)
             return true;
 
+
+        if(player != null) {
+            setPlayerDirection(player);
+        }
+
         this.oldPlayer = player;
+
+        try {
+            Coord tilec = oldPlayer.rc.div(MCache.tilesz).floor();
+            MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
+
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().setLastPlayerGridId(grid.id);
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().setLastPlayerCoord(tilec.sub(grid.ul));
+        } catch (Exception e) {
+            System.out.println("Let fall through");
+        }
 
         if (lastAction != null) {
             route.lastAction = lastAction;
@@ -72,5 +90,9 @@ public class WaitNextPointForRouteAutoRecorder extends NTask {
         }
 
         return player.rc.dist(last) >= dist;
+    }
+
+    private void setPlayerDirection(Gob player) {
+        ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().setLastMovementDirection(player.a);
     }
 }

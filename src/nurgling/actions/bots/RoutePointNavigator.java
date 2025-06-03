@@ -7,10 +7,7 @@ import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
-import nurgling.tasks.GateDetector;
-import nurgling.tasks.WaitForGobWithHash;
-import nurgling.tasks.WaitForMapLoad;
-import nurgling.tasks.WaitGobModelAttrChange;
+import nurgling.tasks.*;
 import nurgling.tools.Finder;
 
 import java.util.List;
@@ -74,6 +71,11 @@ public class RoutePointNavigator implements Action {
             if (target == null) {
                 gui.error(String.format("Target coord %s is null", path.get(i).id));
                 continue;
+            }
+
+            if (NUtils.getGameUI().map.player() == null) {
+                gui.error("Player was null, waiting for player");
+                NUtils.getUI().core.addTask(new WaitPlayerNotNull());
             }
 
             new PathFinder(target).run(gui);
