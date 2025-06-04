@@ -185,6 +185,7 @@ public class RouteAutoRecorder implements Runnable {
                         // TODO WE NEED TO MAKE SURE THERE IS NO EXISTING DOOR ON NEW POSITION. CALCULATE HASH AND LOOK
                         // UP DOORS. IF DOOR (points) EXISTS USE IT.
                         if(graph.points.containsKey(hashCode(lastWaypoint.gridId, lastWaypoint.localCoord))) {
+                            ((NMapView) NUtils.getGameUI().map).routeGraphManager.deleteRoutePointFromNeighborsAndConnections(lastWaypoint);
                             lastWaypoint = graph.getPoint(hashCode(lastWaypoint.gridId, lastWaypoint.localCoord));
                         } else {
                             lastWaypoint.updateHashCode();
@@ -467,8 +468,6 @@ public class RouteAutoRecorder implements Runnable {
                                     secondPointToAdd.setLocalCoord(newPosition);
                                 }
 
-                                // TODO WE NEED TO MAKE SURE THERE IS NO EXISTING DOOR ON NEW POSITION. CALCULATE HASH AND LOOK
-                                // UP DOORS. IF DOOR (points) EXISTS USE IT.
                                 if(graph.points.containsKey(hashCode(secondPointToAdd.gridId, secondPointToAdd.localCoord))) {
                                     secondPointToAdd = graph.getPoint(hashCode(secondPointToAdd.gridId, secondPointToAdd.localCoord));
                                 } else {

@@ -49,7 +49,8 @@ public class RoutePointNavigator implements Action {
         // Find path to target
         List<RoutePoint> path = graph.findPath(startPoint, targetPoint);
         if (path == null || path.isEmpty()) {
-            gui.error("No path found to target waypoint");
+            gui.error(String.format("No path found to target waypoint. Start point: %s, end point: %s", startPoint.id, targetPoint.id));
+            System.out.printf("No path found to target waypoint. Start point: %s, end point: %s%n", startPoint.id, targetPoint.id);
             return Results.FAIL();
         }
 
