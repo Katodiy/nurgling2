@@ -6,6 +6,8 @@ import haven.render.*;
 import java.util.*;
 import java.util.function.*;
 import haven.MenuGrid.Pagina;
+import nurgling.widgets.NCheckBox;
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
@@ -69,7 +71,7 @@ public class CattleId extends GAttrib implements RenderTree.Node, PView.Render2D
 		Coord nmc = sc.sub(rnm.sz().x / 2, -rnm.sz().y);
 		g.image(rnm, nmc);
 		if((entry != null) && entry.mark.a)
-		    g.image(CheckBox.smark, nmc.sub(CheckBox.smark.sz().x, 0));
+		    g.image(NCheckBox.smark, nmc.sub(NCheckBox.smark.sz().x, 0));
 	    }
 	}
     }
