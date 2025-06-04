@@ -16,6 +16,7 @@ import nurgling.tools.NAlias;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import static nurgling.NUtils.player;
 
@@ -182,7 +183,13 @@ public class RouteAutoRecorder implements Runnable {
                             lastWaypoint.localCoord = newPosition;
                         }
 
-                        lastWaypoint.updateHashCode();
+                        // TODO WE NEED TO MAKE SURE THERE IS NO EXISTING DOOR ON NEW POSITION. CALCULATE HASH AND LOOK
+                        // UP DOORS. IF DOOR (points) EXISTS USE IT.
+                        if(graph.points.containsKey(hashCode(lastWaypoint.gridId, lastWaypoint.localCoord))) {
+                            lastWaypoint = graph.getPoint(hashCode(lastWaypoint.gridId, lastWaypoint.localCoord));
+                        } else {
+                            lastWaypoint.updateHashCode();
+                        }
 
                         // Add connections between them
                         lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
@@ -378,14 +385,15 @@ public class RouteAutoRecorder implements Runnable {
                                 firstPointToAdd.addNeighbor(secondPointToAdd.id);
                                 secondPointToAdd.addNeighbor(firstPointToAdd.id);
                             } else {
+                                RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
                                 RoutePoint secondPointToAdd = predefinedWaypoint;
 
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
-                                predefinedWaypoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
+                                existingOutsideRoutePoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
                                 secondPointToAdd.addConnection(graph.getDoors().get(hash).id, String.valueOf(graph.getDoors().get(hash).id), arch.ngob.hash, arch.ngob.name, true);
 
-                                predefinedWaypoint.addNeighbor(secondPointToAdd.id);
+                                existingOutsideRoutePoint.addNeighbor(secondPointToAdd.id);
                                 secondPointToAdd.addNeighbor(graph.getDoors().get(hash).id);
                             }
                         } else {
@@ -460,7 +468,13 @@ public class RouteAutoRecorder implements Runnable {
                                     secondPointToAdd.setLocalCoord(newPosition);
                                 }
 
-                                secondPointToAdd.updateHashCode();
+                                // TODO WE NEED TO MAKE SURE THERE IS NO EXISTING DOOR ON NEW POSITION. CALCULATE HASH AND LOOK
+                                // UP DOORS. IF DOOR (points) EXISTS USE IT.
+                                if(graph.points.containsKey(hashCode(secondPointToAdd.gridId, secondPointToAdd.localCoord))) {
+                                    secondPointToAdd = graph.getPoint(hashCode(secondPointToAdd.gridId, secondPointToAdd.localCoord));
+                                } else {
+                                    secondPointToAdd.updateHashCode();
+                                }
 
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
@@ -508,6 +522,10 @@ public class RouteAutoRecorder implements Runnable {
 
             route.lastAction = null;
         }
+    }
+
+    public int hashCode(long gridId, Coord localCoord) {
+        return Objects.hash(gridId, localCoord);
     }
 }
 

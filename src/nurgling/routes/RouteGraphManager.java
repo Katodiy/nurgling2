@@ -131,6 +131,8 @@ public class RouteGraphManager {
             for (RoutePoint routePoint : route.waypoints) {
                 if(routePoint.id == newId) {
                     mergeConnectionsAndNeighbors(newRoutePoint, routePoint);
+                } else if (routePoint.id == newRoutePoint.id) {
+                    mergeConnectionsAndNeighbors(newRoutePoint, routePoint);
                 }
                 // Update neighbors list if oldId is found
                 for (int i = 0; i < routePoint.neighbors.size(); i++) {
@@ -215,6 +217,4 @@ public class RouteGraphManager {
             }
         }
     }
-
-
 }

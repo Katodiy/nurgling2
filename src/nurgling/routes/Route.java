@@ -117,17 +117,6 @@ public class Route {
                 RoutePoint existingWaypoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().getPoint(routePoint.id);
 
                 routePoint = existingWaypoint != null ? existingWaypoint : routePoint;
-
-                RoutePoint lastRoutePoint = waypoints.get(waypoints.size() - 1);
-
-                // Add neighbors if they do not already exist.
-                if(!routePoint.getNeighbors().contains(lastRoutePoint.id)) {
-                    routePoint.addNeighbor(lastRoutePoint.id);
-                }
-
-                if(!lastRoutePoint.getNeighbors().contains(routePoint.id)) {
-                    lastRoutePoint.addNeighbor(routePoint.id);
-                }
             }
 
 

@@ -51,7 +51,9 @@ public class RoutePoint {
     }
 
     public void addNeighbor(int id) {
-        neighbors.add(id);
+        if(!neighbors.contains(Integer.valueOf(id))) {
+            neighbors.add(id);
+        }
     }
 
     public List<Integer> getNeighbors() {

@@ -69,7 +69,13 @@ public class RoutePointNavigator implements Action {
 
             Coord2d target = path.get(i).toCoord2d(gui.map.glob.map);
             if (target == null) {
+
+                for(RoutePoint point : path) {
+                    System.out.println(point.id);
+                }
+
                 gui.error(String.format("Target coord %s is null", path.get(i).id));
+                System.out.printf("Target coord %s is null%n", path.get(i).id);
                 continue;
             }
 
