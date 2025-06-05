@@ -85,6 +85,10 @@ public class RoutePoint {
         this.id = hashCode();
     }
 
+    public void setGridId(long gridId) {
+        this.gridId = gridId;
+    }
+
     public ArrayList<Integer> getReachableAreas() {
         return reachableAreas;
     }

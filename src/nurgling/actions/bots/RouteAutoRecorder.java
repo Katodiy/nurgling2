@@ -154,7 +154,8 @@ public class RouteAutoRecorder implements Runnable {
                                     (int)Math.round(mineLocalCoord.y +  Math.sin(angle) * offset)
                             );
 
-                            predefinedWaypoint.setLocalCoord(newPosition);
+                            predefinedWaypoint.gridId = grid.id;
+                            predefinedWaypoint.localCoord = newPosition;
                         }
                     }
 
@@ -188,6 +189,9 @@ public class RouteAutoRecorder implements Runnable {
                             lastWaypoint.localCoord = newPosition;
                         }
 
+                        Collection<RoutePoint.Connection> deletedConnections = route.waypoints.get(route.waypoints.size() - 2).getConnections();
+                        List<Integer> deletedNeighbors = route.waypoints.get(route.waypoints.size() - 2).getNeighbors();
+
                         // TODO WE NEED TO MAKE SURE THERE IS NO EXISTING DOOR ON NEW POSITION. CALCULATE HASH AND LOOK
                         // UP DOORS. IF DOOR (points) EXISTS USE IT.
                         if(graph.points.containsKey(hashCode(lastWaypoint.gridId, lastWaypoint.localCoord))) {
@@ -196,8 +200,21 @@ public class RouteAutoRecorder implements Runnable {
                             }
 
                             lastWaypoint = graph.getPoint(hashCode(lastWaypoint.gridId, lastWaypoint.localCoord));
+
+                            for(RoutePoint.Connection connection : deletedConnections) {
+                                if(lastWaypoint.id != Integer.parseInt(connection.connectionTo)) {
+                                    lastWaypoint.addConnection(Integer.parseInt(connection.connectionTo), connection);
+                                }
+                            }
+
+                            for(Integer neighbor : deletedNeighbors) {
+                                if(lastWaypoint.id != neighbor) {
+                                    lastWaypoint.addNeighbor(neighbor);
+                                }
+                            }
                         } else if (graph.points.containsKey(lastWaypoint.id)) {
-                            lastWaypoint = graph.getPoint(lastWaypoint.id);
+//                            lastWaypoint = graph.getPoint(lastWaypoint.id);
+                            lastWaypoint.updateHashCode();
                         } else {
                             lastWaypoint.updateHashCode();
                         }
@@ -476,7 +493,8 @@ public class RouteAutoRecorder implements Runnable {
                                             (int)Math.round(mineLocalCoord.y +  Math.sin(angle) * offset)
                                     );
 
-                                    secondPointToAdd.setLocalCoord(newPosition);
+                                    secondPointToAdd.gridId = grid.id;
+                                    secondPointToAdd.localCoord = newPosition;
                                 }
 
                                 if(graph.points.containsKey(hashCode(secondPointToAdd.gridId, secondPointToAdd.localCoord))) {

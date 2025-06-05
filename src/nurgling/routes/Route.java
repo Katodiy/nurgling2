@@ -24,6 +24,7 @@ public class Route {
     public boolean hasPassedGate = false;
     public Gob lastPassedGate = null;
 
+
     public static class RouteSpecialization {
         public String name;
         public String subtype = null;
@@ -97,7 +98,6 @@ public class Route {
                     lastRoutePoint.addConnection(routePoint.id, String.valueOf(routePoint.id), doorHash, doorName, isDoor);
                 }
             }
-
 
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(routePoint);
             this.waypoints.add(routePoint);
@@ -231,6 +231,79 @@ public class Route {
                     }
                 }
                 
+                waypoints.add(waypoint);
+            }
+        }
+
+        this.spec = new ArrayList<>();
+        if (obj.has("specializations")) {
+            JSONArray arr = obj.getJSONArray("specializations");
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject spec = arr.getJSONObject(i);
+                String name = spec.getString("name");
+                String subtype = spec.has("subtype") ? spec.getString("subtype") : null;
+                this.spec.add(new RouteSpecialization(name, subtype));
+            }
+        }
+    }
+
+    public Route(JSONObject obj, Map<Integer, RoutePoint> routePointMap) {
+        this.name = obj.getString("name");
+        this.id = obj.getInt("id");
+
+        if (obj.has("path")) {
+            this.path = obj.getString("path");
+        } else if (obj.has("dir")) {
+            this.path = "/" + obj.getString("path");
+        }
+
+        this.waypoints = new ArrayList<>();
+        if (obj.has("waypoints")) {
+            JSONArray arr = obj.getJSONArray("waypoints");
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject point = arr.getJSONObject(i);
+                int id = point.getInt("id");
+                long gridId = point.getLong("gridId");
+
+                RoutePoint waypoint;
+                if (routePointMap.containsKey(id)) {
+                    waypoint = routePointMap.get(id);
+                } else {
+                    JSONObject localCoord = point.getJSONObject("localCoord");
+                    int x = localCoord.getInt("x");
+                    int y = localCoord.getInt("y");
+                    waypoint = new RoutePoint(gridId, new Coord(x, y));
+
+                    // Load neighbors if they exist
+                    if (point.has("neighbors")) {
+                        JSONArray neighbors = point.getJSONArray("neighbors");
+                        for (int j = 0; j < neighbors.length(); j++) {
+                            waypoint.addNeighbor(neighbors.getInt(j));
+                        }
+                    }
+
+                    // Load connections if they exist
+                    if (point.has("connections")) {
+                        JSONObject connections = point.getJSONObject("connections");
+                        for (String neighborHash : connections.keySet()) {
+                            JSONObject conn = connections.getJSONObject(neighborHash);
+                            String connectionTo = conn.has("connectionTo") ? conn.getString("connectionTo") : "";
+                            String connGobHash = conn.has("gobHash") ? conn.getString("gobHash") : "";
+                            String connGobName = conn.has("gobName") ? conn.getString("gobName") : "";
+                            boolean isDoor = conn.has("isDoor") ? conn.getBoolean("isDoor") : false;
+                            waypoint.addConnection(Integer.parseInt(neighborHash), connectionTo, connGobHash, connGobName, isDoor);
+                        }
+                    }
+
+                    if (point.has("reachableAreas")) {
+                        JSONArray reachableAreas = point.getJSONArray("reachableAreas");
+                        for (int j = 0; j < reachableAreas.length(); j++) {
+                            waypoint.addReachableArea(reachableAreas.getInt(j));
+                        }
+                    }
+                    routePointMap.put(id, waypoint);
+
+                }
                 waypoints.add(waypoint);
             }
         }

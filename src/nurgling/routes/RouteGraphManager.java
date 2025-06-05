@@ -18,6 +18,7 @@ public class RouteGraphManager {
     private final RouteGraph graph;
     private final Map<Integer, Route> routes = new HashMap<>();
     private boolean needsUpdate = false;
+    private Map<Integer, RoutePoint> routePointMap = new HashMap<>();
 
     public RouteGraphManager() {
         graph = new RouteGraph();
@@ -64,7 +65,7 @@ public class RouteGraphManager {
                 JSONObject main = new JSONObject(contentBuilder.toString());
                 JSONArray array = (JSONArray) main.get("routes");
                 for (int i = 0; i < array.length(); i++) {
-                    Route route = new Route((JSONObject) array.get(i));
+                    Route route = new Route((JSONObject) array.get(i), this.routePointMap);
                     routes.put(route.id, route);
                 }
 
@@ -136,7 +137,7 @@ public class RouteGraphManager {
                 }
                 // Update neighbors list if oldId is found
                 for (int i = 0; i < routePoint.neighbors.size(); i++) {
-                    if (routePoint.neighbors.get(i) == routePoint.id) {
+                    if (routePoint.neighbors.get(i) == newRoutePoint.id) {
                         routePoint.neighbors.set(i, newId); // Replace with newId
                     }
                 }
