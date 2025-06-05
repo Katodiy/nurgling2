@@ -500,30 +500,6 @@ public class RouteAutoRecorder implements Runnable {
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-            } else if (GateDetector.isLastActionNonLoadingDoor()) {
-                // Handle non-loading doors
-                try {
-                    NUtils.getUI().core.addTask(new WaitForDoorGob());
-
-                    // Add new waypoint
-                    route.addWaypoint();
-
-                    // Get the last two waypoints
-                    RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
-                    RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
-
-                    // Add connections between them
-                    lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
-
-                    Gob arch = Finder.findGob(player().rc, new NAlias(
-                            GateDetector.getDoorPair(gobForCachedRoutePoint.ngob.name)
-                    ), null, 100);
-
-                    // Add connection for the arch
-                    newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
             } else {
                 // Regular distance-based waypoint
                 if(NUtils.player() != null && NUtils.player().rc != null) {
