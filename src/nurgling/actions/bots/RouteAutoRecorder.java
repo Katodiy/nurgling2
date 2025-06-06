@@ -117,7 +117,7 @@ public class RouteAutoRecorder implements Runnable {
             } else if(gateDetector.isNearGate()) {
                 continue;
             } else if((gob == null && !GateDetector.isLastActionNonLoadingDoor()) || GateDetector.isLastActionNonLoadingDoor()) {
-                // Handle loading doors
+                // Handle loading and non-loading doors
                 try {
 
                     if(!GateDetector.isLastActionNonLoadingDoor()) {
@@ -170,6 +170,7 @@ public class RouteAutoRecorder implements Runnable {
                     if(!graph.getDoors().containsKey(hash) && !graph.getDoors().containsKey(arch.ngob.hash)) {
                         // Add new waypoint
 
+                        predefinedWaypoint.updateHashCode();
                         route.addPredefinedWaypointNoConnections(predefinedWaypoint);
 
                         // Get the last two waypoints
@@ -214,13 +215,10 @@ public class RouteAutoRecorder implements Runnable {
                             lastWaypoint.updateHashCode();
                         }
 
-                        // Add connections between them
-                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
-                        // Add connection for the arch
-                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
-
-                        lastWaypoint.addNeighbor(newWaypoint.id);
-                        newWaypoint.addNeighbor(lastWaypoint.id);
+                        addBidirectionalDoorConnection(
+                                lastWaypoint, newWaypoint,
+                                hash, name, arch.ngob.hash, arch.ngob.name
+                        );
                     } else if (graph.getDoors().containsKey(hash) && graph.getDoors().containsKey(arch.ngob.hash)) {
                         // Already existing door with less than 2 elements in the route. We've just started recording
                         // before the door and entered the door. We need to simply swap points to existing points.
@@ -249,22 +247,22 @@ public class RouteAutoRecorder implements Runnable {
                                 route.addPredefinedWaypointNoConnections(firstPointToAdd);
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
-                                firstPointToAdd.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
-
-                                firstPointToAdd.addNeighbor(secondPointToAdd.id);
-                                secondPointToAdd.addNeighbor(firstPointToAdd.id);
+                                addBidirectionalDoorConnection(
+                                        firstPointToAdd, secondPointToAdd,
+                                        hash, name,
+                                        arch.ngob.hash, arch.ngob.name
+                                );
                             } else {
                                 RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
                                 RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
 
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
-                                existingOutsideRoutePoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), arch.ngob.hash, arch.ngob.name, true);
-
-                                existingOutsideRoutePoint.addNeighbor(secondPointToAdd.id);
-                                secondPointToAdd.addNeighbor(existingOutsideRoutePoint.id);
+                                addBidirectionalDoorConnection(
+                                        existingOutsideRoutePoint, secondPointToAdd,
+                                        hash, name,
+                                        arch.ngob.hash, arch.ngob.name
+                                );
                             }
                         } else {
                             // Already existing door with more than 2 elements in the route. We've started recording
@@ -302,22 +300,22 @@ public class RouteAutoRecorder implements Runnable {
                                 route.addPredefinedWaypointNoConnections(firstPointToAdd);
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
-                                firstPointToAdd.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
-
-                                firstPointToAdd.addNeighbor(secondPointToAdd.id);
-                                secondPointToAdd.addNeighbor(firstPointToAdd.id);
+                                addBidirectionalDoorConnection(
+                                        firstPointToAdd, secondPointToAdd,
+                                        hash, name,
+                                        arch.ngob.hash, arch.ngob.name
+                                );
                             } else {
                                 RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
                                 RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
 
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
-                                existingOutsideRoutePoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), arch.ngob.hash, arch.ngob.name, true);
-
-                                existingOutsideRoutePoint.addNeighbor(secondPointToAdd.id);
-                                secondPointToAdd.addNeighbor(existingOutsideRoutePoint.id);
+                                addBidirectionalDoorConnection(
+                                        existingOutsideRoutePoint, secondPointToAdd,
+                                        hash, name,
+                                        arch.ngob.hash, arch.ngob.name
+                                );
                             }
                         }
                     } else if (graph.getDoors().containsKey(hash)) {
@@ -340,6 +338,8 @@ public class RouteAutoRecorder implements Runnable {
                                 RoutePoint firstPointToAdd = graph.getDoors().get(hash);
                                 RoutePoint secondPointToAdd = predefinedWaypoint;
 
+                                secondPointToAdd.updateHashCode();
+
                                 migrateConnectionsAndNeighbors(deletedConnections, deletedNeighbors, firstPointToAdd);
 
                                 if(!route.waypoints.get(route.waypoints.size() - 1).connections.keySet().stream().toList().contains(firstPointToAdd.id)) {
@@ -354,14 +354,15 @@ public class RouteAutoRecorder implements Runnable {
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
 
-                                firstPointToAdd.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
-
-                                firstPointToAdd.addNeighbor(secondPointToAdd.id);
-                                secondPointToAdd.addNeighbor(firstPointToAdd.id);
+                                addBidirectionalDoorConnection(
+                                        firstPointToAdd, secondPointToAdd,
+                                        hash, name,
+                                        arch.ngob.hash, arch.ngob.name
+                                );
                             } else {
                                 RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
                                 RoutePoint secondPointToAdd = predefinedWaypoint;
+                                secondPointToAdd.updateHashCode();
 
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
@@ -387,6 +388,7 @@ public class RouteAutoRecorder implements Runnable {
 
                                 RoutePoint firstPointToAdd = graph.getDoors().get(hash);
                                 RoutePoint secondPointToAdd = predefinedWaypoint;
+                                secondPointToAdd.updateHashCode();
 
                                 migrateConnectionsAndNeighbors(deletedConnections, deletedNeighbors, firstPointToAdd);
 
@@ -401,11 +403,11 @@ public class RouteAutoRecorder implements Runnable {
                                 route.addPredefinedWaypointNoConnections(firstPointToAdd);
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
-                                firstPointToAdd.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
-
-                                predefinedWaypoint.addNeighbor(secondPointToAdd.id);
-                                secondPointToAdd.addNeighbor(firstPointToAdd.id);
+                                addBidirectionalDoorConnection(
+                                        firstPointToAdd, secondPointToAdd,
+                                        hash, name,
+                                        arch.ngob.hash, arch.ngob.name
+                                );
                             } else {
                                 RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
                                 RoutePoint secondPointToAdd = predefinedWaypoint;
@@ -442,11 +444,11 @@ public class RouteAutoRecorder implements Runnable {
 
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
-                                existingOutsideRoutePoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), arch.ngob.hash, arch.ngob.name, true);
-
-                                existingOutsideRoutePoint.addNeighbor(secondPointToAdd.id);
-                                secondPointToAdd.addNeighbor(existingOutsideRoutePoint.id);
+                                addBidirectionalDoorConnection(
+                                        existingOutsideRoutePoint, secondPointToAdd,
+                                        hash, name,
+                                        arch.ngob.hash, arch.ngob.name
+                                );
                             }
                         }
                     }
@@ -533,6 +535,19 @@ public class RouteAutoRecorder implements Runnable {
             }
         }
     }
+
+    private void addBidirectionalDoorConnection(
+            RoutePoint a,
+            RoutePoint b,
+            String aToBHash, String aToBName,
+            String bToAHash, String bToAName
+    ) {
+        a.addConnection(b.id, String.valueOf(b.id), aToBHash, aToBName, true);
+        b.addConnection(a.id, String.valueOf(a.id), bToAHash, bToAName, true);
+        a.addNeighbor(b.id);
+        b.addNeighbor(a.id);
+    }
+
 
     public int hashCode(long gridId, Coord localCoord) {
         return Objects.hash(gridId, localCoord);
