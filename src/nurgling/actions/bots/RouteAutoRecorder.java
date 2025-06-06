@@ -7,6 +7,7 @@ import haven.MCache;
 import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.routes.Route;
+import nurgling.routes.RouteEditor;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
@@ -15,19 +16,20 @@ import nurgling.tools.NAlias;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static nurgling.NUtils.player;
 
 public class RouteAutoRecorder implements Runnable {
     private final Route route;
+    private final RouteEditor routeEditor;
     private boolean running = true;
     private final double interval = 77.0;
     private final GateDetector gateDetector;
 
     public RouteAutoRecorder(Route route) {
         this.route = route;
+        this.routeEditor = new RouteEditor(((NMapView) NUtils.getGameUI().map).routeGraphManager);;
         this.gateDetector = new GateDetector();
     }
 
@@ -143,7 +145,7 @@ public class RouteAutoRecorder implements Runnable {
                     Coord tilec = rc.div(MCache.tilesz).floor();
                     MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
                     Coord mineLocalCoord = tilec.sub(grid.ul);
-                    applyWaypointOffset(predefinedWaypoint, arch.ngob.name, grid.id, mineLocalCoord, arch.a);
+                    routeEditor.applyWaypointOffset(predefinedWaypoint, arch.ngob.name, grid.id, mineLocalCoord, arch.a);
 
                     RouteGraph graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
 
@@ -153,8 +155,6 @@ public class RouteAutoRecorder implements Runnable {
 
                     // Completely new door
                     if(!graph.getDoors().containsKey(hash) && !graph.getDoors().containsKey(arch.ngob.hash)) {
-                        // Add new waypoint
-
                         predefinedWaypoint.updateHashCode();
                         route.addPredefinedWaypointNoConnections(predefinedWaypoint);
 
@@ -162,7 +162,7 @@ public class RouteAutoRecorder implements Runnable {
                         RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
                         RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
 
-                        applyWaypointOffset(lastWaypoint, name, graph.getLastPlayerGridId(), graph.getLastPlayerCoord(), graph.getLastMovementDirection() + Math.PI);
+                        routeEditor.applyWaypointOffset(lastWaypoint, name, graph.getLastPlayerGridId(), graph.getLastPlayerCoord(), graph.getLastMovementDirection() + Math.PI);
 
                         Collection<RoutePoint.Connection> deletedConnections = route.waypoints.get(route.waypoints.size() - 2).getConnections();
                         List<Integer> deletedNeighbors = route.waypoints.get(route.waypoints.size() - 2).getNeighbors();
@@ -179,8 +179,8 @@ public class RouteAutoRecorder implements Runnable {
 
                             lastWaypoint = graph.getPoint(hashCode(lastWaypoint.gridId, lastWaypoint.localCoord));
 
-                            replaceAllReferences(oldId, newId);
-                            migrateConnectionsAndNeighbors(deletedConnections, deletedNeighbors, lastWaypoint);
+                            routeEditor.replaceAllReferences(oldId, newId);
+                            routeEditor.migrateConnectionsAndNeighbors(deletedConnections, deletedNeighbors, lastWaypoint);
 
                         } else if (graph.points.containsKey(lastWaypoint.id)) {
                             lastWaypoint.updateHashCode();
@@ -188,7 +188,7 @@ public class RouteAutoRecorder implements Runnable {
                             lastWaypoint.updateHashCode();
                         }
 
-                        addBidirectionalDoorConnection(
+                        routeEditor.addBidirectionalDoorConnection(
                                 lastWaypoint, newWaypoint,
                                 hash, name, arch.ngob.hash, arch.ngob.name
                         );
@@ -206,7 +206,7 @@ public class RouteAutoRecorder implements Runnable {
                                 RoutePoint firstPointToAdd = graph.getDoors().get(hash);
                                 RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
 
-                                deleteAndReplaceLastWaypoint(
+                                routeEditor.deleteAndReplaceLastWaypoint(
                                         route,
                                         firstPointToAdd,
                                         secondPointToAdd,
@@ -219,7 +219,7 @@ public class RouteAutoRecorder implements Runnable {
 
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
-                                addBidirectionalDoorConnection(
+                                routeEditor.addBidirectionalDoorConnection(
                                         existingOutsideRoutePoint, secondPointToAdd,
                                         hash, name,
                                         arch.ngob.hash, arch.ngob.name
@@ -239,7 +239,7 @@ public class RouteAutoRecorder implements Runnable {
                                 RoutePoint firstPointToAdd = graph.getDoors().get(hash);
                                 RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
 
-                                deleteAndReplaceLastWaypoint(
+                                routeEditor.deleteAndReplaceLastWaypoint(
                                         route,
                                         firstPointToAdd,
                                         secondPointToAdd,
@@ -252,7 +252,7 @@ public class RouteAutoRecorder implements Runnable {
 
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
-                                addBidirectionalDoorConnection(
+                                routeEditor.addBidirectionalDoorConnection(
                                         existingOutsideRoutePoint, secondPointToAdd,
                                         hash, name,
                                         arch.ngob.hash, arch.ngob.name
@@ -272,7 +272,7 @@ public class RouteAutoRecorder implements Runnable {
 
                                 secondPointToAdd.updateHashCode();
 
-                                deleteAndReplaceLastWaypoint(
+                                routeEditor.deleteAndReplaceLastWaypoint(
                                         route,
                                         firstPointToAdd,
                                         secondPointToAdd,
@@ -302,7 +302,7 @@ public class RouteAutoRecorder implements Runnable {
 
                                 secondPointToAdd.updateHashCode();
 
-                                deleteAndReplaceLastWaypoint(
+                                routeEditor.deleteAndReplaceLastWaypoint(
                                         route,
                                         firstPointToAdd,
                                         secondPointToAdd,
@@ -317,14 +317,14 @@ public class RouteAutoRecorder implements Runnable {
                                 grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
                                 mineLocalCoord = tilec.sub(grid.ul);
 
-                                applyWaypointOffset(secondPointToAdd, arch.ngob.name, grid.id, mineLocalCoord, arch.a);
+                                routeEditor.applyWaypointOffset(secondPointToAdd, arch.ngob.name, grid.id, mineLocalCoord, arch.a);
 
                                 int oldId = secondPointToAdd.id;
                                 int newId = hashCode(secondPointToAdd.gridId, secondPointToAdd.localCoord);
 
                                 if(graph.points.containsKey(newId) && oldId != newId) {
                                     secondPointToAdd = graph.getPoint(newId);
-                                    replaceAllReferences(oldId, newId);
+                                    routeEditor.replaceAllReferences(oldId, newId);
                                 } else if (graph.points.containsKey(oldId)) {
                                     secondPointToAdd = graph.getPoint(oldId);
                                 } else {
@@ -333,7 +333,7 @@ public class RouteAutoRecorder implements Runnable {
 
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
 
-                                addBidirectionalDoorConnection(
+                                routeEditor.addBidirectionalDoorConnection(
                                         existingOutsideRoutePoint, secondPointToAdd,
                                         hash, name,
                                         arch.ngob.hash, arch.ngob.name
@@ -355,24 +355,6 @@ public class RouteAutoRecorder implements Runnable {
         }
     }
 
-    private void migrateConnectionsAndNeighbors(
-            Collection<RoutePoint.Connection> fromConnections,
-            List<Integer> fromNeighbors,
-            RoutePoint toPoint
-    ) {
-        for (RoutePoint.Connection connection : fromConnections) {
-            int connId = Integer.parseInt(connection.connectionTo);
-            if (toPoint.id != connId) {
-                toPoint.addConnection(connId, connection);
-            }
-        }
-        for (Integer neighbor : fromNeighbors) {
-            if (toPoint.id != neighbor) {
-                toPoint.addNeighbor(neighbor);
-            }
-        }
-    }
-
     private boolean shouldDeleteLastWaypoint(Route route, RouteGraph graph) {
         RoutePoint last = route.waypoints.get(route.waypoints.size() - 1);
         for (RoutePoint door : graph.getDoors().values()) {
@@ -382,103 +364,6 @@ public class RouteAutoRecorder implements Runnable {
         }
         return true;
     }
-
-    private void cleanupReferencesAfterDelete(int deletedId) {
-        Map<Integer, Route> routes = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes();
-        for(Route route : routes.values()) {
-            for (RoutePoint point : route.waypoints) {
-                // Remove from neighbors
-                point.getNeighbors().removeIf(n -> n == deletedId);
-
-                // Remove from connections
-                if (point.connections != null) {
-                    point.connections.remove(deletedId);
-                }
-            }
-        }
-    }
-
-    private void replaceAllReferences(int oldId, int newId) {
-        Map<Integer, Route> routes = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes();
-        for (Route route : routes.values()) {
-            for (RoutePoint point : route.waypoints) {
-                // Replace in neighbors
-                List<Integer> neighbors = point.getNeighbors();
-                for (int i = 0; i < neighbors.size(); i++) {
-                    if (neighbors.get(i) == oldId) {
-                        neighbors.set(i, newId);
-                    }
-                }
-                // Replace in connections
-                if (point.connections != null && point.connections.containsKey(oldId)) {
-                    RoutePoint.Connection conn = point.connections.remove(oldId);
-                    point.connections.put(newId, conn);
-                    conn.connectionTo = String.valueOf(newId); // Update the target
-                }
-                // Also update connectionTo fields in case they're string-based and point to oldId
-                for (RoutePoint.Connection conn : point.connections.values()) {
-                    if (conn.connectionTo.equals(String.valueOf(oldId))) {
-                        conn.connectionTo = String.valueOf(newId);
-                    }
-                }
-            }
-        }
-    }
-
-    private void addBidirectionalDoorConnection(
-            RoutePoint a,
-            RoutePoint b,
-            String aToBHash, String aToBName,
-            String bToAHash, String bToAName
-    ) {
-        a.addConnection(b.id, String.valueOf(b.id), aToBHash, aToBName, true);
-        b.addConnection(a.id, String.valueOf(a.id), bToAHash, bToAName, true);
-        a.addNeighbor(b.id);
-        b.addNeighbor(a.id);
-    }
-
-    private void applyWaypointOffset(RoutePoint wp, String typeName, long gridId, Coord playerCoord, Double angleOpt) {
-        int offset = 2;
-        wp.gridId = gridId;
-        if ("gfx/terobjs/minehole".equals(typeName)) {
-            double angle = (angleOpt != null) ? angleOpt : 0.0;
-            Coord newPosition = new Coord(
-                    (int)Math.round(playerCoord.x + Math.cos(angle) * offset),
-                    (int)Math.round(playerCoord.y + Math.sin(angle) * offset)
-            );
-            wp.localCoord = newPosition;
-        } else {
-            wp.localCoord = playerCoord;
-        }
-    }
-
-    private void deleteAndReplaceLastWaypoint(
-            Route route,
-            RoutePoint firstPointToAdd,
-            RoutePoint secondPointToAdd,
-            String hash1, String name1, String hash2, String name2
-    ) {
-        int idx = route.waypoints.size() - 1;
-        if(idx < 0) return; // Safety check
-
-        RoutePoint pointToDelete = route.waypoints.get(idx);
-        Collection<RoutePoint.Connection> deletedConnections = pointToDelete.getConnections();
-        List<Integer> deletedNeighbors = pointToDelete.getNeighbors();
-
-        route.deleteWaypoint(pointToDelete);
-        cleanupReferencesAfterDelete(pointToDelete.id);
-
-        migrateConnectionsAndNeighbors(deletedConnections, deletedNeighbors, firstPointToAdd);
-
-        route.addPredefinedWaypointNoConnections(firstPointToAdd);
-        route.addPredefinedWaypointNoConnections(secondPointToAdd);
-
-        addBidirectionalDoorConnection(
-                firstPointToAdd, secondPointToAdd,
-                hash1, name1, hash2, name2
-        );
-    }
-
 
     public int hashCode(long gridId, Coord localCoord) {
         return Objects.hash(gridId, localCoord);
