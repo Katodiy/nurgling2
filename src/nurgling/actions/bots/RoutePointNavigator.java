@@ -130,8 +130,6 @@ public class RoutePointNavigator implements Action {
         return Results.SUCCESS();
     }
 
-
-
     private boolean needToPassDoor(RoutePoint.Connection conn, RoutePoint nextPoint, NGameUI gui) {
         Gob gob = Finder.findGob(conn.gobHash);
         if (gob == null) {

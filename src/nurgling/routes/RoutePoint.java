@@ -149,8 +149,6 @@ public class RoutePoint {
     public int updateHashCode() {
         int newHashCode = Objects.hash(this.gridId, this.localCoord);
 
-        System.out.println("Old hash code: " + id);
-        System.out.println("New hash code: " + newHashCode);
         if(this.id != newHashCode) {
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateConnections(this, newHashCode);
             this.id = newHashCode;

@@ -181,6 +181,15 @@ public class Route {
         ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateGraph();
     }
 
+    public RoutePoint getLastWaypoint() {
+        if (waypoints.isEmpty()) return null;
+        return waypoints.get(waypoints.size() - 1);
+    }
+
+    public RoutePoint getSecondToLastWaypoint() {
+        if (waypoints.size() < 2) return null;
+        return waypoints.get(waypoints.size() - 2);
+    }
 
     public Route(JSONObject obj) {
         this.name = obj.getString("name");
