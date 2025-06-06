@@ -15,6 +15,7 @@ import nurgling.tools.NAlias;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static nurgling.NUtils.player;
@@ -195,25 +196,19 @@ public class RouteAutoRecorder implements Runnable {
                         // TODO WE NEED TO MAKE SURE THERE IS NO EXISTING DOOR ON NEW POSITION. CALCULATE HASH AND LOOK
                         // UP DOORS. IF DOOR (points) EXISTS USE IT.
                         if(graph.points.containsKey(hashCode(lastWaypoint.gridId, lastWaypoint.localCoord))) {
+                            int oldId = lastWaypoint.id;
+                            int newId = hashCode(lastWaypoint.gridId, lastWaypoint.localCoord);
+
                             if(lastWaypoint.id != hashCode(lastWaypoint.gridId, lastWaypoint.localCoord)) {
                                 ((NMapView) NUtils.getGameUI().map).routeGraphManager.deleteRoutePointFromNeighborsAndConnections(lastWaypoint);
                             }
 
                             lastWaypoint = graph.getPoint(hashCode(lastWaypoint.gridId, lastWaypoint.localCoord));
 
-                            for(RoutePoint.Connection connection : deletedConnections) {
-                                if(lastWaypoint.id != Integer.parseInt(connection.connectionTo)) {
-                                    lastWaypoint.addConnection(Integer.parseInt(connection.connectionTo), connection);
-                                }
-                            }
+                            replaceAllReferences(oldId, newId);
+                            migrateConnectionsAndNeighbors(deletedConnections, deletedNeighbors, lastWaypoint);
 
-                            for(Integer neighbor : deletedNeighbors) {
-                                if(lastWaypoint.id != neighbor) {
-                                    lastWaypoint.addNeighbor(neighbor);
-                                }
-                            }
                         } else if (graph.points.containsKey(lastWaypoint.id)) {
-//                            lastWaypoint = graph.getPoint(lastWaypoint.id);
                             lastWaypoint.updateHashCode();
                         } else {
                             lastWaypoint.updateHashCode();
@@ -234,41 +229,25 @@ public class RouteAutoRecorder implements Runnable {
                             // We need to make sure that the outside point is not an actual door that is stored in the
                             // graph. If it is we cannot use delete and have to simply swap. If it's a new
                             // point that does not exist in graph doors we can safely delete it.
-                            boolean needToDeleteLastPoint = true;
-
-                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
-
-                            for(RoutePoint routePoint : graph.getDoors().values()) {
-                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
-                                    needToDeleteLastPoint = false;
-                                    break;
-                                }
-                            }
+                            boolean needToDeleteLastPoint = shouldDeleteLastWaypoint(route, graph);
 
                             if(needToDeleteLastPoint) {
                                 Collection<RoutePoint.Connection> deletedConnections = route.waypoints.get(route.waypoints.size() - 1).getConnections();
                                 List<Integer> deletedNeighbors = route.waypoints.get(route.waypoints.size() - 1).getNeighbors();
 
-                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
+                                RoutePoint pointToDelete = route.waypoints.get(route.waypoints.size() - 1);
+
+                                route.deleteWaypoint(pointToDelete);
+
+                                cleanupReferencesAfterDelete(pointToDelete.id);
 
                                 RoutePoint firstPointToAdd = graph.getDoors().get(hash);
                                 RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
 
-                                for(RoutePoint.Connection connection : deletedConnections) {
-                                    if(firstPointToAdd.id != Integer.parseInt(connection.connectionTo)) {
-                                        firstPointToAdd.addConnection(Integer.parseInt(connection.connectionTo), connection);
-                                    }
-                                }
-
-                                for(Integer neighbor : deletedNeighbors) {
-                                    if(firstPointToAdd.id != neighbor) {
-                                        firstPointToAdd.addNeighbor(neighbor);
-                                    }
-                                }
+                                migrateConnectionsAndNeighbors(deletedConnections, deletedNeighbors, firstPointToAdd);
 
                                 route.addPredefinedWaypointNoConnections(firstPointToAdd);
                                 route.addPredefinedWaypointNoConnections(secondPointToAdd);
-
 
                                 firstPointToAdd.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
                                 secondPointToAdd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
@@ -295,38 +274,22 @@ public class RouteAutoRecorder implements Runnable {
                             // We need to make sure that the outside point is not an actual door that is stored in the
                             // graph. If it is we cannot use delete and have to simply swap. If it's a new
                             // point that does not exist in graph doors we can safely delete it.
-                            boolean needToDeleteLastPoint = true;
-
-                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
-
-                            for(RoutePoint routePoint : graph.getDoors().values()) {
-                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
-                                    needToDeleteLastPoint = false;
-                                    break;
-                                }
-                            }
+                            boolean needToDeleteLastPoint = shouldDeleteLastWaypoint(route, graph);
 
                             if(needToDeleteLastPoint) {
                                 Collection<RoutePoint.Connection> deletedConnections = route.waypoints.get(route.waypoints.size() - 1).getConnections();
                                 List<Integer> deletedNeighbors = route.waypoints.get(route.waypoints.size() - 1).getNeighbors();
 
-                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
+                                RoutePoint pointToDelete = route.waypoints.get(route.waypoints.size() - 1);
+
+                                route.deleteWaypoint(pointToDelete);
+
+                                cleanupReferencesAfterDelete(pointToDelete.id);
 
                                 RoutePoint firstPointToAdd = graph.getDoors().get(hash);
                                 RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
 
-                                for(RoutePoint.Connection connection : deletedConnections) {
-                                    if(firstPointToAdd.id != Integer.parseInt(connection.connectionTo)) {
-                                        firstPointToAdd.addConnection(Integer.parseInt(connection.connectionTo), connection);
-                                    }
-                                }
-
-                                for(Integer neighbor : deletedNeighbors) {
-                                    if(firstPointToAdd.id != neighbor) {
-                                        firstPointToAdd.addNeighbor(neighbor);
-                                    }
-                                }
-
+                                migrateConnectionsAndNeighbors(deletedConnections, deletedNeighbors, firstPointToAdd);
 
                                 if(!route.waypoints.get(route.waypoints.size() - 1).connections.keySet().stream().toList().contains(firstPointToAdd.id)) {
                                     route.waypoints.get(route.waypoints.size() - 1).addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), "", "", false);
@@ -362,38 +325,22 @@ public class RouteAutoRecorder implements Runnable {
                         // door and create a new door point on the inside. We then connect the points the same way we
                         // always do.
                         if (route.waypoints.size() <= 1) {
-                            boolean needToDeleteLastPoint = true;
-
-                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
-
-                            for(RoutePoint routePoint : graph.getDoors().values()) {
-                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
-                                    needToDeleteLastPoint = false;
-                                    break;
-                                }
-                            }
+                            boolean needToDeleteLastPoint = shouldDeleteLastWaypoint(route, graph);
 
                             if(needToDeleteLastPoint) {
                                 Collection<RoutePoint.Connection> deletedConnections = route.waypoints.get(route.waypoints.size() - 1).getConnections();
                                 List<Integer> deletedNeighbors = route.waypoints.get(route.waypoints.size() - 1).getNeighbors();
 
-                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
+                                RoutePoint pointToDelete = route.waypoints.get(route.waypoints.size() - 1);
+
+                                route.deleteWaypoint(pointToDelete);
+
+                                cleanupReferencesAfterDelete(pointToDelete.id);
 
                                 RoutePoint firstPointToAdd = graph.getDoors().get(hash);
                                 RoutePoint secondPointToAdd = predefinedWaypoint;
 
-                                for(RoutePoint.Connection connection : deletedConnections) {
-                                    if(firstPointToAdd.id != Integer.parseInt(connection.connectionTo)) {
-                                        firstPointToAdd.addConnection(Integer.parseInt(connection.connectionTo), connection);
-                                    }
-                                }
-
-                                for(Integer neighbor : deletedNeighbors) {
-                                    if(firstPointToAdd.id != neighbor) {
-                                        firstPointToAdd.addNeighbor(neighbor);
-                                    }
-                                }
-
+                                migrateConnectionsAndNeighbors(deletedConnections, deletedNeighbors, firstPointToAdd);
 
                                 if(!route.waypoints.get(route.waypoints.size() - 1).connections.keySet().stream().toList().contains(firstPointToAdd.id)) {
                                     route.waypoints.get(route.waypoints.size() - 1).addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), "", "", false);
@@ -426,38 +373,22 @@ public class RouteAutoRecorder implements Runnable {
                             }
                         } else {
 
-                            boolean needToDeleteLastPoint = true;
-
-                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
-
-                            for(RoutePoint routePoint : graph.getDoors().values()) {
-                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
-                                    needToDeleteLastPoint = false;
-                                    break;
-                                }
-                            }
+                            boolean needToDeleteLastPoint = shouldDeleteLastWaypoint(route, graph);
 
                             if(needToDeleteLastPoint) {
                                 Collection<RoutePoint.Connection> deletedConnections = route.waypoints.get(route.waypoints.size() - 1).getConnections();
                                 List<Integer> deletedNeighbors = route.waypoints.get(route.waypoints.size() - 1).getNeighbors();
 
-                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
+                                RoutePoint pointToDelete = route.waypoints.get(route.waypoints.size() - 1);
+
+                                route.deleteWaypoint(pointToDelete);
+
+                                cleanupReferencesAfterDelete(pointToDelete.id);
 
                                 RoutePoint firstPointToAdd = graph.getDoors().get(hash);
                                 RoutePoint secondPointToAdd = predefinedWaypoint;
 
-                                for(RoutePoint.Connection connection : deletedConnections) {
-                                    if(firstPointToAdd.id != Integer.parseInt(connection.connectionTo)) {
-                                        firstPointToAdd.addConnection(Integer.parseInt(connection.connectionTo), connection);
-                                    }
-                                }
-
-                                for(Integer neighbor : deletedNeighbors) {
-                                    if(firstPointToAdd.id != neighbor) {
-                                        firstPointToAdd.addNeighbor(neighbor);
-                                    }
-                                }
-
+                                migrateConnectionsAndNeighbors(deletedConnections, deletedNeighbors, firstPointToAdd);
 
                                 if(!route.waypoints.get(route.waypoints.size() - 1).connections.keySet().stream().toList().contains(firstPointToAdd.id)) {
                                     route.waypoints.get(route.waypoints.size() - 1).addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), "", "", false);
@@ -497,10 +428,14 @@ public class RouteAutoRecorder implements Runnable {
                                     secondPointToAdd.localCoord = newPosition;
                                 }
 
-                                if(graph.points.containsKey(hashCode(secondPointToAdd.gridId, secondPointToAdd.localCoord))) {
-                                    secondPointToAdd = graph.getPoint(hashCode(secondPointToAdd.gridId, secondPointToAdd.localCoord));
-                                } else if (graph.points.containsKey(secondPointToAdd.id)) {
-                                    secondPointToAdd = graph.getPoint(secondPointToAdd.id);
+                                int oldId = secondPointToAdd.id;
+                                int newId = hashCode(secondPointToAdd.gridId, secondPointToAdd.localCoord);
+
+                                if(graph.points.containsKey(newId) && oldId != newId) {
+                                    secondPointToAdd = graph.getPoint(newId);
+                                    replaceAllReferences(oldId, newId);
+                                } else if (graph.points.containsKey(oldId)) {
+                                    secondPointToAdd = graph.getPoint(oldId);
                                 } else {
                                     secondPointToAdd.updateHashCode();
                                 }
@@ -526,6 +461,76 @@ public class RouteAutoRecorder implements Runnable {
             }
 
             route.lastAction = null;
+        }
+    }
+
+    private void migrateConnectionsAndNeighbors(
+            Collection<RoutePoint.Connection> fromConnections,
+            List<Integer> fromNeighbors,
+            RoutePoint toPoint
+    ) {
+        for (RoutePoint.Connection connection : fromConnections) {
+            int connId = Integer.parseInt(connection.connectionTo);
+            if (toPoint.id != connId) {
+                toPoint.addConnection(connId, connection);
+            }
+        }
+        for (Integer neighbor : fromNeighbors) {
+            if (toPoint.id != neighbor) {
+                toPoint.addNeighbor(neighbor);
+            }
+        }
+    }
+
+    private boolean shouldDeleteLastWaypoint(Route route, RouteGraph graph) {
+        RoutePoint last = route.waypoints.get(route.waypoints.size() - 1);
+        for (RoutePoint door : graph.getDoors().values()) {
+            if (door.id == last.id) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void cleanupReferencesAfterDelete(int deletedId) {
+        Map<Integer, Route> routes = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes();
+        for(Route route : routes.values()) {
+            for (RoutePoint point : route.waypoints) {
+                // Remove from neighbors
+                point.getNeighbors().removeIf(n -> n == deletedId);
+
+                // Remove from connections
+                if (point.connections != null) {
+                    point.connections.remove(deletedId);
+                }
+            }
+        }
+    }
+
+    private void replaceAllReferences(int oldId, int newId) {
+        Map<Integer, Route> routes = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes();
+        for (Route route : routes.values()) {
+            for (RoutePoint point : route.waypoints) {
+                // Replace in neighbors
+                List<Integer> neighbors = point.getNeighbors();
+                for (int i = 0; i < neighbors.size(); i++) {
+                    if (neighbors.get(i) == oldId) {
+                        neighbors.set(i, newId);
+                    }
+                }
+                // Replace in connections
+                if (point.connections != null && point.connections.containsKey(oldId)) {
+                    RoutePoint.Connection conn = point.connections.remove(oldId);
+                    point.connections.put(newId, conn);
+                    conn.connectionTo = String.valueOf(newId); // Update the target
+                }
+                // Also update connectionTo fields in case they're string-based and point to oldId
+                for (RoutePoint.Connection conn : point.connections.values()) {
+                    if (conn.connectionTo.equals(String.valueOf(oldId))) {
+                        conn.connectionTo = String.valueOf(newId);
+                    }
+                }
+            }
         }
     }
 
