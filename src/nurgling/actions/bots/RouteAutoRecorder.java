@@ -140,25 +140,10 @@ public class RouteAutoRecorder implements Runnable {
 
                     // For the minehole we have to add an offset, otherwise the minehole point gets created right on
                     // top of the minehole causing it to be unreachable with PF.
-                    if(arch != null) {
-                        if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
-                            double angle = arch.a;
-                            double offset = 2;
-
-                            Coord tilec = rc.div(MCache.tilesz).floor();
-                            MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
-
-                            Coord mineLocalCoord = tilec.sub(grid.ul);
-
-                            Coord newPosition = new Coord(
-                                    (int)Math.round(mineLocalCoord.x + Math.cos(angle) * offset),
-                                    (int)Math.round(mineLocalCoord.y +  Math.sin(angle) * offset)
-                            );
-
-                            predefinedWaypoint.gridId = grid.id;
-                            predefinedWaypoint.localCoord = newPosition;
-                        }
-                    }
+                    Coord tilec = rc.div(MCache.tilesz).floor();
+                    MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
+                    Coord mineLocalCoord = tilec.sub(grid.ul);
+                    applyWaypointOffset(predefinedWaypoint, arch.ngob.name, grid.id, mineLocalCoord, arch.a);
 
                     RouteGraph graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
 
@@ -177,19 +162,7 @@ public class RouteAutoRecorder implements Runnable {
                         RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
                         RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
 
-                        if(!(name.equals("gfx/terobjs/minehole"))) {
-                            lastWaypoint.gridId = graph.getLastPlayerGridId();
-                            lastWaypoint.localCoord = graph.getLastPlayerCoord();
-                        } else {
-                            int offset = 2;
-                            lastWaypoint.gridId = graph.getLastPlayerGridId();
-                            double oppositeDirection = graph.getLastMovementDirection() + Math.PI;
-                            Coord newPosition = new Coord(
-                                    (int)Math.round(graph.getLastPlayerCoord().x + Math.cos(oppositeDirection) * offset),
-                                    (int)Math.round(graph.getLastPlayerCoord().y +  Math.sin(oppositeDirection) * offset)
-                            );
-                            lastWaypoint.localCoord = newPosition;
-                        }
+                        applyWaypointOffset(lastWaypoint, name, graph.getLastPlayerGridId(), graph.getLastPlayerCoord(), graph.getLastMovementDirection() + Math.PI);
 
                         Collection<RoutePoint.Connection> deletedConnections = route.waypoints.get(route.waypoints.size() - 2).getConnections();
                         List<Integer> deletedNeighbors = route.waypoints.get(route.waypoints.size() - 2).getNeighbors();
@@ -412,23 +385,11 @@ public class RouteAutoRecorder implements Runnable {
                                 RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
                                 RoutePoint secondPointToAdd = predefinedWaypoint;
 
-                                if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
-                                    double angle = arch.a;
-                                    double offset = 2;
+                                tilec = rc.div(MCache.tilesz).floor();
+                                grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
+                                mineLocalCoord = tilec.sub(grid.ul);
 
-                                    Coord tilec = rc.div(MCache.tilesz).floor();
-                                    MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
-
-                                    Coord mineLocalCoord = tilec.sub(grid.ul);
-
-                                    Coord newPosition = new Coord(
-                                            (int)Math.round(mineLocalCoord.x + Math.cos(angle) * offset),
-                                            (int)Math.round(mineLocalCoord.y +  Math.sin(angle) * offset)
-                                    );
-
-                                    secondPointToAdd.gridId = grid.id;
-                                    secondPointToAdd.localCoord = newPosition;
-                                }
+                                applyWaypointOffset(secondPointToAdd, arch.ngob.name, grid.id, mineLocalCoord, arch.a);
 
                                 int oldId = secondPointToAdd.id;
                                 int newId = hashCode(secondPointToAdd.gridId, secondPointToAdd.localCoord);
@@ -548,6 +509,20 @@ public class RouteAutoRecorder implements Runnable {
         b.addNeighbor(a.id);
     }
 
+    private void applyWaypointOffset(RoutePoint wp, String typeName, long gridId, Coord playerCoord, Double angleOpt) {
+        int offset = 2;
+        wp.gridId = gridId;
+        if ("gfx/terobjs/minehole".equals(typeName)) {
+            double angle = (angleOpt != null) ? angleOpt : 0.0;
+            Coord newPosition = new Coord(
+                    (int)Math.round(playerCoord.x + Math.cos(angle) * offset),
+                    (int)Math.round(playerCoord.y + Math.sin(angle) * offset)
+            );
+            wp.localCoord = newPosition;
+        } else {
+            wp.localCoord = playerCoord;
+        }
+    }
 
     public int hashCode(long gridId, Coord localCoord) {
         return Objects.hash(gridId, localCoord);
