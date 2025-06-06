@@ -18,6 +18,7 @@ public class RouteGraphManager {
     private final RouteGraph graph;
     private final Map<Integer, Route> routes = new HashMap<>();
     private boolean needsUpdate = false;
+    private Map<Integer, RoutePoint> routePointMap = new HashMap<>();
 
     public RouteGraphManager() {
         graph = new RouteGraph();
@@ -64,7 +65,7 @@ public class RouteGraphManager {
                 JSONObject main = new JSONObject(contentBuilder.toString());
                 JSONArray array = (JSONArray) main.get("routes");
                 for (int i = 0; i < array.length(); i++) {
-                    Route route = new Route((JSONObject) array.get(i));
+                    Route route = new Route((JSONObject) array.get(i), this.routePointMap);
                     routes.put(route.id, route);
                 }
 
@@ -80,6 +81,7 @@ public class RouteGraphManager {
     }
 
     private void refreshDoors() {
+        graph.clearDoors();
         for (Route route : this.routes.values()) {
             for (RoutePoint routePoint : route.waypoints) {
                 graph.generateDoors(routePoint);
@@ -120,6 +122,99 @@ public class RouteGraphManager {
             if (point.neighbors != null && point.neighbors.contains(routePoint.id)) {
                 point.neighbors.remove(Integer.valueOf(routePoint.id));
                 point.removeConnection(routePoint.id);
+            }
+        }
+    }
+    public void updateConnections(RoutePoint newRoutePoint, int newId) {
+        String oldIdStr = String.valueOf(newRoutePoint.id);  // Convert oldId to String once
+
+        for (Route route : routes.values()) {
+            for (RoutePoint routePoint : route.waypoints) {
+                if(routePoint.id == newId) {
+                    mergeConnectionsAndNeighbors(newRoutePoint, routePoint);
+                } else if (routePoint.id == newRoutePoint.id) {
+                    mergeConnectionsAndNeighbors(newRoutePoint, routePoint);
+                }
+                // Update neighbors list if oldId is found
+                for (int i = 0; i < routePoint.neighbors.size(); i++) {
+                    if (routePoint.neighbors.get(i) == newRoutePoint.id) {
+                        routePoint.neighbors.set(i, newId); // Replace with newId
+                    }
+                }
+
+                // Use a list to accumulate keys to be removed or updated
+                List<Integer> keysToRemove = new ArrayList<>();
+                Map<Integer, RoutePoint.Connection> updatedConnections = new HashMap<>();
+
+                // Iterate through the map and collect modifications
+                for (Map.Entry<Integer, RoutePoint.Connection> entry : routePoint.connections.entrySet()) {
+                    RoutePoint.Connection connection = entry.getValue();
+
+                    // Check if connectionTo matches oldId (using String comparison)
+                    if (connection.connectionTo.equals(oldIdStr)) {
+                        // Update the connectionTo with the newId
+                        connection.connectionTo = String.valueOf(newId);
+
+                        // Mark the current key for removal and collect the updated connection
+                        keysToRemove.add(entry.getKey());
+                        updatedConnections.put(newId, connection);
+                    }
+                }
+
+                // Now remove the old entries
+                for (Integer key : keysToRemove) {
+                    routePoint.connections.remove(key);
+                }
+
+                // Add the new entries with the updated key (newId)
+                for (Map.Entry<Integer, RoutePoint.Connection> entry : updatedConnections.entrySet()) {
+                    routePoint.connections.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+
+        this.needsUpdate = true;
+        updateGraph();
+        NConfig.needRoutesUpdate();
+    }
+
+    private void mergeConnectionsAndNeighbors(RoutePoint a, RoutePoint b) {
+        // Merge neighbors (b → a)
+        List<Integer> bNeighbors = new ArrayList<>(b.neighbors);
+        for (int neighbor : bNeighbors) {
+            if (!a.neighbors.contains(neighbor) && neighbor != a.id) {
+                a.neighbors.add(neighbor);
+            }
+        }
+
+        // Merge neighbors (a → b)
+        List<Integer> aNeighbors = new ArrayList<>(a.neighbors);
+        for (int neighbor : aNeighbors) {
+            if (!b.neighbors.contains(neighbor) && neighbor != b.id) {
+                b.neighbors.add(neighbor);
+            }
+        }
+
+        // Merge connections (b → a)
+        for (Map.Entry<Integer, RoutePoint.Connection> entry : b.connections.entrySet()) {
+            a.connections.putIfAbsent(entry.getKey(), entry.getValue());
+        }
+
+        // Merge connections (a → b)
+        for (Map.Entry<Integer, RoutePoint.Connection> entry : a.connections.entrySet()) {
+            b.connections.putIfAbsent(entry.getKey(), entry.getValue());
+        }
+
+        // Merge reachableAreas
+        for (int area : b.getReachableAreas()) {
+            if (!a.getReachableAreas().contains(area)) {
+                a.getReachableAreas().add(area);
+            }
+        }
+
+        for (int area : a.getReachableAreas()) {
+            if (!b.getReachableAreas().contains(area)) {
+                b.getReachableAreas().add(area);
             }
         }
     }

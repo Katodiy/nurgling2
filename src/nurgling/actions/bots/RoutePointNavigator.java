@@ -7,10 +7,7 @@ import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
-import nurgling.tasks.GateDetector;
-import nurgling.tasks.WaitForGobWithHash;
-import nurgling.tasks.WaitForMapLoad;
-import nurgling.tasks.WaitGobModelAttrChange;
+import nurgling.tasks.*;
 import nurgling.tools.Finder;
 
 import java.util.List;
@@ -52,7 +49,8 @@ public class RoutePointNavigator implements Action {
         // Find path to target
         List<RoutePoint> path = graph.findPath(startPoint, targetPoint);
         if (path == null || path.isEmpty()) {
-            gui.error("No path found to target waypoint");
+            gui.error(String.format("No path found to target waypoint. Start point: %s, end point: %s", startPoint.id, targetPoint.id));
+            System.out.printf("No path found to target waypoint. Start point: %s, end point: %s%n", startPoint.id, targetPoint.id);
             return Results.FAIL();
         }
 
@@ -72,8 +70,19 @@ public class RoutePointNavigator implements Action {
 
             Coord2d target = path.get(i).toCoord2d(gui.map.glob.map);
             if (target == null) {
+
+                for(RoutePoint point : path) {
+                    System.out.println(point.id);
+                }
+
                 gui.error(String.format("Target coord %s is null", path.get(i).id));
+                System.out.printf("Target coord %s is null%n", path.get(i).id);
                 continue;
+            }
+
+            if (NUtils.getGameUI().map.player() == null) {
+                gui.error("Player was null, waiting for player");
+                NUtils.getUI().core.addTask(new WaitPlayerNotNull());
             }
 
             new PathFinder(target).run(gui);
@@ -120,8 +129,6 @@ public class RoutePointNavigator implements Action {
 
         return Results.SUCCESS();
     }
-
-
 
     private boolean needToPassDoor(RoutePoint.Connection conn, RoutePoint nextPoint, NGameUI gui) {
         Gob gob = Finder.findGob(conn.gobHash);

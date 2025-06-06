@@ -51,7 +51,9 @@ public class RoutePoint {
     }
 
     public void addNeighbor(int id) {
-        neighbors.add(id);
+        if(!neighbors.contains(Integer.valueOf(id))) {
+            neighbors.add(id);
+        }
     }
 
     public List<Integer> getNeighbors() {
@@ -60,6 +62,10 @@ public class RoutePoint {
 
     public void addConnection(int neighborHash, String connectionTo, String gobHash, String gobName, boolean isDoor) {
         connections.put(neighborHash, new Connection(connectionTo, gobHash, gobName, isDoor));
+    }
+
+    public void addConnection(int neighborHash, Connection connection) {
+        connections.put(neighborHash, connection);
     }
 
     public Connection getConnection(int neighborHash) {
@@ -77,6 +83,10 @@ public class RoutePoint {
     public void setLocalCoord(Coord localCoord) {
         this.localCoord = localCoord;
         this.id = hashCode();
+    }
+
+    public void setGridId(long gridId) {
+        this.gridId = gridId;
     }
 
     public ArrayList<Integer> getReachableAreas() {
@@ -134,5 +144,15 @@ public class RoutePoint {
     @Override
     public int hashCode() {
         return Objects.hash(this.gridId, this.localCoord);
+    }
+
+    public int updateHashCode() {
+        int newHashCode = Objects.hash(this.gridId, this.localCoord);
+
+        if(this.id != newHashCode) {
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateConnections(this, newHashCode);
+            this.id = newHashCode;
+        }
+        return newHashCode;
     }
 }

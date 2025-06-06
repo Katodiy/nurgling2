@@ -5,25 +5,30 @@ import haven.Coord2d;
 import haven.Gob;
 import haven.MCache;
 import nurgling.NMapView;
-import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.routes.Route;
+import nurgling.routes.RouteEditor;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+
 import static nurgling.NUtils.player;
 
 public class RouteAutoRecorder implements Runnable {
     private final Route route;
+    private final RouteEditor routeEditor;
     private boolean running = true;
-    private final double interval = 77.0;
     private final GateDetector gateDetector;
 
     public RouteAutoRecorder(Route route) {
         this.route = route;
+        this.routeEditor = new RouteEditor(((NMapView) NUtils.getGameUI().map).routeGraphManager);
         this.gateDetector = new GateDetector();
     }
 
@@ -31,6 +36,15 @@ public class RouteAutoRecorder implements Runnable {
         running = false;
     }
 
+    /**
+     * Main recording loop for automatic route creation.
+     *
+     * <p>This method monitors player movement, adds regular waypoints, and handles
+     * special cases such as passing through gates or doors. It delegates all
+     * scenario-specific logic to private helper methods, keeping the main loop readable.
+     *
+     * <p>The loop terminates if recording is stopped or an interrupt is detected.
+     */
     @Override
     public void run() {
         Coord2d playerRC = player().rc;
@@ -39,17 +53,15 @@ public class RouteAutoRecorder implements Runnable {
         route.addWaypoint();
 
         while (running) {
+            // Wait for player to move to next point (or until interrupted)
             try {
-                NUtils.getUI().core.addTask(new WaitNextPointForRouteAutoRecorder(playerRC, interval, this.route));
+                NUtils.getUI().core.addTask(new WaitNextPointForRouteAutoRecorder(playerRC, this.route));
             } catch (InterruptedException e) {
                 NUtils.getGameUI().msg("Stopped route recording for: " + route.name);
                 running = false;
             }
 
-            if (!running) {
-                NConfig.needRoutesUpdate();
-                break;
-            }
+            if (!running) break;
 
             Gob gob = null;
 
@@ -59,62 +71,38 @@ public class RouteAutoRecorder implements Runnable {
                 playerRC = playerGob.rc;
                 gob = Finder.findGob(playerGob.ngob.hash);
             } else {
-                playerRC = null;
+                try {
+                    NUtils.getUI().core.addTask(new WaitPlayerNotNull());
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                playerRC = player().rc;
             }
 
             // get the hash of the last clicked gob (door, minehole, ladder, cellar, stairs, gate)
-            String hash = route.lastAction != null ? route.lastAction.gob.ngob.hash : null;
-            String name = route.lastAction != null ? route.lastAction.gob.ngob.name : null;
+            String lastClickedGobHash = route.lastAction != null ? route.lastAction.gob.ngob.hash : null;
+            String lastClickedGobName = route.lastAction != null ? route.lastAction.gob.ngob.name : null;
             Gob gobForCachedRoutePoint = route.lastAction != null ? route.lastAction.gob : null;
 
 
-            // Handle gate detection and waypoint creation
+            // Handle scenario: player has just passed through a gate
             if(route.hasPassedGate) {
-                // We've passed through a gate, add both waypoints
-                if (route.cachedRoutePoint != null) {
-                    // Calculate position for the point before the gate
-                    Coord tilec = player().rc.div(MCache.tilesz).floor();
-                    MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
-                    Coord playerLocalCoord = tilec.sub(grid.ul);
-                    Coord preRecordedCoord = route.cachedRoutePoint.localCoord;
+                handleGatePassed();
+                continue;
 
-                    // based on position of the player and preRecordedCoords we figure out which direction to offset
-                    // the preRecordedCoord. The reason for this is that the point gets recorded right on top of the
-                    // gate.
-                    Coord newCoordForAfterGate = preRecordedCoord.add((playerLocalCoord.x > preRecordedCoord.x ? -1 : playerLocalCoord.x < preRecordedCoord.x ? 1 : 0), (playerLocalCoord.y > preRecordedCoord.y ? -1 : playerLocalCoord.y < preRecordedCoord.y ? 1 : 0));
-
-                    // Update the coords
-                    route.cachedRoutePoint.setLocalCoord(newCoordForAfterGate);
-
-                    // Add the waypoint.
-                    route.addPredefinedWaypoint(route.cachedRoutePoint, "", "", false);
-
-                    route.addWaypoint();
-                    // Get the last two waypoints (one before gate, one after)
-                    RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
-                    RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
-
-                    // Add connections between them through the gate we passed
-                    if(route.lastPassedGate != null) {
-                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id),
-                                route.lastPassedGate.ngob.hash, route.lastPassedGate.ngob.name, true);
-                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id),
-                                route.lastPassedGate.ngob.hash, route.lastPassedGate.ngob.name, true);
-                    }
-
-                    // Clear the cached point
-                    route.cachedRoutePoint = null;
-                    route.hasPassedGate = false;
-                    route.lastPassedGate = null;
-                    continue;
-                }
+            // Handle scenario: player is near a gate (wait, do not record a waypoint yet)
             } else if(gateDetector.isNearGate()) {
                 continue;
-            } else if(gob == null && !GateDetector.isLastActionNonLoadingDoor()) {
-                // Handle loading doors
+
+            // Handle all door transitions (loading, non-loading, new, existing, etc.)
+            } else if((gob == null && !GateDetector.isLastActionNonLoadingDoor()) || GateDetector.isLastActionNonLoadingDoor()) {
                 try {
-                    NUtils.getUI().core.addTask(new WaitForNoGobWithHash(hash));
-                    NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
+                    if(!GateDetector.isLastActionNonLoadingDoor()) {
+                        NUtils.getUI().core.addTask(new WaitForNoGobWithHash(lastClickedGobHash));
+                        NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
+                    } else if (GateDetector.isLastActionNonLoadingDoor()) {
+                        NUtils.getUI().core.addTask(new WaitForDoorGob());
+                    }
 
                     Gob player = NUtils.player();
                     Coord2d rc = player.rc;
@@ -122,30 +110,16 @@ public class RouteAutoRecorder implements Runnable {
                     // Create a temporary waypoint to get its hash
                     RoutePoint predefinedWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
 
-                    Gob arch = Finder.findGob(player().rc, new NAlias(
+                    Gob archGob = Finder.findGob(player().rc, new NAlias(
                             GateDetector.getDoorPair(gobForCachedRoutePoint.ngob.name)
                     ), null, 100);
 
-                    // For the minehole we have to add an offset, otherwise the minehole point gets created right on
-                    // top of the minehole causing it to be unreachable with PF.
-                    if(arch != null) {
-                        if(arch.ngob.name.equals("gfx/terobjs/minehole")) {
-                            double angle = arch.a;
-                            double offset = 2;
-
-                            Coord tilec = rc.div(MCache.tilesz).floor();
-                            MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
-
-                            Coord mineLocalCoord = tilec.sub(grid.ul);
-
-                            Coord newPosition = new Coord(
-                                    (int)Math.round(mineLocalCoord.x + Math.cos(angle) * offset),
-                                    (int)Math.round(mineLocalCoord.y +  Math.sin(angle) * offset)
-                            );
-
-                            predefinedWaypoint.setLocalCoord(newPosition);
-                        }
-                    }
+                    // For the mine hole we have to add an offset, otherwise the mine hole point gets created right on
+                    // top of the mine hole causing it to be unreachable with PF.
+                    Coord tilec = rc.div(MCache.tilesz).floor();
+                    MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
+                    Coord mineLocalCoord = tilec.sub(grid.ul);
+                    routeEditor.applyWaypointOffset(predefinedWaypoint, archGob.ngob.name, grid.id, mineLocalCoord, archGob.a);
 
                     RouteGraph graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
 
@@ -154,228 +128,271 @@ public class RouteAutoRecorder implements Runnable {
                     }
 
                     // Completely new door
-                    if(!graph.getDoors().containsKey(hash) && !graph.getDoors().containsKey(arch.ngob.hash)) {
-                        // Add new waypoint
-                        route.addPredefinedWaypointNoConnections(predefinedWaypoint);
+                    if(!graph.getDoors().containsKey(lastClickedGobHash) && !graph.getDoors().containsKey(archGob.ngob.hash)) {
+                        handleCompletelyNewDoor(graph, predefinedWaypoint, lastClickedGobHash, lastClickedGobName, archGob);
 
-                        // Get the last two waypoints
-                        RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
-                        RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
+                    // Already existing door. We need to simply swap points to existing points.
+                    } else if (graph.getDoors().containsKey(lastClickedGobHash) && graph.getDoors().containsKey(archGob.ngob.hash)) {
 
-                        // Add connections between them
-                        lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
-                        // Add connection for the arch
-                        newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
-                    } else if (graph.getDoors().containsKey(hash) && graph.getDoors().containsKey(arch.ngob.hash)) {
-                        // Already existing door with less than 2 elements in the route. We've just started recording
-                        // before the door and entered the door. We need to simply swap points to existing points.
-                        if (route.waypoints.size() <= 1) {
+                        handleExistingDoor(graph, lastClickedGobHash, lastClickedGobName, archGob);
 
-                            // We need to make sure that the outside point is not an actual door that is stored in the
-                            // graph. If it is we cannot use delete and have to simply swap. If it's a new
-                            // point that does not exist in graph doors we can safely delete it.
-                            boolean needToDeleteLastPoint = true;
-
-                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
-
-                            for(RoutePoint routePoint : graph.getDoors().values()) {
-                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
-                                    needToDeleteLastPoint = false;
-                                    break;
-                                }
-                            }
-
-                            if(needToDeleteLastPoint) {
-                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
-
-                                RoutePoint firstPointToAdd = graph.getDoors().get(hash);
-                                RoutePoint secondPointToadd = graph.getDoors().get(arch.ngob.hash);
-
-                                route.addPredefinedWaypointNoConnections(firstPointToAdd);
-                                route.addPredefinedWaypointNoConnections(secondPointToadd);
-
-
-
-                                firstPointToAdd.addConnection(secondPointToadd.id, String.valueOf(secondPointToadd.id), hash, name, true);
-                                secondPointToadd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
-                            } else {
-                                RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
-                                RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
-
-                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
-
-                                existingOutsideRoutePoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), arch.ngob.hash, arch.ngob.name, true);
-                            }
-                        } else {
-                            // Already existing door with more than 2 elements in the route. We've started recording
-                            // more than 1 point before the door so we have to swap the points but also connect the
-                            // outside point to the rest of the route
-
-                            // We need to make sure that the outside point is not an actual door that is stored in the
-                            // graph. If it is we cannot use delete and have to simply swap. If it's a new
-                            // point that does not exist in graph doors we can safely delete it.
-                            boolean needToDeleteLastPoint = true;
-
-                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
-
-                            for(RoutePoint routePoint : graph.getDoors().values()) {
-                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
-                                    needToDeleteLastPoint = false;
-                                    break;
-                                }
-                            }
-
-                            if(needToDeleteLastPoint) {
-                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
-
-                                RoutePoint firstPointToAdd = graph.getDoors().get(hash);
-                                RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
-
-                                if(!route.waypoints.get(route.waypoints.size() - 1).connections.keySet().stream().toList().contains(firstPointToAdd.id)) {
-                                    route.waypoints.get(route.waypoints.size() - 1).addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), "", "", false);
-                                }
-
-                                if(!firstPointToAdd.connections.keySet().stream().toList().contains(route.waypoints.get(route.waypoints.size() - 2).id)) {
-                                    firstPointToAdd.addConnection(route.waypoints.get(route.waypoints.size() - 3).id, String.valueOf(route.waypoints.get(route.waypoints.size() - 3).id), "", "", false);
-                                }
-
-                                route.addPredefinedWaypointNoConnections(firstPointToAdd);
-                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
-
-                                firstPointToAdd.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
-                            } else {
-                                RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
-                                RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
-
-                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
-
-                                existingOutsideRoutePoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), arch.ngob.hash, arch.ngob.name, true);
-                            }
-                        }
-                    } else if (graph.getDoors().containsKey(hash)) {
-                        // Entering a new door right after an existing door. We need to swap out the outside
-                        // door and create a new door point on the inside. We then connect the points the same way we
-                        // always do.
-                        if (route.waypoints.size() <= 1) {
-                            boolean needToDeleteLastPoint = true;
-
-                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
-
-                            for(RoutePoint routePoint : graph.getDoors().values()) {
-                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
-                                    needToDeleteLastPoint = false;
-                                    break;
-                                }
-                            }
-
-                            if(needToDeleteLastPoint) {
-                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
-
-                                RoutePoint firstPointToAdd = graph.getDoors().get(hash);
-                                RoutePoint secondPointToAdd = predefinedWaypoint;
-
-                                if(!route.waypoints.get(route.waypoints.size() - 1).connections.keySet().stream().toList().contains(firstPointToAdd.id)) {
-                                    route.waypoints.get(route.waypoints.size() - 1).addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), "", "", false);
-                                }
-
-                                if(!firstPointToAdd.connections.keySet().stream().toList().contains(route.waypoints.get(route.waypoints.size() - 2).id)) {
-                                    firstPointToAdd.addConnection(route.waypoints.get(route.waypoints.size() - 3).id, String.valueOf(route.waypoints.get(route.waypoints.size() - 3).id), "", "", false);
-                                }
-
-                                route.addPredefinedWaypointNoConnections(firstPointToAdd);
-                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
-
-
-                                firstPointToAdd.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
-                            } else {
-                                RoutePoint secondPointToAdd = predefinedWaypoint;
-
-                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
-
-                                predefinedWaypoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(graph.getDoors().get(hash).id, String.valueOf(graph.getDoors().get(hash).id), arch.ngob.hash, arch.ngob.name, true);
-                            }
-                        } else {
-
-                            boolean needToDeleteLastPoint = true;
-
-                            RoutePoint veryLastPointBeforeEnteringTheDoor = route.waypoints.get(route.waypoints.size() - 1);
-
-                            for(RoutePoint routePoint : graph.getDoors().values()) {
-                                if (routePoint.id == veryLastPointBeforeEnteringTheDoor.id) {
-                                    needToDeleteLastPoint = false;
-                                    break;
-                                }
-                            }
-
-                            if(needToDeleteLastPoint) {
-                                route.deleteWaypoint(route.waypoints.get(route.waypoints.size() - 1));
-
-                                RoutePoint firstPointToAdd = graph.getDoors().get(hash);
-                                RoutePoint secondPointToAdd = predefinedWaypoint;
-
-                                if(!route.waypoints.get(route.waypoints.size() - 1).connections.keySet().stream().toList().contains(firstPointToAdd.id)) {
-                                    route.waypoints.get(route.waypoints.size() - 1).addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), "", "", false);
-                                }
-
-                                if(!firstPointToAdd.connections.keySet().stream().toList().contains(route.waypoints.get(route.waypoints.size() - 1).id)) {
-                                    firstPointToAdd.addConnection(route.waypoints.get(route.waypoints.size() - 2).id, String.valueOf(route.waypoints.get(route.waypoints.size() - 3).id), "", "", false);
-                                }
-
-                                route.addPredefinedWaypointNoConnections(firstPointToAdd);
-                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
-
-                                firstPointToAdd.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(firstPointToAdd.id, String.valueOf(firstPointToAdd.id), arch.ngob.hash, arch.ngob.name, true);
-                            } else {
-                                RoutePoint existingOutsideRoutePoint = route.waypoints.get(route.waypoints.size() - 1);
-                                RoutePoint secondPointToAdd = predefinedWaypoint;
-
-                                route.addPredefinedWaypointNoConnections(secondPointToAdd);
-
-                                existingOutsideRoutePoint.addConnection(secondPointToAdd.id, String.valueOf(secondPointToAdd.id), hash, name, true);
-                                secondPointToAdd.addConnection(existingOutsideRoutePoint.id, String.valueOf(existingOutsideRoutePoint.id), arch.ngob.hash, arch.ngob.name, true);
-                            }
-                        }
+                    // Entering a new door right after an existing door. We need to swap out the outside
+                    // door and create a new door point on the inside. We then connect the points the same way we
+                    // always do.
+                    } else if (graph.getDoors().containsKey(lastClickedGobHash)) {
+                        handleEnteringNewDoorAfterExisting(graph, predefinedWaypoint, lastClickedGobHash, lastClickedGobName, archGob, rc);
                     }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-            } else if (GateDetector.isLastActionNonLoadingDoor()) {
-                // Handle non-loading doors
-                try {
-                    NUtils.getUI().core.addTask(new WaitForDoorGob());
 
-                    // Add new waypoint
-                    route.addWaypoint();
-
-                    // Get the last two waypoints
-                    RoutePoint lastWaypoint = route.waypoints.get(route.waypoints.size() - 2);
-                    RoutePoint newWaypoint = route.waypoints.get(route.waypoints.size() - 1);
-
-                    // Add connections between them
-                    lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id), hash, name, true);
-
-                    Gob arch = Finder.findGob(player().rc, new NAlias(
-                            GateDetector.getDoorPair(gobForCachedRoutePoint.ngob.name)
-                    ), null, 100);
-
-                    // Add connection for the arch
-                    newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id), arch.ngob.hash, arch.ngob.name, true);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+            // Handle regular waypoint recording for non-special movement
             } else {
-                // Regular distance-based waypoint
-                route.addWaypoint();
+                if(NUtils.player() != null && NUtils.player().rc != null) {
+                    route.addWaypoint();
+                }
             }
 
             route.lastAction = null;
         }
+    }
+
+    /**
+     * Handles the event where the player has passed through a gate.
+     *
+     * - Adjusts the position of the cached route point based on movement direction.
+     * - Adds waypoints for both sides of the gate.
+     * - Connects the two waypoints with a door connection.
+     * - Clears all temporary gate-related state.
+     *
+     * Preconditions: route.cachedRoutePoint is not null.
+     * Side effects: Modifies route waypoints and gate-related fields.
+     */
+    private void handleGatePassed() {
+        if (route.cachedRoutePoint == null)
+            return;
+        // Calculate position for the point before the gate
+        Coord tilec = player().rc.div(MCache.tilesz).floor();
+        MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
+        Coord playerLocalCoord = tilec.sub(grid.ul);
+        Coord preRecordedCoord = route.cachedRoutePoint.localCoord;
+
+        // Offset to avoid overlapping gate
+        Coord newCoordForAfterGate = preRecordedCoord.add(
+                (playerLocalCoord.x > preRecordedCoord.x ? -1 : playerLocalCoord.x < preRecordedCoord.x ? 1 : 0),
+                (playerLocalCoord.y > preRecordedCoord.y ? -1 : playerLocalCoord.y < preRecordedCoord.y ? 1 : 0)
+        );
+        route.cachedRoutePoint.setLocalCoord(newCoordForAfterGate);
+
+        // Add the waypoint before the gate
+        route.addPredefinedWaypoint(route.cachedRoutePoint, "", "", false);
+        // Add waypoint after the gate
+        route.addWaypoint();
+
+        // Connect the two waypoints with a door connection
+        RoutePoint lastWaypoint = route.getSecondToLastWaypoint();
+        RoutePoint newWaypoint = route.getLastWaypoint();
+        if (route.lastPassedGate != null) {
+            lastWaypoint.addConnection(newWaypoint.id, String.valueOf(newWaypoint.id),
+                    route.lastPassedGate.ngob.hash, route.lastPassedGate.ngob.name, true);
+            newWaypoint.addConnection(lastWaypoint.id, String.valueOf(lastWaypoint.id),
+                    route.lastPassedGate.ngob.hash, route.lastPassedGate.ngob.name, true);
+        }
+
+        // Clear gate-related state
+        route.cachedRoutePoint = null;
+        route.hasPassedGate = false;
+        route.lastPassedGate = null;
+    }
+
+    /**
+     * Handles the case where both sides of a door are new and not present in the route graph.
+     *
+     * - Adds a new waypoint for the inside of the door.
+     * - Offsets the previous waypoint to prevent overlap with the door.
+     * - Updates references and migrates connections/neighbors to avoid duplication.
+     * - Creates a bidirectional connection between the new waypoints.
+     *
+     * @param graph The route graph for reference and modification.
+     * @param predefinedWaypoint The waypoint representing the inside of the new door.
+     * @param hash The hash of the outside door.
+     * @param name The name of the outside door.
+     * @param arch The Gob representing the inside door.
+     */
+    private void handleCompletelyNewDoor(
+            RouteGraph graph,
+            RoutePoint predefinedWaypoint,
+            String hash,
+            String name,
+            Gob arch
+    ) {
+        predefinedWaypoint.updateHashCode();
+        route.addPredefinedWaypointNoConnections(predefinedWaypoint);
+
+        // Get the last two waypoints
+        RoutePoint lastWaypoint = route.getSecondToLastWaypoint();
+        RoutePoint newWaypoint = route.getLastWaypoint();
+
+        // Offset the previous waypoint so it is not inside the door
+        routeEditor.applyWaypointOffset(lastWaypoint, name, graph.getLastPlayerGridId(), graph.getLastPlayerCoord(), graph.getLastMovementDirection() + Math.PI);
+
+        Collection<RoutePoint.Connection> deletedConnections = route.getSecondToLastWaypoint().getConnections();
+        List<Integer> deletedNeighbors = route.getSecondToLastWaypoint().getNeighbors();
+
+        // Prevent duplicate doors by checking if a point already exists at the new position
+        int lastWaypointHash = hashCode(lastWaypoint.gridId, lastWaypoint.localCoord);
+        if(graph.points.containsKey(lastWaypointHash)) {
+            int oldId = lastWaypoint.id;
+            int newId = lastWaypointHash;
+
+            if(oldId != newId) {
+                ((NMapView) NUtils.getGameUI().map).routeGraphManager.deleteRoutePointFromNeighborsAndConnections(lastWaypoint);
+            }
+
+            lastWaypoint = graph.getPoint(newId);
+
+            routeEditor.replaceAllReferences(oldId, newId);
+            routeEditor.migrateConnectionsAndNeighbors(deletedConnections, deletedNeighbors, lastWaypoint);
+        } else if (graph.points.containsKey(lastWaypoint.id)) {
+            lastWaypoint.updateHashCode();
+        } else {
+            lastWaypoint.updateHashCode();
+        }
+
+        routeEditor.addBidirectionalDoorConnection(
+                lastWaypoint, newWaypoint,
+                hash, name, arch.ngob.hash, arch.ngob.name
+        );
+    }
+
+    /**
+     * Handles traversing an already existing door (both sides are known in the route graph).
+     *
+     * - Swaps or connects waypoints as needed, based on whether the previous point is a door.
+     * - Ensures route continuity when traversing doors encountered previously.
+     *
+     * @param graph The route graph for lookups.
+     * @param hash The hash of the outside door.
+     * @param name The name of the outside door.
+     * @param arch The Gob representing the inside door.
+     */
+    private void handleExistingDoor(RouteGraph graph, String hash, String name, Gob arch) {
+        boolean needToDeleteLastPoint = shouldDeleteLastWaypoint(route, graph);
+
+        RoutePoint firstPointToAdd = graph.getDoors().get(hash);
+        RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
+
+        if (needToDeleteLastPoint) {
+            // Delete and replace last waypoint with door points
+            routeEditor.deleteAndReplaceLastWaypoint(
+                    route,
+                    firstPointToAdd,
+                    secondPointToAdd,
+                    hash, name,
+                    arch.ngob.hash, arch.ngob.name
+            );
+        } else {
+            // Add and connect the inside door point to the existing outside
+            RoutePoint existingOutsideRoutePoint = route.getLastWaypoint();
+            route.addPredefinedWaypointNoConnections(secondPointToAdd);
+
+            routeEditor.addBidirectionalDoorConnection(
+                    existingOutsideRoutePoint, secondPointToAdd,
+                    hash, name,
+                    arch.ngob.hash, arch.ngob.name
+            );
+        }
+    }
+
+    /**
+     * Handles the case where the player enters a new door immediately after passing an existing door.
+     *
+     * - Swaps or adds the new inside waypoint depending on route context.
+     * - Applies any special offsets if needed (e.g., for mineholes).
+     * - Handles reference updates and bidirectional connections.
+     *
+     * @param graph The route graph for reference and updates.
+     * @param predefinedWaypoint The inside point to be created or adjusted.
+     * @param hash The hash of the outside door.
+     * @param name The name of the outside door.
+     * @param arch The Gob representing the inside door.
+     * @param rc The player's current coordinate.
+     */
+    private void handleEnteringNewDoorAfterExisting(RouteGraph graph, RoutePoint predefinedWaypoint, String hash, String name, Gob arch, Coord2d rc) {
+        boolean needToDeleteLastPoint = shouldDeleteLastWaypoint(route, graph);
+
+        if (needToDeleteLastPoint) {
+            RoutePoint firstPointToAdd = graph.getDoors().get(hash);
+            RoutePoint secondPointToAdd = predefinedWaypoint;
+            secondPointToAdd.updateHashCode();
+
+            routeEditor.deleteAndReplaceLastWaypoint(
+                    route,
+                    firstPointToAdd,
+                    secondPointToAdd,
+                    hash, name,
+                    arch.ngob.hash, arch.ngob.name
+            );
+        } else {
+            RoutePoint existingOutsideRoutePoint = route.getLastWaypoint();
+            RoutePoint secondPointToAdd = predefinedWaypoint;
+
+            // Only needed for long routes (more than 1 point before door)
+            Coord tilec = rc.div(MCache.tilesz).floor();
+            MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
+            Coord mineLocalCoord = tilec.sub(grid.ul);
+
+            routeEditor.applyWaypointOffset(secondPointToAdd, arch.ngob.name, grid.id, mineLocalCoord, arch.a);
+
+            int oldId = secondPointToAdd.id;
+            int newId = hashCode(secondPointToAdd.gridId, secondPointToAdd.localCoord);
+
+            if (graph.points.containsKey(newId) && oldId != newId) {
+                secondPointToAdd = graph.getPoint(newId);
+                routeEditor.replaceAllReferences(oldId, newId);
+            } else if (graph.points.containsKey(oldId)) {
+                secondPointToAdd = graph.getPoint(oldId);
+            } else {
+                secondPointToAdd.updateHashCode();
+            }
+
+            route.addPredefinedWaypointNoConnections(secondPointToAdd);
+
+            routeEditor.addBidirectionalDoorConnection(
+                    existingOutsideRoutePoint, secondPointToAdd,
+                    hash, name,
+                    arch.ngob.hash, arch.ngob.name
+            );
+        }
+    }
+
+    /**
+     * Determines if the last waypoint in the route should be deleted,
+     * based on whether it's already registered as a door in the route graph.
+     *
+     * @param route The current route being recorded.
+     * @param graph The route graph for checking door status.
+     * @return true if the last waypoint should be deleted; false otherwise.
+     */
+    private boolean shouldDeleteLastWaypoint(Route route, RouteGraph graph) {
+        RoutePoint last = route.getLastWaypoint();
+        for (RoutePoint door : graph.getDoors().values()) {
+            if (door.id == last.id) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Computes a unique hash code for a given grid ID and local coordinate.
+     *
+     * @param gridId The grid identifier.
+     * @param localCoord The local coordinate within the grid.
+     * @return An integer hash representing the combination of grid and coordinate.
+     */
+    public int hashCode(long gridId, Coord localCoord) {
+        return Objects.hash(gridId, localCoord);
     }
 }
 

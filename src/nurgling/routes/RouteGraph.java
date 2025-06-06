@@ -17,6 +17,34 @@ public class RouteGraph {
     private final Map<Long, ArrayList<RoutePoint>> pointsByGridId = new HashMap<>();
     private final Map<String, RoutePoint> doors = new HashBMap<>();
 
+    private long lastPlayerGridId;
+    private Coord lastPlayerCoord;
+    private double lastMovementDirection;
+
+    public long getLastPlayerGridId() {
+        return lastPlayerGridId;
+    }
+
+    public void setLastPlayerGridId(long lastPlayerGridId) {
+        this.lastPlayerGridId = lastPlayerGridId;
+    }
+
+    public Coord getLastPlayerCoord() {
+        return lastPlayerCoord;
+    }
+
+    public void setLastPlayerCoord(Coord lastPlayerCoord) {
+        this.lastPlayerCoord = lastPlayerCoord;
+    }
+
+    public double getLastMovementDirection() {
+        return lastMovementDirection;
+    }
+
+    public void setLastMovementDirection(double lastMovementDirection) {
+        this.lastMovementDirection = lastMovementDirection;
+    }
+
     public void addRoute(Route route) {
         for (RoutePoint point : route.waypoints) {
             points.put(point.id, point);
@@ -207,7 +235,6 @@ public class RouteGraph {
             if(isReachable) {
                 point.addReachableArea(area.id);
             }
-            NConfig.needRoutesUpdate();
         }
     }
 
@@ -254,5 +281,9 @@ public class RouteGraph {
 
     public void deleteDoor(String door) {
         this.doors.remove(door);
+    }
+
+    public void clearDoors() {
+        this.doors.clear();
     }
 }

@@ -215,20 +215,20 @@ public class HarvestCrop implements Action {
         ArrayList<Gob> plants;
         while (!(plants = Finder.findGobs(area,crop,stage)).isEmpty())
         {
-            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
             plant = plants.get(0);
             new PathFinder(plant).run(gui);
             new SelectFlowerAction("Harvest", plant).run(gui);
             NUtils.getUI().core.addTask(new NoGob(plant.id));
+            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
         }
 
         while (!(plants = Finder.findGobs(area,new NAlias("gfx/terobjs/plants/fallowplant"), 0)).isEmpty())
         {
-            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
             plant = plants.get(0);
             new PathFinder(plant).run(gui);
             new SelectFlowerAction("Harvest", plant).run(gui);
             NUtils.getUI().core.addTask(new NoGob(plant.id));
+            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
         }
     }
 
