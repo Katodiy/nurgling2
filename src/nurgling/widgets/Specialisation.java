@@ -90,11 +90,11 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.boneforash.toString(),"Bones for Ash",Resource.loadsimg("nurgling/categories/boneash")));
         specialisation.add(new SpecialisationItem(SpecName.blockforash.toString(),"Block for Ash",Resource.loadsimg("nurgling/categories/block")));
         specialisation.add(new SpecialisationItem(SpecName.chicken.toString(),"Chicken",Resource.loadsimg("nurgling/categories/chicken")));
-        specialisation.add(new SpecialisationItem(SpecName.rabbit.toString(),"Rabbit",Resource.loadsimg("nurgling/categories/chicken")));
+        specialisation.add(new SpecialisationItem(SpecName.rabbit.toString(),"Rabbit",Resource.loadsimg("nurgling/categories/rabbit_buck")));
         specialisation.add(new SpecialisationItem(SpecName.incubator.toString(),"Chick Incubator",Resource.loadsimg("nurgling/categories/cincub")));
         specialisation.add(new SpecialisationItem(SpecName.bed.toString(),"Bed",Resource.loadsimg("nurgling/categories/chicken")));
         specialisation.add(new SpecialisationItem(SpecName.eat.toString(),"Eating area",Resource.loadsimg("nurgling/categories/eat")));
-        specialisation.add(new SpecialisationItem(SpecName.rabbitIncubator.toString(),"Rabbit Incubator",Resource.loadsimg("nurgling/categories/cincub")));
+        specialisation.add(new SpecialisationItem(SpecName.rabbitIncubator.toString(),"Rabbit Incubator",Resource.loadsimg("nurgling/categories/bunny")));
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
             public int compare(SpecialisationItem o1, SpecialisationItem o2) {
