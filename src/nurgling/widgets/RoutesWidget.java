@@ -4,6 +4,7 @@ import haven.*;
 import haven.Label;
 import haven.Window;
 import nurgling.*;
+import nurgling.actions.AddHearthFire;
 import nurgling.actions.bots.RouteAutoRecorder;
 import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.routes.Route;
@@ -170,6 +171,21 @@ public class RoutesWidget extends Window {
                 active[0] = !active[0];
             }
         }, new Coord(0, UI.scale(25))).settip("Start/Stop Auto Waypoint Bot");
+
+        actionContainer.add(new IButton(NStyle.visi[0].back, NStyle.visi[1].back, NStyle.visi[2].back) {
+            @Override
+            public void click() {
+                Thread t = new Thread(() -> {
+                    try {
+                        new AddHearthFire().run(NUtils.getGameUI());
+                    } catch (InterruptedException e) {
+                        NUtils.getGameUI().error("Failed to add hearth fire");
+                    }
+                }, "AddHearthFire");
+                t.start();
+                NUtils.getGameUI().biw.addObserve(t);
+            }
+        }, new Coord(0, UI.scale(50))).settip("Add hearth fire");
 
         waypointList.update(route.waypoints);
         specList.update(route);
