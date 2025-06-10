@@ -43,6 +43,41 @@ public class Route {
         this.name = name;
     }
 
+    public void addHearthFireWaypoint(String name) {
+        Gob player = NUtils.player();
+        Coord2d rc = player.rc;
+        MCache cache = NUtils.getGameUI().ui.sess.glob.map;
+
+        if(player == null || rc == null || cache == null) {
+            return;
+        }
+
+        // Create a temporary waypoint to get its hash
+        RoutePoint tempWaypoint = new RoutePoint(rc, cache, name);
+
+        // Check if this waypoint already exists in the graph
+        RoutePoint existingWaypoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().getPoint(tempWaypoint.id);
+
+        // Use existing waypoint if found, otherwise use the temporary one
+        RoutePoint waypointToAdd = existingWaypoint != null ? existingWaypoint : tempWaypoint;
+
+        // Add the waypoint with default connection values
+        try {
+            try {
+                waypointToAdd.addReachableAreas(NArea.getAllVisible());
+            } catch (InterruptedException e) {
+                NUtils.getGameUI().error("Unable to determine reachable areas.");
+            }
+
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(waypointToAdd);
+            this.waypoints.add(waypointToAdd);
+        } catch (Exception e) {
+            NUtils.getGameUI().msg("Failed to add waypoint: " + e.getMessage());
+        }
+
+        ((NMapView) NUtils.getGameUI().map).createRouteLabel(this.id);
+    }
+
     public void addWaypoint() {
         Gob player = NUtils.player();
         Coord2d rc = player.rc;
@@ -217,7 +252,12 @@ public class Route {
                 JSONObject localCoord = point.getJSONObject("localCoord");
                 int x = localCoord.getInt("x");
                 int y = localCoord.getInt("y");
-                RoutePoint waypoint = new RoutePoint(gridId, new Coord(x, y));
+                String hearthFirePlayerName = "";
+                if(point.has("hearthFirePlayerName")) {
+                    hearthFirePlayerName = point.getString("hearthFirePlayerName");
+                }
+
+                RoutePoint waypoint = new RoutePoint(gridId, new Coord(x, y), hearthFirePlayerName);
                 
                 // Load neighbors if they exist
                 if (point.has("neighbors")) {
@@ -280,6 +320,10 @@ public class Route {
                 JSONObject point = arr.getJSONObject(i);
                 int id = point.getInt("id");
                 long gridId = point.getLong("gridId");
+                String hearthFirePlayerName = "";
+                if(point.has("hearthFirePlayerName")) {
+                    hearthFirePlayerName = point.getString("hearthFirePlayerName");
+                }
 
                 RoutePoint waypoint;
                 if (routePointMap.containsKey(id)) {
@@ -288,7 +332,7 @@ public class Route {
                     JSONObject localCoord = point.getJSONObject("localCoord");
                     int x = localCoord.getInt("x");
                     int y = localCoord.getInt("y");
-                    waypoint = new RoutePoint(gridId, new Coord(x, y));
+                    waypoint = new RoutePoint(gridId, new Coord(x, y), hearthFirePlayerName);
 
                     // Load neighbors if they exist
                     if (point.has("neighbors")) {
@@ -348,6 +392,7 @@ public class Route {
             JSONObject waypointJson = new JSONObject();
             waypointJson.put("id", waypoint.id);
             waypointJson.put("gridId", waypoint.gridId);
+            waypointJson.put("hearthFirePlayerName", waypoint.hearthFirePlayerName);
             waypointJson.put("localCoord", new JSONObject()
                 .put("x", waypoint.localCoord.x)
                 .put("y", waypoint.localCoord.y));

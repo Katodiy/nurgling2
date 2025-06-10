@@ -15,6 +15,7 @@ public class RoutePoint {
     public int id;
     public long gridId;
     public Coord localCoord;
+    public String hearthFirePlayerName;
 
     public ArrayList<Integer> neighbors = new ArrayList<>();
     public Map<Integer, Connection> connections = new HashMap<>();
@@ -43,10 +44,22 @@ public class RoutePoint {
         this.id = hashCode();
     }
 
-    public RoutePoint(long gridId, Coord localCoord) {
+    public RoutePoint(Coord2d rc, MCache mcache, String hearthFirePlayerName) {
+        Coord tilec = rc.div(MCache.tilesz).floor();
+        MCache.Grid grid = mcache.getgridt(tilec);
+
+        this.gridId = grid.id;
+        this.localCoord = tilec.sub(grid.ul);
+        this.hearthFirePlayerName = hearthFirePlayerName;
+        this.id = hashCode();
+    }
+
+
+    public RoutePoint(long gridId, Coord localCoord, String hearthFirePlayerName) {
         this.name = "";
         this.gridId = gridId;
         this.localCoord = localCoord;
+        this.hearthFirePlayerName = hearthFirePlayerName;
         this.id = hashCode();
     }
 

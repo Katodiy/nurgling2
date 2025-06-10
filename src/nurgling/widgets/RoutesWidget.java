@@ -16,14 +16,13 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class RoutesWidget extends Window {
     public String currentPath = "";
 
     public RouteList routeList;
+    private HearthfireWaypointList hearthfireWaypointList;
     private final List<RouteItem> routeItems = new ArrayList<>();
     private WaypointList waypointList;
     private Widget actionContainer;
@@ -71,18 +70,26 @@ public class RoutesWidget extends Window {
         }, importBtn.pos("ur").adds(UI.scale(5, 0)));
         deleteBtn.settip("Delete selected route");
 
-        routeList = add(new RouteList(UI.scale(new Coord(150, 120))), createBtn.pos("bl").adds(0, 10));
+        Label routeListLabel = add(new Label("Routes:", NStyle.areastitle), createBtn.pos("bl").adds(0, 10));
+        routeList = add(new RouteList(UI.scale(new Coord(250, 200))), routeListLabel.pos("bl").adds(0, 10));
 
-        add(new Label("Actions:", NStyle.areastitle), routeList.pos("ur").add(UI.scale(20, 0)));
-        actionContainer = add(new Widget(UI.scale(new Coord(20, 120))), routeList.pos("ur").add(UI.scale(20, 20)));
+        Label actionsListLabel = add(new Label("Actions:", NStyle.areastitle), routeListLabel.pos("ur").add(UI.scale(105, 0)));
+        actionContainer = add(new Widget(UI.scale(new Coord(120, 36))), actionsListLabel.pos("bl").adds(0, UI.scale(5)));
+
+        // HearthFires label under actions
+        Label hearthfireLabel = add(new Label("Hearth Fires:", NStyle.areastitle), actionContainer.pos("bl").adds(0, UI.scale(5)));
+        // Hearthfire waypoint list (custom version of WaypointList, but read-only)
+        hearthfireWaypointList = add(new HearthfireWaypointList(UI.scale(new Coord(200, 130))),
+                hearthfireLabel.pos("bl").adds(0, UI.scale(5)));
 
         Label routeInfoLabel = add(new Label("Route Info:", NStyle.areastitle), routeList.pos("bl").adds(0, UI.scale(10)));
-        waypointList = add(new WaypointList(UI.scale(new Coord(250, 120))), routeInfoLabel.pos("bl").adds(0, UI.scale(5)));
+        waypointList = add(new WaypointList(UI.scale(new Coord(350, 200))), routeInfoLabel.pos("bl").adds(0, UI.scale(5)));
 
         Label specLabel = add(new Label("Specializations:", NStyle.areastitle), waypointList.pos("bl").adds(0, UI.scale(10)));
-        specList = add(new SpecList(UI.scale(new Coord(250, 60))), specLabel.pos("bl").adds(0, UI.scale(5)));
+        specList = add(new SpecList(UI.scale(new Coord(350, 100))), specLabel.pos("bl").adds(0, UI.scale(5)));
 
         pack();
+
     }
 
     @Override
@@ -108,10 +115,19 @@ public class RoutesWidget extends Window {
         synchronized (routeItems) {
             routeItems.clear();
             for (Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values()) {
-                routeItems.add(new RouteItem(route));
+                boolean needToAddroute = true;
+                for(Route.RouteSpecialization spec : route.spec) {
+                    if (spec.name.contains("HearthFires")) {
+                        needToAddroute = false;
+                        break;
+                    }
+                }
+                if(needToAddroute) {
+                    routeItems.add(new RouteItem(route));
+                }
             }
         }
-
+        hearthfireWaypointList.updateHearthfireWaypoints();
         if (!routeItems.isEmpty()) {
             routeList.change(routeItems.get(routeItems.size() - 1));
         }
@@ -137,15 +153,7 @@ public class RoutesWidget extends Window {
 
         ((NMapView) NUtils.getGameUI().map).initRouteDummys(id);
 
-        // Button: Manual waypoint recording
-        actionContainer.add(new IButton(NStyle.add[0].back, NStyle.add[1].back, NStyle.add[2].back) {
-            @Override
-            public void click() {
-                NUtils.getGameUI().msg("Recording position for: " + route.name);
-                route.addRandomWaypoint();
-                waypointList.update(route.waypoints);
-            }
-        }, Coord.z).settip("Record Position");
+        int x = 0;
 
         // Button: Auto waypoint recorder bot
         final RouteAutoRecorder[] recorder = {null};
@@ -170,8 +178,24 @@ public class RoutesWidget extends Window {
                 }
                 active[0] = !active[0];
             }
-        }, new Coord(0, UI.scale(25))).settip("Start/Stop Auto Waypoint Bot");
+        }, new Coord(x, 0)).settip("Start/Stop Auto Waypoint Bot");
 
+        x += UI.scale(36);
+
+        // Button: Manual waypoint recording
+        actionContainer.add(new IButton(NStyle.add[0].back, NStyle.add[1].back, NStyle.add[2].back) {
+            @Override
+            public void click() {
+                NUtils.getGameUI().msg("Recording position for: " + route.name);
+                route.addRandomWaypoint();
+                waypointList.update(route.waypoints);
+                hearthfireWaypointList.updateHearthfireWaypoints();
+            }
+        }, new Coord(x, 0)).settip("Record Position");
+
+
+
+        x += UI.scale(36);
         actionContainer.add(new IButton(NStyle.visi[0].back, NStyle.visi[1].back, NStyle.visi[2].back) {
             @Override
             public void click() {
@@ -185,9 +209,10 @@ public class RoutesWidget extends Window {
                 t.start();
                 NUtils.getGameUI().biw.addObserve(t);
             }
-        }, new Coord(0, UI.scale(50))).settip("Add hearth fire");
+        }, new Coord(x, 0)).settip("Add hearth fire");
 
         waypointList.update(route.waypoints);
+        hearthfireWaypointList.updateHearthfireWaypoints();
         specList.update(route);
     }
 
@@ -348,6 +373,7 @@ public class RoutesWidget extends Window {
             }
             waypointList.update(route.waypoints);
             specList.update(routeList.sel.route);
+            hearthfireWaypointList.updateHearthfireWaypoints();
             ((NMapView) NUtils.getGameUI().map).initRouteDummys(routeList.sel.route.id);
         }
     }
@@ -409,6 +435,7 @@ public class RoutesWidget extends Window {
                                     } else if (option.name.equals("Delete")) {
                                         routeList.sel.route.deleteWaypoint(rp);
                                         waypointList.update(routeList.sel.route.waypoints);
+                                        hearthfireWaypointList.updateHearthfireWaypoints();
                                         specList.update(routeList.sel.route);
                                         ((NMapView) NUtils.getGameUI().map).initRouteDummys(routeList.sel.route.id);
                                     }
@@ -464,7 +491,14 @@ public class RoutesWidget extends Window {
 
         public CoordItem(long gridid, Coord2d coord, RoutePoint routePoint) {
             this.routePoint = routePoint;
-            String displayText = String.valueOf(gridid) + " " + routePoint.id;
+            String displayText;
+
+            if (routePoint.hearthFirePlayerName != null && !routePoint.hearthFirePlayerName.isEmpty()) {
+                displayText = routePoint.hearthFirePlayerName;
+            } else {
+                // old logic, or just something generic:
+                displayText = String.valueOf(gridid) + " " + routePoint.id;
+            }
             
             // Check all connections for door and gobName information
             for (int neighborHash : routePoint.getConnectedNeighbors()) {
@@ -522,5 +556,130 @@ public class RoutesWidget extends Window {
             g.frect(Coord.z, g.sz());
             super.draw(g);
         }
+    }
+
+    public class HearthfireWaypointList extends SListBox<CoordItem, Widget> {
+        private final List<CoordItem> items = new ArrayList<>();
+
+        HearthfireWaypointList(Coord sz) {
+            super(sz, UI.scale(16));
+            updateHearthfireWaypoints();
+        }
+
+        public void updateHearthfireWaypoints() {
+            items.clear();
+            Route hearthfireRoute = getHearthfireRoute();
+            if (hearthfireRoute != null) {
+                for (RoutePoint point : hearthfireRoute.waypoints) {
+                    items.add(new CoordItem(point.gridId, point.toCoord2d(NUtils.getGameUI().map.glob.map), point));
+                }
+            }
+        }
+
+        @Override
+        protected List<CoordItem> items() {
+            return items;
+        }
+
+        Color bg = new Color(30, 40, 40, 160);
+        @Override
+        public void draw(GOut g) {
+            g.chcolor(bg);
+            g.frect(Coord.z, g.sz());
+            super.draw(g);
+        }
+
+        @Override
+        protected Widget makeitem(CoordItem item, int idx, Coord sz) {
+            return new ItemWidget<CoordItem>(this, sz, item) {{
+                add(item);
+            }
+                @Override
+                public boolean mousedown(MouseDownEvent ev) {
+                    if (ev.b == 3) {
+                        // Right click: show menu for this hearthfire point
+                        RoutePoint rp = item.routePoint;
+                        menu = new NFlowerMenu(new String[]{"Navigate To", "Delete"}) {
+                            @Override
+                            public boolean mousedown(MouseDownEvent ev) {
+                                if(super.mousedown(ev))
+                                    nchoose(null);
+                                return true;
+                            }
+
+                            public void destroy() {
+                                menu = null;
+                                super.destroy();
+                            }
+
+                            @Override
+                            public void nchoose(NPetal option) {
+                                if (option != null) {
+                                    Route hearthfireRoute = getHearthfireRoute();
+                                    if (option.name.equals("Navigate To")) {
+                                        new Thread(() -> {
+                                            try {
+                                                new RoutePointNavigator(rp).run(NUtils.getGameUI());
+                                            } catch (InterruptedException e) {
+                                                NUtils.getGameUI().error("Navigation interrupted: " + e.getMessage());
+                                            }
+                                        }, "RoutePointNavigator").start();
+                                    } else if (option.name.equals("Delete")) {
+                                        if (hearthfireRoute != null) {
+                                            hearthfireRoute.deleteWaypoint(rp);
+                                            hearthfireWaypointList.updateHearthfireWaypoints();
+                                            ((NMapView) NUtils.getGameUI().map).initRouteDummys(hearthfireRoute.id);
+                                        }
+                                    }
+                                }
+                                uimsg("cancel");
+                            }
+                        };
+                        Widget par = parent;
+                        Coord pos = ev.c;
+                        while (par != null && !(par instanceof GameUI)) {
+                            pos = pos.add(par.c);
+                            par = par.parent;
+                        }
+                        ui.root.add(menu, pos.add(UI.scale(25, 38)));
+                        return true;
+                    } else if (ev.b == 1) {
+                        // Left click: start navigation
+                        startNavigation(item.routePoint);
+                        return true;
+                    }
+                    return super.mousedown(ev);
+                }
+
+                // Helper, same as in WaypointList:
+                private void startNavigation(RoutePoint point) {
+                    Thread t = new Thread(() -> {
+                        try {
+                            new RoutePointNavigator(point).run(NUtils.getGameUI());
+                        } catch (InterruptedException e) {
+                            NUtils.getGameUI().error("Navigation interrupted by the user");
+                        }
+                    }, "RoutePointNavigator");
+                    t.start();
+                    NUtils.getGameUI().biw.addObserve(t);
+                }
+
+                private NFlowerMenu menu;
+            };
+        }
+
+    }
+
+    private Route getHearthfireRoute() {
+        if(NUtils.getGameUI() != null ) {
+            for (Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values()) {
+                for (Route.RouteSpecialization spec : route.spec) {
+                    if (spec.name.contains("HearthFires")) {
+                        return route;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

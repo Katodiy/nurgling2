@@ -111,10 +111,6 @@ public class RouteGraphManager {
         return hearthFireMap;
     }
 
-    public void addHearthFire(Coord localCoord, long gridId, String nickName) {
-        hearthFireMap.put(nickName, new HearthFire(localCoord, gridId));
-    }
-
     private void refreshDoors() {
         graph.clearDoors();
         for (Route route : this.routes.values()) {
