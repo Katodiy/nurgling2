@@ -324,7 +324,11 @@ public class RouteAutoRecorder implements Runnable {
         if (needToDeleteLastPoint) {
             RoutePoint firstPointToAdd = graph.getDoors().get(hash);
             RoutePoint secondPointToAdd = predefinedWaypoint;
+            int oldId = predefinedWaypoint.id;
             secondPointToAdd.updateHashCode();
+            int newId = secondPointToAdd.id;
+
+            routeEditor.replaceAllReferences(oldId, newId);
 
             routeEditor.deleteAndReplaceLastWaypoint(
                     route,
