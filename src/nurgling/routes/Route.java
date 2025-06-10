@@ -61,12 +61,6 @@ public class Route {
         // Use existing waypoint if found, otherwise use the temporary one
         RoutePoint waypointToAdd = existingWaypoint != null ? existingWaypoint : tempWaypoint;
 
-        try {
-            waypointToAdd.addReachableAreas(NArea.getAllVisible());
-        } catch (InterruptedException e) {
-            NUtils.getGameUI().error("Unable to determine reachable areas.");
-        }
-
         // Add the waypoint with default connection values
         addPredefinedWaypoint(waypointToAdd, "", "", false);
     }
@@ -99,6 +93,12 @@ public class Route {
                 }
             }
 
+            try {
+                routePoint.addReachableAreas(NArea.getAllVisible());
+            } catch (InterruptedException e) {
+                NUtils.getGameUI().error("Unable to determine reachable areas.");
+            }
+
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(routePoint);
             this.waypoints.add(routePoint);
 
@@ -121,6 +121,13 @@ public class Route {
 
 
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(routePoint);
+
+            try {
+                routePoint.addReachableAreas(NArea.getAllVisible());
+            } catch (InterruptedException e) {
+                NUtils.getGameUI().error("Unable to determine reachable areas.");
+            }
+
             this.waypoints.add(routePoint);
 
             NUtils.getGameUI().msg("Waypoint added: " + routePoint);
