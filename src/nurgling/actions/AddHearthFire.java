@@ -53,7 +53,6 @@ public class AddHearthFire implements Action {
         for(RoutePoint routePoint : existingRoute.waypoints) {
             if(routePoint.hearthFirePlayerName.equals(NUtils.getGameUI().getCharInfo().chrid)) {
                 existingRoute.deleteWaypoint(routePoint);
-                break;
             }
         }
 

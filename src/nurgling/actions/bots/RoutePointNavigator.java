@@ -5,11 +5,13 @@ import nurgling.*;
 import nurgling.actions.Action;
 import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
+import nurgling.actions.TravelToHearthFire;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.Finder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RoutePointNavigator implements Action {
@@ -47,11 +49,30 @@ public class RoutePointNavigator implements Action {
         }
 
         // Find path to target
-        List<RoutePoint> path = graph.findPath(startPoint, targetPoint);
-        if (path == null || path.isEmpty()) {
+        List<RoutePoint> path = new ArrayList<>();
+        List<RoutePoint> walkingPath = graph.findPath(startPoint, targetPoint);
+        List<RoutePoint> alternativePath = new ArrayList<>();
+
+        // Calculate path from hearthfire
+        if (((Boolean) NConfig.get(NConfig.Key.useHFinGlobalPF) && walkingPath.size() > 10)) {
+            RoutePoint hfRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getHearthFireForCurrentPlayer();
+            if(hfRoutePoint != null) {
+                alternativePath = graph.findPath(hfRoutePoint, targetPoint);
+            }
+        }
+
+        if ((walkingPath == null || walkingPath.isEmpty()) && (alternativePath == null || alternativePath.isEmpty())) {
             gui.error(String.format("No path found to target waypoint. Start point: %s, end point: %s", startPoint.id, targetPoint.id));
             System.out.printf("No path found to target waypoint. Start point: %s, end point: %s%n", startPoint.id, targetPoint.id);
             return Results.FAIL();
+        }
+
+        if(walkingPath == null || walkingPath.isEmpty() || (alternativePath != null && !alternativePath.isEmpty() && (walkingPath.size() * 0.5 > alternativePath.size()))) {
+            path = alternativePath;
+            new TravelToHearthFire().run(gui);
+            NUtils.getUI().core.addTask(new WaitForMapLoad(alternativePath.get(0), gui));
+        } else {
+            path = walkingPath;
         }
 
         // Navigate the path

@@ -76,8 +76,18 @@ public class RoutesWidget extends Window {
         Label actionsListLabel = add(new Label("Actions:", NStyle.areastitle), routeListLabel.pos("ur").add(UI.scale(105, 0)));
         actionContainer = add(new Widget(UI.scale(new Coord(120, 36))), actionsListLabel.pos("bl").adds(0, UI.scale(5)));
 
+        CheckBox useHFinGlobalPFBox = add(new CheckBox("Use Hearth Fires in Global PF") {
+            {
+                a = (Boolean) NConfig.get(NConfig.Key.useHFinGlobalPF);
+            }
+            public void set(boolean val) {
+                NConfig.set(NConfig.Key.useHFinGlobalPF, val);
+                a = val;
+            }
+        }, actionContainer.pos("bl").adds(0, UI.scale(5)));
+
         // HearthFires label under actions
-        Label hearthfireLabel = add(new Label("Hearth Fires:", NStyle.areastitle), actionContainer.pos("bl").adds(0, UI.scale(5)));
+        Label hearthfireLabel = add(new Label("Hearth Fires:", NStyle.areastitle), useHFinGlobalPFBox.pos("bl").adds(0, UI.scale(5)));
         // Hearthfire waypoint list (custom version of WaypointList, but read-only)
         hearthfireWaypointList = add(new HearthfireWaypointList(UI.scale(new Coord(200, 130))),
                 hearthfireLabel.pos("bl").adds(0, UI.scale(5)));
@@ -202,6 +212,7 @@ public class RoutesWidget extends Window {
                 Thread t = new Thread(() -> {
                     try {
                         new AddHearthFire().run(NUtils.getGameUI());
+                        hearthfireWaypointList.updateHearthfireWaypoints();
                     } catch (InterruptedException e) {
                         NUtils.getGameUI().error("Failed to add hearth fire");
                     }
@@ -212,7 +223,6 @@ public class RoutesWidget extends Window {
         }, new Coord(x, 0)).settip("Add hearth fire");
 
         waypointList.update(route.waypoints);
-        hearthfireWaypointList.updateHearthfireWaypoints();
         specList.update(route);
     }
 
@@ -574,6 +584,11 @@ public class RoutesWidget extends Window {
                     items.add(new CoordItem(point.gridId, point.toCoord2d(NUtils.getGameUI().map.glob.map), point));
                 }
             }
+            if(NUtils.getGameUI() != null) {
+                ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateGraph();
+            }
+
+            NConfig.needRoutesUpdate();
         }
 
         @Override
