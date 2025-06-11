@@ -375,32 +375,32 @@ public class RabbitMaster implements Action {
             }
 
             // TODO KILLING AND PROCESSING
-//            buck = (WItem) gui.getInventory().getItem(new NAlias(BUCK_NAME));
-//            new SelectFlowerAction( "Wring neck", buck).run(gui);
-//            NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("Dead Rabbit"), 1));
-//
-//            buck = (WItem) gui.getInventory().getItem(new NAlias("Dead Rabbit"));
-//            new SelectFlowerAction( "Fray", buck).run(gui);
-//            NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("Rabbit Carcass"), 1));
-//
-//            buck = (WItem) gui.getInventory().getItem(new NAlias("Rabbit Carcass"));
-//            new SelectFlowerAction( "Clean", buck).run(gui);
-//            NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("Clean Rabbit Carcass"), 1));
-//
-//            buck = (WItem) gui.getInventory().getItem(new NAlias("Clean Rabbit Carcass"));
-//            new SelectFlowerAction( "Butcher", buck).run(gui);
-//            NUtils.addTask(new NTask() {
-//                @Override
-//                public boolean check() {
-//                    try {
-//                        return gui.getInventory().getItems(new NAlias("Clean Rabbit Carcass")).isEmpty();
-//                    } catch (InterruptedException e) {
-//                        return false;
-//                    }
-//                }
-//            });
-//
-//            new FreeInventory(context).run(gui);
+            buck = (WItem) gui.getInventory().getItem(new NAlias(BUCK_NAME));
+            new SelectFlowerAction( "Wring neck", buck).run(gui);
+            NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("Dead Rabbit"), 1));
+
+            buck = (WItem) gui.getInventory().getItem(new NAlias("Dead Rabbit"));
+            new SelectFlowerAction( "Flay", buck).run(gui);
+            NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("Rabbit Carcass"), 1));
+
+            buck = (WItem) gui.getInventory().getItem(new NAlias("Rabbit Carcass"));
+            new SelectFlowerAction( "Clean", buck).run(gui);
+            NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("Clean Rabbit Carcass"), 1));
+
+            buck = (WItem) gui.getInventory().getItem(new NAlias("Clean Rabbit Carcass"));
+            new SelectFlowerAction( "Butcher", buck).run(gui);
+            NUtils.addTask(new NTask() {
+                @Override
+                public boolean check() {
+                    try {
+                        return gui.getInventory().getItems(new NAlias("Clean Rabbit Carcass")).isEmpty();
+                    } catch (InterruptedException e) {
+                        return false;
+                    }
+                }
+            });
+
+            new FreeInventory(context).run(gui);
         }
         new FreeInventory(context).run(gui);
         return Results.SUCCESS();
@@ -447,6 +447,8 @@ public class RabbitMaster implements Action {
 
                 if (hutchInfo == null) continue; // skip does in hutches not currently found
 
+                // We need to make sure not to kill a better doe even if there is no candidate to move. Otherwise
+                // we might be killing higher Q rabbits that we'll need later (when 7 days pass).
                 if (candidate.timeMoved == null || candidate.timeMoved.isBefore(sevenDaysAgo)) {
                     // Open hutch for the swap
                     new PathFinder(hutchInfo.container.gob).run(gui);
@@ -504,7 +506,7 @@ public class RabbitMaster implements Action {
 //            NUtils.addTask(new WaitItems((NInventory) gui.maininv, new NAlias("Dead Rabbit"), 1));
 //
 //            doe = (WItem) gui.getInventory().getItem(new NAlias("Dead Rabbit"));
-//            new SelectFlowerAction("Fray", doe).run(gui);
+//            new SelectFlowerAction("Flay", doe).run(gui);
 //            NUtils.addTask(new WaitItems((NInventory) gui.maininv, new NAlias("Rabbit Carcass"), 1));
 //
 //            doe = (WItem) gui.getInventory().getItem(new NAlias("Rabbit Carcass"));
