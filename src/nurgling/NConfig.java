@@ -583,22 +583,6 @@ public class NConfig
             }
             main.put("routes",jroutes);
 
-            JSONArray hearthFireArray = new JSONArray();
-            for (Map.Entry<String, RouteGraphManager.HearthFire> entry : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getHearthFires().entrySet()) {
-                JSONObject hfObj = new JSONObject();
-                hfObj.put("name", entry.getKey());
-                hfObj.put("gridId", entry.getValue().gridId);
-
-                JSONObject coordObj = new JSONObject();
-                coordObj.put("x", entry.getValue().localCoord.x);
-                coordObj.put("y", entry.getValue().localCoord.y);
-
-                hfObj.put("localCoord", coordObj);
-
-                hearthFireArray.put(hfObj);
-            }
-            main.put("hearthFires", hearthFireArray);
-
             try
             {
                 FileWriter f = new FileWriter(customPath==null?path_routes:customPath,StandardCharsets.UTF_8);
@@ -614,7 +598,6 @@ public class NConfig
     }
 
     public void mergeRoutes(File file) {
-
         StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
         {

@@ -20,18 +20,6 @@ public class RouteGraphManager {
     private final Map<Integer, Route> routes = new HashMap<>();
     private boolean needsUpdate = false;
     private Map<Integer, RoutePoint> routePointMap = new HashMap<>();
-    private Map<String, HearthFire> hearthFireMap = new HashMap<>();
-
-    public class HearthFire {
-        public Coord localCoord;
-        public long gridId;
-
-        public HearthFire(Coord localCoord, long gridId) {
-            this.localCoord = localCoord;
-            this.gridId = gridId;
-        }
-
-    }
 
     public RouteGraphManager() {
         graph = new RouteGraph();
@@ -82,20 +70,6 @@ public class RouteGraphManager {
                     routes.put(route.id, route);
                 }
 
-                if(main.has("hearthFires")) {
-                    JSONArray hearthFireArray = (JSONArray) main.get("hearthFires");
-                    for (int i = 0; i < hearthFireArray.length(); i++) {
-                        JSONObject hfObj = hearthFireArray.getJSONObject(i);
-
-                        String name = hfObj.getString("name");
-                        long gridId = hfObj.getLong("gridId");
-                        JSONObject coordObj = hfObj.getJSONObject("localCoord");
-                        Coord localCoord = new Coord(coordObj.getInt("x"), coordObj.getInt("y"));
-
-                        hearthFireMap.put(name, new HearthFire(localCoord, gridId));
-                    }
-                }
-
                 // Update the graph after loading routes
                 needsUpdate = true;
                 updateGraph();
@@ -105,10 +79,6 @@ public class RouteGraphManager {
 
     public Map<Integer, Route> getRoutes() {
         return routes;
-    }
-
-    public Map<String, HearthFire> getHearthFires() {
-        return hearthFireMap;
     }
 
     public RoutePoint getHearthFireForCurrentPlayer() {

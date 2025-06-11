@@ -46,18 +46,45 @@ public class RoutesWidget extends Window {
         IButton importBtn = add(new IButton(NStyle.importb[0].back, NStyle.importb[1].back, NStyle.importb[2].back) {
             @Override
             public void click() {
-                JFileChooser fc = new JFileChooser();
-                fc.setFileFilter(new FileNameExtensionFilter("Route files", "json"));
-                if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                    File file = fc.getSelectedFile();
-                    if (file != null) {
-                        NUtils.getGameUI().msg("Loaded route: " + file.getName());
-                        // TODO: Actual loading logic
+                super.click();
+                java.awt.EventQueue.invokeLater(() -> {
+                    JFileChooser fc = new JFileChooser();
+                    fc.setFileFilter(new FileNameExtensionFilter("Route setting file", "json"));
+                    if(fc.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
+                        return;
+                    if(fc.getSelectedFile()!=null)
+                    {
+                        // I think merging won't work for routes. It works for areas, but routes require connection
+                        // creation at the time of recording. Existing routes will not connect to new routes leading
+                        // to problems. Should we overwrite existing routes with incoming routes? We could warn the user
+                        // with a popup.
+//                        NUtils.getUI().core.config.mergeRoutes(fc.getSelectedFile());
                     }
-                }
+                    RoutesWidget.this.hide();
+                    RoutesWidget.this.show();
+                    NConfig.needRoutesUpdate();
+                });
+
             }
         }, createBtn.pos("ur").adds(UI.scale(5, 0)));
         importBtn.settip("Import route");
+
+        IButton exportBtn;
+        add(exportBtn = new IButton(NStyle.exportb[0].back,NStyle.exportb[1].back,NStyle.exportb[2].back){
+            @Override
+            public void click()
+            {
+                super.click();
+                java.awt.EventQueue.invokeLater(() -> {
+                    JFileChooser fc = new JFileChooser();
+                    fc.setFileFilter(new FileNameExtensionFilter("Routes setting file", "json"));
+                    if(fc.showSaveDialog(null) != JFileChooser.APPROVE_OPTION)
+                        return;
+                    NUtils.getUI().core.config.writeRoutes(fc.getSelectedFile().getAbsolutePath()+".json");
+                });
+            }
+        },importBtn.pos("ur").adds(UI.scale(5,0)));
+        exportBtn.settip("Export");
 
         IButton deleteBtn = add(new IButton(NStyle.remove[0].back, NStyle.remove[1].back, NStyle.remove[2].back) {
             @Override
@@ -67,14 +94,14 @@ public class RoutesWidget extends Window {
                     routeList.sel.deleteSelectedRoute();
                 }
             }
-        }, importBtn.pos("ur").adds(UI.scale(5, 0)));
+        }, exportBtn.pos("ur").adds(UI.scale(5, 0)));
         deleteBtn.settip("Delete selected route");
 
-        Label routeListLabel = add(new Label("Routes:", NStyle.areastitle), createBtn.pos("bl").adds(0, 10));
-        routeList = add(new RouteList(UI.scale(new Coord(250, 200))), routeListLabel.pos("bl").adds(0, 10));
+        Label routeListLabel = add(new Label("Routes:", NStyle.areastitle), createBtn.pos("bl").adds(0, 5));
+        routeList = add(new RouteList(UI.scale(new Coord(250, 190))), routeListLabel.pos("bl").adds(0, 5));
 
         Label actionsListLabel = add(new Label("Actions:", NStyle.areastitle), routeListLabel.pos("ur").add(UI.scale(105, 0)));
-        actionContainer = add(new Widget(UI.scale(new Coord(120, 36))), actionsListLabel.pos("bl").adds(0, UI.scale(5)));
+        actionContainer = add(new Widget(UI.scale(new Coord(120, 30))), actionsListLabel.pos("bl").adds(0, UI.scale(5)));
 
         CheckBox useHFinGlobalPFBox = add(new CheckBox("Use Hearth Fires in Global PF") {
             {
@@ -84,19 +111,19 @@ public class RoutesWidget extends Window {
                 NConfig.set(NConfig.Key.useHFinGlobalPF, val);
                 a = val;
             }
-        }, actionContainer.pos("bl").adds(0, UI.scale(5)));
+        }, actionContainer.pos("bl").adds(0, UI.scale(3)));
 
         // HearthFires label under actions
         Label hearthfireLabel = add(new Label("Hearth Fires:", NStyle.areastitle), useHFinGlobalPFBox.pos("bl").adds(0, UI.scale(5)));
         // Hearthfire waypoint list (custom version of WaypointList, but read-only)
-        hearthfireWaypointList = add(new HearthfireWaypointList(UI.scale(new Coord(200, 130))),
+        hearthfireWaypointList = add(new HearthfireWaypointList(UI.scale(new Coord(200, 100))),
                 hearthfireLabel.pos("bl").adds(0, UI.scale(5)));
 
-        Label routeInfoLabel = add(new Label("Route Info:", NStyle.areastitle), routeList.pos("bl").adds(0, UI.scale(10)));
-        waypointList = add(new WaypointList(UI.scale(new Coord(350, 200))), routeInfoLabel.pos("bl").adds(0, UI.scale(5)));
+        Label routeInfoLabel = add(new Label("Route Info:", NStyle.areastitle), routeList.pos("bl").adds(0, UI.scale(5)));
+        waypointList = add(new WaypointList(UI.scale(new Coord(350, 140))), routeInfoLabel.pos("bl").adds(0, UI.scale(5)));
 
-        Label specLabel = add(new Label("Specializations:", NStyle.areastitle), waypointList.pos("bl").adds(0, UI.scale(10)));
-        specList = add(new SpecList(UI.scale(new Coord(350, 100))), specLabel.pos("bl").adds(0, UI.scale(5)));
+        Label specLabel = add(new Label("Specializations:", NStyle.areastitle), waypointList.pos("bl").adds(0, UI.scale(5)));
+        specList = add(new SpecList(UI.scale(new Coord(350, 50))), specLabel.pos("bl").adds(0, UI.scale(5)));
 
         pack();
 

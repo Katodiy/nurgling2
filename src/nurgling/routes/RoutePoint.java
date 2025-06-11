@@ -36,12 +36,7 @@ public class RoutePoint {
     }
 
     public RoutePoint(Coord2d rc, MCache mcache) {
-        Coord tilec = rc.div(MCache.tilesz).floor();
-        MCache.Grid grid = mcache.getgridt(tilec);
-
-        this.gridId = grid.id;
-        this.localCoord = tilec.sub(grid.ul);
-        this.id = hashCode();
+        this(rc, mcache, null);
     }
 
     public RoutePoint(Coord2d rc, MCache mcache, String hearthFirePlayerName) {
