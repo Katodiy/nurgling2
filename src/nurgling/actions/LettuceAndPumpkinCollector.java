@@ -45,7 +45,7 @@ public class LettuceAndPumpkinCollector implements Action {
                 totalItemsThatCanFit = Math.max(gui.getInventory().getNumberFreeCoord(testItems.get(0)) + 1, totalItemsThatCanFit);
 
                 if ((this.items.keys.contains("Head of Lettuce") && gui.getInventory().getNumberFreeCoord(testItems.get(0)) <= Math.floor(totalItemsThatCanFit/2))
-                        || gui.getInventory().getNumberFreeCoord(testItems.get(0)) <= Math.floor(totalItemsThatCanFit)) {
+                        || (this.items.keys.contains("Giant Pumpkin") && gui.getInventory().getNumberFreeCoord(testItems.get(0)) <= Math.floor(totalItemsThatCanFit))) {
                     splitItems(gui);
 
                     ArrayList<Gob> barrels = Finder.findGobs(seedOutput, new NAlias("barrel"));
