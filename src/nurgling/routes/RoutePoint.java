@@ -15,6 +15,7 @@ public class RoutePoint {
     public int id;
     public long gridId;
     public Coord localCoord;
+    public String hearthFirePlayerName;
 
     public ArrayList<Integer> neighbors = new ArrayList<>();
     public Map<Integer, Connection> connections = new HashMap<>();
@@ -35,18 +36,25 @@ public class RoutePoint {
     }
 
     public RoutePoint(Coord2d rc, MCache mcache) {
+        this(rc, mcache, null);
+    }
+
+    public RoutePoint(Coord2d rc, MCache mcache, String hearthFirePlayerName) {
         Coord tilec = rc.div(MCache.tilesz).floor();
         MCache.Grid grid = mcache.getgridt(tilec);
 
         this.gridId = grid.id;
         this.localCoord = tilec.sub(grid.ul);
+        this.hearthFirePlayerName = hearthFirePlayerName;
         this.id = hashCode();
     }
 
-    public RoutePoint(long gridId, Coord localCoord) {
+
+    public RoutePoint(long gridId, Coord localCoord, String hearthFirePlayerName) {
         this.name = "";
         this.gridId = gridId;
         this.localCoord = localCoord;
+        this.hearthFirePlayerName = hearthFirePlayerName;
         this.id = hashCode();
     }
 
@@ -113,28 +121,32 @@ public class RoutePoint {
     }
 
     public Coord2d toCoord2d(MCache mcache) {
-        for (MCache.Grid grid : mcache.grids.values()) {
-            if (grid.id == gridId) {
-                Coord tilec = grid.ul.add(localCoord);
-                return tilec.mul(MCache.tilesz).add(MCache.tilehsz);
+        synchronized(mcache.grids) {
+            for (MCache.Grid grid : mcache.grids.values()) {
+                if (grid.id == gridId) {
+                    Coord tilec = grid.ul.add(localCoord);
+                    return tilec.mul(MCache.tilesz).add(MCache.tilehsz);
+                }
             }
+            return null;
         }
-        return null;
     }
 
     public Coord3f toCoord3f(MCache mcache) {
-        for (MCache.Grid grid : mcache.grids.values()) {
-            if (grid.id == gridId) {
-                boolean canContinue = false;
-                for(MCache.Grid.Cut cut : grid.cuts) {
-                    canContinue = cut.mesh.isReady() && cut.fo.isReady();
-                }
-                if (canContinue) {
-                    return mcache.getzp(grid.ul.add(localCoord).mul(MCache.tilesz).add(MCache.tilehsz));
+        synchronized (mcache.grids) {
+            for (MCache.Grid grid : mcache.grids.values()) {
+                if (grid.id == gridId) {
+                    boolean canContinue = false;
+                    for(MCache.Grid.Cut cut : grid.cuts) {
+                        canContinue = cut.mesh.isReady() && cut.fo.isReady();
+                    }
+                    if (canContinue) {
+                        return mcache.getzp(grid.ul.add(localCoord).mul(MCache.tilesz).add(MCache.tilehsz));
+                    }
                 }
             }
+            return null;
         }
-        return null;
     }
 
     public Collection<Connection> getConnections() {

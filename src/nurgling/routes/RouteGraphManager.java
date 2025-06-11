@@ -1,5 +1,6 @@
 package nurgling.routes;
 
+import haven.Coord;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -78,6 +79,16 @@ public class RouteGraphManager {
 
     public Map<Integer, Route> getRoutes() {
         return routes;
+    }
+
+    public RoutePoint getHearthFireForCurrentPlayer() {
+        for(RoutePoint routePoint : routePointMap.values()) {
+            if(routePoint.hearthFirePlayerName.equals(NUtils.getGameUI().getCharInfo().chrid)) {
+                return routePoint;
+            }
+        }
+
+        return null;
     }
 
     private void refreshDoors() {

@@ -431,6 +431,36 @@ public class NMapView extends MapView
         return key;
     }
 
+    public String addHearthFireRoute()
+    {
+        String key;
+        synchronized (((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes())
+        {
+            HashSet<String> names = new HashSet<String>();
+            int id = 0;
+            for(Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values())
+            {
+                if(route.id >= id)
+                {
+                    id = route.id + 1;
+                }
+                names.add(route.name);
+            }
+            key = ("New Route" + ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().size());
+            while(names.contains(key))
+            {
+                key = key+"(1)";
+            }
+            Route newRoute = new Route(key);
+            newRoute.id = id;
+            newRoute.path = NUtils.getGameUI().routesWidget.currentPath;
+            newRoute.spec.add(new Route.RouteSpecialization("HearthFires"));
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().put(id, newRoute);
+            createRouteLabel(id);
+        }
+        return key;
+    }
+
 
     @Override
     public void tick(double dt)

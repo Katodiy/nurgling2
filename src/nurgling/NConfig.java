@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
 import nurgling.routes.Route;
+import nurgling.routes.RouteGraphManager;
 import nurgling.widgets.NMiniMap;
 import org.json.*;
 
@@ -83,7 +84,7 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, boxFillColor, boxEdgeColor, fonts
+        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, fonts
     }
 
 
@@ -138,6 +139,7 @@ public class NConfig
         conf.put(Key.ndbenable, false);
         conf.put(Key.harvestautorefill, false);
         conf.put(Key.useGlobalPf, false);
+        conf.put(Key.useHFinGlobalPF, false);
         conf.put(Key.sqlite, false);
         conf.put(Key.postgres, false);
         conf.put(Key.dbFilePath, "");
@@ -580,6 +582,7 @@ public class NConfig
                 jroutes.put(route.toJson());
             }
             main.put("routes",jroutes);
+
             try
             {
                 FileWriter f = new FileWriter(customPath==null?path_routes:customPath,StandardCharsets.UTF_8);
@@ -595,7 +598,6 @@ public class NConfig
     }
 
     public void mergeRoutes(File file) {
-
         StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
         {
