@@ -67,6 +67,7 @@ public class NGameUI extends GameUI
         add(biw = new BotsInterruptWidget());
 
         add(nsw = new NSettingsWindow());
+        nsw.hide();
     }
 
     @Override

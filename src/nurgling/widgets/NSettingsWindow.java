@@ -2,6 +2,8 @@ package nurgling.widgets;
 
 
 import haven.*;
+import nurgling.NMapView;
+import nurgling.NUtils;
 import nurgling.widgets.nsettings.Fonts;
 import nurgling.widgets.nsettings.Panel;
 import nurgling.widgets.nsettings.World;
@@ -52,6 +54,19 @@ public class NSettingsWindow extends Window {
         gameenvironment.addChild(new SettingsItem("World",world = new World(), container));
         list.addCategory(general);
         list.addCategory(gameenvironment);
+    }
+
+    @Override
+    public void wdgmsg(Widget sender, String msg, Object... args) {
+        if (msg.equals("close")) {
+            hide();
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+                ((NMapView) NUtils.getGameUI().map).destroyRouteDummys();
+                NUtils.getGameUI().map.glob.oc.paths.pflines = null;
+            }
+        } else {
+            super.wdgmsg(sender, msg, args);
+        }
     }
 
 
