@@ -8,6 +8,7 @@ import nurgling.areas.NArea;
 import nurgling.tasks.GetCurs;
 import nurgling.tasks.NoGob;
 import nurgling.tasks.WaitGobsInField;
+import nurgling.tasks.WaitItems;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
@@ -194,6 +195,7 @@ public class HarvestCrop implements Action {
             plant = Finder.findGob(plantGobEndpoint.div(MCache.tilesz).floor(),new NAlias("gfx/terobjs/plants/fallowplant"), 0);
         }
         if(plant!=null) {
+            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
             if(PathFinder.isAvailable(pathfinderEndpoint)) {
                 new PathFinder(pathfinderEndpoint).run(NUtils.getGameUI());
                 if (setDir.get()) {
@@ -208,7 +210,6 @@ public class HarvestCrop implements Action {
             {
                 new PathFinder(plant).run(NUtils.getGameUI());
             }
-            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
             new SelectFlowerAction("Harvest", plant).run(gui);
             NUtils.getUI().core.addTask(new NoGob(plant.id));
         }
@@ -230,6 +231,8 @@ public class HarvestCrop implements Action {
             NUtils.getUI().core.addTask(new NoGob(plant.id));
             dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
         }
+
+        dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
     }
 
     private void dropOffSeed(NGameUI gui, Set<Gob> barrels, Gob trough, Gob cistern) throws InterruptedException {
