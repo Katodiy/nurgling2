@@ -4,7 +4,7 @@ import haven.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
 import nurgling.routes.Route;
-import nurgling.routes.RouteGraphManager;
+import nurgling.scenarios.Scenario;
 import nurgling.widgets.NMiniMap;
 import org.json.*;
 
@@ -228,10 +228,12 @@ public class NConfig
     private boolean isAreasUpd = false;
     private boolean isFogUpd = false;
     private boolean isRoutesUpd = false;
+    private boolean isScenariosUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
     public String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
     public String path_fog = ((HashDirCache) ResCache.global).base + "\\..\\" + "fog.nurgling.json";
     public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
+    public String path_scenarios = ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
 
     public boolean isUpdated()
     {
@@ -245,6 +247,10 @@ public class NConfig
 
     public boolean isRoutesUpdated() {
         return isRoutesUpd;
+    }
+
+    public boolean isScenariosUpdated() {
+        return isScenariosUpd;
     }
 
     public boolean isFogUpdated() { return isFogUpd; }
@@ -287,6 +293,13 @@ public class NConfig
         if (current != null)
         {
             current.isRoutesUpd = true;
+        }
+    }
+
+    public static void needScenariosUpdate() {
+        if (current != null)
+        {
+            current.isScenariosUpd = true;
         }
     }
 
@@ -626,6 +639,28 @@ public class NConfig
             }
         }
     }
+
+    public void writeScenarios(String customPath) {
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+            JSONObject main = new JSONObject();
+            JSONArray jscenarios = new JSONArray();
+
+            for (Scenario scenario : ((NMapView) NUtils.getGameUI().map).scenarioManager.getScenarios().values()) {
+                jscenarios.put(scenario.toJson());
+            }
+            main.put("scenarios", jscenarios);
+
+            try {
+                FileWriter f = new FileWriter(customPath == null ? path_scenarios : customPath, StandardCharsets.UTF_8);
+                main.write(f);
+                f.close();
+                current.isScenariosUpd = false;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
 
     public static Set<NPathVisualizer.PathCategory> getPathCategories() {
         HashSet<NPathVisualizer.PathCategory> res = new HashSet<>();

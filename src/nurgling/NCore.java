@@ -206,6 +206,10 @@ public class NCore extends Widget
         {
             config.writeRoutes(null);
         }
+        if (config.isScenariosUpdated())
+        {
+            config.writeScenarios(null);
+        }
         synchronized (tasks)
         {
             for(final NTask task: tasks)
