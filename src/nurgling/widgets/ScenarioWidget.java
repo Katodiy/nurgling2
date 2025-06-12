@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.actions.bots.ScenarioRunner;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
 import nurgling.scenarios.*;
@@ -58,21 +59,32 @@ public class ScenarioWidget extends Window {
             protected Widget makeitem(Scenario item, int idx, Coord sz) {
                 Widget w = new Widget(sz);
                 Label label = new Label(item.getName());
+
                 int btnWidth = UI.scale(60);
                 int btnSpacing = UI.scale(8);
                 int rightPadding = UI.scale(10);
+
+                // We now have 3 buttons: Run, Edit, Delete
+                int runBtnX = sz.x - rightPadding - btnWidth * 3 - btnSpacing * 2;
                 int editBtnX = sz.x - rightPadding - btnWidth * 2 - btnSpacing;
                 int deleteBtnX = sz.x - rightPadding - btnWidth;
 
-                int labelAreaWidth = editBtnX - margin;
+                int labelAreaWidth = runBtnX - margin;
                 int labelX = margin + (labelAreaWidth - label.sz.x) / 2;
 
-
                 w.add(label, new Coord(labelX, (sz.y - label.sz.y) / 2));
+
+                // RUN button (new)
+                w.add(new Button(btnWidth, "Run", () -> runScenario(item)), new Coord(runBtnX, (sz.y - UI.scale(28)) / 2));
+
+                // EDIT button
                 w.add(new Button(btnWidth, "Edit", () -> editScenario(item)), new Coord(editBtnX, (sz.y - UI.scale(28)) / 2));
+
+                // DELETE button
                 w.add(new Button(btnWidth, "Delete", () -> deleteScenario(item)), new Coord(deleteBtnX, (sz.y - UI.scale(28)) / 2));
                 return w;
             }
+
         }, new Coord(margin, margin + UI.scale(32)));
 
         addScenarioButton = listPanel.add(
@@ -229,5 +241,23 @@ public class ScenarioWidget extends Window {
             }
         }), this.c.add(50, 50)); // You can adjust position as you wish
     }
+
+    private void runScenario(Scenario scenario) {
+        if (scenario == null || NUtils.getGameUI() == null)
+            return;
+
+        // This is your bot runner. Adjust import if needed.
+        ScenarioRunner runner = new ScenarioRunner(scenario);
+
+        // You probably want to run this in a new thread, as with other bots:
+        new Thread(() -> {
+            try {
+                runner.run(NUtils.getGameUI());
+            } catch (InterruptedException e) {
+                NUtils.getGameUI().msg("ScenarioRunner: Interrupted!");
+            }
+        }, "ScenarioRunnerThread").start();
+    }
+
 }
 
