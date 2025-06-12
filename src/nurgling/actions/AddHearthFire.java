@@ -13,6 +13,7 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class AddHearthFire implements Action {
 
@@ -50,10 +51,15 @@ public class AddHearthFire implements Action {
             Results.FAIL();
         }
 
+        List<RoutePoint> toDelete = new ArrayList<>();
         for(RoutePoint routePoint : existingRoute.waypoints) {
             if(routePoint.hearthFirePlayerName.equals(NUtils.getGameUI().getCharInfo().chrid)) {
-                existingRoute.deleteWaypoint(routePoint);
+                toDelete.add(routePoint);
             }
+        }
+
+        for (RoutePoint rp : toDelete) {
+            existingRoute.deleteWaypoint(rp);
         }
 
         ArrayList<Gob> fires = Finder.findGobs(new NAlias("gfx/terobjs/pow"));

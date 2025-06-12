@@ -39,7 +39,7 @@ public class ScenarioWidget extends Window {
         super(new Coord(UI.scale(370) + UI.scale(10)*2, 520), "Scenarios");
         int btnWidth = UI.scale(120);
         int btnSpacing = UI.scale(20);
-        int contentWidth = UI.scale(350); // Match your other controls
+        int contentWidth = UI.scale(500); // Match your other controls
         int btnHeight = UI.scale(28);
         int margin = UI.scale(10);
 
@@ -50,7 +50,7 @@ public class ScenarioWidget extends Window {
         listPanel = add(new Widget(new Coord(contentWidth, sz.y)), new Coord(margin, 0));
         listPanel.add(new Label("Scenarios:"), new Coord(margin, margin));
 
-        scenarioList = listPanel.add(new SListBox<Scenario, Widget>(UI.scale(new Coord(320, 302)), UI.scale(32)) {
+        scenarioList = listPanel.add(new SListBox<Scenario, Widget>(UI.scale(new Coord(470, 302)), UI.scale(32)) {
             @Override
             protected List<Scenario> items() {
                 return manager != null ? new ArrayList<>(manager.getScenarios().values()) : Collections.emptyList();
