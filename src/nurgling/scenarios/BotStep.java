@@ -31,7 +31,11 @@ public class BotStep {
     public void setBotKey(String botKey) { this.botKey = botKey; }
 
     public Map<String, Object> getSettings() { return settings; }
-    public void setSettings(Map<String, Object> settings) { this.settings = settings; }
+    public void setSetting(String key, Object value) {
+        if (this.settings == null) this.settings = new HashMap<>();
+        this.settings.put(key, value);
+    }
+
     public boolean hasSettings() {
         BotDescriptor desc = BotRegistry.getDescriptor(botKey);
         return desc != null && desc.factory.requiredSettings().size() > 0;
@@ -46,5 +50,9 @@ public class BotStep {
         obj.put("botKey", botKey);
         obj.put("params", new JSONObject(settings));
         return obj;
+    }
+
+    public void setSettings(Map<String, Object> editedSettings) {
+        this.settings = editedSettings;
     }
 }

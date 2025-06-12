@@ -10,7 +10,6 @@ import haven.Window;
 import nurgling.*;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,7 +19,7 @@ public class ScenarioWidget extends Window {
 
     // Panels
     private final Widget listPanel;
-    private final Widget editorPanel;
+    private Widget editorPanel = null;
 
     // Scenario list controls
     private final SListBox<Scenario, Widget> scenarioList;
@@ -28,9 +27,13 @@ public class ScenarioWidget extends Window {
 
     // Editor controls
     private final TextEntry scenarioNameEntry;
-    private final SListBox<BotStep, Widget> stepList;
+    private SListBox<BotStep, Widget> stepList;
     // Add step buttons etc.
     private final Button saveButton, cancelButton;
+
+    private StepSettingsPanel stepSettingsPanel;
+
+    private BotStep selectedStep = null;
 
     private Scenario editingScenario = null;
 
@@ -104,56 +107,77 @@ public class ScenarioWidget extends Window {
         scenarioNameEntry = editorPanel.add(new TextEntry((contentWidth - margin * 2) - 10, ""), new Coord(margin, y));
         y += UI.scale(36);
 
-        int listWidth = contentWidth - margin * 2;
-        stepList = editorPanel.add(new SListBox<BotStep, Widget>(new Coord(listWidth-10, UI.scale(270)), UI.scale(32)) {
+        int listWidth = contentWidth - margin * 2 - UI.scale(180) - UI.scale(12); // leave space for right panel
+        int settingsPanelWidth = UI.scale(180);
+
+        stepList = editorPanel.add(new SListBox<BotStep, Widget>(new Coord(listWidth, UI.scale(270)), UI.scale(32)) {
             @Override
             protected List<BotStep> items() {
                 return editingScenario != null ? editingScenario.getSteps() : Collections.emptyList();
             }
             @Override
-            protected Widget makeitem(BotStep step, int idx, Coord sz) {
-                Widget w = new Widget(sz);
-                String botName = step.getBotKey();
-                BotDescriptor desc = BotRegistry.getDescriptor(step.getBotKey());
-                if (desc != null)
-                    botName = desc.displayName;
-                Label label = new Label(botName);
-
-                // Calculate X for each button
-                int btnSpacing = UI.scale(8);
-                int removeBtnWidth = UI.scale(70);
-                int settingsBtnWidth = UI.scale(80);
-                int rightMargin = UI.scale(10);
-
-                int removeBtnX = sz.x - rightMargin - removeBtnWidth;
-                int settingsBtnX = removeBtnX - btnSpacing - settingsBtnWidth;
-// Center label between left margin and settings/remove buttons
-                int labelX = UI.scale(10);
-                if (step.hasSettings())
-                    labelX = (settingsBtnX - UI.scale(10) - label.sz.x) / 2 + UI.scale(10);
-                else
-                    labelX = (removeBtnX - UI.scale(10) - label.sz.x) / 2 + UI.scale(10);
-
-                int labelY = (sz.y - label.sz.y) / 2;
-                w.add(label, new Coord(labelX, labelY));
-
-                // Add "Settings" button if needed
-                if (step.hasSettings()) {
-                    w.add(new Button(settingsBtnWidth, "Settings", () -> openStepSettingsDialog(step)),
-                            new Coord(settingsBtnX, (sz.y - UI.scale(28)) / 2));
-                }
-
-                // Remove button (always present)
-                w.add(new Button(removeBtnWidth, "Remove", () -> {
-                    if (editingScenario != null) {
-                        editingScenario.getSteps().remove(step);
-                        stepList.update();
-                    }
-                }), new Coord(removeBtnX, (sz.y - UI.scale(28)) / 2));
-                return w;
+            public void change(BotStep item) {
+                super.change(item);
+                selectedStep = item;
+                stepSettingsPanel.setStep(selectedStep);
             }
+            @Override
+            protected Widget makeitem(BotStep step, int idx, Coord sz) {
+                return new ItemWidget<BotStep>(this, sz, step) {{
+                    String botName = step.getBotKey();
+                    BotDescriptor desc = BotRegistry.getDescriptor(step.getBotKey());
+                    if (desc != null)
+                        botName = desc.displayName;
+
+                    boolean hasSettings = desc != null && !desc.factory.requiredSettings().isEmpty();
+                    String marker = hasSettings ? " ✪" : "";
+                    Label label = new Label(botName + marker);
+
+                    int labelX = UI.scale(10);
+                    int labelY = (sz.y - label.sz.y) / 2;
+                    add(label, new Coord(labelX, labelY));
+
+                    int removeBtnX = sz.x - UI.scale(80);
+                    add(new Button(UI.scale(70), "Remove", () -> {
+                        if (editingScenario != null) {
+                            editingScenario.getSteps().remove(step);
+                            stepList.update();
+                            if (selectedStep == step) {
+                                selectedStep = null;
+                                updateStepSettingsPanel();
+                            }
+                        }
+                    }), new Coord(removeBtnX, (sz.y - UI.scale(28)) / 2));
+                }
+                    @Override
+                    public void draw(GOut g) {
+                        // Highlight if selected
+                        if (list.sel == this.item) {
+                            g.chcolor(50, 80, 120, 120);
+                            g.frect(Coord.z, sz);
+                            g.chcolor();
+                        }
+                        super.draw(g);
+                    }
+
+                    @Override
+                    public boolean mousedown(MouseDownEvent ev) {
+                        if (ev.b == 1) {
+                            list.change(this.item); // select on left click
+                            return true;
+                        }
+                        return super.mousedown(ev);
+                    }
+                };
+            }
+
         }, new Coord(margin, y));
-        y += UI.scale(120) + UI.scale(10);
+        stepSettingsPanel = editorPanel.add(
+                new StepSettingsPanel(new Coord(settingsPanelWidth, UI.scale(270)), null),
+                new Coord(margin + listWidth + UI.scale(12), y)
+        );
+
+        y += UI.scale(270) + UI.scale(10);
 
         int bottomY = editorPanel.sz.y - margin - btnHeight;
 
@@ -209,6 +233,13 @@ public class ScenarioWidget extends Window {
         editorPanel.show();
         scenarioNameEntry.settext(editingScenario != null ? editingScenario.getName() : "");
         stepList.update();
+        List<BotStep> steps = editingScenario != null ? editingScenario.getSteps() : Collections.emptyList();
+        if (!steps.isEmpty()) {
+            stepList.change(steps.get(0));
+        } else {
+            selectedStep = null;
+            stepSettingsPanel.setStep(null);
+        }
     }
 
     private void editScenario(Scenario s) {
@@ -278,9 +309,18 @@ public class ScenarioWidget extends Window {
         }, "ScenarioRunnerThread").start();
     }
 
-    private void openStepSettingsDialog(BotStep step) {
-        ScenarioStepSettingsWindow settings = new ScenarioStepSettingsWindow(step);
-        ui.root.add(settings, c.add(80, 80));
+    private void updateStepSettingsPanel() {
+        stepSettingsPanel.setStep(selectedStep);
     }
+
+    private void clearChildren(Widget parent) {
+        Widget child = parent.child;
+        while (child != null) {
+            Widget next = child.next;
+            child.destroy();
+            child = next;
+        }
+    }
+
 }
 

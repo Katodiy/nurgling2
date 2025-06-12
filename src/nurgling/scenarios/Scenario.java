@@ -10,11 +10,6 @@ public class Scenario {
     private String name;
     private ArrayList<BotStep> steps;
 
-    public Scenario(String name) {
-        this.name = name;
-        this.steps = new ArrayList<>();
-    }
-
     public Scenario(int id, String name) {
         this.id = id;
         this.name = name;

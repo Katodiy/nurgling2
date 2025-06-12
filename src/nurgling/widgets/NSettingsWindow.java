@@ -69,8 +69,6 @@ public class NSettingsWindow extends Window {
         }
     }
 
-
-
     private class SettingsList extends SListBox<SettingsItem, SettingsListItem> {
         public SettingsList(Coord sz) {
             super(sz, UI.scale(24));
