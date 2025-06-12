@@ -204,7 +204,7 @@ public class ScenarioWidget extends Window {
     public void show() {
         super.show();
         if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
-            this.manager = ((NMapView) NUtils.getGameUI().map).scenarioManager;
+            this.manager = NUtils.getUI().core.scenarioManager;
             scenarioList.update();
         }
         showListPanel();

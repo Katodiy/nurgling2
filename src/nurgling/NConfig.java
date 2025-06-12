@@ -645,7 +645,7 @@ public class NConfig
             JSONObject main = new JSONObject();
             JSONArray jscenarios = new JSONArray();
 
-            for (Scenario scenario : ((NMapView) NUtils.getGameUI().map).scenarioManager.getScenarios().values()) {
+            for (Scenario scenario : NUtils.getUI().core.scenarioManager.getScenarios().values()) {
                 jscenarios.put(scenario.toJson());
             }
             main.put("scenarios", jscenarios);

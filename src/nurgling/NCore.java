@@ -9,13 +9,10 @@ import monitoring.ItemWatcher;
 import monitoring.NGlobalSearchItems;
 import nurgling.actions.AutoDrink;
 import nurgling.iteminfo.NFoodInfo;
+import nurgling.scenarios.ScenarioManager;
 import nurgling.tasks.*;
 import nurgling.tools.NSearchItem;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
@@ -27,6 +24,7 @@ public class NCore extends Widget
     boolean isinspect = false;
     public NMappingClient mappingClient;
     public AutoDrink autoDrink = null;
+    public ScenarioManager scenarioManager = new ScenarioManager();
 
     public DBPoolManager poolManager = null;
     public boolean isInspectMode()

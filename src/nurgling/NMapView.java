@@ -11,7 +11,6 @@ import nurgling.overlays.map.*;
 import nurgling.routes.Route;
 import nurgling.routes.RouteGraphManager;
 import nurgling.routes.RoutePoint;
-import nurgling.scenarios.ScenarioManager;
 import nurgling.tools.*;
 
 import java.awt.event.KeyEvent;
@@ -51,7 +50,6 @@ public class NMapView extends MapView
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
 
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
-    public ScenarioManager scenarioManager = new ScenarioManager();
 
     @Override
     public void draw(GOut g) {
