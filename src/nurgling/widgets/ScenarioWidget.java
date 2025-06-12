@@ -119,18 +119,37 @@ public class ScenarioWidget extends Window {
                     botName = desc.displayName;
                 Label label = new Label(botName);
 
-                // Center label in the row (horizontal and vertical)
-                int labelX = (sz.x - label.sz.x - UI.scale(80)) / 2; // Account for button width on the right
+                // Calculate X for each button
+                int btnSpacing = UI.scale(8);
+                int removeBtnWidth = UI.scale(70);
+                int settingsBtnWidth = UI.scale(80);
+                int rightMargin = UI.scale(10);
+
+                int removeBtnX = sz.x - rightMargin - removeBtnWidth;
+                int settingsBtnX = removeBtnX - btnSpacing - settingsBtnWidth;
+// Center label between left margin and settings/remove buttons
+                int labelX = UI.scale(10);
+                if (step.hasSettings())
+                    labelX = (settingsBtnX - UI.scale(10) - label.sz.x) / 2 + UI.scale(10);
+                else
+                    labelX = (removeBtnX - UI.scale(10) - label.sz.x) / 2 + UI.scale(10);
+
                 int labelY = (sz.y - label.sz.y) / 2;
                 w.add(label, new Coord(labelX, labelY));
 
-                // Wider remove button
-                w.add(new Button(UI.scale(70), "Remove", () -> {
+                // Add "Settings" button if needed
+                if (step.hasSettings()) {
+                    w.add(new Button(settingsBtnWidth, "Settings", () -> openStepSettingsDialog(step)),
+                            new Coord(settingsBtnX, (sz.y - UI.scale(28)) / 2));
+                }
+
+                // Remove button (always present)
+                w.add(new Button(removeBtnWidth, "Remove", () -> {
                     if (editingScenario != null) {
                         editingScenario.getSteps().remove(step);
                         stepList.update();
                     }
-                }), new Coord(sz.x - UI.scale(80), (sz.y - UI.scale(28)) / 2)); // Vertically centered
+                }), new Coord(removeBtnX, (sz.y - UI.scale(28)) / 2));
                 return w;
             }
         }, new Coord(margin, y));
@@ -259,5 +278,9 @@ public class ScenarioWidget extends Window {
         }, "ScenarioRunnerThread").start();
     }
 
+    private void openStepSettingsDialog(BotStep step) {
+        ScenarioStepSettingsWindow settings = new ScenarioStepSettingsWindow(step);
+        ui.root.add(settings, c.add(80, 80));
+    }
 }
 

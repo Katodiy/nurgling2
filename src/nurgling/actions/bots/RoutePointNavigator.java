@@ -6,6 +6,7 @@ import nurgling.actions.Action;
 import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.actions.TravelToHearthFire;
+import nurgling.areas.NArea;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
@@ -23,9 +24,15 @@ public class RoutePointNavigator implements Action {
         this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
     }
 
+    public RoutePointNavigator(int areaId) {
+        NArea area = NArea.findAreaById(areaId);
+        this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
+        this.targetPoint = this.graph.findAreaRoutePoint(area);
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        if (gui == null || gui.map == null || gui.map.glob == null || gui.map.glob.map == null) {
+        if (gui == null || gui.map == null || gui.map.glob == null || gui.map.glob.map == null || this.targetPoint == null) {
             return Results.FAIL();
         }
 

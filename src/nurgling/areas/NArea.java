@@ -270,6 +270,15 @@ public class NArea
         return res;
     }
 
+    public static NArea findAreaById(int areaId) {
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+            Map<Integer, NArea> areas = NUtils.getGameUI().map.glob.map.areas;
+            return areas.get(areaId);
+        }
+        return null;
+    }
+
+
     public static TreeMap<Integer,NArea> findOuts(NAlias name)
     {
         TreeMap<Integer,NArea> areas = new TreeMap<>();
