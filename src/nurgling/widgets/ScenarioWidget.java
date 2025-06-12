@@ -49,7 +49,7 @@ public class ScenarioWidget extends Window {
         listPanel = add(new Widget(new Coord(contentWidth, sz.y)), new Coord(margin, 0));
         listPanel.add(new Label("Scenarios:"), new Coord(margin, margin));
 
-        scenarioList = listPanel.add(new SListBox<Scenario, Widget>(/*size*/ UI.scale(new Coord(350, 320)), /*rowheight*/ UI.scale(32)) {
+        scenarioList = listPanel.add(new SListBox<Scenario, Widget>(UI.scale(new Coord(320, 302)), UI.scale(32)) {
             @Override
             protected List<Scenario> items() {
                 return manager != null ? new ArrayList<>(manager.getScenarios().values()) : Collections.emptyList();
@@ -58,7 +58,6 @@ public class ScenarioWidget extends Window {
             protected Widget makeitem(Scenario item, int idx, Coord sz) {
                 Widget w = new Widget(sz);
                 Label label = new Label(item.getName());
-                int labelWidth = label.sz.x;
                 int btnWidth = UI.scale(60);
                 int btnSpacing = UI.scale(8);
                 int rightPadding = UI.scale(10);
@@ -90,13 +89,15 @@ public class ScenarioWidget extends Window {
         editorPanel.add(new Label("Edit Scenario:"), new Coord(margin, y));
         y += UI.scale(22);
 
-        scenarioNameEntry = editorPanel.add(new TextEntry(contentWidth - margin * 2, ""), new Coord(margin, y));
+        scenarioNameEntry = editorPanel.add(new TextEntry((contentWidth - margin * 2) - 10, ""), new Coord(margin, y));
         y += UI.scale(36);
 
-        // Add Step list and controls here...
-        stepList = editorPanel.add(new SListBox<BotStep, Widget>(UI.scale(new Coord(350, 120)), UI.scale(32)) {
+        int listWidth = contentWidth - margin * 2;
+        stepList = editorPanel.add(new SListBox<BotStep, Widget>(new Coord(listWidth-10, UI.scale(270)), UI.scale(32)) {
             @Override
-            protected List<BotStep> items() { return editingScenario != null ? editingScenario.getSteps() : Collections.emptyList(); }
+            protected List<BotStep> items() {
+                return editingScenario != null ? editingScenario.getSteps() : Collections.emptyList();
+            }
             @Override
             protected Widget makeitem(BotStep step, int idx, Coord sz) {
                 Widget w = new Widget(sz);
@@ -123,37 +124,12 @@ public class ScenarioWidget extends Window {
         }, new Coord(margin, y));
         y += UI.scale(120) + UI.scale(10);
 
-        // Add step controls...
-        editorPanel.add(new Label("Add Step:"), new Coord(margin, y));
-        y += UI.scale(20);
-
-        // Scrollable SListBox for bot selection
-        editorPanel.add(new SListBox<BotDescriptor, Widget>(UI.scale(new Coord(350, 100)), UI.scale(32)) {
-            @Override
-            protected List<BotDescriptor> items() {
-                Collection<BotDescriptor> coll = BotRegistry.listBots();
-                return coll == null ? Collections.emptyList() : new ArrayList<>(coll);
-            }
-            @Override
-            protected Widget makeitem(BotDescriptor bot, int idx, Coord sz) {
-                Widget w = new Widget(sz);
-                // Center label
-                Label label = new Label(bot.displayName);
-                int labelY = (sz.y - label.sz.y) / 2;
-                w.add(label, new Coord(margin, labelY));
-                // Add as step button
-                w.add(new Button(UI.scale(80), "Add", () -> {
-                    if (editingScenario != null) {
-                        editingScenario.addStep(new BotStep(bot.key));
-                        stepList.update();
-                    }
-                }), new Coord(sz.x - UI.scale(90), (sz.y - UI.scale(28)) / 2));
-                return w;
-            }
-        }, new Coord(margin, y));
-        y += UI.scale(100) + UI.scale(10);
-
         int bottomY = editorPanel.sz.y - margin - btnHeight;
+
+        Button addStepButton = editorPanel.add(
+                new Button(btnWidth, "Add Step", this::showBotSelectDialog),
+                new Coord((contentWidth - btnWidth) / 2, bottomY - btnHeight - UI.scale(8)) // Centered above Save/Cancel
+        );
 
         saveButton = editorPanel.add(
                 new Button(btnWidth, "Save", this::saveScenario),
@@ -184,7 +160,6 @@ public class ScenarioWidget extends Window {
         if (msg.equals("close")) {
             hide();
             if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
-                ((NMapView) NUtils.getGameUI().map).destroyRouteDummys();
                 NUtils.getGameUI().map.glob.oc.paths.pflines = null;
             }
         } else {
@@ -244,6 +219,15 @@ public class ScenarioWidget extends Window {
 
     private Scenario cloneScenario(Scenario s) {
         return new Scenario(s.toJson());
+    }
+
+    private void showBotSelectDialog() {
+        ui.root.add(new ScenarioBotSelectionDialog(bot -> {
+            if (editingScenario != null && bot != null) {
+                editingScenario.addStep(new BotStep(bot.key));
+                stepList.update();
+            }
+        }), this.c.add(50, 50)); // You can adjust position as you wish
     }
 }
 
