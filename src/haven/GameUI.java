@@ -63,7 +63,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public final NZergwnd zerg;
     public NAreasWidget areas;
 	public RoutesWidget routesWidget;
-	public ScenarioWidget scenarioWidget;
     public NCookBook cookBook;
     public final Collection<Polity> polities = new ArrayList<Polity>();
     public HelpWnd help;
@@ -300,8 +299,6 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	cookBook.hide();
 	add(routesWidget = new RoutesWidget(),new Coord(300, 300 ));
 	routesWidget.hide();
-	add(scenarioWidget = new ScenarioWidget(), new Coord(300, 300));
-	scenarioWidget.hide();
     }
 
     protected void attached() {
