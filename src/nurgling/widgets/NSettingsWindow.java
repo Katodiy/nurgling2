@@ -6,6 +6,7 @@ import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.widgets.nsettings.Fonts;
 import nurgling.widgets.nsettings.Panel;
+import nurgling.widgets.nsettings.ScenarioPanel;
 import nurgling.widgets.nsettings.World;
 
 import java.util.*;
@@ -50,10 +51,16 @@ public class NSettingsWindow extends Window {
     private void fillSettings() {
         SettingsCategory general = new SettingsCategory("General", new Panel("General"), container);
         general.addChild(new SettingsItem("Fonts", new Fonts(), container));
+
         SettingsCategory gameenvironment = new SettingsCategory("Game environment", new Panel("Game environment"), container);
         gameenvironment.addChild(new SettingsItem("World",world = new World(), container));
+
+        SettingsCategory scenarios = new SettingsCategory("Autorunner", new Panel("Autorunner scenarios"), container);
+        scenarios.addChild(new SettingsItem("Scenarios", new ScenarioPanel(), container));
+
         list.addCategory(general);
         list.addCategory(gameenvironment);
+        list.addCategory(scenarios);
     }
 
     @Override

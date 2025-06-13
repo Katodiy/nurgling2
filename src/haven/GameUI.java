@@ -1241,7 +1241,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	    prev = add(new MenuCheckBox("rbtn/chr/", kb_chr, "Character Sheet"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(chrwdg)).click(() -> togglewnd(chrwdg));
 	    prev = add(new MenuCheckBox("rbtn/areas/", kb_areas, "Areas Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(areas)).click(() -> togglewnd(areas));
 		prev = add(new MenuCheckBox("rbtn/routes/", kb_routes, "Routes Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(routesWidget)).click(() -> togglewnd(routesWidget));
-		prev = add(new MenuCheckBox("rbtn/routes/", kb_routes, "Scenario Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(scenarioWidget)).click(() -> togglewnd(scenarioWidget));
+		prev = add(new MenuCheckBox("rbtn/routes/", kb_opt, "Game Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(NUtils.getGameUI().nsw)).click(() -> togglewnd(NUtils.getGameUI().nsw));
         prev = add(new MenuCheckBox("rbtn/cookbook/", kb_cookbook, "Cook Book"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(cookBook)).click(() -> togglewnd(cookBook));
         prev = add(new MenuCheckBox("rbtn/bud/", kb_bud, "Kith & Kin"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(zerg)).click(() -> togglewnd(zerg));
 	    add(new MenuCheckBox("rbtn/opt/", kb_opt, "Options"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(opts)).click(() -> togglewnd(opts));
