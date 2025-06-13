@@ -94,6 +94,7 @@ public class NBotsMenu extends Widget
         utils.elements.add(new NButton("loading", new TransferToVeh()));
         utils.elements.add(new NButton("unloading", new TransferFromVeh()));
         utils.elements.add(new NButton("swap", new TransferFromVehToVeh()));
+        utils.elements.add(new NButton("swap", new Sleep()));
         addLayout(utils);
         NLayout build = new NLayout("build");
         build.elements.add(new NButton("dframe", new BuildDryingFrame(), true));
