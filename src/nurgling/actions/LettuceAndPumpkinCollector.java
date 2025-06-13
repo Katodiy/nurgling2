@@ -39,13 +39,12 @@ public class LettuceAndPumpkinCollector implements Action {
 
         int totalItemsThatCanFit = 0;
 
-
         while (!Finder.findGobs(input, collected_items).isEmpty()) {
             if (!(testItems = gui.getInventory().getItems(items)).isEmpty()) {
                 totalItemsThatCanFit = Math.max(gui.getInventory().getNumberFreeCoord(testItems.get(0)) + 1, totalItemsThatCanFit);
 
                 if ((this.items.keys.contains("Head of Lettuce") && gui.getInventory().getNumberFreeCoord(testItems.get(0)) <= Math.floor(totalItemsThatCanFit/2))
-                        || (this.items.keys.contains("Giant Pumpkin") && gui.getInventory().getNumberFreeCoord(testItems.get(0)) <= Math.floor(totalItemsThatCanFit))) {
+                        || (this.items.keys.contains("Pumpkin") && gui.getInventory().getNumberFreeCoord(testItems.get(0)) < totalItemsThatCanFit)) {
                     splitItems(gui);
 
                     ArrayList<Gob> barrels = Finder.findGobs(seedOutput, new NAlias("barrel"));
@@ -127,7 +126,12 @@ public class LettuceAndPumpkinCollector implements Action {
         NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
         ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(this.items);
         for (WItem item : items) {
-            new SelectFlowerAction("Split", (NWItem) item).run(gui);
+            if(this.items.keys.contains("Head of Lettuce")) {
+                new SelectFlowerAction("Split", (NWItem) item).run(gui);
+            } else if(this.items.keys.contains("Pumpkin")) {
+                new SelectFlowerAction("Slice", (NWItem) item).run(gui);
+            }
+
         }
     }
 }
