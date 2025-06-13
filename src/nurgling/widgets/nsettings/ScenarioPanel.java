@@ -9,6 +9,7 @@ import nurgling.scenarios.*;
 import nurgling.widgets.ScenarioBotSelectionDialog;
 import nurgling.widgets.StepSettingsPanel;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -117,14 +118,39 @@ public class ScenarioPanel extends Panel {
                         return new ItemWidget<BotStep>(this, sz, step) {{
                             String botName = step.getBotKey();
                             BotDescriptor desc = BotRegistry.getDescriptor(step.getBotKey());
-                            if (desc != null)
+                            Tex iconTex = null;
+                            if (desc != null && desc.iconPath != null) {
                                 botName = desc.displayName;
+                                String iconBase = desc.iconPath.replaceAll("/[udh]$", "");
+
+                                try {
+                                    BufferedImage iconImg = Resource.loadsimg(iconBase + "/u");
+                                    if (iconImg != null)
+                                        iconTex = new TexI(iconImg);
+                                } catch (Exception e) {
+                                    iconTex = null;
+                                }
+                            }
+
                             boolean hasSettings = desc != null && !desc.factory.requiredSettings().isEmpty();
                             String marker = hasSettings ? " ✪" : "";
                             Label label = new Label(botName + marker);
 
-                            int labelX = UI.scale(10);
+                            int iconMargin = UI.scale(4);
+                            int iconSize = UI.scale(24);
+                            int labelX = iconTex != null ? iconSize + iconMargin * 2 : UI.scale(10);
                             int labelY = (sz.y - label.sz.y) / 2;
+
+                            if (iconTex != null) {
+                                Tex finalIconTex = iconTex;
+                                add(new Widget(new Coord(iconSize, iconSize)) {
+                                    @Override
+                                    public void draw(GOut g) {
+                                        g.image(finalIconTex, Coord.z, new Coord(iconSize, iconSize));
+                                    }
+                                }, new Coord(iconMargin, (sz.y - iconSize) / 2));
+                            }
+
                             add(label, new Coord(labelX, labelY));
                             int removeBtnX = sz.x - UI.scale(80);
                             add(new Button(UI.scale(70), "Remove", () -> {
