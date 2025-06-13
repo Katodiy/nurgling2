@@ -21,7 +21,6 @@ public class ScenarioPanel extends Panel {
     private Widget editorPanel = null;
 
     private final SListBox<Scenario, Widget> scenarioList;
-    private final Button addScenarioButton;
 
     private final TextEntry scenarioNameEntry;
     private SListBox<BotStep, Widget> stepList;
@@ -30,6 +29,8 @@ public class ScenarioPanel extends Panel {
 
     private BotStep selectedStep = null;
     private Scenario editingScenario = null;
+
+    private ScenarioBotSelectionDialog stepDialog = null;
 
     public ScenarioPanel() {
         super("Autorunner scenarios");
@@ -81,7 +82,7 @@ public class ScenarioPanel extends Panel {
 
         int bottomY = contentHeight - margin - btnHeight;
 
-        addScenarioButton = listPanel.add(
+        listPanel.add(
                 new Button(btnWidth, "Add Scenario", this::addScenario),
                 new Coord((contentWidth - btnWidth) / 2, bottomY - btnHeight - UI.scale(8))
         );
@@ -181,6 +182,11 @@ public class ScenarioPanel extends Panel {
 
     @Override
     public void load() {
+        if (stepDialog != null) {
+            stepDialog.reqdestroy();
+            stepDialog = null;
+        }
+
         if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
             this.manager = NUtils.getUI().core.scenarioManager;
             scenarioList.update();
@@ -242,6 +248,11 @@ public class ScenarioPanel extends Panel {
     }
 
     private void saveScenario() {
+        if (stepDialog != null) {
+            stepDialog.reqdestroy();
+            stepDialog = null;
+        }
+
         if (manager != null && editingScenario != null) {
             editingScenario.setName(scenarioNameEntry.text());
             manager.addOrUpdateScenario(editingScenario);
@@ -256,12 +267,18 @@ public class ScenarioPanel extends Panel {
     }
 
     private void showBotSelectDialog() {
-        ui.root.add(new ScenarioBotSelectionDialog(bot -> {
+        if (stepDialog != null) {
+            stepDialog.reqdestroy();
+        }
+
+        stepDialog = new ScenarioBotSelectionDialog(bot -> {
             if (editingScenario != null && bot != null) {
                 editingScenario.addStep(new BotStep(bot.key));
                 stepList.update();
             }
-        }), this.c.add(50, 50));
+            stepDialog = null;
+        });
+        ui.root.add(stepDialog, this.c.add(50, 50));
     }
 
     private void runScenario(Scenario scenario) {
