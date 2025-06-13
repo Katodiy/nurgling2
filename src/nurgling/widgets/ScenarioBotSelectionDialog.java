@@ -37,7 +37,6 @@ public class ScenarioBotSelectionDialog extends Window {
             IButton btn = new IButton(up, down, hover) {
                 public void click() {
                     onSelect.accept(bot);
-                    // do NOT reqdestroy()
                 }
                 @Override
                 public Object tooltip(Coord c, Widget prev) {
@@ -55,11 +54,9 @@ public class ScenarioBotSelectionDialog extends Window {
         int gridHeight = rows * ICON_SIZE + y0;
         int contentWidth = ICON_SIZE * COLS + GRID_PADDING * 2;
 
-        // If grid too tall, make it scrollable
         int maxGridHeight = sz.y - UI.scale(60);
         if (gridHeight > maxGridHeight) {
             Scrollport scroll = new Scrollport(new Coord(contentWidth, maxGridHeight));
-            // move buttons into scrollport's container
             for (IButton btn : buttons) {
                 btn.unlink();
                 scroll.cont.add(btn, btn.c);

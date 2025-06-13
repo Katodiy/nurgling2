@@ -21,7 +21,6 @@ public class ScenarioManager {
         loadScenarios();
     }
 
-    // Loads scenarios from disk
     public void loadScenarios() {
         scenarios.clear();
         File file = new File(NConfig.current.path_scenarios);
@@ -43,7 +42,6 @@ public class ScenarioManager {
         }
     }
 
-    // Saves scenarios to disk
     public void writeScenarios(String customPath) {
         JSONObject main = new JSONObject();
         JSONArray jscenarios = new JSONArray();
@@ -74,17 +72,5 @@ public class ScenarioManager {
 
     public Map<Integer, Scenario> getScenarios() {
         return scenarios;
-    }
-
-    public Scenario getScenario(int scenarioId) {
-        return scenarios.get(scenarioId);
-    }
-
-    public boolean needsUpdate() {
-        return needsUpdate;
-    }
-
-    public void setNeedsUpdate(boolean needsUpdate) {
-        this.needsUpdate = needsUpdate;
     }
 }

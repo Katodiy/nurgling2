@@ -15,7 +15,6 @@ public class ScenarioRunner implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         for (BotStep step : scenario.getSteps()) {
-            // Pass the settings for this step!
             Action bot = BotRegistry.createBot(step.getBotKey(), step.getSettings());
             if (bot == null) {
                 gui.msg("ScenarioRunner: Unknown bot key: " + step.getBotKey());

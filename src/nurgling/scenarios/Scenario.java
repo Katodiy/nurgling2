@@ -30,24 +30,30 @@ public class Scenario {
         }
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public int getId() {
+        return id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public ArrayList<BotStep> getSteps() { return steps; }
-    public void setSteps(ArrayList<BotStep> steps) { this.steps = steps; }
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ArrayList<BotStep> getSteps() {
+        return steps;
+    }
 
     public void addStep(BotStep step) {
         this.steps.add(step);
     }
 
-    public void removeStep(BotStep step) {
-        this.steps.remove(step);
-    }
-
-    // Serialization
     public JSONObject toJson() {
         JSONObject obj = new JSONObject();
         obj.put("id", id);

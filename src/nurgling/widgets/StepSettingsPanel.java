@@ -53,7 +53,7 @@ public class StepSettingsPanel extends Widget {
             hasAnySetting = true;
             String key = setting.name;
             Class<?> type = setting.type;
-            // Example: Area selector
+
             if ("areaId".equals(key) && type == Integer.class) {
                 add(new Label("Select Area:"), new Coord(UI.scale(8), y));
                 y += UI.scale(24);
@@ -61,7 +61,6 @@ public class StepSettingsPanel extends Widget {
                 List<NArea> areaList = new ArrayList<>(NUtils.getGameUI().map.glob.map.areas.values());
                 areaList.sort(Comparator.comparing(a -> a.name));
 
-                // Find the selected area
                 Integer current = (Integer) step.getSetting("areaId");
                 NArea selectedArea = null;
                 if (current != null && current > 0) {
@@ -76,11 +75,10 @@ public class StepSettingsPanel extends Widget {
                     selectedArea = areaList.get(0);
                 }
 
-                // Create Dropbox
                 Dropbox<NArea> areaDropdown = new Dropbox<NArea>(
-                        UI.scale(160),     // width
-                        Math.min(areaList.size(), 10), // max visible items
-                        UI.scale(22)       // item height
+                        UI.scale(160),
+                        Math.min(areaList.size(), 10),
+                        UI.scale(22)
                 ) {
                     @Override
                     protected NArea listitem(int i) { return areaList.get(i); }
@@ -103,9 +101,9 @@ public class StepSettingsPanel extends Widget {
                 }
 
                 add(areaDropdown, new Coord(UI.scale(8), y));
-                y += UI.scale(40); // Adjust for spacing under dropdown
+                y += UI.scale(40);
             }
-            // More setting types here...
+            // More setting types here later...
         }
         if (!hasAnySetting) {
             add(new Label("No settings for this step."), new Coord(UI.scale(8), y));

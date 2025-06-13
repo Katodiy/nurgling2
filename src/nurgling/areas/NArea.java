@@ -2,11 +2,9 @@ package nurgling.areas;
 
 import haven.*;
 import static haven.MCache.cmaps;
-import haven.render.sl.*;
 import nurgling.*;
 import nurgling.actions.PathFinder;
 import nurgling.tools.*;
-import nurgling.widgets.Specialisation;
 import org.json.*;
 
 import java.awt.*;
