@@ -7,68 +7,90 @@ import nurgling.actions.bots.registry.BotRegistry;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+
+import static nurgling.actions.bots.registry.BotDescriptor.BotType.*;
 
 public class ScenarioBotSelectionDialog extends Window {
     public static final int ICON_SIZE = UI.scale(34);
     public static final int GRID_PADDING = UI.scale(10);
-    public static final int COLS = 6; // Number of icons per row
+    public static final int COLS = 6;
 
     public ScenarioBotSelectionDialog(java.util.function.Consumer<BotDescriptor> onSelect) {
-        // Window width: enough for all icons plus equal left/right margin
         super(new Coord(ICON_SIZE * COLS + GRID_PADDING * 2, UI.scale(350)), "Select Bot");
 
-        Collection<BotDescriptor> bots = BotRegistry.listBots();
-        int y0 = GRID_PADDING;
-        int x0 = GRID_PADDING;
+        List<BotDescriptor> bots = new ArrayList<>(BotRegistry.listBots());
+        bots.sort(Comparator.comparingInt(b -> b.order));
+        List<BotDescriptor.BotType> groupOrder = List.of(UTILS, FARMING, LIVESTOCK, LABORING);
 
-        List<IButton> buttons = new ArrayList<>();
-        int i = 0;
-        for (BotDescriptor bot : bots) {
-            int col = i % COLS;
-            int row = i / COLS;
-
-            String iconBase = bot.iconPath.replaceAll("/[udh]$", "");
-            BufferedImage up = padIcon(Resource.loadsimg(iconBase + "/u"), ICON_SIZE);
-            BufferedImage down = padIcon(Resource.loadsimg(iconBase + "/d"), ICON_SIZE);
-            BufferedImage hover = padIcon(Resource.loadsimg(iconBase + "/h"), ICON_SIZE);
-
-            IButton btn = new IButton(up, down, hover) {
-                public void click() {
-                    onSelect.accept(bot);
-                }
-                @Override
-                public Object tooltip(Coord c, Widget prev) {
-                    return Text.render(bot.displayName).tex();
-                }
-            };
-
-            btn.resize(new Coord(ICON_SIZE, ICON_SIZE));
-            add(btn, new Coord(x0 + col * ICON_SIZE, y0 + row * ICON_SIZE));
-            buttons.add(btn);
-            i++;
-        }
-
-        int rows = (int) Math.ceil(bots.size() / (double) COLS);
-        int gridHeight = rows * ICON_SIZE + y0;
         int contentWidth = ICON_SIZE * COLS + GRID_PADDING * 2;
 
-        int maxGridHeight = sz.y - UI.scale(60);
-        if (gridHeight > maxGridHeight) {
-            Scrollport scroll = new Scrollport(new Coord(contentWidth, maxGridHeight));
-            for (IButton btn : buttons) {
-                btn.unlink();
-                scroll.cont.add(btn, btn.c);
+        Widget contentPanel = new Widget(new Coord(contentWidth, 10000)); // Height will be fixed below
+
+        int y = GRID_PADDING;
+        for (BotDescriptor.BotType type : groupOrder) {
+            List<BotDescriptor> group = bots.stream().filter(b -> b.type == type).toList();
+            if (group.isEmpty()) continue;
+
+            String title;
+            switch (type) {
+                case UTILS:    title = "Utils";     break;
+                case FARMING:  title = "Farmers";   break;
+                case LIVESTOCK: title = "Livestock"; break;
+                case LABORING: title = "Laboring";  break;
+                default:       title = "Other";
             }
+
+            Label label = new Label(title);
+            contentPanel.add(label, new Coord(GRID_PADDING, y));
+            y += label.sz.y + UI.scale(6);
+
+            int groupStartY = y;
+            int i = 0;
+            for (BotDescriptor bot : group) {
+                int col = i % COLS;
+                int row = i / COLS;
+
+                String iconBase = bot.iconPath.replaceAll("/[udh]$", "");
+                BufferedImage up = padIcon(Resource.loadsimg(iconBase + "/u"), ICON_SIZE);
+                BufferedImage down = padIcon(Resource.loadsimg(iconBase + "/d"), ICON_SIZE);
+                BufferedImage hover = padIcon(Resource.loadsimg(iconBase + "/h"), ICON_SIZE);
+
+                IButton btn = new IButton(up, down, hover) {
+                    public void click() { onSelect.accept(bot); }
+                    @Override public Object tooltip(Coord c, Widget prev) {
+                        return Text.render(bot.displayName).tex();
+                    }
+                };
+                btn.resize(new Coord(ICON_SIZE, ICON_SIZE));
+                contentPanel.add(btn, new Coord(GRID_PADDING + col * ICON_SIZE, groupStartY + row * ICON_SIZE));
+                i++;
+            }
+            int groupRows = (int) Math.ceil(group.size() / (double) COLS);
+            y = groupStartY + groupRows * ICON_SIZE + UI.scale(18);
+        }
+
+        int contentHeight = y + UI.scale(8);
+        contentPanel.resize(new Coord(contentWidth, contentHeight));
+
+        int maxGridHeight = sz.y - UI.scale(60);
+
+        if (contentHeight > maxGridHeight) {
+            Scrollport scroll = new Scrollport(new Coord(contentWidth, maxGridHeight));
+            scroll.cont.add(contentPanel, Coord.z);
             add(scroll, Coord.z);
-            add(new Button(UI.scale(120), "Cancel", this::reqdestroy), new Coord((contentWidth - UI.scale(120)) / 2, maxGridHeight + UI.scale(16)));
+            add(new Button(UI.scale(120), "Cancel", this::reqdestroy),
+                    new Coord((contentWidth - UI.scale(120)) / 2, maxGridHeight + UI.scale(16)));
         } else {
-            add(new Button(UI.scale(120), "Cancel", this::reqdestroy), new Coord((contentWidth - UI.scale(120)) / 2, gridHeight + UI.scale(16)));
+            add(contentPanel, Coord.z);
+            add(new Button(UI.scale(120), "Cancel", this::reqdestroy),
+                    new Coord((contentWidth - UI.scale(120)) / 2, contentHeight + UI.scale(16)));
         }
 
         pack();
     }
+
 
     @Override
     public void wdgmsg(Widget sender, String msg, Object... args) {
