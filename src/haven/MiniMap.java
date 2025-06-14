@@ -282,7 +282,7 @@ public class MiniMap extends Widget
 	}
 
 	public void dispupdate() {
-	    if((this.rc == null) || (sessloc == null) || (dloc == null) || (dloc.seg != sessloc.seg))
+	    if((this.rc == null) || (sessloc == null) || (dloc == null) || (dloc.seg.id != sessloc.seg.id))
 		this.sc = null;
 	    else
 		this.sc = p2c(this.rc);
@@ -606,7 +606,7 @@ public class MiniMap extends Widget
 		try {
 		    GobIcon icon = gob.getattr(GobIcon.class);
 		    if(icon != null) {
-			GobIcon.Setting conf = iconconf.get(icon.icon());
+                GobIcon.Setting conf = iconconf.get(icon.icon());
 			if((conf != null) && conf.show) {
 			    DisplayIcon disp = pmap.remove(icon);
 			    if(disp == null)
@@ -629,7 +629,7 @@ public class MiniMap extends Widget
     }
 
     public void drawicons(GOut g) {
-	if((sessloc == null) || (dloc.seg != sessloc.seg))
+	if((sessloc == null) || (dloc.seg.id != sessloc.seg.id))
 	    return;
 	for(DisplayIcon disp : icons) {
 	    if((disp.sc == null) || filter(disp))

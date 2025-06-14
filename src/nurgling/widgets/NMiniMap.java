@@ -125,7 +125,7 @@ public class NMiniMap extends MiniMap implements Console.Directory {
     public static final Color VIEW_FOG_COLOR = new Color(255, 255, 0 , 120);
     public static final Color VIEW_BORDER_COLOR = new Color(0, 0, 0, 128);
 
-    public static Coord2d TEMP_VIEW_SZ = new Coord2d(VIEW_SZ).mul(tilesz).div(2).sub(1,1);
+    public static Coord2d TEMP_VIEW_SZ = new Coord2d(VIEW_SZ).floor().mul(tilesz).div(2).sub(tilesz.mul(5));
     void drawview(GOut g) {
         if(ui.gui.map==null)
             return;
@@ -148,10 +148,6 @@ public class NMiniMap extends MiniMap implements Console.Directory {
         if(NUtils.getGameUI()==null)
             return;
         drawmap(g);
-        drawmarkers(g);
-        if(dlvl == 0)
-            drawicons(g);
-        drawparty(g);
         boolean playerSegment = (sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id));
         if(zoomlevel <= 2 && (Boolean)NConfig.get(NConfig.Key.showGrid)) {drawgrid(g);}
         if(playerSegment && zoomlevel <= 1 && (Boolean)NConfig.get(NConfig.Key.showView)) {drawview(g);}
@@ -168,6 +164,12 @@ public class NMiniMap extends MiniMap implements Console.Directory {
             }
             g.chcolor();
         }
+        drawmarkers(g);
+        if(dlvl == 0)
+            drawicons(g);
+        drawparty(g);
+
+
         drawtempmarks(g);
     }
 
@@ -341,8 +343,14 @@ public class NMiniMap extends MiniMap implements Console.Directory {
                         } else {
                             if (!cm.rc.isect(pl.sub(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)), pl.add(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)))) {
                                 tempMarkList.remove(cm);
-                            }else if (cm.rc.isect(pl.sub(TEMP_VIEW_SZ), pl.add(TEMP_VIEW_SZ))) {
-                                tempMarkList.remove(cm);
+                            }else {
+                                Coord rc = p2c(pl.floor(sgridsz).sub(4, 4).mul(sgridsz).add(9,9));
+                                int zmult = 1 << zoomlevel;
+                                Coord viewsz = VIEW_SZ.div(zmult).mul(scale).sub(9,9);
+                                Coord gc = p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
+                                if (gc.isect(rc, viewsz)) {
+                                    tempMarkList.remove(cm);
+                                }
                             }
                         }
                     } else {
@@ -355,9 +363,8 @@ public class NMiniMap extends MiniMap implements Console.Directory {
                     for (Gob gob : ui.sess.glob.oc) {
                         if (tempMarkList.stream().noneMatch(m -> m.id == gob.id)) {
                             BufferedImage tex = setTex(gob);
-                            MiniMap.Location loc = NUtils.getGameUI().mmap.curloc;
                             if (tex != null && sessloc!=null) {
-                                tempMarkList.add(new TempMark(gob.ngob.name, loc, gob.id, gob.rc, gob.rc.floor(tilesz).add(sessloc.tc), tex));
+                                tempMarkList.add(new TempMark(gob.ngob.name, sessloc, gob.id, gob.rc, gob.rc.floor(tilesz).add(sessloc.tc), tex));
                             }
                         }
                     }

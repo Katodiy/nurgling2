@@ -140,11 +140,6 @@ public class GobIcon extends GAttrib {
 	    this.img = img;
 	}
 
-		public ImageIcon(Image img) {
-			super(null, null);
-			this.img = img;
-		}
-
 	public String name() {
 	    Resource.Tooltip name = res.layer(Resource.tooltip);
 	    return(name == null ? "???" : name.t);
@@ -987,6 +982,4 @@ public class GobIcon extends GAttrib {
 	    }
 	}
     }
-
-
 }

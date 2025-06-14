@@ -168,5 +168,10 @@ public class NBoxOverlay extends Sprite {
     public void removed(RenderTree.Slot slot) {
         slots.remove(slot);
     }
+
+    @Override
+    public boolean tick(double dt) {
+        return super.tick(dt);
+    }
 }
 

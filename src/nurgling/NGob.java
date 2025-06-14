@@ -18,6 +18,9 @@ import nurgling.widgets.NProspecting;
 import nurgling.widgets.NQuestInfo;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static haven.MCache.cmaps;
 import static haven.OCache.posres;
@@ -37,6 +40,16 @@ public class NGob {
     public int lastUpdate = 0;
 
     public String hash;
+    private final Queue<DelayedOverlayTask> delayedOverlayTasks = new ConcurrentLinkedQueue<>();
+    private static class DelayedOverlayTask {
+        final Predicate<Gob> condition;
+        final Consumer<Gob> action;
+
+        DelayedOverlayTask(Predicate<Gob> condition, Consumer<Gob> action) {
+            this.condition = condition;
+            this.action = action;
+        }
+    }
 
     public NGob(Gob parent) {
         this.parent = parent;
@@ -53,7 +66,6 @@ public class NGob {
     }
 
     protected void updateMovingInfo(GAttrib a, GAttrib prev) {
-        boolean me = (parent.id == NUtils.playerID());
         if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
             if (prev instanceof Moving) {
                 NUtils.getGameUI().map.glob.oc.paths.removePath((Moving) prev);
@@ -162,7 +174,7 @@ public class NGob {
 
 
 
-                        if (NParser.checkName(name, new NAlias("borka")) && parent.id!=NUtils.playerID()) {
+                        if (NParser.checkName(name, new NAlias("borka"))) {
                             NAlarmWdg.addBorka(parent.id);
                         }
 
@@ -196,8 +208,16 @@ public class NGob {
                             }
 
                             if (name.equals("gfx/borka/body")) {
-                                parent.addcustomol(new NKinRing(parent));
-                                parent.setattr(new NKinTex(parent));
+                                delayedOverlayTasks.add(new DelayedOverlayTask(
+                                        gob -> gob.pose()!=null,
+                                        gob -> {
+                                            String posename = gob.pose();
+                                            if(!(posename.contains("knocked") || posename.contains("dead") || posename.contains("manneq") || posename.contains("skel")) || NUtils.playerID() == gob.id) {
+                                                gob.addcustomol(new NKinRing(gob));
+                                                gob.setattr(new NKinTex(gob));
+                                            }
+                                        }
+                                ));
                             }
 
                             NHitBox custom = NHitBox.findCustom(name);
@@ -281,6 +301,16 @@ public class NGob {
 
     public void tick(double dt) {
         if(NUtils.getGameUI()!=null) {
+            Iterator<DelayedOverlayTask> it = delayedOverlayTasks.iterator();
+            while (it.hasNext()) {
+                DelayedOverlayTask task = it.next();
+                if (task.condition.test(parent)) {
+                    task.action.accept(parent);
+                    it.remove();
+                }
+            }
+
+
             if(hash==null)
             {
                 Coord pltc = (new Coord2d(parent.rc.x / MCache.tilesz.x, parent.rc.y / MCache.tilesz.y)).floor();
