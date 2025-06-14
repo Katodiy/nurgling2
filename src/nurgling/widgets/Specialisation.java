@@ -52,7 +52,7 @@ public class Specialisation extends Window
         tanning,
         logs,
         smokshed,
-        tarkiln, boneforash, blockforash, readyHides, crucibles, chicken, incubator;
+        tarkiln, boneforash, blockforash, readyHides, crucibles, chicken, incubator, bed;
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -91,6 +91,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.blockforash.toString(),"Block for Ash",Resource.loadsimg("nurgling/categories/block")));
         specialisation.add(new SpecialisationItem(SpecName.chicken.toString(),"Chicken",Resource.loadsimg("nurgling/categories/chicken")));
         specialisation.add(new SpecialisationItem(SpecName.incubator.toString(),"Chick Incubator",Resource.loadsimg("nurgling/categories/cincub")));
+        specialisation.add(new SpecialisationItem(SpecName.bed.toString(),"Bed",Resource.loadsimg("nurgling/categories/chicken")));
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
             public int compare(SpecialisationItem o1, SpecialisationItem o2) {
