@@ -273,13 +273,15 @@ public class NMapView extends MapView
                 tlays.clear();
                 if (inf != null) {
                     Gob gob = Gob.from(inf.ci);
+                    Gob player = NUtils.player();
                     if (gob != null) {
                         ttip.put("gob", gob.ngob.name);
                         if(gob.ngob.hitBox!=null) {
                             ttip.put("HitBox", gob.ngob.hitBox.toString());
                             ttip.put("isDynamic", String.valueOf(gob.ngob.isDynamic));
                         }
-                        ttip.put("dist", String.valueOf(gob.rc.dist(NUtils.player().rc)));
+                        if(player!=null)
+                            ttip.put("dist", String.valueOf(gob.rc.dist(player.rc)));
                         ttip.put("Seg", String.valueOf(gob.ngob.seq));
                         ttip.put("rc" , gob.rc.toString());
                         if(!gob.ols.isEmpty()) {
