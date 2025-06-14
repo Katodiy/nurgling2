@@ -913,7 +913,7 @@ public class MiniMap extends Widget
 
     public void mvclick(MapView mv, Coord mc, Location loc, Gob gob, int button) {
 	if(mc == null) mc = ui.mc;
-	if((sessloc != null) && (sessloc.seg == loc.seg)) {
+	if((sessloc != null) && (sessloc.seg.id == loc.seg.id)) {
 	    if(gob == null)
 		mv.wdgmsg("click", mc,
 			  loc.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),

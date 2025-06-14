@@ -260,7 +260,7 @@ public class NGameUI extends GameUI
     }
 
     public List<IMeter.Meter> getmeters (String name ) {
-        for ( Widget meter : meters ) {
+        for ( Widget meter : new ArrayList<>(meters) ) {
             if ( meter instanceof IMeter ) {
                 IMeter im = ( IMeter ) meter;
                 Resource res = im.bg.get ();

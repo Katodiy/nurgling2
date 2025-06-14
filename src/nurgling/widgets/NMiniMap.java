@@ -124,6 +124,8 @@ public class NMiniMap extends MiniMap implements Console.Directory {
     public static final Color VIEW_BG_COLOR = new Color(255, 255, 255, 60);
     public static final Color VIEW_FOG_COLOR = new Color(255, 255, 0 , 120);
     public static final Color VIEW_BORDER_COLOR = new Color(0, 0, 0, 128);
+
+    public static Coord2d TEMP_VIEW_SZ = new Coord2d(VIEW_SZ).mul(tilesz).div(2).sub(1,1);
     void drawview(GOut g) {
         if(ui.gui.map==null)
             return;
@@ -150,7 +152,7 @@ public class NMiniMap extends MiniMap implements Console.Directory {
         if(dlvl == 0)
             drawicons(g);
         drawparty(g);
-        boolean playerSegment = (sessloc != null) && ((curloc == null) || (sessloc.seg == curloc.seg));
+        boolean playerSegment = (sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id));
         if(zoomlevel <= 2 && (Boolean)NConfig.get(NConfig.Key.showGrid)) {drawgrid(g);}
         if(playerSegment && zoomlevel <= 1 && (Boolean)NConfig.get(NConfig.Key.showView)) {drawview(g);}
 
@@ -175,7 +177,7 @@ public class NMiniMap extends MiniMap implements Console.Directory {
         if(ui.gui.map==null)
             return;
         if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
-            if ((sessloc != null) && ((curloc == null) || (sessloc.seg == curloc.seg))) {
+            if ((sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id))) {
                 fogArea.tick(dt);
                 int zmult = 1 << zoomlevel;
 
@@ -338,6 +340,8 @@ public class NMiniMap extends MiniMap implements Console.Directory {
                             tempMarkList.remove(cm);
                         } else {
                             if (!cm.rc.isect(pl.sub(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)), pl.add(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)))) {
+                                tempMarkList.remove(cm);
+                            }else if (cm.rc.isect(pl.sub(TEMP_VIEW_SZ), pl.add(TEMP_VIEW_SZ))) {
                                 tempMarkList.remove(cm);
                             }
                         }
