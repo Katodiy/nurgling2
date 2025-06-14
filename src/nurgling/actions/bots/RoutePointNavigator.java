@@ -6,6 +6,7 @@ import nurgling.actions.Action;
 import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.actions.TravelToHearthFire;
+import nurgling.areas.NArea;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
@@ -13,6 +14,7 @@ import nurgling.tools.Finder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class RoutePointNavigator implements Action {
     private final RoutePoint targetPoint;
@@ -23,9 +25,24 @@ public class RoutePointNavigator implements Action {
         this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
     }
 
+    public RoutePointNavigator(Map<String, Object> settings) {
+        Object areaIdObj = settings.get("areaId");
+        if (areaIdObj == null) {
+            throw new IllegalArgumentException("RoutePointNavigator requires areaId in settings.");
+        }
+        if (!(areaIdObj instanceof Integer)) {
+            throw new IllegalArgumentException("RoutePointNavigator: areaId must be an Integer.");
+        }
+
+        int areaId = (Integer) areaIdObj;
+        NArea area = NArea.findAreaById(areaId);
+        this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
+        this.targetPoint = this.graph.findAreaRoutePoint(area);
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        if (gui == null || gui.map == null || gui.map.glob == null || gui.map.glob.map == null) {
+        if (gui == null || gui.map == null || gui.map.glob == null || gui.map.glob.map == null || this.targetPoint == null) {
             return Results.FAIL();
         }
 

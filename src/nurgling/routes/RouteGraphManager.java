@@ -1,6 +1,5 @@
 package nurgling.routes;
 
-import haven.Coord;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;

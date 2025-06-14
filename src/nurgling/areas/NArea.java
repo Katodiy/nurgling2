@@ -2,11 +2,9 @@ package nurgling.areas;
 
 import haven.*;
 import static haven.MCache.cmaps;
-import haven.render.sl.*;
 import nurgling.*;
 import nurgling.actions.PathFinder;
 import nurgling.tools.*;
-import nurgling.widgets.Specialisation;
 import org.json.*;
 
 import java.awt.*;
@@ -269,6 +267,15 @@ public class NArea
         }
         return res;
     }
+
+    public static NArea findAreaById(int areaId) {
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+            Map<Integer, NArea> areas = NUtils.getGameUI().map.glob.map.areas;
+            return areas.get(areaId);
+        }
+        return null;
+    }
+
 
     public static TreeMap<Integer,NArea> findOuts(NAlias name)
     {

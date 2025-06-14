@@ -283,7 +283,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	menugridc = brframe.c.add(UI.scale(20), UI.scale(34));
 	Img rbtnimg =add(new Img(rbtnbg), 0, sz.y - rbtnbg.sz().y);
 	rbtnimg.hide();
-	add(new NDraggableWidget(new MainMenu(), "mainmenu", UI.scale(350,52)));
+	add(new NDraggableWidget(new MainMenu(), "mainmenu", UI.scale(385,52)));
 	menubuttons(rbtnimg);
 	portrait = add(new NDraggableWidget(Frame.with(new Avaview(Avaview.dasz, plid, "avacam"), false),"portrait", UI.scale(120, 108)));
 	add(new NDraggableWidget(buffs = new Bufflist(),"bufflist",Coord.z));
@@ -1238,6 +1238,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	    prev = add(new MenuCheckBox("rbtn/chr/", kb_chr, "Character Sheet"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(chrwdg)).click(() -> togglewnd(chrwdg));
 	    prev = add(new MenuCheckBox("rbtn/areas/", kb_areas, "Areas Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(areas)).click(() -> togglewnd(areas));
 		prev = add(new MenuCheckBox("rbtn/routes/", kb_routes, "Routes Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(routesWidget)).click(() -> togglewnd(routesWidget));
+		prev = add(new MenuCheckBox("rbtn/opt/", kb_routes, "Game Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(NUtils.getGameUI().nsw)).click(() -> togglewnd(NUtils.getGameUI().nsw));
         prev = add(new MenuCheckBox("rbtn/cookbook/", kb_cookbook, "Cook Book"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(cookBook)).click(() -> togglewnd(cookBook));
         prev = add(new MenuCheckBox("rbtn/bud/", kb_bud, "Kith & Kin"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(zerg)).click(() -> togglewnd(zerg));
 	    add(new MenuCheckBox("rbtn/opt/", kb_opt, "Options"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(opts)).click(() -> togglewnd(opts));
