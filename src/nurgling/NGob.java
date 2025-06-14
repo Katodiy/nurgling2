@@ -246,6 +246,24 @@ public class NGob {
                             parent.addcustomol(new NTreeScaleOl(parent));
                     }
                 }
+
+                if (name != null && name.contains("kritter")) {
+                    delayedOverlayTasks.add(new DelayedOverlayTask(
+                            gob -> {
+                                String pose = gob.pose();
+                                boolean poseValid = pose == null || !NParser.checkName(pose, "dead", "knock");
+                                boolean overlayNotExists = gob.findol(NAreaRad.class) == null;
+                                nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
+                                boolean radValid = rad != null && rad.vis;
+
+                                return poseValid && overlayNotExists && radValid;
+                            },
+                            gob -> {
+                                nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
+                                gob.addcustomol(new NAreaRange(gob, rad));
+                            }
+                    ));
+                }
             }
         }
         else if(a instanceof TreeScale)
@@ -325,35 +343,31 @@ public class NGob {
                     }
                 }
             }
-            if (name != null && name.contains("kritter") && (parent.pose() == null || !NParser.checkName(parent.pose(), "dead", "knock")) && parent.findol(NAreaRad.class) == null) {
-                nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
-                if (rad != null && rad.vis)
-                    parent.addcustomol(new NAreaRange(parent, rad));
-            }
 
-            Gob player = NUtils.player();
-            if(player!=null && parent.id == player.id) {
-                if ((Boolean) NConfig.get(NConfig.Key.player_box)) {//9*9 around player
-                        parent.addcustomol(new NPlayerBoxOverlay(parent));
-                } else {
-                    Gob.Overlay col = parent.findol(NPlayerBoxOverlay.class);
-                    if (col != null) col.remove();
-                }
 
-                if ((Boolean) NConfig.get(NConfig.Key.player_fov)) {//FOV render
-                    parent.addcustomol(new NRenderBoxOverlay(parent));
-                } else {
-                    Gob.Overlay col = parent.findol(NRenderBoxOverlay.class);
-                    if (col != null) col.remove();
-                }
-
-                if ((Boolean) NConfig.get(NConfig.Key.gridbox)) {//grid borders
-                    parent.addcustomol(new NGridBoxOverlay(parent));
-                } else {
-                    Gob.Overlay col = parent.findol(NGridBoxOverlay.class);
-                    if (col != null) col.remove();
-                }
-            }
+//            Gob player = NUtils.player();
+//            if(player!=null && parent.id == player.id) {
+//                if ((Boolean) NConfig.get(NConfig.Key.player_box)) {//9*9 around player
+//                        parent.addcustomol(new NPlayerBoxOverlay(parent));
+//                } else {
+//                    Gob.Overlay col = parent.findol(NPlayerBoxOverlay.class);
+//                    if (col != null) col.remove();
+//                }
+//
+//                if ((Boolean) NConfig.get(NConfig.Key.player_fov)) {//FOV render
+//                    parent.addcustomol(new NRenderBoxOverlay(parent));
+//                } else {
+//                    Gob.Overlay col = parent.findol(NRenderBoxOverlay.class);
+//                    if (col != null) col.remove();
+//                }
+//
+//                if ((Boolean) NConfig.get(NConfig.Key.gridbox)) {//grid borders
+//                    parent.addcustomol(new NGridBoxOverlay(parent));
+//                } else {
+//                    Gob.Overlay col = parent.findol(NGridBoxOverlay.class);
+//                    if (col != null) col.remove();
+//                }
+//            }
 
             int nlu = NQuestInfo.lastUpdate.get();
             if (NQuestInfo.lastUpdate.get() > lastUpdate) {
@@ -380,15 +394,6 @@ public class NGob {
                         }
                 }
             }
-            if(hash!=null && !NGlobalSearchItems.containerHashes.isEmpty())
-            {
-                synchronized (NGlobalSearchItems.containerHashes) {
-                    if (NGlobalSearchItems.containerHashes.contains(hash)) {
-
-                    }
-                }
-            }
-
         }
     }
 
