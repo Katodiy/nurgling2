@@ -1,253 +1,144 @@
 package nurgling.actions.bots.registry;
 
-import nurgling.actions.Action;
+import nurgling.actions.FillWaterskins;
 import nurgling.actions.PumpkinFarmer;
 import nurgling.actions.bots.*;
+import nurgling.actions.test.*;
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class BotRegistry {
-    private static final Map<String, BotDescriptor> registry = new HashMap<>();
-
-    public interface BotFactory {
-        List<Setting> requiredSettings();
-        Action create(Map<String, Object> settings);
-    }
+    private static final List<BotDescriptor> bots = new ArrayList<>();
 
     static {
-        // ----- NAVIGATION -----
-        registry.put("goto_area", new BotDescriptor(
-                "goto_area", 1, BotDescriptor.BotType.UTILS, "Go to area", "nurgling/bots/icons/attacknearcurs/u",
+        // NAVIGATION
+        bots.add(new BotDescriptor(
+                "goto_area",
+                BotDescriptor.BotType.UTILS,
+                "Go to area",
                 "Global PF navigate to an area id",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() {
-                        return List.of(new Setting("areaId", Integer.class));
-                    }
-                    public Action create(Map<String, Object> settings) {
-                        int areaId = (int) settings.get("areaId");
-                        return new RoutePointNavigator(areaId);
-                    }
-                }
+                true,
+                false,
+                RoutePointNavigator.class,
+                "attacknearcurs",
+                false
         ));
 
-        // ----- FIELD CROPS -----
-        registry.put("turnip", new BotDescriptor(
-                "turnip", 2, BotDescriptor.BotType.FARMING, "Turnip Farmer", "nurgling/bots/icons/turnip/u",
-                "Automatically harvests and replants turnips.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new TurnipsFarmer(); }
-                }
-        ));
-        registry.put("carrot", new BotDescriptor(
-                "carrot", 3, BotDescriptor.BotType.FARMING, "Carrot Farmer", "nurgling/bots/icons/carrot/u",
-                "Automatically harvests and replants carrots.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new CarrotFarmer(); }
-                }
-        ));
-        registry.put("beetroot", new BotDescriptor(
-                "beetroot", 4, BotDescriptor.BotType.FARMING, "Beetroot Farmer", "nurgling/bots/icons/beetroot/u",
-                "Automatically harvests and replants beetroots.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new BeetrootFarmer(); }
-                }
-        ));
-        registry.put("red_onion", new BotDescriptor(
-                "red_onion", 5, BotDescriptor.BotType.FARMING, "Red Onion Farmer", "nurgling/bots/icons/red_onion/u",
-                "Automatically harvests and replants red onions.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new RedOnionFarmer(); }
-                }
-        ));
-        registry.put("yellow_onion", new BotDescriptor(
-                "yellow_onion", 6, BotDescriptor.BotType.FARMING, "Yellow Onion Farmer", "nurgling/bots/icons/yellow_onion/u",
-                "Automatically harvests and replants yellow onions.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new YellowOnionFarmer(); }
-                }
-        ));
-        registry.put("garlic", new BotDescriptor(
-                "garlic", 7, BotDescriptor.BotType.FARMING, "Garlic Farmer", "nurgling/bots/icons/garlic/u",
-                "Automatically harvests and replants garlic.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new GarlicFarmer(); }
-                }
-        ));
-        registry.put("hemp", new BotDescriptor(
-                "hemp", 8, BotDescriptor.BotType.FARMING, "Hemp Farmer", "nurgling/bots/icons/hemp/u",
-                "Automatically harvests and replants hemp.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new HempFarmer(); }
-                }
-        ));
-        registry.put("flax", new BotDescriptor(
-                "flax", 9, BotDescriptor.BotType.FARMING, "Flax Farmer", "nurgling/bots/icons/flax/u",
-                "Automatically harvests and replants flax.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new FlaxFarmer(); }
-                }
-        ));
-        registry.put("lettuce", new BotDescriptor(
-                "lettuce", 10, BotDescriptor.BotType.FARMING, "Lettuce Farmer", "nurgling/bots/icons/lettuce/u",
-                "Automatically harvests and replants lettuce.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new LettuceFarmer(); }
-                }
-        ));
-        registry.put("pumpkin", new BotDescriptor(
-                "pumpkin", 11, BotDescriptor.BotType.FARMING, "Pumpkin Farmer", "nurgling/bots/icons/pumpkin/u",
-                "Automatically harvests and replants pumpkins.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new PumpkinFarmer(); }
-                }
-        ));
-        registry.put("barley", new BotDescriptor(
-                "barley", 12, BotDescriptor.BotType.FARMING, "Barley Farmer", "nurgling/bots/icons/barley/u",
-                "Automatically harvests and replants barley.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new BarleyFarmer(); }
-                }
-        ));
-        registry.put("millet", new BotDescriptor(
-                "millet", 13, BotDescriptor.BotType.FARMING, "Millet Farmer", "nurgling/bots/icons/millet/u",
-                "Automatically harvests and replants millet.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new MilletFarmer(); }
-                }
-        ));
-        registry.put("wheat", new BotDescriptor(
-                "wheat", 14, BotDescriptor.BotType.FARMING, "Wheat Farmer", "nurgling/bots/icons/wheat/u",
-                "Automatically harvests and replants wheat.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new WheatFarmer(); }
-                }
-        ));
-        registry.put("poppy", new BotDescriptor(
-                "poppy", 15, BotDescriptor.BotType.FARMING, "Poppy Farmer", "nurgling/bots/icons/poppy/u",
-                "Automatically harvests and replants poppies.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new PoppyFarmer(); }
-                }
-        ));
-        registry.put("pipeweed", new BotDescriptor(
-                "pipeweed", 16, BotDescriptor.BotType.FARMING, "Pipeweed Farmer", "nurgling/bots/icons/pipeweed/u",
-                "Automatically harvests and replants pipeweed.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new PipeweedFarmer(); }
-                }
-        ));
+        // RESOURCES
+        bots.add(new BotDescriptor("choper", BotDescriptor.BotType.RESOURCES, "Chopper", "Chops trees.", false, true, Chopper.class, "choper", false));
+        bots.add(new BotDescriptor("chipper", BotDescriptor.BotType.RESOURCES, "Chipper", "Chips stuff.", false, true, Chipper.class, "chipper", true));
+        bots.add(new BotDescriptor("pblocks", BotDescriptor.BotType.RESOURCES, "Prepare Blocks", "Prepares blocks.", false, true, PrepareBlocks.class, "pblocks", false));
+        bots.add(new BotDescriptor("pboards", BotDescriptor.BotType.RESOURCES, "Prepare Boards", "Prepares boards.", false, true, PrepareBoards.class, "pboards", false));
+        bots.add(new BotDescriptor("clay", BotDescriptor.BotType.RESOURCES, "Clay Digger", "Digs clay.", false, true, ClayDigger.class, "clay", true));
+        bots.add(new BotDescriptor("bark", BotDescriptor.BotType.RESOURCES, "Collect Bark", "Collects bark.", false, true, CollectBark.class, "bark", true));
+        bots.add(new BotDescriptor("bough", BotDescriptor.BotType.RESOURCES, "Collect Bough", "Collects boughs.", false, true, CollectBough.class, "bough", true));
+        bots.add(new BotDescriptor("leaf", BotDescriptor.BotType.RESOURCES, "Collect Leaf", "Collects leaves.", false, true, CollectLeaf.class, "leaf", true));
+        bots.add(new BotDescriptor("fisher", BotDescriptor.BotType.RESOURCES, "Fishing", "Fishes fish.", false, true, Fishing.class, "fisher", true));
+        bots.add(new BotDescriptor("plower", BotDescriptor.BotType.RESOURCES, "Plower", "Plows fields.", false, true, Plower.class, "plower", true));
 
-        // ----- LIVESTOCK -----
-        registry.put("goats", new BotDescriptor(
-                "goats", 17, BotDescriptor.BotType.LIVESTOCK, "Goat Manager", "nurgling/bots/icons/goats/u",
-                "Manages goat herds.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new GoatsAction(); }
-                }
-        ));
-        registry.put("sheeps", new BotDescriptor(
-                "sheeps", 18, BotDescriptor.BotType.LIVESTOCK, "Sheep Manager", "nurgling/bots/icons/sheeps/u",
-                "Manages sheep herds.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new SheepsAction(); }
-                }
-        ));
-        registry.put("pigs", new BotDescriptor(
-                "pigs", 19, BotDescriptor.BotType.LIVESTOCK, "Pig Manager", "nurgling/bots/icons/pigs/u",
-                "Manages pig herds.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new PigsAction(); }
-                }
-        ));
-        registry.put("horses", new BotDescriptor(
-                "horses", 20, BotDescriptor.BotType.LIVESTOCK, "Horse Manager", "nurgling/bots/icons/horses/u",
-                "Manages horses.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new HorsesAction(); }
-                }
-        ));
-        registry.put("cows", new BotDescriptor(
-                "cows", 21, BotDescriptor.BotType.LIVESTOCK, "Cow Manager", "nurgling/bots/icons/cows/u",
-                "Manages cows.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new nurgling.actions.bots.CowsAction(); }
-                }
-        ));
-        registry.put("chicken", new BotDescriptor(
-                "chicken", 22, BotDescriptor.BotType.LIVESTOCK, "Chicken Manager", "nurgling/bots/icons/chicken/u",
-                "Manages chicken coops.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new KFC(); }
-                }
-        ));
-        registry.put("bee", new BotDescriptor(
-                "bee", 23, BotDescriptor.BotType.LIVESTOCK, "Beehive Manager", "nurgling/bots/icons/bee/u",
-                "Collects honey and wax from beehives.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new HoneyAndWaxCollector(); }
-                }
-        ));
+        // PRODUCTIONS
+        bots.add(new BotDescriptor("smelter", BotDescriptor.BotType.PRODUCTIONS, "Smelter", "Smelts ore.", true, true, SmelterAction.class, "smelter", true));
+        bots.add(new BotDescriptor("backer", BotDescriptor.BotType.PRODUCTIONS, "Baker", "Bakes stuff.", true, true, BackerAction.class, "backer", true));
+        bots.add(new BotDescriptor("ugardenpot", BotDescriptor.BotType.PRODUCTIONS, "Ungarden Pot", "Ungardens pots.", true, true, UnGardentPotAction.class, "ugardenpot", true));
+        bots.add(new BotDescriptor("butcher", BotDescriptor.BotType.PRODUCTIONS, "Butcher", "Butchers animals.", true, true, Butcher.class, "butcher", true));
+        bots.add(new BotDescriptor("hides", BotDescriptor.BotType.PRODUCTIONS, "Handle hides.", "Handles hides.", true, true, DFrameHidesAction.class, "hides", true));
+        bots.add(new BotDescriptor("fishroast", BotDescriptor.BotType.PRODUCTIONS, "Spit Roast", "Roasts fish.", false, true, FriedFish.class, "fishroast", true));
+        bots.add(new BotDescriptor("leather", BotDescriptor.BotType.PRODUCTIONS, "Leather Action", "Makes leather.", true, true, LeatherAction.class, "leather", true));
+        bots.add(new BotDescriptor("smoking", BotDescriptor.BotType.PRODUCTIONS, "Smoking", "Smokes stuff.", false, true, Smoking.class, "smoking", true));
+        bots.add(new BotDescriptor("tarkiln", BotDescriptor.BotType.PRODUCTIONS, "Tarkiln Action", "Burns stuff in tarkiln.", true, true, TarkilnAction.class, "tarkiln", true));
+        bots.add(new BotDescriptor("tabaco", BotDescriptor.BotType.PRODUCTIONS, "Tabaco Action", "Processes tabaco.", true, true, TabacoAction.class, "tabaco", true));
+        bots.add(new BotDescriptor("brick", BotDescriptor.BotType.PRODUCTIONS, "Bricks Action", "Makes bricks.", true, true, BricksAction.class, "brick", true));
+        bots.add(new BotDescriptor("branch", BotDescriptor.BotType.PRODUCTIONS, "Branch Action", "Processes branches.", true, true, BranchAction.class, "branch", true));
+        bots.add(new BotDescriptor("wrap", BotDescriptor.BotType.PRODUCTIONS, "Wrap Action", "Wraps items.", true, true, WrapAction.class, "wrap", true));
+        bots.add(new BotDescriptor("bonestoash", BotDescriptor.BotType.PRODUCTIONS, "Bone Ash", "Burns bones to ash.", true, true, BoneAshAction.class, "bonestoash", true));
+        bots.add(new BotDescriptor("ash", BotDescriptor.BotType.PRODUCTIONS, "Block Ash", "Blocks ash.", true, true, BlockAshAction.class, "ash", true));
+        bots.add(new BotDescriptor("lye", BotDescriptor.BotType.PRODUCTIONS, "Lye Boiler", "Boils lye.", true, true, LyeBoiler.class, "lye", true));
+        bots.add(new BotDescriptor("steel", BotDescriptor.BotType.PRODUCTIONS, "Steel Action", "Makes steel.", true, true, SteelAction.class, "steel", true));
 
-        // ----- PRODUCTION -----
-        registry.put("butcher", new BotDescriptor(
-                "butcher", 24, BotDescriptor.BotType.LABORING, "Butcher", "nurgling/bots/icons/butcher/u",
-                "Automatically butchers animals.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new Butcher(); }
-                }
-        ));
-        registry.put("hides", new BotDescriptor(
-                "hides", 25, BotDescriptor.BotType.LABORING, "Frame Hides", "nurgling/bots/icons/hides/u",
-                "Automates drying and handling of hides.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new DFrameHidesAction(); }
-                }
-        ));
-        registry.put("leather", new BotDescriptor(
-                "leather", 26, BotDescriptor.BotType.LABORING, "Leather Worker", "nurgling/bots/icons/leather/u",
-                "Processes hides into leather automatically.",
-                new BotFactory() {
-                    public List<Setting> requiredSettings() { return List.of(); }
-                    public Action create(Map<String, Object> settings) { return new LeatherAction(); }
-                }
-        ));
+        // BATTLE
+        bots.add(new BotDescriptor("reagro", BotDescriptor.BotType.BATTLE, "Reagro", "Reagros enemies.", true, true, Reagro.class, "reagro", false));
+        bots.add(new BotDescriptor("attacknearcurs", BotDescriptor.BotType.BATTLE, "Aggro Near Cursor", "Aggros near cursor.", true, true, AggroNearCurs.class, "attacknearcurs", false));
+        bots.add(new BotDescriptor("attacknear", BotDescriptor.BotType.BATTLE, "Aggro Nearest", "Aggros nearest enemy.", true, true, AggroNearest.class, "attacknear", false));
+        bots.add(new BotDescriptor("attacknearborka", BotDescriptor.BotType.BATTLE, "Aggro Nearest Borka", "Aggros nearest Borka.", true, true, AggroNearestBorka.class, "attacknearborka", false));
+        bots.add(new BotDescriptor("attackall", BotDescriptor.BotType.BATTLE, "Attack All", "Attacks all enemies.", true, true, AttackAll.class, "attackall", false));
+
+        // FARMING
+        bots.add(new BotDescriptor("turnip", BotDescriptor.BotType.FARMING, "Turnip Farmer", "Automatically harvests and replants turnips.", true, true, TurnipsFarmer.class, "turnip", false));
+        bots.add(new BotDescriptor("carrot", BotDescriptor.BotType.FARMING, "Carrot Farmer", "Automatically harvests and replants carrots.", true, true, CarrotFarmer.class, "carrot", false));
+        bots.add(new BotDescriptor("beetroot", BotDescriptor.BotType.FARMING, "Beetroot Farmer", "Automatically harvests and replants beetroots.", true, true, BeetrootFarmer.class, "beetroot", true));
+        bots.add(new BotDescriptor("red_onion", BotDescriptor.BotType.FARMING, "Red Onion Farmer", "Automatically harvests and replants red onions.", true, true, RedOnionFarmer.class, "red_onion", true));
+        bots.add(new BotDescriptor("yellow_onion", BotDescriptor.BotType.FARMING, "Yellow Onion Farmer", "Automatically harvests and replants yellow onions.", true, true, YellowOnionFarmer.class, "yellow_onion", true));
+        bots.add(new BotDescriptor("garlic", BotDescriptor.BotType.FARMING, "Garlic Farmer", "Automatically harvests and replants garlic.", true, true, GarlicFarmer.class, "garlic", true));
+        bots.add(new BotDescriptor("hemp", BotDescriptor.BotType.FARMING, "Hemp Farmer", "Automatically harvests and replants hemp.", true, true, HempFarmer.class, "hemp", true));
+        bots.add(new BotDescriptor("flax", BotDescriptor.BotType.FARMING, "Flax Farmer", "Automatically harvests and replants flax.", true, true, FlaxFarmer.class, "flax", true));
+        bots.add(new BotDescriptor("lettuce", BotDescriptor.BotType.FARMING, "Lettuce Farmer", "Automatically harvests and replants lettuce.", true, true, LettuceFarmer.class, "lettuce", true));
+        bots.add(new BotDescriptor("pumpkin", BotDescriptor.BotType.FARMING, "Pumpkin Farmer", "Automatically harvests and replants pumpkins.", true, true, PumpkinFarmer.class, "pumpkin", true));
+        bots.add(new BotDescriptor("barley", BotDescriptor.BotType.FARMING, "Barley Farmer", "Automatically harvests and replants barley.", true, true, BarleyFarmer.class, "barley", true));
+        bots.add(new BotDescriptor("millet", BotDescriptor.BotType.FARMING, "Millet Farmer", "Automatically harvests and replants millet.", true, true, MilletFarmer.class, "millet", true));
+        bots.add(new BotDescriptor("wheat", BotDescriptor.BotType.FARMING, "Wheat Farmer", "Automatically harvests and replants wheat.", true, true, WheatFarmer.class, "wheat", true));
+        bots.add(new BotDescriptor("poppy", BotDescriptor.BotType.FARMING, "Poppy Farmer", "Automatically harvests and replants poppies.", true, true, PoppyFarmer.class, "poppy", true));
+        bots.add(new BotDescriptor("pipeweed", BotDescriptor.BotType.FARMING, "Pipeweed Farmer", "Automatically harvests and replants pipeweed.", true, true, PipeweedFarmer.class, "pipeweed", true));
+        bots.add(new BotDescriptor("goats", BotDescriptor.BotType.FARMING, "Goat Manager", "Manages goat herds.", true, true, GoatsAction.class, "goats", false));
+        bots.add(new BotDescriptor("sheeps", BotDescriptor.BotType.FARMING, "Sheep Manager", "Manages sheep herds.", true, true, SheepsAction.class, "sheeps", false));
+        bots.add(new BotDescriptor("pigs", BotDescriptor.BotType.FARMING, "Pig Manager", "Manages pig herds.", true, true, PigsAction.class, "pigs", false));
+        bots.add(new BotDescriptor("horses", BotDescriptor.BotType.FARMING, "Horse Manager", "Manages horses.", true, true, HorsesAction.class, "horses", false));
+        bots.add(new BotDescriptor("cows", BotDescriptor.BotType.FARMING, "Cow Manager", "Manages cows.", true, true, nurgling.actions.bots.CowsAction.class, "cows", false));
+        bots.add(new BotDescriptor("chicken", BotDescriptor.BotType.FARMING, "Chicken Manager", "Manages chicken coops.", true, true, KFC.class, "chicken", true));
+        bots.add(new BotDescriptor("bee", BotDescriptor.BotType.FARMING, "Beehive Manager", "Collects honey and wax from beehives.", true, true, HoneyAndWaxCollector.class, "bee", true));
+
+        // UTILS
+        bots.add(new BotDescriptor("shieldsword", BotDescriptor.BotType.UTILS, "Equip Shield/Sword", "Equips shield and sword.", true, true, EquipShieldSword.class, "shieldsword", false));
+        bots.add(new BotDescriptor("filwater", BotDescriptor.BotType.UTILS, "Fill Waterskins", "Fills waterskins.", true, true, FillWaterskins.class, "filwater", false));
+        bots.add(new BotDescriptor("unbox", BotDescriptor.BotType.UTILS, "Free Containers", "Frees containers in area.", false, true, FreeContainersInArea.class, "unbox", false));
+        bots.add(new BotDescriptor("water_cheker", BotDescriptor.BotType.UTILS, "Check Water", "Checks water.", false, true, CheckWater.class, "water_cheker", false));
+        bots.add(new BotDescriptor("clay_cheker", BotDescriptor.BotType.UTILS, "Check Clay", "Checks clay.", false, true, CheckClay.class, "clay_cheker", true));
+        bots.add(new BotDescriptor("clover", BotDescriptor.BotType.UTILS, "Feed Clover", "Feeds clover.", false, true, FeedClover.class, "clover", true));
+        bots.add(new BotDescriptor("collectalltopile", BotDescriptor.BotType.UTILS, "Collect To Pile", "Collects same items from earth.", false, true, CollectSameItemsFromEarth.class, "collectalltopile", true));
+        bots.add(new BotDescriptor("worldexplorer", BotDescriptor.BotType.UTILS, "World Explorer", "Explores the world.", false, true, WorldExplorer.class, "worldexplorer", true));
+        bots.add(new BotDescriptor("lift", BotDescriptor.BotType.UTILS, "Transfer Liftable", "Lifts items.", false, true, TransferLiftable.class, "lift", false));
+        bots.add(new BotDescriptor("loading", BotDescriptor.BotType.UTILS, "Transfer To Vehicle", "Loads vehicle.", false, true, TransferToVeh.class, "loading", false));
+        bots.add(new BotDescriptor("unloading", BotDescriptor.BotType.UTILS, "Transfer From Vehicle", "Unloads vehicle.", false, true, TransferFromVeh.class, "unloading", false));
+        bots.add(new BotDescriptor("swap", BotDescriptor.BotType.UTILS, "Swap Vehicles", "Swaps between vehicles.", false, true, TransferFromVehToVeh.class, "swap", false));
+
+        // BUILD
+        bots.add(new BotDescriptor("dframe", BotDescriptor.BotType.BUILD, "Build Drying Frame", "Builds drying frame.", false, true, BuildDryingFrame.class, "dframe", true));
+        bots.add(new BotDescriptor("cellar", BotDescriptor.BotType.BUILD, "Build Cellar", "Builds cellar.", false, true, BuildCellar.class, "cellar", false));
+        bots.add(new BotDescriptor("ttub", BotDescriptor.BotType.BUILD, "Build Tub", "Builds tub.", false, true, BuildTtub.class, "ttub", false));
+        bots.add(new BotDescriptor("cupboard", BotDescriptor.BotType.BUILD, "Build Cupboard", "Builds cupboard.", false, true, BuildCupboard.class, "cupboard", false));
+        bots.add(new BotDescriptor("cheese_rack", BotDescriptor.BotType.BUILD, "Build Cheese Rack", "Builds cheese rack.", false, true, BuildCheeseRack.class, "cheese_rack", false));
+        bots.add(new BotDescriptor("kiln", BotDescriptor.BotType.BUILD, "Build Kiln", "Builds kiln.", false, true, BuildKiln.class, "kiln", false));
+        bots.add(new BotDescriptor("barrel", BotDescriptor.BotType.BUILD, "Build Barrel", "Builds barrel.", false, true, BuildBarrel.class, "barrel", false));
+        bots.add(new BotDescriptor("chest", BotDescriptor.BotType.BUILD, "Build Chest", "Builds chest.", false, true, BuildChest.class, "chest", false));
+        bots.add(new BotDescriptor("lchest", BotDescriptor.BotType.BUILD, "Build Large Chest", "Builds large chest.", false, true, BuildLargeChest.class, "lchest", true));
+        bots.add(new BotDescriptor("tarkilnb", BotDescriptor.BotType.BUILD, "Build Tar Kiln", "Builds tar kiln.", false, true, BuildTarKiln.class, "tarkilnb", false));
+        bots.add(new BotDescriptor("smoke_shed", BotDescriptor.BotType.BUILD, "Build Smoke Shed", "Builds smoke shed.", false, true, BuildSmokeShed.class, "smoke_shed", false));
+
+        // TOOLS (for debug)
+        bots.add(new BotDescriptor("test1", BotDescriptor.BotType.TOOLS, "Test 1", "Debug test 1.", false, true, TESTMapv4.class, "test1", false));
+        bots.add(new BotDescriptor("test2", BotDescriptor.BotType.TOOLS, "Test 2", "Debug test 2.", false, true, TESTFillCauldron.class, "test2", false));
+        bots.add(new BotDescriptor("test4", BotDescriptor.BotType.TOOLS, "Test 4", "Debug test 4.", false, true, TESTbranchinvtransferpacks.class, "test4", false));
+        bots.add(new BotDescriptor("test5", BotDescriptor.BotType.TOOLS, "Test 5", "Debug test 5.", false, true, TESTfreeStockpilesAndTransfer.class, "test5", false));
+        bots.add(new BotDescriptor("test7", BotDescriptor.BotType.TOOLS, "Test 7", "Debug test 7.", false, true, TESTselectfloweraction.class, "test7", false));
+        bots.add(new BotDescriptor("test8", BotDescriptor.BotType.TOOLS, "Test 8", "Debug test 8.", false, true, TESTpf.class, "test8", false));
+        bots.add(new BotDescriptor("test9", BotDescriptor.BotType.TOOLS, "Test 9", "Debug test 9.", false, true, TESTAvalaible.class, "test9", false));
+        bots.add(new BotDescriptor("test10", BotDescriptor.BotType.TOOLS, "Test 10", "Debug test 10.", false, true, TESTGlobalPf.class, "test10", false));
+        bots.add(new BotDescriptor("test10", BotDescriptor.BotType.TOOLS, "Test 10", "Debug test 10.", false, true, TESTGlobalPFCheckOrphans.class, "test10", false));
 
     }
 
-    public static Action createBot(String key, Map<String, Object> settings) {
-        BotDescriptor desc = registry.get(key);
-        if (desc == null) throw new IllegalArgumentException("Unknown bot: " + key);
-        return desc.factory.create(settings);
+    public static BotDescriptor byId(String id) {
+        for (BotDescriptor bot : bots) {
+            if (bot.id.equals(id)) return bot;
+        }
+        return null;
     }
 
-    public static Collection<BotDescriptor> listBots() {
-        return registry.values();
+    public static List<BotDescriptor> byType(BotDescriptor.BotType type) {
+        return bots.stream().filter(b -> b.type == type).collect(Collectors.toList());
     }
 
-    public static BotDescriptor getDescriptor(String key) {
-        return registry.get(key);
+    public static List<BotDescriptor> allowedInBotMenu() {
+        return bots.stream().filter(b -> b.allowedAsItemInBotMenu).collect(Collectors.toList());
     }
 }

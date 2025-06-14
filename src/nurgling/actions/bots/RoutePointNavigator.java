@@ -14,6 +14,7 @@ import nurgling.tools.Finder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class RoutePointNavigator implements Action {
     private final RoutePoint targetPoint;
@@ -24,7 +25,16 @@ public class RoutePointNavigator implements Action {
         this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
     }
 
-    public RoutePointNavigator(int areaId) {
+    public RoutePointNavigator(Map<String, Object> settings) {
+        Object areaIdObj = settings.get("areaId");
+        if (areaIdObj == null) {
+            throw new IllegalArgumentException("RoutePointNavigator requires areaId in settings.");
+        }
+        if (!(areaIdObj instanceof Integer)) {
+            throw new IllegalArgumentException("RoutePointNavigator: areaId must be an Integer.");
+        }
+
+        int areaId = (Integer) areaIdObj;
         NArea area = NArea.findAreaById(areaId);
         this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
         this.targetPoint = this.graph.findAreaRoutePoint(area);

@@ -6,16 +6,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BotStep {
-    private String botKey;
+    private String id;
     private Map<String, Object> settings;
 
-    public BotStep(String botKey) {
-        this.botKey = botKey;
+    public BotStep(String id) {
+        this.id = id;
         this.settings = new HashMap<>();
     }
 
     public BotStep(JSONObject obj) {
-        this.botKey = obj.getString("botKey");
+        this.id = obj.getString("id");
         this.settings = new HashMap<>();
         if (obj.has("params")) {
             JSONObject paramsObj = obj.getJSONObject("params");
@@ -25,8 +25,8 @@ public class BotStep {
         }
     }
 
-    public String getBotKey() {
-        return botKey;
+    public String getId() {
+        return id;
     }
 
     public Map<String, Object> getSettings() { return settings; }
@@ -41,7 +41,7 @@ public class BotStep {
 
     public JSONObject toJson() {
         JSONObject obj = new JSONObject();
-        obj.put("botKey", botKey);
+        obj.put("id", id);
         obj.put("params", new JSONObject(settings));
         return obj;
     }

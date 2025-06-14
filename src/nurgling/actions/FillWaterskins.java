@@ -18,6 +18,7 @@ import java.util.ArrayList;
 public class FillWaterskins implements Action {
     boolean oz;
     public FillWaterskins(boolean only_area){oz = only_area;}
+    public FillWaterskins(){oz = false;}
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {

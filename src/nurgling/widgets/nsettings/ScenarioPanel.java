@@ -2,6 +2,8 @@ package nurgling.widgets.nsettings;
 
 import haven.*;
 import nurgling.NUtils;
+import nurgling.actions.Action;
+import nurgling.actions.ActionWithFinal;
 import nurgling.actions.bots.ScenarioRunner;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
@@ -116,15 +118,13 @@ public class ScenarioPanel extends Panel {
                     @Override
                     protected Widget makeitem(BotStep step, int idx, Coord sz) {
                         return new ItemWidget<BotStep>(this, sz, step) {{
-                            String botName = step.getBotKey();
-                            BotDescriptor desc = BotRegistry.getDescriptor(step.getBotKey());
+                            String botId = step.getId();
+                            BotDescriptor desc = BotRegistry.byId(botId);
                             Tex iconTex = null;
-                            if (desc != null && desc.iconPath != null) {
-                                botName = desc.displayName;
-                                String iconBase = desc.iconPath.replaceAll("/[udh]$", "");
-
+                            if (desc != null) {
+                                botId = desc.displayName;
                                 try {
-                                    BufferedImage iconImg = Resource.loadsimg(iconBase + "/u");
+                                    BufferedImage iconImg = Resource.loadsimg(desc.getUpIconPath());
                                     if (iconImg != null)
                                         iconTex = new TexI(iconImg);
                                 } catch (Exception e) {
@@ -132,9 +132,10 @@ public class ScenarioPanel extends Panel {
                                 }
                             }
 
-                            boolean hasSettings = desc != null && !desc.factory.requiredSettings().isEmpty();
+                            // For now, only mark ✪ for goto_area, since that's the only setting-driven bot
+                            boolean hasSettings = desc != null && "goto_area".equals(desc.id);
                             String marker = hasSettings ? " ✪" : "";
-                            Label label = new Label(botName + marker);
+                            Label label = new Label(botId + marker);
 
                             int iconMargin = UI.scale(4);
                             int iconSize = UI.scale(24);
@@ -299,7 +300,7 @@ public class ScenarioPanel extends Panel {
 
         stepDialog = new ScenarioBotSelectionDialog(bot -> {
             if (editingScenario != null && bot != null) {
-                editingScenario.addStep(new BotStep(bot.key));
+                editingScenario.addStep(new BotStep(bot.id));
                 stepList.update();
             }
             stepDialog = null;
@@ -311,16 +312,41 @@ public class ScenarioPanel extends Panel {
         if (scenario == null || NUtils.getGameUI() == null)
             return;
         ScenarioRunner runner = new ScenarioRunner(scenario);
-        new Thread(() -> {
-            try {
-                runner.run(NUtils.getGameUI());
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }, "ScenarioRunnerThread").start();
+        start("scenario_runner", runner);
     }
 
     private void updateStepSettingsPanel() {
         stepSettingsPanel.setStep(selectedStep);
+    }
+
+    void start(String path, Action action)
+    {
+        Thread t;
+        t = new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    action.run(NUtils.getGameUI());
+                }
+                catch (InterruptedException e)
+                {
+                    NUtils.getGameUI().msg(path + ":" + "STOPPED");
+                }
+                finally
+                {
+                    if(action instanceof ActionWithFinal)
+                    {
+                        ((ActionWithFinal)action).endAction();
+                    }
+                }
+            }
+        }, path);
+
+        NUtils.getGameUI().biw.addObserve(t);
+
+        t.start();
     }
 }

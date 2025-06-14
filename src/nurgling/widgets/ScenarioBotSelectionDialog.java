@@ -6,8 +6,6 @@ import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
 
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import static nurgling.actions.bots.registry.BotDescriptor.BotType.*;
@@ -20,25 +18,23 @@ public class ScenarioBotSelectionDialog extends Window {
     public ScenarioBotSelectionDialog(java.util.function.Consumer<BotDescriptor> onSelect) {
         super(new Coord(ICON_SIZE * COLS + GRID_PADDING * 2, UI.scale(350)), "Select Bot");
 
-        List<BotDescriptor> bots = new ArrayList<>(BotRegistry.listBots());
-        bots.sort(Comparator.comparingInt(b -> b.order));
-        List<BotDescriptor.BotType> groupOrder = List.of(UTILS, FARMING, LIVESTOCK, LABORING);
-
+        List<BotDescriptor.BotType> groupOrder = List.of(UTILS, PRODUCTIONS, FARMING, LIVESTOCK);
         int contentWidth = ICON_SIZE * COLS + GRID_PADDING * 2;
-
         Widget contentPanel = new Widget(new Coord(contentWidth, 10000)); // Height will be fixed below
 
         int y = GRID_PADDING;
         for (BotDescriptor.BotType type : groupOrder) {
-            List<BotDescriptor> group = bots.stream().filter(b -> b.type == type).toList();
+            List<BotDescriptor> group = BotRegistry.byType(type).stream()
+                    .filter(b -> b.allowedAsStepInScenario)
+                    .toList();
             if (group.isEmpty()) continue;
 
             String title;
             switch (type) {
-                case UTILS:    title = "Utils";     break;
+                case PRODUCTIONS: title = "Production";  break;
                 case FARMING:  title = "Farmers";   break;
                 case LIVESTOCK: title = "Livestock"; break;
-                case LABORING: title = "Laboring";  break;
+                case UTILS:    title = "Utils";     break;
                 default:       title = "Other";
             }
 
@@ -52,10 +48,9 @@ public class ScenarioBotSelectionDialog extends Window {
                 int col = i % COLS;
                 int row = i / COLS;
 
-                String iconBase = bot.iconPath.replaceAll("/[udh]$", "");
-                BufferedImage up = padIcon(Resource.loadsimg(iconBase + "/u"), ICON_SIZE);
-                BufferedImage down = padIcon(Resource.loadsimg(iconBase + "/d"), ICON_SIZE);
-                BufferedImage hover = padIcon(Resource.loadsimg(iconBase + "/h"), ICON_SIZE);
+                BufferedImage up    = padIcon(Resource.loadsimg(bot.getUpIconPath()), ICON_SIZE);
+                BufferedImage down  = padIcon(Resource.loadsimg(bot.getDownIconPath()), ICON_SIZE);
+                BufferedImage hover = padIcon(Resource.loadsimg(bot.getHoverIconPath()), ICON_SIZE);
 
                 IButton btn = new IButton(up, down, hover) {
                     public void click() { onSelect.accept(bot); }
@@ -90,7 +85,6 @@ public class ScenarioBotSelectionDialog extends Window {
 
         pack();
     }
-
 
     @Override
     public void wdgmsg(Widget sender, String msg, Object... args) {

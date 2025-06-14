@@ -2,6 +2,7 @@ package nurgling.actions.bots;
 
 import nurgling.NGameUI;
 import nurgling.actions.*;
+import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.scenarios.*;
 import nurgling.actions.bots.registry.BotRegistry;
 
@@ -15,14 +16,15 @@ public class ScenarioRunner implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         for (BotStep step : scenario.getSteps()) {
-            Action bot = BotRegistry.createBot(step.getBotKey(), step.getSettings());
+            BotDescriptor desc = BotRegistry.byId(step.getId());
+            Action bot = (desc != null) ? desc.instantiate(step.getSettings()) : null;
             if (bot == null) {
-                gui.msg("ScenarioRunner: Unknown bot key: " + step.getBotKey());
+                gui.msg("ScenarioRunner: Unknown bot key: " + step.getId());
                 return Results.FAIL();
             }
             Results result = bot.run(gui);
             if (!result.IsSuccess()) {
-                gui.msg("ScenarioRunner: Bot failed: " + step.getBotKey());
+                gui.msg("ScenarioRunner: Bot failed: " + step.getId());
                 return result;
             }
         }
