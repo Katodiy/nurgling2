@@ -268,7 +268,7 @@ public class MapWnd extends Window implements Console.Directory {
 	}
     }
 
-    private class View extends MiniMap implements CursorQuery.Handler {
+    private class View extends NMiniMap implements CursorQuery.Handler {
 	View(MapFile file) {
 	    super(file);
 	}

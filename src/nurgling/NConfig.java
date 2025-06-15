@@ -5,7 +5,7 @@ import nurgling.areas.*;
 import nurgling.conf.*;
 import nurgling.routes.Route;
 import nurgling.scenarios.Scenario;
-import nurgling.widgets.NMiniMap;
+import nurgling.widgets.NCornerMiniMap;
 import org.json.*;
 
 import java.awt.*;
@@ -541,7 +541,7 @@ public class NConfig
             try
             {
                 FileWriter f = new FileWriter(customPath==null?path_fog:customPath,StandardCharsets.UTF_8);
-                ((NMiniMap)NUtils.getGameUI().mmap).fogArea.toJson().write(f);
+                ((NCornerMiniMap)NUtils.getGameUI().mmap).fogArea.toJson().write(f);
                 f.close();
                 current.isFogUpd = false;
             }

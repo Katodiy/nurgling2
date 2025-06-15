@@ -3,6 +3,7 @@ package nurgling.tools;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
+import nurgling.widgets.NCornerMiniMap;
 import nurgling.widgets.NMiniMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -14,9 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
-
-import static haven.MCache.cmaps;
-import static haven.MCache.tilesz;
 
 public class FogArea {
     final NMiniMap miniMap;

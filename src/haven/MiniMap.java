@@ -68,6 +68,8 @@ public class MiniMap extends Widget
     protected int dlvl;
     public Location dloc;
 
+	public boolean needUpdate = false;
+
     public MiniMap(Coord sz, MapFile file) {
 	super(sz);
 	this.file = file;
@@ -527,14 +529,15 @@ public class MiniMap extends Widget
 	Coord zmaps = cmaps.mul(1 << zoomlevel);
 	Area next = Area.sized(loc.tc.sub(hsz.mul(UI.unscale((float)(1 << zoomlevel)))).div(zmaps),
 	    UI.unscale(sz).div(cmaps).add(2, 2));
-	if((display == null) || (loc.seg != dseg) || (zoomlevel != dlvl) || !next.equals(dgext)) {
+	if((display == null) || (loc.seg != dseg) || (zoomlevel != dlvl) || !next.equals(dgext) || needUpdate) {
 	    DisplayGrid[] nd = new DisplayGrid[next.rsz()];
-	    if((display != null) && (loc.seg == dseg) && (zoomlevel == dlvl)) {
+	    if((display != null) && (loc.seg == dseg) && (zoomlevel == dlvl) && !needUpdate) {
 		for(Coord c : dgext) {
 		    if(next.contains(c))
 			nd[next.ri(c)] = display[dgext.ri(c)];
 		}
 	    }
+		needUpdate = false;
 	    display = nd;
 	    dseg = loc.seg;
 	    dlvl = zoomlevel;
