@@ -297,7 +297,7 @@ public interface GLPanel extends UIPanel, UI.Context {
 	    synchronized(ui) {
 		ui.draw(g);
 	    }
-	    if(dbtext.get() || true)
+	    if(dbtext.get())
 		drawstats(ui, g, buf);
 	    drawtooltip(ui, g);
 	    drawcursor(ui, g);

@@ -36,8 +36,8 @@ public class Cavein extends Sprite implements Sprite.CDel {
 	sz = new Coord3f(sdt.float8() * 11f, sdt.float8() * 11f, 0f);
 	off = new Coord3f(-sz.x / 2f, -sz.y / 2f, sdt.float8() * 11f);
 	life = sdt.uint8();
-	if(owner instanceof Gob)
-		((Gob)owner).addcustomol(new NMiningNumber(owner,(int)Math.round(str / 30.0)));
+	if(owner instanceof Gob.Overlay)
+		(((Gob.Overlay) owner).gob).addcustomol(new NMiningNumber(((Gob.Overlay) owner).gob,(int)Math.round(str / 30.0)));
     }
 
     class Boll {

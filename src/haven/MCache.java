@@ -1011,7 +1011,7 @@ public class MCache implements MapSource {
 		NUtils.addTask(new NTask() {
 			@Override
 			public boolean check() {
-				if(NUtils.getGameUI().map.glob.map.grids.size()==9)
+				if(NUtils.getGameUI().map.glob!=null && NUtils.getGameUI().map.glob.map.grids.size()==9)
 				{
 					if(NUtils.getGameUI().map.glob.map.grids.get(coord)==null)
 					{

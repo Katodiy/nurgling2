@@ -341,9 +341,9 @@ public class NMiniMap extends MiniMap implements Console.Directory {
                             if (!cm.rc.isect(pl.sub(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)), pl.add(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)))) {
                                 tempMarkList.remove(cm);
                             }else {
-                                Coord rc = p2c(pl.floor(sgridsz).sub(4, 4).mul(sgridsz).add(9,9));
+                                Coord rc = p2c(pl.floor(sgridsz).sub(4, 4).mul(sgridsz).add(22,22));
                                 int zmult = 1 << zoomlevel;
-                                Coord viewsz = VIEW_SZ.div(zmult).mul(scale).sub(9,9);
+                                Coord viewsz = VIEW_SZ.div(zmult).mul(scale).sub(22,22);
                                 Coord gc = p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
                                 if (gc.isect(rc, viewsz)) {
                                     tempMarkList.remove(cm);

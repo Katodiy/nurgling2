@@ -272,6 +272,8 @@ public class NStyle {
         iconMap.put("gfx/terobjs/vehicle/cart",new Resource.Saved(Resource.remote(),"mm/cart",-1));
         iconMap.put("gfx/terobjs/vehicle/plow",new Resource.Saved(Resource.remote(),"mm/plow",-1));
         iconMap.put("gfx/terobjs/map/cavepuddle",new Resource.Saved(Resource.remote(),"mm/clay-cave",-1));
+        iconMap.put("gfx/terobjs/minehole",new Resource.Saved(Resource.remote(),"mm/down",-1));
+        iconMap.put("gfx/terobjs/ladder",new Resource.Saved(Resource.remote(),"mm/up",-1));
     }
 
     public static HashMap<String, String> iconName = new HashMap<>();
