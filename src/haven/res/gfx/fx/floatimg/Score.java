@@ -20,8 +20,8 @@ public class Score implements Sprite.Factory {
 	int num = sdt.int32();
 	int fl = sdt.uint8();
 	int col = sdt.uint16();
-	if(owner instanceof Gob) {
-		NDMGOverlay.IsDMG(col, num, (Gob) owner);
+	if(owner instanceof Gob.Overlay) {
+		NDMGOverlay.IsDMG(col, num, ((Gob.Overlay) owner).gob);
 	}
 	String buf;
 	int t = (fl & 6) >> 1;

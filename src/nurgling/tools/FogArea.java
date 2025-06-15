@@ -258,33 +258,39 @@ public class FogArea {
     void updateNew()
     {
         if(newRect!=null && !newRect.loading) {
-            for(Rectangle rect : rectangles)
-            {
-                if((rect.history.contains(newRect.br_id) || rect.history.contains(newRect.ul_id) ) && rect.loading)
-                    return;
-            }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    for(Rectangle rect : rectangles)
+                    {
+                        if((rect.history.contains(newRect.br_id) || rect.history.contains(newRect.ul_id) ) && rect.loading)
+                            return;
+                    }
 
-            List<Rectangle> nonOverlappingParts = new ArrayList<>();
-            nonOverlappingParts.add(newRect);
+                    List<Rectangle> nonOverlappingParts = new ArrayList<>();
+                    nonOverlappingParts.add(newRect);
 
-            // Вычитаем все существующие прямоугольники из нового
-            for (Rectangle existing : rectangles) {
-                if (!existing.loading && newRect.sameGrid(existing)) {
-                    List<Rectangle> temp = new ArrayList<>();
-                    for (Rectangle part : nonOverlappingParts) {
-                        if(!part.loading) {
-                            temp.addAll(part.subtract(existing));
+                    // Вычитаем все существующие прямоугольники из нового
+                    for (Rectangle existing : rectangles) {
+                        if (!existing.loading && newRect.sameGrid(existing)) {
+                            List<Rectangle> temp = new ArrayList<>();
+                            for (Rectangle part : nonOverlappingParts) {
+                                if(!part.loading) {
+                                    temp.addAll(part.subtract(existing));
+                                }
+                            }
+                            nonOverlappingParts = temp;
+                            if (nonOverlappingParts.isEmpty()) break;
                         }
                     }
-                    nonOverlappingParts = temp;
-                    if (nonOverlappingParts.isEmpty()) break;
-                }
-            }
 
-            // Добавляем оставшиеся части
-            rectangles.addAll(nonOverlappingParts);
-            mergeRectangles();
-            newRect = null;
+                    // Добавляем оставшиеся части
+                    rectangles.addAll(nonOverlappingParts);
+                    mergeRectangles();
+                    newRect = null;
+                }
+            }).start();
+
         }
     }
 
@@ -358,7 +364,7 @@ public class FogArea {
     }
 
     public List<Rectangle> getCoveredAreas() {
-        return rectangles;
+        return new ArrayList<>(rectangles);
     }
 
     public void clear() {
