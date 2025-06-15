@@ -16,11 +16,11 @@ public class NMapWnd extends MapWnd {
     public String searchPattern = "";
     public Resource.Image searchRes = null;
     public boolean needUpdate = false;
-
+    TextEntry te;
     public NMapWnd(MapFile file, MapView mv, Coord sz, String title) {
         super(file, mv, sz, title);
         searchRes = Resource.local().loadwait("alttex/selectedtex").layer(Resource.imgc);
-        add(new TextEntry(200,""){
+        add(te = new TextEntry(200,""){
             @Override
             public void done(ReadLine buf) {
                 super.done(buf);
@@ -28,7 +28,7 @@ public class NMapWnd extends MapWnd {
                 view.needUpdate = true;
                 NUtils.getGameUI().mmap.needUpdate = true;
             }
-        }, view.pos("br").sub(UI.scale(200,16)));
+        }, view.pos("br").sub(UI.scale(200,20)));
     }
 
     public long playerSegmentId() {
@@ -49,5 +49,10 @@ public class NMapWnd extends MapWnd {
         return null;
     }
 
-
+    @Override
+    public void resize(Coord sz) {
+        super.resize(sz);
+        if(te!=null)
+            te.c = view.pos("br").sub(UI.scale(200,20));
+    }
 }

@@ -251,7 +251,7 @@ public class NGob {
                     delayedOverlayTasks.add(new DelayedOverlayTask(
                             gob -> {
                                 String pose = gob.pose();
-                                boolean poseValid = pose == null || !NParser.checkName(pose, "dead", "knock");
+                                boolean poseValid = pose != null && !NParser.checkName(pose, "dead", "knock");
                                 boolean overlayNotExists = gob.findol(NAreaRad.class) == null;
                                 nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
                                 boolean radValid = rad != null && rad.vis;
