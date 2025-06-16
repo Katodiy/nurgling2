@@ -1184,7 +1184,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/sunstone", sunstoneOp);
 
         ArrayList<String> cupriteOp = new ArrayList<>();
-        cupriteOp.add("Wine Glance Ore"); // Камень
+        cupriteOp.add("Wine Glance"); // Камень
         object.put("gfx/terobjs/bumlings/cuprite", cupriteOp);
 
         ArrayList<String> zincsparOp = new ArrayList<>();
@@ -2401,7 +2401,7 @@ public class VSpec {
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/peacockore\",\"name\":\"Peacock Ore\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/sylvanite\",\"name\":\"Schrifterz Ore\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/argentite\",\"name\":\"Silvershine Ore\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/cuprite\",\"name\":\"Wine Glance Ore\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/cuprite\",\"name\":\"Wine Glance\"}"));
         categories.put("Ore", ore);
 
         ArrayList<JSONObject> stones = new ArrayList<>();
@@ -2472,7 +2472,7 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/soapstone\",\"name\":\"Soapstone\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/sodalite\",\"name\":\"Sodalite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/sunstone\",\"name\":\"Sunstone\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/cuprite\",\"name\":\"Wine Glance Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/cuprite\",\"name\":\"Wine Glance\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/zincspar\",\"name\":\"Zincspar\"}"));
         categories.put("Stone", stones);
 

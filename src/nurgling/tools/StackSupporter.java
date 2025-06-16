@@ -54,7 +54,7 @@ public class StackSupporter {
         size3.add("Wicker");
         size3.add("Cloth");
         size3.add("Nugget of a Precious Metal");
-        size3.add("Coal");
+
         size3.add("Nugget of Bronze, Iron or Steel");
         size3.add("Nugget of Any Common Metal");
         size3.add("Nugget of Any Metal");
@@ -85,6 +85,7 @@ public class StackSupporter {
         size4.add("Hide Fresh");
         size4.add("Prepared Animal Hide");
         size4.add("Bone Material");
+        size4.add("Coal");
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
