@@ -12,11 +12,13 @@ import java.awt.*;
 import java.io.*;
 import java.nio.charset.*;
 import java.nio.file.*;
+import java.text.ParseException;
 import java.util.*;
 import java.util.stream.*;
 
 public class NConfig
 {
+    public static NCore.BotmodSettings botmod = null;
 
     public enum Key
     {
@@ -670,6 +672,22 @@ public class NConfig
         res.add(NPathVisualizer.PathCategory.FRIEND);
         res.add(NPathVisualizer.PathCategory.GPF);
         return res;
+    }
+
+    public static void enableBotMod(String path) {
+        try {
+            String jsonString = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
+
+            JSONObject jsonObject = new JSONObject(jsonString);
+            botmod = new NCore.BotmodSettings((String) jsonObject.get("user"), (String) jsonObject.get("password"), (String) jsonObject.get("character"), jsonObject.getInt("scenarioId"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static boolean isBotMod() {
+        return botmod != null;
     }
 
     public static Color getColor(Key key, Color defaultColor) {
