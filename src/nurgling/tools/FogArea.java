@@ -3,6 +3,7 @@ package nurgling.tools;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
+import nurgling.tasks.NTask;
 import nurgling.widgets.NCornerMiniMap;
 import nurgling.widgets.NMiniMap;
 import org.json.JSONArray;
@@ -230,11 +231,11 @@ public class FogArea {
             if (newRect != null && newRect.loading) {
                 newRect.tick(dt);
             }
-            for(Rectangle rect: rectangles)
-            {
-                if(rect.loading)
-                {
-                    rect.tick(dt);
+            synchronized (rectangles) {
+                for (Rectangle rect : rectangles) {
+                    if (rect.loading) {
+                        rect.tick(dt);
+                    }
                 }
             }
         }
@@ -258,39 +259,95 @@ public class FogArea {
     void updateNew()
     {
         if(newRect!=null && !newRect.loading) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    for(Rectangle rect : rectangles)
-                    {
-                        if((rect.history.contains(newRect.br_id) || rect.history.contains(newRect.ul_id) ) && rect.loading)
-                            return;
-                    }
+            new Thread(new NewRectangleProc(new ArrayList<Rectangle>(rectangles),newRect)).start();
+            newRect = null;
+        }
+    }
 
-                    List<Rectangle> nonOverlappingParts = new ArrayList<>();
-                    nonOverlappingParts.add(newRect);
+    class NewRectangleProc implements Runnable
+    {
 
-                    // Вычитаем все существующие прямоугольники из нового
-                    for (Rectangle existing : rectangles) {
-                        if (!existing.loading && newRect.sameGrid(existing)) {
-                            List<Rectangle> temp = new ArrayList<>();
-                            for (Rectangle part : nonOverlappingParts) {
-                                if(!part.loading) {
-                                    temp.addAll(part.subtract(existing));
-                                }
+        ArrayList<Rectangle> testRectangles;
+        final Rectangle newRectangle;
+
+        public NewRectangleProc(ArrayList<Rectangle> testRectangles, Rectangle newRectangle) {
+            this.testRectangles = testRectangles;
+            this.newRectangle = newRectangle;
+        }
+
+        @Override
+        public void run() {
+            for(Rectangle rect : testRectangles)
+            {
+                if((rect.history.contains(newRectangle.br_id) || rect.history.contains(newRectangle.ul_id) ) && rect.loading) {
+                    try {
+                        NUtils.addTask(new NTask() {
+                            @Override
+                            public boolean check() {
+                                return !((rect.history.contains(newRectangle.br_id) || rect.history.contains(newRectangle.ul_id) ) && rect.loading);
                             }
-                            nonOverlappingParts = temp;
-                            if (nonOverlappingParts.isEmpty()) break;
+                        });
+                    } catch (InterruptedException ignored) {
+                        return;
+                    }
+                }
+            }
+
+            List<Rectangle> nonOverlappingParts = new ArrayList<>();
+            nonOverlappingParts.add(newRectangle);
+
+            // Вычитаем все существующие прямоугольники из нового
+            for (Rectangle existing : testRectangles) {
+                if (!existing.loading && newRectangle.sameGrid(existing)) {
+                    List<Rectangle> temp = new ArrayList<>();
+                    for (Rectangle part : nonOverlappingParts) {
+                        if(!part.loading) {
+                            temp.addAll(part.subtract(existing));
                         }
                     }
-
-                    // Добавляем оставшиеся части
-                    rectangles.addAll(nonOverlappingParts);
-                    mergeRectangles();
-                    newRect = null;
+                    nonOverlappingParts = temp;
+                    if (nonOverlappingParts.isEmpty()) break;
                 }
-            }).start();
+            }
 
+            synchronized (rectangles) {
+                // Добавляем оставшиеся части
+                rectangles.addAll(nonOverlappingParts);
+            }
+            mergeRectangles();
+        }
+
+        private void mergeRectangles() {
+            boolean merged;
+            do {
+                merged = false;
+                outer:
+                for (int i = 0; i < testRectangles.size(); i++) {
+                    Rectangle a = testRectangles.get(i);
+                    if(a.loading) continue;
+                    for (int j = i + 1; j < testRectangles.size(); j++) {
+                        Rectangle b = testRectangles.get(j);
+                        if(b.loading || !a.sameGrid(b)) continue;
+                        Optional<Rectangle> mergedRect = tryMerge(a, b);
+                        if (mergedRect.isPresent()) {
+                            // Удаляем сначала больший индекс, потом меньший
+                            ArrayList<Rectangle> forDelete = new ArrayList<>();
+                            forDelete.add(a);
+                            forDelete.add(b);
+                            mergedRect.get().history.addAll(a.history);
+                            mergedRect.get().history.addAll(b.history);
+                            synchronized (rectangles) {
+                                rectangles.add(mergedRect.get());
+                                rectangles.removeAll(forDelete);
+                                testRectangles = new ArrayList<>(rectangles);
+                            }
+                            merged = true;
+                            break outer;
+                        }
+                    }
+                }
+            } while (merged);
+            NConfig.needFogUpdate();
         }
     }
 
@@ -299,35 +356,7 @@ public class FogArea {
      * 1. Соприкасаются или пересекаются,
      * 2. Имеют одинаковую длину грани по оси соприкосновения.
      */
-    private void mergeRectangles() {
-        boolean merged;
-        do {
-            merged = false;
-            outer:
-            for (int i = 0; i < rectangles.size(); i++) {
-                Rectangle a = rectangles.get(i);
-                if(a.loading) continue;
-                for (int j = i + 1; j < rectangles.size(); j++) {
-                    Rectangle b = rectangles.get(j);
-                    if(b.loading || !a.sameGrid(b)) continue;
-                    Optional<Rectangle> mergedRect = tryMerge(a, b);
-                    if (mergedRect.isPresent()) {
-                        // Удаляем сначала больший индекс, потом меньший
-                        ArrayList<Rectangle> forDelete = new ArrayList<>();
-                        forDelete.add(a);
-                        forDelete.add(b);
-                        mergedRect.get().history.addAll(a.history);
-                        mergedRect.get().history.addAll(b.history);
-                        rectangles.add(mergedRect.get());
-                        rectangles.removeAll(forDelete);
-                        merged = true;
-                        break outer;
-                    }
-                }
-            }
-        } while (merged);
-        NConfig.needFogUpdate();
-    }
+
 
 
     /**
