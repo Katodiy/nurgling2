@@ -4,11 +4,15 @@ import haven.Coord;
 import haven.Gob;
 import haven.Inventory;
 import haven.WItem;
+import haven.res.ui.tt.leashed.Leashed;
+import nurgling.NConfig;
+import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Results;
 import nurgling.overlays.NCustomResult;
+import nurgling.tasks.NTask;
 import nurgling.tasks.WaitPose;
 import nurgling.tasks.WaitPoseOrMsg;
 import nurgling.tools.Finder;
@@ -48,6 +52,26 @@ public class FeedClover implements Action {
                     NUtils.player().addcustomol(new NCustomResult(NUtils.player(), "fail"));
                 } else {
                     gob.addcustomol(new NCustomResult(gob, "success"));
+                    if((Boolean) NConfig.get(NConfig.Key.ropeAfterFeeding))
+                    {
+                        WItem rope = gui.getInventory().getItem(new NAlias("Rope"), Leashed.class);
+                        if(rope!=null)
+                        {
+                            NUtils.takeItemToHand(rope);
+                            NUtils.activateItem(gob, false);
+                            NUtils.addTask(new NTask() {
+                                @Override
+                                public boolean check() {
+                                    if(getGameUI().vhand!=null)
+                                    {
+                                        return (((NGItem)getGameUI().vhand.item).getInfo(Leashed.class)!=null);
+                                    }
+                                    return false;
+                                }
+                            });
+                            gui.getInventory().dropOn(gui.getInventory().findFreeCoord(getGameUI().vhand));
+                        }
+                    }
                 }
             }
             feeded.add(gob.id);

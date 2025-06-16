@@ -4,10 +4,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.NMapView;
 import nurgling.NUtils;
-import nurgling.widgets.nsettings.Fonts;
-import nurgling.widgets.nsettings.Panel;
-import nurgling.widgets.nsettings.ScenarioPanel;
-import nurgling.widgets.nsettings.World;
+import nurgling.widgets.nsettings.*;
 
 import java.util.*;
 
@@ -58,9 +55,13 @@ public class NSettingsWindow extends Window {
         SettingsCategory scenarios = new SettingsCategory("Autorunner", new Panel("Autorunner scenarios"), container);
         scenarios.addChild(new SettingsItem("Scenarios", new ScenarioPanel(), container));
 
+        SettingsCategory bots = new SettingsCategory("Bots", new Panel("Bots"), container);
+        bots.addChild(new SettingsItem("Feed Clover", new FeedClover(), container));
+
         list.addCategory(general);
         list.addCategory(gameenvironment);
         list.addCategory(scenarios);
+        list.addCategory(bots);
     }
 
     @Override
