@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class FeedClover implements Action {
+    static ArrayList<Long> feeded = new ArrayList<>();
     NAlias krtters =new NAlias(new ArrayList<String>(Arrays.asList("horse", "cattle", "boar", "goat", "sheep")), new ArrayList<String>(Arrays.asList("stallion", "mare")));
     NAlias clover = new NAlias("Clover");
     @Override
@@ -29,7 +30,7 @@ public class FeedClover implements Action {
         }
         Coord pos = item.c.div(Inventory.sqsz);
         NUtils.takeItemToHand(item);
-        Gob gob = Finder.findGob(krtters);
+        Gob gob = Finder.findGob(krtters, feeded);
         if(gob!=null) {
             NUtils.activateItem(gob, false);
             WaitPoseOrMsg wpom1 = new WaitPoseOrMsg(NUtils.player(),"gfx/borka/animaltease", new NAlias("The animal eye"));
@@ -48,6 +49,7 @@ public class FeedClover implements Action {
                     gob.addcustomol(new NCustomResult(gob, "success"));
                 }
             }
+            feeded.add(gob.id);
         }
 
         return Results.SUCCESS();
