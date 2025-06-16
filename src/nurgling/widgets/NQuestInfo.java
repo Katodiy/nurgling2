@@ -658,7 +658,7 @@ public class NQuestInfo extends Widget
                             bufname = "anthill";
                     }
                     else {
-                        bufname += "kritter/";
+                        bufname = "kritter/"+bufname;
                     }
                 }
                 name = (bufname.replaceAll("\\s+", "")).replaceAll("'+", "");

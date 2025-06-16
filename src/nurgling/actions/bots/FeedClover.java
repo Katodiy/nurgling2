@@ -17,6 +17,8 @@ import nurgling.tools.NAlias;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static nurgling.NUtils.getGameUI;
+
 public class FeedClover implements Action {
     static ArrayList<Long> feeded = new ArrayList<>();
     NAlias krtters =new NAlias(new ArrayList<String>(Arrays.asList("horse", "cattle", "boar", "goat", "sheep")), new ArrayList<String>(Arrays.asList("stallion", "mare")));
@@ -28,7 +30,6 @@ public class FeedClover implements Action {
         {
             return Results.ERROR("No clover");
         }
-        Coord pos = item.c.div(Inventory.sqsz);
         NUtils.takeItemToHand(item);
         Gob gob = Finder.findGob(krtters, feeded);
         if(gob!=null) {
@@ -37,13 +38,13 @@ public class FeedClover implements Action {
             NUtils.addTask(wpom1);
             if(wpom1.isError())
             {
-                gui.getInventory().dropOn(pos, clover);
+                gui.getInventory().dropOn(gui.getInventory().findFreeCoord(getGameUI().vhand));
             }
             else {
                 WaitPoseOrMsg wpom2 = new WaitPoseOrMsg(NUtils.player(), "gfx/borka/idle", new NAlias("The animal loses"));
                 NUtils.addTask(wpom2);
                 if (wpom2.isError()) {
-                    gui.getInventory().dropOn(pos, clover);
+                    gui.getInventory().dropOn(gui.getInventory().findFreeCoord(getGameUI().vhand));
                     NUtils.player().addcustomol(new NCustomResult(NUtils.player(), "fail"));
                 } else {
                     gob.addcustomol(new NCustomResult(gob, "success"));
