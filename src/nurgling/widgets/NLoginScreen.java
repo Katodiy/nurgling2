@@ -93,9 +93,9 @@ public class NLoginScreen extends LoginScreen
     protected void progress(String p)
     {
         super.progress(p);
-        if (ui.core.isBotmod())
+        if (NConfig.isBotMod())
         {
-            wdgmsg("login", new Object[]{new AuthClient.NativeCred(ui.core.getBotMod().user, ui.core.getBotMod().pass), false});
+            wdgmsg("login", new Object[]{new AuthClient.NativeCred(NConfig.botmod.user, NConfig.botmod.pass), false});
         }
     }
 
@@ -115,8 +115,10 @@ public class NLoginScreen extends LoginScreen
             }
             else
             {
-                if (args[0] != null && args[0] instanceof AuthClient.TokenCred) ;
-                saveLoginToken(clogin.user.text(), ((AuthClient.TokenCred) args[0]).token);
+                if (args[0] != null && args[0] instanceof AuthClient.TokenCred) {
+                    saveLoginToken(clogin.user.text(), ((AuthClient.TokenCred) args[0]).token);
+                }
+
             }
         }
         super.wdgmsg(sender, msg, args);

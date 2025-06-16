@@ -4,13 +4,20 @@ import haven.*;
 import static haven.MCache.tilesz;
 
 import haven.Composite;
+import nurgling.actions.Action;
+import nurgling.actions.ActionWithFinal;
 import nurgling.actions.QuickActionBot;
+import nurgling.actions.bots.ScenarioRunner;
 import nurgling.areas.*;
 import nurgling.overlays.*;
 import nurgling.overlays.map.*;
 import nurgling.routes.Route;
 import nurgling.routes.RouteGraphManager;
 import nurgling.routes.RoutePoint;
+import nurgling.scenarios.Scenario;
+import nurgling.tasks.WaitConstructionObject;
+import nurgling.tasks.WaitForMapLoad;
+import nurgling.tasks.WaitForMapLoadNoCoord;
 import nurgling.tools.*;
 
 import java.awt.event.KeyEvent;
@@ -464,6 +471,8 @@ public class NMapView extends MapView
     }
 
 
+    boolean botsInit = false;
+
     @Override
     public void tick(double dt)
     {
@@ -491,6 +500,53 @@ public class NMapView extends MapView
 //        for(Long id : forRemove)
 //            dummys.remove(id);
         super.tick(dt);
+
+        if(NConfig.botmod != null && !botsInit) {
+            Scenario scenario = NUtils.getUI().core.scenarioManager.getScenarios().getOrDefault(NConfig.botmod.scenarioId, null);
+            if (scenario != null || !(NUtils.getGameUI() == null)) {
+                    botsInit = true;
+                    new Thread(() -> {
+                        try {
+                            NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
+                            ScenarioRunner runner = new ScenarioRunner(scenario);
+                            start("scenario_runner", runner);
+                        } catch (InterruptedException e) {
+                            System.out.println("Bot interrupted");
+                        }
+                    }).start();
+            }
+        }
+    }
+
+    void start(String path, Action action)
+    {
+        Thread t;
+        t = new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    action.run(NUtils.getGameUI());
+                }
+                catch (InterruptedException e)
+                {
+                    NUtils.getGameUI().msg(path + ":" + "STOPPED");
+                }
+                finally
+                {
+                    if(action instanceof ActionWithFinal)
+                    {
+                        ((ActionWithFinal)action).endAction();
+                    }
+                }
+            }
+        }, path);
+
+        NUtils.getGameUI().biw.addObserve(t);
+
+        t.start();
     }
 
     @Override

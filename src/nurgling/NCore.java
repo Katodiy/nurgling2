@@ -122,12 +122,19 @@ public class NCore extends Widget
     private boolean botmod = false;
     public boolean enablegrid = true;
 
-    public class BotmodSettings
+    public static class BotmodSettings
     {
         public String user;
         public String pass;
         public String character;
-        public String bot;
+        public Integer scenarioId;
+
+        public BotmodSettings(String user, String password, String character, Integer scenarioId) {
+            this.user = user;
+            this.pass = password;
+            this.character = character;
+            this.scenarioId = scenarioId;
+        }
     }
 
     private BotmodSettings bms;

@@ -446,7 +446,14 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
     }
 
     private static void main2(String[] args) {
-	Config.cmdline(args);
+	for(String value: args){
+		if(value.contains("-bots")){
+			NConfig.enableBotMod(args[1]);
+			break;
+		}
+	}
+
+//	Config.cmdline(args);
 	status("start");
 	try {
 	    javabughack();
