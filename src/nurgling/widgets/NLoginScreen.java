@@ -115,9 +115,10 @@ public class NLoginScreen extends LoginScreen
             }
             else
             {
-                if (args[0] != null && args[0] instanceof AuthClient.TokenCred) ;
-                saveLoginPass(clogin.user.text(), clogin.pass.text());
-//                saveLoginToken(clogin.user.text(), ((AuthClient.TokenCred) args[0]).token);
+                if (args[0] != null && args[0] instanceof AuthClient.TokenCred) {
+                    saveLoginToken(clogin.user.text(), ((AuthClient.TokenCred) args[0]).token);
+                }
+
             }
         }
         super.wdgmsg(sender, msg, args);

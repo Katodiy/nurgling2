@@ -453,7 +453,7 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 			}
 		}
 
-	//	Config.cmdline(args);
+//	Config.cmdline(args);
 	status("start");
 	try {
 	    javabughack();

@@ -26,8 +26,6 @@
 
 package haven;
 
-import nurgling.NCharlist;
-
 import java.util.*;
 
 public class RemoteUI implements UI.Receiver, UI.Runner {

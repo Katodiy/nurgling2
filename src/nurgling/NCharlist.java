@@ -12,7 +12,6 @@ public class NCharlist extends Charlist {
     public NCharlist(int height ) {
         super ( height );
         instance = this;
-        System.out.println("initiated charlist");
     }
 
     public static void play(){
@@ -46,9 +45,7 @@ public class NCharlist extends Charlist {
     public void uimsg(String msg, Object... args) {
         super.uimsg(msg, args);
         if(msg == "add") {
-            System.out.println("MSG is add");
             NCharlist.play();
         }
-
     }
 }
