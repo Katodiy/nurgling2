@@ -61,7 +61,6 @@ public class TransferToContainer implements Action{
                             for (int i = 0; i < Math.min(oldSpace, coorditems.size()); i++) {
                                 transfer(coorditems.get(i), gui.getInventory(container.cap), Math.min(oldSpace, coorditems.size()));
 
-                                i = 0;
                                 if (th == -1)
                                     witems = gui.getInventory().getItems(items);
                                 else
@@ -75,12 +74,14 @@ public class TransferToContainer implements Action{
 
                             }
                             ArrayList<WItem> finalCoorditems = coorditems;
-                            NUtils.getUI().core.addTask(new NTask() {
-                                @Override
-                                public boolean check() {
-                                    return gui.getInventory(container.cap).calcNumberFreeCoord(coord) == oldSpace-Math.min(oldSpace, finalCoorditems.size());
-                                }
-                            });
+                            if(!finalCoorditems.isEmpty()) {
+                                NUtils.getUI().core.addTask(new NTask() {
+                                    @Override
+                                    public boolean check() {
+                                        return gui.getInventory(container.cap).calcNumberFreeCoord(coord) == oldSpace - Math.min(oldSpace, finalCoorditems.size());
+                                    }
+                                });
+                            }
                             container.update();
                         }
                     }

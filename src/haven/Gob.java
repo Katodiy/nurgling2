@@ -49,7 +49,11 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
     private Loader.Future<?> deferral = null;
     public NGob ngob;
 
-    public static class Overlay implements RenderTree.Node, Sprite.Owner {
+	public void changedPose(String currentPose) {
+		ngob.changedPose(currentPose);
+	}
+
+	public static class Overlay implements RenderTree.Node, Sprite.Owner {
 	public final int id;
 	public final Gob gob;
 	public final Sprite.Mill<?> sm;
