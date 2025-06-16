@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Stream;
 
 public class FogArea {
@@ -22,11 +23,11 @@ public class FogArea {
     private final List<Rectangle> rectangles = new ArrayList<>();
     private Coord lastUL, lastBR;
 
-    Rectangle newRect = null;
-
+    private final ConcurrentLinkedQueue<Rectangle> rectangleQueue = new ConcurrentLinkedQueue<>();
+    private volatile boolean isProcessing = false;
 
     public FogArea(NMiniMap miniMap) {
-        this.miniMap = miniMap; // вызов основного конструктора
+        this.miniMap = miniMap;
         if(new File(NConfig.current.path_fog).exists()) {
             StringBuilder contentBuilder = new StringBuilder();
             try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_fog), StandardCharsets.UTF_8)) {
@@ -35,32 +36,23 @@ public class FogArea {
             }
 
             if (!contentBuilder.toString().isEmpty()) {
-
                 JSONObject json = new JSONObject(contentBuilder.toString());
                 if (json.has("rectangles")) {
                     JSONArray rectanglesArray = json.getJSONArray("rectangles");
                     for (int i = 0; i < rectanglesArray.length(); i++) {
                         JSONObject rectJson = rectanglesArray.getJSONObject(i);
-
-                        // Получаем данные из JSON
                         JSONObject jul = rectJson.getJSONObject("ul");
                         JSONObject jbr = rectJson.getJSONObject("br");
                         long seg_id = rectJson.getLong("seg");
 
-                        // Восстанавливаем координаты
                         long ul_grid_id = jul.getLong("grid_id");
                         long br_grid_id = jbr.getLong("grid_id");
                         Coord cul = new Coord(jul.getInt("x"), jul.getInt("y"));
                         Coord cbr = new Coord(jbr.getInt("x"), jbr.getInt("y"));
 
-                        // Создаем временный прямоугольник
-                        Rectangle rect = new Rectangle(cul, cbr, ul_grid_id,br_grid_id,seg_id);
-
-
-                        // Добавляем в список
+                        Rectangle rect = new Rectangle(cul, cbr, ul_grid_id, br_grid_id, seg_id);
                         rectangles.add(rect);
                     }
-
                 }
             }
         }
@@ -225,12 +217,14 @@ public class FogArea {
         }
     }
 
-    public void tick(double dt)
-    {
+    public void tick(double dt) {
         if(NUtils.getGameUI()!=null) {
-            if (newRect != null && newRect.loading) {
-                newRect.tick(dt);
+            // Обработка загрузки текущего прямоугольника
+            Rectangle currentRect = rectangleQueue.peek();
+            if (currentRect != null && currentRect.loading) {
+                currentRect.tick(dt);
             }
+
             synchronized (rectangles) {
                 for (Rectangle rect : rectangles) {
                     if (rect.loading) {
@@ -238,29 +232,47 @@ public class FogArea {
                     }
                 }
             }
+
+            // Если нет активного потока обработки и есть прямоугольники в очереди
+            if (!isProcessing && !rectangleQueue.isEmpty()) {
+                updateNew();
+            }
         }
-        updateNew();
     }
 
-    /**
-     * Добавляет новый прямоугольник, исключая его пересечения с существующими.
-     */
     public void addWithoutOverlaps(Coord ul, Coord br, long id) {
-
         if (ul.equals(lastUL) && br.equals(lastBR))
-            return; // Координаты не изменились
+            return;
 
         lastUL = ul;
         lastBR = br;
 
-        newRect = new Rectangle(ul, br, id);
+        Rectangle newRect = new Rectangle(ul, br, id);
+        rectangleQueue.add(newRect);
     }
 
-    void updateNew()
-    {
-        if(newRect!=null && !newRect.loading) {
-            new Thread(new NewRectangleProc(new ArrayList<Rectangle>(rectangles),newRect)).start();
-            newRect = null;
+    void updateNew() {
+        if (!rectangleQueue.isEmpty() && !isProcessing) {
+            isProcessing = true;
+            Rectangle nextRect = rectangleQueue.poll();
+            if (nextRect != null && !nextRect.loading) {
+                new Thread(new NewRectangleProc(new ArrayList<>(rectangles), nextRect) {
+                    @Override
+                    public void run() {
+                        try {
+                            super.run();
+                        } finally {
+                            isProcessing = false;
+                            // Проверяем, есть ли еще прямоугольники для обработки
+                            if (!rectangleQueue.isEmpty()) {
+                                updateNew();
+                            }
+                        }
+                    }
+                }).start();
+            } else {
+                isProcessing = false;
+            }
         }
     }
 
