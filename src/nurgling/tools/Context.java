@@ -335,6 +335,38 @@ public class Context {
         return inputs;
     }
 
+    public static ArrayList<Input> GetInput( Pair<Coord2d,Coord2d> area ) throws InterruptedException
+    {
+        ArrayList<Input> inputs = new ArrayList<>();
+
+        if(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand"))!=null) {
+            inputs.add(new InputBarter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
+                    Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
+        }
+        else
+        {
+            for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
+            {
+                inputs.add(new InputContainer(gob, contcaps.get(gob.ngob.name)));
+            }
+            for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
+            {
+                inputs.add(new InputPile(gob));
+            }
+
+        }
+
+        inputs.sort(new Comparator<Input>() {
+            @Override
+            public int compare(Input o1, Input o2) {
+                if (o1 instanceof InputPile && o2 instanceof InputPile)
+                    return NUtils.d_comp.compare(((InputPile)o1).pile,((InputPile)o2).pile);
+                return 0;
+            }
+        });
+        return inputs;
+    }
+
     public static ArrayList<Input> GetInput(String item, Pair<Coord2d,Coord2d> area ) throws InterruptedException
     {
         ArrayList<Input> inputs = new ArrayList<>();

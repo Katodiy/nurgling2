@@ -86,7 +86,7 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, ropeAfterFeeding, ropeAfterTaiming, fonts
+        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, ropeAfterFeeding, ropeAfterTaiming, eatingConf, fonts
     }
 
 
@@ -326,73 +326,79 @@ public class NConfig
             for (Object jobj : objs) {
                 if (jobj instanceof HashMap) {
                     HashMap<String, Object> obj = (HashMap<String, Object>) jobj;
-                    switch ((String) obj.get("type")) {
-                        case "NLoginData":
-                            res.add(new NLoginData(obj));
-                            break;
-                        case "NDragProp":
-                            res.add(new NDragProp(obj));
-                            break;
-                        case "NResizeProp":
-                            res.add(new NResizeProp(obj));
-                            break;
-                        case "NKinProp":
-                            res.add(new NKinProp(obj));
-                            break;
-                        case "NToolBeltProp":
-                            res.add(new NToolBeltProp(obj));
-                            break;
-                        case "NDiscordNotification":
-                            res.add(new NDiscordNotification(obj));
-                            break;
-                        case "CowsHerd":
-                            res.add(new CowsHerd(obj));
-                            break;
-                        case "HorseHerd":
-                            res.add(new HorseHerd(obj));
-                            break;
-                        case "GoatsHerd":
-                            res.add(new GoatsHerd(obj));
-                            break;
-                        case "SheepsHerd":
-                            res.add(new SheepsHerd(obj));
-                            break;
-                        case "PigsHerd":
-                            res.add(new PigsHerd(obj));
-                            break;
-                        case "NChopperProp":
-                            res.add(new NChopperProp(obj));
-                            break;
-                        case "NChipperProp":
-                            res.add(new NChipperProp(obj));
-                            break;
-                        case "NPrepBProp":
-                            res.add(new NPrepBlocksProp(obj));
-                            break;
-                        case "NPrepBoardProp":
-                            res.add(new NPrepBoardsProp(obj));
-                            break;
-                        case "NClayDiggerProp":
-                            res.add(new NClayDiggerProp(obj));
-                            break;
-                        case "NAreaRad":
-                            res.add(new NAreaRad(obj));
-                            break;
-                        case "NSmokeProp":
-                            res.add(new NSmokProp(obj));
-                            break;
-                        case "NWorldExplorer":
-                            res.add(new NWorldExplorerProp(obj));
-                            break;
-                        case "NFishingSettings":
-                            res.add(new NFishingSettings(obj));
-                            break;
-                        case "NCarrierProp":
-                            res.add(new NCarrierProp(obj));
-                            break;
+                    if(obj.get("type")!=null) {
+                        switch ((String) obj.get("type")) {
+                            case "NLoginData":
+                                res.add(new NLoginData(obj));
+                                break;
+                            case "NDragProp":
+                                res.add(new NDragProp(obj));
+                                break;
+                            case "NResizeProp":
+                                res.add(new NResizeProp(obj));
+                                break;
+                            case "NKinProp":
+                                res.add(new NKinProp(obj));
+                                break;
+                            case "NToolBeltProp":
+                                res.add(new NToolBeltProp(obj));
+                                break;
+                            case "NDiscordNotification":
+                                res.add(new NDiscordNotification(obj));
+                                break;
+                            case "CowsHerd":
+                                res.add(new CowsHerd(obj));
+                                break;
+                            case "HorseHerd":
+                                res.add(new HorseHerd(obj));
+                                break;
+                            case "GoatsHerd":
+                                res.add(new GoatsHerd(obj));
+                                break;
+                            case "SheepsHerd":
+                                res.add(new SheepsHerd(obj));
+                                break;
+                            case "PigsHerd":
+                                res.add(new PigsHerd(obj));
+                                break;
+                            case "NChopperProp":
+                                res.add(new NChopperProp(obj));
+                                break;
+                            case "NChipperProp":
+                                res.add(new NChipperProp(obj));
+                                break;
+                            case "NPrepBProp":
+                                res.add(new NPrepBlocksProp(obj));
+                                break;
+                            case "NPrepBoardProp":
+                                res.add(new NPrepBoardsProp(obj));
+                                break;
+                            case "NClayDiggerProp":
+                                res.add(new NClayDiggerProp(obj));
+                                break;
+                            case "NAreaRad":
+                                res.add(new NAreaRad(obj));
+                                break;
+                            case "NSmokeProp":
+                                res.add(new NSmokProp(obj));
+                                break;
+                            case "NWorldExplorer":
+                                res.add(new NWorldExplorerProp(obj));
+                                break;
+                            case "NFishingSettings":
+                                res.add(new NFishingSettings(obj));
+                                break;
+                            case "NCarrierProp":
+                                res.add(new NCarrierProp(obj));
+                                break;
 
-                        default:
-                            res.add(obj);
+                            default:
+                                res.add(obj);
+                        }
+                    }
+                    else
+                    {
+                        res.add(obj);
                     }
                 }
                 else if (jobj instanceof String) {

@@ -2,8 +2,10 @@ package nurgling.actions;
 
 import haven.*;
 import nurgling.*;
+import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.actions.bots.SelectArea;
 import nurgling.areas.NArea;
+import nurgling.routes.RoutePoint;
 import nurgling.tasks.HandIsFree;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitItemContent;
@@ -14,9 +16,11 @@ import nurgling.widgets.NEquipory;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class FillWaterskins implements Action {
     boolean oz;
+    List<RoutePoint> routePoints = null;
     public FillWaterskins(boolean only_area){oz = only_area;}
     public FillWaterskins(){oz = false;}
 
@@ -24,18 +28,32 @@ public class FillWaterskins implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         Pair<Coord2d,Coord2d> area = null;
         NArea nArea = NArea.findSpec(Specialisation.SpecName.water.toString());
-        if(nArea!=null)
+        if(nArea==null)
+        {
+            nArea = NArea.globalFindSpec(Specialisation.SpecName.water.toString());
+            if(nArea!=null) {
+                routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(nArea));
+            }
+        }
+        else
         {
             area = nArea.getRCArea();
         }
-        if(area==null) {
-            if(oz)
-                return Results.ERROR("no water area");
+        if(routePoints == null) {
+            if (area == null) {
+                if (oz)
+                    return Results.ERROR("no water area");
 
-            SelectArea insa;
-            NUtils.getGameUI().msg("Please, select area with cistern or barrel");
-            (insa = new SelectArea(Resource.loadsimg("baubles/waterRefiller"))).run(gui);
-            area = insa.getRCArea();
+                SelectArea insa;
+                NUtils.getGameUI().msg("Please, select area with cistern or barrel");
+                (insa = new SelectArea(Resource.loadsimg("baubles/waterRefiller"))).run(gui);
+                area = insa.getRCArea();
+            }
+        }
+        if(routePoints!=null)
+        {
+            new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
+            area = nArea.getRCArea();
         }
         Gob target = null;
         if(area!=null)

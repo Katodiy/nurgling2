@@ -980,7 +980,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/magnetite", magnetiteOp);
 
         ArrayList<String> hematiteOp = new ArrayList<>();
-        hematiteOp.add("Blood Ore"); // Камень
+        hematiteOp.add("Bloodstone"); // Камень
         object.put("gfx/terobjs/bumlings/hematite", hematiteOp);
 
         ArrayList<String> brecciaOp = new ArrayList<>();
@@ -2385,7 +2385,7 @@ public class VSpec {
         ArrayList<JSONObject> ore = new ArrayList<>();
         //ore.add(new JSONObject("{\"static\":\"gfx/invobjs/blackcoal\",\"name\":\"Black Coal\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/magnetite\",\"name\":\"Black Ore\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Blood Ore\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Bloodstone\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/cassiterite\",\"name\":\"Cassiterite\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/chalcopyrite\",\"name\":\"Chalcopyrite\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/cinnabar\",\"name\":\"Cinnabar\"}"));
@@ -2412,7 +2412,7 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/batrock\",\"name\":\"Bat Rock\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/blackcoal\",\"name\":\"Black Coal\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/magnetite\",\"name\":\"Magnetite\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Blood Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Bloodstone\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/breccia\",\"name\":\"Breccia\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/cassiterite\",\"name\":\"Cassiterite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/catgold\",\"name\":\"Cat Gold\"}"));

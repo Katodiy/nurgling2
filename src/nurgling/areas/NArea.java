@@ -4,11 +4,13 @@ import haven.*;
 import static haven.MCache.cmaps;
 import nurgling.*;
 import nurgling.actions.PathFinder;
+import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import org.json.*;
 
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 public class NArea
 {
@@ -223,6 +225,46 @@ public class NArea
             }
         }
         return res;
+    }
+
+    public static NArea globalFindSpec(String name, String sub) {
+        int dist = 10000;
+        NArea target = null;
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids) {
+                if (id > 0) {
+                    for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
+                        if (s.name.equals(name)  && ((sub == null || sub.isEmpty()) || s.subtype != null && s.subtype.toLowerCase().equals(sub.toLowerCase()))) {
+                            NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
+                            List<RoutePoint> routePoints = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(cand));
+                            if(routePoints!=null)
+                            {
+                                if(routePoints.size() <dist)
+                                {
+                                    target = cand;
+                                    dist = routePoints.size();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        return target;
+    }
+
+    public static NArea globalFindSpec(NArea.Specialisation spec)
+    {
+        return globalFindSpec(spec.name, spec.subtype);
+    }
+
+    public static NArea globalFindSpec(String name)
+    {
+        return globalFindSpec(name, null);
     }
 
     public static NArea globalFindOut(String name, double th, NGameUI gui) {

@@ -108,18 +108,25 @@ public class IconItem extends Widget
 
     final ArrayList<String> opt = new ArrayList<String>(){
         {
-            add("Threshold");
+            if(parent instanceof IngredientContainer)
+                add("Threshold");
             add("Delete");
-            add("Mark as barter");
-            add("Mark as barrel");
+            if(parent instanceof IngredientContainer) {
+                add("Mark as barter");
+                add("Mark as barrel");
+            }
         }
     };
 
     final ArrayList<String> uopt = new ArrayList<String>(){
         {
-            add("Threshold");
+            if(parent instanceof IngredientContainer) {
+                add("Threshold");
+            }
             add("Delete");
-            add("Unmark");
+            if(parent instanceof IngredientContainer) {
+                add("Unmark");
+            }
         }
     };
 
@@ -128,6 +135,7 @@ public class IconItem extends Widget
     public void opts( Coord c ) {
         if(menu == null) {
             menu = new NFlowerMenu((type==NArea.Ingredient.Type.CONTAINER)?opt.toArray(new String[0]):uopt.toArray(new String[0])) {
+
                 public boolean mousedown(MouseDownEvent ev) {
                     if(super.mousedown(ev))
                         nchoose(null);
@@ -159,7 +167,7 @@ public class IconItem extends Widget
                         }
                         else if(option.name.equals("Delete"))
                         {
-                            ((IngredientContainer)IconItem.this.parent).delete(IconItem.this.name);
+                            ((BaseIngredientContainer)IconItem.this.parent).delete(IconItem.this.name);
                         }
                         else if(option.name.equals("Mark as barter"))
                         {
@@ -178,6 +186,7 @@ public class IconItem extends Widget
                 }
 
             };
+            menu.shiftMode = true;
             Widget par = parent;
             Coord pos = IconItem.this.c.add(UI.scale(60,60));
             while(par!=null && !(par instanceof GameUI))

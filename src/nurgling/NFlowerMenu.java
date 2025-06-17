@@ -19,7 +19,7 @@ public class NFlowerMenu extends FlowerMenu
     public NPetal[] nopts;
 
     int len = 0;
-    boolean shiftMode = false;
+    public boolean shiftMode = false;
     public NFlowerMenu(String[] opts)
     {
         super();

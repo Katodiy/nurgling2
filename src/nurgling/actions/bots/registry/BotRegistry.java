@@ -62,7 +62,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("attacknear", BotDescriptor.BotType.BATTLE, "Aggro Nearest", "Aggros nearest enemy.", true, true, AggroNearest.class, "attacknear", false));
         bots.add(new BotDescriptor("attacknearborka", BotDescriptor.BotType.BATTLE, "Aggro Nearest Borka", "Aggros nearest Borka.", true, true, AggroNearestBorka.class, "attacknearborka", false));
         bots.add(new BotDescriptor("attackall", BotDescriptor.BotType.BATTLE, "Attack All", "Attacks all enemies.", true, true, AttackAll.class, "attackall", false));
-        bots.add(new BotDescriptor("clover", BotDescriptor.BotType.BATTLE, "Tame an animal", "Attacks the nearest animal waiting to be tamed, allows it to escape. Ties the animal on a rope if the corresponding setting is set. Fighting on your own", false, true, TaimingAnimal.class, "clover", false));
+        bots.add(new BotDescriptor("taming", BotDescriptor.BotType.BATTLE, "Tame an animal", "Attacks the nearest animal waiting to be tamed, allows it to escape. Ties the animal on a rope if the corresponding setting is set. Fighting on your own", false, true, TaimingAnimal.class, "taming", false));
 
         // FARMING
         bots.add(new BotDescriptor("turnip", BotDescriptor.BotType.FARMING, "Turnip Farmer", "Automatically harvests and replants turnips.", true, true, TurnipsFarmer.class, "turnip", false));
@@ -101,6 +101,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("loading", BotDescriptor.BotType.UTILS, "Transfer To Vehicle", "Loads vehicle.", false, true, TransferToVeh.class, "loading", false));
         bots.add(new BotDescriptor("unloading", BotDescriptor.BotType.UTILS, "Transfer From Vehicle", "Unloads vehicle.", false, true, TransferFromVeh.class, "unloading", false));
         bots.add(new BotDescriptor("swap", BotDescriptor.BotType.UTILS, "Swap Vehicles", "Swaps between vehicles.", false, true, TransferFromVehToVeh.class, "swap", false));
+        bots.add(new BotDescriptor("eater", BotDescriptor.BotType.UTILS, "Eating bot", "Eat in the food area.", true, true, Eater.class, "eater", false));
 
         // BUILD
         bots.add(new BotDescriptor("dframe", BotDescriptor.BotType.BUILD, "Build Drying Frame", "Builds drying frame.", false, true, BuildDryingFrame.class, "dframe", true));

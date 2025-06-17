@@ -21,13 +21,14 @@ public class FeedClover extends Panel {
                 tempUseRope = val;
                 a = val;
             }
-        });
+        }, UI.scale(5,30));
 
     }
 
     @Override
     public void load() {
         tempUseRope = (Boolean) NConfig.get(NConfig.Key.ropeAfterFeeding);
+        ropeAfterFeeding.a = tempUseRope;
     }
 
     @Override
