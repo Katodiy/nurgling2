@@ -15,8 +15,6 @@ import nurgling.routes.Route;
 import nurgling.routes.RouteGraphManager;
 import nurgling.routes.RoutePoint;
 import nurgling.scenarios.Scenario;
-import nurgling.tasks.WaitConstructionObject;
-import nurgling.tasks.WaitForMapLoad;
 import nurgling.tasks.WaitForMapLoadNoCoord;
 import nurgling.tools.*;
 
@@ -510,6 +508,9 @@ public class NMapView extends MapView
                             NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
                             ScenarioRunner runner = new ScenarioRunner(scenario);
                             start("scenario_runner", runner);
+                            NConfig.botmod = null;
+                            NUtils.getGameUI().act("lo");
+                            System.exit(0);
                         } catch (InterruptedException e) {
                             System.out.println("Bot interrupted");
                         }
