@@ -417,11 +417,12 @@ public class FogArea {
     public JSONObject toJson()
     {
         JSONArray result = new JSONArray();
-        for(Rectangle rectangle: rectangles)
-        {
-            JSONObject jrect = rectangle.toJson();
-            if(jrect!=null) {
-                result.put(jrect);
+        synchronized (rectangles) {
+            for (Rectangle rectangle : rectangles) {
+                JSONObject jrect = rectangle.toJson();
+                if (jrect != null) {
+                    result.put(jrect);
+                }
             }
         }
         JSONObject doc = new JSONObject();

@@ -229,6 +229,14 @@ public class NUtils
         return NUtils.getUI().root.cursorRes;
     }
 
+    public static void getDefaultCur() throws InterruptedException {
+        Gob player = NUtils.player();
+        if (player!=null && !NParser.checkName(NUtils.getCursorName(), "arw")) {
+            NUtils.getGameUI().map.wdgmsg("click", Coord.z, player.rc.floor(posres), 3, 0);
+            NUtils.getUI().core.addTask(new GetCurs("arw"));
+        }
+    }
+
     public static void dig()
             throws InterruptedException {
         getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "dig");
