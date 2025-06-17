@@ -262,7 +262,7 @@ public class NMapView extends MapView
         return camtypes.keySet();
     }
     static {camtypes.put("northo", NOrthoCam.class);}
-    
+
     public static String defcam(){
         return Utils.getpref("defcam", "ortho");
     }
@@ -502,52 +502,24 @@ public class NMapView extends MapView
         if(NConfig.botmod != null && !botsInit) {
             Scenario scenario = NUtils.getUI().core.scenarioManager.getScenarios().getOrDefault(NConfig.botmod.scenarioId, null);
             if (scenario != null || !(NUtils.getGameUI() == null)) {
-                    botsInit = true;
-                    new Thread(() -> {
-                        try {
-                            NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
-                            ScenarioRunner runner = new ScenarioRunner(scenario);
-                            start("scenario_runner", runner);
-                            NConfig.botmod = null;
-                            NUtils.getGameUI().act("lo");
-                            System.exit(0);
-                        } catch (InterruptedException e) {
-                            System.out.println("Bot interrupted");
-                        }
-                    }).start();
+                botsInit = true;
+                Thread t;
+                t = new Thread(() -> {
+                    try {
+                        NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
+                        ScenarioRunner runner = new ScenarioRunner(scenario);
+                        runner.run(NUtils.getGameUI());
+                        NConfig.botmod = null;
+                        NUtils.getGameUI().act("lo");
+                        System.exit(0);
+                    } catch (InterruptedException e) {
+                        System.out.println("Bot interrupted");
+                    }
+                });
+                NUtils.getGameUI().biw.addObserve(t);
+                t.start();
             }
         }
-    }
-
-    void start(String path, Action action)
-    {
-        Thread t;
-        t = new Thread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    action.run(NUtils.getGameUI());
-                }
-                catch (InterruptedException e)
-                {
-                    NUtils.getGameUI().msg(path + ":" + "STOPPED");
-                }
-                finally
-                {
-                    if(action instanceof ActionWithFinal)
-                    {
-                        ((ActionWithFinal)action).endAction();
-                    }
-                }
-            }
-        }, path);
-
-        NUtils.getGameUI().biw.addObserve(t);
-
-        t.start();
     }
 
     @Override
