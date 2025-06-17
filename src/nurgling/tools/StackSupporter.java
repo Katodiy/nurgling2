@@ -106,7 +106,7 @@ public class StackSupporter {
 
         catSize.put(size5,5);
     }
-    private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tanning Tub", "Oven", "Steelbox", "Frame");
+    private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame");
     public static boolean isStackable(NInventory inv, String name)
     {
         Window win = inv.getparent(Window.class);
