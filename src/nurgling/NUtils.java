@@ -224,6 +224,16 @@ public class NUtils
             getUI().core.addTask(new WaitBattleWindow(gob.id, noTask));
     }
 
+    public static void mine(
+            Coord2d pos
+    )
+            throws InterruptedException {
+        getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "mine");
+        getGameUI().map.wdgmsg("click", Coord.z, pos.floor(posres), 1, 0, 0);
+
+    }
+
+
     public static String getCursorName()
     {
         return NUtils.getUI().root.cursorRes;

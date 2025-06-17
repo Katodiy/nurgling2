@@ -354,7 +354,7 @@ public class PathFinder implements Action {
                         }
                     }
                 }
-                return targets;
+                return targets == null ? new ArrayList<>():targets;
             }
         }
         return new ArrayList<>(Arrays.asList(pos));

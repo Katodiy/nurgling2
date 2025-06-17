@@ -20,7 +20,7 @@ import java.util.List;
 
 public class FillWaterskins implements Action {
     boolean oz;
-    List<RoutePoint> routePoints = null;
+    public List<RoutePoint> routePoints = null;
     public FillWaterskins(boolean only_area){oz = only_area;}
     public FillWaterskins(){oz = false;}
 

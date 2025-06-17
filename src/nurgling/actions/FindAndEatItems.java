@@ -49,6 +49,7 @@ public class FindAndEatItems implements Action
             if(!calcCalories())
                 break;
         }
+        eatAll(gui);
         return Results.SUCCESS();
     }
 
@@ -81,6 +82,8 @@ public class FindAndEatItems implements Action
             }
             WItem taritem = NUtils.getGameUI().getInventory(cont.cap).getItem(new NAlias(items));
             int oldSize = NUtils.getGameUI().getInventory().getItems(new NAlias(items)).size();
+            if( taritem == null )
+                break;
             taritem.item.wdgmsg("transfer", Coord.z);
             gui.ui.core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(items), oldSize + 1));
         }

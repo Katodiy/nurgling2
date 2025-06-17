@@ -309,16 +309,34 @@ public class NBotsMenu extends Widget
 
         void start(String path, Action action)
         {
+
             Thread t;
             t = new Thread(new Runnable()
             {
+                ArrayList<Thread> supports = new ArrayList<>();
                 @Override
                 public void run()
                 {
                     try
                     {
                         showLayouts();
-                        action.run(NUtils.getGameUI());
+                        NGameUI gui = NUtils.getGameUI();
+                        if(gui!=null) {
+                            for (Action sup : action.getSupp()) {
+                                Thread st;
+                                supports.add(st = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            sup.run(gui);
+                                        } catch (InterruptedException e) {
+                                        }
+                                    }
+                                }));
+                                st.start();
+                            }
+                            action.run(gui);
+                        }
                     }
                     catch (InterruptedException e)
                     {
@@ -329,6 +347,10 @@ public class NBotsMenu extends Widget
                         if(action instanceof ActionWithFinal)
                         {
                             ((ActionWithFinal)action).endAction();
+                        }
+                        for(Thread st: supports)
+                        {
+                            st.interrupt();
                         }
                     }
                 }

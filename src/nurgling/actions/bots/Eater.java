@@ -23,7 +23,16 @@ import static haven.Coord.of;
 
 public class Eater implements Action {
 
+    boolean oz = false;
     List<RoutePoint> routePoints = null;
+
+    public Eater(boolean oz) {
+        this.oz = oz;
+    }
+
+    public Eater() {
+        this.oz = false;
+    }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -43,7 +52,7 @@ public class Eater implements Action {
             area = nArea.getRCArea();
         }
         if(routePoints == null) {
-            if (area == null) {
+            if (area == null && !oz) {
                 SelectArea insa;
                 NUtils.getGameUI().msg("Please select a food area");
                 (insa = new SelectArea(Resource.loadsimg("baubles/waterRefiller"))).run(gui);
@@ -55,9 +64,12 @@ public class Eater implements Action {
             new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
             area = nArea.getRCArea();
         }
-        Context cnt = new Context();
-        new FindAndEatItems(cnt,items,8000,area).run(gui);
-
-        return Results.SUCCESS();
+        if(area!=null) {
+            Context cnt = new Context();
+            new FindAndEatItems(cnt, items, 8000, area).run(gui);
+            return NUtils.getEnergy()*10000>8000?Results.SUCCESS():Results.FAIL();
+        }
+        else
+            return Results.FAIL();
     }
 }
