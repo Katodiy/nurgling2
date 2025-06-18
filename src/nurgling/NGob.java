@@ -223,6 +223,9 @@ public class NGob {
                             } else if (name.contains("gfx/terobjs/barrel")) {
                                 customMask = true;
                                 parent.addcustomol(new NBarrelOverlay(parent));
+                            } else if(name.contains("gfx/terobjs/items/gems/gemstone"))
+                            {
+                                parent.addcustomol(new NTexMarker(parent, new TexI(Resource.loadsimg("marks/gem")), () -> false ));
                             }
 
                             if (name.equals("gfx/borka/body")) {

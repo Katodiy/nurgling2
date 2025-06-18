@@ -107,7 +107,7 @@ public class MineAction implements Action {
                             pf.run(gui);
                             while(res_beg == gui.ui.sess.glob.map.tilesetr ( gui.ui.sess.glob.map.gettile ( tile_pos ) )) {
                                 if ( NUtils.getStamina() < 0.5 ) {
-                                    if(!restoreResources(gui,new PathFinder(NGob.getDummy(target_pos, 0, new NHitBox(new Coord2d(-5.5,-5.5),new Coord2d(5.5,5.5))), true))) {
+                                    if(!restoreResources(gui,target_pos)) {
                                         System.out.println("restoreResources111");
                                         return Results.FAIL();
                                     }
@@ -137,7 +137,7 @@ public class MineAction implements Action {
                             if ( bolder != null && bolder.rc.dist(gui.map.player().rc)<=15 ) {
                                 new PathFinder(bolder).run(gui);
                                 while ( Finder.findGob ( bolder.id ) != null ) {
-                                    if(!restoreResources(gui,new PathFinder(bolder))) {
+                                    if(!restoreResources(gui,bolder.rc)) {
                                         System.out.println("restoreResources140");
                                         return Results.FAIL();
                                     }
@@ -149,7 +149,7 @@ public class MineAction implements Action {
                                             case BUMLINGNOTFOUND:
                                                 break;
                                             case BUMLINGFORDRINK: {
-                                                if(!restoreResources(gui,new PathFinder(bolder)))
+                                                if(!restoreResources(gui,bolder.rc))
                                                     return Results.FAIL();
                                                 break;
                                             }
@@ -182,7 +182,7 @@ public class MineAction implements Action {
         return Results.SUCCESS();
     }
 
-    boolean restoreResources(NGameUI gui, PathFinder pf) throws InterruptedException {
+    boolean restoreResources(NGameUI gui, Coord2d target_pos) throws InterruptedException {
         RoutePoint rp = null;
         boolean needPf = false;
         if ( NUtils.getStamina() < 0.5 ) {
@@ -215,7 +215,7 @@ public class MineAction implements Action {
         }
         if(needPf)
         {
-            pf.run(gui);
+            new PathFinder(NGob.getDummy(target_pos, 0, new NHitBox(new Coord2d(-5.5,-5.5),new Coord2d(5.5,5.5)))).run(gui);
         }
         return true;
     }

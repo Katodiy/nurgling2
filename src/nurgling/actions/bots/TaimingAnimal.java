@@ -45,7 +45,7 @@ public class TaimingAnimal implements Action {
             NUtils.getDefaultCur();
             NUtils.addTask(new WaitAnyEscaper(ids));
 
-            if ((Boolean) NConfig.get(NConfig.Key.ropeAfterTaiming) && !taiming_animal.pose().contains("dead")) {
+            if ((Boolean) NConfig.get(NConfig.Key.ropeAfterTaiming) && Finder.findGob(taiming_animal.id)!=null && !taiming_animal.pose().contains("dead")) {
                 WItem rope = gui.getInventory().getItem(new NAlias("Rope"), Leashed.class);
                 if (rope != null) {
                     NUtils.takeItemToHand(rope);
