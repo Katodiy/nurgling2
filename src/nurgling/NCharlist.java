@@ -15,7 +15,6 @@ public class NCharlist extends Charlist {
     }
 
     public static void play(){
-        System.out.println("Trying to play");
         if(NConfig.botmod!=null && instance!=null) {
             for ( Char c: instance.chars) {
                 if(c.name.equals ( NConfig.botmod.character  ))
