@@ -11,6 +11,7 @@ import nurgling.tasks.WaitGobsInField;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
+import nurgling.tools.StackSupporter;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -241,7 +242,13 @@ public class SeedCrop implements Action {
                 if (gui.getInventory().getFreeSpace() > 0) {
                     new PathFinder(stockpile).run(gui);
                     new OpenTargetContainer("Stockpile", stockpile).run(gui);
-                    new TakeItemsFromPile(stockpile, gui.getStockpile(), gui.getInventory().getFreeSpace()).run(gui);
+
+                    int numberOfItemsToFetch = gui.getInventory().getFreeSpace();
+                    if(((NInventory) NUtils.getGameUI().maininv).bundle.a) {
+                        numberOfItemsToFetch = numberOfItemsToFetch * StackSupporter.getMaxStackSize(iseed.getDefault());
+                    }
+
+                    new TakeItemsFromPile(stockpile, gui.getStockpile(), numberOfItemsToFetch).run(gui);
                 }
             }
         }

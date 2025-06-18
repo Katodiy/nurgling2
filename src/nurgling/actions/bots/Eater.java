@@ -61,7 +61,7 @@ public class Eater implements Action {
         }
         if(routePoints!=null)
         {
-            new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
+            new RoutePointNavigator(routePoints.get(0)).run(NUtils.getGameUI());
             area = nArea.getRCArea();
         }
         if(area!=null) {
