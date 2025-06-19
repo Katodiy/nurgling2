@@ -132,6 +132,8 @@ public class TransferToPiles implements Action{
             return new NAlias("gfx/terobjs/stockpile-coal");
         } else if (NParser.checkName(items.getDefault(), new NAlias("onion"))) {
             return new NAlias("gfx/terobjs/stockpile-onion");
+        } else if (NParser.checkName(items.getDefault(), new NAlias("bone"))) {
+            return new NAlias("gfx/terobjs/stockpile-bone");
         } else
             return new NAlias("stockpile");
     }
