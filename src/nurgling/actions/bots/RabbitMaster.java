@@ -15,7 +15,6 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
-import java.time.Instant;
 import java.util.*;
 
 public class RabbitMaster implements Action {
@@ -34,19 +33,6 @@ public class RabbitMaster implements Action {
         public HutchInfo(Container container, double buckQuality) {
             this.container = container;
             this.buckQuality = buckQuality;
-        }
-    }
-
-    private static class Doe {
-        String hutchHash;
-        Float quality;
-        Coord pos;
-        Instant timeMoved;
-
-        public Doe(String hutchHash, Float quality, Coord pos) {
-            this.hutchHash = hutchHash;
-            this.quality = quality;
-            this.pos = pos;
         }
     }
 
