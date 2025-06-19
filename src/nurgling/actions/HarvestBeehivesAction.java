@@ -39,6 +39,7 @@ public class HarvestBeehivesAction implements Action {
             if (hasHoney(skep)) {
                 useBucket(skep, gui);
                 if(bucketIsFull) {
+                    bucketIsFull = false;
                     return Results.SUCCESS();
                 }
             }
