@@ -265,7 +265,7 @@ public class RabbitMaster implements Action {
                 }
             }
 
-            // Kill and process does
+            // Kill and process bucks
             buck = (WItem) gui.getInventory().getItem(new NAlias(BUCK_NAME));
             new SelectFlowerAction( "Wring neck", buck).run(gui);
             NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("Dead Rabbit"), 1));
