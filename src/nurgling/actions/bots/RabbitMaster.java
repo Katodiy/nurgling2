@@ -25,12 +25,8 @@ public class RabbitMaster implements Action {
     private final String DOE_NAME = "Rabbit Doe";
     private final String BUNNY_NAME = "Bunny";
 
-    Instant sevenDaysAgo = Instant.now().minusSeconds(7 * 24 * 60 * 60);
-
-    private ArrayList<Doe> does = new ArrayList<>();
-
     // Info about rabbit hutch
-    private class HutchInfo {
+    private static class HutchInfo {
         Container container; // Rabbit hutch container
         double buckQuality; // Buck quality
         ArrayList<Float> doeQualities = new ArrayList<>(); // Doe quality list
@@ -41,7 +37,7 @@ public class RabbitMaster implements Action {
         }
     }
 
-    private class Doe {
+    private static class Doe {
         String hutchHash;
         Float quality;
         Coord pos;
@@ -52,14 +48,10 @@ public class RabbitMaster implements Action {
             this.quality = quality;
             this.pos = pos;
         }
-
-        public void setTimeMoved(Instant timeMoved) {
-            this.timeMoved = timeMoved;
-        }
     }
 
     // Info about incubator
-    private class IncubatorInfo {
+    private static class IncubatorInfo {
         Container container; // Incubator container
         double rabbitQuality; // Rabbit quality
 
@@ -78,7 +70,7 @@ public class RabbitMaster implements Action {
     };
 
     // Comparator for sorting rabbit hutches.
-    Comparator<RabbitMaster.HutchInfo> coopComparator = new Comparator<RabbitMaster.HutchInfo>() {
+    Comparator<RabbitMaster.HutchInfo> hutchComparator = new Comparator<RabbitMaster.HutchInfo>() {
         @Override
         public int compare(RabbitMaster.HutchInfo o1, RabbitMaster.HutchInfo o2) {
             int res = Double.compare(o1.buckQuality, o2.buckQuality);
@@ -152,36 +144,11 @@ public class RabbitMaster implements Action {
 
 
             // Create hutch info object for current hutch.
-            RabbitMaster.HutchInfo hutchInfo = new RabbitMaster.HutchInfo(container, buckQuality);
+            RabbitMaster.HutchInfo hutchInfo = new HutchInfo(container, buckQuality);
 
             // Get info about does.
             ArrayList<WItem> does = gui.getInventory(RABBIT_HUTCH_NAME).getItems(new NAlias(DOE_NAME));
             for (WItem doeItem : does) {
-                float quality = ((NGItem)doeItem.item).quality;
-                Coord pos = doeItem.c.div(Inventory.sqsz);
-                String hutchHash = container.gob.ngob.hash;
-
-                // Search for existing Doe by hutch+pos
-                Doe match = null;
-                for (Doe d : this.does) {
-                    if (Objects.equals(d.hutchHash, hutchHash) && d.pos.equals(pos)) {
-                        match = d;
-                        break;
-                    }
-                }
-
-                if (match != null) {
-                    // Update quality
-                    match.quality = quality;
-                } else {
-                    // Add new Doe. We've never seen this doe so we assume this is either the first time running the bot
-                    // or the doe was added sometime in between runs. If that is the case we want to consider this doe
-                    // safe to swap out, so we set the time it was moved to today minus 7 days.
-                    Doe doe = new Doe(hutchHash, quality, pos);
-                    doe.setTimeMoved(sevenDaysAgo);
-                    this.does.add(doe);
-                }
-
                 hutchInfo.doeQualities.add(((NGItem)doeItem.item).quality);
             }
 
@@ -193,11 +160,8 @@ public class RabbitMaster implements Action {
             new CloseTargetContainer(container).run(gui);
         }
 
-        // Sort does from best to worst
-        this.does.sort(Comparator.comparing((Doe d) -> d.quality));
-
         // Sort hutches by quality of bucks and average quality of does.
-        hutchInfos.sort(coopComparator.reversed());
+        hutchInfos.sort(hutchComparator.reversed());
 
         for (Container container : rabbitHutchesIncubators) {
             new PathFinder(container.gob).run(gui);
@@ -207,12 +171,12 @@ public class RabbitMaster implements Action {
 
             ArrayList<WItem> bucks = gui.getInventory(RABBIT_HUTCH_NAME).getItems(new NAlias(BUCK_NAME));
             for (WItem buck : bucks) {
-                qBucks.add(new RabbitMaster.IncubatorInfo(container, ((NGItem) buck.item).quality));
+                qBucks.add(new IncubatorInfo(container, ((NGItem) buck.item).quality));
             }
 
             ArrayList<WItem> does = gui.getInventory(RABBIT_HUTCH_NAME).getItems(new NAlias(DOE_NAME));
             for (WItem doe : does) {
-                qDoes.add(new RabbitMaster.IncubatorInfo(container, ((NGItem) doe.item).quality));
+                qDoes.add(new IncubatorInfo(container, ((NGItem) doe.item).quality));
             }
 
             new CloseTargetContainer(container).run(gui);
@@ -315,7 +279,7 @@ public class RabbitMaster implements Action {
                 }
             }
 
-            // TODO KILLING AND PROCESSING
+            // Kill and process does
             buck = (WItem) gui.getInventory().getItem(new NAlias(BUCK_NAME));
             new SelectFlowerAction( "Wring neck", buck).run(gui);
             NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("Dead Rabbit"), 1));
@@ -412,7 +376,7 @@ public class RabbitMaster implements Action {
                 }
             }
 
-            // TODO KILLING AND PROCESSING
+            // Kill and process does
             doe = (WItem) gui.getInventory().getItem(new NAlias(DOE_NAME));
             new SelectFlowerAction("Wring neck", doe).run(gui);
             NUtils.addTask(new WaitItems((NInventory) gui.maininv, new NAlias("Dead Rabbit"), 1));
