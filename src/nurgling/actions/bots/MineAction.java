@@ -190,7 +190,7 @@ public class MineAction implements Action {
                 FillWaterskins fv;
                 if (((fv = new FillWaterskins(true)).run(gui).IsSuccess())) {
                     if (fv.routePoints != null) {
-                        rp = fv.routePoints.get(0);
+                        rp = fv.routePoints.getFirst();
                     }
                     needPf = true;
                 }
@@ -205,7 +205,7 @@ public class MineAction implements Action {
             eater.run(gui);
             if(eater.routePoints!=null && rp == null)
             {
-                rp = eater.routePoints.get(0);
+                rp = eater.routePoints.getFirst();
             }
             needPf = true;
         }
