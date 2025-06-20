@@ -27,6 +27,6 @@ public class CatchBugsAround implements Action {
             NUtils.getUI().core.addTask(new NoGob(gob.id));
         }
 
-        return null;
+        return Results.SUCCESS();
     }
 }
