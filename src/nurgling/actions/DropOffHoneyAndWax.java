@@ -58,6 +58,10 @@ public class DropOffHoneyAndWax implements Action {
         if (bucket == null) bucket = NUtils.getEquipment().findBucket("Honey");
         if (bucket == null) return;
 
+        if(NUtils.getContentsOfBucket(bucket).isEmpty()) {
+            return;
+        }
+
         NUtils.takeItemToHand(bucket);
         NUtils.activateItem(target);
 
@@ -76,8 +80,12 @@ public class DropOffHoneyAndWax implements Action {
         new OpenTargetContainer(bucketContainer).run(gui);
 
         WItem lhand = NUtils.getEquipment().findItem(NEquipory.Slots.HAND_LEFT.idx);
+        WItem rhand = NUtils.getEquipment().findItem(NEquipory.Slots.HAND_RIGHT.idx);
         if (lhand != null) {
             NUtils.takeItemToHand(lhand);
+            gui.getInventory(bucketContainer.cap).dropOn(gui.getInventory(bucketContainer.cap).findFreeCoord(getGameUI().vhand));
+        } else if (rhand != null) {
+            NUtils.takeItemToHand(rhand);
             gui.getInventory(bucketContainer.cap).dropOn(gui.getInventory(bucketContainer.cap).findFreeCoord(getGameUI().vhand));
         }
 

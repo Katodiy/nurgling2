@@ -26,7 +26,13 @@ public class PipeweedFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NContext.findSpec(field),NContext.findSpec(seed),NContext.findSpec(trough),NContext.findSpec(swill),new NAlias("plants/pipeweed"),new NAlias("Pipeweed"),4, false).run(gui);
+            new HarvestCrop(
+                    NContext.findSpec(field),
+                    NContext.findSpec(seed),
+                    NContext.findSpec(trough),
+                    NContext.findSpec(swill),
+                    new NAlias("plants/pipeweed")
+            ).run(gui);
             if(NContext.findOut("Fresh Leaf of Pipeweed", 1)!=null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(),NContext.findOut("Fresh Leaf of Pipeweed", 1).getRCArea(),new NAlias("tobacco-fresh", "Fresh Leaf of Pipeweed")).run(gui);
             new SeedCrop(NContext.findSpec(field),NContext.findSpec(seed),new NAlias("plants/pipeweed"),new NAlias("Pipeweed"), false).run(gui);

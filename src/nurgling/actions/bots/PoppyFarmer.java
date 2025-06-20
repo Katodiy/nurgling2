@@ -27,8 +27,13 @@ public class PoppyFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NContext.findSpec(field), NContext.findSpec(seed),NContext.findSpec(trough),NContext.findSpec(swill),new NAlias("plants/poppy"),new NAlias("Poppy"),4, false).run(gui);
-
+            new HarvestCrop(
+                    NContext.findSpec(field),
+                    NContext.findSpec(seed),
+                    NContext.findSpec(trough),
+                    NContext.findSpec(swill),
+                    new NAlias("plants/poppy")
+            ).run(gui);
             if(NContext.findOut("Poppy Flower", 1)!=null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(),NContext.findOut("Poppy Flower", 1).getRCArea(),new NAlias("flower-poppy", "Poppy Flower")).run(gui);
             new SeedCrop(NContext.findSpec(field),NContext.findSpec(seed),new NAlias("plants/poppy"),new NAlias("Poppy"), false).run(gui);

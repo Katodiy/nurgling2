@@ -27,7 +27,13 @@ public class FlaxFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NContext.findSpec(field),NContext.findSpec(seed),NContext.findSpec(trough),NContext.findSpec(swill),new NAlias("plants/flax"),new NAlias("Flax"),3, false).run(gui);
+            new HarvestCrop(
+                    NContext.findSpec(field),
+                    NContext.findSpec(seed),
+                    NContext.findSpec(trough),
+                    NContext.findSpec(swill),
+                    new NAlias("plants/flax")
+            ).run(gui);
             if(NContext.findOut("Flax Fibres", 1)!=null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(),NContext.findOut("Flax Fibres", 1).getRCArea(),new NAlias("flaxfibre", "Flax Fibres")).run(gui);
             new SeedCrop(NContext.findSpec(field),NContext.findSpec(seed),new NAlias("plants/flax"),new NAlias("Flax"), false).run(gui);

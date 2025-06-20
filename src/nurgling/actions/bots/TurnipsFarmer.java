@@ -27,12 +27,19 @@ public class TurnipsFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NContext.findSpec(field),NContext.findSpec(seed),NContext.findSpec(trough),NContext.findSpec(swill),new NAlias("plants/turnip"),new NAlias("Turnip"),1, false).run(gui);
+//            new HarvestCrop(NArea.findSpec(field),NArea.findSpec(seed),NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/turnip"),new NAlias("Turnip"),1, false).run(gui);
+            new HarvestCrop(
+                    NContext.findSpec(field),
+                    NContext.findSpec(seed),
+                    NContext.findSpec(trough),
+                    NContext.findSpec(swill),
+                    new NAlias("plants/turnip")
+            ).run(gui);
+            if(NContext.findOut("Turnip", 1)!=null)
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(),NContext.findOut("Turnip", 1).getRCArea(),new NAlias("items/turnip", "Turnip")).run(gui);
             new SeedCrop(NContext.findSpec(field),NContext.findSpec(seed),new NAlias("plants/turnip"),new NAlias("Turnip"), false).run(gui);
             return Results.SUCCESS();
         }
-
-
 
         return Results.FAIL();
     }
