@@ -13,11 +13,11 @@ import java.util.List;
 
 public class CatchBugsAround implements Action {
 
-    NAlias caveMoth = new NAlias("cavemoth", "rat", "grasshopper", "silkmoth", "snail", "waterstrider", "grub", "ladybug");
+    NAlias bugs = new NAlias("cavemoth", "rat", "grasshopper", "silkmoth", "snail", "waterstrider", "grub", "ladybug");
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        List<Gob> gobs = Finder.findGobs(caveMoth);
+        List<Gob> gobs = Finder.findGobs(bugs);
 
         if (NUtils.player() != null) {
             gobs = NUtils.sortByNearest(gobs, NUtils.player().rc);
