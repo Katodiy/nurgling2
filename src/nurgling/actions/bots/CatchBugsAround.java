@@ -23,7 +23,6 @@ public class CatchBugsAround implements Action {
             gobs = NUtils.sortByNearest(gobs, NUtils.player().rc);
         }
         for(Gob gob : gobs) {
-            System.out.println(gob.ngob.name);
             NUtils.rclickGob(gob);
             NUtils.getUI().core.addTask(new NoGob(gob.id));
         }
