@@ -26,12 +26,19 @@ public class CarrotFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NArea.findSpec(field),NArea.findSpec(seed),NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/carrot"),new NAlias("Carrot"),3, false).run(gui);
+            new HarvestCrop(
+                    NArea.findSpec(field),
+                    NArea.findSpec(seed),
+                    NArea.findSpec(trough),
+                    NArea.findSpec(swill),
+                    new NAlias("plants/carrot")
+            ).run(gui);
+            if(NArea.findOut("Carrot", 1)!=null)
+                new CollectItemsToPile(NArea.findSpec(field).getRCArea(),NArea.findOut("Carrot", 1).getRCArea(),new NAlias("items/carrot", "Carrot")).run(gui);
             new SeedCrop(NArea.findSpec(field),NArea.findSpec(seed),new NAlias("plants/carrot"),new NAlias("Carrot"), false).run(gui);
+
             return Results.SUCCESS();
         }
-
-
 
         return Results.FAIL();
     }

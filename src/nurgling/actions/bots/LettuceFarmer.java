@@ -26,7 +26,13 @@ public class LettuceFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NArea.findSpec(field),NArea.findSpec(seed),NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/lettuce"),new NAlias("Lettuce"),4, false).run(gui);
+            new HarvestCrop(
+                    NArea.findSpec(field),
+                    NArea.findSpec(seed),
+                    NArea.findSpec(trough),
+                    NArea.findSpec(swill),
+                    new NAlias("plants/lettuce")
+            ).run(gui);
             if(NArea.findOut("Head of Lettuce", 1)!=null)
                 new LettuceAndPumpkinCollector(NArea.findSpec(field), NArea.findSpec(seed), lettuceLeaf, new NAlias("items/lettucehead", "Head of Lettuce"), NArea.findSpec(trough)).run(gui);
             new SeedCrop(NArea.findSpec(field),NArea.findSpec(seed),new NAlias("plants/lettuce"),new NAlias("Lettuce"), false).run(gui);

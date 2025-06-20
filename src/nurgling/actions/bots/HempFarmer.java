@@ -26,7 +26,13 @@ public class HempFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NArea.findSpec(field),NArea.findSpec(seed),NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/hemp"),new NAlias("Hemp"),4, false).run(gui);
+            new HarvestCrop(
+                    NArea.findSpec(field),
+                    NArea.findSpec(seed),
+                    NArea.findSpec(trough),
+                    NArea.findSpec(swill),
+                    new NAlias("plants/hemp")
+            ).run(gui);
             if(NArea.findOut("Hemp Fibres", 1)!=null)
                 new CollectItemsToPile(NArea.findSpec(field).getRCArea(),NArea.findOut("Hemp Fibres", 1).getRCArea(),new NAlias("hempfibre", "Hemp Fibres")).run(gui);
             new SeedCrop(NArea.findSpec(field),NArea.findSpec(seed),new NAlias("plants/hemp"),new NAlias("Hemp"), false).run(gui);

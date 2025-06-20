@@ -25,7 +25,13 @@ public class PumpkinFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NArea.findSpec(field),NArea.findSpec(seed),NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/pumpkin"),new NAlias("Pumpkin"),4, true).run(gui);
+            new HarvestCrop(
+                    NArea.findSpec(field),
+                    NArea.findSpec(seed),
+                    NArea.findSpec(trough),
+                    NArea.findSpec(swill),
+                    new NAlias("plants/pumpkin")
+            ).run(gui);
             if(pumpkinFlesh !=null)
                 new LettuceAndPumpkinCollector(NArea.findSpec(field), NArea.findSpec(seed), pumpkinFlesh, new NAlias("items/pumpkin", "Pumpkin"), NArea.findSpec(trough)).run(gui);
             new SeedCrop(NArea.findSpec(field),NArea.findSpec(seed),new NAlias("plants/pumpkin"),new NAlias("Pumpkin"), false).run(gui);
