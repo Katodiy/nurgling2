@@ -25,8 +25,13 @@ public class GarlicFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NArea.findSpec(field),garlic,NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/garlic"),new NAlias("Garlic"),4, true).run(gui);
-
+            new HarvestCrop(
+                    NArea.findSpec(field),
+                    garlic,
+                    NArea.findSpec(trough),
+                    NArea.findSpec(swill),
+                    new NAlias("plants/garlic")
+            ).run(gui);
             if(NArea.findOut("Garlic", 1)!=null)
                 new CollectItemsToPile(NArea.findSpec(field).getRCArea(),NArea.findOut("Garlic", 1).getRCArea(),new NAlias("items/garlic", "Garlic")).run(gui);
 

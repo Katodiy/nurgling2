@@ -51,4 +51,20 @@ public class NAlias {
     public String getDefault () {
         return keys.get ( 0 );
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NAlias nAlias = (NAlias) o;
+        // Consider two NAlias equal if their `keys` and `exceptions` are equal
+        return keys.equals(nAlias.keys) && exceptions.equals(nAlias.exceptions);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = keys.hashCode();
+        result = 31 * result + exceptions.hashCode();
+        return result;
+    }
 }
