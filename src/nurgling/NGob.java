@@ -46,6 +46,13 @@ public class NGob {
         if (name != null) {
             if (currentPose.contains("fgtidle")) {
                 if (name.equals("gfx/kritter/cattle/cattle") || name.equals("gfx/kritter/boar/boar") || name.equals("gfx/kritter/goat/wildgoat") || name.equals("gfx/kritter/reindeer/reindeer") || name.equals("gfx/kritter/sheep/sheep")) {
+                    if(nurgling.NUtils.getGameUI()!=null) {
+                        for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel) {
+                            if (rel.gobid == parent.id) {
+                                return;
+                            }
+                        }
+                    }
                     parent.addcustomol(new NTexMarker(parent, new TexI(Resource.loadsimg("nurgling/hud/taiming")), () -> {
                         for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel) {
                             if (rel.gobid == parent.id) {
