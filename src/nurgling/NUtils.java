@@ -24,7 +24,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static haven.OCache.posres;
-import static nurgling.tools.NParser.checkName;
 
 public class NUtils
 {
