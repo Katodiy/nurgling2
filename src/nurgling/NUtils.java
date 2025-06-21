@@ -23,6 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static haven.OCache.posres;
+import static nurgling.tools.NParser.checkName;
 
 public class NUtils
 {
@@ -373,6 +374,11 @@ public class NUtils
         item.item.wdgmsg("drop", item.sz, getGameUI().map.player().rc, 0);
     }
 
+    public static void drop(GItem item)
+            throws InterruptedException {
+            item.wdgmsg("drop", item.sz, getGameUI().map.player().rc, 0);
+    }
+
     public static void itemact(WItem item) throws InterruptedException {
         item.item.wdgmsg ( "itemact", 0 );
     }
@@ -658,5 +664,22 @@ public class NUtils
         if ( getGameUI() != null && getGameUI().speedget!=null) {
             getGameUI().speedget.set(value);
         }
+    }
+
+    public static boolean isIt(
+            final WItem item,
+            final NAlias regEx
+    ) {
+        if (item != null) {
+            try {
+                Resource res = null;
+                res = item.item.getres();
+                if (res != null) {
+                    return checkName(res.name, regEx) || (((NGItem)item.item).name()!=null && checkName(((NGItem)item.item).name(), regEx));
+                }
+            } catch (Loading e) {
+            }
+        }
+        return false;
     }
 }

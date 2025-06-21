@@ -1,13 +1,11 @@
 package nurgling.actions;
 
 import haven.*;
-import nurgling.NConfig;
-import nurgling.NGItem;
-import nurgling.NGameUI;
-import nurgling.NUtils;
+import nurgling.*;
 import nurgling.areas.NArea;
 import nurgling.conf.CropRegistry;
 import nurgling.tasks.NoGob;
+import nurgling.tasks.WaitItems;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -161,7 +159,6 @@ public class HarvestCrop implements Action {
             plant = Finder.findGob(plantGobEndpoint.div(MCache.tilesz).floor(),new NAlias("gfx/terobjs/plants/fallowplant"), 0);
         }
         if(plant!=null) {
-            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
             if(PathFinder.isAvailable(pathfinderEndpoint)) {
                 new PathFinder(pathfinderEndpoint).run(NUtils.getGameUI());
                 if (setDir.get()) {
@@ -178,6 +175,7 @@ public class HarvestCrop implements Action {
             }
             new SelectFlowerAction("Harvest", plant).run(gui);
             NUtils.getUI().core.addTask(new NoGob(plant.id));
+            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
         }
 
         ArrayList<Gob> plants;
@@ -188,6 +186,7 @@ public class HarvestCrop implements Action {
             for (CropRegistry.CropStage cropStage : cropStages) {
                 ArrayList<Gob> plantsToHarvest = Finder.findGobs(area, crop, cropStage.stage);
                 if (!plantsToHarvest.isEmpty()) {
+                    dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
                     Gob plantToHarvest = plantsToHarvest.get(0);
                     new PathFinder(plantToHarvest).run(gui);
                     new SelectFlowerAction("Harvest", plantToHarvest).run(gui);
@@ -201,6 +200,7 @@ public class HarvestCrop implements Action {
 
         while (!(plants = Finder.findGobs(area,new NAlias("gfx/terobjs/plants/fallowplant"), 0)).isEmpty())
         {
+            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
             plant = plants.get(0);
             new PathFinder(plant).run(gui);
             new SelectFlowerAction("Harvest", plant).run(gui);
@@ -234,21 +234,23 @@ public class HarvestCrop implements Action {
         List<WItem> barrelItems = new ArrayList<>();
         List<WItem> stockpileItems = new ArrayList<>();
 
+        String name = "";
         for (WItem item : gui.getInventory().getItems()) {
-            String name = ((NGItem) item.item).name();
+            name = ((NGItem) item.item).name();
             CropRegistry.StorageBehavior behavior = resultStorage.get(new NAlias(name));
             if (behavior == null) continue;
             if (behavior == CropRegistry.StorageBehavior.BARREL) barrelItems.add(item);
             else if (behavior == CropRegistry.StorageBehavior.STOCKPILE) stockpileItems.add(item);
         }
 
-        // 1. Always drop stockpile items
-        for (WItem item : stockpileItems) {
-            NUtils.drop(item);
+        // In case item ends up in hand - drop it.
+        if(NUtils.getGameUI().vhand!=null) {
+            NUtils.drop(NUtils.getGameUI().vhand);
+        }
 
-            if(NUtils.getGameUI().vhand!=null) {
-                NUtils.drop(NUtils.getGameUI().vhand);
-            }
+        // 1. Always drop stockpile items
+        if(!stockpileItems.isEmpty()) {
+            dropAllItemsOfExactName(gui, stockpileItems);
         }
 
         // 2. Transfer barrel items if required
@@ -285,5 +287,15 @@ public class HarvestCrop implements Action {
             }
         }
         return false;
+    }
+
+    private void dropAllItemsOfExactName(NGameUI gui, List<WItem> targetItems) throws InterruptedException {
+        String targetName = ((NGItem) targetItems.getFirst().item).name();
+
+        ArrayList<GItem> items = gui.getInventory().getWItems(new NAlias(targetName));
+
+        for (GItem item : items) {
+            NUtils.drop(item);
+        }
     }
 }
