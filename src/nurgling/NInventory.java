@@ -247,21 +247,6 @@ public class NInventory extends Inventory
         return gi.getResult();
     }
 
-    public ArrayList<GItem> getWItems(
-            final NAlias names
-    ) {
-        ArrayList<GItem> result = new ArrayList<>();
-        for (Widget widget = child; widget != null; widget = widget.next) {
-            if (widget instanceof WItem) {
-                NWItem wdg = ((NWItem) widget);
-                if (NUtils.isIt(wdg, names)) {
-                    result.add(wdg.item);
-                }
-            }
-        }
-        return result;
-    }
-
     public void activateItem(NAlias name) throws InterruptedException {
         WItem it = getItem(name);
         it.item.wdgmsg("iact", Coord.z, 1);

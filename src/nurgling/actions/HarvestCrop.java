@@ -292,9 +292,9 @@ public class HarvestCrop implements Action {
     private void dropAllItemsOfExactName(NGameUI gui, List<WItem> targetItems) throws InterruptedException {
         String targetName = ((NGItem) targetItems.getFirst().item).name();
 
-        ArrayList<GItem> items = gui.getInventory().getWItems(new NAlias(targetName));
+        ArrayList<WItem> items = gui.getInventory().getWItems(new NAlias(targetName));
 
-        for (GItem item : items) {
+        for (WItem item : items) {
             NUtils.drop(item);
         }
     }
