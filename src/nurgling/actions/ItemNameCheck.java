@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.GItem;
+import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.tools.NAlias;
@@ -11,9 +12,9 @@ public class ItemNameCheck implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         String targetName = "Yellow Onion";
 
-        ArrayList<GItem> items = gui.getInventory().getWItems(new NAlias(targetName));
+        ArrayList<WItem> items = gui.getInventory().getWItems(new NAlias(targetName));
 
-        for (GItem item : items) {
+        for (WItem item : items) {
                 NUtils.drop(item);
         }
 
