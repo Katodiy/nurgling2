@@ -37,7 +37,7 @@ public class RabbitMaster implements Action {
     }
 
     // Info about incubator
-    private static class IncubatorInfo {
+    public static class IncubatorInfo {
         Container container; // Incubator container
         double rabbitQuality; // Rabbit quality
 
@@ -173,11 +173,12 @@ public class RabbitMaster implements Action {
             return bucksResult;
         }
 
-
         Results doesResult = processDoes(gui, hutchInfos, qDoes);
         if (!doesResult.IsSuccess()) {
             return doesResult;
         }
+
+        cleanupBunnies(gui, rabbitHutchesIncubators);
 
         ArrayList<Context.Output> outputs = new ArrayList<>();
         for (Container cc : rabbitHutchesIncubators) {
@@ -191,6 +192,8 @@ public class RabbitMaster implements Action {
         HashSet<String> bunnies = new HashSet<>();
         bunnies.add(BUNNY_NAME);
         new TransferTargetItemsFromContainers(context, rabbitHutchesBreeding, bunnies, new NAlias(new ArrayList<>(), new ArrayList<>(List.of("Hide", "Entrails", "Meat", "Bone")))).run(gui);
+
+        cleanupBunnies(gui, rabbitHutchesIncubators);
 
         return Results.SUCCESS();
     }
@@ -207,7 +210,7 @@ public class RabbitMaster implements Action {
                 return Results.FAIL();
             }
 
-            // Get buck from intentory
+            // Get buck from inventory
             WItem buck = (WItem) gui.getInventory(RABBIT_HUTCH_NAME).getItem(new NAlias(BUCK_NAME));
             if (buck == null) {
                 return Results.ERROR("NO_BUCK");
@@ -391,6 +394,77 @@ public class RabbitMaster implements Action {
             new FreeInventory(context).run(gui);
         }
         new FreeInventory(context).run(gui);
+        return Results.SUCCESS();
+    }
+
+    private Results cleanupBunnies(NGameUI gui, ArrayList<Container> rabbitHutchesIncubators) throws InterruptedException {
+        ArrayList<RabbitMaster.IncubatorInfo> qBunnies = new ArrayList<>();
+
+        int totalNumberOfPossibleBunnies = 0;
+
+        for (Container container : rabbitHutchesIncubators) {
+            new PathFinder(container.gob).run(gui);
+            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, container.gob).run(gui).IsSuccess())) {
+                return Results.FAIL();
+            }
+
+            ArrayList<WItem> bunnies = gui.getInventory(RABBIT_HUTCH_NAME).getItems(new NAlias(BUNNY_NAME));
+            Coord hutchSize = gui.getInventory(RABBIT_HUTCH_NAME).isz;
+            totalNumberOfPossibleBunnies = hutchSize.x * hutchSize.y;
+
+            for (WItem buck : bunnies) {
+                qBunnies.add(new RabbitMaster.IncubatorInfo(container, ((NGItem) buck.item).quality));
+            }
+
+            new CloseTargetContainer(container).run(gui);
+        }
+
+        double averageBunnyQuality = qBunnies.stream()
+                .mapToDouble(b -> b.rabbitQuality)
+                .average()
+                .orElse(0.0);
+
+        for (Container container : rabbitHutchesIncubators) {
+            new PathFinder(container.gob).run(gui);
+            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, container.gob).run(gui).IsSuccess())) {
+                return Results.FAIL();
+            }
+
+            while(gui.getInventory(RABBIT_HUTCH_NAME).getItems(BUNNY_NAME).size() > totalNumberOfPossibleBunnies/2) {
+                ArrayList<WItem> bunnies = gui.getInventory(RABBIT_HUTCH_NAME).getItems(new NAlias(BUNNY_NAME), NInventory.QualityType.Low);
+                float worstBunnyQuality = ((NGItem) bunnies.get(0).item).quality;
+
+                if(worstBunnyQuality > averageBunnyQuality) {
+                    break;
+                }
+
+                WItem bunny = bunnies.get(0);
+                if (bunny == null) {
+                    return Results.ERROR("NO_BUNNY");
+                }
+
+                Coord pos = bunny.c.div(Inventory.sqsz);
+                bunny.item.wdgmsg("transfer", Coord.z);
+                Coord finalPos1 = pos;
+                NUtils.addTask(new NTask() {
+                    @Override
+                    public boolean check() {
+                        return gui.getInventory(RABBIT_HUTCH_NAME).isSlotFree(finalPos1);
+                    }
+                });
+
+                // Kill and drop the bunny
+                WItem inventoryBunny = (WItem) gui.getInventory().getItem(new NAlias(BUNNY_NAME));
+                new SelectFlowerAction( "Wring neck", inventoryBunny).run(gui);
+                NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("A Bloody Mess"), 1));
+
+                WItem bloodyMess = (WItem) gui.getInventory().getItem(new NAlias("A Bloody Mess"));
+                NUtils.drop(bloodyMess);
+            }
+
+            new CloseTargetContainer(container).run(gui);
+        }
+
         return Results.SUCCESS();
     }
 }
