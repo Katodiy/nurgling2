@@ -24,7 +24,15 @@ public class FoodContainer extends BaseIngredientContainer {
         JSONArray data = new JSONArray((NConfig.get(NConfig.Key.eatingConf) instanceof JSONArray)?(JSONArray)NConfig.get(NConfig.Key.eatingConf):(ArrayList<HashMap<String,Object>>)NConfig.get(NConfig.Key.eatingConf));
         ArrayList<String> names = new ArrayList<>();
         for (int i = 0; i < data.length(); i++) {
-            names.add(((JSONObject)data.get(i)).getString("name"));
+            String name = ((JSONObject)data.get(i)).getString("name");
+            if(name.contains("Sizzling")) {
+                name = name.replace("Sizzling ", "");
+            }
+            if(name.contains("Spitroast"))
+            {
+                names.add("Sizzling " + name);
+            }
+            names.add(name);
         }
         return names;
     }

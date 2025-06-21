@@ -588,7 +588,7 @@ public class NInventory extends Inventory
                     boolean isFree = true;
                     for (int k = i; k < i + target_size.x; k++)
                         for (int n = j; n < j + target_size.y; n++)
-                            if (n < isz.x || k < isz.y || inventory[k][n] != 0) {
+                            if (n >= isz.x || k >= isz.y || inventory[k][n] != 0) {
                                 isFree = false;
                                 break;
                             }

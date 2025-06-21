@@ -2,21 +2,21 @@ package nurgling.actions.bots;
 
 
 import haven.*;
-import nurgling.NGameUI;
-import nurgling.NGob;
-import nurgling.NHitBox;
+import nurgling.*;
 import nurgling.actions.*;
+import nurgling.areas.NArea;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitChipperState;
 import nurgling.tools.NAlias;
 import nurgling.tools.Finder;
-import nurgling.NUtils;
 import nurgling.tools.NParser;
 import nurgling.widgets.FoodContainer;
+import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 public class MineAction implements Action {
     private class Tile {
@@ -74,12 +74,14 @@ public class MineAction implements Action {
                     Resource res_beg = gui.ui.sess.glob.map.tilesetr(gui.ui.sess.glob.map.gettile(tile_pos));
                     if (!NUtils.getGameUI().fv.lsrel.isEmpty()) {
                         System.out.println("FIGHT");
+                        runToSafe(gui);
                         return Results.FAIL();
 //                        return new Results(Results.Types.FIGHT);
                     }
                     Gob looserock;
                     if ((looserock = Finder.findGob(new NAlias("looserock"))) != null && looserock.rc.dist(NUtils.getGameUI().map.player().rc) < 93.5) {
                         //                   return new Results(Results.Types.FIGHT);
+                        runToSafe(gui);
                         System.out.println("looserock");
                         return Results.FAIL();
                     }
@@ -106,11 +108,9 @@ public class MineAction implements Action {
                             pf.isHardMode = true;
                             pf.run(gui);
                             while(res_beg == gui.ui.sess.glob.map.tilesetr ( gui.ui.sess.glob.map.gettile ( tile_pos ) )) {
-                                if ( NUtils.getStamina() < 0.5 ) {
-                                    if(!restoreResources(gui,target_pos)) {
-                                        System.out.println("restoreResources111");
-                                        return Results.FAIL();
-                                    }
+                                if(!restoreResources(gui,target_pos)) {
+                                    System.out.println("restoreResources111");
+                                    return Results.FAIL();
                                 }
                                 NUtils.mine(tile.coord);
                                 gui.map.wdgmsg("sel", tile_pos, tile_pos, 0);
@@ -215,9 +215,15 @@ public class MineAction implements Action {
         }
         if(needPf)
         {
-            new PathFinder(NGob.getDummy(target_pos, 0, new NHitBox(new Coord2d(-5.5,-5.5),new Coord2d(5.5,5.5)))).run(gui);
+                new PathFinder(NGob.getDummy(target_pos, 0, new NHitBox(new Coord2d(-5.5,-5.5),new Coord2d(5.5,5.5))), true).run(gui);
         }
         return true;
+    }
+
+
+    void runToSafe(NGameUI gui) throws InterruptedException {
+        AutoDrink.waitBot.set(false);
+        new RunToSafe().run(gui);
     }
 
     Pair<Coord2d,Coord2d> area;

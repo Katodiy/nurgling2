@@ -653,4 +653,10 @@ public class NUtils
         }
         return res;
     }
+
+    public static void setSpeed(int value) {
+        if ( getGameUI() != null && getGameUI().speedget!=null) {
+            getGameUI().speedget.set(value);
+        }
+    }
 }

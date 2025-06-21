@@ -47,6 +47,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public MiniMap mmap;
     public Fightview fv;
     protected List<Widget> meters = new LinkedList<Widget>();
+	public Speedget speedget = null;
     private Text lastmsg;
     private double msgtime;
     private Window invwnd;
@@ -695,8 +696,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	} else if(place == "meter") {
 		if(child instanceof IMeter)
 	    	add(new NDraggableWidget(child, "meter" + ((IMeter)child).name,IMeter.fsz));
-		else if(child instanceof Speedget)
-			add(new NDraggableWidget(child, "speedmeter" ,IMeter.ssz));
+		else if(child instanceof Speedget) {
+			speedget = (Speedget)child;
+			add(new NDraggableWidget(child, "speedmeter", IMeter.ssz));
+		}
 	    meters.add(child);
 	} else if(place == "buff") {
 	    buffs.addchild(child);
