@@ -203,10 +203,10 @@ public class RabbitMaster implements Action {
         // Sort bucks by quality (from best to worst)
         qBucks.sort(incubatorComparator.reversed());
 
-        for (IncubatorInfo roosterInfo : qBucks) {
+        for (IncubatorInfo buckInfo : qBucks) {
             // Open hutch with buck
-            new PathFinder(roosterInfo.container.gob).run(gui);
-            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, roosterInfo.container.gob).run(gui).IsSuccess())) {
+            new PathFinder(buckInfo.container.gob).run(gui);
+            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, buckInfo.container.gob).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
