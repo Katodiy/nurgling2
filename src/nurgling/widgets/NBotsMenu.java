@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
+import nurgling.actions.bots.CatchBugsAround;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
 
@@ -46,13 +47,11 @@ public class NBotsMenu extends Widget
                     : bot.type;
             NLayout layout = layouts.get(groupType);
             if (layout == null) continue;
-            layout.elements.add(
-                    new NButton(
-                            bot.id,
-                            bot.instantiate(Map.of()),
-                            bot.disStacks
-                    )
-            );
+            if (bot.clazz == CatchBugsAround.class) {
+                layout.elements.add(new NToggleNButton(bot.id, bot.instantiate(Map.of()), bot.disStacks));
+            } else {
+                layout.elements.add(new NButton(bot.id, bot.instantiate(Map.of()), bot.disStacks));
+            }
         }
 
         for (NLayout layout : layouts.values()) {
@@ -364,6 +363,47 @@ public class NBotsMenu extends Widget
 
 
     };
+
+    public class NToggleNButton extends NButton {
+        private boolean active = false;
+        private Thread thread;
+
+        NToggleNButton(String path, Action action, boolean disStacks) {
+            super(path, action, disStacks);
+
+            btn.action(new Runnable() {
+                @Override
+                public void run() {
+                    NGameUI gui = NUtils.getGameUI();
+                    if (!active) {
+                        thread = new Thread(() -> {
+                            try {
+                                action.run(gui);
+                            } catch (InterruptedException e) {
+                                gui.msg(path + ": STOPPED");
+                            }
+                        }, path + "-ToggleThread");
+                        if (disStacks)
+                            gui.biw.addObserve(thread, true);
+                        else
+                            gui.biw.addObserve(thread);
+                        thread.start();
+                        gui.msg("Started: " + path);
+                    } else {
+                        if (thread != null && thread.isAlive()) {
+                            if (action instanceof ActionWithFinal) {
+                                ((ActionWithFinal)action).endAction();
+                            }
+                            thread.interrupt();
+                            gui.msg("Stopped: " + path);
+                        }
+                    }
+                    active = !active;
+                }
+            });
+        }
+    }
+
 
     class NLayout
     {
