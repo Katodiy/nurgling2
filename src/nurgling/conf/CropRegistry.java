@@ -77,7 +77,7 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/hemp"),
                 Arrays.asList(
-                        new CropStage(4, new NAlias("Hemp"), StorageBehavior.BARREL)
+                        new CropStage(4, new NAlias("Hemp Seeds"), StorageBehavior.BARREL)
                 )
         );
 
@@ -85,7 +85,7 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/flax"),
                 Arrays.asList(
-                        new CropStage(3, new NAlias("Flax"), StorageBehavior.BARREL)
+                        new CropStage(3, new NAlias("Flax Seeds"), StorageBehavior.BARREL)
                 )
         );
 
@@ -93,7 +93,7 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/lettuce"),
                 Arrays.asList(
-                        new CropStage(4, new NAlias("Lettuce"), StorageBehavior.BARREL)
+                        new CropStage(4, new NAlias("Lettuce Seeds"), StorageBehavior.BARREL)
                 )
         );
 
@@ -101,7 +101,7 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/pumpkin"),
                 Arrays.asList(
-                        new CropStage(4, new NAlias("Pumpkin"), StorageBehavior.BARREL)
+                        new CropStage(4, new NAlias("Pumpkin Seeds"), StorageBehavior.BARREL)
                 )
         );
 
@@ -109,7 +109,7 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/barley"),
                 Arrays.asList(
-                        new CropStage(3, new NAlias("barley"), StorageBehavior.BARREL)
+                        new CropStage(3, new NAlias("Barley Seeds"), StorageBehavior.BARREL)
                 )
         );
 
@@ -117,7 +117,7 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/millet"),
                 Arrays.asList(
-                        new CropStage(3, new NAlias("millet"), StorageBehavior.BARREL)
+                        new CropStage(3, new NAlias("Millet Seeds"), StorageBehavior.BARREL)
                 )
         );
 
@@ -125,7 +125,7 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/wheat"),
                 Arrays.asList(
-                        new CropStage(3, new NAlias("wheat"), StorageBehavior.BARREL)
+                        new CropStage(3, new NAlias("Wheat Seeds"), StorageBehavior.BARREL)
                 )
         );
 
@@ -133,7 +133,7 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/poppy"),
                 Arrays.asList(
-                        new CropStage(4, new NAlias("Poppy"), StorageBehavior.BARREL)
+                        new CropStage(4, new NAlias("Poppy Seeds"), StorageBehavior.BARREL)
                 )
         );
 
@@ -141,7 +141,7 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/pipeweed"),
                 Arrays.asList(
-                        new CropStage(4, new NAlias("Pipeweed"), StorageBehavior.BARREL)
+                        new CropStage(4, new NAlias("Pipeweed Seeds"), StorageBehavior.BARREL)
                 )
         );
     }
