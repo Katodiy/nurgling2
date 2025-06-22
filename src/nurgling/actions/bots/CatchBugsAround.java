@@ -18,14 +18,16 @@ public class CatchBugsAround implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         while(true) {
-            List<Gob> gobs = Finder.findGobs(bugs);
+            if(NUtils.getGameUI() != null) {
+                List<Gob> gobs = Finder.findGobs(bugs);
 
-            if (NUtils.player() != null) {
-                gobs = NUtils.sortByNearest(gobs, NUtils.player().rc);
-            }
-            for (Gob gob : gobs) {
-                NUtils.rclickGob(gob);
-                NUtils.getUI().core.addTask(new NoGob(gob.id));
+                if (NUtils.player() != null) {
+                    gobs = NUtils.sortByNearest(gobs, NUtils.player().rc);
+                }
+                for (Gob gob : gobs) {
+                    NUtils.rclickGob(gob);
+                    NUtils.getUI().core.addTask(new NoGob(gob.id));
+                }
             }
         }
     }
