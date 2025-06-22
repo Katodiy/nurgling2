@@ -111,11 +111,17 @@ public class RabbitMaster implements Action {
         ArrayList<RabbitMaster.HutchInfo> hutchInfos = new ArrayList<>();
         ArrayList<RabbitMaster.IncubatorInfo> qBucks = new ArrayList<>();
         ArrayList<RabbitMaster.IncubatorInfo> qDoes = new ArrayList<>();
+
+        int totalNumberOfPossibleBunnies = -1;
+
         for (Container container : rabbitHutchesBreeding) {
             new PathFinder( container.gob).run(gui);
             if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME,container.gob).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
+
+            Coord hutchSize = gui.getInventory(RABBIT_HUTCH_NAME).isz;
+            totalNumberOfPossibleBunnies = hutchSize.x * hutchSize.y;
 
             double buckQuality;
             if(gui.getInventory(RABBIT_HUTCH_NAME).getItem(new NAlias(BUCK_NAME))!=null) {
@@ -178,13 +184,15 @@ public class RabbitMaster implements Action {
             return doesResult;
         }
 
-        cleanupBunnies(gui, rabbitHutchesIncubators);
+//        cleanupBunnies(gui, rabbitHutchesIncubators);
 
         ArrayList<Context.Output> outputs = new ArrayList<>();
         for (Container cc : rabbitHutchesIncubators) {
             Context.OutputContainer container = new Context.OutputContainer(cc.gob, NArea.findSpec(Specialisation.SpecName.incubator.toString()).getRCArea(), 1);
             container.cap = RABBIT_HUTCH_NAME;
             container.initattr(Container.Space.class);
+            container.initattr(Container.TargetItems.class);
+            container.getattr(Container.TargetItems.class).setMaxNum(totalNumberOfPossibleBunnies/2);
             outputs.add(container);
         }
 
@@ -193,7 +201,7 @@ public class RabbitMaster implements Action {
         bunnies.add(BUNNY_NAME);
         new TransferTargetItemsFromContainers(context, rabbitHutchesBreeding, bunnies, new NAlias(new ArrayList<>(), new ArrayList<>(List.of("Hide", "Entrails", "Meat", "Bone")))).run(gui);
 
-        cleanupBunnies(gui, rabbitHutchesIncubators);
+//        cleanupBunnies(gui, rabbitHutchesIncubators);
 
         return Results.SUCCESS();
     }
