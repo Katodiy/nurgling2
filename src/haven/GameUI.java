@@ -46,7 +46,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public GobIcon.Settings iconconf;
     public MiniMap mmap;
     public Fightview fv;
-    protected List<Widget> meters = new LinkedList<Widget>();
+    final protected List<Widget> meters = new LinkedList<Widget>();
 	public Speedget speedget = null;
     private Text lastmsg;
     private double msgtime;

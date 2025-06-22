@@ -260,13 +260,15 @@ public class NGameUI extends GameUI
     }
 
     public List<IMeter.Meter> getmeters (String name ) {
-        for ( Widget meter : new ArrayList<>(meters) ) {
-            if ( meter instanceof IMeter ) {
-                IMeter im = ( IMeter ) meter;
-                Resource res = im.bg.get ();
-                if ( res != null ) {
-                    if ( res.basename ().equals ( name ) ) {
-                        return im.meters;
+        synchronized (meters) {
+            for (Widget meter : new ArrayList<>(meters)) {
+                if (meter instanceof IMeter) {
+                    IMeter im = (IMeter) meter;
+                    Resource res = im.bg.get();
+                    if (res != null) {
+                        if (res.basename().equals(name)) {
+                            return im.meters;
+                        }
                     }
                 }
             }
