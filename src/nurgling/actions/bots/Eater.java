@@ -24,7 +24,7 @@ import static haven.Coord.of;
 public class Eater implements Action {
 
     boolean oz = false;
-    List<RoutePoint> routePoints = null;
+    public List<RoutePoint> routePoints = null;
 
     public Eater(boolean oz) {
         this.oz = oz;

@@ -108,7 +108,7 @@ public class MineAction implements Action {
                             pf.isHardMode = true;
                             pf.run(gui);
                             while(res_beg == gui.ui.sess.glob.map.tilesetr ( gui.ui.sess.glob.map.gettile ( tile_pos ) )) {
-                                if(!restoreResources(gui,target_pos)) {
+                                if(!new RestoreResources(target_pos).run(gui).isSuccess) {
                                     System.out.println("restoreResources111");
                                     return Results.FAIL();
                                 }
@@ -137,7 +137,7 @@ public class MineAction implements Action {
                             if ( bolder != null && bolder.rc.dist(gui.map.player().rc)<=15 ) {
                                 new PathFinder(bolder).run(gui);
                                 while ( Finder.findGob ( bolder.id ) != null ) {
-                                    if(!restoreResources(gui,bolder.rc)) {
+                                    if(!new RestoreResources(bolder.rc).run(gui).isSuccess) {
                                         System.out.println("restoreResources140");
                                         return Results.FAIL();
                                     }
@@ -149,7 +149,7 @@ public class MineAction implements Action {
                                             case BUMLINGNOTFOUND:
                                                 break;
                                             case BUMLINGFORDRINK: {
-                                                if(!restoreResources(gui,bolder.rc))
+                                                if(!new RestoreResources(bolder.rc).run(gui).isSuccess)
                                                     return Results.FAIL();
                                                 break;
                                             }
@@ -181,45 +181,6 @@ public class MineAction implements Action {
         System.out.println("NO Tiles" + arrayList.size());
         return Results.SUCCESS();
     }
-
-    boolean restoreResources(NGameUI gui, Coord2d target_pos) throws InterruptedException {
-        RoutePoint rp = null;
-        boolean needPf = false;
-        if ( NUtils.getStamina() < 0.5 ) {
-            if (!new Drink(0.9, false).run(gui).IsSuccess()) {
-                FillWaterskins fv;
-                if (((fv = new FillWaterskins(true)).run(gui).IsSuccess())) {
-                    if (fv.routePoints != null) {
-                        rp = fv.routePoints.getFirst();
-                    }
-                    needPf = true;
-                }
-                if (!new Drink(0.9, false).run(gui).IsSuccess()) {
-                    return false;
-                }
-            }
-        }
-        if(NUtils.getEnergy()<0.35)
-        {
-            Eater eater = new Eater(true);
-            eater.run(gui);
-            if(eater.routePoints!=null && rp == null)
-            {
-                rp = eater.routePoints.getFirst();
-            }
-            needPf = true;
-        }
-        if(rp!=null)
-        {
-            new RoutePointNavigator(rp).run(NUtils.getGameUI());
-        }
-        if(needPf)
-        {
-                new PathFinder(NGob.getDummy(target_pos, 0, new NHitBox(new Coord2d(-5.5,-5.5),new Coord2d(5.5,5.5))), true).run(gui);
-        }
-        return true;
-    }
-
 
     void runToSafe(NGameUI gui) throws InterruptedException {
         AutoDrink.waitBot.set(false);

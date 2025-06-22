@@ -71,7 +71,7 @@ public class Finder
                 {
                     if (gob.rc.x >= space.a.x && gob.rc.y >= space.a.y && gob.rc.x <= space.b.x && gob.rc.y <= space.b.y)
                     {
-                        if (NParser.isIt(gob, name))
+                        if ((name == null && gob.id!=NUtils.playerID()) || NParser.isIt(gob, name))
                         {
                             result.add(gob);
                         }

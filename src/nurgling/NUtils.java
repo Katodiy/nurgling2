@@ -233,6 +233,15 @@ public class NUtils
 
     }
 
+    public static void destroy(
+            Gob gob
+    )
+            throws InterruptedException {
+        getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "destroy");
+        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 1, 0, 0, (int) gob.id, gob.rc.floor(posres),
+                0, -1);
+    }
+
 
     public static String getCursorName()
     {
