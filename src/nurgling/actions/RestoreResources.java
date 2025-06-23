@@ -11,6 +11,7 @@ import nurgling.NUtils;
 import nurgling.actions.bots.Eater;
 import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.routes.RoutePoint;
+import nurgling.tools.Finder;
 
 import static haven.MCache.cmaps;
 import static haven.OCache.posres;
@@ -33,12 +34,14 @@ public class RestoreResources implements Action{
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-            Coord pltc = (new Coord2d(target_pos.x / MCache.tilesz.x, target_pos.y / MCache.tilesz.y)).floor();
-            synchronized (NUtils.getGameUI().ui.sess.glob.map.grids) {
-                if (NUtils.getGameUI().ui.sess.glob.map.grids.containsKey(pltc.div(cmaps))) {
-                    MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
-                    oldCoord = (target_pos.sub(g.ul.mul(Coord2d.of(11, 11)))).floor(posres);
-                    id = g.id;
+            if(target_pos!=null) {
+                Coord pltc = (new Coord2d(target_pos.x / MCache.tilesz.x, target_pos.y / MCache.tilesz.y)).floor();
+                synchronized (NUtils.getGameUI().ui.sess.glob.map.grids) {
+                    if (NUtils.getGameUI().ui.sess.glob.map.grids.containsKey(pltc.div(cmaps))) {
+                        MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
+                        oldCoord = (target_pos.sub(g.ul.mul(Coord2d.of(11, 11)))).floor(posres);
+                        id = g.id;
+                    }
                 }
             }
             RoutePoint rp = null;
@@ -74,7 +77,7 @@ public class RestoreResources implements Action{
             if(needPf)
             {
                 synchronized (NUtils.getGameUI().ui.sess.glob.map.grids) {
-                    if (NUtils.getGameUI().ui.sess.glob.map.grids.containsKey(pltc.div(cmaps))) {
+                    if (target_pos!=null) {
                         for(MCache.Grid g : NUtils.getGameUI().ui.sess.glob.map.grids.values())
                         {
                             if(g.id == id)
@@ -84,6 +87,10 @@ public class RestoreResources implements Action{
                             }
                         }
                     }
+                }
+                if(gob != null)
+                {
+                    gob = Finder.findGob(gob.id);
                 }
                 new PathFinder(gob==null?NGob.getDummy(target_pos, 0, new NHitBox(new Coord2d(-5.5,-5.5),new Coord2d(5.5,5.5))):gob, true).run(gui);
             }
