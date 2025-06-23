@@ -1,14 +1,12 @@
 package nurgling.actions.bots;
 
 import haven.Gob;
+import haven.res.gfx.hud.rosters.goat.Goat;
 import haven.res.gfx.hud.rosters.pig.Pig;
 import haven.res.ui.croster.CattleId;
 import nurgling.NGameUI;
 import nurgling.NUtils;
-import nurgling.actions.Action;
-import nurgling.actions.AnimalAction;
-import nurgling.actions.Results;
-import nurgling.actions.Validator;
+import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.conf.PigsHerd;
 import nurgling.tools.NAlias;
@@ -81,9 +79,11 @@ public class PigsAction implements Action {
                 }
             };
             if(PigsHerd.getCurrent()!=null) {
-                new AnimalAction<Pig>(new NAlias("pig"), "pigs", comparator, Pig.class, wpred, wlpred, PigsHerd.getCurrent().adultPigs).run(gui);
+                new MemorizeAnimalsAction(new NAlias("pig"),"pig", Pig.class).run(gui);
+
+                new KillAnimalsAction<Pig>(new NAlias("pig"), "pigs", comparator, Pig.class, wpred, wlpred, PigsHerd.getCurrent().adultPigs).run(gui);
                 gui.msg("Female pigs cycle done!");
-                new AnimalAction<Pig>(new NAlias("pig"), "pigs", comparator, Pig.class, mpred, mlpred, 1).run(gui);
+                new KillAnimalsAction<Pig>(new NAlias("pig"), "pigs", comparator, Pig.class, mpred, mlpred, 1).run(gui);
                 gui.msg("Male pigs cycle done!");
             }
             else

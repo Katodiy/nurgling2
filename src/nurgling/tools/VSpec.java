@@ -1668,11 +1668,12 @@ public class VSpec {
 
         ArrayList<JSONObject> entrails = new ArrayList<>();
         entrails.add(new JSONObject("{\"static\":\"gfx/invobjs/entrails\",\"name\":\"Entrails\"}"));
-        entrails.add(new JSONObject("{\"static\":\"gfx/invobjs/animalfat\",\"name\":\"Animal Fat\"}"));
+
         categories.put("Entrails", entrails);
 
         ArrayList<JSONObject> intestines = new ArrayList<>();
         intestines.add(new JSONObject("{\"static\":\"gfx/invobjs/intestines\",\"name\":\"Intestines\"}"));
+        intestines.add(new JSONObject("{\"static\":\"gfx/invobjs/animalfat\",\"name\":\"Animal Fat\"}"));
         categories.put("Intestines", intestines);
 
         ArrayList<JSONObject> chitinItems = new ArrayList<>();

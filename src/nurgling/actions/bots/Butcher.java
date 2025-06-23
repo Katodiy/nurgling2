@@ -55,11 +55,9 @@ public class Butcher implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
 
         NArea.Specialisation kritter_corpse = new NArea.Specialisation(Specialisation.SpecName.deadkritter.toString());
-        NArea.Specialisation rawhides = new NArea.Specialisation(Specialisation.SpecName.rawhides.toString());
         NArea area = NArea.findSpec(kritter_corpse);
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(kritter_corpse);
-        req.add(rawhides);
 
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         Context context = new Context();
@@ -93,16 +91,7 @@ public class Butcher implements Action {
 
                         if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
                             new FreeInventory(context).run(gui);
-                            if(!NUtils.getGameUI().getInventory().getItems(new NAlias("Fresh")).isEmpty()) {
-                                NArea harea = NArea.findSpec(Specialisation.SpecName.rawhides.toString());
-                                List<RoutePoint> routePoints = null;
-                                if (harea == null) {
-                                    harea = NArea.globalFindSpec(Specialisation.SpecName.rawhides.toString());
-                                    routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(harea));
-                                    new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
-                                }
-                                new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
-                            }
+                            transferFreshHides(gui);
                         }
                         if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
                             return Results.ERROR("No free coord found for: " + optForSelect + "|" + options.get(optForSelect).size.toString() + "| target size: " + options.get(optForSelect).num);
@@ -142,10 +131,23 @@ public class Butcher implements Action {
                 gobs = getGobs(area);
             }
             new FreeInventory(context).run(gui);
-            new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
+            transferFreshHides(gui);
         }
 
         return Results.SUCCESS();
+    }
+
+    private static void transferFreshHides(NGameUI gui) throws InterruptedException {
+        if(!NUtils.getGameUI().getInventory().getItems(new NAlias("Fresh")).isEmpty()) {
+            NArea harea = NArea.findSpec(Specialisation.SpecName.rawhides.toString());
+            List<RoutePoint> routePoints = null;
+            if (harea == null) {
+                harea = NArea.globalFindSpec(Specialisation.SpecName.rawhides.toString());
+                routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(harea));
+                new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
+            }
+            new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
+        }
     }
 
     private static ArrayList<Gob> getGobs(NArea area) throws InterruptedException {

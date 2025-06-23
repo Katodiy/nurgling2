@@ -5,10 +5,7 @@ import haven.res.gfx.hud.rosters.sheep.Sheep;
 import haven.res.ui.croster.CattleId;
 import nurgling.NGameUI;
 import nurgling.NUtils;
-import nurgling.actions.Action;
-import nurgling.actions.AnimalAction;
-import nurgling.actions.Results;
-import nurgling.actions.Validator;
+import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.conf.SheepsHerd;
 import nurgling.tools.NAlias;
@@ -81,10 +78,15 @@ public class SheepsAction implements Action {
                 }
             };
             if(SheepsHerd.getCurrent()!=null) {
-                new AnimalAction<Sheep>(new NAlias("sheep"), "sheeps", comparator, Sheep.class, wpred, wlpred, SheepsHerd.getCurrent().adultSheeps).run(gui);
+                new MemorizeAnimalsAction(new NAlias("sheep"),"sheeps", Sheep.class).run(gui);
+
+                new ShearWool("sheeps", new NAlias("sheep")).run(gui);
+
+                new KillAnimalsAction<Sheep>(new NAlias("sheep"), "sheeps", comparator, Sheep.class, wpred, wlpred, SheepsHerd.getCurrent().adultSheeps).run(gui);
                 gui.msg("Female sheeps cycle done!");
-                new AnimalAction<Sheep>(new NAlias("sheep"), "sheeps", comparator, Sheep.class, mpred, mlpred, 1).run(gui);
+                new KillAnimalsAction<Sheep>(new NAlias("sheep"), "sheeps", comparator, Sheep.class, mpred, mlpred, 1).run(gui);
                 gui.msg("Male sheeps cycle done!");
+
             }
             else
             {

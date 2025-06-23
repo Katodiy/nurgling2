@@ -42,15 +42,30 @@ public class CollectFromGob implements Action{
         this.pileArea = pileArea;
     }
 
-    NAlias targetItems;
+    public CollectFromGob(Gob target, String action, String pose, Coord targetSize,  NAlias targetItems, boolean withoutTransfer)
+    {
+        this.target = target;
+        this.action = action;
+        this.pose = pose;
+        this.withPiles = false;
+        this.targetSize = targetSize;
+        this.targetItems = targetItems;
+        this.withoutTransfer = withoutTransfer;
+    }
+
+     NAlias targetItems;
     Pair<Coord2d,Coord2d> pileArea = null;
+
+    boolean withoutTransfer = false;
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         WaitCollectState wcs = null;
         do {
-            if (NUtils.getGameUI().getInventory().getNumberFreeCoord(targetSize) == 0) {
-                if (withPiles)
-                    new TransferToPiles(pileArea, targetItems).run(gui);
+            if(withoutTransfer) {
+                if (NUtils.getGameUI().getInventory().getNumberFreeCoord(targetSize) == 0) {
+                    if (withPiles)
+                        new TransferToPiles(pileArea, targetItems).run(gui);
+                }
             }
             if(marker!=-1)
             {
