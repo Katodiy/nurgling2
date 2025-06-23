@@ -4,6 +4,7 @@ import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.Action;
+import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.tasks.NoGob;
 import nurgling.tools.Finder;
@@ -24,9 +25,12 @@ public class CatchBugsAround implements Action {
                 if (NUtils.player() != null) {
                     gobs = NUtils.sortByNearest(gobs, NUtils.player().rc);
                 }
+
                 for (Gob gob : gobs) {
-                    NUtils.rclickGob(gob);
-                    NUtils.getUI().core.addTask(new NoGob(gob.id));
+                    if(Finder.findGob(gob.id) != null) {
+                        NUtils.rclickGob(gob);
+                        NUtils.getUI().core.addTask(new NoGob(gob.id));
+                    }
                 }
             }
         }
