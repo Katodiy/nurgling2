@@ -243,70 +243,69 @@ public class PathFinder implements Action {
 
     private boolean fixStartEnd(boolean test) {
         NPFMap.Cell[][] cells = pfmap.getCells();
-        if (cells[start_pos.x][start_pos.y].val != 0) {
-            if (target_id >= 0 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test)
-                return false;
-            ArrayList<Coord> st_poses = findFreeNear(start_pos, true);
-            if (st_poses.isEmpty())
-                return false;
-            if(cells[start_pos.x][start_pos.y].content.size()==1 || (cells[start_pos.x][start_pos.y].content.size()==2 && cells[start_pos.x][start_pos.y].content.contains((long)-1)))
-                for(Long id: cells[start_pos.x][start_pos.y].content)
-                {
-                    if(id!=-1)
-                    {
-                        gobInStartPos = Finder.findGob(id);
+        if(start_pos.x < pfmap.size && start_pos.y<pfmap.size && start_pos.x>=0 && start_pos.y>=0) {
+            if (cells[start_pos.x][start_pos.y].val != 0) {
+                if (target_id >= 0 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test)
+                    return false;
+                ArrayList<Coord> st_poses = findFreeNear(start_pos, true);
+                if (st_poses.isEmpty())
+                    return false;
+                if (cells[start_pos.x][start_pos.y].content.size() == 1 || (cells[start_pos.x][start_pos.y].content.size() == 2 && cells[start_pos.x][start_pos.y].content.contains((long) -1)))
+                    for (Long id : cells[start_pos.x][start_pos.y].content) {
+                        if (id != -1) {
+                            gobInStartPos = Finder.findGob(id);
+                        }
                     }
-                }
-            start_pos = st_poses.get(0);
-        }
-        if (start_pos.equals(end_pos) && dummy==null) {
-            dn = true;
-            return false;
-        }
-        if(end_pos.x < pfmap.size && end_pos.y<pfmap.size && end_pos.x>=0 && end_pos.y>=0) {
-            if (cells[end_pos.x][end_pos.y].val != 0) {
-                end_poses = findFreeNear(end_pos, false);
-                if (dummy != null || (isHardMode && target_id != -2 && Finder.findGob(target_id) != null)) {
-                    Coord2d tcoord = (dummy != null) ? dummy.rc : Finder.findGob(target_id).rc;
-                    ArrayList<Coord> best_poses = new ArrayList<>();
-                    for (Coord coord : end_poses) {
-                        Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos);
-                        if (coord2d.x + MCache.tileqsz.x > tcoord.x && coord2d.x - MCache.tileqsz.x < tcoord.x ||
-                                coord2d.y + MCache.tileqsz.y > tcoord.y && coord2d.y - MCache.tileqsz.y < tcoord.y)
-                            best_poses.add(coord);
-                    }
-                    if (!best_poses.isEmpty())
-                        end_poses = best_poses;
-                }
-
-                if (badDir != Double.MAX_VALUE && target_id > 0) {
-                    Coord2d orientation = new Coord2d(1, 0).rot(badDir);
-                    Coord2d tcoord = Finder.findGob(target_id).rc;
-                    ArrayList<Coord> best_poses = new ArrayList<>();
-                    for (Coord coord : end_poses) {
-                        Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos).sub(tcoord).norm();
-                        if (coord2d.dot(orientation) >= -0.2)
-                            best_poses.add(coord);
-                        else
-                            cells[coord.x][coord.y].val = 0;
-                    }
-                    end_poses = best_poses;
-                }
-                for (Coord coord : end_poses) {
-                    if (start_pos.equals(coord) && target_id >= 0)
-                        return false;
-                    cells[coord.x][coord.y].val = 7;
-                }
-
-            } else {
-                cells[end_pos.x][end_pos.y].val = 7;
+                start_pos = st_poses.get(0);
             }
+            if (start_pos.equals(end_pos) && dummy == null) {
+                dn = true;
+                return false;
+            }
+            if (end_pos.x < pfmap.size && end_pos.y < pfmap.size && end_pos.x >= 0 && end_pos.y >= 0) {
+                if (cells[end_pos.x][end_pos.y].val != 0) {
+                    end_poses = findFreeNear(end_pos, false);
+                    if (dummy != null || (isHardMode && target_id != -2 && Finder.findGob(target_id) != null)) {
+                        Coord2d tcoord = (dummy != null) ? dummy.rc : Finder.findGob(target_id).rc;
+                        ArrayList<Coord> best_poses = new ArrayList<>();
+                        for (Coord coord : end_poses) {
+                            Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos);
+                            if (coord2d.x + MCache.tileqsz.x > tcoord.x && coord2d.x - MCache.tileqsz.x < tcoord.x ||
+                                    coord2d.y + MCache.tileqsz.y > tcoord.y && coord2d.y - MCache.tileqsz.y < tcoord.y)
+                                best_poses.add(coord);
+                        }
+                        if (!best_poses.isEmpty())
+                            end_poses = best_poses;
+                    }
+
+                    if (badDir != Double.MAX_VALUE && target_id > 0) {
+                        Coord2d orientation = new Coord2d(1, 0).rot(badDir);
+                        Coord2d tcoord = Finder.findGob(target_id).rc;
+                        ArrayList<Coord> best_poses = new ArrayList<>();
+                        for (Coord coord : end_poses) {
+                            Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos).sub(tcoord).norm();
+                            if (coord2d.dot(orientation) >= -0.2)
+                                best_poses.add(coord);
+                            else
+                                cells[coord.x][coord.y].val = 0;
+                        }
+                        end_poses = best_poses;
+                    }
+                    for (Coord coord : end_poses) {
+                        if (start_pos.equals(coord) && target_id >= 0)
+                            return false;
+                        cells[coord.x][coord.y].val = 7;
+                    }
+
+                } else {
+                    cells[end_pos.x][end_pos.y].val = 7;
+                }
+            } else {
+                return false;
+            }
+            return true;
         }
-        else
-        {
-            return false;
-        }
-        return true;
+        return false;
     }
 
     private ArrayList<Coord> findFreeNear(Coord pos, boolean start) {

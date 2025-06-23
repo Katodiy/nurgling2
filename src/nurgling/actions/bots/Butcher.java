@@ -108,7 +108,7 @@ public class Butcher implements Action {
                             return Results.ERROR("No free coord found for: " + optForSelect + "|" + options.get(optForSelect).size.toString() + "| target size: " + options.get(optForSelect).num);
                         }
 
-                        if (useGlobalPf()) {
+                        if (useGlobalPf(area)) {
                             gob = Finder.findGob(gob.id);
                         }
                         if (gob != null) {
@@ -161,18 +161,12 @@ public class Butcher implements Action {
         return result;
     }
 
-    boolean useGlobalPf() throws InterruptedException {
-        NArea nArea = NArea.findSpec(Specialisation.SpecName.deadkritter.toString());
-        if(nArea==null)
-        {
-            nArea = NArea.globalFindSpec(Specialisation.SpecName.deadkritter.toString());
-            if(nArea!=null) {
-                List<RoutePoint> routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(nArea));
-                if(routePoints!=null)
-                    {
-                        new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
-                        return true;
-                    }
+    boolean useGlobalPf(NArea area) throws InterruptedException {
+        if (area.getRCArea() == null) {
+            List<RoutePoint> routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area));
+            if (routePoints != null) {
+                new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
+                return true;
             }
         }
         return false;
