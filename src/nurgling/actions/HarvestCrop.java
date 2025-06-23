@@ -179,23 +179,17 @@ public class HarvestCrop implements Action {
 
         ArrayList<Gob> plants;
         List<CropRegistry.CropStage> cropStages = CropRegistry.HARVESTABLE.getOrDefault(crop, Collections.emptyList());
-        boolean anyHarvested;
-        do {
-            anyHarvested = false;
-            for (CropRegistry.CropStage cropStage : cropStages) {
-                ArrayList<Gob> plantsToHarvest = Finder.findGobs(area, crop, cropStage.stage);
-                if (!plantsToHarvest.isEmpty()) {
-                    dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
-                    Gob plantToHarvest = plantsToHarvest.get(0);
-                    new PathFinder(plantToHarvest).run(gui);
-                    new SelectFlowerAction("Harvest", plantToHarvest).run(gui);
-                    NUtils.getUI().core.addTask(new NoGob(plantToHarvest.id));
-                    dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
-                    anyHarvested = true;
-                    break;
-                }
+        for (CropRegistry.CropStage cropStage : cropStages) {
+            ArrayList<Gob> plantsToHarvest;
+            while (!(plantsToHarvest = Finder.findGobs(area, crop, cropStage.stage)).isEmpty()) {
+                dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
+                Gob plantToHarvest = plantsToHarvest.get(0);
+                new PathFinder(plantToHarvest).run(gui);
+                new SelectFlowerAction("Harvest", plantToHarvest).run(gui);
+                NUtils.getUI().core.addTask(new NoGob(plantToHarvest.id));
+                dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
             }
-        } while (anyHarvested);
+        }
 
         while (!(plants = Finder.findGobs(area,new NAlias("gfx/terobjs/plants/fallowplant"), 0)).isEmpty())
         {
