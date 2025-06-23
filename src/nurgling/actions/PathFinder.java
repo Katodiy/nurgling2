@@ -118,11 +118,12 @@ public class PathFinder implements Action {
     public LinkedList<Graph.Vertex> construct(boolean test) throws InterruptedException {
         LinkedList<Graph.Vertex> path = new LinkedList<>();
         int mul = 1;
-        while (path.size() == 0 && mul < 1000) {
-            if(test && gridIsBiggerThanVisibleArea(mul)) {
-                break;
-            }
+        while (path.isEmpty() && mul < 200) {
+            if(pfmap!=null && pfmap.lastMul)
+                return null;
             pfmap = new NPFMap(begin, end, mul);
+            pfmap.getBegin();
+            pfmap.getEnd();
             if(pfmap.bad) {
                 if (test) {
                     return null;
@@ -488,11 +489,14 @@ public class PathFinder implements Action {
         return dn;
     }
 
-    boolean gridIsBiggerThanVisibleArea(int mul) {
-            int size = VISIBLE_AREA;
-            Coord2d a = new Coord2d(Math.min(begin.x, end.x), Math.min(begin.y, end.y));
-            Coord2d b = new Coord2d(Math.max(begin.x, end.x), Math.max(begin.y, end.y));
-            int dsize = Math.min(size, Math.max(8,((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul));
-            return dsize == VISIBLE_AREA;
-    }
+//    boolean gridIsBiggerThanVisibleArea(NPFMap map) {
+//            Utils.pfGridToWorld(map.getBegin())
+//
+//
+//            int size = VISIBLE_AREA;
+//            Coord2d a = new Coord2d(Math.min(begin.x, end.x), Math.min(begin.y, end.y));
+//            Coord2d b = new Coord2d(Math.max(begin.x, end.x), Math.max(begin.y, end.y));
+//            int dsize = Math.min(size, Math.max(8,((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul));
+//            return dsize == VISIBLE_AREA;
+//    }
 }

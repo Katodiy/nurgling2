@@ -81,7 +81,7 @@ public class Chopper implements Action {
             pf.isHardMode = true;
             pf.run(gui);
 
-            while (Finder.findGob(tree.id) != null) {
+            while (tree!=null && Finder.findGob(tree.id) != null) {
                 boolean chopped = false;
                 if (NParser.isIt(tree, new NAlias("stump"))) {
                     if(!new Equip(new NAlias(prop.shovel)).run(gui).IsSuccess())
@@ -105,39 +105,13 @@ public class Chopper implements Action {
                 switch (wcs.getState()) {
                     case TREENOTFOUND:
                         break;
-                    case TIMEFORDRINK: {
-                        if (prop.autorefill) {
-                            if (FillWaterskins.checkIfNeed())
-                                if (!(new FillWaterskins(true).run(gui).IsSuccess())) {
-                                    return Results.FAIL();
-                                } else {
-                                    pf = new PathFinder(tree);
-                                    pf.setMode(PathFinder.Mode.Y_MAX);
-                                    pf.isHardMode = true;
-                                    pf.run(gui);
-                                }
-                        }
-                        if(!(new Drink(0.9, false).run(gui).IsSuccess()))
-                        {
-                            if (prop.autorefill) {
-                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
-                                    return Results.FAIL();
-                                else
-                                {
-                                    pf = new PathFinder(tree);
-                                    pf.setMode(PathFinder.Mode.Y_MAX);
-                                    pf.isHardMode = true;
-                                    pf.run(gui);
-                                }
-                            }
-                            else
-                                return Results.FAIL();
-                        }
-                        break;
-                    }
+                    case TIMEFORDRINK:
                     case TIMEFOREAT: {
-                        if(!(new AutoEater().run(gui).IsSuccess()))
-                            return Results.FAIL();
+                        if (!new RestoreResources(tree.rc).run(gui).IsSuccess()) {
+                            return Results.ERROR("No Drink or Eat");
+                        } else {
+                            tree = Finder.findGob(tree.id);
+                        }
                         break;
                     }
                     case DANGER:
@@ -145,10 +119,11 @@ public class Chopper implements Action {
 
                 }
                 if(chopped && Finder.findGob(tree.id) == null) {
+                    Gob finalTree = tree;
                     NUtils.addTask(new NTask() {
                         @Override
                         public boolean check() {
-                            return Finder.findGob(tree.rc)!=null;
+                            return Finder.findGob(finalTree.rc)!=null;
                         }
                     });
                 }

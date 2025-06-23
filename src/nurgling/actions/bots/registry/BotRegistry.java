@@ -49,7 +49,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("tarkiln", BotDescriptor.BotType.PRODUCTIONS, "Tarkiln Action", "Burns stuff in tarkiln.", true, true, TarkilnAction.class, "tarkiln", true));
         bots.add(new BotDescriptor("tabaco", BotDescriptor.BotType.PRODUCTIONS, "Tabaco Action", "Processes tabaco.", true, true, TabacoAction.class, "tabaco", true));
         bots.add(new BotDescriptor("brick", BotDescriptor.BotType.PRODUCTIONS, "Bricks Action", "Makes bricks.", true, true, BricksAction.class, "brick", true));
-        bots.add(new BotDescriptor("branch", BotDescriptor.BotType.PRODUCTIONS, "Branch Action", "Processes branches.", true, true, BranchAction.class, "branch", true));
+        bots.add(new BotDescriptor("branch", BotDescriptor.BotType.PRODUCTIONS, "Branch Action", "Processes branches.", true, true, BranchAction.class, "branch", false));
         bots.add(new BotDescriptor("wrap", BotDescriptor.BotType.PRODUCTIONS, "Wrap Action", "Wraps items.", true, true, WrapAction.class, "wrap", true));
         bots.add(new BotDescriptor("bonestoash", BotDescriptor.BotType.PRODUCTIONS, "Bone Ash", "Burns bones to ash.", true, true, BoneAshAction.class, "bonestoash", true));
         bots.add(new BotDescriptor("ash", BotDescriptor.BotType.PRODUCTIONS, "Block Ash", "Blocks ash.", true, true, BlockAshAction.class, "ash", true));
@@ -108,8 +108,9 @@ public class BotRegistry {
         bots.add(new BotDescriptor("bed", BotDescriptor.BotType.UTILS, "Go to bed", "Go to any free bed in a bed area nearby.", true, false, Sleep.class, "bed", false));
         bots.add(new BotDescriptor("unbox", BotDescriptor.BotType.UTILS, "Create piles with soil", "Create piles with soil in area.", false, true, CreateSoilPiles.class, "unbox", false));
         bots.add(new BotDescriptor("test1", BotDescriptor.BotType.UTILS, "Destroyer", "Destroy objects in area.", false, true, Destroyer.class, "test1", false));
-        bots.add(new BotDescriptor("test1", BotDescriptor.BotType.UTILS, "Collect dreams", "Collect dreams from all dream catchers in a dream catcher area.", true, true, CollectDreams.class, "test1", false));
-        bots.add(new BotDescriptor("test1", BotDescriptor.BotType.UTILS, "Catch bugs", "Catch bugs around player.", false, true, CatchBugsAround.class, "test1", false));
+        bots.add(new BotDescriptor("test2", BotDescriptor.BotType.UTILS, "Survey Supporter", "Survey Supporter.", false, true, SurveySupport.class, "test2", false));
+        bots.add(new BotDescriptor("test3", BotDescriptor.BotType.UTILS, "Collect dreams", "Collect dreams from all dream catchers in a dream catcher area.", true, true, CollectDreams.class, "test4", false));
+        bots.add(new BotDescriptor("test4", BotDescriptor.BotType.UTILS, "Catch bugs", "Catch bugs around player.", false, true, CatchBugsAround.class, "test4", false));
 
         // BUILD
         bots.add(new BotDescriptor("dframe", BotDescriptor.BotType.BUILD, "Build Drying Frame", "Builds drying frame.", false, true, BuildDryingFrame.class, "dframe", true));

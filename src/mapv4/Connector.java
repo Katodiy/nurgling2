@@ -117,7 +117,7 @@ public class Connector implements Action {
                 NUtils.setAutoMapperState(true);
             }
         } catch (IOException e) {
-            NUtils.getGameUI().error("Server is not responding");
+            NUtils.getGameUI().error("Map Server is not responding");
         }
     }
 }

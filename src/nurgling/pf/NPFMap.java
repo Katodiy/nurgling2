@@ -14,6 +14,8 @@ public class NPFMap
     public boolean waterMode = false;
     public boolean gatesAlwaysClosed = false;
     public Cell[][] cells;
+
+    public boolean lastMul = false;
     // 1 hitbox
     // 0 have path
     // 2 unpathable tiles
@@ -215,21 +217,34 @@ public class NPFMap
         Coord center = Utils.toPfGrid((a.add(b)).div(2));
         dsize = Math.max(8,((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul);
         size = 2 * dsize + 1;
-        if(dsize>120) {
-            bad = true;
-        }
-        else {
-            cells = new Cell[size][size];
-            begin = center.sub(dsize, dsize);
-            end = center.add(dsize, dsize);
-            for (int i = 0; i < size; i++) {
-                for (int j = 0; j < size; j++) {
-                    cells[i][j] = new Cell(begin.add(i, j));
-                    if (i == 0 || j == 0 || i == size - 1 || j == size - 1)
-                        cells[i][j].val = 2;
-                }
+
+        cells = new Cell[size][size];
+        begin = center.sub(dsize, dsize);
+        end = center.add(dsize, dsize);
+        if(!Utils.inVisibleArea(Utils.pfGridToWorld(begin)) || !Utils.inVisibleArea(Utils.pfGridToWorld(end)))
+        {
+            Gob player = NUtils.player();
+            if(player!=null) {
+                Coord2d cc = player.rc;
+                Coord2d cmap = new Coord2d(MCache.cmaps);
+                Coord2d fixator = cc.floor(cmap).mul(cmap).add(cmap.div(2));
+                Coord2d ul = fixator.add(450,450);
+                Coord2d br = fixator.sub(450,450);
+                end = Utils.toPfGrid(ul);
+                begin = Utils.toPfGrid(br);
+                size = end.x-begin.x;
+                cells = new Cell[size][size];
+                lastMul = true;
             }
         }
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                cells[i][j] = new Cell(begin.add(i, j));
+                if (i == 0 || j == 0 || i == size - 1 || j == size - 1)
+                    cells[i][j].val = 2;
+            }
+        }
+
     }
 
     public NPFMap(Coord2d src, Coord2d dst, int mul, boolean waterMode)throws InterruptedException

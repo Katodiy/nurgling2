@@ -88,6 +88,8 @@ public class NUtils
 
     public static WItem takeItemToHand(WItem item) throws InterruptedException
     {
+        if(item == null)
+            return null;
         item.item.wdgmsg("take", Coord.z);
         WaitItemInHand tith = new WaitItemInHand(item);
         getUI().core.addTask(tith);
