@@ -79,6 +79,7 @@ public class StackSupporter {
         size3.add("Hooks");
         size3.add("Dried Fish");
         size3.add("Medicine");
+        size3.add("Intestines");
         catSize.put(size3,3);
 
         HashSet<String> size4 = new HashSet<>();
@@ -89,6 +90,7 @@ public class StackSupporter {
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
+        size5.add("Entrails");
         size5.add("Feather");
         size5.add("Fine Feather");
         size5.add(" Meat");

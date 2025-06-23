@@ -6,6 +6,7 @@ import nurgling.NGameUI;
 import nurgling.areas.NArea;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
+import nurgling.tools.Finder;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -28,9 +29,14 @@ public class FreeInventory implements Action
         {
             String name = ((NGItem)item.item).name();
             NArea area = NArea.findOut(name, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1);
+            if(area == null)
+            {
+                area = NArea.globalFindOut(name, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1,gui);
+            }
             if(area != null) {
                 targets.add(name);
             }
+
         }
 
         new TransferItems(context, targets).run(gui);

@@ -5,9 +5,11 @@ import haven.FlowerMenu;
 import haven.Gob;
 import nurgling.NFlowerMenu;
 import nurgling.NGameUI;
+import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
@@ -61,80 +63,86 @@ public class Butcher implements Action {
 
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         Context context = new Context();
-        if(new Validator(req, opt).run(gui).IsSuccess())
-        {
+        if (new Validator(req, opt).run(gui).IsSuccess()) {
             ArrayList<Gob> gobs = getGobs(area);
 
-            while (!gobs.isEmpty())
-            {
+            while (!gobs.isEmpty()) {
                 gobs.sort(NUtils.d_comp);
-                for(Gob gob: gobs)
-                {
+                Gob gob = gobs.get(0);
 
-                    while (Finder.findGob(gob.id)!=null) {
-                        NUtils.rclickGob(gob);
-                        NFlowerMenu fm = NUtils.getFlowerMenu();
-                        if(fm == null)
-                            break;
-                        String optForSelect = null;
-                        for(String option: order)
-                        {
-                            for(NFlowerMenu.NPetal petal : fm.nopts)
-                            {
-                                if(petal.name.equals(option))
-                                {
-                                    optForSelect = option;
-                                    fm.wdgmsg("cl", -1);
-                                    NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
-                                    break;
-                                }
-                            }
-                            if(optForSelect != null)
+                while (Finder.findGob(gob.id) != null) {
+                    NUtils.rclickGob(gob);
+                    NFlowerMenu fm = NUtils.getFlowerMenu();
+                    if (fm == null)
+                        break;
+                    String optForSelect = null;
+                    for (String option : order) {
+                        for (NFlowerMenu.NPetal petal : fm.nopts) {
+                            if (petal.name.equals(option)) {
+                                optForSelect = option;
+                                fm.wdgmsg("cl", -1);
+                                NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
                                 break;
+                            }
                         }
-                        boolean optFound = optForSelect != null;
-                        while(optFound) {
+                        if (optForSelect != null)
+                            break;
+                    }
+                    boolean optFound = optForSelect != null;
+                    while (optFound) {
 
-                            if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
-                                new FreeInventory(context).run(gui);
-                                new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(),new NAlias("Fresh")).run(gui);
+                        if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
+                            new FreeInventory(context).run(gui);
+                            if(!NUtils.getGameUI().getInventory().getItems(new NAlias("Fresh")).isEmpty()) {
+                                NArea harea = NArea.findSpec(Specialisation.SpecName.rawhides.toString());
+                                List<RoutePoint> routePoints = null;
+                                if (harea == null) {
+                                    harea = NArea.globalFindSpec(Specialisation.SpecName.rawhides.toString());
+                                    routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(harea));
+                                    new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
+                                }
+                                new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
                             }
-                            if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
-                                return Results.ERROR("No free coord found for: " + optForSelect + "|" + options.get(optForSelect).size.toString() + "| target size: " + options.get(optForSelect).num);
-                            }
+                        }
+                        if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
+                            return Results.ERROR("No free coord found for: " + optForSelect + "|" + options.get(optForSelect).size.toString() + "| target size: " + options.get(optForSelect).num);
+                        }
+
+                        if (useGlobalPf()) {
+                            gob = Finder.findGob(gob.id);
+                        }
+                        if (gob != null) {
                             new PathFinder(gob).run(gui);
 
-                            if(new SelectFlowerAction(optForSelect,gob).run(gui).IsSuccess()) {
+                            if (new SelectFlowerAction(optForSelect, gob).run(gui).IsSuccess()) {
 
                                 if (!optForSelect.equals("Collect bones")) {
                                     NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/butcher"));
                                     WaitButcherState wbs = new WaitButcherState(options.get(optForSelect).size);
                                     NUtils.addTask(wbs);
-                                    if (wbs.getState() == WaitButcherState.State.READY)
-                                    {
+                                    if (wbs.getState() == WaitButcherState.State.READY) {
                                         optFound = false;
                                     }
-                                }
-                                else
-                                {
+                                } else {
                                     NUtils.addTask(new NoGob(gob.id));
-                                    if(gui.vhand!=null)
-                                    {
+                                    if (gui.vhand != null) {
                                         NUtils.drop(gui.vhand);
                                         NUtils.addTask(new WaitFreeHand());
                                         new FreeInventory(context).run(gui);
-                                        new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(),new NAlias("Fresh")).run(gui);
+                                        new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
                                     }
                                     optFound = false;
                                 }
                             }
+                            else
+                                optFound = false;
                         }
                     }
                 }
                 gobs = getGobs(area);
             }
             new FreeInventory(context).run(gui);
-            new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(),new NAlias("Fresh")).run(gui);
+            new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
         }
 
         return Results.SUCCESS();
@@ -151,5 +159,22 @@ public class Butcher implements Action {
             }
         }
         return result;
+    }
+
+    boolean useGlobalPf() throws InterruptedException {
+        NArea nArea = NArea.findSpec(Specialisation.SpecName.deadkritter.toString());
+        if(nArea==null)
+        {
+            nArea = NArea.globalFindSpec(Specialisation.SpecName.deadkritter.toString());
+            if(nArea!=null) {
+                List<RoutePoint> routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(nArea));
+                if(routePoints!=null)
+                    {
+                        new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
+                        return true;
+                    }
+            }
+        }
+        return false;
     }
 }

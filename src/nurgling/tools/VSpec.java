@@ -1666,6 +1666,14 @@ public class VSpec {
         baits.add(new JSONObject("{\"static\":\"gfx/invobjs/woodworm\",\"name\":\"Woodworm\"}"));
         categories.put("Bait", baits);
 
+        ArrayList<JSONObject> entrails = new ArrayList<>();
+        entrails.add(new JSONObject("{\"static\":\"gfx/invobjs/entrails\",\"name\":\"Entrails\"}"));
+        categories.put("Entrails", entrails);
+
+        ArrayList<JSONObject> intestines = new ArrayList<>();
+        intestines.add(new JSONObject("{\"static\":\"gfx/invobjs/intestines\",\"name\":\"Intestines\"}"));
+        categories.put("Intestines", intestines);
+
         ArrayList<JSONObject> chitinItems = new ArrayList<>();
         chitinItems.add(new JSONObject("{\"static\":\"gfx/invobjs/antchitin\",\"name\":\"Ant Chitin\"}"));
         chitinItems.add(new JSONObject("{\"static\":\"gfx/invobjs/beechitin\",\"name\":\"Bee Chitin\"}"));
@@ -2410,7 +2418,6 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/arkose\",\"name\":\"Arkose\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/basalt\",\"name\":\"Basalt\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/batrock\",\"name\":\"Bat Rock\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/blackcoal\",\"name\":\"Black Coal\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/magnetite\",\"name\":\"Magnetite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Bloodstone\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/breccia\",\"name\":\"Breccia\"}"));
