@@ -2,6 +2,7 @@ package nurgling.actions.bots;
 
 import haven.Gob;
 import nurgling.NGameUI;
+import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.tools.Context;
@@ -26,6 +27,10 @@ public class CollectDreams implements Action {
                     break;
                 }
             } while (harvestResult.isSuccess);
+
+            if(NUtils.getGameUI().getInventory().getFreeSpace()<3) {
+                new FreeInventory(context).run(gui);
+            }
         }
 
         new FreeInventory(context).run(gui);
