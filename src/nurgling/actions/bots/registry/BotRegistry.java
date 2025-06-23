@@ -109,7 +109,6 @@ public class BotRegistry {
         bots.add(new BotDescriptor("unbox", BotDescriptor.BotType.UTILS, "Create piles with soil", "Create piles with soil in area.", false, true, CreateSoilPiles.class, "unbox", false));
         bots.add(new BotDescriptor("test1", BotDescriptor.BotType.UTILS, "Destroyer", "Destroy objects in area.", false, true, Destroyer.class, "test1", false));
         bots.add(new BotDescriptor("test1", BotDescriptor.BotType.UTILS, "Collect dreams", "Collect dreams from all dream catchers in a dream catcher area.", true, true, CollectDreams.class, "test1", false));
-        bots.add(new BotDescriptor("test1", BotDescriptor.BotType.UTILS, "Catch moths", "Go to any free bed in a bed area nearby.", false, true, CatchBugsAround.class, "bed", false));
         bots.add(new BotDescriptor("test1", BotDescriptor.BotType.UTILS, "Catch bugs", "Catch bugs around player.", false, true, CatchBugsAround.class, "test1", false));
 
         // BUILD
