@@ -214,7 +214,8 @@ public class NQuestInfo extends Widget
                 imgs.add(new QuestImage(credo_title.render("Credo:").img, -1));
                 for (Condition cond : credo.myConditions)
                 {
-                    imgs.add(new QuestImage(fnd1.render(cond.target).img, cond.questId));
+                    if(!cond.ready)
+                        imgs.add(new QuestImage(fnd1.render(cond.target).img, cond.questId));
                 }
             }
             for (String qname : qgconds.keySet()) {

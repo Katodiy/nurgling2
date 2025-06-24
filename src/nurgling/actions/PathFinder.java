@@ -245,8 +245,10 @@ public class PathFinder implements Action {
         NPFMap.Cell[][] cells = pfmap.getCells();
         if(start_pos.x < pfmap.size && start_pos.y<pfmap.size && start_pos.x>=0 && start_pos.y>=0) {
             if (cells[start_pos.x][start_pos.y].val != 0) {
-                if (target_id >= 0 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test)
+                if (target_id >= 0 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test) {
+                    dn = true;
                     return false;
+                }
                 ArrayList<Coord> st_poses = findFreeNear(start_pos, true);
                 if (st_poses.isEmpty())
                     return false;

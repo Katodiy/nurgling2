@@ -56,7 +56,7 @@ public class NContext {
     private void navigateToAreaIfNeeded(String areaId) throws InterruptedException {
         NArea area = areas.get(areaId);
         if(!area.isVisible()) {
-            new RoutePointNavigator(rps.get(areaId), lastcoord).run(gui);
+            new RoutePointNavigator(rps.get(areaId)).run(gui);
         }
     }
 
