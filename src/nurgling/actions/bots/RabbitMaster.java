@@ -7,6 +7,7 @@ import haven.WItem;
 import nurgling.*;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
@@ -77,7 +78,7 @@ public class RabbitMaster implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<Container> rabbitHutchesBreeding = new ArrayList<>();
 
-        for (Gob ttube : Finder.findGobs(NArea.findSpec(Specialisation.SpecName.rabbit.toString()),
+        for (Gob ttube : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.rabbit.toString()),
                 new NAlias(RABBIT_HUTCH_RESOURCE_NAME))) {
             Container cand = new Container();
             cand.gob = ttube;
@@ -90,7 +91,7 @@ public class RabbitMaster implements Action {
 
         ArrayList<Container> rabbitHutchesIncubators = new ArrayList<>();
 
-        for (Gob ttube : Finder.findGobs(NArea.findSpec(Specialisation.SpecName.rabbitIncubator.toString()),
+        for (Gob ttube : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.rabbitIncubator.toString()),
                 new NAlias(RABBIT_HUTCH_RESOURCE_NAME))) {
             Container cand = new Container();
             cand.gob = ttube;
@@ -102,10 +103,10 @@ public class RabbitMaster implements Action {
         }
 
         // Fill incubators and hutches with liquids
-        new FillFluid(rabbitHutchesBreeding, NArea.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 32).run(gui);
-        new FillFluid(rabbitHutchesIncubators, NArea.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 32).run(gui);
-        new FillFluid(rabbitHutchesBreeding, NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
-        new FillFluid(rabbitHutchesIncubators, NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
+        new FillFluid(rabbitHutchesBreeding, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 32).run(gui);
+        new FillFluid(rabbitHutchesIncubators, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 32).run(gui);
+        new FillFluid(rabbitHutchesBreeding, NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
+        new FillFluid(rabbitHutchesIncubators, NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
 
         // Read contents of rabbit hutches and save them.
         ArrayList<RabbitMaster.HutchInfo> hutchInfos = new ArrayList<>();
@@ -188,7 +189,7 @@ public class RabbitMaster implements Action {
 
         ArrayList<Context.Output> outputs = new ArrayList<>();
         for (Container cc : rabbitHutchesIncubators) {
-            Context.OutputContainer container = new Context.OutputContainer(cc.gob, NArea.findSpec(Specialisation.SpecName.incubator.toString()).getRCArea(), 1);
+            Context.OutputContainer container = new Context.OutputContainer(cc.gob, NContext.findSpec(Specialisation.SpecName.incubator.toString()).getRCArea(), 1);
             container.cap = RABBIT_HUTCH_NAME;
             container.initattr(Container.Space.class);
             container.initattr(Container.TargetItems.class);

@@ -3,6 +3,7 @@ package nurgling.actions.bots;
 import nurgling.NGameUI;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
@@ -25,10 +26,10 @@ public class PipeweedFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NArea.findSpec(field),NArea.findSpec(seed),NArea.findSpec(trough),NArea.findSpec(swill),new NAlias("plants/pipeweed"),new NAlias("Pipeweed"),4, false).run(gui);
-            if(NArea.findOut("Fresh Leaf of Pipeweed", 1)!=null)
-                new CollectItemsToPile(NArea.findSpec(field).getRCArea(),NArea.findOut("Fresh Leaf of Pipeweed", 1).getRCArea(),new NAlias("tobacco-fresh", "Fresh Leaf of Pipeweed")).run(gui);
-            new SeedCrop(NArea.findSpec(field),NArea.findSpec(seed),new NAlias("plants/pipeweed"),new NAlias("Pipeweed"), false).run(gui);
+            new HarvestCrop(NContext.findSpec(field),NContext.findSpec(seed),NContext.findSpec(trough),NContext.findSpec(swill),new NAlias("plants/pipeweed"),new NAlias("Pipeweed"),4, false).run(gui);
+            if(NContext.findOut("Fresh Leaf of Pipeweed", 1)!=null)
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(),NContext.findOut("Fresh Leaf of Pipeweed", 1).getRCArea(),new NAlias("tobacco-fresh", "Fresh Leaf of Pipeweed")).run(gui);
+            new SeedCrop(NContext.findSpec(field),NContext.findSpec(seed),new NAlias("plants/pipeweed"),new NAlias("Pipeweed"), false).run(gui);
             return Results.SUCCESS();
         }
 

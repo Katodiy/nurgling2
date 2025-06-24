@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -24,7 +25,7 @@ public class TabacoAction implements Action {
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
-            NArea npile_area = NArea.findIn(raw.getDefault());
+            NArea npile_area = NContext.findIn(raw.getDefault());
             Pair<Coord2d,Coord2d> pile_area = npile_area!=null?npile_area.getRCArea():null;
             if(pile_area==null)
             {
@@ -33,7 +34,7 @@ public class TabacoAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
 
-            for (Gob htable : Finder.findGobs(NArea.findSpec(rtables.name),
+            for (Gob htable : Finder.findGobs(NContext.findSpec(rtables.name),
                     new NAlias("gfx/terobjs/htable"))) {
                 Container cand = new Container();
                 cand.gob = htable;

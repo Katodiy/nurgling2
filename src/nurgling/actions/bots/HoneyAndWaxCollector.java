@@ -6,6 +6,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.routes.Route;
 import nurgling.tasks.*;
 import nurgling.tools.Container;
@@ -67,7 +68,7 @@ public class HoneyAndWaxCollector implements Action {
         // If no bucket, fetch one from container
         if (needToFindBucket) {
             getGameUI().msg("Looking for bucket container!");
-            Container bucketContainer = findContainer(NArea.findOut("Bucket", 1));
+            Container bucketContainer = findContainer(NContext.findOut("Bucket", 1));
             if (bucketContainer == null) {
                 getGameUI().msg("No bucket container found!");
                 return Results.FAIL();
@@ -76,14 +77,14 @@ public class HoneyAndWaxCollector implements Action {
         }
 
         // Find Honey Barrel
-        honeyBarrel = findBarrel(NArea.findSpec(new NArea.Specialisation(Specialisation.SpecName.barrel.toString(), "Honey")));
+        honeyBarrel = findBarrel(NContext.findSpec(new NArea.Specialisation(Specialisation.SpecName.barrel.toString(), "Honey")));
         if (honeyBarrel == null) {
             getGameUI().msg("No honey barrel found!");
             return Results.FAIL();
         }
 
         // Find Wax Container
-        waxContainer = findContainer(NArea.findOut("Beeswax", 1));
+        waxContainer = findContainer(NContext.findOut("Beeswax", 1));
         if (waxContainer == null) {
             getGameUI().msg("No wax container found!");
             return Results.FAIL();

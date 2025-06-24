@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
@@ -31,7 +32,7 @@ public class BackerAction implements Action {
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
 
-            NArea ovens = NArea.findSpec(Specialisation.SpecName.ovens.toString());
+            NArea ovens = NContext.findSpec(Specialisation.SpecName.ovens.toString());
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob sm : Finder.findGobs(ovens, new NAlias("gfx/terobjs/oven"))) {
@@ -56,7 +57,7 @@ public class BackerAction implements Action {
             while (res == null || res.IsSuccess()) {
                 NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 4));
                 Context icontext = new Context();
-                for (NArea area : NArea.findAllIn(new NAlias("Dough", "Unbaked"))) {
+                for (NArea area : NContext.findAllIn(new NAlias("Dough", "Unbaked"))) {
                     for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
                         Container cand = new Container();
                         cand.gob = sm;

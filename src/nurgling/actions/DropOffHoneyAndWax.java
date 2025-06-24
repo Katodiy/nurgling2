@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitBucketInHandContentQuantityChange;
 import nurgling.tasks.WaitItemInEquip;
 import nurgling.tools.Context;
@@ -67,7 +68,7 @@ public class DropOffHoneyAndWax implements Action {
     }
 
     private Results storeBucketBack(NGameUI gui) throws InterruptedException {
-        Container bucketContainer = findContainer(NArea.findOut("Bucket", 1));
+        Container bucketContainer = findContainer(NContext.findOut("Bucket", 1));
         if (bucketContainer == null)
             return Results.SUCCESS(); // no container — just finish
 

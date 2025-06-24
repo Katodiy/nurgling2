@@ -8,6 +8,7 @@ import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.Context;
@@ -53,7 +54,7 @@ public class Butcher implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
 
         NArea.Specialisation kritter_corpse = new NArea.Specialisation(Specialisation.SpecName.deadkritter.toString());
-        NArea area = NArea.findSpec(kritter_corpse);
+        NArea area = NContext.findSpec(kritter_corpse);
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(kritter_corpse);
 
@@ -116,7 +117,7 @@ public class Butcher implements Action {
                                         NUtils.drop(gui.vhand);
                                         NUtils.addTask(new WaitFreeHand());
                                         new FreeInventory(context).run(gui);
-                                        new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
+                                        new TransferToPiles(NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
                                     }
                                     optFound = false;
                                 }
@@ -137,14 +138,14 @@ public class Butcher implements Action {
 
     private static void transferFreshHides(NGameUI gui) throws InterruptedException {
         if(!NUtils.getGameUI().getInventory().getItems(new NAlias("Fresh")).isEmpty()) {
-            NArea harea = NArea.findSpec(Specialisation.SpecName.rawhides.toString());
+            NArea harea = NContext.findSpec(Specialisation.SpecName.rawhides.toString());
             List<RoutePoint> routePoints = null;
             if (harea == null) {
-                harea = NArea.findSpecGlobal(Specialisation.SpecName.rawhides.toString());
+                harea = NContext.findSpecGlobal(Specialisation.SpecName.rawhides.toString());
                 routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(harea));
                 new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
             }
-            new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
+            new TransferToPiles(NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
         }
     }
 

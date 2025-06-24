@@ -3,6 +3,7 @@ package nurgling.actions;
 import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tools.Context;
 import nurgling.tools.Container;
 import nurgling.tools.NAlias;
@@ -70,8 +71,8 @@ public class TransferItems implements Action
         resitems.addAll(before);
         resitems.addAll(after);
         for(String item : resitems) {
-            TreeMap<Integer, NArea> areas = NArea.findOuts(new NAlias(item));
-            TreeMap<Integer, NArea> outOfReachAreas = NArea.findOutsGlobal(item);
+            TreeMap<Integer, NArea> areas = NContext.findOuts(new NAlias(item));
+            TreeMap<Integer, NArea> outOfReachAreas = NContext.findOutsGlobal(item);
             if(!areas.isEmpty() || !outOfReachAreas.isEmpty()) {
                 if(!areas.isEmpty()) {
                     ArrayList<Integer> ths = new ArrayList<>(areas.keySet());

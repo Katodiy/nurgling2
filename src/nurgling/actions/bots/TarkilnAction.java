@@ -6,6 +6,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.*;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
@@ -23,14 +24,14 @@ public class TarkilnAction implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
 
         NArea.Specialisation tarkilnsa = new NArea.Specialisation(Specialisation.SpecName.tarkiln.toString());
-        NArea area = NArea.findSpec(tarkilnsa);
+        NArea area = NContext.findSpec(tarkilnsa);
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(tarkilnsa);
 
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         Context context = new Context();
 
-        NArea npile_area = NArea.findOut(new NAlias("coal"),1);
+        NArea npile_area = NContext.findOut(new NAlias("coal"),1);
         Pair<Coord2d,Coord2d> pile_area = npile_area!=null?npile_area.getRCArea():null;
         if(pile_area==null)
         {

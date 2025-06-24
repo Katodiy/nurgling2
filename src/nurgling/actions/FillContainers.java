@@ -4,6 +4,7 @@ import haven.Coord;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.NAlias;
@@ -26,7 +27,7 @@ public class FillContainers implements Action
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NArea area = NArea.findIn(transferedItems);
+        NArea area = NContext.findIn(transferedItems);
         if (area == null)
             return Results.ERROR("NO area for: " + transferedItems);
         context.addInput(transferedItems, Context.GetInput(transferedItems, area));

@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
@@ -34,7 +35,7 @@ public class FFAction implements Action {
 
         if(new Validator(req, new ArrayList<>()).run(gui).IsSuccess()) {
 
-            NArea fforges = NArea.findSpec(Specialisation.SpecName.fforge.toString());
+            NArea fforges = NContext.findSpec(Specialisation.SpecName.fforge.toString());
 
             ArrayList<Container> containers = new ArrayList<>();
 
@@ -64,7 +65,7 @@ public class FFAction implements Action {
             Results res = null;
             Context context = new Context();
             context.workstation = new Context.Workstation("gfx/terobjs/anvil", null);
-            context.workstation.selected = Finder.findGob(NArea.findSpec(Specialisation.SpecName.anvil.toString()), new NAlias("anvil"));
+            context.workstation.selected = Finder.findGob(NContext.findSpec(Specialisation.SpecName.anvil.toString()), new NAlias("anvil"));
             while (res == null || res.IsSuccess()) {
                 NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 8));
                 new FreeContainers(containers).run(gui);

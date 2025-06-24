@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.Context;
 import nurgling.widgets.FoodContainer;
@@ -32,10 +33,10 @@ public class Eater implements Action {
         ArrayList<String> items = FoodContainer.getFoodNames();
 
         Pair<Coord2d,Coord2d> area = null;
-        NArea nArea = NArea.findSpec(Specialisation.SpecName.eat.toString());
+        NArea nArea = NContext.findSpec(Specialisation.SpecName.eat.toString());
         if(nArea==null)
         {
-            nArea = NArea.findSpecGlobal(Specialisation.SpecName.eat.toString());
+            nArea = NContext.findSpecGlobal(Specialisation.SpecName.eat.toString());
             if(nArea!=null) {
                 routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(nArea));
             }

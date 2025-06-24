@@ -6,6 +6,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -24,7 +25,7 @@ public class ShearWool implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        ArrayList<Gob> gobs = Finder.findGobs(NArea.findSpec(spec), type);
+        ArrayList<Gob> gobs = Finder.findGobs(NContext.findSpec(spec), type);
         Context context = new Context();
         boolean needRestart = true;
         while (needRestart) {
@@ -32,7 +33,7 @@ public class ShearWool implements Action {
             for (Gob gob : gobs) {
                 if (NUtils.getGameUI().getInventory().getNumberFreeCoord(Coord.of(1, 1)) < 3) {
                     new FreeInventory(context).run(gui);
-                    gobs = Finder.findGobs(NArea.findSpec(spec), type);
+                    gobs = Finder.findGobs(NContext.findSpec(spec), type);
                     needRestart = true;
                     break;
                 }

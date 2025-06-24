@@ -5,6 +5,7 @@ import nurgling.*;
 import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.actions.bots.SelectArea;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.HandIsFree;
 import nurgling.tasks.NTask;
@@ -27,10 +28,10 @@ public class FillWaterskins implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         Pair<Coord2d,Coord2d> area = null;
-        NArea nArea = NArea.findSpec(Specialisation.SpecName.water.toString());
+        NArea nArea = NContext.findSpec(Specialisation.SpecName.water.toString());
         if(nArea==null)
         {
-            nArea = NArea.findSpecGlobal(Specialisation.SpecName.water.toString());
+            nArea = NContext.findSpecGlobal(Specialisation.SpecName.water.toString());
             if(nArea!=null) {
                 routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(nArea));
             }

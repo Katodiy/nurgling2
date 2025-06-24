@@ -162,12 +162,12 @@ public class NMakewindow extends Widget {
             }
             if(NMakewindow.this.autoMode && name!=null)
             {
-                logisticin = (NArea.findIn(name) != null);
+                logisticin = (NContext.findIn(name) != null);
                 if(!logisticin)
                 {
                     categories = (VSpec.categories.get(name)!=null);
                 }
-                logisticout = (NArea.findOut(name,1) != null);
+                logisticout = (NContext.findOut(name,1) != null);
                 if(!logisticout)
                 {
                     categories = (VSpec.categories.get(name)!=null);
@@ -175,13 +175,13 @@ public class NMakewindow extends Widget {
                 for(Spec s : inputs) {
                     if(s.categories && s.ing!=null)
                     {
-                        s.ing.logistic = (NArea.findIn(s.ing.name) != null);
+                        s.ing.logistic = (NContext.findIn(s.ing.name) != null);
                     }
                 }
                 for(Spec s : outputs) {
                     if(s.categories && s.ing!=null)
                     {
-                        s.ing.logistic = (NArea.findOut(s.ing.name, 1) != null);
+                        s.ing.logistic = (NContext.findOut(s.ing.name, 1) != null);
                     }
                 }
             }
@@ -760,7 +760,7 @@ public class NMakewindow extends Widget {
 
         void tick(double dt)
         {
-            logistic = (NArea.findIn(name) != null);
+            logistic = (NContext.findIn(name) != null);
         }
     }
 

@@ -6,6 +6,7 @@ import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitLifted;
 import nurgling.tasks.WaitPose;
@@ -55,7 +56,7 @@ public class FreeKIlnGP implements Action
                         return Finder.findLiftedbyPlayer()!=null;
                     }
                 });
-                new FindPlaceAndAction(null,NArea.findSpec(new NArea.Specialisation(Specialisation.SpecName.gardenpot.toString()))).run(gui);
+                new FindPlaceAndAction(null, NContext.findSpec(new NArea.Specialisation(Specialisation.SpecName.gardenpot.toString()))).run(gui);
             }
             new CloseTargetContainer(container).run(gui);
         }

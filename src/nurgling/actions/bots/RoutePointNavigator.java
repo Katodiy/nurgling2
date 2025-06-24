@@ -7,6 +7,7 @@ import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.actions.TravelToHearthFire;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
@@ -35,7 +36,7 @@ public class RoutePointNavigator implements Action {
         }
 
         int areaId = (Integer) areaIdObj;
-        NArea area = NArea.findAreaById(areaId);
+        NArea area = NContext.findAreaById(areaId);
         this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
         this.targetPoint = this.graph.findAreaRoutePoint(area);
     }

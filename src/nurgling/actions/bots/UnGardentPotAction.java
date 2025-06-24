@@ -6,6 +6,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
@@ -31,7 +32,7 @@ public class UnGardentPotAction implements Action {
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
 
-            NArea kilns = NArea.findSpec(Specialisation.SpecName.kiln.toString());
+            NArea kilns = NContext.findSpec(Specialisation.SpecName.kiln.toString());
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob sm : Finder.findGobs(kilns, new NAlias("gfx/terobjs/kiln"))) {
@@ -59,7 +60,7 @@ public class UnGardentPotAction implements Action {
             }
 
             Context icontext = new Context();
-            for (NArea area : NArea.findAllIn(new NAlias("Unfired Garden Pot"))) {
+            for (NArea area : NContext.findAllIn(new NAlias("Unfired Garden Pot"))) {
                 for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
                     Container cand = new Container();
                     cand.gob = sm;

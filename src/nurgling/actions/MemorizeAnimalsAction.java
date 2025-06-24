@@ -6,6 +6,7 @@ import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import nurgling.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.AnimalInRoster;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -26,7 +27,7 @@ public class MemorizeAnimalsAction implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NArea current = NArea.findSpec(this.type);
+        NArea current = NContext.findSpec(this.type);
         if (current == null)
             return Results.ERROR("No animal area set. (Sheeps, Cows, Pigs, Goats in area specialization)");
 

@@ -8,6 +8,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -30,7 +31,7 @@ public class BlockAshAction implements Action {
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
-            Pair<Coord2d,Coord2d> rca = NArea.findSpec(Specialisation.SpecName.blockforash.toString()).getRCArea();
+            Pair<Coord2d,Coord2d> rca = NContext.findSpec(Specialisation.SpecName.blockforash.toString()).getRCArea();
             if(rca==null)
             {
                 return Results.ERROR("Input area not found");
@@ -45,7 +46,7 @@ public class BlockAshAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
 
-            for (Gob kiln : Finder.findGobs(NArea.findSpec(rkilns.name),
+            for (Gob kiln : Finder.findGobs(NContext.findSpec(rkilns.name),
                     new NAlias("gfx/terobjs/kiln"))) {
                 Container cand = new Container();
                 cand.gob = kiln;

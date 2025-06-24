@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -41,7 +42,7 @@ public class SmelterAction implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
-            NArea smelters = NArea.findSpec(Specialisation.SpecName.smelter.toString());
+            NArea smelters = NContext.findSpec(Specialisation.SpecName.smelter.toString());
             Finder.findGobs(smelters, new NAlias("gfx/terobjs/smelter"));
 
             ArrayList<Container> containers = new ArrayList<>();
@@ -94,7 +95,7 @@ public class SmelterAction implements Action {
                 new FreeContainers(containers).run(gui);
                 new CollectQuickSilver(containers).run(gui);
                 new DropTargets(containers, new NAlias("Slag")).run(gui);
-                res = new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.ore.toString()).getRCArea(), ores).run(gui);
+                res = new FillContainersFromPiles(containers, NContext.findSpec(Specialisation.SpecName.ore.toString()).getRCArea(), ores).run(gui);
                 ArrayList<Container> forFuel = new ArrayList<>();
 
                 for(Container container: containers) {

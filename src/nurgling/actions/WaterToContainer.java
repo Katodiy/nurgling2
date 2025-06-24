@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NGob;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.*;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -32,8 +33,8 @@ public class WaterToContainer implements Action
             neededWater.put(Container.WaterLvl.WATERLVL, watLvl.neededWater());
         }
 
-        Gob cistern = Finder.findGob(NArea.findSpec(Specialisation.SpecName.water.toString()), new NAlias("cistern"));
-        Gob barrel = Finder.findGob(NArea.findSpec(Specialisation.SpecName.water.toString()), new NAlias("barrel"));
+        Gob cistern = Finder.findGob(NContext.findSpec(Specialisation.SpecName.water.toString()), new NAlias("cistern"));
+        Gob barrel = Finder.findGob(NContext.findSpec(Specialisation.SpecName.water.toString()), new NAlias("barrel"));
         if(cistern == null || barrel == null)
             return Results.ERROR("No barrel or cistern.");
         Coord2d pos = new Coord2d(barrel.rc.x, barrel.rc.y);

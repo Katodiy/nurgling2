@@ -8,6 +8,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -29,7 +30,7 @@ public class BricksAction implements Action {
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
-            NArea npile_area = NArea.findIn(clays);
+            NArea npile_area = NContext.findIn(clays);
             Pair<Coord2d,Coord2d> pile_area = npile_area!=null?npile_area.getRCArea():null;
             if(pile_area==null)
             {
@@ -38,7 +39,7 @@ public class BricksAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
 
-            for (Gob kiln : Finder.findGobs(NArea.findSpec(rkilns.name),
+            for (Gob kiln : Finder.findGobs(NContext.findSpec(rkilns.name),
                     new NAlias("gfx/terobjs/kiln"))) {
                 Container cand = new Container();
                 cand.gob = kiln;

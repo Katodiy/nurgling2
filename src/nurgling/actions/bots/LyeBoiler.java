@@ -7,6 +7,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForFirstBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
@@ -32,7 +33,7 @@ public class LyeBoiler implements Action {
         if (new Validator(req, opt).run(gui).IsSuccess()) {
 
 
-            NArea cauldrons = NArea.findSpec(Specialisation.SpecName.boiler.toString());
+            NArea cauldrons = NContext.findSpec(Specialisation.SpecName.boiler.toString());
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob cm : Finder.findGobs(cauldrons, new NAlias("gfx/terobjs/cauldron"))) {
@@ -60,7 +61,7 @@ public class LyeBoiler implements Action {
 
             Results res = null;
             Context icontext = new Context();
-            Pair<Coord2d, Coord2d> area = NArea.findIn(new NAlias("Ashes")).getRCArea();
+            Pair<Coord2d, Coord2d> area = NContext.findIn(new NAlias("Ashes")).getRCArea();
             if (area == null) {
                 return Results.ERROR("Ashes not found");
             }
@@ -85,7 +86,7 @@ public class LyeBoiler implements Action {
                             forFuel.add(container);
                     }
 
-                    new FillFluid(containers, NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
+                    new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
                     if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
                         return Results.ERROR("NO FUEL");
 

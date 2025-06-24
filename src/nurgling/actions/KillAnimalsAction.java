@@ -6,6 +6,7 @@ import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import nurgling.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.AnimalIsDead;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -43,7 +44,7 @@ public class KillAnimalsAction<C extends Entry> implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NArea current = NArea.findSpec(this.type);
+        NArea current = NContext.findSpec(this.type);
         if (current == null)
             return Results.ERROR("No animal area set. (Sheeps, Cows, Pigs, Goats in area specialization)");
 
@@ -105,7 +106,7 @@ public class KillAnimalsAction<C extends Entry> implements Action {
             res = aid.getRes();
         }
         new LiftObject(target).run(gui);
-        new FindPlaceAndAction(target, NArea.findSpec("deadkritter")).run(gui);
+        new FindPlaceAndAction(target, NContext.findSpec("deadkritter")).run(gui);
         Collection<Object> args = new ArrayList<>();
         args.add(((CattleId) target.getattr(CattleId.class)).entry().id);
         NUtils.getRosterWindow(cattleRoster).roster(cattleRoster).wdgmsg("rm", args.toArray(new Object[0]));

@@ -6,6 +6,7 @@ import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.HandIsFree;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -49,7 +50,7 @@ public class FillFuelPowOrCauldron implements Action
                 if(NUtils.getGameUI().getInventory().getItems(fuelname).isEmpty()) {
                     int target_size = count;
                     while (target_size != 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord) != 0) {
-                        ArrayList<Gob> piles = Finder.findGobs(NArea.findSpec(Specialisation.SpecName.fuel.toString(), "Block"), new NAlias("stockpile"));
+                        ArrayList<Gob> piles = Finder.findGobs(NContext.findSpec(Specialisation.SpecName.fuel.toString(), "Block"), new NAlias("stockpile"));
                         if (piles.isEmpty()) {
                             if (gui.getInventory().getItems().isEmpty())
                                 return Results.ERROR("no items");

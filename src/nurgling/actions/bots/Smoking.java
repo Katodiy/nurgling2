@@ -6,6 +6,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.conf.NSmokProp;
 import nurgling.tasks.WaitCheckable;
 import nurgling.tools.Container;
@@ -49,12 +50,12 @@ public class Smoking implements Action {
         req.add(ssmokshed);
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         ArrayList<NSmokProp> cands = new ArrayList<>();
-        Pair<Coord2d,Coord2d> logs = NArea.findSpec(slogs).getRCArea();
-        Pair<Coord2d,Coord2d> sheds = NArea.findSpec(ssmokshed).getRCArea();
+        Pair<Coord2d,Coord2d> logs = NContext.findSpec(slogs).getRCArea();
+        Pair<Coord2d,Coord2d> sheds = NContext.findSpec(ssmokshed).getRCArea();
         if(new Validator(req, opt).run(gui).IsSuccess()) {
             for(NSmokProp prop : smokProps) {
                 Gob testlog = Finder.findGob(logs,new NAlias(prop.fuel));
-                NArea testarea = NArea.findIn(prop.iconName);
+                NArea testarea = NContext.findIn(prop.iconName);
                 if(testlog!=null && testarea!=null) {
                     cands.add(prop);
                 }

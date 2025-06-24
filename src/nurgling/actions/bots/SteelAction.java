@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -28,7 +29,7 @@ public class SteelAction implements Action {
 
         if (new Validator(req, new ArrayList<>()).run(gui).IsSuccess()) {
 
-            NArea smelters = NArea.findSpec(Specialisation.SpecName.crucibles.toString());
+            NArea smelters = NContext.findSpec(Specialisation.SpecName.crucibles.toString());
             Finder.findGobs(smelters, new NAlias("gfx/terobjs/steelcrucible"));
 
             ArrayList<Container> containers = new ArrayList<>();

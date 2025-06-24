@@ -8,6 +8,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.conf.NClayDiggerProp;
 import nurgling.tasks.WaitCheckable;
 import nurgling.tasks.WaitChopperState;
@@ -50,7 +51,7 @@ public class ClayDigger implements Action {
         (insa = new SelectArea(Resource.loadsimg("baubles/clayTime"))).run(gui);
 
 
-        NArea area = NArea.findOut(new NAlias("clay"),1);
+        NArea area = NContext.findOut(new NAlias("clay"),1);
         if(area==null || area.getRCArea() == null)
         {
             NUtils.getGameUI().msg("Please select area for output clay");

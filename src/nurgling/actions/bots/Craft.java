@@ -52,10 +52,10 @@ public class Craft implements Action {
         int size = 0;
         for (NMakewindow.Spec s : mwnd.inputs) {
             if (!s.categories) {
-                NArea area = NArea.findIn(s.name);
+                NArea area = NContext.findIn(s.name);
                 if(area == null)
                 {
-                    area = NArea.findInGlobal(s.ing.name);
+                    area = NContext.findInGlobal(s.ing.name);
                     if(area!=null)
                     {
                         isGlobalMode = true;
@@ -75,10 +75,10 @@ public class Craft implements Action {
                     size += s.count;
                 }
             } else if (s.ing != null) {
-                NArea area = NArea.findIn(s.ing.name);
+                NArea area = NContext.findIn(s.ing.name);
                 if(area == null)
                 {
-                    area = NArea.findInGlobal(s.ing.name);
+                    area = NContext.findInGlobal(s.ing.name);
                     if(area!=null)
                     {
                         isGlobalMode = true;
@@ -104,10 +104,10 @@ public class Craft implements Action {
             size += s.count;
             if (!mwnd.noTransfer.a) {
                 if (!s.categories) {
-                    NArea area = NArea.findOut(s.name, 1);
+                    NArea area = NContext.findOut(s.name, 1);
                     if(area == null)
                     {
-                        area = NArea.findOutGlobal(s.name, 1, gui);
+                        area = NContext.findOutGlobal(s.name, 1, gui);
                         if(area!=null) {
                             isGlobalMode = true;
                         }
@@ -127,10 +127,10 @@ public class Craft implements Action {
                         size += s.count;
                     }
                 } else if (s.ing != null) {
-                    NArea area = NArea.findOut(s.ing.name, 1);
+                    NArea area = NContext.findOut(s.ing.name, 1);
                     if(area == null)
                     {
-                        area = NArea.findOutGlobal(s.name, 1, gui);
+                        area = NContext.findOutGlobal(s.name, 1, gui);
                         if(area!=null) {
                             isGlobalMode = true;
                         }

@@ -3,6 +3,7 @@ package nurgling.actions;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class Validator implements Action{
         {
             if(s.subtype!=null)
             {
-                if((test = NArea.findSpec(s.name,s.subtype))==null || test.getRCArea() == null)
+                if((test = NContext.findSpec(s.name,s.subtype))==null || test.getRCArea() == null)
                 {
                     return Results.ERROR("Area " + Specialisation.findSpecialisation(s.name).prettyName + " ( " + s.subtype + " ) required, but not found!");
                 }
@@ -39,7 +40,7 @@ public class Validator implements Action{
             else
             {
 
-                if((test = NArea.findSpec(s.name))==null || test.getRCArea() == null)
+                if((test = NContext.findSpec(s.name))==null || test.getRCArea() == null)
                 {
                     return Results.ERROR("Area " + Specialisation.findSpecialisation(s.name).prettyName + " required, but not found!");
                 }
@@ -49,13 +50,13 @@ public class Validator implements Action{
         for(NArea.Specialisation s: opt)
         {
             if(s.subtype!=null) {
-                if ((test = NArea.findSpec(s.name,s.subtype))==null || test.getRCArea() == null) {
+                if ((test = NContext.findSpec(s.name,s.subtype))==null || test.getRCArea() == null) {
                     NUtils.getGameUI().msg("Optional area " + Specialisation.findSpecialisation(s.name).prettyName + " ( " + s.subtype + " ) not found.");
                 }
             }
             else
             {
-                if((test = NArea.findSpec(s.name))==null || test.getRCArea() == null)
+                if((test = NContext.findSpec(s.name))==null || test.getRCArea() == null)
                 {
                     NUtils.getGameUI().msg("Optional area " + Specialisation.findSpecialisation(s.name).prettyName +" not found.");
                 }

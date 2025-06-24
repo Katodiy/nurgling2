@@ -4,6 +4,7 @@ import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
@@ -16,7 +17,7 @@ public class Sleep implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
 
         NArea.Specialisation bed = new NArea.Specialisation(Specialisation.SpecName.bed.toString());
-        NArea bedArea = NArea.findSpec(bed);
+        NArea bedArea = NContext.findSpec(bed);
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(bed);

@@ -6,6 +6,7 @@ import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.HandIsFree;
 import nurgling.tasks.WaitTargetSize;
 import nurgling.tools.Container;
@@ -56,7 +57,7 @@ public class FuelToContainers implements Action
                     }
                     int target_size = neededFuel.get(ftype);
                     while (target_size != 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord) != 0) {
-                        NArea fuel = NArea.findSpec(Specialisation.SpecName.fuel.toString(), ftype);
+                        NArea fuel = NContext.findSpec(Specialisation.SpecName.fuel.toString(), ftype);
                         if(fuel == null)
                             return Results.ERROR("No specialisation \"FUEL\" set.");
                         ArrayList<Gob> piles = Finder.findGobs(fuel, new NAlias("stockpile"));

@@ -5,6 +5,7 @@ import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.HandIsFree;
 import nurgling.tasks.NTask;
 import nurgling.tools.Context;
@@ -71,7 +72,7 @@ public class PrepareWorkStation implements Action
                     return Results.ERROR("I can't start a fire");
                 if((context.workstation.selected.ngob.getModelAttribute()&4)==0)
                 {
-                    new FillFluid(context.workstation.selected, NArea.findSpec(Specialisation.SpecName.water.toString())!=null ? NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea():null,new NAlias("water"),4).run(gui);
+                    new FillFluid(context.workstation.selected, NContext.findSpec(Specialisation.SpecName.water.toString())!=null ? NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea():null,new NAlias("water"),4).run(gui);
                 }
                 NUtils.addTask(new NTask() {
                     @Override
@@ -96,7 +97,7 @@ public class PrepareWorkStation implements Action
         if(NUtils.getGameUI().getInventory().getItems("Coal").isEmpty()) {
             int target_size = count;
             while (target_size != 0 && NUtils.getGameUI().getInventory().getFreeSpace() != 0) {
-                ArrayList<Gob> piles = Finder.findGobs(NArea.findSpec(Specialisation.SpecName.fuel.toString(), "Coal"), new NAlias("stockpile"));
+                ArrayList<Gob> piles = Finder.findGobs(NContext.findSpec(Specialisation.SpecName.fuel.toString(), "Coal"), new NAlias("stockpile"));
                 if (piles.isEmpty()) {
                     if (gui.getInventory().getItems().isEmpty())
                         return false;

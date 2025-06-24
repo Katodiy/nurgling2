@@ -10,6 +10,7 @@ import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
@@ -94,7 +95,7 @@ public class KFC implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<Container> containers = new ArrayList<>();
 
-        for (Gob ttube : Finder.findGobs(NArea.findSpec(Specialisation.SpecName.chicken.toString()),
+        for (Gob ttube : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.chicken.toString()),
                 new NAlias("gfx/terobjs/chickencoop"))) {
             Container cand = new Container();
             cand.gob = ttube;
@@ -107,7 +108,7 @@ public class KFC implements Action {
 
         ArrayList<Container> ccontainers = new ArrayList<>();
 
-        for (Gob ttube : Finder.findGobs(NArea.findSpec(Specialisation.SpecName.incubator.toString()),
+        for (Gob ttube : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.incubator.toString()),
                 new NAlias("gfx/terobjs/chickencoop"))) {
             Container cand = new Container();
             cand.gob = ttube;
@@ -119,10 +120,10 @@ public class KFC implements Action {
         }
 
         // Заполняем курятники и инкубаторы жидкостями
-        new FillFluid(containers, NArea.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 2).run(gui);
-        new FillFluid(ccontainers, NArea.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 2).run(gui);
-        new FillFluid(containers, NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 1).run(gui);
-        new FillFluid(ccontainers, NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 1).run(gui);
+        new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 2).run(gui);
+        new FillFluid(ccontainers, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 2).run(gui);
+        new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 1).run(gui);
+        new FillFluid(ccontainers, NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 1).run(gui);
 
         // Считываем содержимое курятников и сортируем их
         ArrayList<CoopInfo> coopInfos = new ArrayList<>();
@@ -199,7 +200,7 @@ public class KFC implements Action {
 
         ArrayList<Context.Output> outputs = new ArrayList<>();
         for (Container cc :ccontainers) {
-            Context.OutputContainer container = new Context.OutputContainer(cc.gob, NArea.findSpec(Specialisation.SpecName.incubator.toString()).getRCArea(), 1);
+            Context.OutputContainer container = new Context.OutputContainer(cc.gob, NContext.findSpec(Specialisation.SpecName.incubator.toString()).getRCArea(), 1);
             container.cap = "Chicken Coop";
             container.initattr(Container.Space.class);
             outputs.add(container);

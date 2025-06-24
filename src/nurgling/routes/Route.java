@@ -8,6 +8,7 @@ import nurgling.NCore;
 import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -64,7 +65,7 @@ public class Route {
         // Add the waypoint with default connection values
         try {
             try {
-                waypointToAdd.addReachableAreas(NArea.getAllVisible());
+                waypointToAdd.addReachableAreas(NContext.getAllVisible());
             } catch (InterruptedException e) {
                 NUtils.getGameUI().error("Unable to determine reachable areas.");
             }
@@ -129,7 +130,7 @@ public class Route {
             }
 
             try {
-                routePoint.addReachableAreas(NArea.getAllVisible());
+                routePoint.addReachableAreas(NContext.getAllVisible());
             } catch (InterruptedException e) {
                 NUtils.getGameUI().error("Unable to determine reachable areas.");
             }
@@ -158,7 +159,7 @@ public class Route {
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(routePoint);
 
             try {
-                routePoint.addReachableAreas(NArea.getAllVisible());
+                routePoint.addReachableAreas(NContext.getAllVisible());
             } catch (InterruptedException e) {
                 NUtils.getGameUI().error("Unable to determine reachable areas.");
             }
@@ -189,7 +190,7 @@ public class Route {
 
         try {
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(waypointToAdd);
-            waypointToAdd.addReachableAreas(NArea.getAllVisible());
+            waypointToAdd.addReachableAreas(NContext.getAllVisible());
             this.waypoints.add(waypointToAdd);
 
             NUtils.getGameUI().msg("Waypoint added: " + waypointToAdd);

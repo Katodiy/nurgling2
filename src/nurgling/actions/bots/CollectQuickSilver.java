@@ -8,6 +8,7 @@ import nurgling.NWItem;
 import nurgling.actions.*;
 import nurgling.actions.test.TESTtakehanddporop;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.HandWithoutContent;
 import nurgling.tasks.NotThisInHand;
 import nurgling.tasks.WaitItems;
@@ -41,7 +42,7 @@ public class CollectQuickSilver implements Action {
         NArea.Specialisation barrels = new NArea.Specialisation(Specialisation.SpecName.barrel.toString(), "Quicksilver");
         if(barrels == null)
             return Results.ERROR("Quicksilver spec not found");
-        NArea area = NArea.findSpec(barrels);
+        NArea area = NContext.findSpec(barrels);
         if (bucket != null && area != null) {
             Gob barrel = Finder.findGob(area, new NAlias("barrel"));
             if (barrel != null) {
