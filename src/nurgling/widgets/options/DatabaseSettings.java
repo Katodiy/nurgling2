@@ -3,6 +3,7 @@ package nurgling.widgets.options;
 import haven.*;
 import haven.Button;
 import haven.Label;
+import nurgling.DBPoolManager;
 import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.tools.NParser;
@@ -199,8 +200,11 @@ public class DatabaseSettings extends Widget {
             filePathEntry.visible = isSQLite;
             initDbButton.visible = isSQLite;
 
-            if(ui!=null)
+            if(ui!=null) {
+                if(ui.core.poolManager == null)
+                    ui.core.poolManager = new DBPoolManager(1);
                 ui.core.poolManager.reconnect();
+            }
         }
 
         // Переупаковываем виджет
