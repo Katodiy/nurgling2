@@ -4,11 +4,8 @@ import haven.WItem;
 import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.areas.NArea;
-import nurgling.tools.Container;
 import nurgling.tools.Context;
-import nurgling.tools.Finder;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 
 public class FreeInventory implements Action
@@ -31,7 +28,7 @@ public class FreeInventory implements Action
             NArea area = NArea.findOut(name, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1);
             if(area == null)
             {
-                area = NArea.globalFindOut(name, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1,gui);
+                area = NArea.findOutGlobal(name, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1,gui);
             }
             if(area != null) {
                 targets.add(name);

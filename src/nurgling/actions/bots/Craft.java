@@ -10,6 +10,7 @@ import nurgling.tasks.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
 
+import javax.print.attribute.standard.MediaSize;
 import java.util.*;
 
 public class Craft implements Action {
@@ -36,6 +37,8 @@ public class Craft implements Action {
     String tools = null;
     int count = 0;
 
+    boolean isGlobalMode = false;
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         if (mwnd != null) {
@@ -50,6 +53,14 @@ public class Craft implements Action {
         for (NMakewindow.Spec s : mwnd.inputs) {
             if (!s.categories) {
                 NArea area = NArea.findIn(s.name);
+                if(area == null)
+                {
+                    area = NArea.findInGlobal(s.ing.name);
+                    if(area!=null)
+                    {
+                        isGlobalMode = true;
+                    }
+                }
                 if (area == null) {
                     SelectArea insa;
                     NUtils.getGameUI().msg("Please select area with:" + s.name);
@@ -57,11 +68,22 @@ public class Craft implements Action {
                     context.addInput(s.name, Context.GetInput(s.name, insa.getRCArea()));
                     size += s.count;
                 } else {
+
+                    /// TODO global
+
                     context.addInput(s.name, Context.GetInput(s.name, area));
                     size += s.count;
                 }
             } else if (s.ing != null) {
                 NArea area = NArea.findIn(s.ing.name);
+                if(area == null)
+                {
+                    area = NArea.findInGlobal(s.ing.name);
+                    if(area!=null)
+                    {
+                        isGlobalMode = true;
+                    }
+                }
                 if (area == null) {
                     SelectArea insa;
                     NUtils.getGameUI().msg("Please select area with:" + s.ing.name);
@@ -69,6 +91,9 @@ public class Craft implements Action {
                     context.addInput(s.ing.name, Context.GetInput(s.ing.name, insa.getRCArea()));
                     size += s.count;
                 } else {
+
+                    /// TODO global
+
                     context.addInput(s.ing.name, Context.GetInput(s.ing.name, area));
                     size += s.count;
                 }
@@ -80,6 +105,13 @@ public class Craft implements Action {
             if (!mwnd.noTransfer.a) {
                 if (!s.categories) {
                     NArea area = NArea.findOut(s.name, 1);
+                    if(area == null)
+                    {
+                        area = NArea.findOutGlobal(s.name, 1, gui);
+                        if(area!=null) {
+                            isGlobalMode = true;
+                        }
+                    }
                     if (area == null) {
                         SelectArea outsa;
                         NUtils.getGameUI().msg("Please select area for:" + s.name);
@@ -87,11 +119,22 @@ public class Craft implements Action {
                         context.addOutput(s.name, Context.GetOutput(s.name, outsa.getRCArea()));
                         size += s.count;
                     } else {
+
+
+                        /// TODO global
+
                         context.addOutput(s.name, context.GetOutput(s.name, area));
                         size += s.count;
                     }
                 } else if (s.ing != null) {
                     NArea area = NArea.findOut(s.ing.name, 1);
+                    if(area == null)
+                    {
+                        area = NArea.findOutGlobal(s.name, 1, gui);
+                        if(area!=null) {
+                            isGlobalMode = true;
+                        }
+                    }
                     if (area == null) {
                         SelectArea outsa;
                         NUtils.getGameUI().msg("Please select area for:" + s.ing.name);
@@ -99,6 +142,9 @@ public class Craft implements Action {
                         context.addOutput(s.ing.name, Context.GetOutput(s.ing.name, outsa.getRCArea()));
                         size += s.count;
                     } else {
+
+                        /// TODO global
+
                         context.addOutput(s.name, context.GetOutput(s.name, area));
                         size += s.count;
                     }

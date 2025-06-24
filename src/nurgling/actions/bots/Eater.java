@@ -4,16 +4,9 @@ import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
-import nurgling.conf.NWorldExplorerProp;
 import nurgling.routes.RoutePoint;
-import nurgling.tasks.HandIsFree;
-import nurgling.tasks.WaitCheckable;
-import nurgling.tasks.WaitItemContent;
 import nurgling.tools.Context;
-import nurgling.tools.Finder;
-import nurgling.tools.NAlias;
 import nurgling.widgets.FoodContainer;
-import nurgling.widgets.NEquipory;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
@@ -42,7 +35,7 @@ public class Eater implements Action {
         NArea nArea = NArea.findSpec(Specialisation.SpecName.eat.toString());
         if(nArea==null)
         {
-            nArea = NArea.globalFindSpec(Specialisation.SpecName.eat.toString());
+            nArea = NArea.findSpecGlobal(Specialisation.SpecName.eat.toString());
             if(nArea!=null) {
                 routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(nArea));
             }

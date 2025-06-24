@@ -53,7 +53,7 @@ public class FreeContainers implements Action
                 if ((Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
                     area = NArea.findOut(name, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1);
                     if (area == null) {
-                        area = NArea.globalFindOut(name, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1, gui);
+                        area = NArea.findOutGlobal(name, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1, gui);
                     }
                 } else {
                     area = NArea.findOut(name, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1);

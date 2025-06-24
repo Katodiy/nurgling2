@@ -1,7 +1,6 @@
 package nurgling.actions.bots;
 
 import haven.Coord;
-import haven.FlowerMenu;
 import haven.Gob;
 import nurgling.NFlowerMenu;
 import nurgling.NGameUI;
@@ -17,7 +16,6 @@ import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -142,7 +140,7 @@ public class Butcher implements Action {
             NArea harea = NArea.findSpec(Specialisation.SpecName.rawhides.toString());
             List<RoutePoint> routePoints = null;
             if (harea == null) {
-                harea = NArea.globalFindSpec(Specialisation.SpecName.rawhides.toString());
+                harea = NArea.findSpecGlobal(Specialisation.SpecName.rawhides.toString());
                 routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(harea));
                 new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
             }

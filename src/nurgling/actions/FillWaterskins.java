@@ -30,7 +30,7 @@ public class FillWaterskins implements Action {
         NArea nArea = NArea.findSpec(Specialisation.SpecName.water.toString());
         if(nArea==null)
         {
-            nArea = NArea.globalFindSpec(Specialisation.SpecName.water.toString());
+            nArea = NArea.findSpecGlobal(Specialisation.SpecName.water.toString());
             if(nArea!=null) {
                 routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(nArea));
             }

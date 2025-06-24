@@ -227,7 +227,39 @@ public class NArea
         return res;
     }
 
-    public static NArea globalFindSpec(String name, String sub) {
+    public static NArea findInGlobal(String name)
+    {
+        return findInGlobal(new NAlias(name));
+    }
+    public static NArea findInGlobal(NAlias name)
+    {
+        double dist = 10000;
+        NArea res = null;
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for(Integer id : nids)
+            {
+                if(id>0) {
+                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
+                        NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
+                        List<RoutePoint> routePoints = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(cand));
+                        if(routePoints!=null)
+                        {
+                            if(routePoints.size() <dist)
+                            {
+                                res = cand;
+                                dist = routePoints.size();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
+    public static NArea findSpecGlobal(String name, String sub) {
         int dist = 10000;
         NArea target = null;
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
@@ -257,17 +289,17 @@ public class NArea
         return target;
     }
 
-    public static NArea globalFindSpec(NArea.Specialisation spec)
+    public static NArea findSpecGlobal(NArea.Specialisation spec)
     {
-        return globalFindSpec(spec.name, spec.subtype);
+        return findSpecGlobal(spec.name, spec.subtype);
     }
 
-    public static NArea globalFindSpec(String name)
+    public static NArea findSpecGlobal(String name)
     {
-        return globalFindSpec(name, null);
+        return findSpecGlobal(name, null);
     }
 
-    public static NArea globalFindOut(String name, double th, NGameUI gui) {
+    public static NArea findOutGlobal(String name, double th, NGameUI gui) {
         NArea res = null;
 
         ArrayList<TestedArea> areas = new ArrayList<>();
@@ -343,7 +375,7 @@ public class NArea
         return areas;
     }
 
-    public static TreeMap<Integer,NArea> globalFindOuts(String name)
+    public static TreeMap<Integer,NArea> findOutsGlobal(String name)
     {
         TreeMap<Integer,NArea> areas = new TreeMap<>();
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
