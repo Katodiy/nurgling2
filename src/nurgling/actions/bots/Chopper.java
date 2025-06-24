@@ -5,6 +5,7 @@ import haven.res.lib.tree.TreeScale;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
+import nurgling.areas.NContext;
 import nurgling.conf.NChopperProp;
 import nurgling.tasks.*;
 import nurgling.tools.Finder;
@@ -41,9 +42,11 @@ public class Chopper implements Action {
         {
             return Results.ERROR("Not set required tools");
         }
-        SelectArea insa;
-        NUtils.getGameUI().msg("Please select area for deforestation");
-        (insa = new SelectArea(Resource.loadsimg("baubles/chopperArea"))).run(gui);
+
+        NContext context = new NContext(gui);
+
+        String treeArea = context.createArea("Please select area for deforestation", Resource.loadsimg("baubles/chopperArea"));
+
         NAlias pattern = prop.stumps ? new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log","oldtrunk"))) :
                 new NAlias(new ArrayList<String>(List.of("gfx/terobjs/tree")),new ArrayList<String>(Arrays.asList("log", "oldtrunk", "stump")));
 
@@ -56,7 +59,7 @@ public class Chopper implements Action {
             pattern.keys.add("gfx/terobjs/bushes");
         }
         ArrayList<Gob> trees;
-        while (!(trees = Finder.findGobs(insa.getRCArea(),pattern)).isEmpty()) {
+        while (!(trees = context.getGobs(treeArea,pattern)).isEmpty()) {
             trees.sort(NUtils.y_min_comp);
 
             if(prop.ngrowth)
@@ -75,13 +78,14 @@ public class Chopper implements Action {
             }
 
             Gob tree = trees.get(0);
-
+            long treeId = tree.id;
+            context.setLastPos(tree.rc);
             PathFinder pf = new PathFinder(tree);
             pf.setMode(PathFinder.Mode.Y_MAX);
             pf.isHardMode = true;
             pf.run(gui);
 
-            while (tree!=null && Finder.findGob(tree.id) != null) {
+            while (tree!=null && context.getGob(treeArea, treeId) != null) {
                 boolean chopped = false;
                 if (NParser.isIt(tree, new NAlias("stump"))) {
                     if(!new Equip(new NAlias(prop.shovel)).run(gui).IsSuccess())
@@ -107,23 +111,27 @@ public class Chopper implements Action {
                         break;
                     case TIMEFORDRINK:
                     case TIMEFOREAT: {
-                        if (!new RestoreResources(tree.rc).run(gui).IsSuccess()) {
+                        context.setLastPos(tree.rc);
+                        if (!new RestoreResources().run(gui).IsSuccess()) {
                             return Results.ERROR("No Drink or Eat");
-                        } else {
-                            tree = Finder.findGob(tree.id);
                         }
+                        tree = context.getGob(treeArea, treeId);
+
                         break;
                     }
                     case DANGER:
                         return Results.ERROR("SOMETHING WRONG, STOP WORKING");
 
                 }
-                if(chopped && Finder.findGob(tree.id) == null) {
-                    Gob finalTree = tree;
+                if(chopped && context.getGob(treeArea, treeId) == null) {
                     NUtils.addTask(new NTask() {
                         @Override
                         public boolean check() {
-                            return Finder.findGob(finalTree.rc)!=null;
+                            try {
+                                return Finder.findGob(context.getLastPosCoord(treeArea))!=null;
+                            } catch (InterruptedException e) {
+                                return true;
+                            }
                         }
                     });
                 }

@@ -3,15 +3,89 @@ package nurgling.areas;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.PathFinder;
+import nurgling.actions.bots.RoutePointNavigator;
+import nurgling.actions.bots.SelectArea;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import org.json.*;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 
+import static haven.MCache.cmaps;
+import static haven.OCache.posres;
+
 public class NContext {
+    
+    private HashMap<NAlias, NArea> inAreas = new HashMap<>();
+    private HashMap<NAlias, TreeMap<Double,NArea>> outAreas = new HashMap<>();
+    private HashMap<NArea.Specialisation, NArea> specArea = new HashMap<>();
+    private HashMap<String, NArea> areas = new HashMap<>();
+    private HashMap<String, RoutePoint> rps = new HashMap<>();
+    int counter = 0;
+    private NGameUI gui;
+
+    private NGlobalCoord lastcoord;
+    public NContext(NGameUI gui)
+    {
+        this.gui = gui;
+    }
+
+    public void setLastPos(Coord2d pos)
+    {
+        lastcoord = new NGlobalCoord(pos);
+    }
+
+    public ArrayList<Gob> getGobs(String areaId, NAlias pattern) throws InterruptedException {
+        navigateToAreaIfNeeded(areaId);
+        return Finder.findGobs(areas.get(areaId), pattern);
+    }
+
+    public Gob getGob(String areaId, NAlias pattern) throws InterruptedException {
+        navigateToAreaIfNeeded(areaId);
+        return Finder.findGob(areas.get(areaId), pattern);
+    }
+
+    public Gob getGob(String areaId, long id) throws InterruptedException {
+        navigateToAreaIfNeeded(areaId);
+        return Finder.findGob(id);
+    }
+
+    private void navigateToAreaIfNeeded(String areaId) throws InterruptedException {
+        NArea area = areas.get(areaId);
+        if(!area.isVisible()) {
+            new RoutePointNavigator(rps.get(areaId), lastcoord).run(gui);
+        }
+    }
+
+    public String createArea(String msg, BufferedImage loadsimg) throws InterruptedException {
+        SelectArea insa;
+        NUtils.getGameUI().msg(msg);
+        (insa = new SelectArea(loadsimg)).run(gui);
+        String id = "temp"+counter++;
+        NArea tempArea = new NArea(id);
+        tempArea.space = insa.result;
+        tempArea.grids_id.clear();
+        tempArea.grids_id.addAll(tempArea.space.space.keySet());
+        areas.put(id, tempArea);
+        int size = 10000;
+        RoutePoint target = null;
+        for(RoutePoint point : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestRoutePoints(tempArea)) {
+            List<RoutePoint> path = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(NUtils.findNearestPoint(), point);
+            if(size > path.size()) {
+                target = point;
+                size = path.size();
+            }
+        }
+        rps.put(id,target);
+        return id;
+    }
+    
+    
+    
+    
     
     public static NArea findIn(String name) {
         double dist = 10000;
@@ -78,6 +152,22 @@ public class NContext {
         }
         return results;
     }
+
+    public Coord2d getLastPosCoord(String areaId) throws InterruptedException {
+        navigateToAreaIfNeeded(areaId);
+
+        return lastcoord.getCurrentCoord();
+    }
+
+    public Pair<Coord2d, Coord2d> getRCArea(String marea) throws InterruptedException {
+        NArea area = areas.get(marea);
+        if(!area.isVisible())
+        {
+            navigateToAreaIfNeeded(marea);
+        }
+        return area.getRCArea();
+    }
+
 
     private static class TestedArea {
         NArea area;

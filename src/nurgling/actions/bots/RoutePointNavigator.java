@@ -8,6 +8,7 @@ import nurgling.actions.Results;
 import nurgling.actions.TravelToHearthFire;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
+import nurgling.areas.NGlobalCoord;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
@@ -20,11 +21,16 @@ import java.util.Map;
 public class RoutePointNavigator implements Action {
     private final RoutePoint targetPoint;
     private final RouteGraph graph;
+    private NGlobalCoord globalCoord;
 
-    public RoutePointNavigator(RoutePoint targetPoint) {
+    public RoutePointNavigator(RoutePoint targetPoint, NGlobalCoord globalCoord) {
         this.targetPoint = targetPoint;
         this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
     }
+    public RoutePointNavigator(RoutePoint targetPoint) {
+        this(targetPoint, null);
+    }
+
 
     public RoutePointNavigator(Map<String, Object> settings) {
         Object areaIdObj = settings.get("areaId");
@@ -122,6 +128,15 @@ public class RoutePointNavigator implements Action {
             if (NUtils.getGameUI().map.player() == null) {
                 gui.error("Player was null, waiting for player");
                 NUtils.getUI().core.addTask(new WaitPlayerNotNull());
+            }
+            if(globalCoord!=null)
+            {
+                Coord2d targetPos = globalCoord.getCurrentCoord();
+                if(targetPos!=null)
+                {
+                    if(PathFinder.isAvailable(targetPos))
+                        return Results.SUCCESS();
+                }
             }
 
             new PathFinder(target).run(gui);

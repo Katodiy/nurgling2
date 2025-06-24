@@ -7,6 +7,7 @@ import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import mapv4.StatusWdg;
 import nurgling.areas.*;
+import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
@@ -669,5 +670,10 @@ public class NUtils
         if ( getGameUI() != null && getGameUI().speedget!=null) {
             getGameUI().speedget.set(value);
         }
+    }
+
+    public static RoutePoint findNearestPoint()
+    {
+        return ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI());
     }
 }
