@@ -138,7 +138,7 @@ public class Chopper implements Action {
             }
 
         }
-
+        new RunToSafe().run(gui);
         return Results.SUCCESS();
     }
 }

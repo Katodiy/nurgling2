@@ -209,7 +209,7 @@ public class Chipper implements Action {
             }
             while (true);
         }
-
+        new RunToSafe().run(gui);
         return Results.SUCCESS();
     }
 }

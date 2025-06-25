@@ -15,7 +15,7 @@ public class RunToSafe implements Action{
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NUtils.setSpeed(4);
-        NArea nArea = NContext.findSpecGlobal(Specialisation.SpecName.eat.toString());
+        NArea nArea = NContext.findSpecGlobal(Specialisation.SpecName.safe.toString());
         if(nArea!=null) {
             List<RoutePoint> routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(nArea));
             new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
