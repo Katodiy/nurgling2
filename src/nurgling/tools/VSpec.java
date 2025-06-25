@@ -1012,7 +1012,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/diorite", dioriteOp);
 
         ArrayList<String> petziteOp = new ArrayList<>();
-        petziteOp.add("Direvein Ore"); // Камень
+        petziteOp.add("Direvein"); // Камень
         object.put("gfx/terobjs/bumlings/petzite", petziteOp);
 
         ArrayList<String> dolomiteOp = new ArrayList<>();
@@ -1060,7 +1060,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/greenschist", greenschistOp);
 
         ArrayList<String> ilmeniteOp = new ArrayList<>();
-        ilmeniteOp.add("Heavy Earth Ore"); // Камень
+        ilmeniteOp.add("Heavy Earth"); // Камень
         object.put("gfx/terobjs/bumlings/ilmenite", ilmeniteOp);
 
 //        ArrayList<String> hornsilverOp = new ArrayList<>();
@@ -1072,7 +1072,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/hornblende", hornblendeOp);
 
 //        ArrayList<String> limoniteOp = new ArrayList<>();
-//        limoniteOp.add("Iron Ochre Ore"); // Камень
+//        limoniteOp.add("Iron Ochre"); // Камень
 //        object.put("gfx/terobjs/bumlings/limonite", limoniteOp);
 
         ArrayList<String> jasperOp = new ArrayList<>();
@@ -1156,7 +1156,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/schist", schistOp);
 
 //        ArrayList<String> sylvaniteOp = new ArrayList<>();
-//        sylvaniteOp.add("Schrifterz Ore"); // Камень
+//        sylvaniteOp.add("Schrifterz"); // Камень
 //        object.put("gfx/terobjs/bumlings/sylvanite", sylvaniteOp);
 
         ArrayList<String> serpentineOp = new ArrayList<>();
@@ -1164,7 +1164,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/serpentine", serpentineOp);
 
         ArrayList<String> argentiteOp = new ArrayList<>();
-        argentiteOp.add("Silvershine Ore"); // Камень
+        argentiteOp.add("Silvershine"); // Камень
         object.put("gfx/terobjs/bumlings/argentite", argentiteOp);
 
         ArrayList<String> slateOp = new ArrayList<>();
@@ -2399,18 +2399,18 @@ public class VSpec {
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/cassiterite\",\"name\":\"Cassiterite\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/chalcopyrite\",\"name\":\"Chalcopyrite\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/cinnabar\",\"name\":\"Cinnabar\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/petzite\",\"name\":\"Direvein Ore\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/petzite\",\"name\":\"Direvein\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/galena\",\"name\":\"Galena\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/ilmenite\",\"name\":\"Heavy Earth Ore\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/ilmenite\",\"name\":\"Heavy Earth\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/hornsilver\",\"name\":\"Horn Silver\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/limonite\",\"name\":\"Iron Ochre Ore\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/limonite\",\"name\":\"Iron Ochre\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/leadglance\",\"name\":\"Lead Glance\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/nagyagite\",\"name\":\"Leaf Ore\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/malachite\",\"name\":\"Malachite\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/meteorite\",\"name\":\"Meteorite\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/peacockore\",\"name\":\"Peacock Ore\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/sylvanite\",\"name\":\"Schrifterz Ore\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/argentite\",\"name\":\"Silvershine Ore\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/sylvanite\",\"name\":\"Schrifterz\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/argentite\",\"name\":\"Silvershine\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/cuprite\",\"name\":\"Wine Glance\"}"));
         categories.put("Ore", ore);
 
@@ -2430,7 +2430,7 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/cinnabar\",\"name\":\"Cinnabar\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/diabase\",\"name\":\"Diabase\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/diorite\",\"name\":\"Diorite\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/petzite\",\"name\":\"Direvein Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/petzite\",\"name\":\"Direvein\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/dolomite\",\"name\":\"Dolomite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/dross\",\"name\":\"Dross\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/eclogite\",\"name\":\"Eclogite\"}"));
@@ -2443,10 +2443,10 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/granite\",\"name\":\"Granite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/graywacke\",\"name\":\"Graywacke\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/greenschist\",\"name\":\"Greenschist\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/ilmenite\",\"name\":\"Heavy Earth Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/ilmenite\",\"name\":\"Heavy Earth\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hornsilver\",\"name\":\"Horn Silver\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hornblende\",\"name\":\"Hornblende\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/limonite\",\"name\":\"Iron Ochre Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/limonite\",\"name\":\"Iron Ochre\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/jasper\",\"name\":\"Jasper\"}"));
 //        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/korundstone\",\"name\":\"Korund Stone\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/kyanite\",\"name\":\"Kyanite\"}"));
@@ -2472,10 +2472,10 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/rockcrystal\",\"name\":\"Rock Crystal\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/sandstone\",\"name\":\"Sandstone\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/schist\",\"name\":\"Schist\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/sylvanite\",\"name\":\"Schrifterz Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/sylvanite\",\"name\":\"Schrifterz\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/serpentine\",\"name\":\"Serpentine\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/conchshard\",\"name\":\"Shard of Conch\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/argentite\",\"name\":\"Silvershine Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/argentite\",\"name\":\"Silvershine\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/slag\",\"name\":\"Slag\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/slate\",\"name\":\"Slate\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/soapstone\",\"name\":\"Soapstone\"}"));

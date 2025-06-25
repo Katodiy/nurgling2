@@ -196,7 +196,7 @@ public class NContext {
             for(Integer id : nids) {
                 if (id > 0) {
                     NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
-                    if (cand.isVisible() && cand.containOut(String.valueOf(name), th)) {
+                    if (cand.isVisible() && cand.containOut(name.getDefault(), th)) {
                         areas.add(new TestedArea(cand, th));
                     }
                 }
