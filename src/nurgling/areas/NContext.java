@@ -391,7 +391,7 @@ public class NContext {
             Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
             for(Integer id : nids) {
                 if (id > 0)
-                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(String.valueOf(name))) {
+                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containOut(name.getDefault())) {
                         NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
                         if(cand.getRCArea()!=null) {
                             for (int i = 0; i < cand.jout.length(); i++) {
