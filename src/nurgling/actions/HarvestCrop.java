@@ -152,12 +152,16 @@ public class HarvestCrop implements Action {
         plant = null;
         for (CropRegistry.CropStage cropStage : CropRegistry.HARVESTABLE.getOrDefault(crop, Collections.emptyList())) {
             plant = Finder.findGob(plantGobEndpoint.div(MCache.tilesz).floor(), crop, cropStage.stage);
+            if(plant != null) {
+                break;
+            }
         }
         if(plant == null)
         {
             plant = Finder.findGob(plantGobEndpoint.div(MCache.tilesz).floor(),new NAlias("gfx/terobjs/plants/fallowplant"), 0);
         }
         if(plant!=null) {
+            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
             if(PathFinder.isAvailable(pathfinderEndpoint)) {
                 new PathFinder(pathfinderEndpoint).run(NUtils.getGameUI());
                 if (setDir.get()) {
@@ -174,7 +178,6 @@ public class HarvestCrop implements Action {
             }
             new SelectFlowerAction("Harvest", plant).run(gui);
             NUtils.getUI().core.addTask(new NoGob(plant.id));
-            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
         }
 
         ArrayList<Gob> plants;

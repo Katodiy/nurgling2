@@ -506,10 +506,11 @@ public class NMapView extends MapView
                 Thread t;
                 t = new Thread(() -> {
                     try {
+                        NConfig.botmod = null;
                         NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
                         ScenarioRunner runner = new ScenarioRunner(scenario);
                         runner.run(NUtils.getGameUI());
-                        NConfig.botmod = null;
+
                         NUtils.getGameUI().act("lo");
                         System.exit(0);
                     } catch (InterruptedException e) {

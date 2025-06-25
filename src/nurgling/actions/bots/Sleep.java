@@ -1,10 +1,13 @@
 package nurgling.actions.bots;
 
 import haven.Gob;
+import nurgling.NCharlist;
 import nurgling.NGameUI;
+import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
+import nurgling.tasks.WaitCharlist;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
@@ -37,7 +40,11 @@ public class Sleep implements Action {
             return Results.FAIL();
         }
 
+        new PathFinder(targetBed).run(gui);
+
         new SelectFlowerAction("Sleep", targetBed).run(gui);
+
+        NUtils.addTask(new WaitCharlist());
 
         return Results.SUCCESS();
     }
