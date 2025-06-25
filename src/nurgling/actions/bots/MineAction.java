@@ -214,7 +214,7 @@ public class MineAction implements Action {
     }
 
     void runToSafe(NGameUI gui) throws InterruptedException {
-        AutoDrink.waitBot.set(false);
+        NContext.waitBot.set(false);
         new RunToSafe().run(gui);
     }
 

@@ -13,12 +13,13 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static haven.MCache.cmaps;
 import static haven.OCache.posres;
 
 public class NContext {
-    
+    public final static AtomicBoolean waitBot = new AtomicBoolean(false);
     private HashMap<NAlias, NArea> inAreas = new HashMap<>();
     private HashMap<NAlias, TreeMap<Double,NArea>> outAreas = new HashMap<>();
     private HashMap<NArea.Specialisation, NArea> specArea = new HashMap<>();

@@ -61,7 +61,7 @@ public class CollectFromGob implements Action{
     public Results run(NGameUI gui) throws InterruptedException {
         WaitCollectState wcs = null;
         do {
-            if(withoutTransfer) {
+            if(!withoutTransfer) {
                 if (NUtils.getGameUI().getInventory().getNumberFreeCoord(targetSize) == 0) {
                     if (withPiles)
                         new TransferToPiles(pileArea, targetItems).run(gui);
@@ -93,7 +93,8 @@ public class CollectFromGob implements Action{
                     NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
                     return Results.FAIL();
                 }
-            } else
+            }
+            else
             {
                 return Results.FAIL();
             }
