@@ -844,7 +844,7 @@ public class NMakewindow extends Widget {
             {
                 destroy();
                 cat = null;
-                return false;
+                return true;
             }
             else
             {
@@ -856,7 +856,7 @@ public class NMakewindow extends Widget {
                         s.ing = ing;
                         destroy();
                         cat = null;
-                        return false;
+                        return true;
                     }
                     if(shift.x<width-1)
                     {

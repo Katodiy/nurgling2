@@ -116,7 +116,7 @@ public class Context {
     {
         Pair<Coord2d,Coord2d>  getArea();
 
-        int getTh();
+        double getTh();
     }
 
     public interface Input
@@ -129,7 +129,8 @@ public class Context {
     {
         public InputContainer(Gob gob, String name)
         {
-            this.gob = gob;
+            super(gob,name);
+            this.gobid = gob.id;
             this.cap = name;
         }
     }
@@ -181,7 +182,7 @@ public class Context {
         Pair<Coord2d,Coord2d> area = null;
 
         @Override
-        public int getTh()
+        public double getTh()
         {
             return th;
         }
@@ -407,7 +408,7 @@ public class Context {
 
         Pair<Coord2d,Coord2d> area = null;
         @Override
-        public int getTh()
+        public double getTh()
         {
             return th;
         }
@@ -432,7 +433,7 @@ public class Context {
 
         Pair<Coord2d,Coord2d> area = null;
         @Override
-        public int getTh()
+        public double getTh()
         {
             return th;
         }
@@ -480,7 +481,8 @@ public class Context {
 
         public OutputContainer(Gob gob, Pair<Coord2d,Coord2d> area, int th)
         {
-            this.gob = gob;
+            super(gob,contcaps.get(gob.ngob.name));
+            this.gobid = gob.id;
             this.cap = contcaps.get(gob.ngob.name);
             this.area = area;
             this.th = th;
@@ -494,7 +496,7 @@ public class Context {
         Pair<Coord2d,Coord2d> area = null;
 
         @Override
-        public int getTh()
+        public double getTh()
         {
             return th;
         }
@@ -555,7 +557,7 @@ public class Context {
     {
         for(Output out: outputs)
         {
-            if(!addOutput(name, out.getTh(), out))
+            if(!addOutput(name, (int)out.getTh(), out))
                 return false;
         }
         return true;

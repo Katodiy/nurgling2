@@ -87,7 +87,7 @@ public class FuelByLogs implements Action
                     }
                     needed_size -= NUtils.getGameUI().getInventory().getItems(new NAlias("block", "Block")).size();
                 }
-                new PathFinder(cont.gob).run(gui);
+                new PathFinder(Finder.findGob(cont.gobid)).run(gui);
                 new OpenTargetContainer(cont).run(gui);
                 fuelLvl = cont.getattr(Container.FuelLvl.class);
                 ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(new NAlias("block", "Block"));
@@ -95,7 +95,7 @@ public class FuelByLogs implements Action
                 int aftersize = gui.getInventory().getItems().size() - fueled;
                 for (int i = 0; i < fueled; i++) {
                     NUtils.takeItemToHand(items.get(i));
-                    NUtils.activateItem(cont.gob);
+                    NUtils.activateItem(Finder.findGob(cont.gobid));
                     NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
                 }
                 NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), aftersize));

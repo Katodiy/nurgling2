@@ -6,6 +6,7 @@ import nurgling.NGameUI;
 import nurgling.areas.NArea;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
+import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ public class TransferTargetItemsFromContainers implements Action
                 if(space.getRes().get(Container.Space.FREESPACE) == space.getRes().get(Container.Space.MAXSPACE))
                     continue;
             }
-            PathFinder pf = new PathFinder(container.gob);
+            PathFinder pf = new PathFinder(Finder.findGob(container.gobid));
             pf.isHardMode = true;
             pf.run(gui);
             new OpenTargetContainer(container).run(gui);
@@ -47,7 +48,7 @@ public class TransferTargetItemsFromContainers implements Action
             while (!new TakeItemsFromContainer(container, targets, patter).run(gui).isSuccess)
             {
                 new TransferItems(context, targets).run(gui);
-                pf = new PathFinder(container.gob);
+                pf = new PathFinder(Finder.findGob(container.gobid));
                 pf.isHardMode = true;
                 pf.run(gui);
                 new OpenTargetContainer(container).run(gui);

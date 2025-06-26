@@ -8,6 +8,7 @@ import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitNoItems;
 import nurgling.tasks.WaitPoseOrMsg;
@@ -24,9 +25,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Forging implements Action
 {
     ArrayList<Container> containers;
-    Context context;
+    NContext context;
     NMakewindow mwnd;
-    public Forging(ArrayList<Container>containers, Context context) {
+    public Forging(ArrayList<Container>containers, NContext context) {
         this.containers = containers;
         this.context = context;
     }
@@ -45,7 +46,7 @@ public class Forging implements Action
             Container.Space space = ((Container.Space)cont.getattr(Container.Space.class));
             while (space.getMaxSpace()!=space.getFreeSpace())
             {
-                new PathFinder(cont.gob).run(gui);
+                new PathFinder(Finder.findGob(cont.gobid)).run(gui);
                 new OpenTargetContainer(cont).run(gui);
                 new TakeItemsFromContainer(cont,targets,null).run(gui);
                 new CloseTargetContainer(cont).run(gui);

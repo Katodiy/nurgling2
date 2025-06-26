@@ -31,7 +31,7 @@ public class SurveySupport implements Action
         new PathFinder(target.rc).run(gui);
         while (true) {
 
-            if (!new RestoreResources(target.rc).run(gui).IsSuccess()) {
+            if (!new RestoreResources().run(gui).IsSuccess()) {
                 return Results.FAIL();
             }
             target = Finder.findGob(target.id);

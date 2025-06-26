@@ -41,12 +41,12 @@ public class FreeKIlnGP implements Action
                 if(space.getRes().get(Container.Space.FREESPACE) == space.getRes().get(Container.Space.MAXSPACE))
                     continue;
             }
-            new PathFinder(container.gob).run(gui);
+            new PathFinder(Finder.findGob(container.gobid)).run(gui);
             new OpenTargetContainer(container).run(gui);
             int total = gui.getInventory(container.cap).getItems(gp).size();
             for (int i = 0; i < total; i++)
             {
-                new PathFinder(container.gob).run(gui);
+                new PathFinder(Finder.findGob(container.gobid)).run(gui);
                 new OpenTargetContainer(container).run(gui);
                 gui.getInventory(container.cap).getItem(gp).item.wdgmsg("take", Coord.z);
                 NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/banzai"));

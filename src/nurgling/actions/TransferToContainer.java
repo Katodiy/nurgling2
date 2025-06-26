@@ -13,19 +13,16 @@ public class TransferToContainer implements Action{
     NAlias items;
 
     Container container;
-    Context context;
 
     Integer th = -1;
-    public TransferToContainer(Context context, Container container, NAlias items) {
+    public TransferToContainer(Container container, NAlias items) {
         this.container = container;
         this.items = items;
-        this.context = context;
     }
 
-    public TransferToContainer(Context context, Container container, NAlias items, Integer th) {
+    public TransferToContainer(Container container, NAlias items, Integer th) {
         this.container = container;
         this.items = items;
-        this.context = context;
         this.th = th;
     }
 
@@ -34,7 +31,7 @@ public class TransferToContainer implements Action{
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<WItem> witems;
         if (!(witems = gui.getInventory().getItems(items)).isEmpty() && (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.Space.class).getFreeSpace()!=0)) {
-            PathFinder pf = new PathFinder(container.gob);
+            PathFinder pf = new PathFinder(Finder.findGob(container.gobid));
             pf.isHardMode = true;
             pf.run(gui);
             if (th == -1)
@@ -42,7 +39,7 @@ public class TransferToContainer implements Action{
             else
                 witems = gui.getInventory().getItems(items, th);
             if (container.cap != null) {
-                new OpenTargetContainer(container.cap, container.gob).run(gui);
+                new OpenTargetContainer(container.cap, Finder.findGob(container.gobid)).run(gui);
             }
 
             Container.Tetris tetris;

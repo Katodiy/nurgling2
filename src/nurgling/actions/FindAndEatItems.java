@@ -6,6 +6,7 @@ import nurgling.iteminfo.NFoodInfo;
 import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
+import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
@@ -73,7 +74,7 @@ public class FindAndEatItems implements Action
 
     public Results takeFromContainer(NGameUI gui, Container cont) throws InterruptedException
     {
-        new PathFinder(cont.gob).run(gui);
+        new PathFinder(Finder.findGob(cont.gobid)).run(gui);
         new OpenTargetContainer(cont).run(gui);
         while (calcCalories()) {
             if(gui.getInventory().getNumberFreeCoord(new Coord(1,1))==0)

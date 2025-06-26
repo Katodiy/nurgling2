@@ -39,7 +39,7 @@ public class FillContainers implements Action
                     if (gui.getInventory().getItems(transferedItems).isEmpty())
                         return Results.ERROR("NO ITEMS");
                 }
-                TransferToContainer ttc = new TransferToContainer(context, cont, new NAlias(transferedItems));
+                TransferToContainer ttc = new TransferToContainer(cont, new NAlias(transferedItems));
                 ttc.run(gui);
                 new CloseTargetContainer(cont).run(gui);
             }

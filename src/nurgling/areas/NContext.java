@@ -7,28 +7,333 @@ import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.actions.bots.SelectArea;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
+import nurgling.tools.Container;
+import nurgling.widgets.Specialisation;
 import org.json.*;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static haven.MCache.cmaps;
-import static haven.OCache.posres;
-
 public class NContext {
     public final static AtomicBoolean waitBot = new AtomicBoolean(false);
-    private HashMap<NAlias, NArea> inAreas = new HashMap<>();
-    private HashMap<NAlias, TreeMap<Double,NArea>> outAreas = new HashMap<>();
-    private HashMap<NArea.Specialisation, NArea> specArea = new HashMap<>();
+    private HashMap<String, String> inAreas = new HashMap<>();
+    private HashMap<String, TreeMap<Double,String>> outAreas = new HashMap<>();
+    private HashMap<NArea.Specialisation, String> specArea = new HashMap<>();
     private HashMap<String, NArea> areas = new HashMap<>();
     private HashMap<String, RoutePoint> rps = new HashMap<>();
+    private HashMap<String, ObjectStorage> containers = new HashMap<>();
     int counter = 0;
     private NGameUI gui;
 
     private NGlobalCoord lastcoord;
+
+    public static HashMap<String, String> contcaps = new HashMap<>();
+    static {
+        contcaps.put("gfx/terobjs/chest", "Chest");
+        contcaps.put("gfx/terobjs/crate", "Crate");
+        contcaps.put("gfx/terobjs/kiln", "Kiln");
+        contcaps.put("gfx/terobjs/cupboard", "Cupboard");
+        contcaps.put("gfx/terobjs/shed", "Shed");
+        contcaps.put("gfx/terobjs/largechest", "Large Chest");
+        contcaps.put("gfx/terobjs/metalcabinet", "Metal Cabinet");
+        contcaps.put("gfx/terobjs/strawbasket", "Straw Basket");
+        contcaps.put("gfx/terobjs/bonechest", "Bone Chest");
+        contcaps.put("gfx/terobjs/coffer", "Coffer");
+        contcaps.put("gfx/terobjs/leatherbasket", "Leather Basket");
+        contcaps.put("gfx/terobjs/woodbox", "Woodbox");
+        contcaps.put("gfx/terobjs/linencrate", "Linen Crate");
+        contcaps.put("gfx/terobjs/stonecasket", "Stone Casket");
+        contcaps.put("gfx/terobjs/birchbasket", "Birch Basket");
+        contcaps.put("gfx/terobjs/wbasket", "Basket");
+        contcaps.put("gfx/terobjs/exquisitechest", "Exquisite Chest");
+        contcaps.put("gfx/terobjs/furn/table-stone", "Table");
+        contcaps.put("gfx/terobjs/map/jotunclam", "Jotun Clam");
+        contcaps.put("gfx/terobjs/studydesk", "Study Desk");
+    }
+
+    public static HashMap<String, String> customTool = new HashMap<>();
+    static {
+        customTool.put("Clay Jar", "paginae/bld/potterswheel");
+        customTool.put("Garden Pot", "paginae/bld/potterswheel");
+        customTool.put("Pot", "paginae/bld/potterswheel");
+        customTool.put("Treeplanter's Pot", "paginae/bld/potterswheel");
+        customTool.put("Urn", "paginae/bld/potterswheel");
+        customTool.put("Teapot", "paginae/bld/potterswheel");
+        customTool.put("Mug", "paginae/bld/potterswheel");
+        customTool.put("Stoneware Vase", "paginae/bld/potterswheel");
+    }
+
+    static HashMap<String, String> equip_map;
+    static {
+        equip_map = new HashMap<>();
+        equip_map.put("gfx/invobjs/small/fryingpan", "Frying Pan");
+        equip_map.put("gfx/invobjs/small/glassrod", "Glass Blowing Rod");
+        equip_map.put("gfx/invobjs/smithshammer", "Smithy's Hammer");
+    }
+
+    static HashMap<String, NContext.Workstation> workstation_map;
+    static {
+        workstation_map = new HashMap<>();
+        workstation_map.put("paginae/bld/meatgrinder",new NContext.Workstation("gfx/terobjs/meatgrinder", "gfx/borka/idle"));
+        workstation_map.put("paginae/bld/loom",new NContext.Workstation("gfx/terobjs/loom", "gfx/borka/loomsit"));
+        workstation_map.put("paginae/bld/ropewalk",new NContext.Workstation("gfx/terobjs/ropewalk", "gfx/borka/idle"));
+        workstation_map.put("paginae/bld/crucible",new NContext.Workstation("gfx/terobjs/crucible", null));
+        workstation_map.put("gfx/invobjs/fire",new NContext.Workstation("gfx/terobjs/pow", null));
+        workstation_map.put("gfx/invobjs/cauldron",new NContext.Workstation("gfx/terobjs/cauldron", null));
+        workstation_map.put("paginae/bld/potterswheel",new NContext.Workstation("gfx/terobjs/potterswheel", "gfx/borka/pwheelidle"));
+        workstation_map.put("paginae/bld/anvil",new NContext.Workstation("gfx/terobjs/anvil", null));
+    }
+
+    static HashMap<String, Specialisation.SpecName> workstation_spec_map;
+    static {
+        workstation_spec_map = new HashMap<>();
+        workstation_spec_map.put("gfx/terobjs/meatgrinder", Specialisation.SpecName.meatgrinder);
+        workstation_spec_map.put("gfx/terobjs/loom",Specialisation.SpecName.loom);
+        workstation_spec_map.put("gfx/terobjs/ropewalk",Specialisation.SpecName.ropewalk);
+        workstation_spec_map.put("gfx/terobjs/crucible",Specialisation.SpecName.crucible);
+        workstation_spec_map.put("gfx/terobjs/pow",Specialisation.SpecName.pow);
+        workstation_spec_map.put("gfx/terobjs/cauldron",Specialisation.SpecName.boiler);
+        workstation_spec_map.put("gfx/terobjs/potterswheel",Specialisation.SpecName.potterswheel);
+        workstation_spec_map.put("gfx/terobjs/anvil",Specialisation.SpecName.anvil);
+    }
+
+
+    public static class Barter implements ObjectStorage
+    {
+        public long barter;
+        public long chest;
+
+        public Barter(Gob barter, Gob chest)
+        {
+            this.barter = barter.id;
+            this.chest = chest.id;
+        }
+    }
+
+    public static class Barrel implements ObjectStorage
+    {
+        public long barrel;
+
+        public Barrel(Gob barrel)
+        {
+            this.barrel = barrel.id;
+        }
+    }
+
+
+
+    public interface ObjectStorage
+    {
+        default double getTh(){
+            return 1;
+        }
+    }
+
+    public static class Pile implements ObjectStorage{
+        public Gob pile;
+        public Pile(Gob gob)
+        {
+            this.pile = gob;
+        }
+    }
+
+
+    public void addCustomTool(String resName) {
+        String cust = customTool.get(resName);
+        if(cust != null) {
+            NContext.Workstation workstation_cand = workstation_map.get(cust);
+            if(workstation_cand!=null)
+            {
+                workstation = workstation_cand;
+            }
+        }
+    }
+
+
+
+    public TreeMap<Double,String> getOutAreas(String item) {
+        return outAreas.get(item);
+    }
+
+    public NArea getSpecArea(NContext.Workstation workstation) throws InterruptedException {
+        if(!areas.containsKey(workstation.station)) {
+            NArea area = findSpec(workstation_spec_map.get(workstation.station).toString());
+            if (area == null) {
+                area = findSpecGlobal(workstation_spec_map.get(workstation.station).toString());
+            }
+            if (area != null) {
+                areas.put(String.valueOf(workstation.station), area);
+                rps.put(String.valueOf(workstation.station),(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+            }
+            else
+            {
+                return null;
+            }
+        }
+        navigateToAreaIfNeeded(workstation.station);
+        return areas.get(workstation.station);
+    }
+
+    public ArrayList<ObjectStorage> getInStorages(String item) throws InterruptedException {
+
+        ArrayList<ObjectStorage> inputs = new ArrayList<>();
+        String id = inAreas.get(item);
+        if(id!=null) {
+            navigateToAreaIfNeeded(inAreas.get(item));
+
+            NArea area = areas.get(id);
+            NArea.Ingredient ingredient = area.getInput(item);
+            switch (ingredient.type) {
+                case BARTER:
+                    inputs.add(new Barter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
+                            Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
+                    break;
+                case CONTAINER: {
+                    for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
+                        String hash = gob.ngob.hash;
+                        if(containers.containsKey(hash))
+                        {
+                            inputs.add(containers.get(hash));
+                        }
+                        else {
+                            Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                            containers.put(gob.ngob.hash, ic);
+                            inputs.add(ic);
+                        }
+                    }
+                    for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
+                        inputs.add(new Pile(gob));
+                    }
+
+                }
+            }
+            inputs.sort(new Comparator<ObjectStorage>() {
+                @Override
+                public int compare(ObjectStorage o1, ObjectStorage o2) {
+                    if (o1 instanceof Pile && o2 instanceof Pile)
+                        return NUtils.d_comp.compare(((Pile) o1).pile, ((Pile) o2).pile);
+                    return 0;
+                }
+            });
+        }
+        return inputs;
+    }
+
+    public ArrayList<ObjectStorage> getOutStorages(String item, double q)  throws InterruptedException
+    {
+        ArrayList<ObjectStorage> outputs = new ArrayList<>();
+        TreeMap<Double,String> thmap =  outAreas.get(item);
+        String id = null;
+        for(Double key: thmap.descendingKeySet())
+        {
+            if(q>=key)
+            {
+                id = thmap.get(key);
+            }
+            else
+                break;
+        }
+        if(id!=null) {
+            navigateToAreaIfNeeded(id);
+
+            NArea area = areas.get(id);
+            NArea.Ingredient ingredient = area.getOutput(item);
+            if (ingredient != null) {
+                switch (ingredient.type) {
+                    case BARTER:
+                        outputs.add(new Barter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
+                                Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
+                        break;
+                    case CONTAINER: {
+
+                        for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
+                            String hash = gob.ngob.hash;
+                            if(containers.containsKey(hash))
+                            {
+                                outputs.add(containers.get(hash));
+                            }
+                            else {
+                                Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                                ic.initattr(Container.Space.class);
+                                containers.put(gob.ngob.hash, ic);
+                                outputs.add(ic);
+                            }
+                        }
+                        for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
+                            outputs.add(new Pile(gob));
+                        }
+                        if (outputs.isEmpty()) {
+                            outputs.add(new Pile(null));
+                        }
+                        break;
+                    }
+                    case BARREL: {
+                        for (Gob gob : Finder.findGobs(area, new NAlias("barrel"))) {
+                            outputs.add(new Barrel(gob));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
+                    String hash = gob.ngob.hash;
+                    if(containers.containsKey(hash))
+                    {
+                        outputs.add(containers.get(hash));
+                    }
+                    else {
+                        Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                        ic.initattr(Container.Space.class);
+                        containers.put(gob.ngob.hash, ic);
+                        outputs.add(ic);
+                    }
+                }
+                for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
+                    outputs.add(new Pile(gob));
+                }
+                if (outputs.isEmpty()) {
+                    outputs.add(new Pile(null));
+                }
+            }
+        }
+        return outputs;
+    }
+
+    public static class Workstation
+    {
+        public String station;
+        public String pose;
+        public long selected = -1;
+
+        public Workstation(String station, String pose)
+        {
+            this.station = station;
+            this.pose = pose;
+        }
+    }
+
+    public void addTools(List<Indir<Resource>> tools)
+    {
+        for (Indir<Resource> res : tools)
+        {
+            String equip_cand = equip_map.get(res.get().name);
+            if(equip_cand!=null)
+            {
+                equip = equip_cand;
+            }
+            NContext.Workstation workstation_cand = workstation_map.get(res.get().name);
+            if(workstation_cand!=null)
+            {
+                workstation = workstation_cand;
+            }
+        }
+    }
+
+    public String equip = null;
+    public NContext.Workstation workstation = null;
     public NContext(NGameUI gui)
     {
         this.gui = gui;
@@ -56,15 +361,21 @@ public class NContext {
 
     private void navigateToAreaIfNeeded(String areaId) throws InterruptedException {
         NArea area = areas.get(areaId);
-        if(!area.isVisible()) {
+        if(!area.isVisible() && rps.containsKey(areaId)) {
             new RoutePointNavigator(rps.get(areaId)).run(gui);
         }
     }
+    public String createArea(String msg, BufferedImage bauble) throws InterruptedException {
+        return createArea(msg, bauble,null);
+    }
 
-    public String createArea(String msg, BufferedImage loadsimg) throws InterruptedException {
+    public String createArea(String msg, BufferedImage bauble, BufferedImage custom) throws InterruptedException {
         SelectArea insa;
         NUtils.getGameUI().msg(msg);
-        (insa = new SelectArea(loadsimg)).run(gui);
+        if(custom==null)
+            (insa = new SelectArea(bauble)).run(gui);
+        else
+            (insa = new SelectArea(bauble,custom)).run(gui);
         String id = "temp"+counter++;
         NArea tempArea = new NArea(id);
         tempArea.space = insa.result;
@@ -75,32 +386,81 @@ public class NContext {
         RoutePoint target = null;
         for(RoutePoint point : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestRoutePoints(tempArea)) {
             List<RoutePoint> path = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(NUtils.findNearestPoint(), point);
-            if(size > path.size()) {
-                target = point;
-                size = path.size();
+            if(path!=null) {
+                if (size > path.size()) {
+                    target = point;
+                    size = path.size();
+                }
             }
         }
         rps.put(id,target);
         return id;
     }
-    
-    
-    
-    
+
+    public void addInItem(String name, BufferedImage loadsimg) throws InterruptedException {
+        NArea area = findIn(name);
+        if (area == null) {
+            area = findInGlobal(name);
+        }
+        if(area!=null)
+        {
+            areas.put(String.valueOf(area.id),area);
+            rps.put(String.valueOf(area.id),(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+            inAreas.put(name, String.valueOf(area.id));
+        }
+        if (loadsimg!=null && area == null) {
+            inAreas.put(name, createArea("Please select area with:" + name, Resource.loadsimg("baubles/custom"), loadsimg));
+        }
+    }
+
+    public boolean addOutItem(String name, BufferedImage loadsimg, double th) throws InterruptedException {
+        if(!outAreas.containsKey(name))
+        {
+            outAreas.put(name,new TreeMap<>());
+        }
+        else
+        {
+            for(Double key :outAreas.get(name).descendingKeySet())
+            {
+                if(th>key)
+                    return true;
+            }
+        }
+        NArea area = findOut(name,th);
+        if (area == null) {
+            area = findOutGlobal(name, th, gui);
+        }
+        if(area!=null)
+        {
+            areas.put(String.valueOf(area.id),area);
+            outAreas.get(name).put(th, String.valueOf(area.id));
+        }
+        if (loadsimg!=null && area == null) {
+            outAreas.get(name).put(th, createArea("Please select area for:" + name, Resource.loadsimg("baubles/custom"), loadsimg));
+        }
+        else
+        {
+            if(area == null)
+                return false;
+        }
+        return true;
+    }
+
     
     public static NArea findIn(String name) {
         double dist = 10000;
+        Gob player = NUtils.player();
         NArea res = null;
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null) {
             Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
             for(Integer id : nids) {
-                if(id>0) {
+                if(id>0 && player!=null) {
                     if (NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
                         NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
                         Pair<Coord2d, Coord2d> testrc = test.getRCArea();
                         if(test.getRCArea()!=null) {
                             double testdist;
-                            if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
+                            if ((testdist = (testrc.a.dist(player.rc) + testrc.b.dist(player.rc))) < dist) {
                                 res = test;
                                 dist = testdist;
                             }
@@ -168,6 +528,8 @@ public class NContext {
         }
         return area.getRCArea();
     }
+
+
 
 
     private static class TestedArea {

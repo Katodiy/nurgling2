@@ -116,7 +116,7 @@ public class TransferItems implements Action
                 }
                 if (output instanceof Container) {
                     if (((Context.OutputContainer) output).getArea() != null)
-                        new TransferToContainer(cnt, (Context.OutputContainer) output, new NAlias(item), th).run(gui);
+                        new TransferToContainer((Context.OutputContainer) output, new NAlias(item), th).run(gui);
                 }
                 if (output instanceof Context.Barter) {
                     if (((Context.OutputBarter) output).getArea() != null)

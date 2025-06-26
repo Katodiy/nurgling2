@@ -6,6 +6,7 @@ import haven.Gob;
 import haven.WItem;
 import haven.res.ui.tt.wellmined.WellMined;
 import nurgling.*;
+import nurgling.areas.NContext;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -14,9 +15,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class Container {
-    public Gob gob;
+public class Container implements NContext.ObjectStorage {
+    public long gobid;
     public String cap;
+
+    public Container(Gob gob, String cap) {
+        this.gobid = gob.id;
+        this.cap = cap;
+    }
 
     public Map<Class<? extends Updater>, Updater> updaters = new HashMap<Class<? extends Updater>, Updater>();
     public void update() throws InterruptedException {

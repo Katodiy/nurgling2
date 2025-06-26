@@ -95,11 +95,9 @@ public class KFC implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<Container> containers = new ArrayList<>();
 
-        for (Gob ttube : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.chicken.toString()),
+        for (Gob cc : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.chicken.toString()),
                 new NAlias("gfx/terobjs/chickencoop"))) {
-            Container cand = new Container();
-            cand.gob = ttube;
-            cand.cap = "Chicken Coop";
+            Container cand = new Container(cc, "Chicken Coop");
 
             cand.initattr(Container.Space.class);
 
@@ -108,11 +106,9 @@ public class KFC implements Action {
 
         ArrayList<Container> ccontainers = new ArrayList<>();
 
-        for (Gob ttube : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.incubator.toString()),
+        for (Gob cc : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.incubator.toString()),
                 new NAlias("gfx/terobjs/chickencoop"))) {
-            Container cand = new Container();
-            cand.gob = ttube;
-            cand.cap = "Chicken Coop";
+            Container cand = new Container(cc, "Chicken Coop");
 
             cand.initattr(Container.Space.class);
 
@@ -130,8 +126,8 @@ public class KFC implements Action {
         ArrayList<IncubatorInfo> qcocks = new ArrayList<>();
         ArrayList<IncubatorInfo> qhens = new ArrayList<>();
         for (Container container : containers) {
-            new PathFinder( container.gob).run(gui);
-            if (!(new OpenTargetContainer("Chicken Coop",container.gob).run(gui).IsSuccess())) {
+            new PathFinder( Finder.findGob(container.gobid)).run(gui);
+            if (!(new OpenTargetContainer("Chicken Coop",Finder.findGob(container.gobid)).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
@@ -169,8 +165,8 @@ public class KFC implements Action {
         coopInfos.sort(coopComparator.reversed());
 
         for (Container container : ccontainers) {
-            new PathFinder(container.gob).run(gui);
-            if (!(new OpenTargetContainer("Chicken Coop", container.gob).run(gui).IsSuccess())) {
+            new PathFinder(Finder.findGob(container.gobid)).run(gui);
+            if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(container.gobid)).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
@@ -200,7 +196,7 @@ public class KFC implements Action {
 
         ArrayList<Context.Output> outputs = new ArrayList<>();
         for (Container cc :ccontainers) {
-            Context.OutputContainer container = new Context.OutputContainer(cc.gob, NContext.findSpec(Specialisation.SpecName.incubator.toString()).getRCArea(), 1);
+            Context.OutputContainer container = new Context.OutputContainer(Finder.findGob(cc.gobid), NContext.findSpec(Specialisation.SpecName.incubator.toString()).getRCArea(), 1);
             container.cap = "Chicken Coop";
             container.initattr(Container.Space.class);
             outputs.add(container);
@@ -214,8 +210,8 @@ public class KFC implements Action {
 
 
         // Выясняем пороговое качество для яиц
-        new PathFinder(coopInfos.get(0).container.gob).run(gui);
-        if (!(new OpenTargetContainer("Chicken Coop", coopInfos.get(0).container.gob).run(gui).IsSuccess())) {
+        new PathFinder(Finder.findGob(coopInfos.get(0).container.gobid)).run(gui);
+        if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(coopInfos.get(0).container.gobid)).run(gui).IsSuccess())) {
             return Results.FAIL();
         }
 
@@ -237,7 +233,7 @@ public class KFC implements Action {
         eggs.add("Chicken Egg");
         for(Container container: containers)
         {
-            PathFinder pf = new PathFinder(container.gob);
+            PathFinder pf = new PathFinder(Finder.findGob(container.gobid));
             pf.isHardMode = true;
             pf.run(gui);
             new OpenTargetContainer(container).run(gui);
@@ -246,7 +242,7 @@ public class KFC implements Action {
             while (!new TakeItemsFromContainer(container, eggs, null, chicken_th).run(gui).isSuccess)
             {
                 new TransferItems(context, eggs).run(gui);
-                pf = new PathFinder(container.gob);
+                pf = new PathFinder(Finder.findGob(container.gobid));
                 pf.isHardMode = true;
                 pf.run(gui);
                 new OpenTargetContainer(container).run(gui);
@@ -265,8 +261,8 @@ public class KFC implements Action {
 
         for (IncubatorInfo roosterInfo : qcocks) {
             // Открываем курятник с петушком
-            new PathFinder(roosterInfo.container.gob).run(gui);
-            if (!(new OpenTargetContainer("Chicken Coop", roosterInfo.container.gob).run(gui).IsSuccess())) {
+            new PathFinder(Finder.findGob(roosterInfo.container.gobid)).run(gui);
+            if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(roosterInfo.container.gobid)).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
@@ -295,8 +291,8 @@ public class KFC implements Action {
                     rooster = (WItem) gui.getInventory().getItem(new NAlias("Cock"));
 
                     // Открываем курятник для замены
-                    new PathFinder(coopInfo.container.gob).run(gui);
-                    if (!(new OpenTargetContainer("Chicken Coop", coopInfo.container.gob).run(gui).IsSuccess())) {
+                    new PathFinder(Finder.findGob(coopInfo.container.gobid)).run(gui);
+                    if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(coopInfo.container.gobid)).run(gui).IsSuccess())) {
                         return Results.FAIL();
                     }
 
@@ -369,8 +365,8 @@ public class KFC implements Action {
 
         for (IncubatorInfo henInfo : qhens) {
             // Открываем курятник с курицей
-            new PathFinder(henInfo.container.gob).run(gui);
-            if (!(new OpenTargetContainer("Chicken Coop", henInfo.container.gob).run(gui).IsSuccess())) {
+            new PathFinder(Finder.findGob(henInfo.container.gobid)).run(gui);
+            if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(henInfo.container.gobid)).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
@@ -396,8 +392,8 @@ public class KFC implements Action {
                 for (int i = 0; i < coopInfo.henQualities.size(); i++) {
                     if (coopInfo.henQualities.get(i) < henQuality) {
                         // Открываем курятник для замены
-                        new PathFinder(coopInfo.container.gob).run(gui);
-                        if (!(new OpenTargetContainer("Chicken Coop", coopInfo.container.gob).run(gui).IsSuccess())) {
+                        new PathFinder(Finder.findGob(coopInfo.container.gobid)).run(gui);
+                        if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(coopInfo.container.gobid)).run(gui).IsSuccess())) {
                             return Results.FAIL();
                         }
 

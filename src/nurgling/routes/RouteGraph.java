@@ -276,7 +276,7 @@ public class RouteGraph {
                 NUtils.getGameUI().error("Unable to determine route point reachability from point to area. Skipping point: " + point.id);
             }
 
-            if(isReachable) {
+            if(isReachable || true) {
                 result.add(point);
             }
         }

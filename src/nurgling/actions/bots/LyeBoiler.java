@@ -37,9 +37,7 @@ public class LyeBoiler implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob cm : Finder.findGobs(cauldrons, new NAlias("gfx/terobjs/cauldron"))) {
-                Container cand = new Container();
-                cand.gob = cm;
-                cand.cap = cap;
+                Container cand = new Container(cm, cap);
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -56,7 +54,7 @@ public class LyeBoiler implements Action {
 
             ArrayList<Gob> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gob);
+                lighted.add(Finder.findGob(cont.gobid));
             }
 
             Results res = null;
@@ -82,7 +80,7 @@ public class LyeBoiler implements Action {
                     ArrayList<Container> forFuel = new ArrayList<>();
                     for (Container container : containers) {
                         Container.Space space = container.getattr(Container.Space.class);
-                        if (!space.isEmpty() && (container.gob.ngob.getModelAttribute() & 1) != 1)
+                        if (!space.isEmpty() && (Finder.findGob(container.gobid).ngob.getModelAttribute() & 1) != 1)
                             forFuel.add(container);
                     }
 
@@ -92,8 +90,8 @@ public class LyeBoiler implements Action {
 
                     ArrayList<Gob> flighted = new ArrayList<>();
                     for (Container cont : containers) {
-                        if (((cont.gob.ngob.getModelAttribute() & 1) == 1) && (cont.gob.ngob.getModelAttribute() & 2) != 2)
-                            flighted.add(cont.gob);
+                        if (((Finder.findGob(cont.gobid).ngob.getModelAttribute() & 1) == 1) && (Finder.findGob(cont.gobid).ngob.getModelAttribute() & 2) != 2)
+                            flighted.add(Finder.findGob(cont.gobid));
                     }
                     new LightGob(flighted, 2).run(gui);
                 }

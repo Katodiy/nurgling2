@@ -36,9 +36,7 @@ public class BackerAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob sm : Finder.findGobs(ovens, new NAlias("gfx/terobjs/oven"))) {
-                Container cand = new Container();
-                cand.gob = sm;
-                cand.cap = "Oven";
+                Container cand = new Container(sm, "Oven");
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -50,7 +48,7 @@ public class BackerAction implements Action {
 
             ArrayList<Gob> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gob);
+                lighted.add(Finder.findGob(cont.gobid));
             }
 
             Results res = null;
@@ -59,9 +57,7 @@ public class BackerAction implements Action {
                 Context icontext = new Context();
                 for (NArea area : NContext.findAllIn(new NAlias("Dough", "Unbaked"))) {
                     for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-                        Container cand = new Container();
-                        cand.gob = sm;
-                        cand.cap = Context.contcaps.get(cand.gob.ngob.name);
+                        Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
                         cand.initattr(Container.Space.class);
                         cand.initattr(Container.TargetItems.class);
                         cand.getattr(Container.TargetItems.class).addTarget("Dough");
@@ -82,7 +78,7 @@ public class BackerAction implements Action {
 
                 ArrayList<Gob> flighted = new ArrayList<>();
                 for (Container cont : forFuel) {
-                    flighted.add(cont.gob);
+                    flighted.add(Finder.findGob(cont.gobid));
                 }
                 new LightGob(flighted, 4).run(gui);
             }

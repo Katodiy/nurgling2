@@ -1,22 +1,31 @@
 package nurgling.actions;
 
-import haven.*;
-import haven.res.ui.barterbox.*;
-import nurgling.*;
-import nurgling.tasks.*;
-import nurgling.tools.*;
+import haven.Gob;
+import haven.WItem;
+import haven.Widget;
+import haven.Window;
+import haven.res.ui.barterbox.Shopbox;
+import nurgling.NGameUI;
+import nurgling.NUtils;
+import nurgling.areas.NContext;
+import nurgling.tasks.WaitItems;
+import nurgling.tools.Container;
+import nurgling.tools.Finder;
+import nurgling.tools.NAlias;
 
-import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class TakeItems implements Action
+public class TakeItems2 implements Action
 {
-    final Context cnt;
+    final NContext cnt;
     String item;
     int count;
 
 
-    public TakeItems(Context context, String item, int count)
+    public TakeItems2(NContext context, String item, int count)
     {
         this.cnt = context;
         this.item = item;
@@ -27,39 +36,47 @@ public class TakeItems implements Action
     public Results run(NGameUI gui) throws InterruptedException
     {
         AtomicInteger left = new AtomicInteger(count);
-        ArrayList<Context.Input> inputs = cnt.getInputs(item);
+        ArrayList<NContext.ObjectStorage> inputs = cnt.getInStorages(item);
         if(inputs == null || inputs.isEmpty())
             return Results.FAIL();
-        for(Context.Input input: cnt.getInputs(item))
+        for(NContext.ObjectStorage input: inputs)
         {
-            if(input instanceof Context.Barter)
-                takeFromBarter(left,gui, (Context.Barter)input);
-            else if (input instanceof Context.InputPile)
+            if(input instanceof NContext.Barter)
+                takeFromBarter(left,gui, (NContext.Barter)input);
+            else if (input instanceof NContext.Pile)
             {
-                takeFromPile(left, gui,(Context.InputPile) input);
+                takeFromPile(left, gui,(NContext.Pile) input);
             }
-            else if (input instanceof Context.InputContainer)
+            else if (input instanceof Container)
             {
-                takeFromContainer(left, gui, (Context.InputContainer) input);
+                takeFromContainer(left, gui, (Container) input);
             }
-            if(left.get() == 0) {
+            if(NUtils.getGameUI().getInventory().getItems(new NAlias(item)).size() >= count) {
                 return Results.SUCCESS();
+            }
+            else
+            {
+                left.set(count - NUtils.getGameUI().getInventory().getItems(new NAlias(item)).size());
             }
         }
         return Results.SUCCESS();
     }
 
-    public Results takeFromBarter(AtomicInteger left, NGameUI gui, Context.Barter barter) throws InterruptedException
+    public Results takeFromBarter(AtomicInteger left, NGameUI gui, NContext.Barter barter) throws InterruptedException
     {
-        new PathFinder(barter.chest).run(gui);
-        new OpenTargetContainer("Chest", barter.chest).run(gui);
+        Gob gchest = Finder.findGob(barter.chest);
+        Gob gbarter = Finder.findGob(barter.barter);
+        if(gbarter==null || gchest==null)
+            return Results.FAIL();
+        new PathFinder(gchest).run(gui);
+        new OpenTargetContainer("Chest", gchest).run(gui);
         ArrayList<WItem> items = gui.getInventory("Chest").getItems("Branch");
         int size = items.size();
         int to_take = Math.min(left.get(),size);
         new SimpleTransferToContainer(gui.getInventory(), gui.getInventory("Chest").getItems("Branch"), to_take).run(gui);
         left.set(left.get() - to_take);
-        new PathFinder(barter.barter).run(gui);
-        new OpenTargetContainer("Barter Stand", barter.barter).run(gui);
+        new PathFinder(gbarter).run(gui);
+        new OpenTargetContainer("Barter Stand", gbarter).run(gui);
 
         Window barter_wnd = gui.getWindow("Barter Stand");
         if(barter_wnd==null)
@@ -90,26 +107,28 @@ public class TakeItems implements Action
         return Results.SUCCESS();
     }
 
-    public Results takeFromPile(AtomicInteger left, NGameUI gui, Context.InputPile pile) throws InterruptedException
+    public Results takeFromPile(AtomicInteger left, NGameUI gui, NContext.Pile pile) throws InterruptedException
     {
         new PathFinder(pile.pile).run(gui);
         new OpenTargetContainer("Stockpile",  pile.pile).run(gui);
         TakeItemsFromPile tifp;
         (tifp = new TakeItemsFromPile(pile.pile, gui.getStockpile(), left.get())).run(gui);
         new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
-        left.set(left.get()-tifp.getResult());
+
         return Results.SUCCESS();
     }
 
     public Results takeFromContainer(AtomicInteger left, NGameUI gui, Container cont) throws InterruptedException
     {
-        new PathFinder(Finder.findGob(cont.gobid)).run(gui);
+        Gob contgob = Finder.findGob(cont.gobid);
+        if(contgob == null)
+            return Results.FAIL();
+        new PathFinder(contgob).run(gui);
         new OpenTargetContainer(cont).run(gui);
         TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont,new HashSet<>(Arrays.asList(item)), null);
         tifc.minSize = left.get();
         tifc.run(gui);
-        new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
-        left.set(left.get()-tifc.getTarget_size());
+            new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
         return Results.SUCCESS();
     }
 }

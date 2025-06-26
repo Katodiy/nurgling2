@@ -52,9 +52,9 @@ public class WaterToContainer implements Action
         for (Container cont : conts) {
             Container.WaterLvl waterLvl = cont.getattr(Container.WaterLvl.class);
             if(waterLvl.neededWater() >=2 ){// <29.1
-                new PathFinder(cont.gob).run(gui);
-                NUtils.activateGob(cont.gob);
-                NUtils.getUI().core.addTask(new WaitGobModelAttr(cont.gob,4));
+                new PathFinder(Finder.findGob(cont.gobid)).run(gui);
+                NUtils.activateGob(Finder.findGob(cont.gobid));
+                NUtils.getUI().core.addTask(new WaitGobModelAttr(Finder.findGob(cont.gobid),4));
                 //TODO: change task from modelAttr to sound
             }
 
@@ -66,12 +66,12 @@ public class WaterToContainer implements Action
                 if(!task.getResult())
                     return Results.ERROR("No water in cistern!");
 
-                new PathFinder(cont.gob).run(gui);
+                new PathFinder(Finder.findGob(cont.gobid)).run(gui);
                 NUtils.activateGob(cistern);
 
-                if((cont.gob.ngob.getModelAttribute() & 4) == 0){
+                if((Finder.findGob(cont.gobid).ngob.getModelAttribute() & 4) == 0){
                     gui.msg("You clicked with empty barreld");
-                    NUtils.activateGob(cont.gob);
+                    NUtils.activateGob(Finder.findGob(cont.gobid));
                 }
             }
         }

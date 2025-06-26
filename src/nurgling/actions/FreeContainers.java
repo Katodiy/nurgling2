@@ -79,13 +79,13 @@ public class FreeContainers implements Action
     private void navigateToTargetContainer(NGameUI gui, Container container) throws InterruptedException {
         PathFinder pf;
 
-        if(PathFinder.isAvailable(container.gob)) {
-            pf = new PathFinder(container.gob);
+        if(PathFinder.isAvailable(Finder.findGob(container.gobid))) {
+            pf = new PathFinder(Finder.findGob(container.gobid));
             pf.isHardMode = true;
             pf.run(gui);
         } else {
             new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
-            pf = new PathFinder(container.gob);
+            pf = new PathFinder(Finder.findGob(container.gobid));
             pf.isHardMode = true;
             pf.run(gui);
         }

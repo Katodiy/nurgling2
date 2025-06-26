@@ -27,7 +27,7 @@ public class Destroyer implements Action {
                     pf.isHardMode = true;
                     pf.run(gui);
                     while (Finder.findGob(gob.id) != null) {
-                        new RestoreResources(gob).run(gui);
+                        new RestoreResources().run(gui);
                         NUtils.destroy(gob);
                         NUtils.addTask(new NTask() {
                             @Override

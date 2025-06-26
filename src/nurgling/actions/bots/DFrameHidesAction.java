@@ -37,9 +37,7 @@ public class DFrameHidesAction implements Action {
 
             for (Gob dframe : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.dframe.toString()),
                     new NAlias("gfx/terobjs/dframe"))) {
-                Container cand = new Container();
-                cand.gob = dframe;
-                cand.cap = "Frame";
+                Container cand = new Container(dframe,"Frame" );
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.Tetris.class);
@@ -59,19 +57,21 @@ public class DFrameHidesAction implements Action {
             containers.sort(new Comparator<Container>() {
                 @Override
                 public int compare(Container o1, Container o2) {
+                    Gob gob1 = Finder.findGob(o1.gobid);
+                    Gob gob2 = Finder.findGob(o2.gobid);
                     if(dir)
                     {
-                        int res = Double.compare(o1.gob.rc.y,o2.gob.rc.y);
+                        int res = Double.compare(gob1.rc.y,gob2.rc.y);
                         if(res == 0)
-                            return Double.compare(o1.gob.rc.x,o2.gob.rc.x);
+                            return Double.compare(gob1.rc.x,gob2.rc.x);
                         else
                             return res;
                     }
                     else
                     {
-                        int res = Double.compare(o1.gob.rc.x,o2.gob.rc.x);
+                        int res = Double.compare(gob1.rc.x,gob2.rc.x);
                         if(res == 0)
-                            return Double.compare(o1.gob.rc.y,o2.gob.rc.y);
+                            return Double.compare(gob1.rc.y,gob2.rc.y);
                         else
                             return res;
                     }

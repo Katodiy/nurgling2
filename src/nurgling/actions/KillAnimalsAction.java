@@ -76,7 +76,17 @@ public class KillAnimalsAction<C extends Entry> implements Action {
                     }
                 }
             }
-
+            if(forlife.size()<flcount) {
+                for (Gob gob : targets) {
+                    if (!forlife.contains(gob)) {
+                        if (c < flcount) {
+                            forlife.add(gob);
+                            c++;
+                            last = gob;
+                        }
+                    }
+                }
+            }
             for (Gob gob : targets) {
                 if (!forlife.contains(gob) && last != null && comp.compare(last, gob) <= 0)
                     forkill.add(gob);

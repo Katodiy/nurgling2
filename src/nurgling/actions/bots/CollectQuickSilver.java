@@ -51,7 +51,7 @@ public class CollectQuickSilver implements Action {
                     if (targetItems.getTargets(target) != 0) {
                         if(NUtils.getGameUI().vhand == null)
                             NUtils.takeItemToHand(bucket);
-                        new PathFinder(container.gob).run(gui);
+                        new PathFinder(Finder.findGob(container.gobid)).run(gui);
                         new OpenTargetContainer(container).run(gui);
                         for (WItem item : NUtils.getGameUI().getInventory(container.cap).getItems(target)) {
                             NUtils.itemact(item);

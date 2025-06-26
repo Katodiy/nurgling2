@@ -25,9 +25,7 @@ public class TubeLeatherAction implements Action {
 
         for (Gob dframe : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.dframe.toString()),
                 new NAlias("gfx/terobjs/dframe"))) {
-            Container cand = new Container();
-            cand.gob = dframe;
-            cand.cap = "Frame";
+            Container cand = new Container(dframe, "Frame");
 
             cand.initattr(Container.Space.class);
             cand.initattr(Container.Tetris.class);

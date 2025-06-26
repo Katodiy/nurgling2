@@ -35,9 +35,7 @@ public class LeatherAction implements Action {
 
             for (Gob ttube : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.ttub.toString()),
                     new NAlias("gfx/terobjs/ttub"))) {
-                Container cand = new Container();
-                cand.gob = ttube;
-                cand.cap = "Tub";
+                Container cand = new Container(ttube , "Tub");
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.Tetris.class);

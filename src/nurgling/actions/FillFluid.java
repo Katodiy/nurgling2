@@ -50,7 +50,7 @@ public class FillFluid implements Action
         boolean needToFill = false;
         if (target == null) {
             for (Container cont : conts) {
-                if ((cont.gob.ngob.getModelAttribute() & mask) != mask) {
+                if ((Finder.findGob(cont.gobid).ngob.getModelAttribute() & mask) != mask) {
                     needToFill = true;
                     break;
                 }
@@ -77,15 +77,15 @@ public class FillFluid implements Action
         if(!forced) {
             if(target==null) {
                 for (Container cont : conts) {
-                    while ((cont.gob.ngob.getModelAttribute() & mask) != mask) {
-                        new PathFinder(cont.gob).run(gui);
-                        NUtils.activateGob(cont.gob);
+                    while ((Finder.findGob(cont.gobid).ngob.getModelAttribute() & mask) != mask) {
+                        new PathFinder(Finder.findGob(cont.gobid)).run(gui);
+                        NUtils.activateGob(Finder.findGob(cont.gobid));
                         NUtils.addTask(new NTask() {
                             @Override
                             public boolean check() {
                                 if (!NUtils.isOverlay(barrel, content))
                                     return true;
-                                return (cont.gob.ngob.getModelAttribute() & mask) == mask;
+                                return (Finder.findGob(cont.gobid).ngob.getModelAttribute() & mask) == mask;
                             }
                         });
                         if (!NUtils.isOverlay(barrel, content)) {

@@ -55,6 +55,8 @@ public class TakeItemsFromContainer implements Action
                 for (int i = 0; i < temptr; i++) {
                     TransferToContainer.transfer(items.get(i), gui.getInventory(), target_size);
                     items = getItems(gui, name);
+                    if(gui.getInventory().getItems(name).size()>=target_size)
+                        break;
                     temptr=Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getMaxStackSize(name), items.size()));
                     i = -1;
                 }

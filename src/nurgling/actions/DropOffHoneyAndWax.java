@@ -44,7 +44,7 @@ public class DropOffHoneyAndWax implements Action {
     }
 
     private void dropOffWax(Container container, NGameUI gui) throws InterruptedException {
-        new PathFinder(container.gob).run(gui);
+        new PathFinder(Finder.findGob(container.gobid)).run(gui);
         new OpenTargetContainer(container).run(gui);
         new SimpleTransferToContainer(gui.getInventory(container.cap), gui.getInventory().getItems(new NAlias("Beeswax"))).run(gui);
         new SimpleTransferToContainer(gui.getInventory(container.cap), gui.getInventory().getItems(new NAlias("Bee Larvae"))).run(gui);
@@ -72,7 +72,7 @@ public class DropOffHoneyAndWax implements Action {
         if (bucketContainer == null)
             return Results.SUCCESS(); // no container — just finish
 
-        new PathFinder(bucketContainer.gob).run(gui);
+        new PathFinder(Finder.findGob(bucketContainer.gobid)).run(gui);
         new OpenTargetContainer(bucketContainer).run(gui);
 
         WItem lhand = NUtils.getEquipment().findItem(NEquipory.Slots.HAND_LEFT.idx);
@@ -89,10 +89,7 @@ public class DropOffHoneyAndWax implements Action {
         if (area == null) return null;
         ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
         for (Gob gob : gobs) {
-            Container container = new Container();
-            container.gob = gob;
-            container.cap = Context.contcaps.get(gob.ngob.name);
-            return container;
+            return new Container(gob,Context.contcaps.get(gob.ngob.name));
         }
         return null;
     }

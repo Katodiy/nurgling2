@@ -79,7 +79,7 @@ public class PigsAction implements Action {
                 }
             };
             if(PigsHerd.getCurrent()!=null) {
-                new MemorizeAnimalsAction(new NAlias("pig"),"pig", Pig.class).run(gui);
+                new MemorizeAnimalsAction(new NAlias("pig"),"pigs", Pig.class).run(gui);
 
                 new KillAnimalsAction<Pig>(new NAlias("pig"), "pigs", comparator, Pig.class, wpred, wlpred, PigsHerd.getCurrent().adultPigs).run(gui);
                 gui.msg("Female pigs cycle done!");

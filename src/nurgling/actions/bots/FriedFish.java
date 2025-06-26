@@ -40,9 +40,7 @@ public class FriedFish implements Action {
         Context context = new Context();
         ArrayList<Container> containers = new ArrayList<>();
         for (Gob sm : Finder.findGobs(outsa.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-            Container cand = new Container();
-            cand.gob = sm;
-            cand.cap = Context.contcaps.get(cand.gob.ngob.name);
+            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
             cand.initattr(Container.Space.class);
             containers.add(cand);
         }
@@ -130,7 +128,7 @@ public class FriedFish implements Action {
                                     Container.Space space = (Container.Space) container.getattr(Container.Space.class);
                                     if(!space.isReady() || (Integer) space.getRes().get(Container.Space.FREESPACE) != 0)
                                     {
-                                        new TransferToContainer(context, container, new NAlias("Spitrosted")).run(gui);
+                                        new TransferToContainer(container, new NAlias("Spitrosted")).run(gui);
                                     }
                                 }
                             }
@@ -147,7 +145,7 @@ public class FriedFish implements Action {
                     if (container.getattr(Container.Space.class) != null) {
                         Container.Space space = (Container.Space) container.getattr(Container.Space.class);
                         if (!space.isReady() || (Integer) space.getRes().get(Container.Space.FREESPACE) != 0) {
-                            new TransferToContainer(context, container, new NAlias("Spitroast")).run(gui);
+                            new TransferToContainer(container, new NAlias("Spitroast")).run(gui);
                         }
                     }
                 }

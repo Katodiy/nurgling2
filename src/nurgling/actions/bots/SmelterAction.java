@@ -48,9 +48,7 @@ public class SmelterAction implements Action {
             ArrayList<Container> containers = new ArrayList<>();
 
             for (Gob sm : Finder.findGobs(smelters, new NAlias("gfx/terobjs/smelter"))) {
-                Container cand = new Container();
-                cand.gob = sm;
-                cand.cap = ((sm.ngob.getModelAttribute() & 128) == 128) ? "Smith's Smelter" : "Ore Smelter";
+                Container cand = new Container(sm, ((sm.ngob.getModelAttribute() & 128) == 128) ? "Smith's Smelter" : "Ore Smelter");
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -65,9 +63,7 @@ public class SmelterAction implements Action {
             }
 
             for (Gob sm : Finder.findGobs(smelters, new NAlias("gfx/terobjs/primsmelter"))) {
-                Container cand = new Container();
-                cand.gob = sm;
-                cand.cap = "Stack furnace";
+                Container cand = new Container(sm, "Stack furnace");
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -83,7 +79,7 @@ public class SmelterAction implements Action {
 
             ArrayList<Gob> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gob);
+                lighted.add(Finder.findGob(cont.gobid));
 
             }
             if(containers.isEmpty())
@@ -109,7 +105,7 @@ public class SmelterAction implements Action {
 
                 ArrayList<Gob> flighted = new ArrayList<>();
                 for (Container cont : forFuel) {
-                    flighted.add(cont.gob);
+                    flighted.add(Finder.findGob(cont.gobid));
                 }
 
                 if (!new LightGob(flighted, 2).run(gui).IsSuccess())

@@ -78,11 +78,9 @@ public class RabbitMaster implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<Container> rabbitHutchesBreeding = new ArrayList<>();
 
-        for (Gob ttube : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.rabbit.toString()),
+        for (Gob rabbitHutch : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.rabbit.toString()),
                 new NAlias(RABBIT_HUTCH_RESOURCE_NAME))) {
-            Container cand = new Container();
-            cand.gob = ttube;
-            cand.cap = RABBIT_HUTCH_NAME;
+            Container cand = new Container(rabbitHutch,RABBIT_HUTCH_NAME);
 
             cand.initattr(Container.Space.class);
 
@@ -91,11 +89,9 @@ public class RabbitMaster implements Action {
 
         ArrayList<Container> rabbitHutchesIncubators = new ArrayList<>();
 
-        for (Gob ttube : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.rabbitIncubator.toString()),
+        for (Gob rabbitHutch : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.rabbitIncubator.toString()),
                 new NAlias(RABBIT_HUTCH_RESOURCE_NAME))) {
-            Container cand = new Container();
-            cand.gob = ttube;
-            cand.cap = RABBIT_HUTCH_NAME;
+            Container cand = new Container(rabbitHutch,RABBIT_HUTCH_NAME);
 
             cand.initattr(Container.Space.class);
 
@@ -116,8 +112,8 @@ public class RabbitMaster implements Action {
         int totalNumberOfPossibleBunnies = -1;
 
         for (Container container : rabbitHutchesBreeding) {
-            new PathFinder( container.gob).run(gui);
-            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME,container.gob).run(gui).IsSuccess())) {
+            new PathFinder( Finder.findGob(container.gobid)).run(gui);
+            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME,Finder.findGob(container.gobid)).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
@@ -157,8 +153,8 @@ public class RabbitMaster implements Action {
         hutchInfos.sort(hutchComparator.reversed());
 
         for (Container container : rabbitHutchesIncubators) {
-            new PathFinder(container.gob).run(gui);
-            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, container.gob).run(gui).IsSuccess())) {
+            new PathFinder(Finder.findGob(container.gobid)).run(gui);
+            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, Finder.findGob(container.gobid)).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
@@ -189,7 +185,7 @@ public class RabbitMaster implements Action {
 
         ArrayList<Context.Output> outputs = new ArrayList<>();
         for (Container cc : rabbitHutchesIncubators) {
-            Context.OutputContainer container = new Context.OutputContainer(cc.gob, NContext.findSpec(Specialisation.SpecName.incubator.toString()).getRCArea(), 1);
+            Context.OutputContainer container = new Context.OutputContainer(Finder.findGob(cc.gobid), NContext.findSpec(Specialisation.SpecName.incubator.toString()).getRCArea(), 1);
             container.cap = RABBIT_HUTCH_NAME;
             container.initattr(Container.Space.class);
             container.initattr(Container.TargetItems.class);
@@ -214,8 +210,8 @@ public class RabbitMaster implements Action {
 
         for (IncubatorInfo buckInfo : qBucks) {
             // Open hutch with buck
-            new PathFinder(buckInfo.container.gob).run(gui);
-            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, buckInfo.container.gob).run(gui).IsSuccess())) {
+            new PathFinder(Finder.findGob(buckInfo.container.gobid)).run(gui);
+            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, Finder.findGob(buckInfo.container.gobid)).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
@@ -244,8 +240,8 @@ public class RabbitMaster implements Action {
                     buck = (WItem) gui.getInventory().getItem(new NAlias(BUCK_NAME));
 
                     // Open hutch for replacement
-                    new PathFinder(hutchInfo.container.gob).run(gui);
-                    if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, hutchInfo.container.gob).run(gui).IsSuccess())) {
+                    new PathFinder(Finder.findGob(hutchInfo.container.gobid)).run(gui);
+                    if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, Finder.findGob(hutchInfo.container.gobid)).run(gui).IsSuccess())) {
                         return Results.FAIL();
                     }
 
@@ -315,8 +311,8 @@ public class RabbitMaster implements Action {
 
         for (RabbitMaster.IncubatorInfo doeInfo : qDoes) {
             // Open hutch with doe
-            new PathFinder(doeInfo.container.gob).run(gui);
-            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, doeInfo.container.gob).run(gui).IsSuccess())) {
+            new PathFinder(Finder.findGob(doeInfo.container.gobid)).run(gui);
+            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, Finder.findGob(doeInfo.container.gobid)).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
@@ -340,8 +336,8 @@ public class RabbitMaster implements Action {
             for (HutchInfo hutchInfo : hutchInfos) {
                 for (int i = 0; i < hutchInfo.doeQualities.size(); i++) {
                     if (hutchInfo.doeQualities.get(i) < doeQuality) {
-                        new PathFinder(hutchInfo.container.gob).run(gui);
-                        if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, hutchInfo.container.gob).run(gui).IsSuccess())) {
+                        new PathFinder(Finder.findGob(hutchInfo.container.gobid)).run(gui);
+                        if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, Finder.findGob(hutchInfo.container.gobid)).run(gui).IsSuccess())) {
                             return Results.FAIL();
                         }
 
@@ -412,8 +408,8 @@ public class RabbitMaster implements Action {
         int totalNumberOfPossibleBunnies = 0;
 
         for (Container container : rabbitHutchesIncubators) {
-            new PathFinder(container.gob).run(gui);
-            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, container.gob).run(gui).IsSuccess())) {
+            new PathFinder(Finder.findGob(container.gobid)).run(gui);
+            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, Finder.findGob(container.gobid)).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
@@ -434,8 +430,8 @@ public class RabbitMaster implements Action {
                 .orElse(0.0);
 
         for (Container container : rabbitHutchesIncubators) {
-            new PathFinder(container.gob).run(gui);
-            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, container.gob).run(gui).IsSuccess())) {
+            new PathFinder(Finder.findGob(container.gobid)).run(gui);
+            if (!(new OpenTargetContainer(RABBIT_HUTCH_NAME, Finder.findGob(container.gobid)).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 

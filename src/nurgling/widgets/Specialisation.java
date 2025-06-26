@@ -1,6 +1,5 @@
 package nurgling.widgets;
 
-import com.jcraft.jorbis.Comment;
 import haven.*;
 import haven.Label;
 import haven.Window;
@@ -11,7 +10,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.*;
 
 public class Specialisation extends Window
 {
@@ -52,7 +50,29 @@ public class Specialisation extends Window
         tanning,
         logs,
         smokshed,
-        tarkiln, boneforash, blockforash, readyHides, crucibles, chicken, incubator, bed, eat, safe,sorting, fforge, anvil, rabbit, rabbitIncubator, dreamcatcher;
+        tarkiln,
+        boneforash,
+        blockforash,
+        readyHides,
+        crucibles,
+        chicken,
+        incubator,
+        bed,
+        eat,
+        safe,
+        sorting,
+        fforge,
+        anvil,
+        rabbit,
+        rabbitIncubator,
+        dreamcatcher,
+        meatgrinder,
+        loom,
+        ropewalk,
+        crucible,
+        pow,
+        cauldron,
+        potterswheel;
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -100,6 +120,13 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.fforge.toString(),"Finery Forge",Resource.loadsimg("nurgling/categories/fineryforge")));
         specialisation.add(new SpecialisationItem(SpecName.anvil.toString(),"Anvil",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.dreamcatcher.toString(),"Dream Catcher",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.meatgrinder.toString(),"Meat Grinder",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.loom.toString(),"Loom",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.ropewalk.toString(),"Rope Walk",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.crucible.toString(),"Crucible",Resource.remote().loadwait("paginae/bld/crucible").flayer(Resource.imgc).img));
+        specialisation.add(new SpecialisationItem(SpecName.pow.toString(),"Fire Place",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.potterswheel.toString(),"Potters Wheel",Resource.loadsimg("nurgling/categories/anvil")));
+
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
             public int compare(SpecialisationItem o1, SpecialisationItem o2) {

@@ -40,9 +40,7 @@ public class FFAction implements Action {
             ArrayList<Container> containers = new ArrayList<>();
 
             for (Gob sm : Finder.findGobs(fforges, new NAlias("gfx/terobjs/fineryforge"))) {
-                Container cand = new Container();
-                cand.gob = sm;
-                cand.cap = "Finery Forge";
+                Container cand = new Container(sm,"Finery Forge" );
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -56,24 +54,24 @@ public class FFAction implements Action {
 
             ArrayList<Gob> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gob);
+                lighted.add(Finder.findGob(cont.gobid));
 
             }
             if(containers.isEmpty())
                 return Results.ERROR("NO Forges");
 
             Results res = null;
-            Context context = new Context();
-            context.workstation = new Context.Workstation("gfx/terobjs/anvil", null);
-            context.workstation.selected = Finder.findGob(NContext.findSpec(Specialisation.SpecName.anvil.toString()), new NAlias("anvil"));
+            NContext context = new NContext(gui);
+            context.workstation = new NContext.Workstation("gfx/terobjs/anvil", null);
+            context.workstation.selected = Finder.findGob(NContext.findSpec(Specialisation.SpecName.anvil.toString()), new NAlias("anvil")).id;
             while (res == null || res.IsSuccess()) {
                 NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 8));
                 new FreeContainers(containers).run(gui);
 
                 new DropTargets(containers, new NAlias("Dross")).run(gui);
                 new Forging(containers,context).run(gui);
-                new FreeInventory(context).run(gui);
-                res = new FillContainers(containers, "Bar of Cast Iron", context).run(gui);
+                new FreeInventory2(context).run(gui);
+                res = new FillContainers(containers, "Bar of Cast Iron", new Context()).run(gui);
                 ArrayList<Container> forFuel = new ArrayList<>();
 
                 for(Container container: containers) {
@@ -87,7 +85,7 @@ public class FFAction implements Action {
 
                 ArrayList<Gob> flighted = new ArrayList<>();
                 for (Container cont : forFuel) {
-                    flighted.add(cont.gob);
+                    flighted.add(Finder.findGob(cont.gobid));
                 }
 
                 if (!new LightGob(flighted, 8).run(gui).IsSuccess())

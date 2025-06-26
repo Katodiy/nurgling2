@@ -18,21 +18,24 @@ import java.util.Arrays;
 
 public class PrepareWorkStation implements Action
 {
-    public PrepareWorkStation(Context context, String name)
+    public PrepareWorkStation(NContext context, String name)
     {
         this.name = name;
         this.context = context;
     }
 
     String name;
-    Context context;
+    NContext context;
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
+        NArea area = context.getSpecArea(context.workstation);
+        if(area == null)
+            return Results.ERROR("NO WORKSTATION");
         Gob ws = null;
         if(name.startsWith("gfx/terobjs/pow"))
         {
-            ArrayList<Gob> gobs = Finder.findGobs(new NAlias("gfx/terobjs/pow"));
+            ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias("gfx/terobjs/pow"));
             gobs.sort(NUtils.d_comp);
             for(Gob gob: gobs)
             {
@@ -43,13 +46,13 @@ public class PrepareWorkStation implements Action
             }
         }
         else {
-            ws = Finder.findGob(new NAlias(name));
+            ws = Finder.findGob(area, new NAlias(name));
         }
         if(ws == null)
             return Results.ERROR("NO WORKSTATION");
         else
         {
-            context.workstation.selected = ws;
+            context.workstation.selected = ws.id;
             if(name.contains("crucible"))
             {
                 if(fillCrucible(ws,gui))
@@ -70,14 +73,14 @@ public class PrepareWorkStation implements Action
                     return Results.FAIL();
                 if (!new LightGob(pows, 2).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");
-                if((context.workstation.selected.ngob.getModelAttribute()&4)==0)
+                if((Finder.findGob(context.workstation.selected).ngob.getModelAttribute()&4)==0)
                 {
-                    new FillFluid(context.workstation.selected, NContext.findSpec(Specialisation.SpecName.water.toString())!=null ? NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea():null,new NAlias("water"),4).run(gui);
+                    new FillFluid(Finder.findGob(context.workstation.selected), NContext.findSpec(Specialisation.SpecName.water.toString())!=null ? NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea():null,new NAlias("water"),4).run(gui);
                 }
                 NUtils.addTask(new NTask() {
                     @Override
                     public boolean check() {
-                        return (context.workstation.selected.ngob.getModelAttribute()&8)==8;
+                        return (Finder.findGob(context.workstation.selected).ngob.getModelAttribute()&8)==8;
                     }
                 });
 
