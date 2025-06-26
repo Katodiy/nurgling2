@@ -26,7 +26,13 @@ public class PumpkinFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NContext.findSpec(field),NContext.findSpec(seed),NContext.findSpec(trough),NContext.findSpec(swill),new NAlias("plants/pumpkin"),new NAlias("Pumpkin"),4, true).run(gui);
+            new HarvestCrop(
+                    NContext.findSpec(field),
+                    NContext.findSpec(seed),
+                    NContext.findSpec(trough),
+                    NContext.findSpec(swill),
+                    new NAlias("plants/pumpkin")
+            ).run(gui);
             if(pumpkinFlesh !=null)
                 new LettuceAndPumpkinCollector(NContext.findSpec(field), NContext.findSpec(seed), pumpkinFlesh, new NAlias("items/pumpkin", "Pumpkin"), NContext.findSpec(trough)).run(gui);
             new SeedCrop(NContext.findSpec(field),NContext.findSpec(seed),new NAlias("plants/pumpkin"),new NAlias("Pumpkin"), false).run(gui);

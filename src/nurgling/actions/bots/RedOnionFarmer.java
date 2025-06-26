@@ -26,8 +26,13 @@ public class RedOnionFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NContext.findSpec(field),redOnion,NContext.findSpec(trough),NContext.findSpec(swill),new NAlias("plants/redonion"),new NAlias("Red Onion"),3, true).run(gui);
-
+            new HarvestCrop(
+                    NContext.findSpec(field),
+                    redOnion,
+                    NContext.findSpec(trough),
+                    NContext.findSpec(swill),
+                    new NAlias("plants/redonion")
+            ).run(gui);
             if(NContext.findOut("Red Onion", 1)!=null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(),NContext.findOut("Red Onion", 1).getRCArea(),new NAlias("items/redonion", "Red Onion")).run(gui);
 

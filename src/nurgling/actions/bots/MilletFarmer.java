@@ -27,7 +27,13 @@ public class MilletFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NContext.findSpec(field),NContext.findSpec(seed),NContext.findSpec(trough),NContext.findSpec(swill),new NAlias("plants/millet"),new NAlias("millet"),3, false).run(gui);
+            new HarvestCrop(
+                    NContext.findSpec(field),
+                    NContext.findSpec(seed),
+                    NContext.findSpec(trough),
+                    NContext.findSpec(swill),
+                    new NAlias("plants/millet")
+            ).run(gui);
             if(NContext.findOut("Straw", 1)!=null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(),NContext.findOut("Straw", 1).getRCArea(),new NAlias("straw", "Straw")).run(gui);
             new SeedCrop(NContext.findSpec(field),NContext.findSpec(seed),new NAlias("plants/millet"),new NAlias("Millet"), false).run(gui);

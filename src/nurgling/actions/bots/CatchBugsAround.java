@@ -4,9 +4,9 @@ import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.Action;
-import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.tasks.NoGob;
+import nurgling.tasks.WaitForGobsWithNAlias;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -33,6 +33,7 @@ public class CatchBugsAround implements Action {
                     }
                 }
             }
+            NUtils.getUI().core.addTask(new WaitForGobsWithNAlias(bugs));
         }
     }
 }

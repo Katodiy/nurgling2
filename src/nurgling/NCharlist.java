@@ -2,7 +2,7 @@ package nurgling;
 import haven.Charlist;
 
 public class NCharlist extends Charlist {
-    static NCharlist instance;
+    public static NCharlist instance;
 
     public NCharlist(int height ) {
         super ( height );

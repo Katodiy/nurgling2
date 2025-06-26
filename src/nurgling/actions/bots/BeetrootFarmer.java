@@ -27,8 +27,13 @@ public class BeetrootFarmer implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
-            new HarvestCrop(NContext.findSpec(field),beetroot,NContext.findSpec(trough),NContext.findSpec(swill),new NAlias("plants/beet"),new NAlias("Beetroot"),3, true).run(gui);
-
+            new HarvestCrop(
+                    NContext.findSpec(field),
+                    beetroot,
+                    NContext.findSpec(trough),
+                    NContext.findSpec(swill),
+                    new NAlias("plants/beet")
+            ).run(gui);
             if(NContext.findOut("Beetroot Leaves", 1)!=null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(),NContext.findOut("Beetroot Leaves", 1).getRCArea(),new NAlias("beetleaves", "Beetroot Leaves")).run(gui);
 
