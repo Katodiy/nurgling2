@@ -163,14 +163,14 @@ public class MineAction implements Action {
 
                             if ( bolder != null && bolder.rc.dist(gui.map.player().rc)<=15 ) {
                                 new PathFinder(bolder).run(gui);
-                                while ( Finder.findGob ( bolder.id ) != null ) {
+                                while (bolder != null && Finder.findGob ( bolder.id ) != null ) {
                                     context.setLastPos(bolder.rc);
                                     if(!new RestoreResources().run(gui).isSuccess) {
                                         System.out.println("restoreResources140");
                                         return Results.FAIL();
                                     }
                                     new PathFinder(NGob.getDummy(context.getLastPosCoord(marea), 0, new NHitBox(new Coord2d(-5.5,-5.5),new Coord2d(5.5,5.5))),true).run(gui);
-                                    while (Finder.findGob(bolder.id) != null) {
+                                    while (bolder!=null && Finder.findGob(bolder.id) != null) {
                                         new SelectFlowerAction("Chip stone", bolder).run(gui);
                                         WaitChipperState wcs = new WaitChipperState(bolder);
                                         NUtils.getUI().core.addTask(wcs);

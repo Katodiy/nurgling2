@@ -49,7 +49,7 @@ public class StackSupporter {
 
         size3.add("Candle");
         size3.add("Pearl");
-        size3.add("Wool");
+
         size3.add("Finer Plant Fibre");
         size3.add("Wicker");
         size3.add("Cloth");

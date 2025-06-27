@@ -9,6 +9,7 @@ import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.conf.SheepsHerd;
 import nurgling.tools.NAlias;
+import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -80,7 +81,7 @@ public class SheepsAction implements Action {
             if(SheepsHerd.getCurrent()!=null) {
                 new MemorizeAnimalsAction(new NAlias("sheep"),"sheeps", Sheep.class).run(gui);
 
-                new ShearWool("sheeps", new NAlias("sheep")).run(gui);
+                new ShearWool(Specialisation.SpecName.sheeps, new NAlias("sheep")).run(gui);
 
                 new KillAnimalsAction<Sheep>(new NAlias("sheep"), "sheeps", comparator, Sheep.class, wpred, wlpred, SheepsHerd.getCurrent().adultSheeps).run(gui);
                 gui.msg("Female sheeps cycle done!");

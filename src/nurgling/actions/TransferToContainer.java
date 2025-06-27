@@ -31,7 +31,10 @@ public class TransferToContainer implements Action{
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<WItem> witems;
         if (!(witems = gui.getInventory().getItems(items)).isEmpty() && (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.Space.class).getFreeSpace()!=0)) {
-            PathFinder pf = new PathFinder(Finder.findGob(container.gobid));
+            Gob gcont = Finder.findGob(container.gobid);
+            if(gcont==null)
+                return Results.FAIL();
+            PathFinder pf = new PathFinder(gcont);
             pf.isHardMode = true;
             pf.run(gui);
             if (th == -1)

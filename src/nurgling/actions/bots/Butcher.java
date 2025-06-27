@@ -59,7 +59,7 @@ public class Butcher implements Action {
         req.add(kritter_corpse);
 
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
-        Context context = new Context();
+        NContext context = new NContext(gui);
         if (new Validator(req, opt).run(gui).IsSuccess()) {
             ArrayList<Gob> gobs = getGobs(area);
 
@@ -89,7 +89,7 @@ public class Butcher implements Action {
                     while (optFound) {
 
                         if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
-                            new FreeInventory(context).run(gui);
+                            new FreeInventory2(context).run(gui);
                             transferFreshHides(gui);
                         }
                         if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
@@ -116,7 +116,7 @@ public class Butcher implements Action {
                                     if (gui.vhand != null) {
                                         NUtils.drop(gui.vhand);
                                         NUtils.addTask(new WaitFreeHand());
-                                        new FreeInventory(context).run(gui);
+                                        new FreeInventory2(context).run(gui);
                                         new TransferToPiles(NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
                                     }
                                     optFound = false;
@@ -129,7 +129,7 @@ public class Butcher implements Action {
                 }
                 gobs = getGobs(area);
             }
-            new FreeInventory(context).run(gui);
+            new FreeInventory2(context).run(gui);
             transferFreshHides(gui);
         }
 

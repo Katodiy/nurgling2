@@ -84,7 +84,7 @@ public class GoatsAction implements Action {
             if(GoatsHerd.getCurrent()!=null) {
                 new MemorizeAnimalsAction(new NAlias("goat"),"goats",Goat.class).run(gui);
 
-                new ShearWool("goats", new NAlias("goat")).run(gui);
+                new ShearWool(Specialisation.SpecName.goats, new NAlias("goat")).run(gui);
 
                 new KillAnimalsAction<Goat>(new NAlias("goat"), "goats", comparator, Goat.class, wpred, wlpred, GoatsHerd.getCurrent().adultGoats).run(gui);
                 gui.msg("Female goats cycle done!");

@@ -66,30 +66,32 @@ public class FFAction implements Action {
             context.workstation.selected = Finder.findGob(NContext.findSpec(Specialisation.SpecName.anvil.toString()), new NAlias("anvil")).id;
             while (res == null || res.IsSuccess()) {
                 NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 8));
-                new FreeContainers(containers).run(gui);
+                synchronized (NUtils.getGameUI()) {
+                    new FreeContainers(containers).run(gui);
 
-                new DropTargets(containers, new NAlias("Dross")).run(gui);
-                new Forging(containers,context).run(gui);
-                new FreeInventory2(context).run(gui);
-                res = new FillContainers(containers, "Bar of Cast Iron", new Context()).run(gui);
-                ArrayList<Container> forFuel = new ArrayList<>();
+                    new DropTargets(containers, new NAlias("Dross")).run(gui);
+                    new Forging(containers, context).run(gui);
+                    new FreeInventory2(context).run(gui);
+                    res = new FillContainers(containers, "Bar of Cast Iron", new Context()).run(gui);
+                    ArrayList<Container> forFuel = new ArrayList<>();
 
-                for(Container container: containers) {
-                    Container.Space space = container.getattr(Container.Space.class);
-                    if(!space.isEmpty())
-                        forFuel.add(container);
+                    for (Container container : containers) {
+                        Container.Space space = container.getattr(Container.Space.class);
+                        if (!space.isEmpty())
+                            forFuel.add(container);
+                    }
+
+                    if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
+                        return Results.ERROR("NO FUEL");
+
+                    ArrayList<Gob> flighted = new ArrayList<>();
+                    for (Container cont : forFuel) {
+                        flighted.add(Finder.findGob(cont.gobid));
+                    }
+
+                    if (!new LightGob(flighted, 8).run(gui).IsSuccess())
+                        return Results.ERROR("I can't start a fire");
                 }
-
-                if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
-                    return Results.ERROR("NO FUEL");
-
-                ArrayList<Gob> flighted = new ArrayList<>();
-                for (Container cont : forFuel) {
-                    flighted.add(Finder.findGob(cont.gobid));
-                }
-
-                if (!new LightGob(flighted, 8).run(gui).IsSuccess())
-                    return Results.ERROR("I can't start a fire");
             }
             return Results.SUCCESS();
         }

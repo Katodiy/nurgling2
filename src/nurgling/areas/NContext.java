@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NContext {
+
     public final static AtomicBoolean waitBot = new AtomicBoolean(false);
     private HashMap<String, String> inAreas = new HashMap<>();
     private HashMap<String, TreeMap<Double,String>> outAreas = new HashMap<>();
@@ -174,6 +175,25 @@ public class NContext {
         }
         navigateToAreaIfNeeded(workstation.station);
         return areas.get(workstation.station);
+    }
+
+    public NArea getSpecArea(Specialisation.SpecName name) throws InterruptedException {
+        if(!areas.containsKey(name.toString())) {
+            NArea area = findSpec(name.toString());
+            if (area == null) {
+                area = findSpecGlobal(name.toString());
+            }
+            if (area != null) {
+                areas.put(String.valueOf(name.toString()), area);
+                rps.put(String.valueOf(name.toString()),(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+            }
+            else
+            {
+                return null;
+            }
+        }
+        navigateToAreaIfNeeded(name.toString());
+        return areas.get(name.toString());
     }
 
     public ArrayList<ObjectStorage> getInStorages(String item) throws InterruptedException {
@@ -433,7 +453,8 @@ public class NContext {
         if(area!=null)
         {
             areas.put(String.valueOf(area.id),area);
-            outAreas.get(name).put(th, String.valueOf(area.id));
+            rps.put(String.valueOf(area.id),(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+            outAreas.get(name).put((double)area.getOutput(name).th, String.valueOf(area.id));
         }
         if (loadsimg!=null && area == null) {
             outAreas.get(name).put(th, createArea("Please select area for:" + name, Resource.loadsimg("baubles/custom"), loadsimg));
