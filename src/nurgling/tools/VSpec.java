@@ -1199,6 +1199,7 @@ public class VSpec {
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/ambergris\",\"name\":\"Ambergris\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/propolis\",\"name\":\"Propolis\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/kvann\",\"name\":\"Kvann\"}"));
+        spices.add(new JSONObject("{\"static\":\"gfx/invobjs/salt\",\"name\":\"Salt\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-juniper\",\"name\":\"Juniper Berries\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/clove-garlic\",\"name\":\"Clove of Garlic\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/chives\",\"name\":\"Chives\"}"));
@@ -1314,6 +1315,10 @@ public class VSpec {
         driedFruits.add(new JSONObject("{\"static\":\"gfx/invobjs/prune\",\"name\":\"Prune\"}"));
         driedFruits.add(new JSONObject("{\"static\":\"gfx/invobjs/raisins\",\"name\":\"Raisins\"}"));
         categories.put("Dried Fruit", driedFruits);
+
+        ArrayList<JSONObject> water = new ArrayList<>();
+        water.add(new JSONObject("{\"static\":\"gfx/invobjs/water\",\"name\":\"Water\"}"));
+        categories.put("Water", water);
 
         ArrayList<JSONObject> mushrooms = new ArrayList<>();
         mushrooms.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/baybolete\",\"name\":\"Bay Bolete\"}"));

@@ -102,6 +102,32 @@ public class NGameUI extends GameUI
         return null;
     }
 
+    public int getWindowsNum(String name) {
+        int count = 0;
+        for ( Widget w = lchild ; w != null ; w = w.prev ) {
+            if ( w instanceof Window ) {
+                Window wnd = ( Window ) w;
+                if ( wnd.cap != null && wnd.cap.equals(name)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    public ArrayList<Window> getWindows(String name) {
+        ArrayList<Window> windows = new ArrayList<>();
+        for ( Widget w = lchild ; w != null ; w = w.prev ) {
+            if ( w instanceof Window ) {
+                Window wnd = ( Window ) w;
+                if ( wnd.cap != null && wnd.cap.equals(name)) {
+                    windows.add(wnd);
+                }
+            }
+        }
+        return windows;
+    }
+
     public Window getWindowWithButton ( String cap, String button ) {
         for ( Widget w = lchild ; w != null ; w = w.prev ) {
             if ( w instanceof Window ) {
@@ -325,6 +351,34 @@ public class NGameUI extends GameUI
         return -1;
     }
 
+    public double findBarrelContent(ArrayList<Window> windows, NAlias content){
+        for (Window spwnd: windows) {
+            if (spwnd != null) {
+                for (Widget sp = spwnd.lchild; sp != null; sp = sp.prev) {
+                    if (sp instanceof RelCont) {
+                        for (Pair<Widget, Supplier<Coord>> pair : ((RelCont) sp).childpos) {
+                            if (pair.a.getClass().getName().contains("TipLabel")) {
+                                try {
+                                    for (ItemInfo inf : (Collection<ItemInfo>) (pair.a.getClass().getField("info").get(pair.a))) {
+                                        if (inf instanceof ItemInfo.Name) {
+                                            String name = ((ItemInfo.Name) inf).str.text;
+                                            if (NParser.checkName(name.toLowerCase(), content))
+                                                return Double.parseDouble(name.substring(0, name.indexOf(' ')));
+                                        }
+                                    }
+                                } catch (NoSuchFieldException | IllegalAccessException e) {
+                                    e.printStackTrace();
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
 
     public void msgToDiscord(NDiscordNotification settings, String message)
     {
@@ -361,6 +415,8 @@ public class NGameUI extends GameUI
                 map.disol(tag);
         }
     }
+
+
 
     public class NToolBelt extends Belt implements KeyBinding.Bindable{
 

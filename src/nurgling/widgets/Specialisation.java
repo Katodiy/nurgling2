@@ -72,7 +72,8 @@ public class Specialisation extends Window
         crucible,
         pow,
         cauldron,
-        potterswheel;
+        potterswheel,
+        barrelworkarea
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -126,6 +127,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.crucible.toString(),"Crucible",Resource.remote().loadwait("paginae/bld/crucible").flayer(Resource.imgc).img));
         specialisation.add(new SpecialisationItem(SpecName.pow.toString(),"Fire Place",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.potterswheel.toString(),"Potters Wheel",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.barrelworkarea.toString(),"Craft area with barrels",Resource.loadsimg("nurgling/categories/anvil")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override

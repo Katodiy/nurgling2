@@ -81,7 +81,7 @@ public class BaseIngredientContainer extends Widget implements DTarget, Scrollab
         if(res != null && res.get("name") != null) {
             Ingredient ing;
             items.add(ing = new Ingredient((String)res.get("name"), ItemTex.create(res)));
-            IconItem it = add(new IconItem(ing.name, ing.image), UI.scale(new Coord(35*((items.size()-1)%5),51*((items.size()-1)/5))).add(new Coord(5,5)));
+            IconItem it = add(new IconItem(ing.name, ing.image, this), UI.scale(new Coord(35*((items.size()-1)%5),51*((items.size()-1)/5))).add(new Coord(5,5)));
             it.basec = new Coord(it.c);
             icons.add(it);
             maxy = UI.scale(51)*((items.size()-1)/5 - 5);

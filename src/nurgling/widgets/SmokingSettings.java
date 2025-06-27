@@ -76,7 +76,7 @@ public class SmokingSettings extends Window implements Checkable {
             for(NSmokProp p : smprop)
             {
                 JSONObject icon = (JSONObject)((JSONObject) p.toJson().get("data")).get("icon");
-                IconItem item = new IconItem(p.iconName, ItemTex.create(icon));
+                IconItem item = new IconItem(p.iconName, ItemTex.create(icon), this);
                 item.src = icon;
                 Recipe recipe = new Recipe(item,(String) ((JSONObject) p.toJson().get("data")).get("fuel"));
                 recipe.isEnabled.a = (Boolean) ((JSONObject) p.toJson().get("data")).get("isSelected");
@@ -192,7 +192,7 @@ public class SmokingSettings extends Window implements Checkable {
             for(NSmokProp p : smprop)
             {
                 JSONObject icon = (JSONObject)((JSONObject) p.toJson().get("data")).get("icon");
-                IconItem item = new IconItem(p.iconName, ItemTex.create(icon));
+                IconItem item = new IconItem(p.iconName, ItemTex.create(icon), this);
                 item.src = icon;
                 Recipe recipe = new Recipe(item,(String) ((JSONObject) p.toJson().get("data")).get("fuel"));
                 recipe.isEnabled.a = (Boolean) ((JSONObject) p.toJson().get("data")).get("isSelected");

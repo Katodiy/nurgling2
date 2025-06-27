@@ -549,6 +549,15 @@ public class NUtils
         return false;
     }
 
+    public static String getContentsOfBarrel(Gob barrel) {
+        for (Gob.Overlay ol : barrel.ols) {
+            if(ol.spr instanceof StaticSprite) {
+                return ((StaticSprite)ol.spr).res.name;
+            }
+        }
+        return null;
+    }
+
     public static String getContentsOfBucket(WItem bucket) {
         for(NGItem.NContent content : ((NGItem) bucket.item).content()) {
             if (content.name().contains("l of")) {

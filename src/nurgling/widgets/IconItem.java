@@ -29,8 +29,9 @@ public class IconItem extends Widget
 
     String name;
 
-    public IconItem(String name, BufferedImage img)
+    public IconItem(String name, BufferedImage img, Widget parent)
     {
+        this.parent = parent;
         this.name = name;
         tip = new TexI(RichText.render(name).img);
 
@@ -106,35 +107,42 @@ public class IconItem extends Widget
 
     }
 
-    final ArrayList<String> opt = new ArrayList<String>(){
-        {
-            if(parent instanceof IngredientContainer)
-                add("Threshold");
-            add("Delete");
-            if(parent instanceof IngredientContainer) {
-                add("Mark as barter");
-                add("Mark as barrel");
-            }
-        }
-    };
-
-    final ArrayList<String> uopt = new ArrayList<String>(){
-        {
-            if(parent instanceof IngredientContainer) {
-                add("Threshold");
-            }
-            add("Delete");
-            if(parent instanceof IngredientContainer) {
-                add("Unmark");
-            }
-        }
-    };
-
     NFlowerMenu menu;
 
     public void opts( Coord c ) {
         if(menu == null) {
-            menu = new NFlowerMenu((type==NArea.Ingredient.Type.CONTAINER)?opt.toArray(new String[0]):uopt.toArray(new String[0])) {
+            String[] opts = null;
+            if(type==NArea.Ingredient.Type.CONTAINER)
+            {
+                ArrayList<String> opt = new ArrayList<String>() {
+                    {
+                        if (parent instanceof IngredientContainer)
+                            add("Threshold");
+                        add("Delete");
+                        if (parent instanceof IngredientContainer) {
+                            add("Mark as barter");
+                            add("Mark as barrel");
+                        }
+                    }
+                };
+                opts = opt.toArray(new String[0]);
+            }
+            else
+            {
+                ArrayList<String> uopt = new ArrayList<String>(){
+                    {
+                        if(parent instanceof IngredientContainer) {
+                            add("Threshold");
+                        }
+                        add("Delete");
+                        if(parent instanceof IngredientContainer) {
+                            add("Unmark");
+                        }
+                    }
+                };
+                opts = uopt.toArray(new String[0]);
+            }
+            menu = new NFlowerMenu(opts) {
 
                 public boolean mousedown(MouseDownEvent ev) {
                     if(super.mousedown(ev))

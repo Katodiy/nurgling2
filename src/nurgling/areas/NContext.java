@@ -2,6 +2,7 @@ package nurgling.areas;
 
 import haven.*;
 import nurgling.*;
+import nurgling.actions.LiftObject;
 import nurgling.actions.PathFinder;
 import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.actions.bots.SelectArea;
@@ -21,10 +22,14 @@ public class NContext {
     public final static AtomicBoolean waitBot = new AtomicBoolean(false);
     private HashMap<String, String> inAreas = new HashMap<>();
     private HashMap<String, TreeMap<Double,String>> outAreas = new HashMap<>();
+    private HashMap<String, String> barrels = new HashMap<>();
+    private HashMap<String, BarrelStorage> barrelstorage = new HashMap<>();
     private HashMap<NArea.Specialisation, String> specArea = new HashMap<>();
     private HashMap<String, NArea> areas = new HashMap<>();
     private HashMap<String, RoutePoint> rps = new HashMap<>();
     private HashMap<String, ObjectStorage> containers = new HashMap<>();
+
+    public boolean bwaused = false;
     int counter = 0;
     private NGameUI gui;
 
@@ -175,6 +180,55 @@ public class NContext {
         }
         navigateToAreaIfNeeded(workstation.station);
         return areas.get(workstation.station);
+    }
+
+    public static class BarrelStorage
+    {
+        public NGlobalCoord coord;
+        public String olname;
+
+        public BarrelStorage(NGlobalCoord coord, String olname) {
+            this.coord = coord;
+            this.olname = olname;
+        }
+    }
+
+    public BarrelStorage getBarrelStorage(String item)
+    {
+        return barrelstorage.get(item);
+    }
+
+    public Gob getBarrelInArea(String item) throws InterruptedException {
+        if(!barrels.containsKey(item)) {
+            NArea area = findIn(item);
+            if (area == null) {
+                area = findInGlobal(item);
+            }
+            if (area != null) {
+                areas.put(String.valueOf(area.id), area);
+                rps.put(String.valueOf(area.id), (((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+                barrels.put(item, String.valueOf(area.id));
+            }
+            if(area == null)
+                return null;
+        }
+        String areaid = barrels.get(item);
+        navigateToAreaIfNeeded(areaid);
+        for(Gob gob: Finder.findGobs(areas.get(areaid), new NAlias("barrel")))
+        {
+            if(NUtils.barrelHasContent(gob))
+            {
+                barrelstorage.put(item,new BarrelStorage(new NGlobalCoord(gob.rc), NUtils.getContentsOfBarrel(gob)));
+                return gob;
+            }
+        }
+        return null;
+
+    }
+
+    public void navigateToBarrelArea(String item) throws InterruptedException {
+        String areaid = barrels.get(item);
+        navigateToAreaIfNeeded(areaid);
     }
 
     public NArea getSpecArea(Specialisation.SpecName name) throws InterruptedException {
@@ -415,6 +469,18 @@ public class NContext {
         }
         rps.put(id,target);
         return id;
+    }
+
+    public boolean isInBarrel(String item) {
+        NArea area = findIn(item);
+        if (area == null) {
+            area = findInGlobal(item);
+        }
+        if(area!=null)
+        {
+            return area.getInput(item).type == NArea.Ingredient.Type.BARREL;
+        }
+        return false;
     }
 
     public void addInItem(String name, BufferedImage loadsimg) throws InterruptedException {
