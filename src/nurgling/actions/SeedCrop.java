@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.*;
+import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -8,12 +9,13 @@ import nurgling.areas.NArea;
 import nurgling.tasks.GetCurs;
 import nurgling.tasks.WaitAnotherAmount;
 import nurgling.tasks.WaitGobsInField;
-import nurgling.tools.Finder;
-import nurgling.tools.NAlias;
-import nurgling.tools.NParser;
-import nurgling.tools.StackSupporter;
+import nurgling.tasks.WaitItems;
+import nurgling.tools.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SeedCrop implements Action {
@@ -26,6 +28,7 @@ public class SeedCrop implements Action {
     final NAlias iseed;
 
     final boolean allowedToPlantFromStockpiles;
+    boolean isQualityGrid = false;
 
 
     public SeedCrop(NArea field, NArea seed, NAlias crop, NAlias iseed, boolean allowedToPlantFromStockpiles) {
@@ -36,9 +39,30 @@ public class SeedCrop implements Action {
         this.allowedToPlantFromStockpiles = allowedToPlantFromStockpiles;
     }
 
+    public SeedCrop(
+            NArea field,
+            NArea seed,
+            NAlias crop,
+            NAlias iseed,
+            boolean allowedToPlantFromStockpiles,
+            boolean isQualityGrid
+    ) {
+        this.field = field;
+        this.seed = seed;
+        this.crop = crop;
+        this.iseed = iseed;
+        this.allowedToPlantFromStockpiles = allowedToPlantFromStockpiles;
+        this.isQualityGrid = isQualityGrid;
+    }
+
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+
+        if (isQualityGrid) {
+            seedForQuality(gui);
+            return Results.SUCCESS();
+        }
 
         ArrayList<Gob> barrels = Finder.findGobs(seed, new NAlias("barrel"));
         ArrayList<Gob> stockPiles = Finder.findGobs(seed, new NAlias("stockpile"));
@@ -259,6 +283,78 @@ public class SeedCrop implements Action {
             }
             gui.error("NO SEEDS: ABORT");
             throw new InterruptedException();
+        }
+    }
+
+    private void seedForQuality(NGameUI gui) throws InterruptedException {
+        final int maxTilesToSeed = 4;
+        // 1. Find up to 4 empty "field" tiles using Area.Tile[][] and isFree
+        Area.Tile[][] tiles = field.getArea().getTiles(field.getArea(), new NAlias("gfx/terobjs/moundbed"));
+
+        ArrayList<Coord> emptyCoords = new ArrayList<>();
+        for (int i = 0; i <= field.getArea().br.x - field.getArea().ul.x; i++) {
+            for (int j = 0; j <= field.getArea().br.y - field.getArea().ul.y; j++) {
+                Area.Tile tile = tiles[i][j];
+                if (NParser.checkName(tile.name, "field") && tile.isFree) {
+                    emptyCoords.add(new Coord(field.getArea().ul.x + i, field.getArea().ul.y + j));
+                }
+            }
+        }
+
+        if (emptyCoords.isEmpty()) {
+            gui.msg("No empty tiles found for seeding!");
+            return;
+        }
+
+        // Only seed up to 4
+        ArrayList<Coord> toSeed = new ArrayList<>(emptyCoords.subList(0, Math.min(maxTilesToSeed, emptyCoords.size())));
+
+        // 2. Find all containers in the seed area (chests, cupboards, etc)
+        ArrayList<Container> containers = new ArrayList<>();
+        for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
+            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+            cand.initattr(Container.Space.class);
+            containers.add(cand);
+        }
+        if(containers.isEmpty())
+            throw new RuntimeException("No container found in seed area!");
+        Container container = containers.get(0);
+
+        // 3. Get all seeds in the container and sort by quality descending (highest first)
+        new OpenTargetContainer(container).run(gui);
+        ArrayList<WItem> seeds = gui.getInventory(container.cap).getItems(iseed, NInventory.QualityType.High);
+        if (seeds.size() < toSeed.size()) {
+            gui.error("Not enough seeds in container for quality seeding!");
+            throw new InterruptedException();
+        }
+
+        // 4. Fetch top seeds to inventory
+        new TakeAvailableItemsFromContainer(container, iseed, toSeed.size()).run(gui);
+
+        // 5. Seed just those 4 tiles, individually
+        for (Coord tile : toSeed) {
+            new PathFinder(tile.mul(MCache.tilesz).add(MCache.tilehsz)).run(gui);
+            NUtils.getGameUI().getInventory().activateItem(iseed);
+            NUtils.getGameUI().map.wdgmsg("sel", tile, tile, 1);
+            NUtils.getUI().core.addTask(new WaitGobsInField(new Area(tile, tile), 1));
+        }
+
+        // Return seeds to the chest
+
+        for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
+            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+            cand.initattr(Container.Space.class);
+            containers.add(cand);
+        }
+
+        seeds = gui.getInventory().getItems(iseed);
+
+        Set<String> processed = new HashSet<>();
+        for (WItem item : seeds) {
+            String itemName = ((NGItem)item.item).name();
+            if(processed.add(itemName)) {
+                new TransferToContainer(container, new NAlias(itemName)).run(gui);
+            }
         }
     }
 }

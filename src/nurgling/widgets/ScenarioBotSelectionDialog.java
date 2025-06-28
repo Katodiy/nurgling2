@@ -18,7 +18,7 @@ public class ScenarioBotSelectionDialog extends Window {
     public ScenarioBotSelectionDialog(java.util.function.Consumer<BotDescriptor> onSelect) {
         super(new Coord(ICON_SIZE * COLS + GRID_PADDING * 2, UI.scale(350)), "Select Bot");
 
-        List<BotDescriptor.BotType> groupOrder = List.of(UTILS, PRODUCTIONS, FARMING, LIVESTOCK);
+        List<BotDescriptor.BotType> groupOrder = List.of(UTILS, PRODUCTIONS, FARMING, FARMING_QUALITY, LIVESTOCK);
         int contentWidth = ICON_SIZE * COLS + GRID_PADDING * 2;
         Widget contentPanel = new Widget(new Coord(contentWidth, 10000)); // Height will be fixed below
 
@@ -33,6 +33,7 @@ public class ScenarioBotSelectionDialog extends Window {
             switch (type) {
                 case PRODUCTIONS: title = "Production";  break;
                 case FARMING:  title = "Farmers";   break;
+                case FARMING_QUALITY: title = "Farmers Quality"; break;
                 case LIVESTOCK: title = "Livestock"; break;
                 case UTILS:    title = "Utils";     break;
                 default:       title = "Other";

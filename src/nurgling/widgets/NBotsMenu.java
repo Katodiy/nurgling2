@@ -19,6 +19,7 @@ public class NBotsMenu extends Widget
                 BotDescriptor.BotType.PRODUCTIONS,
                 BotDescriptor.BotType.BATTLE,
                 BotDescriptor.BotType.FARMING,
+                BotDescriptor.BotType.FARMING_QUALITY,
                 BotDescriptor.BotType.UTILS,
                 BotDescriptor.BotType.BUILD,
                 BotDescriptor.BotType.TOOLS
@@ -31,6 +32,7 @@ public class NBotsMenu extends Widget
                 BotDescriptor.BotType.PRODUCTIONS, "productions",
                 BotDescriptor.BotType.BATTLE,      "battle",
                 BotDescriptor.BotType.FARMING,     "farming",
+                BotDescriptor.BotType.FARMING_QUALITY,  "farming",
                 BotDescriptor.BotType.UTILS,       "utils",
                 BotDescriptor.BotType.BUILD,       "build",
                 BotDescriptor.BotType.TOOLS,       "tools"
@@ -48,9 +50,9 @@ public class NBotsMenu extends Widget
             NLayout layout = layouts.get(groupType);
             if (layout == null) continue;
             if (bot.clazz == CatchBugsAround.class) {
-                layout.elements.add(new NToggleNButton(bot.id, bot.instantiate(Map.of()), bot.disStacks));
+                layout.elements.add(new NToggleNButton(bot.iconPath, bot.instantiate(Map.of()), bot.disStacks));
             } else {
-                layout.elements.add(new NButton(bot.id, bot.instantiate(Map.of()), bot.disStacks));
+                layout.elements.add(new NButton(bot.iconPath, bot.instantiate(Map.of()), bot.disStacks));
             }
         }
 
