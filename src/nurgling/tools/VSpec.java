@@ -878,7 +878,7 @@ public class VSpec {
 
         ArrayList<String> spruceOp_log = new ArrayList<>();
         spruceOp_log.add("Spruce Board"); // Доска
-        spruceOp_log.add("Spruce Block"); // Блок
+        spruceOp_log.add("Block of Spruce"); // Блок
         object.put("gfx/terobjs/trees/sprucelog", spruceOp_log);
 
         ArrayList<String> stonepineOp_log = new ArrayList<>();
@@ -2379,7 +2379,7 @@ public class VSpec {
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sallow\",\"name\":\"Sallow Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-silverfir\",\"name\":\"Silver Fir Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sorbtree\",\"name\":\"Sorb Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-spruce\",\"name\":\"Spruce Block\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-spruce\",\"name\":\"Block of Spruce\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-stonepine\",\"name\":\"Stone Pine Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sweetgum\",\"name\":\"Sweetgum Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sycamore\",\"name\":\"Sycamore Block\"}"));

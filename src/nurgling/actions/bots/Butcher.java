@@ -90,7 +90,6 @@ public class Butcher implements Action {
 
                         if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
                             new FreeInventory2(context).run(gui);
-                            transferFreshHides(gui);
                         }
                         if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
                             return Results.ERROR("No free coord found for: " + optForSelect + "|" + options.get(optForSelect).size.toString() + "| target size: " + options.get(optForSelect).num);
@@ -117,7 +116,6 @@ public class Butcher implements Action {
                                         NUtils.drop(gui.vhand);
                                         NUtils.addTask(new WaitFreeHand());
                                         new FreeInventory2(context).run(gui);
-                                        new TransferToPiles(NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
                                     }
                                     optFound = false;
                                 }
@@ -130,24 +128,11 @@ public class Butcher implements Action {
                 gobs = getGobs(area);
             }
             new FreeInventory2(context).run(gui);
-            transferFreshHides(gui);
         }
 
         return Results.SUCCESS();
     }
 
-    private static void transferFreshHides(NGameUI gui) throws InterruptedException {
-        if(!NUtils.getGameUI().getInventory().getItems(new NAlias("Fresh")).isEmpty()) {
-            NArea harea = NContext.findSpec(Specialisation.SpecName.rawhides.toString());
-            List<RoutePoint> routePoints = null;
-            if (harea == null) {
-                harea = NContext.findSpecGlobal(Specialisation.SpecName.rawhides.toString());
-                routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(harea));
-                new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
-            }
-            new TransferToPiles(NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
-        }
-    }
 
     private static ArrayList<Gob> getGobs(NArea area) throws InterruptedException {
         ArrayList<Gob> result = new ArrayList<>();

@@ -186,7 +186,7 @@ public class Craft implements Action {
             }
         }
 
-        mwnd.wdgmsg("make", 0);
+        mwnd.wdgmsg("make", 1);
         NUtils.addTask(new NTask() {
             @Override
             public boolean check() {
