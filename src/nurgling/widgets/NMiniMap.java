@@ -2,14 +2,12 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.NConfig;
+import nurgling.NMapView;
 import nurgling.NUtils;
-import nurgling.tools.Finder;
 import nurgling.tools.FogArea;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
 
 import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
@@ -23,7 +21,7 @@ public class NMiniMap extends MiniMap {
     public static final Color VIEW_BORDER_COLOR = new Color(0, 0, 0, 128);
     public static Coord2d TEMP_VIEW_SZ = new Coord2d(VIEW_SZ).floor().mul(tilesz).div(2).sub(tilesz.mul(5));
     public final FogArea fogArea = new FogArea(this);
-    private final List<TempMark> tempMarkList = new ArrayList<TempMark>();
+
     private static final Coord2d sgridsz = new Coord2d(new Coord(100,100));
     public NMiniMap(Coord sz, MapFile file) {
         super(sz, file);
@@ -33,23 +31,38 @@ public class NMiniMap extends MiniMap {
         super(file);
     }
 
-    public static class TempMark {
-        String name;
-        long start;
-        final long id;
-        Coord2d rc;
-        Coord gc;
-        BufferedImage icon;
+    public boolean checktemp(TempMark cm, Coord2d pl) {
+        if(dloc!=null) {
+            Coord rc = p2c(pl.floor(sgridsz).sub(4, 4).mul(sgridsz).add(22, 22));
+            int zmult = 1 << zoomlevel;
+            Coord viewsz = VIEW_SZ.div(zmult).mul(scale).sub(22, 22);
+            Coord gc = p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
+            if (gc.isect(rc, viewsz)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-        MiniMap.Location loc;
+    public static class TempMark {
+        public String name;
+        public long start;
+        public long lastupdate;
+        public final long id;
+        public Coord2d rc;
+        public Coord gc;
+        public TexI icon;
+
+        public MiniMap.Location loc;
 
         public TempMark(String name, MiniMap.Location loc, long id, Coord2d rc, Coord gc, BufferedImage icon) {
             start = System.currentTimeMillis();
+            lastupdate = start;
             this.name = name;
             this.id = id;
             this.rc = rc;
             this.gc = gc;
-            this.icon = icon;
+            this.icon = new TexI(icon);
             this.loc = loc;
         }
     }
@@ -136,8 +149,6 @@ public class NMiniMap extends MiniMap {
         if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
             if ((sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id))) {
                 fogArea.tick(dt);
-                int zmult = 1 << zoomlevel;
-
                 Gob player = ui.gui.map.player();
                 if (player != null && dloc != null) {
                     Coord ul = player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz).floor(tilesz).add(sessloc.tc);
@@ -147,7 +158,6 @@ public class NMiniMap extends MiniMap {
             }
         }
 
-        checkTempMarks();
     }
 
     private void drawtempmarks(GOut g) {
@@ -158,84 +168,28 @@ public class NMiniMap extends MiniMap {
                 Coord rc = p2c(player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz));
                 Coord viewsz = VIEW_SZ.div(zmult).mul(scale);
 
-                for (TempMark cm : tempMarkList) {
+                synchronized (((NMapView)ui.gui.map).tempMarkList)
+                {
+                for (TempMark cm : ((NMapView)ui.gui.map).tempMarkList) {
                     if (cm.loc!=null && ui.gui.mmap.curloc.seg.id == cm.loc.seg.id) {
                         if (cm.icon != null) {
                             if (!cm.gc.equals(Coord.z)) {
                                 Coord gc = p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
 
-                                int dsz = Math.max(cm.icon.getHeight(), cm.icon.getWidth());
+                                int dsz = Math.max(cm.icon.sz().y, cm.icon.sz().x);
                                 if (!gc.isect(rc, viewsz)) {
-                                    g.aimage(new TexI(cm.icon), gc, 0.5, 0.5, UI.scale(18 * cm.icon.getWidth() / dsz, 18 * cm.icon.getHeight() / dsz));
+                                    g.aimage(cm.icon, gc, 0.5, 0.5, UI.scale(18 * cm.icon.sz().x / dsz, 18 * cm.icon.sz().y / dsz));
                                 }
                             }
                         }
                     }
                 }
-            }
-        }
-    }
-
-    void checkTempMarks() {
-        if((Boolean)NConfig.get(NConfig.Key.tempmark)) {
-            final Coord2d cmap = new Coord2d(cmaps);
-            if (NUtils.player() != null) {
-                Coord2d pl = NUtils.player().rc;
-                final List<TempMark> marks = new ArrayList<>(tempMarkList);
-                for (TempMark cm : marks) {
-                    Gob g = Finder.findGob(cm.id);
-                    if (g == null) {
-                        if (System.currentTimeMillis() - cm.start > (Integer) NConfig.get(NConfig.Key.temsmarktime) * 1000 * 60 ) {
-                            tempMarkList.remove(cm);
-                        } else {
-                            if (!cm.rc.isect(pl.sub(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)), pl.add(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)))) {
-                                tempMarkList.remove(cm);
-                            }else {
-                                if(dloc!=null) {
-                                    Coord rc = p2c(pl.floor(sgridsz).sub(4, 4).mul(sgridsz).add(22, 22));
-                                    int zmult = 1 << zoomlevel;
-                                    Coord viewsz = VIEW_SZ.div(zmult).mul(scale).sub(22, 22);
-                                    Coord gc = p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
-                                    if (gc.isect(rc, viewsz)) {
-                                        tempMarkList.remove(cm);
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        cm.start = System.currentTimeMillis();;
-                        cm.rc = g.rc;
-                        cm.gc = g.rc.floor(tilesz).add(sessloc.tc);
-                    }
-                }
-                synchronized (ui.sess.glob.oc) {
-                    for (Gob gob : ui.sess.glob.oc) {
-                        if (tempMarkList.stream().noneMatch(m -> m.id == gob.id)) {
-                            BufferedImage tex = setTex(gob);
-                            if (tex != null && sessloc!=null) {
-                                tempMarkList.add(new TempMark(gob.ngob.name, sessloc, gob.id, gob.rc, gob.rc.floor(tilesz).add(sessloc.tc), tex));
-                            }
-                        }
-                    }
                 }
             }
         }
     }
 
-    BufferedImage setTex(Gob gob)
-    {
-        GobIcon icon = gob.getattr(GobIcon.class);
-        if (icon!=null && ui.gui.mmap.iconconf != null && icon.res.isReady() && icon.icon!=null) {
-            if (icon.icon().image() != null) {
-                GobIcon.Setting conf = ui.gui.mmap.iconconf.get(icon.icon());
-                if (conf != null && conf.show)
-                {
-                    return icon.icon().image();
-                }
-            }
-        }
-        return null;
-    }
+
 
     @Override
     public boolean mousewheel(MouseWheelEvent ev) {

@@ -144,7 +144,7 @@ public class PathFinder implements Action {
             // Находим свободные начальные и конечные точки
 
             if (!fixStartEnd(test)) {
-                dn = true; //start == end
+//                dn = true; //start == end
                 return null;
             }
 
@@ -294,8 +294,10 @@ public class PathFinder implements Action {
                         end_poses = best_poses;
                     }
                     for (Coord coord : end_poses) {
-                        if (start_pos.equals(coord) && target_id >= 0)
+                        if (start_pos.equals(coord) && target_id >= 0) {
+                            dn = true;
                             return false;
+                        }
                         cells[coord.x][coord.y].val = 7;
                     }
 

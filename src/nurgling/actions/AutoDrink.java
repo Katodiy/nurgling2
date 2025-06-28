@@ -69,7 +69,7 @@ public class AutoDrink implements Action
     boolean checkWater() throws InterruptedException
     {
         WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
-        if(wbelt.item.contents!=null) {
+        if(wbelt!=null && wbelt.item.contents!=null) {
             ArrayList<WItem> witems = ((NInventory) wbelt.item.contents).getItems(new NAlias("Waterskin"));
             if (!witems.isEmpty()) {
                 for (WItem item : witems) {

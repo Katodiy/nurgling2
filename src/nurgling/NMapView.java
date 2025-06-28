@@ -1,6 +1,8 @@
 package nurgling;
 
 import haven.*;
+
+import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
 
 import haven.Composite;
@@ -17,6 +19,7 @@ import nurgling.routes.RoutePoint;
 import nurgling.scenarios.Scenario;
 import nurgling.tasks.WaitForMapLoadNoCoord;
 import nurgling.tools.*;
+import nurgling.widgets.NMiniMap;
 
 import java.awt.event.KeyEvent;
 import java.awt.image.*;
@@ -33,7 +36,7 @@ public class NMapView extends MapView
     public static final int MINING_OVERLAY = - 1;
     public Coord lastGC = null;
 
-
+    public final List<NMiniMap.TempMark> tempMarkList = new ArrayList<NMiniMap.TempMark>();
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
         super(sz, glob, cc, plgob);
@@ -474,6 +477,7 @@ public class NMapView extends MapView
     @Override
     public void tick(double dt)
     {
+        checkTempMarks();
         synchronized (glob.map.areas)
         {
             for (NArea area : glob.map.areas.values())
@@ -798,4 +802,43 @@ public class NMapView extends MapView
 ////        if(send && !NUtils.getGameUI().nomadMod)
 //            wdgmsg("click", args);
 //    }
+
+
+    void checkTempMarks() {
+        if ((Boolean) NConfig.get(NConfig.Key.tempmark)) {
+            final Coord2d cmap = new Coord2d(cmaps);
+            if (NUtils.player() != null) {
+                Coord2d pl = NUtils.player().rc;
+                final List<NMiniMap.TempMark> marks = new ArrayList<>(tempMarkList);
+                long currenttime = System.currentTimeMillis();
+                for (NMiniMap.TempMark cm : marks) {
+                    Gob g = Finder.findGob(cm.id);
+                    if (g == null) {
+
+                        if (currenttime - cm.start > (Integer) NConfig.get(NConfig.Key.temsmarktime) * 1000 * 60) {
+                            tempMarkList.remove(cm);
+                        } else {
+                            if(currenttime - cm.lastupdate > 1000) {
+                                cm.lastupdate = currenttime;
+                                if (!cm.rc.isect(pl.sub(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)), pl.add(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)))) {
+                                    tempMarkList.remove(cm);
+                                } else {
+                                    if (((NMiniMap) ui.gui.mmap).checktemp(cm, pl)) {
+                                        tempMarkList.remove(cm);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        cm.start = currenttime;
+                        cm.lastupdate = cm.start;
+                        cm.rc = g.rc;
+                        cm.gc = g.rc.floor(tilesz).add(ui.gui.mmap.sessloc.tc);
+                    }
+                }
+            }
+        }
+    }
+
+
 }

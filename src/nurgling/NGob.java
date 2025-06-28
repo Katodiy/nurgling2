@@ -4,25 +4,30 @@ import haven.*;
 import haven.render.Location;
 import haven.render.Transform;
 import haven.res.gfx.fx.eq.Equed;
+import haven.res.gfx.hud.mmap.plo.Player;
 import haven.res.gfx.terobjs.consobj.Consobj;
 import haven.res.lib.tree.TreeScale;
 import haven.res.lib.vmat.Mapping;
 import haven.res.lib.vmat.Materials;
+import haven.res.ui.obj.buddy.Buddy;
 import monitoring.NGlobalSearchItems;
 import nurgling.gattrr.NCustomScale;
 import nurgling.overlays.*;
 import nurgling.pf.*;
 import nurgling.tools.*;
 import nurgling.widgets.NAlarmWdg;
+import nurgling.widgets.NMiniMap;
 import nurgling.widgets.NProspecting;
 import nurgling.widgets.NQuestInfo;
 
+import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static haven.MCache.cmaps;
+import static haven.MCache.tilesz;
 import static haven.OCache.posres;
 
 public class NGob {
@@ -103,6 +108,20 @@ public class NGob {
         }
     }
 
+    static BufferedImage setTex(GobIcon icon)
+    {
+        if (icon!=null && NUtils.getGameUI()!=null && NUtils.getGameUI().mmap.iconconf != null && icon.res.isReady() && icon.icon()!=null) {
+            if (icon.icon().image() != null) {
+                GobIcon.Setting conf = NUtils.getGameUI().mmap.iconconf.get(icon.icon());
+                if (conf != null && conf.show)
+                {
+                    return icon.icon().image();
+                }
+            }
+        }
+        return null;
+    }
+
     public void checkattr(GAttrib a, long id, GAttrib prev) {
 
         if (a instanceof ResDrawable) {
@@ -110,6 +129,25 @@ public class NGob {
         }
         if (a instanceof Following) {
             isDynamic = true;
+        }
+
+        if(a instanceof GobIcon) {
+            delayedOverlayTasks.add(new DelayedOverlayTask(
+                    gob -> {return NUtils.getGameUI()!=null && NUtils.getGameUI().mmap!=null &&  NUtils.getGameUI().mmap.iconconf != null && ((GobIcon)a).res.isReady() && ((GobIcon)a).icon != null && (!(((GobIcon)a).icon instanceof Player) || (gob.getattr(Buddy.class)==null || gob.getattr(Buddy.class).buddy()!=null));},
+                    gob -> {
+                        BufferedImage iconres = setTex((GobIcon)a);
+                        if (iconres != null && NUtils.getGameUI().mmap.sessloc != null) {
+
+                            synchronized (((NMapView) NUtils.getGameUI().map).tempMarkList) {
+                                if (((NMapView) NUtils.getGameUI().map).tempMarkList.stream().noneMatch(m -> m.id == parent.id)) {
+                                    ((NMapView) NUtils.getGameUI().map).tempMarkList.add(new NMiniMap.TempMark(name, NUtils.getGameUI().mmap.sessloc, parent.id, parent.rc, parent.rc.floor(tilesz).add(NUtils.getGameUI().mmap.sessloc.tc), iconres));
+                                }
+                            }
+                        }
+                    }
+            ));
+
+
         }
 
         if (a instanceof Drawable) {
