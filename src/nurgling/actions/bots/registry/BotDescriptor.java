@@ -22,6 +22,7 @@ public class BotDescriptor {
         PRODUCTIONS,
         BATTLE,
         FARMING,
+        FARMING_QUALITY,
         LIVESTOCK,
         UTILS,
         BUILD,
