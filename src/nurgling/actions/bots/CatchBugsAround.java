@@ -14,7 +14,7 @@ import java.util.List;
 
 public class CatchBugsAround implements Action {
 
-    NAlias bugs = new NAlias("cavemoth", "rat", "grasshopper", "silkmoth", "snail", "waterstrider", "grub", "ladybug");
+    NAlias bugs = new NAlias("cavemoth", "rat", "grasshopper", "silkmoth", "snail", "waterstrider", "grub", "ladybug", "dragonfly");
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {

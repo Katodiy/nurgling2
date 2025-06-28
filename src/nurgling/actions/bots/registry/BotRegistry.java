@@ -90,6 +90,9 @@ public class BotRegistry {
         bots.add(new BotDescriptor("rabbit", BotDescriptor.BotType.FARMING, "Rabbit Manager", "Manages rabbit hutches.", true, true, RabbitMaster.class, "rabbit", true));
         bots.add(new BotDescriptor("bee", BotDescriptor.BotType.FARMING, "Beehive Manager", "Collects honey and wax from beehives.", true, true, HoneyAndWaxCollector.class, "bee", true));
 
+        // FARMING QUALITY
+        bots.add(new BotDescriptor("turnipq", BotDescriptor.BotType.FARMING_QUALITY, "Turnip Farmer Quality", "Automatically harvests and replants turnips in 4 cell patches.", true, true, TurnipsFarmerQ.class, "turnip", false));
+
         // UTILS
         bots.add(new BotDescriptor("shieldsword", BotDescriptor.BotType.UTILS, "Equip Shield/Sword", "Equips shield and sword.", true, true, EquipShieldSword.class, "shieldsword", false));
         bots.add(new BotDescriptor("filwater", BotDescriptor.BotType.UTILS, "Fill Waterskins", "Fills waterskins.", true, true, FillWaterskins.class, "filwater", false));
