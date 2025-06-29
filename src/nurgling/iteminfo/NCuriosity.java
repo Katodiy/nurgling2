@@ -11,7 +11,7 @@ import java.awt.image.BufferedImage;
 import static nurgling.NConfig.Key.is_real_time;
 
 public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
-    public static final float server_ratio = 3.287f;
+    public static final float server_ratio = 3.29f;
     public int rm = 0;
     private static final int delta = 60;
     public transient final int lph;

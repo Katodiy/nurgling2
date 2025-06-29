@@ -28,6 +28,7 @@ public class NContext {
     private HashMap<String, NArea> areas = new HashMap<>();
     private HashMap<String, RoutePoint> rps = new HashMap<>();
     private HashMap<String, ObjectStorage> containers = new HashMap<>();
+    public HashSet<Long> barrelsid = new HashSet<>();
 
     public boolean bwaused = false;
     int counter = 0;
@@ -55,6 +56,9 @@ public class NContext {
         contcaps.put("gfx/terobjs/wbasket", "Basket");
         contcaps.put("gfx/terobjs/exquisitechest", "Exquisite Chest");
         contcaps.put("gfx/terobjs/furn/table-stone", "Table");
+        contcaps.put("gfx/terobjs/furn/table-rustic", "Table");
+        contcaps.put("gfx/terobjs/furn/table-elegant", "Table");
+        contcaps.put("gfx/terobjs/furn/table-cottage", "Table");
         contcaps.put("gfx/terobjs/map/jotunclam", "Jotun Clam");
         contcaps.put("gfx/terobjs/studydesk", "Study Desk");
     }
@@ -83,6 +87,7 @@ public class NContext {
     static {
         workstation_map = new HashMap<>();
         workstation_map.put("paginae/bld/meatgrinder",new NContext.Workstation("gfx/terobjs/meatgrinder", "gfx/borka/idle"));
+        workstation_map.put("paginae/bld/churn",new NContext.Workstation("gfx/terobjs/churn", "gfx/borka/churnan-idle"));
         workstation_map.put("paginae/bld/loom",new NContext.Workstation("gfx/terobjs/loom", "gfx/borka/loomsit"));
         workstation_map.put("paginae/bld/ropewalk",new NContext.Workstation("gfx/terobjs/ropewalk", "gfx/borka/idle"));
         workstation_map.put("paginae/bld/crucible",new NContext.Workstation("gfx/terobjs/crucible", null));
@@ -96,6 +101,7 @@ public class NContext {
     static {
         workstation_spec_map = new HashMap<>();
         workstation_spec_map.put("gfx/terobjs/meatgrinder", Specialisation.SpecName.meatgrinder);
+        workstation_spec_map.put("gfx/terobjs/churn", Specialisation.SpecName.churn);
         workstation_spec_map.put("gfx/terobjs/loom",Specialisation.SpecName.loom);
         workstation_spec_map.put("gfx/terobjs/ropewalk",Specialisation.SpecName.ropewalk);
         workstation_spec_map.put("gfx/terobjs/crucible",Specialisation.SpecName.crucible);
@@ -400,6 +406,8 @@ public class NContext {
         public String station;
         public String pose;
         public long selected = -1;
+
+        public NGlobalCoord targetPoint = null;
 
         public Workstation(String station, String pose)
         {

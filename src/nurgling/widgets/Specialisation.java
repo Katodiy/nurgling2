@@ -74,7 +74,7 @@ public class Specialisation extends Window
         cauldron,
         potterswheel,
         barrelworkarea,
-        deer
+        churn, deer
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -123,6 +123,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.anvil.toString(),"Anvil",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.dreamcatcher.toString(),"Dream Catcher",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.meatgrinder.toString(),"Meat Grinder",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.churn.toString(),"Churn",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.loom.toString(),"Loom",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.ropewalk.toString(),"Rope Walk",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.crucible.toString(),"Crucible",Resource.remote().loadwait("paginae/bld/crucible").flayer(Resource.imgc).img));

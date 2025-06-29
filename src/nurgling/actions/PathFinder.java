@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.*;
+import jdk.jshell.execution.Util;
 import nurgling.*;
 import nurgling.pf.*;
 import nurgling.pf.Utils;
@@ -32,6 +33,9 @@ public class PathFinder implements Action {
     Mode mode = Mode.NEAREST;
     Gob gobInStartPos = null;
     double badDir = Double.MAX_VALUE;
+
+
+
     public enum Mode
     {
         NEAREST,
@@ -381,6 +385,26 @@ public class PathFinder implements Action {
         }
     }
 
+    public static ArrayList<Coord2d> getNearestHardPoints(Gob target) throws InterruptedException  {
+        PathFinder pf = new PathFinder(target);
+        pf.isHardMode = true;
+        pf.construct(true);
+        ArrayList<Coord2d> res = new ArrayList<>();
+        for(Coord ep : pf.end_poses)
+        {
+            Coord2d coord2d = Utils.pfGridToWorld(pf.pfmap.cells[ep.x][ep.y].pos);
+            if(Math.abs(coord2d.x-target.rc.x)>Math.abs(coord2d.y-target.rc.y))
+            {
+                coord2d.y = target.rc.y;
+            }
+            else
+            {
+                coord2d.x = target.rc.x;
+            }
+            res.add(coord2d);
+        }
+        return res;
+    }
 
     public static boolean isAvailable(Gob target) throws InterruptedException {
         PathFinder pf = new PathFinder(target);

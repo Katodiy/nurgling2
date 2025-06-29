@@ -12,7 +12,7 @@ public class NGlobalCoord {
     private Coord oldCoord = null;
     private long grid_id;
 
-    NGlobalCoord(Coord2d coord2d)
+    public NGlobalCoord(Coord2d coord2d)
     {
         Coord pltc = (new Coord2d(coord2d.x / MCache.tilesz.x, coord2d.y / MCache.tilesz.y)).floor();
         synchronized (NUtils.getGameUI().ui.sess.glob.map.grids) {

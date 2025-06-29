@@ -1318,6 +1318,7 @@ public class VSpec {
 
         ArrayList<JSONObject> water = new ArrayList<>();
         water.add(new JSONObject("{\"static\":\"gfx/invobjs/water\",\"name\":\"Water\"}"));
+        water.add(new JSONObject("{\"static\":\"gfx/invobjs/milk\",\"name\":\"Milk\"}"));
         categories.put("Water", water);
 
         ArrayList<JSONObject> mushrooms = new ArrayList<>();

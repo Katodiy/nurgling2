@@ -109,6 +109,10 @@ public class Craft implements Action {
                     else
                         ncontext.bwaused = true;
                 }
+                else
+                {
+                    ncontext.bwaused = true;
+                }
             }
         }
 
@@ -135,7 +139,13 @@ public class Craft implements Action {
         for (NMakewindow.Spec s : mwnd.inputs) {
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
-                new TransferBarrelInWorkArea(ncontext, item).run(gui);
+                if(ncontext.workstation == null) {
+                    new TransferBarrelInWorkArea(ncontext, item).run(gui);
+                }
+                else if(ncontext.workstation.targetPoint == null)
+                {
+                    new TransferBarrelToWorkstation(ncontext, item).run(gui);
+                }
             } else {
                 if (!new TakeItems2(ncontext, s.ing == null ? s.name : s.ing.name, s.count * for_craft).run(gui).IsSuccess())
                     return false;
@@ -145,7 +155,11 @@ public class Craft implements Action {
 
 
         if (ncontext.workstation != null) {
-            if (!new PrepareWorkStation(ncontext, ncontext.workstation.station).run(gui).IsSuccess() || !new UseWorkStation(ncontext).run(gui).IsSuccess())
+            if (!new PrepareWorkStation(ncontext, ncontext.workstation.station).run(gui).IsSuccess())
+                return false;
+            if (ncontext.workstation.targetPoint != null)
+                new PathFinder(ncontext.workstation.targetPoint.getCurrentCoord()).run(gui);
+            if (!new UseWorkStation(ncontext).run(gui).IsSuccess())
                 return false;
         }
         else if (ncontext.bwaused) {
@@ -153,32 +167,34 @@ public class Craft implements Action {
             Pair<Coord2d, Coord2d> rcArea = barrelwa.getRCArea();
             Coord2d center = rcArea.b.sub(rcArea.a).div(2).add(rcArea.a);
             new PathFinder(center).run(gui);
-            ArrayList<Gob> gobs = Finder.findGobs(barrelwa, new NAlias("barrel"));
-            int count = 0;
-            for (Gob barrel : gobs) {
-                gui.map.wdgmsg("click", Coord.z, barrel.rc.floor(posres), 3, 0, 0, (int) barrel.id,
-                        barrel.rc.floor(posres), 0, -1);
-                count++;
-                int finalCount = count;
-                NUtils.addTask(new NTask() {
-                    @Override
-                    public boolean check() {
-                        return NUtils.getGameUI().getWindowsNum("Barrel") == finalCount;
-                    }
-                });
-            }
-            ArrayList<Window> windows = NUtils.getGameUI().getWindows("Barrel");
-            for (NMakewindow.Spec s : mwnd.inputs) {
-                String item = s.ing == null ? s.name : s.ing.name;
-                if (ncontext.isInBarrel(item)) {
-                    double val = gui.findBarrelContent(windows, new NAlias(item));
-                    if(val < s.count)
-                    {
-                        break;
-                    }
+        }
+
+        int count = 0;
+        for (Long barrelid : ncontext.barrelsid) {
+            Gob barrel = Finder.findGob(barrelid);
+            gui.map.wdgmsg("click", Coord.z, barrel.rc.floor(posres), 3, 0, 0, (int) barrel.id,
+                    barrel.rc.floor(posres), 0, -1);
+            count++;
+            int finalCount = count;
+            NUtils.addTask(new NTask() {
+                @Override
+                public boolean check() {
+                    return NUtils.getGameUI().getWindowsNum("Barrel") == finalCount;
+                }
+            });
+        }
+        ArrayList<Window> windows = NUtils.getGameUI().getWindows("Barrel");
+        for (NMakewindow.Spec s : mwnd.inputs) {
+            String item = s.ing == null ? s.name : s.ing.name;
+            if (ncontext.isInBarrel(item)) {
+                double val = gui.findBarrelContent(windows, new NAlias(item));
+                if(val < s.count)
+                {
+                    break;
                 }
             }
         }
+
         new Drink(0.9, false).run(gui);
         int resfc = for_craft;
         for (NMakewindow.Spec s : mwnd.outputs) {
@@ -197,6 +213,7 @@ public class Craft implements Action {
                 return gui.prog != null && gui.prog.prog > 0;
             }
         });
+        int finalResfc = resfc;
         NUtils.addTask(new NTask() {
             @Override
             public boolean check() {

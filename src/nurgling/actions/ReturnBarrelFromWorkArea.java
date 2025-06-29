@@ -11,9 +11,13 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
+import java.util.ArrayList;
+
 public class ReturnBarrelFromWorkArea implements Action{
     NContext context;
     String item;
+
+
 
     public ReturnBarrelFromWorkArea(NContext context, String item)
     {
@@ -22,10 +26,15 @@ public class ReturnBarrelFromWorkArea implements Action{
     }
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NArea area = context.getSpecArea(Specialisation.SpecName.barrelworkarea);
+        if(context.workstation==null)
+            context.getSpecArea(Specialisation.SpecName.barrelworkarea);
+        else
+            context.getSpecArea(context.workstation);
         long barrelid = -1;
-        for(Gob gob : Finder.findGobs(area,new NAlias("barrel")))
+
+        for(Long gobid : context.barrelsid)
         {
+            Gob gob = Finder.findGob(gobid);
             if(NUtils.barrelHasContent(gob) && NUtils.getContentsOfBarrel(gob).equals(context.getBarrelStorage(item).olname))
             {
                 new LiftObject(gob).run(gui);
@@ -36,8 +45,9 @@ public class ReturnBarrelFromWorkArea implements Action{
 
         if(barrelid == -1)
         {
-            for(Gob gob : Finder.findGobs(area,new NAlias("barrel")))
+            for(Long gobid : context.barrelsid)
             {
+                Gob gob = Finder.findGob(gobid);
                 if(!NUtils.barrelHasContent(gob))
                 {
                     new LiftObject(gob).run(gui);

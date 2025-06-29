@@ -156,7 +156,7 @@ public class TransferToContainer implements Action{
                     is.wdgmsg("invxf", targetInv.wdgid(), 1);
                     if(is.wmap.size()<=2)
                     {
-                        NUtils.addTask(new ISRemoved(id));
+                        NUtils.addTask(new ISRemovedLoftar(id,is));
                     }
                     else
                     {

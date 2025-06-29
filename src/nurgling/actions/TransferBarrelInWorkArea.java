@@ -26,6 +26,7 @@ public class TransferBarrelInWorkArea implements Action{
         Gob barrel = context.getBarrelInArea(item);
         if(barrel == null)
             return Results.FAIL();
+        context.barrelsid.add(barrel.id);
         new LiftObject(barrel).run(gui);
         long barrelId = barrel.id;
         if(context.workstation==null)
