@@ -1,5 +1,6 @@
 package nurgling.actions;
 
+import haven.Gob;
 import haven.WItem;
 import nurgling.*;
 import nurgling.actions.bots.RoutePointNavigator;
@@ -49,7 +50,7 @@ public class FreeContainers implements Action
             new OpenTargetContainer(container).run(gui);
             for(WItem item : (pattern==null)?gui.getInventory(container.cap).getItems():gui.getInventory(container.cap).getItems(pattern))
             {
-                if(context.addOutItem(((NGItem)item.item).name(),null,((NGItem) item.item).quality))
+                if(context.addOutItem(((NGItem)item.item).name(),null, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1))
                     targets.add(((NGItem)item.item).name());
             }
             while (!new TakeItemsFromContainer(container, targets, pattern).run(gui).isSuccess)
@@ -67,15 +68,18 @@ public class FreeContainers implements Action
     private void navigateToTargetContainer(NGameUI gui, Container container) throws InterruptedException {
         PathFinder pf;
 
-        if(PathFinder.isAvailable(Finder.findGob(container.gobid))) {
-            pf = new PathFinder(Finder.findGob(container.gobid));
+        Gob gob = Finder.findGob(container.gobid);
+        if(gob!= null && PathFinder.isAvailable(gob)) {
+            pf = new PathFinder(gob);
             pf.isHardMode = true;
             pf.run(gui);
         } else {
             new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
-            pf = new PathFinder(Finder.findGob(container.gobid));
-            pf.isHardMode = true;
-            pf.run(gui);
+            if((gob = Finder.findGob(container.gobid))!=null ) {
+                pf = new PathFinder(gob);
+                pf.isHardMode = true;
+                pf.run(gui);
+            }
         }
     }
 }

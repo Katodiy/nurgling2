@@ -86,7 +86,7 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, ropeAfterFeeding, ropeAfterTaiming, eatingConf, fonts
+        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop, fonts
     }
 
 
@@ -348,6 +348,9 @@ public class NConfig
                                 break;
                             case "CowsHerd":
                                 res.add(new CowsHerd(obj));
+                                break;
+                            case "DeersHerd":
+                                res.add(new TeimDeerHerd(obj));
                                 break;
                             case "HorseHerd":
                                 res.add(new HorseHerd(obj));

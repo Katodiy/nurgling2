@@ -186,9 +186,21 @@ public class NGob {
                                 else {
                                     for (Resource.Layer lay : ((Session.CachedRes.Ref) consobj.built.res).res.getLayers()) {
                                         if (lay instanceof Resource.Neg) {
-                                            hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                            if(name!=null && NParser.checkName(name,new NAlias("wall", "trellis")))
+                                            {
+                                                hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc, true);
+                                            }
+                                            else {
+                                                hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                            }
                                         } else if (lay instanceof Resource.Obstacle) {
-                                            hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                            if(name!=null && NParser.checkName(name,new NAlias("wall", "trellis")))
+                                            {
+                                                hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p,true);
+                                            }
+                                            else {
+                                                hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                            }
                                         }
                                     }
                                 }
@@ -215,17 +227,34 @@ public class NGob {
                                     }
                                 }
                                 if(bl!=null && ur!=null) {
-                                    hitBox = new NHitBox(bl, ur);
+                                    if(name!=null && NParser.checkName(name,new NAlias("wall", "trellis")))
+                                    {
+                                        hitBox = new NHitBox(bl, ur, true);
+                                    }
+                                    else {
+                                        hitBox = new NHitBox(bl, ur);
+                                    }
                                 }
                             }
                         }
                         else {
                             for (Resource.Layer lay : ((Drawable) a).getres().getLayers()) {
                                 if (lay instanceof Resource.Neg) {
-                                    hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                    if(name!=null && NParser.checkName(name,new NAlias("wall", "trellis")))
+                                    {
+                                        hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc, true);
+                                    }
+                                    else {
+                                        hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                    }
                                 } else if (lay instanceof Resource.Obstacle) {
-                                    hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
-                                }
+                                    if(name!=null && NParser.checkName(name,new NAlias("wall", "trellis")))
+                                    {
+                                        hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p,true);
+                                    }
+                                    else {
+                                        hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                    }}
                             }
                         }
                     if (name != null) {

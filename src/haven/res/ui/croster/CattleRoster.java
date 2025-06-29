@@ -13,6 +13,7 @@ import haven.res.gfx.hud.rosters.goat.Goat;
 import haven.res.gfx.hud.rosters.horse.Horse;
 import haven.res.gfx.hud.rosters.pig.Pig;
 import haven.res.gfx.hud.rosters.sheep.Sheep;
+import haven.res.gfx.hud.rosters.teimdeer.Teimdeer;
 import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.widgets.NKinSettings;
@@ -69,7 +70,23 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 		public void changed(boolean val)
 		{
 			super.changed(val);
-			if(type == Ochs.class)
+			if(type == Teimdeer.class)
+			{
+				if(val) {
+					if (dset == null) {
+						dset = new Deers();
+						ui.root.add(dset, this.rootpos());
+					}
+					dset.show();
+					dset.raise();
+					dset.move(this.rootpos());
+				}
+				else
+				{
+					dset.hide();
+				}
+			}
+			else if(type == Ochs.class)
 			{
 				if(val) {
 					if (cset == null) {
@@ -158,20 +175,30 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 				if(cset!=null)
 					a = cset.visible;
 			}
-			if(type == Goat.class)
+			else if(type == Goat.class)
 			{
 				if(gset!=null)
 					a = gset.visible;
 			}
-			if(type == Sheep.class)
+			else if(type == Sheep.class)
 			{
 				if(sset!=null)
 					a = sset.visible;
 			}
-			if(type == Pig.class)
+			else if(type == Pig.class)
 			{
 				if(pset!=null)
 					a = pset.visible;
+			}
+			else if(type == Horse.class)
+			{
+				if(hset!=null)
+					a = hset.visible;
+			}
+			else if(type == Teimdeer.class)
+			{
+				if(dset!=null)
+					a = dset.visible;
 			}
 			super.tick(dt);
 		}
@@ -179,6 +206,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	pack();
     }
 
+	Deers dset = null;
 	Cows cset = null;
 	Goats gset = null;
 	Sheeps sset = null;

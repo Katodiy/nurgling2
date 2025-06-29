@@ -5,7 +5,6 @@ package haven.res.gfx.hud.rosters.goat;
 
 import haven.*;
 import haven.res.ui.croster.*;
-import nurgling.conf.CowsHerd;
 import nurgling.conf.GoatsHerd;
 
 import java.util.*;

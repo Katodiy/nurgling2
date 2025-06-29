@@ -2171,6 +2171,7 @@ public class VSpec {
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/trollhide-blood\",\"name\":\"Fresh Troll Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/walrushide-blood\",\"name\":\"Fresh Walrus Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wildgoathide-blood\",\"name\":\"Fresh Wildgoat Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/teimdeerhide-blood\",\"name\":\"Fresh Tame Reindeer Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wildhorsehide-blood\",\"name\":\"Fresh Wildhorse Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wolfhide-blood\",\"name\":\"Fresh Wolf Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wolverinehide-blood\",\"name\":\"Fresh Wolverine Hide\"}"));
@@ -2212,6 +2213,7 @@ public class VSpec {
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/trollhide\",\"name\":\"Troll Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/walrushide\",\"name\":\"Walrus Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/wildgoathide\",\"name\":\"Wildgoat Hide\"}"));
+        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/teimdeerhide-blood\",\"name\":\"Fresh Tame Reindeer Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/wildhorsehide\",\"name\":\"Wildhorse Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/wolfhide\",\"name\":\"Wolf Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/wolverinehide\",\"name\":\"Wolverine Hide\"}"));
