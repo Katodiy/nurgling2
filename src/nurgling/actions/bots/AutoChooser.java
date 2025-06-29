@@ -30,17 +30,23 @@ public class AutoChooser implements Action
             ArrayList<WItem> items = inv.getItems(item);
             if (!items.isEmpty())
                 ((Window) inv.parent).disable();
-            for (WItem item : items)
+            ArrayList<WItem> for_ignore = new ArrayList<>();
+            while (!items.isEmpty())
             {
                 if (!((Window) inv.parent).isDisabled())
                 {
                     NUtils.getUI().core.disableBotMod();
                     return Results.SUCCESS();
                 }
-                new SelectFlowerAction(value, (NWItem) item).run(gui);
+                WItem cand = items.get(0);
+                new SelectFlowerAction(value, cand).run(gui);
+                for_ignore.add(cand);
+                items = inv.getItems(item);
+                items.removeAll(for_ignore);
             }
             NUtils.getUI().core.disableBotMod();
-            ((Window) inv.parent).enable();
+            if(inv.parent!=null)
+                ((Window) inv.parent).enable();
         }
         return Results.SUCCESS();
     }

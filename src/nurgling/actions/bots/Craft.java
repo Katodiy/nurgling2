@@ -71,11 +71,15 @@ public class Craft implements Action {
         }
 
         for (NMakewindow.Spec s : mwnd.outputs) {
-            size += s.count;
+
             if (!mwnd.noTransfer.a) {
                 if (!s.categories) {
+                    if(!ncontext.isInBarrel(s.name))
+                        size += s.count;
                     ncontext.addOutItem(s.name, ItemTex.create(ItemTex.save(s.spr)), 1);
                 } else if (s.ing != null) {
+                    if(!ncontext.isInBarrel(s.ing.name))
+                        size += s.count;
                     ncontext.addOutItem(s.ing.name, ItemTex.create(ItemTex.save(s.spr)), 1);
                 }
             }

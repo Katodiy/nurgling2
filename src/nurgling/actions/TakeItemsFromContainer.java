@@ -52,8 +52,10 @@ public class TakeItemsFromContainer implements Action
 
 
                 int temptr = target_size;
+
                 for (int i = 0; i < temptr; i++) {
-                    TransferToContainer.transfer(items.get(i), gui.getInventory(), target_size);
+                    int left = target_size + oldSpace - gui.getInventory().getItems(name).size();
+                    TransferToContainer.transfer(items.get(i), gui.getInventory(), left);
                     items = getItems(gui, name);
                     if(gui.getInventory().getItems(name).size()>=target_size+oldSpace)
                         break;

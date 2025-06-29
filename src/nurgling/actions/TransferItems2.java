@@ -6,6 +6,7 @@ import nurgling.NUtils;
 import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
+import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
@@ -85,6 +86,10 @@ public class TransferItems2 implements Action
                         }
                         if (output instanceof Container) {
                             new TransferToContainer((Container) output, new NAlias(item), key.intValue()).run(gui);
+                        }
+                        if(output instanceof NContext.Barrel)
+                        {
+                            new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel),new NAlias(item)).run(gui);
                         }
 //                        if (output instanceof NContext.Barter) {
 //                            if (((NContext.Barter) output).getArea() != null)
