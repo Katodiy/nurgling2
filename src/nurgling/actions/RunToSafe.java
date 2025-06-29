@@ -18,7 +18,8 @@ public class RunToSafe implements Action{
         NArea nArea = NContext.findSpecGlobal(Specialisation.SpecName.safe.toString());
         if(nArea!=null) {
             List<RoutePoint> routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(nArea));
-            new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
+            if(routePoints!=null && !routePoints.isEmpty())
+                new RoutePointNavigator(routePoints.get(routePoints.size()-1)).run(NUtils.getGameUI());
             return Results.SUCCESS();
         }
         else {

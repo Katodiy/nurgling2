@@ -150,8 +150,8 @@ public class Butcher implements Action {
     boolean useGlobalPf(NArea area) throws InterruptedException {
         if (area.getRCArea() == null) {
             List<RoutePoint> routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area));
-            if (routePoints != null) {
-                new RoutePointNavigator(routePoints.getLast()).run(NUtils.getGameUI());
+            if (routePoints != null && !routePoints.isEmpty()) {
+                new RoutePointNavigator(routePoints.get(routePoints.size()-1)).run(NUtils.getGameUI());
                 return true;
             }
         }

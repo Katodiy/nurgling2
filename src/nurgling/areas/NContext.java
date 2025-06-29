@@ -177,7 +177,9 @@ public class NContext {
             }
             if (area != null) {
                 areas.put(String.valueOf(workstation.station), area);
-                rps.put(String.valueOf(workstation.station),(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+                List<RoutePoint> pointList = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area));
+                if(pointList!=null && !pointList.isEmpty())
+                    rps.put(String.valueOf(workstation.station),pointList.get(pointList.size()-1));
             }
             else
             {
@@ -212,7 +214,9 @@ public class NContext {
             }
             if (area != null) {
                 areas.put(String.valueOf(area.id), area);
-                rps.put(String.valueOf(area.id), (((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+                List<RoutePoint> pointList = (((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
+                if(pointList!=null && !pointList.isEmpty())
+                    rps.put(String.valueOf(area.id),pointList.get(pointList.size()-1));
                 barrels.put(item, String.valueOf(area.id));
             }
             if(area == null)
@@ -245,7 +249,9 @@ public class NContext {
             }
             if (area != null) {
                 areas.put(String.valueOf(name.toString()), area);
-                rps.put(String.valueOf(name.toString()),(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+                List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
+                if(pointList!=null && !pointList.isEmpty())
+                    rps.put(String.valueOf(name.toString()),pointList.get(pointList.size()-1));
             }
             else
             {
@@ -264,7 +270,9 @@ public class NContext {
             }
             if (area != null) {
                 areas.put(String.valueOf(name.toString()), area);
-                rps.put(String.valueOf(name.toString()),(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+                List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
+                if(pointList!=null && !pointList.isEmpty())
+                    rps.put(String.valueOf(name.toString()),pointList.get(pointList.size()-1));
             }
             else
             {
@@ -518,7 +526,9 @@ public class NContext {
         if(area!=null)
         {
             areas.put(String.valueOf(area.id),area);
-            rps.put(String.valueOf(area.id),(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+            List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
+            if(pointList!=null && !pointList.isEmpty())
+                rps.put(String.valueOf(area.id),pointList.get(pointList.size()-1));
             inAreas.put(name, String.valueOf(area.id));
         }
         if (loadsimg!=null && area == null) {
@@ -546,7 +556,9 @@ public class NContext {
         if(area!=null)
         {
             areas.put(String.valueOf(area.id),area);
-            rps.put(String.valueOf(area.id),(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+            List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
+            if(pointList!=null && !pointList.isEmpty())
+                rps.put(String.valueOf(area.id),pointList.get(pointList.size()-1));
             outAreas.get(name).put(Math.abs((double)area.getOutput(name).th), String.valueOf(area.id));
         }
         if (loadsimg!=null && area == null) {
