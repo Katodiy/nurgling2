@@ -46,6 +46,11 @@ public class PathFinder implements Action {
         this.end = end;
     }
 
+    public PathFinder(Coord2d begin, Gob target) {
+        this(target);
+        this.begin = begin;
+    }
+
     public PathFinder(Coord2d end) {
         this(NUtils.getGameUI().map.player().rc, end);
     }
@@ -396,6 +401,13 @@ public class PathFinder implements Action {
     }
 
     public static boolean isAvailable(Coord2d begin, Coord2d target, boolean gatesAlwaysClosed) throws InterruptedException {
+        PathFinder pf = new PathFinder(begin, target);
+        pf.gatesAlwaysClosed = gatesAlwaysClosed;
+        LinkedList<Graph.Vertex> res = pf.construct(true);
+        return res != null || pf.dn;
+    }
+
+    public static boolean isAvailable(Coord2d begin, Gob target, boolean gatesAlwaysClosed) throws InterruptedException {
         PathFinder pf = new PathFinder(begin, target);
         pf.gatesAlwaysClosed = gatesAlwaysClosed;
         LinkedList<Graph.Vertex> res = pf.construct(true);

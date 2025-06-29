@@ -520,10 +520,10 @@ public class NContext {
         {
             areas.put(String.valueOf(area.id),area);
             rps.put(String.valueOf(area.id),(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
-            outAreas.get(name).put((double)area.getOutput(name).th, String.valueOf(area.id));
+            outAreas.get(name).put(Math.abs((double)area.getOutput(name).th), String.valueOf(area.id));
         }
         if (loadsimg!=null && area == null) {
-            outAreas.get(name).put(th, createArea("Please select area for:" + name, Resource.loadsimg("baubles/custom"), loadsimg));
+            outAreas.get(name).put(Math.abs(th), createArea("Please select area for:" + name, Resource.loadsimg("baubles/custom"), loadsimg));
         }
         else
         {
@@ -647,7 +647,7 @@ public class NContext {
                 if (id > 0) {
                     NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
                     if (cand.isVisible() && cand.containOut(name.getDefault(), th)) {
-                        areas.add(new TestedArea(cand, th));
+                        areas.add(new TestedArea(cand, cand.getOutput(name.getDefault()).th));
                     }
                 }
             }
@@ -693,7 +693,7 @@ public class NContext {
                 if (id > 0) {
                     NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
                     if (cand.isVisible() && cand.containOut(name, th) && cand.getRCArea()!=null) {
-                        areas.add(new TestedArea(cand, th));
+                        areas.add(new TestedArea(cand, cand.getOutput(name).th));
                     }
                 }
             }
@@ -797,7 +797,7 @@ public class NContext {
                 if (id > 0) {
                     NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
                     if (cand.containOut(name) && ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(cand)) != null) {
-                        areas.add(new TestedArea(cand, th));
+                        areas.add(new TestedArea(cand, cand.getOutput(name).th));
                     }
                 }
             }

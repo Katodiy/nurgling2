@@ -196,47 +196,42 @@ public class RouteGraph {
     }
 
     public void connectAreaToRoutePoints(NArea area) {
-        if(area == null) {
+        if (area == null) {
             return;
         }
 
         ArrayList<RoutePoint> points = findNearestPoints();
         MCache cache = NUtils.getGameUI().ui.sess.glob.map;
-        for (RoutePoint point : points) {
-            boolean isReachable = false;
+        Pair<Coord2d, Coord2d> testrc = area.getRCArea();
+        try {
+            if (testrc != null) {
+                ArrayList<Gob> gobs = Finder.findGobs(area);
+                for (RoutePoint point : points) {
+                    if (point.toCoord2d(cache) != null) {
+                        boolean isReachable = false;
 
-            try {
-                Pair<Coord2d, Coord2d> testrc = area.getRCArea();
-                if(testrc != null) {
-                    ArrayList<Gob> gobs = Finder.findGobs(area);
 
-                    if(gobs.isEmpty()) {
-                        if(point.toCoord2d(cache) != null) {
-                            isReachable = PathFinder.isAvailable(testrc.a, point.toCoord2d(cache), false) || PathFinder.isAvailable(testrc.b, point.toCoord2d(cache), false);
+                        if (gobs.isEmpty()) {
+                                isReachable = PathFinder.isAvailable(testrc.a, point.toCoord2d(cache), false) || PathFinder.isAvailable(testrc.b, point.toCoord2d(cache), false);
                         } else {
-                            isReachable = false;
-                        }
-                    } else {
-                        for(Gob gob : gobs) {
-                            if(point.toCoord2d(cache) != null) {
-                                if (PathFinder.isAvailable(point.toCoord2d(cache), gob.rc, true)) {
+                            for (Gob gob : gobs) {
+                                if (PathFinder.isAvailable(point.toCoord2d(cache), gob, true)) {
                                     isReachable = true;
                                     break;
                                 }
                             }
                         }
+                        if (isReachable) {
+                            point.addReachableArea(area.id);
+                        }
                     }
                 }
-
-            } catch (InterruptedException e) {
-                NUtils.getGameUI().error("Unable to determine route point reachability from point to area. Skipping point: " + point.id);
             }
-
-            if(isReachable) {
-                point.addReachableArea(area.id);
-            }
+        } catch (InterruptedException e) {
+            NUtils.getGameUI().error("Unable to determine route point reachability from point to area. Skipping point");
         }
     }
+
 
     public ArrayList<RoutePoint> findNearestRoutePoints(NArea area) {
         ArrayList<RoutePoint> result = new ArrayList<>();
