@@ -314,16 +314,9 @@ public class HarvestCrop implements Action {
         if (cropStages.isEmpty())
             return false;
 
-        if (isQualityGrid) {
-            // Only check the last (latest) stage. This is done specifically for Turnip and Carrots (eventually maybe
-            // leek). We want the plant to get to the last stage to get the quality gain it requires.
-            CropRegistry.CropStage lastStage = cropStages.get(cropStages.size() - 1);
-            return !Finder.findGobs(field, crop, lastStage.stage).isEmpty();
-        } else {
-            for (CropRegistry.CropStage cs : cropStages) {
-                if (!Finder.findGobs(field, crop, cs.stage).isEmpty())
-                    return true;
-            }
+        for (CropRegistry.CropStage cs : cropStages) {
+            if (!Finder.findGobs(field, crop, cs.stage).isEmpty())
+                return true;
         }
 
         return false;

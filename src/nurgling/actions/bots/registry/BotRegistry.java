@@ -93,6 +93,7 @@ public class BotRegistry {
 
         // FARMING QUALITY
         bots.add(new BotDescriptor("turnipq", BotDescriptor.BotType.FARMING_QUALITY, "Turnip Farmer Quality", "Automatically harvests and replants turnips in 4 cell patches.", true, true, TurnipsFarmerQ.class, "turnip", false));
+        bots.add(new BotDescriptor("wheatq", BotDescriptor.BotType.FARMING_QUALITY, "Wheat Farmer Quality", "Automatically harvests and replants wheat in 4 cell patches.", true, true, WheatFarmerQ.class, "wheat", false));
 
         // UTILS
         bots.add(new BotDescriptor("shieldsword", BotDescriptor.BotType.UTILS, "Equip Shield/Sword", "Equips shield and sword.", true, true, EquipShieldSword.class, "shieldsword", false));
