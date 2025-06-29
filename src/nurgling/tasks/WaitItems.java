@@ -78,7 +78,7 @@ public class WaitItems extends NTask
                 if (!NGItem.validateItem(item)) {
                     return true;
                 } else {
-                    if (NParser.checkName(((NGItem)item.item).name(), name)) {
+                    if (name == null || NParser.checkName(((NGItem)item.item).name(), name)) {
                         if(item.item.contents!=null)
                         {
                             if(checkSize(item.item.contents.child))
