@@ -46,9 +46,9 @@ public class BackerAction implements Action {
                 containers.add(cand);
             }
 
-            ArrayList<Gob> lighted = new ArrayList<>();
+            ArrayList<Long> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(Finder.findGob(cont.gobid));
+                lighted.add(cont.gobid);
             }
 
             Results res = null;
@@ -76,9 +76,9 @@ public class BackerAction implements Action {
                 }
                 new FuelToContainers(forFuel).run(gui);
 
-                ArrayList<Gob> flighted = new ArrayList<>();
+                ArrayList<Long> flighted = new ArrayList<>();
                 for (Container cont : forFuel) {
-                    flighted.add(Finder.findGob(cont.gobid));
+                    flighted.add(cont.gobid);
                 }
                 new LightGob(flighted, 4).run(gui);
             }

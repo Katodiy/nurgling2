@@ -49,9 +49,9 @@ public class BricksAction implements Action {
                 containers.add(cand);
             }
 
-            ArrayList<Gob> flighted = new ArrayList<>();
+            ArrayList<Long> flighted = new ArrayList<>();
             for (Container cont : containers) {
-                flighted.add(Finder.findGob(cont.gobid));
+                flighted.add(cont.gobid);
             }
 
             Results res = null;
@@ -70,7 +70,7 @@ public class BricksAction implements Action {
 
                 flighted.clear();
                 for (Container cont : forFuel) {
-                    flighted.add(Finder.findGob(cont.gobid));
+                    flighted.add(cont.gobid);
                 }
                 if (!new LightGob(flighted, 1).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");

@@ -53,12 +53,7 @@ public class StackSupporter {
         size3.add("Finer Plant Fibre");
         size3.add("Wicker");
         size3.add("Cloth");
-        size3.add("Nugget of a Precious Metal");
 
-        size3.add("Nugget of Bronze, Iron or Steel");
-        size3.add("Nugget of Any Common Metal");
-        size3.add("Nugget of Any Metal");
-        size3.add("Wax");
         size3.add("Pigment");
         size3.add("Fine Clay");
         size3.add("Any Brick");
@@ -108,6 +103,13 @@ public class StackSupporter {
         size5.add("Poultry");
 
         catSize.put(size5,5);
+
+        HashSet<String> size10 = new HashSet<>();
+        size10.add("Nugget of a Precious Metal");
+        size10.add("Nugget of Bronze, Iron or Steel");
+        size10.add("Nugget of Any Common Metal");
+        size10.add("Nugget of Any Metal");
+        catSize.put(size10,10);
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln");
     public static boolean isStackable(NInventory inv, String name)

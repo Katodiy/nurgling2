@@ -250,6 +250,25 @@ public class NContext {
         return areas.get(name.toString());
     }
 
+    public NArea getSpecArea(Specialisation.SpecName name, String sub) throws InterruptedException {
+        if(!areas.containsKey(name.toString())) {
+            NArea area = findSpec(name.toString(),sub);
+            if (area == null) {
+                area = findSpecGlobal(name.toString(),sub);
+            }
+            if (area != null) {
+                areas.put(String.valueOf(name.toString()), area);
+                rps.put(String.valueOf(name.toString()),(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)).getLast()));
+            }
+            else
+            {
+                return null;
+            }
+        }
+        navigateToAreaIfNeeded(name.toString());
+        return areas.get(name.toString());
+    }
+
     public ArrayList<ObjectStorage> getInStorages(String item) throws InterruptedException {
 
         ArrayList<ObjectStorage> inputs = new ArrayList<>();

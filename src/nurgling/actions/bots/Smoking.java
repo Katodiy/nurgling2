@@ -93,7 +93,7 @@ public class Smoking implements Action {
 
             new FreeContainers(containers).run(gui);
 
-            ArrayList<Gob> lighted = new ArrayList<>();
+            ArrayList<Long> lighted = new ArrayList<>();
             for(String fuel : fuels.keySet()) {
                 for(NSmokProp prop : fuels.get(fuel)) {
                     new FillContainers(containers,prop.iconName, context).run(gui);
@@ -114,7 +114,7 @@ public class Smoking implements Action {
                 new FreeContainers(forClear).run(gui);
                 new FuelByLogs(forRemove, fuel).run(gui);
                 for(Container cand : forRemove) {
-                    lighted.add(Finder.findGob(cand.gobid));
+                    lighted.add(cand.gobid);
                 }
                 containers.removeAll(forRemove);
                 for(Container cand : forClear) {

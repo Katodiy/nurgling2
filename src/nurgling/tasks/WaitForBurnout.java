@@ -1,6 +1,7 @@
 package nurgling.tasks;
 
 import haven.Gob;
+import nurgling.tools.Finder;
 
 import java.util.ArrayList;
 
@@ -10,10 +11,10 @@ import java.util.ArrayList;
  */
 public class WaitForBurnout extends NTask
 {
-    ArrayList<Gob> gobs;
+    ArrayList<Long> gobs;
     int flame_flag;
 
-    public WaitForBurnout(ArrayList<Gob> gobs, int flag)
+    public WaitForBurnout(ArrayList<Long> gobs, int flag)
     {
         this.gobs = gobs;
         this.flame_flag = flag;
@@ -22,8 +23,8 @@ public class WaitForBurnout extends NTask
     @Override
     public boolean check()
     {
-        for (Gob gob: gobs)
-        {
+        for (Long gobid : gobs) {
+            Gob gob = Finder.findGob(gobid);
             if((gob.ngob.getModelAttribute() & flame_flag) != 0)
             {
                 return false;

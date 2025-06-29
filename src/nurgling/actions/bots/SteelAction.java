@@ -62,9 +62,9 @@ public class SteelAction implements Action {
             if (!new FuelToContainers(containers).run(gui).IsSuccess())
                 return Results.ERROR("NO FUEL");
 
-            ArrayList<Gob> flighted = new ArrayList<>();
+            ArrayList<Long> flighted = new ArrayList<>();
             for (Container cont : containers) {
-                flighted.add(Finder.findGob(cont.gobid));
+                flighted.add(cont.gobid);
             }
 
             if (!new LightGob(flighted, 4).run(gui).IsSuccess())

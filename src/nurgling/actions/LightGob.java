@@ -13,11 +13,11 @@ import java.util.ArrayList;
 
 public class LightGob implements Action
 {
-    ArrayList<Gob> gobs;
+    ArrayList<Long> gobs;
 
     int flame_flag;
 
-    public LightGob(ArrayList<Gob> gobs, int flame_flag) {
+    public LightGob(ArrayList<Long> gobs, int flame_flag) {
         this.gobs = gobs;
         this.flame_flag = flame_flag;
     }
@@ -27,7 +27,8 @@ public class LightGob implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         boolean timeFoWork = false;
-        for (Gob gob : gobs) {
+        for (Long gobid : gobs) {
+            Gob gob = Finder.findGob(gobid);
             if ((gob.ngob.getModelAttribute() & flame_flag) == 0) {
                 timeFoWork = true;
                 break;
@@ -43,7 +44,8 @@ public class LightGob implements Action
         if(candelabrum!=null) {
             Coord2d pos = new Coord2d(candelabrum.rc.x, candelabrum.rc.y);
             new LiftObject(candelabrum).run(gui);
-            for (Gob gob : gobs) {
+            for (Long gobid : gobs) {
+                Gob gob = Finder.findGob(gobid);
                 if ((gob.ngob.getModelAttribute() & flame_flag) == 0) {
                     new PathFinder(gob).run(gui);
                     NUtils.activateGob ( gob );

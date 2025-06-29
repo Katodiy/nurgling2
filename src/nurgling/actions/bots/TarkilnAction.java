@@ -8,6 +8,7 @@ import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tasks.*;
+import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -63,8 +64,11 @@ public class TarkilnAction implements Action {
 
             if(!new FillFuelTarkilns(tarkilns,insa.getRCArea()).run(gui).IsSuccess())
                 return Results.FAIL();
-
-            new LightGob(tarkilns,16).run(gui);
+            ArrayList<Long> flighted = new ArrayList<>();
+            for (Gob cont : tarkilns) {
+                flighted.add(cont.id);
+            }
+            new LightGob(flighted,16).run(gui);
         }
 
         return Results.SUCCESS();

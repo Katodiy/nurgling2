@@ -8,6 +8,7 @@ import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tasks.HandIsFree;
 import nurgling.tasks.NTask;
+import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -56,22 +57,30 @@ public class PrepareWorkStation implements Action
             if(name.contains("crucible"))
             {
                 if(fillCrucible(ws,gui))
-                    new LightGob(new ArrayList<>(Arrays.asList(ws)),4).run(gui);
+                    new LightGob(new ArrayList<>(Arrays.asList(ws.id)),4).run(gui);
             }
             else if(name.startsWith("gfx/terobjs/pow"))
             {
                 ArrayList<Gob> pows = new ArrayList<>(Arrays.asList(ws));
-                if(!new FillFuelPowOrCauldron(pows, 1).run(gui).IsSuccess())
+                if(!new FillFuelPowOrCauldron(context, pows, 1).run(gui).IsSuccess())
                     return Results.FAIL();
-                if (!new LightGob(pows, 4).run(gui).IsSuccess())
+                ArrayList<Long> flighted = new ArrayList<>();
+                for (Gob cont : pows) {
+                    flighted.add(cont.id);
+                }
+                if (!new LightGob(flighted, 4).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");
             }
             else if(name.startsWith("gfx/terobjs/cauldron"))
             {
                 ArrayList<Gob> pows = new ArrayList<>(Arrays.asList(ws));
-                if(!new FillFuelPowOrCauldron(pows, 1).run(gui).IsSuccess())
+                if(!new FillFuelPowOrCauldron(context, pows, 1).run(gui).IsSuccess())
                     return Results.FAIL();
-                if (!new LightGob(pows, 2).run(gui).IsSuccess())
+                ArrayList<Long> flighted = new ArrayList<>();
+                for (Gob cont : pows) {
+                    flighted.add(cont.id);
+                }
+                if (!new LightGob(flighted, 2).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");
                 if((Finder.findGob(context.workstation.selected).ngob.getModelAttribute()&4)==0)
                 {

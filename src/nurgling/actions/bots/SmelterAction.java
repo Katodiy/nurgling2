@@ -77,9 +77,9 @@ public class SmelterAction implements Action {
                 containers.add(cand);
             }
 
-            ArrayList<Gob> lighted = new ArrayList<>();
+            ArrayList<Long> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(Finder.findGob(cont.gobid));
+                lighted.add(cont.gobid);
 
             }
             if(containers.isEmpty())
@@ -104,9 +104,9 @@ public class SmelterAction implements Action {
                     if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
                         return Results.ERROR("NO FUEL");
 
-                    ArrayList<Gob> flighted = new ArrayList<>();
+                    ArrayList<Long> flighted = new ArrayList<>();
                     for (Container cont : forFuel) {
-                        flighted.add(Finder.findGob(cont.gobid));
+                        flighted.add(cont.gobid);
                     }
 
                     if (!new LightGob(flighted, 2).run(gui).IsSuccess())

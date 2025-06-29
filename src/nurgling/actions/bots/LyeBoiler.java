@@ -88,10 +88,10 @@ public class LyeBoiler implements Action {
                     if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
                         return Results.ERROR("NO FUEL");
 
-                    ArrayList<Gob> flighted = new ArrayList<>();
+                    ArrayList<Long> flighted = new ArrayList<>();
                     for (Container cont : containers) {
                         if (((Finder.findGob(cont.gobid).ngob.getModelAttribute() & 1) == 1) && (Finder.findGob(cont.gobid).ngob.getModelAttribute() & 2) != 2)
-                            flighted.add(Finder.findGob(cont.gobid));
+                            flighted.add(cont.gobid);
                     }
                     new LightGob(flighted, 2).run(gui);
                 }
