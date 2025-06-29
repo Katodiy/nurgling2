@@ -318,6 +318,10 @@ public class HarvestCrop implements Action {
     }
 
     private boolean requiresBarrel(NAlias crop) {
+        if(isQualityGrid) {
+            return false;
+        }
+
         for (CropRegistry.CropStage stage : CropRegistry.HARVESTABLE.getOrDefault(crop, Collections.emptyList())) {
             if (stage.storageBehavior == CropRegistry.StorageBehavior.BARREL) {
                 return true;
