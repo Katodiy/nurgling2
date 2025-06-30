@@ -298,12 +298,15 @@ public class HarvestCrop implements Action {
             allItems.addAll(stockpileItems);
 
             Set<String> processed = new HashSet<>();
+
             for (WItem item : allItems) {
                 String itemName = ((NGItem)item.item).name();
                 if(processed.add(itemName)) {
                     new TransferToContainer(container, new NAlias(itemName)).run(gui);
                 }
             }
+
+            new CloseTargetContainer(container).run(gui);
         }
 
     }
