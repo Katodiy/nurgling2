@@ -25,7 +25,7 @@ public class WaitForBurnout extends NTask
     {
         for (Long gobid : gobs) {
             Gob gob = Finder.findGob(gobid);
-            if((gob.ngob.getModelAttribute() & flame_flag) != 0)
+            if(gob!=null && (gob.ngob.getModelAttribute() & flame_flag) != 0)
             {
                 return false;
             }

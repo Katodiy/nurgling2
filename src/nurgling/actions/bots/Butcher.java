@@ -125,6 +125,7 @@ public class Butcher implements Action {
                         }
                     }
                 }
+                context.getSpecArea(Specialisation.SpecName.deadkritter);
                 gobs = getGobs(area);
             }
             new FreeInventory2(context).run(gui);

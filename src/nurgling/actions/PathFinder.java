@@ -328,7 +328,8 @@ public class PathFinder implements Action {
                 if (target == null) {
                     target = Finder.findGob(target_id);
                 }
-
+                if(target == null)
+                    return null;
                 CellsArray ca = target.ngob.getCA();
                 return findFreeNearByHB(ca, target_id, dummy, start);
             }
