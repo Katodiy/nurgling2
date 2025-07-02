@@ -52,19 +52,16 @@ public class NSettingsWindow extends Window {
         SettingsCategory gameenvironment = new SettingsCategory("Game environment", new Panel("Game environment"), container);
         gameenvironment.addChild(new SettingsItem("World",world = new World(), container));
 
-        SettingsCategory farming = new SettingsCategory("Farming", new Panel("Farming"), container);
-        farming.addChild(new SettingsItem("Farming Settings", new FarmingSettingsPanel(), container));
-
         SettingsCategory scenarios = new SettingsCategory("Autorunner", new Panel("Autorunner scenarios"), container);
         scenarios.addChild(new SettingsItem("Scenarios", new ScenarioPanel(), container));
 
         SettingsCategory bots = new SettingsCategory("Bots", new Panel("Bots"), container);
         bots.addChild(new SettingsItem("Feed Clover", new FeedClover(), container));
         bots.addChild(new SettingsItem("Eating bot", new Eater(), container));
+        bots.addChild(new SettingsItem("Farming Settings", new FarmingSettingsPanel(), container));
 
         list.addCategory(general);
         list.addCategory(gameenvironment);
-        list.addCategory(farming);
         list.addCategory(scenarios);
         list.addCategory(bots);
     }

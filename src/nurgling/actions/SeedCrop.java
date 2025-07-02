@@ -287,27 +287,27 @@ public class SeedCrop implements Action {
     }
 
     private void seedForQuality(NGameUI gui) throws InterruptedException {
-        final int maxTilesToSeed = 4;
-        // 1. Find up to 4 empty "field" tiles using Area.Tile[][] and isFree
+        int[] seedingPattern = getQualitySeedingPattern();
+        int patX = seedingPattern[0];
+        int patY = seedingPattern[1];
+
         Area.Tile[][] tiles = field.getArea().getTiles(field.getArea(), new NAlias("gfx/terobjs/moundbed"));
 
-        ArrayList<Coord> emptyCoords = new ArrayList<>();
-        for (int i = 0; i <= field.getArea().br.x - field.getArea().ul.x; i++) {
-            for (int j = 0; j <= field.getArea().br.y - field.getArea().ul.y; j++) {
-                Area.Tile tile = tiles[i][j];
-                if (NParser.checkName(tile.name, "field") && tile.isFree) {
-                    emptyCoords.add(new Coord(field.getArea().ul.x + i, field.getArea().ul.y + j));
-                }
-            }
-        }
+        // Try both orientations
+        int patchesXY = countPossiblePatches(field.getArea(), tiles, patX, patY);
+        int patchesYX = countPossiblePatches(field.getArea(), tiles, patY, patX);
 
-        if (emptyCoords.isEmpty()) {
-            gui.msg("No empty tiles found for seeding!");
+        boolean useRotated = patchesYX > patchesXY;
+
+        int useX = useRotated ? patY : patX;
+        int useY = useRotated ? patX : patY;
+
+        ArrayList<Coord> toSeed = findFirstFreePatch(field.getArea(), tiles, useX, useY);
+
+        if (toSeed == null) {
+            gui.msg("No empty patch of " + useX + "x" + useY + " found for quality seeding!");
             return;
         }
-
-        // Only seed up to 4
-        ArrayList<Coord> toSeed = new ArrayList<>(emptyCoords.subList(0, Math.min(maxTilesToSeed, emptyCoords.size())));
 
         // 2. Find all containers in the seed area (chests, cupboards, etc)
         ArrayList<Container> containers = new ArrayList<>();
@@ -355,6 +355,85 @@ public class SeedCrop implements Action {
                 new TransferToContainer(container, new NAlias(itemName)).run(gui);
             }
         }
+
+        new CloseTargetContainer(container).run(gui);
+    }
+
+    private int[] getQualitySeedingPattern() {
+        String pat = (String) nurgling.NConfig.get(nurgling.NConfig.Key.qualityGrindSeedingPatter);
+        if (pat == null || !pat.matches("\\d+x\\d+")) return new int[]{1, 4}; // default
+        String[] parts = pat.split("x");
+        try {
+            int x = Integer.parseInt(parts[0]);
+            int y = Integer.parseInt(parts[1]);
+            return new int[]{x, y};
+        } catch (Exception e) {
+            return new int[]{1, 4};
+        }
+    }
+
+    private ArrayList<Coord> findFreePatch(Area area, Area.Tile[][] tiles, int patX, int patY) {
+        for (int i = 0; i <= area.br.x - area.ul.x - (patX - 1); i++) {
+            for (int j = 0; j <= area.br.y - area.ul.y - (patY - 1); j++) {
+                boolean ok = true;
+                ArrayList<Coord> patch = new ArrayList<>();
+                for (int dx = 0; dx < patX; dx++) {
+                    for (int dy = 0; dy < patY; dy++) {
+                        Area.Tile tile = tiles[i + dx][j + dy];
+                        if (!nurgling.tools.NParser.checkName(tile.name, "field") || !tile.isFree)
+                            ok = false;
+                        patch.add(new Coord(area.ul.x + i + dx, area.ul.y + j + dy));
+                    }
+                }
+                if (ok) return patch;
+            }
+        }
+        return null;
+    }
+
+    // Counts how many non-overlapping patches of size patX x patY fit in the area
+    private int countPossiblePatches(Area area, Area.Tile[][] tiles, int patX, int patY) {
+        int patches = 0;
+        boolean[][] used = new boolean[tiles.length][tiles[0].length];
+        for (int i = 0; i <= tiles.length - patX; i++) {
+            for (int j = 0; j <= tiles[0].length - patY; j++) {
+                boolean ok = true;
+                for (int dx = 0; dx < patX; dx++) {
+                    for (int dy = 0; dy < patY; dy++) {
+                        if (used[i+dx][j+dy]) ok = false;
+                        Area.Tile tile = tiles[i+dx][j+dy];
+                        if (!nurgling.tools.NParser.checkName(tile.name, "field") || !tile.isFree)
+                            ok = false;
+                    }
+                }
+                if (ok) {
+                    patches++;
+                    for (int dx = 0; dx < patX; dx++)
+                        for (int dy = 0; dy < patY; dy++)
+                            used[i+dx][j+dy] = true;
+                }
+            }
+        }
+        return patches;
+    }
+
+    private ArrayList<Coord> findFirstFreePatch(Area area, Area.Tile[][] tiles, int patX, int patY) {
+        for (int i = 0; i <= tiles.length - patX; i++) {
+            for (int j = 0; j <= tiles[0].length - patY; j++) {
+                boolean ok = true;
+                ArrayList<Coord> patch = new ArrayList<>();
+                for (int dx = 0; dx < patX; dx++) {
+                    for (int dy = 0; dy < patY; dy++) {
+                        Area.Tile tile = tiles[i+dx][j+dy];
+                        if (!nurgling.tools.NParser.checkName(tile.name, "field") || !tile.isFree)
+                            ok = false;
+                        patch.add(new Coord(area.ul.x + i + dx, area.ul.y + j + dy));
+                    }
+                }
+                if (ok) return patch;
+            }
+        }
+        return null;
     }
 }
 
