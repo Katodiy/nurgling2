@@ -320,16 +320,16 @@ public class SeedCrop implements Action {
             throw new RuntimeException("No container found in seed area!");
         Container container = containers.get(0);
 
-        // 3. Get all seeds in the container and sort by quality descending (highest first)
+        // 3. Get all seeds in the container
         new OpenTargetContainer(container).run(gui);
-        ArrayList<WItem> seeds = gui.getInventory(container.cap).getItems(iseed, NInventory.QualityType.High);
+        ArrayList<WItem> seeds = gui.getInventory(container.cap).getItems(iseed);
         if (seeds.size() < toSeed.size()) {
             gui.error("Not enough seeds in container for quality seeding!");
             throw new InterruptedException();
         }
 
         // 4. Fetch top seeds to inventory
-        new TakeAvailableItemsFromContainer(container, iseed, toSeed.size()).run(gui);
+        new TakeAvailableItemsFromContainer(container, iseed, toSeed.size(), NInventory.QualityType.High).run(gui);
 
         // 5. Seed just those 4 tiles, individually
         for (Coord tile : toSeed) {
@@ -340,7 +340,6 @@ public class SeedCrop implements Action {
         }
 
         // Return seeds to the chest
-
         for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
             Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
             cand.initattr(Container.Space.class);

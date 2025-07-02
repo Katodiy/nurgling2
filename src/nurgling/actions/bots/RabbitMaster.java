@@ -181,7 +181,7 @@ public class RabbitMaster implements Action {
             return doesResult;
         }
 
-//        cleanupBunnies(gui, rabbitHutchesIncubators);
+        cleanupBunnies(gui, rabbitHutchesIncubators);
 
         ArrayList<Context.Output> outputs = new ArrayList<>();
         for (Container cc : rabbitHutchesIncubators) {
@@ -198,7 +198,7 @@ public class RabbitMaster implements Action {
         bunnies.add(BUNNY_NAME);
         new TransferTargetItemsFromContainers(context, rabbitHutchesBreeding, bunnies, new NAlias(new ArrayList<>(), new ArrayList<>(List.of("Hide", "Entrails", "Meat", "Bone")))).run(gui);
 
-//        cleanupBunnies(gui, rabbitHutchesIncubators);
+        cleanupBunnies(gui, rabbitHutchesIncubators);
 
         return Results.SUCCESS();
     }

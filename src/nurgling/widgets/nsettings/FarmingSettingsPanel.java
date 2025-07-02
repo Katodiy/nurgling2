@@ -1,0 +1,68 @@
+package nurgling.widgets.nsettings;
+
+import haven.*;
+import nurgling.NConfig;
+
+public class FarmingSettingsPanel extends Panel {
+    private TextEntry xEntry, yEntry;
+    private CheckBox harvestRefillCheck;
+
+    public FarmingSettingsPanel() {
+        super("Farming Settings");
+        int y = UI.scale(36);
+
+        harvestRefillCheck = new CheckBox("Refill water from water containers for farmers") {
+            public void set(boolean val) {
+                a = val;
+            }
+        };
+        add(harvestRefillCheck, new Coord(UI.scale(10), y));
+        y += UI.scale(28);
+
+        add(new Label("Seeding Pattern X (columns):"), new Coord(UI.scale(10), y));
+        y += UI.scale(24);
+
+        xEntry = new TextEntry.NumberValue(50, "") {
+            @Override
+            public void done(ReadLine buf) {
+                super.done(buf);
+            }
+        };
+        add(xEntry, new Coord(UI.scale(10), y));
+        y += UI.scale(32);
+
+        add(new Label("Seeding Pattern Y (rows):"), new Coord(UI.scale(10), y));
+        y += UI.scale(24);
+
+        yEntry = new TextEntry.NumberValue(50, "") {
+            @Override
+            public void done(ReadLine buf) {
+                super.done(buf);
+            }
+        };
+        add(yEntry, new Coord(UI.scale(10), y));
+    }
+
+    @Override
+    public void load() {
+        Boolean refill = (Boolean) NConfig.get(NConfig.Key.harvestautorefill);
+        harvestRefillCheck.a = refill != null && refill;
+
+        String pat = (String) NConfig.get(NConfig.Key.qualityGrindSeedingPatter);
+        if (pat == null || !pat.matches("\\d+x\\d+")) pat = "3x3";
+        String[] parts = pat.split("x");
+        xEntry.settext(parts[0]);
+        yEntry.settext(parts[1]);
+    }
+
+    @Override
+    public void save() {
+        NConfig.set(NConfig.Key.harvestautorefill, harvestRefillCheck.a);
+        String xVal = xEntry.text();
+        String yVal = yEntry.text();
+        if (!xVal.matches("\\d+")) xVal = "3";
+        if (!yVal.matches("\\d+")) yVal = "3";
+        NConfig.set(NConfig.Key.qualityGrindSeedingPatter, xVal + "x" + yVal);
+        NConfig.needUpdate();
+    }
+}

@@ -36,6 +36,6 @@ public class CollectDreams implements Action {
 
         new FreeInventory(context).run(gui);
 
-        return null;
+        return Results.SUCCESS();
     }
 }
