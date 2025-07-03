@@ -317,6 +317,8 @@ public class SeedCrop implements Action {
             throw new RuntimeException("No container found in seed area!");
         Container container = containers.get(0);
 
+        new PathFinder(Finder.findGob(container.gobid)).run(gui);
+
         // 3. Get all seeds in the container
         new OpenTargetContainer(container).run(gui);
         ArrayList<WItem> seeds = gui.getInventory(container.cap).getItems(iseed);
