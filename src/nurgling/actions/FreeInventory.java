@@ -9,6 +9,7 @@ import nurgling.tools.Context;
 
 import java.util.HashSet;
 
+@Deprecated
 public class FreeInventory implements Action
 {
     Context context;

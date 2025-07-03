@@ -248,7 +248,7 @@ public class Container implements NContext.ObjectStorage {
             return (int) res.get(MAXWATERLVL) - (int) res.get(WATERLVL);
         }
     }
-
+    @Deprecated
     public class TestAttr extends Updater{
         public static final String ATTR = "attr";
 
@@ -260,7 +260,7 @@ public class Container implements NContext.ObjectStorage {
 
         }
     }
-
+    @Deprecated
     public class TargetItems extends Updater{
         public static final String TARGETS = "targets";
         public static final String MAXNUM = "maxnum";

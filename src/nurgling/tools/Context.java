@@ -11,8 +11,9 @@ import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 
 import java.util.*;
-
+@Deprecated
 public class Context {
+    @Deprecated
     public static HashMap<String, String> contcaps = new HashMap<>();
     static {
         contcaps.put("gfx/terobjs/chest", "Chest");
@@ -39,6 +40,7 @@ public class Context {
         contcaps.put("gfx/terobjs/map/jotunclam", "Jotun Clam");
     }
 
+    @Deprecated
     public static HashMap<String, String> customTool = new HashMap<>();
     static {
         customTool.put("Clay Jar", "paginae/bld/potterswheel");
@@ -51,6 +53,7 @@ public class Context {
         customTool.put("Stoneware Vase", "paginae/bld/potterswheel");
     }
 
+    @Deprecated
     public void addCustomTool(String resName) {
         String cust = customTool.get(resName);
         if(cust != null) {
@@ -62,6 +65,7 @@ public class Context {
         }
     }
 
+    @Deprecated
     public static class Workstation
     {
         public String station;
@@ -75,6 +79,7 @@ public class Context {
         }
     }
 
+    @Deprecated
     static HashMap<String, String> equip_map;
     static {
         equip_map = new HashMap<>();
@@ -83,6 +88,7 @@ public class Context {
         equip_map.put("gfx/invobjs/smithshammer", "Smithy's Hammer");
     }
 
+    @Deprecated
     static HashMap<String, Workstation> workstation_map;
     static {
         workstation_map = new HashMap<>();
@@ -95,6 +101,7 @@ public class Context {
         workstation_map.put("paginae/bld/potterswheel",new Workstation("gfx/terobjs/potterswheel", "gfx/borka/pwheelidle"));
         workstation_map.put("paginae/bld/anvil",new Workstation("gfx/terobjs/anvil", null));
     }
+    @Deprecated
     public void addTools(List<Indir<Resource>> tools)
     {
         for (Indir<Resource> res : tools)
@@ -111,10 +118,12 @@ public class Context {
             }
         }
     }
-
+    @Deprecated
     public String equip = null;
+    @Deprecated
     public Workstation workstation = null;
 
+    @Deprecated
     public interface Output
     {
         Pair<Coord2d,Coord2d>  getArea();
@@ -122,12 +131,13 @@ public class Context {
         double getTh();
     }
 
+    @Deprecated
     public interface Input
     {
 
     }
 
-
+    @Deprecated
     public static class InputContainer extends Container implements Input
     {
         public InputContainer(Gob gob, String name)
@@ -137,7 +147,7 @@ public class Context {
             this.cap = name;
         }
     }
-
+    @Deprecated
     public static class InputBarter extends Barter implements Input
     {
         public InputBarter(Gob barter, Gob chest)
@@ -145,7 +155,7 @@ public class Context {
             super(barter, chest);
         }
     }
-
+    @Deprecated
     public static class InputBarrel extends Barrel implements Input
     {
         public InputBarrel(Gob barrel)
@@ -153,7 +163,7 @@ public class Context {
             super(barrel);
         }
     }
-
+    @Deprecated
     public static class InputPile extends Pile implements Input
     {
         public InputPile(Gob gob)
@@ -162,7 +172,7 @@ public class Context {
         }
     }
 
-
+    @Deprecated
     public static class OutputPile extends Pile implements Output
     {
         public OutputPile(Gob gob)
@@ -192,7 +202,7 @@ public class Context {
 
         Integer th = 1;
     }
-
+    @Deprecated
     public static class Pile {
         public Gob pile;
         public Pile(Gob gob)
@@ -202,7 +212,7 @@ public class Context {
     }
 
     HashMap<String, OutputContainer> containersInContext = new HashMap<>();
-
+    @Deprecated
     public ArrayList<Output> GetOutput(String item, NArea area)  throws InterruptedException
     {
 
@@ -276,7 +286,7 @@ public class Context {
         }
         return outputs;
     }
-
+    @Deprecated
     public static ArrayList<Output> GetOutput(String item, Pair<Coord2d,Coord2d> area ) throws InterruptedException
     {
         ArrayList<Output> outputs = new ArrayList<>();
@@ -304,7 +314,7 @@ public class Context {
         return outputs;
     }
 
-
+    @Deprecated
     public static ArrayList<Input> GetInput(String item, NArea area ) throws InterruptedException
     {
         ArrayList<Input> inputs = new ArrayList<>();
@@ -338,7 +348,7 @@ public class Context {
         });
         return inputs;
     }
-
+    @Deprecated
     public static ArrayList<Input> GetInput( Pair<Coord2d,Coord2d> area ) throws InterruptedException
     {
         ArrayList<Input> inputs = new ArrayList<>();
@@ -370,7 +380,7 @@ public class Context {
         });
         return inputs;
     }
-
+    @Deprecated
     public static ArrayList<Input> GetInput(String item, Pair<Coord2d,Coord2d> area ) throws InterruptedException
     {
         ArrayList<Input> inputs = new ArrayList<>();
@@ -394,7 +404,7 @@ public class Context {
         return inputs;
     }
 
-
+    @Deprecated
     public static class OutputBarter extends Barter implements Output
     {
         public OutputBarter(Gob barter, Gob chest,  Pair<Coord2d,Coord2d> area, int th)
@@ -419,7 +429,7 @@ public class Context {
         Integer th = 1;
     }
 
-
+    @Deprecated
     public static class OutputBarrel extends Barrel implements Output
     {
         public OutputBarrel(Gob barrel, Pair<Coord2d,Coord2d> area, int th)
@@ -443,7 +453,7 @@ public class Context {
 
         Integer th = 1;
     }
-
+    @Deprecated
     public ArrayList<Output> getOutputs(String name, int th) {
         if(output.get(name)!=null)
         {
@@ -455,7 +465,7 @@ public class Context {
         }
         return null;
     }
-
+    @Deprecated
     public static class Barter
     {
         public Gob barter;
@@ -467,7 +477,7 @@ public class Context {
             this.chest = chest;
         }
     }
-
+    @Deprecated
     public static class Barrel
     {
         public Gob barrel;
@@ -506,7 +516,7 @@ public class Context {
 
         Integer th = 1;
     }
-
+    @Deprecated
     public ArrayList<Input> getInputs(String name)
     {
         ArrayList<Input> in = input.get(name);
@@ -523,7 +533,7 @@ public class Context {
         }
         return in;
     }
-
+    @Deprecated
     public boolean addInput(String name, Input in)
     {
         input.computeIfAbsent(name, k -> new ArrayList<>());
@@ -555,7 +565,7 @@ public class Context {
         output.get(name).get(th).add(out);
         return true;
     }
-
+    @Deprecated
     public boolean addOutput(String name, ArrayList<Output> outputs)
     {
         for(Output out: outputs)
@@ -565,7 +575,7 @@ public class Context {
         }
         return true;
     }
-
+    @Deprecated
     public ArrayList<Container> icontainers = new ArrayList<>();
     HashMap<String,ArrayList<Input>> input = new HashMap<>();
     HashMap<String, SortedMap<Integer,ArrayList<Output>>> output = new HashMap<>();
