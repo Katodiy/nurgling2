@@ -101,10 +101,11 @@ public class ScenarioPanel extends Panel {
         y += UI.scale(36);
 
         int colSpacing = UI.scale(12);
-        int panelWidth = (contentWidth - margin * 2 - colSpacing) / 2;
+        int stepPanelWidth = (contentWidth - margin * 2 - colSpacing) * 2 / 3;
+        int settingsPanelWidth = (contentWidth - margin * 2 - colSpacing) - stepPanelWidth;
 
         stepList = editorPanel.add(
-                new SListBox<BotStep, Widget>(new Coord(panelWidth, editorListHeight), UI.scale(32)) {
+                new SListBox<BotStep, Widget>(new Coord(stepPanelWidth, editorListHeight), UI.scale(32)) {
                     @Override
                     protected List<BotStep> items() {
                         return editingScenario != null ? editingScenario.getSteps() : Collections.emptyList();
@@ -203,8 +204,8 @@ public class ScenarioPanel extends Panel {
         );
 
         stepSettingsPanel = editorPanel.add(
-                new StepSettingsPanel(new Coord(panelWidth, editorListHeight), null),
-                new Coord(margin + panelWidth + colSpacing, y)
+                new StepSettingsPanel(new Coord(settingsPanelWidth, editorListHeight), null),
+                new Coord(margin + stepPanelWidth + colSpacing, y)
         );
 
         y += UI.scale(270) + UI.scale(10);
