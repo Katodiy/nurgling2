@@ -48,15 +48,18 @@ public class TakeAvailableItemsFromContainer implements Action
             for (int i = 0; i < target_size; i++) {
                 items = gui.getInventory(cont.cap).getItems(name);
 
-                if(qualityType == NInventory.QualityType.High) {
-                    items.sort((a, b) -> Float.compare(((NGItem)b.item).quality, ((NGItem)a.item).quality));
-                } else if(qualityType == NInventory.QualityType.Low) {
-                    items.sort((a, b) -> Float.compare(((NGItem)a.item).quality, ((NGItem)b.item).quality));
-                }
+                if (!items.isEmpty()) {
+                    if(qualityType == NInventory.QualityType.High) {
+                        items.sort((a, b) -> Float.compare(((NGItem)b.item).quality, ((NGItem)a.item).quality));
+                    } else if(qualityType == NInventory.QualityType.Low) {
+                        items.sort((a, b) -> Float.compare(((NGItem)a.item).quality, ((NGItem)b.item).quality));
+                    }
 
-                items.get(0).item.wdgmsg("transfer", Coord.z);
-                currentOldSpace+=1;
-                NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), name, currentOldSpace));
+                    items.get(0).item.wdgmsg("transfer", Coord.z);
+
+                    currentOldSpace+=1;
+                    NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), name, currentOldSpace));
+                }
             }
             WaitItems wi = new WaitItems(gui.getInventory(), name, oldSpace + target_size);
             NUtils.getUI().core.addTask(wi);
