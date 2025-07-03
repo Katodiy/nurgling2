@@ -12,10 +12,7 @@ import nurgling.tasks.WaitGobsInField;
 import nurgling.tasks.WaitItems;
 import nurgling.tools.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SeedCrop implements Action {
@@ -323,13 +320,18 @@ public class SeedCrop implements Action {
         // 3. Get all seeds in the container
         new OpenTargetContainer(container).run(gui);
         ArrayList<WItem> seeds = gui.getInventory(container.cap).getItems(iseed);
-        if (seeds.size() < toSeed.size()) {
+
+        int canSeedCells = getSeedingCapacity(seeds);
+
+        if (canSeedCells < toSeed.size()) {
             gui.error("Not enough seeds in container for quality seeding!");
             throw new InterruptedException();
         }
 
+        int fetchCount = Math.min(seeds.size(), gui.getInventory().getFreeSpace());
+
         // 4. Fetch top seeds to inventory
-        new TakeAvailableItemsFromContainer(container, iseed, toSeed.size(), NInventory.QualityType.High).run(gui);
+        new TakeAvailableItemsFromContainer(container, iseed, fetchCount, NInventory.QualityType.High).run(gui);
 
         // 5. Seed just those 4 tiles, individually
         for (Coord tile : toSeed) {
@@ -346,13 +348,38 @@ public class SeedCrop implements Action {
             containers.add(cand);
         }
 
-        seeds = gui.getInventory().getItems(iseed);
-
+        List<WItem> crops = new ArrayList<>();
+        List<WItem> seedsList = new ArrayList<>();
         Set<String> processed = new HashSet<>();
+
         for (WItem item : seeds) {
+            String name = ((NGItem)item.item).name().toLowerCase();
+            if (name.contains("seed")) {
+                seedsList.add(item);
+            } else {
+                crops.add(item);
+            }
+        }
+
+        // Crops first (exclude seed items)
+        for (WItem item : crops) {
             String itemName = ((NGItem)item.item).name();
-            if(processed.add(itemName)) {
-                new TransferToContainer(container, new NAlias(itemName)).run(gui);
+            if (processed.add(itemName)) {
+                new TransferToContainer(
+                        container,
+                        new NAlias(Collections.singletonList(itemName), Collections.singletonList("seed"))
+                ).run(gui);
+            }
+        }
+
+        // Seeds second
+        for (WItem item : seedsList) {
+            String itemName = ((NGItem)item.item).name();
+            if (processed.add(itemName)) {
+                new TransferToContainer(
+                        container,
+                        new NAlias(Collections.singletonList(itemName), Collections.emptyList())
+                ).run(gui);
             }
         }
 
@@ -370,25 +397,6 @@ public class SeedCrop implements Action {
         } catch (Exception e) {
             return new int[]{1, 4};
         }
-    }
-
-    private ArrayList<Coord> findFreePatch(Area area, Area.Tile[][] tiles, int patX, int patY) {
-        for (int i = 0; i <= area.br.x - area.ul.x - (patX - 1); i++) {
-            for (int j = 0; j <= area.br.y - area.ul.y - (patY - 1); j++) {
-                boolean ok = true;
-                ArrayList<Coord> patch = new ArrayList<>();
-                for (int dx = 0; dx < patX; dx++) {
-                    for (int dy = 0; dy < patY; dy++) {
-                        Area.Tile tile = tiles[i + dx][j + dy];
-                        if (!nurgling.tools.NParser.checkName(tile.name, "field") || !tile.isFree)
-                            ok = false;
-                        patch.add(new Coord(area.ul.x + i + dx, area.ul.y + j + dy));
-                    }
-                }
-                if (ok) return patch;
-            }
-        }
-        return null;
     }
 
     // Counts how many non-overlapping patches of size patX x patY fit in the area
@@ -434,6 +442,25 @@ public class SeedCrop implements Action {
             }
         }
         return null;
+    }
+
+    private int getSeedingCapacity(List<WItem> seeds) {
+        int totalCells = 0;
+        for (WItem item : seeds) {
+            int itemCount = 1; // Default: crops count as 1
+
+            for (ItemInfo info : item.item.info()) {
+                if (info instanceof GItem.Amount) {
+                    int qty = ((GItem.Amount) info).itemnum();
+                    itemCount = qty / 5; // Each 5 seeds = 1 cell
+
+                    break;
+                }
+            }
+            // If it's a crop, itemCount remains 1
+            totalCells += itemCount;
+        }
+        return totalCells;
     }
 }
 
