@@ -2,6 +2,7 @@ package nurgling.actions.bots;
 
 import haven.Coord;
 import haven.Gob;
+import haven.MenuGrid;
 import haven.WItem;
 import nurgling.*;
 import nurgling.actions.*;
@@ -23,6 +24,7 @@ public class RabbitMaster implements Action {
     private static final NAlias DOE_ALIAS = new NAlias("Rabbit Doe");
     private static final String BUNNY_NAME = "Bunny Rabbit";
     private static final NAlias BUNNY_ALIAS = new NAlias(BUNNY_NAME);
+    private static boolean wasStacking;
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -36,6 +38,8 @@ public class RabbitMaster implements Action {
         if (incubators.isEmpty())
             return Results.ERROR("NO_RABBIT_INCUBATORS");
 
+        wasStacking = gui.getInventory().bundle.a;
+        NUtils.stackSwitch(true);
         ArrayList<Container> breedContainers = breeders.stream()
                 .filter(h -> h.bunnies.size() > 0)
                 .map(h -> h.container)
@@ -60,6 +64,7 @@ public class RabbitMaster implements Action {
         moveBunniesToIncubators(gui, breeders, incubators);
         redistributeBunnies(gui, breeders, incubators);
         cullBunnies(gui, breeders);
+        NUtils.stackSwitch(wasStacking);
         return Results.SUCCESS();
     }
 
@@ -184,29 +189,46 @@ public class RabbitMaster implements Action {
     }
 
     private void killRemainingRabbits(NGameUI gui, List<Hutch> incubators) throws InterruptedException {
+        FreeInventory2 freeInv = new FreeInventory2(new NContext(gui));
+
         for (Hutch h : incubators) {
-            if (h.does.isEmpty() && h.bucks.isEmpty())
+            if (h.does.isEmpty() && h.bucks.isEmpty()) {
                 continue;
+            }
+
             moveTo(gui, Finder.findGob(h.container.gobid));
             openContainer(gui, h.container);
 
             NInventory inv = gui.getInventory(HUTCH_NAME);
-            List<WItem> items = new ArrayList<WItem>();
+            List<WItem> items = new ArrayList<>();
             items.addAll(inv.getItems(DOE_ALIAS));
             items.addAll(inv.getItems(BUCK_ALIAS));
+
             for (WItem wi : items) {
+                if (gui.getInventory().getFreeSpace() == 0) {
+                    freeInv.run(gui);
+                }
                 new SelectFlowerAction("Wring neck", wi).run(gui);
-                NUtils.addTask(new WaitItems((NInventory) inv, new NAlias("Dead Rabbit"), 1));
+                NUtils.addTask(new WaitItems(inv, new NAlias("Dead Rabbit"), 1));
+                wi = inv.getItem(new NAlias("Dead Rabbit"));
 
-                wi = (WItem) inv.getItem(new NAlias("Dead Rabbit"));
+                if (gui.getInventory().getFreeSpace() == 0) {
+                    freeInv.run(gui);
+                }
                 new SelectFlowerAction("Flay", wi).run(gui);
-                NUtils.addTask(new WaitItems((NInventory) inv, new NAlias("Rabbit Carcass"), 1));
+                NUtils.addTask(new WaitItems(inv, new NAlias("Rabbit Carcass"), 1));
+                wi = inv.getItem(new NAlias("Rabbit Carcass"));
 
-                wi = (WItem) inv.getItem(new NAlias("Rabbit Carcass"));
+                if (gui.getInventory().getFreeSpace() == 0) {
+                    freeInv.run(gui);
+                }
                 new SelectFlowerAction("Clean", wi).run(gui);
-                NUtils.addTask(new WaitItems((NInventory) inv, new NAlias("Clean Rabbit Carcass"), 1));
+                NUtils.addTask(new WaitItems(inv, new NAlias("Clean Rabbit Carcass"), 1));
+                wi = inv.getItem(new NAlias("Clean Rabbit Carcass"));
 
-                wi = (WItem) inv.getItem(new NAlias("Clean Rabbit Carcass"));
+                if (gui.getInventory().getFreeSpace() == 0) {
+                    freeInv.run(gui);
+                }
                 new SelectFlowerAction("Butcher", wi).run(gui);
                 NUtils.addTask(new NTask() {
                     @Override
@@ -222,7 +244,7 @@ public class RabbitMaster implements Action {
 
             closeContainer(gui, h.container);
         }
-        new FreeInventory2(new NContext(gui)).run(gui);
+        freeInv.run(gui);
     }
 
     private void moveBunniesToIncubators(NGameUI gui, List<Hutch> breeders, List<Hutch> incubators) throws InterruptedException {
