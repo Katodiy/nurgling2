@@ -334,12 +334,12 @@ public class SeedCrop implements Action {
         new TakeAvailableItemsFromContainer(container, iseed, fetchCount, NInventory.QualityType.High).run(gui);
 
         // 5. Seed just those 4 tiles, individually
-//        for (Coord tile : toSeed) {
-//            new PathFinder(tile.mul(MCache.tilesz).add(MCache.tilehsz)).run(gui);
-//            NUtils.getGameUI().getInventory().activateItem(iseed);
-//            NUtils.getGameUI().map.wdgmsg("sel", tile, tile, 1);
-//            NUtils.getUI().core.addTask(new WaitGobsInField(new Area(tile, tile), 1));
-//        }
+        for (Coord tile : toSeed) {
+            new PathFinder(tile.mul(MCache.tilesz).add(MCache.tilehsz)).run(gui);
+            NUtils.getGameUI().getInventory().activateItem(iseed);
+            NUtils.getGameUI().map.wdgmsg("sel", tile, tile, 1);
+            NUtils.getUI().core.addTask(new WaitGobsInField(new Area(tile, tile), 1));
+        }
 
         // Return seeds to the chest
         for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
