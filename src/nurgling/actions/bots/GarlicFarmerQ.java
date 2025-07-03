@@ -30,8 +30,6 @@ public class GarlicFarmerQ implements Action {
                     new NAlias("plants/garlic"),
                     true
             ).run(gui);
-            if (NContext.findOut("Yellow Onion", 1) != null)
-                new CollectItemsToPile(NContext.findSpec(cropQ).getRCArea(), NContext.findOut("Garlic", 1).getRCArea(), new NAlias("items/garlic", "Garlic")).run(gui);
 
             new SeedCrop(NContext.findSpec(cropQ), NContext.findSpec(seedQ), new NAlias("plants/garlic"), new NAlias("Garlic"), false, true).run(gui);
         }
