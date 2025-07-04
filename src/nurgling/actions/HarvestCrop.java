@@ -263,8 +263,8 @@ public class HarvestCrop implements Action {
             dropAllItemsOfExactName(gui, stockpileItems);
         }
 
-        // 2. Transfer barrel items if required
         if(!isQualityGrid) {
+            // 2. Transfer barrel items if required
             boolean transferBarrel = !barrelItems.isEmpty()
                     && (!barrelOnlyIfInventoryFull || gui.getInventory().getFreeSpace() < 3);
 

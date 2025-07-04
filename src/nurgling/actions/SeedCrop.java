@@ -335,7 +335,7 @@ public class SeedCrop implements Action {
         // 4. Fetch top seeds to inventory
         new TakeAvailableItemsFromContainer(container, iseed, fetchCount, NInventory.QualityType.High).run(gui);
 
-        // 5. Seed just those 4 tiles, individually
+        // 5. Seed just those x*y tiles, individually
         for (Coord tile : toSeed) {
             new PathFinder(tile.mul(MCache.tilesz).add(MCache.tilehsz)).run(gui);
             NUtils.getGameUI().getInventory().activateItem(iseed);
@@ -362,6 +362,9 @@ public class SeedCrop implements Action {
                 crops.add(item);
             }
         }
+
+        // We have to return crops before seeds (example Carrot before Carrot Seed) because otherwise it will try to
+        // stack crop into seed.
 
         // Crops first (exclude seed items)
         for (WItem item : crops) {
