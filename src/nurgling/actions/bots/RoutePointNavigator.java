@@ -21,10 +21,17 @@ import java.util.Map;
 public class RoutePointNavigator implements Action {
     private final RoutePoint targetPoint;
     private final RouteGraph graph;
+    private int areaId;
 
     public RoutePointNavigator(RoutePoint targetPoint) {
         this.targetPoint = targetPoint;
         this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
+    }
+
+    public RoutePointNavigator(RoutePoint targetPoint, int areaId) {
+        this.targetPoint = targetPoint;
+        this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
+        this.areaId = areaId;
     }
 
     public RoutePointNavigator(Map<String, Object> settings) {
@@ -36,7 +43,7 @@ public class RoutePointNavigator implements Action {
             throw new IllegalArgumentException("RoutePointNavigator: areaId must be an Integer.");
         }
 
-        int areaId = (Integer) areaIdObj;
+        this.areaId = (Integer) areaIdObj;
         NArea area = NContext.findAreaById(areaId);
         this.graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
         this.targetPoint = this.graph.findAreaRoutePoint(area);
@@ -164,6 +171,10 @@ public class RoutePointNavigator implements Action {
                         }
                     }
                 }
+            }
+
+            if(currentPoint.getReachableAreas().contains(areaId)) {
+                return Results.SUCCESS();
             }
         }
 

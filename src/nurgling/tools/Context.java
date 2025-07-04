@@ -227,7 +227,7 @@ public class Context {
                         RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
 
                         if(graph.findAreaRoutePoint(area) != null) {
-                            new RoutePointNavigator(graph.findAreaRoutePoint(area)).run(NUtils.getGameUI());
+                            new RoutePointNavigator(graph.findAreaRoutePoint(area), area.id).run(NUtils.getGameUI());
                         } else {
                             break;
                         }
@@ -241,7 +241,7 @@ public class Context {
                         RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
 
                         if(graph.findAreaRoutePoint(area) != null) {
-                            new RoutePointNavigator(graph.findAreaRoutePoint(area)).run(NUtils.getGameUI());
+                            new RoutePointNavigator(graph.findAreaRoutePoint(area), area.id).run(NUtils.getGameUI());
                         } else {
                             break;
                         }
@@ -272,7 +272,7 @@ public class Context {
                         RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
 
                         if(graph.findAreaRoutePoint(area) != null) {
-                            new RoutePointNavigator(graph.findAreaRoutePoint(area)).run(NUtils.getGameUI());
+                            new RoutePointNavigator(graph.findAreaRoutePoint(area), area.id).run(NUtils.getGameUI());
                         } else {
                             break;
                         }
