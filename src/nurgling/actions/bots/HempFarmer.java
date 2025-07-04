@@ -37,10 +37,9 @@ public class HempFarmer implements Action {
             if(NContext.findOut("Hemp Fibres", 1)!=null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(),NContext.findOut("Hemp Fibres", 1).getRCArea(),new NAlias("hempfibre", "Hemp Fibres")).run(gui);
             new SeedCrop(NContext.findSpec(field),NContext.findSpec(seed),new NAlias("plants/hemp"),new NAlias("Hemp"), false).run(gui);
+
             return Results.SUCCESS();
         }
-
-
 
         return Results.FAIL();
     }

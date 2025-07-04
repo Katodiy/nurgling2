@@ -6,6 +6,7 @@ import nurgling.NConfig;
 public class FarmingSettingsPanel extends Panel {
     private TextEntry xEntry, yEntry;
     private CheckBox harvestRefillCheck;
+    private CheckBox cleanupQContainersCheck;
 
     public FarmingSettingsPanel() {
         super("Farming Settings");
@@ -17,6 +18,19 @@ public class FarmingSettingsPanel extends Panel {
             }
         };
         add(harvestRefillCheck, new Coord(UI.scale(10), y));
+        y += UI.scale(28);
+
+        cleanupQContainersCheck = new CheckBox(
+                "Keep quality grind containers at most half full.") {
+            public void set(boolean val) {
+                a = val;
+            }
+        };
+        add(cleanupQContainersCheck, new Coord(UI.scale(10), y));
+        y += UI.scale(18);
+
+        add(new Label("Excess lowest quality seeds will be moved to the trough if defined."),
+                new Coord(UI.scale(30), y));
         y += UI.scale(28);
 
         add(new Label("Seeding Pattern X (columns):"), new Coord(UI.scale(10), y));
@@ -48,6 +62,9 @@ public class FarmingSettingsPanel extends Panel {
         Boolean refill = (Boolean) NConfig.get(NConfig.Key.harvestautorefill);
         harvestRefillCheck.a = refill != null && refill;
 
+        Boolean cleanupQContainers = (Boolean) NConfig.get(NConfig.Key.cleanupQContainers);
+        cleanupQContainersCheck.a = cleanupQContainers != null && cleanupQContainers;
+
         String pat = (String) NConfig.get(NConfig.Key.qualityGrindSeedingPatter);
         if (pat == null || !pat.matches("\\d+x\\d+")) pat = "3x3";
         String[] parts = pat.split("x");
@@ -58,6 +75,7 @@ public class FarmingSettingsPanel extends Panel {
     @Override
     public void save() {
         NConfig.set(NConfig.Key.harvestautorefill, harvestRefillCheck.a);
+        NConfig.set(NConfig.Key.cleanupQContainers, cleanupQContainersCheck.a);
         String xVal = xEntry.text();
         String yVal = yEntry.text();
         if (!xVal.matches("\\d+")) xVal = "3";

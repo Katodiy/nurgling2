@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
@@ -15,20 +16,36 @@ public class HempFarmerQ implements Action {
 
         NArea.Specialisation cropQ = new NArea.Specialisation(Specialisation.SpecName.cropQ.toString(), "Hemp");
         NArea.Specialisation seedQ = new NArea.Specialisation(Specialisation.SpecName.seedQ.toString(), "Hemp");
+        NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
+
+        Boolean cleanupQContainers = (Boolean) NConfig.get(NConfig.Key.cleanupQContainers);
+
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(cropQ);
         req.add(seedQ);
 
-        new HarvestCrop(
-                NContext.findSpec(cropQ),
-                NContext.findSpec(seedQ),
-                null,
-                new NAlias("plants/hemp"),
-                true
-        ).run(gui);
-        if(NContext.findOut("Hemp Fibres", 1)!=null)
-            new CollectItemsToPile(NContext.findSpec(cropQ).getRCArea(),NContext.findOut("Hemp Fibres", 1).getRCArea(),new NAlias("hempfibre", "Hemp Fibres")).run(gui);
-        new SeedCrop(NContext.findSpec(cropQ),NContext.findSpec(seedQ),new NAlias("plants/hemp"),new NAlias("Hemp"), false, true).run(gui);
-        return Results.SUCCESS();
+        ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+        opt.add(trough);
+
+        if (new Validator(req, opt).run(gui).IsSuccess()) {
+            new HarvestCrop(
+                    NContext.findSpec(cropQ),
+                    NContext.findSpec(seedQ),
+                    null,
+                    new NAlias("plants/hemp"),
+                    true
+            ).run(gui);
+            if (NContext.findOut("Hemp Fibres", 1) != null)
+                new CollectItemsToPile(NContext.findSpec(cropQ).getRCArea(), NContext.findOut("Hemp Fibres", 1).getRCArea(), new NAlias("hempfibre", "Hemp Fibres")).run(gui);
+            new SeedCrop(NContext.findSpec(cropQ), NContext.findSpec(seedQ), new NAlias("plants/hemp"), new NAlias("Hemp"), false, true).run(gui);
+
+            if (cleanupQContainers && NContext.findSpec(trough) != null) {
+                new CleanupSeedQContainer(NContext.findSpec(seedQ), new NAlias("Hemp"), NContext.findSpec(trough)).run(gui);
+            }
+
+            return Results.SUCCESS();
+        }
+
+        return Results.FAIL();
     }
 }

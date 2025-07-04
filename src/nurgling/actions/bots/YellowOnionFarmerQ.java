@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
@@ -15,14 +16,18 @@ public class YellowOnionFarmerQ implements Action {
 
         NArea.Specialisation cropQ = new NArea.Specialisation(Specialisation.SpecName.cropQ.toString(), "Yellow Onion");
         NArea.Specialisation seedQ = new NArea.Specialisation(Specialisation.SpecName.seedQ.toString(), "Yellow Onion");
+        NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
+
+        Boolean cleanupQContainers = (Boolean) NConfig.get(NConfig.Key.cleanupQContainers);
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(cropQ);
         req.add(seedQ);
 
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+        opt.add(trough);
 
-        if(new Validator(req, opt).run(gui).IsSuccess()) {
+        if (new Validator(req, opt).run(gui).IsSuccess()) {
             new HarvestCrop(
                     NContext.findSpec(cropQ),
                     NContext.findSpec(seedQ),
@@ -30,12 +35,16 @@ public class YellowOnionFarmerQ implements Action {
                     new NAlias("plants/yellowonion"),
                     true
             ).run(gui);
-            if (NContext.findOut("Yellow Onion", 1) != null)
-                new CollectItemsToPile(NContext.findSpec(cropQ).getRCArea(), NContext.findOut("Yellow Onion", 1).getRCArea(), new NAlias("items/yellowonion", "Yellow Onion")).run(gui);
 
             new SeedCrop(NContext.findSpec(cropQ), NContext.findSpec(seedQ), new NAlias("plants/yellowonion"), new NAlias("Yellow Onion"), false, true).run(gui);
+
+            if (cleanupQContainers && NContext.findSpec(trough) != null) {
+                new CleanupSeedQContainer(NContext.findSpec(seedQ), new NAlias("Yellow Onion"), NContext.findSpec(trough)).run(gui);
+            }
+
+            return Results.SUCCESS();
         }
 
-        return Results.SUCCESS();
+        return Results.FAIL();
     }
 }

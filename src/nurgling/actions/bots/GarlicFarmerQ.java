@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
@@ -15,14 +16,18 @@ public class GarlicFarmerQ implements Action {
 
         NArea.Specialisation cropQ = new NArea.Specialisation(Specialisation.SpecName.cropQ.toString(), "Garlic");
         NArea.Specialisation seedQ = new NArea.Specialisation(Specialisation.SpecName.seedQ.toString(), "Garlic");
+        NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
+
+        Boolean cleanupQContainers = (Boolean) NConfig.get(NConfig.Key.cleanupQContainers);
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(cropQ);
         req.add(seedQ);
 
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+        opt.add(trough);
 
-        if(new Validator(req, opt).run(gui).IsSuccess()) {
+        if (new Validator(req, opt).run(gui).IsSuccess()) {
             new HarvestCrop(
                     NContext.findSpec(cropQ),
                     NContext.findSpec(seedQ),
@@ -32,8 +37,14 @@ public class GarlicFarmerQ implements Action {
             ).run(gui);
 
             new SeedCrop(NContext.findSpec(cropQ), NContext.findSpec(seedQ), new NAlias("plants/garlic"), new NAlias("Garlic"), false, true).run(gui);
+
+            if (cleanupQContainers && NContext.findSpec(trough) != null) {
+                new CleanupSeedQContainer(NContext.findSpec(seedQ), new NAlias("Garlic"), NContext.findSpec(trough)).run(gui);
+            }
+
+            return Results.SUCCESS();
         }
 
-        return Results.SUCCESS();
+        return Results.FAIL();
     }
 }
