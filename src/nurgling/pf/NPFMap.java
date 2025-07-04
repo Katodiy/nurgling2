@@ -307,7 +307,7 @@ public class NPFMap
                     for(Coord c : cand) {
                         String name = NUtils.getGameUI().ui.sess.glob.map.tilesetname(NUtils.getGameUI().ui.sess.glob.map.gettile(c));
                         if(!waterMode) {
-                            if (name != null && (name.startsWith("gfx/tiles/cave") || name.startsWith("gfx/tiles/rocks") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep"))) {
+                            if (name != null && (name.startsWith("gfx/tiles/cave") || name.startsWith("gfx/tiles/rocks") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep") || name.startsWith("gfx/tiles/nil"))) {
                                 cells[i][j].val = 2;
                             }
                         }
