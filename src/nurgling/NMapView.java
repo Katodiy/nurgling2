@@ -550,7 +550,7 @@ public class NMapView extends MapView
         {
             if (selection == null)
             {
-                selection = new NSelector();
+                selection = new NSelector(null);
             }
         }
         if ( isGobSelectionMode.get() )
@@ -636,6 +636,10 @@ public class NMapView extends MapView
 
     public class NSelector extends Selector
     {
+        public NSelector(Coord max) {
+            super(max);
+        }
+
         public boolean mmouseup(Coord mc, int button)
         {
             synchronized (NMapView.this)

@@ -69,7 +69,7 @@ public class TransferToPiles implements Action{
                     }
                 }
 
-                while(!(gui.getInventory().getItems(items,th)).isEmpty()) {
+                while(!(gui.getInventory().getItems(items,th)).isEmpty() && out!=null) {
                     PileMaker pm;
                     if(!(pm = new PileMaker(out, items, pileName)).run(gui).IsSuccess())
                         return Results.FAIL();
