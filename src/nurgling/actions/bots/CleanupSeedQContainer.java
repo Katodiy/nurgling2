@@ -52,6 +52,7 @@ public class CleanupSeedQContainer implements Action {
         ArrayList<WItem> seeds = gui.getInventory(container.cap).getItems(iseed);
 
         if (seeds.size() <= containerCapacity / 2) {
+            new CloseTargetContainer(container).run(gui);
             return Results.SUCCESS();
         }
 
@@ -69,8 +70,14 @@ public class CleanupSeedQContainer implements Action {
                 throw new RuntimeException("Failed to transfer to trough!");
             }
 
+            new PathFinder(containerGob).run(gui);
+
+            new OpenTargetContainer(container).run(gui);
+
             seeds = gui.getInventory(container.cap).getItems(iseed);
         }
+
+        new CloseTargetContainer(container).run(gui);
 
         return Results.SUCCESS();
     }

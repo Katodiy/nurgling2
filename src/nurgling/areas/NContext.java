@@ -471,7 +471,7 @@ public class NContext {
     private void navigateToAreaIfNeeded(String areaId) throws InterruptedException {
         NArea area = areas.get(areaId);
         if(!area.isVisible() && rps.containsKey(areaId)) {
-            new RoutePointNavigator(rps.get(areaId)).run(gui);
+            new RoutePointNavigator(rps.get(areaId), area.id).run(gui);
         }
     }
     public String createArea(String msg, BufferedImage bauble) throws InterruptedException {

@@ -253,17 +253,16 @@ public class HarvestCrop implements Action {
             else if (behavior == CropRegistry.StorageBehavior.STOCKPILE) stockpileItems.add(item);
         }
 
-        // In case item ends up in hand - drop it.
-        if(NUtils.getGameUI().vhand!=null) {
-            NUtils.drop(NUtils.getGameUI().vhand);
-        }
-
-        // 1. Always drop stockpile items
-        if(!stockpileItems.isEmpty()) {
-            dropAllItemsOfExactName(gui, stockpileItems);
-        }
-
         if(!isQualityGrid) {
+            // In case item ends up in hand - drop it.
+            if(NUtils.getGameUI().vhand!=null) {
+                NUtils.drop(NUtils.getGameUI().vhand);
+            }
+
+            // 1. Always drop stockpile items
+            if(!stockpileItems.isEmpty()) {
+                dropAllItemsOfExactName(gui, stockpileItems);
+            }
             // 2. Transfer barrel items if required
             boolean transferBarrel = !barrelItems.isEmpty()
                     && (!barrelOnlyIfInventoryFull || gui.getInventory().getFreeSpace() < 3);
