@@ -67,7 +67,7 @@ public class Finder
         ArrayList<Gob> result = new ArrayList<> ();
         synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
             for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
-                if (!(gob instanceof OCache.Virtual))
+                if (!(gob instanceof OCache.Virtual) && space!=null)
                 {
                     if (gob.rc.x >= space.a.x && gob.rc.y >= space.a.y && gob.rc.x <= space.b.x && gob.rc.y <= space.b.y)
                     {

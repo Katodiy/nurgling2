@@ -29,7 +29,7 @@ public class Dropper implements Action {
         ArrayList<WItem> fordrop = new ArrayList<>();
         while(true)
         {
-            NUtils.addTask(new WaitMoreItems( gui.getInventory(), oldItems.size() + 1));
+            NUtils.addTask(new WaitMoreItems( gui.getInventory(), 3));
             fordrop.clear();
             for(WItem item : gui.getInventory().getItems())
             {

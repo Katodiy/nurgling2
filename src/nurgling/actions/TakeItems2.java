@@ -128,7 +128,7 @@ public class TakeItems2 implements Action
         TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont,new HashSet<>(Arrays.asList(item)), null);
         tifc.minSize = left.get();
         tifc.run(gui);
-            new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
+        new CloseTargetContainer(cont).run(gui);
         return Results.SUCCESS();
     }
 }
