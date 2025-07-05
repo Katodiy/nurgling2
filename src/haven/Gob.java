@@ -654,7 +654,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	return(c.cast(attr));
     }
 
-    private void setattr(Class<? extends GAttrib> ac, GAttrib a) {
+    public void setattr(Class<? extends GAttrib> ac, GAttrib a) {
 	GAttrib prev = attr.remove(ac);
 	if(prev != null) {
 	    if((prev instanceof RenderTree.Node) && (prev.slots != null))
