@@ -30,7 +30,9 @@ public class Specialisation extends Window
         swill,
         trough,
         crop,
+        cropQ,
         seed,
+        seedQ,
         cows,
         sheeps,
         pigs,
@@ -87,7 +89,9 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.swill.toString(),"Swill",Resource.loadsimg("nurgling/categories/swill")));
         specialisation.add(new SpecialisationItem(SpecName.trough.toString(),"Trough for swill",Resource.loadsimg("nurgling/categories/trough")));
         specialisation.add(new SpecialisationItem(SpecName.crop.toString(),"Crop",Resource.loadsimg("nurgling/categories/crop")));
+        specialisation.add(new SpecialisationItem(SpecName.cropQ.toString(),"Crop Quality",Resource.loadsimg("nurgling/categories/crop")));
         specialisation.add(new SpecialisationItem(SpecName.seed.toString(),"Seeds of crop",Resource.loadsimg("nurgling/categories/seed")));
+        specialisation.add(new SpecialisationItem(SpecName.seedQ.toString(),"Seeds of crop quality",Resource.loadsimg("nurgling/categories/seed")));
         specialisation.add(new SpecialisationItem(SpecName.cows.toString(),"Cows",Resource.loadsimg("nurgling/categories/cows")));
         specialisation.add(new SpecialisationItem(SpecName.goats.toString(),"Goats",Resource.loadsimg("nurgling/categories/goats")));
         specialisation.add(new SpecialisationItem(SpecName.sheeps.toString(),"Sheep",Resource.loadsimg("nurgling/categories/sheeps")));

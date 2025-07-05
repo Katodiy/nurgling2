@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.*;
+import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -8,12 +9,10 @@ import nurgling.areas.NArea;
 import nurgling.tasks.GetCurs;
 import nurgling.tasks.WaitAnotherAmount;
 import nurgling.tasks.WaitGobsInField;
-import nurgling.tools.Finder;
-import nurgling.tools.NAlias;
-import nurgling.tools.NParser;
-import nurgling.tools.StackSupporter;
+import nurgling.tasks.WaitItems;
+import nurgling.tools.*;
 
-import java.util.ArrayList;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SeedCrop implements Action {
@@ -26,6 +25,7 @@ public class SeedCrop implements Action {
     final NAlias iseed;
 
     final boolean allowedToPlantFromStockpiles;
+    boolean isQualityGrid = false;
 
 
     public SeedCrop(NArea field, NArea seed, NAlias crop, NAlias iseed, boolean allowedToPlantFromStockpiles) {
@@ -36,9 +36,30 @@ public class SeedCrop implements Action {
         this.allowedToPlantFromStockpiles = allowedToPlantFromStockpiles;
     }
 
+    public SeedCrop(
+            NArea field,
+            NArea seed,
+            NAlias crop,
+            NAlias iseed,
+            boolean allowedToPlantFromStockpiles,
+            boolean isQualityGrid
+    ) {
+        this.field = field;
+        this.seed = seed;
+        this.crop = crop;
+        this.iseed = iseed;
+        this.allowedToPlantFromStockpiles = allowedToPlantFromStockpiles;
+        this.isQualityGrid = isQualityGrid;
+    }
+
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+
+        if (isQualityGrid) {
+            seedForQuality(gui);
+            return Results.SUCCESS();
+        }
 
         ArrayList<Gob> barrels = Finder.findGobs(seed, new NAlias("barrel"));
         ArrayList<Gob> stockPiles = Finder.findGobs(seed, new NAlias("stockpile"));
@@ -260,6 +281,191 @@ public class SeedCrop implements Action {
             gui.error("NO SEEDS: ABORT");
             throw new InterruptedException();
         }
+    }
+
+    private void seedForQuality(NGameUI gui) throws InterruptedException {
+        int[] seedingPattern = getQualitySeedingPattern();
+        int patX = seedingPattern[0];
+        int patY = seedingPattern[1];
+
+        Area.Tile[][] tiles = field.getArea().getTiles(field.getArea(), new NAlias("gfx/terobjs/moundbed"));
+
+        // Try both orientations
+        int patchesXY = countPossiblePatches(field.getArea(), tiles, patX, patY);
+        int patchesYX = countPossiblePatches(field.getArea(), tiles, patY, patX);
+
+        boolean useRotated = patchesYX > patchesXY;
+
+        int useX = useRotated ? patY : patX;
+        int useY = useRotated ? patX : patY;
+
+        ArrayList<Coord> toSeed = findFirstFreePatch(field.getArea(), tiles, useX, useY);
+
+        if (toSeed == null) {
+            gui.msg("No empty patch of " + useX + "x" + useY + " found for quality seeding!");
+            return;
+        }
+
+        // 2. Find all containers in the seed area (chests, cupboards, etc)
+        ArrayList<Container> containers = new ArrayList<>();
+        for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
+            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+            cand.initattr(Container.Space.class);
+            containers.add(cand);
+        }
+        if(containers.isEmpty())
+            throw new RuntimeException("No container found in seed area!");
+        Container container = containers.get(0);
+
+        new PathFinder(Finder.findGob(container.gobid)).run(gui);
+
+        // 3. Get all seeds in the container
+        new OpenTargetContainer(container).run(gui);
+        ArrayList<WItem> seeds = gui.getInventory(container.cap).getItems(iseed);
+
+        int canSeedCells = getSeedingCapacity(seeds);
+
+        if (canSeedCells < toSeed.size()) {
+            gui.error("Not enough seeds in container for quality seeding!");
+            throw new InterruptedException();
+        }
+
+        int fetchCount = Math.min(seeds.size(), gui.getInventory().getFreeSpace());
+
+        // 4. Fetch top seeds to inventory
+        new TakeAvailableItemsFromContainer(container, iseed, fetchCount, NInventory.QualityType.High).run(gui);
+
+        // 5. Seed just those x*y tiles, individually
+        for (Coord tile : toSeed) {
+            new PathFinder(tile.mul(MCache.tilesz).add(MCache.tilehsz)).run(gui);
+            NUtils.getGameUI().getInventory().activateItem(iseed);
+            NUtils.getGameUI().map.wdgmsg("sel", tile, tile, 1);
+            NUtils.getUI().core.addTask(new WaitGobsInField(new Area(tile, tile), 1));
+        }
+
+        // Return seeds to the chest
+        for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
+            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+            cand.initattr(Container.Space.class);
+            containers.add(cand);
+        }
+
+        List<WItem> crops = new ArrayList<>();
+        List<WItem> seedsList = new ArrayList<>();
+        Set<String> processed = new HashSet<>();
+
+        for (WItem item : seeds) {
+            String name = ((NGItem)item.item).name().toLowerCase();
+            if (name.contains("seed")) {
+                seedsList.add(item);
+            } else {
+                crops.add(item);
+            }
+        }
+
+        // We have to return crops before seeds (example Carrot before Carrot Seed) because otherwise it will try to
+        // stack crop into seed.
+
+        // Crops first (exclude seed items)
+        for (WItem item : crops) {
+            String itemName = ((NGItem)item.item).name();
+            if (processed.add(itemName)) {
+                new TransferToContainer(
+                        container,
+                        new NAlias(Collections.singletonList(itemName), Collections.singletonList("seed"))
+                ).run(gui);
+            }
+        }
+
+        // Seeds second
+        for (WItem item : seedsList) {
+            String itemName = ((NGItem)item.item).name();
+            if (processed.add(itemName)) {
+                new TransferToContainer(
+                        container,
+                        new NAlias(Collections.singletonList(itemName), Collections.emptyList())
+                ).run(gui);
+            }
+        }
+
+        new CloseTargetContainer(container).run(gui);
+    }
+
+    private int[] getQualitySeedingPattern() {
+        String pat = (String) nurgling.NConfig.get(nurgling.NConfig.Key.qualityGrindSeedingPatter);
+        if (pat == null || !pat.matches("\\d+x\\d+")) return new int[]{1, 4}; // default
+        String[] parts = pat.split("x");
+        try {
+            int x = Integer.parseInt(parts[0]);
+            int y = Integer.parseInt(parts[1]);
+            return new int[]{x, y};
+        } catch (Exception e) {
+            return new int[]{1, 4};
+        }
+    }
+
+    // Counts how many non-overlapping patches of size patX x patY fit in the area
+    private int countPossiblePatches(Area area, Area.Tile[][] tiles, int patX, int patY) {
+        int patches = 0;
+        boolean[][] used = new boolean[tiles.length][tiles[0].length];
+        for (int i = 0; i <= tiles.length - patX; i++) {
+            for (int j = 0; j <= tiles[0].length - patY; j++) {
+                boolean ok = true;
+                for (int dx = 0; dx < patX; dx++) {
+                    for (int dy = 0; dy < patY; dy++) {
+                        if (used[i+dx][j+dy]) ok = false;
+                        Area.Tile tile = tiles[i+dx][j+dy];
+                        if (!nurgling.tools.NParser.checkName(tile.name, "field") || !tile.isFree)
+                            ok = false;
+                    }
+                }
+                if (ok) {
+                    patches++;
+                    for (int dx = 0; dx < patX; dx++)
+                        for (int dy = 0; dy < patY; dy++)
+                            used[i+dx][j+dy] = true;
+                }
+            }
+        }
+        return patches;
+    }
+
+    private ArrayList<Coord> findFirstFreePatch(Area area, Area.Tile[][] tiles, int patX, int patY) {
+        for (int i = 0; i <= tiles.length - patX; i++) {
+            for (int j = 0; j <= tiles[0].length - patY; j++) {
+                boolean ok = true;
+                ArrayList<Coord> patch = new ArrayList<>();
+                for (int dx = 0; dx < patX; dx++) {
+                    for (int dy = 0; dy < patY; dy++) {
+                        Area.Tile tile = tiles[i+dx][j+dy];
+                        if (!nurgling.tools.NParser.checkName(tile.name, "field") || !tile.isFree)
+                            ok = false;
+                        patch.add(new Coord(area.ul.x + i + dx, area.ul.y + j + dy));
+                    }
+                }
+                if (ok) return patch;
+            }
+        }
+        return null;
+    }
+
+    private int getSeedingCapacity(List<WItem> seeds) {
+        int totalCells = 0;
+        for (WItem item : seeds) {
+            int itemCount = 1; // Default: crops count as 1
+
+            for (ItemInfo info : item.item.info()) {
+                if (info instanceof GItem.Amount) {
+                    int qty = ((GItem.Amount) info).itemnum();
+                    itemCount = qty / 5; // Each 5 seeds = 1 cell
+
+                    break;
+                }
+            }
+            // If it's a crop, itemCount remains 1
+            totalCells += itemCount;
+        }
+        return totalCells;
     }
 }
 

@@ -15,7 +15,6 @@ public class BeetrootFarmer implements Action {
         NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Beetroot");
         NArea beetroot = NContext.findOut("Beetroot", 1);
         NArea beetrootAsSeed = NContext.findIn("Beetroot");
-        NArea beetrootLeaves = NContext.findOut("Beetroot Leaves", 1);
         NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
         NArea.Specialisation swill = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
 

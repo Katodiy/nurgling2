@@ -5,6 +5,8 @@ import nurgling.*;
 import nurgling.areas.NArea;
 import nurgling.conf.CropRegistry;
 import nurgling.tasks.NoGob;
+import nurgling.tools.Container;
+import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -20,6 +22,7 @@ public class HarvestCrop implements Action {
     NArea swill = null;
 
     final NAlias crop;
+    boolean isQualityGrid = false;
 
     public HarvestCrop(NArea field, NArea seed, NArea trough, NAlias crop) {
         this.field = field;
@@ -29,15 +32,26 @@ public class HarvestCrop implements Action {
     }
 
     public HarvestCrop(NArea field, NArea seed, NArea trough, NArea swill, NAlias crop) {
-        this(field,seed,trough,crop);
+        this(field,seed,trough,crop, false);
         this.swill = swill;
+    }
+
+    public HarvestCrop(NArea field, NArea seed, NArea trough, NAlias crop, boolean isQualityGrid) {
+        this(field,seed,trough,crop);
+        this.isQualityGrid = isQualityGrid;
     }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
 
         ArrayList<Gob> barrels = Finder.findGobs(seed, new NAlias("barrel"));
-        Gob trough = Finder.findGob(trougha, new NAlias("gfx/terobjs/trough"));
+
+        Gob trough = null;
+
+        if(!isQualityGrid) {
+            trough = Finder.findGob(trougha, new NAlias("gfx/terobjs/trough"));
+        }
+
         Gob cistern = null;
         if(this.swill!=null)
         {
@@ -239,44 +253,82 @@ public class HarvestCrop implements Action {
             else if (behavior == CropRegistry.StorageBehavior.STOCKPILE) stockpileItems.add(item);
         }
 
-        // In case item ends up in hand - drop it.
-        if(NUtils.getGameUI().vhand!=null) {
-            NUtils.drop(NUtils.getGameUI().vhand);
-        }
-
-        // 1. Always drop stockpile items
-        if(!stockpileItems.isEmpty()) {
-            dropAllItemsOfExactName(gui, stockpileItems);
-        }
-
-        // 2. Transfer barrel items if required
-        boolean transferBarrel = !barrelItems.isEmpty()
-                && (!barrelOnlyIfInventoryFull || gui.getInventory().getFreeSpace() < 3);
-
-        if (transferBarrel) {
-            NAlias seedAlias = new NAlias(((NGItem) barrelItems.get(0).item).name());
-            for (Gob barrel : barrels) {
-                TransferToBarrel tb = new TransferToBarrel(barrel, seedAlias);
-                tb.run(gui);
-                if (!tb.isFull()) break;
+        if(!isQualityGrid) {
+            // In case item ends up in hand - drop it.
+            if(NUtils.getGameUI().vhand!=null) {
+                NUtils.drop(NUtils.getGameUI().vhand);
             }
-            // 3. Leftover to trough/cistern
-            if (!gui.getInventory().getItems(seedAlias).isEmpty()) {
-                new TransferToTrough(trough, seedAlias, cistern).run(gui);
+
+            // 1. Always drop stockpile items
+            if(!stockpileItems.isEmpty()) {
+                dropAllItemsOfExactName(gui, stockpileItems);
             }
+            // 2. Transfer barrel items if required
+            boolean transferBarrel = !barrelItems.isEmpty()
+                    && (!barrelOnlyIfInventoryFull || gui.getInventory().getFreeSpace() < 3);
+
+            if (transferBarrel) {
+                NAlias seedAlias = new NAlias(((NGItem) barrelItems.get(0).item).name());
+                for (Gob barrel : barrels) {
+                    TransferToBarrel tb = new TransferToBarrel(barrel, seedAlias);
+                    tb.run(gui);
+                    if (!tb.isFull()) break;
+                }
+                // 3. Leftover to trough/cistern
+                if (!gui.getInventory().getItems(seedAlias).isEmpty()) {
+                    new TransferToTrough(trough, seedAlias, cistern).run(gui);
+                }
+            }
+        } else {
+            // Find all containers in the seed area
+            ArrayList<Container> containers = new ArrayList<>();
+            for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
+                Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+                cand.initattr(Container.Space.class);
+                containers.add(cand);
+            }
+
+            if(containers.isEmpty())
+                throw new RuntimeException("No container found in seed area!");
+            Container container = containers.get(0);
+
+            List<WItem> allItems = new ArrayList<>();
+            allItems.addAll(barrelItems);
+            allItems.addAll(stockpileItems);
+
+            Set<String> processed = new HashSet<>();
+
+            for (WItem item : allItems) {
+                String itemName = ((NGItem)item.item).name();
+                if(processed.add(itemName)) {
+                    new TransferToContainer(container, new NAlias(itemName)).run(gui);
+                }
+            }
+
+            new CloseTargetContainer(container).run(gui);
         }
+
     }
 
     private boolean hasAnyCropStage(NArea field, NAlias crop) throws InterruptedException {
         List<CropRegistry.CropStage> cropStages = CropRegistry.HARVESTABLE.getOrDefault(crop, Collections.emptyList());
+
+        if (cropStages.isEmpty())
+            return false;
+
         for (CropRegistry.CropStage cs : cropStages) {
             if (!Finder.findGobs(field, crop, cs.stage).isEmpty())
                 return true;
         }
+
         return false;
     }
 
     private boolean requiresBarrel(NAlias crop) {
+        if(isQualityGrid) {
+            return false;
+        }
+
         for (CropRegistry.CropStage stage : CropRegistry.HARVESTABLE.getOrDefault(crop, Collections.emptyList())) {
             if (stage.storageBehavior == CropRegistry.StorageBehavior.BARREL) {
                 return true;

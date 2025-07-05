@@ -58,6 +58,7 @@ public class NSettingsWindow extends Window {
         SettingsCategory bots = new SettingsCategory("Bots", new Panel("Bots"), container);
         bots.addChild(new SettingsItem("Feed Clover", new FeedClover(), container));
         bots.addChild(new SettingsItem("Eating bot", new Eater(), container));
+        bots.addChild(new SettingsItem("Farming Settings", new FarmingSettingsPanel(), container));
 
         list.addCategory(general);
         list.addCategory(gameenvironment);
