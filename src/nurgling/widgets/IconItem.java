@@ -116,7 +116,7 @@ public class IconItem extends Widget
             {
                 ArrayList<String> opt = new ArrayList<String>() {
                     {
-                        if (parent instanceof IngredientContainer)
+                        if (parent instanceof IngredientContainer || parent instanceof DropContainer)
                             add("Threshold");
                         add("Delete");
                         if (parent instanceof IngredientContainer) {
@@ -131,7 +131,7 @@ public class IconItem extends Widget
             {
                 ArrayList<String> uopt = new ArrayList<String>(){
                     {
-                        if(parent instanceof IngredientContainer) {
+                        if(parent instanceof IngredientContainer || parent instanceof DropContainer) {
                             add("Threshold");
                         }
                         add("Delete");
@@ -228,7 +228,10 @@ public class IconItem extends Widget
                         IconItem.this.isThreshold = true;
                         IconItem.this.val = Integer.valueOf(te.text());
                         IconItem.this.q = new TexI(NStyle.iiqual.render(te.text()).img);
-                        ((IngredientContainer)IconItem.this.parent).setThreshold(IconItem.this.name,IconItem.this.val);
+                        if(parent instanceof IngredientContainer)
+                            ((IngredientContainer)IconItem.this.parent).setThreshold(IconItem.this.name,IconItem.this.val);
+                        else
+                            ((DropContainer)IconItem.this.parent).setThreshold(IconItem.this.name,IconItem.this.val);
                     }
                     catch (NumberFormatException e)
                     {

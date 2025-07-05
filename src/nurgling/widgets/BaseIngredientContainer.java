@@ -19,7 +19,8 @@ public class BaseIngredientContainer extends Widget implements DTarget, Scrollab
     private static TexI freeLabel2 = new TexI(Text.render("or select it from the categories").img);
 
     public Scrollbar sb;
-    private int maxy = 0, cury = 0;
+    protected int maxy = 0;
+    protected int cury = 0;
     protected ArrayList<Ingredient> items = new ArrayList<>();
     protected ArrayList<IconItem> icons = new ArrayList<>();
     protected String type;
