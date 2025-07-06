@@ -80,7 +80,7 @@ public class NMiniMap extends MiniMap {
         if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
             g.chcolor(VIEW_FOG_COLOR);
             for (FogArea.Rectangle rect : fogArea.getCoveredAreas()) {
-                if (curloc.seg.id == rect.seg_id && rect.ul != null && rect.br != null) {
+                if (rect!=null && curloc.seg.id == rect.seg_id && rect.ul != null && rect.br != null) {
                     g.frect2( p2c(rect.ul.sub(sessloc.tc).mul(tilesz)), p2c(rect.br.sub(sessloc.tc).mul(tilesz)));
                 }
             }

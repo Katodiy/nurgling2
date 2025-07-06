@@ -9,6 +9,7 @@ import java.util.HashSet;
 
 public class StackSupporter {
     private static final HashMap<HashSet<String>,Integer> catSize = new HashMap<>();
+    private static final HashSet<String> catExceptions = new HashSet<>();
     static {
         HashSet<String> size3 = new HashSet<>();
         size3.add("Spices");
@@ -80,7 +81,7 @@ public class StackSupporter {
         HashSet<String> size4 = new HashSet<>();
         size4.add("Hide Fresh");
         size4.add("Prepared Animal Hide");
-        size4.add("Bone Material");
+        size4.add("Fake Bone Material");
         size4.add("Coal");
         size4.add("Wool");
         catSize.put(size4,4);
@@ -110,6 +111,16 @@ public class StackSupporter {
         size10.add("Nugget of Any Common Metal");
         size10.add("Nugget of Any Metal");
         catSize.put(size10,10);
+    }
+
+    static
+    {
+        catExceptions.add("Moose Antlers");
+        catExceptions.add("Red Deer Antlers");
+        catExceptions.add("Reindeer Antlers");
+        catExceptions.add("Roe Deer Antlers");
+        catExceptions.add("Wolf's Claw");
+        catExceptions.add("Lynx Claws");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln");
     public static boolean isStackable(NInventory inv, String name)
@@ -141,6 +152,10 @@ public class StackSupporter {
 
     public static int getMaxStackSize(String name)
     {
+        if(catExceptions.contains(name))
+        {
+            return 1;
+        }
         ArrayList<String> categories = VSpec.getCategory(name);
         for(String cat: categories)
         {
