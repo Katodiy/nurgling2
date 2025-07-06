@@ -126,15 +126,15 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.fforge.toString(),"Finery Forge",Resource.loadsimg("nurgling/categories/fineryforge")));
         specialisation.add(new SpecialisationItem(SpecName.anvil.toString(),"Anvil",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.dreamcatcher.toString(),"Dream Catcher",Resource.loadsimg("nurgling/categories/dream-catcher")));
-        specialisation.add(new SpecialisationItem(SpecName.meatgrinder.toString(),"Meat Grinder",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.meatgrinder.toString(),"Meat Grinder",Resource.loadsimg("nurgling/categories/meat_grinder")));
         specialisation.add(new SpecialisationItem(SpecName.churn.toString(),"Churn",Resource.loadsimg("nurgling/categories/anvil")));
-        specialisation.add(new SpecialisationItem(SpecName.loom.toString(),"Loom",Resource.loadsimg("nurgling/categories/anvil")));
-        specialisation.add(new SpecialisationItem(SpecName.ropewalk.toString(),"Rope Walk",Resource.loadsimg("nurgling/categories/anvil")));
-        specialisation.add(new SpecialisationItem(SpecName.crucible.toString(),"Crucible",Resource.remote().loadwait("paginae/bld/crucible").flayer(Resource.imgc).img));
-        specialisation.add(new SpecialisationItem(SpecName.pow.toString(),"Fire Place",Resource.loadsimg("nurgling/categories/anvil")));
-        specialisation.add(new SpecialisationItem(SpecName.potterswheel.toString(),"Potters Wheel",Resource.loadsimg("nurgling/categories/anvil")));
-        specialisation.add(new SpecialisationItem(SpecName.barrelworkarea.toString(),"Craft area with barrels",Resource.loadsimg("nurgling/categories/anvil")));
-        specialisation.add(new SpecialisationItem(SpecName.deer.toString(),"Deer",Resource.loadsimg("nurgling/categories/horses")));
+        specialisation.add(new SpecialisationItem(SpecName.loom.toString(),"Loom",Resource.loadsimg("nurgling/categories/loom")));
+        specialisation.add(new SpecialisationItem(SpecName.ropewalk.toString(),"Rope Walk",Resource.loadsimg("nurgling/categories/rope_walk")));
+        specialisation.add(new SpecialisationItem(SpecName.crucible.toString(),"Crucible",Resource.loadsimg("nurgling/categories/crucible")));
+        specialisation.add(new SpecialisationItem(SpecName.pow.toString(),"Fire Place",Resource.loadsimg("nurgling/categories/fire_place")));
+        specialisation.add(new SpecialisationItem(SpecName.potterswheel.toString(),"Potters Wheel",Resource.loadsimg("nurgling/categories/potters_wheel")));
+        specialisation.add(new SpecialisationItem(SpecName.barrelworkarea.toString(),"Craft area with barrels",Resource.loadsimg("nurgling/categories/barrel_work_area")));
+        specialisation.add(new SpecialisationItem(SpecName.deer.toString(),"Deer",Resource.loadsimg("nurgling/categories/reindeers")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override

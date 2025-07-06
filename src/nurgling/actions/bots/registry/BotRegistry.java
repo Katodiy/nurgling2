@@ -124,8 +124,8 @@ public class BotRegistry {
         bots.add(new BotDescriptor("zoneminer", BotDescriptor.BotType.UTILS, "Mine in area", "Mine rocks in the area.", false, true, MineAction.class, "zoneminer", true));
         bots.add(new BotDescriptor("bed", BotDescriptor.BotType.UTILS, "Go to bed", "Go to any free bed in a bed area nearby.", true, false, Sleep.class, "bed", false));
         bots.add(new BotDescriptor("unbox", BotDescriptor.BotType.UTILS, "Create piles with soil", "Create piles with soil in area.", false, true, CreateSoilPiles.class, "unbox", false));
-        bots.add(new BotDescriptor("test1", BotDescriptor.BotType.UTILS, "Destroyer", "Destroy objects in area.", false, true, Destroyer.class, "test1", false));
-        bots.add(new BotDescriptor("test2", BotDescriptor.BotType.UTILS, "Survey Supporter", "Survey Supporter.", false, true, SurveySupport.class, "test2", false));
+        bots.add(new BotDescriptor("test1", BotDescriptor.BotType.UTILS, "Destroyer", "Destroy objects in area.", false, true, Destroyer.class, "destroy", false));
+        bots.add(new BotDescriptor("test2", BotDescriptor.BotType.UTILS, "Survey Supporter", "Survey Supporter.", false, true, SurveySupport.class, "flag", false));
         bots.add(new BotDescriptor("dream_catcher", BotDescriptor.BotType.UTILS, "Collect dreams", "Collect dreams from all dream catchers in a dream catcher area.", true, true, CollectDreams.class, "dream_catcher", false));
         bots.add(new BotDescriptor("bugs", BotDescriptor.BotType.UTILS, "Catch bugs", "Catch bugs around player.", false, true, CatchBugsAround.class, "bugs", false));
 

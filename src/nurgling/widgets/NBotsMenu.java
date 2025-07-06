@@ -32,7 +32,7 @@ public class NBotsMenu extends Widget
                 BotDescriptor.BotType.PRODUCTIONS, "productions",
                 BotDescriptor.BotType.BATTLE,      "battle",
                 BotDescriptor.BotType.FARMING,     "farming",
-                BotDescriptor.BotType.FARMING_QUALITY,  "farming",
+                BotDescriptor.BotType.FARMING_QUALITY,  "quality",
                 BotDescriptor.BotType.UTILS,       "utils",
                 BotDescriptor.BotType.BUILD,       "build",
                 BotDescriptor.BotType.TOOLS,       "tools"
