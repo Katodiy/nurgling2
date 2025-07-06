@@ -18,6 +18,8 @@ public class NArea
     public String path = "";
     public boolean hide = false;
 
+
+
     public static class Specialisation
     {
         public String name;
@@ -445,6 +447,16 @@ public class NArea
             pos.x += MCache.tilesz.x;
         }
         return tiles;
+    }
+
+    public Coord3f getCenter3f() {
+        Pair<Coord2d,Coord2d> rcArea = getRCArea();
+        if(rcArea!=null)
+        {
+            Coord2d center = (rcArea.b.sub(rcArea.a)).div(2).add(rcArea.a);
+            return NUtils.getGameUI().map.glob.map.getzp(center);
+        }
+        return null;
     }
 
 }

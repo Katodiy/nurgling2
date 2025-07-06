@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import haven.render.*;
 import nurgling.NGob;
+import nurgling.areas.NArea;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 
@@ -111,40 +112,50 @@ public class NPathVisualizer implements RenderTree.Node {
             if(NUtils.getGameUI().map != null) {
                 RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
                 ArrayList<Pair<Coord3f, Coord3f>> gpf = new ArrayList<>();
+                ArrayList<Pair<Coord3f, Coord3f>> gpfconnect = new ArrayList<>();
                 ArrayList<RoutePoint> points = new ArrayList<>(graph.getPoints());
                 for(RoutePoint point : points)
                 {
                     if(NUtils.getGameUI().map.glob.map.findGrid(point.gridId)!=null)
                     {
                         Coord3f one3f = point.toCoord3f(NUtils.getGameUI().map.glob.map);
-                        for(Integer nei:point.getNeighbors())
-                        {
-                            Integer hash = (new Pair<>(point.hashCode(),nei.hashCode())).hashCode();
-                            if(!added.contains(hash))
-                            {
-                                if(NUtils.getGameUI().map.glob.map.findGrid(point.gridId)!=null) {
-                                    if(graph.getPoint(nei) != null) {
-                                        if(NUtils.getGameUI().map.glob.map != null) {
-                                            RoutePoint routePoint = graph.getPoint(nei);
-                                            if (routePoint != null) {
-                                                Coord3f another3f = routePoint.toCoord3f(NUtils.getGameUI().map.glob.map);
-                                                if(one3f!=null && another3f!=null)
-                                                {
-                                                    gpf.add(new Pair<>(another3f,one3f));
-                                                    added.add(hash);
-                                                    added.add((new Pair<>(nei.hashCode(), point.hashCode())).hashCode());
+                        if(one3f!=null) {
+                            for (Integer nei : point.getNeighbors()) {
+                                Integer hash = (new Pair<>(point.hashCode(), nei.hashCode())).hashCode();
+                                if (!added.contains(hash)) {
+                                    if (NUtils.getGameUI().map.glob.map.findGrid(point.gridId) != null) {
+                                        if (graph.getPoint(nei) != null) {
+                                            if (NUtils.getGameUI().map.glob.map != null) {
+                                                RoutePoint routePoint = graph.getPoint(nei);
+                                                if (routePoint != null) {
+                                                    Coord3f another3f = routePoint.toCoord3f(NUtils.getGameUI().map.glob.map);
+                                                    if (one3f != null && another3f != null) {
+                                                        gpf.add(new Pair<>(another3f, one3f));
+                                                        added.add(hash);
+                                                        added.add((new Pair<>(nei.hashCode(), point.hashCode())).hashCode());
+                                                    }
                                                 }
                                             }
                                         }
+
                                     }
                                 }
                             }
+                            for (Integer areaid : point.getReachableAreas()) {
+                                NArea area = NUtils.getGameUI().map.glob.map.areas.get(areaid);
+                                Coord3f center3f = area.getCenter3f();
+                                if (center3f != null)
+                                    gpfconnect.add(new Pair<>(center3f, one3f));
+                            }
                         }
+
                     }
                 }
 
                 MovingPath path = paths.get(PathCategory.GPF);
                 path.update(gpf);
+                MovingPath pathconnect = paths.get(PathCategory.GPFAREAS);
+                pathconnect.update(gpfconnect);
             }
         }
     }
@@ -279,6 +290,7 @@ public class NPathVisualizer implements RenderTree.Node {
         AGGRESSIVE_ANIMAL(new Color(255, 179, 122, 255), true), // Путь агрессивного животного
         PF(new Color(220, 255, 64, 255), true),          // Путь PathFinder
         GPF(new Color(255, 137, 43, 255), true),          // Путь PathFinder
+        GPFAREAS(new Color(31, 222, 10, 255), true),          // Путь PathFinder
         OTHER(new Color(187, 187, 187, 255));            // Прочие пути
 
         private final Pipe.Op state; // Состояние рендеринга
