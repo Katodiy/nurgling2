@@ -408,24 +408,32 @@ public class PathFinder implements Action {
     }
 
     public static boolean isAvailable(Gob target) throws InterruptedException {
+        if(NUtils.player() == null)
+            return false;
         PathFinder pf = new PathFinder(target);
         LinkedList<Graph.Vertex> res = pf.construct(true);
         return res != null || pf.dn;
     }
 
     public static boolean isAvailable(Coord2d target) throws InterruptedException {
+        if(NUtils.player() == null)
+            return false;
         PathFinder pf = new PathFinder(target);
         LinkedList<Graph.Vertex> res = pf.construct(true);
         return res != null || pf.dn;
     }
 
     public static boolean isAvailable(Gob target, boolean hardMode) throws InterruptedException {
+        if(NUtils.player() == null)
+            return false;
         PathFinder pf = new PathFinder(target);
         pf.isHardMode = true;
         return pf.construct(true) != null;
     }
 
     public static boolean isAvailable(Coord2d begin, Coord2d target, boolean gatesAlwaysClosed) throws InterruptedException {
+        if(NUtils.player() == null)
+            return false;
         PathFinder pf = new PathFinder(begin, target);
         pf.gatesAlwaysClosed = gatesAlwaysClosed;
         LinkedList<Graph.Vertex> res = pf.construct(true);
@@ -433,6 +441,8 @@ public class PathFinder implements Action {
     }
 
     public static boolean isAvailable(Coord2d begin, Gob target, boolean gatesAlwaysClosed) throws InterruptedException {
+        if(NUtils.player() == null)
+            return false;
         PathFinder pf = new PathFinder(begin, target);
         pf.gatesAlwaysClosed = gatesAlwaysClosed;
         LinkedList<Graph.Vertex> res = pf.construct(true);

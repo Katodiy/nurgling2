@@ -308,7 +308,7 @@ public class NArea
         }
     }
 
-    boolean isVisible() {
+    public boolean isVisible() {
         for (Long id : space.space.keySet()) {
             synchronized (NUtils.getGameUI().map.glob.map.grids) {
                 for (MCache.Grid g : NUtils.getGameUI().map.glob.map.grids.values()) {
@@ -453,10 +453,33 @@ public class NArea
         Pair<Coord2d,Coord2d> rcArea = getRCArea();
         if(rcArea!=null)
         {
-            Coord2d center = (rcArea.b.sub(rcArea.a)).div(2).add(rcArea.a);
-            return NUtils.getGameUI().map.glob.map.getzp(center);
+            Coord2d center = getCenter2d();
+            if(center!=null)
+                return NUtils.getGameUI().map.glob.map.getzp(center);
         }
         return null;
+    }
+
+    public Coord2d getCenter2d() {
+        Pair<Coord2d,Coord2d> rcArea = getRCArea();
+        if(rcArea!=null)
+        {
+            return  (rcArea.b.sub(rcArea.a)).div(2).add(rcArea.a);
+        }
+        return null;
+    }
+
+    public double getDistance(Coord2d myrc) {
+        double distance = Double.MAX_VALUE;
+        Pair<Coord2d,Coord2d> rcArea = getRCArea();
+        if(rcArea!=null)
+        {
+            distance = Math.min(myrc.dist(rcArea.a),distance);
+            distance = Math.min(myrc.dist(rcArea.b),distance);
+            distance = Math.min(myrc.dist(Coord2d.of(rcArea.a.x,rcArea.b.y)),distance);
+            distance = Math.min(myrc.dist(Coord2d.of(rcArea.b.x,rcArea.a.y)),distance);
+        }
+        return distance;
     }
 
 }

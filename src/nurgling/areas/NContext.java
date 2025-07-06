@@ -980,41 +980,4 @@ public class NContext {
         }
         return res;
     }
-
-    public static ArrayList<NArea> getAllVisible() throws InterruptedException {
-        double dist = 10000;
-        ArrayList<NArea> res = new ArrayList<>();
-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null) {
-            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
-            for(Integer id : nids) {
-                if(id>=0) {
-                    NArea test = NUtils.getGameUI().map.glob.map.areas.get(id);
-                    if(test.isVisible()) {
-                        Pair<Coord2d, Coord2d> testrc = test.getRCArea();
-                        if(testrc != null) {
-                            Coord2d playerRelativeCoord = NUtils.player().rc;
-                            ArrayList<Gob> gobs = Finder.findGobs(test);
-                            boolean isReachable = false;
-
-                            if(gobs.isEmpty()) {
-                                isReachable = PathFinder.isAvailable(testrc.a, playerRelativeCoord, false) || PathFinder.isAvailable(testrc.b, playerRelativeCoord, false);
-                            } else {
-                                for(Gob gob : gobs) {
-                                    if (PathFinder.isAvailable(gob)) {
-                                        isReachable = true;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (testrc.a.dist(playerRelativeCoord) + testrc.b.dist(playerRelativeCoord) < dist && isReachable) {
-                                res.add(test);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return res;
-    }
 }

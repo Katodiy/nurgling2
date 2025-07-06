@@ -217,15 +217,11 @@ public class RouteGraphManager {
 
         // Merge reachableAreas
         for (int area : b.getReachableAreas()) {
-            if (!a.getReachableAreas().contains(area)) {
-                a.getReachableAreas().add(area);
-            }
+            a.getReachableAreas().add(area);
         }
 
         for (int area : a.getReachableAreas()) {
-            if (!b.getReachableAreas().contains(area)) {
-                b.getReachableAreas().add(area);
-            }
+            b.getReachableAreas().add(area);
         }
     }
 }

@@ -1,12 +1,11 @@
 package nurgling.routes;
 
-import haven.Coord;
-import haven.Coord2d;
-import haven.Coord3f;
-import haven.MCache;
+import haven.*;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.actions.PathFinder;
 import nurgling.areas.NArea;
+import nurgling.tools.Finder;
 
 import java.util.*;
 
@@ -19,7 +18,7 @@ public class RoutePoint {
 
     public ArrayList<Integer> neighbors = new ArrayList<>();
     public Map<Integer, Connection> connections = new HashMap<>();
-    private ArrayList<Integer> reachableAreas = new ArrayList<>();
+    private HashMap<Integer,Double> areasDistance = new HashMap<>();
 
     public class Connection {
         public String connectionTo;
@@ -97,27 +96,45 @@ public class RoutePoint {
         this.gridId = gridId;
     }
 
-    public ArrayList<Integer> getReachableAreas() {
-        return reachableAreas;
+    public HashSet<Integer> getReachableAreas() {
+        return new HashSet<>(areasDistance.keySet());
     }
 
-    public void addReachableAreas(ArrayList<NArea> reachableAreas) {
-        for (NArea area : reachableAreas) {
-            this.reachableAreas.add(area.id);
+    public void addReachableAreas() throws InterruptedException {
+        for (NArea area: NUtils.getGameUI().map.glob.map.areas.values())
+        {
+            Pair<Coord2d,Coord2d> rcArea = area.getRCArea();
+            if(rcArea!=null)
+            {
+                Coord2d myrc = toCoord2d(NUtils.getGameUI().map.glob.map);
+                ArrayList<Gob> gobs = Finder.findGobs(area);
+                boolean isReachable = false;
+
+                if(gobs.isEmpty()) {
+                    isReachable = PathFinder.isAvailable(area.getCenter2d());
+                } else {
+                    for(Gob gob : gobs) {
+                        if (PathFinder.isAvailable(gob)) {
+                            isReachable = true;
+                            break;
+                        }
+                    }
+                }
+                if(isReachable)
+                {
+                    areasDistance.put(area.id, area.getDistance(myrc));
+                }
+            }
         }
     }
 
-    public void addReachableArea(int reachableAreas) {
-        this.reachableAreas.add(reachableAreas);
+    public void addReachableArea(int reachableAreas, double distance) {
+        this.areasDistance.put(reachableAreas,distance);
 
     }
 
     public void deleteReachableArea(Integer areaId) {
-        for (int i = 0; i < reachableAreas.size(); i++) {
-            if (reachableAreas.get(i) == areaId) {
-                reachableAreas.remove(i);
-            }
-        }
+        areasDistance.remove(areaId);
     }
 
     public Coord2d toCoord2d(MCache mcache) {
@@ -166,5 +183,9 @@ public class RoutePoint {
             this.id = newHashCode;
         }
         return newHashCode;
+    }
+
+    public double getDistanceToArea(int reachableArea) {
+        return areasDistance.get(reachableArea);
     }
 }

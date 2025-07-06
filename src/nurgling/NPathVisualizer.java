@@ -112,7 +112,7 @@ public class NPathVisualizer implements RenderTree.Node {
             if(NUtils.getGameUI().map != null) {
                 RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
                 ArrayList<Pair<Coord3f, Coord3f>> gpf = new ArrayList<>();
-                ArrayList<Pair<Coord3f, Coord3f>> gpfconnect = new ArrayList<>();
+                HashMap<Integer, Pair<Double, Pair<Coord3f, Coord3f>>> gpfconnect = new HashMap<>();
                 ArrayList<RoutePoint> points = new ArrayList<>(graph.getPoints());
                 for(RoutePoint point : points)
                 {
@@ -144,18 +144,28 @@ public class NPathVisualizer implements RenderTree.Node {
                             for (Integer areaid : point.getReachableAreas()) {
                                 NArea area = NUtils.getGameUI().map.glob.map.areas.get(areaid);
                                 Coord3f center3f = area.getCenter3f();
-                                if (center3f != null)
-                                    gpfconnect.add(new Pair<>(center3f, one3f));
+                                if (center3f != null) {
+                                    Double distance = area.getDistance(Coord2d.of(one3f.x, one3f.y));
+                                    if(!gpfconnect.containsKey(areaid) || gpfconnect.get(areaid).a > distance)
+                                    {
+                                        gpfconnect.put(areaid,new Pair<>(distance, new Pair<>(center3f, one3f)));
+                                    }
+                                }
                             }
                         }
 
                     }
                 }
+                ArrayList<Pair<Coord3f, Coord3f>> gpfc = new ArrayList<>();
+                for (Pair<Double,Pair<Coord3f,Coord3f>> val :gpfconnect.values())
+                {
+                    gpfc.add(val.b);
+                }
 
                 MovingPath path = paths.get(PathCategory.GPF);
                 path.update(gpf);
                 MovingPath pathconnect = paths.get(PathCategory.GPFAREAS);
-                pathconnect.update(gpfconnect);
+                pathconnect.update(gpfc);
             }
         }
     }

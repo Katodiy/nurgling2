@@ -277,7 +277,7 @@ public class RouteAutoRecorder implements Runnable {
      * @param arch The Gob representing the inside door.
      */
     private void handleExistingDoor(RouteGraph graph, String hash, String name, Gob arch) {
-        boolean needToDeleteLastPoint = shouldDeleteLastWaypoint(route, graph);
+        boolean needToDeleteLastPoint = shouldDeleteLastWaypoint(route, graph) && arch.ngob.name.equals(name);
 
         RoutePoint firstPointToAdd = graph.getDoors().get(hash);
         RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);

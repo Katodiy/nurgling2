@@ -207,22 +207,23 @@ public class RouteGraph {
             if (testrc != null) {
                 ArrayList<Gob> gobs = Finder.findGobs(area);
                 for (RoutePoint point : points) {
+                    Coord2d rcpoint = point.toCoord2d(cache);
                     if (point.toCoord2d(cache) != null) {
                         boolean isReachable = false;
 
 
                         if (gobs.isEmpty()) {
-                                isReachable = PathFinder.isAvailable(testrc.a, point.toCoord2d(cache), false) || PathFinder.isAvailable(testrc.b, point.toCoord2d(cache), false);
+                                isReachable = PathFinder.isAvailable(testrc.a, rcpoint, false) || PathFinder.isAvailable(testrc.b, rcpoint, false);
                         } else {
                             for (Gob gob : gobs) {
-                                if (PathFinder.isAvailable(point.toCoord2d(cache), gob, true)) {
+                                if (PathFinder.isAvailable(rcpoint, gob, true)) {
                                     isReachable = true;
                                     break;
                                 }
                             }
                         }
                         if (isReachable) {
-                            point.addReachableArea(area.id);
+                            point.addReachableArea(area.id, area.getDistance(rcpoint));
                         }
                     }
                 }

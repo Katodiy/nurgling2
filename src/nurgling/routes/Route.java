@@ -65,7 +65,7 @@ public class Route {
         // Add the waypoint with default connection values
         try {
             try {
-                waypointToAdd.addReachableAreas(NContext.getAllVisible());
+                waypointToAdd.addReachableAreas();
             } catch (InterruptedException e) {
                 NUtils.getGameUI().error("Unable to determine reachable areas.");
             }
@@ -130,7 +130,7 @@ public class Route {
             }
 
             try {
-                routePoint.addReachableAreas(NContext.getAllVisible());
+                routePoint.addReachableAreas();
             } catch (InterruptedException e) {
                 NUtils.getGameUI().error("Unable to determine reachable areas.");
             }
@@ -159,7 +159,7 @@ public class Route {
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(routePoint);
 
             try {
-                routePoint.addReachableAreas(NContext.getAllVisible());
+                routePoint.addReachableAreas();
             } catch (InterruptedException e) {
                 NUtils.getGameUI().error("Unable to determine reachable areas.");
             }
@@ -190,7 +190,7 @@ public class Route {
 
         try {
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(waypointToAdd);
-            waypointToAdd.addReachableAreas(NContext.getAllVisible());
+            waypointToAdd.addReachableAreas();
             this.waypoints.add(waypointToAdd);
 
             NUtils.getGameUI().msg("Waypoint added: " + waypointToAdd);
@@ -284,7 +284,8 @@ public class Route {
                 if (point.has("reachableAreas")) {
                     JSONArray reachableAreas = point.getJSONArray("reachableAreas");
                     for (int j = 0; j < reachableAreas.length(); j++) {
-                        waypoint.addReachableArea(reachableAreas.getInt(j));
+                        JSONObject jra = (JSONObject) reachableAreas.get(j);
+                        waypoint.addReachableArea(jra.getInt("id"), jra.getDouble("dist"));
                     }
                 }
                 
@@ -359,7 +360,8 @@ public class Route {
                     if (point.has("reachableAreas")) {
                         JSONArray reachableAreas = point.getJSONArray("reachableAreas");
                         for (int j = 0; j < reachableAreas.length(); j++) {
-                            waypoint.addReachableArea(reachableAreas.getInt(j));
+                            JSONObject jra = (JSONObject) reachableAreas.get(j);
+                            waypoint.addReachableArea(jra.getInt("id"), jra.getDouble("dist"));
                         }
                     }
                     routePointMap.put(id, waypoint);
@@ -423,7 +425,10 @@ public class Route {
             // Save reachable areas
             JSONArray reachableAreas = new JSONArray();
             for (int reachableArea : waypoint.getReachableAreas()) {
-                reachableAreas.put(reachableArea);
+                JSONObject jra = new JSONObject();
+                jra.put("id",reachableArea);
+                jra.put("dist",waypoint.getDistanceToArea(reachableArea));
+                reachableAreas.put(jra);
             }
             waypointJson.put("reachableAreas", reachableAreas);
             
