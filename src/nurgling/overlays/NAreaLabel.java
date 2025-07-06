@@ -4,6 +4,7 @@ import haven.*;
 import haven.render.Homo3D;
 import haven.render.Pipe;
 import haven.render.RenderTree;
+import nurgling.NMapView;
 import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
@@ -13,10 +14,13 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class NAreaLabel extends Sprite implements RenderTree.Node, PView.Render2D{
+    private boolean isSelected = false;
     protected Coord3f pos;
     public TexI label = null;
+    public TexI sellabel = null;
     protected TexI img = null;
     NArea area;
+    public Coord sc;
     boolean forced = false;
     int sizeSpec;
     public NAreaLabel(Owner owner, NArea area) {
@@ -31,6 +35,7 @@ public class NAreaLabel extends Sprite implements RenderTree.Node, PView.Render2
     public void update()
     {
         BufferedImage img = NStyle.openings.render(area.name).img;
+        BufferedImage selimg = NStyle.selopenings.render(area.name).img;
         if(!area.spec.isEmpty()) {
             BufferedImage first = Specialisation.findSpecialisation(area.spec.get(0).name).image;
             BufferedImage ret = TexI.mkbuf(new Coord(32, 32));
@@ -44,26 +49,43 @@ public class NAreaLabel extends Sprite implements RenderTree.Node, PView.Render2
                 }
             }
             img = ItemInfo.catimgsh(UI.scale(5), img, first);
+            selimg = ItemInfo.catimgsh(UI.scale(5), selimg, first);
         }
         label = new TexI(img);
+        sellabel = new TexI(selimg);
     }
 
     @Override
     public boolean tick(double dt) {
         if(NUtils.getGameUI()!=null) {
-            if(area.spec.size()!=sizeSpec) {
-                sizeSpec = area.spec.size();
-                update();
+            isSelected = NUtils.getGameUI().areas.al.sel.area == area;
+            if (NUtils.getGameUI() != null) {
+                if (area.spec.size() != sizeSpec) {
+                    sizeSpec = area.spec.size();
+                    update();
+
+                }
+                return NUtils.findGob(((Gob) owner).id) == null;
             }
-            return NUtils.findGob(((Gob) owner).id) == null;
         }
         return true;
     }
 
     @Override
     public void draw(GOut g, Pipe state) {
-        Coord sc = Homo3D.obj2view(pos, state, Area.sized(g.sz())).round2();
+        sc = Homo3D.obj2view(pos, state, Area.sized(g.sz())).round2();
         if (label != null)
-            g.aimage(label, sc, 0.5, 0.5);
+            if(isSelected)
+            {
+                g.aimage(sellabel, sc, 0.5, 0.5);
+            }
+            else {
+                g.aimage(label, sc, 0.5, 0.5);
+            }
+    }
+
+    public boolean isect(Coord pc) {
+        Coord ul = sc.sub(label.sz().div(2));
+        return pc.isect(ul, label.sz());
     }
 }

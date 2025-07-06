@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.function.*;
 import haven.render.*;
 import nurgling.*;
+import nurgling.tools.CheckGridsState;
 import nurgling.tools.NParser;
 
 public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, EquipTarget, RandomSource {
@@ -605,7 +606,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	    m.move(c);
 	this.rc = c;
 	if(NUtils.playerID()!=-1 && id == NUtils.playerID())  {
-		NUtils.CheckGridCoord(c);
+		new Thread(new CheckGridsState(), "plgob_move").start();
 	}
 	this.a = a;
     }

@@ -464,25 +464,6 @@ public class NUtils
         return new Coord2d(c.x - gridUnit.x, c.y - gridUnit.y);
     }
 
-    public static void CheckGridCoord(Coord2d c) {
-        Coord gc = NUtils.toGC(c);
-        if(((NMapView)NUtils.getGameUI().map).lastGC == null || !gc.equals(((NMapView)NUtils.getGameUI().map).lastGC)) {
-            EnterGrid(gc);
-        }
-    }
-
-    public static void EnterGrid(Coord gc) {
-        ((NMapView)NUtils.getGameUI().map).lastGC = gc;
-        if (NUtils.getGameUI().areas.visible) {
-            ((NMapView) NUtils.getGameUI().map).destroyDummys();
-            ((NMapView) NUtils.getGameUI().map).initDummys();
-        }
-
-        if (NUtils.getGameUI().routesWidget.visible) {
-            ((NMapView) NUtils.getGameUI().map).initRouteDummys(NUtils.getGameUI().routesWidget.getSelectedRouteId());
-        }
-    }
-
     public static void startBuild(Window window) {
         for (Widget sp = window.lchild; sp != null; sp = sp.prev) {
             if (sp instanceof Button) {

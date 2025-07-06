@@ -10,6 +10,11 @@ import static haven.OCache.posres;
 
 public class NGlobalCoord {
     private Coord oldCoord = null;
+
+    public long getGridId() {
+        return grid_id;
+    }
+
     private long grid_id;
 
     public NGlobalCoord(Coord2d coord2d)

@@ -8,7 +8,6 @@ import nurgling.actions.Results;
 import nurgling.actions.TravelToHearthFire;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.areas.NGlobalCoord;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
@@ -96,7 +95,7 @@ public class RoutePointNavigator implements Action {
         if(walkingPath == null || walkingPath.isEmpty() || (alternativePathWithHF != null && !alternativePathWithHF.isEmpty() && (walkingPath.size() * 0.5 > alternativePathWithHF.size()))) {
             path = alternativePathWithHF;
             new TravelToHearthFire().run(gui);
-            NUtils.getUI().core.addTask(new WaitForMapLoad(alternativePathWithHF.get(0), gui));
+            NUtils.getUI().core.addTask(new WaitForMapLoadPF(alternativePathWithHF.get(0), gui));
         } else {
             path = walkingPath;
         }
@@ -161,7 +160,7 @@ public class RoutePointNavigator implements Action {
                         // enter through the door
                         NUtils.openDoorOnAGob(gui, gob);
                         // Wait until we can safely get coordinates for the next waypoint
-                        NUtils.getUI().core.addTask(new WaitForMapLoad(nextPoint, gui));
+                        NUtils.getUI().core.addTask(new WaitForMapLoadPF(nextPoint, gui));
                         NUtils.getUI().core.addTask(new WaitForGobWithHash(nextPoint.getConnection(currentPoint.id).gobHash));
                     } else {
                         // open gate if its closed

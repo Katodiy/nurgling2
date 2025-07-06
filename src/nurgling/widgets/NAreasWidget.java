@@ -505,14 +505,14 @@ public class NAreasWidget extends Window
         }
     }
 
-    private void select(int id)
+    public void select(int id)
     {
         in_items.load(id);
         out_items.load(id);
         loadSpec(id);
     }
 
-    private void select()
+    public void select()
     {
         in_items.items.clear();
         out_items.items.clear();
@@ -542,7 +542,7 @@ public class NAreasWidget extends Window
             super(sz, UI.scale(15));
         }
 
-        protected List<AreaItem> items() {
+        public List<AreaItem> items() {
             synchronized (items) {
                 return items;
             }

@@ -19,6 +19,7 @@ import nurgling.routes.RoutePoint;
 import nurgling.scenarios.Scenario;
 import nurgling.tasks.WaitForMapLoadNoCoord;
 import nurgling.tools.*;
+import nurgling.widgets.NAreasWidget;
 import nurgling.widgets.NMiniMap;
 
 import java.awt.event.KeyEvent;
@@ -34,7 +35,7 @@ public class NMapView extends MapView
     public static final KeyBinding kb_displayfov = KeyBinding.get("pfovbox",  KeyMatch.nil);
     public static final KeyBinding kb_displaygrid = KeyBinding.get("gridbox",  KeyMatch.nil);
     public static final int MINING_OVERLAY = - 1;
-    public Coord lastGC = null;
+    public NGlobalCoord lastGC = null;
 
     public final List<NMiniMap.TempMark> tempMarkList = new ArrayList<NMiniMap.TempMark>();
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
@@ -58,6 +59,38 @@ public class NMapView extends MapView
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
 
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
+
+    public static boolean hitNWidgetsInfo(Coord pc) {
+        boolean isFound = false;
+        for(Long gobid: ((NMapView)NUtils.getGameUI().map).dummys.keySet())
+        {
+            Gob gob = Finder.findGob(gobid);
+            Gob.Overlay ol;
+            if(gob!=null && (ol = gob.findol(NAreaLabel.class))!=null)
+            {
+                NAreaLabel al = (NAreaLabel) ol.spr;
+                if(al.isect(pc)) {
+                    isFound = true;
+                    for (NArea area : ((NMapView) NUtils.getGameUI().map).glob.map.areas.values()) {
+                        if(area.gid == gobid)
+                        {
+                            NUtils.getGameUI().areas.showPath(area.path);
+
+                            for(NAreasWidget.AreaItem ai: NUtils.getGameUI().areas.al.items())
+                            {
+                                if(ai.area!=null && ai.area.gid == gobid) {
+                                    NUtils.getGameUI().areas.al.sel = ai;
+                                    NUtils.getGameUI().areas.select(area.id);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return isFound;
+    }
 
     @Override
     public void draw(GOut g) {

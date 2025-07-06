@@ -40,6 +40,7 @@ import haven.render.sl.Type;
 import nurgling.*;
 import nurgling.areas.*;
 import nurgling.overlays.map.*;
+import nurgling.tools.CheckGridsState;
 
 public class MapView extends PView implements DTarget, Console.Directory {
     public static boolean clickdb = false;
@@ -1927,8 +1928,10 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	} else if(msg == "plob") {
 	    if(args[0] == null)
 		plgob = -1;
-	    else
-		plgob = Utils.uiv(args[0]);
+	    else {
+			plgob = Utils.uiv(args[0]);
+			new Thread(new CheckGridsState(), "plgob_create").start();
+		}
 	} else if(msg == "flashol2") {
 	    Collection<String> ols = new LinkedList<>();
 	    double tm = Utils.dv(args[0]) / 100.0;
@@ -2039,6 +2042,8 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	}
 	
 	protected void hit(Coord pc, Coord2d mc, ClickData inf) {
+		if(NMapView.hitNWidgetsInfo(pc))
+			return;
 	    Object[] args = {pc, mc.floor(posres), clickb, ui.modflags()};
 	    if(inf != null)
 		args = Utils.extend(args, inf.clickargs());
