@@ -153,14 +153,16 @@ public class HarvestCrop implements Action {
         dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
 
         if(NUtils.getStamina()<0.35) {
-            if ((Boolean) NConfig.get(NConfig.Key.harvestautorefill)) {
-                if (FillWaterskins.checkIfNeed())
-                    if (!(new FillWaterskins(true).run(gui).IsSuccess()))
-                        throw new InterruptedException();
-            }
-
             if (!new Drink(0.9, false).run(gui).isSuccess)
-                throw new InterruptedException();
+                if ((Boolean) NConfig.get(NConfig.Key.harvestautorefill)) {
+                    if (FillWaterskins.checkIfNeed())
+                        if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                            throw new InterruptedException();
+                        else if (!new Drink(0.9, false).run(gui).isSuccess)
+                            throw new InterruptedException();
+                } else {
+                    throw new InterruptedException();
+                }
         }
         Gob plant;
         plant = null;
