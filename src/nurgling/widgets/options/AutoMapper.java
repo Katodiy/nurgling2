@@ -3,11 +3,12 @@ package nurgling.widgets.options;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
+import nurgling.widgets.nsettings.Panel;
 
-public class AutoMapper extends Widget {
+public class AutoMapper extends Panel {
     public CheckBox navTrack;
     public AutoMapper() {
-
+        super();
         prev = add(new Label("ONLINE Auto-Mapper settings:"), new Coord(0, 0));
 
         prev = add(new CheckBox("Enable Auto Mapper") {

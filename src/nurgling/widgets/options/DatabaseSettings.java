@@ -7,6 +7,7 @@ import nurgling.DBPoolManager;
 import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.tools.NParser;
+import nurgling.widgets.nsettings.Panel;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -19,7 +20,7 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.LinkedList;
 
-public class DatabaseSettings extends Widget {
+public class DatabaseSettings extends Panel {
     private Widget prev;
     private TextEntry hostEntry, usernameEntry, passwordEntry;
     private TextEntry filePathEntry;
@@ -30,6 +31,7 @@ public class DatabaseSettings extends Widget {
     private final int entryX = UI.scale(90);     // X-координата для TextEntry
 
     public DatabaseSettings() {
+        super("");
         // Чекбокс включения/выключения базы данных
         prev = add(new CheckBox("Enable using Database") {
             {

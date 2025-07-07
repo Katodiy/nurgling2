@@ -5,6 +5,7 @@ import haven.*;
 import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.widgets.nsettings.*;
+import nurgling.widgets.options.*;
 
 import java.util.*;
 
@@ -47,9 +48,15 @@ public class NSettingsWindow extends Widget {
     private void fillSettings() {
         SettingsCategory general = new SettingsCategory("General", new Panel("General"), container);
         general.addChild(new SettingsItem("Fonts", new Fonts(), container));
+        general.addChild(new SettingsItem("Quality of life", new QoL(), container));
+        general.addChild(new SettingsItem("Database", new DatabaseSettings(), container));
+        general.addChild(new SettingsItem("Auto Mapper", new AutoMapper(), container));
+        general.addChild(new SettingsItem("Auto Selection", new AutoSelection(), container));
+        general.addChild(new SettingsItem("Quick Actions", new QuickActions(), container));
 
         SettingsCategory gameenvironment = new SettingsCategory("Game environment", new Panel("Game environment"), container);
         gameenvironment.addChild(new SettingsItem("World",world = new World(), container));
+        gameenvironment.addChild(new SettingsItem("Animal rings", new NRingSettings(), container));
 
         SettingsCategory scenarios = new SettingsCategory("Autorunner", new Panel("Autorunner scenarios"), container);
         scenarios.addChild(new SettingsItem("Scenarios", new ScenarioPanel(), container));

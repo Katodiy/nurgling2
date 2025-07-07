@@ -6,13 +6,14 @@ import haven.*;
 import nurgling.NConfig;
 import nurgling.NStyle;
 import nurgling.conf.NAreaRad;
+import nurgling.widgets.nsettings.Panel;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class NRingSettings extends Widget {
+public class NRingSettings extends Panel {
 
     public NRingSettings() {
         prev = add(new Label("Animal rings settings:"));

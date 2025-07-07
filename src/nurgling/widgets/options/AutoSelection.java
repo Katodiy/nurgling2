@@ -5,13 +5,14 @@ import haven.Label;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NStyle;
+import nurgling.widgets.nsettings.Panel;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class AutoSelection extends Widget {
+public class AutoSelection extends Panel {
     public ArrayList<AutoSelectItem> petals = new ArrayList<>();
     ActionList al;
     TextEntry newPetall;

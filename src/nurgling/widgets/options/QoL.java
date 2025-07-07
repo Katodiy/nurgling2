@@ -4,11 +4,13 @@ import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.widgets.NMiniMapWnd;
+import nurgling.widgets.nsettings.Panel;
 
-public class QoL extends Widget {
+public class QoL extends Panel {
     final public CheckBox natura;
     final public CheckBox night;
     public QoL() {
+        super("");
 
         prev = add(new Label("Other:"), new Coord(0, 0));
         prev = add(new CheckBox("Show crop stage") {

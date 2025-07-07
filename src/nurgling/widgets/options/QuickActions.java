@@ -5,13 +5,14 @@ import haven.Button;
 import haven.Label;
 import nurgling.*;
 import nurgling.areas.NArea;
+import nurgling.widgets.nsettings.Panel;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class QuickActions extends Widget {
+public class QuickActions extends Panel {
     public ArrayList<ActionsItem> patterns = new ArrayList<>();
     ActionList al;
     TextEntry newPattern;
