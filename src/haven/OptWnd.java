@@ -847,7 +847,7 @@ public class OptWnd extends Window {
 	Widget prev;
 	y = (prev = main.add(new PButton(UI.scale(200), "Interface settings", 'v', iface), 0, y)).pos("bl").adds(0, 5).y;
 	x = prev.pos("ur").adds(10, 0).x;
-	main.add(new PButton(UI.scale(200), "Quality of Life", 'k', nqolwnd), x, prev.pos("ur").y);
+	main.add(new PButton(UI.scale(200), "Nurgling Settings", 'k', nqolwnd), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Video settings", 'v', video), 0, y)).pos("bl").adds(0, 5).y;
 	y = (prev = main.add(new PButton(UI.scale(200), "Audio settings", 'a', audio), 0, y)).pos("bl").adds(0, 5).y;
 	y = (prev = main.add(new PButton(UI.scale(200), "Keybindings", 'k', keybind), 0, y)).pos("bl").adds(0, 5).y;
