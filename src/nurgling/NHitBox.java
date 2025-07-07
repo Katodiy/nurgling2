@@ -39,7 +39,7 @@ public class NHitBox
     private final static HashMap<String, NHitBox> custom = new HashMap<String, NHitBox>()
     {
         {
-            put("log", new NHitBox(new Coord2d(-10,-2.5),new Coord2d(10,2.5)));
+            put("log", new NHitBox(new Coord2d(-10,-2.5),new Coord2d(10,2.5), true));
             put("gfx/terobjs/vehicle/dugout", new NHitBox(new Coord(-10,-2),new Coord(10,2)));
             put("gfx/terobjs/trough", new NHitBox(new Coord(-4,-13),new Coord(4,13)));
             put("gfx/terobjs/minehole", new NHitBox(new Coord(-15,-15),new Coord(15,15)));

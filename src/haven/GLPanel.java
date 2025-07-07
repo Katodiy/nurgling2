@@ -297,6 +297,7 @@ public interface GLPanel extends UIPanel, UI.Context {
 	    synchronized(ui) {
 		ui.draw(g);
 	    }
+		FastText.aprintf(g, new Coord(10,g.sz().y-UI.scale(10)), 0, 1, "FPS: %d", fps);
 	    if(dbtext.get())
 		drawstats(ui, g, buf);
 	    drawtooltip(ui, g);

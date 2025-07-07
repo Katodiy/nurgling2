@@ -400,7 +400,9 @@ public class NMapView extends MapView
                         ttip.put("tile", res.name);
                     }
                 }
-                catch (Exception e) {}
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
