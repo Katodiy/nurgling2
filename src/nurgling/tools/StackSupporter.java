@@ -60,7 +60,6 @@ public class StackSupporter {
         size3.add("Any Brick");
         size3.add("Clay");
         size3.add("Casting Material");
-        size3.add("Glass");
 
         size3.add("Board");
         size3.add("Block of Wood");

@@ -470,6 +470,10 @@ public class NContext {
 
     private void navigateToAreaIfNeeded(String areaId) throws InterruptedException {
         NArea area = areas.get(areaId);
+        if(area == null) {
+            gui.msg(areaId + " Not found!");
+            return;
+        }
         if(!area.isVisible() && rps.containsKey(areaId)) {
             new RoutePointNavigator(rps.get(areaId), area.id).run(gui);
         }

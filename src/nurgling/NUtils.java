@@ -666,4 +666,27 @@ public class NUtils
     {
         return ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI());
     }
+
+    public static boolean isWorkStationReady(String name, Gob workstation) {
+        if (workstation == null) {
+            return false;
+        }
+
+        // Crucible is ready when it has coal (bit 2 set in modelAttribute)
+        if (name.contains("crucible")) {
+            return (workstation.ngob.getModelAttribute() & 2) == 2;
+        }
+        // For pow (forges), they're ready when not burning (bit 48)
+        else if (name.startsWith("gfx/terobjs/pow")) {
+            return (workstation.ngob.getModelAttribute() & 48) == 0;
+        }
+        // For cauldrons, they must be burning (bit 2) and have liquid (bit 8)
+        else if (name.startsWith("gfx/terobjs/cauldron")) {
+            return (workstation.ngob.getModelAttribute() & 2) == 2 &&
+                    (workstation.ngob.getModelAttribute() & 8) == 8;
+        }
+
+        // For all other workstations, assume they're ready if they exist
+        return true;
+    }
 }
