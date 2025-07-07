@@ -17,6 +17,12 @@ public class NGlobalCoord {
 
     private long grid_id;
 
+
+    public NGlobalCoord(long gridId, Coord localCoord) {
+        oldCoord = localCoord;
+        grid_id = gridId;
+    }
+
     public NGlobalCoord(Coord2d coord2d)
     {
         Coord pltc = (new Coord2d(coord2d.x / MCache.tilesz.x, coord2d.y / MCache.tilesz.y)).floor();

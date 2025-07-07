@@ -210,7 +210,7 @@ public class Craft implements Action {
         NUtils.addTask(new NTask() {
             @Override
             public boolean check() {
-                return gui.prog != null && gui.prog.prog > 0 && (ncontext.workstation.selected ==-1 || NUtils.isWorkStationReady(ncontext.workstation.station,Finder.findGob(ncontext.workstation.selected)));
+                return gui.prog != null && gui.prog.prog > 0 && (ncontext.workstation == null || ncontext.workstation.selected ==-1 || NUtils.isWorkStationReady(ncontext.workstation.station,Finder.findGob(ncontext.workstation.selected)));
             }
         });
         int finalResfc = resfc;

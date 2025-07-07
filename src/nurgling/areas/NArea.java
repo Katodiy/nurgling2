@@ -472,6 +472,8 @@ public class NArea
     public double getDistance(Coord2d myrc) {
         double distance = Double.MAX_VALUE;
         Pair<Coord2d,Coord2d> rcArea = getRCArea();
+        if(myrc==null)
+            return distance;
         if(rcArea!=null)
         {
             distance = Math.min(myrc.dist(rcArea.a),distance);

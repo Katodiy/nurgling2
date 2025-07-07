@@ -120,7 +120,7 @@ public class RoutePoint {
                         }
                     }
                 }
-                if(isReachable)
+                if(isReachable && area.getDistance(myrc)<250)
                 {
                     areasDistance.put(area.id, area.getDistance(myrc));
                 }

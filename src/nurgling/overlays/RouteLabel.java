@@ -6,6 +6,7 @@ import haven.render.Pipe;
 import haven.render.RenderTree;
 import nurgling.NStyle;
 import nurgling.routes.Route;
+import nurgling.routes.RoutePoint;
 
 import java.awt.image.BufferedImage;
 
@@ -17,10 +18,12 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
     public final Tex tex = Resource.loadtex("nurgling/hud/point");
     double a = 0;
     final int sy;
-
-    public RouteLabel(Owner owner, Route route) {
+    public RoutePoint point;
+    Coord sc;
+    public RouteLabel(Owner owner, Route route, RoutePoint point) {
         super(owner, null);
         this.route = route;
+        this.point = point;
         this.sy = place(owner.context(Gob.class), tex.sz().y);
         update();
     }
@@ -56,7 +59,7 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
 
     @Override
     public void draw(GOut g, Pipe state) {
-        Coord sc = Homo3D.obj2view(Coord3f.o, state, Area.sized(Coord.z, g.sz())).round2();
+        sc = Homo3D.obj2view(Coord3f.o, state, Area.sized(Coord.z, g.sz())).round2();
         if(sc == null)
             return;
         int α;
@@ -71,5 +74,12 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
         c.y -= 15;
         g.image(tex, sc.add(c));
         g.chcolor();
+    }
+
+    public boolean isect(Coord pc) {
+        if(sc==null)
+            return false;
+        Coord ul = sc.sub(label.sz().div(2));
+        return pc.isect(ul, label.sz());
     }
 }

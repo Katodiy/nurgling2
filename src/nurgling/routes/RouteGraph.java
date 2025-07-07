@@ -7,6 +7,7 @@ import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.PathFinder;
 import nurgling.areas.NArea;
+import nurgling.areas.NGlobalCoord;
 import nurgling.tools.Finder;
 
 import java.util.*;
@@ -119,15 +120,16 @@ public class RouteGraph {
         
         // If no points found in the same grid, check all points
         if (nearestPoint == null) {
+            Coord2d playerCoords = NUtils.player().rc;
             for (RoutePoint point : points.values()) {
-                Coord2d pointCoords = new Coord2d(point.localCoord);
-                Coord2d playerCoords = NUtils.player().rc;
+                Coord2d pointCoords = new NGlobalCoord(point.gridId, point.localCoord).getCurrentCoord();
+                if(pointCoords!=null) {
+                    double dist = pointCoords.dist(playerCoords);
 
-                double dist = pointCoords.dist(playerCoords);
-
-                if (dist < currentDistanceToClosestPoint) {
-                    currentDistanceToClosestPoint = dist;
-                    nearestPoint = point;
+                    if (dist < currentDistanceToClosestPoint) {
+                        currentDistanceToClosestPoint = dist;
+                        nearestPoint = point;
+                    }
                 }
             }
         }
@@ -186,10 +188,14 @@ public class RouteGraph {
 
     public RoutePoint findAreaRoutePoint(NArea area) {
         RoutePoint end = null;
-
+        double dist = Double.MAX_VALUE;
         for(RoutePoint point : points.values()) {
             if(point.getReachableAreas().contains(area.id)) {
-                end = point;
+                double distCand = point.getDistanceToArea(area.id);
+                if(distCand<dist) {
+                    dist = distCand;
+                    end = point;
+                }
             }
         }
 

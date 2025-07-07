@@ -89,6 +89,21 @@ public class NMapView extends MapView
                 }
             }
         }
+        for(Long gobid: ((NMapView)NUtils.getGameUI().map).routeDummys.keySet())
+        {
+            Gob gob = Finder.findGob(gobid);
+            Gob.Overlay ol;
+            if(gob!=null && (ol = gob.findol(RouteLabel.class))!=null)
+            {
+                RouteLabel al = (RouteLabel) ol.spr;
+                if(al.isect(pc)) {
+                    isFound = true;
+                    NUtils.getGameUI().msg(String.valueOf(al.point.id));
+                    break;
+                }
+            }
+        }
+
         return isFound;
     }
 
@@ -144,7 +159,7 @@ public class NMapView extends MapView
                 if (absCoord != null) {
                     OCache.Virtual dummy = glob.oc.new Virtual(absCoord, 0);
                     dummy.virtual = true;
-                    dummy.addcustomol(new RouteLabel(dummy, route));
+                    dummy.addcustomol(new RouteLabel(dummy, route, point));
                     routeDummys.put(dummy.id, dummy);
                     glob.oc.add(dummy);
                 }

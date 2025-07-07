@@ -110,6 +110,19 @@ public class RouteAutoRecorder implements Runnable {
                     // Create a temporary waypoint to get its hash
                     RoutePoint predefinedWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
 
+                    NUtils.addTask(new NTask() {
+                        @Override
+                        public boolean check() {
+                            try {
+                                Gob archGob = Finder.findGob(player().rc, new NAlias(
+                                        GateDetector.getDoorPair(gobForCachedRoutePoint.ngob.name)
+                                ), null, 100);
+                                return  archGob!=null;
+                            } catch (Exception e) {
+                                return false;
+                            }
+                        }
+                    });
                     Gob archGob = Finder.findGob(player().rc, new NAlias(
                             GateDetector.getDoorPair(gobForCachedRoutePoint.ngob.name)
                     ), null, 100);

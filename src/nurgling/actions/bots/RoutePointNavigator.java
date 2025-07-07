@@ -92,7 +92,7 @@ public class RoutePointNavigator implements Action {
             return Results.FAIL();
         }
 
-        if(walkingPath == null || walkingPath.isEmpty() || (alternativePathWithHF != null && !alternativePathWithHF.isEmpty() && (walkingPath.size() * 0.5 > alternativePathWithHF.size()))) {
+        if(walkingPath.isEmpty() || alternativePathWithHF != null && !alternativePathWithHF.isEmpty() && walkingPath.size() * 0.5 > alternativePathWithHF.size()) {
             path = alternativePathWithHF;
             new TravelToHearthFire().run(gui);
             NUtils.getUI().core.addTask(new WaitForMapLoadPF(alternativePathWithHF.get(0), gui));
@@ -170,10 +170,6 @@ public class RoutePointNavigator implements Action {
                         }
                     }
                 }
-            }
-
-            if(currentPoint.getReachableAreas().contains(areaId)) {
-                return Results.SUCCESS();
             }
         }
 
