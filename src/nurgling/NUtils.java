@@ -423,7 +423,7 @@ public class NUtils
 
     public static ArrayList<Pattern> getQAPatterns() {
         ArrayList<Pattern> patterns = new ArrayList<>();
-        for(QuickActions.ActionsItem ai : ((OptWnd.NQuickActionsPanel)getGameUI ().opts.nquickAct).qol_p.patterns)
+        for(QuickActions.ActionsItem ai : ((OptWnd.NSettingsPanel)getGameUI ().opts.nqolwnd).settingsWindow.qa.patterns)
         {
             if(ai.isEnabled.a)
                 patterns.add(Pattern.compile(ai.text()));
@@ -433,7 +433,7 @@ public class NUtils
 
     public static ArrayList<String> getPetals() {
         ArrayList<String> vals = new ArrayList<>();
-        for(AutoSelection.AutoSelectItem ai : ((OptWnd.NQuickActionsPanel)getGameUI ().opts.nquickAct).autosel_p.petals)
+        for(AutoSelection.AutoSelectItem ai : ((OptWnd.NSettingsPanel)getGameUI ().opts.nqolwnd).settingsWindow.as.petals)
         {
             if(ai.isEnabled.a)
                 vals.add(ai.text());

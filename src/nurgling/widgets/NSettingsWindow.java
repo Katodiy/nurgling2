@@ -18,6 +18,8 @@ public class NSettingsWindow extends Widget {
     Widget container;
     public Panel currentPanel = null;
     private Button saveBtn, cancelBtn;
+    public QuickActions qa;
+    public AutoSelection as;
 
     public NSettingsWindow() {
         sz = UI.scale(800, 600);
@@ -51,8 +53,8 @@ public class NSettingsWindow extends Widget {
         general.addChild(new SettingsItem("Quality of life", new QoL(), container));
         general.addChild(new SettingsItem("Database", new DatabaseSettings(), container));
         general.addChild(new SettingsItem("Auto Mapper", new AutoMapper(), container));
-        general.addChild(new SettingsItem("Auto Selection", new AutoSelection(), container));
-        general.addChild(new SettingsItem("Quick Actions", new QuickActions(), container));
+        general.addChild(new SettingsItem("Auto Selection", as = new AutoSelection(), container));
+        general.addChild(new SettingsItem("Quick Actions", qa = new QuickActions(), container));
 
         SettingsCategory gameenvironment = new SettingsCategory("Game environment", new Panel("Game environment"), container);
         gameenvironment.addChild(new SettingsItem("World",world = new World(), container));
