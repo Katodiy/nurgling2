@@ -8,19 +8,18 @@ import nurgling.widgets.nsettings.*;
 
 import java.util.*;
 
-public class NSettingsWindow extends Window {
+public class NSettingsWindow extends Widget {
 
     private static TexI rbtn = new TexI(Resource.loadsimg("nurgling/hud/buttons/right/u"));
     private static TexI dbtn = new TexI(Resource.loadsimg("nurgling/hud/buttons/down/u"));
     private final SettingsList list;
     public World world;
     Widget container;
-    private Panel currentPanel = null;
+    public Panel currentPanel = null;
     private Button saveBtn, cancelBtn;
 
     public NSettingsWindow() {
-        super(UI.scale(800, 600), "Settings", true);
-
+        sz = UI.scale(800, 600);
         container = add(new Widget(Coord.z));
         list = add(new SettingsList(UI.scale(200, 580)), UI.scale(10, 10));
 

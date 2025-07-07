@@ -30,6 +30,7 @@ import haven.render.*;
 import nurgling.*;
 import nurgling.conf.*;
 import nurgling.widgets.NMiniMapWnd;
+import nurgling.widgets.NSettingsWindow;
 import nurgling.widgets.options.*;
 
 import java.awt.event.KeyEvent;
@@ -939,38 +940,42 @@ public class OptWnd extends Window {
 	}
 
 	public class NQolPanel extends Panel  {
-		private final Widget save;
-		private final Widget back;
+//		private final Widget save;
+//		private final Widget back;
 
-		public QoL qol_p;
+		public NSettingsWindow settingsWindow;
 
 
 		public NQolPanel(Panel prev1) {
 			super();
 
-			qol_p = add(new QoL(),Coord.z);
+			settingsWindow = add(new NSettingsWindow(), Coord.z);
 
-			save = add(new Button(UI.scale(200), "Save") {
-				@Override
-				public void click() {
-					NConfig.needUpdate();
-				}
-			}, qol_p.pos("bl").adds(0, UI.scale(5)));
-			back = add(new Button(UI.scale(200), "Back")
-			{
-				@Override
-				public void click() {
-					chpanel(prev1);
-				}
-
-				public boolean keydown(KeyDownEvent ev) {
-					if((ev.c == 27)) {
-						chpanel(prev1);
-						return(true);
-					}
-					return(false);
-				}
-			}, qol_p.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
+//			save = add(new Button(UI.scale(200), "Save") {
+//				@Override
+//				public void click() {
+//					if (settingsWindow.currentPanel != null) {
+//						settingsWindow.currentPanel.save();
+//					}
+//				}
+//			}, settingsWindow.pos("bl").adds(0, UI.scale(5)));
+//			back = add(new Button(UI.scale(200), "Back") {
+//				@Override
+//				public void click() {
+//					chpanel(prev1);
+//					if (settingsWindow.currentPanel != null) {
+//						settingsWindow.currentPanel.load();
+//					}
+//				}
+//
+//				public boolean keydown(KeyDownEvent ev) {
+//					if ((ev.c == 27)) {
+//						chpanel(prev1);
+//						return (true);
+//					}
+//					return (false);
+//				}
+//			}, settingsWindow.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
 			pack();
 		}
 	}
