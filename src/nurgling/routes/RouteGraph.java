@@ -10,10 +10,11 @@ import nurgling.areas.NArea;
 import nurgling.tools.Finder;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RouteGraph {
     private final int MAX_DISTANCE_FOR_NEIGHBORS = 250;
-    public final Map<Integer, RoutePoint> points = new HashMap<>();
+    public final Map<Integer, RoutePoint> points = new ConcurrentHashMap<>();
     private final Map<Long, ArrayList<RoutePoint>> pointsByGridId = new HashMap<>();
     private final Map<String, RoutePoint> doors = new HashBMap<>();
 

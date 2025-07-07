@@ -35,7 +35,7 @@ public class RouteWorker implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        if (route == null || route.waypoints == null || route.waypoints.isEmpty())
+        if (route == null || route.waypoints.isEmpty())
             return Results.ERROR("No route or waypoints defined.");
 
         int lastVisited = 0;

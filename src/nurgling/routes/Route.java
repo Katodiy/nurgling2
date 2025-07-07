@@ -18,7 +18,7 @@ public class Route {
     public int id;
     public String name;
     public String path = "";
-    public ArrayList<RoutePoint> waypoints = new ArrayList<>();
+    public final ArrayList<RoutePoint> waypoints = new ArrayList<>();
     public ArrayList<RouteSpecialization> spec = new ArrayList<>();
     public NCore.LastActions lastAction = null;
     public RoutePoint cachedRoutePoint = null;
@@ -71,7 +71,9 @@ public class Route {
             }
 
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(waypointToAdd);
-            this.waypoints.add(waypointToAdd);
+            synchronized (waypoints) {
+                this.waypoints.add(waypointToAdd);
+            }
         } catch (Exception e) {
             NUtils.getGameUI().msg("Failed to add waypoint: " + e.getMessage());
         }
@@ -136,8 +138,9 @@ public class Route {
             }
 
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(routePoint);
-            this.waypoints.add(routePoint);
-
+            synchronized (waypoints) {
+                this.waypoints.add(routePoint);
+            }
             NUtils.getGameUI().msg("Waypoint added: " + routePoint);
             NUtils.getGameUI().msg("Neighbors: " + routePoint.getNeighbors());
         } catch (Exception e) {
@@ -164,11 +167,12 @@ public class Route {
                 NUtils.getGameUI().error("Unable to determine reachable areas.");
             }
 
-            this.waypoints.add(routePoint);
-
+            synchronized (waypoints) {
+                this.waypoints.add(routePoint);
+            }
             NUtils.getGameUI().msg("Waypoint added: " + routePoint);
             NUtils.getGameUI().msg("Neighbors: " + routePoint.getNeighbors());
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             NUtils.getGameUI().msg("Failed to add waypoint: " + e.getMessage());
         }
 
@@ -191,8 +195,9 @@ public class Route {
         try {
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().generateNeighboringConnections(waypointToAdd);
             waypointToAdd.addReachableAreas();
-            this.waypoints.add(waypointToAdd);
-
+            synchronized (waypoints) {
+                this.waypoints.add(waypointToAdd);
+            }
             NUtils.getGameUI().msg("Waypoint added: " + waypointToAdd);
             NUtils.getGameUI().msg("Neighbors: " + waypointToAdd.getNeighbors());
         } catch (Exception e) {
@@ -217,8 +222,9 @@ public class Route {
             }
         }
 
-        waypoints.removeAll(toRemove);
-
+        synchronized (waypoints) {
+            waypoints.removeAll(toRemove);
+        }
         ((NMapView) NUtils.getGameUI().map).routeGraphManager.deleteRoutePointFromNeighborsAndConnections(waypoint);
         ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateRoute(this);
         ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateGraph();
@@ -244,7 +250,7 @@ public class Route {
             this.path = "/" + obj.getString("path");
         }
 
-        this.waypoints = new ArrayList<>();
+        this.waypoints.clear();
         if (obj.has("waypoints")) {
             JSONArray arr = obj.getJSONArray("waypoints");
             for (int i = 0; i < arr.length(); i++) {
@@ -288,8 +294,9 @@ public class Route {
                         waypoint.addReachableArea(jra.getInt("id"), jra.getDouble("dist"));
                     }
                 }
-                
-                waypoints.add(waypoint);
+                synchronized (waypoints) {
+                    waypoints.add(waypoint);
+                }
             }
         }
 
@@ -315,7 +322,7 @@ public class Route {
             this.path = "/" + obj.getString("path");
         }
 
-        this.waypoints = new ArrayList<>();
+        this.waypoints.clear();
         if (obj.has("waypoints")) {
             JSONArray arr = obj.getJSONArray("waypoints");
             for (int i = 0; i < arr.length(); i++) {
@@ -367,7 +374,9 @@ public class Route {
                     routePointMap.put(id, waypoint);
 
                 }
-                waypoints.add(waypoint);
+                synchronized (waypoints) {
+                    waypoints.add(waypoint);
+                }
             }
         }
 
