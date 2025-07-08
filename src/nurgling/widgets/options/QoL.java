@@ -3,16 +3,17 @@ package nurgling.widgets.options;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
-import nurgling.widgets.NMiniMapWnd;
 import nurgling.widgets.nsettings.Panel;
 
 public class QoL extends Panel {
     final public CheckBox natura;
     final public CheckBox night;
+
     public QoL() {
         super("");
 
-        prev = add(new Label("Other:"), new Coord(0, 0));
+        int margin = UI.scale(10);
+
         prev = add(new CheckBox("Show crop stage") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.showCropStage);
@@ -22,7 +23,7 @@ public class QoL extends Panel {
                 NConfig.set(NConfig.Key.showCropStage, val);
                 a = val;
             }
-        }, prev.pos("bl").adds(0, 5));
+        }, new Coord(margin, margin));
         prev = add(new CheckBox("Simple crops") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.simplecrops);
@@ -44,7 +45,6 @@ public class QoL extends Panel {
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-
         prev = add(new CheckBox("Auto-drink") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.autoDrink);
@@ -55,7 +55,6 @@ public class QoL extends Panel {
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-
         prev = add(new CheckBox("Bounding Boxes") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.showBB);
@@ -66,7 +65,6 @@ public class QoL extends Panel {
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-
         prev = add(new CheckBox("Flat surface (need reboot)") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.nextflatsurface);
@@ -76,7 +74,6 @@ public class QoL extends Panel {
                 NConfig.set(NConfig.Key.nextflatsurface, val);
                 a = val;
             }
-
         }, prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("Show decorative objects (need reboot)") {
             {
@@ -87,9 +84,7 @@ public class QoL extends Panel {
                 NConfig.set(NConfig.Key.nextshowCSprite, val);
                 a = val;
             }
-
         }, prev.pos("bl").adds(0, 5));
-
         prev = natura = add(new CheckBox("Hide nature objects") {
             {
                 a = !(Boolean) NConfig.get(NConfig.Key.hideNature);
@@ -101,7 +96,6 @@ public class QoL extends Panel {
                 NUtils.getGameUI().mmapw.natura.a = a;
                 NUtils.showHideNature();
             }
-
         }, prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("Show mining overlay") {
             {
@@ -112,7 +106,6 @@ public class QoL extends Panel {
                 NConfig.set(NConfig.Key.miningol, val);
                 a = val;
             }
-
         }, prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("Enable tracking when login") {
             {
@@ -123,7 +116,6 @@ public class QoL extends Panel {
                 NConfig.set(NConfig.Key.tracking, val);
                 a = val;
             }
-
         }, prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("Enable criminal acting when login") {
             {
@@ -134,7 +126,6 @@ public class QoL extends Panel {
                 NConfig.set(NConfig.Key.crime, val);
                 a = val;
             }
-
         }, prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("Enable swimming when login") {
             {
@@ -145,7 +136,6 @@ public class QoL extends Panel {
                 NConfig.set(NConfig.Key.swimming, val);
                 a = val;
             }
-
         }, prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("Disable menugrid keys") {
             {
@@ -156,7 +146,7 @@ public class QoL extends Panel {
                 NConfig.set(NConfig.Key.disableMenugridKeys, val);
                 a = val;
             }
-        },prev.pos("bl").adds(0, 5));
+        }, prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("Enable quest notified") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.questNotified);
@@ -166,7 +156,7 @@ public class QoL extends Panel {
                 NConfig.set(NConfig.Key.questNotified, val);
                 a = val;
             }
-        },prev.pos("bl").adds(0, 5));
+        }, prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("Enable LP assistant") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.lpassistent);
@@ -176,7 +166,7 @@ public class QoL extends Panel {
                 NConfig.set(NConfig.Key.lpassistent, val);
                 a = val;
             }
-        },prev.pos("bl").adds(0, 5));
+        }, prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("Use global PF") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.useGlobalPf);
@@ -186,7 +176,6 @@ public class QoL extends Panel {
                 NConfig.set(NConfig.Key.useGlobalPf, val);
                 a = val;
             }
-
         }, prev.pos("bl").adds(0, 5));
         prev = add(new CheckBox("DEBUG") {
             {
@@ -198,7 +187,6 @@ public class QoL extends Panel {
                 NUtils.getUI().core.debug = val;
                 a = val;
             }
-
         }, prev.pos("bl").adds(0, 5));
 
         // Add Temporary marks section
@@ -222,20 +210,20 @@ public class QoL extends Panel {
             @Override
             public void done(ReadLine buf) {
                 super.done(buf);
-                NConfig.set(NConfig.Key.temsmarkdist,  Integer.parseInt(buf.line()));
+                NConfig.set(NConfig.Key.temsmarkdist, Integer.parseInt(buf.line()));
                 NConfig.needUpdate();
             }
         }, prev.pos("bl").adds(0, 5));
         prev = add(new Label("Storage duration (minutes):"), prev.pos("bl").adds(0, 5));
-
         prev = add(new TextEntry.NumberValue(50, String.valueOf(NConfig.get(NConfig.Key.temsmarktime))) {
             {
                 settext(String.valueOf(NConfig.get(NConfig.Key.temsmarktime)));
             }
+
             @Override
             public void done(ReadLine buf) {
                 super.done(buf);
-                NConfig.set(NConfig.Key.temsmarktime,  Integer.parseInt(buf.line()));
+                NConfig.set(NConfig.Key.temsmarktime, Integer.parseInt(buf.line()));
                 NConfig.needUpdate();
             }
         }, prev.pos("bl").adds(0, 5));

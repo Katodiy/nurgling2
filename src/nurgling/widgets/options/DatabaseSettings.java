@@ -28,12 +28,15 @@ public class DatabaseSettings extends Panel {
     private Button initDbButton;
     private CheckBox enableCheckbox;
     private final int labelWidth = UI.scale(80); // Ширина лейблов
-    private final int entryX = UI.scale(90);     // X-координата для TextEntry
+    private final int entryX = UI.scale(110);    // X-координата для TextEntry (was 90, increased for better space)
+    private final int margin = UI.scale(10);
 
     public DatabaseSettings() {
         super("");
+        int y = margin;
+
         // Чекбокс включения/выключения базы данных
-        prev = add(new CheckBox("Enable using Database") {
+        prev = enableCheckbox = add(new CheckBox("Enable using Database") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.ndbenable);
             }
@@ -43,13 +46,15 @@ public class DatabaseSettings extends Panel {
                 a = val;
                 updateWidgetsVisibility();
             }
-        }, new Coord(0, 0));
+        }, new Coord(margin, y));
+        y += enableCheckbox.sz.y + UI.scale(8);
 
         // Заголовок раздела
-        prev = add(new Label("Database Settings:"), prev.pos("bl").adds(0, UI.scale(5)));
+        prev = add(new Label("Database Settings:"), new Coord(margin, y));
+        y += prev.sz.y + UI.scale(5);
 
         // Выпадающий список для выбора типа базы данных
-        prev = add(new Label("Database Type:"), prev.pos("bl").adds(0, UI.scale(5)));
+        prev = add(new Label("Database Type:"), new Coord(margin, y));
         Dropbox<String> dbType = add(new Dropbox<String>(UI.scale(150), 5, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
@@ -72,33 +77,37 @@ public class DatabaseSettings extends Panel {
                 // Устанавливаем соответствующий флаг в конфиге
                 NConfig.set(NConfig.Key.postgres, "PostgreSQL".equals(item));
                 NConfig.set(NConfig.Key.sqlite, "SQLite".equals(item));
-
                 // Обновляем отображение виджетов
                 updateWidgetsVisibility();
             }
-        }, prev.pos("ur").adds(5, 0));
+        }, new Coord(entryX, y));
+        dbType.change((Boolean) NConfig.get(NConfig.Key.postgres) ? "PostgreSQL" : "SQLite");
+        y += dbType.sz.y + UI.scale(10);
 
-        // Устанавливаем текущее значение из конфига
-        dbType.change((Boolean)NConfig.get(NConfig.Key.postgres) ? "PostgreSQL" : "SQLite");
+        int firstSettingY = y;
 
         // Создаем виджеты для PostgreSQL
-        hostLabel = add(new Label("Host:"), new Coord(0, prev.pos("bl").adds(0, UI.scale(10)).y));
-        hostEntry = add(new TextEntry(UI.scale(150),""), new Coord(entryX, hostLabel.c.y));
+        hostLabel = add(new Label("Host:"), new Coord(margin, firstSettingY));
+        hostEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, firstSettingY));
         hostEntry.settext((String) NConfig.get(NConfig.Key.serverNode));
+        y += hostEntry.sz.y + UI.scale(5);
 
-        userLabel = add(new Label("Username:"), new Coord(0, hostLabel.pos("bl").adds(0, UI.scale(5)).y));
-        usernameEntry = add(new TextEntry(UI.scale(150),""), new Coord(entryX, userLabel.c.y));
+        userLabel = add(new Label("Username:"), new Coord(margin, y));
+        usernameEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, y));
         usernameEntry.settext((String) NConfig.get(NConfig.Key.serverUser));
+        y += usernameEntry.sz.y + UI.scale(5);
 
-        passLabel = add(new Label("Password:"), new Coord(0, userLabel.pos("bl").adds(0, UI.scale(5)).y));
-        passwordEntry = add(new TextEntry(UI.scale(150),""), new Coord(entryX, passLabel.c.y));
+        passLabel = add(new Label("Password:"), new Coord(margin, y));
+        passwordEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, y));
         passwordEntry.settext((String) NConfig.get(NConfig.Key.serverPass));
         passwordEntry.pw = true;
+        y += passwordEntry.sz.y + UI.scale(10);
 
         // Создаем виджеты для SQLite
-        fileLabel = add(new Label("File Path:"), new Coord(0, prev.pos("bl").adds(0, UI.scale(10)).y));
-        filePathEntry = add(new TextEntry(UI.scale(150),""), new Coord(entryX, fileLabel.c.y));
+        fileLabel = add(new Label("File Path:"), new Coord(margin, firstSettingY));
+        filePathEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, firstSettingY));
         filePathEntry.settext((String) NConfig.get(NConfig.Key.dbFilePath));
+        y += filePathEntry.sz.y + UI.scale(5);
 
         // Кнопка инициализации новой базы данных
         initDbButton = add(new Button(UI.scale(200), "Initialize New Database") {
@@ -108,11 +117,11 @@ public class DatabaseSettings extends Panel {
                 java.awt.EventQueue.invokeLater(() -> {
                     JFileChooser fc = new JFileChooser();
                     fc.setFileFilter(new FileNameExtensionFilter("SQLite Database", "db"));
-                    if(fc.showSaveDialog(null) != JFileChooser.APPROVE_OPTION)
+                    if (fc.showSaveDialog(null) != JFileChooser.APPROVE_OPTION)
                         return;
 
                     String dbPath = fc.getSelectedFile().getAbsolutePath();
-                    if(!dbPath.endsWith(".db")) {
+                    if (!dbPath.endsWith(".db")) {
                         dbPath += ".db";
                     }
 
@@ -167,7 +176,8 @@ public class DatabaseSettings extends Panel {
                     }
                 });
             }
-        }, new Coord(entryX, filePathEntry.pos("bl").adds(UI.scale(-2), UI.scale(5)).y));
+        }, new Coord(entryX, y));
+        // y += initDbButton.sz.y + UI.scale(5);
 
         // Обновляем видимость виджетов в соответствии с текущим выбором
         updateWidgetsVisibility();
@@ -175,7 +185,7 @@ public class DatabaseSettings extends Panel {
 
     public void save() {
         // Сохраняем настройки в зависимости от выбранного типа базы данных
-        if((Boolean) NConfig.get(NConfig.Key.postgres)) {
+        if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
             NConfig.set(NConfig.Key.serverNode, hostEntry.text());
             NConfig.set(NConfig.Key.serverUser, usernameEntry.text());
             NConfig.set(NConfig.Key.serverPass, passwordEntry.text());
@@ -189,7 +199,7 @@ public class DatabaseSettings extends Panel {
         boolean isPostgres = isEnabled && (Boolean) NConfig.get(NConfig.Key.postgres);
         boolean isSQLite = isEnabled && !isPostgres;
 
-        if(hostLabel != null) {
+        if (hostLabel != null) {
             // Управляем видимостью всех элементов в зависимости от включения базы данных
             hostLabel.visible = isPostgres;
             hostEntry.visible = isPostgres;
@@ -202,8 +212,8 @@ public class DatabaseSettings extends Panel {
             filePathEntry.visible = isSQLite;
             initDbButton.visible = isSQLite;
 
-            if(ui!=null) {
-                if(ui.core.poolManager == null)
+            if (ui != null) {
+                if (ui.core.poolManager == null)
                     ui.core.poolManager = new DBPoolManager(1);
                 ui.core.poolManager.reconnect();
             }
