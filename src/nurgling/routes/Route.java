@@ -290,8 +290,10 @@ public class Route {
                 if (point.has("reachableAreas")) {
                     JSONArray reachableAreas = point.getJSONArray("reachableAreas");
                     for (int j = 0; j < reachableAreas.length(); j++) {
-                        JSONObject jra = (JSONObject) reachableAreas.get(j);
-                        waypoint.addReachableArea(jra.getInt("id"), jra.getDouble("dist"));
+                        if(reachableAreas.get(j) instanceof JSONObject) {
+                            JSONObject jra = (JSONObject) reachableAreas.get(j);
+                            waypoint.addReachableArea(jra.getInt("id"), jra.getDouble("dist"));
+                        }
                     }
                 }
                 synchronized (waypoints) {
@@ -367,8 +369,10 @@ public class Route {
                     if (point.has("reachableAreas")) {
                         JSONArray reachableAreas = point.getJSONArray("reachableAreas");
                         for (int j = 0; j < reachableAreas.length(); j++) {
-                            JSONObject jra = (JSONObject) reachableAreas.get(j);
-                            waypoint.addReachableArea(jra.getInt("id"), jra.getDouble("dist"));
+                            if(reachableAreas.get(j) instanceof JSONObject) {
+                                JSONObject jra = (JSONObject) reachableAreas.get(j);
+                                waypoint.addReachableArea(jra.getInt("id"), jra.getDouble("dist"));
+                            }
                         }
                     }
                     routePointMap.put(id, waypoint);
