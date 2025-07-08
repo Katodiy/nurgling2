@@ -228,7 +228,7 @@ public class IconItem extends Widget
                         IconItem.this.isThreshold = true;
                         IconItem.this.val = Integer.valueOf(te.text());
                         IconItem.this.q = new TexI(NStyle.iiqual.render(te.text()).img);
-                        if(parent instanceof IngredientContainer)
+                        if(IconItem.this.parent instanceof IngredientContainer)
                             ((IngredientContainer)IconItem.this.parent).setThreshold(IconItem.this.name,IconItem.this.val);
                         else
                             ((DropContainer)IconItem.this.parent).setThreshold(IconItem.this.name,IconItem.this.val);
