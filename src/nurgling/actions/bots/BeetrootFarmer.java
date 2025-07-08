@@ -13,14 +13,15 @@ public class BeetrootFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Beetroot");
-        NArea beetroot = NContext.findOut("Beetroot", 1);
-        NArea beetrootAsSeed = NContext.findIn("Beetroot");
+        NArea.Specialisation beetrootAsSeed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Beetroot");
         NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
         NArea.Specialisation swill = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
+        req.add(beetrootAsSeed);
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+        opt.add(trough);
         opt.add(swill);
 
 
@@ -28,7 +29,7 @@ public class BeetrootFarmer implements Action {
         {
             new HarvestCrop(
                     NContext.findSpec(field),
-                    beetroot,
+                    NContext.findSpec(beetrootAsSeed),
                     NContext.findSpec(trough),
                     NContext.findSpec(swill),
                     new NAlias("plants/beet")
@@ -39,7 +40,7 @@ public class BeetrootFarmer implements Action {
             if(NContext.findOut("Beetroot", 1)!=null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(),NContext.findOut("Beetroot", 1).getRCArea(),new NAlias("items/beet", "Beetroot")).run(gui);
 
-            new SeedCrop(NContext.findSpec(field),beetrootAsSeed,new NAlias("plants/beet"),new NAlias("Beetroot"), true).run(gui);
+            new SeedCrop(NContext.findSpec(field),NContext.findSpec(beetrootAsSeed),new NAlias("plants/beet"),new NAlias("Beetroot"), true).run(gui);
         }
 
         return Results.SUCCESS();
