@@ -17,23 +17,24 @@ public class QuickActions extends Panel {
     ActionList al;
     TextEntry newPattern;
     int width = UI.scale(210);
+
     public QuickActions() {
-        prev = add(new Label("Quick Actions:"), Coord.z);
-        prev = add( al = new ActionList(new Coord(width,UI.scale(300))), prev.pos("bl").add(0,UI.scale(10)));
-        prev = add(newPattern = new TextEntry(UI.scale(150), ""), prev.pos("bl").add(0,UI.scale(10)));
-        add(new Button(UI.scale(45),"Add"){
+        final int margin = UI.scale(10);
+
+        prev = add(al = new ActionList(new Coord(width, UI.scale(300))), new Coord(margin, margin));
+        prev = add(newPattern = new TextEntry(UI.scale(150), ""), prev.pos("bl").adds(0, 10));
+        add(new Button(UI.scale(45), "Add") {
             @Override
             public void click() {
-                if(!newPattern.text().isEmpty()) {
+                if (!newPattern.text().isEmpty()) {
                     ActionsItem ai = new ActionsItem(newPattern.text());
                     ai.isEnabled.a = true;
                     patterns.add(ai);
                 }
             }
-        }, prev.pos("ur").add(UI.scale(10), UI.scale(prev.sz.y/2) - Button.hs/2));
-        if(NConfig.get(NConfig.Key.q_pattern)!=null) {
-            for (HashMap<String,Object> item : (ArrayList< HashMap<String,Object>>) NConfig.get(NConfig.Key.q_pattern))
-            {
+        }, newPattern.pos("ur").adds(10, 0));
+        if (NConfig.get(NConfig.Key.q_pattern) != null) {
+            for (HashMap<String, Object> item : (ArrayList<HashMap<String, Object>>) NConfig.get(NConfig.Key.q_pattern)) {
                 ActionsItem aitem = new ActionsItem((String) item.get("name"));
                 aitem.isEnabled.a = (Boolean) item.get("enabled");
                 patterns.add(aitem);
@@ -42,19 +43,22 @@ public class QuickActions extends Panel {
 
         Label dpy = new Label("");
         addhlp(prev.pos("bl").adds(0, UI.scale(10)), UI.scale(5),
-                prev = new HSlider(UI.scale(160), 1, 10, (Integer)NConfig.get(NConfig.Key.q_range)) {
+                prev = new HSlider(UI.scale(160), 1, 10, (Integer) NConfig.get(NConfig.Key.q_range)) {
                     protected void added() {
                         dpy();
                     }
+
                     void dpy() {
                         dpy.settext(this.val + " tiles");
                     }
+
                     public void changed() {
                         NConfig.set(NConfig.Key.q_range, val);
                         dpy();
                     }
                 }, dpy);
         prev.settip("Set range of quick actions in tiles.", true);
+
         prev = add(new CheckBox("Disable opening/closing visitor gates") {
             {
                 a = (Boolean) NConfig.get(NConfig.Key.q_visitor);
@@ -82,7 +86,7 @@ public class QuickActions extends Panel {
 
     class ActionList extends SListBox<ActionsItem, Widget> {
         ActionList(Coord sz) {
-            super(sz, UI.scale(15));
+            super(sz, UI.scale(22));
         }
 
         protected List<ActionsItem> items() {
@@ -95,9 +99,16 @@ public class QuickActions extends Panel {
         }
 
         protected Widget makeitem(ActionsItem item, int idx, Coord sz) {
-            return (new ItemWidget<ActionsItem>(this, sz, item) {
+            return new ItemWidget<ActionsItem>(this, sz, item) {
                 {
                     add(item);
+                    item.resize(sz);
+                }
+
+                @Override
+                public void resize(Coord sz) {
+                    super.resize(sz);
+                    item.resize(sz);
                 }
 
                 public boolean mousedown(Coord c, int button) {
@@ -108,7 +119,7 @@ public class QuickActions extends Panel {
                     }
                     return (true);
                 }
-            });
+            };
         }
 
         @Override
@@ -122,6 +133,7 @@ public class QuickActions extends Panel {
         public void draw(GOut g) {
             g.chcolor(bg);
             g.frect(Coord.z, g.sz());
+            g.chcolor();
             super.draw(g);
         }
     }
@@ -135,7 +147,13 @@ public class QuickActions extends Panel {
 
         @Override
         public void resize(Coord sz) {
-            remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5), remove.c.y));
+            if (isEnabled != null)
+                isEnabled.move(new Coord(isEnabled.c.x, (sz.y - isEnabled.sz.y) / 2));
+            if (text != null)
+                text.move(new Coord(text.c.x, (sz.y - text.sz.y) / 2));
+            if (remove != null)
+                remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5),
+                        (sz.y - remove.sz.y) / 2));
             super.resize(sz);
         }
 
