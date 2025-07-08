@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.*;
+import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.tasks.*;
@@ -10,6 +11,7 @@ import nurgling.tools.NParser;
 import nurgling.tools.StackSupporter;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class TransferToPiles implements Action{
 
@@ -94,6 +96,16 @@ public class TransferToPiles implements Action{
             for (int i = 0; i < target_size; i++) {
                 {
                     witems = gui.getInventory().getItems(items, th);
+                    witems.sort(new Comparator<WItem>() {
+                        @Override
+                        public int compare(WItem o1, WItem o2) {
+                            Float q1 = ((NGItem)o1.item).quality;
+                            Float q2 = ((NGItem)o2.item).quality;
+                            if(q1 == null || q2 == null)
+                                return 0;
+                            return Float.compare(q1,q2);
+                        }
+                    });
                     NUtils.takeItemToHand(witems.get(0));
                     gui.getStockpile().wdgmsg("drop");
                     NUtils.addTask(new WaitFreeHand());

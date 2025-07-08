@@ -11,6 +11,7 @@ import nurgling.tasks.NTask;
 import nurgling.widgets.DropContainer;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -57,14 +58,25 @@ public class FreeInventory2 implements Action
             }
         }while (fordrop !=null);
 
-        for(WItem item : gui.getInventory().getItems())
+        ArrayList<WItem> items = gui.getInventory().getItems();
+        items.sort(new Comparator<WItem>() {
+            @Override
+            public int compare(WItem o1, WItem o2) {
+                Float q1 = ((NGItem)o1.item).quality;
+                Float q2 = ((NGItem)o2.item).quality;
+                if(q1 == null || q2 == null)
+                    return 0;
+                return Float.compare(q2,q1);
+            }
+        });
+        for(WItem item : items)
         {
             String name = ((NGItem)item.item).name();
             if(context.addOutItem(name, null, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1))
                 targets.add(name);
         }
 
-        new TransferItems2(context, targets).run(gui);
+            new TransferItems2(context, targets).run(gui);
 
         return Results.SUCCESS();
     }

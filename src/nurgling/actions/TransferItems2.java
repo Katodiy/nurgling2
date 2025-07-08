@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.WItem;
+import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NContext;
@@ -10,6 +11,7 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.TreeMap;
 
@@ -59,6 +61,7 @@ public class TransferItems2 implements Action
     {
         ArrayList<String> before = new ArrayList<>();
         ArrayList<String> after = new ArrayList<>();
+
         for (String item : items)
         {
             if(orderList.contains(item))
@@ -76,9 +79,9 @@ public class TransferItems2 implements Action
         for(String item : resitems) {
             TreeMap<Double,String> areas = cnt.getOutAreas(item);
             for (Double key : areas.descendingKeySet()) {
-                ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(new NAlias(item), key);
-                if(!items.isEmpty())
+                if(!NUtils.getGameUI().getInventory().getItems(new NAlias(item), key).isEmpty())
                 {
+
                     for (NContext.ObjectStorage output : cnt.getOutStorages(item,key))
                     {
                         if (output instanceof NContext.Pile) {

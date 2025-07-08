@@ -338,9 +338,8 @@ public class NContext {
             if(q>=key)
             {
                 id = thmap.get(key);
-            }
-            else
                 break;
+            }
         }
         if(id!=null) {
             navigateToAreaIfNeeded(id);
