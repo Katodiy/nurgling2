@@ -59,6 +59,7 @@ public class LettuceAndPumpkinCollector implements Action {
                                 TransferToBarrel tb;
                                 (tb = new TransferToBarrel(barrel, new NAlias("Seed"))).run(gui);
                                 barrelInfo.put(barrel, new AtomicBoolean(tb.isFull()));
+                                if (!tb.isFull()) break;
                             }
 
                             Gob trough = Finder.findGob(troughArea, new NAlias("gfx/terobjs/trough"));
