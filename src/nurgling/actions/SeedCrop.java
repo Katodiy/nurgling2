@@ -474,7 +474,6 @@ public class SeedCrop implements Action {
         List<WItem> order = new ArrayList<>();
         int planted = 0;
 
-        // Make a mutable list of seed quantities (parallel to seeds list)
         List<Integer> amounts = new ArrayList<>();
         for (WItem item : seeds) {
             int amt = -1;
@@ -487,7 +486,7 @@ public class SeedCrop implements Action {
                     }
                 }
             }
-            amounts.add(amt); // amt == -1 means it's a non-stackable crop
+            amounts.add(amt);
         }
 
         for (int i = 0; i < seeds.size() && planted < tilesToPlant; i++) {
@@ -495,11 +494,9 @@ public class SeedCrop implements Action {
             int amt = amounts.get(i);
 
             if (amt == -1) {
-                // Non-stackable: plant once
                 order.add(item);
                 planted++;
             } else {
-                // Stackable: plant as many as possible in batches of 5
                 while (amt >= 5 && planted < tilesToPlant) {
                     order.add(item);
                     amt -= 5;
@@ -509,6 +506,5 @@ public class SeedCrop implements Action {
         }
         return order;
     }
-
 }
 
