@@ -23,7 +23,6 @@ public class StackSupporter {
         size3.add("Egg");
         size3.add("Gellant");
         size3.add("Stuffing");
-        size3.add("Yarn");
         size3.add("Dried Fruit");
         size3.add("Edible Mushroom");
         size3.add("Nuts");

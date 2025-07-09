@@ -94,6 +94,7 @@ public class NContext {
         workstation_map.put("gfx/invobjs/fire",new NContext.Workstation("gfx/terobjs/pow", null));
         workstation_map.put("gfx/invobjs/cauldron",new NContext.Workstation("gfx/terobjs/cauldron", null));
         workstation_map.put("paginae/bld/potterswheel",new NContext.Workstation("gfx/terobjs/potterswheel", "gfx/borka/pwheelidle"));
+        workstation_map.put("paginae/bld/swheel",new NContext.Workstation("gfx/terobjs/swheel", "gfx/borka/swheelan-idle"));
         workstation_map.put("paginae/bld/anvil",new NContext.Workstation("gfx/terobjs/anvil", null));
     }
 
@@ -103,6 +104,7 @@ public class NContext {
         workstation_spec_map.put("gfx/terobjs/meatgrinder", Specialisation.SpecName.meatgrinder);
         workstation_spec_map.put("gfx/terobjs/churn", Specialisation.SpecName.churn);
         workstation_spec_map.put("gfx/terobjs/loom",Specialisation.SpecName.loom);
+        workstation_spec_map.put("gfx/terobjs/swheel",Specialisation.SpecName.swheel);
         workstation_spec_map.put("gfx/terobjs/ropewalk",Specialisation.SpecName.ropewalk);
         workstation_spec_map.put("gfx/terobjs/crucible",Specialisation.SpecName.crucible);
         workstation_spec_map.put("gfx/terobjs/pow",Specialisation.SpecName.pow);
