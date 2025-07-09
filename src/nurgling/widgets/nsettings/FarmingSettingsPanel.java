@@ -11,13 +11,14 @@ public class FarmingSettingsPanel extends Panel {
     public FarmingSettingsPanel() {
         super("Farming Settings");
         int y = UI.scale(36);
+        int margin = UI.scale(10);
 
         harvestRefillCheck = new CheckBox("Refill water from water containers for farmers") {
             public void set(boolean val) {
                 a = val;
             }
         };
-        add(harvestRefillCheck, new Coord(UI.scale(10), y));
+        add(harvestRefillCheck, new Coord(margin, y));
         y += UI.scale(28);
 
         cleanupQContainersCheck = new CheckBox(
@@ -26,14 +27,14 @@ public class FarmingSettingsPanel extends Panel {
                 a = val;
             }
         };
-        add(cleanupQContainersCheck, new Coord(UI.scale(10), y));
+        add(cleanupQContainersCheck, new Coord(margin, y));
         y += UI.scale(18);
 
         add(new Label("Excess lowest quality seeds will be moved to the trough if defined."),
                 new Coord(UI.scale(30), y));
         y += UI.scale(28);
 
-        add(new Label("Seeding Pattern X (columns):"), new Coord(UI.scale(10), y));
+        add(new Label("Seeding Pattern X (columns):"), new Coord(margin, y));
         y += UI.scale(24);
 
         xEntry = new TextEntry.NumberValue(50, "") {
@@ -42,10 +43,10 @@ public class FarmingSettingsPanel extends Panel {
                 super.done(buf);
             }
         };
-        add(xEntry, new Coord(UI.scale(10), y));
+        add(xEntry, new Coord(margin, y));
         y += UI.scale(32);
 
-        add(new Label("Seeding Pattern Y (rows):"), new Coord(UI.scale(10), y));
+        add(new Label("Seeding Pattern Y (rows):"), new Coord(margin, y));
         y += UI.scale(24);
 
         yEntry = new TextEntry.NumberValue(50, "") {
@@ -54,7 +55,7 @@ public class FarmingSettingsPanel extends Panel {
                 super.done(buf);
             }
         };
-        add(yEntry, new Coord(UI.scale(10), y));
+        add(yEntry, new Coord(margin, y));
     }
 
     @Override
