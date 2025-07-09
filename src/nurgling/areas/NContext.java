@@ -2,8 +2,6 @@ package nurgling.areas;
 
 import haven.*;
 import nurgling.*;
-import nurgling.actions.LiftObject;
-import nurgling.actions.PathFinder;
 import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.actions.bots.SelectArea;
 import nurgling.routes.RoutePoint;
@@ -104,7 +102,7 @@ public class NContext {
         workstation_spec_map.put("gfx/terobjs/meatgrinder", Specialisation.SpecName.meatgrinder);
         workstation_spec_map.put("gfx/terobjs/churn", Specialisation.SpecName.churn);
         workstation_spec_map.put("gfx/terobjs/loom",Specialisation.SpecName.loom);
-        workstation_spec_map.put("gfx/terobjs/swheel",Specialisation.SpecName.swheel);
+        workstation_spec_map.put("gfx/terobjs/swheel",Specialisation.SpecName.sswheel);
         workstation_spec_map.put("gfx/terobjs/ropewalk",Specialisation.SpecName.ropewalk);
         workstation_spec_map.put("gfx/terobjs/crucible",Specialisation.SpecName.crucible);
         workstation_spec_map.put("gfx/terobjs/pow",Specialisation.SpecName.pow);

@@ -76,7 +76,7 @@ public class Specialisation extends Window
         cauldron,
         potterswheel,
         barrelworkarea,
-        churn, deer, swheel
+        churn, deer, sswheel
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -135,7 +135,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.potterswheel.toString(),"Potters Wheel",Resource.loadsimg("nurgling/categories/potters_wheel")));
         specialisation.add(new SpecialisationItem(SpecName.barrelworkarea.toString(),"Craft area with barrels",Resource.loadsimg("nurgling/categories/barrel_work_area")));
         specialisation.add(new SpecialisationItem(SpecName.deer.toString(),"Deer",Resource.loadsimg("nurgling/categories/reindeers")));
-        specialisation.add(new SpecialisationItem(SpecName.swheel.toString(),"Spininng Wheel",Resource.loadsimg("nurgling/categories/swheel")));
+        specialisation.add(new SpecialisationItem(SpecName.sswheel.toString(),"Spininng Wheel",Resource.loadsimg("nurgling/categories/swheel")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
