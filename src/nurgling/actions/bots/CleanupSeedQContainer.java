@@ -118,7 +118,6 @@ public class CleanupSeedQContainer implements Action {
             for (int i = 1; i < smallSeeds.size(); i++) {
                 int nextAmt = amounts.get(i);
                 if (combined + nextAmt <= 50) {
-                    System.out.println("Combining seeds: " + combined + " + " + nextAmt);
                     NUtils.takeItemToHand(smallSeeds.get(i));
                     NUtils.itemact(target);
                     NUtils.addTask(new WaitFreeHand());
