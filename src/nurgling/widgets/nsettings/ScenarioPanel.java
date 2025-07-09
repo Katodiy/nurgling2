@@ -36,7 +36,7 @@ public class ScenarioPanel extends Panel {
     private ScenarioBotSelectionDialog stepDialog = null;
 
     public ScenarioPanel() {
-        super("Autorunner scenarios");
+        super("");
 
         int btnWidth = UI.scale(120);
         int btnHeight = UI.scale(28);
@@ -47,8 +47,8 @@ public class ScenarioPanel extends Panel {
         int slistHeight = UI.scale(400);
         int editorListHeight = UI.scale(380);
 
-        listPanel = add(new Widget(new Coord(contentWidth, contentHeight)), new Coord(margin, titleY));
-        listPanel.add(new Label("Scenarios:"), new Coord(margin, margin));
+        listPanel = add(new Widget(new Coord(contentWidth, contentHeight)), new Coord(margin, margin));
+        listPanel.add(new Label("Scenarios:"), new Coord(0, 0));
 
         int slistWidth = contentWidth - margin * 2;
         scenarioList = listPanel.add(
@@ -90,11 +90,11 @@ public class ScenarioPanel extends Panel {
                 new Coord((contentWidth - btnWidth) / 2, bottomY - btnHeight - UI.scale(8))
         );
 
-        editorPanel = add(new Widget(new Coord(contentWidth, contentHeight)), new Coord(margin, titleY));
+        editorPanel = add(new Widget(new Coord(contentWidth, contentHeight)), new Coord(margin, margin));
         editorPanel.hide();
 
         int y = margin;
-        editorPanel.add(new Label("Edit Scenario:"), new Coord(margin, y));
+        editorPanel.add(new Label("Edit Scenario:"), new Coord(0, 0));
         y += UI.scale(22);
 
         scenarioNameEntry = editorPanel.add(new TextEntry(contentWidth - margin * 2 - 10, ""), new Coord(margin, y));

@@ -17,22 +17,15 @@ public class AutoSelection extends Panel {
     ActionList al;
     TextEntry newPetall;
     int width = UI.scale(210);
+    private CheckBox autoSelectEnabled;
+    private CheckBox singlePetal;
 
     public AutoSelection() {
         super("");
 
         final int margin = UI.scale(10);
 
-        prev = add(new CheckBox("Auto selection enabled") {
-            {
-                a = (Boolean) NConfig.get(NConfig.Key.asenable);
-            }
-
-            public void set(boolean val) {
-                NConfig.set(NConfig.Key.asenable, val);
-                a = val;
-            }
-        }, new Coord(margin, margin));
+        prev = autoSelectEnabled = add(new CheckBox("Auto selection enabled"), new Coord(margin, margin));
 
         prev = add(new Label("Auto selected petals:"), prev.pos("bl").adds(0, 5));
         prev = add(al = new ActionList(new Coord(width, UI.scale(300))), prev.pos("bl").adds(0, 10));
@@ -49,6 +42,17 @@ public class AutoSelection extends Panel {
             }
         }, newPetall.pos("ur").adds(10, 0));
 
+        singlePetal = add(new CheckBox("Auto select single petal"), newPetall.pos("bl").adds(0, 10));
+
+        load();
+        pack();
+    }
+
+    @Override
+    public void load() {
+        petals.clear();
+        autoSelectEnabled.a = getBool(NConfig.Key.asenable);
+
         if (NConfig.get(NConfig.Key.petals) != null) {
             for (HashMap<String, Object> item : (ArrayList<HashMap<String, Object>>) NConfig.get(NConfig.Key.petals)) {
                 AutoSelectItem aitem = new AutoSelectItem((String) item.get("name"));
@@ -57,18 +61,27 @@ public class AutoSelection extends Panel {
             }
         }
 
-        prev = add(new CheckBox("Auto select single petal") {
-            {
-                a = (Boolean) NConfig.get(NConfig.Key.singlePetal);
-            }
+        singlePetal.a = getBool(NConfig.Key.singlePetal);
+        if (al != null)
+            al.update();
+    }
 
-            public void set(boolean val) {
-                NConfig.set(NConfig.Key.singlePetal, val);
-                a = val;
-            }
-        }, newPetall.pos("bl").adds(0, 10));
+    @Override
+    public void save() {
+        NConfig.set(NConfig.Key.asenable, autoSelectEnabled.a);
 
-        pack();
+        ArrayList<HashMap<String, Object>> plist = new ArrayList<>();
+        for (AutoSelectItem petal : petals) {
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("name", petal.text());
+            map.put("enabled", petal.isEnabled.a);
+            plist.add(map);
+        }
+        NConfig.set(NConfig.Key.petals, plist);
+
+        NConfig.set(NConfig.Key.singlePetal, singlePetal.a);
+
+        NConfig.needUpdate();
     }
 
     class ActionList extends SListBox<AutoSelectItem, Widget> {
@@ -149,5 +162,10 @@ public class AutoSelection extends Panel {
         public String text() {
             return text.text();
         }
+    }
+
+    private boolean getBool(NConfig.Key key) {
+        Object val = NConfig.get(key);
+        return val instanceof Boolean ? (Boolean) val : false;
     }
 }

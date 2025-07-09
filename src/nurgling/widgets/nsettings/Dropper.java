@@ -9,7 +9,9 @@ public class Dropper extends Panel {
     DropContainer dc;
     public Dropper() {
         super("Drop settings");
-        add(dc = new DropContainer(), UI.scale(5,30));
+        int margin = UI.scale(5);
+
+        add(dc = new DropContainer(), UI.scale(margin, 30));
     }
 
     @Override
