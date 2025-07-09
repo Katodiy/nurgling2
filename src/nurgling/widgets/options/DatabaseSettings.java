@@ -27,9 +27,14 @@ public class DatabaseSettings extends Panel {
     private Label hostLabel, userLabel, passLabel, fileLabel;
     private Button initDbButton;
     private CheckBox enableCheckbox;
+    private Dropbox<String> dbType;
     private final int labelWidth = UI.scale(80); // Ширина лейблов
     private final int entryX = UI.scale(110);    // X-координата для TextEntry (was 90, increased for better space)
     private final int margin = UI.scale(10);
+
+    private boolean enabled;
+    private String dbTypeStr;
+    private String host, user, pass, dbPath;
 
     public DatabaseSettings() {
         super("");
@@ -37,13 +42,9 @@ public class DatabaseSettings extends Panel {
 
         // Чекбокс включения/выключения базы данных
         prev = enableCheckbox = add(new CheckBox("Enable using Database") {
-            {
-                a = (Boolean) NConfig.get(NConfig.Key.ndbenable);
-            }
-
             public void set(boolean val) {
-                NConfig.set(NConfig.Key.ndbenable, val);
                 a = val;
+                enabled = val;
                 updateWidgetsVisibility();
             }
         }, new Coord(margin, y));
@@ -55,7 +56,7 @@ public class DatabaseSettings extends Panel {
 
         // Выпадающий список для выбора типа базы данных
         prev = add(new Label("Database Type:"), new Coord(margin, y));
-        Dropbox<String> dbType = add(new Dropbox<String>(UI.scale(150), 5, UI.scale(16)) {
+        dbType = add(new Dropbox<String>(UI.scale(150), 5, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
                 return new LinkedList<>(getDbTypes()).get(i);
@@ -74,14 +75,10 @@ public class DatabaseSettings extends Panel {
             @Override
             public void change(String item) {
                 super.change(item);
-                // Устанавливаем соответствующий флаг в конфиге
-                NConfig.set(NConfig.Key.postgres, "PostgreSQL".equals(item));
-                NConfig.set(NConfig.Key.sqlite, "SQLite".equals(item));
-                // Обновляем отображение виджетов
+                dbTypeStr = item;
                 updateWidgetsVisibility();
             }
         }, new Coord(entryX, y));
-        dbType.change((Boolean) NConfig.get(NConfig.Key.postgres) ? "PostgreSQL" : "SQLite");
         y += dbType.sz.y + UI.scale(10);
 
         int firstSettingY = y;
@@ -89,24 +86,20 @@ public class DatabaseSettings extends Panel {
         // Создаем виджеты для PostgreSQL
         hostLabel = add(new Label("Host:"), new Coord(margin, firstSettingY));
         hostEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, firstSettingY));
-        hostEntry.settext((String) NConfig.get(NConfig.Key.serverNode));
         y += hostEntry.sz.y + UI.scale(5);
 
         userLabel = add(new Label("Username:"), new Coord(margin, y));
         usernameEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, y));
-        usernameEntry.settext((String) NConfig.get(NConfig.Key.serverUser));
         y += usernameEntry.sz.y + UI.scale(5);
 
         passLabel = add(new Label("Password:"), new Coord(margin, y));
         passwordEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, y));
-        passwordEntry.settext((String) NConfig.get(NConfig.Key.serverPass));
         passwordEntry.pw = true;
         y += passwordEntry.sz.y + UI.scale(10);
 
         // Создаем виджеты для SQLite
         fileLabel = add(new Label("File Path:"), new Coord(margin, firstSettingY));
         filePathEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, firstSettingY));
-        filePathEntry.settext((String) NConfig.get(NConfig.Key.dbFilePath));
         y += filePathEntry.sz.y + UI.scale(5);
 
         // Кнопка инициализации новой базы данных
@@ -120,15 +113,15 @@ public class DatabaseSettings extends Panel {
                     if (fc.showSaveDialog(null) != JFileChooser.APPROVE_OPTION)
                         return;
 
-                    String dbPath = fc.getSelectedFile().getAbsolutePath();
-                    if (!dbPath.endsWith(".db")) {
-                        dbPath += ".db";
+                    String dbPathLocal = fc.getSelectedFile().getAbsolutePath();
+                    if (!dbPathLocal.endsWith(".db")) {
+                        dbPathLocal += ".db";
                     }
 
                     try {
                         // Создаем новую базу данных
-                        Files.deleteIfExists(Paths.get(dbPath));
-                        Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+                        Files.deleteIfExists(Paths.get(dbPathLocal));
+                        Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dbPathLocal);
 
                         // Инициализируем таблицы
                         try (Statement stmt = conn.createStatement()) {
@@ -168,7 +161,8 @@ public class DatabaseSettings extends Panel {
                         conn.close();
 
                         // Устанавливаем путь в текстовое поле
-                        filePathEntry.settext(dbPath);
+                        filePathEntry.settext(dbPathLocal);
+                        dbPath = dbPathLocal;
                         NUtils.getGameUI().msg("Database successfully created and initialized", Color.YELLOW);
                     } catch (Exception e) {
                         NUtils.getGameUI().msg("Failed to create database: " + e.getMessage(), Color.RED);
@@ -177,26 +171,60 @@ public class DatabaseSettings extends Panel {
                 });
             }
         }, new Coord(entryX, y));
-        // y += initDbButton.sz.y + UI.scale(5);
 
-        // Обновляем видимость виджетов в соответствии с текущим выбором
+        load();
         updateWidgetsVisibility();
     }
 
+    @Override
+    public void load() {
+        enabled = getBool(NConfig.Key.ndbenable);
+        enableCheckbox.a = enabled;
+
+        boolean isPostgres = getBool(NConfig.Key.postgres);
+        dbTypeStr = isPostgres ? "PostgreSQL" : "SQLite";
+        dbType.change(dbTypeStr);
+
+        host = asString(NConfig.get(NConfig.Key.serverNode));
+        user = asString(NConfig.get(NConfig.Key.serverUser));
+        pass = asString(NConfig.get(NConfig.Key.serverPass));
+        dbPath = asString(NConfig.get(NConfig.Key.dbFilePath));
+
+        hostEntry.settext(host);
+        usernameEntry.settext(user);
+        passwordEntry.settext(pass);
+        filePathEntry.settext(dbPath);
+
+        updateWidgetsVisibility();
+    }
+
+    @Override
     public void save() {
-        // Сохраняем настройки в зависимости от выбранного типа базы данных
-        if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
+        NConfig.set(NConfig.Key.ndbenable, enabled);
+        boolean isPostgres = "PostgreSQL".equals(dbTypeStr);
+        NConfig.set(NConfig.Key.postgres, isPostgres);
+        NConfig.set(NConfig.Key.sqlite, !isPostgres);
+
+        if (isPostgres) {
             NConfig.set(NConfig.Key.serverNode, hostEntry.text());
             NConfig.set(NConfig.Key.serverUser, usernameEntry.text());
             NConfig.set(NConfig.Key.serverPass, passwordEntry.text());
         } else {
             NConfig.set(NConfig.Key.dbFilePath, filePathEntry.text());
         }
+
+        if (ui != null) {
+            if (ui.core.poolManager == null)
+                ui.core.poolManager = new DBPoolManager(1);
+            ui.core.poolManager.reconnect();
+        }
+
+        NConfig.needUpdate();
     }
 
     private void updateWidgetsVisibility() {
-        boolean isEnabled = (Boolean) NConfig.get(NConfig.Key.ndbenable);
-        boolean isPostgres = isEnabled && (Boolean) NConfig.get(NConfig.Key.postgres);
+        boolean isEnabled = enabled;
+        boolean isPostgres = isEnabled && "PostgreSQL".equals(dbTypeStr);
         boolean isSQLite = isEnabled && !isPostgres;
 
         if (hostLabel != null) {
@@ -229,5 +257,12 @@ public class DatabaseSettings extends Panel {
         types.add("PostgreSQL");
         types.add("SQLite");
         return types;
+    }
+    private boolean getBool(NConfig.Key key) {
+        Object val = NConfig.get(key);
+        return val instanceof Boolean ? (Boolean) val : false;
+    }
+    private String asString(Object v) {
+        return v == null ? "" : v.toString();
     }
 }

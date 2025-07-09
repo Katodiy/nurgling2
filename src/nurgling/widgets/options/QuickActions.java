@@ -17,6 +17,10 @@ public class QuickActions extends Panel {
     ActionList al;
     TextEntry newPattern;
     int width = UI.scale(210);
+    private HSlider rangeSlider;
+    private Label dpy;
+    private CheckBox visitorCheck;
+    private CheckBox doorCheck;
 
     public QuickActions() {
         final int margin = UI.scale(10);
@@ -33,6 +37,36 @@ public class QuickActions extends Panel {
                 }
             }
         }, newPattern.pos("ur").adds(10, 0));
+
+        dpy = new Label("");
+        rangeSlider = new HSlider(UI.scale(160), 1, 10, 1) {
+            protected void added() {
+                updateDpyLabel();
+            }
+            public void changed() {
+                updateDpyLabel();
+            }
+        };
+
+        // Correctly update prev for chaining layout
+        addhlp(prev.pos("bl").adds(0, UI.scale(10)), UI.scale(5), rangeSlider, dpy);
+        prev = rangeSlider;
+        prev.settip("Set range of quick actions in tiles.", true);
+
+        prev = visitorCheck = add(new CheckBox("Disable opening/closing visitor gates"), prev.pos("bl").adds(0, 5));
+        prev = doorCheck = add(new CheckBox("Walking into doors in basic mode"), prev.pos("bl").adds(0, 5));
+        pack();
+        load();
+    }
+
+    private void updateDpyLabel() {
+        if (dpy != null && rangeSlider != null)
+            dpy.settext(rangeSlider.val + " tiles");
+    }
+
+    @Override
+    public void load() {
+        patterns.clear();
         if (NConfig.get(NConfig.Key.q_pattern) != null) {
             for (HashMap<String, Object> item : (ArrayList<HashMap<String, Object>>) NConfig.get(NConfig.Key.q_pattern)) {
                 ActionsItem aitem = new ActionsItem((String) item.get("name"));
@@ -40,49 +74,33 @@ public class QuickActions extends Panel {
                 patterns.add(aitem);
             }
         }
-
-        Label dpy = new Label("");
-        addhlp(prev.pos("bl").adds(0, UI.scale(10)), UI.scale(5),
-                prev = new HSlider(UI.scale(160), 1, 10, (Integer) NConfig.get(NConfig.Key.q_range)) {
-                    protected void added() {
-                        dpy();
-                    }
-
-                    void dpy() {
-                        dpy.settext(this.val + " tiles");
-                    }
-
-                    public void changed() {
-                        NConfig.set(NConfig.Key.q_range, val);
-                        dpy();
-                    }
-                }, dpy);
-        prev.settip("Set range of quick actions in tiles.", true);
-
-        prev = add(new CheckBox("Disable opening/closing visitor gates") {
-            {
-                a = (Boolean) NConfig.get(NConfig.Key.q_visitor);
-            }
-
-            public void set(boolean val) {
-                NConfig.set(NConfig.Key.q_visitor, val);
-                a = val;
-            }
-        }, prev.pos("bl").adds(0, 5));
-
-        prev = add(new CheckBox("Walking into doors in basic mode") {
-            {
-                a = (Boolean) NConfig.get(NConfig.Key.q_door);
-            }
-
-            public void set(boolean val) {
-                NConfig.set(NConfig.Key.q_door, val);
-                a = val;
-            }
-        }, prev.pos("bl").adds(0, 5));
-        pack();
+        int range = 1;
+        Object rv = NConfig.get(NConfig.Key.q_range);
+        if (rv instanceof Integer)
+            range = (Integer) rv;
+        rangeSlider.val = range;
+        updateDpyLabel();
+        visitorCheck.a = getBool(NConfig.Key.q_visitor);
+        doorCheck.a = getBool(NConfig.Key.q_door);
+        if (al != null)
+            al.update();
     }
 
+    @Override
+    public void save() {
+        ArrayList<HashMap<String, Object>> plist = new ArrayList<>();
+        for (ActionsItem pattern : patterns) {
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("name", pattern.text());
+            map.put("enabled", pattern.isEnabled.a);
+            plist.add(map);
+        }
+        NConfig.set(NConfig.Key.q_pattern, plist);
+        NConfig.set(NConfig.Key.q_range, rangeSlider.val);
+        NConfig.set(NConfig.Key.q_visitor, visitorCheck.a);
+        NConfig.set(NConfig.Key.q_door, doorCheck.a);
+        NConfig.needUpdate();
+    }
 
     class ActionList extends SListBox<ActionsItem, Widget> {
         ActionList(Coord sz) {
@@ -178,5 +196,10 @@ public class QuickActions extends Panel {
         public String text() {
             return text.text();
         }
+    }
+
+    private boolean getBool(NConfig.Key key) {
+        Object val = NConfig.get(key);
+        return val instanceof Boolean ? (Boolean) val : false;
     }
 }
