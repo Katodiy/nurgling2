@@ -252,6 +252,10 @@ public class NInventory extends Inventory
         it.item.wdgmsg("iact", Coord.z, 1);
     }
 
+    public void activateItem(WItem item) throws InterruptedException {
+        item.item.wdgmsg("iact", Coord.z, 1);
+    }
+
     public void dropOn(Coord dc, String name) throws InterruptedException
     {
         if (NUtils.getGameUI().vhand != null)

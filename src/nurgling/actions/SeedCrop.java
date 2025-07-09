@@ -9,7 +9,6 @@ import nurgling.areas.NArea;
 import nurgling.tasks.GetCurs;
 import nurgling.tasks.WaitAnotherAmount;
 import nurgling.tasks.WaitGobsInField;
-import nurgling.tasks.WaitItems;
 import nurgling.tools.*;
 
 import java.util.*;
@@ -141,7 +140,7 @@ public class SeedCrop implements Action {
     }
 
     private void dropOffSeeds(NGameUI gui, ArrayList<Gob> barrels) throws InterruptedException {
-        if(barrels.isEmpty() && allowedToPlantFromStockpiles) {
+        if (barrels.isEmpty() && allowedToPlantFromStockpiles) {
             new TransferToPiles(seed.getRCArea(), iseed).run(gui);
         } else {
             if (!gui.getInventory().getItems(iseed).isEmpty()) {
@@ -183,12 +182,12 @@ public class SeedCrop implements Action {
                 }
             }
         }
-        if(gui.getInventory().getItems(iseed).size() < 2) {
+        if (gui.getInventory().getItems(iseed).size() < 2) {
             NUtils.getGameUI().msg("No items for seeding");
             return;
         }
         if (count > 0) {
-            if(PathFinder.isAvailable(target_coord)) {
+            if (PathFinder.isAvailable(target_coord)) {
                 new PathFinder(target_coord).run(NUtils.getGameUI());
                 if (setDir.get()) {
                     if (rev)
@@ -197,19 +196,17 @@ public class SeedCrop implements Action {
                         new SetDir(new Coord2d(0, -1)).run(gui);
                     setDir.set(false);
                 }
-            }
-            else
-            {
+            } else {
                 for (int i = 0; i <= area.br.x - area.ul.x; i++) {
                     for (int j = 0; j <= area.br.y - area.ul.y; j++) {
                         if (NParser.checkName(tiles[i][j].name, "field")) {
-                            new PathFinder(new Coord(area.ul.x+i,area.ul.y+j).mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y)).run(gui);
+                            new PathFinder(new Coord(area.ul.x + i, area.ul.y + j).mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y)).run(gui);
                         }
                     }
                 }
             }
             int stacks_size = 0;
-            if(!barrels.isEmpty()) {
+            if (!barrels.isEmpty()) {
                 stacks_size = NUtils.getGameUI().getInventory().getTotalAmountItems(iseed);
             } else {
                 stacks_size = NUtils.getGameUI().getInventory().getItems(iseed).size();
@@ -225,8 +222,8 @@ public class SeedCrop implements Action {
             }
             NUtils.getUI().core.addTask(new WaitGobsInField(area, total));
 
-            if(!barrels.isEmpty()) {
-                NUtils.getUI().core.addTask(new WaitAnotherAmount(NUtils.getGameUI().getInventory(),iseed,stacks_size));
+            if (!barrels.isEmpty()) {
+                NUtils.getUI().core.addTask(new WaitAnotherAmount(NUtils.getGameUI().getInventory(), iseed, stacks_size));
             } else if (!stockpiles.isEmpty()) {
                 fetchSeedsFromStockpiles(gui);
             }
@@ -258,14 +255,14 @@ public class SeedCrop implements Action {
     private void fetchSeedsFromStockpiles(NGameUI gui) throws InterruptedException {
         ArrayList<Gob> stockPiles = Finder.findGobs(seed, new NAlias("stockpile"));
 
-        if(gui.getInventory().getItems(iseed).size() < 9) {
+        if (gui.getInventory().getItems(iseed).size() < 9) {
             for (Gob stockpile : stockPiles) {
                 if (gui.getInventory().getFreeSpace() > 0) {
                     new PathFinder(stockpile).run(gui);
                     new OpenTargetContainer("Stockpile", stockpile).run(gui);
 
                     int numberOfItemsToFetch = gui.getInventory().getFreeSpace();
-                    if(((NInventory) NUtils.getGameUI().maininv).bundle.a) {
+                    if (((NInventory) NUtils.getGameUI().maininv).bundle.a) {
                         numberOfItemsToFetch = numberOfItemsToFetch * StackSupporter.getMaxStackSize(iseed.getDefault());
                     }
 
@@ -313,7 +310,7 @@ public class SeedCrop implements Action {
             cand.initattr(Container.Space.class);
             containers.add(cand);
         }
-        if(containers.isEmpty())
+        if (containers.isEmpty())
             throw new RuntimeException("No container found in seed area!");
         Container container = containers.get(0);
 
@@ -335,10 +332,15 @@ public class SeedCrop implements Action {
         // 4. Fetch top seeds to inventory
         new TakeAvailableItemsFromContainer(container, iseed, fetchCount, NInventory.QualityType.High).run(gui);
 
+        List<WItem> plantingOrder = getPlantingOrder(NUtils.getGameUI().getInventory().getItems(iseed), toSeed.size());
+
         // 5. Seed just those x*y tiles, individually
-        for (Coord tile : toSeed) {
+        for (int i = 0; i < toSeed.size(); i++) {
+            WItem itemToPlant = plantingOrder.get(i);
+            Coord tile = toSeed.get(i);
+
             new PathFinder(tile.mul(MCache.tilesz).add(MCache.tilehsz)).run(gui);
-            NUtils.getGameUI().getInventory().activateItem(iseed);
+            NUtils.getGameUI().getInventory().activateItem(itemToPlant);
             NUtils.getGameUI().map.wdgmsg("sel", tile, tile, 1);
             NUtils.getUI().core.addTask(new WaitGobsInField(new Area(tile, tile), 1));
         }
@@ -355,7 +357,7 @@ public class SeedCrop implements Action {
         Set<String> processed = new HashSet<>();
 
         for (WItem item : seeds) {
-            String name = ((NGItem)item.item).name().toLowerCase();
+            String name = ((NGItem) item.item).name().toLowerCase();
             if (name.contains("seed")) {
                 seedsList.add(item);
             } else {
@@ -368,7 +370,7 @@ public class SeedCrop implements Action {
 
         // Crops first (exclude seed items)
         for (WItem item : crops) {
-            String itemName = ((NGItem)item.item).name();
+            String itemName = ((NGItem) item.item).name();
             if (processed.add(itemName)) {
                 new TransferToContainer(
                         container,
@@ -379,7 +381,7 @@ public class SeedCrop implements Action {
 
         // Seeds second
         for (WItem item : seedsList) {
-            String itemName = ((NGItem)item.item).name();
+            String itemName = ((NGItem) item.item).name();
             if (processed.add(itemName)) {
                 new TransferToContainer(
                         container,
@@ -413,8 +415,8 @@ public class SeedCrop implements Action {
                 boolean ok = true;
                 for (int dx = 0; dx < patX; dx++) {
                     for (int dy = 0; dy < patY; dy++) {
-                        if (used[i+dx][j+dy]) ok = false;
-                        Area.Tile tile = tiles[i+dx][j+dy];
+                        if (used[i + dx][j + dy]) ok = false;
+                        Area.Tile tile = tiles[i + dx][j + dy];
                         if (!nurgling.tools.NParser.checkName(tile.name, "field") || !tile.isFree)
                             ok = false;
                     }
@@ -423,7 +425,7 @@ public class SeedCrop implements Action {
                     patches++;
                     for (int dx = 0; dx < patX; dx++)
                         for (int dy = 0; dy < patY; dy++)
-                            used[i+dx][j+dy] = true;
+                            used[i + dx][j + dy] = true;
                 }
             }
         }
@@ -437,7 +439,7 @@ public class SeedCrop implements Action {
                 ArrayList<Coord> patch = new ArrayList<>();
                 for (int dx = 0; dx < patX; dx++) {
                     for (int dy = 0; dy < patY; dy++) {
-                        Area.Tile tile = tiles[i+dx][j+dy];
+                        Area.Tile tile = tiles[i + dx][j + dy];
                         if (!nurgling.tools.NParser.checkName(tile.name, "field") || !tile.isFree)
                             ok = false;
                         patch.add(new Coord(area.ul.x + i + dx, area.ul.y + j + dy));
@@ -467,5 +469,46 @@ public class SeedCrop implements Action {
         }
         return totalCells;
     }
+
+    private List<WItem> getPlantingOrder(List<WItem> seeds, int tilesToPlant) {
+        List<WItem> order = new ArrayList<>();
+        int planted = 0;
+
+        // Make a mutable list of seed quantities (parallel to seeds list)
+        List<Integer> amounts = new ArrayList<>();
+        for (WItem item : seeds) {
+            int amt = -1;
+            List<ItemInfo> infoList = item.item.info;
+            if (infoList != null) {
+                for (ItemInfo info : infoList) {
+                    if (info instanceof GItem.Amount) {
+                        amt = ((GItem.Amount) info).itemnum();
+                        break;
+                    }
+                }
+            }
+            amounts.add(amt); // amt == -1 means it's a non-stackable crop
+        }
+
+        for (int i = 0; i < seeds.size() && planted < tilesToPlant; i++) {
+            WItem item = seeds.get(i);
+            int amt = amounts.get(i);
+
+            if (amt == -1) {
+                // Non-stackable: plant once
+                order.add(item);
+                planted++;
+            } else {
+                // Stackable: plant as many as possible in batches of 5
+                while (amt >= 5 && planted < tilesToPlant) {
+                    order.add(item);
+                    amt -= 5;
+                    planted++;
+                }
+            }
+        }
+        return order;
+    }
+
 }
 
