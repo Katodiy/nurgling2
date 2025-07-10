@@ -23,6 +23,10 @@ public class LettuceFarmer implements Action {
 
         NArea lettuceLeaf = NContext.findOut(new NAlias("Lettuce Leaf"), 1);
 
+        if(lettuceLeaf == null) {
+            return Results.ERROR("PUT Area for Lettuce Leaf required, but not found!");
+        }
+
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
         req.add(seed);

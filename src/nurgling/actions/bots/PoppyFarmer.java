@@ -24,6 +24,10 @@ public class PoppyFarmer implements Action {
 
         NArea poppyFlowerArea = NContext.findOut("Poppy Flower", 1);
 
+        if(poppyFlowerArea == null) {
+            return Results.ERROR("PUT Area for Poppy Flower required, but not found!");
+        }
+
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
         req.add(seed);

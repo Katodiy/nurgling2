@@ -24,6 +24,10 @@ public class FlaxFarmer implements Action {
 
         NArea flaxFibersArea = NContext.findOut("Flax Fibres", 1);
 
+        if(flaxFibersArea == null) {
+            return Results.ERROR("PUT Area for Flax Fibres required, but not found!");
+        }
+
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
         req.add(seed);

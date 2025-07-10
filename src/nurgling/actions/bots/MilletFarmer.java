@@ -24,6 +24,10 @@ public class MilletFarmer implements Action {
 
         NArea strawArea = NContext.findOut("Straw", 1);
 
+        if(strawArea == null) {
+            return Results.ERROR("PUT Area for Straw required, but not found!");
+        }
+
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
         req.add(seed);

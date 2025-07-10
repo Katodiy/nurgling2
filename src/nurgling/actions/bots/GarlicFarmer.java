@@ -23,7 +23,9 @@ public class GarlicFarmer implements Action {
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
+        req.add(garlicAsSeed);
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+        opt.add(trough);
         opt.add(swill);
 
         if (new Validator(req, opt).run(gui).IsSuccess()) {

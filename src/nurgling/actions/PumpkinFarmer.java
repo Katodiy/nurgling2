@@ -22,6 +22,10 @@ public class PumpkinFarmer implements Action {
 
         NArea pumpkinFlesh = NContext.findOut(new NAlias("Pumpkin Flesh"), 1);
 
+        if(pumpkinFlesh == null) {
+            return Results.ERROR("PUT Area for Pumpkin Flesh required, but not found!");
+        }
+
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
         req.add(seed);

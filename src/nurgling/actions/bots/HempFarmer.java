@@ -24,6 +24,10 @@ public class HempFarmer implements Action {
 
         NArea hempFibersArea = NContext.findOut("Hemp Fibres", 1);
 
+        if(hempFibersArea == null) {
+            return Results.ERROR("PUT Area for Hemp Fibres required, but not found!");
+        }
+
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
         req.add(seed);
