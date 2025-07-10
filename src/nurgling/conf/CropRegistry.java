@@ -97,6 +97,23 @@ public class CropRegistry {
                 )
         );
 
+        // Green Kale
+        HARVESTABLE.put(
+                new NAlias("plants/greenkale"),
+                Arrays.asList(
+                        new CropStage(4, new NAlias("Green Kale Seeds"), StorageBehavior.BARREL)
+                )
+        );
+
+        // Leek
+        HARVESTABLE.put(
+                new NAlias("plants/leek"),
+                Arrays.asList(
+                        new CropStage(2, new NAlias("Leek Seeds"), StorageBehavior.BARREL),
+                        new CropStage(4, new NAlias("Leek"), StorageBehavior.STOCKPILE)
+                )
+        );
+
         // Pumpkin
         HARVESTABLE.put(
                 new NAlias("plants/pumpkin"),
