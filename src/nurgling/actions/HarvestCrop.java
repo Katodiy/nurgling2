@@ -282,32 +282,34 @@ public class HarvestCrop implements Action {
                 }
             }
         } else {
-            // Find all containers in the seed area
-            ArrayList<Container> containers = new ArrayList<>();
-            for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-                Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
-                cand.initattr(Container.Space.class);
-                containers.add(cand);
-            }
-
-            if(containers.isEmpty())
-                throw new RuntimeException("No container found in seed area!");
-            Container container = containers.get(0);
-
-            List<WItem> allItems = new ArrayList<>();
-            allItems.addAll(barrelItems);
-            allItems.addAll(stockpileItems);
-
-            Set<String> processed = new HashSet<>();
-
-            for (WItem item : allItems) {
-                String itemName = ((NGItem)item.item).name();
-                if(processed.add(itemName)) {
-                    new TransferToContainer(container, new NAlias(itemName)).run(gui);
+            if(!barrelOnlyIfInventoryFull || gui.getInventory().getFreeSpace() <= 7) {
+                // Find all containers in the seed area
+                ArrayList<Container> containers = new ArrayList<>();
+                for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
+                    Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+                    cand.initattr(Container.Space.class);
+                    containers.add(cand);
                 }
-            }
 
-            new CloseTargetContainer(container).run(gui);
+                if (containers.isEmpty())
+                    throw new RuntimeException("No container found in seed area!");
+                Container container = containers.get(0);
+
+                List<WItem> allItems = new ArrayList<>();
+                allItems.addAll(barrelItems);
+                allItems.addAll(stockpileItems);
+
+                Set<String> processed = new HashSet<>();
+
+                for (WItem item : allItems) {
+                    String itemName = ((NGItem) item.item).name();
+                    if (processed.add(itemName)) {
+                        new TransferToContainer(container, new NAlias(itemName)).run(gui);
+                    }
+                }
+
+                new CloseTargetContainer(container).run(gui);
+            }
         }
 
     }
