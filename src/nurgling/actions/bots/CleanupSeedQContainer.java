@@ -2,11 +2,14 @@ package nurgling.actions.bots;
 
 import haven.Coord;
 import haven.Gob;
+import haven.ItemInfo;
 import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NInventory;
+import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.tasks.WaitFreeHand;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
@@ -48,6 +51,8 @@ public class CleanupSeedQContainer implements Action {
         Coord containerSize = gui.getInventory(container.cap).isz;
         int containerCapacity = containerSize.x * containerSize.y;
 
+        combineSmallSeedStacks(gui, container.cap, iseed);
+
         // Get all seeds in the container
         ArrayList<WItem> seeds = gui.getInventory(container.cap).getItems(iseed);
 
@@ -81,4 +86,46 @@ public class CleanupSeedQContainer implements Action {
 
         return Results.SUCCESS();
     }
+
+    private void combineSmallSeedStacks(NGameUI gui, String containerCap, NAlias iseed) throws InterruptedException {
+        while (true) {
+            ArrayList<WItem> seeds = gui.getInventory(containerCap).getItems(iseed);
+            ArrayList<WItem> smallSeeds = new ArrayList<>();
+            ArrayList<Integer> amounts = new ArrayList<>();
+            for (WItem seed : seeds) {
+                int amount = -1;
+                if (seed.item.info != null) {
+                    for (haven.ItemInfo info : seed.item.info) {
+                        if (info instanceof haven.GItem.Amount) {
+                            amount = ((haven.GItem.Amount) info).itemnum();
+                            break;
+                        }
+                    }
+                }
+                if (amount > 0 && amount < 5) {
+                    smallSeeds.add(seed);
+                    amounts.add(amount);
+                }
+            }
+            if (smallSeeds.size() < 2) break;
+
+            int total = 0;
+            for (int amt : amounts) total += amt;
+            if (total < 5) break;
+
+            int combined = amounts.get(0);
+            WItem target = smallSeeds.get(0);
+            for (int i = 1; i < smallSeeds.size(); i++) {
+                int nextAmt = amounts.get(i);
+                if (combined + nextAmt <= 50) {
+                    NUtils.takeItemToHand(smallSeeds.get(i));
+                    NUtils.itemact(target);
+                    NUtils.addTask(new WaitFreeHand());
+                    combined += nextAmt;
+                }
+                if (combined >= 5) break;
+            }
+        }
+    }
+
 }

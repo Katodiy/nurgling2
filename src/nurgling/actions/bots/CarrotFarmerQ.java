@@ -2,6 +2,8 @@ package nurgling.actions.bots;
 
 import nurgling.NConfig;
 import nurgling.NGameUI;
+import nurgling.NInventory;
+import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 public class CarrotFarmerQ implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
 
         NArea.Specialisation cropQ = new NArea.Specialisation(Specialisation.SpecName.cropQ.toString(), "Carrot");
         NArea.Specialisation seedQ = new NArea.Specialisation(Specialisation.SpecName.seedQ.toString(), "Carrot");
@@ -23,11 +26,12 @@ public class CarrotFarmerQ implements Action {
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(cropQ);
         req.add(seedQ);
-
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         opt.add(trough);
 
         if (new Validator(req, opt).run(gui).IsSuccess()) {
+            NUtils.stackSwitch(true);
+
             new HarvestCrop(
                     NContext.findSpec(cropQ),
                     NContext.findSpec(seedQ),
@@ -42,9 +46,11 @@ public class CarrotFarmerQ implements Action {
                 new CleanupSeedQContainer(NContext.findSpec(seedQ), new NAlias("Carrot"), NContext.findSpec(trough)).run(gui);
             }
 
+            NUtils.stackSwitch(oldStackingValue);
             return Results.SUCCESS();
         }
 
+        NUtils.stackSwitch(oldStackingValue);
         return Results.FAIL();
     }
 }
