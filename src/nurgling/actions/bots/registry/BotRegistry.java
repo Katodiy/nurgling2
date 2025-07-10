@@ -72,10 +72,12 @@ public class BotRegistry {
         bots.add(new BotDescriptor("beetroot", BotDescriptor.BotType.FARMING, "Beetroot Farmer", "Automatically harvests and replants beetroots.", true, true, BeetrootFarmer.class, "beetroot", false));
         bots.add(new BotDescriptor("red_onion", BotDescriptor.BotType.FARMING, "Red Onion Farmer", "Automatically harvests and replants red onions.", true, true, RedOnionFarmer.class, "red_onion", false));
         bots.add(new BotDescriptor("yellow_onion", BotDescriptor.BotType.FARMING, "Yellow Onion Farmer", "Automatically harvests and replants yellow onions.", true, true, YellowOnionFarmer.class, "yellow_onion", false));
+        bots.add(new BotDescriptor("leek", BotDescriptor.BotType.FARMING, "Leek Farmer", "Automatically harvests and replants leek.", true, true, LeekFarmer.class, "leek", false));
         bots.add(new BotDescriptor("garlic", BotDescriptor.BotType.FARMING, "Garlic Farmer", "Automatically harvests and replants garlic.", true, true, GarlicFarmer.class, "garlic", false));
         bots.add(new BotDescriptor("hemp", BotDescriptor.BotType.FARMING, "Hemp Farmer", "Automatically harvests and replants hemp.", true, true, HempFarmer.class, "hemp", false));
         bots.add(new BotDescriptor("flax", BotDescriptor.BotType.FARMING, "Flax Farmer", "Automatically harvests and replants flax.", true, true, FlaxFarmer.class, "flax", false));
         bots.add(new BotDescriptor("lettuce", BotDescriptor.BotType.FARMING, "Lettuce Farmer", "Automatically harvests and replants lettuce.", true, true, LettuceFarmer.class, "lettuce", true));
+        bots.add(new BotDescriptor("green_kale", BotDescriptor.BotType.FARMING, "Green Kale Farmer", "Automatically harvests and replants green kale.", true, true, GreenKaleFarmer.class, "green_kale", false));
         bots.add(new BotDescriptor("pumpkin", BotDescriptor.BotType.FARMING, "Pumpkin Farmer", "Automatically harvests and replants pumpkins.", true, true, PumpkinFarmer.class, "pumpkin", true));
         bots.add(new BotDescriptor("barley", BotDescriptor.BotType.FARMING, "Barley Farmer", "Automatically harvests and replants barley.", true, true, BarleyFarmer.class, "barley", false));
         bots.add(new BotDescriptor("millet", BotDescriptor.BotType.FARMING, "Millet Farmer", "Automatically harvests and replants millet.", true, true, MilletFarmer.class, "millet", false));
