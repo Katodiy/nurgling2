@@ -11,6 +11,8 @@ import java.util.*;
 public class TurnipsFarmerQ implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
+
         NArea.Specialisation cropQ = new NArea.Specialisation(Specialisation.SpecName.cropQ.toString(), "Turnip");
         NArea.Specialisation seedQ = new NArea.Specialisation(Specialisation.SpecName.seedQ.toString(), "Turnip");
         NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
@@ -24,6 +26,8 @@ public class TurnipsFarmerQ implements Action {
         opt.add(trough);
 
         if (new Validator(req, opt).run(gui).IsSuccess()) {
+            NUtils.stackSwitch(true);
+
             new HarvestCrop(
                     NContext.findSpec(cropQ),
                     NContext.findSpec(seedQ),
@@ -38,9 +42,11 @@ public class TurnipsFarmerQ implements Action {
                 new CleanupSeedQContainer(NContext.findSpec(seedQ), new NAlias("Turnip"), NContext.findSpec(trough)).run(gui);
             }
 
+            NUtils.stackSwitch(oldStackingValue);
             return Results.SUCCESS();
         }
 
+        NUtils.stackSwitch(oldStackingValue);
         return Results.FAIL();
     }
 }
