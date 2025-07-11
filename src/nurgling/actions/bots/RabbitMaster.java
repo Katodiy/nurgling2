@@ -16,6 +16,7 @@ import nurgling.tasks.NTask;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class RabbitMaster implements Action {
     private static final String HUTCH_NAME = "Rabbit Hutch";
@@ -37,20 +38,14 @@ public class RabbitMaster implements Action {
         if (incubators.isEmpty())
             return Results.ERROR("NO_RABBIT_INCUBATORS");
 
-        ArrayList<Container> breedContainers = breeders.stream()
-                .map(h -> h.container)
-                .collect(Collectors.toCollection(ArrayList::new));
-        ArrayList<Container> incubatorContainers = incubators.stream()
-                .map(h -> h.container)
-                .collect(Collectors.toCollection(ArrayList::new));
-        new FillFluid(breedContainers, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(),
-                new NAlias("swill"), 32).run(gui);
-        new FillFluid(incubatorContainers, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(),
-                new NAlias("swill"), 32).run(gui);
-        new FillFluid(breedContainers, NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea(),
-                new NAlias("water"), 4).run(gui);
-        new FillFluid(incubatorContainers, NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea(),
-                new NAlias("water"), 4).run(gui);
+        ArrayList<Container> containers = Stream.concat(
+                breeders.stream().map(h -> h.container),
+                incubators.stream().map(h -> h.container)
+            )
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 32).run(gui);
+        new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
 
         redistributeDoes(gui, breeders, incubators);
         redistributeBucks(gui, breeders, incubators);
@@ -82,8 +77,8 @@ public class RabbitMaster implements Action {
         openContainer(gui, gob);
 
         NInventory inv = gui.getInventory(HUTCH_NAME);
-        Hutch hutch = new Hutch(container);
 
+        Hutch hutch = new Hutch(container);
         hutch.bucks = extractRabbits(inv, BUCK_ALIAS, hutch);
         hutch.does = extractRabbits(inv, DOE_ALIAS, hutch);
         hutch.bunnies = extractRabbits(inv, BUNNY_ALIAS, hutch);
@@ -316,36 +311,27 @@ public class RabbitMaster implements Action {
     }
 
     private void replaceDoe(NGameUI gui, Rabbit oldDoe, Rabbit newDoe, Hutch from, Hutch to) throws InterruptedException {
-        moveTo(gui, Finder.findGob(from.container.gobid));
-        openContainer(gui, from.container);
-        takeRabbit(gui, DOE_ALIAS, oldDoe.quality);
-        closeContainer(gui, from.container);
-
-        moveTo(gui, Finder.findGob(to.container.gobid));
-        openContainer(gui, to.container);
-        replaceRabbit(gui, oldDoe, newDoe, DOE_ALIAS);
-        closeContainer(gui, to.container);
-
-        moveTo(gui, Finder.findGob(from.container.gobid));
-        openContainer(gui, from.container);
-        dropRabbit(gui, DOE_ALIAS);
-        closeContainer(gui, from.container);
+        replaceRabbit(gui, oldDoe, newDoe, from, to, DOE_ALIAS);
     }
 
     private void replaceBuck(NGameUI gui, Rabbit oldBuck, Rabbit newBuck, Hutch from, Hutch to) throws InterruptedException {
+        replaceRabbit(gui, oldBuck, newBuck, from, to, BUCK_ALIAS);
+    }
+
+    private void replaceRabbit(NGameUI gui, Rabbit oldRabbit, Rabbit newRabbit, Hutch from, Hutch to, NAlias alias) throws InterruptedException {
         moveTo(gui, Finder.findGob(from.container.gobid));
         openContainer(gui, from.container);
-        takeRabbit(gui, BUCK_ALIAS, oldBuck.quality);
+        takeRabbit(gui, alias, oldRabbit.quality);
         closeContainer(gui, from.container);
 
         moveTo(gui, Finder.findGob(to.container.gobid));
         openContainer(gui, to.container);
-        replaceRabbit(gui, oldBuck, newBuck, BUCK_ALIAS);
+        swapRabbits(gui, oldRabbit, newRabbit, alias);
         closeContainer(gui, to.container);
 
         moveTo(gui, Finder.findGob(from.container.gobid));
         openContainer(gui, from.container);
-        dropRabbit(gui, BUCK_ALIAS);
+        dropRabbit(gui, alias);
         closeContainer(gui, from.container);
     }
 
@@ -403,7 +389,7 @@ public class RabbitMaster implements Action {
         gui.ui.core.addTask(new WaitItems(gui.getInventory(), alias, oldSize - 1));
     }
 
-    private void replaceRabbit(NGameUI gui, Rabbit oldRabbit, Rabbit newRabbit, NAlias alias) throws InterruptedException {
+    private void swapRabbits(NGameUI gui, Rabbit oldRabbit, Rabbit newRabbit, NAlias alias) throws InterruptedException {
         WItem oldRabbitItem = null;
         for (WItem w : gui.getInventory().getItems(alias)) {
             if (((NGItem) w.item).quality == oldRabbit.quality) {
