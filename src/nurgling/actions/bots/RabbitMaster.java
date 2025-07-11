@@ -105,7 +105,23 @@ public class RabbitMaster implements Action {
                 .collect(Collectors.toList());
 
         for (Hutch breeder : breeders) {
-            replaceDoes(gui, breeder, doesToMove);
+            breeder.does.sort(Comparator.comparingDouble(r -> r.quality));
+            while (!doesToMove.isEmpty()
+                    && !breeder.does.isEmpty()
+                    && doesToMove.get(0).quality > breeder.does.get(0).quality) {
+
+                Rabbit bestInc = doesToMove.remove(0);
+                Rabbit worstBrd = breeder.does.remove(0);
+
+                replaceDoe(gui, worstBrd, bestInc, breeder, bestInc.sourceHutch);
+
+                bestInc.sourceHutch.does.remove(bestInc);
+                bestInc.sourceHutch.does.add(worstBrd);
+                bestInc.sourceHutch = breeder;
+                breeder.does.add(bestInc);
+
+                breeder.does.sort(Comparator.comparingDouble(r -> r.quality));
+            }
         }
     }
 
@@ -116,7 +132,24 @@ public class RabbitMaster implements Action {
                 .collect(Collectors.toList());
 
         for (Hutch breeder : breeders) {
-            replaceBucks(gui, breeder, bucksToMove);
+            breeder.bucks.sort(Comparator.comparingDouble(r -> r.quality));
+
+            while (!bucksToMove.isEmpty()
+                    && !breeder.bucks.isEmpty()
+                    && bucksToMove.get(0).quality > breeder.bucks.get(0).quality) {
+
+                Rabbit bestInc = bucksToMove.remove(0);
+                Rabbit worstBrd = breeder.bucks.remove(0);
+
+                replaceBuck(gui, worstBrd, bestInc, breeder, bestInc.sourceHutch);
+
+                bestInc.sourceHutch.bucks.remove(bestInc);
+                bestInc.sourceHutch.bucks.add(worstBrd);
+                bestInc.sourceHutch = breeder;
+                breeder.bucks.add(bestInc);
+
+                breeder.bucks.sort(Comparator.comparingDouble(r -> r.quality));
+            }
         }
     }
 
@@ -132,49 +165,24 @@ public class RabbitMaster implements Action {
         }
     }
 
-    private void replaceDoes(NGameUI gui, Hutch breeder, List<Rabbit> pool) throws InterruptedException {
-        breeder.does.sort(Comparator.comparingDouble(r -> r.quality));
-        while (!pool.isEmpty()
-                && !breeder.does.isEmpty()
-                && pool.get(0).quality > breeder.does.get(0).quality) {
-            Rabbit bestInc = pool.remove(0);
-            Rabbit worstBrd = breeder.does.remove(0);
-
-            replaceDoe(gui, worstBrd, bestInc, breeder, bestInc.sourceHutch);
-
-            bestInc.sourceHutch.does.remove(bestInc);
-            breeder.does.add(bestInc);
-        }
-    }
-
-    private void replaceBucks(NGameUI gui, Hutch breeder, List<Rabbit> pool) throws InterruptedException {
-        breeder.bucks.sort(Comparator.comparingDouble(r -> r.quality));
-        while (!pool.isEmpty()
-                && !breeder.bucks.isEmpty()
-                && pool.get(0).quality > breeder.bucks.get(0).quality) {
-            Rabbit bestInc = pool.remove(0);
-            Rabbit worstBrd = breeder.bucks.remove(0);
-
-            replaceBuck(gui, worstBrd, bestInc, breeder, bestInc.sourceHutch);
-
-            bestInc.sourceHutch.bucks.remove(bestInc);
-            breeder.bucks.add(bestInc);
-        }
-    }
-
     private void replaceBunnies(NGameUI gui, Hutch incubator, List<Rabbit> pool) throws InterruptedException {
         incubator.bunnies.sort(Comparator.comparingDouble(r -> r.quality));
+
         while (!pool.isEmpty()
-                && !incubator.bunnies.isEmpty()
-                && pool.get(0).quality > incubator.bunnies.get(0).quality) {
-            Rabbit bestInc = pool.remove(0);
-            Rabbit worstBrd = incubator.bunnies.remove(0);
+            && !incubator.bunnies.isEmpty()
+            && pool.get(0).quality > incubator.bunnies.get(0).quality) {
 
-            transferIndividualBunny(gui, worstBrd, incubator, bestInc.sourceHutch);
-            transferIndividualBunny(gui, bestInc, bestInc.sourceHutch, incubator);
+            Rabbit best = pool.remove(0);
+            Rabbit worst = incubator.bunnies.get(0);
 
-            bestInc.sourceHutch.bunnies.remove(bestInc);
-            incubator.bunnies.add(bestInc);
+            transferIndividualBunny(gui, worst, incubator, best.sourceHutch);
+            transferIndividualBunny(gui, best, best.sourceHutch, incubator);
+
+            best.sourceHutch = incubator;
+            pool.add(worst);
+
+            incubator.bunnies.sort(Comparator.comparingDouble(r -> r.quality));
+            pool.sort(Comparator.<Rabbit>comparingDouble(r -> r.quality).reversed());
         }
     }
 
@@ -281,11 +289,10 @@ public class RabbitMaster implements Action {
             int need = 42 - inc.bunnies.size();
             for (int i = 0; i < need && !pool.isEmpty(); i++) {
                 Rabbit bunny = pool.remove(0);
-                transferIndividualBunny(gui, bunny, bunny.sourceHutch, inc);
+                Hutch from = bunny.sourceHutch;
 
-                bunny.sourceHutch.bunnies.remove(bunny);
+                transferIndividualBunny(gui, bunny, from, inc);
                 bunny.sourceHutch = inc;
-                inc.bunnies.add(bunny);
             }
         }
     }
@@ -323,11 +330,6 @@ public class RabbitMaster implements Action {
         openContainer(gui, from.container);
         dropRabbit(gui, DOE_ALIAS);
         closeContainer(gui, from.container);
-
-        from.does.remove(newDoe);
-        from.does.add(oldDoe);
-        to.does.add(newDoe);
-        to.does.remove(oldDoe);
     }
 
     private void replaceBuck(NGameUI gui, Rabbit oldBuck, Rabbit newBuck, Hutch from, Hutch to) throws InterruptedException {
@@ -345,11 +347,6 @@ public class RabbitMaster implements Action {
         openContainer(gui, from.container);
         dropRabbit(gui, BUCK_ALIAS);
         closeContainer(gui, from.container);
-
-        from.bucks.remove(newBuck);
-        from.bucks.add(oldBuck);
-        to.bucks.add(newBuck);
-        to.bucks.remove(oldBuck);
     }
 
     private void transferIndividualBunny(NGameUI gui, Rabbit bunny, Hutch from, Hutch to) throws InterruptedException {
