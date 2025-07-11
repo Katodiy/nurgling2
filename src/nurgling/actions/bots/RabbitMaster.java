@@ -451,9 +451,5 @@ public class RabbitMaster implements Action {
         Hutch(Container container) {
             this.container = container;
         }
-
-        public int getFreeSpace() {
-            return container.getattr(Container.Space.class).getFreeSpace();
-        }
     }
 }
