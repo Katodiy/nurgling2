@@ -64,6 +64,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public final NZergwnd zerg;
     public NAreasWidget areas;
 	public RoutesWidget routesWidget;
+	public SearchWidget searchWidget;
     public NCookBook cookBook;
     public final Collection<Polity> polities = new ArrayList<Polity>();
     public HelpWnd help;
@@ -1232,7 +1233,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public static final KeyBinding kb_areas = KeyBinding.get("areas", KeyMatch.forchar('L', KeyMatch.C));
     public static final KeyBinding kb_cookbook = KeyBinding.get("areas", KeyMatch.forchar('L', KeyMatch.C));
 	public static final KeyBinding kb_routes = KeyBinding.get("routes", KeyMatch.forchar('R', KeyMatch.C));
-    public static final KeyBinding kb_opt = KeyBinding.get("opt", KeyMatch.forchar('O', KeyMatch.C));
+	public static final KeyBinding kb_searchWidget = KeyBinding.get("searchWidget", KeyMatch.forchar('F', KeyMatch.C));
+	public static final KeyBinding kb_opt = KeyBinding.get("opt", KeyMatch.forchar('O', KeyMatch.C));
     public class MainMenu extends Widget {
 	public MainMenu() {
 	    super(Coord.z);
@@ -1319,6 +1321,9 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	} else if((ev.c == 27) && (map != null) && !map.hasfocus) {
 	    setfocus(map);
 	    return(true);
+	} else if(kb_searchWidget.key().match(ev)) {
+		openSearchWidget();
+		return true;
 	}
 	return(super.globtype(ev));
     }
@@ -1361,7 +1366,21 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	if(prog != null)
 	    prog.move(sz.sub(prog.sz).mul(0.5, 0.35));
     }
-    
+
+	private void openSearchWidget() {
+		if (searchWidget == null) {
+			searchWidget = new SearchWidget("Find Object");
+			add(searchWidget, sz.div(2).sub(searchWidget.sz.div(2)));
+			setfocus(searchWidget);
+		} else if (searchWidget.visible()) {
+			searchWidget.cleanupAndHide();
+		} else {
+			searchWidget.show(true);
+			fitwdg(searchWidget);
+			setfocus(searchWidget);
+		}
+	}
+
     public void presize() {
 	resize(parent.sz);
     }
