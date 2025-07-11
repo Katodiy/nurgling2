@@ -89,7 +89,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("horses", BotDescriptor.BotType.FARMING, "Horse Manager", "Manages horses.", true, true, HorsesAction.class, "horses", false));
         bots.add(new BotDescriptor("cows", BotDescriptor.BotType.FARMING, "Cow Manager", "Manages cows.", true, true, nurgling.actions.bots.CowsAction.class, "cows", false));
         bots.add(new BotDescriptor("chicken", BotDescriptor.BotType.FARMING, "Chicken Manager", "Manages chicken coops.", true, true, KFC.class, "chicken", true));
-        bots.add(new BotDescriptor("rabbit", BotDescriptor.BotType.FARMING, "Rabbit Manager", "Manages rabbit hutches.", true, true, RabbitMaster.class, "rabbit", true));
+        bots.add(new BotDescriptor("rabbit", BotDescriptor.BotType.FARMING, "Rabbit Manager", "Manages rabbit hutches.", true, true, RabbitMaster.class, "rabbit", false));
         bots.add(new BotDescriptor("bee", BotDescriptor.BotType.FARMING, "Beehive Manager", "Collects honey and wax from beehives.", true, true, HoneyAndWaxCollector.class, "bee", true));
         bots.add(new BotDescriptor("reindeers", BotDescriptor.BotType.FARMING, "Teimdeer Manager", "Manages teimdeer.", true, true, nurgling.actions.bots.DeersAction.class, "reindeers", false));
 

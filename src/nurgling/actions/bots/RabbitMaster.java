@@ -2,7 +2,7 @@ package nurgling.actions.bots;
 
 import haven.Coord;
 import haven.Gob;
-import haven.MenuGrid;
+import haven.Inventory;
 import haven.WItem;
 import nurgling.*;
 import nurgling.actions.*;
@@ -24,11 +24,10 @@ public class RabbitMaster implements Action {
     private static final NAlias DOE_ALIAS = new NAlias("Rabbit Doe");
     private static final String BUNNY_NAME = "Bunny Rabbit";
     private static final NAlias BUNNY_ALIAS = new NAlias(BUNNY_NAME);
-    private static boolean wasStacking;
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        if (gui.getInventory().calcNumberFreeCoord(new Coord(2, 2)) == 0) {
+        if (gui.getInventory().calcNumberFreeCoord(new Coord(2, 2)) == 0 || gui.getInventory().getFreeSpace() < 5) {
             return Results.ERROR("INVENTORY_FULL");
         }
         List<Hutch> breeders = collectHutches(gui, Specialisation.SpecName.rabbit);
@@ -38,14 +37,10 @@ public class RabbitMaster implements Action {
         if (incubators.isEmpty())
             return Results.ERROR("NO_RABBIT_INCUBATORS");
 
-        wasStacking = gui.getInventory().bundle.a;
-        NUtils.stackSwitch(true);
         ArrayList<Container> breedContainers = breeders.stream()
-                .filter(h -> h.bunnies.size() > 0)
                 .map(h -> h.container)
                 .collect(Collectors.toCollection(ArrayList::new));
         ArrayList<Container> incubatorContainers = incubators.stream()
-                .filter(h -> h.bunnies.size() > 0)
                 .map(h -> h.container)
                 .collect(Collectors.toCollection(ArrayList::new));
         new FillFluid(breedContainers, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(),
@@ -64,7 +59,6 @@ public class RabbitMaster implements Action {
         moveBunniesToIncubators(gui, breeders, incubators);
         redistributeBunnies(gui, breeders, incubators);
         cullBunnies(gui, breeders);
-        NUtils.stackSwitch(wasStacking);
         return Results.SUCCESS();
     }
 
@@ -100,7 +94,7 @@ public class RabbitMaster implements Action {
 
     private List<Rabbit> extractRabbits(NInventory inv, NAlias alias, Hutch source) throws InterruptedException {
         return inv.getItems(alias).stream()
-                .map(item -> new Rabbit(item, ((NGItem) item.item).quality, source))
+                .map(item -> new Rabbit(((NGItem) item.item).quality, source))
                 .collect(Collectors.toList());
     }
 
@@ -110,7 +104,6 @@ public class RabbitMaster implements Action {
                 .sorted(Comparator.<Rabbit>comparingDouble(r -> r.quality).reversed())
                 .collect(Collectors.toList());
 
-        breeders.sort(Comparator.comparingInt(h -> h.does.size()));
         for (Hutch breeder : breeders) {
             replaceDoes(gui, breeder, doesToMove);
         }
@@ -122,7 +115,6 @@ public class RabbitMaster implements Action {
                 .sorted(Comparator.<Rabbit>comparingDouble(r -> r.quality).reversed())
                 .collect(Collectors.toList());
 
-        breeders.sort(Comparator.comparingInt(h -> h.bucks.size()));
         for (Hutch breeder : breeders) {
             replaceBucks(gui, breeder, bucksToMove);
         }
@@ -148,8 +140,7 @@ public class RabbitMaster implements Action {
             Rabbit bestInc = pool.remove(0);
             Rabbit worstBrd = breeder.does.remove(0);
 
-            transferIndividualDoe(gui, worstBrd, breeder, bestInc.sourceHutch);
-            transferIndividualDoe(gui, bestInc, bestInc.sourceHutch, breeder);
+            replaceDoe(gui, worstBrd, bestInc, breeder, bestInc.sourceHutch);
 
             bestInc.sourceHutch.does.remove(bestInc);
             breeder.does.add(bestInc);
@@ -164,8 +155,7 @@ public class RabbitMaster implements Action {
             Rabbit bestInc = pool.remove(0);
             Rabbit worstBrd = breeder.bucks.remove(0);
 
-            transferIndividualBuck(gui, worstBrd, breeder, bestInc.sourceHutch);
-            transferIndividualBuck(gui, bestInc, bestInc.sourceHutch, breeder);
+            replaceBuck(gui, worstBrd, bestInc, breeder, bestInc.sourceHutch);
 
             bestInc.sourceHutch.bucks.remove(bestInc);
             breeder.bucks.add(bestInc);
@@ -184,7 +174,7 @@ public class RabbitMaster implements Action {
             transferIndividualBunny(gui, bestInc, bestInc.sourceHutch, incubator);
 
             bestInc.sourceHutch.bunnies.remove(bestInc);
-            incubator.bucks.add(bestInc);
+            incubator.bunnies.add(bestInc);
         }
     }
 
@@ -199,42 +189,76 @@ public class RabbitMaster implements Action {
             moveTo(gui, Finder.findGob(h.container.gobid));
             openContainer(gui, h.container);
 
-            NInventory inv = gui.getInventory(HUTCH_NAME);
-            List<WItem> items = new ArrayList<>();
-            items.addAll(inv.getItems(DOE_ALIAS));
-            items.addAll(inv.getItems(BUCK_ALIAS));
+            final NInventory[] invHolder = new NInventory[1];
+            invHolder[0] = gui.getInventory(HUTCH_NAME);
 
-            for (WItem wi : items) {
-                if (gui.getInventory().getFreeSpace() == 0) {
-                    freeInv.run(gui);
+            while (true) {
+                WItem wi = invHolder[0].getItem(DOE_ALIAS);
+                if (wi == null) {
+                    wi = invHolder[0].getItem(BUCK_ALIAS);
+                }
+                if (wi == null) {
+                    break;
                 }
                 new SelectFlowerAction("Wring neck", wi).run(gui);
-                NUtils.addTask(new WaitItems(inv, new NAlias("Dead Rabbit"), 1));
-                wi = inv.getItem(new NAlias("Dead Rabbit"));
+                NUtils.addTask(new WaitItems(invHolder[0], new NAlias("Dead Rabbit"), 1));
 
-                if (gui.getInventory().getFreeSpace() == 0) {
+                if (gui.getInventory().getFreeSpace() < 2) {
                     freeInv.run(gui);
+                    moveTo(gui, Finder.findGob(h.container.gobid));
+                    openContainer(gui, h.container);
+                    invHolder[0] = gui.getInventory(HUTCH_NAME);
                 }
+                wi = invHolder[0].getItem(new NAlias("Dead Rabbit"));
+                int oldFurSize = gui.getInventory().getItems(new NAlias("Fresh Rabbit Fur")).size();
                 new SelectFlowerAction("Flay", wi).run(gui);
-                NUtils.addTask(new WaitItems(inv, new NAlias("Rabbit Carcass"), 1));
-                wi = inv.getItem(new NAlias("Rabbit Carcass"));
+                NUtils.addTask(new NTask() {
+                    @Override
+                    public boolean check() {
+                        try {
+                            return gui.getInventory().getItems(new NAlias("Fresh Rabbit Fur")).size() > oldFurSize;
+                        } catch (InterruptedException e) {
+                            return false;
+                        }
+                    }
+                });
 
-                if (gui.getInventory().getFreeSpace() == 0) {
+                if (gui.getInventory().getFreeSpace() < 1) {
                     freeInv.run(gui);
+                    moveTo(gui, Finder.findGob(h.container.gobid));
+                    openContainer(gui, h.container);
+                    invHolder[0] = gui.getInventory(HUTCH_NAME);
                 }
+                wi = invHolder[0].getItem(new NAlias("Rabbit Carcass"));
+                int oldEntrailsSize = gui.getInventory().getItems(new NAlias("Entrails")).size();
                 new SelectFlowerAction("Clean", wi).run(gui);
-                NUtils.addTask(new WaitItems(inv, new NAlias("Clean Rabbit Carcass"), 1));
-                wi = inv.getItem(new NAlias("Clean Rabbit Carcass"));
+                NUtils.addTask(new NTask() {
+                    @Override
+                    public boolean check() {
+                        try {
+                            return gui.getInventory().getItems(new NAlias("Entrails")).size() > oldEntrailsSize;
+                        } catch (InterruptedException e) {
+                            return false;
+                        }
+                    }
+                });
 
-                if (gui.getInventory().getFreeSpace() == 0) {
+                if (gui.getInventory().getFreeSpace() < 5) {
                     freeInv.run(gui);
+                    moveTo(gui, Finder.findGob(h.container.gobid));
+                    openContainer(gui, h.container);
+                    invHolder[0] = gui.getInventory(HUTCH_NAME);
                 }
+                wi = invHolder[0].getItem(new NAlias("Clean Rabbit Carcass"));
+                int oldMeatSize = gui.getInventory().getItems(new NAlias("Raw Rabbit")).size();
+                int oldBoneSize = gui.getInventory().getItems(new NAlias("Bone Material")).size();
                 new SelectFlowerAction("Butcher", wi).run(gui);
                 NUtils.addTask(new NTask() {
                     @Override
                     public boolean check() {
                         try {
-                            return inv.getItems(new NAlias("Clean Rabbit Carcass")).isEmpty();
+                            return gui.getInventory().getItems(new NAlias("Raw Rabbit")).size() > oldMeatSize
+                                && gui.getInventory().getItems(new NAlias("Bone Material")).size() > oldBoneSize;
                         } catch (InterruptedException e) {
                             return false;
                         }
@@ -284,34 +308,48 @@ public class RabbitMaster implements Action {
         }
     }
 
-    private void transferIndividualDoe(NGameUI gui, Rabbit doe, Hutch from, Hutch to) throws InterruptedException {
+    private void replaceDoe(NGameUI gui, Rabbit oldDoe, Rabbit newDoe, Hutch from, Hutch to) throws InterruptedException {
         moveTo(gui, Finder.findGob(from.container.gobid));
         openContainer(gui, from.container);
-        takeRabbit(gui, DOE_ALIAS, doe.quality);
+        takeRabbit(gui, DOE_ALIAS, oldDoe.quality);
         closeContainer(gui, from.container);
 
         moveTo(gui, Finder.findGob(to.container.gobid));
         openContainer(gui, to.container);
-        dropRabbit(gui, DOE_ALIAS);
+        replaceRabbit(gui, oldDoe, newDoe, DOE_ALIAS);
         closeContainer(gui, to.container);
 
-        from.does.remove(doe);
-        to.does.add(doe);
+        moveTo(gui, Finder.findGob(from.container.gobid));
+        openContainer(gui, from.container);
+        dropRabbit(gui, DOE_ALIAS);
+        closeContainer(gui, from.container);
+
+        from.does.remove(newDoe);
+        from.does.add(oldDoe);
+        to.does.add(newDoe);
+        to.does.remove(oldDoe);
     }
 
-    private void transferIndividualBuck(NGameUI gui, Rabbit buck, Hutch from, Hutch to) throws InterruptedException {
+    private void replaceBuck(NGameUI gui, Rabbit oldBuck, Rabbit newBuck, Hutch from, Hutch to) throws InterruptedException {
         moveTo(gui, Finder.findGob(from.container.gobid));
         openContainer(gui, from.container);
-        takeRabbit(gui, BUCK_ALIAS, buck.quality);
+        takeRabbit(gui, BUCK_ALIAS, oldBuck.quality);
         closeContainer(gui, from.container);
 
         moveTo(gui, Finder.findGob(to.container.gobid));
         openContainer(gui, to.container);
-        dropRabbit(gui, BUCK_ALIAS);
+        replaceRabbit(gui, oldBuck, newBuck, BUCK_ALIAS);
         closeContainer(gui, to.container);
 
-        from.bucks.remove(buck);
-        to.bucks.add(buck);
+        moveTo(gui, Finder.findGob(from.container.gobid));
+        openContainer(gui, from.container);
+        dropRabbit(gui, BUCK_ALIAS);
+        closeContainer(gui, from.container);
+
+        from.bucks.remove(newBuck);
+        from.bucks.add(oldBuck);
+        to.bucks.add(newBuck);
+        to.bucks.remove(oldBuck);
     }
 
     private void transferIndividualBunny(NGameUI gui, Rabbit bunny, Hutch from, Hutch to) throws InterruptedException {
@@ -368,13 +406,40 @@ public class RabbitMaster implements Action {
         gui.ui.core.addTask(new WaitItems(gui.getInventory(), alias, oldSize - 1));
     }
 
+    private void replaceRabbit(NGameUI gui, Rabbit oldRabbit, Rabbit newRabbit, NAlias alias) throws InterruptedException {
+        WItem oldRabbitItem = null;
+        for (WItem w : gui.getInventory().getItems(alias)) {
+            if (((NGItem) w.item).quality == oldRabbit.quality) {
+                oldRabbitItem = w;
+                break;
+            }
+        }
+
+        WItem newRabbitItem = null;
+        for (WItem w : gui.getInventory(HUTCH_NAME).getItems(alias)) {
+            if (((NGItem) w.item).quality == newRabbit.quality) {
+                newRabbitItem = w;
+                break;
+            }
+        }
+        Coord oldRabbitPos = oldRabbitItem.c.div(Inventory.sqsz);
+        Coord newRabbitPos = newRabbitItem.c.div(Inventory.sqsz);
+        NUtils.takeItemToHand(oldRabbitItem);
+        gui.getInventory(HUTCH_NAME).dropOn(newRabbitPos, alias);
+        NUtils.addTask(new NTask() {
+            @Override
+            public boolean check() {
+                return gui.vhand != null && ((NGItem)gui.vhand.item).quality == newRabbit.quality;
+            }
+        });
+        gui.getInventory().dropOn(oldRabbitPos, alias);
+    }
+
     class Rabbit {
-        final WItem widget;
         final float quality;
         Hutch sourceHutch;
 
-        Rabbit(WItem widget, float quality, Hutch sourceHutch) {
-            this.widget = widget;
+        Rabbit(float quality, Hutch sourceHutch) {
             this.quality = quality;
             this.sourceHutch = sourceHutch;
         }
