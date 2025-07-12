@@ -7,6 +7,7 @@ import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import mapv4.StatusWdg;
 import nurgling.areas.*;
+import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
@@ -88,6 +89,8 @@ public class NUtils
 
     public static WItem takeItemToHand(WItem item) throws InterruptedException
     {
+        if(item == null)
+            return null;
         item.item.wdgmsg("take", Coord.z);
         WaitItemInHand tith = new WaitItemInHand(item);
         getUI().core.addTask(tith);
@@ -238,9 +241,36 @@ public class NUtils
             getUI().core.addTask(new WaitBattleWindow(gob.id, noTask));
     }
 
+    public static void mine(
+            Coord2d pos
+    )
+            throws InterruptedException {
+        getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "mine");
+        getGameUI().map.wdgmsg("click", Coord.z, pos.floor(posres), 1, 0, 0);
+
+    }
+
+    public static void destroy(
+            Gob gob
+    )
+            throws InterruptedException {
+        getGameUI().ui.rcvr.rcvmsg(getUI().getMenuGridId(), "act", "destroy");
+        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 1, 0, 0, (int) gob.id, gob.rc.floor(posres),
+                0, -1);
+    }
+
+
     public static String getCursorName()
     {
         return NUtils.getUI().root.cursorRes;
+    }
+
+    public static void getDefaultCur() throws InterruptedException {
+        Gob player = NUtils.player();
+        if (player!=null && !NParser.checkName(NUtils.getCursorName(), "arw")) {
+            NUtils.getGameUI().map.wdgmsg("click", Coord.z, player.rc.floor(posres), 3, 0);
+            NUtils.getUI().core.addTask(new GetCurs("arw"));
+        }
     }
 
     public static void dig()
@@ -412,7 +442,7 @@ public class NUtils
 
     public static ArrayList<Pattern> getQAPatterns() {
         ArrayList<Pattern> patterns = new ArrayList<>();
-        for(QuickActions.ActionsItem ai : ((OptWnd.NQuickActionsPanel)getGameUI ().opts.nquickAct).qol_p.patterns)
+        for(QuickActions.ActionsItem ai : ((OptWnd.NSettingsPanel)getGameUI ().opts.nqolwnd).settingsWindow.qa.patterns)
         {
             if(ai.isEnabled.a)
                 patterns.add(Pattern.compile(ai.text()));
@@ -422,7 +452,7 @@ public class NUtils
 
     public static ArrayList<String> getPetals() {
         ArrayList<String> vals = new ArrayList<>();
-        for(AutoSelection.AutoSelectItem ai : ((OptWnd.NQuickActionsPanel)getGameUI ().opts.nquickAct).autosel_p.petals)
+        for(AutoSelection.AutoSelectItem ai : ((OptWnd.NSettingsPanel)getGameUI ().opts.nqolwnd).settingsWindow.as.petals)
         {
             if(ai.isEnabled.a)
                 vals.add(ai.text());
@@ -451,25 +481,6 @@ public class NUtils
     public static Coord2d gridOffset(Coord2d c) {
         Coord gridUnit = toGridUnit(c);
         return new Coord2d(c.x - gridUnit.x, c.y - gridUnit.y);
-    }
-
-    public static void CheckGridCoord(Coord2d c) {
-        Coord gc = NUtils.toGC(c);
-        if(((NMapView)NUtils.getGameUI().map).lastGC == null || !gc.equals(((NMapView)NUtils.getGameUI().map).lastGC)) {
-            EnterGrid(gc);
-        }
-    }
-
-    public static void EnterGrid(Coord gc) {
-        ((NMapView)NUtils.getGameUI().map).lastGC = gc;
-        if (NUtils.getGameUI().areas.visible) {
-            ((NMapView) NUtils.getGameUI().map).destroyDummys();
-            ((NMapView) NUtils.getGameUI().map).initDummys();
-        }
-
-        if (NUtils.getGameUI().routesWidget.visible) {
-            ((NMapView) NUtils.getGameUI().map).initRouteDummys(NUtils.getGameUI().routesWidget.getSelectedRouteId());
-        }
     }
 
     public static void startBuild(Window window) {
@@ -535,6 +546,15 @@ public class NUtils
             }
         }
         return false;
+    }
+
+    public static String getContentsOfBarrel(Gob barrel) {
+        for (Gob.Overlay ol : barrel.ols) {
+            if(ol.spr instanceof StaticSprite) {
+                return ((StaticSprite)ol.spr).res.name;
+            }
+        }
+        return null;
     }
 
     public static String getContentsOfBucket(WItem bucket) {
@@ -660,5 +680,39 @@ public class NUtils
             }
         }
         return res;
+    }
+
+    public static void setSpeed(int value) {
+        if ( getGameUI() != null && getGameUI().speedget!=null) {
+            getGameUI().speedget.set(value);
+        }
+    }
+
+    public static RoutePoint findNearestPoint()
+    {
+        return ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI());
+    }
+
+    public static boolean isWorkStationReady(String name, Gob workstation) {
+        if (workstation == null) {
+            return false;
+        }
+
+        // Crucible is ready when it has coal (bit 2 set in modelAttribute)
+        if (name.contains("crucible")) {
+            return (workstation.ngob.getModelAttribute() & 2) == 2;
+        }
+        // For pow (forges), they're ready when not burning (bit 48)
+        else if (name.startsWith("gfx/terobjs/pow")) {
+            return (workstation.ngob.getModelAttribute() & 48) == 0;
+        }
+        // For cauldrons, they must be burning (bit 2) and have liquid (bit 8)
+        else if (name.startsWith("gfx/terobjs/cauldron")) {
+            return (workstation.ngob.getModelAttribute() & 2) == 2 &&
+                    (workstation.ngob.getModelAttribute() & 8) == 8;
+        }
+
+        // For all other workstations, assume they're ready if they exist
+        return true;
     }
 }

@@ -13,11 +13,21 @@ public class GetItem extends NTask
 
     float q = -1;
 
+    Class<? extends ItemInfo> prop = null;
+
     public GetItem(NInventory inventory, NAlias name)
     {
         this.name = name;
         this.inventory = inventory;
     }
+
+    public GetItem(NInventory inventory, NAlias name, Class<? extends ItemInfo> prop )
+    {
+        this.name = name;
+        this.inventory = inventory;
+        this.prop = prop;
+    }
+
 
     public GetItem(NInventory inventory, NAlias name, float q)
     {
@@ -48,6 +58,8 @@ public class GetItem extends NTask
                                 return false;
                         }
                         else {
+                            if(prop!=null && ((NGItem) item.item).getInfo(prop)!=null)
+                                continue;
                             if (q != -1) {
                                 if (((NGItem) item.item).quality != q)
                                     continue;

@@ -2,6 +2,7 @@ package nurgling.actions.bots;
 
 import haven.*;
 import nurgling.NGameUI;
+import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.NWItem;
 import nurgling.actions.*;
@@ -30,11 +31,14 @@ public class BranchAction implements Action {
         SelectArea onsa;
         (onsa = new SelectArea(Resource.loadsimg("baubles/branchStart"))).run(gui);
 
-        while(NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(2, 1))!=0 && Finder.findGob(insa.getRCArea(), new NAlias("stockpile"))!=null) {
-            int count = NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(2, 1));
+        boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
+        NUtils.stackSwitch(true);
+
+        while(NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(1, 2))!=0 && Finder.findGob(insa.getRCArea(), new NAlias("stockpile"))!=null) {
+            int count = NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(1, 2));
             count = Math.min(count, NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(1, 1)));
             while (count != 0) {
-                if (NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(2, 1)) > 0) {
+                if (NUtils.getGameUI().getInventory().getNumberFreeCoord(new Coord(1, 2)) > 0) {
                     Gob pile = Finder.findGob(insa.getRCArea(), new NAlias("stockpile"));
                     if (pile == null) {
                         break;
@@ -55,6 +59,9 @@ public class BranchAction implements Action {
             }
             new TransferToPiles(onsa.getRCArea(), new NAlias("Branch")).run(gui);
         }
+
+        NUtils.stackSwitch(oldStackingValue);
+
         return Results.SUCCESS();
     }
 }

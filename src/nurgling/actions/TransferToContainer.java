@@ -13,19 +13,16 @@ public class TransferToContainer implements Action{
     NAlias items;
 
     Container container;
-    Context context;
 
     Integer th = -1;
-    public TransferToContainer(Context context, Container container, NAlias items) {
+    public TransferToContainer(Container container, NAlias items) {
         this.container = container;
         this.items = items;
-        this.context = context;
     }
 
-    public TransferToContainer(Context context, Container container, NAlias items, Integer th) {
+    public TransferToContainer(Container container, NAlias items, Integer th) {
         this.container = container;
         this.items = items;
-        this.context = context;
         this.th = th;
     }
 
@@ -33,8 +30,11 @@ public class TransferToContainer implements Action{
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<WItem> witems;
-        if (!(witems = gui.getInventory().getItems(items)).isEmpty() && (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.Space.class).getFreeSpace()!=0)) {
-            PathFinder pf = new PathFinder(container.gob);
+        if (!(witems = gui.getInventory().getItems(items)).isEmpty() && container.getattr(Container.Space.class)!=null && (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.Space.class).getFreeSpace()!=0)) {
+            Gob gcont = Finder.findGob(container.gobid);
+            if(gcont==null)
+                return Results.FAIL();
+            PathFinder pf = new PathFinder(gcont);
             pf.isHardMode = true;
             pf.run(gui);
             if (th == -1)
@@ -42,7 +42,7 @@ public class TransferToContainer implements Action{
             else
                 witems = gui.getInventory().getItems(items, th);
             if (container.cap != null) {
-                new OpenTargetContainer(container.cap, container.gob).run(gui);
+                new OpenTargetContainer(container.cap, Finder.findGob(container.gobid)).run(gui);
             }
 
             Container.Tetris tetris;
@@ -50,18 +50,19 @@ public class TransferToContainer implements Action{
 
                 for (Coord coord : (ArrayList<Coord>) tetris.getRes().get(Container.Tetris.TARGET_COORD)) {
                     if (!(Boolean) tetris.getRes().get(Container.Tetris.DONE)) {
-                        int oldSpace = gui.getInventory(container.cap).getNumberFreeCoord(coord);
-                        if (oldSpace > 0) {
+                        int numberFreeCoord = gui.getInventory(container.cap).getNumberFreeCoord(coord);
+                        if (numberFreeCoord > 0) {
                             ArrayList<WItem> coorditems = new ArrayList<>();
                             for (WItem witem : witems) {
                                 if (witem.item.spr.sz().div(UI.scale(32)).equals(coord.y, coord.x)) {
                                     coorditems.add(witem);
                                 }
                             }
-                            for (int i = 0; i < Math.min(oldSpace, coorditems.size()); i++) {
-                                transfer(coorditems.get(i), gui.getInventory(container.cap), Math.min(oldSpace, coorditems.size()));
-
-                                i = 0;
+                            int target_size = Math.min(numberFreeCoord, coorditems.size());
+                            while(Math.min(gui.getInventory(container.cap).getNumberFreeCoord(coord),coorditems.size())>0) {
+                                WItem cand = coorditems.get(0);
+                                transfer(cand, gui.getInventory(container.cap), target_size);
+                                NUtils.addTask(new ISRemoved(cand.item.wdgid()));
                                 if (th == -1)
                                     witems = gui.getInventory().getItems(items);
                                 else
@@ -74,13 +75,6 @@ public class TransferToContainer implements Action{
                                 }
 
                             }
-                            ArrayList<WItem> finalCoorditems = coorditems;
-                            NUtils.getUI().core.addTask(new NTask() {
-                                @Override
-                                public boolean check() {
-                                    return gui.getInventory(container.cap).calcNumberFreeCoord(coord) == oldSpace-Math.min(oldSpace, finalCoorditems.size());
-                                }
-                            });
                             container.update();
                         }
                     }
@@ -162,7 +156,7 @@ public class TransferToContainer implements Action{
                     is.wdgmsg("invxf", targetInv.wdgid(), 1);
                     if(is.wmap.size()<=2)
                     {
-                        NUtils.addTask(new ISRemoved(id));
+                        NUtils.addTask(new ISRemovedLoftar(id,is));
                     }
                     else
                     {

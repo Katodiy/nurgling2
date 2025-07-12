@@ -38,14 +38,15 @@ public class LettuceAndPumpkinCollector implements Action {
         ArrayList<WItem> testItems;
 
         int totalItemsThatCanFit = 0;
-
+        int currentQuantity = 0;
 
         while (!Finder.findGobs(input, collected_items).isEmpty()) {
             if (!(testItems = gui.getInventory().getItems(items)).isEmpty()) {
                 totalItemsThatCanFit = Math.max(gui.getInventory().getNumberFreeCoord(testItems.get(0)) + 1, totalItemsThatCanFit);
+                currentQuantity = gui.getInventory().getItems(items).size();
 
                 if ((this.items.keys.contains("Head of Lettuce") && gui.getInventory().getNumberFreeCoord(testItems.get(0)) <= Math.floor(totalItemsThatCanFit/2))
-                        || gui.getInventory().getNumberFreeCoord(testItems.get(0)) <= Math.floor(totalItemsThatCanFit)) {
+                        || (this.items.keys.contains("Pumpkin") && gui.getInventory().getNumberFreeCoord(testItems.get(0)) == 0)) {
                     splitItems(gui);
 
                     ArrayList<Gob> barrels = Finder.findGobs(seedOutput, new NAlias("barrel"));
@@ -58,6 +59,7 @@ public class LettuceAndPumpkinCollector implements Action {
                                 TransferToBarrel tb;
                                 (tb = new TransferToBarrel(barrel, new NAlias("Seed"))).run(gui);
                                 barrelInfo.put(barrel, new AtomicBoolean(tb.isFull()));
+                                if (!tb.isFull()) break;
                             }
 
                             Gob trough = Finder.findGob(troughArea, new NAlias("gfx/terobjs/trough"));
@@ -76,6 +78,8 @@ public class LettuceAndPumpkinCollector implements Action {
                         new TransferToPiles(itemOutput.getRCArea(), new NAlias(this.secondaryItemAlias)).run(gui);
 
                     }
+
+                    currentQuantity = 0;
                 }
             }
 
@@ -87,7 +91,7 @@ public class LettuceAndPumpkinCollector implements Action {
                 pf.run(gui);
             }
             NUtils.takeFromEarth(item);
-            NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), items, 1));
+            NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), items, currentQuantity+1));
         }
 
         splitItems(gui);
@@ -127,7 +131,12 @@ public class LettuceAndPumpkinCollector implements Action {
         NUtils.getUI().core.addTask(new NFlowerMenuIsClosed());
         ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(this.items);
         for (WItem item : items) {
-            new SelectFlowerAction("Split", (NWItem) item).run(gui);
+            if(this.items.keys.contains("Head of Lettuce")) {
+                new SelectFlowerAction("Split", (NWItem) item).run(gui);
+            } else if(this.items.keys.contains("Pumpkin")) {
+                new SelectFlowerAction("Slice", (NWItem) item).run(gui);
+            }
+
         }
     }
 }

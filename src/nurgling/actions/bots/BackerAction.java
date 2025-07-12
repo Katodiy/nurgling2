@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
@@ -31,13 +32,11 @@ public class BackerAction implements Action {
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
 
-            NArea ovens = NArea.findSpec(Specialisation.SpecName.ovens.toString());
+            NArea ovens = NContext.findSpec(Specialisation.SpecName.ovens.toString());
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob sm : Finder.findGobs(ovens, new NAlias("gfx/terobjs/oven"))) {
-                Container cand = new Container();
-                cand.gob = sm;
-                cand.cap = "Oven";
+                Container cand = new Container(sm, "Oven");
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -47,20 +46,18 @@ public class BackerAction implements Action {
                 containers.add(cand);
             }
 
-            ArrayList<Gob> lighted = new ArrayList<>();
+            ArrayList<Long> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gob);
+                lighted.add(cont.gobid);
             }
 
             Results res = null;
             while (res == null || res.IsSuccess()) {
                 NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 4));
                 Context icontext = new Context();
-                for (NArea area : NArea.findAllIn(new NAlias("Dough", "Unbaked"))) {
+                for (NArea area : NContext.findAllIn(new NAlias("Dough", "Unbaked"))) {
                     for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-                        Container cand = new Container();
-                        cand.gob = sm;
-                        cand.cap = Context.contcaps.get(cand.gob.ngob.name);
+                        Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
                         cand.initattr(Container.Space.class);
                         cand.initattr(Container.TargetItems.class);
                         cand.getattr(Container.TargetItems.class).addTarget("Dough");
@@ -79,9 +76,9 @@ public class BackerAction implements Action {
                 }
                 new FuelToContainers(forFuel).run(gui);
 
-                ArrayList<Gob> flighted = new ArrayList<>();
+                ArrayList<Long> flighted = new ArrayList<>();
                 for (Container cont : forFuel) {
-                    flighted.add(cont.gob);
+                    flighted.add(cont.gobid);
                 }
                 new LightGob(flighted, 4).run(gui);
             }

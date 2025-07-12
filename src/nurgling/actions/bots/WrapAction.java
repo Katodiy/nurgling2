@@ -7,6 +7,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -28,7 +29,7 @@ public class WrapAction implements Action {
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         if (new Validator(req, opt).run(gui).IsSuccess()) {
 
-            NArea npile_area = NArea.findIn(wraps);
+            NArea npile_area = NContext.findIn(wraps);
             Pair<Coord2d, Coord2d> pile_area = npile_area != null ? npile_area.getRCArea() : null;
             if (pile_area == null) {
                 return Results.ERROR("Wraps not found");
@@ -36,11 +37,9 @@ public class WrapAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
 
-            for (Gob kiln : Finder.findGobs(NArea.findSpec(rkilns.name),
+            for (Gob kiln : Finder.findGobs(NContext.findSpec(rkilns.name),
                     new NAlias("gfx/terobjs/kiln"))) {
-                Container cand = new Container();
-                cand.gob = kiln;
-                cand.cap = "Kiln";
+                Container cand = new Container(kiln, "Kiln");
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
                 cand.getattr(Container.FuelLvl.class).setMaxlvl(4);
@@ -48,9 +47,9 @@ public class WrapAction implements Action {
                 containers.add(cand);
             }
 
-            ArrayList<Gob> flighted = new ArrayList<>();
+            ArrayList<Long> flighted = new ArrayList<>();
             for (Container cont : containers) {
-                flighted.add(cont.gob);
+                flighted.add(cont.gobid);
             }
 
             Results res = null;
@@ -69,7 +68,7 @@ public class WrapAction implements Action {
 
                 flighted.clear();
                 for (Container cont : forFuel) {
-                    flighted.add(cont.gob);
+                    flighted.add(cont.gobid);
                 }
                 if (!new LightGob(flighted, 1).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");

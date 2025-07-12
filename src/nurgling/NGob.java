@@ -4,22 +4,30 @@ import haven.*;
 import haven.render.Location;
 import haven.render.Transform;
 import haven.res.gfx.fx.eq.Equed;
+import haven.res.gfx.hud.mmap.plo.Player;
 import haven.res.gfx.terobjs.consobj.Consobj;
 import haven.res.lib.tree.TreeScale;
 import haven.res.lib.vmat.Mapping;
 import haven.res.lib.vmat.Materials;
+import haven.res.ui.obj.buddy.Buddy;
 import monitoring.NGlobalSearchItems;
 import nurgling.gattrr.NCustomScale;
 import nurgling.overlays.*;
 import nurgling.pf.*;
 import nurgling.tools.*;
 import nurgling.widgets.NAlarmWdg;
+import nurgling.widgets.NMiniMap;
 import nurgling.widgets.NProspecting;
 import nurgling.widgets.NQuestInfo;
 
+import java.awt.image.BufferedImage;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static haven.MCache.cmaps;
+import static haven.MCache.tilesz;
 import static haven.OCache.posres;
 
 public class NGob {
@@ -37,6 +45,41 @@ public class NGob {
     public int lastUpdate = 0;
 
     public String hash;
+    private final Queue<DelayedOverlayTask> delayedOverlayTasks = new ConcurrentLinkedQueue<>();
+
+    public void changedPose(String currentPose) {
+        if (name != null) {
+            if (currentPose.contains("fgtidle")) {
+                if (name.equals("gfx/kritter/cattle/cattle") || name.equals("gfx/kritter/boar/boar") || name.equals("gfx/kritter/goat/wildgoat") || name.equals("gfx/kritter/reindeer/reindeer") || name.equals("gfx/kritter/sheep/sheep")) {
+                    if(nurgling.NUtils.getGameUI()!=null) {
+                        for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel) {
+                            if (rel.gobid == parent.id) {
+                                return;
+                            }
+                        }
+                    }
+                    parent.addcustomol(new NTexMarker(parent, new TexI(Resource.loadsimg("nurgling/hud/taiming")), () -> {
+                        for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel) {
+                            if (rel.gobid == parent.id) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }));
+                }
+            }
+        }
+    }
+
+    private static class DelayedOverlayTask {
+        final Predicate<Gob> condition;
+        final Consumer<Gob> action;
+
+        DelayedOverlayTask(Predicate<Gob> condition, Consumer<Gob> action) {
+            this.condition = condition;
+            this.action = action;
+        }
+    }
 
     public NGob(Gob parent) {
         this.parent = parent;
@@ -53,7 +96,6 @@ public class NGob {
     }
 
     protected void updateMovingInfo(GAttrib a, GAttrib prev) {
-        boolean me = (parent.id == NUtils.playerID());
         if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
             if (prev instanceof Moving) {
                 NUtils.getGameUI().map.glob.oc.paths.removePath((Moving) prev);
@@ -66,6 +108,20 @@ public class NGob {
         }
     }
 
+    static BufferedImage setTex(GobIcon icon)
+    {
+        if (icon!=null && NUtils.getGameUI()!=null && NUtils.getGameUI().mmap.iconconf != null && icon.res.isReady() && icon.icon()!=null) {
+            if (icon.icon().image() != null) {
+                GobIcon.Setting conf = NUtils.getGameUI().mmap.iconconf.get(icon.icon());
+                if (conf != null && conf.show)
+                {
+                    return icon.icon().image();
+                }
+            }
+        }
+        return null;
+    }
+
     public void checkattr(GAttrib a, long id, GAttrib prev) {
 
         if (a instanceof ResDrawable) {
@@ -73,6 +129,25 @@ public class NGob {
         }
         if (a instanceof Following) {
             isDynamic = true;
+        }
+
+        if(a instanceof GobIcon) {
+            delayedOverlayTasks.add(new DelayedOverlayTask(
+                    gob -> {return NUtils.getGameUI()!=null && NUtils.getGameUI().mmap!=null &&  NUtils.getGameUI().mmap.iconconf != null && ((GobIcon)a).res.isReady() && ((GobIcon)a).icon != null && (!(((GobIcon)a).icon instanceof Player) || (gob.getattr(Buddy.class)==null || gob.getattr(Buddy.class).buddy()!=null));},
+                    gob -> {
+                        BufferedImage iconres = setTex((GobIcon)a);
+                        if (iconres != null && NUtils.getGameUI().mmap.sessloc != null) {
+
+                            synchronized (((NMapView) NUtils.getGameUI().map).tempMarkList) {
+                                if (((NMapView) NUtils.getGameUI().map).tempMarkList.stream().noneMatch(m -> m.id == parent.id)) {
+                                    ((NMapView) NUtils.getGameUI().map).tempMarkList.add(new NMiniMap.TempMark(name, NUtils.getGameUI().mmap.sessloc, parent.id, parent.rc, parent.rc.floor(tilesz).add(NUtils.getGameUI().mmap.sessloc.tc), iconres));
+                                }
+                            }
+                        }
+                    }
+            ));
+
+
         }
 
         if (a instanceof Drawable) {
@@ -111,9 +186,21 @@ public class NGob {
                                 else {
                                     for (Resource.Layer lay : ((Session.CachedRes.Ref) consobj.built.res).res.getLayers()) {
                                         if (lay instanceof Resource.Neg) {
-                                            hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                            if(name!=null && NParser.checkName(name,new NAlias("wall", "trellis")))
+                                            {
+                                                hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc, true);
+                                            }
+                                            else {
+                                                hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                            }
                                         } else if (lay instanceof Resource.Obstacle) {
-                                            hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                            if(name!=null && NParser.checkName(name,new NAlias("wall", "trellis")))
+                                            {
+                                                hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p,true);
+                                            }
+                                            else {
+                                                hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                            }
                                         }
                                     }
                                 }
@@ -140,17 +227,34 @@ public class NGob {
                                     }
                                 }
                                 if(bl!=null && ur!=null) {
-                                    hitBox = new NHitBox(bl, ur);
+                                    if(name!=null && NParser.checkName(name,new NAlias("wall", "trellis")))
+                                    {
+                                        hitBox = new NHitBox(bl, ur, true);
+                                    }
+                                    else {
+                                        hitBox = new NHitBox(bl, ur);
+                                    }
                                 }
                             }
                         }
                         else {
                             for (Resource.Layer lay : ((Drawable) a).getres().getLayers()) {
                                 if (lay instanceof Resource.Neg) {
-                                    hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                    if(name!=null && NParser.checkName(name,new NAlias("wall", "trellis")))
+                                    {
+                                        hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc, true);
+                                    }
+                                    else {
+                                        hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc);
+                                    }
                                 } else if (lay instanceof Resource.Obstacle) {
-                                    hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
-                                }
+                                    if(name!=null && NParser.checkName(name,new NAlias("wall", "trellis")))
+                                    {
+                                        hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p,true);
+                                    }
+                                    else {
+                                        hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p);
+                                    }}
                             }
                         }
                     if (name != null) {
@@ -162,12 +266,8 @@ public class NGob {
 
 
 
-                        if (NParser.checkName(name, new NAlias("borka")) && parent.id!=NUtils.playerID()) {
-                            String pose = parent.pose();
-                            if(pose != null)
-                                if (!NParser.checkName(pose, new NAlias(new ArrayList<String>(Arrays.asList("dead", "mannequin"))))){
-                                    NAlarmWdg.addBorka(parent.id);
-                                }
+                        if (NParser.checkName(name, new NAlias("borka"))) {
+                            NAlarmWdg.addBorka(parent.id);
                         }
 
                         if (NParser.checkName(name, new NAlias("plants"))) {
@@ -197,11 +297,22 @@ public class NGob {
                             } else if (name.contains("gfx/terobjs/barrel")) {
                                 customMask = true;
                                 parent.addcustomol(new NBarrelOverlay(parent));
+                            } else if(name.contains("gfx/terobjs/items/gems/gemstone"))
+                            {
+                                parent.addcustomol(new NTexMarker(parent, new TexI(Resource.loadsimg("marks/gem")), () -> false ));
                             }
 
                             if (name.equals("gfx/borka/body")) {
-                                parent.addcustomol(new NKinRing(parent));
-                                parent.setattr(new NKinTex(parent));
+                                delayedOverlayTasks.add(new DelayedOverlayTask(
+                                        gob -> gob.pose()!=null,
+                                        gob -> {
+                                            String posename = gob.pose();
+                                            if(!(posename.contains("knocked") || posename.contains("dead") || posename.contains("manneq") || posename.contains("skel")) || NUtils.playerID() == gob.id) {
+                                                gob.addcustomol(new NKinRing(gob));
+                                                gob.setattr(new NKinTex(gob));
+                                            }
+                                        }
+                                ));
                             }
 
                             NHitBox custom = NHitBox.findCustom(name);
@@ -229,6 +340,24 @@ public class NGob {
                         if(name!=null)
                             parent.addcustomol(new NTreeScaleOl(parent));
                     }
+                }
+
+                if (name != null && name.contains("kritter")) {
+                    delayedOverlayTasks.add(new DelayedOverlayTask(
+                            gob -> {
+                                String pose = gob.pose();
+                                boolean poseValid =(pose != null && !NParser.checkName(pose, "dead", "knock")) || (pose == null && NParser.checkName(name, new NAlias("badger", "wolverine", "wolf")));
+                                boolean overlayNotExists = gob.findol(NAreaRad.class) == null;
+                                nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
+                                boolean radValid = rad != null && rad.vis;
+
+                                return poseValid && overlayNotExists && radValid;
+                            },
+                            gob -> {
+                                nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
+                                gob.addcustomol(new NAreaRange(gob, rad));
+                            }
+                    ));
                 }
             }
         }
@@ -285,6 +414,16 @@ public class NGob {
 
     public void tick(double dt) {
         if(NUtils.getGameUI()!=null) {
+            Iterator<DelayedOverlayTask> it = delayedOverlayTasks.iterator();
+            while (it.hasNext()) {
+                DelayedOverlayTask task = it.next();
+                if (task.condition.test(parent)) {
+                    task.action.accept(parent);
+                    it.remove();
+                }
+            }
+
+
             if(hash==null)
             {
                 Coord pltc = (new Coord2d(parent.rc.x / MCache.tilesz.x, parent.rc.y / MCache.tilesz.y)).floor();
@@ -299,35 +438,31 @@ public class NGob {
                     }
                 }
             }
-            if (name != null && name.contains("kritter") && (parent.pose() == null || !NParser.checkName(parent.pose(), "dead", "knock")) && parent.findol(NAreaRad.class) == null) {
-                nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
-                if (rad != null && rad.vis)
-                    parent.addcustomol(new NAreaRange(parent, rad));
-            }
 
-            Gob player = NUtils.player();
-            if(player!=null && parent.id == player.id) {
-                if ((Boolean) NConfig.get(NConfig.Key.player_box)) {//9*9 around player
-                        parent.addcustomol(new NPlayerBoxOverlay(parent));
-                } else {
-                    Gob.Overlay col = parent.findol(NPlayerBoxOverlay.class);
-                    if (col != null) col.remove();
-                }
 
-                if ((Boolean) NConfig.get(NConfig.Key.player_fov)) {//FOV render
-                    parent.addcustomol(new NRenderBoxOverlay(parent));
-                } else {
-                    Gob.Overlay col = parent.findol(NRenderBoxOverlay.class);
-                    if (col != null) col.remove();
-                }
-
-                if ((Boolean) NConfig.get(NConfig.Key.gridbox)) {//grid borders
-                    parent.addcustomol(new NGridBoxOverlay(parent));
-                } else {
-                    Gob.Overlay col = parent.findol(NGridBoxOverlay.class);
-                    if (col != null) col.remove();
-                }
-            }
+//            Gob player = NUtils.player();
+//            if(player!=null && parent.id == player.id) {
+//                if ((Boolean) NConfig.get(NConfig.Key.player_box)) {//9*9 around player
+//                        parent.addcustomol(new NPlayerBoxOverlay(parent));
+//                } else {
+//                    Gob.Overlay col = parent.findol(NPlayerBoxOverlay.class);
+//                    if (col != null) col.remove();
+//                }
+//
+//                if ((Boolean) NConfig.get(NConfig.Key.player_fov)) {//FOV render
+//                    parent.addcustomol(new NRenderBoxOverlay(parent));
+//                } else {
+//                    Gob.Overlay col = parent.findol(NRenderBoxOverlay.class);
+//                    if (col != null) col.remove();
+//                }
+//
+//                if ((Boolean) NConfig.get(NConfig.Key.gridbox)) {//grid borders
+//                    parent.addcustomol(new NGridBoxOverlay(parent));
+//                } else {
+//                    Gob.Overlay col = parent.findol(NGridBoxOverlay.class);
+//                    if (col != null) col.remove();
+//                }
+//            }
 
             int nlu = NQuestInfo.lastUpdate.get();
             if (NQuestInfo.lastUpdate.get() > lastUpdate) {
@@ -354,15 +489,6 @@ public class NGob {
                         }
                 }
             }
-            if(hash!=null && !NGlobalSearchItems.containerHashes.isEmpty())
-            {
-                synchronized (NGlobalSearchItems.containerHashes) {
-                    if (NGlobalSearchItems.containerHashes.contains(hash)) {
-
-                    }
-                }
-            }
-
         }
     }
 

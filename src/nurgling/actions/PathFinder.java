@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.*;
+import jdk.jshell.execution.Util;
 import nurgling.*;
 import nurgling.pf.*;
 import nurgling.pf.Utils;
@@ -32,6 +33,9 @@ public class PathFinder implements Action {
     Mode mode = Mode.NEAREST;
     Gob gobInStartPos = null;
     double badDir = Double.MAX_VALUE;
+
+
+
     public enum Mode
     {
         NEAREST,
@@ -44,6 +48,11 @@ public class PathFinder implements Action {
     public PathFinder(Coord2d begin, Coord2d end) {
         this.begin = begin;
         this.end = end;
+    }
+
+    public PathFinder(Coord2d begin, Gob target) {
+        this(target);
+        this.begin = begin;
     }
 
     public PathFinder(Coord2d end) {
@@ -118,11 +127,12 @@ public class PathFinder implements Action {
     public LinkedList<Graph.Vertex> construct(boolean test) throws InterruptedException {
         LinkedList<Graph.Vertex> path = new LinkedList<>();
         int mul = 1;
-        while (path.size() == 0 && mul < 1000) {
-            if(test && gridIsBiggerThanVisibleArea(mul)) {
-                break;
-            }
+        while (path.isEmpty() && mul < 200) {
+            if(pfmap!=null && pfmap.lastMul)
+                return null;
             pfmap = new NPFMap(begin, end, mul);
+            pfmap.getBegin();
+            pfmap.getEnd();
             if(pfmap.bad) {
                 if (test) {
                     return null;
@@ -143,7 +153,7 @@ public class PathFinder implements Action {
             // Находим свободные начальные и конечные точки
 
             if (!fixStartEnd(test)) {
-                dn = true; //start == end
+//                dn = true; //start == end
                 return null;
             }
 
@@ -242,69 +252,73 @@ public class PathFinder implements Action {
 
     private boolean fixStartEnd(boolean test) {
         NPFMap.Cell[][] cells = pfmap.getCells();
-        if (cells[start_pos.x][start_pos.y].val != 0) {
-            if (target_id >= 0 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test)
-                return false;
-            ArrayList<Coord> st_poses = findFreeNear(start_pos, true);
-            if (st_poses.isEmpty())
-                return false;
-            if(cells[start_pos.x][start_pos.y].content.size()==1 || (cells[start_pos.x][start_pos.y].content.size()==2 && cells[start_pos.x][start_pos.y].content.contains((long)-1)))
-                for(Long id: cells[start_pos.x][start_pos.y].content)
-                {
-                    if(id!=-1)
-                    {
-                        gobInStartPos = Finder.findGob(id);
-                    }
-                }
-            start_pos = st_poses.get(0);
-        }
-        if (start_pos.equals(end_pos) && dummy==null) {
-            dn = true;
-            return false;
-        }
-//        cells[start_pos.x][start_pos.y].val = 7;
-        if (cells[end_pos.x][end_pos.y].val != 0) {
-            end_poses = findFreeNear(end_pos, false);
-            if(dummy!=null || (isHardMode&&target_id!=-2 && Finder.findGob(target_id)!=null))
-            {
-                Coord2d tcoord = (dummy!=null)?dummy.rc:Finder.findGob(target_id).rc;
-                ArrayList<Coord> best_poses = new ArrayList<>();
-                for(Coord coord : end_poses)
-                {
-                    Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos);
-                    if(coord2d.x+MCache.tileqsz.x > tcoord.x && coord2d.x-MCache.tileqsz.x< tcoord.x ||
-                            coord2d.y+MCache.tileqsz.y > tcoord.y && coord2d.y-MCache.tileqsz.y< tcoord.y)
-                        best_poses.add(coord);
-                }
-                if(!best_poses.isEmpty())
-                    end_poses = best_poses;
-            }
-
-            if(badDir!=Double.MAX_VALUE && target_id>0)
-            {
-                Coord2d orientation = new Coord2d(1,0).rot(badDir);
-                Coord2d tcoord = Finder.findGob(target_id).rc;
-                ArrayList<Coord> best_poses = new ArrayList<>();
-                for(Coord coord : end_poses)
-                {
-                    Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos).sub(tcoord).norm();
-                    if(coord2d.dot(orientation)>=-0.2)
-                        best_poses.add(coord);
-                    else
-                        cells[coord.x][coord.y].val = 0;
-                }
-                end_poses = best_poses;
-            }
-            for (Coord coord : end_poses) {
-                if (start_pos.equals(coord) && target_id >= 0)
+        if(start_pos.x < pfmap.size && start_pos.y<pfmap.size && start_pos.x>=0 && start_pos.y>=0) {
+            if (cells[start_pos.x][start_pos.y].val != 0) {
+                if (target_id >= 0 && cells[start_pos.x][start_pos.y].content.contains(target_id) && !test) {
+                    dn = true;
                     return false;
-                cells[coord.x][coord.y].val = 7;
+                }
+                ArrayList<Coord> st_poses = findFreeNear(start_pos, true);
+                if (st_poses.isEmpty())
+                    return false;
+                if (cells[start_pos.x][start_pos.y].content.size() == 1 || (cells[start_pos.x][start_pos.y].content.size() == 2 && cells[start_pos.x][start_pos.y].content.contains((long) -1)))
+                    for (Long id : cells[start_pos.x][start_pos.y].content) {
+                        if (id != -1) {
+                            gobInStartPos = Finder.findGob(id);
+                        }
+                    }
+                start_pos = st_poses.get(0);
             }
+            if (start_pos.equals(end_pos) && dummy == null) {
+                dn = true;
+                return false;
+            }
+            if (end_pos.x < pfmap.size && end_pos.y < pfmap.size && end_pos.x >= 0 && end_pos.y >= 0) {
+                if (cells[end_pos.x][end_pos.y].val != 0) {
+                    end_poses = findFreeNear(end_pos, false);
+                    if (dummy != null || (isHardMode && target_id != -2 && Finder.findGob(target_id) != null)) {
+                        Coord2d tcoord = (dummy != null) ? dummy.rc : Finder.findGob(target_id).rc;
+                        ArrayList<Coord> best_poses = new ArrayList<>();
+                        for (Coord coord : end_poses) {
+                            Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos);
+                            if (coord2d.x + MCache.tileqsz.x > tcoord.x && coord2d.x - MCache.tileqsz.x < tcoord.x ||
+                                    coord2d.y + MCache.tileqsz.y > tcoord.y && coord2d.y - MCache.tileqsz.y < tcoord.y)
+                                best_poses.add(coord);
+                        }
+                        if (!best_poses.isEmpty())
+                            end_poses = best_poses;
+                    }
 
-        } else {
-            cells[end_pos.x][end_pos.y].val = 7;
+                    if (badDir != Double.MAX_VALUE && target_id > 0) {
+                        Coord2d orientation = new Coord2d(1, 0).rot(badDir);
+                        Coord2d tcoord = Finder.findGob(target_id).rc;
+                        ArrayList<Coord> best_poses = new ArrayList<>();
+                        for (Coord coord : end_poses) {
+                            Coord2d coord2d = Utils.pfGridToWorld(cells[coord.x][coord.y].pos).sub(tcoord).norm();
+                            if (coord2d.dot(orientation) >= -0.2)
+                                best_poses.add(coord);
+                            else
+                                cells[coord.x][coord.y].val = 0;
+                        }
+                        end_poses = best_poses;
+                    }
+                    for (Coord coord : end_poses) {
+                        if (start_pos.equals(coord) && target_id >= 0) {
+                            dn = true;
+                            return false;
+                        }
+                        cells[coord.x][coord.y].val = 7;
+                    }
+
+                } else {
+                    cells[end_pos.x][end_pos.y].val = 7;
+                }
+            } else {
+                return false;
+            }
+            return true;
         }
-        return true;
+        return false;
     }
 
     private ArrayList<Coord> findFreeNear(Coord pos, boolean start) {
@@ -314,7 +328,8 @@ public class PathFinder implements Action {
                 if (target == null) {
                     target = Finder.findGob(target_id);
                 }
-
+                if(target == null)
+                    return null;
                 CellsArray ca = target.ngob.getCA();
                 return findFreeNearByHB(ca, target_id, dummy, start);
             }
@@ -354,7 +369,7 @@ public class PathFinder implements Action {
                         }
                     }
                 }
-                return targets;
+                return targets == null ? new ArrayList<>():targets;
             }
         }
         return new ArrayList<>(Arrays.asList(pos));
@@ -371,26 +386,63 @@ public class PathFinder implements Action {
         }
     }
 
+    public static ArrayList<Coord2d> getNearestHardPoints(Gob target) throws InterruptedException  {
+        PathFinder pf = new PathFinder(target);
+        pf.isHardMode = true;
+        pf.construct(true);
+        ArrayList<Coord2d> res = new ArrayList<>();
+        for(Coord ep : pf.end_poses)
+        {
+            Coord2d coord2d = Utils.pfGridToWorld(pf.pfmap.cells[ep.x][ep.y].pos);
+            if(Math.abs(coord2d.x-target.rc.x)>Math.abs(coord2d.y-target.rc.y))
+            {
+                coord2d.y = target.rc.y;
+            }
+            else
+            {
+                coord2d.x = target.rc.x;
+            }
+            res.add(coord2d);
+        }
+        return res;
+    }
 
     public static boolean isAvailable(Gob target) throws InterruptedException {
+        if(NUtils.player() == null)
+            return false;
         PathFinder pf = new PathFinder(target);
         LinkedList<Graph.Vertex> res = pf.construct(true);
         return res != null || pf.dn;
     }
 
     public static boolean isAvailable(Coord2d target) throws InterruptedException {
+        if(NUtils.player() == null)
+            return false;
         PathFinder pf = new PathFinder(target);
         LinkedList<Graph.Vertex> res = pf.construct(true);
         return res != null || pf.dn;
     }
 
     public static boolean isAvailable(Gob target, boolean hardMode) throws InterruptedException {
+        if(NUtils.player() == null)
+            return false;
         PathFinder pf = new PathFinder(target);
         pf.isHardMode = true;
         return pf.construct(true) != null;
     }
 
     public static boolean isAvailable(Coord2d begin, Coord2d target, boolean gatesAlwaysClosed) throws InterruptedException {
+        if(NUtils.player() == null)
+            return false;
+        PathFinder pf = new PathFinder(begin, target);
+        pf.gatesAlwaysClosed = gatesAlwaysClosed;
+        LinkedList<Graph.Vertex> res = pf.construct(true);
+        return res != null || pf.dn;
+    }
+
+    public static boolean isAvailable(Coord2d begin, Gob target, boolean gatesAlwaysClosed) throws InterruptedException {
+        if(NUtils.player() == null)
+            return false;
         PathFinder pf = new PathFinder(begin, target);
         pf.gatesAlwaysClosed = gatesAlwaysClosed;
         LinkedList<Graph.Vertex> res = pf.construct(true);
@@ -488,11 +540,14 @@ public class PathFinder implements Action {
         return dn;
     }
 
-    boolean gridIsBiggerThanVisibleArea(int mul) {
-            int size = VISIBLE_AREA;
-            Coord2d a = new Coord2d(Math.min(begin.x, end.x), Math.min(begin.y, end.y));
-            Coord2d b = new Coord2d(Math.max(begin.x, end.x), Math.max(begin.y, end.y));
-            int dsize = Math.min(size, Math.max(8,((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul));
-            return dsize == VISIBLE_AREA;
-    }
+//    boolean gridIsBiggerThanVisibleArea(NPFMap map) {
+//            Utils.pfGridToWorld(map.getBegin())
+//
+//
+//            int size = VISIBLE_AREA;
+//            Coord2d a = new Coord2d(Math.min(begin.x, end.x), Math.min(begin.y, end.y));
+//            Coord2d b = new Coord2d(Math.max(begin.x, end.x), Math.max(begin.y, end.y));
+//            int dsize = Math.min(size, Math.max(8,((int) Math.ceil(b.dist(a) / MCache.tilehsz.x)) * mul));
+//            return dsize == VISIBLE_AREA;
+//    }
 }

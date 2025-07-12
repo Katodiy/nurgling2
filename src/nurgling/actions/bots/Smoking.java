@@ -6,6 +6,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.conf.NSmokProp;
 import nurgling.tasks.WaitCheckable;
 import nurgling.tools.Container;
@@ -49,12 +50,12 @@ public class Smoking implements Action {
         req.add(ssmokshed);
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         ArrayList<NSmokProp> cands = new ArrayList<>();
-        Pair<Coord2d,Coord2d> logs = NArea.findSpec(slogs).getRCArea();
-        Pair<Coord2d,Coord2d> sheds = NArea.findSpec(ssmokshed).getRCArea();
+        Pair<Coord2d,Coord2d> logs = NContext.findSpec(slogs).getRCArea();
+        Pair<Coord2d,Coord2d> sheds = NContext.findSpec(ssmokshed).getRCArea();
         if(new Validator(req, opt).run(gui).IsSuccess()) {
             for(NSmokProp prop : smokProps) {
                 Gob testlog = Finder.findGob(logs,new NAlias(prop.fuel));
-                NArea testarea = NArea.findIn(prop.iconName);
+                NArea testarea = NContext.findIn(prop.iconName);
                 if(testlog!=null && testarea!=null) {
                     cands.add(prop);
                 }
@@ -76,9 +77,7 @@ public class Smoking implements Action {
             for (Gob sm : Finder.findGobs(sheds, new NAlias("gfx/terobjs/smokeshed"))) {
                 if((sm.ngob.getModelAttribute()&16)==16)
                     continue;
-                Container cand = new Container();
-                cand.gob = sm;
-                cand.cap = "Smoke shed";
+                Container cand = new Container(sm, "Smoke shed");
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -94,7 +93,7 @@ public class Smoking implements Action {
 
             new FreeContainers(containers).run(gui);
 
-            ArrayList<Gob> lighted = new ArrayList<>();
+            ArrayList<Long> lighted = new ArrayList<>();
             for(String fuel : fuels.keySet()) {
                 for(NSmokProp prop : fuels.get(fuel)) {
                     new FillContainers(containers,prop.iconName, context).run(gui);
@@ -115,7 +114,7 @@ public class Smoking implements Action {
                 new FreeContainers(forClear).run(gui);
                 new FuelByLogs(forRemove, fuel).run(gui);
                 for(Container cand : forRemove) {
-                    lighted.add(cand.gob);
+                    lighted.add(cand.gobid);
                 }
                 containers.removeAll(forRemove);
                 for(Container cand : forClear) {

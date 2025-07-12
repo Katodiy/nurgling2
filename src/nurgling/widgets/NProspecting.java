@@ -62,9 +62,9 @@ public class NProspecting extends Window {
             Gob p = ui.gui.map.player();
             if(p != null) {pc = p.rc;}
         }
-        if(pc != null) {
-            ui.gui.mapfile.addMarker(pc.floor(tilesz), String.format("%s (below)", NUtils.prettyResName(detected)));
-        }
+//        if(pc != null) {
+//            ui.gui.mapfile.addMarker(pc.floor(tilesz), String.format("%s (below)", NUtils.prettyResName(detected)));
+//        }
     }
 
     private void fx(Dowse fx) {

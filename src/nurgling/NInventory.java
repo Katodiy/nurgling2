@@ -166,6 +166,13 @@ public class NInventory extends Inventory
         return gi.getResult();
     }
 
+    public WItem getItem(NAlias name, Class<? extends ItemInfo> prop) throws InterruptedException
+    {
+        GetItem gi = new GetItem(this, name, prop);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
     public WItem getItem(NAlias name, Float q) throws InterruptedException
     {
         GetItem gi = new GetItem(this, name, q);
@@ -207,6 +214,13 @@ public class NInventory extends Inventory
         return gi.getResult();
     }
 
+    public ArrayList<WItem> getWItems(NAlias name) throws InterruptedException
+    {
+        GetWItems gi = new GetWItems(this, name);
+        NUtils.getUI().core.addTask(gi);
+        return gi.getResult();
+    }
+
 
 
     public ArrayList<WItem> getItems(NAlias name, double th) throws InterruptedException
@@ -236,6 +250,10 @@ public class NInventory extends Inventory
     public void activateItem(NAlias name) throws InterruptedException {
         WItem it = getItem(name);
         it.item.wdgmsg("iact", Coord.z, 1);
+    }
+
+    public void activateItem(WItem item) throws InterruptedException {
+        item.item.wdgmsg("iact", Coord.z, 1);
     }
 
     public void dropOn(Coord dc, String name) throws InterruptedException
@@ -581,7 +599,7 @@ public class NInventory extends Inventory
                     boolean isFree = true;
                     for (int k = i; k < i + target_size.x; k++)
                         for (int n = j; n < j + target_size.y; n++)
-                            if (inventory[k][n] != 0) {
+                            if (n >= isz.x || k >= isz.y || inventory[k][n] != 0) {
                                 isFree = false;
                                 break;
                             }

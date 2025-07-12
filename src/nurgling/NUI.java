@@ -63,9 +63,11 @@ public class NUI extends UI
 
     @Override
     public void keydown(KeyEvent ev) {
+        setmods(ev);
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null) {
             if (ev.getKeyCode() == KeyEvent.VK_SHIFT) {
                 core.isinspect = true;
+                return;
             }
         }
         super.keydown(ev);

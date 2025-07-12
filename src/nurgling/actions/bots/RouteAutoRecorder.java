@@ -110,6 +110,19 @@ public class RouteAutoRecorder implements Runnable {
                     // Create a temporary waypoint to get its hash
                     RoutePoint predefinedWaypoint = new RoutePoint(rc, NUtils.getGameUI().ui.sess.glob.map);
 
+                    NUtils.addTask(new NTask() {
+                        @Override
+                        public boolean check() {
+                            try {
+                                Gob archGob = Finder.findGob(player().rc, new NAlias(
+                                        GateDetector.getDoorPair(gobForCachedRoutePoint.ngob.name)
+                                ), null, 100);
+                                return  archGob!=null;
+                            } catch (Exception e) {
+                                return false;
+                            }
+                        }
+                    });
                     Gob archGob = Finder.findGob(player().rc, new NAlias(
                             GateDetector.getDoorPair(gobForCachedRoutePoint.ngob.name)
                     ), null, 100);
@@ -277,7 +290,7 @@ public class RouteAutoRecorder implements Runnable {
      * @param arch The Gob representing the inside door.
      */
     private void handleExistingDoor(RouteGraph graph, String hash, String name, Gob arch) {
-        boolean needToDeleteLastPoint = shouldDeleteLastWaypoint(route, graph);
+        boolean needToDeleteLastPoint = shouldDeleteLastWaypoint(route, graph) && arch.ngob.name.equals(name);
 
         RoutePoint firstPointToAdd = graph.getDoors().get(hash);
         RoutePoint secondPointToAdd = graph.getDoors().get(arch.ngob.hash);
@@ -324,7 +337,11 @@ public class RouteAutoRecorder implements Runnable {
         if (needToDeleteLastPoint) {
             RoutePoint firstPointToAdd = graph.getDoors().get(hash);
             RoutePoint secondPointToAdd = predefinedWaypoint;
+            int oldId = predefinedWaypoint.id;
             secondPointToAdd.updateHashCode();
+            int newId = secondPointToAdd.id;
+
+            routeEditor.replaceAllReferences(oldId, newId);
 
             routeEditor.deleteAndReplaceLastWaypoint(
                     route,

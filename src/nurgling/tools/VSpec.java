@@ -832,8 +832,8 @@ public class VSpec {
         object.put("gfx/terobjs/trees/persimmontreelog", persimmonOp_log);
 
         ArrayList<String> pineOp_log = new ArrayList<>();
-        pineOp_log.add("Pine Board"); // Доска
-        pineOp_log.add("Pine Block"); // Блок
+        pineOp_log.add("Board of Pine"); // Доска
+        pineOp_log.add("Block of Pine"); // Блок
         object.put("gfx/terobjs/trees/pinelog", pineOp_log);
 
         ArrayList<String> planeOp_log = new ArrayList<>();
@@ -878,7 +878,7 @@ public class VSpec {
 
         ArrayList<String> spruceOp_log = new ArrayList<>();
         spruceOp_log.add("Spruce Board"); // Доска
-        spruceOp_log.add("Spruce Block"); // Блок
+        spruceOp_log.add("Block of Spruce"); // Блок
         object.put("gfx/terobjs/trees/sprucelog", spruceOp_log);
 
         ArrayList<String> stonepineOp_log = new ArrayList<>();
@@ -980,7 +980,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/magnetite", magnetiteOp);
 
         ArrayList<String> hematiteOp = new ArrayList<>();
-        hematiteOp.add("Blood Ore"); // Камень
+        hematiteOp.add("Bloodstone"); // Камень
         object.put("gfx/terobjs/bumlings/hematite", hematiteOp);
 
         ArrayList<String> brecciaOp = new ArrayList<>();
@@ -1012,7 +1012,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/diorite", dioriteOp);
 
         ArrayList<String> petziteOp = new ArrayList<>();
-        petziteOp.add("Direvein Ore"); // Камень
+        petziteOp.add("Direvein"); // Камень
         object.put("gfx/terobjs/bumlings/petzite", petziteOp);
 
         ArrayList<String> dolomiteOp = new ArrayList<>();
@@ -1060,7 +1060,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/greenschist", greenschistOp);
 
         ArrayList<String> ilmeniteOp = new ArrayList<>();
-        ilmeniteOp.add("Heavy Earth Ore"); // Камень
+        ilmeniteOp.add("Heavy Earth"); // Камень
         object.put("gfx/terobjs/bumlings/ilmenite", ilmeniteOp);
 
 //        ArrayList<String> hornsilverOp = new ArrayList<>();
@@ -1072,7 +1072,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/hornblende", hornblendeOp);
 
 //        ArrayList<String> limoniteOp = new ArrayList<>();
-//        limoniteOp.add("Iron Ochre Ore"); // Камень
+//        limoniteOp.add("Iron Ochre"); // Камень
 //        object.put("gfx/terobjs/bumlings/limonite", limoniteOp);
 
         ArrayList<String> jasperOp = new ArrayList<>();
@@ -1156,7 +1156,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/schist", schistOp);
 
 //        ArrayList<String> sylvaniteOp = new ArrayList<>();
-//        sylvaniteOp.add("Schrifterz Ore"); // Камень
+//        sylvaniteOp.add("Schrifterz"); // Камень
 //        object.put("gfx/terobjs/bumlings/sylvanite", sylvaniteOp);
 
         ArrayList<String> serpentineOp = new ArrayList<>();
@@ -1164,7 +1164,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/serpentine", serpentineOp);
 
         ArrayList<String> argentiteOp = new ArrayList<>();
-        argentiteOp.add("Silvershine Ore"); // Камень
+        argentiteOp.add("Silvershine"); // Камень
         object.put("gfx/terobjs/bumlings/argentite", argentiteOp);
 
         ArrayList<String> slateOp = new ArrayList<>();
@@ -1184,7 +1184,7 @@ public class VSpec {
         object.put("gfx/terobjs/bumlings/sunstone", sunstoneOp);
 
         ArrayList<String> cupriteOp = new ArrayList<>();
-        cupriteOp.add("Wine Glance Ore"); // Камень
+        cupriteOp.add("Wine Glance"); // Камень
         object.put("gfx/terobjs/bumlings/cuprite", cupriteOp);
 
         ArrayList<String> zincsparOp = new ArrayList<>();
@@ -1199,6 +1199,7 @@ public class VSpec {
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/ambergris\",\"name\":\"Ambergris\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/propolis\",\"name\":\"Propolis\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/kvann\",\"name\":\"Kvann\"}"));
+        spices.add(new JSONObject("{\"static\":\"gfx/invobjs/salt\",\"name\":\"Salt\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-juniper\",\"name\":\"Juniper Berries\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/clove-garlic\",\"name\":\"Clove of Garlic\"}"));
         spices.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/chives\",\"name\":\"Chives\"}"));
@@ -1314,6 +1315,11 @@ public class VSpec {
         driedFruits.add(new JSONObject("{\"static\":\"gfx/invobjs/prune\",\"name\":\"Prune\"}"));
         driedFruits.add(new JSONObject("{\"static\":\"gfx/invobjs/raisins\",\"name\":\"Raisins\"}"));
         categories.put("Dried Fruit", driedFruits);
+
+        ArrayList<JSONObject> water = new ArrayList<>();
+        water.add(new JSONObject("{\"static\":\"gfx/invobjs/water\",\"name\":\"Water\"}"));
+        water.add(new JSONObject("{\"static\":\"gfx/invobjs/milk\",\"name\":\"Milk\"}"));
+        categories.put("Water", water);
 
         ArrayList<JSONObject> mushrooms = new ArrayList<>();
         mushrooms.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/baybolete\",\"name\":\"Bay Bolete\"}"));
@@ -1666,6 +1672,16 @@ public class VSpec {
         baits.add(new JSONObject("{\"static\":\"gfx/invobjs/woodworm\",\"name\":\"Woodworm\"}"));
         categories.put("Bait", baits);
 
+        ArrayList<JSONObject> entrails = new ArrayList<>();
+        entrails.add(new JSONObject("{\"static\":\"gfx/invobjs/entrails\",\"name\":\"Entrails\"}"));
+
+        categories.put("Entrails", entrails);
+
+        ArrayList<JSONObject> intestines = new ArrayList<>();
+        intestines.add(new JSONObject("{\"static\":\"gfx/invobjs/intestines\",\"name\":\"Intestines\"}"));
+        intestines.add(new JSONObject("{\"static\":\"gfx/invobjs/animalfat\",\"name\":\"Animal Fat\"}"));
+        categories.put("Intestines", intestines);
+
         ArrayList<JSONObject> chitinItems = new ArrayList<>();
         chitinItems.add(new JSONObject("{\"static\":\"gfx/invobjs/antchitin\",\"name\":\"Ant Chitin\"}"));
         chitinItems.add(new JSONObject("{\"static\":\"gfx/invobjs/beechitin\",\"name\":\"Bee Chitin\"}"));
@@ -1890,6 +1906,7 @@ public class VSpec {
         raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-otter\"], \"name\": \"Raw Otter\"}"));
         raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-rabbit\"], \"name\": \"Raw Rabbit\"}"));
         raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-reindeer\"], \"name\": \"Raw Reindeer Venison\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-teimdeer\"], \"name\": \"Raw Tame Reindeer\"}"));
         raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-roedeer\"], \"name\": \"Raw Roe Venison\"}"));
         raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-squirrel\"], \"name\": \"Raw Squirrel\"}"));
         raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-stoat\"], \"name\": \"Raw Stoat\"}"));
@@ -2144,7 +2161,7 @@ public class VSpec {
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/moosehide-blood\",\"name\":\"Fresh Moose Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/mouflonhide-blood\",\"name\":\"Fresh Mouflon Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/otterhide-blood\",\"name\":\"Fresh Otterhide\"}"));
-        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/pighide-blood\",\"name\":\"Fresh Pig Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/pighide-blood\",\"name\":\"Fresh Pigskin\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/rabbithide-blood\",\"name\":\"Fresh Rabbit Fur\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/reddeerhide-blood\",\"name\":\"Fresh Red Deer Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/reindeerhide-blood\",\"name\":\"Fresh Reindeer Hide\"}"));
@@ -2156,6 +2173,7 @@ public class VSpec {
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/trollhide-blood\",\"name\":\"Fresh Troll Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/walrushide-blood\",\"name\":\"Fresh Walrus Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wildgoathide-blood\",\"name\":\"Fresh Wildgoat Hide\"}"));
+        hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/teimdeerhide-blood\",\"name\":\"Fresh Tame Reindeer Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wildhorsehide-blood\",\"name\":\"Fresh Wildhorse Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wolfhide-blood\",\"name\":\"Fresh Wolf Hide\"}"));
         hidesFresh.add(new JSONObject("{\"static\":\"gfx/invobjs/wolverinehide-blood\",\"name\":\"Fresh Wolverine Hide\"}"));
@@ -2197,6 +2215,7 @@ public class VSpec {
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/trollhide\",\"name\":\"Troll Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/walrushide\",\"name\":\"Walrus Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/wildgoathide\",\"name\":\"Wildgoat Hide\"}"));
+        preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/teimdeerhide\",\"name\":\"Tame Reindeer Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/wildhorsehide\",\"name\":\"Wildhorse Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/wolfhide\",\"name\":\"Wolf Hide\"}"));
         preparedAnimalHides.add(new JSONObject("{\"static\":\"gfx/invobjs/wolverinehide\",\"name\":\"Wolverine Hide\"}"));
@@ -2258,7 +2277,7 @@ public class VSpec {
         boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-osier\",\"name\":\"Osier Board\"}"));
         boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-peartree\",\"name\":\"Pear Board\"}"));
         boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-persimmontree\",\"name\":\"Persimmon Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-pine\",\"name\":\"Pine Board\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-pine\",\"name\":\"Board of Pine\"}"));
         boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-planetree\",\"name\":\"Plane Board\"}"));
         boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-plumtree\",\"name\":\"Plum Board\"}"));
         boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-poplar\",\"name\":\"Poplar Board\"}"));
@@ -2355,7 +2374,7 @@ public class VSpec {
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-osier\",\"name\":\"Osier Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-peartree\",\"name\":\"Pear Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-persimmontree\",\"name\":\"Persimmon Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-pine\",\"name\":\"Pine Block\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-pine\",\"name\":\"Block of Pine\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-planetree\",\"name\":\"Plane Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-plumtree\",\"name\":\"Plum Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-poplar\",\"name\":\"Poplar Block\"}"));
@@ -2364,7 +2383,7 @@ public class VSpec {
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sallow\",\"name\":\"Sallow Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-silverfir\",\"name\":\"Silver Fir Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sorbtree\",\"name\":\"Sorb Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-spruce\",\"name\":\"Spruce Block\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-spruce\",\"name\":\"Block of Spruce\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-stonepine\",\"name\":\"Stone Pine Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sweetgum\",\"name\":\"Sweetgum Block\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sycamore\",\"name\":\"Sycamore Block\"}"));
@@ -2385,23 +2404,23 @@ public class VSpec {
         ArrayList<JSONObject> ore = new ArrayList<>();
         //ore.add(new JSONObject("{\"static\":\"gfx/invobjs/blackcoal\",\"name\":\"Black Coal\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/magnetite\",\"name\":\"Black Ore\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Blood Ore\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Bloodstone\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/cassiterite\",\"name\":\"Cassiterite\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/chalcopyrite\",\"name\":\"Chalcopyrite\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/cinnabar\",\"name\":\"Cinnabar\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/petzite\",\"name\":\"Direvein Ore\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/petzite\",\"name\":\"Direvein\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/galena\",\"name\":\"Galena\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/ilmenite\",\"name\":\"Heavy Earth Ore\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/ilmenite\",\"name\":\"Heavy Earth\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/hornsilver\",\"name\":\"Horn Silver\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/limonite\",\"name\":\"Iron Ochre Ore\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/limonite\",\"name\":\"Iron Ochre\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/leadglance\",\"name\":\"Lead Glance\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/nagyagite\",\"name\":\"Leaf Ore\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/malachite\",\"name\":\"Malachite\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/meteorite\",\"name\":\"Meteorite\"}"));
         ore.add(new JSONObject("{\"static\":\"gfx/invobjs/peacockore\",\"name\":\"Peacock Ore\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/sylvanite\",\"name\":\"Schrifterz Ore\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/argentite\",\"name\":\"Silvershine Ore\"}"));
-        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/cuprite\",\"name\":\"Wine Glance Ore\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/sylvanite\",\"name\":\"Schrifterz\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/argentite\",\"name\":\"Silvershine\"}"));
+        ore.add(new JSONObject("{\"static\":\"gfx/invobjs/cuprite\",\"name\":\"Wine Glance\"}"));
         categories.put("Ore", ore);
 
         ArrayList<JSONObject> stones = new ArrayList<>();
@@ -2410,9 +2429,8 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/arkose\",\"name\":\"Arkose\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/basalt\",\"name\":\"Basalt\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/batrock\",\"name\":\"Bat Rock\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/blackcoal\",\"name\":\"Black Coal\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/magnetite\",\"name\":\"Magnetite\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Blood Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Bloodstone\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/breccia\",\"name\":\"Breccia\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/cassiterite\",\"name\":\"Cassiterite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/catgold\",\"name\":\"Cat Gold\"}"));
@@ -2421,7 +2439,7 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/cinnabar\",\"name\":\"Cinnabar\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/diabase\",\"name\":\"Diabase\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/diorite\",\"name\":\"Diorite\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/petzite\",\"name\":\"Direvein Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/petzite\",\"name\":\"Direvein\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/dolomite\",\"name\":\"Dolomite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/dross\",\"name\":\"Dross\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/eclogite\",\"name\":\"Eclogite\"}"));
@@ -2434,10 +2452,10 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/granite\",\"name\":\"Granite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/graywacke\",\"name\":\"Graywacke\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/greenschist\",\"name\":\"Greenschist\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/ilmenite\",\"name\":\"Heavy Earth Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/ilmenite\",\"name\":\"Heavy Earth\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hornsilver\",\"name\":\"Horn Silver\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hornblende\",\"name\":\"Hornblende\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/limonite\",\"name\":\"Iron Ochre Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/limonite\",\"name\":\"Iron Ochre\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/jasper\",\"name\":\"Jasper\"}"));
 //        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/korundstone\",\"name\":\"Korund Stone\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/kyanite\",\"name\":\"Kyanite\"}"));
@@ -2463,16 +2481,16 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/rockcrystal\",\"name\":\"Rock Crystal\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/sandstone\",\"name\":\"Sandstone\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/schist\",\"name\":\"Schist\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/sylvanite\",\"name\":\"Schrifterz Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/sylvanite\",\"name\":\"Schrifterz\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/serpentine\",\"name\":\"Serpentine\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/conchshard\",\"name\":\"Shard of Conch\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/argentite\",\"name\":\"Silvershine Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/argentite\",\"name\":\"Silvershine\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/slag\",\"name\":\"Slag\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/slate\",\"name\":\"Slate\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/soapstone\",\"name\":\"Soapstone\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/sodalite\",\"name\":\"Sodalite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/sunstone\",\"name\":\"Sunstone\"}"));
-        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/cuprite\",\"name\":\"Wine Glance Ore\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/cuprite\",\"name\":\"Wine Glance\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/zincspar\",\"name\":\"Zincspar\"}"));
         categories.put("Stone", stones);
 

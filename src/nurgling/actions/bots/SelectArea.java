@@ -27,7 +27,7 @@ public class SelectArea implements Action {
     }
     BufferedImage image = null;
     BufferedImage spr = null;
-    NArea.Space result;
+    public NArea.Space result;
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException

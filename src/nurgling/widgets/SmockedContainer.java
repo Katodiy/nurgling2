@@ -36,7 +36,7 @@ public class SmockedContainer extends Widget implements DTarget
             ing = new IngredientContainer.Ingredient((String)res.get("name"), ItemTex.create(res));
             if(iconItem == null)
             {
-                add(iconItem = new IconItem(ing.name, ing.image),UI.scale(9,9));
+                add(iconItem = new IconItem(ing.name, ing.image, this),UI.scale(9,9));
             }
             else
             {

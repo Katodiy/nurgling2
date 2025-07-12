@@ -46,7 +46,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public GobIcon.Settings iconconf;
     public MiniMap mmap;
     public Fightview fv;
-    protected List<Widget> meters = new LinkedList<Widget>();
+    final protected List<Widget> meters = new LinkedList<Widget>();
+	public Speedget speedget = null;
     private Text lastmsg;
     private double msgtime;
     private Window invwnd;
@@ -63,6 +64,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public final NZergwnd zerg;
     public NAreasWidget areas;
 	public RoutesWidget routesWidget;
+	public SearchWidget searchWidget;
     public NCookBook cookBook;
     public final Collection<Polity> polities = new ArrayList<Polity>();
     public HelpWnd help;
@@ -283,7 +285,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	menugridc = brframe.c.add(UI.scale(20), UI.scale(34));
 	Img rbtnimg =add(new Img(rbtnbg), 0, sz.y - rbtnbg.sz().y);
 	rbtnimg.hide();
-	add(new NDraggableWidget(new MainMenu(), "mainmenu", UI.scale(350,52)));
+	add(new NDraggableWidget(new MainMenu(), "mainmenu", UI.scale(385,52)));
 	menubuttons(rbtnimg);
 	portrait = add(new NDraggableWidget(Frame.with(new Avaview(Avaview.dasz, plid, "avacam"), false),"portrait", UI.scale(120, 108)));
 	add(new NDraggableWidget(buffs = new Bufflist(),"bufflist",Coord.z));
@@ -695,8 +697,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	} else if(place == "meter") {
 		if(child instanceof IMeter)
 	    	add(new NDraggableWidget(child, "meter" + ((IMeter)child).name,IMeter.fsz));
-		else if(child instanceof Speedget)
-			add(new NDraggableWidget(child, "speedmeter" ,IMeter.ssz));
+		else if(child instanceof Speedget) {
+			speedget = (Speedget)child;
+			add(new NDraggableWidget(child, "speedmeter", IMeter.ssz));
+		}
 	    meters.add(child);
 	} else if(place == "buff") {
 	    buffs.addchild(child);
@@ -1229,7 +1233,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public static final KeyBinding kb_areas = KeyBinding.get("areas", KeyMatch.forchar('L', KeyMatch.C));
     public static final KeyBinding kb_cookbook = KeyBinding.get("areas", KeyMatch.forchar('L', KeyMatch.C));
 	public static final KeyBinding kb_routes = KeyBinding.get("routes", KeyMatch.forchar('R', KeyMatch.C));
-    public static final KeyBinding kb_opt = KeyBinding.get("opt", KeyMatch.forchar('O', KeyMatch.C));
+	public static final KeyBinding kb_searchWidget = KeyBinding.get("searchWidget", KeyMatch.forchar('F', KeyMatch.C));
+	public static final KeyBinding kb_opt = KeyBinding.get("opt", KeyMatch.forchar('O', KeyMatch.C));
     public class MainMenu extends Widget {
 	public MainMenu() {
 	    super(Coord.z);
@@ -1316,6 +1321,9 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	} else if((ev.c == 27) && (map != null) && !map.hasfocus) {
 	    setfocus(map);
 	    return(true);
+	} else if(kb_searchWidget.key().match(ev)) {
+		openSearchWidget();
+		return true;
 	}
 	return(super.globtype(ev));
     }
@@ -1358,7 +1366,21 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	if(prog != null)
 	    prog.move(sz.sub(prog.sz).mul(0.5, 0.35));
     }
-    
+
+	private void openSearchWidget() {
+		if (searchWidget == null) {
+			searchWidget = new SearchWidget("Find Object");
+			add(searchWidget, sz.div(2).sub(searchWidget.sz.div(2)));
+			setfocus(searchWidget);
+		} else if (searchWidget.visible()) {
+			searchWidget.cleanupAndHide();
+		} else {
+			searchWidget.show(true);
+			fitwdg(searchWidget);
+			setfocus(searchWidget);
+		}
+	}
+
     public void presize() {
 	resize(parent.sz);
     }

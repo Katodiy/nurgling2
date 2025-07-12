@@ -1,6 +1,5 @@
 package nurgling.tasks;
 
-import haven.Following;
 import haven.Gob;
 
 public class WaitPose extends NTask

@@ -8,22 +8,38 @@ public class NHitBox
 {
     public Coord2d begin;
     public Coord2d end;
+    public NHitBox(Coord begin, Coord end, boolean force)
+    {
+        this(new Coord2d(begin),new Coord2d(end), force);
+    }
+
     public NHitBox(Coord begin, Coord end)
     {
-        this.begin = new Coord2d(begin);
-        this.end = new Coord2d(end);
+        this(new Coord2d(begin),new Coord2d(end), false);
     }
 
     public NHitBox(Coord2d begin, Coord2d end)
     {
-        this.begin = new Coord2d(begin.x, begin.y);
-        this.end = new Coord2d(end.x, end.y);
+        this(begin, end, false);
+    }
+
+    public NHitBox(Coord2d begin, Coord2d end, boolean force)
+    {
+        if(force)
+        {
+            this.begin = new Coord2d(begin.x,begin.y);
+            this.end = new Coord2d(end.x, end.y);
+        }
+        else {
+            this.begin = new Coord2d(Math.min(begin.x, -3), Math.min(begin.y, -3));
+            this.end = new Coord2d(Math.max(end.x, 3), Math.max(end.y, 3));
+        }
     }
 
     private final static HashMap<String, NHitBox> custom = new HashMap<String, NHitBox>()
     {
         {
-            put("log", new NHitBox(new Coord2d(-10,-2.5),new Coord2d(10,2.5)));
+            put("log", new NHitBox(new Coord2d(-10,-2.5),new Coord2d(10,2.5), true));
             put("gfx/terobjs/vehicle/dugout", new NHitBox(new Coord(-10,-2),new Coord(10,2)));
             put("gfx/terobjs/trough", new NHitBox(new Coord(-4,-13),new Coord(4,13)));
             put("gfx/terobjs/minehole", new NHitBox(new Coord(-15,-15),new Coord(15,15)));
@@ -117,9 +133,14 @@ public class NHitBox
     };
     static NHitBox fromObstacle(Coord2d[][] p)
     {
+        return fromObstacle(p ,false);
+    }
+
+    static NHitBox fromObstacle(Coord2d[][] p, boolean force)
+    {
         if(p.length == 1 && p[0].length == 4)
         {
-            return new NHitBox(p[0][0].floor(),p[0][2].ceil());
+            return new NHitBox(p[0][0].floor(),p[0][2].ceil(), force);
         }
         return null;
     }

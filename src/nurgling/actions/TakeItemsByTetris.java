@@ -4,10 +4,7 @@ import haven.Coord;
 import haven.Gob;
 import haven.UI;
 import haven.WItem;
-import nurgling.NGItem;
-import nurgling.NGameUI;
-import nurgling.NISBox;
-import nurgling.NUtils;
+import nurgling.*;
 import nurgling.tasks.WaitItemFromPile;
 import nurgling.tools.Container;
 import nurgling.tools.NAlias;
@@ -43,9 +40,11 @@ public class TakeItemsByTetris implements Action
 
         while (gui.getInventory().getNumberFreeCoord(target_coord) > 0 && gui.getStockpile()!=null)
         {
+            ((NUI)gui.ui).enableMonitor(gui.maininv);
             gui.getStockpile().transfer(1);
             WaitItemFromPile wifp = new WaitItemFromPile();
             NUtils.getUI().core.addTask(wifp);
+
             for(NGItem item: wifp.getResult()) {
                 for (Container container: conts) {
                     Container.Tetris tetris = container.getattr(Container.Tetris.class);
@@ -53,6 +52,7 @@ public class TakeItemsByTetris implements Action
                         break;
                 }
             }
+            ((NUI)gui.ui).disableMonitor();
             boolean isSuccess = true;
             for (Container container: conts) {
                 Container.Tetris tetris = container.getattr(Container.Tetris.class);

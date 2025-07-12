@@ -1,7 +1,6 @@
 package nurgling.widgets.settings;
 
 import haven.*;
-import nurgling.conf.CowsHerd;
 import nurgling.conf.GoatsHerd;
 
 

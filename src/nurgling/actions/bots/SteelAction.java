@@ -2,17 +2,15 @@ package nurgling.actions.bots;
 
 import haven.Gob;
 import nurgling.NGameUI;
-import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
-import nurgling.tasks.WaitForBurnout;
+import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class SteelAction implements Action {
 
@@ -28,15 +26,13 @@ public class SteelAction implements Action {
 
         if (new Validator(req, new ArrayList<>()).run(gui).IsSuccess()) {
 
-            NArea smelters = NArea.findSpec(Specialisation.SpecName.crucibles.toString());
+            NArea smelters = NContext.findSpec(Specialisation.SpecName.crucibles.toString());
             Finder.findGobs(smelters, new NAlias("gfx/terobjs/steelcrucible"));
 
             ArrayList<Container> containers = new ArrayList<>();
 
             for (Gob sm : Finder.findGobs(smelters, new NAlias("gfx/terobjs/steelcrucible"))) {
-                Container cand = new Container();
-                cand.gob = sm;
-                cand.cap = "Steelbox";
+                Container cand = new Container(sm, "Steelbox");
 
                 cand.initattr(Container.FuelLvl.class);
                 cand.getattr(Container.FuelLvl.class).setMaxlvl(15);
@@ -48,14 +44,14 @@ public class SteelAction implements Action {
 
             ArrayList<Gob> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gob);
+                lighted.add(Finder.findGob(cont.gobid));
             }
 
             if (containers.isEmpty())
                 return Results.ERROR("NO CRUCIBLES");
 
             for (Container container : containers) {
-                PathFinder pf = new PathFinder(container.gob);
+                PathFinder pf = new PathFinder(Finder.findGob(container.gobid));
                 pf.isHardMode = true;
                 pf.run(gui);
                 new OpenTargetContainer(container).run(gui);
@@ -66,9 +62,9 @@ public class SteelAction implements Action {
             if (!new FuelToContainers(containers).run(gui).IsSuccess())
                 return Results.ERROR("NO FUEL");
 
-            ArrayList<Gob> flighted = new ArrayList<>();
+            ArrayList<Long> flighted = new ArrayList<>();
             for (Container cont : containers) {
-                flighted.add(cont.gob);
+                flighted.add(cont.gobid);
             }
 
             if (!new LightGob(flighted, 4).run(gui).IsSuccess())

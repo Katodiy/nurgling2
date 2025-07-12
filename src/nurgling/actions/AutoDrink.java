@@ -5,6 +5,7 @@ import haven.Gob;
 import haven.MenuGrid;
 import haven.WItem;
 import nurgling.*;
+import nurgling.areas.NContext;
 import nurgling.tasks.*;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
@@ -17,12 +18,11 @@ import static haven.OCache.posres;
 
 public class AutoDrink implements Action
 {
-    public final static AtomicBoolean waitBot = new AtomicBoolean(false);
+
     public final static AtomicBoolean stop = new AtomicBoolean(false);
 
     public AutoDrink()
     {
-        waitBot.set(false);
         stop.set(false);
     }
 
@@ -36,7 +36,7 @@ public class AutoDrink implements Action
                 public boolean check() {
                     if(NUtils.getGameUI()==null || NUtils.getGameUI().getmeter ( "stam", 0 )==null)
                         return false;
-                    return (!waitBot.get() && NUtils.getStamina()<0.51) || stop.get();
+                    return (!NContext.waitBot.get() && NUtils.getStamina()<0.51) || stop.get();
                 }
             });
             if(stop.get()) {
@@ -69,7 +69,7 @@ public class AutoDrink implements Action
     boolean checkWater() throws InterruptedException
     {
         WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
-        if(wbelt.item.contents!=null) {
+        if(wbelt!=null && wbelt.item.contents!=null) {
             ArrayList<WItem> witems = ((NInventory) wbelt.item.contents).getItems(new NAlias("Waterskin"));
             if (!witems.isEmpty()) {
                 for (WItem item : witems) {

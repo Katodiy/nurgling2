@@ -51,7 +51,7 @@ public class CollectItemsToPile implements Action{
                 }
             }
 
-            Gob item = Finder.findGob ( in, collected_items );
+            Gob item = Finder.findGob (in, collected_items );
             if(item == null)
                 break;
             if(item.rc.dist(gui.map.player().rc)> MCache.tilesz2.x) {

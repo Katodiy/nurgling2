@@ -6,6 +6,7 @@ import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.HandIsFree;
 import nurgling.tasks.WaitTargetSize;
 import nurgling.tools.Container;
@@ -56,7 +57,7 @@ public class FuelToContainers implements Action
                     }
                     int target_size = neededFuel.get(ftype);
                     while (target_size != 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord) != 0) {
-                        NArea fuel = NArea.findSpec(Specialisation.SpecName.fuel.toString(), ftype);
+                        NArea fuel = NContext.findSpec(Specialisation.SpecName.fuel.toString(), ftype);
                         if(fuel == null)
                             return Results.ERROR("No specialisation \"FUEL\" set.");
                         ArrayList<Gob> piles = Finder.findGobs(fuel, new NAlias("stockpile"));
@@ -78,7 +79,7 @@ public class FuelToContainers implements Action
                     }
                     neededFuel.put(ftype, target_size);
                 }
-                new PathFinder(cont.gob).run(gui);
+                new PathFinder(Finder.findGob(cont.gobid)).run(gui);
                 new OpenTargetContainer(cont).run(gui);
                 fuelLvl = cont.getattr(Container.FuelLvl.class);
                 ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(ftype);
@@ -86,7 +87,7 @@ public class FuelToContainers implements Action
                 int aftersize = gui.getInventory().getItems().size() - fueled;
                 for (int i = 0; i < fueled; i++) {
                     NUtils.takeItemToHand(items.get(i));
-                    NUtils.activateItem(cont.gob);
+                    NUtils.activateItem(Finder.findGob(cont.gobid));
                     NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
                 }
                 NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), aftersize));

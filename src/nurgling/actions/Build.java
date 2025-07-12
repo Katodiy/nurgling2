@@ -62,9 +62,7 @@ public class Build implements Action{
         for(Ingredient ingredient: cmd.ingredients) {
             if (ingredient.area != null) {
                 for (Gob sm : Finder.findGobs(ingredient.area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-                    Container cand = new Container();
-                    cand.gob = sm;
-                    cand.cap = Context.contcaps.get(cand.gob.ngob.name);
+                    Container cand = new Container(sm,  Context.contcaps.get(sm.ngob.name));
                     cand.initattr(Container.Space.class);
                     ingredient.containers.add(cand);
                 }
@@ -191,7 +189,7 @@ public class Build implements Action{
                         {
                             int aval = (int) space.getRes().get(Container.Space.MAXSPACE) - (int) space.getRes().get(Container.Space.FREESPACE);
                             if (aval != 0) {
-                                new PathFinder(container.gob).run(gui);
+                                new PathFinder(Finder.findGob(container.gobid)).run(gui);
                                 new OpenTargetContainer(container).run(gui);
                                 TakeAvailableItemsFromContainer tifc = new TakeAvailableItemsFromContainer(container,ingredient.name, ingredient.count);
                                 tifc.run(gui);
@@ -200,7 +198,7 @@ public class Build implements Action{
                         }
                         else
                         {
-                            new PathFinder(container.gob).run(gui);
+                            new PathFinder(Finder.findGob(container.gobid)).run(gui);
                             new OpenTargetContainer(container).run(gui);
                             TakeAvailableItemsFromContainer tifc = new TakeAvailableItemsFromContainer(container,ingredient.name, ingredient.count);
                             tifc.run(gui);

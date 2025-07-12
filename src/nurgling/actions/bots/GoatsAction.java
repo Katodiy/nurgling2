@@ -1,18 +1,18 @@
 package nurgling.actions.bots;
 
+import haven.Coord;
 import haven.Gob;
 import haven.res.gfx.hud.rosters.goat.Goat;
 import haven.res.ui.croster.CattleId;
 import nurgling.NGameUI;
 import nurgling.NUtils;
-import nurgling.actions.Action;
-import nurgling.actions.AnimalAction;
-import nurgling.actions.Results;
-import nurgling.actions.Validator;
+import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.conf.GoatsHerd;
+import nurgling.tools.Context;
+import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.widgets.settings.Goats;
+import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -82,9 +82,13 @@ public class GoatsAction implements Action {
                 }
             };
             if(GoatsHerd.getCurrent()!=null) {
-                new AnimalAction<Goat>(new NAlias("goat"), "goats", comparator, Goat.class, wpred, wlpred, GoatsHerd.getCurrent().adultGoats).run(gui);
+                new MemorizeAnimalsAction(new NAlias("goat"),"goats",Goat.class).run(gui);
+
+                new ShearWool(Specialisation.SpecName.goats, new NAlias("goat")).run(gui);
+
+                new KillAnimalsAction<Goat>(new NAlias("goat"), "goats", comparator, Goat.class, wpred, wlpred, GoatsHerd.getCurrent().adultGoats).run(gui);
                 gui.msg("Female goats cycle done!");
-                new AnimalAction<Goat>(new NAlias("goat"), "goats", comparator, Goat.class, mpred, mlpred, 1).run(gui);
+                new KillAnimalsAction<Goat>(new NAlias("goat"), "goats", comparator, Goat.class, mpred, mlpred, 1).run(gui);
                 gui.msg("Male goats cycle done!");
             }
             else

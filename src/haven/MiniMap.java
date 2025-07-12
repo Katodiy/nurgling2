@@ -68,6 +68,8 @@ public class MiniMap extends Widget
     protected int dlvl;
     public Location dloc;
 
+	public boolean needUpdate = false;
+
     public MiniMap(Coord sz, MapFile file) {
 	super(sz);
 	this.file = file;
@@ -282,7 +284,7 @@ public class MiniMap extends Widget
 	}
 
 	public void dispupdate() {
-	    if((this.rc == null) || (sessloc == null) || (dloc == null) || (dloc.seg != sessloc.seg))
+	    if((this.rc == null) || (sessloc == null) || (dloc == null) || (dloc.seg.id != sessloc.seg.id))
 		this.sc = null;
 	    else
 		this.sc = p2c(this.rc);
@@ -527,14 +529,15 @@ public class MiniMap extends Widget
 	Coord zmaps = cmaps.mul(1 << zoomlevel);
 	Area next = Area.sized(loc.tc.sub(hsz.mul(UI.unscale((float)(1 << zoomlevel)))).div(zmaps),
 	    UI.unscale(sz).div(cmaps).add(2, 2));
-	if((display == null) || (loc.seg != dseg) || (zoomlevel != dlvl) || !next.equals(dgext)) {
+	if((display == null) || (loc.seg != dseg) || (zoomlevel != dlvl) || !next.equals(dgext) || needUpdate) {
 	    DisplayGrid[] nd = new DisplayGrid[next.rsz()];
-	    if((display != null) && (loc.seg == dseg) && (zoomlevel == dlvl)) {
+	    if((display != null) && (loc.seg == dseg) && (zoomlevel == dlvl) && !needUpdate) {
 		for(Coord c : dgext) {
 		    if(next.contains(c))
 			nd[next.ri(c)] = display[dgext.ri(c)];
 		}
 	    }
+		needUpdate = false;
 	    display = nd;
 	    dseg = loc.seg;
 	    dlvl = zoomlevel;
@@ -606,7 +609,7 @@ public class MiniMap extends Widget
 		try {
 		    GobIcon icon = gob.getattr(GobIcon.class);
 		    if(icon != null) {
-			GobIcon.Setting conf = iconconf.get(icon.icon());
+                GobIcon.Setting conf = iconconf.get(icon.icon());
 			if((conf != null) && conf.show) {
 			    DisplayIcon disp = pmap.remove(icon);
 			    if(disp == null)
@@ -629,7 +632,7 @@ public class MiniMap extends Widget
     }
 
     public void drawicons(GOut g) {
-	if((sessloc == null) || (dloc.seg != sessloc.seg))
+	if((sessloc == null) || (dloc.seg.id != sessloc.seg.id))
 	    return;
 	for(DisplayIcon disp : icons) {
 	    if((disp.sc == null) || filter(disp))
@@ -913,7 +916,7 @@ public class MiniMap extends Widget
 
     public void mvclick(MapView mv, Coord mc, Location loc, Gob gob, int button) {
 	if(mc == null) mc = ui.mc;
-	if((sessloc != null) && (sessloc.seg == loc.seg)) {
+	if((sessloc != null) && (sessloc.seg.id == loc.seg.id)) {
 	    if(gob == null)
 		mv.wdgmsg("click", mc,
 			  loc.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),

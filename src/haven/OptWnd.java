@@ -30,6 +30,7 @@ import haven.render.*;
 import nurgling.*;
 import nurgling.conf.*;
 import nurgling.widgets.NMiniMapWnd;
+import nurgling.widgets.NSettingsWindow;
 import nurgling.widgets.options.*;
 
 import java.awt.event.KeyEvent;
@@ -829,11 +830,8 @@ public class OptWnd extends Window {
 	    return(true);
 	}
     }
-	public Panel nquickAct;
-	public Panel nautomap;
 	public Panel nqolwnd;
-	public Panel nringsettings;
-	public Panel ndatabase;
+
     public OptWnd(boolean gopts) {
 	super(Coord.z, "Options", true);
 	main = add(new Panel());
@@ -841,25 +839,18 @@ public class OptWnd extends Window {
 	Panel audio = add(new AudioPanel(main));
 	Panel iface = add(new InterfacePanel(main));
 	Panel keybind = add(new BindingPanel(main));
-	nqolwnd = add(new NQolPanel(main));
-	nautomap = add( new NAutoMapperPanel(main));
-	nquickAct = add(new NQuickActionsPanel(main));
-	nringsettings = add(new NRingSettingsPanel(main));
-	ndatabase = add(new NDatabasePanel(main));
+	nqolwnd = add(new NSettingsPanel(main));
+
 
 	int y = 0;
 	int x = 0;
 	Widget prev;
 	y = (prev = main.add(new PButton(UI.scale(200), "Interface settings", 'v', iface), 0, y)).pos("bl").adds(0, 5).y;
 	x = prev.pos("ur").adds(10, 0).x;
-	main.add(new PButton(UI.scale(200), "Quality of Life", 'k', nqolwnd), x, prev.pos("ur").y);
+	main.add(new PButton(UI.scale(200), "Nurgling Settings", 'k', nqolwnd), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Video settings", 'v', video), 0, y)).pos("bl").adds(0, 5).y;
-	main.add(new PButton(UI.scale(200), "Quick Actions and Selections", 'k', nquickAct), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Audio settings", 'a', audio), 0, y)).pos("bl").adds(0, 5).y;
-	main.add(new PButton(UI.scale(200), "Auto mapper", 'k', nautomap), x, prev.pos("ur").y);
 	y = (prev = main.add(new PButton(UI.scale(200), "Keybindings", 'k', keybind), 0, y)).pos("bl").adds(0, 5).y;
-	main.add(new PButton(UI.scale(200), "Animal rings settings", 'k', nringsettings), x, prev.pos("ur").y);
-	y = (prev = main.add(new PButton(UI.scale(200), "Database settings", 'd', ndatabase), 0, y)).pos("bl").adds(0, 5).y;
 
 	y += UI.scale(60);
 	if(gopts) {
@@ -900,203 +891,42 @@ public class OptWnd extends Window {
 	super.show();
     }
 
-	public class NDatabasePanel extends Panel {
-		private final Widget save;
-		private final Widget back;
+	public class NSettingsPanel extends Panel  {
 
-		public DatabaseSettings dbSettings;
+		public NSettingsWindow settingsWindow;
 
-		public NDatabasePanel(Panel prev1) {
+
+		public NSettingsPanel(Panel prev1) {
 			super();
 
-			dbSettings = add(new DatabaseSettings(), Coord.z);
+			settingsWindow = add(new NSettingsWindow(), Coord.z);
 
-			save = add(new Button(UI.scale(200), "Save") {
-				@Override
-				public void click() {
-					dbSettings.save();
-					NConfig.needUpdate();
-				}
-			}, dbSettings.pos("bl").adds(0, UI.scale(5)));
-
-			back = add(new Button(UI.scale(200), "Back") {
-				@Override
-				public void click() {
-					chpanel(prev1);
-				}
-
-				public boolean keydown(KeyDownEvent ev) {
-					if((ev.c == 27)) {
-						chpanel(prev1);
-						return(true);
-					}
-					return(false);
-				}
-			}, dbSettings.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
-
+//			save = add(new Button(UI.scale(200), "Save") {
+//				@Override
+//				public void click() {
+//					if (settingsWindow.currentPanel != null) {
+//						settingsWindow.currentPanel.save();
+//					}
+//				}
+//			}, settingsWindow.pos("bl").adds(0, UI.scale(5)));
+//			back = add(new Button(UI.scale(200), "Back") {
+//				@Override
+//				public void click() {
+//					chpanel(prev1);
+//					if (settingsWindow.currentPanel != null) {
+//						settingsWindow.currentPanel.load();
+//					}
+//				}
+//
+//				public boolean keydown(KeyDownEvent ev) {
+//					if ((ev.c == 27)) {
+//						chpanel(prev1);
+//						return (true);
+//					}
+//					return (false);
+//				}
+//			}, settingsWindow.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
 			pack();
 		}
 	}
-
-	public class NQolPanel extends Panel  {
-		private final Widget save;
-		private final Widget back;
-
-		public QoL qol_p;
-
-
-		public NQolPanel(Panel prev1) {
-			super();
-
-			qol_p = add(new QoL(),Coord.z);
-
-			save = add(new Button(UI.scale(200), "Save") {
-				@Override
-				public void click() {
-					NConfig.needUpdate();
-				}
-			}, qol_p.pos("bl").adds(0, UI.scale(5)));
-			back = add(new Button(UI.scale(200), "Back")
-			{
-				@Override
-				public void click() {
-					chpanel(prev1);
-				}
-
-				public boolean keydown(KeyDownEvent ev) {
-					if((ev.c == 27)) {
-						chpanel(prev1);
-						return(true);
-					}
-					return(false);
-				}
-			}, qol_p.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
-			pack();
-		}
-	}
-
-	public class NQuickActionsPanel extends Panel  {
-		private final Widget save;
-		private final Widget back;
-
-		public QuickActions qol_p;
-		public AutoSelection autosel_p;
-
-		public NQuickActionsPanel(Panel prev1) {
-			super();
-
-			qol_p = add(new QuickActions(),Coord.z);
-
-			autosel_p = add(new AutoSelection(),qol_p.pos("ur").adds(UI.scale(10,0)));
-			save = add(new Button(UI.scale(200), "Save") {
-				@Override
-				public void click() {
-					ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
-
-					for(QuickActions.ActionsItem actionsItem: qol_p.patterns)
-					{
-						HashMap<String, Object> res = new HashMap<>();
-						res.put("type", "NPattern");
-						res.put("name", actionsItem.text());
-						res.put("enabled", actionsItem.isEnabled.a);
-						qpattern.add(res);
-					}
-
-					NConfig.set(NConfig.Key.q_pattern, qpattern);
-					NConfig.needUpdate();
-				}
-			}, qol_p.pos("bl").adds(0, UI.scale(5)));
-			back = add(new Button(UI.scale(200), "Back")
-			{
-				@Override
-				public void click() {
-					chpanel(prev1);
-				}
-
-				public boolean keydown(KeyDownEvent ev) {
-					if((ev.c == 27)) {
-						chpanel(prev1);
-						return(true);
-					}
-					return(false);
-				}
-			}, qol_p.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
-			pack();
-		}
-	}
-
-	public class NRingSettingsPanel extends Panel  {
-		private final Widget save;
-		private final Widget back;
-
-		public NRingSettings ring_set;
-
-		public NRingSettingsPanel(Panel prev1) {
-			super();
-
-			ring_set = add(new NRingSettings(),Coord.z);
-			save = add(new Button(UI.scale(200), "Save") {
-				@Override
-				public void click() {
-					NConfig.needUpdate();
-				}
-			}, ring_set.pos("bl").adds(0, UI.scale(5)));
-			back = add(new Button(UI.scale(200), "Back")
-			{
-				@Override
-				public void click() {
-					chpanel(prev1);
-				}
-
-				public boolean keydown(KeyDownEvent ev) {
-					if((ev.c == 27)) {
-						chpanel(prev1);
-						return(true);
-					}
-					return(false);
-				}
-			}, ring_set.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
-			pack();
-		}
-	}
-
-
-
-	public class NAutoMapperPanel extends Panel  {
-		private final Widget save;
-		private final Widget back;
-
-		public AutoMapper autoMapperSettings;
-
-
-		public NAutoMapperPanel(Panel prev1) {
-			super();
-
-			autoMapperSettings = add(new AutoMapper(),Coord.z);
-
-			save = add(new Button(UI.scale(200), "Save") {
-				@Override
-				public void click() {
-					NConfig.needUpdate();
-				}
-			}, autoMapperSettings.pos("bl").adds(0, UI.scale(5)));
-			back = add(new Button(UI.scale(200), "Back")
-			{
-				@Override
-				public void click() {
-					chpanel(prev1);
-				}
-
-				public boolean keydown(KeyEvent ev) {
-					if((ev.getKeyChar() == 27)) {
-						chpanel(prev1);
-						return(true);
-					}
-					return(false);
-				}
-			}, autoMapperSettings.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
-			pack();
-		}
-	}
-
 }

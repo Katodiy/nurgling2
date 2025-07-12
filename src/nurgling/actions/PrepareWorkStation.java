@@ -5,8 +5,10 @@ import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.HandIsFree;
 import nurgling.tasks.NTask;
+import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -17,21 +19,24 @@ import java.util.Arrays;
 
 public class PrepareWorkStation implements Action
 {
-    public PrepareWorkStation(Context context, String name)
+    public PrepareWorkStation(NContext context, String name)
     {
         this.name = name;
         this.context = context;
     }
 
     String name;
-    Context context;
+    NContext context;
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
+        NArea area = context.getSpecArea(context.workstation);
+        if(area == null)
+            return Results.ERROR("NO WORKSTATION");
         Gob ws = null;
         if(name.startsWith("gfx/terobjs/pow"))
         {
-            ArrayList<Gob> gobs = Finder.findGobs(new NAlias("gfx/terobjs/pow"));
+            ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias("gfx/terobjs/pow"));
             gobs.sort(NUtils.d_comp);
             for(Gob gob: gobs)
             {
@@ -42,41 +47,49 @@ public class PrepareWorkStation implements Action
             }
         }
         else {
-            ws = Finder.findGob(new NAlias(name));
+            ws = Finder.findGob(area, new NAlias(name));
         }
         if(ws == null)
             return Results.ERROR("NO WORKSTATION");
         else
         {
-            context.workstation.selected = ws;
+            context.workstation.selected = ws.id;
             if(name.contains("crucible"))
             {
                 if(fillCrucible(ws,gui))
-                    new LightGob(new ArrayList<>(Arrays.asList(ws)),4).run(gui);
+                    new LightGob(new ArrayList<>(Arrays.asList(ws.id)),4).run(gui);
             }
             else if(name.startsWith("gfx/terobjs/pow"))
             {
                 ArrayList<Gob> pows = new ArrayList<>(Arrays.asList(ws));
-                if(!new FillFuelPowOrCauldron(pows, 1).run(gui).IsSuccess())
+                if(!new FillFuelPowOrCauldron(context, pows, 1).run(gui).IsSuccess())
                     return Results.FAIL();
-                if (!new LightGob(pows, 4).run(gui).IsSuccess())
+                ArrayList<Long> flighted = new ArrayList<>();
+                for (Gob cont : pows) {
+                    flighted.add(cont.id);
+                }
+                if (!new LightGob(flighted, 4).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");
             }
             else if(name.startsWith("gfx/terobjs/cauldron"))
             {
                 ArrayList<Gob> pows = new ArrayList<>(Arrays.asList(ws));
-                if(!new FillFuelPowOrCauldron(pows, 1).run(gui).IsSuccess())
+                if(!new FillFuelPowOrCauldron(context, pows, 1).run(gui).IsSuccess())
                     return Results.FAIL();
-                if (!new LightGob(pows, 2).run(gui).IsSuccess())
+                ArrayList<Long> flighted = new ArrayList<>();
+                for (Gob cont : pows) {
+                    flighted.add(cont.id);
+                }
+                if (!new LightGob(flighted, 2).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");
-                if((context.workstation.selected.ngob.getModelAttribute()&4)==0)
+                if((Finder.findGob(context.workstation.selected).ngob.getModelAttribute()&4)==0)
                 {
-                    new FillFluid(context.workstation.selected, NArea.findSpec(Specialisation.SpecName.water.toString())!=null ? NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea():null,new NAlias("water"),4).run(gui);
+                    new FillFluid(Finder.findGob(context.workstation.selected), NContext.findSpec(Specialisation.SpecName.water.toString())!=null ? NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea():null,new NAlias("water"),4).run(gui);
                 }
                 NUtils.addTask(new NTask() {
                     @Override
                     public boolean check() {
-                        return (context.workstation.selected.ngob.getModelAttribute()&8)==8;
+                        return (Finder.findGob(context.workstation.selected).ngob.getModelAttribute()&8)==8;
                     }
                 });
 
@@ -96,7 +109,7 @@ public class PrepareWorkStation implements Action
         if(NUtils.getGameUI().getInventory().getItems("Coal").isEmpty()) {
             int target_size = count;
             while (target_size != 0 && NUtils.getGameUI().getInventory().getFreeSpace() != 0) {
-                ArrayList<Gob> piles = Finder.findGobs(NArea.findSpec(Specialisation.SpecName.fuel.toString(), "Coal"), new NAlias("stockpile"));
+                ArrayList<Gob> piles = Finder.findGobs(NContext.findSpec(Specialisation.SpecName.fuel.toString(), "Coal"), new NAlias("stockpile"));
                 if (piles.isEmpty()) {
                     if (gui.getInventory().getItems().isEmpty())
                         return false;

@@ -43,15 +43,13 @@ public class WaitNextPointForRouteAutoRecorder extends NTask {
 
         this.oldPlayer = player;
 
-        try {
-            Coord tilec = oldPlayer.rc.div(MCache.tilesz).floor();
-            MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
 
-            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().setLastPlayerGridId(grid.id);
-            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().setLastPlayerCoord(tilec.sub(grid.ul));
-        } catch (Exception e) {
-            System.out.println("Let fall through");
-        }
+        Coord tilec = oldPlayer.rc.div(MCache.tilesz).floor();
+        MCache.Grid grid = NUtils.getGameUI().ui.sess.glob.map.getgridt(tilec);
+
+        ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().setLastPlayerGridId(grid.id);
+        ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().setLastPlayerCoord(tilec.sub(grid.ul));
+
 
         if (lastAction != null) {
             route.lastAction = lastAction;

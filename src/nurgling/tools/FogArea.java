@@ -3,6 +3,8 @@ package nurgling.tools;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
+import nurgling.tasks.NTask;
+import nurgling.widgets.NCornerMiniMap;
 import nurgling.widgets.NMiniMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -13,21 +15,19 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Stream;
-
-import static haven.MCache.cmaps;
-import static haven.MCache.tilesz;
 
 public class FogArea {
     final NMiniMap miniMap;
     private final List<Rectangle> rectangles = new ArrayList<>();
     private Coord lastUL, lastBR;
 
-    Rectangle newRect = null;
-
+    private final ConcurrentLinkedQueue<Rectangle> rectangleQueue = new ConcurrentLinkedQueue<>();
+    private volatile boolean isProcessing = false;
 
     public FogArea(NMiniMap miniMap) {
-        this.miniMap = miniMap; // вызов основного конструктора
+        this.miniMap = miniMap;
         if(new File(NConfig.current.path_fog).exists()) {
             StringBuilder contentBuilder = new StringBuilder();
             try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_fog), StandardCharsets.UTF_8)) {
@@ -36,32 +36,23 @@ public class FogArea {
             }
 
             if (!contentBuilder.toString().isEmpty()) {
-
                 JSONObject json = new JSONObject(contentBuilder.toString());
                 if (json.has("rectangles")) {
                     JSONArray rectanglesArray = json.getJSONArray("rectangles");
                     for (int i = 0; i < rectanglesArray.length(); i++) {
                         JSONObject rectJson = rectanglesArray.getJSONObject(i);
-
-                        // Получаем данные из JSON
                         JSONObject jul = rectJson.getJSONObject("ul");
                         JSONObject jbr = rectJson.getJSONObject("br");
                         long seg_id = rectJson.getLong("seg");
 
-                        // Восстанавливаем координаты
                         long ul_grid_id = jul.getLong("grid_id");
                         long br_grid_id = jbr.getLong("grid_id");
                         Coord cul = new Coord(jul.getInt("x"), jul.getInt("y"));
                         Coord cbr = new Coord(jbr.getInt("x"), jbr.getInt("y"));
 
-                        // Создаем временный прямоугольник
-                        Rectangle rect = new Rectangle(cul, cbr, ul_grid_id,br_grid_id,seg_id);
-
-
-                        // Добавляем в список
+                        Rectangle rect = new Rectangle(cul, cbr, ul_grid_id, br_grid_id, seg_id);
                         rectangles.add(rect);
                     }
-
                 }
             }
         }
@@ -226,52 +217,100 @@ public class FogArea {
         }
     }
 
-    public void tick(double dt)
-    {
+    public void tick(double dt) {
         if(NUtils.getGameUI()!=null) {
-            if (newRect != null && newRect.loading) {
-                newRect.tick(dt);
+            // Обработка загрузки текущего прямоугольника
+            Rectangle currentRect = rectangleQueue.peek();
+            if (currentRect != null && currentRect.loading) {
+                currentRect.tick(dt);
             }
-            for(Rectangle rect: rectangles)
-            {
-                if(rect.loading)
-                {
-                    rect.tick(dt);
+
+            synchronized (rectangles) {
+                for (Rectangle rect : rectangles) {
+                    if (rect.loading) {
+                        rect.tick(dt);
+                    }
                 }
             }
+
+            // Если нет активного потока обработки и есть прямоугольники в очереди
+            if (!isProcessing && !rectangleQueue.isEmpty()) {
+                updateNew();
+            }
         }
-        updateNew();
     }
 
-    /**
-     * Добавляет новый прямоугольник, исключая его пересечения с существующими.
-     */
     public void addWithoutOverlaps(Coord ul, Coord br, long id) {
-
         if (ul.equals(lastUL) && br.equals(lastBR))
-            return; // Координаты не изменились
+            return;
 
         lastUL = ul;
         lastBR = br;
 
-        newRect = new Rectangle(ul, br, id);
+        Rectangle newRect = new Rectangle(ul, br, id);
+        rectangleQueue.add(newRect);
     }
 
-    void updateNew()
+    void updateNew() {
+        if (!rectangleQueue.isEmpty() && !isProcessing) {
+            isProcessing = true;
+            Rectangle nextRect = rectangleQueue.poll();
+            if (nextRect != null && !nextRect.loading) {
+                new Thread(new NewRectangleProc(new ArrayList<>(rectangles), nextRect) {
+                    @Override
+                    public void run() {
+                        try {
+                            super.run();
+                        } finally {
+                            isProcessing = false;
+                            // Проверяем, есть ли еще прямоугольники для обработки
+                            if (!rectangleQueue.isEmpty()) {
+                                updateNew();
+                            }
+                        }
+                    }
+                }).start();
+            } else {
+                isProcessing = false;
+            }
+        }
+    }
+
+    class NewRectangleProc implements Runnable
     {
-        if(newRect!=null && !newRect.loading) {
-            for(Rectangle rect : rectangles)
+
+        ArrayList<Rectangle> testRectangles;
+        final Rectangle newRectangle;
+
+        public NewRectangleProc(ArrayList<Rectangle> testRectangles, Rectangle newRectangle) {
+            this.testRectangles = testRectangles;
+            this.newRectangle = newRectangle;
+        }
+
+        @Override
+        public void run() {
+            for(Rectangle rect : testRectangles)
             {
-                if((rect.history.contains(newRect.br_id) || rect.history.contains(newRect.ul_id) ) && rect.loading)
-                    return;
+                if((rect.history.contains(newRectangle.br_id) || rect.history.contains(newRectangle.ul_id) ) && rect.loading) {
+                    try {
+                        NUtils.addTask(new NTask() {
+                            @Override
+                            public boolean check() {
+                                return !((rect.history.contains(newRectangle.br_id) || rect.history.contains(newRectangle.ul_id) ) && rect.loading);
+                            }
+                        });
+                    } catch (InterruptedException ignored) {
+                        return;
+                    }
+                }
             }
 
             List<Rectangle> nonOverlappingParts = new ArrayList<>();
-            nonOverlappingParts.add(newRect);
+            nonOverlappingParts.add(newRectangle);
 
             // Вычитаем все существующие прямоугольники из нового
-            for (Rectangle existing : rectangles) {
-                if (!existing.loading && newRect.sameGrid(existing)) {
+            for (Rectangle existing : testRectangles) {
+                if (!existing.loading && newRectangle.sameGrid(existing)) {
                     List<Rectangle> temp = new ArrayList<>();
                     for (Rectangle part : nonOverlappingParts) {
                         if(!part.loading) {
@@ -283,10 +322,44 @@ public class FogArea {
                 }
             }
 
-            // Добавляем оставшиеся части
-            rectangles.addAll(nonOverlappingParts);
+            synchronized (rectangles) {
+                // Добавляем оставшиеся части
+                rectangles.addAll(nonOverlappingParts);
+            }
             mergeRectangles();
-            newRect = null;
+        }
+
+        private void mergeRectangles() {
+            boolean merged;
+            do {
+                merged = false;
+                outer:
+                for (int i = 0; i < testRectangles.size(); i++) {
+                    Rectangle a = testRectangles.get(i);
+                    if(a.loading) continue;
+                    for (int j = i + 1; j < testRectangles.size(); j++) {
+                        Rectangle b = testRectangles.get(j);
+                        if(b.loading || !a.sameGrid(b)) continue;
+                        Optional<Rectangle> mergedRect = tryMerge(a, b);
+                        if (mergedRect.isPresent()) {
+                            // Удаляем сначала больший индекс, потом меньший
+                            ArrayList<Rectangle> forDelete = new ArrayList<>();
+                            forDelete.add(a);
+                            forDelete.add(b);
+                            mergedRect.get().history.addAll(a.history);
+                            mergedRect.get().history.addAll(b.history);
+                            synchronized (rectangles) {
+                                rectangles.add(mergedRect.get());
+                                rectangles.removeAll(forDelete);
+                                testRectangles = new ArrayList<>(rectangles);
+                            }
+                            merged = true;
+                            break outer;
+                        }
+                    }
+                }
+            } while (merged);
+            NConfig.needFogUpdate();
         }
     }
 
@@ -295,35 +368,7 @@ public class FogArea {
      * 1. Соприкасаются или пересекаются,
      * 2. Имеют одинаковую длину грани по оси соприкосновения.
      */
-    private void mergeRectangles() {
-        boolean merged;
-        do {
-            merged = false;
-            outer:
-            for (int i = 0; i < rectangles.size(); i++) {
-                Rectangle a = rectangles.get(i);
-                if(a.loading) continue;
-                for (int j = i + 1; j < rectangles.size(); j++) {
-                    Rectangle b = rectangles.get(j);
-                    if(b.loading || !a.sameGrid(b)) continue;
-                    Optional<Rectangle> mergedRect = tryMerge(a, b);
-                    if (mergedRect.isPresent()) {
-                        // Удаляем сначала больший индекс, потом меньший
-                        ArrayList<Rectangle> forDelete = new ArrayList<>();
-                        forDelete.add(a);
-                        forDelete.add(b);
-                        mergedRect.get().history.addAll(a.history);
-                        mergedRect.get().history.addAll(b.history);
-                        rectangles.add(mergedRect.get());
-                        rectangles.removeAll(forDelete);
-                        merged = true;
-                        break outer;
-                    }
-                }
-            }
-        } while (merged);
-        NConfig.needFogUpdate();
-    }
+
 
 
     /**
@@ -360,7 +405,7 @@ public class FogArea {
     }
 
     public List<Rectangle> getCoveredAreas() {
-        return rectangles;
+        return new ArrayList<>(rectangles);
     }
 
     public void clear() {
@@ -372,11 +417,12 @@ public class FogArea {
     public JSONObject toJson()
     {
         JSONArray result = new JSONArray();
-        for(Rectangle rectangle: rectangles)
-        {
-            JSONObject jrect = rectangle.toJson();
-            if(jrect!=null) {
-                result.put(jrect);
+        synchronized (rectangles) {
+            for (Rectangle rectangle : rectangles) {
+                JSONObject jrect = rectangle.toJson();
+                if (jrect != null) {
+                    result.put(jrect);
+                }
             }
         }
         JSONObject doc = new JSONObject();

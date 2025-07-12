@@ -5,6 +5,7 @@ import nurgling.NInventory;
 import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.actions.AutoDrink;
+import nurgling.areas.NContext;
 
 import java.util.ArrayList;
 
@@ -64,7 +65,7 @@ public class BotsInterruptWidget extends Widget {
     {
         if(obs.isEmpty())
         {
-            AutoDrink.waitBot.set(true);
+            NContext.waitBot.set(true);
         }
 
         if(obs.size()>=6)
@@ -130,7 +131,7 @@ public class BotsInterruptWidget extends Widget {
         }
         repack();
         if(obs.isEmpty())
-            AutoDrink.waitBot.set(false);
+            NContext.waitBot.set(false);
     }
 
     @Override
@@ -154,7 +155,7 @@ public class BotsInterruptWidget extends Widget {
                     g.remove();
                     obs.remove(g);
                     if(obs.isEmpty())
-                        AutoDrink.waitBot.set(false);
+                        NContext.waitBot.set(false);
                     break;
                 }
             }

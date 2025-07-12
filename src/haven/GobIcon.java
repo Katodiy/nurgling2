@@ -28,6 +28,7 @@ package haven;
 
 import nurgling.NStyle;
 import nurgling.NUtils;
+import nurgling.tools.NParser;
 
 import java.util.*;
 import java.util.function.*;
@@ -140,11 +141,6 @@ public class GobIcon extends GAttrib {
 	    this.img = img;
 	}
 
-		public ImageIcon(Image img) {
-			super(null, null);
-			this.img = img;
-		}
-
 	public String name() {
 	    Resource.Tooltip name = res.layer(Resource.tooltip);
 	    return(name == null ? "???" : name.t);
@@ -175,9 +171,15 @@ public class GobIcon extends GAttrib {
 	}
 
 	private int markdata() {
+
 	    byte[] data = res.flayer(Resource.imgc).kvdata.get("mm/mark");
-	    if(data == null)
-		return(0);
+	    if(data == null) {
+			if(res.name.equals("mm/up") || res.name.equals("mm/down"))
+			{
+				return 1;
+			}
+			return (0);
+		}
 	    return(Utils.intvard(data, 0));
 	}
 
@@ -858,7 +860,7 @@ public class GobIcon extends GAttrib {
 		prev = add(new Label("Sound to play on notification:"), prev.pos("bl").adds(0, 5));
 		nb = new NotifBox(w - pb.sz.x - UI.scale(15));
 		addhl(prev.pos("bl").adds(0, 2), w, prev = Frame.with(nb, false), pb);
-		if(conf.getmarkablep()) {
+		if(conf.getmarkablep() || conf.res.name.equals("mm/up") || conf.res.name.equals("mm/down")) {
 		    add(new CheckBox("Place permanent marker")
 			.state(() -> conf.markset ? conf.mark : conf.getmarkp())
 			.set(andsave(val -> {conf.markset = true; conf.mark = val;})),
@@ -987,6 +989,4 @@ public class GobIcon extends GAttrib {
 	    }
 	}
     }
-
-
 }

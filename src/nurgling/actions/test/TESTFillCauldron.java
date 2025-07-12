@@ -4,6 +4,7 @@ import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -15,13 +16,11 @@ public class TESTFillCauldron implements Action {
     String cap = "Cauldron";
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NArea cauldrons = NArea.findSpec(Specialisation.SpecName.boiler.toString());
+        NArea cauldrons = NContext.findSpec(Specialisation.SpecName.boiler.toString());
 
         ArrayList<Container> containers = new ArrayList<>();
         for (Gob cm : Finder.findGobs(cauldrons, new NAlias("gfx/terobjs/cauldron"))) {
-            Container cand = new Container();
-            cand.gob = cm;
-            cand.cap = cap;
+            Container cand = new Container(cm, cap);
 
             cand.initattr(Container.Space.class);
             cand.initattr(Container.FuelLvl.class);

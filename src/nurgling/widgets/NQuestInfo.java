@@ -214,7 +214,8 @@ public class NQuestInfo extends Widget
                 imgs.add(new QuestImage(credo_title.render("Credo:").img, -1));
                 for (Condition cond : credo.myConditions)
                 {
-                    imgs.add(new QuestImage(fnd1.render(cond.target).img, cond.questId));
+                    if(!cond.ready)
+                        imgs.add(new QuestImage(fnd1.render(cond.target).img, cond.questId));
                 }
             }
             for (String qname : qgconds.keySet()) {
@@ -651,14 +652,14 @@ public class NQuestInfo extends Widget
                         bufname = "cattle";
                     else if (bufname.contains("horse"))
                         bufname = "horse/horse";
-                    else if (info.contains("Raid a")) {
+                    else if (info.contains("raid a")) {
                         if (bufname.contains("bird"))
                             bufname = "nest";
                         else
                             bufname = "anthill";
                     }
                     else {
-                        bufname += "kritter/";
+                        bufname = "kritter/"+bufname;
                     }
                 }
                 name = (bufname.replaceAll("\\s+", "")).replaceAll("'+", "");

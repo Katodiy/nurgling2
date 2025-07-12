@@ -28,6 +28,6 @@ public class NAreaRange extends NAreaRad {
 
     @Override
     public boolean tick(double dt) {
-        return prop.vis;
+        return !prop.vis || super.tick(dt);
     }
 }

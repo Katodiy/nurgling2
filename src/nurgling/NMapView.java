@@ -1,17 +1,26 @@
 package nurgling;
 
 import haven.*;
+
+import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
 
 import haven.Composite;
+import nurgling.actions.Action;
+import nurgling.actions.ActionWithFinal;
 import nurgling.actions.QuickActionBot;
+import nurgling.actions.bots.ScenarioRunner;
 import nurgling.areas.*;
 import nurgling.overlays.*;
 import nurgling.overlays.map.*;
 import nurgling.routes.Route;
 import nurgling.routes.RouteGraphManager;
 import nurgling.routes.RoutePoint;
+import nurgling.scenarios.Scenario;
+import nurgling.tasks.WaitForMapLoadNoCoord;
 import nurgling.tools.*;
+import nurgling.widgets.NAreasWidget;
+import nurgling.widgets.NMiniMap;
 
 import java.awt.event.KeyEvent;
 import java.awt.image.*;
@@ -26,9 +35,9 @@ public class NMapView extends MapView
     public static final KeyBinding kb_displayfov = KeyBinding.get("pfovbox",  KeyMatch.nil);
     public static final KeyBinding kb_displaygrid = KeyBinding.get("gridbox",  KeyMatch.nil);
     public static final int MINING_OVERLAY = - 1;
-    public Coord lastGC = null;
+    public NGlobalCoord lastGC = null;
 
-
+    public final List<NMiniMap.TempMark> tempMarkList = new ArrayList<NMiniMap.TempMark>();
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
         super(sz, glob, cc, plgob);
@@ -50,6 +59,53 @@ public class NMapView extends MapView
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
 
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
+
+    public static boolean hitNWidgetsInfo(Coord pc) {
+        boolean isFound = false;
+        for(Long gobid: ((NMapView)NUtils.getGameUI().map).dummys.keySet())
+        {
+            Gob gob = Finder.findGob(gobid);
+            Gob.Overlay ol;
+            if(gob!=null && (ol = gob.findol(NAreaLabel.class))!=null)
+            {
+                NAreaLabel al = (NAreaLabel) ol.spr;
+                if(al.isect(pc)) {
+                    isFound = true;
+                    for (NArea area : ((NMapView) NUtils.getGameUI().map).glob.map.areas.values()) {
+                        if(area.gid == gobid)
+                        {
+                            NUtils.getGameUI().areas.showPath(area.path);
+
+                            for(NAreasWidget.AreaItem ai: NUtils.getGameUI().areas.al.items())
+                            {
+                                if(ai.area!=null && ai.area.gid == gobid) {
+                                    NUtils.getGameUI().areas.al.sel = ai;
+                                    NUtils.getGameUI().areas.select(area.id);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for(Long gobid: ((NMapView)NUtils.getGameUI().map).routeDummys.keySet())
+        {
+            Gob gob = Finder.findGob(gobid);
+            Gob.Overlay ol;
+            if(gob!=null && (ol = gob.findol(RouteLabel.class))!=null)
+            {
+                RouteLabel al = (RouteLabel) ol.spr;
+                if(al.isect(pc)) {
+                    isFound = true;
+                    NUtils.getGameUI().msg(String.valueOf(al.point.id));
+                    break;
+                }
+            }
+        }
+
+        return isFound;
+    }
 
     @Override
     public void draw(GOut g) {
@@ -103,7 +159,7 @@ public class NMapView extends MapView
                 if (absCoord != null) {
                     OCache.Virtual dummy = glob.oc.new Virtual(absCoord, 0);
                     dummy.virtual = true;
-                    dummy.addcustomol(new RouteLabel(dummy, route));
+                    dummy.addcustomol(new RouteLabel(dummy, route, point));
                     routeDummys.put(dummy.id, dummy);
                     glob.oc.add(dummy);
                 }
@@ -257,7 +313,7 @@ public class NMapView extends MapView
         return camtypes.keySet();
     }
     static {camtypes.put("northo", NOrthoCam.class);}
-    
+
     public static String defcam(){
         return Utils.getpref("defcam", "ortho");
     }
@@ -273,13 +329,15 @@ public class NMapView extends MapView
                 tlays.clear();
                 if (inf != null) {
                     Gob gob = Gob.from(inf.ci);
+                    Gob player = NUtils.player();
                     if (gob != null) {
                         ttip.put("gob", gob.ngob.name);
                         if(gob.ngob.hitBox!=null) {
                             ttip.put("HitBox", gob.ngob.hitBox.toString());
                             ttip.put("isDynamic", String.valueOf(gob.ngob.isDynamic));
                         }
-                        ttip.put("dist", String.valueOf(gob.rc.dist(NUtils.player().rc)));
+                        if(player!=null)
+                            ttip.put("dist", String.valueOf(gob.rc.dist(player.rc)));
                         ttip.put("Seg", String.valueOf(gob.ngob.seq));
                         ttip.put("rc" , gob.rc.toString());
                         if(!gob.ols.isEmpty()) {
@@ -357,7 +415,9 @@ public class NMapView extends MapView
                         ttip.put("tile", res.name);
                     }
                 }
-                catch (Exception e) {}
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
@@ -431,10 +491,43 @@ public class NMapView extends MapView
         return key;
     }
 
+    public String addHearthFireRoute()
+    {
+        String key;
+        synchronized (((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes())
+        {
+            HashSet<String> names = new HashSet<String>();
+            int id = 0;
+            for(Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values())
+            {
+                if(route.id >= id)
+                {
+                    id = route.id + 1;
+                }
+                names.add(route.name);
+            }
+            key = ("New Route" + ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().size());
+            while(names.contains(key))
+            {
+                key = key+"(1)";
+            }
+            Route newRoute = new Route(key);
+            newRoute.id = id;
+            newRoute.path = NUtils.getGameUI().routesWidget.currentPath;
+            newRoute.spec.add(new Route.RouteSpecialization("HearthFires"));
+            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().put(id, newRoute);
+            createRouteLabel(id);
+        }
+        return key;
+    }
+
+
+    boolean botsInit = false;
 
     @Override
     public void tick(double dt)
     {
+        checkTempMarks();
         synchronized (glob.map.areas)
         {
             for (NArea area : glob.map.areas.values())
@@ -459,6 +552,29 @@ public class NMapView extends MapView
 //        for(Long id : forRemove)
 //            dummys.remove(id);
         super.tick(dt);
+
+        if(NConfig.botmod != null && !botsInit) {
+            Scenario scenario = NUtils.getUI().core.scenarioManager.getScenarios().getOrDefault(NConfig.botmod.scenarioId, null);
+            if (scenario != null || !(NUtils.getGameUI() == null)) {
+                botsInit = true;
+                Thread t;
+                t = new Thread(() -> {
+                    try {
+                        NConfig.botmod = null;
+                        NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
+                        ScenarioRunner runner = new ScenarioRunner(scenario);
+                        runner.run(NUtils.getGameUI());
+
+                        NUtils.getGameUI().act("lo");
+                        System.exit(0);
+                    } catch (InterruptedException e) {
+                        System.out.println("Bot interrupted");
+                    }
+                });
+                NUtils.getGameUI().biw.addObserve(t);
+                t.start();
+            }
+        }
     }
 
     @Override
@@ -484,7 +600,7 @@ public class NMapView extends MapView
         {
             if (selection == null)
             {
-                selection = new NSelector();
+                selection = new NSelector(null);
             }
         }
         if ( isGobSelectionMode.get() )
@@ -570,6 +686,10 @@ public class NMapView extends MapView
 
     public class NSelector extends Selector
     {
+        public NSelector(Coord max) {
+            super(max);
+        }
+
         public boolean mmouseup(Coord mc, int button)
         {
             synchronized (NMapView.this)
@@ -736,4 +856,43 @@ public class NMapView extends MapView
 ////        if(send && !NUtils.getGameUI().nomadMod)
 //            wdgmsg("click", args);
 //    }
+
+
+    void checkTempMarks() {
+        if ((Boolean) NConfig.get(NConfig.Key.tempmark)) {
+            final Coord2d cmap = new Coord2d(cmaps);
+            if (NUtils.player() != null) {
+                Coord2d pl = NUtils.player().rc;
+                final List<NMiniMap.TempMark> marks = new ArrayList<>(tempMarkList);
+                long currenttime = System.currentTimeMillis();
+                for (NMiniMap.TempMark cm : marks) {
+                    Gob g = Finder.findGob(cm.id);
+                    if (g == null) {
+
+                        if (currenttime - cm.start > (Integer) NConfig.get(NConfig.Key.temsmarktime) * 1000 * 60) {
+                            tempMarkList.remove(cm);
+                        } else {
+                            if(currenttime - cm.lastupdate > 1000) {
+                                cm.lastupdate = currenttime;
+                                if (!cm.rc.isect(pl.sub(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)), pl.add(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)))) {
+                                    tempMarkList.remove(cm);
+                                } else {
+                                    if (((NMiniMap) ui.gui.mmap).checktemp(cm, pl)) {
+                                        tempMarkList.remove(cm);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        cm.start = currenttime;
+                        cm.lastupdate = cm.start;
+                        cm.rc = g.rc;
+                        cm.gc = g.rc.floor(tilesz).add(ui.gui.mmap.sessloc.tc);
+                    }
+                }
+            }
+        }
+    }
+
+
 }

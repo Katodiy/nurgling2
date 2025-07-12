@@ -1,16 +1,14 @@
 package nurgling.actions;
 
-import haven.WItem;
 import nurgling.NConfig;
-import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tools.Context;
 import nurgling.tools.Container;
 import nurgling.tools.NAlias;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class TransferItems implements Action
 {
@@ -74,8 +72,8 @@ public class TransferItems implements Action
         resitems.addAll(before);
         resitems.addAll(after);
         for(String item : resitems) {
-            TreeMap<Integer, NArea> areas = NArea.findOuts(new NAlias(item));
-            TreeMap<Integer, NArea> outOfReachAreas = NArea.globalFindOuts(item);
+            TreeMap<Integer, NArea> areas = NContext.findOuts(new NAlias(item));
+            TreeMap<Integer, NArea> outOfReachAreas = NContext.findOutsGlobal(item);
             if(!areas.isEmpty() || !outOfReachAreas.isEmpty()) {
                 if(!areas.isEmpty()) {
                     ArrayList<Integer> ths = new ArrayList<>(areas.keySet());
@@ -119,7 +117,7 @@ public class TransferItems implements Action
                 }
                 if (output instanceof Container) {
                     if (((Context.OutputContainer) output).getArea() != null)
-                        new TransferToContainer(cnt, (Context.OutputContainer) output, new NAlias(item), th).run(gui);
+                        new TransferToContainer((Context.OutputContainer) output, new NAlias(item), th).run(gui);
                 }
                 if (output instanceof Context.Barter) {
                     if (((Context.OutputBarter) output).getArea() != null)

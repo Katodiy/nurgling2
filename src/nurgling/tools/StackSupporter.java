@@ -9,6 +9,7 @@ import java.util.HashSet;
 
 public class StackSupporter {
     private static final HashMap<HashSet<String>,Integer> catSize = new HashMap<>();
+    private static final HashSet<String> catExceptions = new HashSet<>();
     static {
         HashSet<String> size3 = new HashSet<>();
         size3.add("Spices");
@@ -22,7 +23,6 @@ public class StackSupporter {
         size3.add("Egg");
         size3.add("Gellant");
         size3.add("Stuffing");
-        size3.add("Yarn");
         size3.add("Dried Fruit");
         size3.add("Edible Mushroom");
         size3.add("Nuts");
@@ -49,22 +49,16 @@ public class StackSupporter {
 
         size3.add("Candle");
         size3.add("Pearl");
-        size3.add("Wool");
+
         size3.add("Finer Plant Fibre");
         size3.add("Wicker");
         size3.add("Cloth");
-        size3.add("Nugget of a Precious Metal");
-        size3.add("Coal");
-        size3.add("Nugget of Bronze, Iron or Steel");
-        size3.add("Nugget of Any Common Metal");
-        size3.add("Nugget of Any Metal");
-        size3.add("Wax");
+
         size3.add("Pigment");
         size3.add("Fine Clay");
         size3.add("Any Brick");
         size3.add("Clay");
         size3.add("Casting Material");
-        size3.add("Glass");
 
         size3.add("Board");
         size3.add("Block of Wood");
@@ -79,15 +73,19 @@ public class StackSupporter {
         size3.add("Hooks");
         size3.add("Dried Fish");
         size3.add("Medicine");
+        size3.add("Intestines");
         catSize.put(size3,3);
 
         HashSet<String> size4 = new HashSet<>();
         size4.add("Hide Fresh");
         size4.add("Prepared Animal Hide");
-        size4.add("Bone Material");
+        size4.add("Fake Bone Material");
+        size4.add("Coal");
+        size4.add("Wool");
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
+        size5.add("Entrails");
         size5.add("Feather");
         size5.add("Fine Feather");
         size5.add(" Meat");
@@ -104,8 +102,25 @@ public class StackSupporter {
         size5.add("Poultry");
 
         catSize.put(size5,5);
+
+        HashSet<String> size10 = new HashSet<>();
+        size10.add("Nugget of a Precious Metal");
+        size10.add("Nugget of Bronze, Iron or Steel");
+        size10.add("Nugget of Any Common Metal");
+        size10.add("Nugget of Any Metal");
+        catSize.put(size10,10);
     }
-    private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tanning Tub", "Oven", "Steelbox");
+
+    static
+    {
+        catExceptions.add("Moose Antlers");
+        catExceptions.add("Red Deer Antlers");
+        catExceptions.add("Reindeer Antlers");
+        catExceptions.add("Roe Deer Antlers");
+        catExceptions.add("Wolf's Claw");
+        catExceptions.add("Lynx Claws");
+    }
+    private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln");
     public static boolean isStackable(NInventory inv, String name)
     {
         Window win = inv.getparent(Window.class);
@@ -135,6 +150,10 @@ public class StackSupporter {
 
     public static int getMaxStackSize(String name)
     {
+        if(catExceptions.contains(name))
+        {
+            return 1;
+        }
         ArrayList<String> categories = VSpec.getCategory(name);
         for(String cat: categories)
         {

@@ -831,7 +831,7 @@ public class UI {
 	msg(new InfoMessage(msg));
     }
 
-    private void setmods(InputEvent ev) {
+    protected void setmods(InputEvent ev) {
 	int mod = ev.getModifiersEx();
 	modshift = (mod & InputEvent.SHIFT_DOWN_MASK) != 0;
 	modctrl = (mod & InputEvent.CTRL_DOWN_MASK) != 0;
@@ -844,7 +844,6 @@ public class UI {
     private Grab[] c(Collection<Grab> g) {return(g.toArray(new Grab[0]));}
 
     public void keydown(KeyEvent ev) {
-	setmods(ev);
 	if(!dispatch(root, new KeyDownEvent(ev)))
 	    dispatch(root, new GlobKeyEvent(ev));
     }

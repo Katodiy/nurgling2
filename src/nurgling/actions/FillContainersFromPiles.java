@@ -3,9 +3,7 @@ package nurgling.actions;
 import haven.*;
 import nurgling.NGameUI;
 import nurgling.NUtils;
-import nurgling.areas.NArea;
 import nurgling.tools.Container;
-import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -95,7 +93,7 @@ public class FillContainersFromPiles implements Action {
                             }
                         }
                     }
-                    new TransferToContainer(new Context(), cont, transferedItems).run(gui);
+                    new TransferToContainer(cont, transferedItems).run(gui);
                 }
                 new CloseTargetContainer(cont).run(gui);
             }

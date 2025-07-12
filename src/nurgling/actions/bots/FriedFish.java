@@ -6,6 +6,7 @@ import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
+import nurgling.areas.NContext;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitCarveState;
 import nurgling.tasks.WaitPose;
@@ -25,6 +26,7 @@ public class FriedFish implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        NContext context = new NContext(gui);
         SelectArea insa;
         NUtils.getGameUI().msg("Please select area with raw fish");
         (insa = new SelectArea(Resource.loadsimg("baubles/rawFish"))).run(gui);
@@ -37,12 +39,9 @@ public class FriedFish implements Action {
         NUtils.getGameUI().msg("Please select area with fireplaces");
         (powsa = new SelectArea(Resource.loadsimg("baubles/fireplace"))).run(gui);
 
-        Context context = new Context();
         ArrayList<Container> containers = new ArrayList<>();
         for (Gob sm : Finder.findGobs(outsa.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-            Container cand = new Container();
-            cand.gob = sm;
-            cand.cap = Context.contcaps.get(cand.gob.ngob.name);
+            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
             cand.initattr(Container.Space.class);
             containers.add(cand);
         }
@@ -130,7 +129,7 @@ public class FriedFish implements Action {
                                     Container.Space space = (Container.Space) container.getattr(Container.Space.class);
                                     if(!space.isReady() || (Integer) space.getRes().get(Container.Space.FREESPACE) != 0)
                                     {
-                                        new TransferToContainer(context, container, new NAlias("Spitrosted")).run(gui);
+                                        new TransferToContainer(container, new NAlias("Spitrosted")).run(gui);
                                     }
                                 }
                             }
@@ -147,7 +146,7 @@ public class FriedFish implements Action {
                     if (container.getattr(Container.Space.class) != null) {
                         Container.Space space = (Container.Space) container.getattr(Container.Space.class);
                         if (!space.isReady() || (Integer) space.getRes().get(Container.Space.FREESPACE) != 0) {
-                            new TransferToContainer(context, container, new NAlias("Spitroast")).run(gui);
+                            new TransferToContainer(container, new NAlias("Spitroast")).run(gui);
                         }
                     }
                 }
@@ -189,9 +188,13 @@ public class FriedFish implements Action {
                 }
             }
 
-            if(!new FillFuelPowOrCauldron(pows, 1).run(gui).IsSuccess())
+            if(!new FillFuelPowOrCauldron(context, pows, 1).run(gui).IsSuccess())
                 return Results.FAIL();
-            if (!new LightGob(pows, 4).run(gui).IsSuccess())
+            ArrayList<Long> flighted =new ArrayList<>();
+            for (Gob pow : pows) {
+                flighted.add(pow.id);
+            }
+            if (!new LightGob(flighted, 4).run(gui).IsSuccess())
                 return Results.ERROR("I can't start a fire");
 
         }

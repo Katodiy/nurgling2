@@ -5,79 +5,88 @@ import haven.Label;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NStyle;
+import nurgling.widgets.nsettings.Panel;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class AutoSelection extends Widget {
+public class AutoSelection extends Panel {
     public ArrayList<AutoSelectItem> petals = new ArrayList<>();
     ActionList al;
     TextEntry newPetall;
     int width = UI.scale(210);
-    public AutoSelection() {
-        prev = add(new Label("Auto selection:"));
-        prev = add(new CheckBox("Auto selection enabled") {
-            {
-                a = (Boolean) NConfig.get(NConfig.Key.asenable);
-            }
+    private CheckBox autoSelectEnabled;
+    private CheckBox singlePetal;
 
-            public void set(boolean val) {
-                NConfig.set(NConfig.Key.asenable, val);
-                a = val;
-            }
-        }, prev.pos("bl").adds(0,5));
+    public AutoSelection() {
+        super("");
+
+        final int margin = UI.scale(10);
+
+        prev = autoSelectEnabled = add(new CheckBox("Auto selection enabled"), new Coord(margin, margin));
+
         prev = add(new Label("Auto selected petals:"), prev.pos("bl").adds(0, 5));
-        prev = add( al = new ActionList(new Coord(width,UI.scale(300))), prev.pos("bl").add(0,UI.scale(10)));
-        prev = add(newPetall = new TextEntry(UI.scale(150), ""), prev.pos("bl").add(0,UI.scale(10)));
-        add(new Button(UI.scale(45),"Add"){
+        prev = add(al = new ActionList(new Coord(width, UI.scale(300))), prev.pos("bl").adds(0, 10));
+
+        newPetall = add(new TextEntry(UI.scale(150), ""), prev.pos("bl").adds(0, 10));
+        add(new Button(UI.scale(45), "Add") {
             @Override
             public void click() {
-                if(!newPetall.text().isEmpty()) {
+                if (!newPetall.text().isEmpty()) {
                     AutoSelectItem ai = new AutoSelectItem(newPetall.text());
                     ai.isEnabled.a = true;
                     petals.add(ai);
                 }
             }
-        }, prev.pos("ur").add(UI.scale(10), UI.scale(prev.sz.y/2) - Button.hs/2));
-        if(NConfig.get(NConfig.Key.petals)!=null) {
-            for (HashMap<String,Object> item : (ArrayList< HashMap<String,Object>>) NConfig.get(NConfig.Key.petals))
-            {
+        }, newPetall.pos("ur").adds(10, 0));
+
+        singlePetal = add(new CheckBox("Auto select single petal"), newPetall.pos("bl").adds(0, 10));
+
+        load();
+        pack();
+    }
+
+    @Override
+    public void load() {
+        petals.clear();
+        autoSelectEnabled.a = getBool(NConfig.Key.asenable);
+
+        if (NConfig.get(NConfig.Key.petals) != null) {
+            for (HashMap<String, Object> item : (ArrayList<HashMap<String, Object>>) NConfig.get(NConfig.Key.petals)) {
                 AutoSelectItem aitem = new AutoSelectItem((String) item.get("name"));
                 aitem.isEnabled.a = (Boolean) item.get("enabled");
                 petals.add(aitem);
             }
         }
 
-        prev = add(new CheckBox("Auto select single petal") {
-            {
-                a = (Boolean) NConfig.get(NConfig.Key.singlePetal);
-            }
-
-            public void set(boolean val) {
-                NConfig.set(NConfig.Key.singlePetal, val);
-                a = val;
-            }
-        }, prev.pos("bl").adds(0, 5));
-//
-//        prev = add(new CheckBox("Walking into doors in basic mode") {
-//            {
-//                a = (Boolean) NConfig.get(NConfig.Key.q_door);
-//            }
-//
-//            public void set(boolean val) {
-//                NConfig.set(NConfig.Key.q_door, val);
-//                a = val;
-//            }
-//        }, prev.pos("bl").adds(0, 5));
-        pack();
+        singlePetal.a = getBool(NConfig.Key.singlePetal);
+        if (al != null)
+            al.update();
     }
 
+    @Override
+    public void save() {
+        NConfig.set(NConfig.Key.asenable, autoSelectEnabled.a);
+
+        ArrayList<HashMap<String, Object>> plist = new ArrayList<>();
+        for (AutoSelectItem petal : petals) {
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("name", petal.text());
+            map.put("enabled", petal.isEnabled.a);
+            plist.add(map);
+        }
+        NConfig.set(NConfig.Key.petals, plist);
+
+        NConfig.set(NConfig.Key.singlePetal, singlePetal.a);
+
+        NConfig.needUpdate();
+    }
 
     class ActionList extends SListBox<AutoSelectItem, Widget> {
         ActionList(Coord sz) {
-            super(sz, UI.scale(15));
+            super(sz, UI.scale(22));
         }
 
         protected List<AutoSelectItem> items() {
@@ -90,9 +99,10 @@ public class AutoSelection extends Widget {
         }
 
         protected Widget makeitem(AutoSelectItem item, int idx, Coord sz) {
-            return (new ItemWidget<AutoSelectItem>(this, sz, item) {
+            return new ItemWidget<AutoSelectItem>(this, sz, item) {
                 {
                     add(item);
+                    item.resize(sz);
                 }
 
                 public boolean mousedown(Coord c, int button) {
@@ -103,12 +113,7 @@ public class AutoSelection extends Widget {
                     }
                     return (true);
                 }
-            });
-        }
-
-        @Override
-        public void wdgmsg(String msg, Object... args) {
-            super.wdgmsg(msg, args);
+            };
         }
 
         Color bg = new Color(30, 40, 40, 160);
@@ -117,6 +122,7 @@ public class AutoSelection extends Widget {
         public void draw(GOut g) {
             g.chcolor(bg);
             g.frect(Coord.z, g.sz());
+            g.chcolor();
             super.draw(g);
         }
     }
@@ -126,10 +132,12 @@ public class AutoSelection extends Widget {
         IButton remove;
         public CheckBox isEnabled;
 
-
         @Override
         public void resize(Coord sz) {
-            remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5), remove.c.y));
+            isEnabled.move(new Coord(isEnabled.c.x, (sz.y - isEnabled.sz.y) / 2));
+            text.move(new Coord(text.c.x, (sz.y - text.sz.y) / 2));
+            remove.move(new Coord(sz.x - NStyle.removei[0].sz().x - UI.scale(5),
+                    (sz.y - remove.sz.y) / 2));
             super.resize(sz);
         }
 
@@ -154,5 +162,10 @@ public class AutoSelection extends Widget {
         public String text() {
             return text.text();
         }
+    }
+
+    private boolean getBool(NConfig.Key key) {
+        Object val = NConfig.get(key);
+        return val instanceof Boolean ? (Boolean) val : false;
     }
 }

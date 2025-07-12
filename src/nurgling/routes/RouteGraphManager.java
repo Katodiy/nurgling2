@@ -80,6 +80,16 @@ public class RouteGraphManager {
         return routes;
     }
 
+    public RoutePoint getHearthFireForCurrentPlayer() {
+        for(RoutePoint routePoint : routePointMap.values()) {
+            if(routePoint.hearthFirePlayerName.equals(NUtils.getGameUI().getCharInfo().chrid)) {
+                return routePoint;
+            }
+        }
+
+        return null;
+    }
+
     private void refreshDoors() {
         graph.clearDoors();
         for (Route route : this.routes.values()) {
@@ -207,15 +217,11 @@ public class RouteGraphManager {
 
         // Merge reachableAreas
         for (int area : b.getReachableAreas()) {
-            if (!a.getReachableAreas().contains(area)) {
-                a.getReachableAreas().add(area);
-            }
+            a.getReachableAreas().add(area);
         }
 
         for (int area : a.getReachableAreas()) {
-            if (!b.getReachableAreas().contains(area)) {
-                b.getReachableAreas().add(area);
-            }
+            b.getReachableAreas().add(area);
         }
     }
 }

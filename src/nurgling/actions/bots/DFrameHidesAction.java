@@ -8,6 +8,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -34,11 +35,9 @@ public class DFrameHidesAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
 
-            for (Gob dframe : Finder.findGobs(NArea.findSpec(Specialisation.SpecName.dframe.toString()),
+            for (Gob dframe : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.dframe.toString()),
                     new NAlias("gfx/terobjs/dframe"))) {
-                Container cand = new Container();
-                cand.gob = dframe;
-                cand.cap = "Frame";
+                Container cand = new Container(dframe,"Frame" );
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.Tetris.class);
@@ -53,24 +52,26 @@ public class DFrameHidesAction implements Action {
 
                 containers.add(cand);
             }
-            Pair<Coord2d,Coord2d> rca = NArea.findSpec(Specialisation.SpecName.dframe.toString()).getRCArea();
+            Pair<Coord2d,Coord2d> rca = NContext.findSpec(Specialisation.SpecName.dframe.toString()).getRCArea();
             boolean dir = rca.b.x - rca.a.x > rca.b.y - rca.a.y;
             containers.sort(new Comparator<Container>() {
                 @Override
                 public int compare(Container o1, Container o2) {
+                    Gob gob1 = Finder.findGob(o1.gobid);
+                    Gob gob2 = Finder.findGob(o2.gobid);
                     if(dir)
                     {
-                        int res = Double.compare(o1.gob.rc.y,o2.gob.rc.y);
+                        int res = Double.compare(gob1.rc.y,gob2.rc.y);
                         if(res == 0)
-                            return Double.compare(o1.gob.rc.x,o2.gob.rc.x);
+                            return Double.compare(gob1.rc.x,gob2.rc.x);
                         else
                             return res;
                     }
                     else
                     {
-                        int res = Double.compare(o1.gob.rc.x,o2.gob.rc.x);
+                        int res = Double.compare(gob1.rc.x,gob2.rc.x);
                         if(res == 0)
-                            return Double.compare(o1.gob.rc.y,o2.gob.rc.y);
+                            return Double.compare(gob1.rc.y,gob2.rc.y);
                         else
                             return res;
                     }
@@ -79,8 +80,8 @@ public class DFrameHidesAction implements Action {
 
 
             new FreeContainers(containers, new NAlias(new ArrayList<>(Arrays.asList("Fur", "Hide", "Scale", "Tail", "skin", "hide")), new ArrayList<>(Arrays.asList("Fresh", "Raw")))).run(gui);
-            new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), raw).run(gui);
-            new TransferToPiles(NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
+            new FillContainersFromPiles(containers, NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), raw).run(gui);
+            new TransferToPiles(NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
 
             return Results.SUCCESS();
         }

@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -41,15 +42,13 @@ public class SmelterAction implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
-            NArea smelters = NArea.findSpec(Specialisation.SpecName.smelter.toString());
+            NArea smelters = NContext.findSpec(Specialisation.SpecName.smelter.toString());
             Finder.findGobs(smelters, new NAlias("gfx/terobjs/smelter"));
 
             ArrayList<Container> containers = new ArrayList<>();
 
             for (Gob sm : Finder.findGobs(smelters, new NAlias("gfx/terobjs/smelter"))) {
-                Container cand = new Container();
-                cand.gob = sm;
-                cand.cap = ((sm.ngob.getModelAttribute() & 128) == 128) ? "Smith's Smelter" : "Ore Smelter";
+                Container cand = new Container(sm, ((sm.ngob.getModelAttribute() & 128) == 128) ? "Smith's Smelter" : "Ore Smelter");
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -64,9 +63,7 @@ public class SmelterAction implements Action {
             }
 
             for (Gob sm : Finder.findGobs(smelters, new NAlias("gfx/terobjs/primsmelter"))) {
-                Container cand = new Container();
-                cand.gob = sm;
-                cand.cap = "Stack furnace";
+                Container cand = new Container(sm, "Stack furnace");
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -80,9 +77,9 @@ public class SmelterAction implements Action {
                 containers.add(cand);
             }
 
-            ArrayList<Gob> lighted = new ArrayList<>();
+            ArrayList<Long> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gob);
+                lighted.add(cont.gobid);
 
             }
             if(containers.isEmpty())
@@ -91,28 +88,30 @@ public class SmelterAction implements Action {
             Results res = null;
             while (res == null || res.IsSuccess()) {
                 NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 2));
-                new FreeContainers(containers).run(gui);
-                new CollectQuickSilver(containers).run(gui);
-                new DropTargets(containers, new NAlias("Slag")).run(gui);
-                res = new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.ore.toString()).getRCArea(), ores).run(gui);
-                ArrayList<Container> forFuel = new ArrayList<>();
+                synchronized (NUtils.getGameUI()) {
+                    new FreeContainers(containers).run(gui);
+                    new CollectQuickSilver(containers).run(gui);
+                    new DropTargets(containers, new NAlias("Slag")).run(gui);
+                    res = new FillContainersFromPiles(containers, NContext.findSpec(Specialisation.SpecName.ore.toString()).getRCArea(), ores).run(gui);
+                    ArrayList<Container> forFuel = new ArrayList<>();
 
-                for(Container container: containers) {
-                    Container.Space space = container.getattr(Container.Space.class);
-                    if(!space.isEmpty())
-                        forFuel.add(container);
+                    for (Container container : containers) {
+                        Container.Space space = container.getattr(Container.Space.class);
+                        if (!space.isEmpty())
+                            forFuel.add(container);
+                    }
+
+                    if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
+                        return Results.ERROR("NO FUEL");
+
+                    ArrayList<Long> flighted = new ArrayList<>();
+                    for (Container cont : forFuel) {
+                        flighted.add(cont.gobid);
+                    }
+
+                    if (!new LightGob(flighted, 2).run(gui).IsSuccess())
+                        return Results.ERROR("I can't start a fire");
                 }
-
-                if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
-                    return Results.ERROR("NO FUEL");
-
-                ArrayList<Gob> flighted = new ArrayList<>();
-                for (Container cont : forFuel) {
-                    flighted.add(cont.gob);
-                }
-
-                if (!new LightGob(flighted, 2).run(gui).IsSuccess())
-                    return Results.ERROR("I can't start a fire");
             }
             return Results.SUCCESS();
         }

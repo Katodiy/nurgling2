@@ -8,6 +8,7 @@ import nurgling.actions.FillContainersFromPiles;
 import nurgling.actions.FreeContainers;
 import nurgling.actions.Results;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -22,11 +23,9 @@ public class TubeLeatherAction implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<Container> containers = new ArrayList<>();
 
-        for (Gob dframe : Finder.findGobs(NArea.findSpec(Specialisation.SpecName.dframe.toString()),
+        for (Gob dframe : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.dframe.toString()),
                 new NAlias("gfx/terobjs/dframe"))) {
-            Container cand = new Container();
-            cand.gob = dframe;
-            cand.cap = "Frame";
+            Container cand = new Container(dframe, "Frame");
 
             cand.initattr(Container.Space.class);
             cand.initattr(Container.Tetris.class);
@@ -44,7 +43,7 @@ public class TubeLeatherAction implements Action {
 
 
         new FreeContainers(containers).run(gui);
-        new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), raw).run(gui);
+        new FillContainersFromPiles(containers, NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), raw).run(gui);
 
         return Results.SUCCESS();
     }

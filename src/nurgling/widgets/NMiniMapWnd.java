@@ -6,7 +6,6 @@ import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
 
-import java.awt.event.KeyEvent;
 import java.net.MalformedURLException;
 
 public class NMiniMapWnd extends Widget{
@@ -161,13 +160,13 @@ public class NMiniMapWnd extends Widget{
             case "natura": {
                 NConfig.set(NConfig.Key.hideNature,a);
                 NUtils.showHideNature();
-                NUtils.getGameUI().nsw.world.setNatureStatus(a);
+//                NUtils.getGameUI().nsw.world.setNatureStatus(a);
 
                 break;
             }
             case "night": {
                 NConfig.set(NConfig.Key.nightVision,a);
-                ((OptWnd.NQolPanel)NUtils.getGameUI().opts.nqolwnd).qol_p.night.a = a;
+//                ((OptWnd.NQolPanel)NUtils.getGameUI().opts.nqolwnd).q.night.a = a;
                 break;
             }
         }
@@ -193,7 +192,7 @@ public class NMiniMapWnd extends Widget{
         wdg.draw(g2);
     }
 
-    public static class Map extends NMiniMap {
+    public static class Map extends NCornerMiniMap {
         NMapView map;
         public Map(Coord sz, MapFile file,NMapView map) {
             super(sz, file);

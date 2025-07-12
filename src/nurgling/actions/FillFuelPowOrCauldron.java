@@ -6,6 +6,7 @@ import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.HandIsFree;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -19,10 +20,11 @@ public class FillFuelPowOrCauldron implements Action
     ArrayList<Gob> pows;
     int marker;
     Coord targetCoord = new Coord(2, 1);
-
-    public FillFuelPowOrCauldron(ArrayList<Gob> gobs, int marker) {
+    NContext context;
+    public FillFuelPowOrCauldron(NContext context, ArrayList<Gob> gobs, int marker) {
         this.pows = gobs;
         this.marker = marker;
+        this.context = context;
     }
     NAlias fuelname = new NAlias("block", "Block");
 
@@ -49,7 +51,8 @@ public class FillFuelPowOrCauldron implements Action
                 if(NUtils.getGameUI().getInventory().getItems(fuelname).isEmpty()) {
                     int target_size = count;
                     while (target_size != 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord) != 0) {
-                        ArrayList<Gob> piles = Finder.findGobs(NArea.findSpec(Specialisation.SpecName.fuel.toString(), "Block"), new NAlias("stockpile"));
+                        NArea fuelarea = context.getSpecArea(Specialisation.SpecName.fuel, "Block");
+                        ArrayList<Gob> piles = Finder.findGobs(fuelarea, new NAlias("stockpile"));
                         if (piles.isEmpty()) {
                             if (gui.getInventory().getItems().isEmpty())
                                 return Results.ERROR("no items");
@@ -69,7 +72,8 @@ public class FillFuelPowOrCauldron implements Action
 
                     }
                 }
-                new PathFinder(gob).run(gui);
+                context.getSpecArea(context.workstation);
+                new PathFinder(Finder.findGob(gob.id)).run(gui);
                 ArrayList<WItem> fueltitem = NUtils.getGameUI().getInventory().getItems(fuelname);
                 if (fueltitem.size()<2) {
                     return Results.ERROR("no fuel");

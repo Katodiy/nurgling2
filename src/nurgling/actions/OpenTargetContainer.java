@@ -5,6 +5,7 @@ import static haven.OCache.posres;
 import nurgling.*;
 import nurgling.tasks.*;
 import nurgling.tools.Container;
+import nurgling.tools.Finder;
 
 public class OpenTargetContainer implements Action
 {
@@ -49,7 +50,7 @@ public class OpenTargetContainer implements Action
     public OpenTargetContainer(Container container)
     {
         this.name = container.cap;
-        this.gob = container.gob;
+        this.gob = Finder.findGob(container.gobid);
         this.cont = container;
     }
 

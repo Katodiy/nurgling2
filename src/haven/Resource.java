@@ -155,7 +155,12 @@ public class Resource implements Serializable {
 		return(loaded.ver);
 	    return(this.ver);
 	}
-    }
+
+		@Override
+		public boolean isReady() {
+			return loaded!=null;
+		}
+	}
 
     public static interface Resolver {
 	public Indir<Resource> getres(int id);

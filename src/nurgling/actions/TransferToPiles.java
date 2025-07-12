@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.*;
+import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.tasks.*;
@@ -10,6 +11,7 @@ import nurgling.tools.NParser;
 import nurgling.tools.StackSupporter;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class TransferToPiles implements Action{
 
@@ -76,7 +78,7 @@ public class TransferToPiles implements Action{
                     }
                 }
 
-                while(!(gui.getInventory().getItems(items,th)).isEmpty()) {
+                while(!(gui.getInventory().getItems(items,th)).isEmpty() && out!=null) {
                     PileMaker pm;
 
                     if(!(pm = new PileMaker(out, items, pileName, playerc)).run(gui).IsSuccess())
@@ -102,6 +104,16 @@ public class TransferToPiles implements Action{
             for (int i = 0; i < target_size; i++) {
                 {
                     witems = gui.getInventory().getItems(items, th);
+                    witems.sort(new Comparator<WItem>() {
+                        @Override
+                        public int compare(WItem o1, WItem o2) {
+                            Float q1 = ((NGItem)o1.item).quality;
+                            Float q2 = ((NGItem)o2.item).quality;
+                            if(q1 == null || q2 == null)
+                                return 0;
+                            return Float.compare(q1,q2);
+                        }
+                    });
                     NUtils.takeItemToHand(witems.get(0));
                     gui.getStockpile().wdgmsg("drop");
                     NUtils.addTask(new WaitFreeHand());
@@ -122,6 +134,8 @@ public class TransferToPiles implements Action{
             return new NAlias("gfx/terobjs/stockpile-soil");
         } else if (NParser.checkName(items.getDefault(), new NAlias("board"))) {
             return new NAlias("gfx/terobjs/stockpile-board");
+        } else if (NParser.checkName(items.getDefault(), new NAlias("Pumpkin Flesh"))) {
+            return new NAlias("gfx/terobjs/stockpile-trash");
         } else if (NParser.checkName(items.getDefault(), new NAlias("pumpkin"))) {
             return new NAlias("gfx/terobjs/stockpile-pumpkin");
         } else if (NParser.checkName(items.getDefault(), new NAlias("metal"))) {
@@ -138,6 +152,8 @@ public class TransferToPiles implements Action{
             return new NAlias("gfx/terobjs/stockpile-coal");
         } else if (NParser.checkName(items.getDefault(), new NAlias("onion"))) {
             return new NAlias("gfx/terobjs/stockpile-onion");
+        } else if (NParser.checkName(items.getDefault(), new NAlias("bone"))) {
+            return new NAlias("gfx/terobjs/stockpile-bone");
         } else
             return new NAlias("stockpile");
     }

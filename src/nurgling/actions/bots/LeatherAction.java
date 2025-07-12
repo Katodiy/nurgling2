@@ -5,6 +5,7 @@ import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -32,11 +33,9 @@ public class LeatherAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
 
-            for (Gob ttube : Finder.findGobs(NArea.findSpec(Specialisation.SpecName.ttub.toString()),
+            for (Gob ttube : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.ttub.toString()),
                     new NAlias("gfx/terobjs/ttub"))) {
-                Container cand = new Container();
-                cand.gob = ttube;
-                cand.cap = "Tub";
+                Container cand = new Container(ttube , "Tub");
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.Tetris.class);
@@ -52,10 +51,10 @@ public class LeatherAction implements Action {
                 containers.add(cand);
             }
 
-            new FillFluid(containers, NArea.findSpec(Specialisation.SpecName.tanning.toString()).getRCArea(), new NAlias("tanfluid"), 2).run(gui);
+            new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.tanning.toString()).getRCArea(), new NAlias("tanfluid"), 2).run(gui);
             new FreeContainers(containers, new NAlias("Leather")).run(gui);
-            new FillContainersFromPiles(containers, NArea.findSpec(Specialisation.SpecName.readyHides.toString()).getRCArea(), notraw).run(gui);
-            new TransferToPiles(NArea.findSpec(Specialisation.SpecName.readyHides.toString()).getRCArea(), notraw).run(gui);
+            new FillContainersFromPiles(containers, NContext.findSpec(Specialisation.SpecName.readyHides.toString()).getRCArea(), notraw).run(gui);
+            new TransferToPiles(NContext.findSpec(Specialisation.SpecName.readyHides.toString()).getRCArea(), notraw).run(gui);
 
             return Results.SUCCESS();
         }

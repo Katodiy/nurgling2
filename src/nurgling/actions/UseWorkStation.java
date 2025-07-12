@@ -11,16 +11,23 @@ import nurgling.tools.*;
 
 public class UseWorkStation implements Action
 {
-    public UseWorkStation(Context context)
+    public UseWorkStation(NContext context)
     {
         this.cnt = context;
     }
 
-    Context cnt;
+    NContext cnt;
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        Gob ws = (cnt.workstation.selected==null)?Finder.findGob(new NAlias(cnt.workstation.station)):cnt.workstation.selected;
+        if(cnt.workstation.selected==-1)
+        {
+            Gob ws = Finder.findGob(new NAlias(cnt.workstation.station));
+            if(ws == null)
+                return Results.FAIL();
+            cnt.workstation.selected = ws.id;
+        }
+        Gob ws = Finder.findGob(cnt.workstation.selected);
         if(ws == null)
             return Results.ERROR("NO WORKSTATION");
         else
@@ -28,7 +35,7 @@ public class UseWorkStation implements Action
             new PathFinder(ws).run(gui);
             if(cnt.workstation.station.contains("gfx/terobjs/pow") || cnt.workstation.station.contains("gfx/terobjs/cauldron"))
             {
-                new SelectFlowerAction("Open",cnt.workstation.selected).run(gui);
+                new SelectFlowerAction("Open",Finder.findGob(cnt.workstation.selected)).run(gui);
                 if(cnt.workstation.station.contains("gfx/terobjs/pow"))
                 {
                     NUtils.addTask(new WaitWindow("Fireplace"));

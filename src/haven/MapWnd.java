@@ -268,7 +268,7 @@ public class MapWnd extends Window implements Console.Directory {
 	}
     }
 
-    private class View extends MiniMap implements CursorQuery.Handler {
+    private class View extends NMiniMap implements CursorQuery.Handler {
 	View(MapFile file) {
 	    super(file);
 	}
@@ -322,7 +322,7 @@ public class MapWnd extends Window implements Console.Directory {
 		domark = false;
 		return(true);
 	    }
-	    if(!press && (sessloc != null) && (loc.seg == sessloc.seg)) {
+	    if(!press && (sessloc != null) && (loc.seg.id == sessloc.seg.id)) {
 		mvclick(mv, null, loc, null, button);
 		return(true);
 	    }

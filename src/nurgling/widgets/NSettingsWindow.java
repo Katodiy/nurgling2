@@ -2,25 +2,27 @@ package nurgling.widgets;
 
 
 import haven.*;
-import nurgling.widgets.nsettings.Fonts;
-import nurgling.widgets.nsettings.Panel;
-import nurgling.widgets.nsettings.World;
+import nurgling.NMapView;
+import nurgling.NUtils;
+import nurgling.widgets.nsettings.*;
+import nurgling.widgets.options.*;
 
 import java.util.*;
 
-public class NSettingsWindow extends Window {
+public class NSettingsWindow extends Widget {
 
     private static TexI rbtn = new TexI(Resource.loadsimg("nurgling/hud/buttons/right/u"));
     private static TexI dbtn = new TexI(Resource.loadsimg("nurgling/hud/buttons/down/u"));
     private final SettingsList list;
     public World world;
     Widget container;
-    private Panel currentPanel = null;
+    public Panel currentPanel = null;
     private Button saveBtn, cancelBtn;
+    public QuickActions qa;
+    public AutoSelection as;
 
     public NSettingsWindow() {
-        super(UI.scale(800, 600), "Settings", true);
-
+        sz = UI.scale(800, 600);
         container = add(new Widget(Coord.z));
         list = add(new SettingsList(UI.scale(200, 580)), UI.scale(10, 10));
 
@@ -48,13 +50,43 @@ public class NSettingsWindow extends Window {
     private void fillSettings() {
         SettingsCategory general = new SettingsCategory("General", new Panel("General"), container);
         general.addChild(new SettingsItem("Fonts", new Fonts(), container));
+        general.addChild(new SettingsItem("Quality of life", new QoL(), container));
+        general.addChild(new SettingsItem("Database", new DatabaseSettings(), container));
+        general.addChild(new SettingsItem("Auto Mapper", new AutoMapper(), container));
+        general.addChild(new SettingsItem("Auto Selection", as = new AutoSelection(), container));
+        general.addChild(new SettingsItem("Quick Actions", qa = new QuickActions(), container));
+
         SettingsCategory gameenvironment = new SettingsCategory("Game environment", new Panel("Game environment"), container);
         gameenvironment.addChild(new SettingsItem("World",world = new World(), container));
+        gameenvironment.addChild(new SettingsItem("Animal rings", new NRingSettings(), container));
+
+        SettingsCategory scenarios = new SettingsCategory("Autorunner", new Panel("Autorunner scenarios"), container);
+        scenarios.addChild(new SettingsItem("Scenarios", new ScenarioPanel(), container));
+
+        SettingsCategory bots = new SettingsCategory("Bots", new Panel("Bots"), container);
+        bots.addChild(new SettingsItem("Feed Clover", new FeedClover(), container));
+        bots.addChild(new SettingsItem("Auto Drop settings", new Dropper(), container));
+        bots.addChild(new SettingsItem("Eating bot", new Eater(), container));
+        bots.addChild(new SettingsItem("Farming Settings", new FarmingSettingsPanel(), container));
+
         list.addCategory(general);
         list.addCategory(gameenvironment);
+        list.addCategory(scenarios);
+        list.addCategory(bots);
     }
 
-
+    @Override
+    public void wdgmsg(Widget sender, String msg, Object... args) {
+        if (msg.equals("close")) {
+            hide();
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+                ((NMapView) NUtils.getGameUI().map).destroyRouteDummys();
+                NUtils.getGameUI().map.glob.oc.paths.pflines = null;
+            }
+        } else {
+            super.wdgmsg(sender, msg, args);
+        }
+    }
 
     private class SettingsList extends SListBox<SettingsItem, SettingsListItem> {
         public SettingsList(Coord sz) {

@@ -7,6 +7,7 @@ import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.conf.NPrepBlocksProp;
 import nurgling.tasks.*;
 import nurgling.tools.Container;
@@ -46,7 +47,7 @@ public class FuelByLogs implements Action
 
                     int target_size = needed_size;
                     while (target_size != 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord) != 0 && NUtils.getGameUI().getInventory().getItems(new NAlias("block", "Block")).size()<needed_size) {
-                        NArea fuel = NArea.findSpec(Specialisation.SpecName.fuel.toString(), ftype);
+                        NArea fuel = NContext.findSpec(Specialisation.SpecName.fuel.toString(), ftype);
                         if(fuel == null)
                             return Results.ERROR("No specialisation \"FUEL\" set.");
                         ArrayList<Gob> logs = Finder.findGobs(fuel, new NAlias(name));
@@ -86,7 +87,7 @@ public class FuelByLogs implements Action
                     }
                     needed_size -= NUtils.getGameUI().getInventory().getItems(new NAlias("block", "Block")).size();
                 }
-                new PathFinder(cont.gob).run(gui);
+                new PathFinder(Finder.findGob(cont.gobid)).run(gui);
                 new OpenTargetContainer(cont).run(gui);
                 fuelLvl = cont.getattr(Container.FuelLvl.class);
                 ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(new NAlias("block", "Block"));
@@ -94,7 +95,7 @@ public class FuelByLogs implements Action
                 int aftersize = gui.getInventory().getItems().size() - fueled;
                 for (int i = 0; i < fueled; i++) {
                     NUtils.takeItemToHand(items.get(i));
-                    NUtils.activateItem(cont.gob);
+                    NUtils.activateItem(Finder.findGob(cont.gobid));
                     NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
                 }
                 NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), aftersize));

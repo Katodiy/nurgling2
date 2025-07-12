@@ -4,18 +4,21 @@ import haven.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
 import nurgling.routes.Route;
-import nurgling.widgets.NMiniMap;
+import nurgling.scenarios.Scenario;
+import nurgling.widgets.NCornerMiniMap;
 import org.json.*;
 
 import java.awt.*;
 import java.io.*;
 import java.nio.charset.*;
 import java.nio.file.*;
+import java.text.ParseException;
 import java.util.*;
 import java.util.stream.*;
 
 public class NConfig
 {
+    public static NCore.BotmodSettings botmod = null;
 
     public enum Key
     {
@@ -83,8 +86,8 @@ public class NConfig
         smokeprop,
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
-        serverNode, serverUser, serverPass, ndbenable, harvestautorefill, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, boxFillColor, boxEdgeColor, fonts
+        serverNode, serverUser, serverPass, ndbenable, harvestautorefill, cleanupQContainers, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
+        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, fonts
     }
 
 
@@ -139,7 +142,10 @@ public class NConfig
         conf.put(Key.simplecrops, true);
         conf.put(Key.ndbenable, false);
         conf.put(Key.harvestautorefill, false);
+        conf.put(Key.cleanupQContainers, false);
+        conf.put(Key.qualityGrindSeedingPatter, "4x1");
         conf.put(Key.useGlobalPf, false);
+        conf.put(Key.useHFinGlobalPF, false);
         conf.put(Key.sqlite, false);
         conf.put(Key.postgres, false);
         conf.put(Key.dbFilePath, "");
@@ -154,6 +160,8 @@ public class NConfig
         conf.put(Key.temsmarkdist, 4);
         conf.put(Key.temsmarktime, 3);
         conf.put(Key.fonts, new FontSettings());
+        conf.put(Key.ropeAfterFeeding, false);
+        conf.put(Key.ropeAfterTaiming, true);
 
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
@@ -228,6 +236,7 @@ public class NConfig
     private boolean isAreasUpd = false;
     private boolean isFogUpd = false;
     private boolean isRoutesUpd = false;
+    private boolean isScenariosUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
     public String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
     public String path_fog = Paths.get(String.valueOf(((HashDirCache) ResCache.global).base), "..", "fog.nurgling.json")
@@ -235,6 +244,7 @@ public class NConfig
             .toAbsolutePath()
             .toString();
     public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
+    public String path_scenarios = ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
 
     public boolean isUpdated()
     {
@@ -248,6 +258,10 @@ public class NConfig
 
     public boolean isRoutesUpdated() {
         return isRoutesUpd;
+    }
+
+    public boolean isScenariosUpdated() {
+        return isScenariosUpd;
     }
 
     public boolean isFogUpdated() { return isFogUpd; }
@@ -293,6 +307,13 @@ public class NConfig
         }
     }
 
+    public static void needScenariosUpdate() {
+        if (current != null)
+        {
+            current.isScenariosUpd = true;
+        }
+    }
+
     public static void needFogUpdate()
     {
         if (current != null)
@@ -312,73 +333,82 @@ public class NConfig
             for (Object jobj : objs) {
                 if (jobj instanceof HashMap) {
                     HashMap<String, Object> obj = (HashMap<String, Object>) jobj;
-                    switch ((String) obj.get("type")) {
-                        case "NLoginData":
-                            res.add(new NLoginData(obj));
-                            break;
-                        case "NDragProp":
-                            res.add(new NDragProp(obj));
-                            break;
-                        case "NResizeProp":
-                            res.add(new NResizeProp(obj));
-                            break;
-                        case "NKinProp":
-                            res.add(new NKinProp(obj));
-                            break;
-                        case "NToolBeltProp":
-                            res.add(new NToolBeltProp(obj));
-                            break;
-                        case "NDiscordNotification":
-                            res.add(new NDiscordNotification(obj));
-                            break;
-                        case "CowsHerd":
-                            res.add(new CowsHerd(obj));
-                            break;
-                        case "HorseHerd":
-                            res.add(new HorseHerd(obj));
-                            break;
-                        case "GoatsHerd":
-                            res.add(new GoatsHerd(obj));
-                            break;
-                        case "SheepsHerd":
-                            res.add(new SheepsHerd(obj));
-                            break;
-                        case "PigsHerd":
-                            res.add(new PigsHerd(obj));
-                            break;
-                        case "NChopperProp":
-                            res.add(new NChopperProp(obj));
-                            break;
-                        case "NChipperProp":
-                            res.add(new NChipperProp(obj));
-                            break;
-                        case "NPrepBProp":
-                            res.add(new NPrepBlocksProp(obj));
-                            break;
-                        case "NPrepBoardProp":
-                            res.add(new NPrepBoardsProp(obj));
-                            break;
-                        case "NClayDiggerProp":
-                            res.add(new NClayDiggerProp(obj));
-                            break;
-                        case "NAreaRad":
-                            res.add(new NAreaRad(obj));
-                            break;
-                        case "NSmokeProp":
-                            res.add(new NSmokProp(obj));
-                            break;
-                        case "NWorldExplorer":
-                            res.add(new NWorldExplorerProp(obj));
-                            break;
-                        case "NFishingSettings":
-                            res.add(new NFishingSettings(obj));
-                            break;
-                        case "NCarrierProp":
-                            res.add(new NCarrierProp(obj));
-                            break;
+                    if(obj.get("type")!=null) {
+                        switch ((String) obj.get("type")) {
+                            case "NLoginData":
+                                res.add(new NLoginData(obj));
+                                break;
+                            case "NDragProp":
+                                res.add(new NDragProp(obj));
+                                break;
+                            case "NResizeProp":
+                                res.add(new NResizeProp(obj));
+                                break;
+                            case "NKinProp":
+                                res.add(new NKinProp(obj));
+                                break;
+                            case "NToolBeltProp":
+                                res.add(new NToolBeltProp(obj));
+                                break;
+                            case "NDiscordNotification":
+                                res.add(new NDiscordNotification(obj));
+                                break;
+                            case "CowsHerd":
+                                res.add(new CowsHerd(obj));
+                                break;
+                            case "DeersHerd":
+                                res.add(new TeimDeerHerd(obj));
+                                break;
+                            case "HorseHerd":
+                                res.add(new HorseHerd(obj));
+                                break;
+                            case "GoatsHerd":
+                                res.add(new GoatsHerd(obj));
+                                break;
+                            case "SheepsHerd":
+                                res.add(new SheepsHerd(obj));
+                                break;
+                            case "PigsHerd":
+                                res.add(new PigsHerd(obj));
+                                break;
+                            case "NChopperProp":
+                                res.add(new NChopperProp(obj));
+                                break;
+                            case "NChipperProp":
+                                res.add(new NChipperProp(obj));
+                                break;
+                            case "NPrepBProp":
+                                res.add(new NPrepBlocksProp(obj));
+                                break;
+                            case "NPrepBoardProp":
+                                res.add(new NPrepBoardsProp(obj));
+                                break;
+                            case "NClayDiggerProp":
+                                res.add(new NClayDiggerProp(obj));
+                                break;
+                            case "NAreaRad":
+                                res.add(new NAreaRad(obj));
+                                break;
+                            case "NSmokeProp":
+                                res.add(new NSmokProp(obj));
+                                break;
+                            case "NWorldExplorer":
+                                res.add(new NWorldExplorerProp(obj));
+                                break;
+                            case "NFishingSettings":
+                                res.add(new NFishingSettings(obj));
+                                break;
+                            case "NCarrierProp":
+                                res.add(new NCarrierProp(obj));
+                                break;
 
-                        default:
-                            res.add(obj);
+                            default:
+                                res.add(obj);
+                        }
+                    }
+                    else
+                    {
+                        res.add(obj);
                     }
                 }
                 else if (jobj instanceof String) {
@@ -531,7 +561,7 @@ public class NConfig
             try
             {
                 FileWriter f = new FileWriter(customPath==null?path_fog:customPath,StandardCharsets.UTF_8);
-                ((NMiniMap)NUtils.getGameUI().mmap).fogArea.toJson().write(f);
+                ((NCornerMiniMap)NUtils.getGameUI().mmap).fogArea.toJson().write(f);
                 f.close();
                 current.isFogUpd = false;
             }
@@ -585,6 +615,7 @@ public class NConfig
                 jroutes.put(route.toJson());
             }
             main.put("routes",jroutes);
+
             try
             {
                 FileWriter f = new FileWriter(customPath==null?path_routes:customPath,StandardCharsets.UTF_8);
@@ -600,7 +631,6 @@ public class NConfig
     }
 
     public void mergeRoutes(File file) {
-
         StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
         {
@@ -630,6 +660,28 @@ public class NConfig
         }
     }
 
+    public void writeScenarios(String customPath) {
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+            JSONObject main = new JSONObject();
+            JSONArray jscenarios = new JSONArray();
+
+            for (Scenario scenario : NUtils.getUI().core.scenarioManager.getScenarios().values()) {
+                jscenarios.put(scenario.toJson());
+            }
+            main.put("scenarios", jscenarios);
+
+            try {
+                FileWriter f = new FileWriter(customPath == null ? path_scenarios : customPath, StandardCharsets.UTF_8);
+                main.write(f);
+                f.close();
+                current.isScenariosUpd = false;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+
     public static Set<NPathVisualizer.PathCategory> getPathCategories() {
         HashSet<NPathVisualizer.PathCategory> res = new HashSet<>();
         res.add(NPathVisualizer.PathCategory.ME);
@@ -638,6 +690,22 @@ public class NConfig
         res.add(NPathVisualizer.PathCategory.FRIEND);
         res.add(NPathVisualizer.PathCategory.GPF);
         return res;
+    }
+
+    public static void enableBotMod(String path) {
+        try {
+            String jsonString = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
+
+            JSONObject jsonObject = new JSONObject(jsonString);
+            botmod = new NCore.BotmodSettings((String) jsonObject.get("user"), (String) jsonObject.get("password"), (String) jsonObject.get("character"), jsonObject.getInt("scenarioId"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static boolean isBotMod() {
+        return botmod != null;
     }
 
     public static Color getColor(Key key, Color defaultColor) {

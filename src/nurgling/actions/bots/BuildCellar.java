@@ -31,7 +31,7 @@ public class BuildCellar implements Action {
                 fpa.run(gui);
 
                 Gob bum = fpa.getPlaced();
-                while (Finder.findGob(bum.id) != null) {
+                while (bum!=null && Finder.findGob(bum.id) != null) {
                     new SelectFlowerAction("Chip stone", bum).run(gui);
                     WaitChipperState wcs = new WaitChipperState(bum);
                     NUtils.getUI().core.addTask(wcs);

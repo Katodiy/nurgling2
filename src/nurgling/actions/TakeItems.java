@@ -103,7 +103,7 @@ public class TakeItems implements Action
 
     public Results takeFromContainer(AtomicInteger left, NGameUI gui, Container cont) throws InterruptedException
     {
-        new PathFinder(cont.gob).run(gui);
+        new PathFinder(Finder.findGob(cont.gobid)).run(gui);
         new OpenTargetContainer(cont).run(gui);
         TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont,new HashSet<>(Arrays.asList(item)), null);
         tifc.minSize = left.get();

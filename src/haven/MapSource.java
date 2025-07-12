@@ -26,6 +26,9 @@
 
 package haven;
 
+import nurgling.NUtils;
+import nurgling.widgets.NMapWnd;
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
@@ -47,6 +50,13 @@ public interface MapSource {
 		return(null);
 	    img = ir.img;
 	    texes[t] = img;
+	}
+	if(NUtils.getGameUI()!=null && img!=null && !NUtils.getGameUI().mapfile.searchPattern.isEmpty())
+	{
+		NMapWnd mpwnd = NUtils.getGameUI().mapfile;
+		Tileset set = m.tileset(t);
+		if(set.getres().name.contains(mpwnd.searchPattern))
+			return mpwnd.searchRes.img;
 	}
 	return(img);
     }

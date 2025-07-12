@@ -46,11 +46,11 @@ public class TESTLiftDrop extends Test
 //        new PathFinder ( cistern ).run(gui);
 //        NUtils.activateGob ( cistern );
 //        NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 7));
-//        new FindPlaceAndAction(trough, NArea.findSpec("trough")).run(gui);
+//        new FindPlaceAndAction(trough, NContext.findSpec("trough")).run(gui);
 //        new LiftObject(trough).run(gui);
 //        new PathFinder ( cistern ).run(gui);
 //        NUtils.activateGob ( cistern );
 //        NUtils.getUI().core.addTask(new ChangeModelAtrib(trough, 0));
-//        new FindPlaceAndAction(trough, NArea.findSpec("trough")).run(gui);
+//        new FindPlaceAndAction(trough, NContext.findSpec("trough")).run(gui);
     }
 }

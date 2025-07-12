@@ -6,7 +6,9 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.*;
+import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -23,14 +25,14 @@ public class TarkilnAction implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
 
         NArea.Specialisation tarkilnsa = new NArea.Specialisation(Specialisation.SpecName.tarkiln.toString());
-        NArea area = NArea.findSpec(tarkilnsa);
+        NArea area = NContext.findSpec(tarkilnsa);
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(tarkilnsa);
 
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         Context context = new Context();
 
-        NArea npile_area = NArea.findOut(new NAlias("coal"),1);
+        NArea npile_area = NContext.findOut(new NAlias("Coal"),1);
         Pair<Coord2d,Coord2d> pile_area = npile_area!=null?npile_area.getRCArea():null;
         if(pile_area==null)
         {
@@ -47,6 +49,7 @@ public class TarkilnAction implements Action {
         if(new Validator(req, opt).run(gui).IsSuccess())
         {
             ArrayList<Gob> tarkilns = Finder.findGobs(area, new NAlias("gfx/terobjs/tarkiln"));
+            tarkilns.sort(NUtils.d_comp);
             ArrayList<Gob> forRemove = new ArrayList<>();
             for(Gob tarkiln : tarkilns) {
                 if((tarkiln.ngob.getModelAttribute()&4)!=0)
@@ -57,12 +60,15 @@ public class TarkilnAction implements Action {
             for(Gob tarkiln : tarkilns) {
                 new CollectFromGob(tarkiln, "Collect coal", "gfx/borka/bushpickan", true, new Coord(1, 1), 8, new NAlias("Coal"), pile_area).run(gui);
             }
-            new TransferToPiles(pile_area, new NAlias("Coal")).run(gui);
+            new FreeInventory(context).run(gui);
 
             if(!new FillFuelTarkilns(tarkilns,insa.getRCArea()).run(gui).IsSuccess())
                 return Results.FAIL();
-
-            new LightGob(tarkilns,16).run(gui);
+            ArrayList<Long> flighted = new ArrayList<>();
+            for (Gob cont : tarkilns) {
+                flighted.add(cont.id);
+            }
+            new LightGob(flighted,16).run(gui);
         }
 
         return Results.SUCCESS();

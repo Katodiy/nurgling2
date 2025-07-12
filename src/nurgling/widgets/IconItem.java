@@ -29,8 +29,9 @@ public class IconItem extends Widget
 
     String name;
 
-    public IconItem(String name, BufferedImage img)
+    public IconItem(String name, BufferedImage img, Widget parent)
     {
+        this.parent = parent;
         this.name = name;
         tip = new TexI(RichText.render(name).img);
 
@@ -106,28 +107,43 @@ public class IconItem extends Widget
 
     }
 
-    final ArrayList<String> opt = new ArrayList<String>(){
-        {
-            add("Threshold");
-            add("Delete");
-            add("Mark as barter");
-            add("Mark as barrel");
-        }
-    };
-
-    final ArrayList<String> uopt = new ArrayList<String>(){
-        {
-            add("Threshold");
-            add("Delete");
-            add("Unmark");
-        }
-    };
-
     NFlowerMenu menu;
 
     public void opts( Coord c ) {
         if(menu == null) {
-            menu = new NFlowerMenu((type==NArea.Ingredient.Type.CONTAINER)?opt.toArray(new String[0]):uopt.toArray(new String[0])) {
+            String[] opts = null;
+            if(type==NArea.Ingredient.Type.CONTAINER)
+            {
+                ArrayList<String> opt = new ArrayList<String>() {
+                    {
+                        if (parent instanceof IngredientContainer || parent instanceof DropContainer)
+                            add("Threshold");
+                        add("Delete");
+                        if (parent instanceof IngredientContainer) {
+                            add("Mark as barter");
+                            add("Mark as barrel");
+                        }
+                    }
+                };
+                opts = opt.toArray(new String[0]);
+            }
+            else
+            {
+                ArrayList<String> uopt = new ArrayList<String>(){
+                    {
+                        if(parent instanceof IngredientContainer || parent instanceof DropContainer) {
+                            add("Threshold");
+                        }
+                        add("Delete");
+                        if(parent instanceof IngredientContainer) {
+                            add("Unmark");
+                        }
+                    }
+                };
+                opts = uopt.toArray(new String[0]);
+            }
+            menu = new NFlowerMenu(opts) {
+
                 public boolean mousedown(MouseDownEvent ev) {
                     if(super.mousedown(ev))
                         nchoose(null);
@@ -159,7 +175,7 @@ public class IconItem extends Widget
                         }
                         else if(option.name.equals("Delete"))
                         {
-                            ((IngredientContainer)IconItem.this.parent).delete(IconItem.this.name);
+                            ((BaseIngredientContainer)IconItem.this.parent).delete(IconItem.this.name);
                         }
                         else if(option.name.equals("Mark as barter"))
                         {
@@ -178,6 +194,7 @@ public class IconItem extends Widget
                 }
 
             };
+            menu.shiftMode = true;
             Widget par = parent;
             Coord pos = IconItem.this.c.add(UI.scale(60,60));
             while(par!=null && !(par instanceof GameUI))
@@ -211,7 +228,10 @@ public class IconItem extends Widget
                         IconItem.this.isThreshold = true;
                         IconItem.this.val = Integer.valueOf(te.text());
                         IconItem.this.q = new TexI(NStyle.iiqual.render(te.text()).img);
-                        ((IngredientContainer)IconItem.this.parent).setThreshold(IconItem.this.name,IconItem.this.val);
+                        if(IconItem.this.parent instanceof IngredientContainer)
+                            ((IngredientContainer)IconItem.this.parent).setThreshold(IconItem.this.name,IconItem.this.val);
+                        else
+                            ((DropContainer)IconItem.this.parent).setThreshold(IconItem.this.name,IconItem.this.val);
                     }
                     catch (NumberFormatException e)
                     {

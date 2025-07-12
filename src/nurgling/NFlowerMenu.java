@@ -1,7 +1,9 @@
 package nurgling;
 
 import haven.*;
+import nurgling.actions.AutoDrink;
 import nurgling.actions.bots.*;
+import nurgling.areas.NContext;
 import nurgling.widgets.NProspecting;
 
 import java.util.*;
@@ -19,7 +21,7 @@ public class NFlowerMenu extends FlowerMenu
     public NPetal[] nopts;
 
     int len = 0;
-    boolean shiftMode = false;
+    public boolean shiftMode = false;
     public NFlowerMenu(String[] opts)
     {
         super();
@@ -43,7 +45,7 @@ public class NFlowerMenu extends FlowerMenu
     @Override
     public void tick(double dt) {
         super.tick(dt);
-        if(!shiftMode && (Boolean) NConfig.get(NConfig.Key.asenable)) {
+        if(!shiftMode && (Boolean) NConfig.get(NConfig.Key.asenable) && !NContext.waitBot.get()) {
             if ((Boolean) NConfig.get(NConfig.Key.singlePetal) && nopts.length == 1 && (NUtils.getUI().core.getLastActions()==null || NUtils.getUI().core.getLastActions().item == null)) {
                 nchoose(nopts[0]);
             } else {

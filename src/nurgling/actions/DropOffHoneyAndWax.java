@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitBucketInHandContentQuantityChange;
 import nurgling.tasks.WaitItemInEquip;
 import nurgling.tools.Context;
@@ -43,7 +44,7 @@ public class DropOffHoneyAndWax implements Action {
     }
 
     private void dropOffWax(Container container, NGameUI gui) throws InterruptedException {
-        new PathFinder(container.gob).run(gui);
+        new PathFinder(Finder.findGob(container.gobid)).run(gui);
         new OpenTargetContainer(container).run(gui);
         new SimpleTransferToContainer(gui.getInventory(container.cap), gui.getInventory().getItems(new NAlias("Beeswax"))).run(gui);
         new SimpleTransferToContainer(gui.getInventory(container.cap), gui.getInventory().getItems(new NAlias("Bee Larvae"))).run(gui);
@@ -57,6 +58,10 @@ public class DropOffHoneyAndWax implements Action {
         if (bucket == null) bucket = NUtils.getEquipment().findBucket("Honey");
         if (bucket == null) return;
 
+        if(NUtils.getContentsOfBucket(bucket).isEmpty()) {
+            return;
+        }
+
         NUtils.takeItemToHand(bucket);
         NUtils.activateItem(target);
 
@@ -67,16 +72,20 @@ public class DropOffHoneyAndWax implements Action {
     }
 
     private Results storeBucketBack(NGameUI gui) throws InterruptedException {
-        Container bucketContainer = findContainer(NArea.findOut("Bucket", 1));
+        Container bucketContainer = findContainer(NContext.findOut("Bucket", 1));
         if (bucketContainer == null)
             return Results.SUCCESS(); // no container — just finish
 
-        new PathFinder(bucketContainer.gob).run(gui);
+        new PathFinder(Finder.findGob(bucketContainer.gobid)).run(gui);
         new OpenTargetContainer(bucketContainer).run(gui);
 
         WItem lhand = NUtils.getEquipment().findItem(NEquipory.Slots.HAND_LEFT.idx);
+        WItem rhand = NUtils.getEquipment().findItem(NEquipory.Slots.HAND_RIGHT.idx);
         if (lhand != null) {
             NUtils.takeItemToHand(lhand);
+            gui.getInventory(bucketContainer.cap).dropOn(gui.getInventory(bucketContainer.cap).findFreeCoord(getGameUI().vhand));
+        } else if (rhand != null) {
+            NUtils.takeItemToHand(rhand);
             gui.getInventory(bucketContainer.cap).dropOn(gui.getInventory(bucketContainer.cap).findFreeCoord(getGameUI().vhand));
         }
 
@@ -88,10 +97,7 @@ public class DropOffHoneyAndWax implements Action {
         if (area == null) return null;
         ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
         for (Gob gob : gobs) {
-            Container container = new Container();
-            container.gob = gob;
-            container.cap = Context.contcaps.get(gob.ngob.name);
-            return container;
+            return new Container(gob,Context.contcaps.get(gob.ngob.name));
         }
         return null;
     }

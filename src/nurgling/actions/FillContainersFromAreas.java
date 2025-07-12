@@ -1,20 +1,14 @@
 package nurgling.actions;
 
 import haven.Coord;
-import haven.Gob;
-import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
-import nurgling.areas.NArea;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
-import java.io.InterruptedIOException;
-import java.lang.annotation.Target;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class FillContainersFromAreas implements Action
 {
@@ -49,7 +43,7 @@ public class FillContainersFromAreas implements Action
                     else {
                         for (Container container : context.icontainers) {
                             if (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.TargetItems.class).getTargets(transferedItems) > 0) {
-                                new PathFinder(container.gob).run(gui);
+                                new PathFinder(Finder.findGob(container.gobid)).run(gui);
                                 new OpenTargetContainer(container).run(gui);
                                 TakeAvailableItemsFromContainer tifc = new TakeAvailableItemsFromContainer(container, transferedItems, target_size);
                                 tifc.run(gui);
@@ -63,7 +57,7 @@ public class FillContainersFromAreas implements Action
                     if (gui.getInventory().getItems(transferedItems).isEmpty())
                         return Results.ERROR("NO ITEMS");
                 }
-                TransferToContainer ttc = new TransferToContainer(context, cont, transferedItems);
+                TransferToContainer ttc = new TransferToContainer(cont, transferedItems);
                 ttc.run(gui);
                 new CloseTargetContainer(cont).run(gui);
             }

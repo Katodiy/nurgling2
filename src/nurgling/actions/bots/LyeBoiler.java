@@ -7,6 +7,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForFirstBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
@@ -32,13 +33,11 @@ public class LyeBoiler implements Action {
         if (new Validator(req, opt).run(gui).IsSuccess()) {
 
 
-            NArea cauldrons = NArea.findSpec(Specialisation.SpecName.boiler.toString());
+            NArea cauldrons = NContext.findSpec(Specialisation.SpecName.boiler.toString());
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob cm : Finder.findGobs(cauldrons, new NAlias("gfx/terobjs/cauldron"))) {
-                Container cand = new Container();
-                cand.gob = cm;
-                cand.cap = cap;
+                Container cand = new Container(cm, cap);
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -55,12 +54,12 @@ public class LyeBoiler implements Action {
 
             ArrayList<Gob> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gob);
+                lighted.add(Finder.findGob(cont.gobid));
             }
 
             Results res = null;
             Context icontext = new Context();
-            Pair<Coord2d, Coord2d> area = NArea.findIn(new NAlias("Ashes")).getRCArea();
+            Pair<Coord2d, Coord2d> area = NContext.findIn(new NAlias("Ashes")).getRCArea();
             if (area == null) {
                 return Results.ERROR("Ashes not found");
             }
@@ -81,18 +80,18 @@ public class LyeBoiler implements Action {
                     ArrayList<Container> forFuel = new ArrayList<>();
                     for (Container container : containers) {
                         Container.Space space = container.getattr(Container.Space.class);
-                        if (!space.isEmpty() && (container.gob.ngob.getModelAttribute() & 1) != 1)
+                        if (!space.isEmpty() && (Finder.findGob(container.gobid).ngob.getModelAttribute() & 1) != 1)
                             forFuel.add(container);
                     }
 
-                    new FillFluid(containers, NArea.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
+                    new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 4).run(gui);
                     if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
                         return Results.ERROR("NO FUEL");
 
-                    ArrayList<Gob> flighted = new ArrayList<>();
+                    ArrayList<Long> flighted = new ArrayList<>();
                     for (Container cont : containers) {
-                        if (((cont.gob.ngob.getModelAttribute() & 1) == 1) && (cont.gob.ngob.getModelAttribute() & 2) != 2)
-                            flighted.add(cont.gob);
+                        if (((Finder.findGob(cont.gobid).ngob.getModelAttribute() & 1) == 1) && (Finder.findGob(cont.gobid).ngob.getModelAttribute() & 2) != 2)
+                            flighted.add(cont.gobid);
                     }
                     new LightGob(flighted, 2).run(gui);
                 }

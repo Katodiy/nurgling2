@@ -4,11 +4,15 @@ import haven.Coord;
 import haven.Gob;
 import haven.Inventory;
 import haven.WItem;
+import haven.res.ui.tt.leashed.Leashed;
+import nurgling.NConfig;
+import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Results;
 import nurgling.overlays.NCustomResult;
+import nurgling.tasks.NTask;
 import nurgling.tasks.WaitPose;
 import nurgling.tasks.WaitPoseOrMsg;
 import nurgling.tools.Finder;
@@ -17,7 +21,10 @@ import nurgling.tools.NAlias;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static nurgling.NUtils.getGameUI;
+
 public class FeedClover implements Action {
+    static ArrayList<Long> feeded = new ArrayList<>();
     NAlias krtters =new NAlias(new ArrayList<String>(Arrays.asList("horse", "cattle", "boar", "goat", "sheep")), new ArrayList<String>(Arrays.asList("stallion", "mare")));
     NAlias clover = new NAlias("Clover");
     @Override
@@ -27,27 +34,47 @@ public class FeedClover implements Action {
         {
             return Results.ERROR("No clover");
         }
-        Coord pos = item.c.div(Inventory.sqsz);
         NUtils.takeItemToHand(item);
-        Gob gob = Finder.findGob(krtters);
+        Gob gob = Finder.findGob(krtters, feeded);
         if(gob!=null) {
             NUtils.activateItem(gob, false);
             WaitPoseOrMsg wpom1 = new WaitPoseOrMsg(NUtils.player(),"gfx/borka/animaltease", new NAlias("The animal eye"));
             NUtils.addTask(wpom1);
             if(wpom1.isError())
             {
-                gui.getInventory().dropOn(pos, clover);
+                gui.getInventory().dropOn(gui.getInventory().findFreeCoord(getGameUI().vhand));
             }
             else {
                 WaitPoseOrMsg wpom2 = new WaitPoseOrMsg(NUtils.player(), "gfx/borka/idle", new NAlias("The animal loses"));
                 NUtils.addTask(wpom2);
                 if (wpom2.isError()) {
-                    gui.getInventory().dropOn(pos, clover);
+                    gui.getInventory().dropOn(gui.getInventory().findFreeCoord(getGameUI().vhand));
                     NUtils.player().addcustomol(new NCustomResult(NUtils.player(), "fail"));
                 } else {
                     gob.addcustomol(new NCustomResult(gob, "success"));
+                    if((Boolean) NConfig.get(NConfig.Key.ropeAfterFeeding))
+                    {
+                        WItem rope = gui.getInventory().getItem(new NAlias("Rope"), Leashed.class);
+                        if(rope!=null)
+                        {
+                            NUtils.takeItemToHand(rope);
+                            NUtils.activateItem(gob, false);
+                            NUtils.addTask(new NTask() {
+                                @Override
+                                public boolean check() {
+                                    if(getGameUI().vhand!=null)
+                                    {
+                                        return (((NGItem)getGameUI().vhand.item).getInfo(Leashed.class)!=null);
+                                    }
+                                    return false;
+                                }
+                            });
+                            gui.getInventory().dropOn(gui.getInventory().findFreeCoord(getGameUI().vhand));
+                        }
+                    }
                 }
             }
+            feeded.add(gob.id);
         }
 
         return Results.SUCCESS();

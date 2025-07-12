@@ -60,13 +60,15 @@ public class DBPoolManager {
     }
 
     public Future<?> submitTask(Runnable task) {
-        return executorService.submit(() -> {
-            try {
-                task.run();
-            } finally {
-                // Освобождаем ресурсы, если необходимо
-            }
-        });
+        synchronized (executorService) {
+            return executorService.submit(() -> {
+                try {
+                    task.run();
+                } finally {
+                    // Освобождаем ресурсы, если необходимо
+                }
+            });
+        }
     }
 
     public synchronized void shutdown() {

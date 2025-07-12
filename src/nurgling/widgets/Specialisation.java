@@ -1,6 +1,5 @@
 package nurgling.widgets;
 
-import com.jcraft.jorbis.Comment;
 import haven.*;
 import haven.Label;
 import haven.Window;
@@ -11,7 +10,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.*;
 
 public class Specialisation extends Window
 {
@@ -33,7 +31,9 @@ public class Specialisation extends Window
         swill,
         trough,
         crop,
+        cropQ,
         seed,
+        seedQ,
         cows,
         sheeps,
         pigs,
@@ -53,8 +53,32 @@ public class Specialisation extends Window
         tanning,
         logs,
         smokshed,
-        tarkiln, boneforash, blockforash, readyHides, crucibles, chicken, incubator,
-        pickling_general, pickling_juice
+        pickling_general, pickling_juice,
+        tarkiln,
+        boneforash,
+        blockforash,
+        readyHides,
+        crucibles,
+        chicken,
+        incubator,
+        bed,
+        eat,
+        safe,
+        sorting,
+        fforge,
+        anvil,
+        rabbit,
+        rabbitIncubator,
+        dreamcatcher,
+        meatgrinder,
+        loom,
+        ropewalk,
+        crucible,
+        pow,
+        cauldron,
+        potterswheel,
+        barrelworkarea,
+        churn, deer, sswheel
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -68,7 +92,9 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.swill.toString(),"Swill",Resource.loadsimg("nurgling/categories/swill")));
         specialisation.add(new SpecialisationItem(SpecName.trough.toString(),"Trough for swill",Resource.loadsimg("nurgling/categories/trough")));
         specialisation.add(new SpecialisationItem(SpecName.crop.toString(),"Crop",Resource.loadsimg("nurgling/categories/crop")));
+        specialisation.add(new SpecialisationItem(SpecName.cropQ.toString(),"Crop Quality",Resource.loadsimg("nurgling/categories/crop")));
         specialisation.add(new SpecialisationItem(SpecName.seed.toString(),"Seeds of crop",Resource.loadsimg("nurgling/categories/seed")));
+        specialisation.add(new SpecialisationItem(SpecName.seedQ.toString(),"Seeds of crop quality",Resource.loadsimg("nurgling/categories/seed")));
         specialisation.add(new SpecialisationItem(SpecName.cows.toString(),"Cows",Resource.loadsimg("nurgling/categories/cows")));
         specialisation.add(new SpecialisationItem(SpecName.goats.toString(),"Goats",Resource.loadsimg("nurgling/categories/goats")));
         specialisation.add(new SpecialisationItem(SpecName.sheeps.toString(),"Sheep",Resource.loadsimg("nurgling/categories/sheeps")));
@@ -93,9 +119,29 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.boneforash.toString(),"Bones for Ash",Resource.loadsimg("nurgling/categories/boneash")));
         specialisation.add(new SpecialisationItem(SpecName.blockforash.toString(),"Block for Ash",Resource.loadsimg("nurgling/categories/block")));
         specialisation.add(new SpecialisationItem(SpecName.chicken.toString(),"Chicken",Resource.loadsimg("nurgling/categories/chicken")));
+        specialisation.add(new SpecialisationItem(SpecName.rabbit.toString(),"Rabbit",Resource.loadsimg("nurgling/categories/rabbit_buck")));
         specialisation.add(new SpecialisationItem(SpecName.incubator.toString(),"Chick Incubator",Resource.loadsimg("nurgling/categories/cincub")));
         specialisation.add(new SpecialisationItem(SpecName.pickling_general.toString(),"Pickling",Resource.loadsimg("nurgling/categories/cincub")));
         specialisation.add(new SpecialisationItem(SpecName.pickling_juice.toString(),"Pickling juice",Resource.loadsimg("nurgling/categories/cincub")));
+        specialisation.add(new SpecialisationItem(SpecName.bed.toString(),"Bed",Resource.loadsimg("nurgling/categories/bed")));
+        specialisation.add(new SpecialisationItem(SpecName.eat.toString(),"Eating area",Resource.loadsimg("nurgling/categories/eat")));
+        specialisation.add(new SpecialisationItem(SpecName.rabbitIncubator.toString(),"Rabbit Incubator",Resource.loadsimg("nurgling/categories/bunny")));
+        specialisation.add(new SpecialisationItem(SpecName.safe.toString(),"Safe area",Resource.loadsimg("nurgling/categories/safety")));
+        specialisation.add(new SpecialisationItem(SpecName.sorting.toString(),"Sorting area",Resource.loadsimg("nurgling/categories/sorting")));
+        specialisation.add(new SpecialisationItem(SpecName.fforge.toString(),"Finery Forge",Resource.loadsimg("nurgling/categories/fineryforge")));
+        specialisation.add(new SpecialisationItem(SpecName.anvil.toString(),"Anvil",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.dreamcatcher.toString(),"Dream Catcher",Resource.loadsimg("nurgling/categories/dream-catcher")));
+        specialisation.add(new SpecialisationItem(SpecName.meatgrinder.toString(),"Meat Grinder",Resource.loadsimg("nurgling/categories/meat_grinder")));
+        specialisation.add(new SpecialisationItem(SpecName.churn.toString(),"Churn",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.loom.toString(),"Loom",Resource.loadsimg("nurgling/categories/loom")));
+        specialisation.add(new SpecialisationItem(SpecName.ropewalk.toString(),"Rope Walk",Resource.loadsimg("nurgling/categories/rope_walk")));
+        specialisation.add(new SpecialisationItem(SpecName.crucible.toString(),"Crucible",Resource.loadsimg("nurgling/categories/crucible")));
+        specialisation.add(new SpecialisationItem(SpecName.pow.toString(),"Fire Place",Resource.loadsimg("nurgling/categories/fire_place")));
+        specialisation.add(new SpecialisationItem(SpecName.potterswheel.toString(),"Potters Wheel",Resource.loadsimg("nurgling/categories/potters_wheel")));
+        specialisation.add(new SpecialisationItem(SpecName.barrelworkarea.toString(),"Craft area with barrels",Resource.loadsimg("nurgling/categories/barrel_work_area")));
+        specialisation.add(new SpecialisationItem(SpecName.deer.toString(),"Deer",Resource.loadsimg("nurgling/categories/reindeers")));
+        specialisation.add(new SpecialisationItem(SpecName.sswheel.toString(),"Spininng Wheel",Resource.loadsimg("nurgling/categories/swheel")));
+
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
             public int compare(SpecialisationItem o1, SpecialisationItem o2) {

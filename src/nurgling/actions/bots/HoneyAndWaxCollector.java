@@ -6,6 +6,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.routes.Route;
 import nurgling.tasks.*;
 import nurgling.tools.Container;
@@ -67,7 +68,7 @@ public class HoneyAndWaxCollector implements Action {
         // If no bucket, fetch one from container
         if (needToFindBucket) {
             getGameUI().msg("Looking for bucket container!");
-            Container bucketContainer = findContainer(NArea.findOut("Bucket", 1));
+            Container bucketContainer = findContainer(NContext.findOut("Bucket", 1));
             if (bucketContainer == null) {
                 getGameUI().msg("No bucket container found!");
                 return Results.FAIL();
@@ -76,14 +77,14 @@ public class HoneyAndWaxCollector implements Action {
         }
 
         // Find Honey Barrel
-        honeyBarrel = findBarrel(NArea.findSpec(new NArea.Specialisation(Specialisation.SpecName.barrel.toString(), "Honey")));
+        honeyBarrel = findBarrel(NContext.findSpec(new NArea.Specialisation(Specialisation.SpecName.barrel.toString(), "Honey")));
         if (honeyBarrel == null) {
             getGameUI().msg("No honey barrel found!");
             return Results.FAIL();
         }
 
         // Find Wax Container
-        waxContainer = findContainer(NArea.findOut("Beeswax", 1));
+        waxContainer = findContainer(NContext.findOut("Beeswax", 1));
         if (waxContainer == null) {
             getGameUI().msg("No wax container found!");
             return Results.FAIL();
@@ -137,16 +138,13 @@ public class HoneyAndWaxCollector implements Action {
         if (area == null) return null;
         ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
         for (Gob gob : gobs) {
-            Container container = new Container();
-            container.gob = gob;
-            container.cap = Context.contcaps.get(gob.ngob.name);
-            return container;
+            return new Container(gob,Context.contcaps.get(gob.ngob.name));
         }
         return null;
     }
 
     private void takeBucketFromContainer(Container container, NGameUI gui) throws InterruptedException {
-        new PathFinder(container.gob).run(gui);
+        new PathFinder(Finder.findGob(container.gobid)).run(gui);
         new OpenTargetContainer(container).run(gui);
         new EquipFromInventory(new NAlias("bucket"), gui.getInventory(container.cap)).run(gui);
         new CloseTargetContainer(container).run(gui);

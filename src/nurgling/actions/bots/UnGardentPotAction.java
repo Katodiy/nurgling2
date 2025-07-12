@@ -6,6 +6,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
@@ -31,13 +32,11 @@ public class UnGardentPotAction implements Action {
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
 
-            NArea kilns = NArea.findSpec(Specialisation.SpecName.kiln.toString());
+            NArea kilns = NContext.findSpec(Specialisation.SpecName.kiln.toString());
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob sm : Finder.findGobs(kilns, new NAlias("gfx/terobjs/kiln"))) {
-                Container cand = new Container();
-                cand.gob = sm;
-                cand.cap = "Kiln";
+                Container cand = new Container(sm, "Kiln");
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -53,17 +52,15 @@ public class UnGardentPotAction implements Action {
                 containers.add(cand);
             }
 
-            ArrayList<Gob> lighted = new ArrayList<>();
+            ArrayList<Long> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gob);
+                lighted.add(cont.gobid);
             }
 
             Context icontext = new Context();
-            for (NArea area : NArea.findAllIn(new NAlias("Unfired Garden Pot"))) {
+            for (NArea area : NContext.findAllIn(new NAlias("Unfired Garden Pot"))) {
                 for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-                    Container cand = new Container();
-                    cand.gob = sm;
-                    cand.cap = Context.contcaps.get(cand.gob.ngob.name);
+                    Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
                     cand.initattr(Container.Space.class);
                     cand.initattr(Container.TargetItems.class);
                     cand.getattr(Container.TargetItems.class).addTarget("Unfired Garden Pot");
@@ -85,9 +82,9 @@ public class UnGardentPotAction implements Action {
                 }
                 new FuelToContainers(forFuel).run(gui);
 
-                ArrayList<Gob> flighted = new ArrayList<>();
+                ArrayList<Long> flighted = new ArrayList<>();
                 for (Container cont : forFuel) {
-                    flighted.add(cont.gob);
+                    flighted.add(cont.gobid);
                 }
                 if (!new LightGob(flighted, 1).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");

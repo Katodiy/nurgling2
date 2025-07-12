@@ -219,17 +219,16 @@ public class NCatSelection extends Window {
         // Метод для добавления в IN
         private void addToInput() {
             for (JSONObject obj : VSpec.categories.get(category.getName())) {
-                NUtils.getGameUI().areas.in_items.addItem(obj.getString("name"), obj);
+                NUtils.getGameUI().areas.in_items.addItem(obj.getString("name"), new JSONObject(obj.toString()));
             }
         }
 
         // Метод для добавления в OUT
         private void addToOutput() {
             for (JSONObject obj : VSpec.categories.get(category.getName())) {
-                NUtils.getGameUI().areas.out_items.addItem(obj.getString("name"), obj);
+                NUtils.getGameUI().areas.out_items.addItem(obj.getString("name"), new JSONObject(obj.toString()));
             }
         }
-
     }
 
     public class ElementList extends SListBox<Element, Widget> {
@@ -298,13 +297,13 @@ public class NCatSelection extends Window {
         // Метод для добавления в IN
         private void addToInput() {
             if(NUtils.getGameUI().areas.al.sel.area!=null)
-                NUtils.getGameUI().areas.in_items.addItem(element.name, element.res);
+                NUtils.getGameUI().areas.in_items.addItem(element.name, new JSONObject(element.res.toString()));
         }
 
         // Метод для добавления в OUT
         private void addToOutput() {
             if(NUtils.getGameUI().areas.al.sel.area!=null)
-                NUtils.getGameUI().areas.out_items.addItem(element.name, element.res);
+                NUtils.getGameUI().areas.out_items.addItem(element.name, new JSONObject(element.res.toString()));
         }
         @Override
         public void draw(GOut g) {
