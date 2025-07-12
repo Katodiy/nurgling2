@@ -82,6 +82,7 @@ public class StackSupporter {
         size4.add("Bone Material");
         size4.add("Coal");
         size4.add("Wool");
+        size4.add("Leaf");
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();

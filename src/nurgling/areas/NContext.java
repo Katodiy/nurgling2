@@ -59,6 +59,7 @@ public class NContext {
         contcaps.put("gfx/terobjs/furn/table-cottage", "Table");
         contcaps.put("gfx/terobjs/map/jotunclam", "Jotun Clam");
         contcaps.put("gfx/terobjs/studydesk", "Study Desk");
+        contcaps.put("gfx/terobjs/htable", "Herbalist Table");
     }
 
     public static HashMap<String, String> customTool = new HashMap<>();
