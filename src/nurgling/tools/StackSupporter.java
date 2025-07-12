@@ -183,7 +183,7 @@ public class StackSupporter {
         {
             NAlias same = new NAlias(VSpec.getCategoryContent(cat));
             same.keys.removeAll(items.keys);
-            if(!inv.getItems(same).isEmpty())
+            if(!same.keys.isEmpty() && !inv.getItems(same).isEmpty())
                 return true;
         }
         return false;

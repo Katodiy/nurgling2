@@ -40,7 +40,7 @@ public class TransferToPiles implements Action{
         if (!(witems = gui.getInventory().getItems(items,th)).isEmpty() ) {
                 Gob target = null;
                 for (Gob gob : Finder.findGobs(out, pileName = getStockpileName(items))) {
-                    if (gob.ngob.getModelAttribute() != 31) {
+                    while (gob.ngob.getModelAttribute() != 31) {
                         if(PathFinder.isAvailable(gob)) {
                             target = gob;
                             PathFinder pf = new PathFinder(target);
@@ -76,12 +76,18 @@ public class TransferToPiles implements Action{
                     if(!(pm = new PileMaker(out, items, pileName)).run(gui).IsSuccess())
                         return Results.FAIL();
                     Gob pile = pm.getPile();
-                    witems = gui.getInventory().getItems(items,th);
-                    int size = witems.size();
-                    new OpenTargetContainer("Stockpile", pile).run(gui);
-                    int target_size = Math.min(size, gui.getStockpile().getFreeSpace());
-                    if(target_size>0) {
-                        transfer(gui, target_size);
+                    while (pile.ngob.getModelAttribute() != 31) {
+                        witems = gui.getInventory().getItems(items, th);
+                        int size = witems.size();
+                        new OpenTargetContainer("Stockpile", pile).run(gui);
+                        int target_size = Math.min(size, gui.getStockpile().getFreeSpace());
+                        if (target_size > 0) {
+                            transfer(gui, target_size);
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -122,7 +128,7 @@ public class TransferToPiles implements Action{
 
 
     NAlias getStockpileName(NAlias items) {
-        if (NParser.checkName(items.getDefault(), new NAlias("soil"))) {
+        if (NParser.checkName(items.getDefault(), new NAlias("Soil"))) {
             return new NAlias("gfx/terobjs/stockpile-soil");
         } else if (NParser.checkName(items.getDefault(), new NAlias("board"))) {
             return new NAlias("gfx/terobjs/stockpile-board");
