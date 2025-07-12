@@ -126,7 +126,7 @@ public class QoL extends Panel {
             NUtils.getUI().core.debug = debug.a;
 
         if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
-            NUtils.showHideNature();
+//            NUtils.showHideNature();
         }
         NConfig.needUpdate();
     }
