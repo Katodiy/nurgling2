@@ -19,7 +19,12 @@ public class AnimalIsDead extends NTask
     @Override
     public boolean check()
     {
-        if(animal.pose()!=null && NParser.checkName(animal.pose(), "knock")) {
+        String pose = animal.pose();
+        boolean checked_name = false;
+        if(pose != null)
+            checked_name = NParser.checkName(animal.pose(), "knock");
+        //дохлые бараны не поднимаются из-за этого чека
+        if(checked_name) {
             res = true;
             return true;
         }

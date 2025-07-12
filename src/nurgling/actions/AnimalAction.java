@@ -85,6 +85,7 @@ public class AnimalAction <C extends Entry> implements Action {
         while (!res) {
             new DynamicPf(target).run(gui);
             new SelectFlowerAction("Slaughter", target).run(gui);
+            Thread.sleep(1000);
             AnimalIsDead aid = new AnimalIsDead(target);
             NUtils.getUI().core.addTask(aid);
             res = aid.getRes();

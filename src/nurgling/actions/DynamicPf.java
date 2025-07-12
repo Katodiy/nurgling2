@@ -80,7 +80,7 @@ public class DynamicPf implements Action
                 Coord2d targetCoord = Utils.pfGridToWorld(path.pop().pos);
                 gui.map.wdgmsg("click", Coord.z, targetCoord.floor(posres), 1, 0);
                 IsMoving im;
-                NUtils.getUI().core.addTask(im = new IsMoving(targetCoord, 20));
+                NUtils.getUI().core.addTask(im = new IsMoving(targetCoord, 20)); //!
                 if (im.getResult()) {
                     DynMovingCompleted dmc;
                     NUtils.getUI().core.addTask((dmc = new DynMovingCompleted(new WorkerPf(), target, targetCoord)));
@@ -92,7 +92,7 @@ public class DynamicPf implements Action
                     }
                 } else {
                     wpf = new WorkerPf();
-                    NUtils.getUI().core.addTask((new WaitPath(wpf)));
+                    NUtils.getUI().core.addTask((new WaitPath(wpf)));//
                     path = wpf.path;
                     updatePath(path, wpf,target);
                 }
