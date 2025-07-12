@@ -32,9 +32,7 @@ public class DeersAction implements Action {
                 public int compare(Gob o1, Gob o2) {
                     if (o1.getattr(CattleId.class) != null && o2.getattr(CattleId.class) != null) {
                         Teimdeer p1 = (Teimdeer) (NUtils.getAnimalEntity(o1, Teimdeer.class));
-                        ;
                         Teimdeer p2 = (Teimdeer) (NUtils.getAnimalEntity(o2, Teimdeer.class));
-                        ;
                         return Double.compare(p2.rang(), p1.rang());
                     }
                     return 0;

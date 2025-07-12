@@ -353,7 +353,7 @@ public class NBotsMenu extends Widget
                         {
                             st.interrupt();
                         }
-                    }
+                        }
                 }
             }, path);
             if(disStacks)

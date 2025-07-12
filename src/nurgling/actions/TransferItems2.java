@@ -78,26 +78,25 @@ public class TransferItems2 implements Action
         resitems.addAll(after);
         for(String item : resitems) {
             TreeMap<Double,String> areas = cnt.getOutAreas(item);
-            for (Double key : areas.descendingKeySet()) {
-                if(!NUtils.getGameUI().getInventory().getItems(new NAlias(item), key).isEmpty())
-                {
+            if(areas!=null) {
+                for (Double key : areas.descendingKeySet()) {
+                    if (!NUtils.getGameUI().getInventory().getItems(new NAlias(item), key).isEmpty()) {
 
-                    for (NContext.ObjectStorage output : cnt.getOutStorages(item,key))
-                    {
-                        if (output instanceof NContext.Pile) {
-                            new TransferToPiles(cnt.getRCArea(areas.get(key)), new NAlias(item), key.intValue()).run(gui);
-                        }
-                        if (output instanceof Container) {
-                            new TransferToContainer((Container) output, new NAlias(item), key.intValue()).run(gui);
-                        }
-                        if(output instanceof NContext.Barrel)
-                        {
-                            new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel),new NAlias(item)).run(gui);
-                        }
+                        for (NContext.ObjectStorage output : cnt.getOutStorages(item, key)) {
+                            if (output instanceof NContext.Pile) {
+                                new TransferToPiles(cnt.getRCArea(areas.get(key)), new NAlias(item), key.intValue()).run(gui);
+                            }
+                            if (output instanceof Container) {
+                                new TransferToContainer((Container) output, new NAlias(item), key.intValue()).run(gui);
+                            }
+                            if (output instanceof NContext.Barrel) {
+                                new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel), new NAlias(item)).run(gui);
+                            }
 //                        if (output instanceof NContext.Barter) {
 //                            if (((NContext.Barter) output).getArea() != null)
 //                                new TransferToBarter(((NContext.Barter) output), new NAlias(item), key.intValue()).run(gui);
 //                        }
+                        }
                     }
                 }
             }

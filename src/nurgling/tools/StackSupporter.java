@@ -100,6 +100,7 @@ public class StackSupporter {
         size5.add("Raw ");
         size5.add("Crab Meat");
         size5.add("Poultry");
+        size5.add("Soil");
 
         catSize.put(size5,5);
 

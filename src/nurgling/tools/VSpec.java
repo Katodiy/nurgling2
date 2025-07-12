@@ -1975,6 +1975,10 @@ public class VSpec {
         finerPlantFibres.add(new JSONObject("{\"static\":\"gfx/invobjs/hempfibre\",\"name\":\"Hemp Fibre\"}"));
         categories.put("Finer Plant Fibre", finerPlantFibres);
 
+        ArrayList<JSONObject> soil = new ArrayList<>();
+        soil.add(new JSONObject("{\"static\":\"gfx/invobjs/soil\",\"name\":\"Soil\"}"));
+        categories.put("Soil", soil);
+
         ArrayList<JSONObject> wickerItems = new ArrayList<>();
         wickerItems.add(new JSONObject("{\"static\":\"gfx/invobjs/branch\",\"name\":\"Branch\"}"));
         wickerItems.add(new JSONObject("{\"static\":\"gfx/invobjs/branch-olive\",\"name\":\"Olive Branch\"}"));
