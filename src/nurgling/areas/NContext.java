@@ -473,7 +473,7 @@ public class NContext {
             gui.msg(areaId + " Not found!");
             return;
         }
-        if((!area.isVisible() || area.getCenter2d().dist(NUtils.player().rc)>450) && rps.containsKey(areaId)) {
+        if((!area.isVisible() || area.getCenter2d() == null || area.getCenter2d().dist(NUtils.player().rc)>450) && rps.containsKey(areaId)) {
             new RoutePointNavigator(rps.get(areaId), area.id).run(gui);
         }
     }
