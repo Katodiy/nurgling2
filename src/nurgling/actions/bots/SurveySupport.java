@@ -41,7 +41,7 @@ public class SurveySupport implements Action
             if (!new RestoreResources().run(gui).IsSuccess()) {
                 return Results.FAIL();
             }
-            if(rp!=null && rp.toCoord2d(NUtils.getGameUI().map.glob.map)==null)
+            if(rp!=null && (rp.toCoord2d(NUtils.getGameUI().map.glob.map)==null || rp.toCoord2d(NUtils.getGameUI().map.glob.map).dist(NUtils.player().rc)>350))
                 new RoutePointNavigator(rp).run(gui);
             target = Finder.findGob(targetid);
             if(target == null)
