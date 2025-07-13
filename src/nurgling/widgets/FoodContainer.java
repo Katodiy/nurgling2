@@ -17,7 +17,7 @@ public class FoodContainer extends BaseIngredientContainer {
     }
 
     public JSONArray getFoodsJson() {
-        return jitems;
+        return new JSONArray(jitems);
     }
 
     public static ArrayList<String> getFoodNames() {
@@ -87,7 +87,13 @@ public class FoodContainer extends BaseIngredientContainer {
         icons.clear();
         jitems.clear();
 
-        jitems = new JSONArray((ArrayList<HashMap<String,Object>>) NConfig.get(NConfig.Key.eatingConf));
+        if(NConfig.get(NConfig.Key.eatingConf) instanceof JSONArray)
+        {
+            jitems = new JSONArray((JSONArray)NConfig.get(NConfig.Key.eatingConf));
+        }
+        else {
+            jitems = new JSONArray((ArrayList<HashMap<String, Object>>) NConfig.get(NConfig.Key.eatingConf));
+        }
 
         for (int i = 0; i < jitems.length(); i++) {
             addIcon(((JSONObject) jitems.get(i)));
