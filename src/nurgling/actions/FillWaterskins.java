@@ -46,7 +46,7 @@ public class FillWaterskins implements Action {
                     return Results.ERROR("no water area");
 
                 SelectArea insa;
-                NUtils.getGameUI().msg("Please, select area with cistern or barrel");
+                NUtils.getGameUI().msg("Please, select area with cistern, well or barrel");
                 (insa = new SelectArea(Resource.loadsimg("baubles/waterRefiller"))).run(gui);
                 area = insa.getRCArea();
             }
@@ -106,6 +106,12 @@ public class FillWaterskins implements Action {
 
     void refillItemInEquip(NGameUI gui, WItem item, Gob target) throws InterruptedException
     {
+        if(NParser.isIt(target,new NAlias("barrel")))
+        {
+            if(!NUtils.barrelHasContent(target) || !NParser.checkName(NUtils.getContentsOfBarrel(target), "water")) {
+                return;
+            }
+        }
         if(item!=null && item.item instanceof NGItem && NParser.checkName(((NGItem)item.item).name(), new NAlias("Waterskin", "Glass Jug"))) {
             NGItem ngItem = ((NGItem) item.item);
             if (ngItem.content().isEmpty()) {
