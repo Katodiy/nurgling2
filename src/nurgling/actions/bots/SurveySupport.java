@@ -46,9 +46,12 @@ public class SurveySupport implements Action
             target = Finder.findGob(targetid);
             if(target == null)
                 return Results.ERROR("Survey object not found");
-            new PathFinder(target.rc).run(gui);
-            NUtils.rclickGob(target);
-            NUtils.addTask(new WaitWindow("Land survey"));
+            if(NUtils.getGameUI().getWindow("Land survey") == null) {
+                leftover = null;
+                new PathFinder(target.rc).run(gui);
+                NUtils.rclickGob(target);
+                NUtils.addTask(new WaitWindow("Land survey"));
+            }
 
             Window wnd = NUtils.getGameUI().getWindow("Land survey");
             if (wnd != null) {
