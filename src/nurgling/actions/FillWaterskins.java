@@ -59,7 +59,21 @@ public class FillWaterskins implements Action {
         Gob target = null;
         if(area!=null)
         {
-            target = Finder.findGob(area,new NAlias("barrel", "cistern", "well"));
+            ArrayList<Gob> targets = Finder.findGobs(area,new NAlias("barrel", "cistern", "well"));
+            for(Gob cand: targets)
+            {
+                if(NParser.isIt(cand,new NAlias("barrel")))
+                {
+                    if(NUtils.barrelHasContent(cand) && NParser.checkName(NUtils.getContentsOfBarrel(cand), "water")) {
+                        target = cand;
+                        break;
+                    }
+                }
+                else {
+                    target = cand;
+                    break;
+                }
+            }
             if(target==null)
                 return Results.ERROR("No containers with water");
         }
