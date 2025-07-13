@@ -112,6 +112,8 @@ public class SurveySupport implements Action
                         return counter >= 360 || NUtils.getStamina() < 0.25 || NUtils.getEnergy() < 0.3;
                     }
                 });
+                if(NUtils.getStamina() < 0.25 || NUtils.getEnergy() < 0.3)
+                    leftover = null;
             }
         }
 
