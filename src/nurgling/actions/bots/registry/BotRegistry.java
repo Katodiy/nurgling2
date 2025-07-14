@@ -93,6 +93,10 @@ public class BotRegistry {
         bots.add(new BotDescriptor("bee", BotDescriptor.BotType.FARMING, "Beehive Manager", "Collects honey and wax from beehives.", true, true, HoneyAndWaxCollector.class, "bee", true));
         bots.add(new BotDescriptor("reindeers", BotDescriptor.BotType.FARMING, "Teimdeer Manager", "Manages teimdeer.", true, true, nurgling.actions.bots.DeersAction.class, "reindeers", false));
 
+        // Silk
+        bots.add(new BotDescriptor("silkmoth_egg", BotDescriptor.BotType.FARMING, "Move silkmoth eggs out of breeders", "Manages silkmoth eggs from breeders.", true, true, CollectAndMoveSilkwormEggs.class, "silkmoth_egg", false));
+        bots.add(new BotDescriptor("silkworm", BotDescriptor.BotType.FARMING, "Move silkworm from herbalist table to feeding area. Move silkmoth eggs to herbalist tables.", "Manages silkmoth eggs.", true, true, MoveEggsToHerbalistTablesAndMoveWorms.class, "silkworm", false));
+
         // FARMING QUALITY
         bots.add(new BotDescriptor("turnipq", BotDescriptor.BotType.FARMING_QUALITY, "Turnip Farmer Quality", "Automatically harvests and replants turnips in X*Y cell patches.", true, true, TurnipsFarmerQ.class, "turnipq", false));
         bots.add(new BotDescriptor("carrotq", BotDescriptor.BotType.FARMING_QUALITY, "Carrot Farmer Quality", "Automatically harvests and replants carrots in X*Y cell patches.", true, true, CarrotFarmerQ.class, "carrotq", false));
