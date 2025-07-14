@@ -1,9 +1,11 @@
 package nurgling.widgets.nsettings;
 
 import haven.*;
+import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.ActionWithFinal;
+import nurgling.actions.bots.RouteAutoRecorder;
 import nurgling.actions.bots.ScenarioRunner;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
@@ -156,20 +158,32 @@ public class ScenarioPanel extends Panel {
                             add(label, new Coord(labelX, labelY));
 
                             // Move Up button
-                            int upBtnX = sz.x - UI.scale(110);
-                            add(new Button(UI.scale(30), "↑", () -> {
-                                moveStep(step, -1);
-                            }), new Coord(upBtnX, (sz.y - UI.scale(28)) / 2));
+                            int upBtnX = sz.x - UI.scale(90);
+                            add(new IButton(NStyle.upSquareArrow[0].back, NStyle.upSquareArrow[1].back, NStyle.upSquareArrow[2].back) {
+                                @Override
+                                public void click() {
+                                    moveStep(step, -1);
+                                }
+
+                            }, new Coord(upBtnX, (sz.y - UI.scale(22)) / 2));
 
                             // Move Down button
-                            int downBtnX = sz.x - UI.scale(140);
-                            add(new Button(UI.scale(30), "↓", () -> {
-                                moveStep(step, 1);
-                            }), new Coord(downBtnX, (sz.y - UI.scale(28)) / 2));
+                            int downBtnX = sz.x - UI.scale(60);
 
-                            int removeBtnX = sz.x - UI.scale(80);
-                            add(new Button(UI.scale(70), "Remove", () -> {
-                                if (editingScenario != null) {
+                            add(new IButton(NStyle.downSquareArrow[0].back, NStyle.downSquareArrow[1].back, NStyle.downSquareArrow[2].back) {
+                                @Override
+                                public void click() {
+                                    moveStep(step, 1);
+                                }
+
+                            }, new Coord(downBtnX, (sz.y - UI.scale(22)) / 2));
+
+                            int removeBtnX = sz.x - UI.scale(30);
+
+                            add(new IButton(NStyle.crossSquare[0].back, NStyle.crossSquare[1].back, NStyle.crossSquare[2].back) {
+                                @Override
+                                public void click() {
+                                    if (editingScenario != null) {
                                     editingScenario.getSteps().remove(step);
                                     stepList.update();
                                     if (selectedStep == step) {
@@ -177,7 +191,9 @@ public class ScenarioPanel extends Panel {
                                         updateStepSettingsPanel();
                                     }
                                 }
-                            }), new Coord(removeBtnX, (sz.y - UI.scale(28)) / 2));
+                                }
+
+                            }, new Coord(removeBtnX, (sz.y - UI.scale(22)) / 2));
                         }
                             @Override
                             public void draw(GOut g) {

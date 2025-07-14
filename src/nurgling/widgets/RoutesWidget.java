@@ -196,26 +196,57 @@ public class RoutesWidget extends Window {
         final RouteAutoRecorder[] recorder = {null};
         final Thread[] thread = {null};
         final boolean[] active = {false};
+        final IButton[] recordBtnNormal = new IButton[1];
+        final IButton[] recordBtnActive = new IButton[1];
 
-        actionContainer.add(new IButton(NStyle.flipi[0].back, NStyle.flipi[1].back, NStyle.flipi[2].back) {
-            @Override
-            public void click() {
-                if (!active[0]) {
+        final Runnable[] showActive = new Runnable[1];
+        final Runnable[] showNormal = new Runnable[1];
+
+        showNormal[0] = () -> {
+            if (recordBtnActive[0] != null) {
+                recordBtnActive[0].reqdestroy();
+                recordBtnActive[0] = null;
+            }
+            recordBtnNormal[0] = new IButton(NStyle.record[0].back, NStyle.record[1].back, NStyle.record[2].back) {
+                @Override
+                public void click() {
+                    // Start recording
                     recorder[0] = new RouteAutoRecorder(route);
                     thread[0] = new Thread(recorder[0], "RouteAutoRecorder");
                     thread[0].start();
                     NUtils.getGameUI().biw.addObserve(thread[0]);
                     NUtils.getGameUI().msg("Started route recording for: " + route.name);
-                } else {
+                    active[0] = true;
+                    // Swap to active button
+                    showActive[0].run();
+                }
+            };
+            actionContainer.add(recordBtnNormal[0], new Coord(0, 0)).settip("Start/Stop Auto Waypoint Bot");
+        };
+
+        showActive[0] = () -> {
+            if (recordBtnNormal[0] != null) {
+                recordBtnNormal[0].reqdestroy();
+                recordBtnNormal[0] = null;
+            }
+            recordBtnActive[0] = new IButton(NStyle.record[3].back, NStyle.record[3].back, NStyle.record[3].back) {
+                @Override
+                public void click() {
+                    // Stop recording
                     if (recorder[0] != null) {
                         recorder[0].stop();
                         thread[0].interrupt();
                         NUtils.getGameUI().msg("Stopped route recording for: " + route.name);
                     }
+                    active[0] = false;
+                    // Swap back to normal button
+                    showNormal[0].run();
                 }
-                active[0] = !active[0];
-            }
-        }, new Coord(x, 0)).settip("Start/Stop Auto Waypoint Bot");
+            };
+            actionContainer.add(recordBtnActive[0], new Coord(0, 0)).settip("Recording... (Click to stop)");
+        };
+
+        showNormal[0].run();
 
         x += UI.scale(36);
 
@@ -233,7 +264,7 @@ public class RoutesWidget extends Window {
 
 
         x += UI.scale(36);
-        actionContainer.add(new IButton(NStyle.visi[0].back, NStyle.visi[1].back, NStyle.visi[2].back) {
+        actionContainer.add(new IButton(NStyle.hearthFire[0].back, NStyle.hearthFire[1].back, NStyle.hearthFire[2].back) {
             @Override
             public void click() {
                 Thread t = new Thread(() -> {
