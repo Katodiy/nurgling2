@@ -154,6 +154,26 @@ public class NStyle {
             new TexI(Resource.loadsimg("nurgling/hud/buttons/fire/d")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/fire/h")),
     };
+
+    public static final TexI[] upSquareArrow = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v1/UP/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v1/UP/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v1/UP/h")),
+    };
+
+    public static final TexI[] downSquareArrow = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v1/DOWN/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v1/DOWN/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v1/DOWN/h")),
+    };
+
+
+    public static final TexI[] crossSquare = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/square/cross/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/square/cross/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/square/cross/h")),
+    };
+
     private final static ArrayList<BufferedImage> hlight = new ArrayList<>();
 
     static {
