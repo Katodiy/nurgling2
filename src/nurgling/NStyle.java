@@ -141,6 +141,19 @@ public class NStyle {
             new TexI(Resource.loadsimg("nurgling/hud/buttons/auto/h")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/auto/dh"))
     };
+
+    public static final TexI[] record = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/record_4states/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/record_4states/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/record_4states/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/record_4states/dh"))
+    };
+
+    public static final TexI[] hearthFire = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/fire/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/fire/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/fire/h")),
+    };
     private final static ArrayList<BufferedImage> hlight = new ArrayList<>();
 
     static {
