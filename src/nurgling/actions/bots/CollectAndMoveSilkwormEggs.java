@@ -20,70 +20,26 @@ public class CollectAndMoveSilkwormEggs implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         NContext context = new NContext(gui);
 
-        NAlias eggAlias = new NAlias("Silkworm Egg");
+        Specialisation.SpecName specName = Specialisation.SpecName.silkmothBreeding;
+        String item = "Silkworm Egg";
 
-        NArea.Specialisation breedingArea = new NArea.Specialisation(Specialisation.SpecName.silkmothBreeding.toString());
-        NArea eggPutArea = NContext.findOut(eggAlias, 1);
+        while (true) {
+            int invSpace = gui.getInventory().getFreeSpace();
+            int before = gui.getInventory().getItems(new NAlias(item)).size();
 
-        if(eggPutArea == null) {
-            return Results.ERROR("PUT Area for Silkworm Egg required, but not found!");
-        }
+            new TakeItems2(context, item, invSpace, specName).run(gui);
 
-        ArrayList<Container> breedingContainers = new ArrayList<>();
-        ArrayList<Container> eggContainers = new ArrayList<>();
+            int after = gui.getInventory().getItems(new NAlias(item)).size();
 
-        for (Gob sm : Finder.findGobs(NContext.findSpec(breedingArea).getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
-            cand.initattr(Container.Space.class);
-            breedingContainers.add(cand);
-        }
+            boolean hasEggsInInventory = after > 0;
 
-        // Find all egg-put cabinets (assumed "egg_put" NArea)
-        for (Gob sm : Finder.findGobs(eggPutArea.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
-            cand.initattr(Container.Space.class);
-            eggContainers.add(cand);
-        }
-
-        // Sanity check
-        if (breedingContainers.isEmpty() || eggContainers.isEmpty()) {
-            return Results.ERROR("No cabinets found in required NAareas.");
-        }
-
-        // Go through breeding cabinets and collect silkworm eggs
-        for (Container breedingCabinet : breedingContainers) {
-            new PathFinder(Finder.findGob(breedingCabinet.gobid)).run(gui);
-
-            new OpenTargetContainer(breedingCabinet).run(gui);
-            ArrayList<WItem> eggs = gui.getInventory(breedingCabinet.cap).getItems(eggAlias);
-
-            if (eggs.isEmpty()) {
-                new CloseTargetContainer(breedingCabinet).run(gui);
-                continue;
-            }
-
-            while (!eggs.isEmpty()) {
-                new PathFinder(Finder.findGob(breedingCabinet.gobid)).run(gui);
-
-                new OpenTargetContainer(breedingCabinet).run(gui);
-
-                eggs = gui.getInventory(breedingCabinet.cap).getItems(eggAlias);
-
-                if (eggs.isEmpty()) {
-                    new CloseTargetContainer(breedingCabinet).run(gui);
-                    continue;
-                }
-
-                int fetchCount = Math.min(eggs.size(), gui.getInventory().getFreeSpace());
-                // 4. Fetch all eggs from container
-                new TakeAvailableItemsFromContainer(breedingCabinet, eggAlias, fetchCount).run(gui);
-
-                new CloseTargetContainer(breedingCabinet).run(gui);
-
+            if (hasEggsInInventory) {
                 new FreeInventory2(context).run(gui);
             }
-        }
 
-        return Results.SUCCESS();
+            if (after <= before && !hasEggsInInventory) {
+                return Results.SUCCESS();
+            }
+        }
     }
 }
