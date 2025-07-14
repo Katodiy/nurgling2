@@ -12,6 +12,7 @@ import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
+import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +24,7 @@ public class TakeItems2 implements Action
     final NContext cnt;
     String item;
     int count;
+    Specialisation.SpecName specName;
 
 
     public TakeItems2(NContext context, String item, int count)
@@ -32,11 +34,25 @@ public class TakeItems2 implements Action
         this.count = count;
     }
 
+    public TakeItems2(NContext context, String item, int count, Specialisation.SpecName specName)
+    {
+        this.cnt = context;
+        this.item = item;
+        this.count = count;
+        this.specName = specName;
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
         AtomicInteger left = new AtomicInteger(count);
-        ArrayList<NContext.ObjectStorage> inputs = cnt.getInStorages(item);
+        ArrayList<NContext.ObjectStorage> inputs;
+        if(specName == null) {
+            inputs = cnt.getInStorages(item);
+        } else {
+            inputs = cnt.getSpecStorages(this.specName);
+        }
+
         if(inputs == null || inputs.isEmpty())
             return Results.FAIL();
         for(NContext.ObjectStorage input: inputs)

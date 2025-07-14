@@ -78,7 +78,8 @@ public class Specialisation extends Window
         barrelworkarea,
         churn, deer, sswheel,
         compostBin,
-        silkmothBreeding
+        silkmothBreeding,
+        silkwormFeeding
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -142,6 +143,7 @@ public class Specialisation extends Window
 
         // silk
         specialisation.add(new SpecialisationItem(SpecName.silkmothBreeding.toString(),"Silk Moths Breeding",Resource.loadsimg("nurgling/categories/silkmoth1")));
+        specialisation.add(new SpecialisationItem(SpecName.silkwormFeeding.toString(),"Silkword feeding",Resource.loadsimg("nurgling/categories/silkmoth1")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
