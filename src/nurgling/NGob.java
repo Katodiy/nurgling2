@@ -172,6 +172,12 @@ public class NGob {
                         if(parent.getattr(NCustomScale.class)==null)
                             parent.setattr(new NCustomScale(parent));
                     }
+
+                    if(name.contains("cupboard") && (Boolean) NConfig.get(NConfig.Key.shortCupboards))
+                    {
+                        if(parent.getattr(NCustomScale.class)==null)
+                            parent.setattr(new NCustomScale(parent));
+                    }
                 }
 
                 if (((Drawable) a).getres().getLayers() != null) {
