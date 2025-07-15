@@ -29,14 +29,12 @@ public class EquipTravellersSacksFromBelt implements Action {
         if (sacksOnBelt.isEmpty())
             return Results.ERROR("No Traveller's Sacks on belt");
 
-        // Left hand
         WItem lhand = NUtils.getEquipment().findItem(NEquipory.Slots.HAND_LEFT.idx);
         if (lhand == null || !NParser.checkName(((NGItem) lhand.item).name(), sackAlias)) {
             if (!equipSackToHand(gui, beltInv, NEquipory.Slots.HAND_LEFT.idx))
                 return Results.ERROR("Could not equip sack to left hand");
         }
 
-        // Right hand
         WItem rhand = NUtils.getEquipment().findItem(NEquipory.Slots.HAND_RIGHT.idx);
         if (rhand == null || !NParser.checkName(((NGItem) rhand.item).name(), sackAlias)) {
             if (!equipSackToHand(gui, beltInv, NEquipory.Slots.HAND_RIGHT.idx))
@@ -46,26 +44,21 @@ public class EquipTravellersSacksFromBelt implements Action {
         return Results.SUCCESS();
     }
 
-    // Helper function to equip a sack to a given hand slot (left or right)
     private boolean equipSackToHand(NGameUI gui, NInventory beltInv, int handSlot) throws InterruptedException {
         WItem sack = beltInv.getItem(sackAlias);
         if (sack == null)
             return false;
 
-        // Take sack to vhand
         NUtils.takeItemToHand(sack);
 
-        // Drop on hand slot (equip)
         NUtils.getEquipment().wdgmsg("drop", handSlot);
 
-        // Wait for the equip (optional, recommended)
         NEquipory.Slots slot = (handSlot == NEquipory.Slots.HAND_LEFT.idx)
                 ? NEquipory.Slots.HAND_LEFT
                 : NEquipory.Slots.HAND_RIGHT;
 
         NUtils.getUI().core.addTask(new WaitItemInEquip(sack, new NEquipory.Slots[]{slot}));
 
-        // If something is now in your vhand, try to transfer to belt, else to inventory
         if (NUtils.getGameUI().vhand != null) {
             if (beltInv.getFreeSpace() > 0) {
                 NUtils.transferToBelt();
