@@ -22,9 +22,15 @@ public class Equip implements Action {
 
     NAlias target_name;
     NAlias exception = null;
+    boolean isBothHands = false;
 
     public Equip(NAlias target_name) {
         this.target_name = target_name;
+    }
+
+    public Equip(NAlias target_name, boolean isBothHands) {
+        this.target_name = target_name;
+        this.isBothHands = isBothHands;
     }
 
     public Equip(NAlias target_name, NAlias exception) {
@@ -42,10 +48,13 @@ public class Equip implements Action {
         WItem lhand = NUtils.getEquipment().findItem (NEquipory.Slots.HAND_LEFT.idx);
 
         WItem rhand = NUtils.getEquipment().findItem (NEquipory.Slots.HAND_RIGHT.idx);
-        if((lhand!=null && NParser.checkName(((NGItem)lhand.item).name(), target_name) || (rhand!=null && NParser.checkName(((NGItem)rhand.item).name(),target_name))))
-        {
+        boolean l = lhand != null && NParser.checkName(((NGItem) lhand.item).name(), target_name);
+        boolean r = rhand != null && NParser.checkName(((NGItem) rhand.item).name(), target_name);
+
+        if ((!isBothHands && (l || r)) || (isBothHands && l && r)) {
             return Results.SUCCESS();
         }
+
         WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
         if(wbelt!=null) {
             if (wbelt.item.contents instanceof NInventory) {

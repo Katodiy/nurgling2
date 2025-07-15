@@ -24,6 +24,7 @@ public class QoL extends Panel {
     private CheckBox useGlobalPf;
     private CheckBox debug;
     private CheckBox tempmark;
+    private CheckBox shortCupboards;
 
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
@@ -48,6 +49,7 @@ public class QoL extends Panel {
         prev = disableMenugridKeys = add(new CheckBox("Disable menugrid keys"), prev.pos("bl").adds(0, 5));
         prev = questNotified = add(new CheckBox("Enable quest notified"), prev.pos("bl").adds(0, 5));
         prev = lpassistent = add(new CheckBox("Enable LP assistant"), prev.pos("bl").adds(0, 5));
+        prev = shortCupboards = add(new CheckBox("Short cupboards"), prev.pos("bl").adds(0, 5));
         prev = useGlobalPf = add(new CheckBox("Use global PF"), prev.pos("bl").adds(0, 5));
         prev = debug = add(new CheckBox("DEBUG"), prev.pos("bl").adds(0, 5));
 
@@ -82,6 +84,7 @@ public class QoL extends Panel {
         useGlobalPf.a = getBool(NConfig.Key.useGlobalPf);
         debug.a = getBool(NConfig.Key.debug);
         tempmark.a = getBool(NConfig.Key.tempmark);
+        shortCupboards.a = getBool(NConfig.Key.shortCupboards);
 
         Object dist = NConfig.get(NConfig.Key.temsmarkdist);
         temsmarkdistEntry.settext(dist == null ? "" : dist.toString());
@@ -92,6 +95,12 @@ public class QoL extends Panel {
 
     @Override
     public void save() {
+        boolean oldHideNature = false;
+        if (NConfig.get(NConfig.Key.hideNature) instanceof Boolean) {
+            oldHideNature = (Boolean) NConfig.get(NConfig.Key.hideNature);
+        }
+        boolean newHideNature = !hideNature.a;
+
         NConfig.set(NConfig.Key.showCropStage, showCropStage.a);
         NConfig.set(NConfig.Key.simplecrops, simpleCrops.a);
         NConfig.set(NConfig.Key.nightVision, nightVision.a);
@@ -99,7 +108,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.showBB, showBB.a);
         NConfig.set(NConfig.Key.nextflatsurface, flatSurface.a);
         NConfig.set(NConfig.Key.nextshowCSprite, showCSprite.a);
-        NConfig.set(NConfig.Key.hideNature, !hideNature.a);
+        NConfig.set(NConfig.Key.hideNature, newHideNature);
         NConfig.set(NConfig.Key.miningol, miningOL.a);
         NConfig.set(NConfig.Key.tracking, tracking.a);
         NConfig.set(NConfig.Key.crime, crime.a);
@@ -110,6 +119,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.useGlobalPf, useGlobalPf.a);
         NConfig.set(NConfig.Key.debug, debug.a);
         NConfig.set(NConfig.Key.tempmark, tempmark.a);
+        NConfig.set(NConfig.Key.shortCupboards, shortCupboards.a);
 
         int dist = parseIntOrDefault(temsmarkdistEntry.text(), 0);
         int time = parseIntOrDefault(temsmarktimeEntry.text(), 0);
@@ -126,7 +136,9 @@ public class QoL extends Panel {
             NUtils.getUI().core.debug = debug.a;
 
         if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
-            NUtils.showHideNature();
+            if (oldHideNature != newHideNature) {
+                NUtils.showHideNature();
+            }
         }
         NConfig.needUpdate();
     }
