@@ -43,7 +43,7 @@ public class LeekFarmer implements Action {
             ).run(gui);
             if (leekArea != null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(), leekArea.getRCArea(), new NAlias("items/leek", "Leek")).run(gui);
-            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/leek"), new NAlias("Leek"), false).run(gui);
+            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/leek"), new NAlias("Leek"), true).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
 
