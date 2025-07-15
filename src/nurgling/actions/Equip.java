@@ -42,10 +42,10 @@ public class Equip implements Action {
         WItem lhand = NUtils.getEquipment().findItem (NEquipory.Slots.HAND_LEFT.idx);
 
         WItem rhand = NUtils.getEquipment().findItem (NEquipory.Slots.HAND_RIGHT.idx);
-        if((lhand!=null && NParser.checkName(((NGItem)lhand.item).name(), target_name) || (rhand!=null && NParser.checkName(((NGItem)rhand.item).name(),target_name)))) {
+        if((lhand!=null && NParser.checkName(((NGItem)lhand.item).name(), target_name) || (rhand!=null && NParser.checkName(((NGItem)rhand.item).name(),target_name))))
+        {
             return Results.SUCCESS();
         }
-
         WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
         if(wbelt!=null) {
             if (wbelt.item.contents instanceof NInventory) {
