@@ -307,6 +307,7 @@ public class RabbitMaster implements Action {
                 WItem bloodyMess = (WItem) inventory.getItem(new NAlias("A Bloody Mess"));
                 NUtils.drop(bloodyMess);
             }
+            closeContainer(gui, h.container);
         }
     }
 
