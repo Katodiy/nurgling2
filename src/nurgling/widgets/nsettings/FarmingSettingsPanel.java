@@ -8,6 +8,7 @@ public class FarmingSettingsPanel extends Panel {
     private CheckBox harvestRefillCheck;
     private CheckBox cleanupQContainersCheck;
     private CheckBox fillCompostWithSwill;
+    private CheckBox ignoreStrawInFarmers;
 
     public FarmingSettingsPanel() {
         super("Farming Settings");
@@ -45,6 +46,16 @@ public class FarmingSettingsPanel extends Panel {
         add(fillCompostWithSwill, new Coord(margin, y));
         y += UI.scale(28);
 
+        ignoreStrawInFarmers = new CheckBox(
+                "Do NOT pick up straw in farmers.") {
+            public void set(boolean val) {
+                a = val;
+            }
+        };
+
+        add(ignoreStrawInFarmers, new Coord(margin, y));
+        y += UI.scale(28);
+
         add(new Label("Seeding Pattern X (columns):"), new Coord(margin, y));
         y += UI.scale(24);
 
@@ -80,6 +91,9 @@ public class FarmingSettingsPanel extends Panel {
         Boolean fillConstBinsWithSwill = (Boolean) NConfig.get(NConfig.Key.fillCompostWithSwill);
         fillCompostWithSwill.a = fillConstBinsWithSwill != null && fillConstBinsWithSwill;
 
+        Boolean ignoreStraw = (Boolean) NConfig.get(NConfig.Key.ignoreStrawInFarmers);
+        ignoreStrawInFarmers.a = ignoreStraw != null && ignoreStraw;
+
         String pat = (String) NConfig.get(NConfig.Key.qualityGrindSeedingPatter);
         if (pat == null || !pat.matches("\\d+x\\d+")) pat = "3x3";
         String[] parts = pat.split("x");
@@ -91,6 +105,7 @@ public class FarmingSettingsPanel extends Panel {
     public void save() {
         NConfig.set(NConfig.Key.harvestautorefill, harvestRefillCheck.a);
         NConfig.set(NConfig.Key.cleanupQContainers, cleanupQContainersCheck.a);
+        NConfig.set(NConfig.Key.ignoreStrawInFarmers, ignoreStrawInFarmers.a);
         NConfig.set(NConfig.Key.fillCompostWithSwill, fillCompostWithSwill.a);
         String xVal = xEntry.text();
         String yVal = yEntry.text();

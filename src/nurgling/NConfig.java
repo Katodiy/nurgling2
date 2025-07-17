@@ -88,7 +88,8 @@ public class NConfig
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, cleanupQContainers, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
         temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, fonts,
         shortCupboards,
-        fillCompostWithSwill
+        fillCompostWithSwill,
+        ignoreStrawInFarmers
     }
 
 
