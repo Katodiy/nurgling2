@@ -514,7 +514,7 @@ public class SeedCrop implements Action {
         // Only straw allowed (any number)
         for (Gob gob : tile.gobs) {
             String name = gob.ngob != null ? gob.ngob.name : "";
-            if (name == null || !name.toLowerCase().contains("straw"))
+            if (!NParser.checkName(name, "straw"))
                 return false;
         }
         return true;
