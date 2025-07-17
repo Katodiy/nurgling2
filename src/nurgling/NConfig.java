@@ -88,6 +88,7 @@ public class NConfig
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, cleanupQContainers, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
         temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, fonts,
         shortCupboards,
+        fillCompostWithSwill
     }
 
 
@@ -162,6 +163,7 @@ public class NConfig
         conf.put(Key.ropeAfterFeeding, false);
         conf.put(Key.ropeAfterTaiming, true);
         conf.put(Key.shortCupboards, false);
+        conf.put(Key.fillCompostWithSwill, false);
 
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();

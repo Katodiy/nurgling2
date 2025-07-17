@@ -95,6 +95,8 @@ public class BotRegistry {
         bots.add(new BotDescriptor("rabbit", BotDescriptor.BotType.FARMING, "Rabbit Manager", "Manages rabbit hutches.", true, true, RabbitMaster.class, "rabbit", false));
         bots.add(new BotDescriptor("bee", BotDescriptor.BotType.FARMING, "Beehive Manager", "Collects honey and wax from beehives.", true, true, HoneyAndWaxCollector.class, "bee", true));
 
+        bots.add(new BotDescriptor("bee", BotDescriptor.BotType.FARMING, "Compost Bin", "Pull mulch out of compost bins.", true, true, CompostBinUnloader.class, "bee", false));
+
         // FARMING QUALITY
         bots.add(new BotDescriptor("turnipq", BotDescriptor.BotType.FARMING_QUALITY, "Turnip Farmer Quality", "Automatically harvests and replants turnips in X*Y cell patches.", true, true, TurnipsFarmerQ.class, "turnipq", false));
         bots.add(new BotDescriptor("carrotq", BotDescriptor.BotType.FARMING_QUALITY, "Carrot Farmer Quality", "Automatically harvests and replants carrots in X*Y cell patches.", true, true, CarrotFarmerQ.class, "carrotq", false));
