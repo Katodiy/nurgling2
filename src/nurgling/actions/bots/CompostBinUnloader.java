@@ -1,6 +1,7 @@
 package nurgling.actions.bots;
 
 import haven.Gob;
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -19,6 +20,7 @@ public class CompostBinUnloader implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
+        boolean fillCompostBinsWithSwill = (Boolean) NConfig.get(NConfig.Key.fillCompostWithSwill);
 
         NContext context = new NContext(gui);
 
@@ -50,8 +52,10 @@ public class CompostBinUnloader implements Action {
                 containers.add(cand);
             }
 
-            // Marker 7 is half way full
-            new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 7).run(gui);
+            if(fillCompostBinsWithSwill) {
+                // Marker 7 is half way full
+                new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 7).run(gui);
+            }
 
             new FreeContainers(containers, new NAlias("Mulch")).run(gui);
 
