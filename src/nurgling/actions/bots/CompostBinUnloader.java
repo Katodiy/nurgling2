@@ -50,6 +50,9 @@ public class CompostBinUnloader implements Action {
                 containers.add(cand);
             }
 
+            // Marker 7 is half way full
+            new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 7).run(gui);
+
             new FreeContainers(containers, new NAlias("Mulch")).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
