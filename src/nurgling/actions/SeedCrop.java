@@ -1,10 +1,7 @@
 package nurgling.actions;
 
 import haven.*;
-import nurgling.NGItem;
-import nurgling.NGameUI;
-import nurgling.NInventory;
-import nurgling.NUtils;
+import nurgling.*;
 import nurgling.areas.NArea;
 import nurgling.tasks.GetCurs;
 import nurgling.tasks.WaitAnotherAmount;
@@ -25,7 +22,6 @@ public class SeedCrop implements Action {
 
     final boolean allowedToPlantFromStockpiles;
     boolean isQualityGrid = false;
-
 
     public SeedCrop(NArea field, NArea seed, NAlias crop, NAlias iseed, boolean allowedToPlantFromStockpiles) {
         this.field = field;
@@ -54,6 +50,7 @@ public class SeedCrop implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        boolean ignoreStraw = (Boolean) NConfig.get(NConfig.Key.ignoreStrawInFarmers);
 
         if (isQualityGrid) {
             seedForQuality(gui);
@@ -87,7 +84,7 @@ public class SeedCrop implements Action {
                             Coord endPos = new Coord(Math.max(pos.x - 1, field.getArea().ul.x), Math.min(pos.y + 1, field.getArea().br.y - 1));
                             Area harea = new Area(pos, endPos, true);
                             Coord2d endp = harea.ul.sub(0, 1).mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y + MCache.tileqsz.y);
-                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir);
+                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir, ignoreStraw);
                             pos.y += 2;
 
                         }
@@ -97,7 +94,7 @@ public class SeedCrop implements Action {
                             Coord endPos = new Coord(Math.max(pos.x - 1, field.getArea().ul.x), Math.max(pos.y - 1, field.getArea().ul.y));
                             Area harea = new Area(pos, endPos, true);
                             Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y).add(0, MCache.tileqsz.y);
-                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir);
+                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir, ignoreStraw);
                             pos.y -= 2;
                         }
                         pos.y = field.getArea().ul.y;
@@ -113,7 +110,7 @@ public class SeedCrop implements Action {
                             Coord endPos = new Coord(Math.min(pos.x + 1, field.getArea().br.x - 1), Math.min(pos.y + 1, field.getArea().br.y - 1));
                             Area harea = new Area(pos, endPos, true);
                             Coord2d endp = harea.ul.sub(0, 1).mul(MCache.tilesz).add(MCache.tilehsz.x, MCache.tilehsz.y + MCache.tileqsz.y);
-                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir);
+                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir, ignoreStraw);
                             pos.y += 2;
 
                         }
@@ -123,7 +120,7 @@ public class SeedCrop implements Action {
                             Coord endPos = new Coord(Math.min(pos.x + 1, field.getArea().br.x - 1), Math.max(pos.y - 1, field.getArea().ul.y));
                             Area harea = new Area(pos, endPos, true);
                             Coord2d endp = harea.br.mul(MCache.tilesz).add(MCache.tilehsz).add(0, MCache.tileqsz.y);
-                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir);
+                            seedCrop(gui, barrels, stockPiles, harea, revdir, endp, setDir, ignoreStraw);
                             pos.y -= 2;
                         }
                         pos.y = field.getArea().ul.y;
@@ -154,7 +151,7 @@ public class SeedCrop implements Action {
         }
     }
 
-    void seedCrop(NGameUI gui, ArrayList<Gob> barrels, ArrayList<Gob> stockpiles, Area area, boolean rev, Coord2d target_coord, AtomicBoolean setDir) throws InterruptedException {
+    void seedCrop(NGameUI gui, ArrayList<Gob> barrels, ArrayList<Gob> stockpiles, Area area, boolean rev, Coord2d target_coord, AtomicBoolean setDir, boolean ignoreStraw) throws InterruptedException {
         if (gui.getInventory().getItems(iseed).size() < 5) {
             if (!gui.hand.isEmpty()) {
                 NUtils.dropToInv();
@@ -177,7 +174,7 @@ public class SeedCrop implements Action {
             for (int j = 0; j <= area.br.y - area.ul.y; j++) {
                 if (NParser.checkName(tiles[i][j].name, "field")) {
                     total++;
-                    if (tiles[i][j].isFree)
+                    if (isTileFreeForSeeding(tiles[i][j], ignoreStraw))
                         count++;
                 }
             }
@@ -505,6 +502,22 @@ public class SeedCrop implements Action {
             }
         }
         return order;
+    }
+
+    private boolean isTileFreeForSeeding(Area.Tile tile, boolean ignoreStraw) {
+        if (tile.gobs.isEmpty()) {
+            return true;
+        }
+        if (!ignoreStraw) {
+            return tile.isFree;
+        }
+        // Only straw allowed (any number)
+        for (Gob gob : tile.gobs) {
+            String name = gob.ngob != null ? gob.ngob.name : "";
+            if (!NParser.checkName(name, "straw"))
+                return false;
+        }
+        return true;
     }
 }
 

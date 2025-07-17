@@ -83,6 +83,27 @@ public class Finder
         return result;
     }
 
+    public static ArrayList<Gob> findGobs(Coord pos) {
+        ArrayList<Gob> result = new ArrayList<> ();
+        Pair<Coord2d,Coord2d> space = new Pair<>(new Coord2d(pos.x*MCache.tilesz.x,pos.y*MCache.tilesz.y),new Coord2d((pos.x + 1) *MCache.tilesz.x,(pos.y+1)*MCache.tilesz.y));
+//        NUtils.getGameUI().msg(space.a + " " +  space.b);
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
+                {
+                    // Только внутри тайла, без пересечений
+                    if (gob.id!= NUtils.playerID() && gob.rc.x >=space.a.x && gob.rc.y >=space.a.y && gob.rc.x <=space.b.x && gob.rc.y <=space.b.y)
+                    {
+                        result.add(gob);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     public static ArrayList<Coord2d> findTilesInArea (
             NAlias name,
             Pair<Coord2d,Coord2d> area_rc

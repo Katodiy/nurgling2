@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -22,9 +23,11 @@ public class WheatFarmer implements Action {
         NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
         NArea.Specialisation swill = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
 
+        boolean ignoreStraw = (Boolean) NConfig.get(NConfig.Key.ignoreStrawInFarmers);
+
         NArea strawArea = NContext.findOut("Straw", 1);
 
-        if(strawArea == null) {
+        if(!ignoreStraw && strawArea == null) {
             return Results.ERROR("PUT Area for Straw required, but not found!");
         }
 
@@ -45,7 +48,7 @@ public class WheatFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/wheat")
             ).run(gui);
-            if (strawArea != null)
+            if (!ignoreStraw && strawArea != null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(), strawArea.getRCArea(), new NAlias("straw", "Straw")).run(gui);
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/wheat"), new NAlias("Wheat"), false).run(gui);
 

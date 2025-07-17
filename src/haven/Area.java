@@ -178,6 +178,7 @@ public class Area implements Iterable<Coord>, java.io.Serializable {
         Coord pos;
         public String name;
         public boolean isFree = false;
+        public List<Gob> gobs = new ArrayList<>();
 
         public Tile(Coord pos, String name, boolean isFree) {
             this.pos = pos;
@@ -196,6 +197,7 @@ public class Area implements Iterable<Coord>, java.io.Serializable {
             while (pos.y <= a.br.y) {
                 Resource res_beg = NUtils.getGameUI().ui.sess.glob.map.tilesetr ( NUtils.getGameUI().ui.sess.glob.map.gettile ( pos ) );
                 res[i][j] = new Tile(pos, res_beg.name, (names==null)?Finder.findGob(pos)==null:Finder.findGob(pos,names)==null);
+                res[i][j].gobs = Finder.findGobs(pos);
                 pos.y += 1;
                 j++;
             }
