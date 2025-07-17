@@ -165,6 +165,7 @@ public class NConfig
         conf.put(Key.ropeAfterTaiming, true);
         conf.put(Key.shortCupboards, false);
         conf.put(Key.fillCompostWithSwill, false);
+        conf.put(Key.ignoreStrawInFarmers, false);
 
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
