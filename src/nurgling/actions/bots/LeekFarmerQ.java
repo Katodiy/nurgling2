@@ -47,7 +47,7 @@ public class LeekFarmerQ implements Action {
             ).run(gui);
 
             if (leekArea != null)
-                new CollectItemsToPile(NContext.findSpec(cropQ).getRCArea(), leekArea.getRCArea(), new NAlias("items/leek", "Leek")).run(gui);
+                new CollectItemsToPile(NContext.findSpec(cropQ).getRCArea(), leekArea.getRCArea(), new NAlias("items/leek")).run(gui);
 
             new SeedCrop(NContext.findSpec(cropQ), NContext.findSpec(seedQ), new NAlias("plants/leek"), new NAlias("Leek"), false, true).run(gui);
 
