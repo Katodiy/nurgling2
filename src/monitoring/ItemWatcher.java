@@ -2,18 +2,16 @@ package monitoring;
 
 import haven.Coord;
 import haven.Utils;
-import nurgling.NInventory;
 import nurgling.NUtils;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class ItemWatcher implements Runnable {
 
-
-    public static class ItemInfo
-    {
+    public static class ItemInfo {
         String name;
         double q = -1;
         Coord c;
@@ -28,8 +26,7 @@ public class ItemWatcher implements Runnable {
     }
 
     public java.sql.Connection connection;
-    final String sql = "";
-    ArrayList<ItemInfo> iis;
+    private final ArrayList<ItemInfo> iis;
 
     public ItemWatcher(ArrayList<ItemInfo> iis)
     {
@@ -38,53 +35,71 @@ public class ItemWatcher implements Runnable {
 
     @Override
     public void run() {
+        if (iis == null || iis.isEmpty()) {
+            return;
+        }
+
         try {
-            // Подготавливаем SQL-запросы
-            final String deleteSql = "DELETE FROM storageitems WHERE container = ? AND item_hash NOT IN (?)";
-            final String insertSql = "INSERT INTO storageitems (item_hash, name, quality, coordinates, container) " +
-                    "VALUES (?, ?, ?, ?, ?) " +
-                    "ON CONFLICT (item_hash) DO UPDATE SET " +
-                    "name = EXCLUDED.name, quality = EXCLUDED.quality, coordinates = EXCLUDED.coordinates";
-
-            // Создаем список хэшей для текущего массива
-            ArrayList<String> itemHashes = new ArrayList<>();
-            for (ItemInfo item : iis) {
-                itemHashes.add(generateItemHash(item));
-            }
-
-            // Удаляем старые записи для данного контейнера
-            try (PreparedStatement deleteStatement = connection.prepareStatement(deleteSql)) {
-                deleteStatement.setString(1, iis.get(0).container);  // Контейнер берем из первого элемента
-                deleteStatement.setString(2, String.join(",", itemHashes));  // Хэши текущих предметов
-                deleteStatement.executeUpdate();
-            }
-
-            // Вставляем или обновляем новые записи
-            try (PreparedStatement insertStatement = connection.prepareStatement(insertSql)) {
-                for (ItemInfo item : iis) {
-                    String itemHash = generateItemHash(item);
-
-                    insertStatement.setString(1, itemHash);
-                    insertStatement.setString(2, item.name);
-                    insertStatement.setDouble(3, item.q);
-                    insertStatement.setString(4, item.c.toString());
-                    insertStatement.setString(5, item.container);
-
-                    insertStatement.executeUpdate();
-                }
-            }
-
-            // Подтверждаем транзакцию
+            connection.setAutoCommit(false);
+            deleteItems();
+            insertItems();
             connection.commit();
         } catch (SQLException e) {
-            // Откатываем транзакцию в случае ошибки
-            try {
-                connection.rollback();
-            } catch (SQLException rollbackException) {
-                rollbackException.printStackTrace();
-            }
-
+            rollback();
             e.printStackTrace();
+        } finally {
+            resetAutoCommit();
+        }
+    }
+
+    private void deleteItems() throws SQLException {
+        String deleteSql = "DELETE FROM storageitems WHERE container = ? AND item_hash NOT IN (?)";
+        String inClause = iis.stream().map(i -> generateItemHash(i)).collect(Collectors.joining(","));
+
+        try (PreparedStatement deleteStatement = connection.prepareStatement(deleteSql)) {
+            deleteStatement.setString(1, iis.get(0).container);
+            deleteStatement.setString(2, inClause);
+            deleteStatement.executeUpdate();
+        }
+    }
+
+    private void insertItems() throws SQLException {
+        final String insertSql = "INSERT INTO storageitems (item_hash, name, quality, coordinates, container) " +
+                "VALUES (?, ?, ?, ?, ?) " +
+                "ON CONFLICT (item_hash) DO UPDATE SET " +
+                "name = EXCLUDED.name, quality = EXCLUDED.quality, coordinates = EXCLUDED.coordinates";
+
+        try (PreparedStatement insertStatement = connection.prepareStatement(insertSql)) {
+            for (ItemInfo item : iis) {
+                String itemHash = generateItemHash(item);
+
+                insertStatement.setString(1, itemHash);
+                insertStatement.setString(2, item.name);
+                insertStatement.setDouble(3, item.q);
+                insertStatement.setString(4, item.c.toString());
+                insertStatement.setString(5, item.container);
+
+                insertStatement.addBatch();
+            }
+            insertStatement.executeBatch();
+        }
+    }
+
+    private void rollback() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.rollback();
+            }
+        } catch (SQLException ignore) {
+        }
+    }
+
+    private void resetAutoCommit() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException ignore) {
         }
     }
 
