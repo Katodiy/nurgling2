@@ -25,6 +25,7 @@ public class QoL extends Panel {
     private CheckBox debug;
     private CheckBox tempmark;
     private CheckBox shortCupboards;
+    private CheckBox printpfmap;
 
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
@@ -52,6 +53,7 @@ public class QoL extends Panel {
         prev = shortCupboards = add(new CheckBox("Short cupboards"), prev.pos("bl").adds(0, 5));
         prev = useGlobalPf = add(new CheckBox("Use global PF"), prev.pos("bl").adds(0, 5));
         prev = debug = add(new CheckBox("DEBUG"), prev.pos("bl").adds(0, 5));
+        prev = printpfmap = add(new CheckBox("Path Finder map in debug"), prev.pos("bl").adds(0, 5));
 
         prev = add(new Label("Temporary marks:"), prev.pos("bl").adds(0, 15));
         prev = tempmark = add(new CheckBox("Save temporary marks"), prev.pos("bl").adds(0, 5));
@@ -83,6 +85,7 @@ public class QoL extends Panel {
         lpassistent.a = getBool(NConfig.Key.lpassistent);
         useGlobalPf.a = getBool(NConfig.Key.useGlobalPf);
         debug.a = getBool(NConfig.Key.debug);
+        debug.a = getBool(NConfig.Key.printpfmap);
         tempmark.a = getBool(NConfig.Key.tempmark);
         shortCupboards.a = getBool(NConfig.Key.shortCupboards);
 
@@ -118,6 +121,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.lpassistent, lpassistent.a);
         NConfig.set(NConfig.Key.useGlobalPf, useGlobalPf.a);
         NConfig.set(NConfig.Key.debug, debug.a);
+        NConfig.set(NConfig.Key.printpfmap, printpfmap.a);
         NConfig.set(NConfig.Key.tempmark, tempmark.a);
         NConfig.set(NConfig.Key.shortCupboards, shortCupboards.a);
 
