@@ -25,6 +25,7 @@ import static haven.OCache.posres;
 public class DynamicPf implements Action
 {
     Gob target;
+    boolean isVirtual = false;
 
     public DynamicPf(Gob gob)
     {
@@ -32,9 +33,12 @@ public class DynamicPf implements Action
     }
 
     public DynamicPf(Gob dummy, boolean b) {
+        this.target = dummy;
+        this.isVirtual = b;
     }
 
     boolean virtual = false;
+    public boolean isHardMode = false;
     public class WorkerPf implements Runnable
     {
         public LinkedList<Graph.Vertex> path;
@@ -43,8 +47,9 @@ public class DynamicPf implements Action
         @Override
         public void run() {
             try {
-                PathFinder pf = new PathFinder(target);
+                PathFinder pf = (isVirtual) ? new PathFinder(target, isVirtual) : new PathFinder(target);
                 pf.isDynamic = true;
+                pf.isHardMode = isHardMode;
                 path = pf.construct();
                 pfMap = pf.pfmap;
                 ready.set(true);

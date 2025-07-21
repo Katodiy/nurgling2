@@ -116,7 +116,7 @@ public class KillAnimalsAction<C extends Entry> implements Action {
             res = aid.getRes();
         }
         new LiftObject(target).run(gui);
-        new FindPlaceAndAction(target, NContext.findSpec("deadkritter")).run(gui);
+        new FindPlaceAndAction(target, NContext.findSpec("deadkritter"), true).run(gui);
         Collection<Object> args = new ArrayList<>();
         args.add(((CattleId) target.getattr(CattleId.class)).entry().id);
         NUtils.getRosterWindow(cattleRoster).roster(cattleRoster).wdgmsg("rm", args.toArray(new Object[0]));
