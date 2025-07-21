@@ -59,7 +59,10 @@ public class DynamicPf implements Action
         }
 
         public boolean checkDN() {
-            PathFinder pf = new PathFinder(target);
+
+            PathFinder pf = (isVirtual) ? new PathFinder(target, isVirtual) : new PathFinder(target);
+            pf.isDynamic = true;
+            pf.isHardMode = isHardMode;
             try {
                 path = pf.construct();
 

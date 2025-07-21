@@ -303,7 +303,7 @@ public class PathFinder implements Action {
                         end_poses = best_poses;
                     }
                     for (Coord coord : end_poses) {
-                        if (start_pos.equals(coord) && target_id >= 0) {
+                        if (start_pos.equals(coord)) {
                             dn = true;
                             return false;
                         }
