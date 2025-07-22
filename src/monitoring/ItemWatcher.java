@@ -40,15 +40,12 @@ public class ItemWatcher implements Runnable {
         }
 
         try {
-            connection.setAutoCommit(false);
             deleteItems();
             insertItems();
             connection.commit();
         } catch (SQLException e) {
             rollback();
             e.printStackTrace();
-        } finally {
-            resetAutoCommit();
         }
     }
 
@@ -89,15 +86,6 @@ public class ItemWatcher implements Runnable {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.rollback();
-            }
-        } catch (SQLException ignore) {
-        }
-    }
-
-    private void resetAutoCommit() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.setAutoCommit(true);
             }
         } catch (SQLException ignore) {
         }
