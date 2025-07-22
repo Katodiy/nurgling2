@@ -80,22 +80,32 @@ public class NPathVisualizer implements RenderTree.Node {
             }
         }
 
-        if (NUtils.getGameUI()!=null && NUtils.getGameUI().routesWidget!=null && NUtils.getGameUI().routesWidget.visible)
-        {
-            final MapView mv = (MapView) NUtils.getGameUI().map;
-            final RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
+        for (PathCategory cat : PathCategory.values()) {
+            List<Pair<Coord3f, Coord3f>> lines = categorized.get(cat);
+            MovingPath mp = paths.get(cat);
+            if (!pathCategories.contains(cat) || lines == null || lines.isEmpty()) {
+                mp.update(null);
+            } else {
+                mp.update(lines);
+            }
+        }
+
+        if (NUtils.getGameUI()!=null && NUtils.getGameUI().routesWidget!=null && NUtils.getGameUI().routesWidget.visible) {
+            final NMapView mv = (NMapView) NUtils.getGameUI().map;
+            final RouteGraph graph = mv.routeGraphManager.getGraph();
             final MCache map = mv.glob.map;
 
             class Cache {
                 long gid;  MCache.Grid grid;
                 MCache.Grid get(long id) {
                     if (gid==id && grid!=null) return grid;
-                    gid=id; grid=map.findGrid(id); return grid;
+                    gid=id; grid=map.findGrid(id);
+                    return grid;
                 }
             }
             Cache cache = new Cache();
 
-            List<Pair<Coord3f, Coord3f>> gpf  = categorized.get(PathCategory.GPF);
+            List<Pair<Coord3f, Coord3f>> gpf = categorized.get(PathCategory.GPF);
             Set<Integer> seen = new HashSet<Integer>();
             for (RoutePoint p : graph.getPoints()) {
                 if (cache.get(p.gridId)==null) continue;
@@ -113,6 +123,7 @@ public class NPathVisualizer implements RenderTree.Node {
                     }
                 }
             }
+            paths.get(PathCategory.GPF).update(gpf);
 
             List<Pair<Coord3f, Coord3f>> gpfa = categorized.get(PathCategory.GPFAREAS);
             Map<Integer, Pair<Double, Pair<Coord3f, Coord3f>>> best = new HashMap<>();
@@ -135,16 +146,7 @@ public class NPathVisualizer implements RenderTree.Node {
             for (Pair<Double, Pair<Coord3f,Coord3f>> v : best.values()) {
                 gpfa.add(v.b);
             }
-        }
-
-        for (PathCategory cat : PathCategory.values()) {
-            List<Pair<Coord3f, Coord3f>> lines = categorized.get(cat);
-            MovingPath mp = paths.get(cat);
-            if (!pathCategories.contains(cat) || lines==null || lines.isEmpty()) {
-                mp.update(null);
-            } else {
-                mp.update(lines);
-            }
+            paths.get(PathCategory.GPFAREAS).update(gpfa);
         }
     }
 
