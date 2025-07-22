@@ -53,120 +53,104 @@ public class NPathVisualizer implements RenderTree.Node {
     /**
      * Обновление визуализации путей на основе текущего состояния
      */
-    private void update() {
-        Set<Moving> tmoves;
+    public void update() {
+        final Set<PathCategory> pathCategories = NConfig.getPathCategories();
+        if (pathCategories.isEmpty()) return;
+
+        final EnumMap<PathCategory, List<Pair<Coord3f, Coord3f>>> categorized = new EnumMap<>(PathCategory.class);
+        for (PathCategory c : PathCategory.values()) {
+            categorized.put(c, new ArrayList<>());
+        }
 
         synchronized (moves) {
-            tmoves = new HashSet<>(moves);
+            for (Moving m : moves) {
+                try {
+                    categorized.get(categorize(m)).add(new Pair<>(m.getc(), m.gett()));
+                } catch (Loading ignored) {}
+            }
         }
 
-        Map<PathCategory, List<Pair<Coord3f, Coord3f>>> categorized = new HashMap<>();
-
-        for (Moving m : tmoves) {
-            PathCategory category = categorize(m);
-            if(!categorized.containsKey(category)) {
-                categorized.put(category, new LinkedList<>());
-            }
-            try {
-                categorized.get(category).add(new Pair<>(
-                        m.getc(), // Текущая позиция
-                        m.gett()  // Целевая позиция
-                ));
-            }catch (Loading ignore)
-            {
-//                e.printStackTrace();
-            }
-
-
-        }
-
-        // Получаем выбранные пользователем категории для отображения
-        Set<PathCategory> selected = NConfig.getPathCategories();
-        if( path != null) {
-            // Добавляем пути из очереди
-            List<Pair<Coord3f, Coord3f>> lines = path.lines();
-            categorized.put(PathCategory.QUEUED, lines);
-            // Автоматически добавляем категории, если есть активный путь
-            if(!selected.contains(PathCategory.ME) && lines.size() > 1) {
-                selected.add(PathCategory.ME);
-            }
-            if(selected.contains(PathCategory.ME)) {selected.add(PathCategory.QUEUED);}
-        }
-
-        // Обновляем отображение для каждой категории
-        for (PathCategory cat : PathCategory.values()) {
-            List<Pair<Coord3f, Coord3f>> lines = categorized.get(cat);
-            MovingPath path = paths.get(cat);
-            if(!selected.contains(cat) || lines == null || lines.isEmpty()) {
-                if(path != null) {
-                    path.update(null); // Скрываем путь, если не выбран или пуст
+        if (path != null) {
+            List<Pair<Coord3f, Coord3f>> queued = path.lines();
+            if (!queued.isEmpty()) {
+                categorized.get(PathCategory.QUEUED).addAll(queued);
+                if (!pathCategories.contains(PathCategory.ME)) {
+                    pathCategories.add(PathCategory.ME);
                 }
-            } else {
-                path.update(lines); // Обновляем путь
             }
         }
 
-        // Особый случай для путей PathFinder
-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().routesWidget.visible){
-            HashSet<Integer> added = new HashSet<>();
-            if(NUtils.getGameUI().map != null) {
-                RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
-                ArrayList<Pair<Coord3f, Coord3f>> gpf = new ArrayList<>();
-                HashMap<Integer, Pair<Double, Pair<Coord3f, Coord3f>>> gpfconnect = new HashMap<>();
-                ArrayList<RoutePoint> points = new ArrayList<>(graph.getPoints());
-                for(RoutePoint point : points)
-                {
-                    if(NUtils.getGameUI().map.glob.map.findGrid(point.gridId)!=null)
-                    {
-                        Coord3f one3f = point.toCoord3f(NUtils.getGameUI().map.glob.map);
-                        if(one3f!=null) {
-                            for (Integer nei : point.getNeighbors()) {
-                                Integer hash = (new Pair<>(point.hashCode(), nei.hashCode())).hashCode();
-                                if (!added.contains(hash)) {
-                                    if (NUtils.getGameUI().map.glob.map.findGrid(point.gridId) != null) {
-                                        if (graph.getPoint(nei) != null) {
-                                            if (NUtils.getGameUI().map.glob.map != null) {
-                                                RoutePoint routePoint = graph.getPoint(nei);
-                                                if (routePoint != null) {
-                                                    Coord3f another3f = routePoint.toCoord3f(NUtils.getGameUI().map.glob.map);
-                                                    if (one3f != null && another3f != null) {
-                                                        gpf.add(new Pair<>(another3f, one3f));
-                                                        added.add(hash);
-                                                        added.add((new Pair<>(nei.hashCode(), point.hashCode())).hashCode());
-                                                    }
-                                                }
-                                            }
-                                        }
+        if (NUtils.getGameUI()!=null && NUtils.getGameUI().routesWidget!=null && NUtils.getGameUI().routesWidget.visible)
+        {
+            final MapView mv = (MapView) NUtils.getGameUI().map;
+            final RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
+            final MCache map = mv.glob.map;
 
-                                    }
-                                }
-                            }
-                            for (Integer areaid : point.getReachableAreas()) {
-                                NArea area = NUtils.getGameUI().map.glob.map.areas.get(areaid);
-                                Coord3f center3f = area.getCenter3f();
-                                if (center3f != null) {
-                                    Double distance = area.getDistance(Coord2d.of(one3f.x, one3f.y));
-                                    if(!gpfconnect.containsKey(areaid) || gpfconnect.get(areaid).a > distance)
-                                    {
-                                        gpfconnect.put(areaid,new Pair<>(distance, new Pair<>(center3f, one3f)));
-                                    }
-                                }
-                            }
+            class Cache {
+                long gid;  MCache.Grid grid;
+                MCache.Grid get(long id) {
+                    if (gid==id && grid!=null) return grid;
+                    gid=id; grid=map.findGrid(id); return grid;
+                }
+            }
+            Cache cache = new Cache();
+
+            List<Pair<Coord3f, Coord3f>> gpf  = categorized.get(PathCategory.GPF);
+            Set<Integer> seen = new HashSet<Integer>();
+            for (RoutePoint p : graph.getPoints()) {
+                if (cache.get(p.gridId)==null) continue;
+                Coord3f a = p.toCoord3f(map);
+                if (a==null) continue;
+
+                for (int nId : p.getNeighbors()) {
+                    int key = IntPair.key(p.id, nId);
+                    if (seen.add(key)) {
+                        RoutePoint n = graph.getPoint(nId);
+                        if (n!=null && cache.get(n.gridId)!=null) {
+                            Coord3f b = n.toCoord3f(map);
+                            if (b!=null) gpf.add(new Pair<>(a,b));
                         }
-
                     }
                 }
-                ArrayList<Pair<Coord3f, Coord3f>> gpfc = new ArrayList<>();
-                for (Pair<Double,Pair<Coord3f,Coord3f>> val :gpfconnect.values())
-                {
-                    gpfc.add(val.b);
-                }
-
-                MovingPath path = paths.get(PathCategory.GPF);
-                path.update(gpf);
-                MovingPath pathconnect = paths.get(PathCategory.GPFAREAS);
-                pathconnect.update(gpfc);
             }
+
+            List<Pair<Coord3f, Coord3f>> gpfa = categorized.get(PathCategory.GPFAREAS);
+            Map<Integer, Pair<Double, Pair<Coord3f, Coord3f>>> best = new HashMap<>();
+            for (RoutePoint p : graph.getPoints()) {
+                if (cache.get(p.gridId)==null) continue;
+                Coord3f pt = p.toCoord3f(map);
+                if (pt==null) continue;
+                for (int areaId : p.getReachableAreas()) {
+                    NArea ar = map.areas.get(areaId);
+                    if (ar==null) continue;
+                    Coord3f center = ar.getCenter3f();
+                    if (center==null) continue;
+                    double d = ar.getDistance(Coord2d.of(pt.x, pt.y));
+                    Pair<Double,Pair<Coord3f,Coord3f>> old = best.get(areaId);
+                    if (old==null || d < old.a) {
+                        best.put(areaId, new Pair<>(d, new Pair<>(center, pt)));
+                    }
+                }
+            }
+            for (Pair<Double, Pair<Coord3f,Coord3f>> v : best.values()) {
+                gpfa.add(v.b);
+            }
+        }
+
+        for (PathCategory cat : PathCategory.values()) {
+            List<Pair<Coord3f, Coord3f>> lines = categorized.get(cat);
+            MovingPath mp = paths.get(cat);
+            if (!pathCategories.contains(cat) || lines==null || lines.isEmpty()) {
+                mp.update(null);
+            } else {
+                mp.update(lines);
+            }
+        }
+    }
+
+    private static final class IntPair {
+        static int key(int a, int b) {
+            return (a << 16) | (b & 0xFFFF);
         }
     }
 
