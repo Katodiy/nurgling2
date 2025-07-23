@@ -54,6 +54,7 @@ public class NMapView extends MapView
     public AtomicBoolean isGobSelectionMode = new AtomicBoolean(false);
     public NArea.Space areaSpace = null;
     public Gob selectedGob = null;
+    public static boolean isRecordingRoutePoint = false;
 
     public HashMap<Long, Gob> dummys = new HashMap<>();
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
