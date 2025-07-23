@@ -79,6 +79,9 @@ public class RouteAutoRecorder implements Runnable {
                 playerRC = player().rc;
             }
 
+            NUtils.lclick(playerRC);
+            NMapView.isRecordingRoutePoint = true;
+
             // get the hash of the last clicked gob (door, minehole, ladder, cellar, stairs, gate)
             String lastClickedGobHash = route.lastAction != null ? route.lastAction.gob.ngob.hash : null;
             String lastClickedGobName = route.lastAction != null ? route.lastAction.gob.ngob.name : null;
@@ -88,10 +91,12 @@ public class RouteAutoRecorder implements Runnable {
             // Handle scenario: player has just passed through a gate
             if(route.hasPassedGate) {
                 handleGatePassed();
+                NMapView.isRecordingRoutePoint = false;
                 continue;
 
             // Handle scenario: player is near a gate (wait, do not record a waypoint yet)
             } else if(gateDetector.isNearGate()) {
+                NMapView.isRecordingRoutePoint = false;
                 continue;
 
             // Handle all door transitions (loading, non-loading, new, existing, etc.)
@@ -156,6 +161,7 @@ public class RouteAutoRecorder implements Runnable {
                         handleEnteringNewDoorAfterExisting(graph, predefinedWaypoint, lastClickedGobHash, lastClickedGobName, archGob, rc);
                     }
                 } catch (InterruptedException e) {
+                    NMapView.isRecordingRoutePoint = false;
                     throw new RuntimeException(e);
                 }
 
@@ -166,6 +172,7 @@ public class RouteAutoRecorder implements Runnable {
                 }
             }
 
+            NMapView.isRecordingRoutePoint = false;
             route.lastAction = null;
         }
     }
