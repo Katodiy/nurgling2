@@ -5,6 +5,7 @@ import nurgling.*;
 import nurgling.areas.NArea;
 import nurgling.conf.CropRegistry;
 import nurgling.tasks.NoGob;
+import nurgling.tasks.WaitMoreItems;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
@@ -194,6 +195,12 @@ public class HarvestCrop implements Action {
             }
             new SelectFlowerAction("Harvest", plant).run(gui);
             NUtils.getUI().core.addTask(new NoGob(plant.id));
+
+            if(crop.keys.contains("plants/beet")) {
+                NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), new NAlias("Beetroot"), 1));
+            }
+
+            dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
         }
 
         ArrayList<Gob> plants;
@@ -206,6 +213,11 @@ public class HarvestCrop implements Action {
                 new PathFinder(plantToHarvest).run(gui);
                 new SelectFlowerAction("Harvest", plantToHarvest).run(gui);
                 NUtils.getUI().core.addTask(new NoGob(plantToHarvest.id));
+
+                if(crop.keys.contains("beet")) {
+                    NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), new NAlias("Beetroot"), 1));
+                }
+
                 dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
             }
         }
@@ -217,6 +229,11 @@ public class HarvestCrop implements Action {
             new PathFinder(plant).run(gui);
             new SelectFlowerAction("Harvest", plant).run(gui);
             NUtils.getUI().core.addTask(new NoGob(plant.id));
+
+            if(crop.keys.contains("beet")) {
+                NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), new NAlias("Beetroot"), 1));
+            }
+
             dropOffSeed(gui, barrelInfo.keySet(), trough, cistern);
         }
 
