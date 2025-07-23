@@ -25,7 +25,7 @@ public class ContainerWatcher  implements Runnable {
             preparedStatement.executeUpdate();
             connection.commit();
         } catch (SQLException e) {
-            if (!e.getSQLState().equals("23505")) {  // Код ошибки для нарушения уникальности
+            if (e.getSQLState()!=null && !e.getSQLState().equals("23505")) {  // Код ошибки для нарушения уникальности
                 e.printStackTrace();
             }
             try {

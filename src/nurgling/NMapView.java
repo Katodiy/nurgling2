@@ -152,7 +152,9 @@ public class NMapView extends MapView
 
     public void createRouteLabel(Integer id) {
         Route route = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(id);
-        NUtils.getGameUI().routesWidget.updateWaypoints();
+        synchronized (route.waypoints) {
+            NUtils.getGameUI().routesWidget.updateWaypoints();
+        }
 
         if (route != null && route.waypoints != null) {
             for (RoutePoint point : route.waypoints) {
