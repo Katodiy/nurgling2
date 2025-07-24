@@ -152,12 +152,11 @@ public class NMapView extends MapView
 
     public void createRouteLabel(Integer id) {
         Route route = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(id);
+        if (route == null) return;
         synchronized (route.waypoints) {
             NUtils.getGameUI().routesWidget.updateWaypoints();
-        }
-
-        if (route != null && route.waypoints != null) {
-            for (RoutePoint point : route.waypoints) {
+            List<RoutePoint> waypointsCopy = new ArrayList<>(route.waypoints);
+            for (RoutePoint point : waypointsCopy) {
                 Coord2d absCoord = point.toCoord2d(glob.map);
                 if (absCoord != null) {
                     OCache.Virtual dummy = glob.oc.new Virtual(absCoord, 0);
