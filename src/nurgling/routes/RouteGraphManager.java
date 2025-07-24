@@ -100,8 +100,7 @@ public class RouteGraphManager {
     }
 
     public void deleteRoute(Route route) {
-        ArrayList<String> doorsInRoute = new ArrayList<>();
-
+        Set<String> doorsInRoute = new HashSet<>();
         for (RoutePoint routePoint : route.waypoints) {
             for (RoutePoint.Connection connection : routePoint.getConnections()) {
                 if (connection.isDoor) {
@@ -110,20 +109,34 @@ public class RouteGraphManager {
             }
         }
 
+        // Combine: Collect referenced doors and point IDs in a single loop
+        Set<String> referencedDoors = new HashSet<>();
+        Set<Integer> referencedPointIds = new HashSet<>();
         for (Route remainingRoute : routes.values()) {
+            if (remainingRoute.id == route.id) continue;
             for (RoutePoint routePoint : remainingRoute.waypoints) {
+                referencedPointIds.add(routePoint.id);
                 for (RoutePoint.Connection connection : routePoint.getConnections()) {
-                    // Technically don't have to check contains, but its better performance if you have a lot of connections.
-                    if (connection.isDoor && doorsInRoute.contains(connection.gobHash)) {
-                        doorsInRoute.remove(connection.gobHash);
+                    if (connection.isDoor) {
+                        referencedDoors.add(connection.gobHash);
                     }
                 }
             }
         }
 
+        // Remove doors that are still referenced
+        doorsInRoute.removeAll(referencedDoors);
         for (String door : doorsInRoute) {
             graph.deleteDoor(door);
         }
+
+        // Only clean up RoutePoints not used in any remaining routes
+        for (RoutePoint routePoint : route.waypoints) {
+            if (!referencedPointIds.contains(routePoint.id)) {
+                deleteRoutePointFromNeighborsAndConnections(routePoint);
+            }
+        }
+
         ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().remove(route.id);
     }
 

@@ -4,6 +4,7 @@ import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
 import haven.MCache;
+import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.routes.Route;
@@ -173,6 +174,8 @@ public class RouteAutoRecorder implements Runnable {
             }
 
             NMapView.isRecordingRoutePoint = false;
+            System.out.println("Update routes");
+            NUtils.getGameUI().routesWidget.updateWaypoints();
             route.lastAction = null;
         }
     }
