@@ -174,7 +174,6 @@ public class RouteAutoRecorder implements Runnable {
             }
 
             NMapView.isRecordingRoutePoint = false;
-            System.out.println("Update routes");
             NUtils.getGameUI().routesWidget.updateWaypoints();
             route.lastAction = null;
         }
