@@ -273,52 +273,66 @@ public class NPFMap
         return size;
     }
 
-    public void build()
-    {
-        if(NUtils.playerID()!=-1) {
+    public void build() {
+        final Glob glob = NUtils.getGameUI().ui.sess.glob;
+        final OCache oc = glob.oc;
+        if (oc == null) return;
+
+        currentTransport = -1;
+        if (NUtils.playerID() != -1) {
             Following fl = NUtils.player().getattr(Following.class);
-            if(fl!= null)
-            {
-                currentTransport = fl.tgt;
+            if (fl != null) currentTransport = fl.tgt;
+        }
+
+        synchronized (oc) {
+            for (Gob gob : oc) {
+                if (gob.id != currentTransport) addGob(gob);
             }
         }
-        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
-        {
 
-            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
-            {
-                if(gob.id!=currentTransport)
-                    addGob(gob);
-            }
-        }
-        for (int i = 0; i < size; i += 1)
-        {
-            for (int j = 0; j < size; j += 1)
-            {
+        final MCache map = glob.map;
+        final boolean water = waterMode;
+        final double tsx = MCache.tilesz.x, tsy = MCache.tilesz.y;
 
-                if (cells[i][j].val == 0)
-                {
-                    ArrayList<Coord> cand = new ArrayList<>();
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(-MCache.tileqsz.x,MCache.tileqsz.y))).div(MCache.tilesz).floor());
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(MCache.tileqsz.x,-MCache.tileqsz.y))).div(MCache.tilesz).floor());
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(-MCache.tileqsz.x,-MCache.tileqsz.y))).div(MCache.tilesz).floor());
-                    cand.add((Utils.pfGridToWorld(cells[i][j].pos).add(new Coord2d(MCache.tileqsz.x,MCache.tileqsz.y))).div(MCache.tilesz).floor());
+        for (int i = 1; i < size - 1; i++) {
+            for (int j = 1; j < size - 1; j++) {
+                if (cells[i][j].val != 0) continue;
 
-                    for(Coord c : cand) {
-                        String name = NUtils.getGameUI().ui.sess.glob.map.tilesetname(NUtils.getGameUI().ui.sess.glob.map.gettile(c));
-                        if(!waterMode) {
-                            if (name != null && (name.startsWith("gfx/tiles/cave") || name.startsWith("gfx/tiles/rocks") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep") || name.startsWith("gfx/tiles/nil"))) {
-                                cells[i][j].val = 2;
-                            }
+                Coord tc = begin.add(i, j);
+
+                Coord2d world = Utils.pfGridToWorld(tc);
+                Coord[] cands = {
+                    world.add(-tsx / 2f,  tsy / 2f).div(tsx, tsy).floor(),
+                    world.add( tsx / 2f, -tsy / 2f).div(tsx, tsy).floor(),
+                    world.add(-tsx / 2f, -tsy / 2f).div(tsx, tsy).floor(),
+                    world.add( tsx / 2f,  tsy / 2f).div(tsx, tsy).floor()
+                };
+
+                boolean block = false;
+                for (Coord c : cands) {
+                    String name = map.tilesetname(map.gettile(c));
+                    if (name == null) continue;
+
+                    if (!water) {
+                        if (name.startsWith("gfx/tiles/cave") ||
+                            name.startsWith("gfx/tiles/rocks") ||
+                            name.equals("gfx/tiles/deep") ||
+                            name.equals("gfx/tiles/odeep") ||
+                            name.startsWith("gfx/tiles/nil")) {
+                            block = true;
+                            break;
                         }
-                        else
-                        {
-                            if (name != null && !(name.startsWith("gfx/tiles/water") || name.startsWith("gfx/tiles/owater") || name.equals("gfx/tiles/deep") || name.equals("gfx/tiles/odeep"))) {
-                                cells[i][j].val = 2;
-                            }
+                    } else {
+                        if (!(name.startsWith("gfx/tiles/water") ||
+                            name.startsWith("gfx/tiles/owater") ||
+                            name.equals("gfx/tiles/deep") ||
+                            name.equals("gfx/tiles/odeep"))) {
+                            block = true;
+                            break;
                         }
                     }
                 }
+                if (block) cells[i][j].val = 2;
             }
         }
     }

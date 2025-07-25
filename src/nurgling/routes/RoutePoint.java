@@ -101,29 +101,32 @@ public class RoutePoint {
     }
 
     public void addReachableAreas() throws InterruptedException {
-        for (NArea area: NUtils.getGameUI().map.glob.map.areas.values())
-        {
-            Pair<Coord2d,Coord2d> rcArea = area.getRCArea();
-            if(rcArea!=null)
-            {
-                Coord2d myrc = toCoord2d(NUtils.getGameUI().map.glob.map);
-                ArrayList<Gob> gobs = Finder.findGobs(area);
-                boolean isReachable = false;
+        for (NArea area : NUtils.getGameUI().map.glob.map.areas.values()) {
+            Pair<Coord2d, Coord2d> rcArea = area.getRCArea();
+            if (rcArea == null) continue;
 
-                if(gobs.isEmpty()) {
-                    isReachable = PathFinder.isAvailable(area.getCenter2d());
-                } else {
-                    for(Gob gob : gobs) {
-                        if (PathFinder.isAvailable(gob)) {
-                            isReachable = true;
-                            break;
-                        }
+            Coord2d myrc = toCoord2d(NUtils.getGameUI().map.glob.map);
+            if (myrc == null) continue;
+
+            double distance = area.getDistance(myrc);
+            if (distance > 250) continue;
+
+            ArrayList<Gob> gobs = Finder.findGobs(area);
+            boolean isReachable = false;
+
+            if (gobs.isEmpty()) {
+                isReachable = PathFinder.isAvailable(area.getCenter2d());
+            } else {
+                for (Gob gob : gobs) {
+                    if (PathFinder.isAvailable(gob)) {
+                        isReachable = true;
+                        break;
                     }
                 }
-                if(isReachable && area.getDistance(myrc)<250)
-                {
-                    areasDistance.put(area.id, area.getDistance(myrc));
-                }
+            }
+
+            if (isReachable) {
+                areasDistance.put(area.id, distance);
             }
         }
     }

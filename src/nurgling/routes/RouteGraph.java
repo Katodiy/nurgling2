@@ -3,7 +3,6 @@ package nurgling.routes;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NGameUI;
-import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.PathFinder;
 import nurgling.areas.NArea;
@@ -153,37 +152,49 @@ public class RouteGraph {
 
     public List<RoutePoint> findPath(RoutePoint start, RoutePoint end) {
         if (start == null || end == null) return null;
-        
-        // Use breadth-first search to find the shortest path
+
+        PriorityQueue<AStarNode> open = new PriorityQueue<>(Comparator.comparingDouble(n -> n.f));
+        Map<Integer, Double> gScore = new HashMap<>();
         Map<Integer, Integer> cameFrom = new HashMap<>();
-        Queue<Integer> queue = new LinkedList<>();
-        Set<Integer> visited = new HashSet<>();
-        
-        queue.add(start.id);
-        visited.add(start.id);
-        
-        while (!queue.isEmpty()) {
-            Integer currentId = queue.poll();
-            
-            if (currentId.equals(end.id)) {
-                // Found the end point, reconstruct the path
-                return reconstructPath(end.id, cameFrom);
-            }
-            
-            // Get the current point and check all its neighbors
-            RoutePoint current = points.get(currentId);
-            if (current != null) {
-                for (Integer neighborId : current.getNeighbors()) {
-                    if (!visited.contains(neighborId)) {
-                        visited.add(neighborId);
-                        cameFrom.put(neighborId, currentId);
-                        queue.add(neighborId);
-                    }
+
+        open.add(new AStarNode(start.id, heuristic(start, end)));
+        gScore.put(start.id, 0.0);
+
+        while (!open.isEmpty()) {
+            AStarNode cur = open.poll();
+            if (cur.id == end.id) return reconstructPath(end.id, cameFrom);
+
+            for (Integer neighborId : points.get(cur.id).getNeighbors()) {
+                RoutePoint neighbor = points.get(neighborId);
+                if (neighbor == null) continue;
+
+                double tentativeG = gScore.get(cur.id) + dist(cur.id, neighborId);
+                if (tentativeG < gScore.getOrDefault(neighborId, Double.MAX_VALUE)) {
+                    cameFrom.put(neighborId, cur.id);
+                    gScore.put(neighborId, tentativeG);
+                    open.add(new AStarNode(neighborId, tentativeG + heuristic(neighbor, end)));
                 }
             }
         }
-        
         return null;
+    }
+
+    private double heuristic(RoutePoint a, RoutePoint b) {
+        Coord2d ca = a.toCoord2d(NUtils.getGameUI().ui.sess.glob.map);
+        Coord2d cb = b.toCoord2d(NUtils.getGameUI().ui.sess.glob.map);
+        return ca == null || cb == null ? 0 : ca.dist(cb);
+    }
+
+    private double dist(int aId, int bId) {
+        return heuristic(points.get(aId), points.get(bId));
+    }
+
+    private static class AStarNode {
+        final int id; double f;
+        AStarNode(int id, double f) {
+            this.id = id;
+            this.f = f;
+        }
     }
 
     public RoutePoint findAreaRoutePoint(NArea area) {
