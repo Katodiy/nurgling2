@@ -165,9 +165,8 @@ public class PathFinder implements Action {
 
             Graph res = null;
             if (pfmap.getCells()[end_pos.x][end_pos.y].val == 7) {
-                Thread th = new Thread(res = new Graph(pfmap, start_pos, end_pos));
-                th.start();
-                th.join();
+                res = new Graph(pfmap, start_pos, end_pos);
+                res.run();
             } else {
                 switch (mode) {
                     case NEAREST:
