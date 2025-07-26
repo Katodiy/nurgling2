@@ -64,6 +64,7 @@ public class OCache implements Iterable<Gob> {
     private Glob glob;
     private final Collection<ChangeCallback> cbs = new WeakList<ChangeCallback>();
 	public final NPathVisualizer paths = new NPathVisualizer();
+	public volatile long lastGobActivity = System.currentTimeMillis();
     public interface ChangeCallback {
 	public void added(Gob ob);
 	public void removed(Gob ob);
@@ -90,6 +91,7 @@ public class OCache implements Iterable<Gob> {
 	    }
 	    for(ChangeCallback cb : cbs)
 		cb.added(ob);
+		lastGobActivity = System.currentTimeMillis();
 	}
     }
 
@@ -109,6 +111,8 @@ public class OCache implements Iterable<Gob> {
 		    cb.removed(old);
 	    }
 	}
+
+		lastGobActivity = System.currentTimeMillis();
     }
 
     public void ctick(double dt) {
