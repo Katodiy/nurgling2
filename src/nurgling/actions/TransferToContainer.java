@@ -15,6 +15,9 @@ public class TransferToContainer implements Action{
     Container container;
 
     Integer th = -1;
+
+    Integer targetAmount = null;
+
     public TransferToContainer(Container container, NAlias items) {
         this.container = container;
         this.items = items;
@@ -24,6 +27,12 @@ public class TransferToContainer implements Action{
         this.container = container;
         this.items = items;
         this.th = th;
+    }
+
+    public TransferToContainer(Container container, Integer targetAmount, NAlias items) {
+        this.container = container;
+        this.items = items;
+        this.targetAmount = targetAmount;
     }
 
 
@@ -83,6 +92,9 @@ public class TransferToContainer implements Action{
             } else {
                 if(!witems.isEmpty()) {
                     transfer_size = Math.min(gui.getInventory().getItems(items).size(), Math.min(witems.size(), gui.getInventory(container.cap).getNumberFreeCoord(witems.get(0))));
+                    if(targetAmount != null) {
+                        transfer_size = Math.min(transfer_size, targetAmount);
+                    }
                     if (container.getattr(Container.TargetItems.class) != null && container.getattr(Container.TargetItems.class).getRes().containsKey(Container.TargetItems.MAXNUM)) {
                         int need = (Integer) container.getattr(Container.TargetItems.class).getRes().get(Container.TargetItems.MAXNUM) - (Integer) container.getattr(Container.TargetItems.class).getTargets(items);
                         transfer_size = Math.min(transfer_size, need);
