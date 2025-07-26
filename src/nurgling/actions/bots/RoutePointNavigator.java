@@ -157,6 +157,12 @@ public class RoutePointNavigator implements Action {
                     }
 
                     if (GateDetector.isGobDoor(gob)) {
+                        if(gob.ngob.name.contains("upstairs")) {
+                            Coord2d front = getFrontOfGob(gob, 1.5);
+                            new PathFinder(front).run(gui);
+                        } else if(gob.ngob.name.contains("cellar")) {
+                            new PathFinder(gob).run(gui);
+                        }
                         // enter through the door
                         NUtils.openDoorOnAGob(gui, gob);
                         // Wait until we can safely get coordinates for the next waypoint
@@ -182,5 +188,13 @@ public class RoutePointNavigator implements Action {
             return false;
         }
         return nextPoint.toCoord2d(gui.map.glob.map) == null || gob.ngob.name.contains("stairs") || gob.ngob.name.contains("gate");
+    }
+
+    public static Coord2d getFrontOfGob(Gob gob, double offsetTiles) {
+        double angle = gob.a;
+
+        double offsetX = Math.cos(angle) * offsetTiles * MCache.tilesz.x;
+        double offsetY = Math.sin(angle) * offsetTiles * MCache.tilesz.y;
+        return new Coord2d(gob.rc.x + offsetX, gob.rc.y + offsetY);
     }
 }
