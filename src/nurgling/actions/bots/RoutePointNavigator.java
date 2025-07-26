@@ -161,6 +161,7 @@ public class RoutePointNavigator implements Action {
                         NUtils.openDoorOnAGob(gui, gob);
                         // Wait until we can safely get coordinates for the next waypoint
                         NUtils.getUI().core.addTask(new WaitForMapLoadPF(nextPoint, gui));
+                        NUtils.getUI().core.addTask(new WaitGobsLoadingTimeout(500));
                         NUtils.getUI().core.addTask(new WaitForGobWithHash(nextPoint.getConnection(currentPoint.id).gobHash));
                     } else {
                         // open gate if its closed
