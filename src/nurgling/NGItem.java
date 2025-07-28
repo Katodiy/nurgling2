@@ -265,8 +265,8 @@ public class NGItem extends GItem
 
     @Override
     public void destroy() {
-        if(parent!=null && parent instanceof NInventory && (((NInventory) parent).parentGob)!=null && (((NInventory) parent).parentGob).gob!=null && name!=null) {
-            ((NInventory) parent).iis.add(new ItemWatcher.ItemInfo(name, quality != null ? quality : -1, wi != null ? wi.c : Coord.z, (((NInventory) parent).parentGob).hash));
+        if(parent!=null && parent instanceof NInventory && (((NInventory) parent).parentGob)!=null && ((NInventory) parent).parentGob !=null && name!=null) {
+            ((NInventory) parent).iis.add(new ItemWatcher.ItemInfo(name, quality != null ? quality : -1, wi != null ? wi.c : Coord.z, (((NInventory) parent).parentGob).ngob.hash));
             ((NInventory) parent).lastUpdate = NUtils.getTickId();
         }
         super.destroy();

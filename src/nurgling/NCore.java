@@ -429,9 +429,9 @@ public class NCore extends Widget
         poolManager.submitTask(ngItemWriter);
     }
 
-    public void writeContainerInfo(NInventory.ParentGob gob)
+    public void writeContainerInfo(Gob gob)
     {
-        if(gob.gob!=null) {
+        if(gob!=null) {
             ContainerWatcher cw = new ContainerWatcher(gob);
             try {
                 cw.connection = poolManager.getConnection();

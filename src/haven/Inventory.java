@@ -63,15 +63,15 @@ public class Inventory extends Widget implements DTarget {
     @RName("inv")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-		return(new NInventory((Coord)args[0]));
-//		NInventory ni = new NInventory((Coord) args[0]);
-//		if(ui.core.getLastActions()!=null) {
-//			ni.parentGob = new NInventory.ParentGob(ui.core.getLastActions().gob);
-//			if((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
-//				ui.core.writeContainerInfo(ni.parentGob);
-//			}
-//		}
-//		return ni;
+//		return(new NInventory((Coord)args[0]));
+		NInventory ni = new NInventory((Coord) args[0]);
+		if(ui.core.getLastActions()!=null) {
+			ni.parentGob = ui.core.getLastActions().gob;
+			if((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+				ui.core.writeContainerInfo(ni.parentGob);
+			}
+		}
+		return ni;
 	}
     }
 

@@ -45,6 +45,8 @@ public class NGob {
     public int lastUpdate = 0;
 
     public String hash;
+    public long grid_id;
+    public Coord gcoord;
     private final Queue<DelayedOverlayTask> delayedOverlayTasks = new ConcurrentLinkedQueue<>();
 
     public void changedPose(String currentPose) {
@@ -438,6 +440,8 @@ public class NGob {
                         MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
                         StringBuilder hashInput = new StringBuilder();
                         Coord coord = (parent.rc.sub(g.ul.mul(Coord2d.of(11, 11)))).floor(posres);
+                        this.grid_id = g.id;
+                        this.gcoord = coord.sub(g.ul);
                         hashInput.append(name).append(g.id).append(coord.toString());
                         hash = NUtils.calculateSHA256(hashInput.toString());
                         parent.setattr(new NGlobalSearch(parent));

@@ -30,26 +30,9 @@ public class NInventory extends Inventory
     boolean showPopup = false;
     BufferedImage numbers = null;
     short[][] oldinv = null;
-    public ParentGob parentGob = null;
+    public Gob parentGob = null;
     long lastUpdate = 0;
-    public static class ParentGob
-    {
-        public Gob gob;
-        public long grid_id;
-        public Coord coord;
-        public String hash;
 
-        public ParentGob(Gob gob) {
-            this.gob = gob;
-            if(gob!=null) {
-                Coord pltc = (new Coord2d(gob.rc.x / MCache.tilesz.x, gob.rc.y / MCache.tilesz.y)).floor();
-                MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
-                this.grid_id = g.id;
-                this.coord = pltc.sub(g.ul);
-                this.hash = gob.ngob.hash;
-            }
-        }
-    }
     public NInventory(Coord sz)
     {
         super(sz);
@@ -732,7 +715,7 @@ public class NInventory extends Inventory
 
     @Override
     public void reqdestroy() {
-        if(parentGob!=null && parentGob.gob!=null)
+        if(parentGob!=null && parentGob.ngob.hash!=null)
         {
             if((Boolean)NConfig.get(NConfig.Key.ndbenable)) {
                 ui.core.writeItemInfoForContainer(iis);
