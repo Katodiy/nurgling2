@@ -27,44 +27,35 @@ public class CurdingTubUnloader implements Action {
 
         NArea.Specialisation curdingTubSpecialization = new NArea.Specialisation(curdingTubSpecName.toString());
 
-//        ArrayList<NArea.Specialisation> req = new ArrayList<>();
-//        req.add(curdingTubSpecialization);
-//        ArrayList<NArea.Specialisation> opt = new ArrayList<>();
-
         NArea goatsCurdOutputArea = NContext.findOutGlobal("Goat's Curd", 1, gui);
         NArea cowsCurdOutputArea = NContext.findOutGlobal("Cow's Curd", 1, gui);
         NArea sheepsCurdOutputArea = NContext.findOutGlobal("Sheep's Curd", 1, gui);
         NArea curdingTubArea = NContext.findSpecGlobal(curdingTubSpecialization);
 
-        if(curdingTubArea == null) {
+        if (curdingTubArea == null) {
             return Results.ERROR("Curding Tub specialization area required, but not found!");
         }
 
-        if(goatsCurdOutputArea == null || cowsCurdOutputArea == null || sheepsCurdOutputArea == null) {
+        if (goatsCurdOutputArea == null || cowsCurdOutputArea == null || sheepsCurdOutputArea == null) {
             return Results.ERROR("PUT Area for Curds required, but not found!");
         }
 
-//        if (new Validator(req, opt).run(gui).IsSuccess()) {
-            NUtils.stackSwitch(true);
+        NUtils.stackSwitch(true);
 
-            context.getSpecArea(curdingTubSpecName);
+        context.getSpecArea(curdingTubSpecName);
 
-            ArrayList<Gob> curdingTubs = Finder.findGobs(NContext.findSpec(curdingTubSpecialization), new NAlias("gfx/terobjs/curdingtub"));
+        ArrayList<Gob> curdingTubs = Finder.findGobs(NContext.findSpec(curdingTubSpecialization), new NAlias("gfx/terobjs/curdingtub"));
 
-            ArrayList<Container> containers = new ArrayList<>();
-            for (Gob curdingTub : curdingTubs) {
-                Container cand = new Container(curdingTub, "Curding Tub");
-                cand.initattr(Container.Space.class);
-                containers.add(cand);
-            }
+        ArrayList<Container> containers = new ArrayList<>();
+        for (Gob curdingTub : curdingTubs) {
+            Container cand = new Container(curdingTub, "Curding Tub");
+            cand.initattr(Container.Space.class);
+            containers.add(cand);
+        }
 
-            new FreeContainers(containers, new NAlias("Curd")).run(gui);
+        new FreeContainers(containers, new NAlias("Curd")).run(gui);
 
-            NUtils.stackSwitch(oldStackingValue);
-            return Results.SUCCESS();
-//        }
-
-//        NUtils.stackSwitch(oldStackingValue);
-//        return Results.FAIL();
+        NUtils.stackSwitch(oldStackingValue);
+        return Results.SUCCESS();
     }
 }
