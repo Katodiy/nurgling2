@@ -173,6 +173,7 @@ public class NCore extends Widget
         if(!(Boolean) NConfig.get(NConfig.Key.ndbenable) && poolManager != null)
         {
             poolManager.shutdown();
+            poolManager = null;
         }
 
         if(autoDrink == null && (Boolean)NConfig.get(NConfig.Key.autoDrink))
@@ -283,6 +284,7 @@ public class NCore extends Widget
         if(poolManager!=null)
         {
             poolManager.shutdown();
+            poolManager = null;
         }
         super.dispose();
     }
@@ -435,6 +437,7 @@ public class NCore extends Widget
                 cw.connection = poolManager.getConnection();
             } catch (SQLException e) {
                 e.printStackTrace();
+                return;
             }
             poolManager.submitTask(cw);
         }
