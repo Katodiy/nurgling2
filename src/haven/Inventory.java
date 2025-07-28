@@ -28,9 +28,7 @@ package haven;
 
 import nurgling.NConfig;
 import nurgling.NInventory;
-import nurgling.NUtils;
 import nurgling.NWItem;
-import nurgling.tasks.WaitForMapLoadNoCoord;
 
 import java.util.*;
 import java.awt.image.WritableRaster;
@@ -65,20 +63,15 @@ public class Inventory extends Widget implements DTarget {
     @RName("inv")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
-		NInventory ni = new NInventory((Coord) args[0]);
-		if(ui.core.getLastActions()!=null) {
-			try {
-				NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
-			} catch (InterruptedException ie) {
-				ie.printStackTrace();
-				return ni;
-			}
-			ni.parentGob = new NInventory.ParentGob(ui.core.getLastActions().gob);
-			if((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
-				ui.core.writeContainerInfo(ni.parentGob);
-			}
-		}
-		return ni;
+		return(new NInventory((Coord)args[0]));
+//		NInventory ni = new NInventory((Coord) args[0]);
+//		if(ui.core.getLastActions()!=null) {
+//			ni.parentGob = new NInventory.ParentGob(ui.core.getLastActions().gob);
+//			if((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+//				ui.core.writeContainerInfo(ni.parentGob);
+//			}
+//		}
+//		return ni;
 	}
     }
 
