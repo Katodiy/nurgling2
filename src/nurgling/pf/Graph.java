@@ -11,64 +11,163 @@ public class Graph implements Runnable
 {
 
     @Override
-    public void run() {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                Vertex v = new Vertex(map.getCells()[i][j].pos, map.getCells()[i][j].val);
-                v.dist = Coord.of(i, j).dist(end);
-                v.i = i; v.j = j;
-                vert[i][j] = v;
+    public void run()
+    {
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                vert[i][j] = new Vertex(map.getCells()[i][j].pos, map.getCells()[i][j].val);
+                Coord c = new Coord(i, j);
+                vert[i][j].dist = c.dist(end);
+                vert[i][j].i = i;
+                vert[i][j].j = j;
             }
         }
+        Vertex next = vert[begin.x][begin.y];
+        next.len = 0;
+        candidates.add(next);
+        do
+        {
+            analise(next);
+            candidates.remove(next);
 
-        Vertex start = vert[begin.x][begin.y];
-        start.len = 0;
-
-        PriorityQueue<Vertex> pq = new PriorityQueue<>(size * size, (a, b) -> Double.compare(a.dist * 100 + a.len, b.dist * 100 + b.len));
-        pq.add(start);
-
-        while (!pq.isEmpty()) {
-            Vertex cur = pq.poll();
-            if (cur.val == 4) continue;
-            cur.val = 4;
-
-            if (cur.i == end.x && cur.j == end.y) {
-                addToPath(cur);
+            candidates.sort(new Comparator<Vertex>()
+            {
+                @Override
+                public int compare(Vertex o1, Vertex o2)
+                {
+                    return (Double.compare(o1.dist * 100 + o1.len, o2.dist * 100 + o2.len));
+                    //return ((res = Double.compare(o1.dist, o2.dist)) == 0 ? Integer.compare(o1.len, o2.len) : res);
+                }
+            });
+            if (candidates.size() > 0)
+                next = candidates.get(0);
+            else
+            {
+                if(vert[end.x][end.y].val == 4)
+                    break;
                 return;
             }
+        }
+        while (vert[end.x][end.y].val != 4);
 
-            for (int di = -1; di <= 1; di++) {
-                for (int dj = -1; dj <= 1; dj++) {
-                    if (di == 0 && dj == 0) continue;
+        addToPath(vert[end.x][end.y]);
+    }
 
-                    int ni = cur.i + di, nj = cur.j + dj;
-                    if (ni < 0 || nj < 0 || ni >= size || nj >= size) continue;
+    private void analise(Vertex v)
+    {
+        v.val = 4;
+        if (v.i > 0)
+        {
+            if (v.j > 0)
+            {
+                if ((vert[v.i][v.j - 1].val & 3) == 0 && (vert[v.i - 1][v.j].val & 3) == 0)
+                    check(vert[v.i - 1][v.j - 1]);
+            }
+            check(vert[v.i - 1][v.j]);
+            if (v.j < size - 1)
+            {
+                if ((vert[v.i][v.j + 1].val & 3) == 0 && (vert[v.i - 1][v.j].val & 3) == 0)
+                    check(vert[v.i - 1][v.j + 1]);
+            }
+        }
+        if (v.j > 0)
+        {
+            check(vert[v.i][v.j - 1]);
+            if (v.i < size - 1)
+            {
+                if ((vert[v.i][v.j - 1].val & 3) == 0 && (vert[v.i + 1][v.j].val & 3) == 0)
+                    check(vert[v.i + 1][v.j - 1]);
+            }
+        }
+        if (v.i < size - 1)
+        {
+            check(vert[v.i + 1][v.j]);
+            if (v.j < size - 1)
+            {
+                if ((vert[v.i][v.j + 1].val & 3) == 0 && (vert[v.i + 1][v.j].val & 3) == 0)
+                    check(vert[v.i + 1][v.j + 1]);
+            }
+        }
+        if (v.j < size - 1)
+        {
+            check(vert[v.i][v.j + 1]);
+        }
+    }
 
-                    Vertex n = vert[ni][nj];
-                    if ((n.val & 3) != 0) continue;
+    private void check(Vertex c)
+    {
+        if (c.val == 0 && c.len == -1)
+        {
+            c.len = Integer.MAX_VALUE;
+            if(c.i>0)
+            {
 
-                    int cost = (di == 0 || dj == 0) ? 100 : 141;
-                    int newLen = cur.len + cost;
-
-                    if (newLen < n.len || n.len == -1) {
-                        n.len  = newLen;
-                        n.prev = cur;
-                        if (!pq.contains(n)) pq.add(n);
+                if(c.j>0 && (vert[c.i][c.j - 1].val & 3) == 0 && (vert[c.i - 1][c.j].val & 3) == 0)
+                {
+                    int tlen = vert[c.i-1][c.j - 1].len;
+                    if(tlen !=-1 && tlen+141<c.len)
+                    {
+                        c.len = tlen+141;
+                    }
+                }
+                int tlen = vert[c.i-1][c.j].len;
+                if(tlen !=-1 && tlen+100<c.len)
+                {
+                    c.len = tlen+100;
+                }
+                if(c.j<size-1  && (vert[c.i][c.j + 1].val & 3) == 0 && (vert[c.i - 1][c.j].val & 3) == 0)
+                {
+                    tlen = vert[c.i-1][c.j+1].len;
+                    if(tlen !=-1 && tlen+141<c.len)
+                    {
+                        c.len = tlen+141;
                     }
                 }
             }
+            if(c.j>0)
+            {
+                int tlen = vert[c.i][c.j - 1].len;
+                if(tlen !=-1 && tlen+100<c.len)
+                {
+                    c.len = tlen+100;
+                }
+            }
+            if(c.j<size-1)
+            {
+                int tlen = vert[c.i][c.j+1].len;
+                if(tlen !=-1 && tlen+100<c.len)
+                {
+                    c.len = tlen+100;
+                }
+            }
+            if(c.i<size-1)
+            {
+                if(c.j>0  && (vert[c.i][c.j - 1].val & 3) == 0 && (vert[c.i + 1][c.j].val & 3) == 0)
+                {
+                    int tlen = vert[c.i+1][c.j - 1].len;
+                    if(tlen !=-1 && tlen+141<c.len)
+                    {
+                        c.len = tlen+141;
+                    }
+                }
+                int tlen = vert[c.i+1][c.j].len;
+                if(tlen !=-1 && tlen+100<c.len)
+                {
+                    c.len = tlen+100;
+                }
+                if(c.j<size-1  && (vert[c.i][c.j + 1].val & 3) == 0 && (vert[c.i + 1][c.j].val & 3) == 0)
+                {
+                    tlen = vert[c.i+1][c.j+1].len;
+                    if(tlen !=-1 && tlen+141<c.len)
+                    {
+                        c.len = tlen+141;
+                    }
+                }
+            }
+            candidates.add(c);
         }
-
-        if (vert[end.x][end.y].val != 4) return;
-    }
-
-    private boolean addToPath(Vertex v) {
-        path.clear();
-        for (Vertex u = v; u != null; u = u.prev) {
-            path.addFirst(u);
-            u.val = 8;
-        }
-        return true;
     }
 
     public int getPathLen()
@@ -78,9 +177,66 @@ public class Graph implements Runnable
 
     public LinkedList<Vertex> path = new LinkedList<>();
 
+    boolean addToPath(Vertex v)
+    {
+        path.add(0, v);
+        v.val = 8;
+        if (v.len == 0)
+            return true;
+        if (v.i > 0)
+        {
+            if (v.j > 0 && ((vert[v.i-1][v.j].val & 3) == 0) && ((vert[v.i][v.j-1].val & 3) == 0))
+            {
+                if (checkPath(vert[v.i - 1][v.j - 1], v.len - 141))
+                    return addToPath(vert[v.i - 1][v.j - 1]);
+            }
+            if (checkPath(vert[v.i - 1][v.j], v.len - 100))
+                return addToPath(vert[v.i - 1][v.j]);
+            if (v.j < size - 1 && ((vert[v.i-1][v.j].val & 3) == 0) && ((vert[v.i][v.j+1].val & 3) == 0))
+            {
+                if (checkPath(vert[v.i - 1][v.j + 1], v.len - 141))
+                    return addToPath(vert[v.i - 1][v.j + 1]);
+            }
+        }
+        if (v.j > 0)
+        {
+            if (checkPath(vert[v.i][v.j - 1], v.len - 100))
+                return addToPath(vert[v.i][v.j - 1]);
+        }
+        if (v.j < size - 1)
+        {
+            if (checkPath(vert[v.i][v.j + 1], v.len - 100))
+                return addToPath(vert[v.i][v.j + 1]);
+        }
+        if (v.i < size - 1)
+        {
+            if (v.j>0)
+            {
+                if (checkPath(vert[v.i + 1][v.j - 1], v.len - 141)&& ((vert[v.i+1][v.j].val & 3) == 0) && ((vert[v.i][v.j-1].val & 3) == 0))
+                    return addToPath(vert[v.i + 1][v.j - 1]);
+            }
+            if (checkPath(vert[v.i + 1][v.j], v.len - 100))
+                return addToPath(vert[v.i + 1][v.j]);
+            if (v.j < size - 1 && ((vert[v.i+1][v.j].val & 3) == 0) && ((vert[v.i][v.j+1].val & 3) == 0))
+            {
+                if (checkPath(vert[v.i + 1][v.j + 1], v.len - 141))
+                    return addToPath(vert[v.i + 1][v.j + 1]);
+            }
+
+        }
+
+        return false;
+    }
+
+    private boolean checkPath(Vertex c, int len)
+    {
+        return c.val == 4 && c.len == len;
+    }
+
     public static LinkedList<Vertex> getPath(NPFMap map, LinkedList<Vertex> path)
     {
             Coord dir = new Coord();
+            Gob player = NUtils.player();
 
             if (!path.isEmpty()) {
                 Iterator<Vertex> it;
@@ -175,7 +331,6 @@ public class Graph implements Runnable
     public class Vertex extends NPFMap.Cell
     {
         double dist;
-        Vertex prev = null;
         int len = -1;
 
         public int i;
