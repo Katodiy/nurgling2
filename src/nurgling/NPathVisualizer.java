@@ -92,9 +92,6 @@ public class NPathVisualizer implements RenderTree.Node {
 
         if (NUtils.getGameUI()!=null && NUtils.getGameUI().routesWidget!=null && NUtils.getGameUI().routesWidget.visible) {
             final NMapView mv = (NMapView) NUtils.getGameUI().map;
-            if (mv == null) {
-                return;
-            }
             final RouteGraph graph = mv.routeGraphManager.getGraph();
             final MCache map = mv.glob.map;
 
