@@ -1,5 +1,6 @@
 package nurgling.actions.bots.registry;
 
+import nurgling.actions.CreateTraysWithCurds;
 import nurgling.actions.FillWaterskins;
 import nurgling.actions.PumpkinFarmer;
 import nurgling.actions.bots.*;
@@ -97,6 +98,7 @@ public class BotRegistry {
 
         bots.add(new BotDescriptor("compostbin", BotDescriptor.BotType.FARMING, "Compost Bin", "Pull mulch out of compost bins.", true, true, CompostBinUnloader.class, "compostbin", false));
         bots.add(new BotDescriptor("curdingtub", BotDescriptor.BotType.FARMING, "Curding Tub", "Pull curd out of curding tubs.", true, true, CurdingTubUnloader.class, "compostbin", false));
+        bots.add(new BotDescriptor("curdingtub", BotDescriptor.BotType.FARMING, "Curding Tub", "Pull curd out of curding tubs.", true, true, CreateTraysWithCurds.class, "compostbin", false));
 
         // FARMING QUALITY
         bots.add(new BotDescriptor("turnipq", BotDescriptor.BotType.FARMING_QUALITY, "Turnip Farmer Quality", "Automatically harvests and replants turnips in X*Y cell patches.", true, true, TurnipsFarmerQ.class, "turnipq", false));
