@@ -19,5 +19,7 @@ public class SpecialisationData {
         data.put("barrel",barrel);
         data.put("cropQ",crops);
         data.put("seedQ",crops);
+        ArrayList<String> cheeseRacks = new ArrayList<>(Arrays.asList("Inside", "Cellar", "Outside", "Mine"));
+        data.put("cheeseRacks", cheeseRacks);
     }
 }
