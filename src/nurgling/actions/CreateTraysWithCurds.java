@@ -7,18 +7,21 @@ import nurgling.tasks.WaitItems;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class CreateTraysWithCurds implements Action {
-    private final String curdType = "Cow's Curd";
-    private final int count = 2; // Number of trays to create
+    private final String curdType;
+    private final int count;
     private final String cheeseTrayType = "Cheese Tray";
     NAlias cheeseTrayAlias = new NAlias("Cheese Tray");
 
-    //    public CreateTraysWithCurds(String curdType, int count) {
-    //        this.curdType = curdType;
-    //        this.count = count;
-    //    }
+    public CreateTraysWithCurds() {
+        this("Cow's Curd", 2);
+    }
+
+    public CreateTraysWithCurds(String curdType, int count) {
+        this.curdType = curdType;
+        this.count = count;
+    }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -59,15 +62,16 @@ public class CreateTraysWithCurds implements Action {
 
             // 3. Use 4 curds on the tray
             for (int j = 0; j < 4; j++) {
-//                new UseItemOnItem(new NAlias(curdType), emptyTray).run(gui);
-//                int expected = curds.size() - (j + 1);
-//                NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), new NAlias(curdType), expected));
+                new UseItemOnItem(new NAlias(curdType), emptyTray).run(gui);
+                int expected = curds.size() - (j + 1);
+                NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), new NAlias(curdType), expected));
             }
+
+            // 4. Transfer filled tray to correct area
+            new CheeseAreaMatcher.TransferCheeseTraysToCorrectAreas().run(gui);
 
             traysCreated++;
         }
-
-//        new FreeInventory2(context).run(gui);
 
         return Results.SUCCESS();
     }
@@ -81,4 +85,5 @@ public class CreateTraysWithCurds implements Action {
         }
         return null;
     }
+
 }
