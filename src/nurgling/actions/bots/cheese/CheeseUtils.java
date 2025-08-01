@@ -1,12 +1,54 @@
 package nurgling.actions.bots.cheese;
 
 import haven.WItem;
+import nurgling.NGameUI;
+import nurgling.NGItem;
+import nurgling.cheese.CheeseOrder;
+import nurgling.cheese.CheeseOrdersManager;
 import nurgling.cheese.CheeseBranch;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
- * Utility methods for cheese detection, progression logic, and workflow decisions
+ * Combined utility class for all cheese-related operations including:
+ * - Cheese tray content inspection
+ * - Cheese workflow and progression logic
+ * - Cheese order processing and analysis
  */
-public class CheeseWorkflowUtils {
+public class CheeseUtils {
+    
+    // ============== CHEESE TRAY UTILITIES ==============
+    
+    /**
+     * Check if a cheese tray is empty (no content)
+     */
+    public static boolean isEmpty(WItem tray) {
+        if (tray == null) return true;
+        
+        List<NGItem.NContent> contents = ((NGItem) tray.item).content();
+        return contents == null || contents.isEmpty();
+    }
+    
+    /**
+     * Get the content name of what's inside a cheese tray
+     * @param tray The cheese tray WItem
+     * @return The name of the content (e.g., "Sheep's Curd", "Feta", etc.) or null if empty
+     */
+    public static String getContentName(WItem tray) {
+        if (tray == null) return null;
+        
+        List<NGItem.NContent> contents = ((NGItem) tray.item).content();
+        if (contents == null || contents.isEmpty()) {
+            return null; // Empty tray
+        }
+        
+        // Return the name of the first content item
+        return contents.get(0).name();
+    }
+    
+    // ============== CHEESE WORKFLOW UTILITIES ==============
     
     /**
      * Check if a cheese tray is ready to move to next stage
@@ -17,9 +59,9 @@ public class CheeseWorkflowUtils {
      * any cheese of the correct type for the current location is ready to move if it 
      * has a next progression step.
      */
-    public boolean isCheeseReadyToMove(WItem tray, CheeseBranch.Place currentPlace) {
+    public static boolean isCheeseReadyToMove(WItem tray, CheeseBranch.Place currentPlace) {
         // Get the content name from the tray
-        String contentName = CheeseTrayUtils.getContentName(tray);
+        String contentName = getContentName(tray);
         if (contentName == null) {
             return false; // Empty tray cannot be moved
         }
@@ -43,8 +85,8 @@ public class CheeseWorkflowUtils {
     /**
      * Check if cheese is ready to slice (final product in chain)
      */
-    public boolean isCheeseReadyToSlice(WItem tray) {
-        String contentName = CheeseTrayUtils.getContentName(tray);
+    public static boolean isCheeseReadyToSlice(WItem tray) {
+        String contentName = getContentName(tray);
         if (contentName == null) return false; // Empty tray
         
         // Find this cheese in the production chains
@@ -63,7 +105,7 @@ public class CheeseWorkflowUtils {
     /**
      * Check if cheese should move to next stage
      */
-    public boolean shouldMoveToNextStage(WItem tray, CheeseBranch.Place currentPlace) {
+    public static boolean shouldMoveToNextStage(WItem tray, CheeseBranch.Place currentPlace) {
         // If it's not ready to slice, and it's aged enough, it should move
         return !isCheeseReadyToSlice(tray) && isCheeseReadyToMove(tray, currentPlace);
     }
@@ -71,8 +113,8 @@ public class CheeseWorkflowUtils {
     /**
      * Get the next stage location for a cheese
      */
-    public CheeseBranch.Place getNextStageLocation(WItem tray, CheeseBranch.Place currentPlace) {
-        String contentName = CheeseTrayUtils.getContentName(tray);
+    public static CheeseBranch.Place getNextStageLocation(WItem tray, CheeseBranch.Place currentPlace) {
+        String contentName = getContentName(tray);
         if (contentName == null) return null; // Empty tray
         
         for (CheeseBranch branch : CheeseBranch.branches) {
@@ -87,37 +129,35 @@ public class CheeseWorkflowUtils {
         return null;
     }
     
-    /**
-     * Check if resource path matches cheese name (simplified)
-     */
-    public boolean resourceMatches(String resourcePath, String cheeseName) {
-        // This is a simplified check - you might need more sophisticated matching
-        return resourcePath.toLowerCase().contains(cheeseName.toLowerCase().replace(" ", "").replace("'", ""));
-    }
+    // ============== CHEESE ORDER PROCESSING ==============
     
     /**
-     * Get the cheese type name from a tray's content
+     * Analyze current orders to determine what work needs to be done
      */
-    public String getCheeseTypeName(WItem tray) {
-        String contentName = CheeseTrayUtils.getContentName(tray);
-        return contentName != null ? contentName : "Unknown Cheese";
-    }
-    
-    /**
-     * Get the final product name for a production chain
-     */
-    public String getFinalProductName(String cheeseType) {
-        for (CheeseBranch branch : CheeseBranch.branches) {
-            if (!branch.steps.isEmpty()) {
-                // Check if this branch produces the target cheese type
-                for (CheeseBranch.Cheese step : branch.steps) {
-                    if (step.name.equals(cheeseType)) {
-                        // Return the final step's name
-                        return branch.steps.get(branch.steps.size() - 1).name;
-                    }
+    public static Map<String, Integer> analyzeOrders(NGameUI gui) {
+        CheeseOrdersManager ordersManager = new CheeseOrdersManager();
+        Map<String, Integer> workNeeded = new HashMap<>();
+        
+        for (CheeseOrder order : ordersManager.getOrders().values()) {
+            String cheeseType = order.getCheeseType();
+            
+            // Get the production chain for this cheese
+            List<CheeseBranch.Cheese> chain = CheeseBranch.getChainToProduct(cheeseType);
+            if (chain == null) {
+                gui.msg("Unknown cheese type: " + cheeseType);
+                continue;
+            }
+            
+            // For now, focus on the first step (creating curds)
+            // TODO Add the rest of the steps
+            for (CheeseOrder.StepStatus status : order.getStatus()) {
+                if (status.left > 0) {
+                    workNeeded.put(cheeseType, status.left);
+                    break; // Focus on first incomplete step
                 }
             }
         }
-        return cheeseType; // Default to input if not found
+        
+        return workNeeded;
     }
 }

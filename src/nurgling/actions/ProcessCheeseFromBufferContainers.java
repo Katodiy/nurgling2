@@ -6,7 +6,7 @@ import nurgling.NGameUI;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
-import nurgling.actions.bots.cheese.CheeseWorkflowUtils;
+import nurgling.actions.bots.cheese.CheeseUtils;
 import nurgling.actions.bots.cheese.CheeseSlicingManager;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -20,11 +20,9 @@ import java.util.ArrayList;
  * Handles slicing ready cheese and moving cheese to next aging stage
  */
 public class ProcessCheeseFromBufferContainers implements Action {
-    private CheeseWorkflowUtils utils;
     private CheeseSlicingManager slicingManager;
     
     public ProcessCheeseFromBufferContainers() {
-        this.utils = new CheeseWorkflowUtils();
         this.slicingManager = new CheeseSlicingManager();
     }
     
@@ -89,13 +87,13 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 String resourcePath = tray.item.res.get().name;
                 
                 // Check if this cheese is ready to slice (final product)
-                if (utils.isCheeseReadyToSlice(tray)) {
+                if (CheeseUtils.isCheeseReadyToSlice(tray)) {
                     gui.msg("Found ready cheese for slicing: " + resourcePath);
                     slicingManager.sliceCheese(gui, tray);
                     
-                } else if (utils.shouldMoveToNextStage(tray, place)) {
+                } else if (CheeseUtils.shouldMoveToNextStage(tray, place)) {
                     // This cheese needs to move to the next aging area
-                    CheeseBranch.Place nextStage = utils.getNextStageLocation(tray, place);
+                    CheeseBranch.Place nextStage = CheeseUtils.getNextStageLocation(tray, place);
                     if (nextStage != null) {
                         gui.msg("Moving " + resourcePath + " from " + place + " to " + nextStage);
                         // TODO: Implement moving cheese between areas

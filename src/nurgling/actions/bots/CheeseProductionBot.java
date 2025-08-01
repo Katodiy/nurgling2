@@ -16,18 +16,16 @@ import java.util.Map;
  */
 public class CheeseProductionBot implements Action {
     
-    private CheeseOrderProcessor orderProcessor;
     private CheeseRackManager rackManager;
     
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         rackManager = new CheeseRackManager();
-        orderProcessor = new CheeseOrderProcessor();
         
         gui.msg("=== Starting Cheese Production Bot ===");
         
         // 1. Analyze current orders and determine what needs to be done
-        Map<String, Integer> workNeeded = orderProcessor.analyzeOrders(gui);
+        Map<String, Integer> workNeeded = CheeseUtils.analyzeOrders(gui);
         if (workNeeded.isEmpty()) {
             gui.msg("No work needed - all orders complete!");
             return Results.SUCCESS();
