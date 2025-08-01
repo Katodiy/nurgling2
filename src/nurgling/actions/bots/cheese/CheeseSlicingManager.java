@@ -49,15 +49,12 @@ public class CheeseSlicingManager {
             gui.msg("Error returning empty tray: " + e.getMessage());
         }
     }
-    
+
     /**
      * Store sliced cheese products in appropriate storage
      */
     public void storeSlicedCheese(NGameUI gui, String cheeseType) throws InterruptedException {
-        // TODO: Implement storage of sliced cheese products
-        // This would find the appropriate storage area for the cheese type
-        // and transfer the sliced cheese there
-        gui.msg("Storing sliced " + cheeseType + " cheese (implementation needed)");
+
     }
 
     public void sliceCheese(NGameUI gui, WItem tray) {
