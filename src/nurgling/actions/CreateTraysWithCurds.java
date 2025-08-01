@@ -1,9 +1,12 @@
 package nurgling.actions;
 
+import haven.Gob;
 import haven.WItem;
 import nurgling.*;
 import nurgling.areas.NContext;
 import nurgling.tasks.WaitItems;
+import nurgling.tools.Container;
+import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.actions.bots.cheese.CheeseTrayUtils;
 
@@ -36,14 +39,16 @@ public class CreateTraysWithCurds implements Action {
             // 1. Find an empty tray
             WItem emptyTray = getNextEmptyTray(gui);
             if (emptyTray == null) {
-                Results traysRes = new TakeItems2(context, cheeseTrayType, 1).run(gui);
-                if (!traysRes.isSuccess) {
-                    gui.error("No Cheese Trays available");
+                // TakeItems2 gets confused by filled trays, so we need custom logic
+                gui.msg("No empty tray in inventory, fetching from storage containers...");
+                boolean success = fetchEmptyTrayFromStorage(gui, context);
+                if (!success) {
+                    gui.error("No empty Cheese Trays available in storage");
                     break;
                 }
                 emptyTray = getNextEmptyTray(gui);
                 if (emptyTray == null) {
-                    gui.error("Still no empty Cheese Tray after taking!");
+                    gui.error("Still no empty Cheese Tray after fetching from storage!");
                     break;
                 }
             }
@@ -75,6 +80,63 @@ public class CreateTraysWithCurds implements Action {
         }
 
         return Results.SUCCESS(traysCreated);
+    }
+
+    /**
+     * Manually fetch cheese trays from storage containers
+     * Take any cheese tray and verify it's empty - if not, continue searching
+     */
+    private boolean fetchEmptyTrayFromStorage(NGameUI gui, NContext context) throws InterruptedException {
+        ArrayList<NContext.ObjectStorage> storages = context.getInStorages(cheeseTrayType);
+        if (storages == null || storages.isEmpty()) {
+            gui.error("No storage containers configured for " + cheeseTrayType);
+            return false;
+        }
+        
+        for (NContext.ObjectStorage storage : storages) {
+            if (storage instanceof Container) {
+                Container container = (Container) storage;
+                if (tryTakeEmptyTrayFromContainer(gui, container)) {
+                    return true; // Successfully took an empty tray
+                }
+            }
+        }
+        
+        gui.msg("No empty cheese trays found in any storage container");
+        return false;
+    }
+    
+    /**
+     * Try to take an empty cheese tray from a specific container
+     */
+    private boolean tryTakeEmptyTrayFromContainer(NGameUI gui, Container container) throws InterruptedException {
+        try {
+            // Use TakeItemsFromContainer to take any cheese tray
+            java.util.HashSet<String> trayNames = new java.util.HashSet<>();
+            trayNames.add("Cheese Tray");
+
+            new PathFinder(Finder.findGob(container.gobid)).run(gui);
+            new OpenTargetContainer(container).run(gui);
+            Results result = new TakeItemsFromContainer(container, trayNames, cheeseTrayAlias).run(gui);
+            new CloseTargetContainer(container).run(gui);
+            if (result.IsSuccess()) {
+                // Check if the tray we got is actually empty
+                WItem takenTray = getNextEmptyTray(gui);
+                if (takenTray != null) {
+                    gui.msg("Successfully took empty cheese tray from storage");
+                    return true;
+                } else {
+                    gui.msg("Took filled tray, looking in next container...");
+                    return false;
+                }
+            }
+            
+            return false;
+            
+        } catch (Exception e) {
+            gui.msg("Error taking from container: " + e.getMessage());
+            return false;
+        }
     }
 
     private WItem getNextEmptyTray(NGameUI gui) throws InterruptedException {
