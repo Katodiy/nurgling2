@@ -18,14 +18,16 @@ import java.util.Map;
 
 /**
  * Clears ready cheese from all racks to buffer containers and records rack capacity
- * Returns rack capacity data via Results payload
+ * Use getLastRecordedCapacity() to access the capacity data after running
  */
 public class ClearRacksAndRecordCapacity implements Action {
     private final Coord TRAY_SIZE = new Coord(1, 2);
     private final CheeseWorkflowUtils cheeseWorkflowUtils = new CheeseWorkflowUtils();
+    private Map<CheeseBranch.Place, Integer> lastRecordedCapacity = new HashMap<>();
     
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        lastRecordedCapacity = new HashMap<>();
         Map<CheeseBranch.Place, Integer> rackCapacity = new HashMap<>();
         
         CheeseBranch.Place[] places = {
@@ -50,7 +52,16 @@ public class ClearRacksAndRecordCapacity implements Action {
         }
         
         gui.msg("=== Full picture obtained - rack capacity across all areas ===");
-        return Results.SUCCESS(rackCapacity);
+        lastRecordedCapacity = rackCapacity;
+        return Results.SUCCESS();
+    }
+    
+    /**
+     * Get the last recorded rack capacity data
+     * @return Map of place to available capacity, or empty map if not yet recorded
+     */
+    public Map<CheeseBranch.Place, Integer> getLastRecordedCapacity() {
+        return new HashMap<>(lastRecordedCapacity);
     }
     
     /**
