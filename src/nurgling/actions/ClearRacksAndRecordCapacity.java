@@ -3,6 +3,7 @@ package nurgling.actions;
 import haven.Coord;
 import haven.Gob;
 import nurgling.NGameUI;
+import nurgling.actions.bots.cheese.CheeseWorkflowUtils;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
@@ -21,6 +22,7 @@ import java.util.Map;
  */
 public class ClearRacksAndRecordCapacity implements Action {
     private final Coord TRAY_SIZE = new Coord(1, 2);
+    private final CheeseWorkflowUtils cheeseWorkflowUtils = new CheeseWorkflowUtils();
     
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -90,8 +92,7 @@ public class ClearRacksAndRecordCapacity implements Action {
             ArrayList<haven.WItem> trays = gui.getInventory(rackContainer.cap).getItems(new NAlias("Cheese Tray"));
             
             for (haven.WItem tray : trays) {
-                // TODO: Add logic to determine if cheese is ready to move
-                if(false) {
+                if(cheeseWorkflowUtils.isCheeseReadyToSlice(tray) && cheeseWorkflowUtils.isCheeseReadyToMove(tray, place)) {
                     moveToBufferContainer(gui, tray, place);
                     break;
                 }
