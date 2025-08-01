@@ -8,7 +8,7 @@ import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.actions.bots.cheese.CheeseTrayUtils;
+import nurgling.actions.bots.cheese.CheeseUtils;
 
 import java.util.ArrayList;
 
@@ -17,6 +17,7 @@ public class CreateTraysWithCurds implements Action {
     private final int count;
     private final String cheeseTrayType = "Cheese Tray";
     NAlias cheeseTrayAlias = new NAlias("Cheese Tray");
+    private int lastTraysCreated = 0;
 
     public CreateTraysWithCurds() {
         this("Cow's Curd", 2);
@@ -71,7 +72,16 @@ public class CreateTraysWithCurds implements Action {
             traysCreated++;
         }
 
-        return Results.SUCCESS(traysCreated);
+        lastTraysCreated = traysCreated;
+        return Results.SUCCESS();
+    }
+    
+    /**
+     * Get the number of trays created in the last run
+     * @return Number of trays created, or 0 if not yet run
+     */
+    public int getLastTraysCreated() {
+        return lastTraysCreated;
     }
 
     /**
@@ -126,7 +136,7 @@ public class CreateTraysWithCurds implements Action {
         ArrayList<WItem> trays = gui.getInventory().getItems(cheeseTrayAlias);
         int emptyCount = 0;
         for (WItem tray : trays) {
-            if (CheeseTrayUtils.isEmpty(tray)) {
+            if (CheeseUtils.isEmpty(tray)) {
                 emptyCount++;
             }
         }
@@ -176,7 +186,7 @@ public class CreateTraysWithCurds implements Action {
             
             // First pass: count empty trays available
             for (WItem tray : trays) {
-                if (CheeseTrayUtils.isEmpty(tray)) {
+                if (CheeseUtils.isEmpty(tray)) {
                     emptyTraysFound++;
                 }
             }
@@ -194,7 +204,7 @@ public class CreateTraysWithCurds implements Action {
             for (WItem tray : trays) {
                 if (emptyTraysTransferred >= traysToTake) break;
                 
-                if (CheeseTrayUtils.isEmpty(tray)) {
+                if (CheeseUtils.isEmpty(tray)) {
                     tray.item.wdgmsg("transfer", haven.Coord.z);
                     NUtils.addTask(new nurgling.tasks.ISRemoved(tray.item.wdgid()));
                     emptyTraysTransferred++;
@@ -262,7 +272,7 @@ public class CreateTraysWithCurds implements Action {
         ArrayList<WItem> trays = gui.getInventory().getItems(cheeseTrayAlias);
         for (WItem tray : trays) {
             // Use content inspection instead of resource name
-            if (CheeseTrayUtils.isEmpty(tray)) {
+            if (CheeseUtils.isEmpty(tray)) {
                 return tray;
             }
         }

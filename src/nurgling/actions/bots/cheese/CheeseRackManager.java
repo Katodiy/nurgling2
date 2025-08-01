@@ -18,6 +18,8 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
+// Import the combined CheeseUtils class
+
 /**
  * Handles cheese rack capacity checking and tray movement between areas
  */
@@ -113,7 +115,7 @@ public class CheeseRackManager {
         for (WItem tray : allTrays) {
             if (specificTrays.size() >= maxCount) break;
             
-            String contentName = CheeseTrayUtils.getContentName(tray);
+            String contentName = CheeseUtils.getContentName(tray);
             if (cheeseType.equals(contentName)) {
                 specificTrays.add(tray);
             }

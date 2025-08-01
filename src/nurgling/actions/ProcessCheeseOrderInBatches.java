@@ -6,7 +6,7 @@ import nurgling.cheese.CheeseOrder;
 import nurgling.cheese.CheeseOrdersManager;
 import nurgling.cheese.CheeseBranch;
 import nurgling.actions.bots.cheese.CheeseRackManager;
-import nurgling.actions.bots.cheese.CheeseTrayUtils;
+import nurgling.actions.bots.cheese.CheeseUtils;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
@@ -86,7 +86,7 @@ public class ProcessCheeseOrderInBatches implements Action {
         
         // Save updated orders
         ordersManager.writeOrders(null);
-        return Results.SUCCESS(totalProcessed);
+        return Results.SUCCESS();
     }
     
     /**
@@ -103,8 +103,9 @@ public class ProcessCheeseOrderInBatches implements Action {
             gui.msg("Creating batch of " + batchSize + " trays with " + curdType);
             
             // Create trays with curds and get actual count created
-            Results result = new CreateTraysWithCurds(curdType, batchSize).run(gui);
-            int actualCount = result.hasPayload() ? (Integer) result.getPayload() : 0;
+            CreateTraysWithCurds createAction = new CreateTraysWithCurds(curdType, batchSize);
+            createAction.run(gui);
+            int actualCount = createAction.getLastTraysCreated();
             
             gui.msg("Created " + actualCount + " trays (requested " + batchSize + ")");
 
@@ -226,7 +227,7 @@ public class ProcessCheeseOrderInBatches implements Action {
         int count = 0;
         
         for (WItem tray : allTrays) {
-            String contentName = CheeseTrayUtils.getContentName(tray);
+            String contentName = CheeseUtils.getContentName(tray);
             if (cheeseType.equals(contentName)) {
                 count++;
             }

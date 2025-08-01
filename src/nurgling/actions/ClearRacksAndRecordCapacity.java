@@ -3,7 +3,7 @@ package nurgling.actions;
 import haven.Coord;
 import haven.Gob;
 import nurgling.NGameUI;
-import nurgling.actions.bots.cheese.CheeseWorkflowUtils;
+import nurgling.actions.bots.cheese.CheeseUtils;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
@@ -22,7 +22,6 @@ import java.util.Map;
  */
 public class ClearRacksAndRecordCapacity implements Action {
     private final Coord TRAY_SIZE = new Coord(1, 2);
-    private final CheeseWorkflowUtils cheeseWorkflowUtils = new CheeseWorkflowUtils();
     private Map<CheeseBranch.Place, Integer> lastRecordedCapacity = new HashMap<>();
     
     @Override
@@ -105,7 +104,7 @@ public class ClearRacksAndRecordCapacity implements Action {
             
             // Identify which trays are ready to move
             for (haven.WItem tray : trays) {
-                if(cheeseWorkflowUtils.isCheeseReadyToMove(tray, place)) {
+                if(CheeseUtils.isCheeseReadyToMove(tray, place)) {
                     readyTrays.add(tray);
                 }
             }
