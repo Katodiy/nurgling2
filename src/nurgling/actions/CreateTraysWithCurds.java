@@ -5,6 +5,7 @@ import nurgling.*;
 import nurgling.areas.NContext;
 import nurgling.tasks.WaitItems;
 import nurgling.tools.NAlias;
+import nurgling.actions.bots.cheese.CheeseTrayUtils;
 
 import java.util.ArrayList;
 
@@ -73,13 +74,14 @@ public class CreateTraysWithCurds implements Action {
             traysCreated++;
         }
 
-        return Results.SUCCESS();
+        return Results.SUCCESS(traysCreated);
     }
 
     private WItem getNextEmptyTray(NGameUI gui) throws InterruptedException {
         ArrayList<WItem> trays = gui.getInventory().getItems(cheeseTrayAlias);
         for (WItem tray : trays) {
-            if (!tray.item.res.get().name.contains("curd")) {
+            // Use content inspection instead of resource name
+            if (CheeseTrayUtils.isEmpty(tray)) {
                 return tray;
             }
         }
