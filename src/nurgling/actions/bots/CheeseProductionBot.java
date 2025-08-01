@@ -38,26 +38,22 @@ public class CheeseProductionBot implements Action {
             return Results.SUCCESS();
         }
         
-//        // 2. Pass 1: Clear all racks into buffer and record capacity
-//        gui.msg("=== Pass 1: Clearing all racks and recording capacity ===");
-//        Results clearResult = new ClearRacksAndRecordCapacity().run(gui);
-//        if (!clearResult.IsSuccess() || !clearResult.hasPayload()) {
-//            gui.error("Failed to clear racks and record capacity");
-//        }
-//
-//        @SuppressWarnings("unchecked")
-//        Map<CheeseBranch.Place, Integer> rackCapacity = (Map<CheeseBranch.Place, Integer>) clearResult.getPayload();
-        Map<CheeseBranch.Place, Integer> rackCapacity = new EnumMap<>(CheeseBranch.Place.class);
-        for (CheeseBranch.Place place : CheeseBranch.Place.values()) {
-            rackCapacity.put(place, 12);
+        // 2. Pass 1: Clear all racks into buffer and record capacity
+        gui.msg("=== Pass 1: Clearing all racks and recording capacity ===");
+        Results clearResult = new ClearRacksAndRecordCapacity().run(gui);
+        if (!clearResult.IsSuccess() || !clearResult.hasPayload()) {
+            gui.error("Failed to clear racks and record capacity");
         }
 
-                // 3. Pass 2: Process buffers + create new cheese trays
+        @SuppressWarnings("unchecked")
+        Map<CheeseBranch.Place, Integer> rackCapacity = (Map<CheeseBranch.Place, Integer>) clearResult.getPayload();
+
+        // 3. Pass 2: Process buffers + create new cheese trays
         gui.msg("=== Pass 2: Processing buffers and creating new cheese trays ===");
-//        Results bufferResult = new ProcessCheeseFromBufferContainers().run(gui);
-//        if (!bufferResult.IsSuccess()) {
-//            gui.error("Failed to process cheese from buffer containers");
-//        }
+        Results bufferResult = new ProcessCheeseFromBufferContainers().run(gui);
+        if (!bufferResult.IsSuccess()) {
+            gui.error("Failed to process cheese from buffer containers");
+        }
 
         for (Map.Entry<String, Integer> work : workNeeded.entrySet()) {
             String cheeseType = work.getKey();
