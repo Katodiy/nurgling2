@@ -11,7 +11,6 @@ import nurgling.actions.PathFinder;
 import nurgling.actions.OpenTargetContainer;
 import nurgling.actions.CloseTargetContainer;
 import nurgling.actions.TransferWItemsToContainer;
-import nurgling.actions.CheeseAreaMatcher;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -45,9 +44,8 @@ public class CheeseRackManager {
         int placed = moveTraysToRacks(gui, targetPlace, batchSize, cheeseType);
         
         if (placed < batchSize) {
-            gui.msg("Only placed " + placed + "/" + batchSize + " trays in racks, sending remaining to buffer containers");
-            // Send remaining trays to buffer containers using area matcher
-            new CheeseAreaMatcher.TransferCheeseTraysToCorrectAreas().run(gui);
+            gui.msg("Only placed " + placed + "/" + batchSize + " trays in racks, remaining need buffer container handling");
+            // TODO: Implement proper buffer container handling for remaining trays
         }
         
         return placed;

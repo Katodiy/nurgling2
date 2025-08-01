@@ -90,15 +90,27 @@ public class ClearRacksAndRecordCapacity implements Action {
             
             // Get all cheese trays in this rack
             ArrayList<haven.WItem> trays = gui.getInventory(rackContainer.cap).getItems(new NAlias("Cheese Tray"));
+            ArrayList<haven.WItem> readyTrays = new ArrayList<>();
             
+            // Identify which trays are ready to move
             for (haven.WItem tray : trays) {
-                if(cheeseWorkflowUtils.isCheeseReadyToSlice(tray) && cheeseWorkflowUtils.isCheeseReadyToMove(tray, place)) {
-                    moveToBufferContainer(gui, tray, place);
-                    break;
+                if(cheeseWorkflowUtils.isCheeseReadyToMove(tray, place)) {
+                    readyTrays.add(tray);
                 }
             }
             
             new CloseTargetContainer(rackContainer).run(gui);
+            
+            // Take ready trays to inventory using the new action
+            if (!readyTrays.isEmpty()) {
+                gui.msg("Taking " + readyTrays.size() + " ready cheese trays to inventory from " + place + " rack");
+                new TakeWItemsFromContainer(rackContainer, readyTrays).run(gui);
+                
+                // Now move the trays from inventory to buffer containers
+                for (int i = 0; i < readyTrays.size(); i++) {
+                    moveFromInventoryToBuffer(gui, place);
+                }
+            }
             
         } catch (Exception e) {
             gui.msg("Error checking rack in " + place + ": " + e.getMessage());
@@ -106,9 +118,9 @@ public class ClearRacksAndRecordCapacity implements Action {
     }
     
     /**
-     * Move a cheese tray to buffer container in the same area
+     * Move a cheese tray from inventory to buffer container in the same area
      */
-    private void moveToBufferContainer(NGameUI gui, haven.WItem tray, CheeseBranch.Place place) {
+    private void moveFromInventoryToBuffer(NGameUI gui, CheeseBranch.Place place) {
         try {
             // Find buffer containers in this area (containers within the same area as racks)
             NContext freshContext = new NContext(gui);
@@ -128,11 +140,11 @@ public class ClearRacksAndRecordCapacity implements Action {
                 if (bufferContainer.getattr(Container.Space.class) != null && 
                     bufferContainer.getattr(Container.Space.class).getFreeSpace() > 0) {
                     
-                    // Transfer the tray to buffer container
+                    // Transfer the tray from inventory to buffer container
                     new TransferToContainer(bufferContainer, new NAlias("Cheese Tray"), 1).run(gui);
                     new CloseTargetContainer(bufferContainer).run(gui);
                     
-                    gui.msg("Moved " + tray.item.res.get().name + " to buffer container in " + place + " area");
+                    gui.msg("Moved cheese tray from inventory to buffer container in " + place + " area");
                     return;
                 }
                 

@@ -66,8 +66,7 @@ public class CreateTraysWithCurds implements Action {
                 NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), new NAlias(curdType), expected));
             }
 
-            // 4. Transfer filled tray to correct area
-            new CheeseAreaMatcher.TransferCheeseTraysToCorrectAreas().run(gui);
+            // 4. Transfer filled tray to correct area (removed non-functional CheeseAreaMatcher call)
 
             traysCreated++;
         }
