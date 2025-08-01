@@ -10,7 +10,6 @@ import nurgling.cheese.CheeseBranch;
 import nurgling.actions.PathFinder;
 import nurgling.actions.OpenTargetContainer;
 import nurgling.actions.CloseTargetContainer;
-import nurgling.actions.TransferToContainer;
 import nurgling.actions.TransferWItemsToContainer;
 import nurgling.actions.CheeseAreaMatcher;
 import nurgling.tools.Container;
@@ -19,66 +18,14 @@ import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Handles cheese rack capacity checking and tray movement between areas
  */
 public class CheeseRackManager {
     private final Coord TRAY_SIZE = new Coord(1, 2);
-    private NContext context;
     
-    public CheeseRackManager(NContext context) {
-        this.context = context;
-    }
-    
-    /**
-     * Check available capacity in cheese racks across all areas
-     */
-    public Map<CheeseBranch.Place, Integer> checkRackCapacity(NGameUI gui) throws InterruptedException {
-        Map<CheeseBranch.Place, Integer> capacity = new HashMap<>();
-        
-        for (CheeseBranch.Place place : CheeseBranch.Place.values()) {
-            if (place == CheeseBranch.Place.start) continue; // Skip start placeholder
-            
-            try {
-                // Create fresh context for each area to avoid caching issues
-                NContext freshContext = new NContext(gui);
-                NArea area = freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, place.toString());
-                if (area != null) {
-                    int rackSpace = calculateRackSpace(gui, area);
-                    capacity.put(place, rackSpace);
-                    gui.msg(place + " cheese racks can fit " + rackSpace + " more trays");
-                }
-            } catch (Exception e) {
-                gui.msg("Could not access " + place + " cheese racks: " + e.getMessage());
-                capacity.put(place, 0);
-            }
-        }
-        
-        return capacity;
-    }
-    
-    /**
-     * Calculate available space in cheese racks in an area
-     */
-    private int calculateRackSpace(NGameUI gui, NArea area) throws InterruptedException {
-        ArrayList<Gob> racks = Finder.findGobs(area, new NAlias("gfx/terobjs/cheeserack"));
-        int totalSpace = 0;
-        
-        for (Gob rack : racks) {
-            Container rackContainer = new Container(rack, "Rack");
-            new PathFinder(rack).run(gui);
-            new OpenTargetContainer(rackContainer).run(gui);
-            
-            int freeSpace = gui.getInventory(rackContainer.cap).getNumberFreeCoord(TRAY_SIZE);
-            totalSpace += freeSpace;
-            
-            new CloseTargetContainer(rackContainer).run(gui);
-        }
-        
-        return totalSpace;
+    public CheeseRackManager() {
     }
     
     /**
