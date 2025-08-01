@@ -32,9 +32,12 @@ public class CheeseBufferManager {
     }
     
     /**
-     * Phase 1: Clear all ready cheese from racks to buffer containers
+     * OPTIMIZED: Clear ready cheese from all racks and record capacity in single pass
+     * @return map of rack capacity for each area
      */
-    public void clearReadyCheeseFromAllRacks(NGameUI gui) throws InterruptedException {
+    public java.util.Map<CheeseBranch.Place, Integer> clearRacksAndRecordCapacity(NGameUI gui) throws InterruptedException {
+        java.util.Map<CheeseBranch.Place, Integer> rackCapacity = new java.util.HashMap<>();
+        
         CheeseBranch.Place[] places = {
                 CheeseBranch.Place.outside,
                 CheeseBranch.Place.inside,
@@ -43,9 +46,60 @@ public class CheeseBufferManager {
         };
         
         for (CheeseBranch.Place place : places) {
-            gui.msg("Clearing ready cheese from " + place + " racks");
+            gui.msg("=== Clearing " + place + " area and recording capacity ===");
+            
+            // Step 1: Clear ready cheese from racks to buffer containers
+            gui.msg("1. Clearing ready cheese from " + place + " racks");
             clearReadyCheeseFromArea(gui, place);
+            
+            // Step 2: Check rack capacity while we're already in this area
+            gui.msg("2. Checking rack capacity in " + place);
+            int capacity = calculateRackCapacityInArea(gui, place);
+            rackCapacity.put(place, capacity);
+            gui.msg(place + " racks can fit " + capacity + " more trays");
         }
+        
+        gui.msg("=== Full picture obtained - rack capacity across all areas ===");
+        return rackCapacity;
+    }
+    
+    /**
+     * Calculate rack capacity for a specific area (extracted from CheeseRackManager logic)
+     */
+    private int calculateRackCapacityInArea(NGameUI gui, CheeseBranch.Place place) throws InterruptedException {
+        try {
+            // Create fresh context for each area to avoid caching issues
+            NContext freshContext = new NContext(gui);
+            NArea area = freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, place.toString());
+            if (area != null) {
+                return calculateRackSpaceInArea(gui, area);
+            }
+        } catch (Exception e) {
+            gui.msg("Could not access " + place + " cheese racks: " + e.getMessage());
+        }
+        return 0;
+    }
+    
+    /**
+     * Calculate available space in cheese racks in a specific area
+     */
+    private int calculateRackSpaceInArea(NGameUI gui, NArea area) throws InterruptedException {
+        ArrayList<Gob> racks = Finder.findGobs(area, new NAlias("gfx/terobjs/cheeserack"));
+        int totalSpace = 0;
+        final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
+        
+        for (Gob rack : racks) {
+            Container rackContainer = new Container(rack, "Rack");
+            new PathFinder(rack).run(gui);
+            new OpenTargetContainer(rackContainer).run(gui);
+            
+            int freeSpace = gui.getInventory(rackContainer.cap).getNumberFreeCoord(TRAY_SIZE);
+            totalSpace += freeSpace;
+            
+            new CloseTargetContainer(rackContainer).run(gui);
+        }
+        
+        return totalSpace;
     }
     
     /**
