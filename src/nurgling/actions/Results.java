@@ -5,19 +5,11 @@ import nurgling.NUtils;
 public class Results {
     String msg;
     public boolean isSuccess = false;
-    private Object payload = null;
+    
     public static Results SUCCESS()
     {
         Results res =new Results(null);
         res.isSuccess = true;
-        return res;
-    }
-
-    public static Results SUCCESS(Object payload)
-    {
-        Results res =new Results(null);
-        res.isSuccess = true;
-        res.payload = payload;
         return res;
     }
 
@@ -42,15 +34,5 @@ public class Results {
     public boolean IsSuccess()
     {
         return isSuccess;
-    }
-
-    public boolean hasPayload()
-    {
-        return payload != null;
-    }
-
-    public Object getPayload()
-    {
-        return payload;
     }
 }
