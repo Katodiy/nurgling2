@@ -6,12 +6,9 @@ import nurgling.actions.Results;
 import nurgling.actions.ClearRacksAndRecordCapacity;
 import nurgling.actions.ProcessCheeseFromBufferContainers;
 import nurgling.actions.ProcessCheeseOrderInBatches;
-import nurgling.areas.NContext;
 import nurgling.actions.bots.cheese.*;
 import nurgling.cheese.CheeseBranch;
 
-import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -24,9 +21,7 @@ public class CheeseProductionBot implements Action {
     
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NContext context = new NContext(gui);
-
-        rackManager = new CheeseRackManager(context);
+        rackManager = new CheeseRackManager();
         orderProcessor = new CheeseOrderProcessor();
         
         gui.msg("=== Starting Cheese Production Bot ===");

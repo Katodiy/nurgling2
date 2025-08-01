@@ -10,25 +10,34 @@ public class CheeseWorkflowUtils {
     
     /**
      * Check if a cheese tray is ready to move to next stage
+     * 
+     * Uses location-based filtering logic: builds a candidates list of cheese names 
+     * that belong in the current location, then checks if the tray's content matches 
+     * any candidate name and has a next stage. No explicit readiness state - assumes 
+     * any cheese of the correct type for the current location is ready to move if it 
+     * has a next progression step.
      */
     public boolean isCheeseReadyToMove(WItem tray, CheeseBranch.Place currentPlace) {
-        // TODO: Implement logic to check if cheese has aged long enough
-        // For now, assume all cheese is ready to move (this needs refinement)
+        // Get the content name from the tray
+        String contentName = CheeseTrayUtils.getContentName(tray);
+        if (contentName == null) {
+            return false; // Empty tray cannot be moved
+        }
         
-        String resourcePath = tray.item.res.get().name;
+        // Build candidates list: cheese names that belong in the current location
+        // and check if they have a next stage in their progression
+        for (CheeseBranch branch : CheeseBranch.branches) {
+            for (int i = 0; i < branch.steps.size(); i++) {
+                CheeseBranch.Cheese step = branch.steps.get(i);
+                if (step.place == currentPlace && step.name.equals(contentName)) {
+                    // This cheese is in the correct current location according to 
+                    // the progression schedule. Check if there's a next stage.
+                    return i < branch.steps.size() - 1; // Ready to move if not final product
+                }
+            }
+        }
         
-        // Find what cheese this is and what stage it should be at
-//        for (CheeseBranch branch : CheeseBranch.branches) {
-//            for (int i = 0; i < branch.steps.size(); i++) {
-//                CheeseBranch.Cheese step = branch.steps.get(i);
-//                if (step.place == currentPlace && resourceMatches(resourcePath, step.name)) {
-//                    // This cheese is in the right place, check if it should move to next stage
-//                    return i < branch.steps.size() - 1; // Not the final product yet
-//                }
-//            }
-//        }
-        
-        return false; // Don't move if we're not sure
+        return false; // This cheese doesn't belong in current location or is final product
     }
     
     /**
