@@ -36,40 +36,4 @@ public class CheeseTrayUtils {
         // Return the name of the first content item
         return contents.get(0).name();
     }
-    
-    /**
-     * Check if a cheese tray contains a specific type of curd or cheese
-     */
-    public static boolean containsContent(WItem tray, String contentName) {
-        String actualContent = getContentName(tray);
-        return actualContent != null && actualContent.equals(contentName);
-    }
-    
-    /**
-     * Check if a cheese tray contains any type of curd
-     */
-    public static boolean containsCurd(WItem tray) {
-        String content = getContentName(tray);
-        return content != null && content.contains("Curd");
-    }
-    
-    /**
-     * Get the curd type from a tray (e.g., "Sheep's", "Cow's", "Goat's")
-     */
-    public static String getCurdType(WItem tray) {
-        String content = getContentName(tray);
-        if (content != null && content.contains("Curd")) {
-            // Extract the type before "'s Curd"
-            return content.replace(" Curd", "").replace("'s", "'s");
-        }
-        return null;
-    }
-    
-    /**
-     * Check if the tray contains cheese ready for next stage or slicing
-     */
-    public static boolean containsAgedCheese(WItem tray) {
-        String content = getContentName(tray);
-        return content != null && !content.contains("Curd"); // Not curd = aged cheese
-    }
 }

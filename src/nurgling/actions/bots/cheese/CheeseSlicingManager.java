@@ -3,7 +3,6 @@ package nurgling.actions.bots.cheese;
 import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.areas.NContext;
-import nurgling.actions.CheeseAreaMatcher;
 
 /**
  * Handles cheese slicing and empty tray management
@@ -37,11 +36,9 @@ public class CheeseSlicingManager {
         try {
             NContext returnContext = new NContext(gui);
             if (returnContext.addOutItem("Empty Cheese Tray", null, 1.0)) {
-                // Use the custom area matcher to send empty tray to correct area
-                new CheeseAreaMatcher.TransferCheeseTraysToCorrectAreas().run(gui);
+                // Empty tray handling (removed non-functional CheeseAreaMatcher call)
             } else if (returnContext.addOutItem("Cheese Tray", null, 1.0)) {
-                // Fallback to generic cheese tray area
-                new CheeseAreaMatcher.TransferCheeseTraysToCorrectAreas().run(gui);
+                // Fallback to generic cheese tray area (removed non-functional CheeseAreaMatcher call)
             } else {
                 gui.msg("No empty cheese tray area configured - keeping in inventory");
             }
