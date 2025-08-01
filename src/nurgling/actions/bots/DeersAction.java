@@ -74,7 +74,7 @@ public class DeersAction implements Action {
                 public boolean test(Gob gob) {
                     Teimdeer p1 = (Teimdeer) (NUtils.getAnimalEntity(gob, Teimdeer.class));
                     ;
-                    return !p1.buck && !p1.dead && p1.lactate;
+                    return !p1.buck && !p1.dead && !p1.fawn;
                 }
             };
             if(TeimDeerHerd.getCurrent()!=null) {

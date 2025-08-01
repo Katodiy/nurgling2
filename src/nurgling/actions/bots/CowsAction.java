@@ -77,7 +77,7 @@ public class CowsAction implements Action {
                 public boolean test(Gob gob) {
                     Ochs p1 = (Ochs) (NUtils.getAnimalEntity(gob, Ochs.class));
                     ;
-                    return !p1.bull && !p1.dead && p1.lactate;
+                    return !p1.bull && !p1.dead && !p1.calf;
                 }
             };
             if(CowsHerd.getCurrent()!=null) {

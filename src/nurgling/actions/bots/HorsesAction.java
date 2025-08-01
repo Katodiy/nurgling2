@@ -74,7 +74,7 @@ public class HorsesAction implements Action {
                 public boolean test(Gob gob) {
                     Horse p1 = (Horse) (NUtils.getAnimalEntity(gob, Horse.class));
                     ;
-                    return !p1.stallion && !p1.dead && p1.lactate;
+                    return !p1.stallion && !p1.dead && !p1.foal;
                 }
             };
             if(HorseHerd.getCurrent()!=null) {
