@@ -59,4 +59,7 @@ public class CheeseSlicingManager {
         // and transfer the sliced cheese there
         gui.msg("Storing sliced " + cheeseType + " cheese (implementation needed)");
     }
+
+    public void sliceCheese(NGameUI gui, WItem tray) {
+    }
 }
