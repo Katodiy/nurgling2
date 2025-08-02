@@ -83,23 +83,24 @@ public class CheeseUtils {
     }
     
     /**
-     * Check if cheese is ready to slice (final product in chain)
+     * Check if cheese is ready to slice (has been ordered by a customer)
+     * A cheese is ready to slice if it appears in any active order, regardless of 
+     * whether it's the final product in its branch or an intermediate step
      */
     public static boolean isCheeseReadyToSlice(WItem tray) {
         String contentName = getContentName(tray);
         if (contentName == null) return false; // Empty tray
         
-        // Find this cheese in the production chains
-        for (CheeseBranch branch : CheeseBranch.branches) {
-            for (int i = 0; i < branch.steps.size(); i++) {
-                CheeseBranch.Cheese step = branch.steps.get(i);
-                if (step.name.equals(contentName)) {
-                    // This is the final step if it's the last in the chain
-                    return i == branch.steps.size() - 1;
-                }
+        // Check if this cheese type is in any active order
+        CheeseOrdersManager ordersManager = new CheeseOrdersManager();
+        for (CheeseOrder order : ordersManager.getOrders().values()) {
+            if (order.getCheeseType().equals(contentName)) {
+                // This cheese type has been ordered, so it's ready to slice
+                return true;
             }
         }
-        return false;
+        
+        return false; // This cheese type hasn't been ordered
     }
     
     /**
@@ -132,11 +133,12 @@ public class CheeseUtils {
     // ============== CHEESE ORDER PROCESSING ==============
     
     /**
-     * Analyze current orders to determine what work needs to be done
+     * Analyze current orders to determine what curd creation work needs to be done
+     * Only focuses on "start" step since movement work is handled by buffer processing
      */
     public static Map<String, Integer> analyzeOrders(NGameUI gui) {
         CheeseOrdersManager ordersManager = new CheeseOrdersManager();
-        Map<String, Integer> workNeeded = new HashMap<>();
+        Map<String, Integer> curdWorkNeeded = new HashMap<>();
         
         for (CheeseOrder order : ordersManager.getOrders().values()) {
             String cheeseType = order.getCheeseType();
@@ -148,16 +150,17 @@ public class CheeseUtils {
                 continue;
             }
             
-            // For now, focus on the first step (creating curds)
-            // TODO Add the rest of the steps
+            // Only look for "start" step work (curd creation)
+            // Movement work between stages is handled by buffer processing
             for (CheeseOrder.StepStatus status : order.getStatus()) {
-                if (status.left > 0) {
-                    workNeeded.put(cheeseType, status.left);
-                    break; // Focus on first incomplete step
+                if (status.left > 0 && status.place.equals("start")) {
+                    curdWorkNeeded.put(cheeseType, status.left);
+                    gui.msg("Need to create " + status.left + " " + status.name + " trays for " + cheeseType);
+                    break; // Only need the start step
                 }
             }
         }
         
-        return workNeeded;
+        return curdWorkNeeded;
     }
 }

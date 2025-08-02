@@ -43,13 +43,14 @@ public class TakeWItemsFromContainer implements Action {
         for (WItem item : itemsToTake) {
             try {
                 // Check if there's space in player inventory
-                if (gui.getInventory().getFreeSpace() <= 0) {
+                if (gui.getInventory().getNumberFreeCoord(item) <= 1) {
                     gui.msg("Player inventory is full, stopping take operation");
                     break;
                 }
                 
                 // Take this specific item to inventory
-                item.item.wdgmsg("take", haven.Coord.z);
+//                item.item.wdgmsg("take", haven.Coord.z);
+                item.item.wdgmsg("transfer", haven.Coord.z);
                 NUtils.addTask(new ISRemoved(item.item.wdgid()));
                 taken++;
                 
