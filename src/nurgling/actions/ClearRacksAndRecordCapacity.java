@@ -65,6 +65,7 @@ public class ClearRacksAndRecordCapacity implements Action {
     
     /**
      * Clear ready cheese from a specific area's racks to its buffer containers
+     * Efficiently batch collect from all racks, then batch drop to buffers
      */
     private void clearReadyCheeseFromArea(NGameUI gui, CheeseBranch.Place place) {
         try {
@@ -78,11 +79,19 @@ public class ClearRacksAndRecordCapacity implements Action {
             
             // Find all cheese racks in this area
             ArrayList<Gob> racks = Finder.findGobs(area, new NAlias("gfx/terobjs/cheeserack"));
+            gui.msg("Found " + racks.size() + " cheese racks in " + place + " area");
             
-            for (Gob rack : racks) {
-                // Check each rack for ready cheese to move
-                checkRackForReadyCheese(gui, rack, place);
+            // Keep processing racks until all ready cheese is collected
+            boolean foundReadyCheese = true;
+            while (foundReadyCheese) {
+                foundReadyCheese = batchCollectFromRacks(gui, racks, place, area);
+                if (foundReadyCheese) {
+                    // Drop collected cheese to buffer containers
+                    dropToBufferContainers(gui, area, place);
+                }
             }
+            
+            gui.msg("Finished clearing ready cheese from " + place + " area");
             
         } catch (Exception e) {
             gui.msg("Error clearing " + place + " area: " + e.getMessage());
@@ -90,81 +99,120 @@ public class ClearRacksAndRecordCapacity implements Action {
     }
     
     /**
-     * Check a single rack for ready cheese and move to buffer containers
+     * Batch collect ready cheese from all racks until inventory is full
+     * @return true if any ready cheese was found and collected
      */
-    private void checkRackForReadyCheese(NGameUI gui, Gob rack, CheeseBranch.Place place) {
-        try {
-            Container rackContainer = new Container(rack, "Rack");
-            new PathFinder(rack).run(gui);
-            new OpenTargetContainer(rackContainer).run(gui);
-            
-            // Get all cheese trays in this rack
-            ArrayList<haven.WItem> trays = gui.getInventory(rackContainer.cap).getItems(new NAlias("Cheese Tray"));
-            ArrayList<haven.WItem> readyTrays = new ArrayList<>();
-            
-            // Identify which trays are ready to move
-            for (haven.WItem tray : trays) {
-                if(CheeseUtils.isCheeseReadyToMove(tray, place)) {
-                    readyTrays.add(tray);
+    private boolean batchCollectFromRacks(NGameUI gui, ArrayList<Gob> racks, CheeseBranch.Place place, NArea area) throws InterruptedException {
+        final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
+        boolean foundAnything = false;
+        
+        for (Gob rack : racks) {
+            try {
+                // Check if inventory has space for at least one tray
+                int availableSpace = gui.getInventory().getNumberFreeCoord(TRAY_SIZE);
+                if (availableSpace <= 0) {
+                    gui.msg("Inventory full, stopping collection from racks");
+                    break;
                 }
-            }
-            
-            new CloseTargetContainer(rackContainer).run(gui);
-            
-            // Take ready trays to inventory using the new action
-            if (!readyTrays.isEmpty()) {
-                gui.msg("Taking " + readyTrays.size() + " ready cheese trays to inventory from " + place + " rack");
-                new TakeWItemsFromContainer(rackContainer, readyTrays).run(gui);
                 
-                // Now move the trays from inventory to buffer containers
-                for (int i = 0; i < readyTrays.size(); i++) {
-                    moveFromInventoryToBuffer(gui, place);
+                Container rackContainer = new Container(rack, "Rack");
+                new PathFinder(rack).run(gui);
+                new OpenTargetContainer(rackContainer).run(gui);
+                
+                // Get all cheese trays in this rack
+                ArrayList<haven.WItem> trays = gui.getInventory(rackContainer.cap).getItems(new NAlias("Cheese Tray"));
+                ArrayList<haven.WItem> readyTrays = new ArrayList<>();
+                
+                // Identify which trays are ready to move
+                for (haven.WItem tray : trays) {
+                    if(CheeseUtils.isCheeseReadyToMove(tray, place)) {
+                        readyTrays.add(tray);
+                    }
                 }
+                
+//                new CloseTargetContainer(rackContainer).run(gui);
+                
+                // Take ready trays to inventory (up to available space)
+                if (!readyTrays.isEmpty()) {
+                    int maxTraysToTake = Math.min(readyTrays.size(), availableSpace);
+                    ArrayList<haven.WItem> traysToTake = new ArrayList<>(readyTrays.subList(0, maxTraysToTake));
+                    
+                    gui.msg("Taking " + traysToTake.size() + " ready cheese trays from " + place + " rack to inventory");
+                    new TakeWItemsFromContainer(rackContainer, traysToTake).run(gui);
+                    foundAnything = true;
+                    
+                    // Check remaining space after taking trays
+                    availableSpace = gui.getInventory().getNumberFreeCoord(TRAY_SIZE);
+                    if (availableSpace <= 0) {
+                        gui.msg("Inventory full after taking from this rack");
+                        break;
+                    }
+                }
+                
+            } catch (Exception e) {
+                gui.msg("Error collecting from rack in " + place + ": " + e.getMessage());
             }
-            
-        } catch (Exception e) {
-            gui.msg("Error checking rack in " + place + ": " + e.getMessage());
         }
+        
+        return foundAnything;
     }
     
     /**
-     * Move a cheese tray from inventory to buffer container in the same area
+     * Drop all cheese trays from inventory to buffer containers in the area
      */
-    private void moveFromInventoryToBuffer(NGameUI gui, CheeseBranch.Place place) {
+    private void dropToBufferContainers(NGameUI gui, NArea area, CheeseBranch.Place place) throws InterruptedException {
         try {
-            // Find buffer containers in this area (containers within the same area as racks)
-            NContext freshContext = new NContext(gui);
-            NArea area = freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, place.toString());
-            if (area == null) return;
+            // Count how many cheese trays we have in inventory
+            ArrayList<haven.WItem> cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+            if (cheeseTrays.isEmpty()) {
+                gui.msg("No cheese trays in inventory to drop off");
+                return;
+            }
             
-            // Find containers that can serve as buffers (not racks)
+            gui.msg("Dropping " + cheeseTrays.size() + " cheese trays to buffer containers in " + place + " area");
+            
+            // Find buffer containers that can serve as buffers (not racks)
             ArrayList<Gob> containers = Finder.findGobs(area, new NAlias(new ArrayList<String>(NContext.contcaps.keySet()), new ArrayList<>()));
             
             for (Gob containerGob : containers) {
+                // Check if we still have trays to drop
+                cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+                if (cheeseTrays.isEmpty()) {
+                    gui.msg("All cheese trays dropped off");
+                    break;
+                }
+                
                 Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
                 bufferContainer.initattr(Container.Space.class);
                 new PathFinder(containerGob).run(gui);
                 new OpenTargetContainer(bufferContainer).run(gui);
                 
-                // Check if container has space
-                if (bufferContainer.getattr(Container.Space.class) != null && 
-                    bufferContainer.getattr(Container.Space.class).getFreeSpace() > 0) {
+                // Check if container has space for 1x2 cheese trays
+                final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
+                int containerSpace = gui.getInventory(bufferContainer.cap).getNumberFreeCoord(TRAY_SIZE);
+                
+                if (containerSpace > 0) {
+                    // Transfer all possible trays to this buffer container
+                    int traysToTransfer = Math.min(cheeseTrays.size(), containerSpace);
                     
-                    // Transfer the tray from inventory to buffer container
-                    new TransferToContainer(bufferContainer, new NAlias("Cheese Tray"), 1).run(gui);
-                    new CloseTargetContainer(bufferContainer).run(gui);
+                    for (int i = 0; i < traysToTransfer; i++) {
+                        new TransferToContainer(bufferContainer, new NAlias("Cheese Tray"), 1).run(gui);
+                    }
                     
-                    gui.msg("Moved cheese tray from inventory to buffer container in " + place + " area");
-                    return;
+                    gui.msg("Transferred " + traysToTransfer + " trays to buffer container in " + place + " area");
                 }
                 
                 new CloseTargetContainer(bufferContainer).run(gui);
             }
             
-            gui.msg("No space in buffer containers for " + place + " area");
+            // Check if any trays are left
+            cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+            if (!cheeseTrays.isEmpty()) {
+                gui.msg("Warning: " + cheeseTrays.size() + " cheese trays couldn't be stored (no buffer space)");
+            }
             
         } catch (Exception e) {
-            gui.msg("Error moving to buffer in " + place + ": " + e.getMessage());
+            gui.msg("Error dropping to buffer in " + place + ": " + e.getMessage());
         }
     }
     

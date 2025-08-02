@@ -41,27 +41,41 @@ public class CheeseProductionBot implements Action {
 
         Map<CheeseBranch.Place, Integer> rackCapacity = clearAction.getLastRecordedCapacity();
 
-        // 3. Pass 2: Process buffers + create new cheese trays
-        gui.msg("=== Pass 2: Processing buffers and creating new cheese trays ===");
-        Results bufferResult = new ProcessCheeseFromBufferContainers().run(gui);
+        // 3. Pass 2: Process buffers (slice ready cheese, move aging cheese)
+        gui.msg("=== Pass 2: Processing buffers ===");
+        ProcessCheeseFromBufferContainers bufferAction = new ProcessCheeseFromBufferContainers();
+        Results bufferResult = bufferAction.run(gui);
         if (!bufferResult.IsSuccess()) {
             gui.error("Failed to process cheese from buffer containers");
         }
 
+        // 4. Update rack capacity based on cheese movements
+        Map<CheeseBranch.Place, Integer> traysMovedToAreas = bufferAction.getTraysMovedToAreas();
+        for (Map.Entry<CheeseBranch.Place, Integer> entry : traysMovedToAreas.entrySet()) {
+            CheeseBranch.Place area = entry.getKey();
+            int traysMovedToArea = entry.getValue();
+            int currentCapacity = rackCapacity.getOrDefault(area, 0);
+            int updatedCapacity = Math.max(0, currentCapacity - traysMovedToArea);
+            rackCapacity.put(area, updatedCapacity);
+            gui.msg("Updated " + area + " capacity: " + currentCapacity + " - " + traysMovedToArea + " = " + updatedCapacity);
+        }
+
+        // 5. Create new curd trays for incomplete orders (only "start" step)
+        gui.msg("=== Pass 3: Creating new curd trays ===");
         for (Map.Entry<String, Integer> work : workNeeded.entrySet()) {
             String cheeseType = work.getKey();
             int quantity = work.getValue();
             
-            gui.msg("Processing " + quantity + " " + cheeseType + " cheese");
+            gui.msg("Checking if " + cheeseType + " needs new curd creation");
             
             // Get inventory capacity for batch processing
             int inventoryCapacity = rackManager.getInventoryCapacity(gui);
             
-            // Process this order in batches
+            // Only process curd creation (start step) - movement work was already handled in steps 2-3
             Results orderResult = new ProcessCheeseOrderInBatches(cheeseType, quantity, inventoryCapacity, 
                                                                  rackManager, rackCapacity).run(gui);
             if (!orderResult.IsSuccess()) {
-                gui.error("Failed to process " + cheeseType + " order");
+                gui.error("Failed to process " + cheeseType + " curd creation");
                 // Continue with other orders instead of failing completely
                 continue;
             }

@@ -43,8 +43,8 @@ public class TransferWItemsToContainer implements Action {
         for (WItem item : itemsToTransfer) {
             try {
                 // Check if there's space in the container
-                if (container.getattr(Container.Space.class) != null && 
-                    container.getattr(Container.Space.class).getFreeSpace() <= 0) {
+                if (container.getattr(Container.Space.class) != null &&
+                        gui.getInventory(container.cap).getNumberFreeCoord(item) <= 1) {
                     gui.msg("Container is full, stopping transfer");
                     break;
                 }
