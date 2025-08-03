@@ -61,6 +61,11 @@ public class NGob
     private static final NAlias PLANTS_ALIAS = new NAlias("plants");
     private static final NAlias MINEBEAM_ALIAS = new NAlias(new ArrayList<>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<>(Arrays.asList("stump", "wrack", "log")));
     private static final NAlias MOUNDBED_ALIAS = new NAlias("gfx/terobjs/moundbed");
+    private static final NAlias KRITTER_ALIAS = new NAlias("kritter");
+    private static final NAlias BORKA_ALIAS_SETDYNAMIC = new NAlias("borka");
+    private static final NAlias VEHICLE_ALIAS = new NAlias("vehicle");
+    private static final NAlias GATE_ALIAS = new NAlias("gate");
+    private static final NAlias BADGER_WOLVERINE_WOLF_ALIAS = new NAlias("badger", "wolverine", "wolf");
     
     // Config cache to reduce NConfig.get calls
     private boolean cachedShowCropStage = false;
@@ -283,11 +288,6 @@ public class NGob
                     name = name.replaceAll("\\d+$", "");
                 }
 
-                if (name.contains("bumlings"))
-                {
-                    name = name.replaceAll("\\d+$", "");
-                }
-
                 if (name.contains("palisade"))
                 {
                     if (parent.getattr(NCustomScale.class) == null)
@@ -501,7 +501,7 @@ public class NGob
                         gob ->
                         {
                             String pose = gob.pose();
-                            boolean poseValid = (pose != null && !NParser.checkName(pose, "dead", "knock")) || (pose == null && NParser.checkName(name, new NAlias("badger", "wolverine", "wolf")));
+                            boolean poseValid = (pose != null && !NParser.checkName(pose, "dead", "knock")) || (pose == null && NParser.checkName(name, BADGER_WOLVERINE_WOLF_ALIAS));
                             boolean overlayNotExists = gob.findol(NAreaRad.class) == null;
                             nurgling.conf.NAreaRad rad = nurgling.conf.NAreaRad.get(name);
                             boolean radValid = rad != null && rad.vis;
@@ -521,8 +521,10 @@ public class NGob
 
     private void setDynamic()
     {
-        isDynamic = (NParser.checkName(name, new NAlias("kritter", "borka", "vehicle")));
-        isGate = (NParser.checkName(name, new NAlias("gate")));
+        isDynamic = (NParser.checkName(name, KRITTER_ALIAS) || 
+                     NParser.checkName(name, BORKA_ALIAS_SETDYNAMIC) || 
+                     NParser.checkName(name, VEHICLE_ALIAS));
+        isGate = (NParser.checkName(name, GATE_ALIAS));
     }
 
     public long getModelAttribute()
@@ -571,14 +573,21 @@ public class NGob
     {
         if (NUtils.getGameUI() != null)
         {
-            Iterator<DelayedOverlayTask> it = delayedOverlayTasks.iterator();
-            while (it.hasNext())
-            {
-                DelayedOverlayTask task = it.next();
-                if (task.condition.test(parent))
+            // Process delayed overlay tasks - limit to avoid performance issues
+            if (!delayedOverlayTasks.isEmpty()) {
+                Iterator<DelayedOverlayTask> it = delayedOverlayTasks.iterator();
+                int processedTasks = 0;
+                final int MAX_TASKS_PER_TICK = 5; // Limit processing to avoid lag
+                
+                while (it.hasNext() && processedTasks < MAX_TASKS_PER_TICK)
                 {
-                    task.action.accept(parent);
-                    it.remove();
+                    DelayedOverlayTask task = it.next();
+                    if (task.condition.test(parent))
+                    {
+                        task.action.accept(parent);
+                        it.remove();
+                    }
+                    processedTasks++;
                 }
             }
 
@@ -595,7 +604,7 @@ public class NGob
                         Coord coord = (parent.rc.sub(g.ul.mul(Coord2d.of(11, 11)))).floor(posres);
                         this.grid_id = g.id;
                         this.gcoord = coord.sub(g.ul);
-                        hashInput.append(name).append(g.id).append(coord.toString());
+                        hashInput.append(name).append(g.id).append(coord.x).append(',').append(coord.y);
                         hash = NUtils.calculateSHA256(hashInput.toString());
                         parent.setattr(new NGlobalSearch(parent));
                     }
@@ -628,7 +637,7 @@ public class NGob
 //            }
 
             int nlu = NQuestInfo.lastUpdate.get();
-            if (NQuestInfo.lastUpdate.get() > lastUpdate)
+            if (nlu > lastUpdate)
             {
 
 
