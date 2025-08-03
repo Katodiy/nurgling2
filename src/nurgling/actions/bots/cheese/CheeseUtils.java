@@ -133,12 +133,12 @@ public class CheeseUtils {
     // ============== CHEESE ORDER PROCESSING ==============
     
     /**
-     * Analyze current orders to determine what curd creation work needs to be done
-     * Only focuses on "start" step since movement work is handled by buffer processing
+     * Analyze current orders to determine what work needs to be done
+     * Returns work needed for any incomplete steps, not just "start" step
      */
     public static Map<String, Integer> analyzeOrders(NGameUI gui) {
         CheeseOrdersManager ordersManager = new CheeseOrdersManager();
-        Map<String, Integer> curdWorkNeeded = new HashMap<>();
+        Map<String, Integer> workNeeded = new HashMap<>();
         
         for (CheeseOrder order : ordersManager.getOrders().values()) {
             String cheeseType = order.getCheeseType();
@@ -150,17 +150,22 @@ public class CheeseUtils {
                 continue;
             }
             
-            // Only look for "start" step work (curd creation)
-            // Movement work between stages is handled by buffer processing
+            // Look for ANY step that has work remaining
+            boolean hasWork = false;
             for (CheeseOrder.StepStatus status : order.getStatus()) {
-                if (status.left > 0 && status.place.equals("start")) {
-                    curdWorkNeeded.put(cheeseType, status.left);
-                    gui.msg("Need to create " + status.left + " " + status.name + " trays for " + cheeseType);
-                    break; // Only need the start step
+                if (status.left > 0) {
+                    if (!hasWork) {
+                        // For curd creation work, use the amount needed
+                        // For movement work, use a placeholder amount (will be handled by buffer processing)
+                        int workAmount = status.place.equals("start") ? status.left : 1;
+                        workNeeded.put(cheeseType, workAmount);
+                        hasWork = true;
+                    }
+                    gui.msg("Order " + cheeseType + " needs work: " + status.left + " " + status.name + " at " + status.place);
                 }
             }
         }
         
-        return curdWorkNeeded;
+        return workNeeded;
     }
 }

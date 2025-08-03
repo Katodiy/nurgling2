@@ -115,12 +115,6 @@ public class ProcessCheeseOrderInBatches implements Action {
             gui.msg("Total " + curdType + " trays in inventory: " + totalTraysInInventory + 
                    " (created " + actualCount + " new)");
             
-            // Update the order status with actual count created
-            updateOrderProgress(gui, order, currentStep, actualCount);
-            
-            // Advance all trays of this type to next step (including existing ones)
-            advanceTraysToNextStep(gui, order, chain, actualCount);
-            
             // Handle tray placement for ALL trays of this type in inventory
             int traysPlaced = 0;
             if (chain.size() > 1 && totalTraysInInventory > 0) {
@@ -129,11 +123,15 @@ public class ProcessCheeseOrderInBatches implements Action {
                 
                 traysPlaced = rackManager.handleTrayPlacement(gui, targetPlace, totalTraysInInventory, curdType);
                 
-                // If trays were placed, we need to reduce the current step count
+                // Update orders only after successful placement
                 if (traysPlaced > 0) {
-                    gui.msg("Placed " + traysPlaced + " trays on racks, reducing current step count");
-                    currentStep.left -= traysPlaced;
-                    gui.msg("Current step " + currentStep.name + " now has " + currentStep.left + " remaining");
+                    gui.msg("Placed " + traysPlaced + " trays on racks, updating order progress");
+                    
+                    // Reduce current step by number of trays actually placed
+                    updateOrderProgress(gui, order, currentStep, traysPlaced);
+                    
+                    // Advance placed trays to next step
+                    advanceTraysToNextStep(gui, order, chain, traysPlaced);
                 }
             }
             
@@ -179,18 +177,14 @@ public class ProcessCheeseOrderInBatches implements Action {
     
     /**
      * Advance completed trays to the next step in the production chain
-     * This accounts for both newly created trays AND existing trays in inventory
+     * Only advances the specific number of trays that were actually placed
      */
-    private void advanceTraysToNextStep(NGameUI gui, CheeseOrder order, List<CheeseBranch.Cheese> chain, int completedCount) throws InterruptedException {
+    private void advanceTraysToNextStep(NGameUI gui, CheeseOrder order, List<CheeseBranch.Cheese> chain, int traysPlaced) throws InterruptedException {
         if (chain.size() <= 1) return; // No next step
         
         // Find the current and next steps in the chain
         CheeseBranch.Cheese currentCheeseStep = chain.get(0); // Current step (e.g., "Sheep's Curd")
         CheeseBranch.Cheese nextCheeseStep = chain.get(1); // Next step after start (e.g., "Abbaye")
-        
-        // Count how many trays of the CURRENT type are actually in inventory
-        // These are the trays that are ready to be placed and will age into the next step
-        int traysInInventory = countTraysOfTypeInInventory(gui, currentCheeseStep.name);
         
         // Look for existing status entry for this step
         CheeseOrder.StepStatus nextStepStatus = null;
@@ -207,16 +201,16 @@ public class ProcessCheeseOrderInBatches implements Action {
             nextStepStatus = new CheeseOrder.StepStatus(
                 nextCheeseStep.name,
                 nextCheeseStep.place.toString(),
-                0 // Start with 0, will be set to actual inventory count below
+                0 // Start with 0, will be increased by traysPlaced below
             );
             order.getStatus().add(nextStepStatus);
             gui.msg("Created next step: " + nextStepStatus.name + " at " + nextStepStatus.place);
         }
         
-        // Set the next step count to actual inventory count of CURRENT step trays ready to age
-        nextStepStatus.left = traysInInventory;
-        gui.msg("Next step " + nextStepStatus.name + " now has " + traysInInventory + 
-                " " + currentCheeseStep.name + " trays ready to age (includes " + completedCount + " newly created)");
+        // Increase the next step count by the number of trays that were actually placed
+        nextStepStatus.left += traysPlaced;
+        gui.msg("Advanced " + traysPlaced + " trays to next step: " + nextStepStatus.name + 
+                " at " + nextStepStatus.place + " (now " + nextStepStatus.left + " total)");
     }
     
     /**

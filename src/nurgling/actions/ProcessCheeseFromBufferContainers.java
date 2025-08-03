@@ -14,9 +14,13 @@ import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
+import nurgling.cheese.CheeseOrder;
+import nurgling.cheese.CheeseOrdersManager;
+import nurgling.cheese.CheeseBranch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,9 +31,11 @@ import java.util.Map;
 public class ProcessCheeseFromBufferContainers implements Action {
     private CheeseSlicingManager slicingManager;
     private Map<CheeseBranch.Place, Integer> traysMovedToAreas = new HashMap<>();
+    private CheeseOrdersManager ordersManager;
     
     public ProcessCheeseFromBufferContainers() {
         this.slicingManager = new CheeseSlicingManager();
+        this.ordersManager = new CheeseOrdersManager();
     }
     
     @Override
@@ -177,7 +183,9 @@ public class ProcessCheeseFromBufferContainers implements Action {
             for (WItem tray : trays) {
                 if (CheeseUtils.shouldMoveToNextStage(tray, place)) {
                     String cheeseType = CheeseUtils.getContentName(tray);
-                    CheeseBranch.Place nextStage = CheeseUtils.getNextStageLocation(tray, place);
+                    
+                    // Determine correct destination using the specific order's progression chain
+                    CheeseBranch.Place nextStage = getCorrectNextStageLocation(cheeseType, place);
                     
                     if (cheeseType != null && nextStage != null) {
                         cheeseTypeToDestination.put(cheeseType, nextStage);
@@ -201,7 +209,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 int availableSpace = gui.getInventory().getNumberFreeCoord(TRAY_SIZE);
                 if (availableSpace <= 0) {
                     gui.msg("Inventory full! Moving current batch of " + cheeseType + " to " + destination);
-                    moveInventoryCheeseToDestination(gui, destination);
+                    moveInventoryCheeseToDestination(gui, destination, cheeseType, place);
                     
                     // Navigate back to original area to continue processing
                     NContext freshContext = new NContext(gui);
@@ -252,9 +260,10 @@ public class ProcessCheeseFromBufferContainers implements Action {
             }
             
             // Move all collected cheese of this type to destination
-            if (!gui.getInventory().getItems(new NAlias("Cheese Tray")).isEmpty()) {
+            ArrayList<WItem> cheeseToMove = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+            if (!cheeseToMove.isEmpty()) {
                 gui.msg("Moving collected " + cheeseType + " to " + destination);
-                moveInventoryCheeseToDestination(gui, destination);
+                moveInventoryCheeseToDestination(gui, destination, cheeseType, place);
                 
                 // Navigate back to original area for next cheese type
                 NContext freshContext = new NContext(gui);
@@ -265,8 +274,82 @@ public class ProcessCheeseFromBufferContainers implements Action {
     
     /**
      * Move cheese currently in inventory to a specific destination area
+     * Updates orders immediately after each tray is successfully placed
      */
     private void moveInventoryCheeseToDestination(NGameUI gui, CheeseBranch.Place destination) throws InterruptedException {
+        moveInventoryCheeseToDestination(gui, destination, null, null);
+    }
+    
+    /**
+     * Move cheese currently in inventory to a specific destination area without updating orders
+     * Used when we want to update orders only once per cheese type at the end
+     */
+    private void moveInventoryCheeseToDestinationNoOrderUpdate(NGameUI gui, CheeseBranch.Place destination) throws InterruptedException {
+        ArrayList<WItem> cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+        if (cheeseTrays.isEmpty()) {
+            return;
+        }
+        
+        gui.msg("Moving " + cheeseTrays.size() + " cheese trays to " + destination + " area (no order update)");
+        
+        // Navigate to destination area
+        NContext freshContext = new NContext(gui);
+        NArea destinationArea = freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, destination.toString());
+        if (destinationArea == null) {
+            gui.msg("No cheese racks area found for " + destination + ". Using FreeInventory2 as fallback.");
+            new FreeInventory2(freshContext).run(gui);
+            return;
+        }
+        
+        // Find available racks in destination area
+        ArrayList<Gob> racks = Finder.findGobs(destinationArea, new NAlias("gfx/terobjs/cheeserack"));
+        if (racks.isEmpty()) {
+            gui.msg("No cheese racks found in " + destination + " area. Using FreeInventory2 as fallback.");
+            new FreeInventory2(freshContext).run(gui);
+            return;
+        }
+        
+        // Place cheese trays on racks WITHOUT updating orders
+        final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
+        for (Gob rackGob : racks) {
+            cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+            if (cheeseTrays.isEmpty()) {
+                break; // All cheese placed
+            }
+            
+            Container rack = new Container(rackGob, "Rack");
+            new PathFinder(rackGob).run(gui);
+            new OpenTargetContainer(rack).run(gui);
+            
+            // Check available space in this rack
+            int availableSpace = gui.getInventory(rack.cap).getNumberFreeCoord(TRAY_SIZE);
+            if (availableSpace > 0) {
+                // Transfer trays to this rack but DON'T update orders
+                int traysToPlace = Math.min(availableSpace, cheeseTrays.size());
+                for (int i = 0; i < traysToPlace; i++) {
+                    WItem tray = cheeseTrays.get(i);
+                    tray.item.wdgmsg("transfer", haven.Coord.z);
+                    nurgling.NUtils.addTask(new nurgling.tasks.ISRemoved(tray.item.wdgid()));
+                }
+                
+                gui.msg("Placed " + traysToPlace + " trays on rack in " + destination + " (no order update)");
+            }
+            
+            new CloseTargetContainer(rack).run(gui);
+        }
+        
+        // If any cheese remains, use FreeInventory2 as fallback
+        cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+        if (!cheeseTrays.isEmpty()) {
+            gui.msg("Warning: " + cheeseTrays.size() + " cheese trays couldn't fit in " + destination + " racks. Using FreeInventory2.");
+            new FreeInventory2(freshContext).run(gui);
+        }
+    }
+    
+    /**
+     * Move cheese currently in inventory to a specific destination area with order updating
+     */
+    private void moveInventoryCheeseToDestination(NGameUI gui, CheeseBranch.Place destination, String cheeseType, CheeseBranch.Place fromPlace) throws InterruptedException {
         ArrayList<WItem> cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
         if (cheeseTrays.isEmpty()) {
             return;
@@ -306,13 +389,21 @@ public class ProcessCheeseFromBufferContainers implements Action {
             // Check available space in this rack
             int availableSpace = gui.getInventory(rack.cap).getNumberFreeCoord(TRAY_SIZE);
             if (availableSpace > 0) {
-                // Transfer trays to this rack
-                for (int i = 0; i < Math.min(availableSpace, cheeseTrays.size()); i++) {
+                // Transfer trays to this rack and update orders immediately for each tray
+                int traysToPlace = Math.min(availableSpace, cheeseTrays.size());
+                for (int i = 0; i < traysToPlace; i++) {
                     WItem tray = cheeseTrays.get(i);
                     tray.item.wdgmsg("transfer", haven.Coord.z);
                     nurgling.NUtils.addTask(new nurgling.tasks.ISRemoved(tray.item.wdgid()));
                 }
-                gui.msg("Placed " + Math.min(availableSpace, cheeseTrays.size()) + " trays on rack in " + destination);
+                
+                // Update orders immediately after placing trays - this ensures each tray is recorded
+                // Only update if we have the expected cheese type and source location
+                if (traysToPlace > 0 && cheeseType != null && fromPlace != null) {
+                    updateOrdersAfterCheeseMovement(gui, cheeseType, traysToPlace, fromPlace, destination);
+                }
+                
+                gui.msg("Placed " + traysToPlace + " trays on rack in " + destination);
             }
             
             new CloseTargetContainer(rack).run(gui);
@@ -324,6 +415,196 @@ public class ProcessCheeseFromBufferContainers implements Action {
             gui.msg("Warning: " + cheeseTrays.size() + " cheese trays couldn't fit in " + destination + " racks. Using FreeInventory2.");
             new FreeInventory2(freshContext).run(gui);
         }
+    }
+    
+    /**
+     * Update cheese orders after moving cheese to the next stage
+     * When cheese moves from current place to next place, we need to:
+     * 1. Reduce count of current stage step by amount moved
+     * 2. Add/increase count of next stage step by amount moved
+     */
+    private void updateOrdersAfterCheeseMovement(NGameUI gui, String cheeseType, int movedCount, 
+                                                CheeseBranch.Place fromPlace, CheeseBranch.Place toPlace) {
+        try {
+            // First find which order this cheese belongs to
+            CheeseOrder relevantOrder = findOrderContainingCheeseType(cheeseType);
+            if (relevantOrder == null) {
+                gui.msg("Warning: No order found containing cheese type " + cheeseType);
+                return;
+            }
+            
+            // Find the next cheese type and its correct location in the progression chain for this specific order
+            CheeseBranch.Cheese nextCheeseStep = getNextCheeseStepInChain(cheeseType, fromPlace, relevantOrder.getCheeseType());
+            if (nextCheeseStep == null) {
+                gui.msg("Warning: Could not determine next cheese step for " + cheeseType + " from " + fromPlace + " in " + relevantOrder.getCheeseType() + " chain");
+                return;
+            }
+            
+            String nextCheeseType = nextCheeseStep.name;
+            CheeseBranch.Place nextCheesePlace = nextCheeseStep.place;
+            
+            boolean orderUpdated = false;
+            
+            // Look for current stage step and reduce it
+            for (CheeseOrder.StepStatus step : relevantOrder.getStatus()) {
+                if (step.name.equals(cheeseType) && step.place.equals(fromPlace.toString())) {
+                    step.left = Math.max(0, step.left - movedCount);
+                    gui.msg("Updated order " + relevantOrder.getCheeseType() + ": reduced " + cheeseType + 
+                           " at " + fromPlace + " by " + movedCount + " (now " + step.left + " left)");
+                    orderUpdated = true;
+                    break;
+                }
+            }
+            
+            // Look for next stage step and increase it (or create it)
+            // Use the correct cheese progression place, not the physical destination
+            CheeseOrder.StepStatus nextStep = null;
+            for (CheeseOrder.StepStatus step : relevantOrder.getStatus()) {
+                if (step.name.equals(nextCheeseType) && step.place.equals(nextCheesePlace.toString())) {
+                    nextStep = step;
+                    break;
+                }
+            }
+            
+            if (nextStep != null) {
+                nextStep.left += movedCount;
+                gui.msg("Updated order " + relevantOrder.getCheeseType() + ": increased " + nextCheeseType + 
+                       " at " + nextCheesePlace + " by " + movedCount + " (now " + nextStep.left + " left)");
+                orderUpdated = true;
+            } else {
+                // Create new step for next stage using correct progression location
+                nextStep = new CheeseOrder.StepStatus(nextCheeseType, nextCheesePlace.toString(), movedCount);
+                relevantOrder.getStatus().add(nextStep);
+                gui.msg("Created new step in order " + relevantOrder.getCheeseType() + ": " + nextCheeseType + 
+                       " at " + nextCheesePlace + " with " + movedCount + " trays");
+                orderUpdated = true;
+            }
+            
+            if (orderUpdated) {
+                ordersManager.addOrUpdateOrder(relevantOrder);
+            }
+            
+            // Save updated orders
+            ordersManager.writeOrders(null);
+            
+        } catch (Exception e) {
+            gui.msg("Error updating orders after cheese movement: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Find the specific order that contains a cheese progression
+     * Only returns an order if it contains the full progression chain
+     */
+    private CheeseOrder findOrderForCheeseType(String currentCheeseType, String nextCheeseType) {
+        for (CheeseOrder order : ordersManager.getOrders().values()) {
+            // Check if this order's progression chain contains both cheese types
+            boolean hasCurrentType = false;
+            boolean hasNextType = false;
+            
+            for (CheeseOrder.StepStatus step : order.getStatus()) {
+                if (step.name.equals(currentCheeseType)) {
+                    hasCurrentType = true;
+                }
+                if (step.name.equals(nextCheeseType)) {
+                    hasNextType = true;
+                }
+            }
+            
+            // Also check if the final product matches the progression
+            List<CheeseBranch.Cheese> chain = CheeseBranch.getChainToProduct(order.getCheeseType());
+            if (chain != null) {
+                for (CheeseBranch.Cheese step : chain) {
+                    if (step.name.equals(currentCheeseType) || step.name.equals(nextCheeseType)) {
+                        return order; // Found order with matching progression
+                    }
+                }
+            }
+        }
+        return null; // No matching order found
+    }
+    
+    /**
+     * Find the order that contains a specific cheese type in its progression
+     */
+    private CheeseOrder findOrderContainingCheeseType(String cheeseType) {
+        for (CheeseOrder order : ordersManager.getOrders().values()) {
+            // Check if this order's progression chain contains the cheese type
+            List<CheeseBranch.Cheese> chain = CheeseBranch.getChainToProduct(order.getCheeseType());
+            if (chain != null) {
+                for (CheeseBranch.Cheese step : chain) {
+                    if (step.name.equals(cheeseType)) {
+                        return order; // Found order with matching progression
+                    }
+                }
+            }
+        }
+        return null; // No matching order found
+    }
+    
+    /**
+     * Determine the next cheese step (name + place) in the progression chain for a specific target product
+     * This ensures we get the correct progression chain when multiple chains share the same intermediate steps
+     */
+    private CheeseBranch.Cheese getNextCheeseStepInChain(String currentCheeseType, CheeseBranch.Place currentPlace, String targetProduct) {
+        // Get the specific chain for the target product
+        List<CheeseBranch.Cheese> chain = CheeseBranch.getChainToProduct(targetProduct);
+        if (chain == null) {
+            return null;
+        }
+        
+        // Find the current step in this specific chain
+        for (int i = 0; i < chain.size() - 1; i++) {
+            CheeseBranch.Cheese currentStep = chain.get(i);
+            if (currentStep.name.equals(currentCheeseType) && currentStep.place == currentPlace) {
+                // Found the current step, return the next step
+                return chain.get(i + 1);
+            }
+        }
+        return null; // No next step found (might be final product)
+    }
+    
+    /**
+     * Determine the correct next stage location for a cheese type using the specific order's progression
+     * This fixes the issue where CheeseUtils.getNextStageLocation returns the wrong location for shared intermediate steps
+     */
+    private CheeseBranch.Place getCorrectNextStageLocation(String cheeseType, CheeseBranch.Place currentPlace) {
+        // Find which order this cheese belongs to
+        CheeseOrder relevantOrder = findOrderContainingCheeseType(cheeseType);
+        if (relevantOrder == null) {
+            // Fallback to the old method if no order found
+            return CheeseUtils.getNextStageLocation(null, currentPlace); // Passing null since we only need the location logic
+        }
+        
+        // Use the specific order's progression chain to determine correct destination
+        CheeseBranch.Cheese nextStep = getNextCheeseStepInChain(cheeseType, currentPlace, relevantOrder.getCheeseType());
+        return nextStep != null ? nextStep.place : null;
+    }
+    
+    /**
+     * Determine the next cheese type in the progression chain for a specific target product
+     * This ensures we get the correct progression chain when multiple chains share the same intermediate steps
+     */
+    private String getNextCheeseTypeInChain(String currentCheeseType, CheeseBranch.Place currentPlace, String targetProduct) {
+        CheeseBranch.Cheese nextStep = getNextCheeseStepInChain(currentCheeseType, currentPlace, targetProduct);
+        return nextStep != null ? nextStep.name : null;
+    }
+    
+    /**
+     * Legacy method for backward compatibility
+     */
+    private String getNextCheeseTypeInChain(String currentCheeseType, CheeseBranch.Place currentPlace) {
+        for (CheeseBranch branch : CheeseBranch.branches) {
+            for (int i = 0; i < branch.steps.size() - 1; i++) {
+                CheeseBranch.Cheese currentStep = branch.steps.get(i);
+                if (currentStep.name.equals(currentCheeseType) && currentStep.place == currentPlace) {
+                    // Found the current step, return the next step's cheese type
+                    CheeseBranch.Cheese nextStep = branch.steps.get(i + 1);
+                    return nextStep.name;
+                }
+            }
+        }
+        return null; // No next step found (might be final product)
     }
     
     /**
