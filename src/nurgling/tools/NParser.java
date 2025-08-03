@@ -4,34 +4,26 @@ import haven.*;
 import haven.res.ui.barterbox.Shopbox;
 import nurgling.*;
 import nurgling.tasks.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class NParser
 {
+    // Cache for frequently used NAlias objects
+    private static final Map<String, NAlias> ALIAS_CACHE = new HashMap<>();
+    private static final int MAX_ALIAS_CACHE_SIZE = 500;
     public static boolean checkName(
             final String name,
             final NAlias regEx
-    ) { if (regEx!=null) {
-        /// Проверяем имя на соответствие
-        for (String key : regEx.keys) {
-            if (key!=null && name!=null && name.toLowerCase().contains(key.toLowerCase())) {
-                for (String ex : regEx.exceptions) {
-                    if (name.toLowerCase().contains(ex.toLowerCase())) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-        if(regEx.keys.isEmpty())
-        {
-            for (String ex : regEx.exceptions) {
-                if (name.toLowerCase().contains(ex.toLowerCase())) {
-                    return false;
-                }
-            }
+    ) { 
+        if (regEx == null || name == null) return false;
+        String lowerName = name.toLowerCase();
+
+        // Check if cached match result exists
+        if (regEx.matches(lowerName)) {
             return true;
         }
-    }
+
         return false;
     }
 
@@ -40,7 +32,12 @@ public class NParser
             final NAlias regEx
     ) {
         if (regEx != null && name != null) {
-            return (regEx.keys.containsAll(name.keys)) && (regEx.exceptions.containsAll(name.exceptions));
+            for (String key : name.keys) {
+                if (!regEx.matches(key)) {
+                    return false;
+                }
+            }
+            return true;
         }
         return false;
     }
@@ -51,7 +48,27 @@ public class NParser
     ) {
         if(name==null)
             return false;
-        return checkName(name, new NAlias(args));
+        for (String arg : args) {
+            NAlias alias = getCachedAlias(arg);
+            if (alias.matches(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Get cached NAlias object or create and cache a new one
+     */
+    private static NAlias getCachedAlias(String key) {
+        NAlias cached = ALIAS_CACHE.get(key);
+        if (cached == null) {
+            cached = new NAlias(key);
+            if (ALIAS_CACHE.size() < MAX_ALIAS_CACHE_SIZE) {
+                ALIAS_CACHE.put(key, cached);
+            }
+        }
+        return cached;
     }
 
 
@@ -95,44 +112,25 @@ public class NParser
     public static boolean checkName(
             Shopbox.ShopItem price,
             final NAlias regEx
-    ) { if (regEx!=null) {
+    ) { 
+        if (regEx == null || price == null || price.name == null) 
+            return false;
+            
+        // Handle special meat cases
         if(regEx.keys.size()==1)
         {
-            if ( NParser.checkName ( regEx.keys.get(0), new NAlias ( "Raw Wild Beef" ) ) ) {
-                regEx.keys.add ( "Raw Beef" );
-            }
-            else if ( NParser.checkName ( regEx.keys.get(0), new NAlias ( "Raw Wild Pork" ) ) ) {
-                regEx.keys.add ( "Raw Pork" );
-            }
-            else if ( NParser.checkName ( regEx.keys.get(0), new NAlias ( "Raw Wild Horse" ) ) ) {
-                regEx.keys.add ( "Raw Horse" );
-            }
-            else if ( NParser.checkName ( regEx.keys.get(0), new NAlias ( "Raw Wild Mutton" ) ) ) {
-                regEx.keys.add ( "Raw Mutton" );
+            String firstKey = regEx.keys.get(0);
+            if ( firstKey != null && firstKey.contains("Raw Wild") ) {
+                // Add non-wild variant
+                String nonWild = firstKey.replace("Wild ", "");
+                if (!regEx.keys.contains(nonWild)) {
+                    regEx.keys.add(nonWild);
+                    regEx.buildCaches(); // Rebuild caches after modification
+                }
             }
         }
 
-        /// Проверяем имя на соответствие
-        for (String key : regEx.keys) {
-            if (key!=null && price.name.toLowerCase().contains(key.toLowerCase())) {
-                for (String ex : regEx.exceptions) {
-                    if (price.name.toLowerCase().contains(ex.toLowerCase())) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-        if(regEx.keys.isEmpty())
-        {
-            for (String ex : regEx.exceptions) {
-                if (price.name.toLowerCase().contains(ex.toLowerCase())) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-        return false;
+        // Use optimized matching
+        return regEx.matches(price.name);
     }
 }

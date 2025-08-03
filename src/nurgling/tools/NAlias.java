@@ -1,33 +1,42 @@
 package nurgling.tools;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class NAlias {
     public ArrayList<String> keys;
     public ArrayList<String> exceptions;
+    
+    // Cached lowercase versions for performance
+    private Set<String> lowercaseKeys;
+    private Set<String> lowercaseExceptions;
+    
+    // Cache for string matching results
+    private static final Map<String, Map<NAlias, Boolean>> MATCH_CACHE = new HashMap<>();
+    private static final int MAX_CACHE_SIZE = 1000;
 
     public NAlias() {
         keys = new ArrayList<String> ();
         exceptions = new ArrayList<String> ();
+        buildCaches();
     }
 
     public NAlias(String... args) {
         keys = new ArrayList<String> (Arrays.asList(args));
         exceptions = new ArrayList<String> ();
+        buildCaches();
     }
 
     public NAlias(String name ) {
         keys = new ArrayList<String> ( Collections.singletonList ( name ) );
         exceptions = new ArrayList<String> ();
+        buildCaches();
     }
 
     public NAlias(ArrayList<String> keys ) {
         this.keys = new ArrayList<String> ();
         exceptions = new ArrayList<String> ();
         this.keys.addAll ( keys );
+        buildCaches();
     }
 
     public NAlias(
@@ -36,6 +45,7 @@ public class NAlias {
     ) {
         this.keys = keys;
         this.exceptions = exceptions;
+        buildCaches();
     }
 
     public NAlias(
@@ -46,10 +56,101 @@ public class NAlias {
         this.keys.addAll ( keys );
         this.exceptions = new ArrayList<> ();
         this.exceptions.addAll ( exceptions );
+        buildCaches();
     }
 
     public String getDefault () {
         return keys.get ( 0 );
+    }
+    
+    /**
+     * Builds cached lowercase versions of keys and exceptions for fast lookups
+     */
+    public void buildCaches() {
+        lowercaseKeys = new HashSet<>();
+        lowercaseExceptions = new HashSet<>();
+        
+        if (keys != null) {
+            for (String key : keys) {
+                if (key != null) {
+                    lowercaseKeys.add(key.toLowerCase());
+                }
+            }
+        }
+        
+        if (exceptions != null) {
+            for (String exception : exceptions) {
+                if (exception != null) {
+                    lowercaseExceptions.add(exception.toLowerCase());
+                }
+            }
+        }
+    }
+    
+    /**
+     * Fast matching using cached lowercase strings and indexOf for better performance
+     */
+    public boolean matches(String name) {
+        if (name == null) return false;
+        
+        String lowerName = name.toLowerCase();
+        
+        // Check cache first
+        Map<NAlias, Boolean> nameCache = MATCH_CACHE.get(lowerName);
+        if (nameCache != null) {
+            Boolean cachedResult = nameCache.get(this);
+            if (cachedResult != null) {
+                return cachedResult;
+            }
+        }
+        
+        boolean result = matchesInternal(lowerName);
+        
+        // Cache the result
+        if (MATCH_CACHE.size() < MAX_CACHE_SIZE) {
+            MATCH_CACHE.computeIfAbsent(lowerName, k -> new HashMap<>()).put(this, result);
+        }
+        
+        return result;
+    }
+    
+    private boolean matchesInternal(String lowerName) {
+        // Check if any key matches
+        if (!lowercaseKeys.isEmpty()) {
+            boolean keyMatched = false;
+            for (String key : lowercaseKeys) {
+                if (lowerName.contains(key)) {
+                    keyMatched = true;
+                    break;
+                }
+            }
+            if (!keyMatched) {
+                return false;
+            }
+        }
+        
+        // Check exceptions
+        for (String exception : lowercaseExceptions) {
+            if (lowerName.contains(exception)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Get cached lowercase keys for external use
+     */
+    public Set<String> getLowercaseKeys() {
+        return Collections.unmodifiableSet(lowercaseKeys);
+    }
+    
+    /**
+     * Get cached lowercase exceptions for external use
+     */
+    public Set<String> getLowercaseExceptions() {
+        return Collections.unmodifiableSet(lowercaseExceptions);
     }
 
     @Override
