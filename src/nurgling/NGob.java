@@ -278,7 +278,7 @@ public class NGob {
                             NAlarmWdg.addBorka(parent.id);
                         }
 
-                        if (NParser.checkName(name, new NAlias("plants"))) {
+                        if (NParser.checkName(name, new NAlias("plants")) && (Boolean) NConfig.get(NConfig.Key.showCropStage)) {
                             parent.addcustomol(new NCropMarker(parent));
                         }
                         else {
