@@ -41,7 +41,6 @@ public class TransferWItemsToContainer implements Action {
         
         // Transfer each specific item
         for (WItem item : itemsToTransfer) {
-            try {
                 // Check if there's space in the container
                 if (container.getattr(Container.Space.class) != null &&
                         gui.getInventory(container.cap).getNumberFreeCoord(item) <= 1) {
@@ -56,11 +55,6 @@ public class TransferWItemsToContainer implements Action {
                 
                 // Update container state
                 container.update();
-                
-            } catch (Exception e) {
-                gui.msg("Error transferring item: " + e.getMessage());
-                break;
-            }
         }
         
         // Close container
