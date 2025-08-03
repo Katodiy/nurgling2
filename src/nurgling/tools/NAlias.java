@@ -3,15 +3,34 @@ package nurgling.tools;
 import java.util.*;
 
 public class NAlias {
+    /**
+     * Keys for alias matching.
+     */
     public ArrayList<String> keys;
+    
+    /**
+     * Exceptions to exclude from matching.
+     */
     public ArrayList<String> exceptions;
     
-    // Cached lowercase versions for performance
+    /**
+     * Lowercase version of keys for performance.
+     */
     private Set<String> lowercaseKeys;
+    
+    /**
+     * Lowercase version of exceptions for performance.
+     */
     private Set<String> lowercaseExceptions;
     
-    // Cache for string matching results
+    /**
+     * Cache for string matching results.
+     */
     private static final Map<String, Map<NAlias, Boolean>> MATCH_CACHE = new HashMap<>();
+    
+    /**
+     * Maximum size of match cache.
+     */
     private static final int MAX_CACHE_SIZE = 1000;
 
     public NAlias() {
@@ -59,6 +78,11 @@ public class NAlias {
         buildCaches();
     }
 
+    /**
+     * Retrieves the first key as default.
+     *
+     * @return the first key in the list.
+     */
     public String getDefault () {
         return keys.get ( 0 );
     }
@@ -88,7 +112,10 @@ public class NAlias {
     }
     
     /**
-     * Fast matching using cached lowercase strings and indexOf for better performance
+     * Fast matching using cached lowercase strings for better performance.
+     *
+     * @param name the string to match against.
+     * @return true if name matches this alias, false otherwise.
      */
     public boolean matches(String name) {
         if (name == null) return false;
@@ -140,14 +167,18 @@ public class NAlias {
     }
     
     /**
-     * Get cached lowercase keys for external use
+     * Get cached lowercase keys for external use.
+     *
+     * @return unmodifiable set of lowercase keys.
      */
     public Set<String> getLowercaseKeys() {
         return Collections.unmodifiableSet(lowercaseKeys);
     }
     
     /**
-     * Get cached lowercase exceptions for external use
+     * Get cached lowercase exceptions for external use.
+     *
+     * @return unmodifiable set of lowercase exceptions.
      */
     public Set<String> getLowercaseExceptions() {
         return Collections.unmodifiableSet(lowercaseExceptions);
@@ -158,7 +189,6 @@ public class NAlias {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         NAlias nAlias = (NAlias) o;
-        // Consider two NAlias equal if their `keys` and `exceptions` are equal
         return keys.equals(nAlias.keys) && exceptions.equals(nAlias.exceptions);
     }
 
