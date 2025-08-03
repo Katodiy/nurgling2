@@ -11,40 +11,40 @@ import java.util.Map;
 /** NUI class extends the main UI to provide customized functionality and integrate with Nurgling's advanced features */
 public class NUI extends UI
 {
-    /** Identifier for the current tick to track time-based operations within the UI */
+    /** Current tick identifier to track time-based operations within the UI */
     public long tickId = 0;
-    /** Stores data tables used across the UI for different functionalities */
+    /** Data tables for various functionalities */
     public NDataTables dataTables;
-    /** Information related to the current session including username and subscription details */
+    /** Session information including username and subscription details */
     public NSessInfo sessInfo;
-    /** Widget currently being monitored for events and updates */
+    /** Currently monitored widget for events */
     Widget monitor = null;
-    /** Collection of widget IDs currently being tracked */
+    /** List of widget IDs currently tracked */
     HashSet<Integer> statusWdg = new HashSet<>();
-    /** Flag to control session info initialization frequency */
+    /** Flag for session info initialization frequency control */
     private boolean sessInfoChecked = false;
-    /** Tick counter for periodic operations */
+    /** Counter for periodic operations ticks */
     private int periodicCheckTick = 0;
-    /** Precomputed delta Z multiplier for performance */
+    /** Precomputed Z multiplier for performance */
     private static final double DELTA_Z_DIVISOR = 10.0;
-    /** Period for session verification checks (every N ticks) */
+    /** Periodicity for session verification checks */
     private static final int SESSION_CHECK_PERIOD = 60;
 
-    /** Session information container that holds user data and verification status */
+    /** Container for session data and verification */
     public class NSessInfo
     {
-        /** Username of the current session */
+        /** Username for the session */
         public String username;
-        /** Flag indicating if user is verified */
+        /** Verification flag */
         public boolean isVerified = false;
-        /** Flag indicating if user has active subscription */
+        /** Subscription flag */
         public boolean isSubscribed = false;
-        /** Character information associated with the session */
+        /** Character info for the session */
         public NCharacterInfo characterInfo = null;
 
         /**
-         * Constructor for session information.
-         * @param username The username for this session.
+         * Session information constructor.
+         * @param username The session's username.
          */
         public NSessInfo(String username)
         {
@@ -117,11 +117,33 @@ public class NUI extends UI
                 NMapView mapView = (NMapView) gui.map;
                 if (modshift)
                 {
-                    mapView.inspect(c);
+                    // Apply throttling for inspect calls
+                    long currentTime = System.currentTimeMillis();
+                    boolean shouldInspect = false;
+                    
+                    // Check time since last inspect
+                    if (currentTime - lastInspectTime >= INSPECT_THROTTLE_MS) {
+                        shouldInspect = true;
+                    }
+                    
+                    // Check distance from last inspect position
+                    if (lastInspectCoord != null && c.dist(lastInspectCoord) >= INSPECT_MIN_DISTANCE) {
+                        shouldInspect = true;
+                    }
+                    
+                    // If first inspect or conditions met
+                    if (lastInspectCoord == null || shouldInspect) {
+                        mapView.inspect(c);
+                        lastInspectTime = currentTime;
+                        lastInspectCoord = c;
+                    }
                 } else
                 {
                     core.isinspect = false;
                     mapView.ttip.clear();
+                    // Reset throttling when Shift is released
+                    lastInspectCoord = null;
+                    lastInspectTime = 0;
                 }
             }
         }
@@ -256,6 +278,58 @@ public class NUI extends UI
             }
         }
         return res;
+    }
+
+    /** Cached value of modifier flags to improve performance */
+    private int cachedModFlags = -1;
+    /** Last modifier state to detect changes */
+    private int lastModifiersNUI = -1;
+    
+    /** Timestamp of last inspect call */
+    private long lastInspectTime = 0;
+    /** Last coordinates of inspect call */
+    private Coord lastInspectCoord = null;
+    /** Minimum interval between inspect calls (20 FPS cap) */
+    private static final long INSPECT_THROTTLE_MS = 50;
+    /** Minimum distance for new inspect call */
+    private static final int INSPECT_MIN_DISTANCE = 5;
+
+    /**
+     * Returns cached modifier flags to enhance performance.
+     * Cache is invalidated on modifier state change.
+     * 
+     * @return Bitmask of active modifier keys
+     */
+    public int modflags() {
+        if (cachedModFlags != -1) {
+            return cachedModFlags;
+        }
+        
+        cachedModFlags = ((modshift ? MOD_SHIFT : 0) |
+                          (modctrl ? MOD_CTRL : 0) |
+                          (modmeta ? MOD_META : 0) |
+                          (modsuper ? MOD_SUPER : 0));
+        return cachedModFlags;
+    }
+
+    /**
+     * Optimized method to set modifiers with caching for performance enhancement.
+     * Avoids unnecessary calculations if modifiers remain unchanged.
+     * 
+     * @param ev Input event containing modifier information
+     */
+    protected void setmods(InputEvent ev) {
+        int mod = ev.getModifiersEx();
+        if (lastModifiersNUI == mod) {
+            return;
+        }
+        lastModifiersNUI = mod;
+        
+        modshift = (mod & InputEvent.SHIFT_DOWN_MASK) != 0;
+        modctrl = (mod & InputEvent.CTRL_DOWN_MASK) != 0;
+        modmeta = (mod & (InputEvent.META_DOWN_MASK | InputEvent.ALT_DOWN_MASK)) != 0;
+
+        cachedModFlags = -1;
     }
 
     /**
