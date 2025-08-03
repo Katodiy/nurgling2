@@ -6,13 +6,14 @@ import nurgling.*;
 import nurgling.tasks.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class NParser
 {
     /**
      * Cache for frequently used NAlias objects.
      */
-    private static final Map<String, NAlias> ALIAS_CACHE = new HashMap<>();
+    private static final Map<String, NAlias> ALIAS_CACHE = new ConcurrentHashMap<>();
     
     /**
      * Maximum size of alias cache.

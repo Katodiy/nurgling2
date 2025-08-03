@@ -56,7 +56,6 @@ public class NGob
         "gfx/kritter/cattle/cattle", "gfx/kritter/boar/boar", "gfx/kritter/goat/wildgoat", 
         "gfx/kritter/reindeer/reindeer", "gfx/kritter/sheep/sheep"
     );
-    private static final Pattern BUMLINGS_PATTERN = Pattern.compile("\\d+$");
     private static final NAlias WALL_TRELLIS_ALIAS = new NAlias("wall", "trellis");
     private static final NAlias BORKA_ALIAS = new NAlias("borka");
     private static final NAlias PLANTS_ALIAS = new NAlias("plants");
@@ -191,6 +190,11 @@ public class NGob
      */
     public void checkattr(GAttrib a, long id, GAttrib prev)
     {
+        if (a instanceof Moving || prev instanceof Moving)
+        {
+            updateMovingInfo(a, prev);
+            return;
+        }
         // Early exit for null attributes
         if (a == null)
         {
@@ -210,10 +214,6 @@ public class NGob
         else if (a instanceof TreeScale)
         {
             handleTreeScale();
-            return;
-        } else if (a instanceof Moving || prev instanceof Moving)
-        {
-            updateMovingInfo(a, prev);
             return;
         }
 
@@ -322,7 +322,7 @@ public class NGob
                             {
                                 if (lay instanceof Resource.Neg)
                                 {
-                                    if (name != null && NParser.checkName(name, new NAlias("wall", "trellis")))
+                                    if (name != null && NParser.checkName(name, WALL_TRELLIS_ALIAS))
                                     {
                                         hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc, true);
                                     } else
@@ -331,7 +331,7 @@ public class NGob
                                     }
                                 } else if (lay instanceof Resource.Obstacle)
                                 {
-                                    if (name != null && NParser.checkName(name, new NAlias("wall", "trellis")))
+                                    if (name != null && NParser.checkName(name, WALL_TRELLIS_ALIAS))
                                     {
                                         hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p, true);
                                     } else
@@ -364,7 +364,7 @@ public class NGob
                         }
                         if (bl != null && ur != null)
                         {
-                            if (name != null && NParser.checkName(name, new NAlias("wall", "trellis")))
+                            if (name != null && NParser.checkName(name, WALL_TRELLIS_ALIAS))
                             {
                                 hitBox = new NHitBox(bl, ur, true);
                             } else
@@ -379,7 +379,7 @@ public class NGob
                     {
                         if (lay instanceof Resource.Neg)
                         {
-                            if (name != null && NParser.checkName(name, new NAlias("wall", "trellis")))
+                            if (name != null && NParser.checkName(name, WALL_TRELLIS_ALIAS))
                             {
                                 hitBox = new NHitBox(((Resource.Neg) lay).ac, ((Resource.Neg) lay).bc, true);
                             } else
@@ -388,7 +388,7 @@ public class NGob
                             }
                         } else if (lay instanceof Resource.Obstacle)
                         {
-                            if (name != null && NParser.checkName(name, new NAlias("wall", "trellis")))
+                            if (name != null && NParser.checkName(name, WALL_TRELLIS_ALIAS))
                             {
                                 hitBox = NHitBox.fromObstacle(((Resource.Obstacle) lay).p, true);
                             } else
@@ -407,7 +407,7 @@ public class NGob
                     }
 
 
-                    if (NParser.checkName(name, new NAlias("borka")))
+                    if (NParser.checkName(name, BORKA_ALIAS))
                     {
                         NAlarmWdg.addBorka(parent.id);
                     }
@@ -417,7 +417,7 @@ public class NGob
                         parent.addcustomol(new NCropMarker(parent));
                     } else
                     {
-                        if (NParser.checkName(name, new NAlias(new ArrayList<String>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<String>(Arrays.asList("stump", "wrack", "log")))))
+                        if (NParser.checkName(name, MINEBEAM_ALIAS))
                         {
                             switch (name)
                             {
@@ -475,7 +475,7 @@ public class NGob
                 }
                 if (hitBox != null)
                 {
-                    if (NParser.checkName(name, new NAlias("gfx/terobjs/moundbed")))
+                    if (NParser.checkName(name, MOUNDBED_ALIAS))
                     {
                         hitBox = null;
                     } else

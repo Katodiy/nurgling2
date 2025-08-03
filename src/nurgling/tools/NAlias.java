@@ -1,6 +1,7 @@
 package nurgling.tools;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class NAlias {
     /**
@@ -26,7 +27,7 @@ public class NAlias {
     /**
      * Cache for string matching results.
      */
-    private static final Map<String, Map<NAlias, Boolean>> MATCH_CACHE = new HashMap<>();
+    private static final Map<String, Map<NAlias, Boolean>> MATCH_CACHE = new ConcurrentHashMap<>();
     
     /**
      * Maximum size of match cache.
@@ -135,7 +136,7 @@ public class NAlias {
         
         // Cache the result
         if (MATCH_CACHE.size() < MAX_CACHE_SIZE) {
-            MATCH_CACHE.computeIfAbsent(lowerName, k -> new HashMap<>()).put(this, result);
+            MATCH_CACHE.computeIfAbsent(lowerName, k -> new ConcurrentHashMap<>()).put(this, result);
         }
         
         return result;
