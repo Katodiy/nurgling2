@@ -14,13 +14,26 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Efficiently moves ready cheese from racks to buffer containers in a specific area
  * Based on FreeContainers pattern - batch collect from racks, then distribute to buffers
+ * Also calculates rack capacities to avoid redundant container operations
  */
 public class MoveReadyCheeseToBuffers implements Action {
+    
+    public static class ResultWithCapacity {
+        public final Results result;
+        public final Map<Container, Integer> rackCapacities;
+        
+        public ResultWithCapacity(Results result, Map<Container, Integer> rackCapacities) {
+            this.result = result;
+            this.rackCapacities = rackCapacities;
+        }
+    }
     
     private ArrayList<Container> racks;
     private ArrayList<Container> buffers;
@@ -34,7 +47,17 @@ public class MoveReadyCheeseToBuffers implements Action {
     
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        ResultWithCapacity result = runWithCapacity(gui);
+        return result.result;
+    }
+    
+    /**
+     * Run the action and return both result and rack capacities
+     */
+    public ResultWithCapacity runWithCapacity(NGameUI gui) throws InterruptedException {
         NContext context = new NContext(gui);
+        Map<Container, Integer> rackCapacities = new HashMap<>();
+        final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
         
         // Phase 1: Collect all ready cheese from racks to inventory
         for (Container rack : racks) {
@@ -43,7 +66,7 @@ public class MoveReadyCheeseToBuffers implements Action {
             
             // Take ready cheese from this rack until inventory is full or rack is empty of ready cheese
             Results takeResult;
-            while (!(takeResult = new TakeReadyCheeseFromRack(rack, place).run(gui)).isSuccess) {
+            while (!(takeResult = new TakeReadyCheeseFromRack(rack, place, rackCapacities).run(gui)).isSuccess) {
                 // Inventory is full, need to distribute to buffers
                 new CloseTargetContainer(rack).run(gui);
                 distributeToBuffers(gui, context);
@@ -57,7 +80,7 @@ public class MoveReadyCheeseToBuffers implements Action {
         // Phase 2: Final distribution of any remaining cheese in inventory
         distributeToBuffers(gui, context);
         
-        return Results.SUCCESS();
+        return new ResultWithCapacity(Results.SUCCESS(), rackCapacities);
     }
     
     
@@ -136,15 +159,22 @@ public class MoveReadyCheeseToBuffers implements Action {
     }
     
     /**
-     * Action to take ready cheese from a specific rack
+     * Action to take ready cheese from a specific rack and optionally calculate capacity
      */
     private static class TakeReadyCheeseFromRack implements Action {
         private Container rack;
         private CheeseBranch.Place place;
+        private Map<Container, Integer> capacityMap;
         
         public TakeReadyCheeseFromRack(Container rack, CheeseBranch.Place place) {
             this.rack = rack;
             this.place = place;
+        }
+        
+        public TakeReadyCheeseFromRack(Container rack, CheeseBranch.Place place, Map<Container, Integer> capacityMap) {
+            this.rack = rack;
+            this.place = place;
+            this.capacityMap = capacityMap;
         }
         
         @Override
@@ -158,7 +188,7 @@ public class MoveReadyCheeseToBuffers implements Action {
             }
             
             // Find ALL ready cheese trays in the rack
-            ArrayList<WItem> allTrays = gui.getInventory(rack.cap).getItems(new NAlias("Cheese Tray"));
+            ArrayList<WItem> allTrays = gui.getInventory("Rack").getItems(new NAlias("Cheese Tray"));
             ArrayList<WItem> readyTrays = new ArrayList<>();
             
             for (WItem tray : allTrays) {
@@ -168,6 +198,11 @@ public class MoveReadyCheeseToBuffers implements Action {
             }
             
             if (readyTrays.isEmpty()) {
+                // Calculate capacity if not already done (rack with no ready cheese)
+                if (capacityMap != null && !capacityMap.containsKey(rack)) {
+                    int capacity = gui.getInventory("Rack").getNumberFreeCoord(TRAY_SIZE);
+                    capacityMap.put(rack, capacity);
+                }
                 return Results.SUCCESS(); // No ready cheese left in this rack
             }
             
@@ -178,6 +213,16 @@ public class MoveReadyCheeseToBuffers implements Action {
             
             // Take ALL ready trays to inventory
             new TakeWItemsFromContainer(rack, readyTrays).run(gui);
+
+            new OpenTargetContainer(rack).run(gui);
+            
+            // Calculate capacity after taking cheese (if not already done)
+            if (capacityMap != null && !capacityMap.containsKey(rack)) {
+                int capacity = gui.getInventory(rack.cap).getNumberFreeCoord(TRAY_SIZE);
+                capacityMap.put(rack, capacity);
+            }
+
+            new CloseTargetContainer(rack).run(gui);
             
             return Results.SUCCESS(); // Rack is now empty of ready cheese
         }
