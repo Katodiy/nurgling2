@@ -111,9 +111,10 @@ public class NMapView extends MapView
     @Override
     public void draw(GOut g) {
         super.draw(g);
-        for(Gob dummy : dummys.values())
-        {
-            dummy.gtick(g.out);
+        synchronized (dummys) {
+            for (Gob dummy : dummys.values()) {
+                dummy.gtick(g.out);
+            }
         }
     }
 
