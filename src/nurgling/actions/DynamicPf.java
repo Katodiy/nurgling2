@@ -15,6 +15,7 @@ import nurgling.tasks.DynMovingCompleted;
 import nurgling.tasks.IsMoving;
 import nurgling.tasks.MovingCompleted;
 import nurgling.tasks.WaitPath;
+import nurgling.tools.Finder;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -105,9 +106,41 @@ public class DynamicPf implements Action
                     updatePath(path, wpf,target);
                 }
             }
+            
+            // Проверяем достижение цели перед проверкой DN статуса
+            if (isTargetReached()) {
+                break;
+            }
         }
         while (!wpf.checkDN());
         return Results.SUCCESS();
+    }
+
+    /**
+     * Проверяет, достигнута ли цель
+     */
+    private boolean isTargetReached() {
+        if (target == null || NUtils.player() == null) {
+            return false;
+        }
+        
+        // Получаем текущую позицию игрока и цели
+        Coord2d playerPos = NUtils.player().rc;
+        Coord2d targetPos;
+        
+        if (isVirtual) {
+            targetPos = target.rc;
+        } else {
+            Gob actualTarget = Finder.findGob(target.id);
+            if (actualTarget == null) {
+                return true; // Цель исчезла, считаем задачу выполненной
+            }
+            targetPos = actualTarget.rc;
+        }
+        
+        // Проверяем расстояние до цели (примерно один тайл)
+        double distance = playerPos.dist(targetPos);
+        return distance <= MCache.tilesz.x * 1.5;
     }
 
     private static void updatePath(LinkedList<Graph.Vertex> path, WorkerPf wpf, Gob target) {
