@@ -172,7 +172,6 @@ public class CreateTraysWithCurds implements Action {
      * @return number of empty trays actually obtained
      */
     private int fetchMultipleTraysFromContainer(NGameUI gui, Container container, int maxTrays) throws InterruptedException {
-        try {
             Gob containerGob = Finder.findGob(container.gobid);
             if (containerGob == null) return 0;
             
@@ -214,18 +213,12 @@ public class CreateTraysWithCurds implements Action {
             new CloseTargetContainer(container).run(gui);
             gui.msg("Transferred " + emptyTraysTransferred + " empty trays from container");
             return emptyTraysTransferred;
-            
-        } catch (Exception e) {
-            gui.msg("Error fetching multiple trays from container: " + e.getMessage());
-            return 0;
-        }
     }
     
     /**
      * Try to take exactly 1 cheese tray from a specific container
      */
     private boolean tryTakeEmptyTrayFromContainer(NGameUI gui, Container container) throws InterruptedException {
-        try {
             Gob containerGob = Finder.findGob(container.gobid);
             if (containerGob == null) return false;
             
@@ -261,11 +254,6 @@ public class CreateTraysWithCurds implements Action {
             }
             
             return false;
-            
-        } catch (Exception e) {
-            gui.msg("Error taking from container: " + e.getMessage());
-            return false;
-        }
     }
 
     private WItem getNextEmptyTray(NGameUI gui) throws InterruptedException {

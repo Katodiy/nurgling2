@@ -64,8 +64,7 @@ public class ClearRacksAndRecordCapacity implements Action {
      * Uses the new MoveReadyCheeseToBuffers action for efficient batch processing
      * @return total capacity of all racks in the area
      */
-    private int clearReadyCheeseFromArea(NGameUI gui, CheeseBranch.Place place) {
-        try {
+    private int clearReadyCheeseFromArea(NGameUI gui, CheeseBranch.Place place) throws InterruptedException {
             // Create a fresh context to avoid caching issues when navigating between areas
             NContext freshContext = new NContext(gui);
             NArea area = freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, place.toString());
@@ -103,10 +102,5 @@ public class ClearRacksAndRecordCapacity implements Action {
             
             gui.msg("Finished clearing ready cheese from " + place + " area");
             return totalCapacity;
-            
-        } catch (Exception e) {
-            gui.msg("Error clearing " + place + " area: " + e.getMessage());
-            return 0;
-        }
     }
 }

@@ -68,7 +68,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
      * 3. Second pass: move remaining cheese to next aging stage
      */
     private void processBufferContainers(NGameUI gui, CheeseBranch.Place place) throws InterruptedException {
-        try {
             // Create fresh context to avoid caching issues
             NContext freshContext = new NContext(gui);
             NArea area = freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, place.toString());
@@ -87,10 +86,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
             // Phase 2: Move remaining cheese to next stages
             gui.msg("Phase 2: Moving remaining cheese to next stages from " + place + " buffers");
             moveRemainingCheeseToNextStage(gui, containers, place);
-            
-        } catch (Exception e) {
-            gui.msg("Error processing buffer containers in " + place + ": " + e.getMessage());
-        }
     }
     
     /**
@@ -101,7 +96,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
         NContext freshContext = new NContext(gui);
         
         for (Gob containerGob : containers) {
-            try {
                 Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
                 new PathFinder(containerGob).run(gui);
                 new OpenTargetContainer(bufferContainer).run(gui);
@@ -156,10 +150,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 }
                 
                 new CloseTargetContainer(bufferContainer).run(gui);
-                
-            } catch (Exception e) {
-                gui.msg("Error collecting and slicing ready cheese from container in " + place + ": " + e.getMessage());
-            }
         }
         
         // Final inventory cleanup after processing all ready cheese
@@ -174,7 +164,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
         final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
         
         for (Gob containerGob : containers) {
-            try {
                 Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
                 new PathFinder(containerGob).run(gui);
                 new OpenTargetContainer(bufferContainer).run(gui);
@@ -219,10 +208,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 }
                 
                 new CloseTargetContainer(bufferContainer).run(gui);
-                
-            } catch (Exception e) {
-                gui.msg("Error moving cheese from container in " + place + ": " + e.getMessage());
-            }
         }
         
         // Move any remaining cheese in inventory to their next stages

@@ -41,7 +41,6 @@ public class TakeWItemsFromContainer implements Action {
         
         // Take each specific item from container to inventory
         for (WItem item : itemsToTake) {
-            try {
                 // Check if there's space in player inventory
                 if (gui.getInventory().getNumberFreeCoord(item) == 0) {
                     gui.msg("Player inventory is full, stopping take operation");
@@ -56,11 +55,6 @@ public class TakeWItemsFromContainer implements Action {
                 
                 // Update container state
                 container.update();
-                
-            } catch (Exception e) {
-                gui.msg("Error taking item: " + e.getMessage());
-                break;
-            }
         }
         
         // Close container
