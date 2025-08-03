@@ -39,13 +39,9 @@ public class ClearRacksAndRecordCapacity implements Action {
         for (CheeseBranch.Place place : places) {
             gui.msg("=== Clearing " + place + " area and recording capacity ===");
             
-            // Step 1: Clear ready cheese from racks to buffer containers
-            gui.msg("1. Clearing ready cheese from " + place + " racks");
-            clearReadyCheeseFromArea(gui, place);
-            
-            // Step 2: Check rack capacity while we're already in this area
-            gui.msg("2. Checking rack capacity in " + place);
-            int capacity = calculateRackCapacityInArea(gui, place);
+            // Step 1: Clear ready cheese from racks to buffer containers and get capacity
+            gui.msg("1. Clearing ready cheese from " + place + " racks and recording capacity");
+            int capacity = clearReadyCheeseFromArea(gui, place);
             rackCapacity.put(place, capacity);
             gui.msg(place + " racks can fit " + capacity + " more trays");
         }
@@ -66,15 +62,16 @@ public class ClearRacksAndRecordCapacity implements Action {
     /**
      * Clear ready cheese from a specific area's racks to its buffer containers
      * Uses the new MoveReadyCheeseToBuffers action for efficient batch processing
+     * @return total capacity of all racks in the area
      */
-    private void clearReadyCheeseFromArea(NGameUI gui, CheeseBranch.Place place) {
+    private int clearReadyCheeseFromArea(NGameUI gui, CheeseBranch.Place place) {
         try {
             // Create a fresh context to avoid caching issues when navigating between areas
             NContext freshContext = new NContext(gui);
             NArea area = freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, place.toString());
             if (area == null) {
                 gui.msg("No cheese racks area found for " + place);
-                return;
+                return 0;
             }
             
             // Find all cheese racks and buffer containers in this area
@@ -94,52 +91,22 @@ public class ClearRacksAndRecordCapacity implements Action {
             
             gui.msg("Found " + racks.size() + " cheese racks and " + buffers.size() + " buffer containers in " + place + " area");
             
-            // Use the new efficient action to move ready cheese
-            new MoveReadyCheeseToBuffers(racks, buffers, place).run(gui);
+            // Use the new efficient action to move ready cheese and get capacity data
+            MoveReadyCheeseToBuffers moveAction = new MoveReadyCheeseToBuffers(racks, buffers, place);
+            MoveReadyCheeseToBuffers.ResultWithCapacity result = moveAction.runWithCapacity(gui);
+            
+            // Calculate total capacity from all racks
+            int totalCapacity = 0;
+            for (Integer capacity : result.rackCapacities.values()) {
+                totalCapacity += capacity;
+            }
             
             gui.msg("Finished clearing ready cheese from " + place + " area");
+            return totalCapacity;
             
         } catch (Exception e) {
             gui.msg("Error clearing " + place + " area: " + e.getMessage());
+            return 0;
         }
-    }
-    
-    
-    /**
-     * Calculate rack capacity for a specific area
-     */
-    private int calculateRackCapacityInArea(NGameUI gui, CheeseBranch.Place place) {
-        try {
-            // Create fresh context for each area to avoid caching issues
-            NContext freshContext = new NContext(gui);
-            NArea area = freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, place.toString());
-            if (area != null) {
-                return calculateRackSpaceInArea(gui, area);
-            }
-        } catch (Exception e) {
-            gui.msg("Could not access " + place + " cheese racks: " + e.getMessage());
-        }
-        return 0;
-    }
-    
-    /**
-     * Calculate available space in cheese racks in a specific area
-     */
-    private int calculateRackSpaceInArea(NGameUI gui, NArea area) throws InterruptedException {
-        ArrayList<Gob> racks = Finder.findGobs(area, new NAlias("gfx/terobjs/cheeserack"));
-        int totalSpace = 0;
-        
-        for (Gob rack : racks) {
-            Container rackContainer = new Container(rack, "Rack");
-            new PathFinder(rack).run(gui);
-            new OpenTargetContainer(rackContainer).run(gui);
-            
-            int freeSpace = gui.getInventory(rackContainer.cap).getNumberFreeCoord(TRAY_SIZE);
-            totalSpace += freeSpace;
-            
-            new CloseTargetContainer(rackContainer).run(gui);
-        }
-        
-        return totalSpace;
     }
 }
