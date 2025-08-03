@@ -9,6 +9,7 @@ import nurgling.actions.bots.cheese.CheeseUtils;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
+import nurgling.actions.bots.cheese.CheeseRackOverlayUtils;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -60,7 +61,24 @@ public class MoveReadyCheeseToBuffers implements Action {
         final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
         
         // Phase 1: Collect all ready cheese from racks to inventory
+        // First, filter racks using overlay status to skip empty ones
+        ArrayList<Container> racksToProcess = new ArrayList<>();
         for (Container rack : racks) {
+            Gob rackGob = Finder.findGob(rack.gobid);
+            if (rackGob != null && CheeseRackOverlayUtils.mightHaveCheeseToMove(rackGob)) {
+                racksToProcess.add(rack);
+            } else {
+                // Record capacity for empty racks without opening them
+                if (rackCapacities != null && rackGob != null && CheeseRackOverlayUtils.isRackEmpty(rackGob)) {
+                    rackCapacities.put(rack, 3); // Empty rack can hold 3 trays
+                }
+                gui.msg("Skipping empty rack (overlay check) - no cheese to move");
+            }
+        }
+        
+        gui.msg("Processing " + racksToProcess.size() + " non-empty racks out of " + racks.size() + " total racks");
+        
+        for (Container rack : racksToProcess) {
             navigateToContainer(gui, rack);
             new OpenTargetContainer(rack).run(gui);
             

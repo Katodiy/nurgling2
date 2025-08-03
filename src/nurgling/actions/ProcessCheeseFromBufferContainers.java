@@ -8,6 +8,7 @@ import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
 import nurgling.actions.bots.cheese.CheeseUtils;
 import nurgling.actions.bots.cheese.CheeseSlicingManager;
+import nurgling.actions.bots.cheese.CheeseRackOverlayUtils;
 import nurgling.actions.FreeInventory2;
 import nurgling.actions.TakeWItemsFromContainer;
 import nurgling.tools.Container;
@@ -309,9 +310,16 @@ public class ProcessCheeseFromBufferContainers implements Action {
             return;
         }
         
-        // Place cheese trays on racks WITHOUT updating orders
+        // Place cheese trays on racks WITHOUT updating orders - filter full racks first
         final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
+        ArrayList<Gob> availableRacks = new ArrayList<>();
         for (Gob rackGob : racks) {
+            if (CheeseRackOverlayUtils.canAcceptTrays(rackGob)) {
+                availableRacks.add(rackGob);
+            }
+        }
+        
+        for (Gob rackGob : availableRacks) {
             cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
             if (cheeseTrays.isEmpty()) {
                 break; // All cheese placed
@@ -374,9 +382,20 @@ public class ProcessCheeseFromBufferContainers implements Action {
             return;
         }
         
-        // Place cheese trays on racks
+        // Place cheese trays on racks - filter out full racks first using overlays
         final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
+        ArrayList<Gob> availableRacks = new ArrayList<>();
         for (Gob rackGob : racks) {
+            if (CheeseRackOverlayUtils.canAcceptTrays(rackGob)) {
+                availableRacks.add(rackGob);
+            } else {
+                gui.msg("Skipping full rack (overlay check) - no space available");
+            }
+        }
+        
+        gui.msg("Found " + availableRacks.size() + " racks with space out of " + racks.size() + " total racks");
+        
+        for (Gob rackGob : availableRacks) {
             cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
             if (cheeseTrays.isEmpty()) {
                 break; // All cheese placed
@@ -386,7 +405,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
             new PathFinder(rackGob).run(gui);
             new OpenTargetContainer(rack).run(gui);
             
-            // Check available space in this rack
+            // Check available space in this rack (still needed for exact count)
             int availableSpace = gui.getInventory(rack.cap).getNumberFreeCoord(TRAY_SIZE);
             if (availableSpace > 0) {
                 // Transfer trays to this rack and update orders immediately for each tray

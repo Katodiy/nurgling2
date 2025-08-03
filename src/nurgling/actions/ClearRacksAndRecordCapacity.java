@@ -4,6 +4,7 @@ import haven.Coord;
 import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.actions.bots.cheese.CheeseUtils;
+import nurgling.actions.bots.cheese.CheeseRackOverlayUtils;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
@@ -88,7 +89,9 @@ public class ClearRacksAndRecordCapacity implements Action {
                 buffers.add(new Container(buffer, NContext.contcaps.get(buffer.ngob.name)));
             }
             
-            gui.msg("Found " + racks.size() + " cheese racks and " + buffers.size() + " buffer containers in " + place + " area");
+            // Log rack status summary using overlays
+            String rackStatusSummary = CheeseRackOverlayUtils.getRackStatusSummary(rackGobs);
+            gui.msg("Found " + racks.size() + " cheese racks (" + rackStatusSummary + ") and " + buffers.size() + " buffer containers in " + place + " area");
             
             // Use the new efficient action to move ready cheese and get capacity data
             MoveReadyCheeseToBuffers moveAction = new MoveReadyCheeseToBuffers(racks, buffers, place);
