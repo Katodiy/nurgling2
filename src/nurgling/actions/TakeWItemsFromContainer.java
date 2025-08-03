@@ -48,7 +48,6 @@ public class TakeWItemsFromContainer implements Action {
                 }
                 
                 // Take this specific item to inventory
-//                item.item.wdgmsg("take", haven.Coord.z);
                 item.item.wdgmsg("transfer", haven.Coord.z);
                 NUtils.addTask(new ISRemoved(item.item.wdgid()));
                 taken++;
