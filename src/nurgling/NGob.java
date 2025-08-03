@@ -126,12 +126,12 @@ public class NGob
      * Updates cached configuration values to reduce NConfig.get calls.
      */
     private void updateConfigCache() {
-        if (++configCacheCounter >= CONFIG_CACHE_INTERVAL) {
+        if (configCacheCounter <= 0 || ++configCacheCounter >= CONFIG_CACHE_INTERVAL) {
             cachedShowCropStage = (Boolean) NConfig.get(NConfig.Key.showCropStage);
             cachedShortCupboards = (Boolean) NConfig.get(NConfig.Key.shortCupboards);
             cachedQuestNotified = (Boolean) NConfig.get(NConfig.Key.questNotified);
             cachedLpassistent = (Boolean) NConfig.get(NConfig.Key.lpassistent);
-            configCacheCounter = 0;
+            configCacheCounter = 1;
         }
     }
 
@@ -190,13 +190,9 @@ public class NGob
      */
     public void checkattr(GAttrib a, long id, GAttrib prev)
     {
-        if (a instanceof Moving || prev instanceof Moving)
-        {
-            updateMovingInfo(a, prev);
-            return;
-        }
+
         // Early exit for null attributes
-        if (a == null)
+        if (a == null && !(prev instanceof Moving))
         {
             return;
         }
@@ -214,6 +210,11 @@ public class NGob
         else if (a instanceof TreeScale)
         {
             handleTreeScale();
+            return;
+        }
+        else if(a instanceof Moving || prev instanceof Moving)
+        {
+            updateMovingInfo(a, prev);
             return;
         }
 
@@ -240,8 +241,6 @@ public class NGob
                         }
                     }
             ));
-
-
         }
 
         if (a instanceof Drawable)
