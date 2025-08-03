@@ -12,24 +12,40 @@ import java.util.*;
 import java.util.List;
 
 /**
- * Визуализатор путей для объектов в игре.
- * Отображает пути перемещения различных категорий объектов (игрок, друзья, враги и т.д.) 
- * с разными цветами и стилями.
+ * Path visualizer for game objects.
+ * Displays movement paths for different categories of objects (player, friends, enemies, etc.)
+ * with different colors and styles.
  */
 public class NPathVisualizer implements RenderTree.Node {
-    // Категории путей, отображаемые по умолчанию
+    // Default path categories for rendering
     public static final HashSet<PathCategory> DEF_CATEGORIES = new HashSet<>(Arrays.asList(PathCategory.ME, PathCategory.FOE));
-    // Формат вершин для рендеринга линий
+    // Vertex format for rendering lines
     private static final VertexArray.Layout LAYOUT = new VertexArray.Layout(new VertexArray.Layout.Input(Homo3D.vertex, new VectorFormat(3, NumberFormat.FLOAT32), 0, 0, 12));
+    // Line rendering height above surface
+    private static final float Z = 1f;
 
-    public NPathQueue path; // Очередь путей для отображения
-    public List<Pair<Coord3f, Coord3f>> pflines = null; // Линии пути для PathFinder
-    public final Collection<RenderTree.Slot> slots = new ArrayList<>(1); // Слоты рендеринга
-    private final Set<Moving> moves = new HashSet<>(); // Набор перемещающихся объектов
-    private final Map<PathCategory, MovingPath> paths = new HashMap<>(); // Категории путей
-
+    /**
+     * Path queue for rendering
+     */
+    public NPathQueue path;
+    /**
+     * PathFinder lines
+     */
+    public List<Pair<Coord3f, Coord3f>> pflines = null;
+    /**
+     * Collection of rendering slots
+     */
+    public final Collection<RenderTree.Slot> slots = new ArrayList<>(1);
+    /**
+     * Set of moving objects
+     */
+    private final Set<Moving> moves = new HashSet<>();
+    /**
+     * Map of path categories
+     */
+    private final Map<PathCategory, MovingPath> paths = new HashMap<>();
     public NPathVisualizer() {
-        // Инициализация путей для всех категорий
+        // Initialize paths for all categories
         for (PathCategory cat : PathCategory.values()) {
             paths.put(cat, new MovingPath(cat.state));
         }
@@ -37,7 +53,7 @@ public class NPathVisualizer implements RenderTree.Node {
 
     @Override
     public void added(RenderTree.Slot slot) {
-        // Добавление слота рендеринга
+        // Add rendering slot
         synchronized (slots) {slots.add(slot);}
         for (MovingPath path : paths.values()) {
             slot.add(path);
@@ -46,12 +62,12 @@ public class NPathVisualizer implements RenderTree.Node {
 
     @Override
     public void removed(RenderTree.Slot slot) {
-        // Удаление слота рендеринга
+        // Remove rendering slot
         synchronized (slots) {slots.remove(slot);}
     }
 
     /**
-     * Обновление визуализации путей на основе текущего состояния
+     * Update path visualization based on current state
      */
     public void update() {
         final Set<PathCategory> pathCategories = NConfig.getPathCategories();
@@ -93,6 +109,7 @@ public class NPathVisualizer implements RenderTree.Node {
         if (NUtils.getGameUI()!=null && NUtils.getGameUI().routesWidget!=null && NUtils.getGameUI().routesWidget.visible) {
             final NMapView mv = (NMapView) NUtils.getGameUI().map;
 
+            if (mv == null) return;
             final RouteGraph graph = mv.routeGraphManager.getGraph();
             final MCache map = mv.glob.map;
 
@@ -158,36 +175,35 @@ public class NPathVisualizer implements RenderTree.Node {
     }
 
     /**
-     * Определение категории пути для объекта
+     * Determine path category for an object
      */
     private PathCategory categorize(Moving m) {
         Gob gob =  m.gob;
         if(gob.id==NUtils.playerID()) {
-            return PathCategory.ME; // Путь игрока
+            return PathCategory.ME; // Player path
         } else {
-            return PathCategory.OTHER; // Другие объекты
+            return PathCategory.OTHER; // Other objects
         }
     }
 
-    // Высота отрисовки линий над поверхностью
-    private static final float Z = 1f;
+
 
     /**
-     * Конвертация координат пути в массив float для рендеринга
+     * Convert path coordinates to a float array for rendering
      */
     private static float[] convert(List<Pair<Coord3f, Coord3f>> lines) {
         float[] ret = new float[lines.size() * 6];
         int i = 0;
         for (Pair<Coord3f, Coord3f> line : lines) {
-            // Координаты начала линии
+            // Line start coordinates
             ret[i++] = line.a.x;
-            ret[i++] = -line.a.y; // Инвертируем Y для корректного отображения
-            // Учитываем настройку плоской поверхности
+            ret[i++] = -line.a.y; // Invert Y for correct display
+            // Consider flat surface setting
             if(!(Boolean) NConfig.get(NConfig.Key.flatsurface))
                 ret[i++] = line.a.z + Z;
             else
                 ret[i++] = Z;
-            // Координаты конца линии
+            // Line end coordinates
             ret[i++] = line.b.x;
             ret[i++] = -line.b.y;
             if(!(Boolean) NConfig.get(NConfig.Key.flatsurface))
@@ -199,7 +215,7 @@ public class NPathVisualizer implements RenderTree.Node {
     }
 
     /**
-     * Добавление пути для отображения
+     * Add path for display
      */
     public void addPath(Moving moving) {
         if(moving == null) {return;}
@@ -207,7 +223,7 @@ public class NPathVisualizer implements RenderTree.Node {
     }
 
     /**
-     * Удаление пути из отображения
+     * Remove path from display
      */
     public void removePath(Moving moving) {
         if(moving == null) {return;}
@@ -215,7 +231,7 @@ public class NPathVisualizer implements RenderTree.Node {
     }
 
     /**
-     * Обновление состояния визуализатора
+     * Update visualizer state
      */
     public void tick(double dt) {
         update();
