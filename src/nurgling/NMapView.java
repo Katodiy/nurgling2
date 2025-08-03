@@ -49,7 +49,10 @@ public class NMapView extends MapView
 
     final HashMap<String, String> ttip = new HashMap<>();
     final ArrayList<String> tlays = new ArrayList<>();
-
+    final HashMap<String, BufferedImage> cachedImages = new HashMap<>();
+    long lastTooltipUpdate = 0;
+    final long tooltipThrottleTime = 100; // milliseconds for throttling
+    TexI oldttip = null;
     public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
     public AtomicBoolean isGobSelectionMode = new AtomicBoolean(false);
     public NArea.Space areaSpace = null;
@@ -218,9 +221,27 @@ public class NMapView extends MapView
     }
 
     public Object tooltip(Coord c, Widget prev) {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastTooltipUpdate < tooltipThrottleTime) {
+            return oldttip;
+        }
+        lastTooltipUpdate = currentTime;
+
         if (NUtils.getGameUI()!=null && !ttip.isEmpty() && NUtils.getGameUI().ui.core.isInspectMode()) {
 
-            Collection<BufferedImage> imgs = new LinkedList<BufferedImage>();
+            Collection<BufferedImage> imgs = new LinkedList<>();
+
+            for (String key : ttip.keySet()) {
+                String text = String.format("$col[128,128,255]{%s}:", key);
+                BufferedImage img = cachedImages.get(text);
+                if (img == null) {
+                    img = RichText.render(text, 0).img;
+                    cachedImages.put(text, img);
+                }
+
+                imgs.add(img);
+                imgs.add(RichText.render(ttip.get(key), 0).img);
+            }
             if (ttip.get("gob") != null) {
                 BufferedImage gob = RichText.render(String.format("$col[128,128,255]{%s}:", "Gob"), 0).img;
                 imgs.add(gob);
@@ -307,8 +328,9 @@ public class NMapView extends MapView
                 imgs.add(gob);
                 imgs.add(RichText.render(ttip.get("poses"), 0).img);
             }
-            return new TexI((ItemInfo.catimgs(0, imgs.toArray(new BufferedImage[0]))));
+            return (oldttip = new TexI((ItemInfo.catimgs(0, imgs.toArray(new BufferedImage[0])))));
         }
+        oldttip = null;
         return (super.tooltip(c, prev));
     }
 
@@ -636,15 +658,19 @@ public class NMapView extends MapView
 
     @Override
     public boolean keyup(KeyUpEvent ev) {
-        if(ev.code == 16)
+        if(ev.code == 16) {
             shiftPressed = false;
+            ttip.clear();
+        }
         return super.keyup(ev);
     }
 
     @Override
     public boolean keydown(KeyDownEvent ev) {
-        if(ev.code == 16)
+        if(ev.code == 16) {
             shiftPressed = true;
+            inspect(lastCoord);
+        }
         if(kb_quickaction.key().match(ev) || kb_quickignaction.key().match(ev)) {
             Thread t;
             (t = new Thread(new Runnable()
