@@ -5,7 +5,6 @@ import nurgling.widgets.*;
 
 import java.awt.event.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -22,6 +21,14 @@ public class NUI extends UI
     Widget monitor = null;
     /** Collection of widget IDs currently being tracked */
     HashSet<Integer> statusWdg = new HashSet<>();
+    /** Flag to control session info initialization frequency */
+    private boolean sessInfoChecked = false;
+    /** Tick counter for periodic operations */
+    private int periodicCheckTick = 0;
+    /** Precomputed delta Z multiplier for performance */
+    private static final double DELTA_Z_DIVISOR = 10.0;
+    /** Period for session verification checks (every N ticks) */
+    private static final int SESSION_CHECK_PERIOD = 60;
 
     /** Session information container that holds user data and verification status */
     public class NSessInfo
@@ -68,27 +75,20 @@ public class NUI extends UI
     public void tick()
     {
         tickId += 1;
+        periodicCheckTick++;
+        
+        // Initialize session info once
         if (sessInfo == null && sess != null)
         {
             sessInfo = new NSessInfo(sess.username);
         }
-        if (gui == null && sessInfo != null)
+        
+        // Only check for verification/subscription periodically to reduce CPU load
+        if (gui == null && sessInfo != null && !sessInfoChecked && periodicCheckTick % SESSION_CHECK_PERIOD == 0)
         {
-            for (Widget wdg : widgets.values())
-            {
-                if (wdg instanceof Img)
-                {
-                    Img img = (Img) wdg;
-                    if (img.tooltip instanceof Widget.KeyboundTip)
-                    {
-                        if (!sessInfo.isVerified && ((Widget.KeyboundTip) img.tooltip).base.contains("Verif"))
-                            sessInfo.isVerified = true;
-                        else if (!sessInfo.isSubscribed && ((Widget.KeyboundTip) img.tooltip).base.contains("Subsc"))
-                            sessInfo.isSubscribed = true;
-                    }
-                }
-            }
+            checkSessionVerification();
         }
+        
         super.tick();
     }
 
@@ -96,7 +96,7 @@ public class NUI extends UI
     public void keydown(KeyEvent ev)
     {
         setmods(ev);
-        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null)
+        if (gui != null && gui.map != null)
         {
             if (ev.getKeyCode() == KeyEvent.VK_SHIFT)
             {
@@ -110,17 +110,18 @@ public class NUI extends UI
     @Override
     public void mousemove(MouseEvent ev, Coord c)
     {
-        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null)
+        if (gui != null && gui.map != null)
         {
             if (core != null && core.debug && core.isinspect)
             {
+                NMapView mapView = (NMapView) gui.map;
                 if (modshift)
                 {
-                    ((NMapView) NUtils.getGameUI().map).inspect(c);
+                    mapView.inspect(c);
                 } else
                 {
                     core.isinspect = false;
-                    ((NMapView) NUtils.getGameUI().map).ttip.clear();
+                    mapView.ttip.clear();
                 }
             }
         }
@@ -186,12 +187,13 @@ public class NUI extends UI
 
     /**
      * Calculates the delta Z value for some transformations.
+     * Optimized version using precomputed constants.
      *
      * @return The calculated delta Z.
      */
     public float getDeltaZ()
     {
-        return (float) Math.sin(tickId / 10.) * 1;
+        return (float) Math.sin(tickId / DELTA_Z_DIVISOR);
     }
 
 
@@ -254,5 +256,41 @@ public class NUI extends UI
             }
         }
         return res;
+    }
+
+    /**
+     * Checks session verification and subscription status by examining widget tooltips.
+     * This method is called periodically to reduce CPU load.
+     */
+    private void checkSessionVerification()
+    {
+        if (sessInfo == null) return;
+        
+        for (Widget wdg : widgets.values())
+        {
+            if (wdg instanceof Img)
+            {
+                Img img = (Img) wdg;
+                if (img.tooltip instanceof Widget.KeyboundTip)
+                {
+                    String tooltipText = ((Widget.KeyboundTip) img.tooltip).base;
+                    if (!sessInfo.isVerified && tooltipText.contains("Verif"))
+                    {
+                        sessInfo.isVerified = true;
+                    }
+                    else if (!sessInfo.isSubscribed && tooltipText.contains("Subsc"))
+                    {
+                        sessInfo.isSubscribed = true;
+                    }
+                    
+                    // If both flags are set, we can stop checking
+                    if (sessInfo.isVerified && sessInfo.isSubscribed)
+                    {
+                        sessInfoChecked = true;
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
