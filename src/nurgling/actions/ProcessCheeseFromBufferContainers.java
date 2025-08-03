@@ -159,70 +159,185 @@ public class ProcessCheeseFromBufferContainers implements Action {
     
     /**
      * Phase 2: Move remaining cheese to next aging stages
+     * Process one cheese type at a time for efficient batching
      */
     private void moveRemainingCheeseToNextStage(NGameUI gui, ArrayList<Gob> containers, CheeseBranch.Place place) throws InterruptedException {
         final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
         
+        // Process each container individually for cheese type batching
+        Map<String, CheeseBranch.Place> cheeseTypeToDestination = new HashMap<>();
+        
+        // Collect cheese types and their destinations first
         for (Gob containerGob : containers) {
-                Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
-                new PathFinder(containerGob).run(gui);
-                new OpenTargetContainer(bufferContainer).run(gui);
-                
-                // Get remaining cheese trays from this container
-                ArrayList<WItem> trays = gui.getInventory(bufferContainer.cap).getItems(new NAlias("Cheese Tray"));
-                ArrayList<WItem> toMoveTrays = new ArrayList<>();
-                
-                // Find trays that should move to next stage
-                for (WItem tray : trays) {
-                    if (CheeseUtils.shouldMoveToNextStage(tray, place)) {
-                        CheeseBranch.Place nextStage = CheeseUtils.getNextStageLocation(tray, place);
-                        if (nextStage != null) {
-                            toMoveTrays.add(tray);
-                            gui.msg("Will move " + CheeseUtils.getContentName(tray) + " from " + place + " to " + nextStage);
-                        }
-                    }
-                }
-                
-                // Take trays to inventory in batches (respecting inventory space)
-                for (WItem tray : toMoveTrays) {
-                    // Check if inventory has space
-                    int availableSpace = gui.getInventory().getNumberFreeCoord(TRAY_SIZE);
-                    if (availableSpace <= 0) {
-                        gui.msg("Inventory full! Moving current batch to next stages...");
-                        new CloseTargetContainer(bufferContainer).run(gui);
-                        moveInventoryCheeseToNextStages(gui, place);
-                        new PathFinder(containerGob).run(gui);
-                        new OpenTargetContainer(bufferContainer).run(gui);
-                    }
-                    
-                    // Take tray to inventory for movement
-                    tray.item.wdgmsg("transfer", haven.Coord.z);
-                    nurgling.NUtils.addTask(new nurgling.tasks.ISRemoved(tray.item.wdgid()));
-                    
-                    // Track this move for capacity calculation
+            Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
+            new PathFinder(containerGob).run(gui);
+            new OpenTargetContainer(bufferContainer).run(gui);
+            
+            ArrayList<WItem> trays = gui.getInventory(bufferContainer.cap).getItems(new NAlias("Cheese Tray"));
+            for (WItem tray : trays) {
+                if (CheeseUtils.shouldMoveToNextStage(tray, place)) {
+                    String cheeseType = CheeseUtils.getContentName(tray);
                     CheeseBranch.Place nextStage = CheeseUtils.getNextStageLocation(tray, place);
-                    if (nextStage != null) {
-                        traysMovedToAreas.put(nextStage, traysMovedToAreas.getOrDefault(nextStage, 0) + 1);
-                        gui.msg("Tracked move: " + nextStage + " capacity reduced by 1");
+                    
+                    if (cheeseType != null && nextStage != null) {
+                        cheeseTypeToDestination.put(cheeseType, nextStage);
                     }
                 }
-                
-                new CloseTargetContainer(bufferContainer).run(gui);
+            }
+            
+            new CloseTargetContainer(bufferContainer).run(gui);
         }
         
-        // Move any remaining cheese in inventory to their next stages
-        gui.msg("Moving final batch of cheese to next stages");
-        moveInventoryCheeseToNextStages(gui, place);
+        // Process each cheese type separately
+        for (Map.Entry<String, CheeseBranch.Place> entry : cheeseTypeToDestination.entrySet()) {
+            String cheeseType = entry.getKey();
+            CheeseBranch.Place destination = entry.getValue();
+            
+            gui.msg("Processing " + cheeseType + " trays for move to " + destination);
+            
+            // Collect all cheese of this type from all containers
+            while (true) {
+                // Check if inventory has space
+                int availableSpace = gui.getInventory().getNumberFreeCoord(TRAY_SIZE);
+                if (availableSpace <= 0) {
+                    gui.msg("Inventory full! Moving current batch of " + cheeseType + " to " + destination);
+                    moveInventoryCheeseToDestination(gui, destination);
+                    
+                    // Navigate back to original area to continue processing
+                    NContext freshContext = new NContext(gui);
+                    freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, place.toString());
+                }
+                
+                // Find matching cheese in any container
+                ArrayList<WItem> matchingTrays = new ArrayList<>();
+                Container currentContainer = null;
+                
+                for (Gob containerGob : containers) {
+                    Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
+                    new PathFinder(containerGob).run(gui);
+                    new OpenTargetContainer(bufferContainer).run(gui);
+                    
+                    ArrayList<WItem> trays = gui.getInventory(bufferContainer.cap).getItems(new NAlias("Cheese Tray"));
+                    for (WItem tray : trays) {
+                        if (CheeseUtils.shouldMoveToNextStage(tray, place)) {
+                            String currentCheeseType = CheeseUtils.getContentName(tray);
+                            if (cheeseType.equals(currentCheeseType)) {
+                                matchingTrays.add(tray);
+                            }
+                        }
+                    }
+                    
+                    if (!matchingTrays.isEmpty()) {
+                        currentContainer = bufferContainer;
+                        break; // Found cheese in this container
+                    }
+                    
+                    new CloseTargetContainer(bufferContainer).run(gui);
+                }
+                
+                if (matchingTrays.isEmpty()) {
+                    break; // No more cheese of this type found
+                }
+                
+                // Take cheese using TakeWItemsFromContainer
+                int traysToTake = Math.min(matchingTrays.size(), availableSpace);
+                ArrayList<WItem> traysToTakeList = new ArrayList<>(matchingTrays.subList(0, traysToTake));
+                
+                new TakeWItemsFromContainer(currentContainer, traysToTakeList).run(gui);
+                
+                // Track these moves for capacity calculation
+                traysMovedToAreas.put(destination, traysMovedToAreas.getOrDefault(destination, 0) + traysToTake);
+                
+                new CloseTargetContainer(currentContainer).run(gui);
+            }
+            
+            // Move all collected cheese of this type to destination
+            if (!gui.getInventory().getItems(new NAlias("Cheese Tray")).isEmpty()) {
+                gui.msg("Moving collected " + cheeseType + " to " + destination);
+                moveInventoryCheeseToDestination(gui, destination);
+                
+                // Navigate back to original area for next cheese type
+                NContext freshContext = new NContext(gui);
+                freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, place.toString());
+            }
+        }
     }
     
     /**
-     * Move cheese currently in inventory to their appropriate next stage areas
+     * Move cheese currently in inventory to a specific destination area
      */
-    private void moveInventoryCheeseToNextStages(NGameUI gui, CheeseBranch.Place currentPlace) throws InterruptedException {
-        // TODO: Implement actual movement to next stage areas
-        // For now, just use FreeInventory2 to store them appropriately
-        gui.msg("Moving inventory cheese to next stages (using FreeInventory2 for now)");
-//        new FreeInventory2().run(gui);
+    private void moveInventoryCheeseToDestination(NGameUI gui, CheeseBranch.Place destination) throws InterruptedException {
+        ArrayList<WItem> cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+        if (cheeseTrays.isEmpty()) {
+            return;
+        }
+        
+        gui.msg("Moving " + cheeseTrays.size() + " cheese trays to " + destination + " area");
+        
+        // Navigate to destination area
+        NContext freshContext = new NContext(gui);
+        NArea destinationArea = freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, destination.toString());
+        if (destinationArea == null) {
+            gui.msg("No cheese racks area found for " + destination + ". Using FreeInventory2 as fallback.");
+            new FreeInventory2(freshContext).run(gui);
+            return;
+        }
+        
+        // Find available racks in destination area
+        ArrayList<Gob> racks = Finder.findGobs(destinationArea, new NAlias("gfx/terobjs/cheeserack"));
+        if (racks.isEmpty()) {
+            gui.msg("No cheese racks found in " + destination + " area. Using FreeInventory2 as fallback.");
+            new FreeInventory2(freshContext).run(gui);
+            return;
+        }
+        
+        // Place cheese trays on racks
+        final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
+        for (Gob rackGob : racks) {
+            cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+            if (cheeseTrays.isEmpty()) {
+                break; // All cheese placed
+            }
+            
+            Container rack = new Container(rackGob, "Rack");
+            new PathFinder(rackGob).run(gui);
+            new OpenTargetContainer(rack).run(gui);
+            
+            // Check available space in this rack
+            int availableSpace = gui.getInventory(rack.cap).getNumberFreeCoord(TRAY_SIZE);
+            if (availableSpace > 0) {
+                // Transfer trays to this rack
+                for (int i = 0; i < Math.min(availableSpace, cheeseTrays.size()); i++) {
+                    WItem tray = cheeseTrays.get(i);
+                    tray.item.wdgmsg("transfer", haven.Coord.z);
+                    nurgling.NUtils.addTask(new nurgling.tasks.ISRemoved(tray.item.wdgid()));
+                }
+                gui.msg("Placed " + Math.min(availableSpace, cheeseTrays.size()) + " trays on rack in " + destination);
+            }
+            
+            new CloseTargetContainer(rack).run(gui);
+        }
+        
+        // If any cheese remains, use FreeInventory2 as fallback
+        cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+        if (!cheeseTrays.isEmpty()) {
+            gui.msg("Warning: " + cheeseTrays.size() + " cheese trays couldn't fit in " + destination + " racks. Using FreeInventory2.");
+            new FreeInventory2(freshContext).run(gui);
+        }
     }
     
+    /**
+     * Helper class to track cheese location information
+     */
+    private static class CheeseLocation {
+        public final WItem tray;
+        public final Gob containerGob;
+        public final Container container;
+        
+        public CheeseLocation(WItem tray, Gob containerGob, Container container) {
+            this.tray = tray;
+            this.containerGob = containerGob;
+            this.container = container;
+        }
+    }
 }
