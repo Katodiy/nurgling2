@@ -43,7 +43,7 @@ public class TakeWItemsFromContainer implements Action {
         for (WItem item : itemsToTake) {
             try {
                 // Check if there's space in player inventory
-                if (gui.getInventory().getNumberFreeCoord(item) <= 1) {
+                if (gui.getInventory().getNumberFreeCoord(item) == 0) {
                     gui.msg("Player inventory is full, stopping take operation");
                     break;
                 }
