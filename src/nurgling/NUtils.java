@@ -404,6 +404,7 @@ public class NUtils
      * @throws InterruptedException if the task is interrupted
      */
     public static void waitForDebugInput() throws InterruptedException {
+        NUtils.getGameUI().msg("Press N");
         addTask(new nurgling.tasks.WaitKeyPress(KeyEvent.VK_N));
     }
 

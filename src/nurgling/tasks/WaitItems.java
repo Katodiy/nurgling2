@@ -60,7 +60,7 @@ public class WaitItems extends NTask
                 NUtils.getGameUI().error("WAIT ITEMS ERROR result.size():" + String.valueOf(result.size()) + " req target size:" + String.valueOf(target_size) + " WITEMS: " + ((name != null && name.keys.size() > 0) ? name.keys.get(0) : "null"));
                 return true;
             }
-            return result.size() == target_size || ((NInventory) inventory).calcFreeSpace()==0; /*Плохое решение, надо было добить заполнение последнего стака но уже лень*/
+            return result.size() == target_size || ((NInventory) inventory).calcFreeSpace()==0;
         }
         else if(inventory instanceof NISBox)
         {

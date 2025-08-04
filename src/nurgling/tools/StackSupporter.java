@@ -79,7 +79,7 @@ public class StackSupporter {
         HashSet<String> size4 = new HashSet<>();
         size4.add("Hide Fresh");
         size4.add("Prepared Animal Hide");
-        size4.add("Fake Bone Material");
+        size4.add("Bone Material");
         size4.add("Coal");
         size4.add("Wool");
         catSize.put(size4,4);
