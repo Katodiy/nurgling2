@@ -8,6 +8,7 @@ import nurgling.actions.ProcessCheeseFromBufferContainers;
 import nurgling.actions.ProcessCheeseOrderInBatches;
 import nurgling.actions.bots.cheese.*;
 import nurgling.cheese.CheeseBranch;
+import nurgling.cheese.CheeseOrdersManager;
 
 import java.util.Map;
 
@@ -22,10 +23,13 @@ public class CheeseProductionBot implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         rackManager = new CheeseRackManager();
         
+        // Create a single shared CheeseOrdersManager instance to eliminate redundant file I/O
+        CheeseOrdersManager sharedOrdersManager = new CheeseOrdersManager();
+        
         gui.msg("=== Starting Cheese Production Bot ===");
         
         // 1. Analyze current orders and determine what needs to be done
-        Map<String, Integer> workNeeded = CheeseUtils.analyzeOrders(gui);
+        Map<String, Integer> workNeeded = CheeseUtils.analyzeOrders(gui, sharedOrdersManager);
         if (workNeeded.isEmpty()) {
             gui.msg("No work needed - all orders complete!");
             return Results.SUCCESS();
@@ -43,7 +47,7 @@ public class CheeseProductionBot implements Action {
 
         // 3. Pass 2: Process buffers (slice ready cheese, move aging cheese)
         gui.msg("=== Pass 2: Processing buffers ===");
-        ProcessCheeseFromBufferContainers bufferAction = new ProcessCheeseFromBufferContainers();
+        ProcessCheeseFromBufferContainers bufferAction = new ProcessCheeseFromBufferContainers(sharedOrdersManager);
         Results bufferResult = bufferAction.run(gui);
         if (!bufferResult.IsSuccess()) {
             gui.error("Failed to process cheese from buffer containers");
@@ -73,7 +77,7 @@ public class CheeseProductionBot implements Action {
             
             // Only process curd creation (start step) - movement work was already handled in steps 2-3
             Results orderResult = new ProcessCheeseOrderInBatches(cheeseType, quantity, inventoryCapacity, 
-                                                                 rackManager, rackCapacity).run(gui);
+                                                                 rackManager, rackCapacity, sharedOrdersManager).run(gui);
             if (!orderResult.IsSuccess()) {
                 gui.error("Failed to process " + cheeseType + " curd creation");
                 // Continue with other orders instead of failing completely

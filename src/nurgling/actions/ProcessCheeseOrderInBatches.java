@@ -26,12 +26,18 @@ public class ProcessCheeseOrderInBatches implements Action {
     
     public ProcessCheeseOrderInBatches(String cheeseType, int totalQuantity, int inventoryCapacity, 
                                       CheeseRackManager rackManager, Map<CheeseBranch.Place, Integer> rackCapacity) {
+        this(cheeseType, totalQuantity, inventoryCapacity, rackManager, rackCapacity, new CheeseOrdersManager());
+    }
+    
+    public ProcessCheeseOrderInBatches(String cheeseType, int totalQuantity, int inventoryCapacity, 
+                                      CheeseRackManager rackManager, Map<CheeseBranch.Place, Integer> rackCapacity,
+                                      CheeseOrdersManager ordersManager) {
         this.cheeseType = cheeseType;
         this.totalQuantity = totalQuantity;
         this.inventoryCapacity = inventoryCapacity;
         this.rackManager = rackManager;
         this.rackCapacity = rackCapacity;
-        this.ordersManager = new CheeseOrdersManager();
+        this.ordersManager = ordersManager;
     }
     
     @Override
