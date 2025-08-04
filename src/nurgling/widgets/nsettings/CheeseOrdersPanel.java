@@ -1,11 +1,15 @@
 package nurgling.widgets.nsettings;
 
 import haven.*;
+import haven.res.lib.itemtex.ItemTex;
 import nurgling.cheese.CheeseBranch;
 import nurgling.cheese.CheeseOrder;
 import nurgling.cheese.CheeseOrdersManager;
 import nurgling.NUtils;
+import nurgling.tools.VSpec;
+import org.json.JSONObject;
 
+import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,6 +29,9 @@ public class CheeseOrdersPanel extends Panel {
     // --- Editor Panel widgets ---
     private Dropbox<String> cheeseTypeDropdown;
     private TextEntry countEntry;
+    
+    // Icon cache for cheese types
+    private final Map<String, BufferedImage> cheeseIcons = new HashMap<>();
 
     public CheeseOrdersPanel() {
         super("");
@@ -166,14 +173,16 @@ public class CheeseOrdersPanel extends Panel {
         int baseHeight = UI.scale(32);
         int stepCount = (isExpanded && steps != null) ? steps.size() : 0;
         int headerHeight = (isExpanded && stepCount > 0) ? UI.scale(18) : 0;
-        int totalHeight = baseHeight + headerHeight + (stepCount * UI.scale(20)) + (isExpanded ? UI.scale(5) : 0);
+        int stepLineHeight = UI.scale(24); // Increased from 20 to 24 for better icon display
+        int totalHeight = baseHeight + headerHeight + (stepCount * stepLineHeight) + (isExpanded ? UI.scale(5) : 0);
         
         Widget w = new Widget(new Coord(sz.x, totalHeight));
         
         // Column widths for alignment
         int expandBtnW = UI.scale(30);
+        int iconColW = UI.scale(25);
         int statusColW = UI.scale(50);
-        int nameColW = UI.scale(140);
+        int nameColW = UI.scale(115);
         int locationColW = UI.scale(80);
         int progressColW = UI.scale(120);
         int btnW = UI.scale(70);
@@ -181,7 +190,8 @@ public class CheeseOrdersPanel extends Panel {
         
         // Column positions
         int expandBtnX = margin;
-        int statusColX = expandBtnX + expandBtnW + UI.scale(10);
+        int iconColX = expandBtnX + expandBtnW + UI.scale(5);
+        int statusColX = iconColX + iconColW + UI.scale(5);
         int nameColX = statusColX + statusColW;
         int locationColX = nameColX + nameColW;
         int progressColX = locationColX + locationColW;
@@ -207,6 +217,19 @@ public class CheeseOrdersPanel extends Panel {
             rebuildOrderList();
         });
         w.add(expandBtn, new Coord(expandBtnX, (baseHeight - expandBtn.sz.y) / 2));
+        
+        // Cheese icon
+        BufferedImage cheeseIcon = getCheeseIcon(order.getCheeseType());
+        if (cheeseIcon != null) {
+            final TexI iconTex = new TexI(cheeseIcon);
+            w.add(new Widget(new Coord(UI.scale(20), UI.scale(20))) {
+                public void draw(GOut g) {
+                    g.image(iconTex, Coord.z);
+                }
+            }, new Coord(iconColX + UI.scale(2), (baseHeight - UI.scale(20)) / 2));
+        } else {
+            System.out.println("cheeseIcon is null for: " + order.getCheeseType()); // Debug
+        }
         
         // Order title (cheese type)
         Label orderLabel = new Label(order.getCheeseType());
@@ -243,18 +266,34 @@ public class CheeseOrdersPanel extends Panel {
             
             // Step rows
             for (CheeseOrder.StepStatus step : steps) {
-                // Status icon
+                // Status icon (simple text indicator)
                 String statusIcon = step.left == 0 ? "✓" : "○";
                 Label statusLabel = new Label(statusIcon);
-                w.add(statusLabel, new Coord(statusColX, stepY));
+                w.add(statusLabel, new Coord(statusColX, stepY + UI.scale(4))); // Centered vertically
                 
-                // Cheese name
-                Label nameLabel = new Label(step.name);
-                w.add(nameLabel, new Coord(nameColX, stepY));
+                // Cheese icon + name (icon as part of name column)
+                BufferedImage stepIcon = getCheeseIcon(step.name);
+                if (stepIcon != null) {
+                    final TexI stepIconTex = new TexI(stepIcon);
+                    // Add icon
+                    w.add(new Widget(new Coord(UI.scale(18), UI.scale(18))) {
+                        public void draw(GOut g) {
+                            g.image(stepIconTex, Coord.z, new Coord(UI.scale(18), UI.scale(18)));
+                        }
+                    }, new Coord(nameColX, stepY + UI.scale(3))); // Slightly offset for better alignment
+                    
+                    // Add name label next to icon
+                    Label nameLabel = new Label(step.name);
+                    w.add(nameLabel, new Coord(nameColX + UI.scale(22), stepY + UI.scale(4)));
+                } else {
+                    // No icon, just name
+                    Label nameLabel = new Label(step.name);
+                    w.add(nameLabel, new Coord(nameColX, stepY + UI.scale(4)));
+                }
                 
                 // Location
                 Label locationLabel = new Label(step.place);
-                w.add(locationLabel, new Coord(locationColX, stepY));
+                w.add(locationLabel, new Coord(locationColX, stepY + UI.scale(4)));
                 
                 // Progress
                 String progressText;
@@ -264,9 +303,9 @@ public class CheeseOrdersPanel extends Panel {
                     progressText = "Complete";
                 }
                 Label progressLabel = new Label(progressText);
-                w.add(progressLabel, new Coord(progressColX, stepY));
+                w.add(progressLabel, new Coord(progressColX, stepY + UI.scale(4)));
                 
-                stepY += UI.scale(20);
+                stepY += stepLineHeight;
             }
         }
         
@@ -296,4 +335,82 @@ public class CheeseOrdersPanel extends Panel {
         orderListContent.pack();
         orderListContainer.cont.update();
     }
+    
+    /**
+     * Get cheese icon for a cheese type name
+     * Uses VSpec cheese category to find the correct JSON object
+     */
+    private BufferedImage getCheeseIcon(String cheeseType) {
+        // Return cached icon if available (including null results)
+        if (cheeseIcons.containsKey(cheeseType)) {
+            BufferedImage cached = cheeseIcons.get(cheeseType);
+            if (cached != null) {
+                System.out.println("Using cached icon for: " + cheeseType); // Debug
+            }
+            return cached;
+        }
+        
+        BufferedImage icon = null;
+        try {
+            // Find the cheese JSON object in VSpec categories
+            JSONObject cheeseRes = null;
+            if (VSpec.categories.containsKey("Cheese")) {
+                for (JSONObject obj : VSpec.categories.get("Cheese")) {
+                    if (obj.getString("name").equals(cheeseType)) {
+                        cheeseRes = obj;
+                        break;
+                    }
+                }
+            }
+            
+            if (cheeseRes != null) {
+                // Use ItemTex.create() same as category selection window
+                icon = ItemTex.create(cheeseRes);
+                if (icon != null) {
+                    System.out.println("Successfully loaded icon for: " + cheeseType + " (size: " + icon.getWidth() + "x" + icon.getHeight() + ")"); // Debug
+                } else {
+                    System.out.println("ItemTex.create returned null for: " + cheeseType); // Debug
+                }
+            } else {
+                System.out.println("No VSpec entry found for cheese: " + cheeseType); // Debug
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to load icon for: " + cheeseType + " - " + e.getMessage()); // Debug
+        }
+        
+        // If icon loading failed, create placeholder
+        if (icon == null) {
+            icon = createPlaceholderIcon(cheeseType);
+        }
+        
+        // Cache the result (even if null)
+        cheeseIcons.put(cheeseType, icon);
+        return icon;
+    }
+    
+    /**
+     * Create a simple colored square as placeholder icon
+     */
+    private BufferedImage createPlaceholderIcon(String cheeseType) {
+        int size = 16;
+        BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g2d = img.createGraphics();
+        
+        // Set color based on cheese type (simple hash-based coloring)
+        int hash = cheeseType.hashCode();
+        int r = 150 + (Math.abs(hash) % 100);
+        int g = 120 + (Math.abs(hash >> 8) % 100);  
+        int b = 80 + (Math.abs(hash >> 16) % 100);
+        
+        g2d.setColor(new java.awt.Color(r, g, b));
+        g2d.fillRect(0, 0, size, size);
+        
+        // Add a simple border
+        g2d.setColor(java.awt.Color.BLACK);
+        g2d.drawRect(0, 0, size-1, size-1);
+        
+        g2d.dispose();
+        return img;
+    }
+    
 }
