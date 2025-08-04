@@ -16,8 +16,11 @@ public class CheeseOrdersPanel extends Panel {
     private final Widget listPanel;
     private Widget editorPanel = null;
 
-    private final SListBox<CheeseOrder, Widget> orderList;
+    private Scrollport orderListContainer;
+    private Widget orderListContent;
     private final List<String> cheeseTypes = CheeseBranch.allProducts();
+    
+    private final Set<Integer> expandedOrders = new HashSet<>();
 
     // --- Editor Panel widgets ---
     private Dropbox<String> cheeseTypeDropdown;
@@ -39,36 +42,19 @@ public class CheeseOrdersPanel extends Panel {
         listPanel.add(new Label("Cheese Orders:"), new Coord(0, 0));
 
         int olistWidth = contentWidth - margin * 2;
-        orderList = listPanel.add(
-                new SListBox<CheeseOrder, Widget>(new Coord(olistWidth, olistHeight), UI.scale(32)) {
-                    @Override
-                    protected List<CheeseOrder> items() {
-                        return new ArrayList<>(manager.getOrders().values()).stream()
-                                .sorted(Comparator.comparingInt(CheeseOrder::getId))
-                                .collect(Collectors.toList());
-                    }
-                    @Override
-                    protected Widget makeitem(CheeseOrder order, int idx, Coord sz) {
-                        Widget w = new Widget(sz);
-                        Label label = new Label(order.getCheeseType() + " x" + order.getCount());
-                        int btnW = UI.scale(70);
-                        int rightPad = UI.scale(10);
-                        int delBtnX = sz.x - rightPad - btnW;
-
-                        int labelAreaWidth = delBtnX - margin;
-                        int labelX = margin + (labelAreaWidth - label.sz.x) / 2;
-
-                        w.add(label, new Coord(labelX, (sz.y - label.sz.y) / 2));
-                        w.add(new Button(btnW, "Delete", () -> {
-                            manager.deleteOrder(order.getId());
-                            manager.writeOrders();
-                            orderList.update();
-                        }), new Coord(delBtnX, (sz.y - btnHeight) / 2));
-                        return w;
-                    }
-                },
-                new Coord(margin, margin + UI.scale(32))
-        );
+        
+        // Create scrollable container for the order list
+        orderListContainer = listPanel.add(new Scrollport(new Coord(olistWidth, olistHeight)), new Coord(margin, margin + UI.scale(32)));
+        orderListContent = new Widget(new Coord(olistWidth, UI.scale(50))) {
+            @Override
+            public void pack() {
+                // Auto-resize based on children
+                resize(contentsz());
+            }
+        };
+        orderListContainer.cont.add(orderListContent, Coord.z);
+        
+        rebuildOrderList();
 
         int bottomY = contentHeight - margin - btnHeight;
 
@@ -123,7 +109,7 @@ public class CheeseOrdersPanel extends Panel {
     private void showListPanel() {
         listPanel.show();
         editorPanel.hide();
-        orderList.update();
+        rebuildOrderList();
     }
 
     private void showEditorPanel() {
@@ -170,5 +156,144 @@ public class CheeseOrdersPanel extends Panel {
     private int getNextOrderId() {
         if (manager.getOrders().isEmpty()) return 1;
         return manager.getOrders().keySet().stream().max(Integer::compareTo).orElse(0) + 1;
+    }
+    
+    private Widget createOrderWidget(CheeseOrder order, Coord sz) {
+        boolean isExpanded = expandedOrders.contains(order.getId());
+        List<CheeseOrder.StepStatus> steps = order.getStatus();
+        
+        // Calculate height
+        int baseHeight = UI.scale(32);
+        int stepCount = (isExpanded && steps != null) ? steps.size() : 0;
+        int headerHeight = (isExpanded && stepCount > 0) ? UI.scale(18) : 0;
+        int totalHeight = baseHeight + headerHeight + (stepCount * UI.scale(20)) + (isExpanded ? UI.scale(5) : 0);
+        
+        Widget w = new Widget(new Coord(sz.x, totalHeight));
+        
+        // Column widths for alignment
+        int expandBtnW = UI.scale(30);
+        int statusColW = UI.scale(50);
+        int nameColW = UI.scale(140);
+        int locationColW = UI.scale(80);
+        int progressColW = UI.scale(120);
+        int btnW = UI.scale(70);
+        int rightPad = UI.scale(10);
+        
+        // Column positions
+        int expandBtnX = margin;
+        int statusColX = expandBtnX + expandBtnW + UI.scale(10);
+        int nameColX = statusColX + statusColW;
+        int locationColX = nameColX + nameColW;
+        int progressColX = locationColX + locationColW;
+        int delBtnX = sz.x - rightPad - btnW;
+        
+        // Main row background (subtle)
+        w.add(new Widget(new Coord(sz.x - margin * 2, baseHeight)) {
+            public void draw(GOut g) {
+                g.chcolor(255, 255, 255, 8);
+                g.frect(Coord.z, sz);
+                g.chcolor();
+            }
+        }, new Coord(margin, 0));
+        
+        // Expand/collapse button
+        String expandBtnText = isExpanded ? "▼" : "▶";
+        Button expandBtn = new Button(expandBtnW, expandBtnText, () -> {
+            if (expandedOrders.contains(order.getId())) {
+                expandedOrders.remove(order.getId());
+            } else {
+                expandedOrders.add(order.getId());
+            }
+            rebuildOrderList();
+        });
+        w.add(expandBtn, new Coord(expandBtnX, (baseHeight - expandBtn.sz.y) / 2));
+        
+        // Order title (cheese type)
+        Label orderLabel = new Label(order.getCheeseType());
+        w.add(orderLabel, new Coord(nameColX, (baseHeight - orderLabel.sz.y) / 2));
+        
+        // Quantity
+        Label qtyLabel = new Label("x" + order.getCount());
+        w.add(qtyLabel, new Coord(progressColX, (baseHeight - qtyLabel.sz.y) / 2));
+        
+        // Delete button
+        w.add(new Button(btnW, "Delete", () -> {
+            manager.deleteOrder(order.getId());
+            manager.writeOrders();
+            expandedOrders.remove(order.getId());
+            rebuildOrderList();
+        }), new Coord(delBtnX, (baseHeight - UI.scale(28)) / 2));
+        
+        // Step details (if expanded)
+        if (isExpanded && steps != null && !steps.isEmpty()) {
+            int stepY = baseHeight + UI.scale(5);
+            
+            // Header row for steps
+            Label headerStatus = new Label("Status");
+            Label headerName = new Label("Cheese Type");
+            Label headerLocation = new Label("Location");
+            Label headerProgress = new Label("Progress");
+            
+            w.add(headerStatus, new Coord(statusColX, stepY));
+            w.add(headerName, new Coord(nameColX, stepY));
+            w.add(headerLocation, new Coord(locationColX, stepY));
+            w.add(headerProgress, new Coord(progressColX, stepY));
+            
+            stepY += UI.scale(18);
+            
+            // Step rows
+            for (CheeseOrder.StepStatus step : steps) {
+                // Status icon
+                String statusIcon = step.left == 0 ? "✓" : "○";
+                Label statusLabel = new Label(statusIcon);
+                w.add(statusLabel, new Coord(statusColX, stepY));
+                
+                // Cheese name
+                Label nameLabel = new Label(step.name);
+                w.add(nameLabel, new Coord(nameColX, stepY));
+                
+                // Location
+                Label locationLabel = new Label(step.place);
+                w.add(locationLabel, new Coord(locationColX, stepY));
+                
+                // Progress
+                String progressText;
+                if (step.left > 0) {
+                    progressText = step.left + " remaining";
+                } else {
+                    progressText = "Complete";
+                }
+                Label progressLabel = new Label(progressText);
+                w.add(progressLabel, new Coord(progressColX, stepY));
+                
+                stepY += UI.scale(20);
+            }
+        }
+        
+        return w;
+    }
+    
+    private void rebuildOrderList() {
+        // Clear existing widgets from content
+        for (Widget child : new ArrayList<>(orderListContent.children())) {
+            child.destroy();
+        }
+        
+        List<CheeseOrder> orders = new ArrayList<>(manager.getOrders().values()).stream()
+                .sorted(Comparator.comparingInt(CheeseOrder::getId))
+                .collect(Collectors.toList());
+        
+        int y = 0;
+        int contentWidth = orderListContainer.cont.sz.x;
+        
+        for (CheeseOrder order : orders) {
+            Widget orderWidget = createOrderWidget(order, new Coord(contentWidth, UI.scale(32)));
+            orderListContent.add(orderWidget, new Coord(0, y));
+            y += orderWidget.sz.y + UI.scale(2);
+        }
+        
+        // Let the content widget auto-resize and update scrollbar
+        orderListContent.pack();
+        orderListContainer.cont.update();
     }
 }
