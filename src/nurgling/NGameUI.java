@@ -696,4 +696,10 @@ public class NGameUI extends GameUI
         }
         return super.msg(msg);
     }
+
+    @Override
+    public boolean keydown(KeyDownEvent ev) {
+        nurgling.tasks.WaitKeyPress.setLastKeyPressed(ev.code);
+        return super.keydown(ev);
+    }
 }

@@ -15,6 +15,7 @@ import nurgling.widgets.options.AutoSelection;
 import nurgling.widgets.options.QuickActions;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.text.*;
@@ -392,6 +393,16 @@ public class NUtils
     public static void addTask(NTask task) throws InterruptedException {
         if(NUtils.getUI()!=null)
             NUtils.getUI().core.addTask(task);
+    }
+
+    /**
+     * Waits for debug input by pressing 'N' key.
+     * This method is used for debugging purposes to pause execution until user input.
+     * 
+     * @throws InterruptedException if the task is interrupted
+     */
+    public static void waitForDebugInput() throws InterruptedException {
+        addTask(new nurgling.tasks.WaitKeyPress(KeyEvent.VK_N));
     }
 
     public static void setQuestConds(int id, Object... args)
