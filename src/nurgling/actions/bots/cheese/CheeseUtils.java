@@ -88,11 +88,17 @@ public class CheeseUtils {
      * whether it's the final product in its branch or an intermediate step
      */
     public static boolean isCheeseReadyToSlice(WItem tray) {
+        return isCheeseReadyToSlice(tray, new CheeseOrdersManager());
+    }
+    
+    /**
+     * Check if cheese is ready to slice using provided orders manager (more efficient)
+     */
+    public static boolean isCheeseReadyToSlice(WItem tray, CheeseOrdersManager ordersManager) {
         String contentName = getContentName(tray);
         if (contentName == null) return false; // Empty tray
         
         // Check if this cheese type is in any active order
-        CheeseOrdersManager ordersManager = new CheeseOrdersManager();
         for (CheeseOrder order : ordersManager.getOrders().values()) {
             if (order.getCheeseType().equals(contentName)) {
                 // This cheese type has been ordered, so it's ready to slice
@@ -137,7 +143,13 @@ public class CheeseUtils {
      * Returns work needed for any incomplete steps, not just "start" step
      */
     public static Map<String, Integer> analyzeOrders(NGameUI gui) {
-        CheeseOrdersManager ordersManager = new CheeseOrdersManager();
+        return analyzeOrders(gui, new CheeseOrdersManager());
+    }
+    
+    /**
+     * Analyze current orders using provided orders manager (more efficient)
+     */
+    public static Map<String, Integer> analyzeOrders(NGameUI gui, CheeseOrdersManager ordersManager) {
         Map<String, Integer> workNeeded = new HashMap<>();
         
         for (CheeseOrder order : ordersManager.getOrders().values()) {
