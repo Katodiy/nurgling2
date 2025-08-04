@@ -13,18 +13,18 @@ public class TestBot implements Action {
     
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        gui.msg("Start test bot.");
+        gui.msg("Test bot started! Press N to proceed to the next iteration.");
         
         for (int i = 1; i <= 10; i++) {
-            gui.msg("Iteration " + i + " from 10");
+            gui.msg("Iteration " + i + " of 10");
             
             // Wait for debug input (N key press)
             NUtils.waitForDebugInput();
             
-            gui.msg("Iteration " + i + " completed. Press N for continue...");
+            gui.msg("Iteration " + i + " completed. Press N to continue...");
         }
         
-        gui.msg("End!");
+        gui.msg("Test bot finished working!");
         return Results.SUCCESS();
     }
 }

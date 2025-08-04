@@ -397,7 +397,9 @@ public class NUtils
 
     /**
      * Waits for debug input by pressing 'N' key.
-     * This method is used for debugging purposes to pause execution until user input.
+     * This method is used for debugging purposes to pause bot execution until user input.
+     * Use this function to pause bots when you need to stop execution for debugging purposes.
+     * The bot will wait indefinitely until the 'N' key is pressed.
      * 
      * @throws InterruptedException if the task is interrupted
      */
