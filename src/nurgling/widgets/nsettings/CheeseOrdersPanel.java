@@ -32,6 +32,8 @@ public class CheeseOrdersPanel extends Panel {
     
     // Icon cache for cheese types
     private final Map<String, BufferedImage> cheeseIcons = new HashMap<>();
+    // Track failed icon loading attempts to avoid repeated failures
+    private final Set<String> failedIcons = new HashSet<>();
 
     public CheeseOrdersPanel() {
         super("");
@@ -338,21 +340,24 @@ public class CheeseOrdersPanel extends Panel {
     
     /**
      * Get cheese icon for a cheese type name
-     * Uses VSpec cheese category to find the correct JSON object
+     * Uses VSpec cheese category with ItemTex.create() - loads only once per type
      */
     private BufferedImage getCheeseIcon(String cheeseType) {
-        // Return cached icon if available (including null results)
+        // Return cached icon if available
         if (cheeseIcons.containsKey(cheeseType)) {
-            BufferedImage cached = cheeseIcons.get(cheeseType);
-            if (cached != null) {
-                System.out.println("Using cached icon for: " + cheeseType); // Debug
-            }
-            return cached;
+            return cheeseIcons.get(cheeseType);
+        }
+        
+        // Don't retry icons that have already failed to load
+        if (failedIcons.contains(cheeseType)) {
+            BufferedImage placeholder = createPlaceholderIcon(cheeseType);
+            cheeseIcons.put(cheeseType, placeholder);
+            return placeholder;
         }
         
         BufferedImage icon = null;
         try {
-            // Find the cheese JSON object in VSpec categories
+            // Find the cheese JSON object in VSpec categories (same as NCatSelection)
             JSONObject cheeseRes = null;
             if (VSpec.categories.containsKey("Cheese")) {
                 for (JSONObject obj : VSpec.categories.get("Cheese")) {
@@ -364,28 +369,25 @@ public class CheeseOrdersPanel extends Panel {
             }
             
             if (cheeseRes != null) {
-                // Use ItemTex.create() same as category selection window
+                // Use ItemTex.create() exactly like NCatSelection does
                 icon = ItemTex.create(cheeseRes);
                 if (icon != null) {
-                    System.out.println("Successfully loaded icon for: " + cheeseType + " (size: " + icon.getWidth() + "x" + icon.getHeight() + ")"); // Debug
-                } else {
-                    System.out.println("ItemTex.create returned null for: " + cheeseType); // Debug
+                    // Success - cache the icon and return
+                    cheeseIcons.put(cheeseType, icon);
+                    return icon;
                 }
-            } else {
-                System.out.println("No VSpec entry found for cheese: " + cheeseType); // Debug
             }
         } catch (Exception e) {
-            System.out.println("Failed to load icon for: " + cheeseType + " - " + e.getMessage()); // Debug
+            // Silent failure
         }
         
-        // If icon loading failed, create placeholder
-        if (icon == null) {
-            icon = createPlaceholderIcon(cheeseType);
-        }
+        // Mark as failed to prevent repeated attempts
+        failedIcons.add(cheeseType);
         
-        // Cache the result (even if null)
-        cheeseIcons.put(cheeseType, icon);
-        return icon;
+        // Create and cache placeholder
+        BufferedImage placeholder = createPlaceholderIcon(cheeseType);
+        cheeseIcons.put(cheeseType, placeholder);
+        return placeholder;
     }
     
     /**
