@@ -15,7 +15,6 @@ import java.util.stream.Stream;
 
 public class CheeseOrdersManager {
     private final Map<Integer, CheeseOrder> orders = new HashMap<>();
-    private boolean needsUpdate = false;
 
     public CheeseOrdersManager() {
         loadOrders();
@@ -37,12 +36,11 @@ public class CheeseOrdersManager {
                     CheeseOrder order = new CheeseOrder(array.getJSONObject(i));
                     orders.put(order.getId(), order);
                 }
-                needsUpdate = false;
             }
         }
     }
 
-    public void writeOrders(String customPath) {
+    public void writeOrders() {
         JSONObject main = new JSONObject();
         JSONArray jorders = new JSONArray();
         for (CheeseOrder order : orders.values()) {
@@ -51,10 +49,9 @@ public class CheeseOrdersManager {
         main.put("orders", jorders);
 
         try {
-            FileWriter f = new FileWriter(customPath == null ? NConfig.current.path_cheese_orders : customPath, StandardCharsets.UTF_8);
+            FileWriter f = new FileWriter(NConfig.current.path_cheese_orders, StandardCharsets.UTF_8);
             main.write(f);
             f.close();
-            needsUpdate = false;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -62,12 +59,10 @@ public class CheeseOrdersManager {
 
     public void addOrUpdateOrder(CheeseOrder order) {
         orders.put(order.getId(), order);
-        needsUpdate = true;
     }
 
     public void deleteOrder(int orderId) {
         orders.remove(orderId);
-        needsUpdate = true;
     }
 
     public Map<Integer, CheeseOrder> getOrders() {

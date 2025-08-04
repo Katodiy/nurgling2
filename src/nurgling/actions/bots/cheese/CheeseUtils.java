@@ -52,7 +52,6 @@ public class CheeseUtils {
     
     /**
      * Check if a cheese tray is ready to move to next stage
-     * 
      * Uses location-based filtering logic: builds a candidates list of cheese names 
      * that belong in the current location, then checks if the tray's content matches 
      * any candidate name and has a next stage. No explicit readiness state - assumes 
@@ -137,15 +136,6 @@ public class CheeseUtils {
     }
     
     // ============== CHEESE ORDER PROCESSING ==============
-    
-    /**
-     * Analyze current orders to determine what work needs to be done
-     * Returns work needed for any incomplete steps, not just "start" step
-     */
-    public static Map<String, Integer> analyzeOrders(NGameUI gui) {
-        return analyzeOrders(gui, new CheeseOrdersManager());
-    }
-    
     /**
      * Analyze current orders using provided orders manager (more efficient)
      */

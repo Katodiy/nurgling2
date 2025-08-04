@@ -16,12 +16,10 @@ import java.util.Map;
  * This orchestrates the high-level workflow and delegates specific tasks
  */
 public class CheeseProductionBot implements Action {
-    
-    private CheeseRackManager rackManager;
-    
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        rackManager = new CheeseRackManager();
+        CheeseRackManager rackManager = new CheeseRackManager();
         
         // Create a single shared CheeseOrdersManager instance to eliminate redundant file I/O
         CheeseOrdersManager sharedOrdersManager = new CheeseOrdersManager();
@@ -76,12 +74,10 @@ public class CheeseProductionBot implements Action {
             int inventoryCapacity = rackManager.getInventoryCapacity(gui);
             
             // Only process curd creation (start step) - movement work was already handled in steps 2-3
-            Results orderResult = new ProcessCheeseOrderInBatches(cheeseType, quantity, inventoryCapacity, 
-                                                                 rackManager, rackCapacity, sharedOrdersManager).run(gui);
+            Results orderResult = new ProcessCheeseOrderInBatches(cheeseType, quantity, inventoryCapacity,
+                    rackManager, rackCapacity, sharedOrdersManager).run(gui);
             if (!orderResult.IsSuccess()) {
                 gui.error("Failed to process " + cheeseType + " curd creation");
-                // Continue with other orders instead of failing completely
-                continue;
             }
         }
         
