@@ -67,6 +67,8 @@ public class ProcessCheeseOrderInBatches implements Action {
             gui.msg("No cheese can fit on racks, continuing to next order.");
             return Results.SUCCESS();
         }
+
+        totalWorkNeeded = Math.min(totalWorkNeeded, totalRackSpace);
         
         // Process in batches considering inventory and rack capacity limits
         int totalProcessed = 0;
