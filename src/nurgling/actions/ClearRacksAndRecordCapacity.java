@@ -1,17 +1,16 @@
 package nurgling.actions;
 
-import haven.Coord;
 import haven.Gob;
 import nurgling.NGameUI;
-import nurgling.actions.bots.cheese.CheeseUtils;
 import nurgling.actions.bots.cheese.CheeseRackOverlayUtils;
+import nurgling.actions.bots.cheese.CheeseConstants;
+import nurgling.actions.bots.cheese.CheeseAreaManager;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +21,7 @@ import java.util.Map;
  * Use getLastRecordedCapacity() to access the capacity data after running
  */
 public class ClearRacksAndRecordCapacity implements Action {
-    private final Coord TRAY_SIZE = new Coord(1, 2);
+    // Use centralized cheese tray size constant
     private Map<CheeseBranch.Place, Integer> lastRecordedCapacity = new HashMap<>();
     
     @Override
@@ -66,22 +65,21 @@ public class ClearRacksAndRecordCapacity implements Action {
      * @return total capacity of all racks in the area
      */
     private int clearReadyCheeseFromArea(NGameUI gui, CheeseBranch.Place place) throws InterruptedException {
-            // Create a fresh context to avoid caching issues when navigating between areas
-            NContext freshContext = new NContext(gui);
-            NArea area = freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, place.toString());
+            // Get cheese area using centralized manager
+            NArea area = CheeseAreaManager.getCheeseArea(gui, place);
             if (area == null) {
                 gui.msg("No cheese racks area found for " + place);
                 return 0;
             }
             
             // Find all cheese racks and buffer containers in this area
-            ArrayList<Gob> rackGobs = Finder.findGobs(area, new NAlias("gfx/terobjs/cheeserack"));
-            ArrayList<Gob> bufferGobs = Finder.findGobs(area, new NAlias(new ArrayList<String>(NContext.contcaps.keySet()), new ArrayList<>()));
+            ArrayList<Gob> rackGobs = Finder.findGobs(area, new NAlias(CheeseConstants.CHEESE_RACK_RESOURCE));
+            ArrayList<Gob> bufferGobs = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
             
             // Convert to Container objects
             ArrayList<Container> racks = new ArrayList<>();
             for (Gob rack : rackGobs) {
-                racks.add(new Container(rack, "Rack"));
+                racks.add(new Container(rack, CheeseConstants.RACK_CONTAINER_TYPE));
             }
             
             ArrayList<Container> buffers = new ArrayList<>();

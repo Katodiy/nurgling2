@@ -18,8 +18,6 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
-// Import the combined CheeseUtils class
-
 /**
  * Handles cheese rack capacity checking and tray movement between areas
  */
@@ -62,7 +60,7 @@ public class CheeseRackManager {
         try {
             // Create fresh context to avoid caching issues
             NContext freshContext = new NContext(gui);
-            NArea targetArea = freshContext.getSpecArea(Specialisation.SpecName.cheeseRacks, targetPlace.toString());
+            NArea targetArea = CheeseAreaManager.getCheeseArea(gui, targetPlace);
             if (targetArea == null) {
                 gui.msg("Target area not found: " + targetPlace);
                 return 0;
@@ -109,7 +107,7 @@ public class CheeseRackManager {
      * Get specific cheese trays of a particular type from inventory
      */
     private ArrayList<WItem> getTraysOfType(NGameUI gui, String cheeseType, int maxCount) throws InterruptedException {
-        ArrayList<WItem> allTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+        ArrayList<WItem> allTrays = CheeseInventoryOperations.getCheeseTrays(gui);
         ArrayList<WItem> specificTrays = new ArrayList<>();
         
         for (WItem tray : allTrays) {

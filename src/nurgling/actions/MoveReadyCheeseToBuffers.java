@@ -10,6 +10,8 @@ import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
 import nurgling.actions.bots.cheese.CheeseRackOverlayUtils;
+import nurgling.actions.bots.cheese.CheeseConstants;
+import nurgling.actions.bots.cheese.CheeseInventoryOperations;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -58,7 +60,7 @@ public class MoveReadyCheeseToBuffers implements Action {
     public ResultWithCapacity runWithCapacity(NGameUI gui) throws InterruptedException {
         NContext context = new NContext(gui);
         Map<Container, Integer> rackCapacities = new HashMap<>();
-        final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
+        // Use centralized cheese tray size constant
         
         // Phase 1: Collect all ready cheese from racks to inventory
         // First, filter racks using overlay status to skip empty ones
@@ -106,7 +108,7 @@ public class MoveReadyCheeseToBuffers implements Action {
      * Distribute cheese trays from inventory to buffer containers
      */
     private void distributeToBuffers(NGameUI gui, NContext context) throws InterruptedException {
-        ArrayList<WItem> cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+        ArrayList<WItem> cheeseTrays = CheeseInventoryOperations.getCheeseTrays(gui);
         if (cheeseTrays.isEmpty()) {
             return; // Nothing to distribute
         }
@@ -115,7 +117,7 @@ public class MoveReadyCheeseToBuffers implements Action {
         
         // Try to distribute to buffer containers
         for (Container buffer : buffers) {
-            cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+            cheeseTrays = CheeseInventoryOperations.getCheeseTrays(gui);
             if (cheeseTrays.isEmpty()) {
                 break; // All distributed
             }
@@ -124,8 +126,8 @@ public class MoveReadyCheeseToBuffers implements Action {
             new OpenTargetContainer(buffer).run(gui);
             
             // Check space and transfer trays if there's room
-            final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
-            int availableSpace = gui.getInventory(buffer.cap).getNumberFreeCoord(TRAY_SIZE);
+            // Use centralized cheese tray size constant
+            int availableSpace = gui.getInventory(buffer.cap).getNumberFreeCoord(CheeseConstants.CHEESE_TRAY_SIZE);
             
             if (availableSpace > 0) {
                 // Transfer as many trays as possible to this buffer
@@ -148,21 +150,21 @@ public class MoveReadyCheeseToBuffers implements Action {
      * Transfer cheese trays from inventory to an open buffer container
      */
     private void transferTraysToBuffer(NGameUI gui, Container buffer) throws InterruptedException {
-        final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
+        // Use centralized cheese tray size constant
         
         while (true) {
-            ArrayList<WItem> cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+            ArrayList<WItem> cheeseTrays = CheeseInventoryOperations.getCheeseTrays(gui);
             if (cheeseTrays.isEmpty()) {
                 break; // No more trays to transfer
             }
             
-            int availableSpace = gui.getInventory(buffer.cap).getNumberFreeCoord(TRAY_SIZE);
+            int availableSpace = gui.getInventory(buffer.cap).getNumberFreeCoord(CheeseConstants.CHEESE_TRAY_SIZE);
             if (availableSpace <= 0) {
                 break; // Buffer is full
             }
             
             // Transfer one tray
-            new TransferToContainer(buffer, new NAlias("Cheese Tray")).run(gui);
+            new TransferToContainer(buffer, CheeseConstants.CHEESE_TRAY_ALIAS).run(gui);
         }
     }
     
@@ -197,16 +199,16 @@ public class MoveReadyCheeseToBuffers implements Action {
         
         @Override
         public Results run(NGameUI gui) throws InterruptedException {
-            final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
+            // Use centralized cheese tray size constant
             
             // Check if inventory has space
-            int inventorySpace = gui.getInventory().getNumberFreeCoord(TRAY_SIZE);
+            int inventorySpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
             if (inventorySpace <= 2) {
                 return Results.FAIL(); // Inventory full
             }
             
             // Find ALL ready cheese trays in the rack
-            ArrayList<WItem> allTrays = gui.getInventory("Rack").getItems(new NAlias("Cheese Tray"));
+            ArrayList<WItem> allTrays = CheeseInventoryOperations.getCheeseTraysFromContainer(gui, "Rack");
             ArrayList<WItem> readyTrays = new ArrayList<>();
             
             for (WItem tray : allTrays) {
@@ -218,7 +220,7 @@ public class MoveReadyCheeseToBuffers implements Action {
             if (readyTrays.isEmpty()) {
                 // Calculate capacity if not already done (rack with no ready cheese)
                 if (capacityMap != null && !capacityMap.containsKey(rack)) {
-                    int capacity = gui.getInventory("Rack").getNumberFreeCoord(TRAY_SIZE);
+                    int capacity = gui.getInventory("Rack").getNumberFreeCoord(CheeseConstants.CHEESE_TRAY_SIZE);
                     capacityMap.put(rack, capacity);
                 }
                 return Results.SUCCESS(); // No ready cheese left in this rack
@@ -236,7 +238,7 @@ public class MoveReadyCheeseToBuffers implements Action {
             
             // Calculate capacity after taking cheese (if not already done)
             if (capacityMap != null && !capacityMap.containsKey(rack)) {
-                int capacity = gui.getInventory(rack.cap).getNumberFreeCoord(TRAY_SIZE);
+                int capacity = gui.getInventory(rack.cap).getNumberFreeCoord(CheeseConstants.CHEESE_TRAY_SIZE);
                 capacityMap.put(rack, capacity);
             }
 

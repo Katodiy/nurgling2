@@ -35,9 +35,9 @@ public class CheeseSlicingManager {
         // Find the area configured for empty cheese trays
         try {
             NContext returnContext = new NContext(gui);
-            if (returnContext.addOutItem("Empty Cheese Tray", null, 1.0)) {
+            if (returnContext.addOutItem(CheeseConstants.EMPTY_CHEESE_TRAY_NAME, null, 1.0)) {
                 // Empty tray handling (removed non-functional CheeseAreaMatcher call)
-            } else if (returnContext.addOutItem("Cheese Tray", null, 1.0)) {
+            } else if (returnContext.addOutItem(CheeseConstants.CHEESE_TRAY_NAME, null, 1.0)) {
                 // Fallback to generic cheese tray area (removed non-functional CheeseAreaMatcher call)
             } else {
                 gui.msg("No empty cheese tray area configured - keeping in inventory");

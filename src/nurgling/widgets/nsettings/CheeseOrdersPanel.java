@@ -61,7 +61,7 @@ public class CheeseOrdersPanel extends Panel {
                         w.add(label, new Coord(labelX, (sz.y - label.sz.y) / 2));
                         w.add(new Button(btnW, "Delete", () -> {
                             manager.deleteOrder(order.getId());
-                            manager.writeOrders(null);
+                            manager.writeOrders();
                             orderList.update();
                         }), new Coord(delBtnX, (sz.y - btnHeight) / 2));
                         return w;
@@ -161,7 +161,7 @@ public class CheeseOrdersPanel extends Panel {
 
         CheeseOrder order = new CheeseOrder(id, cheeseType, count, status);
         manager.addOrUpdateOrder(order);
-        manager.writeOrders(null);
+        manager.writeOrders();
 
         showListPanel();
         NUtils.getGameUI().msg("Order added: " + cheeseType + " x" + count);

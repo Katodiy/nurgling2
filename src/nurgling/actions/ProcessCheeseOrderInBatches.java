@@ -7,7 +7,7 @@ import nurgling.cheese.CheeseOrdersManager;
 import nurgling.cheese.CheeseBranch;
 import nurgling.actions.bots.cheese.CheeseRackManager;
 import nurgling.actions.bots.cheese.CheeseUtils;
-import nurgling.tools.NAlias;
+import nurgling.actions.bots.cheese.CheeseInventoryOperations;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,17 +17,12 @@ import java.util.Map;
  * Processes a specific cheese order in batches, handling batch sizing and order tracking
  */
 public class ProcessCheeseOrderInBatches implements Action {
-    private String cheeseType;
-    private int totalQuantity;
-    private int inventoryCapacity;
-    private CheeseRackManager rackManager;
-    private Map<CheeseBranch.Place, Integer> rackCapacity;
-    private CheeseOrdersManager ordersManager;
-    
-    public ProcessCheeseOrderInBatches(String cheeseType, int totalQuantity, int inventoryCapacity, 
-                                      CheeseRackManager rackManager, Map<CheeseBranch.Place, Integer> rackCapacity) {
-        this(cheeseType, totalQuantity, inventoryCapacity, rackManager, rackCapacity, new CheeseOrdersManager());
-    }
+    private final String cheeseType;
+    private final int totalQuantity;
+    private final int inventoryCapacity;
+    private final CheeseRackManager rackManager;
+    private final Map<CheeseBranch.Place, Integer> rackCapacity;
+    private final CheeseOrdersManager ordersManager;
     
     public ProcessCheeseOrderInBatches(String cheeseType, int totalQuantity, int inventoryCapacity, 
                                       CheeseRackManager rackManager, Map<CheeseBranch.Place, Integer> rackCapacity,
@@ -91,7 +86,7 @@ public class ProcessCheeseOrderInBatches implements Action {
         }
         
         // Save updated orders
-        ordersManager.writeOrders(null);
+        ordersManager.writeOrders();
         return Results.SUCCESS();
     }
     
@@ -122,7 +117,7 @@ public class ProcessCheeseOrderInBatches implements Action {
                    " (created " + actualCount + " new)");
             
             // Handle tray placement for ALL trays of this type in inventory
-            int traysPlaced = 0;
+            int traysPlaced;
             if (chain.size() > 1 && totalTraysInInventory > 0) {
                 CheeseBranch.Cheese nextCheeseStep = chain.get(1);
                 CheeseBranch.Place targetPlace = nextCheeseStep.place;
@@ -185,11 +180,10 @@ public class ProcessCheeseOrderInBatches implements Action {
      * Advance completed trays to the next step in the production chain
      * Only advances the specific number of trays that were actually placed
      */
-    private void advanceTraysToNextStep(NGameUI gui, CheeseOrder order, List<CheeseBranch.Cheese> chain, int traysPlaced) throws InterruptedException {
+    private void advanceTraysToNextStep(NGameUI gui, CheeseOrder order, List<CheeseBranch.Cheese> chain, int traysPlaced) {
         if (chain.size() <= 1) return; // No next step
         
         // Find the current and next steps in the chain
-        CheeseBranch.Cheese currentCheeseStep = chain.get(0); // Current step (e.g., "Sheep's Curd")
         CheeseBranch.Cheese nextCheeseStep = chain.get(1); // Next step after start (e.g., "Abbaye")
         
         // Look for existing status entry for this step
@@ -223,7 +217,7 @@ public class ProcessCheeseOrderInBatches implements Action {
      * Count how many cheese trays of a specific type are in inventory
      */
     private int countTraysOfTypeInInventory(NGameUI gui, String cheeseType) throws InterruptedException {
-        ArrayList<WItem> allTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+        ArrayList<WItem> allTrays = CheeseInventoryOperations.getCheeseTrays(gui);
         int count = 0;
         
         for (WItem tray : allTrays) {

@@ -9,14 +9,16 @@ import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.actions.bots.cheese.CheeseUtils;
+import nurgling.actions.bots.cheese.CheeseConstants;
+import nurgling.actions.bots.cheese.CheeseInventoryOperations;
 
 import java.util.ArrayList;
 
 public class CreateTraysWithCurds implements Action {
     private final String curdType;
     private final int count;
-    private final String cheeseTrayType = "Cheese Tray";
-    NAlias cheeseTrayAlias = new NAlias("Cheese Tray");
+    private final String cheeseTrayType = CheeseConstants.CHEESE_TRAY_NAME;
+    NAlias cheeseTrayAlias = CheeseConstants.CHEESE_TRAY_ALIAS;
     private int lastTraysCreated = 0;
 
     public CreateTraysWithCurds() {
@@ -50,9 +52,9 @@ public class CreateTraysWithCurds implements Action {
             // 2. Make sure you have 4 curds
 //            gui.getInventory().getItems(new NAlias(new ArrayList<>(Arrays.asList("cheesetray")), new ArrayList<>(Arrays.asList("curd")) ))
             ArrayList<WItem> curds = gui.getInventory().getItems(curdType);
-            if (curds.size() < 4) {
-                Results curdRes = new TakeItems2(context, curdType, 4 - curds.size()).run(gui);
-                if (!curdRes.isSuccess || gui.getInventory().getItems(curdType).size() < 4) {
+            if (curds.size() < CheeseConstants.CURDS_PER_TRAY) {
+                Results curdRes = new TakeItems2(context, curdType, CheeseConstants.CURDS_PER_TRAY - curds.size()).run(gui);
+                if (!curdRes.isSuccess || gui.getInventory().getItems(curdType).size() < CheeseConstants.CURDS_PER_TRAY) {
                     gui.error("Not enough curds available to fill a tray");
                     break;
                 }
@@ -61,7 +63,7 @@ public class CreateTraysWithCurds implements Action {
             }
 
             // 3. Use 4 curds on the tray
-            for (int j = 0; j < 4; j++) {
+            for (int j = 0; j < CheeseConstants.CURDS_PER_TRAY; j++) {
                 new UseItemOnItem(new NAlias(curdType), emptyTray).run(gui);
                 int expected = curds.size() - (j + 1);
                 NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(), new NAlias(curdType), expected));
@@ -98,9 +100,9 @@ public class CreateTraysWithCurds implements Action {
         }
         
         // Calculate available space for cheese trays (1x2 each) and reserve space for curds
-        final haven.Coord TRAY_SIZE = new haven.Coord(1, 2);
-        int availableTraySlots = gui.getInventory().getNumberFreeCoord(TRAY_SIZE);
-        int availableSlots = availableTraySlots - 2; // Reserve 2 tray-sized slots for 4 curds (1x1 each)
+        // Use centralized cheese tray size constant
+        int availableTraySlots = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
+        int availableSlots = availableTraySlots - CheeseConstants.RESERVED_CURD_SLOTS; // Reserve slots for curds
         
         // Limit trays to fetch by available inventory space
         traysToFetch = Math.min(traysToFetch, availableSlots);
