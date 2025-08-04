@@ -75,11 +75,9 @@ public class ProcessCheeseOrderInBatches implements Action {
         while (totalProcessed < totalWorkNeeded) {
             // Limit batch size by both inventory capacity AND available rack space
             int maxBatchSize = Math.min(inventoryCapacity, totalWorkNeeded - totalProcessed);
-            if (totalRackSpace > 0) {
-                maxBatchSize = Math.min(maxBatchSize, totalRackSpace);
-                gui.msg("Batch size limited by rack capacity: " + maxBatchSize);
-            }
-            
+            maxBatchSize = Math.min(maxBatchSize, totalRackSpace);
+            gui.msg("Batch size limited by rack capacity: " + maxBatchSize);
+
             int actualProcessed = processBatch(gui, order, currentStep, chain, maxBatchSize);
             totalProcessed += actualProcessed;
 
