@@ -98,7 +98,7 @@ public class GetItems extends NTask
                 if (!NGItem.validateItem(item)) {
                     return true;
                 } else {
-                    if (name == null || matchesNameOrResource((NGItem)item.item, name)) {
+                    if (name == null || NParser.checkName(((NGItem)item.item).name(), name)) {
                         if (item.item.contents != null) {
                             if(checkContainer(item.item.contents.child))
                                 return true;
@@ -120,13 +120,5 @@ public class GetItems extends NTask
 
     public ArrayList<WItem> getResult(){
         return result;
-    }
-
-    private boolean matchesNameOrResource(NGItem item, NAlias alias) {
-        if (NParser.checkName(item.name(), alias))
-            return true;
-        if (item.getres() != null && NParser.checkName(item.getres().name, alias))
-            return true;
-        return false;
     }
 }
