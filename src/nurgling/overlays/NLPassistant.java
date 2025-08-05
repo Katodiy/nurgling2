@@ -54,7 +54,9 @@ public class NLPassistant extends Sprite implements RenderTree.Node
 
     public void added(RenderTree.Slot slot)
     {
-        Pipe.Op rmat = Pipe.Op.compose(сt,Rendered.postpfx);
+        Pipe.Op rmat = Pipe.Op.compose(new Rendered.Order.Default(7000), States.Depthtest.none, States.maskdepth,
+            FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
+                BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), сt, Rendered.postpfx);
         slot.add(emod,rmat);
     }
 
