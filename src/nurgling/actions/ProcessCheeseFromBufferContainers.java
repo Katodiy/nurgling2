@@ -94,7 +94,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
             // Phase 1: Collect ready-to-slice cheese
             gui.msg("Phase 1: Collecting ready-to-slice cheese from " + place + " buffers");
-            collectReadyToSliceCheese(gui, containers);
+            collectReadyToSliceCheese(gui, containers, place);
 
             // Phase 2: Move remaining cheese to next stages
             gui.msg("Phase 2: Moving remaining cheese to next stages from " + place + " buffers");
@@ -104,7 +104,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
     /**
      * Phase 1: Collect ready-to-slice cheese from buffer containers and slice them
      */
-    private void collectReadyToSliceCheese(NGameUI gui, ArrayList<Gob> containers) throws InterruptedException {
+    private void collectReadyToSliceCheese(NGameUI gui, ArrayList<Gob> containers, CheeseBranch.Place place) throws InterruptedException {
         // Use centralized constants for sizes
         NContext freshContext = new NContext(gui);
 
@@ -126,6 +126,15 @@ public class ProcessCheeseFromBufferContainers implements Action {
                             new CloseTargetContainer(bufferContainer).run(gui);
                             freshContext = new NContext(gui);
                             new FreeInventory2(freshContext).run(gui);
+                            
+                            // CRITICAL FIX: After FreeInventory2, we need to re-find the area and containers
+                            // because the character could be very far from the original location
+                            containerGob = refindContainerAfterFreeInventory(gui, place, containerGob);
+                            if (containerGob == null) {
+                                gui.msg("Could not re-find container after FreeInventory2, skipping this container");
+                                break; // Skip this container and move to next
+                            }
+                            bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
                             new PathFinder(containerGob).run(gui);
                             new OpenTargetContainer(bufferContainer).run(gui);
                         }
@@ -153,6 +162,14 @@ public class ProcessCheeseFromBufferContainers implements Action {
                             gui.msg("Inventory getting full after slicing. Freeing inventory...");
                             freshContext = new NContext(gui);
                             new FreeInventory2(freshContext).run(gui);
+                            
+                            // CRITICAL FIX: After FreeInventory2, re-find the container
+                            containerGob = refindContainerAfterFreeInventory(gui, place, containerGob);
+                            if (containerGob == null) {
+                                gui.msg("Could not re-find container after slicing FreeInventory2, skipping this container");
+                                break; // Skip this container and move to next
+                            }
+                            bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
                         }
 
                         // Reopen container to continue
@@ -167,6 +184,59 @@ public class ProcessCheeseFromBufferContainers implements Action {
         // Final inventory cleanup after processing all ready cheese
         gui.msg("Final inventory cleanup after slicing ready cheese");
         new FreeInventory2(freshContext).run(gui);
+    }
+    
+    /**
+     * Re-find a container after FreeInventory2 has potentially moved the character far away
+     * This is critical because after FreeInventory2, the original gob references may be out of range
+     * 
+     * @param gui The game UI
+     * @param place The cheese area place where the container should be
+     * @param originalGob The original container gob (used for matching by ID)
+     * @return The re-found container gob, or null if not found
+     */
+    private Gob refindContainerAfterFreeInventory(NGameUI gui, CheeseBranch.Place place, Gob originalGob) throws InterruptedException {
+        try {
+            // Step 1: Navigate back to the cheese area
+            NArea area = CheeseAreaManager.getCheeseArea(gui, place);
+            if (area == null) {
+                gui.msg("Could not find cheese area for " + place + " after FreeInventory2");
+                return null;
+            }
+            
+            // Step 2: Find containers in the area again
+            ArrayList<Gob> containers = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
+            if (containers.isEmpty()) {
+                gui.msg("No containers found in " + place + " area after FreeInventory2");
+                return null;
+            }
+            
+            // Step 3: Try to find the exact same container using Gob.id
+            long originalGobId = originalGob.id;
+            for (Gob containerGob : containers) {
+                if (containerGob.id == originalGobId) {
+                    gui.msg("Successfully re-found original container (ID: " + originalGobId + ") in " + place + " area");
+                    return containerGob; // Found the exact same container
+                }
+            }
+            
+            // Step 4: If original container not found by ID, return the first available container of same type
+            String originalContainerName = originalGob.ngob.name;
+            for (Gob containerGob : containers) {
+                if (containerGob.ngob.name.equals(originalContainerName)) {
+                    gui.msg("Original container ID not found, using container of same type: " + originalContainerName + " in " + place + " area");
+                    return containerGob;
+                }
+            }
+            
+            // Step 5: Fallback to first available container
+            gui.msg("No matching container found, using first available container in " + place + " area");
+            return containers.get(0);
+            
+        } catch (Exception e) {
+            gui.msg("Error re-finding container after FreeInventory2: " + e.getMessage());
+            return null;
+        }
     }
 
     /**
