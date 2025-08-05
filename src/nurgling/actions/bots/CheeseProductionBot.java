@@ -45,7 +45,7 @@ public class CheeseProductionBot implements Action {
 
         // 3. Pass 2: Process buffers (slice ready cheese, move aging cheese)
         gui.msg("=== Pass 2: Processing buffers ===");
-        ProcessCheeseFromBufferContainers bufferAction = new ProcessCheeseFromBufferContainers(sharedOrdersManager);
+        ProcessCheeseFromBufferContainers bufferAction = new ProcessCheeseFromBufferContainers(sharedOrdersManager, rackCapacity);
         Results bufferResult = bufferAction.run(gui);
         if (!bufferResult.IsSuccess()) {
             gui.error("Failed to process cheese from buffer containers");
