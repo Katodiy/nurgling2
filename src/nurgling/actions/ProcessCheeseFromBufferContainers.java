@@ -3,6 +3,7 @@ package nurgling.actions;
 import haven.Gob;
 import haven.WItem;
 import nurgling.NGameUI;
+import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
@@ -12,6 +13,7 @@ import nurgling.actions.bots.cheese.CheeseRackOverlayUtils;
 import nurgling.actions.bots.cheese.CheeseConstants;
 import nurgling.actions.bots.cheese.CheeseAreaManager;
 import nurgling.actions.bots.cheese.CheeseInventoryOperations;
+import nurgling.tasks.ISRemoved;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -308,10 +310,21 @@ public class ProcessCheeseFromBufferContainers implements Action {
     
     /**
      * Collect cheese from containers to inventory, handling inventory space efficiently
+     * Groups items by container to minimize open/close operations
      */
     private void collectCheeseFromContainersToInventory(NGameUI gui, ArrayList<CheeseLocation> cheeseLocations, 
                                                        CheeseBranch.Place destination, String cheeseType, CheeseBranch.Place place) throws InterruptedException {
+        // Group cheese locations by container to batch operations
+        Map<Gob, List<CheeseLocation>> itemsByContainer = new HashMap<>();
         for (CheeseLocation location : cheeseLocations) {
+            itemsByContainer.computeIfAbsent(location.containerGob, k -> new ArrayList<>()).add(location);
+        }
+        
+        // Process each container once
+        for (Map.Entry<Gob, List<CheeseLocation>> entry : itemsByContainer.entrySet()) {
+            Gob containerGob = entry.getKey();
+            List<CheeseLocation> locationsInContainer = entry.getValue();
+            
             // Check if inventory has space
             int availableSpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
             if (availableSpace <= 0) {
@@ -320,27 +333,134 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 CheeseAreaManager.getCheeseArea(gui, place); // Navigate back
             }
 
-            // Take cheese from specific container
-            takeSingleCheeseFromContainer(gui, location, destination);
+            // Calculate how many we can actually place at destination
+            // Account for items already moved to this destination in current session
+            int destinationCapacity = calculateDestinationCapacity(gui, destination, cheeseType);
+            int alreadyMovedToDestination = traysMovedToAreas.getOrDefault(destination, 0);
+            int remainingCapacity = Math.max(0, destinationCapacity - alreadyMovedToDestination);
+            int maxToTake = Math.min(locationsInContainer.size(), remainingCapacity);
+            
+            if (maxToTake <= 0) {
+                gui.msg("Destination " + destination + " has no remaining capacity for " + cheeseType + " (capacity: " + destinationCapacity + ", already moved: " + alreadyMovedToDestination + "), skipping");
+                continue;
+            }
+            
+            gui.msg("Taking " + maxToTake + " " + cheeseType + " trays (capacity: " + destinationCapacity + ", already moved: " + alreadyMovedToDestination + ", remaining: " + remainingCapacity + ")");
+            
+            // Take only what we can place at destination
+            int takenFromContainer = takeCheeseFromSingleContainer(gui, containerGob, cheeseType, maxToTake, place);
+            
+            // Track moves for capacity calculation
+            if (takenFromContainer > 0) {
+                traysMovedToAreas.put(destination, traysMovedToAreas.getOrDefault(destination, 0) + takenFromContainer);
+            }
         }
     }
     
     /**
-     * Take a single cheese tray from a specific container
+     * Take cheese from a single container using fresh WItem references
+     * Returns the number of items actually taken
      */
-    private void takeSingleCheeseFromContainer(NGameUI gui, CheeseLocation location, CheeseBranch.Place destination) throws InterruptedException {
-        new PathFinder(location.containerGob).run(gui);
-        new OpenTargetContainer(location.container).run(gui);
+    private int takeCheeseFromSingleContainer(NGameUI gui, Gob containerGob, String cheeseType, int maxToTake, CheeseBranch.Place currentPlace) throws InterruptedException {
+        // Navigate to container
+        new PathFinder(containerGob).run(gui);
         
-        // Take just this specific tray
-        ArrayList<WItem> singleTray = new ArrayList<>();
-        singleTray.add(location.tray);
-        new TakeWItemsFromContainer(location.container, singleTray).run(gui);
+        // Open container
+        Container container = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
+        new OpenTargetContainer(container).run(gui);
         
-        // Track this move for capacity calculation
-        traysMovedToAreas.put(destination, traysMovedToAreas.getOrDefault(destination, 0) + 1);
+        // Get FRESH WItem references after opening container
+        ArrayList<WItem> availableTrays = CheeseInventoryOperations.getCheeseTraysFromContainer(gui, container);
         
-        new CloseTargetContainer(location.container).run(gui);
+        // Filter for the specific cheese type we want and limit to maxToTake
+        ArrayList<WItem> targetTrays = new ArrayList<>();
+        for (WItem tray : availableTrays) {
+            if (targetTrays.size() >= maxToTake) break;
+            
+            if (CheeseUtils.shouldMoveToNextStage(tray, currentPlace)) {
+                String trayCheeseType = CheeseUtils.getContentName(tray);
+                if (cheeseType.equals(trayCheeseType)) {
+                    targetTrays.add(tray);
+                }
+            }
+        }
+        
+        // Take the items using fresh references
+        int taken = 0;
+        if (!targetTrays.isEmpty()) {
+            for (WItem tray : targetTrays) {
+                // Check inventory space
+                if (gui.getInventory().getNumberFreeCoord(CheeseConstants.CHEESE_TRAY_SIZE) == 0) {
+                    gui.msg("Inventory full, stopping take from this container");
+                    break;
+                }
+                
+                // Transfer the item
+                tray.item.wdgmsg("transfer", haven.Coord.z);
+                NUtils.addTask(new ISRemoved(tray.item.wdgid()));
+                taken++;
+            }
+        }
+        
+        // Close container
+        new CloseTargetContainer(container).run(gui);
+        
+        gui.msg("Took " + taken + " " + cheeseType + " trays from container");
+        return taken;
+    }
+    
+    /**
+     * Calculate how many cheese trays can be placed at the destination
+     * Considers both available rack space and inventory capacity
+     */
+    private int calculateDestinationCapacity(NGameUI gui, CheeseBranch.Place destination, String cheeseType) throws InterruptedException {
+        try {
+            // Get destination area
+            NArea destinationArea = CheeseAreaManager.getCheeseArea(gui, destination);
+            if (destinationArea == null) {
+                gui.msg("No area found for " + destination + ", capacity = 0");
+                return 0;
+            }
+            
+            // Find available racks in destination area
+            ArrayList<Gob> racks = Finder.findGobs(destinationArea, new NAlias("gfx/terobjs/cheeserack"));
+            if (racks.isEmpty()) {
+                gui.msg("No racks found in " + destination + " area, capacity = 0");
+                return 0;
+            }
+            
+            // Calculate total available capacity across all racks
+            int totalCapacity = 0;
+            for (Gob rackGob : racks) {
+                if (CheeseRackOverlayUtils.canAcceptTrays(rackGob)) {
+                    // For now, assume each rack can hold up to 3 trays
+                    // TODO: Could make this more precise by checking actual rack inventory
+                    totalCapacity += CheeseConstants.RACK_CAPACITY_TRAYS;
+                } else {
+                    gui.msg("Rack is full (overlay check), skipping");
+                }
+            }
+            
+            // Also consider player inventory capacity as a limiting factor
+            int inventoryCapacity = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
+            int effectiveCapacity = Math.min(totalCapacity, inventoryCapacity);
+            
+            gui.msg("Destination " + destination + " capacity: " + effectiveCapacity + " (racks: " + totalCapacity + ", inventory: " + inventoryCapacity + ")");
+            return effectiveCapacity;
+            
+        } catch (Exception e) {
+            gui.msg("Error calculating destination capacity for " + destination + ": " + e.getMessage());
+            return 0;
+        }
+    }
+    
+    /**
+     * Helper to determine the current place based on container location
+     */
+    private CheeseBranch.Place getCurrentPlace(Gob containerGob) {
+        // This is a simplified version - you may need to implement proper area detection
+        // For now, we'll need to track this differently or pass it as parameter
+        return CheeseBranch.Place.outside; // TODO: Implement proper place detection
     }
     
     /**
