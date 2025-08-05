@@ -38,15 +38,7 @@ public class CheeseRackManager {
      * @return number of trays actually placed
      */
     public int handleTrayPlacement(NGameUI gui, CheeseBranch.Place targetPlace, int batchSize, String cheeseType) throws InterruptedException {
-        // Try to place in racks first
-        int placed = moveTraysToRacks(gui, targetPlace, batchSize, cheeseType);
-        
-        if (placed < batchSize) {
-            gui.msg("Only placed " + placed + "/" + batchSize + " trays in racks, remaining need buffer container handling");
-            // TODO: Implement proper buffer container handling for remaining trays
-        }
-        
-        return placed;
+        return moveTraysToRacks(gui, targetPlace, batchSize, cheeseType);
     }
     
     /**
@@ -54,11 +46,9 @@ public class CheeseRackManager {
      */
     public int moveTraysToRacks(NGameUI gui, CheeseBranch.Place targetPlace, int quantity, String cheeseType) throws InterruptedException {
         int moved = 0;
-        
-        try {
+
             NArea targetArea = CheeseAreaManager.getCheeseArea(gui, targetPlace);
             if (targetArea == null) {
-                gui.msg("Target area not found: " + targetPlace);
                 return 0;
             }
             
@@ -89,12 +79,6 @@ public class CheeseRackManager {
                 
                 new CloseTargetContainer(rackContainer).run(gui);
             }
-            
-            gui.msg("Moved " + moved + " trays to " + targetPlace + " area racks");
-            
-        } catch (Exception e) {
-            gui.msg("Error moving trays to " + targetPlace + ": " + e.getMessage());
-        }
         
         return moved;
     }

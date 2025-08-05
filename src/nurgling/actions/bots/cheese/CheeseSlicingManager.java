@@ -15,85 +15,6 @@ import java.util.ArrayList;
  * Handles cheese slicing and empty tray management
  */
 public class CheeseSlicingManager {
-    
-    /**
-     * Slice cheese and return empty tray to empty tray area
-     */
-    /**
-     * Slice cheese and return empty tray to storage area
-     * This is the main public method that orchestrates the complete slicing process
-     */
-    public void sliceCheeseAndReturnEmptyTray(NGameUI gui, WItem tray) throws InterruptedException {
-        String cheeseType = CheeseUtils.getContentName(tray);
-        
-        // 1. Slice the cheese
-        sliceCheese(gui, tray);
-        
-        // 2. Store the sliced cheese products
-        storeSlicedCheese(gui, cheeseType);
-        
-        // 3. Return empty tray to storage
-        returnEmptyTrayToStorage(gui);
-    }
-    
-    /**
-     * Return empty trays to the empty cheese tray storage area
-     */
-    private void returnEmptyTrayToStorage(NGameUI gui) throws InterruptedException {
-        ArrayList<WItem> emptyTrays = gui.getInventory().getItems(new NAlias(CheeseConstants.EMPTY_CHEESE_TRAY_NAME));
-        
-        if (emptyTrays.isEmpty()) {
-            return; // No empty trays to return
-        }
-        
-        gui.msg("Returning " + emptyTrays.size() + " empty tray(s) to storage area");
-        
-        // Find the area configured for empty cheese trays
-        try {
-            NContext returnContext = new NContext(gui);
-            if (returnContext.addOutItem(CheeseConstants.EMPTY_CHEESE_TRAY_NAME, null, 1.0)) {
-                // Successfully configured to return empty trays
-                gui.msg("Empty trays will be moved to configured storage area");
-            } else if (returnContext.addOutItem(CheeseConstants.CHEESE_TRAY_NAME, null, 1.0)) {
-                // Fallback to generic cheese tray area
-                gui.msg("Empty trays will be moved to generic cheese tray area");
-            } else {
-                gui.msg("No empty cheese tray area configured - keeping in inventory");
-            }
-        } catch (Exception e) {
-            gui.msg("Error configuring empty tray return: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Store sliced cheese products in appropriate storage areas
-     */
-    public void storeSlicedCheese(NGameUI gui, String cheeseType) throws InterruptedException {
-        if (cheeseType == null || cheeseType.isEmpty()) {
-            return;
-        }
-        
-        NAlias cheeseAlias = new NAlias(cheeseType);
-        ArrayList<WItem> cheeseItems = gui.getInventory().getItems(cheeseAlias);
-        
-        if (cheeseItems.isEmpty()) {
-            return; // No cheese to store
-        }
-        
-        gui.msg("Storing " + cheeseItems.size() + " pieces of " + cheeseType);
-        
-        try {
-            NContext storeContext = new NContext(gui);
-            if (storeContext.addOutItem(cheeseType, null, 1.0)) {
-                gui.msg("Sliced " + cheeseType + " will be moved to configured storage area");
-            } else {
-                gui.msg("No storage area configured for " + cheeseType + " - keeping in inventory");
-            }
-        } catch (Exception e) {
-            gui.msg("Error configuring cheese storage: " + e.getMessage());
-        }
-    }
-
     /**
      * Slice a cheese tray using the "Slice up" action
      * Waits for cheese pieces and empty tray to appear in inventory
@@ -141,9 +62,6 @@ public class CheeseSlicingManager {
                 }
             }
         });
-        
-        gui.msg("Successfully sliced " + cheeseType + " - produced " + 
-                (getCheeseCount(gui, cheeseType) - initialCheeseCount) + " cheese pieces");
     }
     
     /**
