@@ -314,6 +314,15 @@ public class CheeseOrdersPanel extends Panel {
         return w;
     }
     
+    @Override
+    public void show() {
+        // Refresh orders from disk when panel becomes visible
+        manager.loadOrders();
+        rebuildOrderList();
+
+        super.show();
+    }
+    
     private void rebuildOrderList() {
         // Clear existing widgets from content
         for (Widget child : new ArrayList<>(orderListContent.children())) {
