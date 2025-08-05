@@ -24,7 +24,7 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
         String leaves = "Mulberry Leaf";
 
         // Step 1: Ensure feeding cabinets have sufficient mulberry leaves (32 per cabinet)
-        new DepositItemsToSpecArea(context, leaves, Specialisation.SpecName.silkwormFeeding, 28).run(gui);
+        new DepositItemsToSpecArea(context, leaves, Specialisation.SpecName.silkwormFeeding, 32).run(gui);
 
         // Step 2: Move hatched silkworms from herbalist tables to feeding cabinets
         while (true) {
