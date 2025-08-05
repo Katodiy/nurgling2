@@ -51,20 +51,13 @@ public class ProcessCheeseOrderInBatches implements Action {
             return Results.SUCCESS();
         }
         
-        gui.msg("Processing step: " + currentStep.name + " (" + currentStep.left + " remaining)");
-        
         // Determine how much work we can actually do in batches
         int totalWorkNeeded = Math.min(totalQuantity, currentStep.left);
         
         // Calculate available rack space for this cheese type
         int totalRackSpace = calculateAvailableRackSpace(chain, rackCapacity);
-        
-        gui.msg("Need to process " + totalWorkNeeded + " trays");
-        gui.msg("Inventory can hold " + inventoryCapacity + " trays");
-        gui.msg("Available rack space: " + totalRackSpace + " trays");
 
         if(totalRackSpace == 0) {
-            gui.msg("No cheese can fit on racks, continuing to next order.");
             return Results.SUCCESS();
         }
 
@@ -76,16 +69,12 @@ public class ProcessCheeseOrderInBatches implements Action {
             // Limit batch size by both inventory capacity AND available rack space
             int maxBatchSize = Math.min(inventoryCapacity, totalWorkNeeded - totalProcessed);
             maxBatchSize = Math.min(maxBatchSize, totalRackSpace);
-            gui.msg("Batch size limited by rack capacity: " + maxBatchSize);
 
             int actualProcessed = processBatch(gui, order, currentStep, chain, maxBatchSize);
             totalProcessed += actualProcessed;
-
-            gui.msg("Completed batch: " + actualProcessed + " trays (" + totalProcessed + "/" + totalWorkNeeded + " total)");
             
             // If we couldn't process anything, break to avoid infinite loop
             if (actualProcessed == 0) {
-                gui.msg("Could not process any more trays - stopping batch processing");
                 break;
             }
         }
@@ -106,20 +95,13 @@ public class ProcessCheeseOrderInBatches implements Action {
             // This is the curd creation step
             String curdType = currentStep.name; // e.g., "Sheep's Curd"
             
-            gui.msg("Creating batch of " + batchSize + " trays with " + curdType);
-            
             // Create trays with curds and get actual count created
             CreateTraysWithCurds createAction = new CreateTraysWithCurds(curdType, batchSize);
             createAction.run(gui);
             int actualCount = createAction.getLastTraysCreated();
-            
-            gui.msg("Created " + actualCount + " trays (requested " + batchSize + ")");
 
             // Count total trays of this type in inventory (new + existing)
             int totalTraysInInventory = countTraysOfTypeInInventory(gui, curdType);
-            
-            gui.msg("Total " + curdType + " trays in inventory: " + totalTraysInInventory + 
-                   " (created " + actualCount + " new)");
             
             // Handle tray placement for ALL trays of this type in inventory
             int traysPlaced;
@@ -131,20 +113,17 @@ public class ProcessCheeseOrderInBatches implements Action {
                 
                 // Update orders only after successful placement
                 if (traysPlaced > 0) {
-                    gui.msg("Placed " + traysPlaced + " trays on racks, updating order progress");
                     
                     // Reduce current step by number of trays actually placed
-                    updateOrderProgress(gui, order, currentStep, traysPlaced);
+                    updateOrderProgress(currentStep, traysPlaced);
                     
                     // Advance placed trays to next step
-                    advanceTraysToNextStep(gui, order, chain, traysPlaced);
+                    advanceTraysToNextStep(order, chain, traysPlaced);
                 }
             }
             
             return actualCount;
         } else {
-            // This is a cheese aging/movement step
-            // TODO: Implement moving existing cheese between areas
             return 0; // No work done yet for aging steps
         }
     }
@@ -176,16 +155,15 @@ public class ProcessCheeseOrderInBatches implements Action {
     /**
      * Update order progress by reducing the "left" count
      */
-    private void updateOrderProgress(NGameUI gui, CheeseOrder order, CheeseOrder.StepStatus step, int completed) {
+    private void updateOrderProgress(CheeseOrder.StepStatus step, int completed) {
         step.left -= completed;
-        gui.msg("Updated " + order.getCheeseType() + " - " + step.name + ": " + step.left + " remaining");
     }
     
     /**
      * Advance completed trays to the next step in the production chain
      * Only advances the specific number of trays that were actually placed
      */
-    private void advanceTraysToNextStep(NGameUI gui, CheeseOrder order, List<CheeseBranch.Cheese> chain, int traysPlaced) {
+    private void advanceTraysToNextStep(CheeseOrder order, List<CheeseBranch.Cheese> chain, int traysPlaced) {
         if (chain.size() <= 1) return; // No next step
         
         // Find the current and next steps in the chain
@@ -209,13 +187,10 @@ public class ProcessCheeseOrderInBatches implements Action {
                 0 // Start with 0, will be increased by traysPlaced below
             );
             order.getStatus().add(nextStepStatus);
-            gui.msg("Created next step: " + nextStepStatus.name + " at " + nextStepStatus.place);
         }
         
         // Increase the next step count by the number of trays that were actually placed
         nextStepStatus.left += traysPlaced;
-        gui.msg("Advanced " + traysPlaced + " trays to next step: " + nextStepStatus.name + 
-                " at " + nextStepStatus.place + " (now " + nextStepStatus.left + " total)");
     }
     
     /**

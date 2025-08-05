@@ -37,21 +37,17 @@ public class TransferWItemsToContainer implements Action {
             new OpenTargetContainer(container.cap, Finder.findGob(container.gobid)).run(gui);
         }
         
-        int transferred = 0;
-        
         // Transfer each specific item
         for (WItem item : itemsToTransfer) {
                 // Check if there's space in the container
                 if (container.getattr(Container.Space.class) != null &&
                         gui.getInventory(container.cap).getNumberFreeCoord(item) == 0) {
-                    gui.msg("Container is full, stopping transfer");
                     break;
                 }
                 
                 // Transfer this specific item
                 item.item.wdgmsg("transfer", haven.Coord.z);
                 NUtils.addTask(new ISRemoved(item.item.wdgid()));
-                transferred++;
                 
                 // Update container state
                 container.update();
@@ -59,8 +55,7 @@ public class TransferWItemsToContainer implements Action {
         
         // Close container
         new CloseTargetContainer(container).run(gui);
-        
-        gui.msg("Transferred " + transferred + " specific items to container");
+
         return Results.SUCCESS();
     }
 }

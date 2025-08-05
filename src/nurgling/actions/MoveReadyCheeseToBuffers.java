@@ -3,11 +3,7 @@ package nurgling.actions;
 import haven.Gob;
 import haven.WItem;
 import nurgling.NGameUI;
-import nurgling.NUtils;
-import nurgling.NGItem;
 import nurgling.actions.bots.cheese.CheeseUtils;
-import nurgling.areas.NArea;
-import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
 import nurgling.actions.bots.cheese.CheeseRackOverlayUtils;
 import nurgling.actions.bots.cheese.CheeseConstants;
@@ -18,7 +14,6 @@ import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -38,9 +33,9 @@ public class MoveReadyCheeseToBuffers implements Action {
         }
     }
     
-    private ArrayList<Container> racks;
-    private ArrayList<Container> buffers;
-    private CheeseBranch.Place place;
+    private final ArrayList<Container> racks;
+    private final ArrayList<Container> buffers;
+    private final CheeseBranch.Place place;
     
     public MoveReadyCheeseToBuffers(ArrayList<Container> racks, ArrayList<Container> buffers, CheeseBranch.Place place) {
         this.racks = racks;
@@ -58,7 +53,6 @@ public class MoveReadyCheeseToBuffers implements Action {
      * Run the action and return both result and rack capacities
      */
     public ResultWithCapacity runWithCapacity(NGameUI gui) throws InterruptedException {
-        NContext context = new NContext(gui);
         Map<Container, Integer> rackCapacities = new HashMap<>();
         // Use centralized cheese tray size constant
         
@@ -71,25 +65,21 @@ public class MoveReadyCheeseToBuffers implements Action {
                 racksToProcess.add(rack);
             } else {
                 // Record capacity for empty racks without opening them
-                if (rackCapacities != null && rackGob != null && CheeseRackOverlayUtils.isRackEmpty(rackGob)) {
+                if (rackGob != null && CheeseRackOverlayUtils.isRackEmpty(rackGob)) {
                     rackCapacities.put(rack, 3); // Empty rack can hold 3 trays
                 }
-                gui.msg("Skipping empty rack (overlay check) - no cheese to move");
             }
         }
-        
-        gui.msg("Processing " + racksToProcess.size() + " non-empty racks out of " + racks.size() + " total racks");
         
         for (Container rack : racksToProcess) {
             navigateToContainer(gui, rack);
             new OpenTargetContainer(rack).run(gui);
             
             // Take ready cheese from this rack until inventory is full or rack is empty of ready cheese
-            Results takeResult;
-            while (!(takeResult = new TakeReadyCheeseFromRack(rack, place, rackCapacities).run(gui)).isSuccess) {
+            while (!new TakeReadyCheeseFromRack(rack, place, rackCapacities).run(gui).isSuccess) {
                 // Inventory is full, need to distribute to buffers
                 new CloseTargetContainer(rack).run(gui);
-                distributeToBuffers(gui, context);
+                distributeToBuffers(gui);
                 navigateToContainer(gui, rack);
                 new OpenTargetContainer(rack).run(gui);
             }
@@ -98,7 +88,7 @@ public class MoveReadyCheeseToBuffers implements Action {
         }
         
         // Phase 2: Final distribution of any remaining cheese in inventory
-        distributeToBuffers(gui, context);
+        distributeToBuffers(gui);
         
         return new ResultWithCapacity(Results.SUCCESS(), rackCapacities);
     }
@@ -107,13 +97,11 @@ public class MoveReadyCheeseToBuffers implements Action {
     /**
      * Distribute cheese trays from inventory to buffer containers
      */
-    private void distributeToBuffers(NGameUI gui, NContext context) throws InterruptedException {
+    private void distributeToBuffers(NGameUI gui) throws InterruptedException {
         ArrayList<WItem> cheeseTrays = CheeseInventoryOperations.getCheeseTrays(gui);
         if (cheeseTrays.isEmpty()) {
             return; // Nothing to distribute
         }
-        
-        gui.msg("Distributing " + cheeseTrays.size() + " cheese trays to buffer containers in " + place);
         
         // Try to distribute to buffer containers
         for (Container buffer : buffers) {
@@ -182,14 +170,9 @@ public class MoveReadyCheeseToBuffers implements Action {
      * Action to take ready cheese from a specific rack and optionally calculate capacity
      */
     private static class TakeReadyCheeseFromRack implements Action {
-        private Container rack;
-        private CheeseBranch.Place place;
-        private Map<Container, Integer> capacityMap;
-        
-        public TakeReadyCheeseFromRack(Container rack, CheeseBranch.Place place) {
-            this.rack = rack;
-            this.place = place;
-        }
+        private final Container rack;
+        private final CheeseBranch.Place place;
+        private final Map<Container, Integer> capacityMap;
         
         public TakeReadyCheeseFromRack(Container rack, CheeseBranch.Place place, Map<Container, Integer> capacityMap) {
             this.rack = rack;

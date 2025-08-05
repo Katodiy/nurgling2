@@ -29,9 +29,6 @@ public class CheeseConstants {
     /** Single slot size for cheese pieces and small items */
     public static final Coord SINGLE_SLOT_SIZE = new Coord(1, 1);
     
-    /** Standard rack capacity in trays */
-    public static final int RACK_CAPACITY_TRAYS = 3;
-    
     /** Inventory slots needed for slicing (tray + up to 5 cheese pieces) */
     public static final int SLICING_INVENTORY_REQUIREMENT = 7;
     
