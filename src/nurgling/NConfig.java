@@ -168,7 +168,6 @@ public class NConfig
         conf.put(Key.ignoreStrawInFarmers, false);
         conf.put(Key.printpfmap, false);
 
-
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
         res1.put("type", "NPattern");
@@ -442,7 +441,6 @@ public class NConfig
             for (Map.Entry<String, Object> entry : map.entrySet())
             {
                 try {
-
                     if (entry.getValue() instanceof HashMap<?, ?>) {
                         HashMap<String, Object> hobj = ((HashMap<String, Object>) entry.getValue());
                         String type;
@@ -454,7 +452,24 @@ public class NConfig
                                 case "FontSettings":
                                     conf.put(Key.fonts, new FontSettings(hobj));
                                     break;
+                                case "Color":
+                                    try {
+                                        int red = ((Number) hobj.get("red")).intValue();
+                                        int green = ((Number) hobj.get("green")).intValue();
+                                        int blue = ((Number) hobj.get("blue")).intValue();
+                                        int alpha = ((Number) hobj.get("alpha")).intValue();
+                                        Color col = new Color(red, green, blue, alpha);
+                                        conf.put(Key.valueOf(entry.getKey()), col);
+                                    } catch (Exception e) {
+                                        conf.put(Key.valueOf(entry.getKey()), entry.getValue());
+                                    }
+                                    break;
+                                default:
+                                    conf.put(Key.valueOf(entry.getKey()), entry.getValue());
+                                    break;
                             }
+                        } else {
+                            conf.put(Key.valueOf(entry.getKey()), entry.getValue());
                         }
                     } else if (Key.valueOf(entry.getKey()) != null && entry.getValue() instanceof ArrayList<?>) {
                         conf.put(Key.valueOf(entry.getKey()), readArray((ArrayList<HashMap<String, Object>>) entry.getValue()));
@@ -509,6 +524,18 @@ public class NConfig
             else if (entry.getValue() instanceof ArrayList<?>)
             {
                 prep.put(entry.getKey().toString(), prepareArray((ArrayList<Object>) entry.getValue()));
+            }
+            else if (entry.getValue() instanceof Color)
+            {
+                // Convert Color objects back to Map format for JSON serialization
+                Color color = (Color) entry.getValue();
+                Map<String, Object> colorMap = new HashMap<>();
+                colorMap.put("type", "Color");
+                colorMap.put("red", color.getRed());
+                colorMap.put("green", color.getGreen());
+                colorMap.put("blue", color.getBlue());
+                colorMap.put("alpha", color.getAlpha());
+                prep.put(entry.getKey().toString(), colorMap);
             }
             else
             {
@@ -716,18 +743,23 @@ public class NConfig
             return (Color) colorObj;
         } else if (colorObj instanceof Map) {
             Map<String, Object> colorMap = (Map<String, Object>) colorObj;
-            return new Color(
-                    ((Number)colorMap.get("red")).intValue(),
-                    ((Number)colorMap.get("green")).intValue(),
-                    ((Number)colorMap.get("blue")).intValue(),
-                    ((Number)colorMap.get("alpha")).intValue()
-            );
+            try {
+                return new Color(
+                        ((Number)colorMap.get("red")).intValue(),
+                        ((Number)colorMap.get("green")).intValue(),
+                        ((Number)colorMap.get("blue")).intValue(),
+                        ((Number)colorMap.get("alpha")).intValue()
+                );
+        } catch (Exception e) {
+                return defaultColor;
+            }
         }
         return defaultColor;
     }
 
     public static void setColor(Key key, Color color) {
         Map<String, Object> colorMap = new HashMap<>();
+        colorMap.put("type", "Color");
         colorMap.put("red", color.getRed());
         colorMap.put("green", color.getGreen());
         colorMap.put("blue", color.getBlue());

@@ -22,7 +22,7 @@ public class NColorWidget extends Widget
         cb = new NColorButton();
         label = new Label(text + ":");
         add(label, UI.scale(0,8));
-        add(cb, UI.scale(50,0));
+        add(cb, UI.scale(80,0));
         pack();
     }
     public class NColorButton extends Button {

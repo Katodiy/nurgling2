@@ -2,8 +2,10 @@ package nurgling.widgets.nsettings;
 
 import haven.*;
 import nurgling.*;
+import nurgling.overlays.NModelBox;
 import nurgling.widgets.NColorWidget;
 import java.awt.Color;
+import java.util.ConcurrentModificationException;
 
 public class World extends Panel {
     // Temporary settings structure
@@ -65,13 +67,11 @@ public class World extends Panel {
 
         // Bounding box colors
         add(new Label("Bounding Box Colors:"), UI.scale(10, 200));
-        add(new Label("Fill:"), UI.scale(10, 230));
-        fillColorWidget = add(new NColorWidget("Fill Color"), UI.scale(100, 230));
+        
+        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 230));
         fillColorWidget.color = tempSettings.boxFillColor;
-
-
-        add(new Label("Edge:"), UI.scale(10, 260));
-        edgeColorWidget = add(new NColorWidget("Edge Color"), UI.scale(100, 260));
+        
+        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 280));
         edgeColorWidget.color = tempSettings.boxEdgeColor;
 
     }
@@ -110,25 +110,49 @@ public class World extends Panel {
         NConfig.set(NConfig.Key.nextshowCSprite, tempSettings.decorativeObjects);
 
         NConfig.set(NConfig.Key.showBB, tempSettings.showBB);
+        
+        // Save hideNature setting
+        NConfig.set(NConfig.Key.hideNature, tempSettings.hideNature);
+        
+        // Update colors from UI widgets
         tempSettings.boxFillColor = fillColorWidget.color;
         tempSettings.boxEdgeColor = edgeColorWidget.color;
         NConfig.setColor(NConfig.Key.boxFillColor, tempSettings.boxFillColor);
         NConfig.setColor(NConfig.Key.boxEdgeColor, tempSettings.boxEdgeColor);
 
         if ((Boolean) NConfig.get(NConfig.Key.hideNature) != tempSettings.hideNature) {
-            NConfig.set(NConfig.Key.hideNature, tempSettings.hideNature);
             NUtils.getGameUI().mmapw.natura.a = !tempSettings.hideNature;
             NUtils.showHideNature();
         }
+
+        // Force update of all NModelBox instances
+        try {
+            if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+            {
+                for (Gob gob : NUtils.getGameUI().map.glob.oc)
+                {
+                    for (Gob.Overlay overlay : gob.ols)
+                    {
+                        if (overlay.spr instanceof NModelBox)
+                        {
+                            ((NModelBox) overlay.spr).updateMaterials();
+                        }
+                    }
+                }
+            }
+        } catch (ConcurrentModificationException e) {
+            // Ignore concurrent modification exceptions during iteration
+        }
+        
+        // Mark configuration as needing update to file
+        NConfig.needUpdate();
     }
 
     public static Color getBoxFillColor() {
-        Color color = (Color) NConfig.get(NConfig.Key.boxFillColor);
-        return color != null ? color : new Color(227, 28, 1, 195);
+        return NConfig.getColor(NConfig.Key.boxFillColor, new Color(227, 28, 1, 195));
     }
 
     public static Color getBoxEdgeColor() {
-        Color color = (Color) NConfig.get(NConfig.Key.boxEdgeColor  );
-        return color != null ? color : new Color(224, 193, 79, 255);
+        return NConfig.getColor(NConfig.Key.boxEdgeColor, new Color(224, 193, 79, 255));
     }
 }
