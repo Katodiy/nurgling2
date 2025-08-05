@@ -34,11 +34,19 @@ public class ProcessCheeseFromBufferContainers implements Action {
     private final CheeseSlicingManager slicingManager;
     private final Map<CheeseBranch.Place, Integer> traysMovedToAreas = new HashMap<>();
     private final CheeseOrdersManager ordersManager;
+    private final Map<CheeseBranch.Place, Integer> recordedRackCapacity;
     private boolean ordersNeedSaving = false;
 
     public ProcessCheeseFromBufferContainers(CheeseOrdersManager ordersManager) {
         this.slicingManager = new CheeseSlicingManager();
         this.ordersManager = ordersManager;
+        this.recordedRackCapacity = new HashMap<>(); // Empty map for backward compatibility
+    }
+    
+    public ProcessCheeseFromBufferContainers(CheeseOrdersManager ordersManager, Map<CheeseBranch.Place, Integer> rackCapacity) {
+        this.slicingManager = new CheeseSlicingManager();
+        this.ordersManager = ordersManager;
+        this.recordedRackCapacity = rackCapacity != null ? rackCapacity : new HashMap<>();
     }
 
     @Override
@@ -307,13 +315,30 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 continue; // No cheese of this type found
             }
 
-            gui.msg("Processing " + cheeseLocations.size() + " " + cheeseType + " trays for move to " + destination);
+            // Check destination capacity before doing anything
+            int destinationCapacity = calculateDestinationCapacity(gui, destination);
+            int alreadyMovedToDestination = traysMovedToAreas.getOrDefault(destination, 0);
+            int remainingCapacity = Math.max(0, destinationCapacity - alreadyMovedToDestination);
+            
+            if (remainingCapacity <= 0) {
+                gui.msg("Skipping " + cheeseLocations.size() + " " + cheeseType + " trays - destination " + destination + " has no capacity (" + destinationCapacity + " total, " + alreadyMovedToDestination + " already moved)");
+                continue; // Skip this cheese type entirely
+            }
+            
+            int maxCanProcess = Math.min(cheeseLocations.size(), remainingCapacity);
+            gui.msg("Processing " + maxCanProcess + "/" + cheeseLocations.size() + " " + cheeseType + " trays for move to " + destination + " (capacity: " + remainingCapacity + ")");
             
             // Collect cheese from containers to inventory
             collectCheeseFromContainersToInventory(gui, cheeseLocations, destination, cheeseType, place);
             
-            // Move collected cheese to final destination
-            moveCollectedCheeseToDestination(gui, destination, cheeseType, place);
+            // Only navigate to destination if we actually collected something
+            ArrayList<WItem> collectedCheese = gui.getInventory().getItems(new NAlias("Cheese Tray"));
+            if (!collectedCheese.isEmpty()) {
+                // Move collected cheese to final destination
+                moveCollectedCheeseToDestination(gui, destination, cheeseType, place);
+            } else {
+                gui.msg("No " + cheeseType + " cheese was actually collected, skipping destination move");
+            }
         }
     }
     
@@ -342,19 +367,8 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 CheeseAreaManager.getCheeseArea(gui, place); // Navigate back
             }
 
-            // Calculate how many we can actually place at destination
-            // Account for items already moved to this destination in current session
-            int destinationCapacity = calculateDestinationCapacity(gui, destination);
-            int alreadyMovedToDestination = traysMovedToAreas.getOrDefault(destination, 0);
-            int remainingCapacity = Math.max(0, destinationCapacity - alreadyMovedToDestination);
-            int maxToTake = Math.min(locationsInContainer.size(), remainingCapacity);
-            
-            if (maxToTake <= 0) {
-                gui.msg("Destination " + destination + " has no remaining capacity for " + cheeseType + " (capacity: " + destinationCapacity + ", already moved: " + alreadyMovedToDestination + "), skipping");
-                continue;
-            }
-            
-            gui.msg("Taking " + maxToTake + " " + cheeseType + " trays (capacity: " + destinationCapacity + ", already moved: " + alreadyMovedToDestination + ", remaining: " + remainingCapacity + ")");
+            // Capacity check is now done at the higher level, so just take what we can fit
+            int maxToTake = locationsInContainer.size(); // Take all available from this container
             
             // Take only what we can place at destination
             int takenFromContainer = takeCheeseFromSingleContainer(gui, containerGob, cheeseType, maxToTake, place);
@@ -424,36 +438,18 @@ public class ProcessCheeseFromBufferContainers implements Action {
      */
     private int calculateDestinationCapacity(NGameUI gui, CheeseBranch.Place destination) throws InterruptedException {
         try {
-            NArea destinationArea = CheeseAreaManager.getCheeseArea(gui, destination);
-            if (destinationArea == null) {
-                gui.msg("No area found for " + destination + ", capacity = 0");
+            // Use the recorded rack capacity from ClearRacksAndRecordCapacity
+            Integer recordedCapacity = recordedRackCapacity.get(destination);
+            if (recordedCapacity == null || recordedCapacity <= 0) {
+                gui.msg("No recorded capacity for " + destination + ", capacity = 0");
                 return 0;
-            }
-            
-            // Find available racks in destination area
-            ArrayList<Gob> racks = Finder.findGobs(destinationArea, new NAlias("gfx/terobjs/cheeserack"));
-            if (racks.isEmpty()) {
-                gui.msg("No racks found in " + destination + " area, capacity = 0");
-                return 0;
-            }
-            
-            // Calculate total available capacity across all racks
-            int totalCapacity = 0;
-            for (Gob rackGob : racks) {
-                if (CheeseRackOverlayUtils.canAcceptTrays(rackGob)) {
-                    // For now, assume each rack can hold up to 3 trays
-                    // TODO: Could make this more precise by checking actual rack inventory
-                    totalCapacity += CheeseConstants.RACK_CAPACITY_TRAYS;
-                } else {
-                    gui.msg("Rack is full (overlay check), skipping");
-                }
             }
             
             // Also consider player inventory capacity as a limiting factor
             int inventoryCapacity = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
-            int effectiveCapacity = Math.min(totalCapacity, inventoryCapacity);
+            int effectiveCapacity = Math.min(recordedCapacity, inventoryCapacity);
             
-            gui.msg("Destination " + destination + " capacity: " + effectiveCapacity + " (racks: " + totalCapacity + ", inventory: " + inventoryCapacity + ")");
+            gui.msg("Destination " + destination + " capacity: " + effectiveCapacity + " (recorded: " + recordedCapacity + ", inventory: " + inventoryCapacity + ")");
             return effectiveCapacity;
             
         } catch (Exception e) {
