@@ -163,7 +163,6 @@ public class CheeseUtils {
                         workNeeded.put(cheeseType, workAmount);
                         hasWork = true;
                     }
-                    gui.msg("Order " + cheeseType + " needs work: " + status.left + " " + status.name + " at " + status.place);
                 }
             }
         }

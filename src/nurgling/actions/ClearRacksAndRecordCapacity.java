@@ -40,22 +40,15 @@ public class ClearRacksAndRecordCapacity implements Action {
         };
         
         for (CheeseBranch.Place place : places) {
-            gui.msg("=== Clearing " + place + " area and recording capacity ===");
-            
             // Step 1: Clear ready cheese from racks to buffer containers and get capacity
-            gui.msg("1. Clearing ready cheese from " + place + " racks and recording capacity");
             int capacity = clearReadyCheeseFromArea(gui, place);
             rackCapacity.put(place, capacity);
-            gui.msg(place + " racks can fit " + capacity + " more trays");
-            
+
             // Step 2: Check buffer emptiness in this area
-            gui.msg("2. Checking buffer emptiness in " + place + " area");
             boolean allBuffersEmpty = checkBufferEmptiness(gui, place);
             bufferEmptinessMap.put(place, allBuffersEmpty);
-            gui.msg(place + " buffers are " + (allBuffersEmpty ? "all empty" : "not all empty"));
         }
-        
-        gui.msg("=== Full picture obtained - rack capacity across all areas ===");
+
         lastRecordedCapacity = rackCapacity;
         return Results.SUCCESS();
     }
@@ -106,7 +99,6 @@ public class ClearRacksAndRecordCapacity implements Action {
             
             // Log rack status summary using overlays
             String rackStatusSummary = CheeseRackOverlayUtils.getRackStatusSummary(rackGobs);
-            gui.msg("Found " + racks.size() + " cheese racks (" + rackStatusSummary + ") and " + buffers.size() + " buffer containers in " + place + " area");
             
             // Use the new efficient action to move ready cheese and get capacity data
             MoveReadyCheeseToBuffers moveAction = new MoveReadyCheeseToBuffers(racks, buffers, place);
@@ -117,8 +109,7 @@ public class ClearRacksAndRecordCapacity implements Action {
             for (Integer capacity : result.rackCapacities.values()) {
                 totalCapacity += capacity;
             }
-            
-            gui.msg("Finished clearing ready cheese from " + place + " area");
+
             return totalCapacity;
     }
     
@@ -136,7 +127,7 @@ public class ClearRacksAndRecordCapacity implements Action {
             gui.msg("No cheese area found for " + place + " - considering empty");
             return true;
         }
-        
+
         // Find all buffer containers in this area
         ArrayList<Gob> bufferGobs = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
         

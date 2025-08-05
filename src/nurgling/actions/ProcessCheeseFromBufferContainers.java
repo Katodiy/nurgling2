@@ -77,14 +77,12 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 gui.msg("Skipping " + place + " - all buffers are empty (no items to process)");
                 continue;
             }
-            
-            gui.msg("Processing cheese from " + place + " buffer containers");
+
             processBufferContainers(gui, place);
         }
 
         // Batch save all order updates at the end - much more efficient than writing after every tray
         if (ordersNeedSaving) {
-            gui.msg("Saving all order updates to disk (batched for efficiency)");
             ordersManager.writeOrders();
             ordersNeedSaving = false;
         }
@@ -119,11 +117,9 @@ public class ProcessCheeseFromBufferContainers implements Action {
             ArrayList<Gob> containers = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
 
             // Phase 1: Collect ready-to-slice cheese
-            gui.msg("Phase 1: Collecting ready-to-slice cheese from " + place + " buffers");
             collectReadyToSliceCheese(gui, containers, place);
 
             // Phase 2: Move remaining cheese to next stages
-            gui.msg("Phase 2: Moving remaining cheese to next stages from " + place + " buffers");
             moveRemainingCheeseToNextStage(gui, containers, place);
     }
 
@@ -150,8 +146,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 // Process ready trays one by one to manage inventory space properly
                 for (WItem tray : trays) {
                     if (CheeseUtils.isCheeseReadyToSlice(tray, ordersManager)) {
-                        gui.msg("Found ready-to-slice cheese: " + CheeseUtils.getContentName(tray));
-
                         // Check if inventory has space for slicing (tray + up to 5 cheese pieces = 7 slots)
                         if (!CheeseInventoryOperations.hasSpaceForSlicing(gui)) {
                             new CloseTargetContainer(bufferContainer).run(gui);
@@ -162,7 +156,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
                             // because the character could be very far from the original location
                             containerGob = refindContainerAfterFreeInventory(gui, place, containerGob);
                             if (containerGob == null) {
-                                gui.msg("Could not re-find container after FreeInventory2, skipping this container");
                                 break; // Skip this container and move to next
                             }
                             bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
@@ -173,7 +166,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
                         // Take the tray to inventory
                         tray.item.wdgmsg("transfer", haven.Coord.z);
                         nurgling.NUtils.addTask(new nurgling.tasks.ISRemoved(tray.item.wdgid()));
-                        gui.msg("Took ready cheese to inventory: " + CheeseUtils.getContentName(tray));
 
                         // Close container to slice the cheese
                         new CloseTargetContainer(bufferContainer).run(gui);
@@ -182,7 +174,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
                         ArrayList<WItem> inventoryTrays = CheeseInventoryOperations.getCheeseTrays(gui);
                         for (WItem inventoryTray : inventoryTrays) {
                             if (CheeseUtils.isCheeseReadyToSlice(inventoryTray, ordersManager)) {
-                                gui.msg("Slicing cheese: " + CheeseUtils.getContentName(inventoryTray));
                                 slicingManager.sliceCheese(gui, inventoryTray);
                                 break; // Only slice one tray per iteration
                             }
@@ -190,15 +181,13 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
                         // Check if inventory is getting full after slicing
                         if (!CheeseInventoryOperations.hasSpaceForSlicing(gui)) {
-                            gui.msg("Inventory getting full after slicing. Freeing inventory...");
                             freshContext = new NContext(gui);
                             new FreeInventory2(freshContext).run(gui);
                             
                             // CRITICAL FIX: After FreeInventory2, re-find the container
                             containerGob = refindContainerAfterFreeInventory(gui, place, containerGob);
                             if (containerGob == null) {
-                                gui.msg("Could not re-find container after slicing FreeInventory2, skipping this container");
-                                break; // Skip this container and move to next
+                                break;
                             }
                             bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
                         }
@@ -211,9 +200,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
                 new CloseTargetContainer(bufferContainer).run(gui);
         }
-
-        // Final inventory cleanup after processing all ready cheese
-        gui.msg("Final inventory cleanup after slicing ready cheese");
         new FreeInventory2(freshContext).run(gui);
     }
     
@@ -227,7 +213,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
      * @return The re-found container gob, or null if not found
      */
     private Gob refindContainerAfterFreeInventory(NGameUI gui, CheeseBranch.Place place, Gob originalGob) throws InterruptedException {
-        try {
             // Step 1: Navigate back to the cheese area
             NArea area = CheeseAreaManager.getCheeseArea(gui, place);
             if (area == null) {
@@ -246,8 +231,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
             long originalGobId = originalGob.id;
             for (Gob containerGob : containers) {
                 if (containerGob.id == originalGobId) {
-                    gui.msg("Successfully re-found original container (ID: " + originalGobId + ") in " + place + " area");
-                    return containerGob; // Found the exact same container
+                    return containerGob;
                 }
             }
             
@@ -255,19 +239,12 @@ public class ProcessCheeseFromBufferContainers implements Action {
             String originalContainerName = originalGob.ngob.name;
             for (Gob containerGob : containers) {
                 if (containerGob.ngob.name.equals(originalContainerName)) {
-                    gui.msg("Original container ID not found, using container of same type: " + originalContainerName + " in " + place + " area");
                     return containerGob;
                 }
             }
             
             // Step 5: Fallback to first available container
-            gui.msg("No matching container found, using first available container in " + place + " area");
             return containers.get(0);
-            
-        } catch (Exception e) {
-            gui.msg("Error re-finding container after FreeInventory2: " + e.getMessage());
-            return null;
-        }
     }
 
     /**
@@ -337,12 +314,10 @@ public class ProcessCheeseFromBufferContainers implements Action {
             int remainingCapacity = Math.max(0, destinationCapacity - alreadyMovedToDestination);
             
             if (remainingCapacity <= 0) {
-                gui.msg("Skipping " + cheeseLocations.size() + " " + cheeseType + " trays - destination " + destination + " has no capacity (" + destinationCapacity + " total, " + alreadyMovedToDestination + " already moved)");
-                continue; // Skip this cheese type entirely
+                continue;
             }
             
             int maxCanProcess = Math.min(cheeseLocations.size(), remainingCapacity);
-            gui.msg("Processing " + maxCanProcess + "/" + cheeseLocations.size() + " " + cheeseType + " trays for move to " + destination + " (capacity: " + remainingCapacity + ")");
             
             // Collect cheese from containers to inventory
             collectCheeseFromContainersToInventory(gui, cheeseLocations, destination, cheeseType, place);
@@ -352,8 +327,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
             if (!collectedCheese.isEmpty()) {
                 // Move collected cheese to final destination
                 moveCollectedCheeseToDestination(gui, destination, cheeseType, place);
-            } else {
-                gui.msg("No " + cheeseType + " cheese was actually collected, skipping destination move");
             }
         }
     }
@@ -378,7 +351,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
             // Check if inventory has space
             int availableSpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
             if (availableSpace <= 0) {
-                gui.msg("Inventory full! Moving current batch of " + cheeseType + " to " + destination);
                 moveInventoryCheeseToDestination(gui, destination, cheeseType, place);
                 CheeseAreaManager.getCheeseArea(gui, place); // Navigate back
             }
@@ -430,7 +402,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
             for (WItem tray : targetTrays) {
                 // Check inventory space
                 if (gui.getInventory().getNumberFreeCoord(CheeseConstants.CHEESE_TRAY_SIZE) == 0) {
-                    gui.msg("Inventory full, stopping take from this container");
                     break;
                 }
                 
@@ -443,8 +414,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
         
         // Close container
         new CloseTargetContainer(container).run(gui);
-        
-        gui.msg("Took " + taken + " " + cheeseType + " trays from container");
+
         return taken;
     }
     
@@ -453,25 +423,17 @@ public class ProcessCheeseFromBufferContainers implements Action {
      * Considers both available rack space and inventory capacity
      */
     private int calculateDestinationCapacity(NGameUI gui, CheeseBranch.Place destination) throws InterruptedException {
-        try {
             // Use the recorded rack capacity from ClearRacksAndRecordCapacity
             Integer recordedCapacity = recordedRackCapacity.get(destination);
             if (recordedCapacity == null || recordedCapacity <= 0) {
-                gui.msg("No recorded capacity for " + destination + ", capacity = 0");
                 return 0;
             }
             
             // Also consider player inventory capacity as a limiting factor
             int inventoryCapacity = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
             int effectiveCapacity = Math.min(recordedCapacity, inventoryCapacity);
-            
-            gui.msg("Destination " + destination + " capacity: " + effectiveCapacity + " (recorded: " + recordedCapacity + ", inventory: " + inventoryCapacity + ")");
+
             return effectiveCapacity;
-            
-        } catch (Exception e) {
-            gui.msg("Error calculating destination capacity for " + destination + ": " + e.getMessage());
-            return 0;
-        }
     }
     
     /**
@@ -489,7 +451,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
     private void moveCollectedCheeseToDestination(NGameUI gui, CheeseBranch.Place destination, String cheeseType, CheeseBranch.Place place) throws InterruptedException {
         ArrayList<WItem> cheeseToMove = CheeseInventoryOperations.getCheeseTrays(gui);
         if (!cheeseToMove.isEmpty()) {
-            gui.msg("Moving collected " + cheeseType + " to " + destination);
             moveInventoryCheeseToDestination(gui, destination, cheeseType, place);
             CheeseAreaManager.getCheeseArea(gui, place); // Navigate back for next cheese type
         }
@@ -503,8 +464,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
         if (cheeseTrays.isEmpty()) {
             return;
         }
-
-        gui.msg("Moving " + cheeseTrays.size() + " cheese trays to " + destination + " area");
         
         // Get destination area and validate
         NArea destinationArea = getValidatedDestinationArea(gui, destination);
@@ -552,12 +511,9 @@ public class ProcessCheeseFromBufferContainers implements Action {
         for (Gob rackGob : racks) {
             if (CheeseRackOverlayUtils.canAcceptTrays(rackGob)) {
                 availableRacks.add(rackGob);
-            } else {
-                gui.msg("Skipping full rack (overlay check) - no space available");
             }
         }
 
-        gui.msg("Found " + availableRacks.size() + " racks with space out of " + racks.size() + " total racks");
         return availableRacks;
     }
     
@@ -621,7 +577,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
     private void handleRemainingCheeseTrays(NGameUI gui, CheeseBranch.Place destination) throws InterruptedException {
         ArrayList<WItem> remainingTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
         if (!remainingTrays.isEmpty()) {
-            gui.msg("Warning: " + remainingTrays.size() + " cheese trays couldn't fit in " + destination + " racks. Using FreeInventory2.");
             NContext freshContext = new NContext(gui);
             new FreeInventory2(freshContext).run(gui);
         }
@@ -635,18 +590,15 @@ public class ProcessCheeseFromBufferContainers implements Action {
      */
     private void updateOrdersAfterCheeseMovement(NGameUI gui, String cheeseType, int movedCount,
                                                 CheeseBranch.Place fromPlace) {
-        try {
             // First find which order this cheese belongs to
             CheeseOrder relevantOrder = findOrderContainingCheeseType(cheeseType);
             if (relevantOrder == null) {
-                gui.msg("Warning: No order found containing cheese type " + cheeseType);
                 return;
             }
 
             // Find the next cheese type and its correct location in the progression chain for this specific order
             CheeseBranch.Cheese nextCheeseStep = getNextCheeseStepInChain(cheeseType, fromPlace, relevantOrder.getCheeseType());
             if (nextCheeseStep == null) {
-                gui.msg("Warning: Could not determine next cheese step for " + cheeseType + " from " + fromPlace + " in " + relevantOrder.getCheeseType() + " chain");
                 return;
             }
 
@@ -657,8 +609,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
             for (CheeseOrder.StepStatus step : relevantOrder.getStatus()) {
                 if (step.name.equals(cheeseType) && step.place.equals(fromPlace.toString())) {
                     step.left = Math.max(0, step.left - movedCount);
-                    gui.msg("Updated order " + relevantOrder.getCheeseType() + ": reduced " + cheeseType +
-                           " at " + fromPlace + " by " + movedCount + " (now " + step.left + " left)");
                     break;
                 }
             }
@@ -675,22 +625,14 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
             if (nextStep != null) {
                 nextStep.left += movedCount;
-                gui.msg("Updated order " + relevantOrder.getCheeseType() + ": increased " + nextCheeseType +
-                       " at " + nextCheesePlace + " by " + movedCount + " (now " + nextStep.left + " left)");
             } else {
                 // Create new step for next stage using correct progression location
                 nextStep = new CheeseOrder.StepStatus(nextCheeseType, nextCheesePlace.toString(), movedCount);
                 relevantOrder.getStatus().add(nextStep);
-                gui.msg("Created new step in order " + relevantOrder.getCheeseType() + ": " + nextCheeseType +
-                       " at " + nextCheesePlace + " with " + movedCount + " trays");
             }
 
             ordersManager.addOrUpdateOrder(relevantOrder);
             ordersNeedSaving = true; // Mark that orders need saving, but don't save yet
-
-        } catch (Exception e) {
-            gui.msg("Error updating orders after cheese movement: " + e.getMessage());
-        }
     }
 
     /**
