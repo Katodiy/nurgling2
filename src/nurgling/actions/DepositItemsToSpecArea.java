@@ -44,66 +44,62 @@ public class DepositItemsToSpecArea implements Action {
         }
         if (containers.isEmpty()) return Results.ERROR("No containers in target area!");
 
-        // Loop until all containers are at max or we run out of source items
+        // Main processing loop - process each container individually
         while (true) {
-            // Step 1: Calculate how many more we need in total
-            int totalNeeded = 0;
-            List<Integer> needs = new ArrayList<>(containers.size());
-            for (Container cont : containers) {
-                new PathFinder(Finder.findGob(cont.gobid)).run(gui);
-                new OpenTargetContainer(cont).run(gui);
-                int current = gui.getInventory(cont.cap).getItems(itemAlias).size();
-                new CloseTargetContainer(cont).run(gui);
-                int need = Math.max(0, maxPerContainer - current);
-                needs.add(need);
-                totalNeeded += need;
+            // Step 1: Check all containers to find those that need items
+            List<ContainerNeed> containerNeeds = new ArrayList<>();
+            
+            for (Container container : containers) {
+                new PathFinder(Finder.findGob(container.gobid)).run(gui);
+                new OpenTargetContainer(container).run(gui);
+                
+                int currentCount = gui.getInventory(container.cap).getItems(itemAlias).size();
+                int needed = Math.max(0, maxPerContainer - currentCount);
+                containerNeeds.add(new ContainerNeed(container, needed, currentCount));
+                
+                new CloseTargetContainer(container).run(gui);
             }
-            if (totalNeeded == 0) break; // All full
-
-            // Step 2: Fetch as much as possible from source
-            int invSpace = gui.getInventory().getFreeSpace();
-            int fetch = Math.min(invSpace, totalNeeded);
-            context.addInItem(item, null);
-            new TakeItems2(context, item, fetch).run(gui);
-            int inInv = gui.getInventory().getItems(itemAlias).size();
-            if (inInv == 0) break; // No more source
-
-            // Step 3: Deposit into containers as needed
-            context.getSpecArea(specArea);
-
-            for (int i = 0; i < containers.size(); i++) {
-                Container cont = containers.get(i);
-                int need = needs.get(i); // maxPerContainer - current, already calculated above
-                int itemsInInventory = gui.getInventory().getItems(itemAlias).size();
-
-                if (need > 0 && itemsInInventory > 0) {
-                    int toDeposit = Math.min(need, itemsInInventory);
-
-                    System.out.printf("[Deposit] Checking container %d (GobID: %d)\n", i, cont.gobid);
-                    System.out.printf("[Deposit] This container needs %d more items.\n", need);
-                    System.out.printf("[Deposit] Items available in inventory: %d\n", itemsInInventory);
-
-                    new PathFinder(Finder.findGob(cont.gobid)).run(gui);
-                    new OpenTargetContainer(cont).run(gui);
-
-                    int currentCount = gui.getInventory(cont.cap).getItems(itemAlias).size();
-                    System.out.printf("[Deposit] Current item count in container: %d\n", currentCount);
-                    System.out.printf("[Deposit] Will deposit up to: %d items\n", toDeposit);
-
-                    new TransferToContainer(cont, itemAlias).run(gui);
-
-                    System.out.println("[Deposit] Done with this container, closing...");
-                    new CloseTargetContainer(cont).run(gui);
-                } else {
-                    System.out.printf("[Deposit] Skipping container (need: %d, in inv: %d)\n", need, itemsInInventory);
+            
+            // Step 2: Process each container that needs items
+            boolean anyContainerProcessed = false;
+            
+            for (ContainerNeed containerNeed : containerNeeds) {
+                if (containerNeed.needed > 0) {
+                    // Fetch exactly what this container needs
+                    context.addInItem(item, null);
+                    new TakeItems2(context, item, containerNeed.needed).run(gui);
+                    
+                    int itemsInInventory = gui.getInventory().getItems(itemAlias).size();
+                    if (itemsInInventory == 0) break; // No more items available from source
+                    
+                    // Transfer all items from inventory to this container
+                    new PathFinder(Finder.findGob(containerNeed.container.gobid)).run(gui);
+                    new OpenTargetContainer(containerNeed.container).run(gui);
+                    
+                    new TransferToContainer(containerNeed.container, itemAlias).run(gui);
+                    
+                    new CloseTargetContainer(containerNeed.container).run(gui);
+                    
+                    anyContainerProcessed = true;
                 }
             }
-
-            // Safety: If we couldn't deposit anything, prevent infinite loop
-            if (gui.getInventory().getItems(itemAlias).size() == inInv)
-                break;
+            
+            // If no containers were processed, we're done
+            if (!anyContainerProcessed) break;
         }
 
         return Results.SUCCESS();
+    }
+    
+    private static class ContainerNeed {
+        final Container container;
+        final int needed;
+        final int current;
+        
+        ContainerNeed(Container container, int needed, int current) {
+            this.container = container;
+            this.needed = needed;
+            this.current = current;
+        }
     }
 }
