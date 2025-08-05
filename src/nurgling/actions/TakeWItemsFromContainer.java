@@ -1,11 +1,15 @@
 package nurgling.actions;
 
 import haven.WItem;
+import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
+import nurgling.NWItem;
 import nurgling.tasks.ISRemoved;
+import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
+import nurgling.tools.NAlias;
 
 import java.util.List;
 
@@ -71,6 +75,8 @@ public class TakeWItemsFromContainer implements Action {
             // Update container state
             container.update();
         }
+
+        NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(((NGItem) itemsToTake.getFirst().item).name()), itemsToTake.size()));
 
         // Close container
         new CloseTargetContainer(container).run(gui);
