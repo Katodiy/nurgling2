@@ -90,7 +90,7 @@ public class DepositItemsToSpecArea implements Action {
                     System.out.printf("[Deposit] Current item count in container: %d\n", currentCount);
                     System.out.printf("[Deposit] Will deposit up to: %d items\n", toDeposit);
 
-                    new TransferToContainer(cont, toDeposit, itemAlias).run(gui);
+                    new TransferToContainer(cont, itemAlias).run(gui);
 
                     System.out.println("[Deposit] Done with this container, closing...");
                     new CloseTargetContainer(cont).run(gui);
