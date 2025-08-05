@@ -111,6 +111,11 @@ public class ProcessCheeseFromBufferContainers implements Action {
         NContext freshContext = new NContext(gui);
 
         for (Gob containerGob : containers) {
+                // Skip checking empty containers.
+                if((containerGob.ngob.name.equals("gfx/terobjs/chest") || containerGob.ngob.name.equals("gfx/terobjs/cupboard")) && containerGob.ngob.getModelAttribute() == 2) {
+                    continue;
+                }
+
                 Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
                 new PathFinder(containerGob).run(gui);
                 new OpenTargetContainer(bufferContainer).run(gui);
@@ -262,6 +267,10 @@ public class ProcessCheeseFromBufferContainers implements Action {
         Map<String, ArrayList<CheeseLocation>> cheeseByType = new HashMap<>();
 
         for (Gob containerGob : containers) {
+            // Skip checking empty containers.
+            if((containerGob.ngob.name.equals("gfx/terobjs/chest") || containerGob.ngob.name.equals("gfx/terobjs/cupboard")) && containerGob.ngob.getModelAttribute() == 2) {
+                continue;
+            }
             Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
             new PathFinder(containerGob).run(gui);
             new OpenTargetContainer(bufferContainer).run(gui);
@@ -335,7 +344,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
             // Calculate how many we can actually place at destination
             // Account for items already moved to this destination in current session
-            int destinationCapacity = calculateDestinationCapacity(gui, destination, cheeseType);
+            int destinationCapacity = calculateDestinationCapacity(gui, destination);
             int alreadyMovedToDestination = traysMovedToAreas.getOrDefault(destination, 0);
             int remainingCapacity = Math.max(0, destinationCapacity - alreadyMovedToDestination);
             int maxToTake = Math.min(locationsInContainer.size(), remainingCapacity);
@@ -413,9 +422,8 @@ public class ProcessCheeseFromBufferContainers implements Action {
      * Calculate how many cheese trays can be placed at the destination
      * Considers both available rack space and inventory capacity
      */
-    private int calculateDestinationCapacity(NGameUI gui, CheeseBranch.Place destination, String cheeseType) throws InterruptedException {
+    private int calculateDestinationCapacity(NGameUI gui, CheeseBranch.Place destination) throws InterruptedException {
         try {
-            // Get destination area
             NArea destinationArea = CheeseAreaManager.getCheeseArea(gui, destination);
             if (destinationArea == null) {
                 gui.msg("No area found for " + destination + ", capacity = 0");
