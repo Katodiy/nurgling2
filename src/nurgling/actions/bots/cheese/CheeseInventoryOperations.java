@@ -66,32 +66,4 @@ public class CheeseInventoryOperations {
         int availableSlots = gui.getInventory().getNumberFreeCoord(CheeseConstants.SINGLE_SLOT_SIZE);
         return availableSlots >= CheeseConstants.SLICING_INVENTORY_REQUIREMENT;
     }
-    
-    /**
-     * Check if container has space for cheese trays
-     * 
-     * @param gui The game UI
-     * @param containerType The container type
-     * @return Number of cheese trays that can fit in the container
-     */
-    public static int getAvailableCheeseTraySlotsInContainer(NGameUI gui, String containerType) throws InterruptedException {
-        return gui.getInventory(containerType).getNumberFreeCoord(CheeseConstants.CHEESE_TRAY_SIZE);
-    }
-    
-    /**
-     * Count empty cheese trays in inventory
-     * 
-     * @param gui The game UI
-     * @return Number of empty cheese trays
-     */
-    public static int countEmptyCheeseTrays(NGameUI gui) throws InterruptedException {
-        ArrayList<WItem> trays = getCheeseTrays(gui);
-        int emptyCount = 0;
-        for (WItem tray : trays) {
-            if (CheeseUtils.isEmpty(tray)) {
-                emptyCount++;
-            }
-        }
-        return emptyCount;
-    }
 }
