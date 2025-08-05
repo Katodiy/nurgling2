@@ -364,7 +364,7 @@ public class TransferToContainer implements Action
                 {
                     int oldstacksize = sourceStack.wmap.size();
                     // Если НЕТ неполных стаков в целевом инвентаре и есть свободное место - переносим полный стак целиком
-                    if (targetInv.calcFreeSpace() != 0)
+                    if (targetInv.calcFreeSpace() > 0)
                     {
                         ((GItem.ContentsWindow) sourceStack.parent).cont.wdgmsg("transfer", Coord.z);
                         NUtils.addTask(new ISRemoved(sourceStack.wdgid()));
@@ -388,11 +388,17 @@ public class TransferToContainer implements Action
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(targetSingleItem);
                     NUtils.addTask(new WaitFreeHand());
-                } else
+                }
+                else
                 {
-                    item.item.wdgmsg("transfer", Coord.z);
-                    int id = item.item.wdgid();
-                    NUtils.addTask(new ISRemoved(id));
+                    if (targetInv.calcFreeSpace() > 0)
+                    {
+                        item.item.wdgmsg("transfer", Coord.z);
+                        int id = item.item.wdgid();
+                        NUtils.addTask(new ISRemoved(id));
+                    }
+                    else
+                        return 0;
                 }
                 return 1;
             }

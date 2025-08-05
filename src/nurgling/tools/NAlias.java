@@ -184,6 +184,15 @@ public class NAlias {
     public Set<String> getLowercaseExceptions() {
         return Collections.unmodifiableSet(lowercaseExceptions);
     }
+    
+    /**
+     * Get keys list for external use.
+     *
+     * @return unmodifiable list of keys.
+     */
+    public List<String> getKeys() {
+        return Collections.unmodifiableList(keys);
+    }
 
     @Override
     public boolean equals(Object o) {

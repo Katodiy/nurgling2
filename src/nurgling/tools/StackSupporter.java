@@ -181,10 +181,14 @@ public class StackSupporter {
             categories.add("Hide Fresh");
         for(String cat: categories)
         {
-            NAlias same = new NAlias(VSpec.getCategoryContent(cat));
-            same.keys.removeAll(items.keys);
-            if(!same.keys.isEmpty() && !inv.getItems(same).isEmpty())
-                return true;
+            ArrayList<String> categoryContent = new ArrayList<>(VSpec.getCategoryContent(cat));
+            categoryContent.removeAll(items.keys);
+            if(!categoryContent.isEmpty())
+            {
+                NAlias same = new NAlias(categoryContent);
+                if(!inv.getItems(same).isEmpty())
+                    return true;
+            }
         }
         return false;
     }

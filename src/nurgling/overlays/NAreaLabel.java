@@ -85,6 +85,8 @@ public class NAreaLabel extends Sprite implements RenderTree.Node, PView.Render2
     }
 
     public boolean isect(Coord pc) {
+        if(sc == null)
+            return false;
         Coord ul = sc.sub(label.sz().div(2));
         return pc.isect(ul, label.sz());
     }
