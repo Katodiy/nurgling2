@@ -21,8 +21,6 @@ public class CheeseProductionBot implements Action {
         // Create a single shared CheeseOrdersManager instance to eliminate redundant file I/O
         CheeseOrdersManager sharedOrdersManager = new CheeseOrdersManager();
         
-        gui.msg("=== Starting Cheese Production Bot ===");
-        
         // 1. Analyze current orders and determine what needs to be done
         Map<String, Integer> workNeeded = CheeseUtils.analyzeOrders(gui, sharedOrdersManager);
         if (workNeeded.isEmpty()) {
@@ -31,7 +29,6 @@ public class CheeseProductionBot implements Action {
         }
         
         // 2. Pass 1: Clear all racks into buffer and record capacity
-        gui.msg("=== Pass 1: Clearing all racks and recording capacity ===");
         ClearRacksAndRecordCapacity clearAction = new ClearRacksAndRecordCapacity();
         Results clearResult = clearAction.run(gui);
         if (!clearResult.IsSuccess()) {
@@ -42,7 +39,6 @@ public class CheeseProductionBot implements Action {
         Map<CheeseBranch.Place, Boolean> bufferEmptinessMap = clearAction.getBufferEmptinessMap();
 
         // 3. Pass 2: Process buffers (slice ready cheese, move aging cheese)
-        gui.msg("=== Pass 2: Processing buffers ===");
         ProcessCheeseFromBufferContainers bufferAction = new ProcessCheeseFromBufferContainers(sharedOrdersManager, rackCapacity, bufferEmptinessMap);
         Results bufferResult = bufferAction.run(gui);
         if (!bufferResult.IsSuccess()) {
@@ -57,16 +53,12 @@ public class CheeseProductionBot implements Action {
             int currentCapacity = rackCapacity.getOrDefault(area, 0);
             int updatedCapacity = Math.max(0, currentCapacity - traysMovedToArea);
             rackCapacity.put(area, updatedCapacity);
-            gui.msg("Updated " + area + " capacity: " + currentCapacity + " - " + traysMovedToArea + " = " + updatedCapacity);
         }
 
         // 5. Create new curd trays for incomplete orders (only "start" step)
-        gui.msg("=== Pass 3: Creating new curd trays ===");
         for (Map.Entry<String, Integer> work : workNeeded.entrySet()) {
             String cheeseType = work.getKey();
             int quantity = work.getValue();
-            
-            gui.msg("Checking if " + cheeseType + " needs new curd creation");
             
             // Get inventory capacity for batch processing
             int inventoryCapacity = rackManager.getInventoryCapacity(gui);
@@ -78,8 +70,7 @@ public class CheeseProductionBot implements Action {
                 gui.error("Failed to process " + cheeseType + " curd creation");
             }
         }
-        
-        gui.msg("=== Cheese Production Bot Complete ===");
+
         new FreeInventory2(new NContext(gui)).run(gui);
         return Results.SUCCESS();
     }
