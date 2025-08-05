@@ -42,10 +42,11 @@ public class CheeseProductionBot implements Action {
         }
 
         Map<CheeseBranch.Place, Integer> rackCapacity = clearAction.getLastRecordedCapacity();
+        Map<CheeseBranch.Place, Boolean> bufferEmptinessMap = clearAction.getBufferEmptinessMap();
 
         // 3. Pass 2: Process buffers (slice ready cheese, move aging cheese)
         gui.msg("=== Pass 2: Processing buffers ===");
-        ProcessCheeseFromBufferContainers bufferAction = new ProcessCheeseFromBufferContainers(sharedOrdersManager, rackCapacity);
+        ProcessCheeseFromBufferContainers bufferAction = new ProcessCheeseFromBufferContainers(sharedOrdersManager, rackCapacity, bufferEmptinessMap);
         Results bufferResult = bufferAction.run(gui);
         if (!bufferResult.IsSuccess()) {
             gui.error("Failed to process cheese from buffer containers");

@@ -35,18 +35,28 @@ public class ProcessCheeseFromBufferContainers implements Action {
     private final Map<CheeseBranch.Place, Integer> traysMovedToAreas = new HashMap<>();
     private final CheeseOrdersManager ordersManager;
     private final Map<CheeseBranch.Place, Integer> recordedRackCapacity;
+    private final Map<CheeseBranch.Place, Boolean> bufferEmptinessMap;
     private boolean ordersNeedSaving = false;
 
     public ProcessCheeseFromBufferContainers(CheeseOrdersManager ordersManager) {
         this.slicingManager = new CheeseSlicingManager();
         this.ordersManager = ordersManager;
         this.recordedRackCapacity = new HashMap<>(); // Empty map for backward compatibility
+        this.bufferEmptinessMap = new HashMap<>(); // Empty map for backward compatibility
     }
     
     public ProcessCheeseFromBufferContainers(CheeseOrdersManager ordersManager, Map<CheeseBranch.Place, Integer> rackCapacity) {
         this.slicingManager = new CheeseSlicingManager();
         this.ordersManager = ordersManager;
         this.recordedRackCapacity = rackCapacity != null ? rackCapacity : new HashMap<>();
+        this.bufferEmptinessMap = new HashMap<>(); // Empty map for backward compatibility
+    }
+    
+    public ProcessCheeseFromBufferContainers(CheeseOrdersManager ordersManager, Map<CheeseBranch.Place, Integer> rackCapacity, Map<CheeseBranch.Place, Boolean> bufferEmptinessMap) {
+        this.slicingManager = new CheeseSlicingManager();
+        this.ordersManager = ordersManager;
+        this.recordedRackCapacity = rackCapacity != null ? rackCapacity : new HashMap<>();
+        this.bufferEmptinessMap = bufferEmptinessMap != null ? bufferEmptinessMap : new HashMap<>();
     }
 
     @Override
@@ -62,6 +72,12 @@ public class ProcessCheeseFromBufferContainers implements Action {
         };
 
         for (CheeseBranch.Place place : places) {
+            // Skip areas that have all empty buffers (optimization from ClearRacksAndRecordCapacity)
+            if (bufferEmptinessMap.containsKey(place) && bufferEmptinessMap.get(place)) {
+                gui.msg("Skipping " + place + " - all buffers are empty (no items to process)");
+                continue;
+            }
+            
             gui.msg("Processing cheese from " + place + " buffer containers");
             processBufferContainers(gui, place);
         }

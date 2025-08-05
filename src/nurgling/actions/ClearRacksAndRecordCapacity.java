@@ -19,14 +19,17 @@ import java.util.Map;
 /**
  * Clears ready cheese from all racks to buffer containers and records rack capacity
  * Use getLastRecordedCapacity() to access the capacity data after running
+ * Use getBufferEmptinessMap() to access buffer emptiness data for optimization
  */
 public class ClearRacksAndRecordCapacity implements Action {
     // Use centralized cheese tray size constant
     private Map<CheeseBranch.Place, Integer> lastRecordedCapacity = new HashMap<>();
+    private Map<CheeseBranch.Place, Boolean> bufferEmptinessMap = new HashMap<>();
     
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         lastRecordedCapacity = new HashMap<>();
+        bufferEmptinessMap = new HashMap<>();
         Map<CheeseBranch.Place, Integer> rackCapacity = new HashMap<>();
         
         CheeseBranch.Place[] places = {
@@ -44,6 +47,12 @@ public class ClearRacksAndRecordCapacity implements Action {
             int capacity = clearReadyCheeseFromArea(gui, place);
             rackCapacity.put(place, capacity);
             gui.msg(place + " racks can fit " + capacity + " more trays");
+            
+            // Step 2: Check buffer emptiness in this area
+            gui.msg("2. Checking buffer emptiness in " + place + " area");
+            boolean allBuffersEmpty = checkBufferEmptiness(gui, place);
+            bufferEmptinessMap.put(place, allBuffersEmpty);
+            gui.msg(place + " buffers are " + (allBuffersEmpty ? "all empty" : "not all empty"));
         }
         
         gui.msg("=== Full picture obtained - rack capacity across all areas ===");
@@ -57,6 +66,14 @@ public class ClearRacksAndRecordCapacity implements Action {
      */
     public Map<CheeseBranch.Place, Integer> getLastRecordedCapacity() {
         return new HashMap<>(lastRecordedCapacity);
+    }
+    
+    /**
+     * Get the buffer emptiness map for optimization
+     * @return Map of place to boolean indicating if all buffers are empty
+     */
+    public Map<CheeseBranch.Place, Boolean> getBufferEmptinessMap() {
+        return new HashMap<>(bufferEmptinessMap);
     }
     
     /**
@@ -103,5 +120,44 @@ public class ClearRacksAndRecordCapacity implements Action {
             
             gui.msg("Finished clearing ready cheese from " + place + " area");
             return totalCapacity;
+    }
+    
+    /**
+     * Check if all buffer containers in an area are empty
+     * Uses the same condition as line 123 of ProcessCheeseFromBufferContainers
+     * @param gui Game UI
+     * @param place Area to check
+     * @return true if ALL buffers are empty, false otherwise
+     */
+    private boolean checkBufferEmptiness(NGameUI gui, CheeseBranch.Place place) throws InterruptedException {
+        // Get cheese area using centralized manager
+        NArea area = CheeseAreaManager.getCheeseArea(gui, place);
+        if (area == null) {
+            gui.msg("No cheese area found for " + place + " - considering empty");
+            return true;
+        }
+        
+        // Find all buffer containers in this area
+        ArrayList<Gob> bufferGobs = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
+        
+        if (bufferGobs.isEmpty()) {
+            gui.msg("No buffer containers found in " + place + " - considering empty");
+            return true;
+        }
+        
+        // Check each buffer using the same condition as ProcessCheeseFromBufferContainers line 123
+        for (Gob containerGob : bufferGobs) {
+            // Skip checking empty containers - same condition as line 123
+            if((containerGob.ngob.name.equals("gfx/terobjs/chest") || containerGob.ngob.name.equals("gfx/terobjs/cupboard")) && containerGob.ngob.getModelAttribute() == 2) {
+                // This container is empty, continue checking others
+                continue;
+            } else {
+                // Found a non-empty container, so not all buffers are empty
+                return false;
+            }
+        }
+        
+        // All buffers passed the empty test
+        return true;
     }
 }
