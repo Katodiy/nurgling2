@@ -32,8 +32,6 @@ public class TakeWItemsFromContainer implements Action {
             return Results.SUCCESS();
         }
 
-        gui.msg("Taking " + itemsToTake.size() + " items from container");
-
         // Navigate to container
         if (container.gobid != -1) {
             new PathFinder(Finder.findGob(container.gobid)).run(gui);
@@ -41,13 +39,10 @@ public class TakeWItemsFromContainer implements Action {
 
         // Open container if needed
         if (container.cap != null) {
-            gui.msg("Opening container: " + container.cap);
             Results openResult = new OpenTargetContainer(container.cap, Finder.findGob(container.gobid)).run(gui);
             if (!openResult.IsSuccess()) {
-                gui.msg("Failed to open container");
                 return openResult;
             }
-            gui.msg("Container opened successfully");
         }
 
         int taken = 0;
@@ -56,11 +51,8 @@ public class TakeWItemsFromContainer implements Action {
         for (WItem item : itemsToTake) {
             // Check if there's space in player inventory
             if (gui.getInventory().getNumberFreeCoord(item) == 0) {
-                gui.msg("Player inventory is full, stopping take operation");
                 break;
             }
-
-            gui.msg("Attempting to transfer item: " + item.item.getres().name + " (ID: " + item.item.wdgid() + ")");
 
             // Take this specific item to inventory
             item.item.wdgmsg("transfer", haven.Coord.z);
@@ -70,7 +62,6 @@ public class TakeWItemsFromContainer implements Action {
 
             // If we get here, the ISRemoved task completed, meaning the transfer succeeded
             taken++;
-            gui.msg("Successfully transferred item " + item.item.getres().name);
 
             // Update container state
             container.update();
@@ -80,8 +71,6 @@ public class TakeWItemsFromContainer implements Action {
 
         // Close container
         new CloseTargetContainer(container).run(gui);
-
-        gui.msg("Took " + taken + " specific items from container to inventory");
 
         // Return failure if we were supposed to take items but didn't take any
         if (taken == 0 && !itemsToTake.isEmpty()) {

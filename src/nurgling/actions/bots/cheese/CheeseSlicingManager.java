@@ -1,15 +1,10 @@
 package nurgling.actions.bots.cheese;
 
-import haven.Coord;
 import haven.WItem;
 import nurgling.*;
 import nurgling.actions.SelectFlowerAction;
-import nurgling.areas.NContext;
 import nurgling.tasks.NTask;
-import nurgling.tasks.WaitItems;
 import nurgling.tools.NAlias;
-
-import java.util.ArrayList;
 
 /**
  * Handles cheese slicing and empty tray management
@@ -31,12 +26,9 @@ public class CheeseSlicingManager {
             return;
         }
         
-        gui.msg("Slicing " + cheeseType + " cheese tray...");
-        
         // Check inventory space before slicing
         // Slicing typically produces 4-5 cheese pieces + 1 empty tray
         if (gui.getInventory().getFreeSpace() < CheeseConstants.SLICING_INVENTORY_REQUIREMENT) {
-            gui.msg("Not enough inventory space for slicing (need " + CheeseConstants.SLICING_INVENTORY_REQUIREMENT + " slots)");
             return;
         }
         
