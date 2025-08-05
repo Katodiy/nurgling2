@@ -5,7 +5,6 @@ import haven.Gob;
 import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.areas.NArea;
-import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
 import nurgling.actions.PathFinder;
 import nurgling.actions.OpenTargetContainer;
@@ -14,7 +13,6 @@ import nurgling.actions.TransferWItemsToContainer;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
@@ -58,8 +56,6 @@ public class CheeseRackManager {
         int moved = 0;
         
         try {
-            // Create fresh context to avoid caching issues
-            NContext freshContext = new NContext(gui);
             NArea targetArea = CheeseAreaManager.getCheeseArea(gui, targetPlace);
             if (targetArea == null) {
                 gui.msg("Target area not found: " + targetPlace);

@@ -1,12 +1,9 @@
 package nurgling.actions.bots;
 
 import nurgling.NGameUI;
-import nurgling.actions.Action;
-import nurgling.actions.Results;
-import nurgling.actions.ClearRacksAndRecordCapacity;
-import nurgling.actions.ProcessCheeseFromBufferContainers;
-import nurgling.actions.ProcessCheeseOrderInBatches;
+import nurgling.actions.*;
 import nurgling.actions.bots.cheese.*;
+import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
 import nurgling.cheese.CheeseOrdersManager;
 
@@ -83,6 +80,7 @@ public class CheeseProductionBot implements Action {
         }
         
         gui.msg("=== Cheese Production Bot Complete ===");
+        new FreeInventory2(new NContext(gui)).run(gui);
         return Results.SUCCESS();
     }
 }

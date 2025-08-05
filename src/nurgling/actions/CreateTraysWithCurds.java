@@ -50,7 +50,6 @@ public class CreateTraysWithCurds implements Action {
             }
 
             // 2. Make sure you have 4 curds
-//            gui.getInventory().getItems(new NAlias(new ArrayList<>(Arrays.asList("cheesetray")), new ArrayList<>(Arrays.asList("curd")) ))
             ArrayList<WItem> curds = gui.getInventory().getItems(curdType);
             if (curds.size() < CheeseConstants.CURDS_PER_TRAY) {
                 Results curdRes = new TakeItems2(context, curdType, CheeseConstants.CURDS_PER_TRAY - curds.size()).run(gui);
