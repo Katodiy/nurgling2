@@ -24,8 +24,11 @@ public class TakeWItemsFromContainer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         if (itemsToTake.isEmpty()) {
+            gui.msg("No items to take from container");
             return Results.SUCCESS();
         }
+        
+        gui.msg("Taking " + itemsToTake.size() + " items from container");
         
         // Navigate to container
         if (container.gobid != -1) {
@@ -34,7 +37,13 @@ public class TakeWItemsFromContainer implements Action {
         
         // Open container if needed
         if (container.cap != null) {
-            new OpenTargetContainer(container.cap, Finder.findGob(container.gobid)).run(gui);
+            gui.msg("Opening container: " + container.cap);
+            Results openResult = new OpenTargetContainer(container.cap, Finder.findGob(container.gobid)).run(gui);
+            if (!openResult.IsSuccess()) {
+                gui.msg("Failed to open container");
+                return openResult;
+            }
+            gui.msg("Container opened successfully");
         }
         
         int taken = 0;
@@ -47,10 +56,22 @@ public class TakeWItemsFromContainer implements Action {
                     break;
                 }
                 
-                // Take this specific item to inventory
-                item.item.wdgmsg("transfer", haven.Coord.z);
-                NUtils.addTask(new ISRemoved(item.item.wdgid()));
-                taken++;
+                gui.msg("Attempting to transfer item: " + item.item.getres().name + " (ID: " + item.item.wdgid() + ")");
+                
+                try {
+                    // Take this specific item to inventory
+                    item.item.wdgmsg("transfer", haven.Coord.z);
+                    
+                    // Wait for the item to be removed from the container (this is the proper way)
+                    NUtils.addTask(new ISRemoved(item.item.wdgid()));
+                    
+                    // If we get here, the ISRemoved task completed, meaning the transfer succeeded
+                    taken++;
+                    gui.msg("Successfully transferred item " + item.item.getres().name);
+                    
+                } catch (Exception e) {
+                    gui.msg("Transfer failed for item " + item.item.getres().name + ": " + e.getMessage());
+                }
                 
                 // Update container state
                 container.update();
@@ -60,6 +81,12 @@ public class TakeWItemsFromContainer implements Action {
         new CloseTargetContainer(container).run(gui);
         
         gui.msg("Took " + taken + " specific items from container to inventory");
+        
+        // Return failure if we were supposed to take items but didn't take any
+        if (taken == 0 && !itemsToTake.isEmpty()) {
+            return Results.FAIL();
+        }
+        
         return Results.SUCCESS();
     }
 }
