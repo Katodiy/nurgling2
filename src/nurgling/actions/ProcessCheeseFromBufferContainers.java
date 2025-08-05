@@ -60,7 +60,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
         for (CheeseBranch.Place place : places) {
             // Skip areas that have all empty buffers (optimization from ClearRacksAndRecordCapacity)
             if (bufferEmptinessMap.containsKey(place) && bufferEmptinessMap.get(place)) {
-                gui.msg("Skipping " + place + " - all buffers are empty (no items to process)");
                 continue;
             }
 
