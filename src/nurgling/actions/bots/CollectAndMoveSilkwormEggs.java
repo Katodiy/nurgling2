@@ -1,19 +1,15 @@
 package nurgling.actions.bots;
 
-import haven.Gob;
-import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.actions.*;
-import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.tools.Container;
-import nurgling.tools.Context;
-import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
-import java.util.ArrayList;
-
+/**
+ * Collects silkworm eggs from breeding cabinets and stores them in egg storage
+ * Uses FreeInventory2 to automatically deposit eggs in the correct storage area
+ */
 public class CollectAndMoveSilkwormEggs implements Action {
 
     @Override
