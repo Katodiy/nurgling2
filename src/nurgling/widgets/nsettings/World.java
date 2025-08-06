@@ -16,6 +16,7 @@ public class World extends Panel {
         boolean showBB;
         Color boxFillColor = new Color(227, 28, 1, 195);
         Color boxEdgeColor = new Color(224, 193, 79, 255);
+        int boxLineWidth = 4;
     }
 
     private final WorldSettings tempSettings = new WorldSettings();
@@ -25,6 +26,8 @@ public class World extends Panel {
     private CheckBox boundingBoxes;
     private NColorWidget fillColorWidget;
     private NColorWidget edgeColorWidget;
+    private HSlider lineWidthSlider;
+    private Label lineWidthLabel;
 
     public World() {
         super("World Settings");
@@ -74,6 +77,15 @@ public class World extends Panel {
         edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 280));
         edgeColorWidget.color = tempSettings.boxEdgeColor;
 
+        // Line width setting
+        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 330));
+        lineWidthSlider = add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
+            public void changed() {
+                tempSettings.boxLineWidth = val;
+                lineWidthLabel.settext("Line width: " + val);
+            }
+        }, UI.scale(50, 350));
+
     }
 
     public void setNatureStatus(Boolean a) {
@@ -92,6 +104,10 @@ public class World extends Panel {
         // Load colors if they exist in config
         tempSettings.boxFillColor = NConfig.getColor(NConfig.Key.boxFillColor, new Color(227, 28, 1, 195));
         tempSettings.boxEdgeColor = NConfig.getColor(NConfig.Key.boxEdgeColor, new Color(224, 193, 79, 255));
+        
+        // Load line width
+        Object lineWidthObj = NConfig.get(NConfig.Key.boxLineWidth);
+        tempSettings.boxLineWidth = (lineWidthObj instanceof Integer) ? (Integer) lineWidthObj : 4;
 
 
         // Update UI components
@@ -101,6 +117,8 @@ public class World extends Panel {
         boundingBoxes.a = tempSettings.showBB;
         fillColorWidget.color = tempSettings.boxFillColor;
         edgeColorWidget.color = tempSettings.boxEdgeColor;
+        lineWidthSlider.val = tempSettings.boxLineWidth;
+        lineWidthLabel.settext("Line width: " + tempSettings.boxLineWidth);
     }
 
     @Override
@@ -119,6 +137,9 @@ public class World extends Panel {
         tempSettings.boxEdgeColor = edgeColorWidget.color;
         NConfig.setColor(NConfig.Key.boxFillColor, tempSettings.boxFillColor);
         NConfig.setColor(NConfig.Key.boxEdgeColor, tempSettings.boxEdgeColor);
+        
+        // Save line width setting
+        NConfig.set(NConfig.Key.boxLineWidth, tempSettings.boxLineWidth);
 
         if ((Boolean) NConfig.get(NConfig.Key.hideNature) != tempSettings.hideNature) {
             NUtils.getGameUI().mmapw.natura.a = !tempSettings.hideNature;

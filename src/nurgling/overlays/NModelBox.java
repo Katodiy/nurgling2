@@ -93,7 +93,7 @@ public class NModelBox extends Sprite implements RenderTree.Node {
 
             this.lmat = Pipe.Op.compose(new Rendered.Order.Default(6000), States.Depthtest.none, States.maskdepth,
                     FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
-                            BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), new States.Facecull(), new States.LineWidth(4),
+                            BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), new States.Facecull(), new States.LineWidth((Integer) NConfig.get(NConfig.Key.boxLineWidth)),
                     new BaseColor(edgeColor));
             this.emat = Pipe.Op.compose(new Rendered.Order.Default(6000), FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
                     BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), new BaseColor(fillColor));
