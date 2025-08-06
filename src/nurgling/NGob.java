@@ -720,11 +720,21 @@ public class NGob
             {
                 if (ol.spr instanceof StaticSprite)
                 {
-                    ResDrawable dr = ((ResDrawable) parent.getattr(Drawable.class));
-                    parent.setattr(new ResDrawable(parent, dr.res, dr.sdt, false));
+                    altMats.clear();
+                    MaterialFactory.clearCache(name);
+                    
+                    customMask = true;
+                    
+                    parent.delattr(Materials.class);
+                    
+                    Drawable dr = parent.getattr(Drawable.class);
+                    if (dr instanceof ResDrawable) {
+                        parent.delattr(Drawable.class);
+                        parent.glob.loader.defer(() -> {
+                            parent.setattr(new ResDrawable(parent, ((ResDrawable) dr).res, ((ResDrawable) dr).sdt, false));
+                        }, null);
+                    }
                 }
-
-
             }
         Sprite spr = ol.spr;
         if (spr != null)
@@ -747,8 +757,20 @@ public class NGob
             {
                 if (ol.spr instanceof StaticSprite)
                 {
-                    ResDrawable dr = ((ResDrawable) parent.getattr(Drawable.class));
-                    parent.setattr(new ResDrawable(parent, dr.res, dr.sdt, false));
+                    altMats.clear();
+                    MaterialFactory.clearCache(name);
+                    
+                    customMask = true;
+                    
+                    parent.delattr(Materials.class);
+                    
+                    Drawable dr = parent.getattr(Drawable.class);
+                    if (dr instanceof ResDrawable) {
+                        parent.delattr(Drawable.class);
+                        parent.glob.loader.defer(() -> {
+                            parent.setattr(new ResDrawable(parent, ((ResDrawable) dr).res, ((ResDrawable) dr).sdt, false));
+                        }, null);
+                    }
                 }
             }
     }
