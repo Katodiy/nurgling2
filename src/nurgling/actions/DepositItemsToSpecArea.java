@@ -11,13 +11,17 @@ import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DepositItemsToSpecArea implements Action {
     private final NContext context;
     private final String item; // item name (e.g. "Mulberry Leaf")
     private final Specialisation.SpecName specArea;
     private final int maxPerContainer; // e.g. 32
+
+    private Map<Long, Integer> containerFreeSpaceMap = new HashMap<>();
 
     public DepositItemsToSpecArea(NContext context, String item, Specialisation.SpecName specArea, int maxPerContainer) {
         this.context = context;
@@ -56,6 +60,8 @@ public class DepositItemsToSpecArea implements Action {
                 int currentCount = gui.getInventory(container.cap).getItems(itemAlias).size();
                 int needed = Math.max(0, maxPerContainer - currentCount);
                 containerNeeds.add(new ContainerNeed(container, needed, currentCount));
+
+                containerFreeSpaceMap.put(container.gobid, gui.getInventory(container.cap).getFreeSpace());
                 
                 new CloseTargetContainer(container).run(gui);
             }
@@ -91,6 +97,11 @@ public class DepositItemsToSpecArea implements Action {
         }
 
         return Results.SUCCESS();
+    }
+    
+    // Getter method to access container free space mapping
+    public Map<Long, Integer> getContainerFreeSpaceMap() {
+        return containerFreeSpaceMap;
     }
     
     private static class ContainerNeed {
