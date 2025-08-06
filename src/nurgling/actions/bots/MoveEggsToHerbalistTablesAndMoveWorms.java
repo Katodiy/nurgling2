@@ -1,13 +1,21 @@
 package nurgling.actions.bots;
 
+import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.actions.*;
+import nurgling.areas.NArea;
 import nurgling.areas.NContext;
+import nurgling.tools.Container;
+import nurgling.tools.Context;
+import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+
+import static nurgling.areas.NContext.contcaps;
 
 /**
  * Multi-step silk processing bot:
@@ -48,24 +56,39 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
         // Step 3: Move eggs from storage to now-empty herbalist tables
         while (true) {
             int eggsBefore = gui.getInventory().getItems(new NAlias(eggs)).size();
-            
+
+            context.addInItem(eggs, null);
             // Take eggs from egg storage
             new TakeItems2(context, eggs, gui.getInventory().getFreeSpace()).run(gui);
-            
+
             int eggsAfter = gui.getInventory().getItems(new NAlias(eggs)).size();
             int eggsCollected = eggsAfter - eggsBefore;
-            
+
             if (eggsCollected > 0) {
                 // Move eggs to herbalist tables using existing transfer logic
-                HashSet<String> eggsSet = new HashSet<>(Collections.singleton(eggs));
-                new TransferItems2(context, eggsSet, Specialisation.SpecName.htable).run(gui);
+                NArea htablesArea = context.getSpecArea(Specialisation.SpecName.htable, eggs);
+
+                ArrayList<Container> containers = new ArrayList<>();
+                ArrayList<Gob> gobs = Finder.findGobs(htablesArea, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
+                for (Gob gob : gobs) {
+                    Container cand = new Container(gob, contcaps.get(gob.ngob.name));
+                    cand.initattr(Container.Space.class);
+                    containers.add(cand);
+                }
+
+                new FillContainers2(containers, eggs, context).run(gui);
+
+                if(!gui.getInventory().getItems(eggs).isEmpty()) {
+                    break;
+                }
             } else {
                 break;
             }
         }
 
+        NContext freshContext = new NContext(gui);
         // Step 4: Clean up any remaining items in inventory
-        new FreeInventory2(context).run(gui);
+        new FreeInventory2(freshContext).run(gui);
 
         return Results.SUCCESS();
     }
