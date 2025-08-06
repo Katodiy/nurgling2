@@ -34,6 +34,7 @@ public class NMapView extends MapView
     public static final KeyBinding kb_displaypbox = KeyBinding.get("pgridbox",  KeyMatch.nil);
     public static final KeyBinding kb_displayfov = KeyBinding.get("pfovbox",  KeyMatch.nil);
     public static final KeyBinding kb_displaygrid = KeyBinding.get("gridbox",  KeyMatch.nil);
+    public static final KeyBinding kb_togglebb = KeyBinding.get("togglebb",  KeyMatch.forcode(KeyEvent.VK_N, KeyMatch.C));
     public static final int MINING_OVERLAY = - 1;
     public NGlobalCoord lastGC = null;
 
@@ -712,6 +713,18 @@ public class NMapView extends MapView
             boolean val = (Boolean) NConfig.get(NConfig.Key.gridbox);
             NConfig.set(NConfig.Key.gridbox, !val);
             NUtils.getGameUI().msg("Gridbox: " + !val);
+        }
+        if(kb_togglebb.key().match(ev)) {
+            boolean val = (Boolean) NConfig.get(NConfig.Key.showBB);
+            NConfig.set(NConfig.Key.showBB, !val);
+            NUtils.getGameUI().msg("Bounding Boxes: " + (!val ? "enabled" : "disabled"));
+            
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().opts != null && NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
+                OptWnd.NSettingsPanel panel = (OptWnd.NSettingsPanel) NUtils.getGameUI().opts.nqolwnd;
+                if (panel.settingsWindow != null && panel.settingsWindow.qol != null) {
+                    panel.settingsWindow.qol.syncShowBB();
+                }
+            }
         }
         return super.keydown(ev);
     }

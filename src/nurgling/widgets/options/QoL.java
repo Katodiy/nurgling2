@@ -96,6 +96,10 @@ public class QoL extends Panel {
         temsmarktimeEntry.settext(time == null ? "" : time.toString());
     }
 
+    public void syncShowBB() {
+        showBB.a = getBool(NConfig.Key.showBB);
+    }
+
     @Override
     public void save() {
         boolean oldHideNature = false;
