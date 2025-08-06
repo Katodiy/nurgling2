@@ -223,7 +223,10 @@ public class NMapView extends MapView
     public Object tooltip(Coord c, Widget prev) {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastTooltipUpdate < tooltipThrottleTime) {
-            return oldttip;
+            if(oldttip!=null)
+                return oldttip;
+            else
+                return (super.tooltip(c, prev));
         }
         lastTooltipUpdate = currentTime;
 
