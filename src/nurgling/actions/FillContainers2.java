@@ -27,7 +27,7 @@ public class FillContainers2 implements Action
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NArea area = NContext.findIn(transferedItems);
+        NArea area = NContext.findInGlobal(transferedItems);
         if (area == null)
             return Results.ERROR("NO area for: " + transferedItems);
         context.addInItem(transferedItems, null);
