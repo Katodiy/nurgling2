@@ -11,7 +11,6 @@ public class QoL extends Panel {
     private CheckBox nightVision;
     private CheckBox autoDrink;
     private CheckBox showBB;
-    private CheckBox flatSurface;
     private CheckBox showCSprite;
     private CheckBox hideNature;
     private CheckBox miningOL;
@@ -40,7 +39,6 @@ public class QoL extends Panel {
         prev = nightVision = add(new CheckBox("Night vision"), prev.pos("bl").adds(0, 5));
         prev = autoDrink = add(new CheckBox("Auto-drink"), prev.pos("bl").adds(0, 5));
         prev = showBB = add(new CheckBox("Bounding Boxes"), prev.pos("bl").adds(0, 5));
-        prev = flatSurface = add(new CheckBox("Flat surface (need reboot)"), prev.pos("bl").adds(0, 5));
         prev = showCSprite = add(new CheckBox("Show decorative objects (need reboot)"), prev.pos("bl").adds(0, 5));
         prev = hideNature = add(new CheckBox("Hide nature objects"), prev.pos("bl").adds(0, 5));
         prev = miningOL = add(new CheckBox("Show mining overlay"), prev.pos("bl").adds(0, 5));
@@ -72,7 +70,6 @@ public class QoL extends Panel {
         nightVision.a = getBool(NConfig.Key.nightVision);
         autoDrink.a = getBool(NConfig.Key.autoDrink);
         showBB.a = getBool(NConfig.Key.showBB);
-        flatSurface.a = getBool(NConfig.Key.nextflatsurface);
         showCSprite.a = getBool(NConfig.Key.nextshowCSprite);
 
         hideNature.a = !getBool(NConfig.Key.hideNature);
@@ -117,7 +114,6 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.nightVision, nightVision.a);
         NConfig.set(NConfig.Key.autoDrink, autoDrink.a);
         NConfig.set(NConfig.Key.showBB, showBB.a);
-        NConfig.set(NConfig.Key.nextflatsurface, flatSurface.a);
         NConfig.set(NConfig.Key.nextshowCSprite, showCSprite.a);
         NConfig.set(NConfig.Key.hideNature, newHideNature);
         NConfig.set(NConfig.Key.miningol, miningOL.a);
