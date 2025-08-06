@@ -68,6 +68,8 @@ public class DepositItemsToSpecArea implements Action {
                     // Fetch exactly what this container needs
                     context.addInItem(item, null);
                     new TakeItems2(context, item, containerNeed.needed).run(gui);
+
+                    context.getSpecArea(specArea);
                     
                     int itemsInInventory = gui.getInventory().getItems(itemAlias).size();
                     if (itemsInInventory == 0) break; // No more items available from source
