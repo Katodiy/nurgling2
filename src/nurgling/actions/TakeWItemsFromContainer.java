@@ -67,8 +67,6 @@ public class TakeWItemsFromContainer implements Action {
             container.update();
         }
 
-        NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(((NGItem) itemsToTake.getFirst().item).name()), itemsToTake.size()));
-
         // Close container
         new CloseTargetContainer(container).run(gui);
 
