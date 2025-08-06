@@ -154,7 +154,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
                     nurgling.NUtils.addTask(new nurgling.tasks.ISRemoved(tray.item.wdgid()));
 
                     // Close container to slice the cheese
-                    new CloseTargetContainer(bufferContainer).run(gui);
 
                     // Find the tray we just took and slice it
                     ArrayList<WItem> inventoryTrays = CheeseInventoryOperations.getCheeseTrays(gui);
