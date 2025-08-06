@@ -20,8 +20,8 @@ import static nurgling.areas.NContext.contcaps;
 
 /**
  * Multi-step silk processing bot:
- * 1. Move hatched silkworms from herbalist tables to feeding cabinets
- * 2. Ensure feeding cabinets have mulberry leaves (32 per cabinet)  
+ * 1. Ensure feeding cabinets have mulberry leaves (32 per cabinet)
+ * 2. Move hatched silkworms from herbalist tables to feeding cabinets
  * 3. Move eggs from storage to now-empty herbalist tables
  */
 public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
@@ -35,9 +35,36 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
         // Step 1: Ensure feeding cabinets have sufficient mulberry leaves (32 per cabinet)
         new DepositItemsToSpecArea(context, leaves, Specialisation.SpecName.silkwormFeeding, 32).run(gui);
 
-        // Step 2: Move hatched silkworms from herbalist tables to feeding cabinets
-        while (true) {
-            int wormsBefore = gui.getInventory().getItems(new NAlias(worms)).size();
+        // Step 1.5: Calculate how many silkworms we can fit in feeding containers
+        int totalSilkwormsNeeded = 0;
+        NArea feedingArea = context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
+        if (feedingArea != null) {
+            ArrayList<Container> feedingContainers = new ArrayList<>();
+            ArrayList<Gob> feedingGobs = Finder.findGobs(feedingArea, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
+            for (Gob gob : feedingGobs) {
+                Container cand = new Container(gob, contcaps.get(gob.ngob.name));
+                cand.initattr(Container.Space.class);
+                feedingContainers.add(cand);
+            }
+            
+            // Check each feeding container to see how many silkworms it can fit
+            for (Container feedingContainer : feedingContainers) {
+                new PathFinder(Finder.findGob(feedingContainer.gobid)).run(gui);
+                new OpenTargetContainer(feedingContainer).run(gui);
+                
+                int currentWorms = gui.getInventory(feedingContainer.cap).getItems(new NAlias(worms)).size();
+                int spaceAvailable = Math.max(0, 56 - currentWorms); // Max 56 silkworms per container
+                totalSilkwormsNeeded += spaceAvailable;
+                
+                new CloseTargetContainer(feedingContainer).run(gui);
+            }
+        }
+
+        System.out.println(totalSilkwormsNeeded);
+
+        // Step 2: Move hatched silkworms from herbalist tables to feeding cabinets (only collect what we need)
+        if (totalSilkwormsNeeded > 0) {
+            int wormsCollectedSoFar = 0;
             
             // Take silkworms from herbalist tables - use manual approach like eggs
             NArea htablesArea = context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Eggs");
@@ -50,8 +77,12 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
                     htableContainers.add(cand);
                 }
                 
-                // Take silkworms from herbalist table containers
+                // Take silkworms from herbalist table containers - only take what we need
                 for (Container htableContainer : htableContainers) {
+                    if (wormsCollectedSoFar >= totalSilkwormsNeeded) {
+                        break; // We have enough silkworms
+                    }
+                    
                     new PathFinder(Finder.findGob(htableContainer.gobid)).run(gui);
                     new OpenTargetContainer(htableContainer).run(gui);
                     
@@ -63,19 +94,28 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
                     ArrayList<WItem> silkwormItems = gui.getInventory(htableContainer.cap).getItems(new NAlias(silkwormKeys, exceptions));
                     
                     if (!silkwormItems.isEmpty()) {
-                        new TakeWItemsFromContainer(htableContainer, silkwormItems).run(gui);
+                        // Only take what we still need
+                        int wormsStillNeeded = totalSilkwormsNeeded - wormsCollectedSoFar;
+                        ArrayList<WItem> wormsToTake = new ArrayList<>();
+                        
+                        for (int i = 0; i < Math.min(silkwormItems.size(), wormsStillNeeded); i++) {
+                            wormsToTake.add(silkwormItems.get(i));
+                        }
+                        
+                        if (!wormsToTake.isEmpty()) {
+                            new TakeWItemsFromContainer(htableContainer, wormsToTake).run(gui);
+                            wormsCollectedSoFar += wormsToTake.size();
+                        }
                     }
                     
                     new CloseTargetContainer(htableContainer).run(gui);
                 }
             }
             
-            int wormsAfter = gui.getInventory().getItems(new NAlias(worms)).size();
-            int wormsCollected = wormsAfter - wormsBefore;
-            
-            if (wormsCollected > 0) {
+            // Move worms to feeding cabinets if we collected any
+            if (wormsCollectedSoFar > 0) {
                 // Move worms to feeding cabinets - use manual approach since silkworms don't have a source area
-                NArea feedingArea = context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
+                feedingArea = context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
                 if (feedingArea != null) {
                     ArrayList<Container> feedingContainers = new ArrayList<>();
                     ArrayList<Gob> feedingGobs = Finder.findGobs(feedingArea, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
@@ -105,8 +145,6 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
                         new CloseTargetContainer(feedingContainer).run(gui);
                     }
                 }
-            } else {
-                break;
             }
         }
 
