@@ -160,10 +160,20 @@ public class NMiniMapWnd extends Widget{
             case "natura": {
                 NConfig.set(NConfig.Key.hideNature,a);
                 NUtils.showHideNature();
+                
+                // Sync with World settings panel
                 if (NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
                     ((OptWnd.NSettingsPanel)NUtils.getGameUI().opts.nqolwnd).settingsWindow.world.setNatureStatus(a);
                 }
-
+                
+                // Sync with QoL panel
+                if (NUtils.getGameUI() != null && NUtils.getGameUI().opts != null && NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
+                    OptWnd.NSettingsPanel panel = (OptWnd.NSettingsPanel) NUtils.getGameUI().opts.nqolwnd;
+                    if (panel.settingsWindow != null && panel.settingsWindow.qol != null) {
+                        panel.settingsWindow.qol.syncHideNature();
+                    }
+                }
+                
                 break;
             }
             case "night": {

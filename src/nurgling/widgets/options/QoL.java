@@ -100,6 +100,10 @@ public class QoL extends Panel {
         showBB.a = getBool(NConfig.Key.showBB);
     }
 
+    public void syncHideNature() {
+        hideNature.a = !getBool(NConfig.Key.hideNature);
+    }
+
     @Override
     public void save() {
         boolean oldHideNature = false;

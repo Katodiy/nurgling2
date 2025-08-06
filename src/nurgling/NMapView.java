@@ -35,6 +35,7 @@ public class NMapView extends MapView
     public static final KeyBinding kb_displayfov = KeyBinding.get("pfovbox",  KeyMatch.nil);
     public static final KeyBinding kb_displaygrid = KeyBinding.get("gridbox",  KeyMatch.nil);
     public static final KeyBinding kb_togglebb = KeyBinding.get("togglebb",  KeyMatch.forcode(KeyEvent.VK_N, KeyMatch.C));
+    public static final KeyBinding kb_togglenature = KeyBinding.get("togglenature",  KeyMatch.forcode(KeyEvent.VK_H, KeyMatch.C));
     public static final int MINING_OVERLAY = - 1;
     public NGlobalCoord lastGC = null;
 
@@ -723,6 +724,33 @@ public class NMapView extends MapView
                 OptWnd.NSettingsPanel panel = (OptWnd.NSettingsPanel) NUtils.getGameUI().opts.nqolwnd;
                 if (panel.settingsWindow != null && panel.settingsWindow.qol != null) {
                     panel.settingsWindow.qol.syncShowBB();
+                }
+            }
+        }
+        if(kb_togglenature.key().match(ev)) {
+            boolean val = (Boolean) NConfig.get(NConfig.Key.hideNature);
+            NConfig.set(NConfig.Key.hideNature, !val);
+            NUtils.getGameUI().msg("Hide Nature: " + (!val ? "enabled" : "disabled"));
+            NUtils.showHideNature();
+            
+            // Sync with mini map
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().mmapw != null) {
+                NUtils.getGameUI().mmapw.natura.a = !(!val);
+            }
+            
+            // Sync with QoL panel
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().opts != null && NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
+                OptWnd.NSettingsPanel panel = (OptWnd.NSettingsPanel) NUtils.getGameUI().opts.nqolwnd;
+                if (panel.settingsWindow != null && panel.settingsWindow.qol != null) {
+                    panel.settingsWindow.qol.syncHideNature();
+                }
+            }
+            
+            // Sync with World settings panel
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().opts != null && NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
+                OptWnd.NSettingsPanel panel = (OptWnd.NSettingsPanel) NUtils.getGameUI().opts.nqolwnd;
+                if (panel.settingsWindow != null && panel.settingsWindow.world != null) {
+                    panel.settingsWindow.world.setNatureStatus(!val);
                 }
             }
         }

@@ -142,7 +142,19 @@ public class World extends Panel {
         NConfig.set(NConfig.Key.boxLineWidth, tempSettings.boxLineWidth);
 
         if ((Boolean) NConfig.get(NConfig.Key.hideNature) != tempSettings.hideNature) {
-            NUtils.getGameUI().mmapw.natura.a = !tempSettings.hideNature;
+            // Sync with mini map
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().mmapw != null) {
+                NUtils.getGameUI().mmapw.natura.a = !tempSettings.hideNature;
+            }
+            
+            // Sync with QoL panel
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().opts != null && NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
+                OptWnd.NSettingsPanel panel = (OptWnd.NSettingsPanel) NUtils.getGameUI().opts.nqolwnd;
+                if (panel.settingsWindow != null && panel.settingsWindow.qol != null) {
+                    panel.settingsWindow.qol.syncHideNature();
+                }
+            }
+            
             NUtils.showHideNature();
         }
 
