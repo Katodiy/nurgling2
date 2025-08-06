@@ -126,63 +126,76 @@ public class ProcessCheeseFromBufferContainers implements Action {
             new PathFinder(containerGob).run(gui);
             new OpenTargetContainer(bufferContainer).run(gui);
 
-            // Get all cheese trays from this container
-            ArrayList<WItem> trays = CheeseInventoryOperations.getCheeseTraysFromContainer(gui, bufferContainer);
-
-            // Process ready trays one by one to manage inventory space properly
-            for (WItem tray : trays) {
-                if (CheeseUtils.isCheeseReadyToSlice(tray, ordersManager)) {
-                    // Check if inventory has space for slicing (tray + up to 5 cheese pieces = 7 slots)
-                    if (!CheeseInventoryOperations.hasSpaceForSlicing(gui)) {
-                        new CloseTargetContainer(bufferContainer).run(gui);
-                        freshContext = new NContext(gui);
-                        new FreeInventory2(freshContext).run(gui);
-
-                        // CRITICAL FIX: After FreeInventory2, we need to re-find the area and containers
-                        // because the character could be very far from the original location
-                        containerGob = refindContainerAfterFreeInventory(gui, place, containerGob);
-                        if (containerGob == null) {
-                            break; // Skip this container and move to next
-                        }
-                        bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
-                        new PathFinder(containerGob).run(gui);
-                        new OpenTargetContainer(bufferContainer).run(gui);
+            // Process this container completely before moving to next
+            while (true) {
+                // Get cheese trays from this container (only re-fetch after FreeInventory2)
+                ArrayList<WItem> trays = CheeseInventoryOperations.getCheeseTraysFromContainer(gui, bufferContainer);
+                
+                // Find first ready-to-slice tray in this container
+                WItem readyTray = null;
+                for (WItem tray : trays) {
+                    if (CheeseUtils.isCheeseReadyToSlice(tray, ordersManager)) {
+                        readyTray = tray;
+                        break;
                     }
+                }
+                
+                // If no ready trays found, this container is done
+                if (readyTray == null) {
+                    new CloseTargetContainer(bufferContainer).run(gui);
+                    break; // Move to next container
+                }
+                
+                // Check if inventory has space for slicing (tray + up to 5 cheese pieces = 7 slots)
+                if (!CheeseInventoryOperations.hasSpaceForSlicing(gui)) {
+                    new CloseTargetContainer(bufferContainer).run(gui);
+                    freshContext = new NContext(gui);
+                    new FreeInventory2(freshContext).run(gui);
 
-                    // Take the tray to inventory
-                    tray.item.wdgmsg("transfer", haven.Coord.z);
-                    nurgling.NUtils.addTask(new nurgling.tasks.ISRemoved(tray.item.wdgid()));
-
-                    // Close container to slice the cheese
-
-                    // Find the tray we just took and slice it
-                    ArrayList<WItem> inventoryTrays = CheeseInventoryOperations.getCheeseTrays(gui);
-                    for (WItem inventoryTray : inventoryTrays) {
-                        if (CheeseUtils.isCheeseReadyToSlice(inventoryTray, ordersManager)) {
-                            slicingManager.sliceCheese(gui, inventoryTray);
-                            break; // Only slice one tray per iteration
-                        }
+                    // CRITICAL FIX: After FreeInventory2, we need to re-find the area and containers
+                    // because the character could be very far from the original location
+                    containerGob = refindContainerAfterFreeInventory(gui, place, containerGob);
+                    if (containerGob == null) {
+                        break; // Skip this container and move to next
                     }
+                    bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
+                    new PathFinder(containerGob).run(gui);
+                    new OpenTargetContainer(bufferContainer).run(gui);
+                    continue; // Go back to start of while loop with fresh container references
+                }
 
-                    // Check if inventory is getting full after slicing
-                    if (!CheeseInventoryOperations.hasSpaceForSlicing(gui)) {
-                        freshContext = new NContext(gui);
-                        new FreeInventory2(freshContext).run(gui);
+                // Take the ready tray to inventory using the fresh reference
+                readyTray.item.wdgmsg("transfer", haven.Coord.z);
+                nurgling.NUtils.addTask(new nurgling.tasks.ISRemoved(readyTray.item.wdgid()));
 
-                        // CRITICAL FIX: After FreeInventory2, re-find the container
-                        containerGob = refindContainerAfterFreeInventory(gui, place, containerGob);
-                        if (containerGob == null) {
-                            break;
-                        }
-                        bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
+                // Find the tray we just took and slice it (container stays open)
+                ArrayList<WItem> inventoryTrays = CheeseInventoryOperations.getCheeseTrays(gui);
+                for (WItem inventoryTray : inventoryTrays) {
+                    if (CheeseUtils.isCheeseReadyToSlice(inventoryTray, ordersManager)) {
+                        slicingManager.sliceCheese(gui, inventoryTray);
+                        break; // Only slice one tray per iteration
                     }
+                }
 
-                    // Reopen container to continue
+                // Check if inventory is getting full after slicing
+                if (!CheeseInventoryOperations.hasSpaceForSlicing(gui)) {
+                    new CloseTargetContainer(bufferContainer).run(gui);
+                    freshContext = new NContext(gui);
+                    new FreeInventory2(freshContext).run(gui);
+
+                    // CRITICAL FIX: After FreeInventory2, re-find the container
+                    containerGob = refindContainerAfterFreeInventory(gui, place, containerGob);
+                    if (containerGob == null) {
+                        break;
+                    }
+                    bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
                     new PathFinder(containerGob).run(gui);
                     new OpenTargetContainer(bufferContainer).run(gui);
                 }
+                
+                // Continue processing this container (loop back, but don't need to re-fetch trays unless we called FreeInventory2)
             }
-
+            
             new CloseTargetContainer(bufferContainer).run(gui);
         }
         new FreeInventory2(freshContext).run(gui);

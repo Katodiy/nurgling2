@@ -64,6 +64,6 @@ public class CheeseInventoryOperations {
      */
     public static boolean hasSpaceForSlicing(NGameUI gui) throws InterruptedException {
         int availableSlots = gui.getInventory().getNumberFreeCoord(CheeseConstants.SINGLE_SLOT_SIZE);
-        return availableSlots >= CheeseConstants.SLICING_INVENTORY_REQUIREMENT;
+        return availableSlots >= CheeseConstants.SLICING_INVENTORY_REQUIREMENT && gui.getInventory().getNumberFreeCoord(CheeseConstants.CHEESE_TRAY_SIZE) > 1;
     }
 }
