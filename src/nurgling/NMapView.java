@@ -6,6 +6,7 @@ import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
 
 import haven.Composite;
+import haven.res.ui.gobcp.Gobcopy;
 import nurgling.actions.Action;
 import nurgling.actions.ActionWithFinal;
 import nurgling.actions.QuickActionBot;
@@ -26,6 +27,7 @@ import java.awt.event.KeyEvent;
 import java.awt.image.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.Supplier;
 
 public class NMapView extends MapView
 {
@@ -967,5 +969,85 @@ public class NMapView extends MapView
         }
     }
 
+    // Extended Plob class with bounding box support
+    public class NPlob extends Plob {
+        private NModelBox boundingBox;
+
+        public NPlob(Indir<Resource> res, Message sdt) {
+            super(res, sdt);
+            // Add bounding box support for temporal objects
+            addPlobBoundingBox(res, sdt);
+        }
+
+        // Add bounding box support for Plob objects using Gobcopy hitbox
+        private void addPlobBoundingBox(Indir<Resource> res, Message sdt)
+        {
+            // Get the Gob copy that will be placed to extract its hitbox
+            ResDrawable drawable = getattr(ResDrawable.class);
+            if (drawable != null && drawable.spr instanceof Gobcopy)
+            {
+                Gobcopy gobcopy = (Gobcopy) drawable.spr;
+                Gob targetGob = gobcopy.gob;
+
+                // Check if the target Gob has a hitbox
+                if (targetGob != null && targetGob.ngob != null && targetGob.ngob.hitBox != null)
+                {
+                    // Add NModelBox overlay using the existing hitbox from the target Gob
+                    boundingBox = new NModelBox(targetGob);
+                    addcustomol(boundingBox);
+                }
+            }
+        }
+    }
+
+    // Override uimsg to use NPlob instead of Plob
+    @Override
+    public void uimsg(String msg, Object... args) {
+        if(msg.equals("place")) {
+            Loader.Future<Plob> placing = this.placing;
+            if(placing != null) {
+                if(!placing.cancel()) {
+                    Plob ob = placing.get();
+                    synchronized(ob) {
+                        ob.slot.remove();
+                    }
+                }
+                this.placing = null;
+            }
+            int a = 0;
+            Indir<Resource> res = ui.sess.getresv(args[a++]);
+            Message sdt;
+            if((args.length > a) && (args[a] instanceof byte[]))
+                sdt = new MessageBuf((byte[])args[a++]);
+            else
+                sdt = Message.nil;
+            int oa = a;
+            // Use NPlob instead of Plob
+            this.placing = glob.loader.defer(new Supplier<Plob>() {
+                int a = oa;
+                Plob ret = null;
+                public Plob get() {
+                    if(ret == null)
+                        ret = new NPlob(res, new MessageBuf(sdt)); // Use NPlob here
+                    while(a < args.length) {
+                        int a2 = a;
+                        Indir<Resource> ores = ui.sess.getresv(args[a2++]);
+                        Message odt;
+                        if((args.length > a2) && (args[a2] instanceof byte[]))
+                            odt = new MessageBuf((byte[])args[a2++]);
+                        else
+                            odt = Message.nil;
+                        ret.addol(ores, odt);
+                        a = a2;
+                    }
+                    ret.place();
+                    return(ret);
+                }
+            });
+        } else {
+            // For all other messages, use the parent implementation
+            super.uimsg(msg, args);
+        }
+    }
 
 }

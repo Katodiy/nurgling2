@@ -1806,9 +1806,9 @@ public class MapView extends PView implements DTarget, Console.Directory {
     public class Plob extends Gob {
 	public PlobAdjust adjust = new StdPlace();
 	Coord lastmc = null;
-	RenderTree.Slot slot;
+	public RenderTree.Slot slot;
 
-	private Plob(Indir<Resource> res, Message sdt) {
+	protected Plob(Indir<Resource> res, Message sdt) {
 	    super(MapView.this.glob, Coord2d.of(getcc()));
 	    setattr(new ResDrawable(this, res, sdt));
 	}
@@ -1828,7 +1828,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	    move(this.rc, a);
 	}
 
-	void place() {
+	public void place() {
 	    if(ui.mc.isect(rootpos(), sz))
 		new Adjust(ui.mc.sub(rootpos()), 0).run();
 	    this.slot = basic.add(this.placed);
