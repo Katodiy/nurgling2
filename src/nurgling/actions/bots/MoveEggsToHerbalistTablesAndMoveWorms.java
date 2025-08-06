@@ -33,32 +33,15 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
         String leaves = "Mulberry Leaf";
 
         // Step 1: Ensure feeding cabinets have sufficient mulberry leaves (32 per cabinet)
-        new DepositItemsToSpecArea(context, leaves, Specialisation.SpecName.silkwormFeeding, 32).run(gui);
+        DepositItemsToSpecArea depositItemsAction = new DepositItemsToSpecArea(context, leaves, Specialisation.SpecName.silkwormFeeding, 32);
+        depositItemsAction.run(gui);
 
         // Step 1.5: Calculate how many silkworms we can fit in feeding containers
-        int totalSilkwormsNeeded = 0;
-        NArea feedingArea = context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
-        if (feedingArea != null) {
-            ArrayList<Container> feedingContainers = new ArrayList<>();
-            ArrayList<Gob> feedingGobs = Finder.findGobs(feedingArea, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
-            for (Gob gob : feedingGobs) {
-                Container cand = new Container(gob, contcaps.get(gob.ngob.name));
-                cand.initattr(Container.Space.class);
-                feedingContainers.add(cand);
-            }
-            
-            // Check each feeding container to see how many silkworms it can fit
-            for (Container feedingContainer : feedingContainers) {
-                new PathFinder(Finder.findGob(feedingContainer.gobid)).run(gui);
-                new OpenTargetContainer(feedingContainer).run(gui);
-                
-                int currentWorms = gui.getInventory(feedingContainer.cap).getItems(new NAlias(worms)).size();
-                int spaceAvailable = Math.max(0, 56 - currentWorms); // Max 56 silkworms per container
-                totalSilkwormsNeeded += spaceAvailable;
-                
-                new CloseTargetContainer(feedingContainer).run(gui);
-            }
-        }
+        int totalSilkwormsNeeded = depositItemsAction.getContainerFreeSpaceMap().values().stream()
+                .mapToInt(freeSpace -> Math.min(freeSpace, 52)) // Cap each container at 52 silkworms max
+                .sum();
+
+        System.out.println(totalSilkwormsNeeded);
 
         // Step 2: Move hatched silkworms from herbalist tables to feeding cabinets
         // Also record herbalist table capacity for eggs during this pass
@@ -67,7 +50,7 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
         ArrayList<Container> feedingContainers = new ArrayList<>();
         
         // Pre-populate feeding containers for efficiency
-        feedingArea = context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
+        NArea feedingArea = context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
         if (feedingArea != null) {
             ArrayList<Gob> feedingGobs = Finder.findGobs(feedingArea, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
             for (Gob gob : feedingGobs) {
