@@ -17,12 +17,18 @@ public class NSettingsWindow extends Widget {
     public World world;
     Widget container;
     public Panel currentPanel = null;
-    private Button saveBtn, cancelBtn;
+    private Button saveBtn, cancelBtn, backBtn;
     public QuickActions qa;
     public AutoSelection as;
     public QoL qol;
+    private Runnable backAction;
 
     public NSettingsWindow() {
+        this(null);
+    }
+
+    public NSettingsWindow(Runnable backAction) {
+        this.backAction = backAction;
         sz = UI.scale(800, 600);
         container = add(new Widget(Coord.z));
         list = add(new SettingsList(UI.scale(200, 580)), UI.scale(10, 10));
@@ -42,6 +48,23 @@ public class NSettingsWindow extends Widget {
                 }
             }
         }, UI.scale(580, 560));
+
+        // Add Back button only if back action is provided
+        if(backAction != null) {
+            backBtn = add(new Button(UI.scale(100), "Back") {
+                public void click() {
+                    backAction.run();
+                }
+                
+                public boolean keydown(KeyDownEvent ev) {
+                    if(ev.c == 27) { // ESC key
+                        backAction.run();
+                        return true;
+                    }
+                    return super.keydown(ev);
+                }
+            }, UI.scale(480, 560));
+        }
 
         fillSettings();
         container.resize(UI.scale(800, 600));

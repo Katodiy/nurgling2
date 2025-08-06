@@ -900,33 +900,14 @@ public class OptWnd extends Window {
 		public NSettingsPanel(Panel prev1) {
 			super();
 
-			settingsWindow = add(new NSettingsWindow(), Coord.z);
+			// Create NSettingsWindow with back action to return to main options menu
+			settingsWindow = add(new NSettingsWindow(() -> {
+				chpanel(prev1);
+				if (settingsWindow.currentPanel != null) {
+					settingsWindow.currentPanel.load();
+				}
+			}), Coord.z);
 
-//			save = add(new Button(UI.scale(200), "Save") {
-//				@Override
-//				public void click() {
-//					if (settingsWindow.currentPanel != null) {
-//						settingsWindow.currentPanel.save();
-//					}
-//				}
-//			}, settingsWindow.pos("bl").adds(0, UI.scale(5)));
-//			back = add(new Button(UI.scale(200), "Back") {
-//				@Override
-//				public void click() {
-//					chpanel(prev1);
-//					if (settingsWindow.currentPanel != null) {
-//						settingsWindow.currentPanel.load();
-//					}
-//				}
-//
-//				public boolean keydown(KeyDownEvent ev) {
-//					if ((ev.c == 27)) {
-//						chpanel(prev1);
-//						return (true);
-//					}
-//					return (false);
-//				}
-//			}, settingsWindow.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
 			pack();
 		}
 	}
