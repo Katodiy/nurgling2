@@ -60,8 +60,6 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
             }
         }
 
-        System.out.println(totalSilkwormsNeeded);
-
         // Step 2: Move hatched silkworms from herbalist tables to feeding cabinets (only collect what we need)
         if (totalSilkwormsNeeded > 0) {
             int wormsCollectedSoFar = 0;
@@ -148,36 +146,45 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
             }
         }
 
-        // Step 3: Move eggs from storage to now-empty herbalist tables
-        while (true) {
-            int eggsBefore = gui.getInventory().getItems(new NAlias(eggs)).size();
+        // Step 3: Move eggs from storage to now-empty herbalist tables (only fetch what's needed)
+        // Step 3.1: Calculate how many eggs herbalist tables can accept
+        int totalEggsNeeded = 0;
+        NArea htablesArea = context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Eggs");
+        if (htablesArea != null) {
+            ArrayList<Container> htableContainers = new ArrayList<>();
+            ArrayList<Gob> htableGobs = Finder.findGobs(htablesArea, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
+            for (Gob gob : htableGobs) {
+                Container cand = new Container(gob, contcaps.get(gob.ngob.name));
+                cand.initattr(Container.Space.class);
+                htableContainers.add(cand);
+            }
+            
+            // Check each herbalist table to see how many eggs it can fit
+            for (Container htableContainer : htableContainers) {
+                new PathFinder(Finder.findGob(htableContainer.gobid)).run(gui);
+                new OpenTargetContainer(htableContainer).run(gui);
 
-            context.addInItem(eggs, null);
-            // Take eggs from egg storage
-            new TakeItems2(context, eggs, gui.getInventory().getFreeSpace()).run(gui);
-
-            int eggsAfter = gui.getInventory().getItems(new NAlias(eggs)).size();
-            int eggsCollected = eggsAfter - eggsBefore;
-
-            if (eggsCollected > 0) {
-                // Move eggs to herbalist tables using existing transfer logic
-                NArea htablesArea = context.getSpecArea(Specialisation.SpecName.htable, eggs);
-
-                ArrayList<Container> containers = new ArrayList<>();
-                ArrayList<Gob> gobs = Finder.findGobs(htablesArea, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
-                for (Gob gob : gobs) {
-                    Container cand = new Container(gob, contcaps.get(gob.ngob.name));
-                    cand.initattr(Container.Space.class);
-                    containers.add(cand);
+                int freeSpace = gui.getInventory(htableContainer.cap).getFreeSpace();
+                
+                // Herbalist tables should have space for eggs (assuming they can hold multiple eggs)
+                totalEggsNeeded += freeSpace;
+                
+                new CloseTargetContainer(htableContainer).run(gui);
+            }
+            
+            // Step 3.2: Fetch and place only the needed eggs
+            if (totalEggsNeeded > 0) {
+                context.addInItem(eggs, null);
+                // Take only what we need (or what fits in inventory, whichever is smaller)
+                int eggsToFetch = Math.min(totalEggsNeeded, gui.getInventory().getFreeSpace());
+                new TakeItems2(context, eggs, eggsToFetch).run(gui);
+                
+                int eggsCollected = gui.getInventory().getItems(new NAlias(eggs)).size();
+                
+                if (eggsCollected > 0) {
+                    // Move eggs to herbalist tables using existing transfer logic
+                    new FillContainers2(htableContainers, eggs, context).run(gui);
                 }
-
-                new FillContainers2(containers, eggs, context).run(gui);
-
-                if(!gui.getInventory().getItems(eggs).isEmpty()) {
-                    break;
-                }
-            } else {
-                break;
             }
         }
 
