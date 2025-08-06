@@ -14,6 +14,7 @@ public class World extends Panel {
         boolean decorativeObjects;
         boolean hideNature;
         boolean showBB;
+        boolean persistentBarrelLabels;
         Color boxFillColor = new Color(227, 28, 1, 195);
         Color boxEdgeColor = new Color(224, 193, 79, 255);
         int boxLineWidth = 4;
@@ -24,6 +25,7 @@ public class World extends Panel {
     private CheckBox decorativeObjects;
     private CheckBox natura;
     private CheckBox boundingBoxes;
+    private CheckBox persistentBarrels;
     private NColorWidget fillColorWidget;
     private NColorWidget edgeColorWidget;
     private HSlider lineWidthSlider;
@@ -67,24 +69,32 @@ public class World extends Panel {
             }
         }, UI.scale(100, 160));
 
+        // Persistent barrel labels setting
+        persistentBarrels = add(new CheckBox("Keep barrel labels visible during camera scroll") {
+            public void set(boolean val) {
+                tempSettings.persistentBarrelLabels = val;
+                a = val;
+            }
+        }, UI.scale(100, 200));
+
 
         // Bounding box colors
-        add(new Label("Bounding Box Colors:"), UI.scale(10, 200));
+        add(new Label("Bounding Box Colors:"), UI.scale(10, 240));
         
-        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 230));
+        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 270));
         fillColorWidget.color = tempSettings.boxFillColor;
         
-        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 280));
+        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 320));
         edgeColorWidget.color = tempSettings.boxEdgeColor;
 
         // Line width setting
-        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 330));
+        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 370));
         lineWidthSlider = add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
             public void changed() {
                 tempSettings.boxLineWidth = val;
                 lineWidthLabel.settext("Line width: " + val);
             }
-        }, UI.scale(50, 350));
+        }, UI.scale(50, 390));
 
     }
 
@@ -100,6 +110,7 @@ public class World extends Panel {
         tempSettings.decorativeObjects = (Boolean) NConfig.get(NConfig.Key.nextshowCSprite);
         tempSettings.hideNature = (Boolean) NConfig.get(NConfig.Key.hideNature);
         tempSettings.showBB = (Boolean) NConfig.get(NConfig.Key.showBB);
+        tempSettings.persistentBarrelLabels = (Boolean) NConfig.get(NConfig.Key.persistentBarrelLabels);
 
         // Load colors if they exist in config
         tempSettings.boxFillColor = NConfig.getColor(NConfig.Key.boxFillColor, new Color(227, 28, 1, 195));
@@ -115,6 +126,7 @@ public class World extends Panel {
         decorativeObjects.a = tempSettings.decorativeObjects;
         natura.a = !tempSettings.hideNature;
         boundingBoxes.a = tempSettings.showBB;
+        persistentBarrels.a = tempSettings.persistentBarrelLabels;
         fillColorWidget.color = tempSettings.boxFillColor;
         edgeColorWidget.color = tempSettings.boxEdgeColor;
         lineWidthSlider.val = tempSettings.boxLineWidth;
@@ -128,6 +140,7 @@ public class World extends Panel {
         NConfig.set(NConfig.Key.nextshowCSprite, tempSettings.decorativeObjects);
 
         NConfig.set(NConfig.Key.showBB, tempSettings.showBB);
+        NConfig.set(NConfig.Key.persistentBarrelLabels, tempSettings.persistentBarrelLabels);
         
         // Save hideNature setting
         NConfig.set(NConfig.Key.hideNature, tempSettings.hideNature);

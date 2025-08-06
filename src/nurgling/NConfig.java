@@ -89,7 +89,8 @@ public class NConfig
         temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
         shortCupboards,
         fillCompostWithSwill,
-        ignoreStrawInFarmers
+        ignoreStrawInFarmers,
+        persistentBarrelLabels
     }
 
 
@@ -168,6 +169,7 @@ public class NConfig
         conf.put(Key.ignoreStrawInFarmers, false);
         conf.put(Key.printpfmap, false);
         conf.put(Key.boxLineWidth, 4);
+        conf.put(Key.persistentBarrelLabels, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
