@@ -352,10 +352,16 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 CheeseAreaManager.getCheeseArea(gui, place); // Navigate back
             }
 
-            // Capacity check is now done at the higher level, so just take what we can fit
-            int maxToTake = locationsInContainer.size(); // Take all available from this container
+            // Calculate how many we can actually take based on destination capacity and inventory space
+            int destinationCapacity = calculateDestinationCapacity(gui, destination);
+            int alreadyMovedToDestination = traysMovedToAreas.getOrDefault(destination, 0);
+            int remainingDestinationCapacity = Math.max(0, destinationCapacity - alreadyMovedToDestination);
+            
+            int inventorySpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
+            int maxToTake = Math.min(locationsInContainer.size(), 
+                                   Math.min(remainingDestinationCapacity, inventorySpace));
 
-            // Take only what we can place at destination
+            // Only take what we can actually place at destination
             int takenFromContainer = takeCheeseFromSingleContainer(gui, containerGob, cheeseType, maxToTake, place);
 
             // Track moves for capacity calculation
