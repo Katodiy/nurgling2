@@ -5,16 +5,17 @@ import nurgling.*;
 import nurgling.actions.SelectFlowerAction;
 import nurgling.tasks.NTask;
 import nurgling.tools.NAlias;
+import nurgling.cheese.CheeseOrdersManager;
+import nurgling.cheese.CheeseOrder;
 
 /**
  * Handles cheese slicing and empty tray management
  */
 public class CheeseSlicingManager {
     /**
-     * Slice a cheese tray using the "Slice up" action
-     * Waits for cheese pieces and empty tray to appear in inventory
+     * Slice a cheese tray with order saving
      */
-    public void sliceCheese(NGameUI gui, WItem tray) throws InterruptedException {
+    public void sliceCheese(NGameUI gui, WItem tray, CheeseOrdersManager ordersManager) throws InterruptedException {
         if (tray == null) {
             gui.msg("Cannot slice: tray is null");
             return;
@@ -54,6 +55,12 @@ public class CheeseSlicingManager {
                 }
             }
         });
+        
+        // Update and save orders after slicing
+        if (ordersManager != null) {
+            updateOrderAfterSlicing(ordersManager, cheeseType);
+            ordersManager.writeOrders();
+        }
     }
     
     /**
@@ -69,5 +76,23 @@ public class CheeseSlicingManager {
      */
     private int getEmptyTrayCount(NGameUI gui) throws InterruptedException {
         return gui.getInventory().getItems(new NAlias(CheeseConstants.EMPTY_CHEESE_TRAY_NAME)).size();
+    }
+    
+    /**
+     * Update orders after slicing cheese - reduce count by 1
+     */
+    private void updateOrderAfterSlicing(CheeseOrdersManager ordersManager, String cheeseType) {
+        for (CheeseOrder order : ordersManager.getOrders().values()) {
+            if (order.getCheeseType().equals(cheeseType)) {
+                for (CheeseOrder.StepStatus step : order.getStatus()) {
+                    if (step.name.equals(cheeseType) && step.left > 0) {
+                        step.left = Math.max(0, step.left - 1);
+                        ordersManager.addOrUpdateOrder(order);
+                        return;
+                    }
+                }
+                break;
+            }
+        }
     }
 }

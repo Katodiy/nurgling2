@@ -109,7 +109,7 @@ public class ProcessCheeseOrderInBatches implements Action {
                 CheeseBranch.Cheese nextCheeseStep = chain.get(1);
                 CheeseBranch.Place targetPlace = nextCheeseStep.place;
                 
-                traysPlaced = rackManager.handleTrayPlacement(gui, targetPlace, totalTraysInInventory, curdType);
+                traysPlaced = rackManager.handleTrayPlacement(gui, targetPlace, totalTraysInInventory, curdType, ordersManager);
                 
                 // Update orders only after successful placement
                 if (traysPlaced > 0) {

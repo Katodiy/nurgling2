@@ -172,7 +172,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 ArrayList<WItem> inventoryTrays = CheeseInventoryOperations.getCheeseTrays(gui);
                 for (WItem inventoryTray : inventoryTrays) {
                     if (CheeseUtils.isCheeseReadyToSlice(inventoryTray, ordersManager)) {
-                        slicingManager.sliceCheese(gui, inventoryTray);
+                        slicingManager.sliceCheese(gui, inventoryTray, ordersManager);
                         break; // Only slice one tray per iteration
                     }
                 }
@@ -526,13 +526,8 @@ public class ProcessCheeseFromBufferContainers implements Action {
             new PathFinder(rackGob).run(gui);
             new OpenTargetContainer(rack).run(gui);
 
-            // Place trays on this rack
-            int traysPlaced = placeTraysOnSingleRack(gui, rack, cheeseTrays);
-
-            // Update orders if trays were placed successfully
-            if (traysPlaced > 0 && cheeseType != null && fromPlace != null) {
-                updateOrdersAfterCheeseMovement(cheeseType, traysPlaced, fromPlace);
-            }
+            // Place trays on this rack (updates and saves orders inside)
+            int traysPlaced = placeTraysOnSingleRack(gui, rack, cheeseTrays, cheeseType, fromPlace);
 
             // Refresh inventory after transfers
             cheeseTrays = gui.getInventory().getItems(new NAlias("Cheese Tray"));
@@ -548,7 +543,8 @@ public class ProcessCheeseFromBufferContainers implements Action {
     /**
      * Place trays on a single rack, returning the number of trays actually placed
      */
-    private int placeTraysOnSingleRack(NGameUI gui, Container rack, ArrayList<WItem> cheeseTrays) throws InterruptedException {
+    private int placeTraysOnSingleRack(NGameUI gui, Container rack, ArrayList<WItem> cheeseTrays, 
+                                       String cheeseType, CheeseBranch.Place fromPlace) throws InterruptedException {
         int availableSpace = gui.getInventory(rack.cap).getNumberFreeCoord(CheeseConstants.CHEESE_TRAY_SIZE);
         if (availableSpace <= 0) {
             return 0; // No space on this rack
@@ -559,6 +555,12 @@ public class ProcessCheeseFromBufferContainers implements Action {
             WItem tray = cheeseTrays.get(i);
             tray.item.wdgmsg("transfer", haven.Coord.z);
             nurgling.NUtils.addTask(new nurgling.tasks.ISRemoved(tray.item.wdgid()));
+        }
+
+        // Update and save orders after placing trays on rack
+        if (traysToPlace > 0 && ordersManager != null && cheeseType != null && fromPlace != null) {
+            updateOrdersAfterCheeseMovement(cheeseType, traysToPlace, fromPlace);
+            ordersManager.writeOrders();
         }
 
         return traysToPlace;
