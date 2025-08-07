@@ -67,12 +67,13 @@ public class DepositItemsToSpecArea implements Action {
             }
             
             // Step 2: Process each container that needs items
-            boolean anyContainerProcessed = false;
-            
+            context.addInItem(item, null);
+
             for (ContainerNeed containerNeed : containerNeeds) {
-                if (containerNeed.needed > 0) {
+                while (containerNeed.needed > 0) {
+                    containerNeed.container.initattr(Container.Space.class);
+
                     // Fetch exactly what this container needs
-                    context.addInItem(item, null);
                     new TakeItems2(context, item, containerNeed.needed).run(gui);
 
                     context.getSpecArea(specArea);
@@ -80,20 +81,20 @@ public class DepositItemsToSpecArea implements Action {
                     int itemsInInventory = gui.getInventory().getItems(itemAlias).size();
                     if (itemsInInventory == 0) break; // No more items available from source
                     
-                    // Transfer all items from inventory to this container
-                    new PathFinder(Finder.findGob(containerNeed.container.gobid)).run(gui);
-                    new OpenTargetContainer(containerNeed.container).run(gui);
-                    
                     new TransferToContainer(containerNeed.container, itemAlias).run(gui);
+
+                    if(gui.getInventory(containerNeed.container.cap).getFreeSpace() == 0) {
+                        break;
+                    }
                     
                     new CloseTargetContainer(containerNeed.container).run(gui);
-                    
-                    anyContainerProcessed = true;
+
+                    containerNeed.setNeeded(containerNeed.needed - itemsInInventory);
                 }
             }
             
             // If no containers were processed, we're done
-            if (!anyContainerProcessed) break;
+            break;
         }
 
         return Results.SUCCESS();
@@ -106,13 +107,17 @@ public class DepositItemsToSpecArea implements Action {
     
     private static class ContainerNeed {
         final Container container;
-        final int needed;
+        int needed;
         final int current;
         
         ContainerNeed(Container container, int needed, int current) {
             this.container = container;
             this.needed = needed;
             this.current = current;
+        }
+
+        void setNeeded(int needed) {
+            this.needed = needed;
         }
     }
 }
