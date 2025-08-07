@@ -15,6 +15,7 @@ import nurgling.widgets.Specialisation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 
 import static nurgling.areas.NContext.contcaps;
 
@@ -28,16 +29,21 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NContext context = new NContext(gui);
+        String moth = "Silkmoth";
         String eggs = "Silkworm Egg";
         String worms = "Silkworm";
         String leaves = "Mulberry Leaf";
+        String cacoons = "Silkworm Cocoon";
+
+        DepositItemsToSpecArea depositItemsActionCacoons = new DepositItemsToSpecArea(context, new NAlias(cacoons, moth), Specialisation.SpecName.silkmothBreeding, Specialisation.SpecName.silkwormFeeding, 16);
+        depositItemsActionCacoons.run(gui);
 
         // Step 1: Ensure feeding cabinets have sufficient mulberry leaves (32 per cabinet)
-        DepositItemsToSpecArea depositItemsAction = new DepositItemsToSpecArea(context, leaves, Specialisation.SpecName.silkwormFeeding, 32);
-        depositItemsAction.run(gui);
+        DepositItemsToSpecArea depositItemsActionLeafs = new DepositItemsToSpecArea(context, new NAlias(leaves), Specialisation.SpecName.silkwormFeeding, 32);
+        depositItemsActionLeafs.run(gui);
 
         // Step 1.5: Calculate how many silkworms we can fit in feeding containers
-        int totalSilkwormsNeeded = depositItemsAction.getContainerFreeSpaceMap().values().stream()
+        int totalSilkwormsNeeded = depositItemsActionLeafs.getContainerFreeSpaceMap().values().stream()
                 .mapToInt(freeSpace -> Math.min(freeSpace, 52)) // Cap each container at 52 silkworms max
                 .sum();
 
