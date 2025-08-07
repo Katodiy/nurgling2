@@ -108,7 +108,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("cheese", BotDescriptor.BotType.FARMING, "Cheese Production Bot", "Process cheese orders.", true, true, CheeseProductionBot.class, "cheese", false));
 
         // Silk
-        bots.add(new BotDescriptor("silkmoth_egg", BotDescriptor.BotType.FARMING, "Move silkmoth eggs out of breeders", "Manages silkmoth eggs from breeders.", true, true, CollectAndMoveSilkwormEggs.class, "silkmoth_egg", false));
+        bots.add(new BotDescriptor("silkmoth_egg", BotDescriptor.BotType.FARMING, "Move silkmoth eggs out of breeders", "Manages silkmoth eggs from breeders.", true, true, ArrangeSilkmothPairs.class, "silkmoth_egg", false));
         bots.add(new BotDescriptor("silkworm", BotDescriptor.BotType.FARMING, "Move silkworm from herbalist table to feeding area. Move silkmoth eggs to herbalist tables.", "Manages silkmoth eggs.", true, true, MoveEggsToHerbalistTablesAndMoveWorms.class, "silkworm", false));
 
         // FARMING QUALITY

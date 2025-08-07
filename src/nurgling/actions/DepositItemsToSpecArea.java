@@ -76,7 +76,12 @@ public class DepositItemsToSpecArea implements Action {
             // Step 2: Process each container that needs items
             context.addInItem(this.itemAlias.getDefault(), null);
 
+            boolean noMoreItemsAtSource = false;
             for (ContainerNeed containerNeed : containerNeeds) {
+                if(noMoreItemsAtSource) {
+                    break;
+                }
+
                 while (containerNeed.needed > 0) {
                     containerNeed.container.initattr(Container.Space.class);
 
@@ -90,7 +95,10 @@ public class DepositItemsToSpecArea implements Action {
                     context.getSpecArea(destinationSpec);
                     
                     int itemsInInventory = gui.getInventory().getItems(itemAlias).size();
-                    if (itemsInInventory == 0) break; // No more items available from source
+                    if (itemsInInventory == 0) {
+                        noMoreItemsAtSource = true;
+                        break; // No more items available from source
+                    }
                     
                     new TransferToContainer(containerNeed.container, itemAlias).run(gui);
 
