@@ -17,25 +17,32 @@ import java.util.Map;
 
 public class DepositItemsToSpecArea implements Action {
     private final NContext context;
-    private final String item; // item name (e.g. "Mulberry Leaf")
-    private final Specialisation.SpecName specArea;
+    private final NAlias itemAlias; // item name (e.g. "Mulberry Leaf")
+    private final Specialisation.SpecName destinationSpec;
     private final int maxPerContainer; // e.g. 32
+    private Specialisation.SpecName originSpec = null;
 
     private Map<Long, Integer> containerFreeSpaceMap = new HashMap<>();
 
-    public DepositItemsToSpecArea(NContext context, String item, Specialisation.SpecName specArea, int maxPerContainer) {
+    public DepositItemsToSpecArea(NContext context, NAlias itemAlias, Specialisation.SpecName destinationSpec, int maxPerContainer) {
         this.context = context;
-        this.item = item;
-        this.specArea = specArea;
+        this.itemAlias = itemAlias;
+        this.destinationSpec = destinationSpec;
         this.maxPerContainer = maxPerContainer;
+    }
+
+    public DepositItemsToSpecArea(NContext context, NAlias itemAlias, Specialisation.SpecName destinationSpec, Specialisation.SpecName originSpec, int maxPerContainer) {
+        this.context = context;
+        this.itemAlias = itemAlias;
+        this.destinationSpec = destinationSpec;
+        this.maxPerContainer = maxPerContainer;
+        this.originSpec = originSpec;
     }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NAlias itemAlias = new NAlias(item);
-
         // Get the destination area
-        NArea area = context.getSpecArea(specArea);
+        NArea area = context.getSpecArea(destinationSpec);
         if (area == null) return Results.ERROR("Destination spec area not found!");
 
         // Get all containers in this area (cupboards, troughs, etc)
@@ -67,16 +74,20 @@ public class DepositItemsToSpecArea implements Action {
             }
             
             // Step 2: Process each container that needs items
-            context.addInItem(item, null);
+            context.addInItem(this.itemAlias.getDefault(), null);
 
             for (ContainerNeed containerNeed : containerNeeds) {
                 while (containerNeed.needed > 0) {
                     containerNeed.container.initattr(Container.Space.class);
 
                     // Fetch exactly what this container needs
-                    new TakeItems2(context, item, containerNeed.needed).run(gui);
+                    if(this.originSpec != null) {
+                        new TakeItems2(context, this.itemAlias.getDefault(), containerNeed.needed, originSpec).run(gui);
+                    } else {
+                        new TakeItems2(context, this.itemAlias.getDefault(), containerNeed.needed).run(gui);
+                    }
 
-                    context.getSpecArea(specArea);
+                    context.getSpecArea(destinationSpec);
                     
                     int itemsInInventory = gui.getInventory().getItems(itemAlias).size();
                     if (itemsInInventory == 0) break; // No more items available from source
