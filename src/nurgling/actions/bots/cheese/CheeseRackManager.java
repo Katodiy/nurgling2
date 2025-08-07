@@ -13,8 +13,11 @@ import nurgling.actions.TransferWItemsToContainer;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
+import nurgling.cheese.CheeseOrdersManager;
+import nurgling.cheese.CheeseOrder;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Handles cheese rack capacity checking and tray movement between areas
@@ -38,13 +41,21 @@ public class CheeseRackManager {
      * @return number of trays actually placed
      */
     public int handleTrayPlacement(NGameUI gui, CheeseBranch.Place targetPlace, int batchSize, String cheeseType) throws InterruptedException {
-        return moveTraysToRacks(gui, targetPlace, batchSize, cheeseType);
+        return moveTraysToRacks(gui, targetPlace, batchSize, cheeseType, null);
     }
     
     /**
-     * Move cheese trays to a specific area's racks
+     * Handle tray placement with order saving
+     * @return number of trays actually placed
      */
-    public int moveTraysToRacks(NGameUI gui, CheeseBranch.Place targetPlace, int quantity, String cheeseType) throws InterruptedException {
+    public int handleTrayPlacement(NGameUI gui, CheeseBranch.Place targetPlace, int batchSize, String cheeseType, CheeseOrdersManager ordersManager) throws InterruptedException {
+        return moveTraysToRacks(gui, targetPlace, batchSize, cheeseType, ordersManager);
+    }
+    
+    /**
+     * Move cheese trays to a specific area's racks with order saving
+     */
+    public int moveTraysToRacks(NGameUI gui, CheeseBranch.Place targetPlace, int quantity, String cheeseType, CheeseOrdersManager ordersManager) throws InterruptedException {
         int moved = 0;
 
             NArea targetArea = CheeseAreaManager.getCheeseArea(gui, targetPlace);
@@ -74,6 +85,12 @@ public class CheeseRackManager {
                         // Transfer only the specific cheese trays to this rack
                         new TransferWItemsToContainer(rackContainer, specificTrays).run(gui);
                         moved += specificTrays.size();
+                        
+                        // Update and save orders after placing trays on rack
+                        if (ordersManager != null) {
+                            updateOrdersAfterCurdPlacement(ordersManager, cheeseType, specificTrays.size());
+                            ordersManager.writeOrders();
+                        }
                     }
                 }
                 
@@ -100,5 +117,48 @@ public class CheeseRackManager {
         }
         
         return specificTrays;
+    }
+    
+    /**
+     * Update orders after placing curd trays on racks
+     */
+    private void updateOrdersAfterCurdPlacement(CheeseOrdersManager ordersManager, String cheeseType, int traysPlaced) {
+        for (CheeseOrder order : ordersManager.getOrders().values()) {
+            // Find the production chain for this order
+            List<CheeseBranch.Cheese> chain = CheeseBranch.getChainToProduct(order.getCheeseType());
+            if (chain == null) continue;
+            
+            // Find the "start" step and reduce it
+            for (CheeseOrder.StepStatus step : order.getStatus()) {
+                if (step.place.equals("start") && step.name.equals(cheeseType) && step.left > 0) {
+                    step.left = Math.max(0, step.left - traysPlaced);
+                    
+                    // Add to next step if there is one
+                    if (chain.size() > 1) {
+                        CheeseBranch.Cheese nextStep = chain.get(1);
+                        
+                        // Find or create next step
+                        CheeseOrder.StepStatus nextStepStatus = null;
+                        for (CheeseOrder.StepStatus nextStepCheck : order.getStatus()) {
+                            if (nextStepCheck.name.equals(nextStep.name) && 
+                                nextStepCheck.place.equals(nextStep.place.toString())) {
+                                nextStepStatus = nextStepCheck;
+                                break;
+                            }
+                        }
+                        
+                        if (nextStepStatus == null) {
+                            nextStepStatus = new CheeseOrder.StepStatus(nextStep.name, nextStep.place.toString(), 0);
+                            order.getStatus().add(nextStepStatus);
+                        }
+                        
+                        nextStepStatus.left += traysPlaced;
+                    }
+                    
+                    ordersManager.addOrUpdateOrder(order);
+                    return;
+                }
+            }
+        }
     }
 }
