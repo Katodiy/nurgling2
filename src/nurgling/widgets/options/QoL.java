@@ -25,6 +25,7 @@ public class QoL extends Panel {
     private CheckBox tempmark;
     private CheckBox shortCupboards;
     private CheckBox printpfmap;
+    private CheckBox uniformBiomeColors;
 
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
@@ -50,6 +51,7 @@ public class QoL extends Panel {
         prev = lpassistent = add(new CheckBox("Enable LP assistant"), prev.pos("bl").adds(0, 5));
         prev = shortCupboards = add(new CheckBox("Short cupboards"), prev.pos("bl").adds(0, 5));
         prev = useGlobalPf = add(new CheckBox("Use global PF"), prev.pos("bl").adds(0, 5));
+        prev = uniformBiomeColors = add(new CheckBox("Uniform biome colors on minimap"), prev.pos("bl").adds(0, 5));
         prev = debug = add(new CheckBox("DEBUG"), prev.pos("bl").adds(0, 5));
         prev = printpfmap = add(new CheckBox("Path Finder map in debug"), prev.pos("bl").adds(0, 5));
 
@@ -82,9 +84,10 @@ public class QoL extends Panel {
         lpassistent.a = getBool(NConfig.Key.lpassistent);
         useGlobalPf.a = getBool(NConfig.Key.useGlobalPf);
         debug.a = getBool(NConfig.Key.debug);
-        debug.a = getBool(NConfig.Key.printpfmap);
+        printpfmap.a = getBool(NConfig.Key.printpfmap);
         tempmark.a = getBool(NConfig.Key.tempmark);
         shortCupboards.a = getBool(NConfig.Key.shortCupboards);
+        uniformBiomeColors.a = getBool(NConfig.Key.uniformBiomeColors);
 
         Object dist = NConfig.get(NConfig.Key.temsmarkdist);
         temsmarkdistEntry.settext(dist == null ? "" : dist.toString());
@@ -128,6 +131,20 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.printpfmap, printpfmap.a);
         NConfig.set(NConfig.Key.tempmark, tempmark.a);
         NConfig.set(NConfig.Key.shortCupboards, shortCupboards.a);
+        
+        // Save uniform biome colors and update minimap if changed
+        boolean oldUniformColors = getBool(NConfig.Key.uniformBiomeColors);
+        NConfig.set(NConfig.Key.uniformBiomeColors, uniformBiomeColors.a);
+        if(oldUniformColors != uniformBiomeColors.a) {
+            // Force minimap update when uniform biome colors setting changes
+            if(NUtils.getGameUI() != null && NUtils.getGameUI().mmapw != null && NUtils.getGameUI().mmapw.miniMap != null) {
+                NUtils.getGameUI().mmapw.miniMap.needUpdate = true;
+            }
+            // Also update main map if it exists
+            if(NUtils.getGameUI() != null && NUtils.getGameUI().mapfile != null && NUtils.getGameUI().mapfile.view != null) {
+                NUtils.getGameUI().mapfile.view.needUpdate = true;
+            }
+        }
 
         int dist = parseIntOrDefault(temsmarkdistEntry.text(), 0);
         int time = parseIntOrDefault(temsmarktimeEntry.text(), 0);

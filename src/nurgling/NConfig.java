@@ -90,7 +90,8 @@ public class NConfig
         shortCupboards,
         fillCompostWithSwill,
         ignoreStrawInFarmers,
-        persistentBarrelLabels
+        persistentBarrelLabels,
+        uniformBiomeColors
     }
 
 
@@ -170,6 +171,7 @@ public class NConfig
         conf.put(Key.printpfmap, false);
         conf.put(Key.boxLineWidth, 4);
         conf.put(Key.persistentBarrelLabels, false);
+        conf.put(Key.uniformBiomeColors, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

@@ -35,6 +35,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import haven.render.*;
 import haven.Defer.Future;
+import nurgling.NConfig;
 import static haven.MCache.cmaps;
 
 public class MapFile {
@@ -461,14 +462,34 @@ public class MapFile {
 	    boolean[] cached = new boolean[tilesets.length];
 	    WritableRaster buf = PUtils.imgraster(cmaps);
 	    Coord c = new Coord();
+	    
+	    // Cache for biome colors (for uniformBiomeColors)
+	    int[] biomeColors = null;
+	    if((Boolean) NConfig.get(NConfig.Key.uniformBiomeColors)) {
+		biomeColors = new int[tilesets.length];
+		Arrays.fill(biomeColors, -1); // -1 means "not loaded yet"
+	    }
+	    
 	    for(c.y = 0; c.y < cmaps.y; c.y++) {
 		for(c.x = 0; c.x < cmaps.x; c.x++) {
 		    int t = gettile(c);
 		    BufferedImage tex = tiletex(t, texes, cached);
 		    int rgb = 0;
-		    if(tex != null)
-			rgb = tex.getRGB(Utils.floormod(c.x + off.x, tex.getWidth()),
-					 Utils.floormod(c.y + off.y, tex.getHeight()));
+		    if(tex != null) {
+			if((Boolean) NConfig.get(NConfig.Key.uniformBiomeColors)) {
+			    // Get cached color or load it from position (0,0)
+			    if(biomeColors[t] == -1) {
+				int color = tex.getRGB(0, 0);
+				// Force alpha channel to maximum (opaque)
+				biomeColors[t] = (color & 0x00FFFFFF) | 0xFF000000;
+			    }
+			    rgb = biomeColors[t];
+			} else {
+			    // Normal behavior - get color from current texture coordinates
+			    rgb = tex.getRGB(Utils.floormod(c.x + off.x, tex.getWidth()),
+					     Utils.floormod(c.y + off.y, tex.getHeight()));
+			}
+		    }
 		    buf.setSample(c.x, c.y, 0, (rgb & 0x00ff0000) >>> 16);
 		    buf.setSample(c.x, c.y, 1, (rgb & 0x0000ff00) >>>  8);
 		    buf.setSample(c.x, c.y, 2, (rgb & 0x000000ff) >>>  0);
