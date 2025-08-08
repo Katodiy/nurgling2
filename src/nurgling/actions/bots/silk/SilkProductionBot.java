@@ -1,7 +1,6 @@
 package nurgling.actions.bots.silk;
 
 import haven.Gob;
-import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.actions.*;
 import nurgling.actions.bots.CollectRemainingCocoons;
@@ -31,9 +30,9 @@ public class SilkProductionBot implements Action {
         NContext context = new NContext(gui);
         String moth = "Silkmoth";
         String eggs = "Silkworm Egg";
-        String worms = "Silkworm";
         String leaves = "Mulberry Leaf";
         String cacoons = "Silkworm Cocoon";
+        
 
         boolean areasValid = validateRequiredAreas(gui);
 
@@ -66,150 +65,16 @@ public class SilkProductionBot implements Action {
         // Step 5: Move hatched silkworms from herbalist tables to feeding cupboards
         // Also record herbalist table capacity for eggs during this pass
         gui.msg("Moving hatches silkworms from herbalist table to feeding cupboards.");
-        int totalEggsNeeded = 0;
+        TransferSilkwormsFromHTablesToFeeding transferAction = new TransferSilkwormsFromHTablesToFeeding(totalSilkwormsNeeded);
+
+        transferAction.run(gui);
+        int totalEggsNeeded = transferAction.getTotalEggsNeeded();
+        
+        // Get htable containers for egg filling step
         ArrayList<Container> htableContainers = new ArrayList<>();
-        ArrayList<Container> feedingContainers = new ArrayList<>();
-
-        // Pre-populate feeding containers for efficiency
-        NArea feedingArea = context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
-        if (feedingArea != null) {
-            ArrayList<Gob> feedingGobs = Finder.findGobs(feedingArea, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
-            for (Gob gob : feedingGobs) {
-                Container cand = new Container(gob, contcaps.get(gob.ngob.name));
-                cand.initattr(Container.Space.class);
-                feedingContainers.add(cand);
-            }
-        }
-
-        if (totalSilkwormsNeeded > 0) {
-            int wormsTransferredTotal = 0;
-
-            // Take silkworms from herbalist tables - use container-by-container approach
-            NArea htablesArea = context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Egg");
-            if (htablesArea != null) {
-                ArrayList<Gob> htableGobs = Finder.findGobs(htablesArea, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
-                for (Gob gob : htableGobs) {
-                    Container cand = new Container(gob, contcaps.get(gob.ngob.name));
-                    cand.initattr(Container.Space.class);
-                    htableContainers.add(cand);
-                }
-
-                // Process each herbalist table container individually
-                for (Container htableContainer : htableContainers) {
-                    if (wormsTransferredTotal >= totalSilkwormsNeeded) {
-                        // Still need to check remaining containers for egg capacity only
-                        new PathFinder(Finder.findGob(htableContainer.gobid)).run(gui);
-                        new OpenTargetContainer(htableContainer).run(gui);
-
-                        // Record free space for eggs
-                        int freeSpace = gui.getInventory(htableContainer.cap).getFreeSpace();
-                        totalEggsNeeded += freeSpace;
-
-                        new CloseTargetContainer(htableContainer).run(gui);
-                        continue;
-                    }
-
-                    new PathFinder(Finder.findGob(htableContainer.gobid)).run(gui);
-                    new OpenTargetContainer(htableContainer).run(gui);
-
-                    // Get all silkworm WItems from this container, excluding anything with "egg" in the name
-                    ArrayList<String> silkwormKeys = new ArrayList<>();
-                    silkwormKeys.add(worms);
-                    ArrayList<String> exceptions = new ArrayList<>();
-                    exceptions.add("egg");
-                    ArrayList<WItem> silkwormItems = gui.getInventory(htableContainer.cap).getItems(new NAlias(silkwormKeys, exceptions));
-
-                    // Transfer silkworms from this container in batches based on inventory space
-                    int wormsFromThisContainer = 0;
-                    while (!silkwormItems.isEmpty() &&
-                           wormsTransferredTotal + wormsFromThisContainer < totalSilkwormsNeeded) {
-
-                        // Take what fits in inventory
-                        int inventorySpace = gui.getInventory().getFreeSpace();
-                        int wormsToTake = Math.min(silkwormItems.size(), inventorySpace);
-
-                        if (wormsToTake == 0) {
-                            break; // No inventory space
-                        }
-
-                        ArrayList<WItem> wormsToTakeBatch = new ArrayList<>();
-                        for (int i = 0; i < wormsToTake; i++) {
-                            wormsToTakeBatch.add(silkwormItems.get(i));
-                        }
-
-                        new TakeWItemsFromContainer(htableContainer, wormsToTakeBatch).run(gui);
-                        wormsFromThisContainer += wormsToTakeBatch.size();
-
-                        // Remove taken items from our tracking list
-                        for (int i = 0; i < wormsToTake; i++) {
-                            silkwormItems.remove(0);
-                        }
-
-                        context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
-
-                        // Continue processing htables without dropping off when there is inventory room
-                        if(gui.getInventory().getFreeSpace() > 1) {
-                            continue;
-                        }
-
-                        for (Container feedingContainer : feedingContainers) {
-
-                            if (gui.getInventory().getItems(new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).isEmpty()) {
-                                break; // No more silkworms in inventory
-                            }
-
-                            new PathFinder(Finder.findGob(feedingContainer.gobid)).run(gui);
-                            new OpenTargetContainer(feedingContainer).run(gui);
-
-                            // Check how many silkworms this container currently has
-                            int currentWorms = gui.getInventory(feedingContainer.cap).getItems(new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).size();
-                            int spaceAvailable = Math.max(0, 56 - currentWorms);
-
-                            if (spaceAvailable > 0) {
-                                new TransferToContainer(feedingContainer, new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).run(gui);
-                            }
-
-                            new CloseTargetContainer(feedingContainer).run(gui);
-                        }
-                        context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Egg");
-                    }
-
-                    // Drop off any remaining silkworms in inventory after finishing this container
-                    if (!gui.getInventory().getItems(new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).isEmpty()) {
-                        context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
-                        
-                        for (Container feedingContainer : feedingContainers) {
-                            if (gui.getInventory().getItems(new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).isEmpty()) {
-                                break; // No more silkworms in inventory
-                            }
-                            
-                            new PathFinder(Finder.findGob(feedingContainer.gobid)).run(gui);
-                            new OpenTargetContainer(feedingContainer).run(gui);
-                            
-                            int currentWorms = gui.getInventory(feedingContainer.cap).getItems(new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).size();
-                            int spaceAvailable = Math.max(0, 56 - currentWorms);
-                            
-                            if (spaceAvailable > 0) {
-                                new TransferToContainer(feedingContainer, new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).run(gui);
-                            }
-                            
-                            new CloseTargetContainer(feedingContainer).run(gui);
-                        }
-                        
-                        context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Egg");
-                    }
-
-                    wormsTransferredTotal += wormsFromThisContainer;
-
-                    // Record free space for eggs (done once per container)
-                    new PathFinder(Finder.findGob(htableContainer.gobid)).run(gui);
-                    new OpenTargetContainer(htableContainer).run(gui);
-                    int freeSpace = gui.getInventory(htableContainer.cap).getFreeSpace();
-                    totalEggsNeeded += freeSpace;
-
-                    new CloseTargetContainer(htableContainer).run(gui);
-                }
-            }
+        NArea htablesArea = context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Egg");
+        if (htablesArea != null) {
+            htableContainers = createContainersFromArea(htablesArea);
         }
 
         // Step 6: Move eggs from storage to now-empty herbalist tables (only fetch what's needed)
@@ -281,5 +146,17 @@ public class SilkProductionBot implements Action {
 
         return true;
     }
+    
+    private ArrayList<Container> createContainersFromArea(NArea area) throws InterruptedException {
+        ArrayList<Container> containers = new ArrayList<>();
+        ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
+        for (Gob gob : gobs) {
+            Container cand = new Container(gob, contcaps.get(gob.ngob.name));
+            cand.initattr(Container.Space.class);
+            containers.add(cand);
+        }
+        return containers;
+    }
+    
 }
 
