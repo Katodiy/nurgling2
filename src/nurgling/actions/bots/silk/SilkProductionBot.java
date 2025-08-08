@@ -33,9 +33,11 @@ public class SilkProductionBot implements Action {
         String leaves = "Mulberry Leaf";
         String cacoons = "Silkworm Cocoon";
 
+        // Step 1: Collect all ready silkworm eggs and drop them off at storage area.
+        gui.msg("Collecting and storing silkworm eggs.");
         new CollectAndMoveSilkwormEggs().run(gui);
 
-        // Step 1: Collect all ready silkworm cocoons and drop them off at silkmoth breeding area.
+        // Step 2: Collect all ready silkworm cocoons and drop them off at silkmoth breeding area.
         gui.msg("Collecting ready silkworm cocoons to breeding area.");
         DepositItemsToSpecArea depositItemsActionCacoons = new DepositItemsToSpecArea(context, new NAlias(cacoons, moth), Specialisation.SpecName.silkmothBreeding, Specialisation.SpecName.silkwormFeeding, 16);
         depositItemsActionCacoons.run(gui);
@@ -43,17 +45,17 @@ public class SilkProductionBot implements Action {
         gui.msg("Dropping off remaining silkworm cocoons to storage area.");
         new CollectRemainingCocoons().run(gui);
 
-        // Step 2: Ensure feeding cupboards have sufficient mulberry leaves (32 per cabinet).
+        // Step 3: Ensure feeding cupboards have sufficient mulberry leaves (32 per cabinet).
         gui.msg("Refilling mulberry leafs.");
         DepositItemsToSpecArea depositItemsActionLeafs = new DepositItemsToSpecArea(context, new NAlias(leaves), Specialisation.SpecName.silkwormFeeding, 32);
         depositItemsActionLeafs.run(gui);
 
-        // Step 3: Calculate how many silkworms we can fit in feeding containers
+        // Step 4: Calculate how many silkworms we can fit in feeding containers
         int totalSilkwormsNeeded = depositItemsActionLeafs.getContainerFreeSpaceMap().values().stream()
                 .mapToInt(freeSpace -> Math.min(freeSpace, 52)) // Cap each container at 52 silkworms max
                 .sum();
 
-        // Step 4: Move hatched silkworms from herbalist tables to feeding cupboards
+        // Step 5: Move hatched silkworms from herbalist tables to feeding cupboards
         // Also record herbalist table capacity for eggs during this pass
         gui.msg("Moving hatches silkworms from herbalist table to feeding cupboards.");
         int totalEggsNeeded = 0;
@@ -176,7 +178,7 @@ public class SilkProductionBot implements Action {
             }
         }
 
-        // Step 5: Move eggs from storage to now-empty herbalist tables (only fetch what's needed)
+        // Step 6: Move eggs from storage to now-empty herbalist tables (only fetch what's needed)
         gui.msg("Filling herbalist tables with eggs.");
         if (totalEggsNeeded > 0) {
             context.addInItem(eggs, null);
@@ -193,10 +195,11 @@ public class SilkProductionBot implements Action {
         }
 
         NContext freshContext = new NContext(gui);
-        // Step 6: Clean up any remaining items in inventory
+        // Step 7: Clean up any remaining items in inventory
         gui.msg("Free up inventory.");
         new FreeInventory2(freshContext).run(gui);
 
+        // Step 8: Rearrange silkmoths in the breeding containers to maximize pairs.
         gui.msg("Rearranging silkmoths to maximize pairs.");
         new ArrangeSilkmothPairs().run(gui);
 
