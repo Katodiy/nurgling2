@@ -166,13 +166,9 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
                     int freeSpace = gui.getInventory(htableContainer.cap).getFreeSpace();
                     totalEggsNeeded += freeSpace;
 
-                    System.out.println(freeSpace);
-
                     new CloseTargetContainer(htableContainer).run(gui);
                 }
             }
-
-            System.out.println(totalEggsNeeded);
         }
 
         // Step 3: Move eggs from storage to now-empty herbalist tables (only fetch what's needed)

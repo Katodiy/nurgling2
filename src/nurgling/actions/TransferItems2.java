@@ -9,7 +9,6 @@ import nurgling.routes.RoutePoint;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -20,7 +19,6 @@ public class TransferItems2 implements Action
 {
     final NContext cnt;
     HashSet<String> items;
-    Specialisation.SpecName specName;
 
     static HashSet<String> orderList = new HashSet<>();
     static {
@@ -56,13 +54,6 @@ public class TransferItems2 implements Action
     {
         this.cnt = context;
         this.items = items;
-    }
-
-    public TransferItems2(NContext context, HashSet<String> items, Specialisation.SpecName specName)
-    {
-        this.cnt = context;
-        this.items = items;
-        this.specName = specName;
     }
 
     /**

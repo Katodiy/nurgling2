@@ -37,9 +37,6 @@ public class NAreaLabel extends Sprite implements RenderTree.Node, PView.Render2
         BufferedImage img = NStyle.openings.render(area.name).img;
         BufferedImage selimg = NStyle.selopenings.render(area.name).img;
         if(!area.spec.isEmpty()) {
-            if(Specialisation.findSpecialisation(area.spec.get(0).name) == null) {
-                return;
-            }
             BufferedImage first = Specialisation.findSpecialisation(area.spec.get(0).name).image;
             BufferedImage ret = TexI.mkbuf(new Coord(32, 32));
             Graphics g = ret.getGraphics();
