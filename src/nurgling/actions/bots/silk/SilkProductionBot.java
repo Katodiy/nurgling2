@@ -34,19 +34,20 @@ public class SilkProductionBot implements Action {
 
         new CollectAndMoveSilkwormEggs().run(gui);
 
+        // Step 1: Collect all ready silkworm cocoons and drop them off at silkmoth breeding area.
         DepositItemsToSpecArea depositItemsActionCacoons = new DepositItemsToSpecArea(context, new NAlias(cacoons, moth), Specialisation.SpecName.silkmothBreeding, Specialisation.SpecName.silkwormFeeding, 16);
         depositItemsActionCacoons.run(gui);
 
-        // Step 1: Ensure feeding cabinets have sufficient mulberry leaves (32 per cabinet)
+        // Step 2: Ensure feeding cabinets have sufficient mulberry leaves (32 per cabinet).
         DepositItemsToSpecArea depositItemsActionLeafs = new DepositItemsToSpecArea(context, new NAlias(leaves), Specialisation.SpecName.silkwormFeeding, 32);
         depositItemsActionLeafs.run(gui);
 
-        // Step 1.5: Calculate how many silkworms we can fit in feeding containers
+        // Step 3: Calculate how many silkworms we can fit in feeding containers
         int totalSilkwormsNeeded = depositItemsActionLeafs.getContainerFreeSpaceMap().values().stream()
                 .mapToInt(freeSpace -> Math.min(freeSpace, 52)) // Cap each container at 52 silkworms max
                 .sum();
 
-        // Step 2: Move hatched silkworms from herbalist tables to feeding cabinets
+        // Step 4: Move hatched silkworms from herbalist tables to feeding cabinets
         // Also record herbalist table capacity for eggs during this pass
         int totalEggsNeeded = 0;
         ArrayList<Container> htableContainers = new ArrayList<>();
@@ -168,7 +169,7 @@ public class SilkProductionBot implements Action {
             }
         }
 
-        // Step 3: Move eggs from storage to now-empty herbalist tables (only fetch what's needed)
+        // Step 5: Move eggs from storage to now-empty herbalist tables (only fetch what's needed)
         if (totalEggsNeeded > 0) {
             context.addInItem(eggs, null);
             // Take only what we need (or what fits in inventory, whichever is smaller)
@@ -184,7 +185,7 @@ public class SilkProductionBot implements Action {
         }
 
         NContext freshContext = new NContext(gui);
-        // Step 4: Clean up any remaining items in inventory
+        // Step 6: Clean up any remaining items in inventory
         new FreeInventory2(freshContext).run(gui);
 
         new ArrangeSilkmothPairs().run(gui);
