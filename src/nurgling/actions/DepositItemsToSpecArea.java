@@ -17,9 +17,9 @@ import java.util.Map;
 
 public class DepositItemsToSpecArea implements Action {
     private final NContext context;
-    private final NAlias itemAlias; // item name (e.g. "Mulberry Leaf")
+    private final NAlias itemAlias;
     private final Specialisation.SpecName destinationSpec;
-    private final int maxPerContainer; // e.g. 32
+    private final int maxPerContainer;
     private Specialisation.SpecName originSpec = null;
 
     private Map<Long, Integer> containerFreeSpaceMap = new HashMap<>();
@@ -111,8 +111,7 @@ public class DepositItemsToSpecArea implements Action {
                     containerNeed.setNeeded(containerNeed.needed - itemsInInventory);
                 }
             }
-            
-            // If no containers were processed, we're done
+
             break;
         }
 

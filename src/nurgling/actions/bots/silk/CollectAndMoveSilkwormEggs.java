@@ -1,4 +1,4 @@
-package nurgling.actions.bots;
+package nurgling.actions.bots.silk;
 
 import nurgling.NGameUI;
 import nurgling.actions.*;

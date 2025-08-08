@@ -1,4 +1,4 @@
-package nurgling.actions.bots;
+package nurgling.actions.bots.silk;
 
 import haven.Gob;
 import haven.WItem;
@@ -13,19 +13,16 @@ import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
 
 import static nurgling.areas.NContext.contcaps;
 
 /**
- * Multi-step silk processing bot:
+ * Multistep silk processing bot:
  * 1. Ensure feeding cabinets have mulberry leaves (32 per cabinet)
  * 2. Move hatched silkworms from herbalist tables to feeding cabinets
  * 3. Move eggs from storage to now-empty herbalist tables
  */
-public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
+public class SilkProductionBot implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NContext context = new NContext(gui);
