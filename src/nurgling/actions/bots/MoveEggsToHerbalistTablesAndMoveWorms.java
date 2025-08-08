@@ -35,6 +35,8 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
         String leaves = "Mulberry Leaf";
         String cacoons = "Silkworm Cocoon";
 
+        new CollectAndMoveSilkwormEggs().run(gui);
+
         DepositItemsToSpecArea depositItemsActionCacoons = new DepositItemsToSpecArea(context, new NAlias(cacoons, moth), Specialisation.SpecName.silkmothBreeding, Specialisation.SpecName.silkwormFeeding, 16);
         depositItemsActionCacoons.run(gui);
 
@@ -192,6 +194,7 @@ public class MoveEggsToHerbalistTablesAndMoveWorms implements Action {
         // Step 4: Clean up any remaining items in inventory
         new FreeInventory2(freshContext).run(gui);
 
+        new ArrangeSilkmothPairs().run(gui);
         return Results.SUCCESS();
     }
 }
