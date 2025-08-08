@@ -145,15 +145,7 @@ public class ArrangeSilkmothPairs implements Action {
             // Calculate available space AFTER pairs and cocoons are placed
             int usedSlots = state.cocoonCount + state.targetFemale + state.targetMale;
             int availableSlots = 16 - usedSlots;
-            
-            // Debug check - this should never be negative
-            if (usedSlots > 16) {
-                System.err.println("ERROR: Container would exceed 16 items! Cocoons: " + state.cocoonCount + 
-                                   ", Target pairs: " + state.targetFemale + "+" + state.targetMale + 
-                                   ", Total: " + usedSlots);
-                continue; // Skip this container
-            }
-            
+
             if (availableSlots > 0 && (remainingFemales > 0 || remainingMales > 0)) {
                 // Only add moths if there's actual space remaining
                 int totalRemainingMoths = remainingFemales + remainingMales;
