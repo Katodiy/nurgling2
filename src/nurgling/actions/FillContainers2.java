@@ -16,7 +16,6 @@ public class FillContainers2 implements Action
     ArrayList<Container> conts;
     String transferedItems;
     NContext context;
-    ArrayList<Container> currentContainers = new ArrayList<>();
     Coord targetCoord = new Coord(1,1);
 
     public FillContainers2(ArrayList<Container> conts, String transferedItems, NContext context) {
