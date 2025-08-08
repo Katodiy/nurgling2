@@ -297,8 +297,7 @@ public class NContext {
             return null;
         }
 
-        String id = String.valueOf(area.id);
-        navigateToAreaIfNeeded(id);
+        navigateToAreaIfNeeded(String.valueOf(name));
 
         for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
             String hash = gob.ngob.hash;

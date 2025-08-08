@@ -151,7 +151,7 @@ public class Specialisation extends Window
 
         // silk
         specialisation.add(new SpecialisationItem(SpecName.silkmothBreeding.toString(),"Silkmoth Breeding",Resource.loadsimg("nurgling/categories/silkmoth1")));
-        specialisation.add(new SpecialisationItem(SpecName.silkwormFeeding.toString(),"Silkworm feeding",Resource.loadsimg("nurgling/categories/silkmoth1")));
+        specialisation.add(new SpecialisationItem(SpecName.silkwormFeeding.toString(),"Silkworm Feeding",Resource.loadsimg("nurgling/categories/silkmoth1")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
