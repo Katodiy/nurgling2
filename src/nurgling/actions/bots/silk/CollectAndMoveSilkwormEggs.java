@@ -33,7 +33,7 @@ public class CollectAndMoveSilkwormEggs implements Action {
                 new FreeInventory2(context).run(gui);
             }
 
-            if (after <= before && !hasEggsInInventory) {
+            if (after <= before) {
                 return Results.SUCCESS();
             }
         }
