@@ -14,6 +14,7 @@ import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 import static nurgling.areas.NContext.contcaps;
@@ -144,16 +145,16 @@ public class SilkProductionBot implements Action {
                             silkwormItems.remove(0);
                         }
 
-                        // Immediately transfer to feeding containers to free up inventory
                         context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
 
                         // Continue processing htables without dropping off when there is inventory room
-                        if(gui.getInventory(htableContainer.cap).getFreeSpace() > 1) {
+                        if(gui.getInventory().getFreeSpace() > 1) {
                             continue;
                         }
 
                         for (Container feedingContainer : feedingContainers) {
-                            if (gui.getInventory().getItems(new NAlias(worms)).isEmpty()) {
+
+                            if (gui.getInventory().getItems(new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).isEmpty()) {
                                 break; // No more silkworms in inventory
                             }
 
@@ -161,15 +162,41 @@ public class SilkProductionBot implements Action {
                             new OpenTargetContainer(feedingContainer).run(gui);
 
                             // Check how many silkworms this container currently has
-                            int currentWorms = gui.getInventory(feedingContainer.cap).getItems(new NAlias(worms)).size();
+                            int currentWorms = gui.getInventory(feedingContainer.cap).getItems(new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).size();
                             int spaceAvailable = Math.max(0, 56 - currentWorms);
 
                             if (spaceAvailable > 0) {
-                                new TransferToContainer(feedingContainer, new NAlias(worms)).run(gui);
+                                new TransferToContainer(feedingContainer, new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).run(gui);
                             }
 
                             new CloseTargetContainer(feedingContainer).run(gui);
                         }
+                        context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Egg");
+                    }
+
+                    // Drop off any remaining silkworms in inventory after finishing this container
+                    if (!gui.getInventory().getItems(new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).isEmpty()) {
+                        context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
+                        
+                        for (Container feedingContainer : feedingContainers) {
+                            if (gui.getInventory().getItems(new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).isEmpty()) {
+                                break; // No more silkworms in inventory
+                            }
+                            
+                            new PathFinder(Finder.findGob(feedingContainer.gobid)).run(gui);
+                            new OpenTargetContainer(feedingContainer).run(gui);
+                            
+                            int currentWorms = gui.getInventory(feedingContainer.cap).getItems(new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).size();
+                            int spaceAvailable = Math.max(0, 56 - currentWorms);
+                            
+                            if (spaceAvailable > 0) {
+                                new TransferToContainer(feedingContainer, new NAlias(new ArrayList<>(List.of(worms)), new ArrayList<>(List.of("egg")))).run(gui);
+                            }
+                            
+                            new CloseTargetContainer(feedingContainer).run(gui);
+                        }
+                        
+                        context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Egg");
                     }
 
                     wormsTransferredTotal += wormsFromThisContainer;
