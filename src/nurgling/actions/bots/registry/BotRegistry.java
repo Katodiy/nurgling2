@@ -6,6 +6,7 @@ import nurgling.actions.bots.farmers.PumpkinFarmer;
 import nurgling.actions.bots.*;
 import nurgling.actions.bots.CarrotFarmerQ;
 import nurgling.actions.bots.silk.ArrangeSilkmothPairs;
+import nurgling.actions.bots.silk.RefillSilkwormFeedingCupboards;
 import nurgling.actions.bots.silk.SilkProductionBot;
 import nurgling.actions.bots.farmers.WheatFarmer;
 import nurgling.actions.bots.farmers.YellowOnionFarmer;
@@ -110,8 +111,8 @@ public class BotRegistry {
         bots.add(new BotDescriptor("cheese", BotDescriptor.BotType.FARMING, "Cheese Production Bot", "Process cheese orders.", true, true, CheeseProductionBot.class, "cheese", false));
 
         // Silk
-        bots.add(new BotDescriptor("silkmoth_egg", BotDescriptor.BotType.FARMING, "Move silkmoth eggs out of breeders", "Manages silkmoth eggs from breeders.", true, true, ArrangeSilkmothPairs.class, "silkmoth_egg", false));
-        bots.add(new BotDescriptor("silkworm_cocoon", BotDescriptor.BotType.FARMING, "Move silkworm from herbalist table to feeding area. Move silkmoth eggs to herbalist tables.", "Manages silkmoth eggs.", true, true, SilkProductionBot.class, "silkworm_cocoon", false));
+        bots.add(new BotDescriptor("mulberry_leaf", BotDescriptor.BotType.FARMING, "Refill silkworm cupboards with mulberry leafs", "Refill silkworm cupboards with mulberry leafs.", true, true, RefillSilkwormFeedingCupboards.class, "mulberry_leaf", false));
+        bots.add(new BotDescriptor("silk_production", BotDescriptor.BotType.FARMING, "Manages silk production starting at eggs all the way to silkworm cocoons.", "Silk cocoons production.", true, true, SilkProductionBot.class, "silkworm_cocoon", false));
 
         // FARMING QUALITY
         bots.add(new BotDescriptor("turnipq", BotDescriptor.BotType.FARMING_QUALITY, "Turnip Farmer Quality", "Automatically harvests and replants turnips in X*Y cell patches.", true, true, TurnipsFarmerQ.class, "turnipq", false));
