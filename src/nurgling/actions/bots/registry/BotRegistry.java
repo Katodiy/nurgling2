@@ -111,8 +111,9 @@ public class BotRegistry {
         bots.add(new BotDescriptor("cheese", BotDescriptor.BotType.FARMING, "Cheese Production Bot", "Process cheese orders.", true, true, CheeseProductionBot.class, "cheese", false));
 
         // Silk
-        bots.add(new BotDescriptor("mulberry_leaf", BotDescriptor.BotType.FARMING, "Refill silkworm cupboards with mulberry leafs", "Refill silkworm cupboards with mulberry leafs.", true, true, RefillSilkwormFeedingCupboards.class, "mulberry_leaf", false));
+        bots.add(new BotDescriptor("mulberry_leaf_refiller", BotDescriptor.BotType.FARMING, "Refill silkworm cupboards with mulberry leafs", "Refill silkworm cupboards with mulberry leafs.", true, true, RefillSilkwormFeedingCupboards.class, "mulberry_leaf", false));
         bots.add(new BotDescriptor("silk_production", BotDescriptor.BotType.FARMING, "Manages silk production starting at eggs all the way to silkworm cocoons.", "Silk cocoons production.", true, true, SilkProductionBot.class, "silkworm_cocoon", false));
+        bots.add(new BotDescriptor("kill_cocoons", BotDescriptor.BotType.FARMING, "Kill all cocoons in the take area.", "Kill silkworm cocoons.", true, true, KillCocoons.class, "silkworm_cocoon", false));
 
         // FARMING QUALITY
         bots.add(new BotDescriptor("turnipq", BotDescriptor.BotType.FARMING_QUALITY, "Turnip Farmer Quality", "Automatically harvests and replants turnips in X*Y cell patches.", true, true, TurnipsFarmerQ.class, "turnipq", false));
