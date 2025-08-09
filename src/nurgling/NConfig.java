@@ -251,6 +251,7 @@ public class NConfig
     public String path_fog = ((HashDirCache) ResCache.global).base + "\\..\\" + "fog.nurgling.json";
     public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
     public String path_scenarios = ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
+    public String path_cheese_orders = ((HashDirCache) ResCache.global).base + "\\..\\" + "cheese_orders.nurgling.json";
 
     public boolean isUpdated()
     {
