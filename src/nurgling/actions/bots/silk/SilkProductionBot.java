@@ -3,7 +3,7 @@ package nurgling.actions.bots.silk;
 import haven.Gob;
 import nurgling.NGameUI;
 import nurgling.actions.*;
-import nurgling.actions.bots.CollectRemainingCocoons;
+import nurgling.actions.bots.CollectAndKillRemainingCocoons;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tools.Container;
@@ -13,7 +13,6 @@ import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.TreeMap;
 
 import static nurgling.areas.NContext.contcaps;
@@ -49,8 +48,8 @@ public class SilkProductionBot implements Action {
         DepositItemsToSpecArea depositItemsActionCacoons = new DepositItemsToSpecArea(context, new NAlias(cacoons, moth), Specialisation.SpecName.silkmothBreeding, Specialisation.SpecName.silkwormFeeding, 16);
         depositItemsActionCacoons.run(gui);
 
-        gui.msg("Dropping off remaining silkworm cocoons to storage area.");
-        new CollectRemainingCocoons().run(gui);
+        gui.msg("Killing and dropping off remaining silkworm cocoons to storage area.");
+        new CollectAndKillRemainingCocoons().run(gui);
 
         // Step 3: Ensure feeding cupboards have sufficient mulberry leaves (32 per cabinet).
         gui.msg("Refilling mulberry leafs.");
