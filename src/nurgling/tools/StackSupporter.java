@@ -74,7 +74,6 @@ public class StackSupporter {
         size3.add("Dried Fish");
         size3.add("Medicine");
         size3.add("Intestines");
-        size3.add("Bait");
         catSize.put(size3,3);
 
         HashSet<String> size4 = new HashSet<>();
