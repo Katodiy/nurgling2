@@ -20,7 +20,7 @@ import static nurgling.areas.NContext.contcaps;
  * Collects all remaining cocoons from silkworm feeding area after the initial
  * batch has been moved to breeding area, then uses FreeInventory2 to store them.
  */
-public class CollectRemainingCocoons implements Action {
+public class CollectAndKillRemainingCocoons implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NContext context = new NContext(gui);
@@ -67,6 +67,7 @@ public class CollectRemainingCocoons implements Action {
                     if (inventorySpace == 0) {
                         // Inventory full - use FreeInventory2 to clear it
                         new CloseTargetContainer(container).run(gui);
+                        new KillCocoons().run(gui);
                         new FreeInventory2(context).run(gui);
                         context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
                         new PathFinder(Finder.findGob(container.gobid)).run(gui);
@@ -98,6 +99,7 @@ public class CollectRemainingCocoons implements Action {
         
         // Clear any remaining items in inventory
         if (foundCocoons || gui.getInventory().getItems(cocoonAlias).size() > 0) {
+            new KillCocoons().run(gui);
             new FreeInventory2(context).run(gui);
         }
         
