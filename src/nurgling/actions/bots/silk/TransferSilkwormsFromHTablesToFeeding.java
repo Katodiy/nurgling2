@@ -85,7 +85,10 @@ public class TransferSilkwormsFromHTablesToFeeding implements Action {
                         int wormsToTake = Math.min(silkwormItems.size(), inventorySpace);
                         
                         if (wormsToTake == 0) {
-                            break; // No inventory space
+                            // Inventory full - drop off and continue
+                            dropOffWormsToFeedingContainers(gui, feedingContainers, wormsAlias, context);
+                            context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Egg");
+                            continue;
                         }
                         
                         ArrayList<WItem> wormsToTakeBatch = new ArrayList<>();
@@ -100,33 +103,21 @@ public class TransferSilkwormsFromHTablesToFeeding implements Action {
                         for (int i = 0; i < wormsToTake; i++) {
                             silkwormItems.remove(0);
                         }
-                        
-                        context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
-                        
-                        // Continue processing htables without dropping off when there is inventory room
-                        if(gui.getInventory().getFreeSpace() > 1) {
-                            continue;
-                        }
-                        
-                        dropOffWormsToFeedingContainers(gui, feedingContainers, wormsAlias, context);
-                        context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Egg");
-                    }
-                    
-                    // Drop off any remaining silkworms in inventory after finishing this container
-                    if (!gui.getInventory().getItems(wormsAlias).isEmpty()) {
-                        dropOffWormsToFeedingContainers(gui, feedingContainers, wormsAlias, context);
-                        context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Egg");
                     }
                     
                     wormsTransferredTotal += wormsFromThisContainer;
                     
                     // Record free space for eggs (done once per container)
-                    new PathFinder(Finder.findGob(htableContainer.gobid)).run(gui);
                     new OpenTargetContainer(htableContainer).run(gui);
                     int freeSpace = gui.getInventory(htableContainer.cap).getFreeSpace();
                     totalEggsNeeded += freeSpace;
                     
                     new CloseTargetContainer(htableContainer).run(gui);
+                }
+                
+                // Drop off any remaining silkworms in inventory after processing all containers
+                if (!gui.getInventory().getItems(wormsAlias).isEmpty()) {
+                    dropOffWormsToFeedingContainers(gui, feedingContainers, wormsAlias, context);
                 }
             }
         }
