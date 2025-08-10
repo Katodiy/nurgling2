@@ -148,7 +148,7 @@ public class SilkProductionBot implements Action {
     
     private ArrayList<Container> createContainersFromArea(NArea area) throws InterruptedException {
         ArrayList<Container> containers = new ArrayList<>();
-        ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
+        ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet())));
         for (Gob gob : gobs) {
             Container cand = new Container(gob, contcaps.get(gob.ngob.name));
             cand.initattr(Container.Space.class);
