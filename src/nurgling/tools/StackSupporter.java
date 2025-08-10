@@ -74,6 +74,7 @@ public class StackSupporter {
         size3.add("Dried Fish");
         size3.add("Medicine");
         size3.add("Intestines");
+        size3.add("Bait");
         catSize.put(size3,3);
 
         HashSet<String> size4 = new HashSet<>();
@@ -122,6 +123,8 @@ public class StackSupporter {
         catExceptions.add("Wolf's Claw");
         catExceptions.add("Lynx Claws");
         catExceptions.add("Silkworm");
+        catExceptions.add("Female Silkmoth");
+        catExceptions.add("Male Silkmoth");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln");
     public static boolean isStackable(NInventory inv, String name)
@@ -129,7 +132,7 @@ public class StackSupporter {
         Window win = inv.getparent(Window.class);
         if(win!=null)
         {
-            if(NParser.checkName(win.cap,unstackableContainers) || NParser.checkName(name, new NAlias("Lynx Claws")) || name.equals("Silkworm"))
+            if(NParser.checkName(win.cap,unstackableContainers) || NParser.checkName(name, new NAlias("Lynx Claws")) || name.equals("Silkworm") || catExceptions.contains(name))
             {
                 return false;
             }

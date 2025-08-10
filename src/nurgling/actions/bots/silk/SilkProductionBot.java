@@ -45,7 +45,7 @@ public class SilkProductionBot implements Action {
 
         // Step 2: Collect all ready silkworm cocoons and drop them off at silkmoth breeding area.
         gui.msg("Collecting ready silkworm cocoons to breeding area.");
-        DepositItemsToSpecArea depositItemsActionCacoons = new DepositItemsToSpecArea(context, new NAlias(cacoons, moth), Specialisation.SpecName.silkmothBreeding, Specialisation.SpecName.silkwormFeeding, 16);
+        DepositItemsToSpecArea depositItemsActionCacoons = new DepositItemsToSpecArea(context, new NAlias(moth, cacoons), Specialisation.SpecName.silkmothBreeding, Specialisation.SpecName.silkwormFeeding, 16);
         depositItemsActionCacoons.run(gui);
 
         gui.msg("Killing and dropping off remaining silkworm cocoons to storage area.");
