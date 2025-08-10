@@ -26,6 +26,9 @@ import static nurgling.areas.NContext.contcaps;
 public class SilkProductionBot implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        // Known problems:
+        // Silkmoth Breeding containers will ALL be opened at least 3 times when no changes need to happen
+
         NContext context = new NContext(gui);
         String moth = "Silkmoth";
         String eggs = "Silkworm Egg";
@@ -41,10 +44,12 @@ public class SilkProductionBot implements Action {
 
         // Step 1: Collect all ready silkworm eggs and drop them off at storage area.
         gui.msg("Collecting and storing silkworm eggs.");
+        // 1 OPEN ALL SILKMOTH BREEDING CONTAINERS
         new CollectAndMoveSilkwormEggs().run(gui);
 
         // Step 2: Collect all ready silkworm cocoons and drop them off at silkmoth breeding area.
         gui.msg("Collecting ready silkworm cocoons to breeding area.");
+        // 1 OPEN ALL SILKMOTH BREEDING CONTAINERS
         DepositItemsToSpecArea depositItemsActionCacoons = new DepositItemsToSpecArea(context, new NAlias(moth, cacoons), Specialisation.SpecName.silkmothBreeding, Specialisation.SpecName.silkwormFeeding, 16);
         depositItemsActionCacoons.run(gui);
 
@@ -98,6 +103,7 @@ public class SilkProductionBot implements Action {
         new FreeInventory2(freshContext).run(gui);
 
         // Step 8: Rearrange silkmoths in the breeding containers to maximize pairs.
+        // 1 OPEN ALL SILKMOTH BREEDING CONTAINERS
         gui.msg("Rearranging silkmoths to maximize pairs.");
         new ArrangeSilkmothPairs().run(gui);
 
