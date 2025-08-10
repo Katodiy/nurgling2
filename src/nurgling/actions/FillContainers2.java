@@ -65,7 +65,10 @@ public class FillContainers2 implements Action
             else
             {
                 Container.Space space = tcont.getattr(Container.Space.class);
-                target_size += (Integer) space.getRes().get(Container.Space.FREESPACE);
+                Integer freeSpace = (Integer) space.getRes().get(Container.Space.FREESPACE);
+                if (freeSpace != null) {
+                    target_size += freeSpace;
+                }
             }
         }
         return target_size;

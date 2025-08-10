@@ -74,7 +74,9 @@ public class DepositItemsToSpecArea implements Action {
             }
             
             // Step 2: Process each container that needs items
-            context.addInItem(this.itemAlias.getDefault(), null);
+            for(String key : this.itemAlias.getKeys()) {
+                context.addInItem(key, null);
+            }
 
             boolean noMoreItemsAtSource = false;
             for (ContainerNeed containerNeed : containerNeeds) {
@@ -85,11 +87,18 @@ public class DepositItemsToSpecArea implements Action {
                 while (containerNeed.needed > 0) {
                     containerNeed.container.initattr(Container.Space.class);
 
-                    // Fetch exactly what this container needs
-                    if(this.originSpec != null) {
-                        new TakeItems2(context, this.itemAlias.getDefault(), containerNeed.needed, originSpec).run(gui);
-                    } else {
-                        new TakeItems2(context, this.itemAlias.getDefault(), containerNeed.needed).run(gui);
+                    // Fetch items for all keys in the alias, but stop when we have enough total
+                    int initialInventoryCount = gui.getInventory().getItems(itemAlias).size();
+                    for(String key : this.itemAlias.getKeys()) {
+                        int currentTotalInInventory = gui.getInventory().getItems(itemAlias).size();
+                        int stillNeeded = containerNeed.needed - (currentTotalInInventory - initialInventoryCount);
+                        if (stillNeeded <= 0) break;
+                        
+                        if(this.originSpec != null) {
+                            new TakeItems2(context, key, stillNeeded, originSpec).run(gui);
+                        } else {
+                            new TakeItems2(context, key, stillNeeded).run(gui);
+                        }
                     }
 
                     context.getSpecArea(destinationSpec);
