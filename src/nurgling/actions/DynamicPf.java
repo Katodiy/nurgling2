@@ -70,7 +70,7 @@ public class DynamicPf implements Action
             } catch (InterruptedException e) {
 
             }
-            return pf.getDNStatus();
+            return pf.getDNStatus() || (pf.start_pos!=null && pf.end_poses.contains(pf.start_pos));
         }
     }
 
