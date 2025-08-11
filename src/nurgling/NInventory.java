@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.Label;
 import haven.Window;
 import haven.res.ui.stackinv.ItemStack;
 import haven.res.ui.tt.slot.Slotted;
@@ -290,7 +291,7 @@ public class NInventory extends Inventory
         }
         if(rightToggles != null)
         {
-            rightToggles.move(new Coord(c.x + parent.sz.x - rightToggles.atl.x - UI.scale(10), c.y + UI.scale(35)));
+            rightToggles.move(new Coord(c.x + parent.sz.x - rightToggles.atl.x - UI.scale(4), c.y + UI.scale(35)));
         }
         if(searchwdg!=null && searchwdg.history!=null) {
             searchwdg.history.move(new Coord(c.x  + ((Window)parent).ca().ul.x + UI.scale(7), c.y + parent.sz.y- UI.scale(37)));
@@ -421,6 +422,10 @@ public class NInventory extends Inventory
                    }
                 , new Coord(-gildingi[0].sz().x + UI.scale(2), UI.scale(27)));
 
+
+
+        parent.pack();
+
         // Right panel toggle button
         parent.add(new ICheckBox(collapsei[0], collapsei[1], collapsei[2], collapsei[3]) {
                        @Override
@@ -429,9 +434,8 @@ public class NInventory extends Inventory
                            showRightPopup = val;
                        }
                    }
-                , new Coord(sz.x - UI.scale(2), UI.scale(27)));
+                , new Coord(sz.x + UI.scale(4), UI.scale(27)));
 
-        parent.pack();
         toggles = NUtils.getGameUI().add(new NPopupWidget(new Coord(UI.scale(50), UI.scale(80)), NPopupWidget.Type.RIGHT));
         rightToggles = NUtils.getGameUI().add(new NPopupWidget(new Coord(UI.scale(180), UI.scale(230)), NPopupWidget.Type.LEFT));
 
@@ -525,10 +529,14 @@ public class NInventory extends Inventory
     }
 
     private void setupRightPanel() {
-        Coord currentPos = rightToggles.atl.add(new Coord(50, 1));
+        int panelMargin = UI.scale(8);
+        Coord headerPos = rightToggles.atl.add(new Coord(panelMargin, panelMargin));
+
+        // Position for dropdowns - below header
+        Coord dropdownPos = headerPos.add(new Coord(8, 0));
         
-        // Sort type dropdown (left side)
-        sortTypeDropbox = new Dropbox<String>(UI.scale(150), 4, UI.scale(16)) {
+        // Sort type dropdown (smaller, cleaner)
+        sortTypeDropbox = new Dropbox<String>(UI.scale(85), 4, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
                 String[] options = {"Count", "Name", "Resource", "Quality"};
@@ -540,7 +548,7 @@ public class NInventory extends Inventory
             
             @Override
             protected void drawitem(GOut g, String item, int idx) {
-                g.text(item, new Coord(2, 1));
+                g.text(item, new Coord(3, 2));
             }
             
             @Override
@@ -549,12 +557,11 @@ public class NInventory extends Inventory
                 applySorting();
             }
         };
-        // Set default selection
         sortTypeDropbox.change("Count");
-        rightToggles.add(sortTypeDropbox, currentPos.add(new Coord(10, 0)));
+        rightToggles.add(sortTypeDropbox, dropdownPos);
         
-        // Order dropdown (right side)  
-        orderDropbox = new Dropbox<String>(UI.scale(150), 2, UI.scale(16)) {
+        // Order dropdown (smaller, right aligned)
+        orderDropbox = new Dropbox<String>(UI.scale(60), 2, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
                 String[] options = {"Asc", "Desc"};
@@ -566,7 +573,7 @@ public class NInventory extends Inventory
             
             @Override
             protected void drawitem(GOut g, String item, int idx) {
-                g.text(item, new Coord(2, 1));
+                g.text(item, new Coord(3, 2));
             }
             
             @Override
@@ -575,13 +582,13 @@ public class NInventory extends Inventory
                 applySorting();
             }
         };
-        // Set default selection
-        orderDropbox.change("Desc");
-        rightToggles.add(orderDropbox, new Coord(currentPos.x + UI.scale(100), currentPos.y));
+        orderDropbox.change("Asc");  // Default to descending
+        rightToggles.add(orderDropbox, dropdownPos.add(new Coord(UI.scale(90), 0)));
+
         
-        // Create SListBox for item list - position it below the dropdowns
-        itemListBox = rightToggles.add(new ItemSListBox(new Coord(UI.scale(180), UI.scale(250))),
-                                      new Coord(currentPos.x, UI.scale(45)));
+        // Create SListBox for item list - with better positioning
+        Coord listPos = dropdownPos.add(new Coord(0, UI.scale(25)));
+        itemListBox = rightToggles.add(new ItemSListBox(new Coord(UI.scale(250), UI.scale(100))), listPos);
         
         // Initial population of items
         if (itemListBox != null) {
@@ -678,45 +685,66 @@ public class NInventory extends Inventory
             return new Widget(sz) {
                 @Override
                 public void draw(GOut g) {
-                    int iconSize = UI.scale(24);
+                    int iconSize = UI.scale(22);
+                    int margin = UI.scale(3);
+                    int textY = UI.scale(3);
                     
-                    // Draw item icon or placeholder
+                    // Draw item icon with border
                     NGItem representativeItem = group.getRepresentativeItem();
-                        try {
-                            GSprite spr = representativeItem.spr();
-                            if (spr != null) {
-                                // Get the sprite's texture and draw it scaled
-                                Coord iconPos = new Coord(2, 1);
-                                Resource.Image img = representativeItem.getres().layer(Resource.imgc);
-                                if (img != null) {
-                                    g.image(img.tex(), iconPos, new Coord(iconSize, iconSize));
-                                } else {
-                                    // Fallback: draw gray placeholder
-                                    g.chcolor(128, 128, 128, 180);
-                                    g.frect(iconPos, new Coord(iconSize, iconSize));
-                                    g.chcolor();
-                                }
+                    Coord iconPos = new Coord(margin, margin);
+                    
+                    // Icon background/border
+                    g.chcolor(60, 60, 60, 200);
+                    g.frect(iconPos.sub(1, 1), new Coord(iconSize + 2, iconSize + 2));
+                    g.chcolor(120, 120, 120, 255);
+                    g.rect(iconPos.sub(1, 1), new Coord(iconSize + 2, iconSize + 2));
+                    g.chcolor();
+                    
+                    try {
+                        GSprite spr = representativeItem.spr();
+                        if (spr != null) {
+                            Resource.Image img = representativeItem.getres().layer(Resource.imgc);
+                            if (img != null) {
+                                g.image(img.tex(), iconPos, new Coord(iconSize, iconSize));
                             } else {
-                                // Draw gray placeholder if no sprite
-                                g.chcolor(128, 128, 128, 180);
-                                g.frect(new Coord(2, 1), new Coord(iconSize, iconSize));
+                                // Fallback: draw colored placeholder
+                                g.chcolor(100, 150, 100, 200);
+                                g.frect(iconPos, new Coord(iconSize, iconSize));
                                 g.chcolor();
                             }
-                        } catch (Exception e) {
-                            // Draw gray placeholder if sprite fails
-                            g.chcolor(128, 128, 128, 180);
-                            g.frect(new Coord(2, 1), new Coord(iconSize, iconSize));
+                        } else {
+                            // Draw colored placeholder if no sprite
+                            g.chcolor(150, 100, 100, 200);
+                            g.frect(iconPos, new Coord(iconSize, iconSize));
                             g.chcolor();
                         }
+                    } catch (Exception e) {
+                        // Draw error placeholder
+                        g.chcolor(150, 150, 100, 200);
+                        g.frect(iconPos, new Coord(iconSize, iconSize));
+                        g.chcolor();
+                    }
                     
-                    // Draw quantity and name
-                    String displayText = String.format("%d %s", group.totalQuantity, group.name);
-                    g.text(displayText, new Coord(iconSize + 5, 2));
+                    // Calculate text positions
+                    int textStartX = iconPos.x + iconSize + UI.scale(8);
+                    int quantityWidth = UI.scale(25);
+                    int nameStartX = textStartX + quantityWidth;
+                    int qualityX = sz.x - UI.scale(35);
                     
-                    // Draw average quality if available
+                    // Draw quantity in a distinct style
+                    String quantityText = String.valueOf(group.totalQuantity);
+                    g.text(quantityText, new Coord(textStartX, textY));
+                    g.chcolor();
+                    
+                    // Draw item name)
+                    g.text(group.name, new Coord(nameStartX, textY));
+                    g.chcolor();
+                    
+                    // Draw quality with color coding
                     if (group.averageQuality > 0) {
                         String qualityText = String.format("%.1f", group.averageQuality);
-                        g.text(qualityText, new Coord(sz.x - 35, 2));
+                        g.text(qualityText, new Coord(qualityX, textY));
+                        g.chcolor();
                     }
                 }
             };
@@ -774,7 +802,7 @@ public class NInventory extends Inventory
                 if (orderDropbox != null && "Asc".equals(orderDropbox.sel)) {
                     return result;
                 } else {
-                    return -result;
+                    return -result; // Descending
                 }
             });
             
