@@ -361,6 +361,33 @@ public class NInventory extends Inventory
             new TexI(Resource.loadsimg("nurgling/hud/buttons/itogglec/h")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/itogglec/dh"))};
 
+    // Mirrored versions for right-side toggle
+    private static final TexI[] collapseiRight = createMirroredTextures(collapsei);
+    
+    // Helper method to create horizontally mirrored textures
+    private static TexI[] createMirroredTextures(TexI[] original) {
+        TexI[] mirrored = new TexI[original.length];
+        for (int i = 0; i < original.length; i++) {
+            BufferedImage img = original[i].back;
+            
+            // Use ARGB format to ensure compatibility
+            int imageType = img.getType();
+            if (imageType == 0) {
+                imageType = BufferedImage.TYPE_INT_ARGB;
+            }
+            
+            BufferedImage flippedImg = new BufferedImage(img.getWidth(), img.getHeight(), imageType);
+            
+            // Create mirrored image using Graphics2D for better handling
+            java.awt.Graphics2D g2d = flippedImg.createGraphics();
+            g2d.drawImage(img, img.getWidth(), 0, 0, img.getHeight(), 0, 0, img.getWidth(), img.getHeight(), null);
+            g2d.dispose();
+            
+            mirrored[i] = new TexI(flippedImg);
+        }
+        return mirrored;
+    }
+
     private static final TexI[] gildingi = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/gilding/u")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/gilding/d")),
@@ -426,8 +453,8 @@ public class NInventory extends Inventory
 
         parent.pack();
 
-        // Right panel toggle button
-        parent.add(new ICheckBox(collapsei[0], collapsei[1], collapsei[2], collapsei[3]) {
+        // Right panel toggle button - using mirrored textures
+        parent.add(new ICheckBox(collapseiRight[0], collapseiRight[1], collapseiRight[2], collapseiRight[3]) {
                        @Override
                        public void changed(boolean val) {
                            super.changed(val);
