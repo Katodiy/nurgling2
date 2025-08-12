@@ -299,17 +299,24 @@ public class NInventory extends Inventory
             ));
 
             // size: base on this inventory content height, not the whole window height
-            int usableInvHeight = this.sz.y; // inventory widget pixel height
-            int newHeight = (int)(usableInvHeight * 0.80f);
+
+            int invH = this.sz.y;
+
+            // want: inner content = 80% of inventory height
+            int insetY = rightToggles.atl.y;
+            int desiredInner = Math.round(invH * 0.80f);
+
+            // outer height must include both top & bottom insets
+            int outerH = desiredInner + insetY * 2;
 
             // scale width
             int panelW = UI.scale(250);
-            rightToggles.resize(panelW, newHeight);
+            rightToggles.resize(panelW, outerH);
 
             if (itemListBox != null) {
                 // Insets (uniform border): use atl for both sides
                 int insetX = rightToggles.atl.x;
-                int insetY = rightToggles.atl.y;
+                insetY = rightToggles.atl.y;
 
                 // Content box
                 int contentLeft   = insetX;
@@ -421,20 +428,20 @@ public class NInventory extends Inventory
         TexI[] mirrored = new TexI[original.length];
         for (int i = 0; i < original.length; i++) {
             BufferedImage img = original[i].back;
-            
+
             // Use ARGB format to ensure compatibility
             int imageType = img.getType();
             if (imageType == 0) {
                 imageType = BufferedImage.TYPE_INT_ARGB;
             }
-            
+
             BufferedImage flippedImg = new BufferedImage(img.getWidth(), img.getHeight(), imageType);
-            
+
             // Create mirrored image using Graphics2D for better handling
             java.awt.Graphics2D g2d = flippedImg.createGraphics();
             g2d.drawImage(img, img.getWidth(), 0, 0, img.getHeight(), 0, 0, img.getWidth(), img.getHeight(), null);
             g2d.dispose();
-            
+
             mirrored[i] = new TexI(flippedImg);
         }
         return mirrored;
@@ -518,10 +525,17 @@ public class NInventory extends Inventory
         toggles = NUtils.getGameUI().add(new NPopupWidget(new Coord(UI.scale(50), UI.scale(80)), NPopupWidget.Type.RIGHT));
         // Initialize with 66% of inventory height
         int panelW = UI.scale(250);
-        int initialHeight = (int)(this.sz.y * 0.80f);
+
+        // 1) create with a provisional height
         rightToggles = NUtils.getGameUI().add(
-                new NPopupWidget(new Coord(panelW, initialHeight), NPopupWidget.Type.LEFT)
+                new NPopupWidget(new Coord(panelW, UI.scale(100)), NPopupWidget.Type.LEFT)
         );
+
+        // 2) now we can read insets and set the real outer height
+        int insetY = rightToggles.atl.y;
+        int desiredInner = Math.round(this.sz.y * 0.80f); // 80% of inventory height
+        int outerH = desiredInner + insetY * 2;
+        rightToggles.resize(panelW, outerH);
 
         Widget pw = toggles.add(new ICheckBox(gildingi[0], gildingi[1], gildingi[2], gildingi[3]) {
             @Override
