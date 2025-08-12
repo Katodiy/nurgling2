@@ -704,10 +704,28 @@ public class NInventory extends Inventory
 
                 totalQuantity += stackSize;
 
-                // Calculate quality
-                if (item.quality != null && item.quality > 0) {
-                    totalQuality += item.quality;
-                    qualityCount++;
+                // Calculate quality - try to get stack quality first, then fallback to item quality
+                double itemQuality = 0;
+                try {
+                    // Try to get stack quality info for stacked items
+                    Stack stackInfo = item.getInfo(Stack.class);
+                    if (stackInfo != null && stackInfo.quality > 0) {
+                        itemQuality = stackInfo.quality;
+                    } else if (item.quality != null && item.quality > 0) {
+                        // Fallback to individual item quality if no stack quality
+                        itemQuality = item.quality;
+                    }
+                } catch (Exception e) {
+                    // Fallback to individual item quality
+                    if (item.quality != null && item.quality > 0) {
+                        itemQuality = item.quality;
+                    }
+                }
+                
+                if (itemQuality > 0) {
+                    // Weight quality by stack size for accurate average
+                    totalQuality += itemQuality * stackSize;
+                    qualityCount += stackSize;
                 }
             }
             
