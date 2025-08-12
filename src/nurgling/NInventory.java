@@ -329,7 +329,7 @@ public class NInventory extends Inventory
         int desiredInner = Math.round(invH * 0.80f);
         int outerH = desiredInner + insetY * 2;
         int panelW = UI.scale(250);
-        int compactPanelW = UI.scale(180); // Smaller width for compact mode
+        int compactPanelW = UI.scale(100); // Smaller width for compact mode
         
         if (rightTogglesExpanded != null) {
             rightTogglesExpanded.move(new Coord(
@@ -595,7 +595,7 @@ public class NInventory extends Inventory
         rightTogglesExpanded.resize(panelW, outerH);
         
         // Create compact panel
-        int compactPanelW = UI.scale(180);
+        int compactPanelW = UI.scale(120);
         rightTogglesCompact = NUtils.getGameUI().add(
                 new NPopupWidget(new Coord(compactPanelW, outerH), NPopupWidget.Type.LEFT)
         );
@@ -684,9 +684,7 @@ public class NInventory extends Inventory
         // Setup both right panels
         setupExpandedPanel();
         setupCompactPanel();
-        
-        // Start in hidden mode
-//        rightPanelMode = RightPanelMode.HIDDEN;
+
         checkBoxForRight.a = false;
         updateRightPanelVisibility();
 
@@ -807,10 +805,10 @@ public class NInventory extends Inventory
             }
         };
         viewToggle.a = false; // Will switch to expanded mode
-        rightTogglesCompact.add(viewToggle, new Coord(rightTogglesCompact.sz.x - UI.scale(20), headerPos.y));
+        rightTogglesCompact.add(viewToggle, new Coord(rightTogglesCompact.sz.x - UI.scale(40), headerPos.y));
         
         // Simple sorting dropdown for compact mode
-        Dropbox<String> compactSortDropbox = new Dropbox<String>(UI.scale(80), 2, UI.scale(14)) {
+        Dropbox<String> compactSortDropbox = new Dropbox<String>(UI.scale(40), 2, UI.scale(14)) {
             @Override
             protected String listitem(int i) {
                 String[] options = {"Count", "Name"};
@@ -1053,25 +1051,15 @@ public class NInventory extends Inventory
         List<ItemGroup> itemGroups = new ArrayList<>(itemGroupMap.values());
         itemGroups.sort((a, b) -> Integer.compare(b.totalQuantity, a.totalQuantity)); // Descending by count
         
-        // Create compact grid layout
-        int x = 0, y = 0;
-        int iconSize = UI.scale(24);
-        int margin = UI.scale(2);
-        int itemWidth = iconSize + margin;
-        int itemHeight = iconSize + UI.scale(8); // Extra space for quantity text
+        // Create compact list layout - one line per item
+        int y = 0;
         int contentWidth = compactListContainer.cont.sz.x;
-        int itemsPerRow = Math.max(1, (contentWidth - margin) / itemWidth);
+        int itemHeight = UI.scale(18); // Single line height
         
-        for (int i = 0; i < itemGroups.size(); i++) {
-            ItemGroup group = itemGroups.get(i);
-            Widget compactWidget = createCompactItemWidget(group, new Coord(itemWidth, itemHeight));
-            compactListContent.add(compactWidget, new Coord(x, y));
-            
-            x += itemWidth;
-            if ((i + 1) % itemsPerRow == 0) {
-                x = 0;
-                y += itemHeight;
-            }
+        for (ItemGroup group : itemGroups) {
+            Widget compactWidget = createCompactItemWidget(group, new Coord(contentWidth, itemHeight));
+            compactListContent.add(compactWidget, new Coord(0, y));
+            y += itemHeight + UI.scale(1);
         }
         
         // Let the content widget auto-resize and update scrollbar
@@ -1148,11 +1136,13 @@ public class NInventory extends Inventory
             @Override
             public void draw(GOut g) {
                 int iconSize = UI.scale(24);
+                int margin = UI.scale(1);
+                int textY = UI.scale(1);
                 
                 // Draw item icon
                 NGItem representativeItem = group.getRepresentativeItem();
                 if (representativeItem != null) {
-                    Coord iconPos = new Coord(0, 0);
+                    Coord iconPos = new Coord(margin, margin);
                     
                     try {
                         Resource.Image img = representativeItem.getres().layer(Resource.imgc);
@@ -1172,10 +1162,10 @@ public class NInventory extends Inventory
                     }
                 }
                 
-                // Draw quantity below icon
+                // Draw just the quantity next to the icon
+                int textStartX = margin + iconSize + UI.scale(4);
                 String quantityText = "x" + group.totalQuantity;
-                Coord textPos = new Coord(0, iconSize + UI.scale(1));
-                g.text(quantityText, textPos);
+                g.text(quantityText, new Coord(textStartX, textY));
             }
         };
     }
