@@ -908,8 +908,8 @@ public class NInventory extends Inventory
                 int nameStartX = textStartX + quantityWidth;
                 int qualityX = sz.x - UI.scale(35);
                 
-                // Draw quantity
-                String quantityText = String.valueOf(group.totalQuantity);
+                // Draw quantity with "x" prefix
+                String quantityText = "x" + group.totalQuantity;
                 g.text(quantityText, new Coord(textStartX, textY));
                 
                 // Draw item name
@@ -917,6 +917,17 @@ public class NInventory extends Inventory
                 
                 // Draw quality if available
                 if (group.averageQuality > 0) {
+                    // Draw blue quality dot
+                    try {
+                        Tex qualityIcon = new TexI(Resource.remote().loadwait("ui/tt/q/quality").layer(Resource.imgc, 0).scaled());
+                        int dotSize = UI.scale(12);
+                        int dotX = qualityX - dotSize - UI.scale(2);
+                        g.image(qualityIcon, new Coord(dotX, textY), new Coord(dotSize, dotSize));
+                    } catch (Exception e) {
+                        // Ignore if icon fails to load
+                    }
+                    
+                    // Draw quality value
                     String qualityText = String.format("%.1f", group.averageQuality);
                     g.text(qualityText, new Coord(qualityX, textY));
                 }
