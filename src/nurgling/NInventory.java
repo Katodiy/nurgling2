@@ -695,7 +695,7 @@ public class NInventory extends Inventory
                 int stackSize = 1;
                 try {
                     GItem.Amount amount = item.getInfo(GItem.Amount.class);
-                    if (amount != null) {
+                    if (amount != null && amount.itemnum() > 0) {
                         stackSize = amount.itemnum();
                     }
                 } catch (Exception e) {
@@ -706,7 +706,7 @@ public class NInventory extends Inventory
 
                 // Calculate quality - try to get stack quality first, then fallback to item quality
                 double itemQuality = 0;
-                try {
+                if(stackSize > 1) {
                     // Try to get stack quality info for stacked items
                     Stack stackInfo = item.getInfo(Stack.class);
                     if (stackInfo != null && stackInfo.quality > 0) {
@@ -715,12 +715,18 @@ public class NInventory extends Inventory
                         // Fallback to individual item quality if no stack quality
                         itemQuality = item.quality;
                     }
-                } catch (Exception e) {
-                    // Fallback to individual item quality
-                    if (item.quality != null && item.quality > 0) {
-                        itemQuality = item.quality;
+                } else {
+                    // Fallback to individual item quality on any error
+                    try {
+                        if (item.quality != null && item.quality > 0) {
+                            itemQuality = item.quality;
+                        }
+                    } catch (Exception e2) {
+                        // Ignore and continue with 0 quality
+                        itemQuality = 0;
                     }
                 }
+
                 
                 if (itemQuality > 0) {
                     // Weight quality by stack size for accurate average
@@ -744,9 +750,10 @@ public class NInventory extends Inventory
     // SListBox implementation for inventory items
     private class ItemSListBox extends SListBox<ItemGroup, Widget> {
         private java.util.List<ItemGroup> itemGroups = new ArrayList<>();
+        private final Tex qualityIcon = new TexI(Resource.remote().loadwait("ui/tt/q/quality").layer(Resource.imgc, 0).scaled());
         
         public ItemSListBox(Coord sz) {
-            super(sz, UI.scale(28), 0);  // Increased to accommodate 32px icons
+            super(sz, UI.scale(18), 0);  // Increased to accommodate 32px icons
         }
         
         protected java.util.List<ItemGroup> items() {
@@ -757,9 +764,9 @@ public class NInventory extends Inventory
             return new Widget(sz) {
                 @Override
                 public void draw(GOut g) {
-                    int iconSize = UI.scale(22);
-                    int margin = UI.scale(3);
-                    int textY = UI.scale(3);
+                    int iconSize = UI.scale(16);
+                    int margin = UI.scale(1);
+                    int textY = UI.scale(1);
                     
                     // Draw item icon with border
                     NGItem representativeItem = group.getRepresentativeItem();
@@ -793,8 +800,14 @@ public class NInventory extends Inventory
                     g.text(group.name, new Coord(nameStartX, textY));
                     g.chcolor();
                     
-                    // Draw quality with color coding
+                    // Draw quality with blue dot and color coding
                     if (group.averageQuality > 0) {
+                        // Draw blue quality dot
+                        int dotSize = UI.scale(12);
+                        int dotX = qualityX - dotSize - UI.scale(2);
+                        g.image(qualityIcon, new Coord(dotX, textY), new Coord(dotSize, dotSize));
+                        
+                        // Draw quality value
                         String qualityText = String.format("%.1f", group.averageQuality);
                         g.text(qualityText, new Coord(qualityX, textY));
                         g.chcolor();
