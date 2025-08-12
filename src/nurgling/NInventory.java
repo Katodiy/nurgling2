@@ -1,7 +1,6 @@
 package nurgling;
 
 import haven.*;
-import haven.Label;
 import haven.Window;
 import haven.res.ui.stackinv.ItemStack;
 import haven.res.ui.tt.slot.Slotted;
@@ -281,10 +280,10 @@ public class NInventory extends Inventory
         super.resize(new Coord(sz));
         searchwdg.resize(new Coord(sz.x , 0));
         searchwdg.move(new Coord(0,sz.y + UI.scale(5)));
-        moveCheckbox(parent.c);
+        moveCheckbox();
         parent.pack();
         movePopup(parent.c);
-        moveCheckboxAfterPack(parent.c);
+        moveCheckboxAfterPack();
     }
 
     public void movePopup(Coord c) {
@@ -312,7 +311,7 @@ public class NInventory extends Inventory
         }
     }
 
-    public void moveCheckbox(Coord c) {
+    public void moveCheckbox() {
         if(checkBoxForRight != null) {
             // Since the button is positioned relative to sz.x, it should automatically 
             // adjust when the inventory resizes. Only reposition if needed.
@@ -320,7 +319,7 @@ public class NInventory extends Inventory
         }
     }
 
-    public void moveCheckboxAfterPack(Coord c) {
+    public void moveCheckboxAfterPack() {
         if(checkBoxForRight != null) {
             // Since the button is positioned relative to sz.x, it should automatically
             // adjust when the inventory resizes. Only reposition if needed.
@@ -796,7 +795,7 @@ public class NInventory extends Inventory
                     g.text(quantityText, new Coord(textStartX, textY));
                     g.chcolor();
                     
-                    // Draw item name)
+                    // Draw item name
                     g.text(group.name, new Coord(nameStartX, textY));
                     g.chcolor();
                     
@@ -817,7 +816,7 @@ public class NInventory extends Inventory
         }
         
         public void updateItems() {
-            // Get current inventory items and group by name  
+            // Get current inventory items and group by name
             Map<String, ItemGroup> itemGroupMap = new HashMap<>();
             
             // Access parent inventory's children
@@ -906,9 +905,9 @@ public class NInventory extends Inventory
             if (widget instanceof WItem)
             {
                 WItem item = (WItem) widget;
-                if (((NGItem) item.item).spr != null)
+                if (item.item.spr != null)
                 {
-                    Coord size = ((NGItem) item.item).spr.sz().div(UI.scale(32));
+                    Coord size = item.item.spr.sz().div(UI.scale(32));
                     int xSize = size.x;
                     int ySize = size.y;
                     int xLoc = item.c.div(Inventory.sqsz).x;
