@@ -14,7 +14,7 @@ public class Stack extends ItemInfo.Name implements GItem.OverlayInfo<Tex> {
 
 	}
 
-	double quality = 0;
+	public double quality = 0;
 
 	public Tex overlay() {
 		int count = 0;
