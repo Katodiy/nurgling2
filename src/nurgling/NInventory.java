@@ -291,20 +291,43 @@ public class NInventory extends Inventory
         {
             toggles.move(new Coord(c.x - toggles.sz.x + toggles.atl.x +UI.scale(10),c.y + UI.scale(35)));
         }
-        if(rightToggles != null)
-        {
-            rightToggles.move(new Coord(c.x + parent.sz.x - rightToggles.atl.x - UI.scale(4), c.y + UI.scale(35)));
-            // Resize to 66% of inventory height
-            int newHeight = (int)(parent.sz.y * 0.66);
-            rightToggles.resize(450, newHeight);
-            
-            // Also resize the itemListBox to fit the new panel size
-            if(itemListBox != null) {
-                // Calculate available space for the list (panel height minus space for dropdowns and margins)
-                int listHeight = newHeight - UI.scale(70); // Leave space for header and dropdowns
-                int listWidth = 450 - UI.scale(40); // Panel width minus margins
+        if (rightToggles != null) {
+            // position
+            rightToggles.move(new Coord(
+                    c.x + parent.sz.x - rightToggles.atl.x - UI.scale(6),
+                    c.y + UI.scale(35)
+            ));
+
+            // size: base on this inventory content height, not the whole window height
+            int usableInvHeight = this.sz.y; // inventory widget pixel height
+            int newHeight = (int)(usableInvHeight * 0.80f);
+
+            // scale width
+            int panelW = UI.scale(250);
+            rightToggles.resize(panelW, newHeight);
+
+            if (itemListBox != null) {
+                // Insets (uniform border): use atl for both sides
+                int insetX = rightToggles.atl.x;
+                int insetY = rightToggles.atl.y;
+
+                // Content box
+                int contentLeft   = insetX;
+                int contentTop    = insetY;
+                int contentRight  = rightToggles.sz.x - insetX;
+                int contentBottom = rightToggles.sz.y - insetY;
+
+                // itemListBox was added at listPos (relative to rightToggles), keep its X
+                int listTopY   = itemListBox.c.y;
+                int sidePad    = UI.scale(12);
+                int bottomPad  = UI.scale(8);
+
+                int listWidth  = Math.max(0, (contentRight - contentLeft) - sidePad * 2);
+                int listHeight = Math.max(0, contentBottom - listTopY - bottomPad);
+
                 itemListBox.resize(new Coord(listWidth, listHeight));
             }
+
         }
         if(searchwdg!=null && searchwdg.history!=null) {
             searchwdg.history.move(new Coord(c.x  + ((Window)parent).ca().ul.x + UI.scale(7), c.y + parent.sz.y- UI.scale(37)));
@@ -494,8 +517,11 @@ public class NInventory extends Inventory
 
         toggles = NUtils.getGameUI().add(new NPopupWidget(new Coord(UI.scale(50), UI.scale(80)), NPopupWidget.Type.RIGHT));
         // Initialize with 66% of inventory height
-        int initialHeight = (int)(sz.y * 0.66);
-        rightToggles = NUtils.getGameUI().add(new NPopupWidget(new Coord(450, initialHeight), NPopupWidget.Type.LEFT));
+        int panelW = UI.scale(250);
+        int initialHeight = (int)(this.sz.y * 0.80f);
+        rightToggles = NUtils.getGameUI().add(
+                new NPopupWidget(new Coord(panelW, initialHeight), NPopupWidget.Type.LEFT)
+        );
 
         Widget pw = toggles.add(new ICheckBox(gildingi[0], gildingi[1], gildingi[2], gildingi[3]) {
             @Override
@@ -583,7 +609,6 @@ public class NInventory extends Inventory
 
         movePopup(parent.c);
         toggles.pack();
-        rightToggles.pack();
     }
 
     private void setupRightPanel() {
