@@ -30,7 +30,8 @@ public class NInventory extends Inventory
     public NPopupWidget toggles;
     public NPopupWidget rightToggles;
     public ICheckBox checkBoxForRight;
-    public ItemSListBox itemListBox;
+    public Scrollport itemListContainer;
+    public Widget itemListContent;
     public Dropbox<String> sortTypeDropbox;
     public Dropbox<String> orderDropbox;
     public ICheckBox bundle;
@@ -313,7 +314,7 @@ public class NInventory extends Inventory
             int panelW = UI.scale(250);
             rightToggles.resize(panelW, outerH);
 
-            if (itemListBox != null) {
+            if (itemListContainer != null) {
                 // Insets (uniform border): use atl for both sides
                 int insetX = rightToggles.atl.x;
                 insetY = rightToggles.atl.y;
@@ -324,15 +325,16 @@ public class NInventory extends Inventory
                 int contentRight  = rightToggles.sz.x - insetX;
                 int contentBottom = rightToggles.sz.y - insetY;
 
-                // itemListBox was added at listPos (relative to rightToggles), keep its X
-                int listTopY   = itemListBox.c.y;
+                // itemListContainer was added at listPos (relative to rightToggles), keep its X
+                int listTopY   = itemListContainer.c.y;
                 int sidePad    = UI.scale(12);
                 int bottomPad  = UI.scale(8);
 
                 int listWidth  = Math.max(0, (contentRight - contentLeft) - sidePad * 2);
                 int listHeight = Math.max(0, contentBottom - listTopY - bottomPad);
 
-                itemListBox.resize(new Coord(listWidth, listHeight));
+                itemListContainer.resize(new Coord(listWidth, listHeight));
+                rebuildItemList();
             }
 
         }
@@ -683,27 +685,32 @@ public class NInventory extends Inventory
         rightToggles.add(orderDropbox, dropdownPos.add(new Coord(UI.scale(90), 0)));
 
         
-        // Create SListBox for item list - with better positioning
+        // Create Scrollport for item list - following CheeseOrdersPanel pattern
         Coord listPos = dropdownPos.add(new Coord(0, UI.scale(25)));
-        itemListBox = rightToggles.add(new ItemSListBox(new Coord(UI.scale(250), UI.scale(150))), listPos);
+        int listWidth = UI.scale(220);
+        int listHeight = UI.scale(150);
+        
+        itemListContainer = rightToggles.add(new Scrollport(new Coord(listWidth, listHeight)), listPos);
+        itemListContent = new Widget(new Coord(listWidth, UI.scale(50))) {
+            @Override
+            public void pack() {
+                // Auto-resize based on children
+                resize(contentsz());
+            }
+        };
+        itemListContainer.cont.add(itemListContent, Coord.z);
         
         // Initial population of items
-        if (itemListBox != null) {
-            itemListBox.updateItems();
-        }
+        rebuildItemList();
     }
 
     private void applySorting() {
         // Trigger re-population of items with current sort settings
-        if (itemListBox != null) {
-            itemListBox.updateItems();
-        }
+        rebuildItemList();
     }
 
     private void updateRightPanelItems() {
-        if (itemListBox != null) {
-            itemListBox.updateItems();
-        }
+        rebuildItemList();
     }
     
     // Helper class to group items by name
@@ -785,33 +792,99 @@ public class NInventory extends Inventory
         }
     }
     
-    // SListBox implementation for inventory items
-    private class ItemSListBox extends SListBox<ItemGroup, Widget> {
-        private java.util.List<ItemGroup> itemGroups = new ArrayList<>();
-        private final Tex qualityIcon = new TexI(Resource.remote().loadwait("ui/tt/q/quality").layer(Resource.imgc, 0).scaled());
+    private void rebuildItemList() {
+        if (itemListContent == null) return;
         
-        public ItemSListBox(Coord sz) {
-            super(sz, UI.scale(18), 0);  // Increased to accommodate 32px icons
+        // Clear existing widgets from content
+        for (Widget child : new ArrayList<>(itemListContent.children())) {
+            child.destroy();
         }
         
-        protected java.util.List<ItemGroup> items() {
-            return itemGroups;
-        }
+        // Get current inventory items and group by name
+        Map<String, ItemGroup> itemGroupMap = new HashMap<>();
         
-        protected Widget makeitem(ItemGroup group, int idx, Coord sz) {
-            return new Widget(sz) {
-                @Override
-                public void draw(GOut g) {
-                    int iconSize = UI.scale(16);
-                    int margin = UI.scale(1);
-                    int textY = UI.scale(1);
+        // Access parent inventory's children
+        for (Widget widget = this.child; widget != null; widget = widget.next) {
+            if (widget instanceof WItem) {
+                WItem wItem = (WItem) widget;
+                if (wItem.item instanceof NGItem) {
+                    NGItem nitem = (NGItem) wItem.item;
+                    String itemName = nitem.name();
                     
-                    // Draw item icon with border
-                    NGItem representativeItem = group.getRepresentativeItem();
+                    if (itemName != null) {
+                        ItemGroup group = itemGroupMap.get(itemName);
+                        if (group == null) {
+                            group = new ItemGroup(itemName);
+                            itemGroupMap.put(itemName, group);
+                        }
+                        group.addItem(nitem);
+                    }
+                }
+            }
+        }
+        
+        // Sort the items based on current dropdown selections
+        List<ItemGroup> itemGroups = new ArrayList<>(itemGroupMap.values());
+        itemGroups.sort((a, b) -> {
+            int result = 0;
+            
+            if (sortTypeDropbox != null && sortTypeDropbox.sel != null) {
+                switch (sortTypeDropbox.sel) {
+                    case "Count":
+                        result = Integer.compare(a.totalQuantity, b.totalQuantity);
+                        break;
+                    case "Name":
+                        result = a.name.compareTo(b.name);
+                        break;
+                    case "Resource":
+                        result = a.name.compareTo(b.name); // Same as name for now
+                        break;
+                    case "Quality":
+                        result = Double.compare(a.averageQuality, b.averageQuality);
+                        break;
+                    default:
+                        result = 0;
+                }
+            }
+            
+            // Apply ascending/descending order
+            if (orderDropbox != null && "Asc".equals(orderDropbox.sel)) {
+                return result;
+            } else {
+                return -result; // Descending
+            }
+        });
+        
+        // Create widgets for each item group
+        int y = 0;
+        int contentWidth = itemListContainer.cont.sz.x;
+        int itemHeight = UI.scale(20);
+        
+        for (ItemGroup group : itemGroups) {
+            Widget itemWidget = createItemWidget(group, new Coord(contentWidth, itemHeight));
+            itemListContent.add(itemWidget, new Coord(0, y));
+            y += itemHeight + UI.scale(1);
+        }
+        
+        // Let the content widget auto-resize and update scrollbar
+        itemListContent.pack();
+        itemListContainer.cont.update();
+    }
+    
+    private Widget createItemWidget(ItemGroup group, Coord sz) {
+        return new Widget(sz) {
+            @Override
+            public void draw(GOut g) {
+                int iconSize = UI.scale(16);
+                int margin = UI.scale(1);
+                int textY = UI.scale(2);
+                
+                // Draw item icon
+                NGItem representativeItem = group.getRepresentativeItem();
+                if (representativeItem != null) {
                     Coord iconPos = new Coord(margin, margin);
-
-                    GSprite spr = representativeItem.spr();
-                    if (spr != null) {
+                    
+                    try {
                         Resource.Image img = representativeItem.getres().layer(Resource.imgc);
                         if (img != null) {
                             g.image(img.tex(), iconPos, new Coord(iconSize, iconSize));
@@ -821,105 +894,34 @@ public class NInventory extends Inventory
                             g.frect(iconPos, new Coord(iconSize, iconSize));
                             g.chcolor();
                         }
-                    }
-                    
-                    // Calculate text positions
-                    int textStartX = iconPos.x + iconSize + UI.scale(8);
-                    int quantityWidth = UI.scale(25);
-                    int nameStartX = textStartX + quantityWidth;
-                    int qualityX = sz.x - UI.scale(35);
-                    
-                    // Draw quantity in a distinct style
-                    String quantityText = String.valueOf(group.totalQuantity);
-                    g.text(quantityText, new Coord(textStartX, textY));
-                    g.chcolor();
-                    
-                    // Draw item name
-                    g.text(group.name, new Coord(nameStartX, textY));
-                    g.chcolor();
-                    
-                    // Draw quality with blue dot and color coding
-                    if (group.averageQuality > 0) {
-                        // Draw blue quality dot
-                        int dotSize = UI.scale(12);
-                        int dotX = qualityX - dotSize - UI.scale(2);
-                        g.image(qualityIcon, new Coord(dotX, textY), new Coord(dotSize, dotSize));
-                        
-                        // Draw quality value
-                        String qualityText = String.format("%.1f", group.averageQuality);
-                        g.text(qualityText, new Coord(qualityX, textY));
+                    } catch (Exception e) {
+                        // Fallback: draw colored placeholder
+                        g.chcolor(100, 150, 100, 200);
+                        g.frect(iconPos, new Coord(iconSize, iconSize));
                         g.chcolor();
                     }
                 }
-            };
-        }
-        
-        public void updateItems() {
-            // Get current inventory items and group by name
-            Map<String, ItemGroup> itemGroupMap = new HashMap<>();
-            
-            // Access parent inventory's children
-            for (Widget widget = NInventory.this.child; widget != null; widget = widget.next) {
-                if (widget instanceof WItem) {
-                    WItem wItem = (WItem) widget;
-                    if (wItem.item instanceof NGItem) {
-                        NGItem nitem = (NGItem) wItem.item;
-                        String itemName = nitem.name();
-                        
-                        if (itemName != null) {
-                            ItemGroup group = itemGroupMap.get(itemName);
-                            if (group == null) {
-                                group = new ItemGroup(itemName);
-                                itemGroupMap.put(itemName, group);
-                            }
-                            group.addItem(nitem);
-                        }
-                    }
+                
+                // Calculate text positions
+                int textStartX = margin + iconSize + UI.scale(4);
+                int quantityWidth = UI.scale(25);
+                int nameStartX = textStartX + quantityWidth;
+                int qualityX = sz.x - UI.scale(35);
+                
+                // Draw quantity
+                String quantityText = String.valueOf(group.totalQuantity);
+                g.text(quantityText, new Coord(textStartX, textY));
+                
+                // Draw item name
+                g.text(group.name, new Coord(nameStartX, textY));
+                
+                // Draw quality if available
+                if (group.averageQuality > 0) {
+                    String qualityText = String.format("%.1f", group.averageQuality);
+                    g.text(qualityText, new Coord(qualityX, textY));
                 }
             }
-            
-            // Sort the items based on current dropdown selections
-            itemGroups = new ArrayList<>(itemGroupMap.values());
-            itemGroups.sort((a, b) -> {
-                int result = 0;
-                
-                if (sortTypeDropbox != null && sortTypeDropbox.sel != null) {
-                    switch (sortTypeDropbox.sel) {
-                        case "Count":
-                            result = Integer.compare(a.totalQuantity, b.totalQuantity);
-                            break;
-                        case "Name":
-                            result = a.name.compareTo(b.name);
-                            break;
-                        case "Resource":
-                            result = a.name.compareTo(b.name); // Same as name for now
-                            break;
-                        case "Quality":
-                            result = Double.compare(a.averageQuality, b.averageQuality);
-                            break;
-                        default:
-                            result = 0;
-                    }
-                }
-                
-                // Apply ascending/descending order
-                if (orderDropbox != null && "Asc".equals(orderDropbox.sel)) {
-                    return result;
-                } else {
-                    return -result; // Descending
-                }
-            });
-            
-            // Tell SListBox that items have changed
-            reset();
-        }
-        
-        @Override
-        public void tick(double dt) {
-            // Periodically update items to keep list current
-            updateItems();
-            super.tick(dt);
-        }
+        };
     }
 
     public short[][] containerMatrix()
