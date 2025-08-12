@@ -30,6 +30,7 @@ public class NInventory extends Inventory
     public NSearchWidget searchwdg;
     public NPopupWidget toggles;
     public NPopupWidget rightToggles;
+    public ICheckBox checkBoxForRight;
     public ItemSListBox itemListBox;
     public Dropbox<String> sortTypeDropbox;
     public Dropbox<String> orderDropbox;
@@ -280,8 +281,10 @@ public class NInventory extends Inventory
         super.resize(new Coord(sz));
         searchwdg.resize(new Coord(sz.x , 0));
         searchwdg.move(new Coord(0,sz.y + UI.scale(5)));
+        moveCheckbox(parent.c);
         parent.pack();
         movePopup(parent.c);
+        moveCheckboxAfterPack(parent.c);
     }
 
     public void movePopup(Coord c) {
@@ -292,9 +295,36 @@ public class NInventory extends Inventory
         if(rightToggles != null)
         {
             rightToggles.move(new Coord(c.x + parent.sz.x - rightToggles.atl.x - UI.scale(4), c.y + UI.scale(35)));
+            // Resize to 66% of inventory height
+            int newHeight = (int)(parent.sz.y * 0.66);
+            rightToggles.resize(450, newHeight);
+            
+            // Also resize the itemListBox to fit the new panel size
+            if(itemListBox != null) {
+                // Calculate available space for the list (panel height minus space for dropdowns and margins)
+                int listHeight = newHeight - UI.scale(70); // Leave space for header and dropdowns
+                int listWidth = 450 - UI.scale(40); // Panel width minus margins
+                itemListBox.resize(new Coord(listWidth, listHeight));
+            }
         }
         if(searchwdg!=null && searchwdg.history!=null) {
             searchwdg.history.move(new Coord(c.x  + ((Window)parent).ca().ul.x + UI.scale(7), c.y + parent.sz.y- UI.scale(37)));
+        }
+    }
+
+    public void moveCheckbox(Coord c) {
+        if(checkBoxForRight != null) {
+            // Since the button is positioned relative to sz.x, it should automatically 
+            // adjust when the inventory resizes. Only reposition if needed.
+            checkBoxForRight.c = new Coord(sz.x - UI.scale(40), 0);
+        }
+    }
+
+    public void moveCheckboxAfterPack(Coord c) {
+        if(checkBoxForRight != null) {
+            // Since the button is positioned relative to sz.x, it should automatically
+            // adjust when the inventory resizes. Only reposition if needed.
+            checkBoxForRight.c = new Coord(sz.x + UI.scale(4), UI.scale(27));
         }
     }
 
@@ -450,21 +480,23 @@ public class NInventory extends Inventory
                 , new Coord(-gildingi[0].sz().x + UI.scale(2), UI.scale(27)));
 
 
+        checkBoxForRight = new ICheckBox(collapseiRight[0], collapseiRight[1], collapseiRight[2], collapseiRight[3]) {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+                showRightPopup = val;
+            }
+        };
 
         parent.pack();
 
         // Right panel toggle button - using mirrored textures
-        parent.add(new ICheckBox(collapseiRight[0], collapseiRight[1], collapseiRight[2], collapseiRight[3]) {
-                       @Override
-                       public void changed(boolean val) {
-                           super.changed(val);
-                           showRightPopup = val;
-                       }
-                   }
-                , new Coord(sz.x + UI.scale(4), UI.scale(27)));
+        parent.add(checkBoxForRight, new Coord(sz.x + UI.scale(4), UI.scale(27)));
 
         toggles = NUtils.getGameUI().add(new NPopupWidget(new Coord(UI.scale(50), UI.scale(80)), NPopupWidget.Type.RIGHT));
-        rightToggles = NUtils.getGameUI().add(new NPopupWidget(new Coord(UI.scale(180), UI.scale(230)), NPopupWidget.Type.LEFT));
+        // Initialize with 66% of inventory height
+        int initialHeight = (int)(sz.y * 0.66);
+        rightToggles = NUtils.getGameUI().add(new NPopupWidget(new Coord(450, initialHeight), NPopupWidget.Type.LEFT));
 
         Widget pw = toggles.add(new ICheckBox(gildingi[0], gildingi[1], gildingi[2], gildingi[3]) {
             @Override
@@ -615,7 +647,7 @@ public class NInventory extends Inventory
         
         // Create SListBox for item list - with better positioning
         Coord listPos = dropdownPos.add(new Coord(0, UI.scale(25)));
-        itemListBox = rightToggles.add(new ItemSListBox(new Coord(UI.scale(250), UI.scale(100))), listPos);
+        itemListBox = rightToggles.add(new ItemSListBox(new Coord(UI.scale(250), UI.scale(150))), listPos);
         
         // Initial population of items
         if (itemListBox != null) {
@@ -628,11 +660,6 @@ public class NInventory extends Inventory
         if (itemListBox != null) {
             itemListBox.updateItems();
         }
-    }
-
-    private void applyItemQualitySort(String itemName, boolean ascending) {
-        // Implement item-specific quality sorting
-        // This would sort items of a specific type by quality
     }
 
     private void updateRightPanelItems() {
@@ -664,19 +691,19 @@ public class NInventory extends Inventory
             int qualityCount = 0;
             
             for (NGItem item : items) {
-                // Try to get stack size, default to 1
+                // Get proper stack count using Amount info like GetTotalAmountItems does
                 int stackSize = 1;
                 try {
-                    // Check if item has a stack size property
-                    if (item.num >= 0) {
-                        stackSize = item.num;
+                    GItem.Amount amount = item.getInfo(GItem.Amount.class);
+                    if (amount != null) {
+                        stackSize = amount.itemnum();
                     }
                 } catch (Exception e) {
                     stackSize = 1;
                 }
-                
+
                 totalQuantity += stackSize;
-                
+
                 // Calculate quality
                 if (item.quality != null && item.quality > 0) {
                     totalQuality += item.quality;
@@ -701,7 +728,7 @@ public class NInventory extends Inventory
         private java.util.List<ItemGroup> itemGroups = new ArrayList<>();
         
         public ItemSListBox(Coord sz) {
-            super(sz, UI.scale(34), 0);  // Increased to accommodate 32px icons
+            super(sz, UI.scale(28), 0);  // Increased to accommodate 32px icons
         }
         
         protected java.util.List<ItemGroup> items() {
@@ -719,37 +746,18 @@ public class NInventory extends Inventory
                     // Draw item icon with border
                     NGItem representativeItem = group.getRepresentativeItem();
                     Coord iconPos = new Coord(margin, margin);
-                    
-                    // Icon background/border
-                    g.chcolor(60, 60, 60, 200);
-                    g.frect(iconPos.sub(1, 1), new Coord(iconSize + 2, iconSize + 2));
-                    g.chcolor(120, 120, 120, 255);
-                    g.rect(iconPos.sub(1, 1), new Coord(iconSize + 2, iconSize + 2));
-                    g.chcolor();
-                    
-                    try {
-                        GSprite spr = representativeItem.spr();
-                        if (spr != null) {
-                            Resource.Image img = representativeItem.getres().layer(Resource.imgc);
-                            if (img != null) {
-                                g.image(img.tex(), iconPos, new Coord(iconSize, iconSize));
-                            } else {
-                                // Fallback: draw colored placeholder
-                                g.chcolor(100, 150, 100, 200);
-                                g.frect(iconPos, new Coord(iconSize, iconSize));
-                                g.chcolor();
-                            }
+
+                    GSprite spr = representativeItem.spr();
+                    if (spr != null) {
+                        Resource.Image img = representativeItem.getres().layer(Resource.imgc);
+                        if (img != null) {
+                            g.image(img.tex(), iconPos, new Coord(iconSize, iconSize));
                         } else {
-                            // Draw colored placeholder if no sprite
-                            g.chcolor(150, 100, 100, 200);
+                            // Fallback: draw colored placeholder
+                            g.chcolor(100, 150, 100, 200);
                             g.frect(iconPos, new Coord(iconSize, iconSize));
                             g.chcolor();
                         }
-                    } catch (Exception e) {
-                        // Draw error placeholder
-                        g.chcolor(150, 150, 100, 200);
-                        g.frect(iconPos, new Coord(iconSize, iconSize));
-                        g.chcolor();
                     }
                     
                     // Calculate text positions
