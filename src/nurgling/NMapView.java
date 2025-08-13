@@ -687,11 +687,14 @@ public class NMapView extends MapView
             // Update preview position immediately with screen coordinates
             draggedRouteLabel.updateDragPreview(ev.c);
             
+            // Capture the reference to avoid race conditions with async Hittest
+            final RouteLabel currentDraggedLabel = draggedRouteLabel;
+            
             // Convert screen coordinate to world coordinate using Hittest
             new Hittest(ev.c) {
                 public void hit(Coord pc, Coord2d mc, ClickData inf) {
-                    if(mc != null) {
-                        draggedRouteLabel.updatePosition(mc);
+                    if(mc != null && currentDraggedLabel != null) {
+                        currentDraggedLabel.updatePosition(mc);
                     }
                 }
                 
