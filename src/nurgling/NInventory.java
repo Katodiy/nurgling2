@@ -43,6 +43,7 @@ public class NInventory extends Inventory
     RightPanelMode rightPanelMode = RightPanelMode.HIDDEN;
     boolean compactNameAscending = true;
     boolean compactQuantityAscending = false;
+    String compactLastSortType = "quantity"; // Track which was clicked last
     BufferedImage numbers = null;
     short[][] oldinv = null;
     public Gob parentGob = null;
@@ -823,6 +824,7 @@ public class NInventory extends Inventory
             public void changed(boolean val) {
                 super.changed(val);
                 compactNameAscending = !val; // false = ascending, true = descending
+                compactLastSortType = "name"; // Mark name as last clicked
                 rebuildCompactList();
             }
         };
@@ -840,6 +842,7 @@ public class NInventory extends Inventory
             public void changed(boolean val) {
                 super.changed(val);
                 compactQuantityAscending = !val; // false = ascending, true = descending
+                compactLastSortType = "quantity"; // Mark quantity as last clicked
                 rebuildCompactList();
             }
         };
@@ -1061,19 +1064,32 @@ public class NInventory extends Inventory
             }
         }
         
-        // Sort items - default by quantity, but name sorting takes precedence if used recently
+        // Sort items - whatever was clicked last becomes the primary sort
         List<ItemGroup> itemGroups = new ArrayList<>(itemGroupMap.values());
         itemGroups.sort((a, b) -> {
-            // Primary sort by quantity
-            int quantityResult = Integer.compare(a.totalQuantity, b.totalQuantity);
-            if (!compactQuantityAscending) quantityResult = -quantityResult;
-            
-            // Secondary sort by name for ties
-            if (quantityResult == 0) {
+            if ("name".equals(compactLastSortType)) {
+                // Name is primary sort
                 int nameResult = a.name.compareTo(b.name);
-                return compactNameAscending ? nameResult : -nameResult;
+                if (!compactNameAscending) nameResult = -nameResult;
+                
+                // Secondary sort by quantity for ties
+                if (nameResult == 0) {
+                    int quantityResult = Integer.compare(a.totalQuantity, b.totalQuantity);
+                    return compactQuantityAscending ? quantityResult : -quantityResult;
+                }
+                return nameResult;
+            } else {
+                // Quantity is primary sort (default)
+                int quantityResult = Integer.compare(a.totalQuantity, b.totalQuantity);
+                if (!compactQuantityAscending) quantityResult = -quantityResult;
+                
+                // Secondary sort by name for ties
+                if (quantityResult == 0) {
+                    int nameResult = a.name.compareTo(b.name);
+                    return compactNameAscending ? nameResult : -nameResult;
+                }
+                return quantityResult;
             }
-            return quantityResult;
         });
         
         // Create compact list layout - one line per item
