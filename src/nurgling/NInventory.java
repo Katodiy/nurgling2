@@ -715,6 +715,7 @@ public class NInventory extends Inventory
             }
         };
         viewToggle.a = false; // Start in expanded mode
+        viewToggle.settip("Switch to compact view");
         rightTogglesExpanded.add(viewToggle, new Coord(rightTogglesExpanded.sz.x - UI.scale(50), headerPos.y));
 
         // Position for dropdowns - below header
@@ -809,6 +810,7 @@ public class NInventory extends Inventory
             }
         };
         viewToggle.a = false; // Will switch to expanded mode
+        viewToggle.settip("Switch to expanded view");
         rightTogglesCompact.add(viewToggle, new Coord(rightTogglesCompact.sz.x - UI.scale(40), headerPos.y));
         
         // Sorting buttons for compact mode
@@ -828,6 +830,7 @@ public class NInventory extends Inventory
             }
         };
         nameSortButton.a = false; // Start with ascending (up arrow)
+        nameSortButton.settip("Sort by name (ascending/descending)");
         rightTogglesCompact.add(nameSortButton, new Coord(headerPos.x + 5, headerPos.y));
         
         // Quantity sort button (above quantities area)  
@@ -846,6 +849,7 @@ public class NInventory extends Inventory
             }
         };
         quantitySortButton.a = true; // Start with descending (down arrow) for quantities
+        quantitySortButton.settip("Sort by quantity (ascending/descending)");
         rightTogglesCompact.add(quantitySortButton, new Coord(headerPos.x + 40, headerPos.y));
         
         // Create compact Scrollport for item list (below the sorting buttons)
