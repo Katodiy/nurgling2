@@ -40,7 +40,8 @@ public class NInventory extends Inventory
     public ICheckBox bundle;
     public MenuGrid.PagButton pagBundle = null;
     boolean showPopup = false;
-    RightPanelMode rightPanelMode = RightPanelMode.HIDDEN;
+    boolean showRightPanel = false;
+    RightPanelMode rightPanelMode = RightPanelMode.EXPANDED;
     boolean compactNameAscending = true;
     boolean compactQuantityAscending = false;
     String compactLastSortType = "quantity"; // Track which was clicked last
@@ -59,7 +60,7 @@ public class NInventory extends Inventory
     }
     
     public enum RightPanelMode {
-        HIDDEN, COMPACT, EXPANDED
+        COMPACT, EXPANDED
     }
 
     @Override
@@ -390,7 +391,7 @@ public class NInventory extends Inventory
     
     private void updateRightPanelVisibility() {
         if (rightTogglesExpanded != null) {
-            if (rightPanelMode == RightPanelMode.EXPANDED) {
+            if (showRightPanel && rightPanelMode == RightPanelMode.EXPANDED) {
                 rightTogglesExpanded.show();
             } else {
                 rightTogglesExpanded.hide();
@@ -398,7 +399,7 @@ public class NInventory extends Inventory
         }
         
         if (rightTogglesCompact != null) {
-            if (rightPanelMode == RightPanelMode.COMPACT) {
+            if (showRightPanel && rightPanelMode == RightPanelMode.COMPACT) {
                 rightTogglesCompact.show();
                 rebuildCompactList();
             } else {
@@ -454,8 +455,8 @@ public class NInventory extends Inventory
         if(toggles !=null)
             toggles.visible = parent.visible && showPopup;
         if(rightTogglesExpanded != null) {
-            rightTogglesExpanded.visible = parent.visible && (rightPanelMode == RightPanelMode.EXPANDED);
-            if (rightPanelMode == RightPanelMode.EXPANDED) {
+            rightTogglesExpanded.visible = parent.visible && showRightPanel && (rightPanelMode == RightPanelMode.EXPANDED);
+            if (showRightPanel && rightPanelMode == RightPanelMode.EXPANDED) {
                 // Update expanded panel contents periodically
                 if (NUtils.getTickId() % 10 == 0) { // Update every 10 ticks
                     updateRightPanelItems();
@@ -463,8 +464,8 @@ public class NInventory extends Inventory
             }
         }
         if(rightTogglesCompact != null) {
-            rightTogglesCompact.visible = parent.visible && (rightPanelMode == RightPanelMode.COMPACT);
-            if (rightPanelMode == RightPanelMode.COMPACT) {
+            rightTogglesCompact.visible = parent.visible && showRightPanel && (rightPanelMode == RightPanelMode.COMPACT);
+            if (showRightPanel && rightPanelMode == RightPanelMode.COMPACT) {
                 // Update compact panel contents periodically
                 if (NUtils.getTickId() % 20 == 0) { // Update every 20 ticks (less frequent)
                     rebuildCompactList();
@@ -572,11 +573,7 @@ public class NInventory extends Inventory
             @Override
             public void changed(boolean val) {
                 super.changed(val);
-                if (val) {
-                    rightPanelMode = RightPanelMode.EXPANDED;
-                } else {
-                    rightPanelMode = RightPanelMode.HIDDEN;
-                }
+                showRightPanel = val;
                 updateRightPanelVisibility();
             }
         };
@@ -690,6 +687,8 @@ public class NInventory extends Inventory
         setupExpandedPanel();
         setupCompactPanel();
 
+        // Start with panel hidden, but remember it was in expanded mode
+        showRightPanel = false;
         checkBoxForRight.a = false;
         updateRightPanelVisibility();
 
