@@ -1160,9 +1160,9 @@ public class NInventory extends Inventory
         return new Widget(sz) {
             @Override
             public void draw(GOut g) {
-                int iconSize = UI.scale(24);
+                int iconSize = UI.scale(16);
                 int margin = UI.scale(1);
-                int textY = UI.scale(1);
+                int textY = UI.scale(2);
                 
                 // Draw item icon
                 NGItem representativeItem = group.getRepresentativeItem();
