@@ -41,6 +41,8 @@ public class NInventory extends Inventory
     public MenuGrid.PagButton pagBundle = null;
     boolean showPopup = false;
     RightPanelMode rightPanelMode = RightPanelMode.HIDDEN;
+    boolean compactNameAscending = true;
+    boolean compactQuantityAscending = false;
     BufferedImage numbers = null;
     short[][] oldinv = null;
     public Gob parentGob = null;
@@ -807,35 +809,45 @@ public class NInventory extends Inventory
         viewToggle.a = false; // Will switch to expanded mode
         rightTogglesCompact.add(viewToggle, new Coord(rightTogglesCompact.sz.x - UI.scale(40), headerPos.y));
         
-        // Simple sorting dropdown for compact mode
-        Dropbox<String> compactSortDropbox = new Dropbox<String>(UI.scale(40), 2, UI.scale(14)) {
+        // Sorting buttons for compact mode
+        // Name sort button (above icons area)
+        ICheckBox nameSortButton = new ICheckBox(
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/UP/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/DOWN/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/UP/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/DOWN/h"))
+        ) {
             @Override
-            protected String listitem(int i) {
-                String[] options = {"Count", "Name"};
-                return options[i];
-            }
-            
-            @Override
-            protected int listitems() { return 2; }
-            
-            @Override
-            protected void drawitem(GOut g, String item, int idx) {
-                g.text(item, new Coord(2, 1));
-            }
-            
-            @Override
-            public void change(String item) {
-                super.change(item);
+            public void changed(boolean val) {
+                super.changed(val);
+                compactNameAscending = !val; // false = ascending, true = descending
                 rebuildCompactList();
             }
         };
-        compactSortDropbox.change("Count");
-        rightTogglesCompact.add(compactSortDropbox, headerPos);
+        nameSortButton.a = false; // Start with ascending (up arrow)
+        rightTogglesCompact.add(nameSortButton, new Coord(headerPos.x + 5, headerPos.y + UI.scale(20)));
         
-        // Create compact Scrollport for item list
-        Coord listPos = headerPos.add(new Coord(0, UI.scale(20)));
-        int listWidth = UI.scale(160);
-        int listHeight = UI.scale(200);
+        // Quantity sort button (above quantities area)  
+        ICheckBox quantitySortButton = new ICheckBox(
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/UP/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/DOWN/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/UP/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/DOWN/h"))
+        ) {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+                compactQuantityAscending = !val; // false = ascending, true = descending
+                rebuildCompactList();
+            }
+        };
+        quantitySortButton.a = true; // Start with descending (down arrow) for quantities
+        rightTogglesCompact.add(quantitySortButton, new Coord(headerPos.x + 40, headerPos.y + UI.scale(20)));
+        
+        // Create compact Scrollport for item list (below the sorting buttons)
+        Coord listPos = headerPos.add(new Coord(0, UI.scale(40)));
+        int listWidth = UI.scale(90);
+        int listHeight = UI.scale(180);
         
         compactListContainer = rightTogglesCompact.add(new Scrollport(new Coord(listWidth, listHeight)), listPos);
         compactListContent = new Widget(new Coord(listWidth, UI.scale(50))) {
@@ -1047,14 +1059,25 @@ public class NInventory extends Inventory
             }
         }
         
-        // Sort items (simple sorting for compact mode - by count descending by default)
+        // Sort items - default by quantity, but name sorting takes precedence if used recently
         List<ItemGroup> itemGroups = new ArrayList<>(itemGroupMap.values());
-        itemGroups.sort((a, b) -> Integer.compare(b.totalQuantity, a.totalQuantity)); // Descending by count
+        itemGroups.sort((a, b) -> {
+            // Primary sort by quantity
+            int quantityResult = Integer.compare(a.totalQuantity, b.totalQuantity);
+            if (!compactQuantityAscending) quantityResult = -quantityResult;
+            
+            // Secondary sort by name for ties
+            if (quantityResult == 0) {
+                int nameResult = a.name.compareTo(b.name);
+                return compactNameAscending ? nameResult : -nameResult;
+            }
+            return quantityResult;
+        });
         
         // Create compact list layout - one line per item
         int y = 0;
         int contentWidth = compactListContainer.cont.sz.x;
-        int itemHeight = UI.scale(18); // Single line height
+        int itemHeight = UI.scale(20); // Single line height
         
         for (ItemGroup group : itemGroups) {
             Widget compactWidget = createCompactItemWidget(group, new Coord(contentWidth, itemHeight));
