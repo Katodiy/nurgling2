@@ -574,6 +574,7 @@ public class NInventory extends Inventory
             public void changed(boolean val) {
                 super.changed(val);
                 showRightPanel = val;
+                NConfig.set(NConfig.Key.inventoryRightPanelShow, val);
                 updateRightPanelVisibility();
             }
         };
@@ -687,9 +688,18 @@ public class NInventory extends Inventory
         setupExpandedPanel();
         setupCompactPanel();
 
-        // Start with panel hidden, but remember it was in expanded mode
-        showRightPanel = false;
-        checkBoxForRight.a = false;
+        // Load settings from NConfig
+        Boolean showPanelConfig = (Boolean) NConfig.get(NConfig.Key.inventoryRightPanelShow);
+        showRightPanel = showPanelConfig != null ? showPanelConfig : false;
+        
+        String panelModeStr = (String) NConfig.get(NConfig.Key.inventoryRightPanelMode);
+        if ("COMPACT".equals(panelModeStr)) {
+            rightPanelMode = RightPanelMode.COMPACT;
+        } else {
+            rightPanelMode = RightPanelMode.EXPANDED;
+        }
+        
+        checkBoxForRight.a = showRightPanel;
         updateRightPanelVisibility();
 
         movePopup(parent.c);
@@ -711,6 +721,7 @@ public class NInventory extends Inventory
             public void changed(boolean val) {
                 super.changed(val);
                 rightPanelMode = RightPanelMode.COMPACT;
+                NConfig.set(NConfig.Key.inventoryRightPanelMode, "COMPACT");
                 updateRightPanelVisibility();
             }
         };
@@ -806,6 +817,7 @@ public class NInventory extends Inventory
             public void changed(boolean val) {
                 super.changed(val);
                 rightPanelMode = RightPanelMode.EXPANDED;
+                NConfig.set(NConfig.Key.inventoryRightPanelMode, "EXPANDED");
                 updateRightPanelVisibility();
             }
         };
