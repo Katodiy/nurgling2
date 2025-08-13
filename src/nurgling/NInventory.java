@@ -1207,6 +1207,19 @@ public class NInventory extends Inventory
                 String quantityText = "x" + group.totalQuantity;
                 g.text(quantityText, new Coord(textStartX, textY));
             }
+            
+            @Override
+            public Object tooltip(Coord c, Widget prev) {
+                // Show item name as tooltip when hovering over the icon area
+                int iconSize = UI.scale(16);
+                int margin = UI.scale(1);
+                Coord iconArea = new Coord(margin + iconSize, iconSize + margin * 2);
+                
+                if (c.isect(new Coord(margin, margin), iconArea)) {
+                    return group.name;
+                }
+                return super.tooltip(c, prev);
+            }
         };
     }
 
