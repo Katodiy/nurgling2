@@ -655,6 +655,7 @@ public class NMapView extends MapView
             if(clickedLabel != null) {
                 isDraggingRoutePoint = true;
                 draggedRouteLabel = clickedLabel;
+                draggedRouteLabel.startDrag();
                 dragGrab = ui.grabmouse(this);
                 return true;
             }
@@ -683,6 +684,9 @@ public class NMapView extends MapView
         
         // Handle route point dragging
         if(isDraggingRoutePoint && draggedRouteLabel != null) {
+            // Update preview position immediately with screen coordinates
+            draggedRouteLabel.updateDragPreview(ev.c);
+            
             // Convert screen coordinate to world coordinate using Hittest
             new Hittest(ev.c) {
                 public void hit(Coord pc, Coord2d mc, ClickData inf) {
@@ -703,17 +707,32 @@ public class NMapView extends MapView
     
     @Override
     public boolean mouseup(MouseUpEvent ev) {
-        if(isDraggingRoutePoint && ev.b == 1) {
-            isDraggingRoutePoint = false;
-            if(dragGrab != null) {
-                dragGrab.remove();
-                dragGrab = null;
+        if(isDraggingRoutePoint) {
+            if(ev.b == 1) {
+                // Left mouse button - finalize drag
+                isDraggingRoutePoint = false;
+                if(dragGrab != null) {
+                    dragGrab.remove();
+                    dragGrab = null;
+                }
+                if(draggedRouteLabel != null) {
+                    draggedRouteLabel.finalizeDrag();
+                    draggedRouteLabel = null;
+                }
+                return true;
+            } else if(ev.b == 3) {
+                // Right mouse button - cancel drag
+                isDraggingRoutePoint = false;
+                if(dragGrab != null) {
+                    dragGrab.remove();
+                    dragGrab = null;
+                }
+                if(draggedRouteLabel != null) {
+                    draggedRouteLabel.cancelDrag();
+                    draggedRouteLabel = null;
+                }
+                return true;
             }
-            if(draggedRouteLabel != null) {
-                draggedRouteLabel.finalizeDrag();
-                draggedRouteLabel = null;
-            }
-            return true;
         }
         return super.mouseup(ev);
     }

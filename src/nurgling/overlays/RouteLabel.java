@@ -13,7 +13,7 @@ import nurgling.routes.RoutePoint;
 import java.awt.image.BufferedImage;
 
 public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2D {
-    private static final Coord3f Z_OFFSET = new Coord3f(0, 0, 0); // Slightly above the ground
+    private static final Coord3f Z_OFFSET = new Coord3f(0, 0, 0); // At ground level
     private TexI label;
     public static final double floaty = UI.scale(5.0);
     Route route;
@@ -22,6 +22,10 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
     final int sy;
     public RoutePoint point;
     Coord sc;
+    
+    // Dragging state
+    private boolean isDragging = false;
+    private Coord dragPreviewPosition = null;
 
     public RouteLabel(Owner owner, Route route, RoutePoint point) {
         super(owner, null);
@@ -70,12 +74,26 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
             α = 255;
         else
             α = (int)Utils.clip(255 * ((1 - a) / 0.25), 0, 255);
-        g.chcolor(255, 255, 255, α);
+        
         Coord c = tex.sz().inv();
         c.x = c.x / 2;
         c.y += cury();
-        c.y -= 15;
+        // Position dot at ground level instead of above it
+        
+        // Draw the original position (red tint if dragging)
+        if(isDragging) {
+            g.chcolor(255, 128, 128, (α * 2) / 3); // Red tint, 2/3 brightness
+        } else {
+            g.chcolor(255, 255, 255, α); // Normal white brightness
+        }
         g.image(tex, sc.add(c));
+        
+        // Draw preview position if dragging
+        if(isDragging && dragPreviewPosition != null) {
+            g.chcolor(128, 255, 128, α); // Green tint preview dot
+            g.image(tex, dragPreviewPosition.add(c));
+        }
+        
         g.chcolor();
     }
 
@@ -91,7 +109,20 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
         return sc != null && isect(screenCoord);
     }
     
-    // Update position during drag
+    // Start dragging
+    public void startDrag() {
+        isDragging = true;
+        dragPreviewPosition = null;
+    }
+    
+    // Update preview position during drag (screen coordinates)
+    public void updateDragPreview(Coord screenPos) {
+        if(isDragging) {
+            dragPreviewPosition = screenPos;
+        }
+    }
+    
+    // Update actual position during drag
     public void updatePosition(Coord2d worldPos) {
         updateRoutePointPosition(worldPos);
     }
@@ -99,6 +130,9 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
     // Finalize the drag operation
     public void finalizeDrag() {
         try {
+            isDragging = false;
+            dragPreviewPosition = null;
+            
             // Update the route graph and connections
             NMapView mapView = (NMapView) NUtils.getGameUI().map;
             mapView.routeGraphManager.updateRoute(route);
@@ -113,6 +147,12 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
         } catch(Exception e) {
             NUtils.getGameUI().error("Failed to move route point: " + e.getMessage());
         }
+    }
+    
+    // Cancel drag operation
+    public void cancelDrag() {
+        isDragging = false;
+        dragPreviewPosition = null;
     }
     
     private void updateRoutePointPosition(Coord2d worldPos) {
