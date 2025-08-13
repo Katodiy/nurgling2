@@ -328,16 +328,16 @@ public class NInventory extends Inventory
     private void updateRightPanelPositions(Coord c) {
         int invH = this.sz.y;
         int insetY = UI.scale(8); // Default inset
-        int desiredInner = Math.round(invH * 0.80f);
-        int outerH = desiredInner + insetY * 2;
+        int desiredInner = Math.round(invH * 1.2f);
+        int outerH = desiredInner;
         int panelW = UI.scale(250);
         int compactPanelW = UI.scale(100); // Smaller width for compact mode
-        int compactOuterH = Math.round(invH * 0.90f) + insetY * 2; // Taller than expanded but still smaller than inventory
+        int compactOuterH = Math.round(invH * 1.2f); // Taller than expanded but still smaller than inventory
         
         if (rightTogglesExpanded != null) {
             rightTogglesExpanded.move(new Coord(
                     c.x + parent.sz.x - rightTogglesExpanded.atl.x - UI.scale(6),
-                    c.y + UI.scale(35)
+                    c.y + UI.scale(20)
             ));
             rightTogglesExpanded.resize(panelW, outerH);
             
@@ -363,7 +363,7 @@ public class NInventory extends Inventory
         if (rightTogglesCompact != null) {
             rightTogglesCompact.move(new Coord(
                     c.x + parent.sz.x - rightTogglesCompact.atl.x - UI.scale(6),
-                    c.y + UI.scale(35)
+                    c.y + UI.scale(20)
             ));
             rightTogglesCompact.resize(compactPanelW, compactOuterH);
             
