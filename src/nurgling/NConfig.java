@@ -91,7 +91,9 @@ public class NConfig
         fillCompostWithSwill,
         ignoreStrawInFarmers,
         persistentBarrelLabels,
-        uniformBiomeColors
+        uniformBiomeColors,
+        inventoryRightPanelShow,
+        inventoryRightPanelMode
     }
 
 
@@ -172,6 +174,10 @@ public class NConfig
         conf.put(Key.boxLineWidth, 4);
         conf.put(Key.persistentBarrelLabels, false);
         conf.put(Key.uniformBiomeColors, false);
+        
+        // Inventory right panel settings
+        conf.put(Key.inventoryRightPanelShow, false);
+        conf.put(Key.inventoryRightPanelMode, "EXPANDED");
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

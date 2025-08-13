@@ -574,6 +574,7 @@ public class NInventory extends Inventory
             public void changed(boolean val) {
                 super.changed(val);
                 showRightPanel = val;
+                NConfig.set(NConfig.Key.inventoryRightPanelShow, val);
                 updateRightPanelVisibility();
             }
         };
@@ -687,9 +688,18 @@ public class NInventory extends Inventory
         setupExpandedPanel();
         setupCompactPanel();
 
-        // Start with panel hidden, but remember it was in expanded mode
-        showRightPanel = false;
-        checkBoxForRight.a = false;
+        // Load settings from NConfig
+        Boolean showPanelConfig = (Boolean) NConfig.get(NConfig.Key.inventoryRightPanelShow);
+        showRightPanel = showPanelConfig != null ? showPanelConfig : false;
+        
+        String panelModeStr = (String) NConfig.get(NConfig.Key.inventoryRightPanelMode);
+        if ("COMPACT".equals(panelModeStr)) {
+            rightPanelMode = RightPanelMode.COMPACT;
+        } else {
+            rightPanelMode = RightPanelMode.EXPANDED;
+        }
+        
+        checkBoxForRight.a = showRightPanel;
         updateRightPanelVisibility();
 
         movePopup(parent.c);
@@ -711,6 +721,7 @@ public class NInventory extends Inventory
             public void changed(boolean val) {
                 super.changed(val);
                 rightPanelMode = RightPanelMode.COMPACT;
+                NConfig.set(NConfig.Key.inventoryRightPanelMode, "COMPACT");
                 updateRightPanelVisibility();
             }
         };
@@ -806,6 +817,7 @@ public class NInventory extends Inventory
             public void changed(boolean val) {
                 super.changed(val);
                 rightPanelMode = RightPanelMode.EXPANDED;
+                NConfig.set(NConfig.Key.inventoryRightPanelMode, "EXPANDED");
                 updateRightPanelVisibility();
             }
         };
@@ -831,7 +843,7 @@ public class NInventory extends Inventory
         };
         nameSortButton.a = false; // Start with ascending (up arrow)
         nameSortButton.settip("Sort by name (ascending/descending)");
-        rightTogglesCompact.add(nameSortButton, new Coord(headerPos.x + 5, headerPos.y));
+        rightTogglesCompact.add(nameSortButton, new Coord(headerPos.x + UI.scale(3), headerPos.y));
         
         // Quantity sort button (above quantities area)  
         ICheckBox quantitySortButton = new ICheckBox(
@@ -850,8 +862,8 @@ public class NInventory extends Inventory
         };
         quantitySortButton.a = true; // Start with descending (down arrow) for quantities
         quantitySortButton.settip("Sort by quantity (ascending/descending)");
-        rightTogglesCompact.add(quantitySortButton, new Coord(headerPos.x + 40, headerPos.y));
-        
+        rightTogglesCompact.add(quantitySortButton, new Coord(headerPos.x + UI.scale(20), headerPos.y));
+
         // Create compact Scrollport for item list (below the sorting buttons)
         Coord listPos = headerPos.add(new Coord(0, UI.scale(25)));
         int listWidth = UI.scale(90);
