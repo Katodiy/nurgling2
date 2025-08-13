@@ -831,7 +831,7 @@ public class NInventory extends Inventory
         };
         nameSortButton.a = false; // Start with ascending (up arrow)
         nameSortButton.settip("Sort by name (ascending/descending)");
-        rightTogglesCompact.add(nameSortButton, new Coord(headerPos.x + 5, headerPos.y));
+        rightTogglesCompact.add(nameSortButton, new Coord(headerPos.x + UI.scale(3), headerPos.y));
         
         // Quantity sort button (above quantities area)  
         ICheckBox quantitySortButton = new ICheckBox(
@@ -850,7 +850,7 @@ public class NInventory extends Inventory
         };
         quantitySortButton.a = true; // Start with descending (down arrow) for quantities
         quantitySortButton.settip("Sort by quantity (ascending/descending)");
-        rightTogglesCompact.add(quantitySortButton, new Coord(headerPos.x + 40, headerPos.y));
+        rightTogglesCompact.add(quantitySortButton, new Coord(headerPos.x + UI.scale(20), headerPos.y));
         
         // Create compact Scrollport for item list (below the sorting buttons)
         Coord listPos = headerPos.add(new Coord(0, UI.scale(25)));
