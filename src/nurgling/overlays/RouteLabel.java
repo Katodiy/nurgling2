@@ -4,7 +4,9 @@ import haven.*;
 import haven.render.Homo3D;
 import haven.render.Pipe;
 import haven.render.RenderTree;
+import nurgling.NMapView;
 import nurgling.NStyle;
+import nurgling.NUtils;
 import nurgling.routes.Route;
 import nurgling.routes.RoutePoint;
 
@@ -20,6 +22,7 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
     final int sy;
     public RoutePoint point;
     Coord sc;
+
     public RouteLabel(Owner owner, Route route, RoutePoint point) {
         super(owner, null);
         this.route = route;
@@ -79,7 +82,52 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
     public boolean isect(Coord pc) {
         if(sc==null)
             return false;
-        Coord ul = sc.sub(label.sz().div(2));
-        return pc.isect(ul, label.sz());
+        Coord ul = sc.sub(tex.sz().div(2));
+        return pc.isect(ul, tex.sz());
+    }
+    
+    // Check if this route label is being clicked for drag
+    public boolean checkDragStart(Coord screenCoord) {
+        return sc != null && isect(screenCoord);
+    }
+    
+    // Update position during drag
+    public void updatePosition(Coord2d worldPos) {
+        updateRoutePointPosition(worldPos);
+    }
+    
+    // Finalize the drag operation
+    public void finalizeDrag() {
+        try {
+            // Update the route graph and connections
+            NMapView mapView = (NMapView) NUtils.getGameUI().map;
+            mapView.routeGraphManager.updateRoute(route);
+            mapView.routeGraphManager.updateGraph();
+            
+            // Recreate the visual representation
+            mapView.destroyRouteDummys();
+            mapView.createRouteLabel(route.id);
+            
+            NUtils.getGameUI().msg("Route point moved to: " + point.gridId + "," + point.localCoord);
+            
+        } catch(Exception e) {
+            NUtils.getGameUI().error("Failed to move route point: " + e.getMessage());
+        }
+    }
+    
+    private void updateRoutePointPosition(Coord2d worldPos) {
+        MCache cache = NUtils.getGameUI().ui.sess.glob.map;
+        if(cache == null) return;
+        
+        // Convert world coordinate to tile coordinate
+        Coord tilec = worldPos.div(MCache.tilesz).floor();
+        MCache.Grid grid = cache.getgridt(tilec);
+        
+        if(grid != null) {
+            // Update the route point's position
+            point.gridId = grid.id;
+            point.localCoord = tilec.sub(grid.ul);
+            point.updateHashCode(); // This will update connections if ID changes
+        }
     }
 }
