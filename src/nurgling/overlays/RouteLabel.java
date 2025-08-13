@@ -90,8 +90,20 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
         
         // Draw preview position if dragging
         if(isDragging && dragPreviewPosition != null) {
-            g.chcolor(128, 255, 128, α); // Green tint preview dot
+            // Check if the preview position would be within drag limits
+            boolean withinLimits = isPreviewWithinLimits(dragPreviewPosition, state);
+            
+            if(withinLimits) {
+                g.chcolor(128, 255, 128, α); // Green tint for valid position
+            } else {
+                g.chcolor(255, 128, 128, α); // Red tint for invalid position
+            }
             g.image(tex, dragPreviewPosition.add(c));
+        }
+        
+        // Draw drag limit boundary when dragging
+        if(isDragging) {
+            drawDragLimitBoundary(g, state);
         }
         
         g.chcolor();
@@ -155,6 +167,93 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
         dragPreviewPosition = null;
     }
     
+    // Check if preview position is within drag limits  
+    private boolean isPreviewWithinLimits(Coord screenPos, Pipe state) {
+        try {
+            MCache cache = NUtils.getGameUI().ui.sess.glob.map;
+            if(cache == null) return false;
+            
+            // Convert screen position to world coordinate using the same method as the main game
+            NMapView mapView = (NMapView) NUtils.getGameUI().map;
+            final boolean[] result = {false};
+            
+            mapView.new Hittest(screenPos) {
+                public void hit(Coord pc, Coord2d mc, ClickData inf) {
+                    if(mc != null) {
+                        Coord tilec = mc.div(MCache.tilesz).floor();
+                        MCache.Grid grid = cache.getgridt(tilec);
+                        if(grid != null) {
+                            long proposedGridId = grid.id;
+                            Coord proposedLocalCoord = tilec.sub(grid.ul);
+                            result[0] = point.isWithinDragLimit(proposedGridId, proposedLocalCoord, cache);
+                        }
+                    }
+                }
+                
+                protected void nohit(Coord pc) {
+                    result[0] = false;
+                }
+            }.run();
+            
+            return result[0];
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    // Draw a circular boundary showing the 5-cell drag limit
+    private void drawDragLimitBoundary(GOut g, Pipe state) {
+        try {
+            MCache cache = NUtils.getGameUI().ui.sess.glob.map;
+            if(cache == null) return;
+            
+            // Get original world position
+            Coord2d originalWorldPos = point.getOriginalWorldPosition(cache);
+            if(originalWorldPos == null) return;
+            
+            // Calculate boundary world position (5 tiles away)
+            Coord2d boundaryWorldPos = originalWorldPos.add(5 * MCache.tilesz.x, 0);
+            
+            // Convert both original and boundary positions to screen coordinates
+            Coord3f originalWorld3d = new Coord3f((float)originalWorldPos.x, (float)originalWorldPos.y, 0);
+            Coord3f boundaryWorld3d = new Coord3f((float)boundaryWorldPos.x, (float)boundaryWorldPos.y, 0);
+            
+            Coord originalScreen = Homo3D.obj2view(originalWorld3d, state, Area.sized(Coord.z, g.sz())).round2();
+            Coord boundaryScreen = Homo3D.obj2view(boundaryWorld3d, state, Area.sized(Coord.z, g.sz())).round2();
+            
+            if(originalScreen != null && boundaryScreen != null) {
+                // Calculate actual radius in screen pixels based on zoom
+                int radiusPixels = (int)originalScreen.dist(boundaryScreen);
+                
+                // Draw a more visible circle boundary
+                g.chcolor(255, 255, 0, 150); // Yellow with higher transparency
+                
+                // Draw circle using more line segments for smoother appearance
+                int segments = 64;
+                Coord prevPoint = null;
+                
+                for(int i = 0; i <= segments; i++) {
+                    double angle = (2 * Math.PI * i) / segments;
+                    int x = originalScreen.x + (int)(Math.cos(angle) * radiusPixels);
+                    int y = originalScreen.y + (int)(Math.sin(angle) * radiusPixels);
+                    Coord currentPoint = new Coord(x, y);
+                    
+                    if(prevPoint != null) {
+                        g.line(prevPoint, currentPoint, 2);
+                    }
+                    prevPoint = currentPoint;
+                }
+                
+                // Draw a center dot to mark the original position
+                g.chcolor(255, 0, 0, 200); // Red center dot
+                g.frect(originalScreen.sub(2, 2), new Coord(4, 4));
+            }
+        } catch (Exception e) {
+            // Ignore drawing errors - but maybe log for debugging
+            System.err.println("Error drawing drag boundary: " + e.getMessage());
+        }
+    }
+    
     private void updateRoutePointPosition(Coord2d worldPos) {
         MCache cache = NUtils.getGameUI().ui.sess.glob.map;
         if(cache == null) return;
@@ -164,10 +263,19 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
         MCache.Grid grid = cache.getgridt(tilec);
         
         if(grid != null) {
-            // Update the route point's position
-            point.gridId = grid.id;
-            point.localCoord = tilec.sub(grid.ul);
-            point.updateHashCode(); // This will update connections if ID changes
+            long proposedGridId = grid.id;
+            Coord proposedLocalCoord = tilec.sub(grid.ul);
+            
+            // Check if the proposed position is within the 5-cell drag limit
+            if(point.isWithinDragLimit(proposedGridId, proposedLocalCoord, cache)) {
+                // Update the route point's position only if within limit
+                point.gridId = proposedGridId;
+                point.localCoord = proposedLocalCoord;
+                point.updateHashCode(); // This will update connections if ID changes
+            } else {
+                // Position is outside the allowed drag area - could show a message or visual indicator
+                NUtils.getGameUI().msg("Route point cannot be moved more than 5 tiles from its original position");
+            }
         }
     }
 }
