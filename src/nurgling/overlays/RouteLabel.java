@@ -26,6 +26,7 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
     // Dragging state
     private boolean isDragging = false;
     private Coord dragPreviewPosition = null;
+    private boolean previewWithinLimits = true; // Cache the limits check result
 
     public RouteLabel(Owner owner, Route route, RoutePoint point) {
         super(owner, null);
@@ -90,10 +91,8 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
         
         // Draw preview position if dragging
         if(isDragging && dragPreviewPosition != null) {
-            // Check if the preview position would be within drag limits
-            boolean withinLimits = isPreviewWithinLimits(dragPreviewPosition, state);
-            
-            if(withinLimits) {
+            // Use cached limits check result instead of expensive operation
+            if(previewWithinLimits) {
                 g.chcolor(128, 255, 128, α); // Green tint for valid position
             } else {
                 g.chcolor(255, 128, 128, α); // Red tint for invalid position
@@ -125,12 +124,23 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
     public void startDrag() {
         isDragging = true;
         dragPreviewPosition = null;
+        previewWithinLimits = true; // Start assuming valid
     }
     
     // Update preview position during drag (screen coordinates)
     public void updateDragPreview(Coord screenPos) {
         if(isDragging) {
             dragPreviewPosition = screenPos;
+            // Update the cached limits check result, but avoid expensive operations when out of bounds
+            if(screenPos.x >= 0 && screenPos.y >= 0) {
+                try {
+                    previewWithinLimits = isPreviewWithinLimits(screenPos, null);
+                } catch (Exception e) {
+                    previewWithinLimits = false;
+                }
+            } else {
+                previewWithinLimits = false;
+            }
         }
     }
     
@@ -165,6 +175,7 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
     public void cancelDrag() {
         isDragging = false;
         dragPreviewPosition = null;
+        previewWithinLimits = true;
     }
     
     // Check if preview position is within drag limits  
@@ -173,19 +184,35 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
             MCache cache = NUtils.getGameUI().ui.sess.glob.map;
             if(cache == null) return false;
             
+            // Don't perform expensive operations if coordinates are clearly invalid
+            if(screenPos == null || screenPos.x < 0 || screenPos.y < 0) {
+                return false;
+            }
+            
             // Convert screen position to world coordinate using the same method as the main game
             NMapView mapView = (NMapView) NUtils.getGameUI().map;
+            if(mapView == null) return false;
+            
             final boolean[] result = {false};
+            
+            // Add bounds checking for the map view size
+            if(screenPos.x >= mapView.sz.x || screenPos.y >= mapView.sz.y) {
+                return false;
+            }
             
             mapView.new Hittest(screenPos) {
                 public void hit(Coord pc, Coord2d mc, ClickData inf) {
                     if(mc != null) {
-                        Coord tilec = mc.div(MCache.tilesz).floor();
-                        MCache.Grid grid = cache.getgridt(tilec);
-                        if(grid != null) {
-                            long proposedGridId = grid.id;
-                            Coord proposedLocalCoord = tilec.sub(grid.ul);
-                            result[0] = point.isWithinDragLimit(proposedGridId, proposedLocalCoord, cache);
+                        try {
+                            Coord tilec = mc.div(MCache.tilesz).floor();
+                            MCache.Grid grid = cache.getgridt(tilec);
+                            if(grid != null) {
+                                long proposedGridId = grid.id;
+                                Coord proposedLocalCoord = tilec.sub(grid.ul);
+                                result[0] = point.isWithinDragLimit(proposedGridId, proposedLocalCoord, cache);
+                            }
+                        } catch (Exception e) {
+                            result[0] = false;
                         }
                     }
                 }

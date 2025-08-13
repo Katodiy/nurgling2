@@ -690,18 +690,25 @@ public class NMapView extends MapView
             // Capture the reference to avoid race conditions with async Hittest
             final RouteLabel currentDraggedLabel = draggedRouteLabel;
             
-            // Convert screen coordinate to world coordinate using Hittest
-            new Hittest(ev.c) {
-                public void hit(Coord pc, Coord2d mc, ClickData inf) {
-                    if(mc != null && currentDraggedLabel != null) {
-                        currentDraggedLabel.updatePosition(mc);
-                    }
+            // Check if coordinates are within valid bounds before attempting Hittest
+            if(ev.c.x >= 0 && ev.c.y >= 0 && ev.c.x < sz.x && ev.c.y < sz.y) {
+                try {
+                    // Convert screen coordinate to world coordinate using Hittest
+                    new Hittest(ev.c) {
+                        public void hit(Coord pc, Coord2d mc, ClickData inf) {
+                            if(mc != null && currentDraggedLabel != null) {
+                                currentDraggedLabel.updatePosition(mc);
+                            }
+                        }
+                        
+                        protected void nohit(Coord pc) {
+                            // Ignore if no hit - mouse outside valid map area
+                        }
+                    }.run();
+                } catch (Exception e) {
+                    // Ignore hittest errors when mouse is outside valid area
                 }
-                
-                protected void nohit(Coord pc) {
-                    // Ignore if no hit
-                }
-            }.run();
+            }
             return;
         }
         
