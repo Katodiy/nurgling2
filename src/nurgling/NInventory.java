@@ -1079,7 +1079,7 @@ public class NInventory extends Inventory
         // Create compact list layout - one line per item
         int y = 0;
         int contentWidth = compactListContainer.cont.sz.x;
-        int itemHeight = UI.scale(20); // Single line height
+        int itemHeight = UI.scale(18); // Single line height
         
         for (ItemGroup group : itemGroups) {
             Widget compactWidget = createCompactItemWidget(group, new Coord(contentWidth, itemHeight));
@@ -1096,7 +1096,7 @@ public class NInventory extends Inventory
         return new Widget(sz) {
             @Override
             public void draw(GOut g) {
-                int iconSize = UI.scale(16);
+                int iconSize = UI.scale(19);
                 int margin = UI.scale(1);
                 int textY = UI.scale(2);
                 
