@@ -851,8 +851,7 @@ public class NInventory extends Inventory
         quantitySortButton.a = true; // Start with descending (down arrow) for quantities
         quantitySortButton.settip("Sort by quantity (ascending/descending)");
         rightTogglesCompact.add(quantitySortButton, new Coord(headerPos.x + UI.scale(20), headerPos.y));
-        
-        // Create compact Scrollport for item list (below the sorting buttons)
+
         Coord listPos = headerPos.add(new Coord(0, UI.scale(25)));
         int listWidth = UI.scale(90);
         int listHeight = UI.scale(180);
