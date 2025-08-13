@@ -332,6 +332,7 @@ public class NInventory extends Inventory
         int outerH = desiredInner + insetY * 2;
         int panelW = UI.scale(250);
         int compactPanelW = UI.scale(100); // Smaller width for compact mode
+        int compactOuterH = Math.round(invH * 0.90f) + insetY * 2; // Taller than expanded but still smaller than inventory
         
         if (rightTogglesExpanded != null) {
             rightTogglesExpanded.move(new Coord(
@@ -364,7 +365,7 @@ public class NInventory extends Inventory
                     c.x + parent.sz.x - rightTogglesCompact.atl.x - UI.scale(6),
                     c.y + UI.scale(35)
             ));
-            rightTogglesCompact.resize(compactPanelW, outerH);
+            rightTogglesCompact.resize(compactPanelW, compactOuterH);
             
             if (compactListContainer != null) {
                 // Resize compact list container  
@@ -596,10 +597,11 @@ public class NInventory extends Inventory
         int outerH = desiredInner + insetY * 2;
         rightTogglesExpanded.resize(panelW, outerH);
         
-        // Create compact panel
+        // Create compact panel (taller than expanded)
         int compactPanelW = UI.scale(120);
+        int compactOuterH = Math.round(this.sz.y * 0.90f) + rightTogglesExpanded.atl.y * 2;
         rightTogglesCompact = NUtils.getGameUI().add(
-                new NPopupWidget(new Coord(compactPanelW, outerH), NPopupWidget.Type.LEFT)
+                new NPopupWidget(new Coord(compactPanelW, compactOuterH), NPopupWidget.Type.LEFT)
         );
 
         Widget pw = toggles.add(new ICheckBox(gildingi[0], gildingi[1], gildingi[2], gildingi[3]) {
@@ -825,7 +827,7 @@ public class NInventory extends Inventory
             }
         };
         nameSortButton.a = false; // Start with ascending (up arrow)
-        rightTogglesCompact.add(nameSortButton, new Coord(headerPos.x + 5, headerPos.y + UI.scale(20)));
+        rightTogglesCompact.add(nameSortButton, new Coord(headerPos.x + 5, headerPos.y));
         
         // Quantity sort button (above quantities area)  
         ICheckBox quantitySortButton = new ICheckBox(
@@ -842,10 +844,10 @@ public class NInventory extends Inventory
             }
         };
         quantitySortButton.a = true; // Start with descending (down arrow) for quantities
-        rightTogglesCompact.add(quantitySortButton, new Coord(headerPos.x + 40, headerPos.y + UI.scale(20)));
+        rightTogglesCompact.add(quantitySortButton, new Coord(headerPos.x + 40, headerPos.y));
         
         // Create compact Scrollport for item list (below the sorting buttons)
-        Coord listPos = headerPos.add(new Coord(0, UI.scale(40)));
+        Coord listPos = headerPos.add(new Coord(0, UI.scale(25)));
         int listWidth = UI.scale(90);
         int listHeight = UI.scale(180);
         
