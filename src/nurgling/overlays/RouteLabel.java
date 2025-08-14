@@ -92,18 +92,11 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
         // Draw preview position if dragging
         if(isDragging && dragPreviewPosition != null) {
             // Use cached limits check result instead of expensive operation
-            if(previewWithinLimits) {
-                g.chcolor(128, 255, 128, α); // Green tint for valid position
-            } else {
-                g.chcolor(255, 128, 128, α); // Red tint for invalid position
-            }
+            g.chcolor(128, 255, 128, α); // Green tint for valid position
+
             g.image(tex, dragPreviewPosition.add(c));
         }
         
-        // Draw drag limit boundary when dragging
-        if(isDragging) {
-            drawDragLimitBoundary(g, state);
-        }
         
         g.chcolor();
     }
@@ -227,60 +220,7 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
             return false;
         }
     }
-    
-    // Draw a circular boundary showing the 5-cell drag limit
-    private void drawDragLimitBoundary(GOut g, Pipe state) {
-        try {
-            MCache cache = NUtils.getGameUI().ui.sess.glob.map;
-            if(cache == null) return;
-            
-            // Get original world position
-            Coord2d originalWorldPos = point.getOriginalWorldPosition(cache);
-            if(originalWorldPos == null) return;
-            
-            // Calculate boundary world position (5 tiles away)
-            Coord2d boundaryWorldPos = originalWorldPos.add(5 * MCache.tilesz.x, 0);
-            
-            // Convert both original and boundary positions to screen coordinates
-            Coord3f originalWorld3d = new Coord3f((float)originalWorldPos.x, (float)originalWorldPos.y, 0);
-            Coord3f boundaryWorld3d = new Coord3f((float)boundaryWorldPos.x, (float)boundaryWorldPos.y, 0);
-            
-            Coord originalScreen = Homo3D.obj2view(originalWorld3d, state, Area.sized(Coord.z, g.sz())).round2();
-            Coord boundaryScreen = Homo3D.obj2view(boundaryWorld3d, state, Area.sized(Coord.z, g.sz())).round2();
-            
-            if(originalScreen != null && boundaryScreen != null) {
-                // Calculate actual radius in screen pixels based on zoom
-                int radiusPixels = (int)originalScreen.dist(boundaryScreen);
-                
-                // Draw a more visible circle boundary
-                g.chcolor(255, 255, 0, 150); // Yellow with higher transparency
-                
-                // Draw circle using more line segments for smoother appearance
-                int segments = 64;
-                Coord prevPoint = null;
-                
-                for(int i = 0; i <= segments; i++) {
-                    double angle = (2 * Math.PI * i) / segments;
-                    int x = originalScreen.x + (int)(Math.cos(angle) * radiusPixels);
-                    int y = originalScreen.y + (int)(Math.sin(angle) * radiusPixels);
-                    Coord currentPoint = new Coord(x, y);
-                    
-                    if(prevPoint != null) {
-                        g.line(prevPoint, currentPoint, 2);
-                    }
-                    prevPoint = currentPoint;
-                }
-                
-                // Draw a center dot to mark the original position
-                g.chcolor(255, 0, 0, 200); // Red center dot
-                g.frect(originalScreen.sub(2, 2), new Coord(4, 4));
-            }
-        } catch (Exception e) {
-            // Ignore drawing errors - but maybe log for debugging
-            System.err.println("Error drawing drag boundary: " + e.getMessage());
-        }
-    }
-    
+
     private void updateRoutePointPosition(Coord2d worldPos) {
         MCache cache = NUtils.getGameUI().ui.sess.glob.map;
         if(cache == null) return;
