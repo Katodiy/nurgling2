@@ -2682,6 +2682,50 @@ public class VSpec {
 
         categories.put("Medicine", medicine);
 
+        // Cheese category with all cheese types
+        ArrayList<JSONObject> cheeses = new ArrayList<>();
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-creamycamembert\",\"name\":\"Creamy Camembert\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-muskymilben\",\"name\":\"Musky Milben\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-midnightblue\",\"name\":\"Midnight Blue Cheese\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-cavecheddar\",\"name\":\"Cave Cheddar\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-sunlitstilton\",\"name\":\"Sunlit Stilton\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-halloumi\",\"name\":\"Halloumi\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-caciotta\",\"name\":\"Caciotta\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-cabrales\",\"name\":\"Cabrales\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-manchego\",\"name\":\"Manchego\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-roncal\",\"name\":\"Roncal\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-oscypki\",\"name\":\"Oscypki\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-robiola\",\"name\":\"Robiola\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-picodon\",\"name\":\"Picodon\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-garrotxa\",\"name\":\"Garrotxa\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-formaela\",\"name\":\"Formaela\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-majorero\",\"name\":\"Majorero\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-kasseri\",\"name\":\"Kasseri\"}"));
+        // Intermediate cheeses
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-temmentaler\",\"name\":\"Tasty Emmentaler\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-cellarcheddar\",\"name\":\"Cellar Cheddar\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-brodgarblue\",\"name\":\"Brodgar Blue Cheese\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-jorbonzola\",\"name\":\"Jorbonzola\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-mothzarella\",\"name\":\"Mothzarella\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-harmesan\",\"name\":\"Harmesan Cheese\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-feta\",\"name\":\"Feta\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-pecorino\",\"name\":\"Pecorino\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-gbejna\",\"name\":\"Gbejna\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-abbaye\",\"name\":\"Abbaye\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-zamorano\",\"name\":\"Zamorano\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-brique\",\"name\":\"Brique\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-banon\",\"name\":\"Banon\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-bucheron\",\"name\":\"Bucheron\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-graviera\",\"name\":\"Graviera\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-gevrik\",\"name\":\"Gevrik\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-chabichou\",\"name\":\"Chabichou\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-chabis\",\"name\":\"Chabis\"}"));
+        // Curds
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/curd-cow\",\"name\":\"Cow's Curd\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/curd-goat\",\"name\":\"Goat's Curd\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/curd-sheep\",\"name\":\"Sheep's Curd\"}"));
+        categories.put("Cheese", cheeses);
+
 
     }
 
