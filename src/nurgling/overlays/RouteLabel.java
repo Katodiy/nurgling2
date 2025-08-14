@@ -27,6 +27,9 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
     private boolean isDragging = false;
     private Coord dragPreviewPosition = null;
     private boolean previewWithinLimits = true; // Cache the limits check result
+    
+    // Drag radius overlay
+    private OCache.Virtual dragRadiusGob = null;
 
     public RouteLabel(Owner owner, Route route, RoutePoint point) {
         super(owner, null);
@@ -118,6 +121,7 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
         isDragging = true;
         dragPreviewPosition = null;
         previewWithinLimits = true; // Start assuming valid
+        showDragRadiusOverlay();
     }
     
     // Update preview position during drag (screen coordinates)
@@ -147,6 +151,7 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
         try {
             isDragging = false;
             dragPreviewPosition = null;
+            hideDragRadiusOverlay();
             
             // Update the route graph and connections
             NMapView mapView = (NMapView) NUtils.getGameUI().map;
@@ -169,6 +174,7 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
         isDragging = false;
         dragPreviewPosition = null;
         previewWithinLimits = true;
+        hideDragRadiusOverlay();
     }
     
     // Check if preview position is within drag limits  
@@ -243,6 +249,50 @@ public class RouteLabel extends Sprite implements RenderTree.Node, PView.Render2
                 // Position is outside the allowed drag area - could show a message or visual indicator
                 NUtils.getGameUI().msg("Route point cannot be moved more than 5 tiles from its original position");
             }
+        }
+    }
+    
+    // Show drag radius overlay at original route point position
+    private void showDragRadiusOverlay() {
+        try {
+            if(dragRadiusGob != null) {
+                hideDragRadiusOverlay(); // Clean up any existing overlay
+            }
+            
+            MCache cache = NUtils.getGameUI().ui.sess.glob.map;
+            if(cache == null) return;
+            
+            // Get original world position
+            Coord2d originalWorldPos = point.getOriginalWorldPosition(cache);
+            if(originalWorldPos == null) return;
+            
+            // Create virtual gob at original position
+            NMapView mapView = (NMapView) NUtils.getGameUI().map;
+            dragRadiusGob = mapView.glob.oc.new Virtual(originalWorldPos, 0);
+            dragRadiusGob.virtual = true;
+            
+            // Add the drag radius overlay
+            Coord3f originalWorldPos3d = new Coord3f((float)originalWorldPos.x, (float)originalWorldPos.y, 0f);
+            dragRadiusGob.addcustomol(new DragRadiusOverlay(dragRadiusGob, point, originalWorldPos3d));
+            
+            // Add to global object cache
+            mapView.glob.oc.add(dragRadiusGob);
+            
+        } catch(Exception e) {
+            System.err.println("Error showing drag radius overlay: " + e.getMessage());
+        }
+    }
+    
+    // Hide drag radius overlay
+    private void hideDragRadiusOverlay() {
+        try {
+            if(dragRadiusGob != null) {
+                NMapView mapView = (NMapView) NUtils.getGameUI().map;
+                mapView.glob.oc.remove(dragRadiusGob);
+                dragRadiusGob = null;
+            }
+        } catch(Exception e) {
+            System.err.println("Error hiding drag radius overlay: " + e.getMessage());
         }
     }
 }
