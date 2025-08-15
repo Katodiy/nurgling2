@@ -348,33 +348,40 @@ public class ProcessCheeseFromBufferContainers implements Action {
             itemsByContainer.computeIfAbsent(location.containerGob, k -> new ArrayList<>()).add(location);
         }
 
+        // Calculate total destination capacity limits once
+        int destinationCapacity = calculateDestinationCapacity(gui, destination);
+        int alreadyMovedToDestination = traysMovedToAreas.getOrDefault(destination, 0);
+        int remainingDestinationCapacity = Math.max(0, destinationCapacity - alreadyMovedToDestination);
+        
         // Process each container once
         for (Map.Entry<Gob, List<CheeseLocation>> entry : itemsByContainer.entrySet()) {
             Gob containerGob = entry.getKey();
             List<CheeseLocation> locationsInContainer = entry.getValue();
+
+            // Check if we've reached destination capacity limit
+            if (remainingDestinationCapacity <= 0) {
+                break;
+            }
 
             // Check if inventory has space
             int availableSpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
             if (availableSpace <= 0) {
                 moveInventoryCheeseToDestination(gui, destination, cheeseType, place);
                 CheeseAreaManager.getCheeseArea(gui, place); // Navigate back
+                availableSpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
             }
 
-            // Calculate how many we can actually take based on destination capacity and inventory space
-            int destinationCapacity = calculateDestinationCapacity(gui, destination);
-            int alreadyMovedToDestination = traysMovedToAreas.getOrDefault(destination, 0);
-            int remainingDestinationCapacity = Math.max(0, destinationCapacity - alreadyMovedToDestination);
-            
-            int inventorySpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
+            // Take what fits in inventory, limited by remaining destination capacity
             int maxToTake = Math.min(locationsInContainer.size(), 
-                                   Math.min(remainingDestinationCapacity, inventorySpace));
+                                   Math.min(remainingDestinationCapacity, availableSpace));
 
             // Only take what we can actually place at destination
             int takenFromContainer = takeCheeseFromSingleContainer(gui, containerGob, cheeseType, maxToTake, place);
 
-            // Track moves for capacity calculation
+            // Track moves for capacity calculation and update remaining capacity
             if (takenFromContainer > 0) {
                 traysMovedToAreas.put(destination, traysMovedToAreas.getOrDefault(destination, 0) + takenFromContainer);
+                remainingDestinationCapacity -= takenFromContainer;
             }
         }
     }
@@ -432,7 +439,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
     /**
      * Calculate how many cheese trays can be placed at the destination
-     * Considers both available rack space and inventory capacity
+     * Returns only the rack capacity - inventory space is handled separately
      */
     private int calculateDestinationCapacity(NGameUI gui, CheeseBranch.Place destination) throws InterruptedException {
         // Use the recorded rack capacity from ClearRacksAndRecordCapacity
@@ -441,10 +448,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
             return 0;
         }
 
-        // Also consider player inventory capacity as a limiting factor
-        int inventoryCapacity = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
-
-        return Math.min(recordedCapacity, inventoryCapacity);
+        return recordedCapacity;
     }
 
     /**
