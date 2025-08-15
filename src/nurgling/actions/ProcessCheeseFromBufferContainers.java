@@ -338,50 +338,59 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
     /**
      * Collect cheese from containers to inventory, handling inventory space efficiently
-     * Groups items by container to minimize open/close operations
+     * Continues collecting until all containers are empty or destination capacity is reached
      */
     private void collectCheeseFromContainersToInventory(NGameUI gui, ArrayList<CheeseLocation> cheeseLocations,
                                                         CheeseBranch.Place destination, String cheeseType, CheeseBranch.Place place) throws InterruptedException {
-        // Group cheese locations by container to batch operations
-        Map<Gob, List<CheeseLocation>> itemsByContainer = new HashMap<>();
-        for (CheeseLocation location : cheeseLocations) {
-            itemsByContainer.computeIfAbsent(location.containerGob, k -> new ArrayList<>()).add(location);
-        }
-
         // Calculate total destination capacity limits once
         int destinationCapacity = calculateDestinationCapacity(gui, destination);
         int alreadyMovedToDestination = traysMovedToAreas.getOrDefault(destination, 0);
         int remainingDestinationCapacity = Math.max(0, destinationCapacity - alreadyMovedToDestination);
         
-        // Process each container once
-        for (Map.Entry<Gob, List<CheeseLocation>> entry : itemsByContainer.entrySet()) {
-            Gob containerGob = entry.getKey();
-            List<CheeseLocation> locationsInContainer = entry.getValue();
+        // Get list of container gobs to process
+        ArrayList<Gob> containers = new ArrayList<>();
+        for (CheeseLocation location : cheeseLocations) {
+            if (!containers.contains(location.containerGob)) {
+                containers.add(location.containerGob);
+            }
+        }
+        
+        // Continue collecting until all containers are empty or destination capacity reached
+        while (remainingDestinationCapacity > 0) {
+            boolean foundAnyTrays = false;
+            
+            // Check each container for remaining trays
+            for (Gob containerGob : containers) {
+                // Check if we've reached destination capacity limit
+                if (remainingDestinationCapacity <= 0) {
+                    break;
+                }
 
-            // Check if we've reached destination capacity limit
-            if (remainingDestinationCapacity <= 0) {
+                // Check if inventory has space
+                int availableSpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
+                if (availableSpace <= 0) {
+                    moveInventoryCheeseToDestination(gui, destination, cheeseType, place);
+                    CheeseAreaManager.getCheeseArea(gui, place); // Navigate back
+                    availableSpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
+                }
+
+                // Take what fits in inventory, limited by remaining destination capacity
+                int maxToTake = Math.min(remainingDestinationCapacity, availableSpace);
+
+                // Take cheese from this container
+                int takenFromContainer = takeCheeseFromSingleContainer(gui, containerGob, cheeseType, maxToTake, place);
+
+                // Track moves for capacity calculation and update remaining capacity
+                if (takenFromContainer > 0) {
+                    traysMovedToAreas.put(destination, traysMovedToAreas.getOrDefault(destination, 0) + takenFromContainer);
+                    remainingDestinationCapacity -= takenFromContainer;
+                    foundAnyTrays = true;
+                }
+            }
+            
+            // If no trays were found in any container, all containers are empty
+            if (!foundAnyTrays) {
                 break;
-            }
-
-            // Check if inventory has space
-            int availableSpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
-            if (availableSpace <= 0) {
-                moveInventoryCheeseToDestination(gui, destination, cheeseType, place);
-                CheeseAreaManager.getCheeseArea(gui, place); // Navigate back
-                availableSpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
-            }
-
-            // Take what fits in inventory, limited by remaining destination capacity
-            int maxToTake = Math.min(locationsInContainer.size(), 
-                                   Math.min(remainingDestinationCapacity, availableSpace));
-
-            // Only take what we can actually place at destination
-            int takenFromContainer = takeCheeseFromSingleContainer(gui, containerGob, cheeseType, maxToTake, place);
-
-            // Track moves for capacity calculation and update remaining capacity
-            if (takenFromContainer > 0) {
-                traysMovedToAreas.put(destination, traysMovedToAreas.getOrDefault(destination, 0) + takenFromContainer);
-                remainingDestinationCapacity -= takenFromContainer;
             }
         }
     }
