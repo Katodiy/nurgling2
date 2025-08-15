@@ -266,6 +266,13 @@ public class Route {
 
                 RoutePoint waypoint = new RoutePoint(gridId, new Coord(x, y), hearthFirePlayerName);
                 
+                // Load original position if it exists
+                if (point.has("originalGridId") && point.has("originalLocalCoord")) {
+                    waypoint.originalGridId = point.getLong("originalGridId");
+                    JSONObject originalLocalCoord = point.getJSONObject("originalLocalCoord");
+                    waypoint.originalLocalCoord = new Coord(originalLocalCoord.getInt("x"), originalLocalCoord.getInt("y"));
+                }
+                
                 // Load neighbors if they exist
                 if (point.has("neighbors")) {
                     JSONArray neighbors = point.getJSONArray("neighbors");
@@ -345,6 +352,13 @@ public class Route {
                     int y = localCoord.getInt("y");
                     waypoint = new RoutePoint(gridId, new Coord(x, y), hearthFirePlayerName);
 
+                    // Load original position if it exists
+                    if (point.has("originalGridId") && point.has("originalLocalCoord")) {
+                        waypoint.originalGridId = point.getLong("originalGridId");
+                        JSONObject originalLocalCoordObj = point.getJSONObject("originalLocalCoord");
+                        waypoint.originalLocalCoord = new Coord(originalLocalCoordObj.getInt("x"), originalLocalCoordObj.getInt("y"));
+                    }
+
                     // Load neighbors if they exist
                     if (point.has("neighbors")) {
                         JSONArray neighbors = point.getJSONArray("neighbors");
@@ -412,6 +426,12 @@ public class Route {
             waypointJson.put("localCoord", new JSONObject()
                 .put("x", waypoint.localCoord.x)
                 .put("y", waypoint.localCoord.y));
+            
+            // Save original position for drag limiting
+            waypointJson.put("originalGridId", waypoint.originalGridId);
+            waypointJson.put("originalLocalCoord", new JSONObject()
+                .put("x", waypoint.originalLocalCoord.x)
+                .put("y", waypoint.originalLocalCoord.y));
             
             // Save neighbors
             JSONArray neighborsArray = new JSONArray();
