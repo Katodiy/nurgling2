@@ -195,7 +195,7 @@ public class MoveReadyCheeseToBuffers implements Action {
             ArrayList<WItem> readyTrays = new ArrayList<>();
             
             for (WItem tray : allTrays) {
-                if (CheeseUtils.isCheeseReadyToMove(tray, place)) {
+                if (CheeseUtils.isCheeseReadyToMove(tray, place) || CheeseUtils.isCheeseReadyToSlice(tray)) {
                     readyTrays.add(tray);
                 }
             }

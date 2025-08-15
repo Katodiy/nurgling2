@@ -14,6 +14,8 @@ import nurgling.actions.bots.cheese.CheeseConstants;
 import nurgling.actions.bots.cheese.CheeseAreaManager;
 import nurgling.actions.bots.cheese.CheeseInventoryOperations;
 import nurgling.tasks.ISRemoved;
+import nurgling.tasks.WaitForGobWithHash;
+import nurgling.tasks.WaitMoreItems;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -104,6 +106,12 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
         // Phase 1: Collect ready-to-slice cheese
         collectReadyToSliceCheese(gui, containers, place);
+
+        area = CheeseAreaManager.getCheeseArea(gui, place);
+        if (area == null) {
+            gui.msg("No cheese area found for " + place);
+            return;
+        }
 
         // Phase 2: Move remaining cheese to next stages
         moveRemainingCheeseToNextStage(gui, containers, place);
@@ -377,6 +385,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
      */
     private int takeCheeseFromSingleContainer(NGameUI gui, Gob containerGob, String cheeseType, int maxToTake, CheeseBranch.Place currentPlace) throws InterruptedException {
         // Navigate to container
+        NUtils.getUI().core.addTask(new WaitForGobWithHash(containerGob.ngob.hash));
         new PathFinder(containerGob).run(gui);
 
         // Open container
