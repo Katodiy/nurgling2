@@ -140,8 +140,8 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.deer.toString(),"Deer",Resource.loadsimg("nurgling/categories/reindeers")));
         specialisation.add(new SpecialisationItem(SpecName.sswheel.toString(),"Spininng Wheel",Resource.loadsimg("nurgling/categories/swheel")));
         specialisation.add(new SpecialisationItem(SpecName.compostBin.toString(),"Compost Bin",Resource.loadsimg("nurgling/categories/compostbin")));
-        specialisation.add(new SpecialisationItem(SpecName.curdingTub.toString(),"Curding Tub",Resource.loadsimg("nurgling/categories/compostbin")));
-        specialisation.add(new SpecialisationItem(SpecName.cheeseRacks.toString(),"Cheese Racks",Resource.loadsimg("nurgling/categories/compostbin")));
+        specialisation.add(new SpecialisationItem(SpecName.curdingTub.toString(),"Curding Tub",Resource.loadsimg("nurgling/categories/curding_tubl")));
+        specialisation.add(new SpecialisationItem(SpecName.cheeseRacks.toString(),"Cheese Racks",Resource.loadsimg("nurgling/categories/cheese_rack")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
