@@ -1,11 +1,13 @@
 package nurgling.widgets;
 
 import haven.*;
+import haven.res.ui.pag.toggle.Toggle;
 import nurgling.*;
 
 public class NMenuGridWdg extends Widget
 {
     MenuGrid menuGrid;
+    private boolean lastSwimmingState = false;
 
     final Coord marg = UI.scale(new Coord(6,6));
     final Coord dmarg = UI.scale(new Coord(2,2));
@@ -64,5 +66,28 @@ public class NMenuGridWdg extends Widget
     {
         super.draw(g);
         pbox.draw(g, menuGrid.c.sub(marg), menuGrid.sz.add(marg.mul(2)));
+    }
+    
+    /**
+     * Checks if swimming toggle state has changed and updates the buff indicator accordingly
+     */
+    public void checkSwimmingStateChange(MenuGrid.Pagina pag) {
+        try {
+            MenuGrid.PagButton button = pag.button();
+            if (button instanceof Toggle) {
+                Toggle toggle = (Toggle) button;
+                boolean currentState = toggle.a;
+                
+                if (currentState != lastSwimmingState) {
+                    lastSwimmingState = currentState;
+                    // Notify the game UI about swimming state change
+                    if (NUtils.getGameUI() instanceof NGameUI) {
+                        ((NGameUI) NUtils.getGameUI()).onSwimmingStateChanged(currentState);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore errors in swimming state detection
+        }
     }
 }

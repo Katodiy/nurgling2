@@ -616,7 +616,6 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	boolean criminalIsInstall = false;
 	boolean trackingIsInstall = false;
 	boolean swimmingIsInstall = false;
-	private static boolean lastSwimmingState = false;
 
     public void uimsg(String msg, Object... args) {
 	if(msg == "goto") {
@@ -681,7 +680,10 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 				
 				// Check for swimming toggle state changes and update buff indicator
 				if(ref.equals("paginae/act/swim")) {
-					checkSwimmingStateChange(pag);
+					// Delegate to NMenuGridWdg if it exists
+					if (parent instanceof nurgling.widgets.NMenuGridWdg) {
+						((nurgling.widgets.NMenuGridWdg) parent).checkSwimmingStateChange(pag);
+					}
 				}
 			}
 
@@ -736,26 +738,4 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	return((h == null) ? null : h.bind);
     }
     
-    /**
-     * Checks if swimming toggle state has changed and updates the buff indicator accordingly
-     */
-    private void checkSwimmingStateChange(Pagina pag) {
-        try {
-            PagButton button = pag.button();
-            if (button instanceof haven.res.ui.pag.toggle.Toggle) {
-                haven.res.ui.pag.toggle.Toggle toggle = (haven.res.ui.pag.toggle.Toggle) button;
-                boolean currentState = toggle.a;
-                
-                if (currentState != lastSwimmingState) {
-                    lastSwimmingState = currentState;
-                    // Notify the game UI about swimming state change
-                    if (NUtils.getGameUI() instanceof nurgling.NGameUI) {
-                        ((nurgling.NGameUI) NUtils.getGameUI()).onSwimmingStateChanged(currentState);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Ignore errors in swimming state detection
-        }
-    }
 }
