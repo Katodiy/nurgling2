@@ -33,10 +33,10 @@ public class ClearRacksAndRecordCapacity implements Action {
         Map<CheeseBranch.Place, Integer> rackCapacity = new HashMap<>();
         
         CheeseBranch.Place[] places = {
-                CheeseBranch.Place.outside,
                 CheeseBranch.Place.inside,
-                CheeseBranch.Place.mine,
-                CheeseBranch.Place.cellar
+                CheeseBranch.Place.cellar,
+                CheeseBranch.Place.outside,
+                CheeseBranch.Place.mine
         };
         
         for (CheeseBranch.Place place : places) {
