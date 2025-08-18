@@ -678,12 +678,9 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 					swimmingIsInstall = (Boolean) NConfig.get(NConfig.Key.swimming);
 				}
 				
-				// Check for swimming toggle state changes and update buff indicator
-				if(ref.equals("paginae/act/swim")) {
-					// Delegate to NMenuGridWdg if it exists
-					if (parent instanceof nurgling.widgets.NMenuGridWdg) {
-						((nurgling.widgets.NMenuGridWdg) parent).checkSwimmingStateChange(pag);
-					}
+				// Delegate swimming handling to NMenuGridWdg if it exists
+				if (parent instanceof nurgling.widgets.NMenuGridWdg) {
+					((nurgling.widgets.NMenuGridWdg) parent).handleSwimmingPagina(pag);
 				}
 			}
 

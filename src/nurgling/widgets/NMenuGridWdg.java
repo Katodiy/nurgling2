@@ -69,6 +69,19 @@ public class NMenuGridWdg extends Widget
     }
     
     /**
+     * Handles swimming-related pagina updates from MenuGrid
+     */
+    public void handleSwimmingPagina(MenuGrid.Pagina pag) {
+        if (pag.res instanceof Session.CachedRes.Ref) {
+            String ref = ((Session.CachedRes.Ref)pag.res).resnm();
+            // Check for swimming toggle state changes and update buff indicator
+            if (ref.equals("paginae/act/swim")) {
+                checkSwimmingStateChange(pag);
+            }
+        }
+    }
+    
+    /**
      * Checks if swimming toggle state has changed and updates the buff indicator accordingly
      */
     public void checkSwimmingStateChange(MenuGrid.Pagina pag) {
