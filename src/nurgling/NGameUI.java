@@ -11,6 +11,7 @@ import nurgling.notifications.*;
 import nurgling.overlays.QualityOl;
 import nurgling.tools.*;
 import nurgling.widgets.*;
+import nurgling.widgets.SwimmingStatusBuff;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -37,6 +38,7 @@ public class NGameUI extends GameUI
     public RouteSpecialization routespec;
     public BotsInterruptWidget biw;
     public NEquipProxy nep;
+    private SwimmingStatusBuff swimmingBuff = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -210,6 +212,21 @@ public class NGameUI extends GameUI
             }
         }
         return realmBuff;
+    }
+
+    /**
+     * Called when swimming toggle state changes (event-driven)
+     */
+    public void onSwimmingStateChanged(boolean isSwimmingEnabled) {
+        if (isSwimmingEnabled && swimmingBuff == null) {
+            // Create and add swimming status buff
+            swimmingBuff = new SwimmingStatusBuff();
+            buffs.addchild(swimmingBuff);
+        } else if (!isSwimmingEnabled && swimmingBuff != null) {
+            // Remove swimming status buff
+            swimmingBuff.reqdestroy();
+            swimmingBuff = null;
+        }
     }
 
     @Override
