@@ -310,6 +310,10 @@ public class NBotsMenu extends Widget
 
         void start(String path, Action action)
         {
+            NGameUI gui = NUtils.getGameUI();
+            if (gui != null && gui.recentActionsPanel != null) {
+                   gui.recentActionsPanel.addBotAction(path, action);
+               }
 
             Thread t;
             t = new Thread(new Runnable()
@@ -378,6 +382,10 @@ public class NBotsMenu extends Widget
                 public void run() {
                     NGameUI gui = NUtils.getGameUI();
                     if (!active) {
+                        if (gui != null && gui.recentActionsPanel != null) {
+                            gui.recentActionsPanel.addBotAction(path, action);
+                        }
+
                         thread = new Thread(() -> {
                             try {
                                 action.run(gui);
