@@ -33,6 +33,7 @@ public class NMapView extends MapView
 {
     public static final KeyBinding kb_quickaction = KeyBinding.get("quickaction", KeyMatch.forcode(KeyEvent.VK_Q, 0));
     public static final KeyBinding kb_quickignaction = KeyBinding.get("quickignaction", KeyMatch.forcode(KeyEvent.VK_Q, 1));
+    public static final KeyBinding kb_mousequickaction = KeyBinding.get("mousequickaction", KeyMatch.forcode(KeyEvent.VK_Q, KeyMatch.M));
     public static final KeyBinding kb_displaypbox = KeyBinding.get("pgridbox",  KeyMatch.nil);
     public static final KeyBinding kb_displayfov = KeyBinding.get("pfovbox",  KeyMatch.nil);
     public static final KeyBinding kb_displaygrid = KeyBinding.get("gridbox",  KeyMatch.nil);
@@ -774,7 +775,7 @@ public class NMapView extends MapView
             shiftPressed = true;
             inspect(lastCoord);
         }
-        if(kb_quickaction.key().match(ev) || kb_quickignaction.key().match(ev)) {
+        if(kb_quickaction.key().match(ev) || kb_quickignaction.key().match(ev) || kb_mousequickaction.key().match(ev)) {
             Thread t;
             (t = new Thread(new Runnable()
             {
@@ -784,9 +785,11 @@ public class NMapView extends MapView
                     try
                     {
                         if(kb_quickaction.key().match(ev))
-                            new QuickActionBot(false).run(NUtils.getGameUI());
-                        else
-                            new QuickActionBot(true).run(NUtils.getGameUI());
+                            new QuickActionBot(false, false).run(NUtils.getGameUI());
+                        else if(kb_quickignaction.key().match(ev))
+                            new QuickActionBot(true, false).run(NUtils.getGameUI());
+                        else if(kb_mousequickaction.key().match(ev))
+                            new QuickActionBot(false, true).run(NUtils.getGameUI());
                     }
                     catch (InterruptedException e)
                     {
