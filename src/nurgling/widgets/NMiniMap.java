@@ -283,6 +283,11 @@ public class NMiniMap extends MiniMap {
             return null;
         }
         
+        // Only show terrain tooltip when Shift is pressed
+        if(ui == null || !ui.modshift) {
+            return null;
+        }
+        
         try {
             // Convert screen coordinates to tile coordinates  
             Coord tc = c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
