@@ -66,6 +66,16 @@ public class NRecentActionsPanel extends Widget {
     }
     
     /**
+     * Removes a specific action from the recent actions list
+     */
+    public synchronized void removeRecentAction(RecentAction actionToRemove) {
+        if (actionToRemove != null && actionToRemove.pagina != null) {
+            recentActions.removeIf(action -> action.resourceName.equals(actionToRemove.resourceName));
+            updateLayout();
+        }
+    }
+    
+    /**
      * Updates the layout with current recent actions
      */
     private void updateLayout() {
@@ -210,11 +220,24 @@ public class NRecentActionsPanel extends Widget {
                 
                 @Override
                 public Object tooltip(Coord c, Widget prev) {
+                    if (recentAction.pagina != null) {
+                        return recentAction.tooltip + " (Right-click to remove)";
+                    }
                     return recentAction.tooltip;
                 }
             };
             
             add(button, Coord.z);
+        }
+        
+        @Override
+        public boolean mousedown(MouseDownEvent ev) {
+            if (ev.b == 3 && recentAction.pagina != null) { // Right click
+                // Remove this action from the recent actions list
+                removeRecentAction(recentAction);
+                return true;
+            }
+            return super.mousedown(ev);
         }
     }
 }
