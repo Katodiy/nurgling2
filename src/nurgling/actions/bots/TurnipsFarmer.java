@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -41,6 +42,12 @@ public class TurnipsFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/turnip")
             ).run(gui);
+            
+            // Auto-equip traveller's sacks if setting is enabled
+            if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
+                new EquipTravellersSacksFromBelt().run(gui);
+            }
+            
             if (turnipArea != null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(), turnipArea.getRCArea(), new NAlias("items/turnip", "Turnip")).run(gui);
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/turnip"), new NAlias("Turnip"), false).run(gui);

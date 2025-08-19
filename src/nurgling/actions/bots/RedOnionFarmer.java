@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -37,6 +38,12 @@ public class RedOnionFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/redonion")
             ).run(gui);
+            
+            // Auto-equip traveller's sacks if setting is enabled
+            if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
+                new EquipTravellersSacksFromBelt().run(gui);
+            }
+            
             if (NContext.findSpec(redOnionAsSeed) != null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(), NContext.findSpec(redOnionAsSeed).getRCArea(), new NAlias("items/redonion", "Red Onion")).run(gui);
 

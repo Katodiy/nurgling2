@@ -48,6 +48,12 @@ public class MilletFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/millet")
             ).run(gui);
+            
+            // Auto-equip traveller's sacks if setting is enabled
+            if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
+                new EquipTravellersSacksFromBelt().run(gui);
+            }
+            
             if (!ignoreStraw && strawArea != null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(), strawArea.getRCArea(), new NAlias("straw", "Straw")).run(gui);
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/millet"), new NAlias("Millet"), false).run(gui);
