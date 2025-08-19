@@ -2,6 +2,8 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.*;
+import nurgling.actions.Action;
+import nurgling.actions.ActionWithFinal;
 import nurgling.conf.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -44,10 +46,39 @@ public class NRecentActionsPanel extends Widget {
             }
             
             // Create new recent action
-            RecentAction newAction = new RecentAction(pagina, resourceName);
+            RecentAction newAction = new RecentAction(pagina, null, resourceName, null);
             
             // Remove duplicate if it exists
             recentActions.removeIf(action -> action.resourceName.equals(resourceName));
+            
+            // Add to front
+            recentActions.addFirst(newAction);
+            
+            // Limit size
+            while (recentActions.size() > MAX_RECENT_ACTIONS) {
+                recentActions.removeLast();
+            }
+            
+            // Update the UI
+            updateLayout();
+            
+        } catch (Exception e) {
+            // Silently ignore errors in action tracking
+        }
+    }
+
+    /**
+     * Adds a bot action to the recent actions stack
+     */
+    public synchronized void addBotAction(String botPath, Action botAction) {
+        if (botPath == null || botAction == null) return;
+        
+        try {
+            // Create new recent action for bot
+            RecentAction newAction = new RecentAction(null, botAction, botPath, botPath);
+            
+            // Remove duplicate if it exists
+            recentActions.removeIf(action -> action.resourceName.equals(botPath));
             
             // Add to front
             recentActions.addFirst(newAction);
@@ -69,7 +100,7 @@ public class NRecentActionsPanel extends Widget {
      * Removes a specific action from the recent actions list
      */
     public synchronized void removeRecentAction(RecentAction actionToRemove) {
-        if (actionToRemove != null && actionToRemove.pagina != null) {
+        if (actionToRemove != null && (actionToRemove.pagina != null || actionToRemove.botAction != null)) {
             recentActions.removeIf(action -> action.resourceName.equals(actionToRemove.resourceName));
             updateLayout();
         }
@@ -108,24 +139,42 @@ public class NRecentActionsPanel extends Widget {
      */
     private static class RecentAction {
         final MenuGrid.Pagina pagina;
+        final Action botAction;
         final String resourceName;
+        final String botPath;
         final BufferedImage icon;
         
-        RecentAction(MenuGrid.Pagina pagina, String resourceName) {
+        RecentAction(MenuGrid.Pagina pagina, Action botAction, String resourceName, String botPath) {
             this.pagina = pagina;
+            this.botAction = botAction;
             this.resourceName = resourceName != null ? resourceName : "";
-            this.icon = createIcon(pagina);
+            this.botPath = botPath;
+            this.icon = createIcon(pagina, botPath);
         }
         
-        private BufferedImage createIcon(MenuGrid.Pagina pagina) {
+        private BufferedImage createIcon(MenuGrid.Pagina pagina, String botPath) {
             BufferedImage originalIcon = null;
             
             if (pagina != null) {
                 try {
-                    // Try to get the button and its icon
+                    // Try to get the button and its icon from MenuGrid
                     MenuGrid.PagButton button = pagina.button();
                     if (button != null && button.res != null) {
                         Resource.Image img = button.res.layer(Resource.imgc);
+                        if (img != null) {
+                            originalIcon = img.img;
+                        }
+                    }
+                } catch (Exception e) {
+                    // Fall through to fallback
+                }
+            } else if (botPath != null) {
+                try {
+                    // Try to get the icon from bot resources
+                    String iconPath = "nurgling/bots/icons/" + botPath + "/u";
+                    Resource res = Resource.remote().load(iconPath).get();
+                    if (res != null) {
+                        Resource.Image img = res.layer(Resource.imgc);
                         if (img != null) {
                             originalIcon = img.img;
                         }
@@ -185,19 +234,62 @@ public class NRecentActionsPanel extends Widget {
             super(BUTTON_SIZE);
             
             // Create empty action for null slots
-            this.recentAction = (action != null) ? action : new RecentAction(null, null);
+            this.recentAction = (action != null) ? action : new RecentAction(null, null, "", null);
             
             // Create IButton with the action's icon (already a BufferedImage)
             this.button = new IButton(this.recentAction.icon, this.recentAction.icon, this.recentAction.icon) {
                 @Override
                 public void click() {
                     try {
-                        // Only trigger action if there's a real action (not empty slot)
                         if (recentAction.pagina != null) {
+                            // Handle MenuGrid action
                             MenuGrid.PagButton pagButton = recentAction.pagina.button();
                             if (pagButton != null) {
                                 pagButton.use(new MenuGrid.Interaction());
                             }
+                        } else if (recentAction.botAction != null) {
+                            // Handle bot action - mirror the behavior from NBotsMenu.start()
+                            Thread t = new Thread(() -> {
+                                ArrayList<Thread> supports = new ArrayList<>();
+                                try {
+                                    NGameUI gui = NUtils.getGameUI();
+                                    if (gui != null) {
+                                        // Start support actions first
+                                        for (Action sup : recentAction.botAction.getSupp()) {
+                                            Thread st = new Thread(() -> {
+                                                try {
+                                                    sup.run(gui);
+                                                } catch (InterruptedException e) {
+                                                    // Support action interrupted
+                                                }
+                                            });
+                                            supports.add(st);
+                                            st.start();
+                                        }
+                                        // Run main action
+                                        recentAction.botAction.run(gui);
+                                    }
+                                } catch (InterruptedException e) {
+                                    if (NUtils.getGameUI() != null) {
+                                        NUtils.getGameUI().msg(recentAction.botPath + ": STOPPED");
+                                    }
+                                } finally {
+                                    // Clean up like the original
+                                    if (recentAction.botAction instanceof ActionWithFinal) {
+                                        ((ActionWithFinal) recentAction.botAction).endAction();
+                                    }
+                                    for (Thread st : supports) {
+                                        st.interrupt();
+                                    }
+                                }
+                            }, recentAction.botPath + "-RecentAction");
+                            
+                            // Add to bot interrupt widget so the gear appears
+                            NGameUI gui = NUtils.getGameUI();
+                            if (gui != null && gui.biw != null) {
+                                gui.biw.addObserve(t);
+                            }
+                            t.start();
                         }
                     } catch (Exception e) {
                         // Silently ignore errors in action execution
@@ -206,10 +298,10 @@ public class NRecentActionsPanel extends Widget {
 
                 @Override
                 public Object tooltip(Coord c, Widget prev) {
-                    if (recentAction.pagina != null) {
+                    if (recentAction.pagina != null || recentAction.botAction != null) {
                         return "Right-click to remove";
                     }
-                    return "Right-click to remove";
+                    return null;
                 }
             };
             
@@ -218,7 +310,7 @@ public class NRecentActionsPanel extends Widget {
         
         @Override
         public boolean mousedown(MouseDownEvent ev) {
-            if (ev.b == 3 && recentAction.pagina != null) { // Right click
+            if (ev.b == 3 && (recentAction.pagina != null || recentAction.botAction != null)) { // Right click on any action
                 // Remove this action from the recent actions list
                 removeRecentAction(recentAction);
                 return true;
