@@ -45,6 +45,7 @@ public class NGameUI extends GameUI
     private TrackingStatusBuff trackingBuff = null;
     private CrimeStatusBuff crimeBuff = null;
     private AllowVisitingStatusBuff allowVisitingBuff = null;
+    public NRecentActionsPanel recentActionsPanel;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -60,6 +61,7 @@ public class NGameUI extends GameUI
 
         add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
         add(new NDraggableWidget(questinfo = new NQuestInfo(), "quests", questinfo.sz.add(NDraggableWidget.delta)));
+        add(new NDraggableWidget(recentActionsPanel = new NRecentActionsPanel(), "recentactions", recentActionsPanel.sz.add(NDraggableWidget.delta)));
         add(guiinfo = new NGUIInfo(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
         if(!(Boolean) NConfig.get(NConfig.Key.show_drag_menu))
             guiinfo.hide();
@@ -234,7 +236,7 @@ public class NGameUI extends GameUI
             swimmingBuff = null;
         }
     }
-    
+
     /**
      * Called when tracking toggle state changes (event-driven)
      */
@@ -249,7 +251,7 @@ public class NGameUI extends GameUI
             trackingBuff = null;
         }
     }
-    
+
     /**
      * Called when crime toggle state changes (event-driven)
      */
@@ -264,7 +266,7 @@ public class NGameUI extends GameUI
             crimeBuff = null;
         }
     }
-    
+
     /**
      * Called when allow visiting toggle state changes (event-driven)
      */

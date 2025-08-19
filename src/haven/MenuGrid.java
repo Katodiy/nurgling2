@@ -580,6 +580,23 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	} else {
 	    r.pag.anew = r.pag.tnew = 0;
 	    r.use(iact);
+
+	    // Track this action in the recent actions panel
+	    try {
+	        if (parent instanceof nurgling.widgets.NMenuGridWdg) {
+	            nurgling.widgets.NMenuGridWdg menuGridWdg = (nurgling.widgets.NMenuGridWdg) parent;
+	            // MenuGridWdg -> NDraggableWidget -> NGameUI, so we need to go up two levels
+	            if (menuGridWdg.parent != null && menuGridWdg.parent.parent instanceof nurgling.NGameUI) {
+	                nurgling.NGameUI gameUI = (nurgling.NGameUI) menuGridWdg.parent.parent;
+	                if (gameUI.recentActionsPanel != null) {
+	                    gameUI.recentActionsPanel.addRecentAction(r.pag);
+	                }
+	            }
+	        }
+	    } catch (Exception e) {
+	        // Silently ignore errors in recent action tracking
+	    }
+
 	    if(reset)
 		change(null);
 	}
