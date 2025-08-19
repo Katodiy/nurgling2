@@ -11,6 +11,10 @@ import nurgling.notifications.*;
 import nurgling.overlays.QualityOl;
 import nurgling.tools.*;
 import nurgling.widgets.*;
+import nurgling.widgets.SwimmingStatusBuff;
+import nurgling.widgets.TrackingStatusBuff;
+import nurgling.widgets.CrimeStatusBuff;
+import nurgling.widgets.AllowVisitingStatusBuff;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -37,6 +41,10 @@ public class NGameUI extends GameUI
     public RouteSpecialization routespec;
     public BotsInterruptWidget biw;
     public NEquipProxy nep;
+    private SwimmingStatusBuff swimmingBuff = null;
+    private TrackingStatusBuff trackingBuff = null;
+    private CrimeStatusBuff crimeBuff = null;
+    private AllowVisitingStatusBuff allowVisitingBuff = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -210,6 +218,66 @@ public class NGameUI extends GameUI
             }
         }
         return realmBuff;
+    }
+
+    /**
+     * Called when swimming toggle state changes (event-driven)
+     */
+    public void onSwimmingStateChanged(boolean isSwimmingEnabled) {
+        if (isSwimmingEnabled && swimmingBuff == null) {
+            // Create and add swimming status buff
+            swimmingBuff = new SwimmingStatusBuff();
+            buffs.addchild(swimmingBuff);
+        } else if (!isSwimmingEnabled && swimmingBuff != null) {
+            // Remove swimming status buff
+            swimmingBuff.reqdestroy();
+            swimmingBuff = null;
+        }
+    }
+    
+    /**
+     * Called when tracking toggle state changes (event-driven)
+     */
+    public void onTrackingStateChanged(boolean isTrackingEnabled) {
+        if (isTrackingEnabled && trackingBuff == null) {
+            // Create and add tracking status buff
+            trackingBuff = new TrackingStatusBuff();
+            buffs.addchild(trackingBuff);
+        } else if (!isTrackingEnabled && trackingBuff != null) {
+            // Remove tracking status buff
+            trackingBuff.reqdestroy();
+            trackingBuff = null;
+        }
+    }
+    
+    /**
+     * Called when crime toggle state changes (event-driven)
+     */
+    public void onCrimeStateChanged(boolean isCrimeEnabled) {
+        if (isCrimeEnabled && crimeBuff == null) {
+            // Create and add crime status buff
+            crimeBuff = new CrimeStatusBuff();
+            buffs.addchild(crimeBuff);
+        } else if (!isCrimeEnabled && crimeBuff != null) {
+            // Remove crime status buff
+            crimeBuff.reqdestroy();
+            crimeBuff = null;
+        }
+    }
+    
+    /**
+     * Called when allow visiting toggle state changes (event-driven)
+     */
+    public void onAllowVisitingStateChanged(boolean isAllowVisitingEnabled) {
+        if (isAllowVisitingEnabled && allowVisitingBuff == null) {
+            // Create and add allow visiting status buff
+            allowVisitingBuff = new AllowVisitingStatusBuff();
+            buffs.addchild(allowVisitingBuff);
+        } else if (!isAllowVisitingEnabled && allowVisitingBuff != null) {
+            // Remove allow visiting status buff
+            allowVisitingBuff.reqdestroy();
+            allowVisitingBuff = null;
+        }
     }
 
     @Override
