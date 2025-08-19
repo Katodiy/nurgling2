@@ -42,6 +42,27 @@ public class NMapView extends MapView
     public NGlobalCoord lastGC = null;
 
     public final List<NMiniMap.TempMark> tempMarkList = new ArrayList<NMiniMap.TempMark>();
+    
+    // Route point dragging state
+    private RouteLabel draggedRouteLabel = null;
+    private boolean isDraggingRoutePoint = false;
+    private UI.Grab dragGrab = null;
+    
+    // Find RouteLabel at screen coordinate
+    private RouteLabel getRouteLabeAt(Coord screenCoord) {
+        // Check all virtual game objects for RouteLabel overlays
+        for(Gob gob : routeDummys.values()) {
+            for(Gob.Overlay ol : gob.ols) {
+                if(ol.spr instanceof RouteLabel) {
+                    RouteLabel routeLabel = (RouteLabel) ol.spr;
+                    if(routeLabel.checkDragStart(screenCoord)) {
+                        return routeLabel;
+                    }
+                }
+            }
+        }
+        return null;
+    }
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
         super(sz, glob, cc, plgob);
@@ -628,6 +649,18 @@ public class NMapView extends MapView
     @Override
     public boolean mousedown(MouseDownEvent ev)
     {
+        // Check for route point drag start
+        if(ev.b == 1 && !isDraggingRoutePoint) { // Left mouse button
+            RouteLabel clickedLabel = getRouteLabeAt(ev.c);
+            if(clickedLabel != null) {
+                isDraggingRoutePoint = true;
+                draggedRouteLabel = clickedLabel;
+                draggedRouteLabel.startDrag();
+                dragGrab = ui.grabmouse(this);
+                return true;
+            }
+        }
+        
         if ( isAreaSelectionMode.get() )
         {
             if (selection == null)
@@ -648,7 +681,70 @@ public class NMapView extends MapView
     @Override
     public void mousemove(MouseMoveEvent ev) {
         lastCoord = ev.c;
+        
+        // Handle route point dragging
+        if(isDraggingRoutePoint && draggedRouteLabel != null) {
+            // Update preview position immediately with screen coordinates
+            draggedRouteLabel.updateDragPreview(ev.c);
+            
+            // Capture the reference to avoid race conditions with async Hittest
+            final RouteLabel currentDraggedLabel = draggedRouteLabel;
+            
+            // Check if coordinates are within valid bounds before attempting Hittest
+            if(ev.c.x >= 0 && ev.c.y >= 0 && ev.c.x < sz.x && ev.c.y < sz.y) {
+                try {
+                    // Convert screen coordinate to world coordinate using Hittest
+                    new Hittest(ev.c) {
+                        public void hit(Coord pc, Coord2d mc, ClickData inf) {
+                            if(mc != null && currentDraggedLabel != null) {
+                                currentDraggedLabel.updatePosition(mc);
+                            }
+                        }
+                        
+                        protected void nohit(Coord pc) {
+                            // Ignore if no hit - mouse outside valid map area
+                        }
+                    }.run();
+                } catch (Exception e) {
+                    // Ignore hittest errors when mouse is outside valid area
+                }
+            }
+            return;
+        }
+        
         super.mousemove(ev);
+    }
+    
+    @Override
+    public boolean mouseup(MouseUpEvent ev) {
+        if(isDraggingRoutePoint) {
+            if(ev.b == 1) {
+                // Left mouse button - finalize drag
+                isDraggingRoutePoint = false;
+                if(dragGrab != null) {
+                    dragGrab.remove();
+                    dragGrab = null;
+                }
+                if(draggedRouteLabel != null) {
+                    draggedRouteLabel.finalizeDrag();
+                    draggedRouteLabel = null;
+                }
+                return true;
+            } else if(ev.b == 3) {
+                // Right mouse button - cancel drag
+                isDraggingRoutePoint = false;
+                if(dragGrab != null) {
+                    dragGrab.remove();
+                    dragGrab = null;
+                }
+                if(draggedRouteLabel != null) {
+                    draggedRouteLabel.cancelDrag();
+                    draggedRouteLabel = null;
+                }
+                return true;
+            }
+        }
+        return super.mouseup(ev);
     }
 
     public Coord2d getLCoord() {
