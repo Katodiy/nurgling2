@@ -735,5 +735,4 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	PagButton h = bhit(cc);
 	return((h == null) ? null : h.bind);
     }
-    
 }
