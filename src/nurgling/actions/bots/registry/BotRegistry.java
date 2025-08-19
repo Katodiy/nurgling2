@@ -1,5 +1,6 @@
 package nurgling.actions.bots.registry;
 
+import nurgling.actions.CreateTraysWithCurds;
 import nurgling.actions.FillWaterskins;
 import nurgling.actions.PumpkinFarmer;
 import nurgling.actions.bots.*;
@@ -96,7 +97,8 @@ public class BotRegistry {
         bots.add(new BotDescriptor("bee", BotDescriptor.BotType.FARMING, "Beehive Manager", "Collects honey and wax from beehives.", true, true, HoneyAndWaxCollector.class, "bee", true));
 
         bots.add(new BotDescriptor("compostbin", BotDescriptor.BotType.FARMING, "Compost Bin", "Pull mulch out of compost bins.", true, true, CompostBinUnloader.class, "compostbin", false));
-        bots.add(new BotDescriptor("curdingtub", BotDescriptor.BotType.FARMING, "Curding Tub", "Pull curd out of curding tubs.", true, true, CurdingTubUnloader.class, "compostbin", false));
+        bots.add(new BotDescriptor("curdingtub", BotDescriptor.BotType.FARMING, "Unload curding Tubs", "Pull curd out of curding tubs.", true, true, CurdingTubUnloader.class, "cheese_empty", false));
+        bots.add(new BotDescriptor("cheese", BotDescriptor.BotType.FARMING, "Cheese Production Bot", "Process cheese orders.", true, true, CheeseProductionBot.class, "cheese", false));
 
         // FARMING QUALITY
         bots.add(new BotDescriptor("turnipq", BotDescriptor.BotType.FARMING_QUALITY, "Turnip Farmer Quality", "Automatically harvests and replants turnips in X*Y cell patches.", true, true, TurnipsFarmerQ.class, "turnipq", false));
