@@ -110,13 +110,11 @@ public class NRecentActionsPanel extends Widget {
         final MenuGrid.Pagina pagina;
         final String resourceName;
         final BufferedImage icon;
-        final String tooltip;
         
         RecentAction(MenuGrid.Pagina pagina, String resourceName) {
             this.pagina = pagina;
             this.resourceName = resourceName != null ? resourceName : "";
             this.icon = createIcon(pagina);
-            this.tooltip = createTooltip(this.resourceName);
         }
         
         private BufferedImage createIcon(MenuGrid.Pagina pagina) {
@@ -174,18 +172,6 @@ public class NRecentActionsPanel extends Widget {
             g.dispose();
             return scaledIcon;
         }
-        
-        private String createTooltip(String resourceName) {
-            // Create a readable tooltip from the resource name
-            if (resourceName == null || resourceName.isEmpty()) {
-                return "Empty slot";
-            }
-            if (resourceName.startsWith("paginae/act/")) {
-                String actionName = resourceName.substring("paginae/act/".length());
-                return "Recent action: " + actionName.replace("_", " ").replace("-", " ");
-            }
-            return "Recent action: " + resourceName;
-        }
     }
     
     /**
@@ -217,13 +203,13 @@ public class NRecentActionsPanel extends Widget {
                         // Silently ignore errors in action execution
                     }
                 }
-                
+
                 @Override
                 public Object tooltip(Coord c, Widget prev) {
                     if (recentAction.pagina != null) {
-                        return recentAction.tooltip + " (Right-click to remove)";
+                        return "Right-click to remove";
                     }
-                    return recentAction.tooltip;
+                    return "Right-click to remove";
                 }
             };
             
