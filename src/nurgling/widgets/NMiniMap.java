@@ -21,6 +21,8 @@ public class NMiniMap extends MiniMap {
     public static final Color VIEW_BORDER_COLOR = new Color(0, 0, 0, 128);
     public static Coord2d TEMP_VIEW_SZ = new Coord2d(VIEW_SZ).floor().mul(tilesz).div(2).sub(tilesz.mul(5));
     public final FogArea fogArea = new FogArea(this);
+    
+    private String currentTerrainName = null;
 
     private static final Coord2d sgridsz = new Coord2d(new Coord(100,100));
     public NMiniMap(Coord sz, MapFile file) {
@@ -93,6 +95,7 @@ public class NMiniMap extends MiniMap {
 
 
         drawtempmarks(g);
+        drawterrainname(g);
     }
 
     void drawview(GOut g) {
@@ -189,7 +192,27 @@ public class NMiniMap extends MiniMap {
         }
     }
 
+    private void drawterrainname(GOut g) {
+        if((Boolean)NConfig.get(NConfig.Key.showTerrainName) && currentTerrainName != null && !currentTerrainName.isEmpty()) {
+            Text.Foundry fnd = new Text.Foundry(Text.dfont, 10);
+            Text terrainText = fnd.render(currentTerrainName, Color.WHITE);
+            Coord textPos = new Coord((sz.x - terrainText.sz().x) / 2, 5);
+            g.chcolor(0, 0, 0, 180);
+            g.frect(textPos.sub(2, 1), terrainText.sz().add(4, 2));
+            g.chcolor();
+            g.image(terrainText.tex(), textPos);
+        }
+    }
 
+
+
+    @Override
+    public void mousemove(MouseMoveEvent ev) {
+        super.mousemove(ev);
+        if((Boolean)NConfig.get(NConfig.Key.showTerrainName)) {
+            updateCurrentTerrainName(ev.c);
+        }
+    }
 
     @Override
     public boolean mousewheel(MouseWheelEvent ev) {
@@ -258,5 +281,122 @@ public class NMiniMap extends MiniMap {
                 mark.draw(g, mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz));
             }
         }
+    }
+
+    @Override
+    public Object tooltip(Coord c, Widget prev) {
+        if(dloc != null) {
+            Coord tc = c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
+            DisplayMarker mark = markerat(tc);
+            if(mark != null) {
+                return(mark.tip);
+            }
+            
+            // Get terrain type tooltip
+            String terrainInfo = getTerrainTooltip(c);
+            if(terrainInfo != null) {
+                return(Text.render(terrainInfo));
+            }
+        }
+        return(super.tooltip(c, prev));
+    }
+    
+    private String getTerrainTooltip(Coord c) {
+        // Only show terrain tooltip when Shift is pressed
+        if(ui == null || !ui.modshift) {
+            return null;
+        }
+        return getTerrainNameAtCoord(c);
+    }
+    
+    private void updateCurrentTerrainName(Coord c) {
+        String terrainName = getTerrainNameAtCoord(c);
+        if(terrainName != null && !terrainName.equals(currentTerrainName)) {
+            currentTerrainName = terrainName;
+        } else if(terrainName == null) {
+            currentTerrainName = null;
+        }
+    }
+    
+    private String getTerrainNameAtCoord(Coord c) {
+        if(dloc == null || display == null || dgext == null) {
+            return null;
+        }
+        
+        try {
+            // Convert screen coordinates to tile coordinates  
+            Coord tc = c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
+            
+            // Find which DisplayGrid contains this coordinate
+            Coord zmaps = cmaps.mul(1 << dlvl);
+            Coord gridCoord = tc.div(zmaps);
+            
+            // Check if this grid coordinate is in our display extent
+            if(!dgext.contains(gridCoord)) {
+                return null;
+            }
+            
+            // Get the DisplayGrid
+            DisplayGrid dgrid = display[dgext.ri(gridCoord)];
+            if(dgrid == null) {
+                return null;
+            }
+            
+            // Get the DataGrid from the DisplayGrid
+            MapFile.DataGrid grid = dgrid.gref.get();
+            if(grid == null) {
+                return null;
+            }
+            
+            // Calculate coordinates within the grid (0-99 range)
+            Coord localTC = tc.sub(gridCoord.mul(zmaps));
+            Coord tileCoord = localTC.div(1 << dlvl);
+            
+            // Ensure coordinates are within grid bounds
+            if(tileCoord.x < 0 || tileCoord.x >= cmaps.x || tileCoord.y < 0 || tileCoord.y >= cmaps.y) {
+                return null;
+            }
+            
+            // Get the tile type ID
+            int tileId = grid.gettile(tileCoord);
+            if(tileId < 0 || tileId >= grid.tilesets.length) {
+                return null;
+            }
+            
+            // Get the TileInfo for this tile
+            MapFile.TileInfo tileInfo = grid.tilesets[tileId];
+            if(tileInfo == null || tileInfo.res == null) {
+                return null;
+            }
+            
+            // Format the terrain name for display
+            String resName = tileInfo.res.name;
+            String terrainName = formatTerrainName(resName);
+            
+            return terrainName;
+            
+        } catch(Exception e) {
+            // Silently handle any exceptions
+            return null;
+        }
+    }
+
+    private String formatTerrainName(String resName) {
+        if(resName == null) {
+            return "Unknown";
+        }
+        
+        // Remove "gfx/tiles/" prefix if present
+        String name = resName;
+        if(name.startsWith("gfx/tiles/")) {
+            name = name.substring("gfx/tiles/".length());
+        }
+
+        // Capitalize first letter and replace underscores with spaces
+        name = name.replace("_", " ");
+        if(name.length() > 0) {
+            name = Character.toUpperCase(name.charAt(0)) + name.substring(1);
+        }
+        return name;
     }
 }

@@ -26,6 +26,7 @@ public class QoL extends Panel {
     private CheckBox shortCupboards;
     private CheckBox printpfmap;
     private CheckBox uniformBiomeColors;
+    private CheckBox showTerrainName;
 
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
@@ -52,6 +53,7 @@ public class QoL extends Panel {
         prev = shortCupboards = add(new CheckBox("Short cupboards"), prev.pos("bl").adds(0, 5));
         prev = useGlobalPf = add(new CheckBox("Use global PF"), prev.pos("bl").adds(0, 5));
         prev = uniformBiomeColors = add(new CheckBox("Uniform biome colors on minimap"), prev.pos("bl").adds(0, 5));
+        prev = showTerrainName = add(new CheckBox("Show terrain name on minimap hover"), prev.pos("bl").adds(0, 5));
         prev = debug = add(new CheckBox("DEBUG"), prev.pos("bl").adds(0, 5));
         prev = printpfmap = add(new CheckBox("Path Finder map in debug"), prev.pos("bl").adds(0, 5));
 
@@ -88,6 +90,7 @@ public class QoL extends Panel {
         tempmark.a = getBool(NConfig.Key.tempmark);
         shortCupboards.a = getBool(NConfig.Key.shortCupboards);
         uniformBiomeColors.a = getBool(NConfig.Key.uniformBiomeColors);
+        showTerrainName.a = getBool(NConfig.Key.showTerrainName);
 
         Object dist = NConfig.get(NConfig.Key.temsmarkdist);
         temsmarkdistEntry.settext(dist == null ? "" : dist.toString());
@@ -131,6 +134,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.printpfmap, printpfmap.a);
         NConfig.set(NConfig.Key.tempmark, tempmark.a);
         NConfig.set(NConfig.Key.shortCupboards, shortCupboards.a);
+        NConfig.set(NConfig.Key.showTerrainName, showTerrainName.a);
         
         // Save uniform biome colors and update minimap if changed
         boolean oldUniformColors = getBool(NConfig.Key.uniformBiomeColors);
