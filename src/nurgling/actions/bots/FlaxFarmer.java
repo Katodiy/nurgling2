@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -45,6 +46,12 @@ public class FlaxFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/flax")
             ).run(gui);
+            
+            // Auto-equip traveller's sacks if setting is enabled
+            if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
+                new EquipTravellersSacksFromBelt().run(gui);
+            }
+            
             if (flaxFibersArea != null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(), flaxFibersArea.getRCArea(), new NAlias("flaxfibre", "Flax Fibres")).run(gui);
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/flax"), new NAlias("Flax"), false).run(gui);

@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -38,6 +39,12 @@ public class GarlicFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/garlic")
             ).run(gui);
+            
+            // Auto-equip traveller's sacks if setting is enabled
+            if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
+                new EquipTravellersSacksFromBelt().run(gui);
+            }
+            
             if (NContext.findSpec(garlicAsSeed) != null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(), NContext.findSpec(garlicAsSeed).getRCArea(), new NAlias("items/garlic", "Garlic")).run(gui);
 

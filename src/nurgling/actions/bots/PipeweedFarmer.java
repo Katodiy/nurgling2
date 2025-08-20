@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -44,6 +45,12 @@ public class PipeweedFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/pipeweed")
             ).run(gui);
+            
+            // Auto-equip traveller's sacks if setting is enabled
+            if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
+                new EquipTravellersSacksFromBelt().run(gui);
+            }
+            
             if (pipeweedLeafArea != null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(), pipeweedLeafArea.getRCArea(), new NAlias("tobacco-fresh", "Fresh Leaf of Pipeweed")).run(gui);
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/pipeweed"), new NAlias("Pipeweed"), false).run(gui);

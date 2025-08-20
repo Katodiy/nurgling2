@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -45,6 +46,12 @@ public class GreenKaleFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/greenkale")
             ).run(gui);
+            
+            // Auto-equip traveller's sacks if setting is enabled
+            if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
+                new EquipTravellersSacksFromBelt().run(gui);
+            }
+            
             if (greenKale != null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(), greenKale.getRCArea(), new NAlias("items/greenkale", "Green Kale")).run(gui);
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/greenkale"), new NAlias("Green Kale"), false).run(gui);

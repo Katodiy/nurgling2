@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -43,6 +44,12 @@ public class BeetrootFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/beet")
             ).run(gui);
+            
+            // Auto-equip traveller's sacks if setting is enabled
+            if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
+                new EquipTravellersSacksFromBelt().run(gui);
+            }
+            
             if (beetrootLeavesArea != null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(), NContext.findOut("Beetroot Leaves", 1).getRCArea(), new NAlias("beetleaves", "Beetroot Leaves")).run(gui);
 

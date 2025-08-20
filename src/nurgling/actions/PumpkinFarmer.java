@@ -1,8 +1,10 @@
 package nurgling.actions;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
+import nurgling.actions.bots.EquipTravellersSacksFromBelt;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tools.NAlias;
@@ -43,6 +45,12 @@ public class PumpkinFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/pumpkin")
             ).run(gui);
+            
+            // Auto-equip traveller's sacks if setting is enabled
+            if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
+                new EquipTravellersSacksFromBelt().run(gui);
+            }
+            
             if (pumpkinFlesh != null)
                 new LettuceAndPumpkinCollector(NContext.findSpec(field), NContext.findSpec(seed), pumpkinFlesh, new NAlias("items/pumpkin", "Pumpkin"), NContext.findSpec(trough)).run(gui);
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/pumpkin"), new NAlias("Pumpkin"), false).run(gui);

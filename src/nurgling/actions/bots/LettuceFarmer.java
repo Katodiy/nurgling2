@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -44,6 +45,12 @@ public class LettuceFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/lettuce")
             ).run(gui);
+            
+            // Auto-equip traveller's sacks if setting is enabled
+            if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
+                new EquipTravellersSacksFromBelt().run(gui);
+            }
+            
             if (lettuceLeaf != null)
                 new LettuceAndPumpkinCollector(NContext.findSpec(field), NContext.findSpec(seed), lettuceLeaf, new NAlias("items/lettucehead", "Head of Lettuce"), NContext.findSpec(trough)).run(gui);
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/lettuce"), new NAlias("Lettuce"), false).run(gui);

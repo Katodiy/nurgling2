@@ -1,5 +1,6 @@
 package nurgling.actions.bots;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
@@ -45,6 +46,12 @@ public class PoppyFarmer implements Action {
                     NContext.findSpec(swill),
                     new NAlias("plants/poppy")
             ).run(gui);
+            
+            // Auto-equip traveller's sacks if setting is enabled
+            if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
+                new EquipTravellersSacksFromBelt().run(gui);
+            }
+            
             if (poppyFlowerArea != null)
                 new CollectItemsToPile(NContext.findSpec(field).getRCArea(), poppyFlowerArea.getRCArea(), new NAlias("flower-poppy", "Poppy Flower")).run(gui);
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/poppy"), new NAlias("Poppy"), false).run(gui);
