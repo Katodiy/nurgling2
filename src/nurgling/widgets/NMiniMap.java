@@ -193,7 +193,7 @@ public class NMiniMap extends MiniMap {
     }
 
     private void drawterrainname(GOut g) {
-        if(currentTerrainName != null && !currentTerrainName.isEmpty()) {
+        if((Boolean)NConfig.get(NConfig.Key.showTerrainName) && currentTerrainName != null && !currentTerrainName.isEmpty()) {
             Text.Foundry fnd = new Text.Foundry(Text.dfont, 10);
             Text terrainText = fnd.render(currentTerrainName, Color.WHITE);
             Coord textPos = new Coord((sz.x - terrainText.sz().x) / 2, 5);
@@ -209,7 +209,9 @@ public class NMiniMap extends MiniMap {
     @Override
     public void mousemove(MouseMoveEvent ev) {
         super.mousemove(ev);
-        updateCurrentTerrainName(ev.c);
+        if((Boolean)NConfig.get(NConfig.Key.showTerrainName)) {
+            updateCurrentTerrainName(ev.c);
+        }
     }
 
     @Override
