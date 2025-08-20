@@ -300,71 +300,11 @@ public class NMiniMap extends MiniMap {
     }
     
     private String getTerrainTooltip(Coord c) {
-        if(dloc == null || display == null || dgext == null) {
-            return null;
-        }
-        
         // Only show terrain tooltip when Shift is pressed
         if(ui == null || !ui.modshift) {
             return null;
         }
-        
-        try {
-            // Convert screen coordinates to tile coordinates  
-            Coord tc = c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
-            
-            // Find which DisplayGrid contains this coordinate
-            Coord zmaps = cmaps.mul(1 << dlvl);
-            Coord gridCoord = tc.div(zmaps);
-            
-            // Check if this grid coordinate is in our display extent
-            if(!dgext.contains(gridCoord)) {
-                return null;
-            }
-            
-            // Get the DisplayGrid
-            DisplayGrid dgrid = display[dgext.ri(gridCoord)];
-            if(dgrid == null) {
-                return null;
-            }
-            
-            // Get the DataGrid from the DisplayGrid
-            MapFile.DataGrid grid = dgrid.gref.get();
-            if(grid == null) {
-                return null;
-            }
-            
-            // Calculate coordinates within the grid (0-99 range)
-            Coord localTC = tc.sub(gridCoord.mul(zmaps));
-            Coord tileCoord = localTC.div(1 << dlvl);
-            
-            // Ensure coordinates are within grid bounds
-            if(tileCoord.x < 0 || tileCoord.x >= cmaps.x || tileCoord.y < 0 || tileCoord.y >= cmaps.y) {
-                return null;
-            }
-            
-            // Get the tile type ID
-            int tileId = grid.gettile(tileCoord);
-            if(tileId < 0 || tileId >= grid.tilesets.length) {
-                return null;
-            }
-            
-            // Get the TileInfo for this tile
-            MapFile.TileInfo tileInfo = grid.tilesets[tileId];
-            if(tileInfo == null || tileInfo.res == null) {
-                return null;
-            }
-            
-            // Format the terrain name for display
-            String resName = tileInfo.res.name;
-            String terrainName = formatTerrainName(resName);
-            
-            return terrainName;
-            
-        } catch(Exception e) {
-            // Silently handle any exceptions - tooltip shouldn't break the game
-            return null;
-        }
+        return getTerrainNameAtCoord(c);
     }
     
     private void updateCurrentTerrainName(Coord c) {
