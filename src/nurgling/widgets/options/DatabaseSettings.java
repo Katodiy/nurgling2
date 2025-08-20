@@ -170,7 +170,7 @@ public class DatabaseSettings extends Panel {
                     }
                 });
             }
-        }, new Coord(entryX, y));
+        }, new Coord(margin, firstSettingY + filePathEntry.sz.y + UI.scale(5)));
 
         load();
         updateWidgetsVisibility();
@@ -249,7 +249,7 @@ public class DatabaseSettings extends Panel {
 
         // Переупаковываем виджет
         pack();
-        sz.y = UI.scale(130);
+        sz.y = UI.scale(200);
     }
 
     private LinkedList<String> getDbTypes() {
