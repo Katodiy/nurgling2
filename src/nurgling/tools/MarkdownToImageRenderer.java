@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.InputStream;
 import javax.imageio.ImageIO;
 
 public class MarkdownToImageRenderer {
@@ -16,7 +17,7 @@ public class MarkdownToImageRenderer {
         return renderMarkdownToImage(markdown, maxWidth, null);
     }
     
-    public static BufferedImage renderMarkdownToImage(String markdown, int maxWidth, File basePath) {
+    public static BufferedImage renderMarkdownToImage(String markdown, int maxWidth, String documentKey) {
         // Define fonts and colors
         Font regularFont = new Font("Arial", Font.PLAIN, UI.scale(12));
         Font boldFont = new Font("Arial", Font.BOLD, UI.scale(12));
@@ -109,7 +110,7 @@ public class MarkdownToImageRenderer {
                     String altText = imageMatcher.group(1);
                     String imagePath = imageMatcher.group(2);
                     
-                    BufferedImage imageToRender = loadImage(imagePath, basePath);
+                    BufferedImage imageToRender = loadImage(imagePath, documentKey);
                     if (imageToRender != null) {
                         // Scale image if too wide
                         int imageWidth = imageToRender.getWidth();
@@ -317,31 +318,91 @@ public class MarkdownToImageRenderer {
         return x + textWidth;
     }
     
-    private static BufferedImage loadImage(String imagePath, File basePath) {
+    private static BufferedImage loadImage(String imagePath, String documentKey) {
         try {
-            File imageFile;
+            String resourcePath;
             
-            // If basePath is provided, resolve relative to it
-            if (basePath != null && !imagePath.startsWith("/") && !imagePath.contains(":")) {
-                imageFile = new File(basePath.getParentFile(), imagePath);
+            // Construct resource path based on document location
+            if (documentKey != null && documentKey.contains("/")) {
+                // Extract directory from document key
+                String docDir = documentKey.substring(0, documentKey.lastIndexOf("/"));
+                resourcePath = resolveRelativePath("/nurgling/docs/" + docDir, imagePath);
             } else {
-                imageFile = new File(imagePath);
+                // Default to images directory 
+                resourcePath = "/nurgling/docs/images/" + imagePath;
             }
             
-            // If file doesn't exist, try relative to docs directory
-            if (!imageFile.exists() && basePath != null) {
-                imageFile = new File("src/nurgling/docs/guides", imagePath);
-            }
-            
-            if (imageFile.exists()) {
-                return ImageIO.read(imageFile);
+            // Try to load as resource
+            InputStream imageStream = MarkdownToImageRenderer.class.getResourceAsStream(resourcePath);
+            if (imageStream != null) {
+                try (InputStream stream = imageStream) {
+                    return ImageIO.read(stream);
+                }
             } else {
-                System.err.println("Image not found: " + imagePath + " (tried: " + imageFile.getAbsolutePath() + ")");
-                return null;
+                // Fallback 1: try loading from images directory
+                resourcePath = "/nurgling/docs/images/" + imagePath;
+                imageStream = MarkdownToImageRenderer.class.getResourceAsStream(resourcePath);
+                if (imageStream != null) {
+                    try (InputStream stream = imageStream) {
+                        return ImageIO.read(stream);
+                    }
+                } else {
+                    // Fallback 2: try loading from root docs directory
+                    resourcePath = "/nurgling/docs/" + imagePath;
+                    imageStream = MarkdownToImageRenderer.class.getResourceAsStream(resourcePath);
+                    if (imageStream != null) {
+                        try (InputStream stream = imageStream) {
+                            return ImageIO.read(stream);
+                        }
+                    } else {
+                        System.err.println("Image not found in resources: " + imagePath + " (tried multiple paths including /nurgling/docs/images/)");
+                        return null;
+                    }
+                }
             }
         } catch (Exception e) {
             System.err.println("Failed to load image: " + imagePath + " - " + e.getMessage());
             return null;
         }
+    }
+    
+    private static String resolveRelativePath(String basePath, String relativePath) {
+        // Handle relative paths like ../images/img.png
+        if (relativePath.startsWith("./")) {
+            relativePath = relativePath.substring(2);
+        }
+        
+        String[] baseParts = basePath.split("/");
+        String[] relativeParts = relativePath.split("/");
+        
+        java.util.List<String> resultParts = new java.util.ArrayList<>();
+        
+        // Add base path parts
+        for (String part : baseParts) {
+            if (!part.isEmpty()) {
+                resultParts.add(part);
+            }
+        }
+        
+        // Process relative path parts
+        for (String part : relativeParts) {
+            if (part.equals("..")) {
+                // Go up one directory
+                if (!resultParts.isEmpty()) {
+                    resultParts.remove(resultParts.size() - 1);
+                }
+            } else if (!part.equals(".") && !part.isEmpty()) {
+                // Add this part
+                resultParts.add(part);
+            }
+        }
+        
+        // Rebuild path
+        StringBuilder result = new StringBuilder();
+        for (String part : resultParts) {
+            result.append("/").append(part);
+        }
+        
+        return result.toString();
     }
 }

@@ -2,7 +2,7 @@
 
 This guide covers automated farming with Nurgling2.
 
-![Farm Layout](img.png)
+![Farm Layout](../images/img.png)
 
 ## Crop Types
 

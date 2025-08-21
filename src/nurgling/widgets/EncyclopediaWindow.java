@@ -80,9 +80,9 @@ public class EncyclopediaWindow extends Window {
     
     
     private void loadDocument(String documentKey) {
-        java.io.File file = manager.getDocumentFile(documentKey);
-        if (file != null && file.exists()) {
-            displayDocument(file);
+        String content = manager.getDocumentContent(documentKey);
+        if (content != null) {
+            displayDocument(documentKey, content);
         } else {
             // Clear content area
             for (Widget child : scrollableContent.children()) {
@@ -92,7 +92,7 @@ public class EncyclopediaWindow extends Window {
     }
     
     
-    private void displayDocument(java.io.File file) {
+    private void displayDocument(String documentKey, String content) {
         // Clear existing content
         for (Widget child : scrollableContent.children()) {
             child.destroy();
@@ -101,8 +101,8 @@ public class EncyclopediaWindow extends Window {
         int margin = UI.scale(10);
         int availableWidth = ((Scrollport)contentArea).cont.sz.x - margin * 2;
         
-        // Create a rendered image widget for the file
-        Widget documentWidget = createMarkdownImageWidget(file, availableWidth);
+        // Create a rendered image widget for the content
+        Widget documentWidget = createMarkdownImageWidget(documentKey, content, availableWidth);
         scrollableContent.add(documentWidget, new Coord(margin, UI.scale(10)));
         
         // Use pack() to auto-resize based on children
@@ -119,10 +119,8 @@ public class EncyclopediaWindow extends Window {
         }
     }
     
-    private Widget createMarkdownImageWidget(java.io.File file, int maxWidth) {
-        // Read the raw Markdown text directly from file
-        String rawMarkdown = readFileContent(file);
-        BufferedImage image = MarkdownToImageRenderer.renderMarkdownToImage(rawMarkdown, maxWidth, file);
+    private Widget createMarkdownImageWidget(String documentKey, String content, int maxWidth) {
+        BufferedImage image = MarkdownToImageRenderer.renderMarkdownToImage(content, maxWidth, documentKey);
         
         // Convert to Haven texture and create widget
         final TexI tex = new TexI(image);
@@ -134,14 +132,6 @@ public class EncyclopediaWindow extends Window {
         };
     }
     
-    private String readFileContent(java.io.File file) {
-        try {
-            return new String(java.nio.file.Files.readAllBytes(file.toPath()));
-        } catch (Exception e) {
-            System.err.println("Could not read file: " + file.getPath() + " - " + e.getMessage());
-            return "Error reading file: " + file.getName();
-        }
-    }
 
     @Override
     public void wdgmsg(Widget sender, String msg, Object... args) {
