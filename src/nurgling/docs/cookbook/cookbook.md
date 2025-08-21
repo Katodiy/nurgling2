@@ -2,7 +2,7 @@
 
 Cookbook allows you to import/save/view recipes you've previously cooked.
 
-*Note:* Make sure to set up your database first. Read about it in **Setting Up SQLite Database** section.
+*Note:* Make sure to set up your database first. Read about it in **Setting Up SQLite Database**  section.
 
 ## Importing Existing Recipes
 
