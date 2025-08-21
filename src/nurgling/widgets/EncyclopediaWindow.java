@@ -20,7 +20,7 @@ public class EncyclopediaWindow extends Window {
     
     public EncyclopediaWindow() {
         super(UI.scale(new Coord(800, 600)), "Encyclopedia");
-        manager = EncyclopediaManager.getInstance();
+        manager = new EncyclopediaManager();
         
         setupUI();
         loadDocumentList();
