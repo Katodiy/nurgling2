@@ -19,6 +19,7 @@ public class EncyclopediaWindow extends Window {
         manager = new EncyclopediaManager();
         
         setupUI();
+        loadDefaultDocument();
     }
     
     private void setupUI() {
@@ -78,6 +79,21 @@ public class EncyclopediaWindow extends Window {
         return manager.getAllDocumentKeys().stream().sorted().collect(Collectors.toList());
     }
     
+    private void loadDefaultDocument() {
+        // Try to load welcome.md if it exists
+        List<String> documentKeys = getDocumentKeys();
+        String welcomeKey = documentKeys.stream()
+            .filter(key -> key.contains("welcome"))
+            .findFirst()
+            .orElse(null);
+        
+        if (welcomeKey != null) {
+            loadDocument(welcomeKey);
+        } else if (!documentKeys.isEmpty()) {
+            // Fallback to first document if welcome.md not found
+            loadDocument(documentKeys.get(0));
+        }
+    }
     
     private void loadDocument(String documentKey) {
         String content = manager.getDocumentContent(documentKey);
