@@ -120,7 +120,7 @@ public class EncyclopediaWindow extends Window {
     }
     
     private Widget createMarkdownImageWidget(String documentKey, String content, int maxWidth) {
-        BufferedImage image = MarkdownToImageRenderer.renderMarkdownToImageV2(content, maxWidth, documentKey);
+        BufferedImage image = MarkdownToImageRenderer.renderMarkdownToImage(content, maxWidth, documentKey);
         
         // Convert to Haven texture and create widget
         final TexI tex = new TexI(image);
