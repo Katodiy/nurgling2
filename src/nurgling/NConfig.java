@@ -94,8 +94,7 @@ public class NConfig
         uniformBiomeColors,
         inventoryRightPanelShow,
         inventoryRightPanelMode,
-        showTerrainName,
-        encyclopediaPath
+        showTerrainName
     }
 
 
@@ -180,9 +179,6 @@ public class NConfig
         conf.put(Key.inventoryRightPanelShow, false);
         conf.put(Key.inventoryRightPanelMode, "EXPANDED");
         conf.put(Key.showTerrainName, false);
-        
-        // Encyclopedia settings
-        conf.put(Key.encyclopediaPath, "src/nurgling/docs");
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

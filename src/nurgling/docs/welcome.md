@@ -66,13 +66,15 @@ You can create subdirectories to organize your documents:
 - `bots/` - for bot documentation
 - `tips/` - for tips and tricks
 
-Happy documenting!### Organization
+Happy documenting!
+### Organization
 You can create subdirectories to organize your documents:
 - `guides/` - for game guides
 - `bots/` - for bot documentation
 - `tips/` - for tips and tricks
 
-Happy documenting!### Organization
+Happy documenting!
+### Organization
 You can create subdirectories to organize your documents:
 - `guides/` - for game guides
 - `bots/` - for bot documentation

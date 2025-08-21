@@ -1,19 +1,18 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.NMapView;
+import nurgling.NUtils;
 import nurgling.tools.EncyclopediaManager;
-import nurgling.tools.markdown.MarkdownDocument;
-import nurgling.tools.markdown.MarkdownElement;
+import nurgling.tools.MarkdownToImageRenderer;
 
-import java.awt.Color;
-import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class EncyclopediaWindow extends Window {
     private final EncyclopediaManager manager;
-    private MarkdownDocument currentDocument;
-    private TextEntry searchBox;
+    private String currentDocumentKey;
     private Listbox<String> documentList;
     private Widget contentArea;
     private Widget scrollableContent;
@@ -31,26 +30,8 @@ public class EncyclopediaWindow extends Window {
         int margin = UI.scale(5);
         Widget prev;
         
-        // Search box at the top
-        prev = add(new Label("Search:"), new Coord(margin, margin));
-        searchBox = add(new TextEntry(UI.scale(200), "") {
-            @Override
-            public boolean keydown(KeyDownEvent ev) {
-                if (ev.code == KeyEvent.VK_ENTER) {
-                    performSearch();
-                    return true;
-                }
-                return super.keydown(ev);
-            }
-        }, prev.pos("ur").adds(5, 0));
-        
-        prev = add(new Button(UI.scale(60), "Search") {
-            @Override
-            public void click() {
-                super.click();
-                performSearch();
-            }
-        }, searchBox.pos("ur").adds(5, 0));
+        // Title at the top
+        prev = add(new Label("Documentation"), new Coord(margin, margin));
         
         // Document list on the left
         int listY = prev.pos("bl").y + UI.scale(10);
@@ -128,160 +109,85 @@ public class EncyclopediaWindow extends Window {
     }
     
     private void loadDocument(String documentKey) {
-        MarkdownDocument doc = manager.getDocument(documentKey);
-        if (doc != null) {
-            currentDocument = doc;
-            titleLabel.settext(doc.getTitle());
-            displayDocument(doc);
+        java.io.File file = manager.getDocumentFile(documentKey);
+        if (file != null && file.exists()) {
+            currentDocumentKey = documentKey;
+            String title = getDocumentTitle(documentKey);
+            titleLabel.settext(title);
+            displayDocument(file);
         } else {
             titleLabel.settext("Document not found: " + documentKey);
             // Clear content area
-            for (Widget child : contentArea.children()) {
+            for (Widget child : scrollableContent.children()) {
                 child.destroy();
             }
         }
     }
     
-    private void displayDocument(MarkdownDocument document) {
+    private String getDocumentTitle(String documentKey) {
+        // Extract title from filename, handling nested paths
+        String filename = documentKey;
+        if (filename.contains("/")) {
+            filename = filename.substring(filename.lastIndexOf("/") + 1);
+        }
+        if (filename.endsWith(".md")) {
+            filename = filename.substring(0, filename.length() - 3);
+        }
+        // Convert dashes to spaces and capitalize
+        return filename.replace("-", " ").replace("_", " ");
+    }
+    
+    private void displayDocument(java.io.File file) {
         // Clear existing content
         for (Widget child : scrollableContent.children()) {
             child.destroy();
         }
         
-        int y = UI.scale(10);
         int margin = UI.scale(10);
-        int availableWidth = ((Scrollport)contentArea).cont.sz.x - margin * 2; // Use fixed scrollport content width
+        int availableWidth = ((Scrollport)contentArea).cont.sz.x - margin * 2;
         
-        // Render each element
-        for (MarkdownElement element : document.elements) {
-            Widget elementWidget = createElement(element, availableWidth);
-            if (elementWidget != null) {
-                scrollableContent.add(elementWidget, new Coord(margin, y));
-                y += elementWidget.sz.y + UI.scale(8);
-            }
-        }
+        // Create a rendered image widget for the file
+        Widget documentWidget = createMarkdownImageWidget(file, availableWidth);
+        scrollableContent.add(documentWidget, new Coord(margin, UI.scale(10)));
         
-        // Use pack() to auto-resize based on children like NInventory does
+        // Use pack() to auto-resize based on children
         scrollableContent.pack();
         
         // Manually trigger scrollport update to recalculate scrollbar
         Scrollport sp = (Scrollport)contentArea;
         sp.cont.update();
-        
-        // Debug scrollbar info
-        System.out.println("Scrollbar max: " + sp.bar.max);
-        System.out.println("Scrollbar position: " + sp.bar.c);
-        System.out.println("Scrollbar size: " + sp.bar.sz);
-        System.out.println("Scrollport size: " + sp.sz);
     }
     
-    private Widget createElement(MarkdownElement element, int maxWidth) {
-        if (element instanceof MarkdownElement.Header) {
-            MarkdownElement.Header header = (MarkdownElement.Header) element;
-            // Headers in a distinctive color
-            return createWrappedText(header.text, maxWidth, new Color(255, 255, 128));
-            
-        } else if (element instanceof MarkdownElement.Paragraph) {
-            MarkdownElement.Paragraph para = (MarkdownElement.Paragraph) element;
-            // Regular text in standard UI color
-            return createWrappedText(para.text, maxWidth, Color.WHITE);
-            
-        } else if (element instanceof MarkdownElement.Text) {
-            MarkdownElement.Text text = (MarkdownElement.Text) element;
-            return createWrappedText(text.text, maxWidth, Color.WHITE);
-        }
+    private Widget createMarkdownImageWidget(java.io.File file, int maxWidth) {
+        // Read the raw markdown text directly from file
+        String rawMarkdown = readFileContent(file);
+        BufferedImage image = MarkdownToImageRenderer.renderMarkdownToImage(rawMarkdown, maxWidth);
         
-        return null;
-    }
-    
-    private Widget createWrappedText(String text, int maxWidth, Color color) {
-        // Try to manually break up text that's too long
-        String[] lines = wrapText(text, maxWidth);
-        
-        if (lines.length == 1) {
-            // Single line, use regular label
-            Label label = new Label(text);
-            label.setcolor(color);
-            return label;
-        } else {
-            // Multiple lines, create a container widget with proper spacing
-            int lineHeight = UI.scale(15); // Increased from 12 to 15 for better spacing
-            Widget container = new Widget(new Coord(maxWidth, lines.length * lineHeight + UI.scale(5))); // Extra padding
-            int y = 0;
-            for (String line : lines) {
-                Label label = new Label(line);
-                label.setcolor(color);
-                container.add(label, new Coord(0, y));
-                y += lineHeight;
+        // Convert to Haven texture and create widget
+        final TexI tex = new TexI(image);
+        return new Widget(new Coord(image.getWidth(), image.getHeight())) {
+            @Override
+            public void draw(GOut g) {
+                g.image(tex, Coord.z);
             }
-            return container;
-        }
+        };
     }
     
-    private String[] wrapText(String text, int maxWidth) {
-        // Simple word wrapping - estimate characters per line
-        int avgCharWidth = UI.scale(7); // Rough estimate
-        int charsPerLine = Math.max(10, maxWidth / avgCharWidth);
-        
-        if (text.length() <= charsPerLine) {
-            return new String[]{text};
-        }
-        
-        java.util.List<String> lines = new java.util.ArrayList<>();
-        String[] words = text.split(" ");
-        StringBuilder currentLine = new StringBuilder();
-        
-        for (String word : words) {
-            if (currentLine.length() + word.length() + 1 <= charsPerLine) {
-                if (currentLine.length() > 0) {
-                    currentLine.append(" ");
-                }
-                currentLine.append(word);
-            } else {
-                if (currentLine.length() > 0) {
-                    lines.add(currentLine.toString());
-                    currentLine = new StringBuilder(word);
-                } else {
-                    lines.add(word);
-                }
-            }
-        }
-        
-        if (currentLine.length() > 0) {
-            lines.add(currentLine.toString());
-        }
-        
-        return lines.toArray(new String[0]);
-    }
-    
-    private void performSearch() {
-        String query = searchBox.text().trim();
-        if (query.isEmpty()) {
-            loadDocumentList();
-            return;
-        }
-        
-        List<MarkdownDocument> results = manager.searchDocuments(query);
-        // For now, just show the first result
-        if (!results.isEmpty()) {
-            displayDocument(results.get(0));
-            titleLabel.settext("Search Results for: " + query);
+    private String readFileContent(java.io.File file) {
+        try {
+            return new String(java.nio.file.Files.readAllBytes(file.toPath()));
+        } catch (Exception e) {
+            System.err.println("Could not read file: " + file.getPath() + " - " + e.getMessage());
+            return "Error reading file: " + file.getName();
         }
     }
-    
+
     @Override
-    public void wdgmsg(String msg, Object... args) {
+    public void wdgmsg(Widget sender, String msg, Object... args) {
         if (msg.equals("close")) {
             hide();
         } else {
-            super.wdgmsg(msg, args);
+            super.wdgmsg(sender, msg, args);
         }
-    }
-    
-    @Override
-    public void show() {
-        super.show();
-        manager.loadDocuments(); // Ensure documents are loaded
-        loadDocumentList();
     }
 }
