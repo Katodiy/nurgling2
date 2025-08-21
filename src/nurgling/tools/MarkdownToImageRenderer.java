@@ -43,8 +43,33 @@ public class MarkdownToImageRenderer {
         // Split into lines and estimate height
         String[] lines = markdown.split("\n");
         
-        int estimatedHeight = lines.length * 25 + 100; // Rough estimate
+        // Start with base estimate for text lines
+        int estimatedHeight = lines.length * 30 + 100; // Rough estimate
         
+        // Add estimated height for images
+        for (String line : lines) {
+            String trimmedLine = line.trim();
+            if (trimmedLine.matches("^!\\[.*\\]\\(.*\\)$")) {
+                java.util.regex.Pattern imagePattern = java.util.regex.Pattern.compile("!\\[([^\\]]*)\\]\\(([^)]+)\\)");
+                java.util.regex.Matcher imageMatcher = imagePattern.matcher(trimmedLine);
+                if (imageMatcher.find()) {
+                    String imagePath = imageMatcher.group(2);
+                    BufferedImage imageToCheck = loadImage(imagePath, documentKey);
+                    if (imageToCheck != null) {
+                        int imageHeight = imageToCheck.getHeight();
+                        // Scale height if image would be scaled down
+                        int maxImageWidth = maxWidth - 30; // Account for margins
+                        if (imageToCheck.getWidth() > maxImageWidth) {
+                            double scale = (double) maxImageWidth / imageToCheck.getWidth();
+                            imageHeight = (int) (imageHeight * scale);
+                        }
+                        estimatedHeight += imageHeight + 25; // Add image height plus spacing
+                    } else {
+                        estimatedHeight += 25; // Fallback for missing image
+                    }
+                }
+            }
+        }
         // Create image
         BufferedImage image = new BufferedImage(maxWidth, estimatedHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = image.createGraphics();
@@ -58,7 +83,6 @@ public class MarkdownToImageRenderer {
         int y = 25;
         int margin = 15;
         int lineHeight = 20;
-        int headerHeight = 30;
         
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
@@ -192,9 +216,13 @@ public class MarkdownToImageRenderer {
                     }
                     
                     y += 3; // Tighter spacing between list items
-                    renderFormattedLine(g2d, listLine, margin + 20, y, maxWidth - 40, regularFont, boldFont, italicFont, codeFont, textColor, boldColor, italicColor, linkColor, codeColor);
-                    y += lineHeight;
+                    y = renderFormattedLineWithWrapping(g2d, listLine, margin + 20, y, maxWidth - 40, lineHeight, regularFont, boldFont, italicFont, codeFont, textColor, boldColor, italicColor, linkColor, codeColor);
                     i++;
+                }
+                
+                // Ensure we don't go past the array bounds
+                if (i >= lines.length) {
+                    break;
                 }
                 
                 y += 8; // Space after list
@@ -204,8 +232,8 @@ public class MarkdownToImageRenderer {
             // Regular paragraph
             if (!line.isEmpty()) {
                 y += 8;
-                renderFormattedLine(g2d, line, margin, y, maxWidth - 30, regularFont, boldFont, italicFont, codeFont, textColor, boldColor, italicColor, linkColor, codeColor);
-                y += lineHeight + 5;
+                y = renderFormattedLineWithWrapping(g2d, line, margin, y, maxWidth - 30, lineHeight, regularFont, boldFont, italicFont, codeFont, textColor, boldColor, italicColor, linkColor, codeColor);
+                y += 5;
             }
         }
         
@@ -221,6 +249,47 @@ public class MarkdownToImageRenderer {
         }
         
         return image;
+    }
+    
+    private static int renderFormattedLineWithWrapping(Graphics2D g2d, String line, int x, int y, int maxWidth, int lineHeight,
+                                              Font regularFont, Font boldFont, Font italicFont, Font codeFont,
+                                              Color textColor, Color boldColor, Color italicColor, Color linkColor, Color codeColor) {
+        // Split long lines into words for wrapping
+        String[] words = line.split("\\s+");
+        StringBuilder currentLine = new StringBuilder();
+        int currentY = y;
+        
+        g2d.setFont(regularFont);
+        
+        for (String word : words) {
+            String testLine = currentLine.length() == 0 ? word : currentLine + " " + word;
+            
+            // Check if this line would be too wide (simplified check - doesn't account for formatting)
+            int testWidth = g2d.getFontMetrics().stringWidth(testLine);
+            
+            if (testWidth <= maxWidth || currentLine.length() == 0) {
+                // Word fits on current line
+                if (currentLine.length() > 0) {
+                    currentLine.append(" ");
+                }
+                currentLine.append(word);
+            } else {
+                // Current line is full, render it and start a new line
+                if (currentLine.length() > 0) {
+                    renderFormattedLine(g2d, currentLine.toString(), x, currentY, maxWidth, regularFont, boldFont, italicFont, codeFont, textColor, boldColor, italicColor, linkColor, codeColor);
+                    currentY += lineHeight;
+                }
+                currentLine = new StringBuilder(word);
+            }
+        }
+        
+        // Render the last line
+        if (currentLine.length() > 0) {
+            renderFormattedLine(g2d, currentLine.toString(), x, currentY, maxWidth, regularFont, boldFont, italicFont, codeFont, textColor, boldColor, italicColor, linkColor, codeColor);
+            currentY += lineHeight;
+        }
+        
+        return currentY;
     }
     
     private static void renderFormattedLine(Graphics2D g2d, String line, int x, int y, int maxWidth, 
@@ -339,12 +408,16 @@ public class MarkdownToImageRenderer {
         g2d.setColor(color);
         
         int textWidth = g2d.getFontMetrics().stringWidth(text);
-        if (x + textWidth > maxWidth) {
-            return x;
+        if (x + textWidth <= maxWidth) {
+            // Text fits on current line
+            g2d.drawString(text, x, y);
+            return x + textWidth;
+        } else {
+            // Text is too long, just render what we can (simplified approach)
+            // For now, just render the text at the current position - wrapping would need more complex changes
+            g2d.drawString(text, x, y);
+            return x + textWidth;
         }
-        
-        g2d.drawString(text, x, y);
-        return x + textWidth;
     }
     
     private static BufferedImage loadImage(String imagePath, String documentKey) {
