@@ -108,9 +108,15 @@ public class EncyclopediaWindow extends Window {
         // Use pack() to auto-resize based on children
         scrollableContent.pack();
         
-        // Manually trigger scrollport update to recalculate scrollbar
+        // Manually trigger scrollport update to recalculate scrollbar and reset scroll position
         Scrollport sp = (Scrollport)contentArea;
         sp.cont.update();
+        
+        // Reset scroll position to top
+        if (sp.bar != null) {
+            sp.bar.val = sp.bar.min;
+            sp.bar.changed();
+        }
     }
     
     private Widget createMarkdownImageWidget(java.io.File file, int maxWidth) {
