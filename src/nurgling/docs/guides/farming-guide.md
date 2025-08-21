@@ -2,6 +2,8 @@
 
 This guide covers automated farming with Nurgling2.
 
+![Farm Layout](img.png)
+
 ## Crop Types
 
 ### Grains

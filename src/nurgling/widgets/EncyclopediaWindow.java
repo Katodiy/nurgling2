@@ -122,7 +122,7 @@ public class EncyclopediaWindow extends Window {
     private Widget createMarkdownImageWidget(java.io.File file, int maxWidth) {
         // Read the raw Markdown text directly from file
         String rawMarkdown = readFileContent(file);
-        BufferedImage image = MarkdownToImageRenderer.renderMarkdownToImage(rawMarkdown, maxWidth);
+        BufferedImage image = MarkdownToImageRenderer.renderMarkdownToImage(rawMarkdown, maxWidth, file);
         
         // Convert to Haven texture and create widget
         final TexI tex = new TexI(image);

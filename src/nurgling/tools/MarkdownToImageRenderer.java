@@ -7,10 +7,16 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
 
 public class MarkdownToImageRenderer {
     
     public static BufferedImage renderMarkdownToImage(String markdown, int maxWidth) {
+        return renderMarkdownToImage(markdown, maxWidth, null);
+    }
+    
+    public static BufferedImage renderMarkdownToImage(String markdown, int maxWidth, File basePath) {
         // Define fonts and colors
         Font regularFont = new Font("Arial", Font.PLAIN, UI.scale(12));
         Font boldFont = new Font("Arial", Font.BOLD, UI.scale(12));
@@ -90,6 +96,51 @@ public class MarkdownToImageRenderer {
                 g2d.setColor(headerColor);
                 g2d.drawString(headerText, margin, y);
                 y += headerSpacing;
+                continue;
+            }
+            
+            // Check for images: ![alt text](image.png)
+            if (line.matches("^!\\[.*\\]\\(.*\\)$")) {
+                y += 10; // Space before image
+                
+                java.util.regex.Pattern imagePattern = java.util.regex.Pattern.compile("!\\[([^\\]]*)\\]\\(([^)]+)\\)");
+                java.util.regex.Matcher imageMatcher = imagePattern.matcher(line);
+                if (imageMatcher.find()) {
+                    String altText = imageMatcher.group(1);
+                    String imagePath = imageMatcher.group(2);
+                    
+                    BufferedImage imageToRender = loadImage(imagePath, basePath);
+                    if (imageToRender != null) {
+                        // Scale image if too wide
+                        int imageWidth = imageToRender.getWidth();
+                        int imageHeight = imageToRender.getHeight();
+                        int maxImageWidth = maxWidth - margin * 2;
+                        
+                        if (imageWidth > maxImageWidth) {
+                            double scale = (double) maxImageWidth / imageWidth;
+                            imageWidth = maxImageWidth;
+                            imageHeight = (int) (imageHeight * scale);
+                            
+                            // Create scaled image
+                            BufferedImage scaledImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+                            Graphics2D scaleG2d = scaledImage.createGraphics();
+                            scaleG2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                            scaleG2d.drawImage(imageToRender, 0, 0, imageWidth, imageHeight, null);
+                            scaleG2d.dispose();
+                            imageToRender = scaledImage;
+                        }
+                        
+                        // Draw the image
+                        g2d.drawImage(imageToRender, margin, y, null);
+                        y += imageHeight + 15; // Space after image
+                    } else {
+                        // Fallback: draw alt text if image couldn't be loaded
+                        g2d.setFont(regularFont);
+                        g2d.setColor(textColor);
+                        g2d.drawString("[Image: " + altText + "]", margin, y);
+                        y += lineHeight + 5;
+                    }
+                }
                 continue;
             }
             
@@ -264,5 +315,33 @@ public class MarkdownToImageRenderer {
         
         g2d.drawString(text, x, y);
         return x + textWidth;
+    }
+    
+    private static BufferedImage loadImage(String imagePath, File basePath) {
+        try {
+            File imageFile;
+            
+            // If basePath is provided, resolve relative to it
+            if (basePath != null && !imagePath.startsWith("/") && !imagePath.contains(":")) {
+                imageFile = new File(basePath.getParentFile(), imagePath);
+            } else {
+                imageFile = new File(imagePath);
+            }
+            
+            // If file doesn't exist, try relative to docs directory
+            if (!imageFile.exists() && basePath != null) {
+                imageFile = new File("src/nurgling/docs/guides", imagePath);
+            }
+            
+            if (imageFile.exists()) {
+                return ImageIO.read(imageFile);
+            } else {
+                System.err.println("Image not found: " + imagePath + " (tried: " + imageFile.getAbsolutePath() + ")");
+                return null;
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load image: " + imagePath + " - " + e.getMessage());
+            return null;
+        }
     }
 }
