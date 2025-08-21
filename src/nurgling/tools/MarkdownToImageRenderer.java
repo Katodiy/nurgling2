@@ -145,6 +145,35 @@ public class MarkdownToImageRenderer {
                 continue;
             }
             
+            // Check for fenced code blocks: ```
+            if (line.startsWith("```")) {
+                y += 10; // Space before code block
+                
+                // Extract language if specified (optional)
+                String language = line.length() > 3 ? line.substring(3).trim() : "";
+                
+                // Collect all lines until closing ```
+                StringBuilder codeContent = new StringBuilder();
+                i++; // Move to next line after opening ```
+                
+                while (i < lines.length) {
+                    String codeLine = lines[i];
+                    if (codeLine.trim().equals("```")) {
+                        break; // Found closing ```
+                    }
+                    if (codeContent.length() > 0) {
+                        codeContent.append("\n");
+                    }
+                    codeContent.append(codeLine);
+                    i++;
+                }
+                
+                // Render the code block
+                y = renderCodeBlock(g2d, codeContent.toString(), margin, y, maxWidth - margin * 2, codeFont, codeColor, bgColor);
+                y += 15; // Space after code block
+                continue;
+            }
+            
             // Check for list items - group consecutive items
             boolean isNumberedList = line.matches("^\\d+\\.\\s.*");
             boolean isBulletList = line.matches("^[-*]\\s.*");
@@ -404,5 +433,40 @@ public class MarkdownToImageRenderer {
         }
         
         return result.toString();
+    }
+    
+    private static int renderCodeBlock(Graphics2D g2d, String codeContent, int x, int y, int blockWidth, Font codeFont, Color codeColor, Color backgroundColor) {
+        // Set up colors for code block
+        Color codeBlockBg = new Color(20, 20, 20, 200); // Darker background for code blocks
+        Color borderColor = new Color(60, 60, 60, 180);
+        
+        // Split code into lines
+        String[] codeLines = codeContent.split("\n");
+        
+        // Calculate dimensions
+        g2d.setFont(codeFont);
+        int lineHeight = g2d.getFontMetrics().getHeight();
+        int padding = 10;
+        int blockHeight = (codeLines.length * lineHeight) + (padding * 2);
+        
+        // Draw background rectangle
+        g2d.setColor(codeBlockBg);
+        g2d.fillRect(x, y, blockWidth, blockHeight);
+        
+        // Draw border
+        g2d.setColor(borderColor);
+        g2d.drawRect(x, y, blockWidth, blockHeight);
+        
+        // Draw code lines
+        g2d.setColor(codeColor);
+        g2d.setFont(codeFont);
+        
+        int lineY = y + padding + g2d.getFontMetrics().getAscent();
+        for (String codeLine : codeLines) {
+            g2d.drawString(codeLine, x + padding, lineY);
+            lineY += lineHeight;
+        }
+        
+        return y + blockHeight;
     }
 }

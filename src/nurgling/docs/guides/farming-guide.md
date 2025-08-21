@@ -37,6 +37,20 @@ This guide covers automated farming with Nurgling2.
 - **Storage**: Plan adequate storage space
 - **Monitoring**: Check bot progress regularly
 
+## Sample Bot Configuration
+
+Here's a basic configuration example:
+
+```
+botType=farming
+cropType=wheat
+areaRadius=10
+harvestThreshold=mature
+storageContainer=barrel
+```
+
+This configuration sets up a wheat farming bot with a 10-tile radius.
+
 ## Troubleshooting
 
 **Bot stops working:**
