@@ -15,10 +15,17 @@ public class MarkdownToImageRenderer {
         Font regularFont = new Font("Arial", Font.PLAIN, UI.scale(12));
         Font boldFont = new Font("Arial", Font.BOLD, UI.scale(12));
         Font italicFont = new Font("Arial", Font.ITALIC, UI.scale(12));
-        Font headerFont = new Font("Arial", Font.BOLD, UI.scale(15));
         Font codeFont = new Font("Courier New", Font.PLAIN, UI.scale(11));
         
-        Color bgColor = new Color(30, 30, 30);
+        // Header fonts for different levels
+        Font h1Font = new Font("Arial", Font.BOLD, UI.scale(20)); // # Main Header
+        Font h2Font = new Font("Arial", Font.BOLD, UI.scale(18)); // ## Sub Header  
+        Font h3Font = new Font("Arial", Font.BOLD, UI.scale(16)); // ### Smaller Header
+        Font h4Font = new Font("Arial", Font.BOLD, UI.scale(14)); // #### 
+        Font h5Font = new Font("Arial", Font.BOLD, UI.scale(13)); // #####
+        Font h6Font = new Font("Arial", Font.BOLD, UI.scale(12)); // ######
+        
+        Color bgColor = new Color(30, 30, 30, 180);
         Color textColor = Color.WHITE;
         Color headerColor = new Color(255, 255, 128);
         Color boldColor = Color.WHITE;
@@ -57,11 +64,32 @@ public class MarkdownToImageRenderer {
             // Check for headers
             if (line.startsWith("#")) {
                 y += 15; // Space before header
+                
+                // Determine header level and get appropriate font
+                int headerLevel = 0;
+                for (char c : line.toCharArray()) {
+                    if (c == '#') headerLevel++;
+                    else break;
+                }
+                
                 String headerText = line.replaceFirst("^#+\\s*", "");
+                Font headerFont;
+                int headerSpacing;
+                
+                switch (headerLevel) {
+                    case 1: headerFont = h1Font; headerSpacing = 20; break;
+                    case 2: headerFont = h2Font; headerSpacing = 18; break;
+                    case 3: headerFont = h3Font; headerSpacing = 16; break;
+                    case 4: headerFont = h4Font; headerSpacing = 14; break;
+                    case 5: headerFont = h5Font; headerSpacing = 12; break;
+                    case 6: 
+                    default: headerFont = h6Font; headerSpacing = 20; break;
+                }
+                
                 g2d.setFont(headerFont);
                 g2d.setColor(headerColor);
                 g2d.drawString(headerText, margin, y);
-                y += headerHeight;
+                y += headerSpacing;
                 continue;
             }
             
