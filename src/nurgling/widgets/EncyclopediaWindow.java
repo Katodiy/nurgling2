@@ -1,8 +1,6 @@
 package nurgling.widgets;
 
 import haven.*;
-import nurgling.NMapView;
-import nurgling.NUtils;
 import nurgling.tools.EncyclopediaManager;
 import nurgling.tools.MarkdownToImageRenderer;
 
@@ -12,7 +10,6 @@ import java.util.stream.Collectors;
 
 public class EncyclopediaWindow extends Window {
     private final EncyclopediaManager manager;
-    private String currentDocumentKey;
     private Listbox<String> documentList;
     private Widget contentArea;
     private Widget scrollableContent;
@@ -60,9 +57,9 @@ public class EncyclopediaWindow extends Window {
                 if (item != null) {
                     // Find the actual document key for the selected display item
                     List<String> docs = getDocumentKeys();
-                    for (int i = 0; i < docs.size(); i++) {
-                        if (formatDocumentName(docs.get(i)).equals(item)) {
-                            loadDocument(docs.get(i));
+                    for (String doc : docs) {
+                        if (formatDocumentName(doc).equals(item)) {
+                            loadDocument(doc);
                             break;
                         }
                     }
@@ -111,7 +108,6 @@ public class EncyclopediaWindow extends Window {
     private void loadDocument(String documentKey) {
         java.io.File file = manager.getDocumentFile(documentKey);
         if (file != null && file.exists()) {
-            currentDocumentKey = documentKey;
             String title = getDocumentTitle(documentKey);
             titleLabel.settext(title);
             displayDocument(file);
@@ -159,7 +155,7 @@ public class EncyclopediaWindow extends Window {
     }
     
     private Widget createMarkdownImageWidget(java.io.File file, int maxWidth) {
-        // Read the raw markdown text directly from file
+        // Read the raw Markdown text directly from file
         String rawMarkdown = readFileContent(file);
         BufferedImage image = MarkdownToImageRenderer.renderMarkdownToImage(rawMarkdown, maxWidth);
         

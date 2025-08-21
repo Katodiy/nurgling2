@@ -5,7 +5,6 @@ import java.util.*;
 
 public class EncyclopediaManager {
     private final Map<String, File> documentFiles = new HashMap<>();
-    private final Map<String, String> fileToPath = new HashMap<>();
     
     public EncyclopediaManager() {
         loadDocuments();
@@ -27,16 +26,13 @@ public class EncyclopediaManager {
         if (files == null) return;
         
         for (File file : files) {
+            String relativePathToFiles = relativePath.isEmpty() ?
+                    file.getName() : relativePath + "/" + file.getName();
             if (file.isDirectory()) {
-                String newRelativePath = relativePath.isEmpty() ? 
-                    file.getName() : relativePath + "/" + file.getName();
-                loadDocumentsFromDirectory(file, newRelativePath);
+                loadDocumentsFromDirectory(file, relativePathToFiles);
             } else if (file.getName().toLowerCase().endsWith(".md")) {
-                String documentKey = relativePath.isEmpty() ? 
-                    file.getName() : relativePath + "/" + file.getName();
-                
-                documentFiles.put(documentKey, file);
-                fileToPath.put(file.getName(), documentKey);
+
+                documentFiles.put(relativePathToFiles, file);
             }
         }
     }
