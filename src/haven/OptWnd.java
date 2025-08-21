@@ -29,6 +29,7 @@ package haven;
 import haven.render.*;
 import nurgling.*;
 import nurgling.conf.*;
+import nurgling.widgets.EncyclopediaWindow;
 import nurgling.widgets.NMiniMapWnd;
 import nurgling.widgets.NSettingsWindow;
 import nurgling.widgets.options.*;
