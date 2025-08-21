@@ -22,7 +22,7 @@ public class MarkdownToImageRenderer {
         Font regularFont = new Font("Arial", Font.PLAIN, UI.scale(12));
         Font boldFont = new Font("Arial", Font.BOLD, UI.scale(12));
         Font italicFont = new Font("Arial", Font.ITALIC, UI.scale(12));
-        Font codeFont = new Font("Courier New", Font.PLAIN, UI.scale(11));
+        Font codeFont = new Font("Fira code", Font.PLAIN, UI.scale(11));
         
         // Header fonts for different levels
         Font h1Font = new Font("Arial", Font.BOLD, UI.scale(20)); // # Main Header
