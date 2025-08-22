@@ -45,7 +45,8 @@ public class LettuceFarmer implements Action {
             if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
                 if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/lettuce")).run(gui).isSuccess) {
                     NUtils.stackSwitch(oldStackingValue);
-                    return Results.ERROR("Not all lettuce crops are ready for harvest");
+                    gui.msg("Not all lettuce crops are ready for harvest, skipping harvest.");
+                    return Results.SUCCESS();
                 }
             }
 

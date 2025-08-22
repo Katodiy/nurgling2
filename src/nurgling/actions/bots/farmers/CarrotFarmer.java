@@ -42,7 +42,8 @@ public class CarrotFarmer implements Action {
             if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
                 if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/carrot")).run(gui).isSuccess) {
                     NUtils.stackSwitch(oldStackingValue);
-                    return Results.ERROR("Not all carrot crops are ready for harvest");
+                    gui.msg("Not all carrot crops are ready for harvest, skipping harvest.");
+                    return Results.SUCCESS();
                 }
             }
 

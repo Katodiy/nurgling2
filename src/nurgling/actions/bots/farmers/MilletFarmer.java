@@ -48,7 +48,8 @@ public class MilletFarmer implements Action {
             if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
                 if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/millet")).run(gui).isSuccess) {
                     NUtils.stackSwitch(oldStackingValue);
-                    return Results.ERROR("Not all millet crops are ready for harvest");
+                    gui.msg("Not all millet crops are ready for harvest, skipping harvest.");
+                    return Results.SUCCESS();
                 }
             }
 

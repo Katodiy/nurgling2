@@ -49,7 +49,8 @@ public class BarleyFarmer implements Action {
             if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
                 if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/barley")).run(gui).isSuccess) {
                     NUtils.stackSwitch(oldStackingValue);
-                    return Results.ERROR("Not all barley crops are ready for harvest");
+                    gui.msg("Not all barley crops are ready for harvest, skipping harvest.");
+                    return Results.SUCCESS();
                 }
             }
 

@@ -45,7 +45,8 @@ public class PumpkinFarmer implements Action {
             if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
                 if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/pumpkin")).run(gui).isSuccess) {
                     NUtils.stackSwitch(oldStackingValue);
-                    return Results.ERROR("Not all pumpkin crops are ready for harvest");
+                    gui.msg("Not all pumpkin crops are ready for harvest, skipping harvest.");
+                    return Results.SUCCESS();
                 }
             }
 

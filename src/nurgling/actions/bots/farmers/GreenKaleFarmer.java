@@ -46,7 +46,8 @@ public class GreenKaleFarmer implements Action {
             if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
                 if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/greenkale")).run(gui).isSuccess) {
                     NUtils.stackSwitch(oldStackingValue);
-                    return Results.ERROR("Not all green kale crops are ready for harvest");
+                    gui.msg("Not all green kale crops are ready for harvest, skipping harvest.");
+                    return Results.SUCCESS();
                 }
             }
 

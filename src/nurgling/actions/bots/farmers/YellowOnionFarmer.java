@@ -38,7 +38,8 @@ public class YellowOnionFarmer implements Action {
             if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
                 if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/yellowonion")).run(gui).isSuccess) {
                     NUtils.stackSwitch(oldStackingValue);
-                    return Results.ERROR("Not all yellow onion crops are ready for harvest");
+                    gui.msg("Not all red onion crops are ready for harvest, skipping harvest.");
+                    return Results.SUCCESS();
                 }
             }
 

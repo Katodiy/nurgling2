@@ -44,7 +44,8 @@ public class BeetrootFarmer implements Action {
             if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
                 if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/beet")).run(gui).isSuccess) {
                     NUtils.stackSwitch(oldStackingValue);
-                    return Results.ERROR("Not all beetroot crops are ready for harvest");
+                    gui.msg("Not all beetroot crops are ready for harvest, skipping harvest.");
+                    return Results.SUCCESS();
                 }
             }
 
