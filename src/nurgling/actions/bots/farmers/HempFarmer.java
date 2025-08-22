@@ -1,10 +1,11 @@
-package nurgling.actions.bots;
+package nurgling.actions.bots.farmers;
 
 import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.actions.*;
+import nurgling.actions.bots.EquipTravellersSacksFromBelt;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tools.NAlias;
@@ -13,23 +14,30 @@ import nurgling.widgets.Specialisation;
 import java.util.ArrayList;
 
 
-public class LeekFarmer implements Action {
+public class HempFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        NContext nContext = new NContext(gui);
         boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
 
-        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Leek");
-        NArea.Specialisation seed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Leek");
+        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Hemp");
+        NArea.Specialisation seed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Hemp");
         NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
         NArea.Specialisation swill = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
 
-        NArea leekArea = NContext.findOut("Leek", 1);
+        nContext.getSpecArea(Specialisation.SpecName.crop, "Hemp");
+
+        NArea hempFibersArea = NContext.findOut("Hemp Fibres", 1);
+
+        if(hempFibersArea == null) {
+            return Results.ERROR("PUT Area for Hemp Fibres required, but not found!");
+        }
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
         req.add(seed);
-        req.add(trough);
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+        req.add(trough);
         opt.add(swill);
 
         if (new Validator(req, opt).run(gui).IsSuccess()) {
@@ -40,7 +48,7 @@ public class LeekFarmer implements Action {
                     NContext.findSpec(seed),
                     NContext.findSpec(trough),
                     NContext.findSpec(swill),
-                    new NAlias("plants/leek")
+                    new NAlias("plants/hemp")
             ).run(gui);
             
             // Auto-equip traveller's sacks if setting is enabled
@@ -48,9 +56,9 @@ public class LeekFarmer implements Action {
                 new EquipTravellersSacksFromBelt().run(gui);
             }
             
-            if (leekArea != null)
-                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), leekArea.getRCArea(), new NAlias("items/leek")).run(gui);
-            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/leek"), new NAlias("Leek"), true).run(gui);
+            if (hempFibersArea != null)
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), hempFibersArea.getRCArea(), new NAlias("hempfibre", "Hemp Fibres")).run(gui);
+            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/hemp"), new NAlias("Hemp"), false).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
 

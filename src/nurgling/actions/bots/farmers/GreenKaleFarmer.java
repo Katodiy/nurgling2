@@ -1,9 +1,10 @@
-package nurgling.actions;
+package nurgling.actions.bots.farmers;
 
 import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
+import nurgling.actions.*;
 import nurgling.actions.bots.EquipTravellersSacksFromBelt;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
@@ -12,20 +13,24 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
-public class PumpkinFarmer implements Action {
+
+public class GreenKaleFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        NContext nContext = new NContext(gui);
         boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
 
-        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Pumpkin");
-        NArea.Specialisation seed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Pumpkin");
+        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Green Kale");
+        NArea.Specialisation seed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Green Kale");
         NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
         NArea.Specialisation swill = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
 
-        NArea pumpkinFlesh = NContext.findOut(new NAlias("Pumpkin Flesh"), 1);
+        nContext.getSpecArea(Specialisation.SpecName.crop, "Green Kale");
 
-        if(pumpkinFlesh == null) {
-            return Results.ERROR("PUT Area for Pumpkin Flesh required, but not found!");
+        NArea greenKale = NContext.findOut("Green Kale", 1);
+
+        if(greenKale == null) {
+            return Results.ERROR("PUT Area for Green Kale required, but not found!");
         }
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
@@ -43,7 +48,7 @@ public class PumpkinFarmer implements Action {
                     NContext.findSpec(seed),
                     NContext.findSpec(trough),
                     NContext.findSpec(swill),
-                    new NAlias("plants/pumpkin")
+                    new NAlias("plants/greenkale")
             ).run(gui);
             
             // Auto-equip traveller's sacks if setting is enabled
@@ -51,9 +56,9 @@ public class PumpkinFarmer implements Action {
                 new EquipTravellersSacksFromBelt().run(gui);
             }
             
-            if (pumpkinFlesh != null)
-                new LettuceAndPumpkinCollector(NContext.findSpec(field), NContext.findSpec(seed), pumpkinFlesh, new NAlias("items/pumpkin", "Pumpkin"), NContext.findSpec(trough)).run(gui);
-            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/pumpkin"), new NAlias("Pumpkin"), false).run(gui);
+            if (greenKale != null)
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), greenKale.getRCArea(), new NAlias("items/greenkale", "Green Kale")).run(gui);
+            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/greenkale"), new NAlias("Green Kale"), false).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
 

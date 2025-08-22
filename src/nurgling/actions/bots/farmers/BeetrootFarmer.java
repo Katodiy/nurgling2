@@ -1,10 +1,11 @@
-package nurgling.actions.bots;
+package nurgling.actions.bots.farmers;
 
 import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.actions.*;
+import nurgling.actions.bots.EquipTravellersSacksFromBelt;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tools.NAlias;
@@ -12,28 +13,29 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
-
-public class GreenKaleFarmer implements Action {
+public class BeetrootFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        NContext nContext = new NContext(gui);
         boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
 
-        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Green Kale");
-        NArea.Specialisation seed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Green Kale");
+        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Beetroot");
+        NArea.Specialisation beetrootAsSeed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Beetroot");
         NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
         NArea.Specialisation swill = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
+        NArea beetrootLeavesArea = NContext.findOut("Beetroot Leaves", 1);
 
-        NArea greenKale = NContext.findOut("Green Kale", 1);
+        nContext.getSpecArea(Specialisation.SpecName.crop, "Beetroot");
 
-        if(greenKale == null) {
-            return Results.ERROR("PUT Area for Green Kale required, but not found!");
+        if(beetrootLeavesArea == null) {
+            return Results.ERROR("PUT Area for Beetroot Leaves required, but not found!");
         }
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(field);
-        req.add(seed);
+        req.add(beetrootAsSeed);
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
-        req.add(trough);
+        opt.add(trough);
         opt.add(swill);
 
         if (new Validator(req, opt).run(gui).IsSuccess()) {
@@ -41,10 +43,10 @@ public class GreenKaleFarmer implements Action {
 
             new HarvestCrop(
                     NContext.findSpec(field),
-                    NContext.findSpec(seed),
+                    NContext.findSpec(beetrootAsSeed),
                     NContext.findSpec(trough),
                     NContext.findSpec(swill),
-                    new NAlias("plants/greenkale")
+                    new NAlias("plants/beet")
             ).run(gui);
             
             // Auto-equip traveller's sacks if setting is enabled
@@ -52,9 +54,13 @@ public class GreenKaleFarmer implements Action {
                 new EquipTravellersSacksFromBelt().run(gui);
             }
             
-            if (greenKale != null)
-                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), greenKale.getRCArea(), new NAlias("items/greenkale", "Green Kale")).run(gui);
-            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/greenkale"), new NAlias("Green Kale"), false).run(gui);
+            if (beetrootLeavesArea != null)
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), NContext.findOut("Beetroot Leaves", 1).getRCArea(), new NAlias("beetleaves", "Beetroot Leaves")).run(gui);
+
+            if (NContext.findSpec(beetrootAsSeed) != null)
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), NContext.findSpec(beetrootAsSeed).getRCArea(), new NAlias("items/beet", "Beetroot")).run(gui);
+
+            new SeedCrop(NContext.findSpec(field), NContext.findSpec(beetrootAsSeed), new NAlias("plants/beet"), new NAlias("Beetroot"), true).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
 

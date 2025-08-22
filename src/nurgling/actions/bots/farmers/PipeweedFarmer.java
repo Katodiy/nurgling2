@@ -1,10 +1,11 @@
-package nurgling.actions.bots;
+package nurgling.actions.bots.farmers;
 
 import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.actions.*;
+import nurgling.actions.bots.EquipTravellersSacksFromBelt;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tools.NAlias;
@@ -12,21 +13,22 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
-
-public class FlaxFarmer implements Action {
+public class PipeweedFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        NContext nContext = new NContext(gui);
         boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
 
-        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Flax");
-        NArea.Specialisation seed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Flax");
+        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Pipeweed");
+        NArea.Specialisation seed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Pipeweed");
         NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
         NArea.Specialisation swill = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
+        NArea pipeweedLeafArea = NContext.findOut("Fresh Leaf of Pipeweed", 1);
 
-        NArea flaxFibersArea = NContext.findOut("Flax Fibres", 1);
+        nContext.getSpecArea(Specialisation.SpecName.crop, "Pipeweed");
 
-        if(flaxFibersArea == null) {
-            return Results.ERROR("PUT Area for Flax Fibres required, but not found!");
+        if(pipeweedLeafArea == null) {
+            return Results.ERROR("PUT Area for Fresh Leaf of Pipeweed required, but not found!");
         }
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
@@ -44,7 +46,7 @@ public class FlaxFarmer implements Action {
                     NContext.findSpec(seed),
                     NContext.findSpec(trough),
                     NContext.findSpec(swill),
-                    new NAlias("plants/flax")
+                    new NAlias("plants/pipeweed")
             ).run(gui);
             
             // Auto-equip traveller's sacks if setting is enabled
@@ -52,9 +54,9 @@ public class FlaxFarmer implements Action {
                 new EquipTravellersSacksFromBelt().run(gui);
             }
             
-            if (flaxFibersArea != null)
-                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), flaxFibersArea.getRCArea(), new NAlias("flaxfibre", "Flax Fibres")).run(gui);
-            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/flax"), new NAlias("Flax"), false).run(gui);
+            if (pipeweedLeafArea != null)
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), pipeweedLeafArea.getRCArea(), new NAlias("tobacco-fresh", "Fresh Leaf of Pipeweed")).run(gui);
+            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/pipeweed"), new NAlias("Pipeweed"), false).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
 
