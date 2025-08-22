@@ -14,12 +14,17 @@ import java.text.DecimalFormat;
 public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PView.Render2D {
     private static final DecimalFormat SPEED_FORMAT = new DecimalFormat("0.0");
     private static final Font SPEED_FONT = new Font("Arial", Font.BOLD, 16);
-    private static final Color SPEED_COLOR = Color.WHITE;
     private static final Color OUTLINE_COLOR = Color.BLACK;
+    
+    // Speed comparison colors
+    private static final Color PLAYER_COLOR = Color.WHITE;
+    private static final Color SLOWER_COLOR = Color.GREEN;
+    private static final Color FASTER_COLOR = Color.RED;
     
     protected Coord3f pos;
     private TexI speedLabel = null;
     private String lastSpeedText = "";
+    private double lastPlayerSpeed = -1; // Track player speed for color updates
     private long lastUpdateTime = 0;
     private static final long UPDATE_INTERVAL = 100; // Update every 100ms
     
@@ -67,14 +72,60 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
         double speed = gob.getv();
         String speedText = SPEED_FORMAT.format(speed);
         
-        // Only update texture if speed changed
-        if (!speedText.equals(lastSpeedText)) {
+        // Get current player speed for comparison
+        Gob player = NUtils.player();
+        double currentPlayerSpeed = (player != null) ? player.getv() : 0.0;
+        
+        // Update texture if speed changed OR player speed changed (affects color)
+        if (!speedText.equals(lastSpeedText) || Math.abs(currentPlayerSpeed - lastPlayerSpeed) > 0.01) {
             lastSpeedText = speedText;
-            speedLabel = createSpeedTexture(speedText);
+            lastPlayerSpeed = currentPlayerSpeed;
+            Color speedColor = getSpeedColor(gob, speed);
+            speedLabel = createSpeedTexture(speedText, speedColor);
         }
     }
     
-    private TexI createSpeedTexture(String speedText) {
+    private Color getSpeedColor(Gob currentGob, double currentSpeed) {
+        // Check if this is the player
+        Gob player = NUtils.player();
+        if (player != null && currentGob.id == player.id) {
+            return PLAYER_COLOR; // White for player
+        }
+        
+        // Compare with player speed
+        if (player != null) {
+            double playerSpeed = player.getv();
+            
+            if (currentSpeed < playerSpeed) {
+                // Slower than player - shade from green to white
+                double ratio = Math.min(currentSpeed / playerSpeed, 1.0);
+                return blendColors(SLOWER_COLOR, PLAYER_COLOR, ratio);
+            } else if (currentSpeed > playerSpeed) {
+                // Faster than player - shade from white to red
+                double ratio = Math.min((currentSpeed - playerSpeed) / playerSpeed, 1.0);
+                return blendColors(PLAYER_COLOR, FASTER_COLOR, ratio);
+            } else {
+                // Same speed as player
+                return PLAYER_COLOR;
+            }
+        }
+        
+        // Default to white if no player reference
+        return PLAYER_COLOR;
+    }
+    
+    private Color blendColors(Color color1, Color color2, double ratio) {
+        // Clamp ratio between 0 and 1
+        ratio = Math.max(0.0, Math.min(1.0, ratio));
+        
+        int red = (int) (color1.getRed() * (1 - ratio) + color2.getRed() * ratio);
+        int green = (int) (color1.getGreen() * (1 - ratio) + color2.getGreen() * ratio);
+        int blue = (int) (color1.getBlue() * (1 - ratio) + color2.getBlue() * ratio);
+        
+        return new Color(red, green, blue);
+    }
+    
+    private TexI createSpeedTexture(String speedText, Color speedColor) {
         // Create a simple text image
         FontMetrics fm = Toolkit.getDefaultToolkit().getFontMetrics(SPEED_FONT);
         int width = fm.stringWidth(speedText) + 4; // Add padding
@@ -97,8 +148,8 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
             }
         }
         
-        // Draw main text
-        g2d.setColor(SPEED_COLOR);
+        // Draw main text with dynamic color
+        g2d.setColor(speedColor);
         g2d.drawString(speedText, 2, fm.getAscent() + 1);
         
         g2d.dispose();
