@@ -94,7 +94,8 @@ public class NConfig
         uniformBiomeColors,
         inventoryRightPanelShow,
         inventoryRightPanelMode,
-        showTerrainName
+        showTerrainName,
+        showSpeedometer
     }
 
 
@@ -179,6 +180,7 @@ public class NConfig
         conf.put(Key.inventoryRightPanelShow, false);
         conf.put(Key.inventoryRightPanelMode, "EXPANDED");
         conf.put(Key.showTerrainName, false);
+        conf.put(Key.showSpeedometer, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -493,6 +495,12 @@ public class NConfig
                 {}
             }
         }
+        
+        // Migration: Ensure new config keys have default values if not present in loaded config
+        if (!conf.containsKey(Key.showSpeedometer)) {
+            conf.put(Key.showSpeedometer, true);
+        }
+        
         conf.put(Key.showCSprite,conf.get(Key.nextshowCSprite));
         conf.put(Key.flatsurface,conf.get(Key.nextflatsurface));
     }
