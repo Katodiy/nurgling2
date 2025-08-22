@@ -32,6 +32,9 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
     private boolean shouldShow = false;
     private boolean configEnabled = true;
     
+    // Speedometer icon texture
+    public final Tex speedometerIcon = Resource.loadtex("nurgling/hud/speedometer");
+    
     public NSpeedometerOverlay(Owner owner) {
         super(owner, null);
         pos = new Coord3f(0, 0, 18); // Position well above the gob (above head level)
@@ -126,31 +129,47 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
     }
     
     private TexI createSpeedTexture(String speedText, Color speedColor) {
-        // Create a simple text image
+        // Get font metrics and icon dimensions
         FontMetrics fm = Toolkit.getDefaultToolkit().getFontMetrics(SPEED_FONT);
-        int width = fm.stringWidth(speedText) + 4; // Add padding
-        int height = fm.getHeight() + 2;
+        int iconWidth = speedometerIcon.sz().x;
+        int iconHeight = speedometerIcon.sz().y;
+        int textWidth = fm.stringWidth(speedText);
+        int textHeight = fm.getHeight();
         
-        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        // Calculate combined dimensions with small gap between icon and text
+        int gap = 3;
+        int totalWidth = iconWidth + gap + textWidth + 4; // Add padding
+        int totalHeight = Math.max(iconHeight, textHeight) + 2;
+        
+        BufferedImage img = new BufferedImage(totalWidth, totalHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = img.createGraphics();
         
         // Enable anti-aliasing
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
-        // Draw outline (black text slightly offset)
+        // Draw speedometer icon
+        int iconY = (totalHeight - iconHeight) / 2;
+        g2d.drawImage(((TexI)speedometerIcon).back, 2, iconY, null);
+        
+        // Calculate text position (vertically centered with icon)
+        int textX = 2 + iconWidth + gap;
+        int textY = (totalHeight - textHeight) / 2 + fm.getAscent();
+        
+        // Draw text outline (black text slightly offset)
         g2d.setFont(SPEED_FONT);
         g2d.setColor(OUTLINE_COLOR);
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {
                 if (x != 0 || y != 0) {
-                    g2d.drawString(speedText, 2 + x, fm.getAscent() + 1 + y);
+                    g2d.drawString(speedText, textX + x, textY + y);
                 }
             }
         }
         
         // Draw main text with dynamic color
         g2d.setColor(speedColor);
-        g2d.drawString(speedText, 2, fm.getAscent() + 1);
+        g2d.drawString(speedText, textX, textY);
         
         g2d.dispose();
         return new TexI(img);
@@ -163,6 +182,10 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
         }
         
         Coord sc = Homo3D.obj2view(pos, state, Area.sized(g.sz())).round2();
+        if(sc == null)
+            return;
+            
+        // Draw combined speedometer icon and text (centered)
         g.aimage(speedLabel, sc, 0.5, 0.5);
     }
 }
