@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.actions.*;
+import nurgling.actions.ValidateAllCropsReady;
 import nurgling.actions.bots.EquipTravellersSacksFromBelt;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
@@ -44,6 +45,13 @@ public class BarleyFarmer implements Action {
 
         if (new Validator(req, opt).run(gui).IsSuccess()) {
             NUtils.stackSwitch(true);
+
+            if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
+                if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/barley")).run(gui).isSuccess) {
+                    NUtils.stackSwitch(oldStackingValue);
+                    return Results.ERROR("Not all barley crops are ready for harvest");
+                }
+            }
 
             new HarvestCrop(
                     NContext.findSpec(field),

@@ -35,6 +35,13 @@ public class RedOnionFarmer implements Action {
         if (new Validator(req, opt).run(gui).IsSuccess()) {
             NUtils.stackSwitch(true);
 
+            if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
+                if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/redonion")).run(gui).isSuccess) {
+                    NUtils.stackSwitch(oldStackingValue);
+                    return Results.ERROR("Not all red onion crops are ready for harvest");
+                }
+            }
+
             new HarvestCrop(
                     NContext.findSpec(field),
                     NContext.findSpec(redOnionAsSeed),
