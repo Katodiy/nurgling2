@@ -496,11 +496,6 @@ public class NConfig
             }
         }
         
-        // Migration: Ensure new config keys have default values if not present in loaded config
-        if (!conf.containsKey(Key.showSpeedometer)) {
-            conf.put(Key.showSpeedometer, true);
-        }
-        
         conf.put(Key.showCSprite,conf.get(Key.nextshowCSprite));
         conf.put(Key.flatsurface,conf.get(Key.nextflatsurface));
     }
