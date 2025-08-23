@@ -10,6 +10,9 @@ import nurgling.tools.VSpec;
 import org.json.JSONObject;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,6 +37,12 @@ public class CheeseOrdersPanel extends Panel {
     private final Map<String, BufferedImage> cheeseIcons = new HashMap<>();
     // Track failed icon loading attempts to avoid repeated failures
     private final Set<String> failedIcons = new HashSet<>();
+    
+    // File watching for real-time updates
+    private Thread watchThread;
+    private volatile boolean watchingEnabled = false;
+    private WatchService watchService;
+    private WatchKey watchKey;
 
     public CheeseOrdersPanel() {
         super("");
@@ -319,9 +328,107 @@ public class CheeseOrdersPanel extends Panel {
         // Refresh orders from disk when panel becomes visible
         manager.loadOrders();
         rebuildOrderList();
+        
+        // Start file watching when panel becomes visible
+        startFileWatching();
 
         super.show();
     }
+    
+    @Override
+    public void hide() {
+        // Stop file watching when panel is hidden
+        stopFileWatching();
+        super.hide();
+    }
+    
+    @Override
+    public void destroy() {
+        // Stop file watching when panel is destroyed
+        stopFileWatching();
+        super.destroy();
+    }
+    
+    private void startFileWatching() {
+        try {
+            Path filePath = Paths.get(manager.getOrdersFilePath());
+            Path directory = filePath.getParent();
+            
+            if (directory != null && Files.exists(directory)) {
+                watchService = FileSystems.getDefault().newWatchService();
+                watchKey = directory.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+                
+                watchingEnabled = true;
+                watchThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String ordersFileName = filePath.getFileName().toString();
+                        
+                        while (watchingEnabled) {
+                            try {
+                                WatchKey key = watchService.take();
+                                
+                                for (WatchEvent<?> event : key.pollEvents()) {
+                                    WatchEvent.Kind<?> kind = event.kind();
+                                    
+                                    if (kind == StandardWatchEventKinds.OVERFLOW) {
+                                        continue;
+                                    }
+                                    
+                                    Path filename = (Path) event.context();
+                                    
+                                    if (filename.toString().equals(ordersFileName)) {
+                                        System.out.println("File changed");
+                                        manager.loadOrders();
+                                        rebuildOrderList();
+                                    }
+                                }
+                                
+                                boolean valid = key.reset();
+                                if (!valid) {
+                                    break;
+                                }
+                            } catch (InterruptedException e) {
+                                break;
+                            } catch (Exception e) {
+                                break;
+                            }
+                        }
+                    }
+                }, "CheeseOrders-FileWatcher");
+                watchThread.setDaemon(true);
+                watchThread.start();
+            }
+        } catch (IOException e) {
+            System.err.println("Failed to start file watching: " + e.getMessage());
+        }
+    }
+    
+    private void stopFileWatching() {
+        watchingEnabled = false;
+        System.out.println("Stop watching");
+        
+        if (watchKey != null) {
+            watchKey.cancel();
+            watchKey = null;
+        }
+        
+        if (watchService != null) {
+            try {
+                watchService.close();
+            } catch (IOException e) {
+                // Ignore
+            }
+            watchService = null;
+        }
+        
+        if (watchThread != null) {
+            watchThread.interrupt();
+            watchThread = null;
+        }
+    }
+    
+    
     
     private void rebuildOrderList() {
         // Clear existing widgets from content
