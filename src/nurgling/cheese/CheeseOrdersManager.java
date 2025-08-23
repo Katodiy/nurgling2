@@ -68,4 +68,8 @@ public class CheeseOrdersManager {
     public Map<Integer, CheeseOrder> getOrders() {
         return orders;
     }
+    
+    public String getOrdersFilePath() {
+        return NConfig.current.path_cheese_orders;
+    }
 }

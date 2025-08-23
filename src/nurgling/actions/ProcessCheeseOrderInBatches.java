@@ -104,22 +104,11 @@ public class ProcessCheeseOrderInBatches implements Action {
             int totalTraysInInventory = countTraysOfTypeInInventory(gui, curdType);
             
             // Handle tray placement for ALL trays of this type in inventory
-            int traysPlaced;
             if (chain.size() > 1 && totalTraysInInventory > 0) {
                 CheeseBranch.Cheese nextCheeseStep = chain.get(1);
                 CheeseBranch.Place targetPlace = nextCheeseStep.place;
                 
-                traysPlaced = rackManager.handleTrayPlacement(gui, targetPlace, totalTraysInInventory, curdType, ordersManager);
-                
-                // Update orders only after successful placement
-                if (traysPlaced > 0) {
-                    
-                    // Reduce current step by number of trays actually placed
-                    updateOrderProgress(currentStep, traysPlaced);
-                    
-                    // Advance placed trays to next step
-                    advanceTraysToNextStep(order, chain, traysPlaced);
-                }
+                rackManager.handleTrayPlacement(gui, targetPlace, totalTraysInInventory, curdType, ordersManager, order);
             }
             
             return actualCount;
