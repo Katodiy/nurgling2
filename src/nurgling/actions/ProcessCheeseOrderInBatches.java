@@ -108,7 +108,7 @@ public class ProcessCheeseOrderInBatches implements Action {
                 CheeseBranch.Cheese nextCheeseStep = chain.get(1);
                 CheeseBranch.Place targetPlace = nextCheeseStep.place;
                 
-                rackManager.handleTrayPlacement(gui, targetPlace, totalTraysInInventory, curdType, ordersManager);
+                rackManager.handleTrayPlacement(gui, targetPlace, totalTraysInInventory, curdType, ordersManager, order);
             }
             
             return actualCount;

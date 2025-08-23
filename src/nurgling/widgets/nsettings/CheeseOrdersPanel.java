@@ -378,7 +378,6 @@ public class CheeseOrdersPanel extends Panel {
                                     Path filename = (Path) event.context();
                                     
                                     if (filename.toString().equals(ordersFileName)) {
-                                        System.out.println("File changed");
                                         manager.loadOrders();
                                         rebuildOrderList();
                                     }
@@ -406,7 +405,6 @@ public class CheeseOrdersPanel extends Panel {
     
     private void stopFileWatching() {
         watchingEnabled = false;
-        System.out.println("Stop watching");
         
         if (watchKey != null) {
             watchKey.cancel();
