@@ -26,8 +26,13 @@ public class EncyclopediaManager {
                 Path docsPath;
                 
                 if (resourceUri.getScheme().equals("jar")) {
-                    // Running from JAR - create filesystem for the JAR
-                    FileSystem fileSystem = FileSystems.newFileSystem(resourceUri, Collections.emptyMap());
+                    // Running from JAR - get or create filesystem for the JAR
+                    FileSystem fileSystem;
+                    try {
+                        fileSystem = FileSystems.getFileSystem(resourceUri);
+                    } catch (FileSystemNotFoundException e) {
+                        fileSystem = FileSystems.newFileSystem(resourceUri, Collections.emptyMap());
+                    }
                     docsPath = fileSystem.getPath(resourcePath);
                 } else {
                     // Running from IDE/file system
