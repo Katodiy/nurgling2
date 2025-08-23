@@ -478,7 +478,7 @@ public class MarkdownToImageRenderer {
     }
     
     private static String resolveRelativePath(String basePath, String relativePath) {
-        // Handle relative paths like ../images/img.png
+        // Handle relative paths like ../images/routes_main_ui.png
         if (relativePath.startsWith("./")) {
             relativePath = relativePath.substring(2);
         }
