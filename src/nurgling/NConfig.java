@@ -94,7 +94,8 @@ public class NConfig
         uniformBiomeColors,
         inventoryRightPanelShow,
         inventoryRightPanelMode,
-        showTerrainName
+        showTerrainName,
+        showSpeedometer
     }
 
 
@@ -179,6 +180,7 @@ public class NConfig
         conf.put(Key.inventoryRightPanelShow, false);
         conf.put(Key.inventoryRightPanelMode, "EXPANDED");
         conf.put(Key.showTerrainName, false);
+        conf.put(Key.showSpeedometer, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -493,6 +495,7 @@ public class NConfig
                 {}
             }
         }
+        
         conf.put(Key.showCSprite,conf.get(Key.nextshowCSprite));
         conf.put(Key.flatsurface,conf.get(Key.nextflatsurface));
     }
