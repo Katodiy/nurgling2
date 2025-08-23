@@ -1,10 +1,11 @@
-package nurgling.actions.bots;
+package nurgling.actions.bots.farmers;
 
 import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.actions.*;
+import nurgling.actions.bots.EquipTravellersSacksFromBelt;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tools.NAlias;
@@ -12,23 +13,23 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
-
-public class BarleyFarmer implements Action {
+public class LettuceFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        NContext nContext = new NContext(gui);
         boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
 
-        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Barley");
-        NArea.Specialisation seed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Barley");
+        NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Lettuce");
+        NArea.Specialisation seed = new NArea.Specialisation(Specialisation.SpecName.seed.toString(), "Lettuce");
         NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
         NArea.Specialisation swill = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
 
-        boolean ignoreStraw = (Boolean) NConfig.get(NConfig.Key.ignoreStrawInFarmers);
+        nContext.getSpecArea(Specialisation.SpecName.crop, "Lettuce");
 
-        NArea strawArea = NContext.findOut("Straw", 1);
+        NArea lettuceLeaf = NContext.findOut(new NAlias("Lettuce Leaf"), 1);
 
-        if(!ignoreStraw && strawArea == null) {
-            return Results.ERROR("PUT Area for Straw required, but not found!");
+        if(lettuceLeaf == null) {
+            return Results.ERROR("PUT Area for Lettuce Leaf required, but not found!");
         }
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
@@ -41,12 +42,20 @@ public class BarleyFarmer implements Action {
         if (new Validator(req, opt).run(gui).IsSuccess()) {
             NUtils.stackSwitch(true);
 
+            if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
+                if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/lettuce")).run(gui).isSuccess) {
+                    NUtils.stackSwitch(oldStackingValue);
+                    gui.msg("Not all lettuce crops are ready for harvest, skipping harvest.");
+                    return Results.SUCCESS();
+                }
+            }
+
             new HarvestCrop(
                     NContext.findSpec(field),
                     NContext.findSpec(seed),
                     NContext.findSpec(trough),
                     NContext.findSpec(swill),
-                    new NAlias("plants/barley")
+                    new NAlias("plants/lettuce")
             ).run(gui);
             
             // Auto-equip traveller's sacks if setting is enabled
@@ -54,9 +63,9 @@ public class BarleyFarmer implements Action {
                 new EquipTravellersSacksFromBelt().run(gui);
             }
             
-            if (!ignoreStraw && strawArea != null)
-                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), strawArea.getRCArea(), new NAlias("straw", "Straw")).run(gui);
-            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/barley"), new NAlias("Barley"), false).run(gui);
+            if (lettuceLeaf != null)
+                new LettuceAndPumpkinCollector(NContext.findSpec(field), NContext.findSpec(seed), lettuceLeaf, new NAlias("items/lettucehead", "Head of Lettuce"), NContext.findSpec(trough)).run(gui);
+            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/lettuce"), new NAlias("Lettuce"), false).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
 

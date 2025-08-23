@@ -1,10 +1,11 @@
-package nurgling.actions.bots;
+package nurgling.actions.bots.farmers;
 
 import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.actions.*;
+import nurgling.actions.bots.EquipTravellersSacksFromBelt;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tools.NAlias;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 public class BeetrootFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        NContext nContext = new NContext(gui);
         boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
 
         NArea.Specialisation field = new NArea.Specialisation(Specialisation.SpecName.crop.toString(), "Beetroot");
@@ -22,6 +24,8 @@ public class BeetrootFarmer implements Action {
         NArea.Specialisation trough = new NArea.Specialisation(Specialisation.SpecName.trough.toString());
         NArea.Specialisation swill = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
         NArea beetrootLeavesArea = NContext.findOut("Beetroot Leaves", 1);
+
+        nContext.getSpecArea(Specialisation.SpecName.crop, "Beetroot");
 
         if(beetrootLeavesArea == null) {
             return Results.ERROR("PUT Area for Beetroot Leaves required, but not found!");
@@ -36,6 +40,14 @@ public class BeetrootFarmer implements Action {
 
         if (new Validator(req, opt).run(gui).IsSuccess()) {
             NUtils.stackSwitch(true);
+
+            if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
+                if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/beet")).run(gui).isSuccess) {
+                    NUtils.stackSwitch(oldStackingValue);
+                    gui.msg("Not all beetroot crops are ready for harvest, skipping harvest.");
+                    return Results.SUCCESS();
+                }
+            }
 
             new HarvestCrop(
                     NContext.findSpec(field),

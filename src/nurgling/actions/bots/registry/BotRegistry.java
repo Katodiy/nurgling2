@@ -1,10 +1,11 @@
 package nurgling.actions.bots.registry;
 
-import nurgling.actions.CreateTraysWithCurds;
 import nurgling.actions.FillWaterskins;
-import nurgling.actions.PumpkinFarmer;
+import nurgling.actions.bots.farmers.PumpkinFarmer;
 import nurgling.actions.bots.*;
 import nurgling.actions.bots.CarrotFarmerQ;
+import nurgling.actions.bots.farmers.WheatFarmer;
+import nurgling.actions.bots.farmers.YellowOnionFarmer;
 import nurgling.actions.test.*;
 
 import java.util.*;
@@ -68,23 +69,23 @@ public class BotRegistry {
         bots.add(new BotDescriptor("taming", BotDescriptor.BotType.BATTLE, "Tame an animal", "Attacks the nearest animal waiting to be tamed, allows it to escape. Ties the animal on a rope if the corresponding setting is set. Fighting on your own", false, true, TaimingAnimal.class, "taming", false));
 
         // FARMING
-        bots.add(new BotDescriptor("turnip", BotDescriptor.BotType.FARMING, "Turnip Farmer", "Automatically harvests and replants turnips.", true, true, TurnipsFarmer.class, "turnip", false));
-        bots.add(new BotDescriptor("carrot", BotDescriptor.BotType.FARMING, "Carrot Farmer", "Automatically harvests and replants carrots.", true, true, CarrotFarmer.class, "carrot", false));
-        bots.add(new BotDescriptor("beetroot", BotDescriptor.BotType.FARMING, "Beetroot Farmer", "Automatically harvests and replants beetroots.", true, true, BeetrootFarmer.class, "beetroot", false));
-        bots.add(new BotDescriptor("red_onion", BotDescriptor.BotType.FARMING, "Red Onion Farmer", "Automatically harvests and replants red onions.", true, true, RedOnionFarmer.class, "red_onion", false));
+        bots.add(new BotDescriptor("turnip", BotDescriptor.BotType.FARMING, "Turnip Farmer", "Automatically harvests and replants turnips.", true, true, nurgling.actions.bots.farmers.TurnipsFarmer.class, "turnip", false));
+        bots.add(new BotDescriptor("carrot", BotDescriptor.BotType.FARMING, "Carrot Farmer", "Automatically harvests and replants carrots.", true, true, nurgling.actions.bots.farmers.CarrotFarmer.class, "carrot", false));
+        bots.add(new BotDescriptor("beetroot", BotDescriptor.BotType.FARMING, "Beetroot Farmer", "Automatically harvests and replants beetroots.", true, true, nurgling.actions.bots.farmers.BeetrootFarmer.class, "beetroot", false));
+        bots.add(new BotDescriptor("red_onion", BotDescriptor.BotType.FARMING, "Red Onion Farmer", "Automatically harvests and replants red onions.", true, true, nurgling.actions.bots.farmers.RedOnionFarmer.class, "red_onion", false));
         bots.add(new BotDescriptor("yellow_onion", BotDescriptor.BotType.FARMING, "Yellow Onion Farmer", "Automatically harvests and replants yellow onions.", true, true, YellowOnionFarmer.class, "yellow_onion", false));
-        bots.add(new BotDescriptor("leek", BotDescriptor.BotType.FARMING, "Leek Farmer", "Automatically harvests and replants leek.", true, true, LeekFarmer.class, "leek", false));
-        bots.add(new BotDescriptor("garlic", BotDescriptor.BotType.FARMING, "Garlic Farmer", "Automatically harvests and replants garlic.", true, true, GarlicFarmer.class, "garlic", false));
-        bots.add(new BotDescriptor("hemp", BotDescriptor.BotType.FARMING, "Hemp Farmer", "Automatically harvests and replants hemp.", true, true, HempFarmer.class, "hemp", false));
-        bots.add(new BotDescriptor("flax", BotDescriptor.BotType.FARMING, "Flax Farmer", "Automatically harvests and replants flax.", true, true, FlaxFarmer.class, "flax", false));
-        bots.add(new BotDescriptor("lettuce", BotDescriptor.BotType.FARMING, "Lettuce Farmer", "Automatically harvests and replants lettuce.", true, true, LettuceFarmer.class, "lettuce", true));
-        bots.add(new BotDescriptor("green_kale", BotDescriptor.BotType.FARMING, "Green Kale Farmer", "Automatically harvests and replants green kale.", true, true, GreenKaleFarmer.class, "green_kale", false));
+        bots.add(new BotDescriptor("leek", BotDescriptor.BotType.FARMING, "Leek Farmer", "Automatically harvests and replants leek.", true, true, nurgling.actions.bots.farmers.LeekFarmer.class, "leek", false));
+        bots.add(new BotDescriptor("garlic", BotDescriptor.BotType.FARMING, "Garlic Farmer", "Automatically harvests and replants garlic.", true, true, nurgling.actions.bots.farmers.GarlicFarmer.class, "garlic", false));
+        bots.add(new BotDescriptor("hemp", BotDescriptor.BotType.FARMING, "Hemp Farmer", "Automatically harvests and replants hemp.", true, true, nurgling.actions.bots.farmers.HempFarmer.class, "hemp", false));
+        bots.add(new BotDescriptor("flax", BotDescriptor.BotType.FARMING, "Flax Farmer", "Automatically harvests and replants flax.", true, true, nurgling.actions.bots.farmers.FlaxFarmer.class, "flax", false));
+        bots.add(new BotDescriptor("lettuce", BotDescriptor.BotType.FARMING, "Lettuce Farmer", "Automatically harvests and replants lettuce.", true, true, nurgling.actions.bots.farmers.LettuceFarmer.class, "lettuce", true));
+        bots.add(new BotDescriptor("green_kale", BotDescriptor.BotType.FARMING, "Green Kale Farmer", "Automatically harvests and replants green kale.", true, true, nurgling.actions.bots.farmers.GreenKaleFarmer.class, "green_kale", false));
         bots.add(new BotDescriptor("pumpkin", BotDescriptor.BotType.FARMING, "Pumpkin Farmer", "Automatically harvests and replants pumpkins.", true, true, PumpkinFarmer.class, "pumpkin", true));
-        bots.add(new BotDescriptor("barley", BotDescriptor.BotType.FARMING, "Barley Farmer", "Automatically harvests and replants barley.", true, true, BarleyFarmer.class, "barley", false));
-        bots.add(new BotDescriptor("millet", BotDescriptor.BotType.FARMING, "Millet Farmer", "Automatically harvests and replants millet.", true, true, MilletFarmer.class, "millet", false));
+        bots.add(new BotDescriptor("barley", BotDescriptor.BotType.FARMING, "Barley Farmer", "Automatically harvests and replants barley.", true, true, nurgling.actions.bots.farmers.BarleyFarmer.class, "barley", false));
+        bots.add(new BotDescriptor("millet", BotDescriptor.BotType.FARMING, "Millet Farmer", "Automatically harvests and replants millet.", true, true, nurgling.actions.bots.farmers.MilletFarmer.class, "millet", false));
         bots.add(new BotDescriptor("wheat", BotDescriptor.BotType.FARMING, "Wheat Farmer", "Automatically harvests and replants wheat.", true, true, WheatFarmer.class, "wheat", false));
-        bots.add(new BotDescriptor("poppy", BotDescriptor.BotType.FARMING, "Poppy Farmer", "Automatically harvests and replants poppies.", true, true, PoppyFarmer.class, "poppy", true));
-        bots.add(new BotDescriptor("pipeweed", BotDescriptor.BotType.FARMING, "Pipeweed Farmer", "Automatically harvests and replants pipeweed.", true, true, PipeweedFarmer.class, "pipeweed", false));
+        bots.add(new BotDescriptor("poppy", BotDescriptor.BotType.FARMING, "Poppy Farmer", "Automatically harvests and replants poppies.", true, true, nurgling.actions.bots.farmers.PoppyFarmer.class, "poppy", true));
+        bots.add(new BotDescriptor("pipeweed", BotDescriptor.BotType.FARMING, "Pipeweed Farmer", "Automatically harvests and replants pipeweed.", true, true, nurgling.actions.bots.farmers.PipeweedFarmer.class, "pipeweed", false));
 
         bots.add(new BotDescriptor("goats", BotDescriptor.BotType.FARMING, "Goat Manager", "Manages goat herds.", true, true, GoatsAction.class, "goats", false));
         bots.add(new BotDescriptor("sheeps", BotDescriptor.BotType.FARMING, "Sheep Manager", "Manages sheep herds.", true, true, SheepsAction.class, "sheeps", false));
