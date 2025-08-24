@@ -15,6 +15,7 @@ import nurgling.widgets.SwimmingStatusBuff;
 import nurgling.widgets.TrackingStatusBuff;
 import nurgling.widgets.CrimeStatusBuff;
 import nurgling.widgets.AllowVisitingStatusBuff;
+import nurgling.widgets.ResourceTimerWindow;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -46,6 +47,7 @@ public class NGameUI extends GameUI
     private CrimeStatusBuff crimeBuff = null;
     private AllowVisitingStatusBuff allowVisitingBuff = null;
     public NRecentActionsPanel recentActionsPanel;
+    private ResourceTimerWindow resourceTimerWindow = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -770,6 +772,24 @@ public class NGameUI extends GameUI
     @Override
     public boolean keydown(KeyDownEvent ev) {
         nurgling.tasks.WaitKeyPress.setLastKeyPressed(ev.code);
+        
+        // Handle resource timer window shortcut (Ctrl+R)
+        if(ev.code == KeyEvent.VK_R && ui.modctrl) { // Ctrl+R
+            toggleResourceTimerWindow();
+            return true;
+        }
+        
         return super.keydown(ev);
+    }
+    
+    private void toggleResourceTimerWindow() {
+        if(resourceTimerWindow == null || !resourceTimerWindow.visible()) {
+            if(resourceTimerWindow == null) {
+                resourceTimerWindow = add(new ResourceTimerWindow(), new Coord(100, 100));
+            }
+            resourceTimerWindow.show();
+        } else {
+            resourceTimerWindow.hide();
+        }
     }
 }

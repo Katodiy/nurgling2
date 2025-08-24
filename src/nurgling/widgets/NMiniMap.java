@@ -4,6 +4,8 @@ import haven.*;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.ResourceTimer;
+import nurgling.ResourceTimerManager;
 import nurgling.tools.FogArea;
 
 import java.awt.*;
@@ -96,6 +98,7 @@ public class NMiniMap extends MiniMap {
 
         drawtempmarks(g);
         drawterrainname(g);
+        drawResourceTimers(g);
     }
 
     void drawview(GOut g) {
@@ -398,5 +401,42 @@ public class NMiniMap extends MiniMap {
             name = Character.toUpperCase(name.charAt(0)) + name.substring(1);
         }
         return name;
+    }
+
+    private void drawResourceTimers(GOut g) {
+        if(dloc == null) return;
+
+        ResourceTimerManager manager = ResourceTimerManager.getInstance();
+        java.util.List<ResourceTimer> timers = manager.getTimersForSegment(dloc.seg.id);
+
+        Coord hsz = sz.div(2);
+        Text.Foundry timerFont = new Text.Foundry(Text.dfont, 9);
+
+        for(ResourceTimer timer : timers) {
+            // Calculate screen position for the timer
+            Coord screenPos = timer.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+
+            // Only draw if on screen
+            if(screenPos.x >= 0 && screenPos.x <= sz.x &&
+               screenPos.y >= 0 && screenPos.y <= sz.y) {
+
+                String timeText = timer.getFormattedRemainingTime();
+                Color timerColor = timer.isExpired() ? Color.GREEN : Color.YELLOW;
+
+                // Create timer text
+                Text timerDisplay = timerFont.render(timeText, timerColor);
+
+                // Position text slightly below the resource icon
+                Coord textPos = screenPos.add(-timerDisplay.sz().x / 2, 15);
+
+                // Draw background for better visibility
+                g.chcolor(0, 0, 0, 180);
+                g.frect(textPos.sub(2, 1), timerDisplay.sz().add(4, 2));
+                g.chcolor();
+
+                // Draw the timer text
+                g.image(timerDisplay.tex(), textPos);
+            }
+        }
     }
 }
