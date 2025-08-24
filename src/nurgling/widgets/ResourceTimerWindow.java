@@ -222,21 +222,37 @@ public class ResourceTimerWindow extends Window {
     }
     
     private void navigateToResource(ResourceTimer timer) {
-        // Try to center the minimap on the resource location
+        // Open the map window and center on the resource location
         try {
             if(this.ui != null && this.ui instanceof nurgling.NUI) {
                 nurgling.NUI nui = (nurgling.NUI)this.ui;
-                if(nui.gui != null && nui.gui.mmap != null) {
-                    // Find the segment and create a location
-                    MapFile.Segment segment = nui.gui.mmap.file.segments.get(timer.getSegmentId());
-                    if(segment != null) {
-                        MiniMap.Location targetLoc = new MiniMap.Location(segment, timer.getTileCoords());
-                        nui.gui.mmap.center(targetLoc);
-                        
-                        // Show message
-                        nui.gui.msg("Navigating to " + timer.getDescription(), java.awt.Color.YELLOW);
-                    } else {
-                        nui.gui.msg("Cannot navigate to " + timer.getDescription() + " - segment not loaded", java.awt.Color.RED);
+                if(nui.gui != null) {
+                    // Open the map window if it's not already open
+                    if(nui.gui.mapfile == null || !nui.gui.mapfile.visible()) {
+                        nui.gui.togglewnd(nui.gui.mapfile);
+                    }
+                    
+                    // Center both minimap and main map on the resource
+                    if(nui.gui.mmap != null) {
+                        // Find the segment and create a location
+                        MapFile.Segment segment = nui.gui.mmap.file.segments.get(timer.getSegmentId());
+                        if(segment != null) {
+                            MiniMap.Location targetLoc = new MiniMap.Location(segment, timer.getTileCoords());
+                            
+                            // Center the minimap
+                            nui.gui.mmap.center(targetLoc);
+                            
+                            // Center the main map if it exists
+                            if(nui.gui.mapfile != null && nui.gui.mapfile instanceof nurgling.widgets.NMapWnd) {
+                                nurgling.widgets.NMapWnd mapWnd = (nurgling.widgets.NMapWnd) nui.gui.mapfile;
+                                mapWnd.view.center(targetLoc);
+                            }
+                            
+                            // Show success message
+                            nui.gui.msg("Navigating to " + timer.getDescription(), java.awt.Color.YELLOW);
+                        } else {
+                            nui.gui.msg("Cannot navigate to " + timer.getDescription() + " - segment not loaded", java.awt.Color.RED);
+                        }
                     }
                 }
             }
