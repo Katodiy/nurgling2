@@ -239,6 +239,12 @@ public class ResourceTimerWindow extends Window {
                         if(segment != null) {
                             MiniMap.Location targetLoc = new MiniMap.Location(segment, timer.getTileCoords());
                             
+                            // Temporarily disable following to allow manual centering
+                            if(nui.gui.mmap instanceof nurgling.widgets.NMiniMapWnd.Map) {
+                                nurgling.widgets.NMiniMapWnd.Map miniMapWidget = (nurgling.widgets.NMiniMapWnd.Map) nui.gui.mmap;
+                                miniMapWidget.follow(null); // Stop following player
+                            }
+                            
                             // Center the minimap
                             nui.gui.mmap.center(targetLoc);
                             
@@ -246,12 +252,12 @@ public class ResourceTimerWindow extends Window {
                             if(nui.gui.mapfile != null && nui.gui.mapfile instanceof nurgling.widgets.NMapWnd) {
                                 nurgling.widgets.NMapWnd mapWnd = (nurgling.widgets.NMapWnd) nui.gui.mapfile;
                                 mapWnd.view.center(targetLoc);
+                                
+                                // Also disable following on main map view if it has it
+                                if(mapWnd.view instanceof MiniMap) {
+                                    ((MiniMap) mapWnd.view).follow(null);
+                                }
                             }
-                            
-                            // Show success message
-                            nui.gui.msg("Navigating to " + timer.getDescription(), java.awt.Color.YELLOW);
-                        } else {
-                            nui.gui.msg("Cannot navigate to " + timer.getDescription() + " - segment not loaded", java.awt.Color.RED);
                         }
                     }
                 }
