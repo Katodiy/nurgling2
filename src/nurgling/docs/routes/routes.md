@@ -1,29 +1,30 @@
 # Routes System
 
-The Routes system allows you to create paths between different locations, enabling automated navigation for bots and manual travel convenience.
+The **Routes System** allows you to create paths between different locations, enabling automated navigation for bots and manual travel convenience.
 
 ## Accessing the Routes Interface
 
-To open up the routes UI find a button that looks like the wheel or the helm:
+To open the Routes interface, locate the button resembling a wheel or helm:
 
 ![Routes Button](../images/routes/routes_button.png)
- 
-Once you click this button you should see the screen shown below, however your UI will likely be pretty empty in comparison.
+
+Clicking this button opens the main Routes UI. Your screen may appear largely empty initially:
 
 ![Routes Main UI](../images/routes/routes_main_ui.png)
 
 ## Managing Routes
 
-We'll first cover all the elements of the UI.
+Below is an overview of the main elements in the Routes UI.
 
 ### Routes List
 
 ![Routes List](../images/routes/routes_list.png)
 
-The routes list shows all your saved routes. From here you can:
+The **Routes List** displays all saved routes. From this panel you can:
+
 - View existing routes
 - Select routes for editing
-- Delete unwanted routes
+- Delete routes you no longer need
 - Create new routes
 - Rename existing routes
 
@@ -31,57 +32,59 @@ The routes list shows all your saved routes. From here you can:
 
 ![Route Points](../images/routes/route_points.png)
 
-Each route consists of multiple points that define the path. Route Info portion of the UI allow you to:
-- See any special route points. For example: doors, ladders and mine holes.
-- Navigate to any route point by clicking it, given there is a connection from your location to that point.
+Each route is composed of **multiple points** that define its path. The **Route Info** panel allows you to:
+- View special route points, such as doors, ladders, and mine holes
+- Navigate directly to any route point by clicking it, provided a connection exists from your current location
 
-*Note:* do not worry about this piece, you will most likely never use it except for when you need to test things out.
+*Note:* This panel is primarily for testing and advanced adjustments. Most users will rarely need to interact with it.
 
 ### Route Actions
 
 ![Route Actions](../images/routes/routes_actions.png)
 
-This section of the UI is how you interact with your routes:
-- Red dot button allows you to start/stop recording of a route
-- Green plus button allows you to place a route point at your current position in the current route. *Note:* it's very important to only use this functionality either in the middle of recording, at the end or start of the route. **Never** try to randomly add a point far from your last placed route point. This will break the route.
-- Green fire button allows you to add a hearthfire route point. Hearthfire route points are special points that do not appear in a route. To define a hearthfire route point go to your hearthfire and click the button. Your character will navigate to the hearthfire and set a route point.
-- If you check the `Use Hearth Fires in Global PF` and set the hearthfire route point during navigation the client will calculate weather traveling to your hearthfire is faster than walking the route to get to the destination. If it is it will travel to hearthfire.
-*Note:* if you are only starting out with using routes we highly recommend avoiding hearth fires. Get used to using routes without it first.
+The **Route Actions** panel is where you manage route creation and recording:
+
+- **Red dot:** Start or stop route recording
+- **Green plus:** Add a route point at your current location. *Note:* it's very important to only use this functionality either in the middle of recording, at the end or start of the route. **Important:** Only place points at the start, end, or midpoint of a route during recording. Randomly adding points far from the last will break the route.
+- **Green fire:** Add a **hearthfire route point**. Hearthfire route points are special points that do not appear in a route. To define a hearthfire route point go to your hearthfire and click the button. Your character will navigate to the hearthfire and set a route point.
+- **Use Hearth Fires in Global PF:** When enabled, the system calculates whether traveling via a hearthfire is faster than walking the route. If so, it will use the hearthfire.
+
+*Tip:* Beginners are advised to avoid hearthfires initially. Master standard route creation before using hearthfire points.
 
 ## Creating Your First Route
 
-1. At the top right of the Routes UI click the green plus button. This will add a new route called something like `Route 0`.
-2. You can right-click the route and rename it if you'd like
+1. Click the **green plus** at the top right of the Routes UI. A new route will appear (e.g., Route 0).
+2. Right-click the route to rename it if desired.
 3. Think of two areas in your village you would like to be connected. A good example could be going from `Outside` to `L3` or from `Outside` to the second floor of your `Stonestead` where your bed is.
-4. Once you are ready to record your route click the red dot button. This will start the route recording process.
-5. Start running to your destination. You will notice that every time you cover a small distance your character stops and gets anchored to a point. This is expected, a lot of calculations have to happen based on your position, which takes a bit of time. Input is disabled during this process until you see a white dot appear under your character. Once the dot appears continue walking. Feel free to walk through doors/mineholes/ladders - the routes system knows how to handle these.
-6. Once you've arrived at your destination press the red dot button again. This will stop the recording process.
+4. Click the **red dot** to begin recording.
+5. Travel to your destination. Your character will pause periodically to calculate route points—input is temporarily disabled until a **white dot** appears under your character. Continue walking normally, passing through doors, ladders, or mineholes as needed; the system automatically handles these.
+6. Press the **red dot** again to stop recording once you reach your destination.
 
-Now you've created your first route. You can try testing it by clicking one of the route points in the `Route Info` list at the bottom of the Routes UI. Your character should navigate to the point you've clicked.
+Your first route is now complete. Test it by clicking a route point in the **Route Info** panel—the character should navigate to the selected point.
 
-As you create more routes they will connect to each other if two points from two different routes are located close to each other. This will form a web around your village, which will allow some of the bots to create new paths to navigate around your village.
+As more routes are recorded, nearby points from different routes will automatically connect, creating a **network** that allows bots to find new paths across your village.
 
 ## Example Usage
 
-Let's pretend you have a bunch of items in your inventory. Maybe you just came back from looting an abandoned village.
+Suppose your inventory is full after looting:
 
 ![Inventory](../images/routes/inventory.png)
 
-And let's also pretend you have a zone set up for each of these items. Each one of these areas simply has the item in the PUT section, meaning these areas are designated storage for the item.
+And you have designated areas for each item in the PUT section of the zone setup:
 
 ![Areas](../images/routes/areas.png)
 
 For this scenario to work we have to make sure all areas are reachable via a route or multiple routes. Here is a good example of a route point that is connected to a few areas. 
 
-*Note:* the connection between route points and areas happen automatically as you record routes.
-*Note:* green lines signify a connection between a route point and an area, orange lines signify a connection between individual route points.
+*Note:* Connections between route points and areas are established automatically during route recording.
+*Note:* **Green lines:** connection between a route point and an area. **Orange lines** Connection between individual route points.
 
 ![area_route_point_connection.png](../images/routes/area_route_point_connection.png)
 
-Once everything is setup correctly we can press the button for the bot called `Free Inventory` and our character will deposit all items into their designated areas using the routes we've created to connect these areas.
+Once configured, use the `Free Inventory` bot to deposit items into their designated areas using the routes you created.
 
 ## Tips
 
-1. Sometimes when recording a route the automatic route point placement might not end up being to your liking. For these cases we've added an ability to adjust the placement of a route point. Simply select the route which contains the route point you'd like to move, click and hold the route point and adjust the placement. The placement adjustment is limited to a 5x5 radius.
+1. If a route point is misplaced during recording, you can adjust it: select the route, click and hold the point, and move it within a 5x5 radius for fine-tuning.
 
-2. ![move_route_point.png](../images/routes/move_route_point.png)
+![move_route_point.png](../images/routes/move_route_point.png)
