@@ -293,7 +293,6 @@ public class MapWnd extends Window implements Console.Directory {
 	}
 
 	public boolean clickmarker(DisplayMarker mark, Location loc, int button, boolean press) {
-		System.out.println("Clicked 1");
 	    if(button == 1) {
 		if(!compact() && !press && !domark) {
 		    focus(mark.m);
