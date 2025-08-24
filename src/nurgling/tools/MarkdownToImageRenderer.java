@@ -62,9 +62,17 @@ public class MarkdownToImageRenderer {
                     elements.add(new MarkdownElement(ElementType.IMAGE, imagePath, documentKey));
                 }
                 
-            } else if (line.matches("^\\d+\\.\\s.*") || line.matches("^[-*]\\s.*")) {
-                String listText = line.replaceFirst("^(\\d+\\.|[-*])\\s*", "");
-                elements.add(new MarkdownElement(ElementType.LIST_ITEM, listText, null));
+            } else if (line.matches("^\\d+\\.\\s.*")) {
+                String listText = line.replaceFirst("^\\d+\\.\\s*", "");
+                // Extract number for numbered list
+                java.util.regex.Pattern numberPattern = java.util.regex.Pattern.compile("^(\\d+)\\.");
+                java.util.regex.Matcher numberMatcher = numberPattern.matcher(line);
+                Integer listNumber = numberMatcher.find() ? Integer.parseInt(numberMatcher.group(1)) : 1;
+                elements.add(new MarkdownElement(ElementType.NUMBERED_LIST_ITEM, listText, listNumber));
+                
+            } else if (line.matches("^[-*]\\s.*")) {
+                String listText = line.replaceFirst("^[-*]\\s*", "");
+                elements.add(new MarkdownElement(ElementType.BULLET_LIST_ITEM, listText, null));
                 
             } else {
                 // Regular paragraph - parse inline formatting
@@ -209,15 +217,15 @@ public class MarkdownToImageRenderer {
             } else if (element.type == ElementType.IMAGE) {
                 lines.add(new DocumentLine(element));
                 
-            } else if (element.type == ElementType.LIST_ITEM) {
+            } else if (element.type == ElementType.BULLET_LIST_ITEM || element.type == ElementType.NUMBERED_LIST_ITEM) {
                 // Convert list item text to spans and fit to lines
                 java.util.List<TextSpan> spans = parseInlineFormatting(element.textContent);
-                fitSpansToLines(spans, maxWidth - 40, g2d, lines, true); // Indent list items
+                fitSpansToLines(spans, maxWidth - 40, g2d, lines, element); // Pass element for marker info
                 
             } else if (element.type == ElementType.PARAGRAPH) {
                 @SuppressWarnings("unchecked")
                 java.util.List<TextSpan> spans = (java.util.List<TextSpan>) element.content;
-                fitSpansToLines(spans, maxWidth, g2d, lines, false);
+                fitSpansToLines(spans, maxWidth, g2d, lines, null);
             }
         }
         
@@ -226,12 +234,13 @@ public class MarkdownToImageRenderer {
     }
     
     private static void fitSpansToLines(java.util.List<TextSpan> spans, int maxWidth, Graphics2D g2d, 
-                                      java.util.List<DocumentLine> lines, boolean isListItem) {
+                                      java.util.List<DocumentLine> lines, MarkdownElement listElement) {
         DocumentLine currentLine = new DocumentLine();
-        boolean isFirstLineOfList = isListItem;
+        boolean isListItem = (listElement != null && (listElement.type == ElementType.BULLET_LIST_ITEM || listElement.type == ElementType.NUMBERED_LIST_ITEM));
         
-        if (isFirstLineOfList) {
+        if (isListItem) {
             currentLine.isListItem = true;
+            currentLine.listElement = listElement; // Store list element for rendering
         }
         
         for (TextSpan span : spans) {
@@ -258,6 +267,7 @@ public class MarkdownToImageRenderer {
                     currentLine.isListItem = false;
                     if (isListItem) {
                         currentLine.isListContinuation = true; // Mark as continuation
+                        currentLine.listElement = listElement; // Preserve list element for continuation
                     }
                     currentLine.spans.add(wordSpan);
                 }
@@ -344,10 +354,16 @@ public class MarkdownToImageRenderer {
                     // For now, we'll handle this in the layout phase
                 }
                 
-                if (line.isListItem) {
+                if (line.isListItem && line.listElement != null) {
                     g2d.setColor(java.awt.Color.WHITE);
                     g2d.setFont(new Font("Arial", Font.PLAIN, UI.scale(12)));
-                    g2d.drawString("•", x, y);
+                    
+                    if (line.listElement.type == ElementType.BULLET_LIST_ITEM) {
+                        g2d.drawString("•", x, y);
+                    } else if (line.listElement.type == ElementType.NUMBERED_LIST_ITEM) {
+                        Integer listNumber = (Integer) line.listElement.content;
+                        g2d.drawString(listNumber + ".", x, y);
+                    }
                     x += 20; // Indent for list content
                 } else if (line.isListContinuation) {
                     // Indent continuation lines but no bullet
@@ -403,6 +419,7 @@ public class MarkdownToImageRenderer {
         MarkdownElement element; // For non-text elements like images
         boolean isListItem = false;
         boolean isListContinuation = false; // For wrapped list content
+        MarkdownElement listElement; // For storing list element info (bullet vs numbered)
         
         DocumentLine() {}
         
@@ -422,7 +439,7 @@ public class MarkdownToImageRenderer {
     }
     
     private enum ElementType {
-        PARAGRAPH, HEADER, IMAGE, LIST_ITEM, PARAGRAPH_BREAK
+        PARAGRAPH, HEADER, IMAGE, BULLET_LIST_ITEM, NUMBERED_LIST_ITEM, PARAGRAPH_BREAK
     }
     
     private enum TextStyle {
@@ -478,7 +495,7 @@ public class MarkdownToImageRenderer {
     }
     
     private static String resolveRelativePath(String basePath, String relativePath) {
-        // Handle relative paths like ../images/img.png
+        // Handle relative paths like ../images/routes_main_ui.png
         if (relativePath.startsWith("./")) {
             relativePath = relativePath.substring(2);
         }
