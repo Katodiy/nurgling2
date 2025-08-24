@@ -5,42 +5,52 @@ import nurgling.ResourceTimer;
 import nurgling.ResourceTimerManager;
 
 public class ResourceTimerWidget extends Window {
-    private final MapFile.SMarker marker;
-    private final MiniMap.Location location;
-    private final String resourceDisplayName;
-    private final ResourceTimer existingTimer;
+    private MapFile.SMarker currentMarker;
+    private MiniMap.Location currentLocation;
+    private String currentResourceDisplayName;
+    private ResourceTimer currentExistingTimer;
     
     private TextEntry hoursEntry;
     private TextEntry minutesEntry;
+    private Label titleLabel;
+    private Label existingTimerLabel;
+    private Button removeButton;
     
-    public ResourceTimerWidget(MapFile.SMarker marker, MiniMap.Location location, String resourceDisplayName) {
-        super(new Coord(300, 150), "Resource Timer");
-        this.marker = marker;
-        this.location = location;
-        this.resourceDisplayName = resourceDisplayName;
+    public ResourceTimerWidget() {
+        super(UI.scale(new Coord(400, 140)), "Resource Timer");
+        initializeWidgets();
+        hide(); // Start hidden
+    }
+    
+    public void showForMarker(MapFile.SMarker marker, MiniMap.Location location, String resourceDisplayName) {
+        this.currentMarker = marker;
+        this.currentLocation = location;
+        this.currentResourceDisplayName = resourceDisplayName;
         
         // Check if timer already exists
         ResourceTimerManager manager = ResourceTimerManager.getInstance();
-        this.existingTimer = manager.getTimer(marker.seg, marker.tc, marker.res.name);
+        this.currentExistingTimer = manager.getTimer(marker.seg, marker.tc, marker.res.name);
         
-        initializeWidgets();
+        updateWidgetContent();
+        show();
     }
     
     private void initializeWidgets() {
-        int y = 10;
+        int y = UI.scale(5);
         
         // Title label
-        add(new Label("Set timer for: " + resourceDisplayName), new Coord(10, y));
-        y += 25;
+        titleLabel = new Label("Set timer for: ");
+        add(titleLabel, UI.scale(new Coord(10, y)));
+        y += UI.scale(18);
         
-        if(existingTimer != null) {
-            add(new Label("Existing timer: " + existingTimer.getFormattedRemainingTime()), new Coord(10, y));
-            y += 25;
-        }
+        // Existing timer label (initially empty)
+        existingTimerLabel = new Label("");
+        add(existingTimerLabel, UI.scale(new Coord(10, y)));
+        y += UI.scale(18);
         
-        // Hours input
-        add(new Label("Hours:"), new Coord(10, y));
-        hoursEntry = new TextEntry(50, "") {
+        // Input line: [hours] hrs [minutes] mins
+        int inputY = y;
+        hoursEntry = new TextEntry(UI.scale(40), "") {
             @Override
             public boolean keydown(KeyDownEvent ev) {
                 // Only allow digits
@@ -53,12 +63,11 @@ public class ResourceTimerWidget extends Window {
                 return true; // consume other keys
             }
         };
-        add(hoursEntry, new Coord(60, y));
-        y += 30;
+        add(hoursEntry, UI.scale(new Coord(10, inputY)));
         
-        // Minutes input  
-        add(new Label("Minutes:"), new Coord(10, y));
-        minutesEntry = new TextEntry(50, "") {
+        add(new Label("hrs"), UI.scale(new Coord(55, inputY + 3)));
+        
+        minutesEntry = new TextEntry(UI.scale(40), "") {
             @Override
             public boolean keydown(KeyDownEvent ev) {
                 // Only allow digits
@@ -71,37 +80,58 @@ public class ResourceTimerWidget extends Window {
                 return true; // consume other keys
             }
         };
-        add(minutesEntry, new Coord(60, y));
-        y += 40;
+        add(minutesEntry, UI.scale(new Coord(85, inputY)));
         
-        // Buttons
-        Button saveButton = new Button(60, "Save") {
+        add(new Label("mins"), UI.scale(new Coord(130, inputY + 3)));
+        
+        y += UI.scale(30);
+        
+        // Buttons with consistent spacing - always reserve space for Remove button
+        Button saveButton = new Button(UI.scale(65), "Save") {
             @Override
             public void click() {
                 saveTimer();
             }
         };
-        add(saveButton, new Coord(50, y));
+        add(saveButton, UI.scale(new Coord(10, y)));
         
-        Button cancelButton = new Button(60, "Cancel") {
+        Button cancelButton = new Button(UI.scale(65), "Cancel") {
             @Override
             public void click() {
                 close();
             }
         };
-        add(cancelButton, new Coord(120, y));
+        add(cancelButton, UI.scale(new Coord(85, y)));
         
-        if(existingTimer != null) {
-            Button removeButton = new Button(60, "Remove") {
-                @Override
-                public void click() {
-                    removeTimer();
-                }
-            };
-            add(removeButton, new Coord(190, y));
+        // Remove button (initially hidden) - always positioned consistently
+        removeButton = new Button(UI.scale(65), "Remove") {
+            @Override
+            public void click() {
+                removeTimer();
+            }
+        };
+        add(removeButton, UI.scale(new Coord(160, y)));
+        removeButton.hide();
+    }
+    
+    private void updateWidgetContent() {
+        // Update title
+        titleLabel.settext("Set timer for: " + currentResourceDisplayName);
+        
+        // Update existing timer info
+        if(currentExistingTimer != null) {
+            existingTimerLabel.settext("Existing timer: " + currentExistingTimer.getFormattedRemainingTime());
+            existingTimerLabel.show();
+            removeButton.show();
+        } else {
+            existingTimerLabel.settext("");
+            existingTimerLabel.hide();
+            removeButton.hide();
         }
         
-        pack();
+        // Clear input fields
+        hoursEntry.settext("");
+        minutesEntry.settext("");
     }
     
     private void saveTimer() {
@@ -127,13 +157,13 @@ public class ResourceTimerWidget extends Window {
             ResourceTimerManager manager = ResourceTimerManager.getInstance();
             
             // Remove existing timer if present
-            if(existingTimer != null) {
-                manager.removeTimer(existingTimer.getResourceId());
+            if(currentExistingTimer != null) {
+                manager.removeTimer(currentExistingTimer.getResourceId());
             }
             
             // Add new timer
-            manager.addTimer(marker.seg, marker.tc, marker.nm, marker.res.name, 
-                           duration, resourceDisplayName);
+            manager.addTimer(currentMarker.seg, currentMarker.tc, currentMarker.nm, currentMarker.res.name, 
+                           duration, currentResourceDisplayName);
             
             close();
             
@@ -145,8 +175,8 @@ public class ResourceTimerWidget extends Window {
     }
     
     private void removeTimer() {
-        if(existingTimer != null) {
-            ResourceTimerManager.getInstance().removeTimer(existingTimer.getResourceId());
+        if(currentExistingTimer != null) {
+            ResourceTimerManager.getInstance().removeTimer(currentExistingTimer.getResourceId());
             close();
         }
     }
@@ -157,7 +187,7 @@ public class ResourceTimerWidget extends Window {
     }
     
     private void close() {
-        ui.destroy(this);
+        hide();
     }
     
     @Override
@@ -167,5 +197,14 @@ public class ResourceTimerWidget extends Window {
             return true;
         }
         return super.keydown(ev);
+    }
+
+    @Override
+    public void wdgmsg(String msg, Object... args) {
+        if(msg.equals("close")) {
+            hide();
+        } else {
+            super.wdgmsg(msg, args);
+        }
     }
 }

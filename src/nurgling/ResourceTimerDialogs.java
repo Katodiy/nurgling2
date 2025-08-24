@@ -10,18 +10,19 @@ import nurgling.NUtils;
 public class ResourceTimerDialogs {
     
     /**
-     * Show resource timer dialog - creates in-game widget
+     * Show resource timer dialog - uses persistent widget in NGameUI
      */
     public static void showResourceTimerDialog(MapFile.SMarker marker, MiniMap.Location loc) {
-        String resourceDisplayName = getResourceDisplayName(marker.res.name);
+        // Use the marker's name (.nm) for display, fallback to processed resource name if null
+        String displayName = marker.nm != null ? marker.nm : getResourceDisplayName(marker.res.name);
         
-        // Create and show the in-game widget
-        ResourceTimerWidget widget = new ResourceTimerWidget(marker, loc, resourceDisplayName);
-        
-        // Get the game UI and add the widget
-        GameUI gui = NUtils.getGameUI();
+        // Get the persistent widget from NGameUI
+        NGameUI gui = (NGameUI) NUtils.getGameUI();
         if(gui != null) {
-            gui.add(widget, new Coord(200, 200)); // Position the widget
+            ResourceTimerWidget widget = gui.getResourceTimerWidget();
+            if(widget != null) {
+                widget.showForMarker(marker, loc, displayName);
+            }
         }
     }
     

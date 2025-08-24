@@ -16,6 +16,7 @@ import nurgling.widgets.TrackingStatusBuff;
 import nurgling.widgets.CrimeStatusBuff;
 import nurgling.widgets.AllowVisitingStatusBuff;
 import nurgling.widgets.ResourceTimerWindow;
+import nurgling.widgets.ResourceTimerWidget;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -48,6 +49,7 @@ public class NGameUI extends GameUI
     private AllowVisitingStatusBuff allowVisitingBuff = null;
     public NRecentActionsPanel recentActionsPanel;
     private ResourceTimerWindow resourceTimerWindow = null;
+    private ResourceTimerWidget resourceTimerWidget = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -76,6 +78,7 @@ public class NGameUI extends GameUI
         add(routespec = new RouteSpecialization());
         routespec.hide();
         add(biw = new BotsInterruptWidget());
+        add(resourceTimerWidget = new ResourceTimerWidget(), new Coord(200, 200));
     }
 
     @Override
@@ -791,5 +794,9 @@ public class NGameUI extends GameUI
         } else {
             resourceTimerWindow.hide();
         }
+    }
+    
+    public ResourceTimerWidget getResourceTimerWidget() {
+        return resourceTimerWidget;
     }
 }
