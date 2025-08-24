@@ -2,7 +2,7 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.NUtils;
-import nurgling.ResourceTimerDialogs;
+import nurgling.ResourceTimerUtils;
 
 import java.util.Map;
 
@@ -83,8 +83,8 @@ public class NMapWnd extends MapWnd {
             MapFile.SMarker smarker = (MapFile.SMarker) marker.m;
             
             // Check if this is a localized resource (map resource)
-            if(ResourceTimerDialogs.isTimerSupportedResource(smarker.res.name)) {
-                ResourceTimerDialogs.showResourceTimerDialog(smarker, clickLoc);
+            if(ResourceTimerUtils.isTimerSupportedResource(smarker.res.name)) {
+                ResourceTimerUtils.showResourceTimerDialog(smarker, clickLoc);
                 return true;
             }
         }

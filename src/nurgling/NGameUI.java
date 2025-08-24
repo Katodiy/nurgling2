@@ -81,6 +81,7 @@ public class NGameUI extends GameUI
         add(biw = new BotsInterruptWidget());
         add(resourceTimerWidget = new ResourceTimerWidget(), new Coord(200, 200));
         resourceTimerManager = new ResourceTimerManager();
+        add(resourceTimerWindow = new ResourceTimerWindow(), new Coord(100, 100));
     }
 
     @Override
@@ -790,13 +791,12 @@ public class NGameUI extends GameUI
     }
     
     private void toggleResourceTimerWindow() {
-        if(resourceTimerWindow == null || !resourceTimerWindow.visible()) {
-            if(resourceTimerWindow == null) {
-                resourceTimerWindow = add(new ResourceTimerWindow(), new Coord(100, 100));
+        if(resourceTimerWindow != null) {
+            if(resourceTimerWindow.visible()) {
+                resourceTimerWindow.hide();
+            } else {
+                resourceTimerWindow.show();
             }
-            resourceTimerWindow.show();
-        } else {
-            resourceTimerWindow.hide();
         }
     }
     

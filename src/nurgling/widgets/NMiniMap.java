@@ -5,8 +5,6 @@ import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.ResourceTimer;
-import nurgling.ResourceTimerManager;
-import nurgling.ResourceTimerDialogs;
 import nurgling.NGameUI;
 import nurgling.tools.FogArea;
 

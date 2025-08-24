@@ -5,6 +5,7 @@ import nurgling.ResourceTimer;
 import nurgling.ResourceTimerManager;
 import nurgling.NGameUI;
 import nurgling.NUtils;
+import nurgling.NStyle;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -15,23 +16,29 @@ import java.util.Comparator;
  * Window for managing resource timers
  */
 public class ResourceTimerWindow extends haven.Window {
-    private static final Coord WINDOW_SIZE = new Coord(400, 300);
-    private static final int ROW_HEIGHT = 20;
-    private static final Text.Foundry headerFont = new Text.Foundry(Text.dfont, 12).aa(true);
-    private static final Text.Foundry contentFont = new Text.Foundry(Text.dfont, 10).aa(true);
+    private static final Coord WINDOW_SIZE = UI.scale(new Coord(450, 350));
     
-    private final ResourceTimerManager manager;
-    private List<ResourceTimer> displayedTimers = new ArrayList<>();
-    private int scrollOffset = 0;
-    private final haven.Scrollbar scrollbar;
+    private ResourceTimerManager manager;
+    private final ArrayList<TimerItem> items = new ArrayList<>();
+    private TimerList timerList;
     
     public ResourceTimerWindow() {
         super(WINDOW_SIZE, "Resource Timers");
+        
+        // Create the timer list
+        timerList = add(new TimerList(new Coord(WINDOW_SIZE.x - UI.scale(20), WINDOW_SIZE.y - UI.scale(40))), 
+                       UI.scale(new Coord(10, 30)));
+        
+        hide(); // Start hidden
+    }
+    
+    @Override
+    public void show() {
+        // Refresh manager reference when showing
         NGameUI gui = (NGameUI) NUtils.getGameUI();
         this.manager = gui != null ? gui.resourceTimerManager : null;
-        this.scrollbar = adda(new haven.Scrollbar(WINDOW_SIZE.y - 40, 0, 0), 
-                             WINDOW_SIZE.x - 20, 20);
         refreshTimers();
+        super.show();
     }
     
     @Override
@@ -40,177 +47,158 @@ public class ResourceTimerWindow extends haven.Window {
     }
     
     private void refreshTimers() {
-        if(manager == null) {
-            displayedTimers = new ArrayList<>();
-            return;
-        }
-        displayedTimers = new ArrayList<>(manager.getAllTimers());
-        // Sort by remaining time (expired first, then by time remaining)
-        Collections.sort(displayedTimers, new Comparator<ResourceTimer>() {
-            @Override
-            public int compare(ResourceTimer a, ResourceTimer b) {
-                boolean aExpired = a.isExpired();
-                boolean bExpired = b.isExpired();
+        synchronized (items) {
+            items.clear();
+            if(manager != null) {
+                List<ResourceTimer> timers = new ArrayList<>(manager.getAllTimers());
+                // Sort by remaining time (expired first, then by time remaining)
+                Collections.sort(timers, new Comparator<ResourceTimer>() {
+                    @Override
+                    public int compare(ResourceTimer a, ResourceTimer b) {
+                        boolean aExpired = a.isExpired();
+                        boolean bExpired = b.isExpired();
+                        
+                        if(aExpired != bExpired) {
+                            return aExpired ? -1 : 1; // Expired timers first
+                        }
+                        
+                        // Both expired or both active - sort by remaining time
+                        return Long.compare(a.getRemainingTime(), b.getRemainingTime());
+                    }
+                });
                 
-                if(aExpired != bExpired) {
-                    return aExpired ? -1 : 1; // Expired timers first
-                }
-                
-                // Both expired or both active - sort by remaining time
-                return Long.compare(a.getRemainingTime(), b.getRemainingTime());
-            }
-        });
-        
-        updateScrollbar();
-    }
-    
-    private void updateScrollbar() {
-        int maxVisible = (WINDOW_SIZE.y - 60) / ROW_HEIGHT;
-        int maxScroll = Math.max(0, displayedTimers.size() - maxVisible);
-        scrollbar.max = maxScroll;
-        scrollbar.val = Math.min(scrollOffset, maxScroll);
-    }
-    
-    @Override
-    public void draw(GOut g) {
-        super.draw(g);
-        drawTimerList(g);
-    }
-    
-    private void drawTimerList(GOut g) {
-        // Draw header
-        g.chcolor(java.awt.Color.WHITE);
-        g.atext("Resource Timers", new Coord(WINDOW_SIZE.x / 2, 15), 0.5, 0.5);
-        
-        // Draw column headers
-        int headerY = 35;
-        g.chcolor(java.awt.Color.LIGHT_GRAY);
-        g.image(headerFont.render("Resource", java.awt.Color.LIGHT_GRAY).tex(), new Coord(10, headerY));
-        g.image(headerFont.render("Time Left", java.awt.Color.LIGHT_GRAY).tex(), new Coord(200, headerY));
-        g.image(headerFont.render("Action", java.awt.Color.LIGHT_GRAY).tex(), new Coord(320, headerY));
-        
-        // Draw separator line
-        g.chcolor(java.awt.Color.GRAY);
-        g.line(new Coord(5, headerY + 15), new Coord(WINDOW_SIZE.x - 25, headerY + 15), 1);
-        
-        // Draw timer entries
-        int startY = headerY + 25;
-        int maxVisible = (WINDOW_SIZE.y - startY - 10) / ROW_HEIGHT;
-        scrollOffset = scrollbar.val;
-        
-        for(int i = 0; i < Math.min(maxVisible, displayedTimers.size() - scrollOffset); i++) {
-            int timerIndex = i + scrollOffset;
-            if(timerIndex >= displayedTimers.size()) break;
-            
-            ResourceTimer timer = displayedTimers.get(timerIndex);
-            int rowY = startY + (i * ROW_HEIGHT);
-            
-            drawTimerRow(g, timer, rowY, timerIndex);
-        }
-        
-        g.chcolor();
-    }
-    
-    private void drawTimerRow(GOut g, ResourceTimer timer, int y, int index) {
-        // Highlight expired timers
-        if(timer.isExpired()) {
-            g.chcolor(0, 128, 0, 50); // Light green background for ready resources
-            g.frect(new Coord(5, y - 2), new Coord(WINDOW_SIZE.x - 30, ROW_HEIGHT));
-        }
-        
-        // Resource name
-        java.awt.Color textColor = timer.isExpired() ? java.awt.Color.GREEN : java.awt.Color.WHITE;
-        String displayName = timer.getDescription();
-        if(displayName.length() > 25) {
-            displayName = displayName.substring(0, 22) + "...";
-        }
-        g.image(contentFont.render(displayName, textColor).tex(), new Coord(10, y));
-        
-        // Time remaining
-        String timeText = timer.getFormattedRemainingTime();
-        g.image(contentFont.render(timeText, textColor).tex(), new Coord(200, y));
-        
-        // Remove button (small X)
-        g.image(contentFont.render("[X]", java.awt.Color.RED).tex(), new Coord(320, y));
-        
-        g.chcolor();
-    }
-    
-    @Override
-    public boolean mousedown(MouseDownEvent ev) {
-        Coord c = ev.c;
-        int button = ev.b;
-        // Check if clicking on remove buttons
-        if(button == 1) {
-            int headerY = 35;
-            int startY = headerY + 25;
-            int maxVisible = (WINDOW_SIZE.y - startY - 10) / ROW_HEIGHT;
-            
-            for(int i = 0; i < Math.min(maxVisible, displayedTimers.size() - scrollOffset); i++) {
-                int timerIndex = i + scrollOffset;
-                if(timerIndex >= displayedTimers.size()) break;
-                
-                int rowY = startY + (i * ROW_HEIGHT);
-                
-                // Check if clicking on remove button
-                if(c.x >= 320 && c.x <= 340 && 
-                   c.y >= rowY - 2 && c.y <= rowY + ROW_HEIGHT - 2) {
-                    
-                    ResourceTimer timer = displayedTimers.get(timerIndex);
-                    manager.removeTimer(timer.getResourceId());
-                    refreshTimers();
-                    return true;
-                }
-                
-                // Check if clicking on timer row for details
-                if(c.x >= 5 && c.x <= 315 && 
-                   c.y >= rowY - 2 && c.y <= rowY + ROW_HEIGHT - 2) {
-                    
-                    ResourceTimer timer = displayedTimers.get(timerIndex);
-                    showTimerDetails(timer);
-                    return true;
+                for(ResourceTimer timer : timers) {
+                    items.add(new TimerItem(timer));
                 }
             }
         }
+    }
+    
+    // TimerItem class - represents individual timer entries
+    public class TimerItem extends Widget {
+        private final ResourceTimer timer;
+        private Label nameLabel;
+        private Label timeLabel;
+        private IButton removeButton;
         
-        return super.mousedown(ev);
+        public TimerItem(ResourceTimer timer) {
+            this.timer = timer;
+            
+            // Create name label
+            String displayName = timer.getDescription();
+            if(displayName.length() > 30) {
+                displayName = displayName.substring(0, 27) + "...";
+            }
+            nameLabel = add(new Label(displayName), UI.scale(new Coord(5, 2)));
+            
+            // Create time label
+            String timeText = timer.getFormattedRemainingTime();
+            timeLabel = add(new Label(timeText), UI.scale(new Coord(250, 2)));
+            
+            // Create remove button
+            removeButton = add(new IButton(NStyle.removei[0].back, NStyle.removei[1].back, NStyle.removei[2].back) {
+                @Override
+                public void click() {
+                    if(manager != null) {
+                        manager.removeTimer(TimerItem.this.timer.getResourceId());
+                        refreshTimers();
+                    }
+                }
+            }, UI.scale(new Coord(380, 0)));
+            removeButton.settip("Remove timer");
+            
+            pack();
+        }
+        
+        @Override
+        public boolean mousedown(MouseDownEvent ev) {
+            if(ev.b == 1) {
+                showTimerDetails(timer);
+                return true;
+            }
+            return super.mousedown(ev);
+        }
+        
+        @Override
+        public void draw(GOut g) {
+            // Highlight expired timers with background
+            if(timer.isExpired()) {
+                g.chcolor(0, 128, 0, 30);
+                g.frect(Coord.z, sz);
+                g.chcolor();
+            }
+            
+            // Draw the widget normally first
+            super.draw(g);
+            
+            // Override text color for expired timers
+            if(timer.isExpired()) {
+                Text.Foundry fnd = new Text.Foundry(Text.dfont, 12).aa(true);
+                g.chcolor(java.awt.Color.GREEN);
+                
+                // Redraw name text in green
+                String displayName = timer.getDescription();
+                if(displayName.length() > 30) {
+                    displayName = displayName.substring(0, 27) + "...";
+                }
+                g.image(fnd.render(displayName, java.awt.Color.GREEN).tex(), nameLabel.c);
+                
+                // Redraw time text in green
+                String timeText = timer.getFormattedRemainingTime();
+                g.image(fnd.render(timeText, java.awt.Color.GREEN).tex(), timeLabel.c);
+                
+                g.chcolor();
+            }
+        }
+    }
+    
+    // TimerList class - scrollable list of timers
+    public class TimerList extends SListBox<TimerItem, Widget> {
+        TimerList(Coord sz) {
+            super(sz, UI.scale(25)); // 25 pixel row height
+        }
+        
+        public List<TimerItem> items() {
+            synchronized (items) {
+                return items;
+            }
+        }
+        
+        protected Widget makeitem(TimerItem item, int idx, Coord sz) {
+            return new ItemWidget<TimerItem>(this, sz, item) {
+                {
+                    add(item);
+                }
+            };
+        }
+        
+        @Override
+        public void resize(Coord sz) {
+            super.resize(sz);
+        }
     }
     
     private void showTimerDetails(ResourceTimer timer) {
-        // Show detailed information about the timer
+        // Navigate to resource on click for now, show details in game message
         String details = String.format(
-            "Resource: %s\n" +
-            "Location: Segment %d, (%d, %d)\n" +
-            "Started: %s\n" +
-            "Duration: %s\n" +
-            "Remaining: %s\n" +
-            "Status: %s",
+            "Timer: %s | Location: Segment %d (%d, %d) | %s | %s",
             timer.getDescription(),
             timer.getSegmentId(),
             timer.getTileCoords().x, timer.getTileCoords().y,
-            formatTimestamp(timer.getStartTime()),
-            formatDuration(timer.getDuration()),
             timer.getFormattedRemainingTime(),
-            timer.isExpired() ? "Ready for collection" : "Cooling down"
+            timer.isExpired() ? "Ready!" : "Cooling down"
         );
         
-        Object[] options = {"Navigate to Resource", "Remove Timer", "Close"};
-        int choice = javax.swing.JOptionPane.showOptionDialog(
-            null, details, "Timer Details: " + timer.getDescription(),
-            javax.swing.JOptionPane.YES_NO_CANCEL_OPTION,
-            javax.swing.JOptionPane.INFORMATION_MESSAGE,
-            null, options, options[2]);
-            
-        switch(choice) {
-            case 0: // Navigate to resource
-                navigateToResource(timer);
-                break;
-            case 1: // Remove timer
-                manager.removeTimer(timer.getResourceId());
-                refreshTimers();
-                break;
-            // case 2 or default: Close (do nothing)
+        // Show details in game chat
+        if(this.ui instanceof nurgling.NUI) {
+            nurgling.NUI nui = (nurgling.NUI)this.ui;
+            if(nui.gui != null) {
+                nui.gui.msg(details, java.awt.Color.CYAN);
+            }
         }
+        
+        // Automatically navigate to the resource
+        navigateToResource(timer);
     }
     
     private void navigateToResource(ResourceTimer timer) {
@@ -233,9 +221,13 @@ public class ResourceTimerWindow extends haven.Window {
                 }
             }
         } catch(Exception e) {
-            javax.swing.JOptionPane.showMessageDialog(null, 
-                "Error navigating to resource: " + e.getMessage(), 
-                "Navigation Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            // Show error in game message instead of dialog
+            if(this.ui instanceof nurgling.NUI) {
+                nurgling.NUI nui = (nurgling.NUI)this.ui;
+                if(nui.gui != null) {
+                    nui.gui.msg("Navigation error: " + e.getMessage(), java.awt.Color.RED);
+                }
+            }
         }
     }
     
@@ -257,12 +249,13 @@ public class ResourceTimerWindow extends haven.Window {
         }
     }
     
+    
     @Override
-    public void wdgmsg(Widget sender, String msg, Object... args) {
-        if(sender == scrollbar && msg.equals("changed")) {
-            scrollOffset = scrollbar.val;
+    public void wdgmsg(String msg, Object... args) {
+        if(msg.equals("close")) {
+            hide();
         } else {
-            super.wdgmsg(sender, msg, args);
+            super.wdgmsg(msg, args);
         }
     }
     

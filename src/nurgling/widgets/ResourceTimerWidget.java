@@ -2,7 +2,6 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.ResourceTimer;
-import nurgling.ResourceTimerManager;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 
