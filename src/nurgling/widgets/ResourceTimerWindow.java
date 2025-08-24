@@ -199,7 +199,7 @@ public class ResourceTimerWindow extends Window {
     }
     
     private void showTimerDetails(ResourceTimer timer) {
-        // Navigate to resource on click for now, show details in game message
+        // Show details and navigate to resource
         String details = String.format(
             "Timer: %s | Location: Segment %d (%d, %d) | %s | %s",
             timer.getDescription(),
@@ -209,88 +209,66 @@ public class ResourceTimerWindow extends Window {
             timer.isExpired() ? "Ready!" : "Cooling down"
         );
         
-        // Show details in game chat
-        if(this.ui instanceof nurgling.NUI) {
-            nurgling.NUI nui = (nurgling.NUI)this.ui;
-            if(nui.gui != null) {
-                nui.gui.msg(details, java.awt.Color.CYAN);
-            }
-        }
-        
-        // Automatically navigate to the resource
+        showMessage(details, java.awt.Color.CYAN);
         navigateToResource(timer);
     }
     
+    private void showMessage(String message, java.awt.Color color) {
+        nurgling.NUI nui = getNUI();
+        if(nui != null && nui.gui != null) {
+            nui.gui.msg(message, color);
+        }
+    }
+    
+    private nurgling.NUI getNUI() {
+        return (this.ui instanceof nurgling.NUI) ? (nurgling.NUI)this.ui : null;
+    }
+    
     private void navigateToResource(ResourceTimer timer) {
-        // Open the map window and center on the resource location
         try {
-            if(this.ui != null && this.ui instanceof nurgling.NUI) {
-                nurgling.NUI nui = (nurgling.NUI)this.ui;
-                if(nui.gui != null) {
-                    // Open the map window if it's not already open
-                    if(nui.gui.mapfile == null || !nui.gui.mapfile.visible()) {
-                        nui.gui.togglewnd(nui.gui.mapfile);
-                    }
-                    
-                    // Center both minimap and main map on the resource
-                    if(nui.gui.mmap != null) {
-                        // Find the segment and create a location
-                        MapFile.Segment segment = nui.gui.mmap.file.segments.get(timer.getSegmentId());
-                        if(segment != null) {
-                            MiniMap.Location targetLoc = new MiniMap.Location(segment, timer.getTileCoords());
-                            
-                            // Temporarily disable following to allow manual centering
-                            if(nui.gui.mmap instanceof nurgling.widgets.NMiniMapWnd.Map) {
-                                nurgling.widgets.NMiniMapWnd.Map miniMapWidget = (nurgling.widgets.NMiniMapWnd.Map) nui.gui.mmap;
-                                miniMapWidget.follow(null); // Stop following player
-                            }
-                            
-                            // Center the minimap
-                            nui.gui.mmap.center(targetLoc);
-                            
-                            // Center the main map if it exists
-                            if(nui.gui.mapfile != null && nui.gui.mapfile instanceof nurgling.widgets.NMapWnd) {
-                                nurgling.widgets.NMapWnd mapWnd = (nurgling.widgets.NMapWnd) nui.gui.mapfile;
-                                mapWnd.view.center(targetLoc);
-                                
-                                // Also disable following on main map view if it has it
-                                if(mapWnd.view instanceof MiniMap) {
-                                    ((MiniMap) mapWnd.view).follow(null);
-                                }
-                            }
-                        }
-                    }
+            nurgling.NUI nui = getNUI();
+            if(nui == null || nui.gui == null) return;
+            
+            openMapWindowIfNeeded(nui.gui);
+            
+            if(nui.gui.mmap != null) {
+                MapFile.Segment segment = nui.gui.mmap.file.segments.get(timer.getSegmentId());
+                if(segment != null) {
+                    MiniMap.Location targetLoc = new MiniMap.Location(segment, timer.getTileCoords());
+                    disablePlayerFollowing(nui.gui);
+                    centerMaps(nui.gui, targetLoc);
                 }
             }
         } catch(Exception e) {
-            // Show error in game message instead of dialog
-            if(this.ui instanceof nurgling.NUI) {
-                nurgling.NUI nui = (nurgling.NUI)this.ui;
-                if(nui.gui != null) {
-                    nui.gui.msg("Navigation error: " + e.getMessage(), java.awt.Color.RED);
-                }
+            showMessage("Navigation error: " + e.getMessage(), java.awt.Color.RED);
+        }
+    }
+    
+    private void openMapWindowIfNeeded(NGameUI gui) {
+        if(gui.mapfile == null || !gui.mapfile.visible()) {
+            gui.togglewnd(gui.mapfile);
+        }
+    }
+    
+    private void disablePlayerFollowing(NGameUI gui) {
+        if(gui.mmap instanceof nurgling.widgets.NMiniMapWnd.Map) {
+            nurgling.widgets.NMiniMapWnd.Map miniMapWidget = (nurgling.widgets.NMiniMapWnd.Map) gui.mmap;
+            miniMapWidget.follow(null);
+        }
+    }
+    
+    private void centerMaps(NGameUI gui, MiniMap.Location targetLoc) {
+        gui.mmap.center(targetLoc);
+        
+        if(gui.mapfile != null && gui.mapfile instanceof nurgling.widgets.NMapWnd) {
+            nurgling.widgets.NMapWnd mapWnd = (nurgling.widgets.NMapWnd) gui.mapfile;
+            mapWnd.view.center(targetLoc);
+            
+            if(mapWnd.view instanceof MiniMap) {
+                ((MiniMap) mapWnd.view).follow(null);
             }
         }
     }
-    
-    private String formatTimestamp(long timestamp) {
-        java.time.Instant instant = java.time.Instant.ofEpochMilli(timestamp);
-        java.time.LocalDateTime dateTime = java.time.LocalDateTime.ofInstant(
-            instant, java.time.ZoneId.systemDefault());
-        return dateTime.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, HH:mm"));
-    }
-    
-    private String formatDuration(long durationMs) {
-        long hours = durationMs / (1000 * 60 * 60);
-        long minutes = (durationMs % (1000 * 60 * 60)) / (1000 * 60);
-        
-        if(hours > 0) {
-            return String.format("%dh %dm", hours, minutes);
-        } else {
-            return String.format("%dm", minutes);
-        }
-    }
-    
     
     @Override
     public void wdgmsg(String msg, Object... args) {

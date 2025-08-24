@@ -12,10 +12,8 @@ public class ResourceTimerUtils {
      * Show resource timer dialog - uses persistent widget in NGameUI
      */
     public static void showResourceTimerDialog(MapFile.SMarker marker, MiniMap.Location loc) {
-        // Use the marker's name (.nm) for display, fallback to processed resource name if null
         String displayName = marker.nm != null ? marker.nm : marker.res.name;
         
-        // Get the persistent widget from NGameUI
         NGameUI gui = (NGameUI) NUtils.getGameUI();
         if(gui != null) {
             ResourceTimerWidget widget = gui.getResourceTimerWidget();

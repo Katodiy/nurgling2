@@ -7,7 +7,6 @@ import nurgling.NUtils;
 
 public class ResourceTimerWidget extends Window {
     private MapFile.SMarker currentMarker;
-    private MiniMap.Location currentLocation;
     private String currentResourceDisplayName;
     private ResourceTimer currentExistingTimer;
     
@@ -25,11 +24,10 @@ public class ResourceTimerWidget extends Window {
     
     public void showForMarker(MapFile.SMarker marker, MiniMap.Location location, String resourceDisplayName) {
         this.currentMarker = marker;
-        this.currentLocation = location;
         this.currentResourceDisplayName = resourceDisplayName;
         
         // Check if timer already exists
-        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        NGameUI gui = getGameUI();
         if(gui != null && gui.resourceTimerManager != null) {
             this.currentExistingTimer = gui.resourceTimerManager.getTimer(marker.seg, marker.tc, marker.res.name);
         }
@@ -139,36 +137,23 @@ public class ResourceTimerWidget extends Window {
     
     private void saveTimer() {
         try {
-            String hoursText = hoursEntry.text().trim();
-            String minutesText = minutesEntry.text().trim();
+            int hours = parseTimeInput(hoursEntry.text().trim());
+            int minutes = parseTimeInput(minutesEntry.text().trim());
             
-            int hours = hoursText.isEmpty() ? 0 : Integer.parseInt(hoursText);
-            int minutes = minutesText.isEmpty() ? 0 : Integer.parseInt(minutesText);
-            
-            if(hours < 0 || minutes < 0 || minutes >= 60) {
-                showError("Invalid time values. Minutes must be 0-59.");
+            if(!validateTimeInput(hours, minutes)) {
                 return;
             }
             
-            if(hours == 0 && minutes == 0) {
-                showError("Please enter a valid time.");
-                return;
-            }
+            long duration = (hours * 60L + minutes) * 60L * 1000L;
             
-            long duration = (hours * 60L + minutes) * 60L * 1000L; // Convert to milliseconds
-            
-            NGameUI gui = (NGameUI) NUtils.getGameUI();
+            NGameUI gui = getGameUI();
             if(gui != null && gui.resourceTimerManager != null) {
-                // Remove existing timer if present
                 if(currentExistingTimer != null) {
                     gui.resourceTimerManager.removeTimer(currentExistingTimer.getResourceId());
                 }
                 
-                // Add new timer
                 gui.resourceTimerManager.addTimer(currentMarker.seg, currentMarker.tc, currentMarker.nm, currentMarker.res.name, 
                                                duration, currentResourceDisplayName);
-                
-                // Refresh the timer window if it's open
                 gui.refreshResourceTimerWindow();
             }
             
@@ -183,19 +168,38 @@ public class ResourceTimerWidget extends Window {
     
     private void removeTimer() {
         if(currentExistingTimer != null) {
-            NGameUI gui = (NGameUI) NUtils.getGameUI();
+            NGameUI gui = getGameUI();
             if(gui != null && gui.resourceTimerManager != null) {
                 gui.resourceTimerManager.removeTimer(currentExistingTimer.getResourceId());
-                
-                // Refresh the timer window if it's open
                 gui.refreshResourceTimerWindow();
             }
             close();
         }
     }
     
+    private NGameUI getGameUI() {
+        return (NGameUI) NUtils.getGameUI();
+    }
+    
+    private int parseTimeInput(String input) {
+        return input.isEmpty() ? 0 : Integer.parseInt(input);
+    }
+    
+    private boolean validateTimeInput(int hours, int minutes) {
+        if(hours < 0 || minutes < 0 || minutes >= 60) {
+            showError("Invalid time values. Minutes must be 0-59.");
+            return false;
+        }
+        
+        if(hours == 0 && minutes == 0) {
+            showError("Please enter a valid time.");
+            return false;
+        }
+        
+        return true;
+    }
+    
     private void showError(String message) {
-        // For now, just print to console. Could be enhanced with in-game error display
         System.err.println("Resource Timer Error: " + message);
     }
     
