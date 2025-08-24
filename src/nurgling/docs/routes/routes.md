@@ -61,14 +61,27 @@ Now you've created your first route. You can try testing it by clicking one of t
 
 As you create more routes they will connect to each other if two points from two different routes are located close to each other. This will form a web around your village, which will allow some of the bots to create new paths to navigate around your village.
 
-## Advanced Route Features
+## Example Usage
 
-[Coming soon...]
+Let's pretend you have a bunch of items in your inventory. Maybe you just came back from looting an abandoned village.
 
-## Using Routes with Bots
+![Inventory](../images/routes/inventory.png)
 
-[Coming soon...]
+And let's also pretend you have a zone set up for each of these items. Each one of these areas simply has the item in the PUT section, meaning these areas are designated storage for the item.
 
-## Troubleshooting
+![Areas](../images/routes/areas.png)
 
-[Coming soon...]
+For this scenario to work we have to make sure all areas are reachable via a route or multiple routes. Here is a good example of a route point that is connected to a few areas. 
+
+*Note:* the connection between route points and areas happen automatically as you record routes.
+*Note:* green lines signify a connection between a route point and an area, orange lines signify a connection between individual route points.
+
+![area_route_point_connection.png](../images/routes/area_route_point_connection.png)
+
+Once everything is setup correctly we can press the button for the bot called `Free Inventory` and our character will deposit all items into their designated areas using the routes we've created to connect these areas.
+
+## Tips
+
+1. Sometimes when recording a route the automatic route point placement might not end up being to your liking. For these cases we've added an ability to adjust the placement of a route point. Simply select the route which contains the route point you'd like to move, click and hold the route point and adjust the placement. The placement adjustment is limited to a 5x5 radius.
+
+2. ![move_route_point.png](../images/routes/move_route_point.png)
