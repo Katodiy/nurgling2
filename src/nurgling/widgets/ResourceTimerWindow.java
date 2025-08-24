@@ -3,6 +3,8 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.ResourceTimer;
 import nurgling.ResourceTimerManager;
+import nurgling.NGameUI;
+import nurgling.NUtils;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -25,7 +27,8 @@ public class ResourceTimerWindow extends haven.Window {
     
     public ResourceTimerWindow() {
         super(WINDOW_SIZE, "Resource Timers");
-        this.manager = ResourceTimerManager.getInstance();
+        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        this.manager = gui != null ? gui.resourceTimerManager : null;
         this.scrollbar = adda(new haven.Scrollbar(WINDOW_SIZE.y - 40, 0, 0), 
                              WINDOW_SIZE.x - 20, 20);
         refreshTimers();
@@ -37,6 +40,10 @@ public class ResourceTimerWindow extends haven.Window {
     }
     
     private void refreshTimers() {
+        if(manager == null) {
+            displayedTimers = new ArrayList<>();
+            return;
+        }
         displayedTimers = new ArrayList<>(manager.getAllTimers());
         // Sort by remaining time (expired first, then by time remaining)
         Collections.sort(displayedTimers, new Comparator<ResourceTimer>() {

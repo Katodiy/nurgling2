@@ -7,6 +7,7 @@ import nurgling.NUtils;
 import nurgling.ResourceTimer;
 import nurgling.ResourceTimerManager;
 import nurgling.ResourceTimerDialogs;
+import nurgling.NGameUI;
 import nurgling.tools.FogArea;
 
 import java.awt.*;
@@ -407,8 +408,10 @@ public class NMiniMap extends MiniMap {
     private void drawResourceTimers(GOut g) {
         if(dloc == null) return;
 
-        ResourceTimerManager manager = ResourceTimerManager.getInstance();
-        java.util.List<ResourceTimer> timers = manager.getTimersForSegment(dloc.seg.id);
+        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        if(gui == null || gui.resourceTimerManager == null) return;
+        
+        java.util.List<ResourceTimer> timers = gui.resourceTimerManager.getTimersForSegment(dloc.seg.id);
 
         Coord hsz = sz.div(2);
         Text.Foundry timerFont = new Text.Foundry(Text.dfont, 9);

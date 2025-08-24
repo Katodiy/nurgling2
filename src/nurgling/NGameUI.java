@@ -50,6 +50,7 @@ public class NGameUI extends GameUI
     public NRecentActionsPanel recentActionsPanel;
     private ResourceTimerWindow resourceTimerWindow = null;
     private ResourceTimerWidget resourceTimerWidget = null;
+    public ResourceTimerManager resourceTimerManager;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -79,10 +80,13 @@ public class NGameUI extends GameUI
         routespec.hide();
         add(biw = new BotsInterruptWidget());
         add(resourceTimerWidget = new ResourceTimerWidget(), new Coord(200, 200));
+        resourceTimerManager = new ResourceTimerManager();
     }
 
     @Override
     public void dispose() {
+        if(resourceTimerManager != null)
+            resourceTimerManager.dispose();
         if(nurgling.NUtils.getUI().core!=null)
             NUtils.getUI().core.dispose();
         super.dispose();

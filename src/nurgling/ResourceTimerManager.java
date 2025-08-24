@@ -18,27 +18,20 @@ import java.util.stream.Stream;
  * Manages resource timers with persistence and thread-safe access
  */
 public class ResourceTimerManager {
-    private static ResourceTimerManager instance;
     private final Map<String, ResourceTimer> timers = new ConcurrentHashMap<>();
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final String dataFile;
+    private Thread cleanupThread;
     
-    private ResourceTimerManager() {
+    public ResourceTimerManager() {
         this.dataFile = ((haven.HashDirCache) haven.ResCache.global).base + "\\..\\" + "resource_timers.nurgling.json";
         loadTimers();
         
         // Start cleanup thread to remove expired timers periodically
-        Thread cleanupThread = new Thread(this::cleanupExpiredTimers);
+        cleanupThread = new Thread(this::cleanupExpiredTimers);
         cleanupThread.setDaemon(true);
         cleanupThread.setName("ResourceTimer-Cleanup");
         cleanupThread.start();
-    }
-    
-    public static synchronized ResourceTimerManager getInstance() {
-        if (instance == null) {
-            instance = new ResourceTimerManager();
-        }
-        return instance;
     }
     
     /**
@@ -55,15 +48,6 @@ public class ResourceTimerManager {
         } finally {
             lock.writeLock().unlock();
         }
-    }
-    
-    /**
-     * Add a timer with duration parsed from a string like "8 hrs and 23 minutes"
-     */
-    public void addTimer(long segmentId, haven.Coord tileCoords, String resourceName, 
-                        String resourceType, String durationStr, String description) {
-        long duration = ResourceTimer.parseDurationString(durationStr);
-        addTimer(segmentId, tileCoords, resourceName, resourceType, duration, description);
     }
     
     /**
@@ -123,19 +107,6 @@ public class ResourceTimerManager {
             return timers.values().stream()
                     .filter(timer -> timer.getSegmentId() == segmentId)
                     .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
-        } finally {
-            lock.readLock().unlock();
-        }
-    }
-    
-    /**
-     * Check if a timer exists for a resource location
-     */
-    public boolean hasTimer(long segmentId, haven.Coord tileCoords, String resourceType) {
-        String resourceId = generateResourceId(segmentId, tileCoords, resourceType);
-        lock.readLock().lock();
-        try {
-            return timers.containsKey(resourceId);
         } finally {
             lock.readLock().unlock();
         }
@@ -237,18 +208,16 @@ public class ResourceTimerManager {
     }
     
     /**
-     * Manual cleanup of expired timers
+     * Dispose the manager and stop cleanup thread
      */
-    public int cleanupExpired() {
+    public void dispose() {
+        if (cleanupThread != null && cleanupThread.isAlive()) {
+            cleanupThread.interrupt();
+        }
+        // Save any remaining timers
         lock.writeLock().lock();
         try {
-            int sizeBefore = timers.size();
-            timers.values().removeIf(ResourceTimer::isExpired);
-            int removed = sizeBefore - timers.size();
-            if (removed > 0) {
-                saveTimers();
-            }
-            return removed;
+            saveTimers();
         } finally {
             lock.writeLock().unlock();
         }

@@ -3,6 +3,8 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.ResourceTimer;
 import nurgling.ResourceTimerManager;
+import nurgling.NGameUI;
+import nurgling.NUtils;
 
 public class ResourceTimerWidget extends Window {
     private MapFile.SMarker currentMarker;
@@ -28,8 +30,10 @@ public class ResourceTimerWidget extends Window {
         this.currentResourceDisplayName = resourceDisplayName;
         
         // Check if timer already exists
-        ResourceTimerManager manager = ResourceTimerManager.getInstance();
-        this.currentExistingTimer = manager.getTimer(marker.seg, marker.tc, marker.res.name);
+        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        if(gui != null && gui.resourceTimerManager != null) {
+            this.currentExistingTimer = gui.resourceTimerManager.getTimer(marker.seg, marker.tc, marker.res.name);
+        }
         
         updateWidgetContent();
         show();
@@ -154,16 +158,17 @@ public class ResourceTimerWidget extends Window {
             
             long duration = (hours * 60L + minutes) * 60L * 1000L; // Convert to milliseconds
             
-            ResourceTimerManager manager = ResourceTimerManager.getInstance();
-            
-            // Remove existing timer if present
-            if(currentExistingTimer != null) {
-                manager.removeTimer(currentExistingTimer.getResourceId());
+            NGameUI gui = (NGameUI) NUtils.getGameUI();
+            if(gui != null && gui.resourceTimerManager != null) {
+                // Remove existing timer if present
+                if(currentExistingTimer != null) {
+                    gui.resourceTimerManager.removeTimer(currentExistingTimer.getResourceId());
+                }
+                
+                // Add new timer
+                gui.resourceTimerManager.addTimer(currentMarker.seg, currentMarker.tc, currentMarker.nm, currentMarker.res.name, 
+                                               duration, currentResourceDisplayName);
             }
-            
-            // Add new timer
-            manager.addTimer(currentMarker.seg, currentMarker.tc, currentMarker.nm, currentMarker.res.name, 
-                           duration, currentResourceDisplayName);
             
             close();
             
@@ -176,7 +181,10 @@ public class ResourceTimerWidget extends Window {
     
     private void removeTimer() {
         if(currentExistingTimer != null) {
-            ResourceTimerManager.getInstance().removeTimer(currentExistingTimer.getResourceId());
+            NGameUI gui = (NGameUI) NUtils.getGameUI();
+            if(gui != null && gui.resourceTimerManager != null) {
+                gui.resourceTimerManager.removeTimer(currentExistingTimer.getResourceId());
+            }
             close();
         }
     }
