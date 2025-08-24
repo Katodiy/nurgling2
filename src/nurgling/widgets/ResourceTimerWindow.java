@@ -15,8 +15,8 @@ import java.util.Comparator;
 /**
  * Window for managing resource timers
  */
-public class ResourceTimerWindow extends haven.Window {
-    private static final Coord WINDOW_SIZE = UI.scale(new Coord(450, 350));
+public class ResourceTimerWindow extends Window {
+    private static final Coord WINDOW_SIZE = UI.scale(new Coord(350, 250));
     
     private ResourceTimerManager manager;
     private final ArrayList<TimerItem> items = new ArrayList<>();
@@ -41,12 +41,20 @@ public class ResourceTimerWindow extends haven.Window {
         super.show();
     }
     
+    private long lastRefresh = 0;
+    
     @Override
     public void tick(double dt) {
         super.tick(dt);
+        
+        // Refresh timer list every 5 seconds if window is visible
+        if(visible() && System.currentTimeMillis() - lastRefresh > 5000) {
+            refreshTimers();
+            lastRefresh = System.currentTimeMillis();
+        }
     }
     
-    private void refreshTimers() {
+    public void refreshTimers() {
         synchronized (items) {
             items.clear();
             if(manager != null) {
@@ -86,14 +94,14 @@ public class ResourceTimerWindow extends haven.Window {
             
             // Create name label
             String displayName = timer.getDescription();
-            if(displayName.length() > 30) {
-                displayName = displayName.substring(0, 27) + "...";
+            if(displayName.length() > 22) {
+                displayName = displayName.substring(0, 19) + "...";
             }
             nameLabel = add(new Label(displayName), UI.scale(new Coord(5, 2)));
             
             // Create time label
             String timeText = timer.getFormattedRemainingTime();
-            timeLabel = add(new Label(timeText), UI.scale(new Coord(250, 2)));
+            timeLabel = add(new Label(timeText), UI.scale(new Coord(180, 2)));
             
             // Create remove button
             removeButton = add(new IButton(NStyle.removei[0].back, NStyle.removei[1].back, NStyle.removei[2].back) {
@@ -101,10 +109,10 @@ public class ResourceTimerWindow extends haven.Window {
                 public void click() {
                     if(manager != null) {
                         manager.removeTimer(TimerItem.this.timer.getResourceId());
-                        refreshTimers();
+                        ResourceTimerWindow.this.refreshTimers();
                     }
                 }
-            }, UI.scale(new Coord(380, 0)));
+            }, UI.scale(new Coord(280, 0)));
             removeButton.settip("Remove timer");
             
             pack();
@@ -113,8 +121,19 @@ public class ResourceTimerWindow extends haven.Window {
         @Override
         public boolean mousedown(MouseDownEvent ev) {
             if(ev.b == 1) {
-                showTimerDetails(timer);
-                return true;
+                // Check if click is on the remove button area
+                Coord buttonPos = removeButton.c;
+                Coord buttonSize = removeButton.sz;
+                
+                if(ev.c.x >= buttonPos.x && ev.c.x <= buttonPos.x + buttonSize.x &&
+                   ev.c.y >= buttonPos.y && ev.c.y <= buttonPos.y + buttonSize.y) {
+                    // Let the button handle the click
+                    return super.mousedown(ev);
+                } else {
+                    // Click elsewhere on the row - show timer details
+                    showTimerDetails(timer);
+                    return true;
+                }
             }
             return super.mousedown(ev);
         }
@@ -138,8 +157,8 @@ public class ResourceTimerWindow extends haven.Window {
                 
                 // Redraw name text in green
                 String displayName = timer.getDescription();
-                if(displayName.length() > 30) {
-                    displayName = displayName.substring(0, 27) + "...";
+                if(displayName.length() > 22) {
+                    displayName = displayName.substring(0, 19) + "...";
                 }
                 g.image(fnd.render(displayName, java.awt.Color.GREEN).tex(), nameLabel.c);
                 
@@ -171,6 +190,7 @@ public class ResourceTimerWindow extends haven.Window {
                 }
             };
         }
+        
         
         @Override
         public void resize(Coord sz) {

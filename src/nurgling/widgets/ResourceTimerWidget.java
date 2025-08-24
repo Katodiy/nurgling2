@@ -167,6 +167,9 @@ public class ResourceTimerWidget extends Window {
                 // Add new timer
                 gui.resourceTimerManager.addTimer(currentMarker.seg, currentMarker.tc, currentMarker.nm, currentMarker.res.name, 
                                                duration, currentResourceDisplayName);
+                
+                // Refresh the timer window if it's open
+                gui.refreshResourceTimerWindow();
             }
             
             close();
@@ -183,6 +186,9 @@ public class ResourceTimerWidget extends Window {
             NGameUI gui = (NGameUI) NUtils.getGameUI();
             if(gui != null && gui.resourceTimerManager != null) {
                 gui.resourceTimerManager.removeTimer(currentExistingTimer.getResourceId());
+                
+                // Refresh the timer window if it's open
+                gui.refreshResourceTimerWindow();
             }
             close();
         }

@@ -803,4 +803,10 @@ public class NGameUI extends GameUI
     public ResourceTimerWidget getResourceTimerWidget() {
         return resourceTimerWidget;
     }
+    
+    public void refreshResourceTimerWindow() {
+        if(resourceTimerWindow != null) {
+            resourceTimerWindow.refreshTimers();
+        }
+    }
 }
