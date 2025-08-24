@@ -34,6 +34,8 @@ public class ResourceTimerWidget extends Window {
         
         updateWidgetContent();
         show();
+        raise();
+        setfocus(hoursEntry);
     }
     
     private void initializeWidgets() {
