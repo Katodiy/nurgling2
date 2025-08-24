@@ -54,8 +54,8 @@ public class NMapWnd extends MapWnd {
     
     @Override
     public boolean mousedown(MouseDownEvent ev) {
-        // Check if the click is on the view area and it's a right-click
-        if(ev.b == 3 && view.c != null) {
+        // Check if the click is on the view area and it's a shift+right-click
+        if(ev.b == 3 && ui.modshift && view.c != null) {
             // Convert global coordinates to view coordinates
             Coord viewCoord = ev.c.sub(view.parentpos(this));
             

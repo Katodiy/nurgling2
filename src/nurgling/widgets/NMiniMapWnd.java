@@ -219,8 +219,8 @@ public class NMiniMapWnd extends Widget{
         }
 
         public boolean clickmarker(DisplayMarker mark, Location loc, int button, boolean press) {
-            // Handle right-click on resource markers for timer functionality
-            if(button == 3 && mark.m instanceof MapFile.SMarker) {
+            // Handle shift+right-click on resource markers for timer functionality
+            if(button == 3 && ui.modshift && mark.m instanceof MapFile.SMarker) {
                 MapFile.SMarker smarker = (MapFile.SMarker) mark.m;
                 
                 // Check if this is a localized resource (map resource)

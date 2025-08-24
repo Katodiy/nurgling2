@@ -17,7 +17,7 @@ public class ResourceTimerWidget extends Window {
     private Button removeButton;
     
     public ResourceTimerWidget() {
-        super(UI.scale(new Coord(400, 140)), "Resource Timer");
+        super(UI.scale(new Coord(235, 140)), "Resource Timer");
         initializeWidgets();
         hide(); // Start hidden
     }
