@@ -47,8 +47,8 @@ public class NGameUI extends GameUI
     private CrimeStatusBuff crimeBuff = null;
     private AllowVisitingStatusBuff allowVisitingBuff = null;
     public NRecentActionsPanel recentActionsPanel;
-    private ResourceTimersWindow resourceTimerWindow = null;
-    private AddResourceTimerWidget resourceTimerWidget = null;
+    private ResourceTimersWindow resourceTimersWindow = null;
+    private AddResourceTimerWidget addResourceTimerWidget = null;
     public ResourceTimerManager resourceTimerManager;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
@@ -78,9 +78,9 @@ public class NGameUI extends GameUI
         add(routespec = new RouteSpecialization());
         routespec.hide();
         add(biw = new BotsInterruptWidget());
-        add(resourceTimerWidget = new AddResourceTimerWidget(), new Coord(200, 200));
+        add(addResourceTimerWidget = new AddResourceTimerWidget(), new Coord(200, 200));
         resourceTimerManager = new ResourceTimerManager();
-        add(resourceTimerWindow = new ResourceTimersWindow(), new Coord(100, 100));
+        add(resourceTimersWindow = new ResourceTimersWindow(), new Coord(100, 100));
     }
 
     @Override
@@ -790,22 +790,22 @@ public class NGameUI extends GameUI
     }
     
     private void toggleResourceTimerWindow() {
-        if(resourceTimerWindow != null) {
-            if(resourceTimerWindow.visible()) {
-                resourceTimerWindow.hide();
+        if(resourceTimersWindow != null) {
+            if(resourceTimersWindow.visible()) {
+                resourceTimersWindow.hide();
             } else {
-                resourceTimerWindow.show();
+                resourceTimersWindow.show();
             }
         }
     }
     
-    public AddResourceTimerWidget getResourceTimerWidget() {
-        return resourceTimerWidget;
+    public AddResourceTimerWidget getAddResourceTimerWidget() {
+        return addResourceTimerWidget;
     }
     
     public void refreshResourceTimerWindow() {
-        if(resourceTimerWindow != null) {
-            resourceTimerWindow.refreshTimers();
+        if(resourceTimersWindow != null) {
+            resourceTimersWindow.refreshTimers();
         }
     }
 }

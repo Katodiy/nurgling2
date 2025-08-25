@@ -16,7 +16,7 @@ public class ResourceTimerUtils {
         
         NGameUI gui = (NGameUI) NUtils.getGameUI();
         if(gui != null) {
-            AddResourceTimerWidget widget = gui.getResourceTimerWidget();
+            AddResourceTimerWidget widget = gui.getAddResourceTimerWidget();
             if(widget != null) {
                 widget.showForMarker(marker, loc, displayName);
             }
