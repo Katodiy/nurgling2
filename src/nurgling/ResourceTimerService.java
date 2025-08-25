@@ -2,18 +2,34 @@ package nurgling;
 
 import haven.*;
 import nurgling.widgets.AddResourceTimerWidget;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Stream;
 
 /**
  * Centralized service for all resource timer operations
- * Coordinates between ResourceTimerManager and UI components
+ * Handles persistence, UI coordination, and map navigation
  */
 public class ResourceTimerService {
-    private final ResourceTimerManager manager;
+    private final Map<String, ResourceTimer> timers = new ConcurrentHashMap<>();
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final String dataFile;
     private final NGameUI gui;
     
     public ResourceTimerService(NGameUI gui) {
         this.gui = gui;
-        this.manager = new ResourceTimerManager();
+        this.dataFile = ((haven.HashDirCache) haven.ResCache.global).base + "\\..\\" + "resource_timers.nurgling.json";
+        loadTimers();
     }
     
     /**
@@ -44,40 +60,84 @@ public class ResourceTimerService {
      */
     public void createTimer(long segmentId, haven.Coord tileCoords, String resourceName, 
                            String resourceType, long duration, String description) {
-        manager.addTimer(segmentId, tileCoords, resourceName, resourceType, duration, description);
-        refreshTimerWindow();
+        lock.writeLock().lock();
+        try {
+            ResourceTimer timer = new ResourceTimer(segmentId, tileCoords, resourceName, 
+                                                   resourceType, duration, description);
+            timers.put(timer.getResourceId(), timer);
+            saveTimers();
+            refreshTimerWindow();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
     
     /**
      * Remove a timer
      */
     public boolean removeTimer(String resourceId) {
-        boolean removed = manager.removeTimer(resourceId);
-        if (removed) {
-            refreshTimerWindow();
+        lock.writeLock().lock();
+        try {
+            boolean removed = timers.remove(resourceId) != null;
+            if (removed) {
+                saveTimers();
+                refreshTimerWindow();
+            }
+            return removed;
+        } finally {
+            lock.writeLock().unlock();
         }
-        return removed;
     }
     
     /**
      * Get existing timer for a resource location
      */
     public ResourceTimer getExistingTimer(long segmentId, haven.Coord tileCoords, String resourceType) {
-        return manager.getTimer(segmentId, tileCoords, resourceType);
+        String resourceId = generateResourceId(segmentId, tileCoords, resourceType);
+        return getTimer(resourceId);
+    }
+    
+    /**
+     * Get timer by resource ID
+     */
+    public ResourceTimer getTimer(String resourceId) {
+        lock.readLock().lock();
+        try {
+            return timers.get(resourceId);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
     
     /**
      * Get all timers for display
      */
     public java.util.Collection<ResourceTimer> getAllTimers() {
-        return manager.getAllTimers();
+        lock.readLock().lock();
+        try {
+            return new ArrayList<>(timers.values());
+        } finally {
+            lock.readLock().unlock();
+        }
     }
     
     /**
      * Get timers for a specific segment (for map display)
      */
     public java.util.List<ResourceTimer> getTimersForSegment(long segmentId) {
-        return manager.getTimersForSegment(segmentId);
+        lock.readLock().lock();
+        try {
+            return timers.values().stream()
+                    .filter(timer -> timer.getSegmentId() == segmentId)
+                    .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+    
+    private static String generateResourceId(long segmentId, haven.Coord tileCoords, String resourceType) {
+        return String.format("res_%d_%d_%d_%s", segmentId, tileCoords.x, tileCoords.y, 
+                           resourceType.replaceAll("[^a-zA-Z0-9]", "_"));
     }
     
     /**
@@ -156,9 +216,79 @@ public class ResourceTimerService {
     }
     
     /**
+     * Load timers from JSON file
+     */
+    private void loadTimers() {
+        lock.writeLock().lock();
+        try {
+            timers.clear();
+            File file = new File(dataFile);
+            if (file.exists()) {
+                StringBuilder contentBuilder = new StringBuilder();
+                try (Stream<String> stream = Files.lines(Paths.get(dataFile), StandardCharsets.UTF_8)) {
+                    stream.forEach(s -> contentBuilder.append(s).append("\n"));
+                } catch (IOException e) {
+                    System.err.println("Failed to load resource timers: " + e.getMessage());
+                    return;
+                }
+                
+                if (!contentBuilder.toString().trim().isEmpty()) {
+                    try {
+                        JSONObject main = new JSONObject(contentBuilder.toString());
+                        JSONArray array = main.getJSONArray("timers");
+                        for (int i = 0; i < array.length(); i++) {
+                            ResourceTimer timer = new ResourceTimer(array.getJSONObject(i));
+                            // Only load non-expired timers
+                            if (!timer.isExpired()) {
+                                timers.put(timer.getResourceId(), timer);
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Failed to parse resource timers JSON: " + e.getMessage());
+                    }
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+    
+    /**
+     * Save timers to JSON file
+     */
+    private void saveTimers() {
+        // Called within write lock - don't lock again
+        try {
+            JSONObject main = new JSONObject();
+            JSONArray jTimers = new JSONArray();
+            for (ResourceTimer timer : timers.values()) {
+                // Only save non-expired timers
+                if (!timer.isExpired()) {
+                    jTimers.put(timer.toJson());
+                }
+            }
+            main.put("timers", jTimers);
+            main.put("version", 1);
+            main.put("lastSaved", java.time.Instant.now().toString());
+            
+            try (FileWriter writer = new FileWriter(dataFile, StandardCharsets.UTF_8)) {
+                writer.write(main.toString(2)); // Pretty print with indent
+            }
+        } catch (IOException e) {
+            System.err.println("Failed to save resource timers: " + e.getMessage());
+        }
+    }
+    
+    /**
      * Dispose the service and cleanup resources
      */
     public void dispose() {
-        manager.dispose();
+        // Save any remaining timers
+        lock.writeLock().lock();
+        try {
+            saveTimers();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 }
