@@ -406,13 +406,22 @@ public class NMiniMap extends MiniMap {
     private void drawResourceTimers(GOut g) {
         if(dloc == null) return;
 
-        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        NGameUI gui = NUtils.getGameUI();
         if(gui == null || gui.localizedResourceTimerService == null) return;
         
         java.util.List<LocalizedResourceTimer> timers = gui.localizedResourceTimerService.getTimersForSegment(dloc.seg.id);
 
         Coord hsz = sz.div(2);
-        Text.Foundry timerFont = new Text.Foundry(Text.dfont, 9);
+        
+        // Create bordered text furnaces for timer display (like barrel names and character nicknames)
+        Text.Furnace readyTimerFurnace = new PUtils.BlurFurn(
+            new Text.Foundry(Text.dfont, UI.scale(9), Color.GREEN).aa(true), 
+            2, 1, Color.BLACK
+        );
+        Text.Furnace activeTimerFurnace = new PUtils.BlurFurn(
+            new Text.Foundry(Text.dfont, UI.scale(9), Color.WHITE).aa(true), 
+            2, 1, Color.BLACK
+        );
 
         for(LocalizedResourceTimer timer : timers) {
             // Calculate screen position for the timer
@@ -423,20 +432,15 @@ public class NMiniMap extends MiniMap {
                screenPos.y >= 0 && screenPos.y <= sz.y) {
 
                 String timeText = timer.getFormattedRemainingTime();
-                Color timerColor = timer.isExpired() ? Color.GREEN : Color.YELLOW;
-
-                // Create timer text
-                Text timerDisplay = timerFont.render(timeText, timerColor);
+                
+                // Use appropriate furnace based on timer state
+                Text.Furnace furnace = timer.isExpired() ? readyTimerFurnace : activeTimerFurnace;
+                Text timerDisplay = furnace.render(timeText);
 
                 // Position text slightly below the resource icon
                 Coord textPos = screenPos.add(-timerDisplay.sz().x / 2, 15);
 
-                // Draw background for better visibility
-                g.chcolor(0, 0, 0, 180);
-                g.frect(textPos.sub(2, 1), timerDisplay.sz().add(4, 2));
-                g.chcolor();
-
-                // Draw the timer text
+                // Draw timer text with black border (no background needed)
                 g.image(timerDisplay.tex(), textPos);
             }
         }
