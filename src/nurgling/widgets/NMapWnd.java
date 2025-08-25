@@ -84,8 +84,8 @@ public class NMapWnd extends MapWnd {
             
             // Handle through service
             NGameUI gui = (NGameUI) NUtils.getGameUI();
-            if(gui != null && gui.resourceTimerService != null) {
-                return gui.resourceTimerService.handleResourceClick(smarker);
+            if(gui != null && gui.localizedResourceTimerService != null) {
+                return gui.localizedResourceTimerService.handleResourceClick(smarker);
             }
         }
         

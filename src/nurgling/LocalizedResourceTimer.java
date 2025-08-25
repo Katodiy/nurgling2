@@ -6,7 +6,7 @@ import java.time.Instant;
 /**
  * Represents a timer for a localized resource node
  */
-public class ResourceTimer {
+public class LocalizedResourceTimer {
     private final String resourceId;  // Unique ID combining segment + coordinates + resource type
     private final long segmentId;
     private final haven.Coord tileCoords;
@@ -16,8 +16,8 @@ public class ResourceTimer {
     private final long duration;      // Duration in milliseconds
     private final String description; // User-friendly description like "Tar Pit"
     
-    public ResourceTimer(long segmentId, haven.Coord tileCoords, String resourceName, 
-                        String resourceType, long duration, String description) {
+    public LocalizedResourceTimer(long segmentId, haven.Coord tileCoords, String resourceName,
+                                  String resourceType, long duration, String description) {
         this.segmentId = segmentId;
         this.tileCoords = tileCoords;
         this.resourceName = resourceName;
@@ -28,7 +28,7 @@ public class ResourceTimer {
         this.resourceId = generateResourceId(segmentId, tileCoords, resourceType);
     }
     
-    public ResourceTimer(JSONObject json) {
+    public LocalizedResourceTimer(JSONObject json) {
         this.resourceId = json.getString("resourceId");
         this.segmentId = json.getLong("segmentId");
         this.tileCoords = new haven.Coord(json.getInt("tileX"), json.getInt("tileY"));

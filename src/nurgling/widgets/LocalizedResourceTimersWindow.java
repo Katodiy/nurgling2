@@ -1,8 +1,8 @@
 package nurgling.widgets;
 
 import haven.*;
-import nurgling.ResourceTimer;
-import nurgling.ResourceTimerService;
+import nurgling.LocalizedResourceTimer;
+import nurgling.LocalizedResourceTimerService;
 import nurgling.NStyle;
 
 import java.util.List;
@@ -11,15 +11,15 @@ import java.util.ArrayList;
 /**
  * Window for managing resource timers
  */
-public class ResourceTimersWindow extends Window {
+public class LocalizedResourceTimersWindow extends Window {
     private static final Coord WINDOW_SIZE = UI.scale(new Coord(350, 250));
     
-    private final ResourceTimerService service;
+    private final LocalizedResourceTimerService localizedResourceTimerService;
     private final ArrayList<TimerItem> items = new ArrayList<>();
 
-    public ResourceTimersWindow(ResourceTimerService service) {
+    public LocalizedResourceTimersWindow(LocalizedResourceTimerService localizedResourceTimerService) {
         super(WINDOW_SIZE, "Resource Timers");
-        this.service = service;
+        this.localizedResourceTimerService = localizedResourceTimerService;
         
         // Create the timer list
         add(new TimerList(new Coord(WINDOW_SIZE.x - UI.scale(20), WINDOW_SIZE.y - UI.scale(40))),
@@ -50,8 +50,8 @@ public class ResourceTimersWindow extends Window {
     public void refreshTimers() {
         synchronized (items) {
             items.clear();
-            if(service != null) {
-                List<ResourceTimer> timers = new ArrayList<>(service.getAllTimers());
+            if(localizedResourceTimerService != null) {
+                List<LocalizedResourceTimer> timers = new ArrayList<>(localizedResourceTimerService.getAllTimers());
                 // Sort by remaining time (expired first, then by time remaining)
                 timers.sort((a, b) -> {
                     boolean aExpired = a.isExpired();
@@ -65,7 +65,7 @@ public class ResourceTimersWindow extends Window {
                     return Long.compare(a.getRemainingTime(), b.getRemainingTime());
                 });
                 
-                for(ResourceTimer timer : timers) {
+                for(LocalizedResourceTimer timer : timers) {
                     items.add(new TimerItem(timer));
                 }
             }
@@ -74,12 +74,12 @@ public class ResourceTimersWindow extends Window {
     
     // TimerItem class - represents individual timer entries
     public class TimerItem extends Widget {
-        private final ResourceTimer timer;
+        private final LocalizedResourceTimer timer;
         private final Label nameLabel;
         private final Label timeLabel;
         private final IButton removeButton;
         
-        public TimerItem(ResourceTimer timer) {
+        public TimerItem(LocalizedResourceTimer timer) {
             this.timer = timer;
             
             // Create name label
@@ -97,9 +97,9 @@ public class ResourceTimersWindow extends Window {
             removeButton = add(new IButton(NStyle.removei[0].back, NStyle.removei[1].back, NStyle.removei[2].back) {
                 @Override
                 public void click() {
-                    if(service != null) {
-                        service.removeTimer(TimerItem.this.timer.getResourceId());
-                        ResourceTimersWindow.this.refreshTimers();
+                    if(localizedResourceTimerService != null) {
+                        localizedResourceTimerService.removeTimer(TimerItem.this.timer.getResourceId());
+                        LocalizedResourceTimersWindow.this.refreshTimers();
                     }
                 }
             }, UI.scale(new Coord(280, 0)));
@@ -187,32 +187,10 @@ public class ResourceTimersWindow extends Window {
         }
     }
     
-    private void showTimerDetails(ResourceTimer timer) {
-        // Show details and navigate to resource
-        String details = String.format(
-            "Timer: %s | Location: Segment %d (%d, %d) | %s | %s",
-            timer.getDescription(),
-            timer.getSegmentId(),
-            timer.getTileCoords().x, timer.getTileCoords().y,
-            timer.getFormattedRemainingTime(),
-            timer.isExpired() ? "Ready!" : "Cooling down"
-        );
-        
-        showMessage(details);
-        if(service != null) {
-            service.navigateToResourceTimer(timer);
+    private void showTimerDetails(LocalizedResourceTimer timer) {
+        if(localizedResourceTimerService != null) {
+            localizedResourceTimerService.openMapAtLocalizedResourceLocation(timer);
         }
-    }
-    
-    private void showMessage(String message) {
-        nurgling.NUI nui = getNUI();
-        if(nui != null && nui.gui != null) {
-            nui.gui.msg(message);
-        }
-    }
-    
-    private nurgling.NUI getNUI() {
-        return (this.ui instanceof nurgling.NUI) ? (nurgling.NUI)this.ui : null;
     }
     
     @Override

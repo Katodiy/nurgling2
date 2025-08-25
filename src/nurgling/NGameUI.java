@@ -15,8 +15,8 @@ import nurgling.widgets.SwimmingStatusBuff;
 import nurgling.widgets.TrackingStatusBuff;
 import nurgling.widgets.CrimeStatusBuff;
 import nurgling.widgets.AllowVisitingStatusBuff;
-import nurgling.widgets.ResourceTimersWindow;
-import nurgling.widgets.AddResourceTimerWidget;
+import nurgling.widgets.LocalizedResourceTimersWindow;
+import nurgling.widgets.LocalizedResourceTimerDialog;
 
 import java.awt.event.KeyEvent;
 import java.util.*;
@@ -47,9 +47,9 @@ public class NGameUI extends GameUI
     private CrimeStatusBuff crimeBuff = null;
     private AllowVisitingStatusBuff allowVisitingBuff = null;
     public NRecentActionsPanel recentActionsPanel;
-    public ResourceTimersWindow resourceTimersWindow = null;
-    private AddResourceTimerWidget addResourceTimerWidget = null;
-    public ResourceTimerService resourceTimerService;
+    public LocalizedResourceTimersWindow localizedResourceTimersWindow = null;
+    private LocalizedResourceTimerDialog localizedResourceTimerDialog = null;
+    public LocalizedResourceTimerService localizedResourceTimerService;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -78,15 +78,15 @@ public class NGameUI extends GameUI
         add(routespec = new RouteSpecialization());
         routespec.hide();
         add(biw = new BotsInterruptWidget());
-        add(addResourceTimerWidget = new AddResourceTimerWidget(), new Coord(200, 200));
-        resourceTimerService = new ResourceTimerService(this);
-        add(resourceTimersWindow = new ResourceTimersWindow(resourceTimerService), new Coord(100, 100));
+        add(localizedResourceTimerDialog = new LocalizedResourceTimerDialog(), new Coord(200, 200));
+        localizedResourceTimerService = new LocalizedResourceTimerService(this);
+        add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
     }
 
     @Override
     public void dispose() {
-        if(resourceTimerService != null)
-            resourceTimerService.dispose();
+        if(localizedResourceTimerService != null)
+            localizedResourceTimerService.dispose();
         if(nurgling.NUtils.getUI().core!=null)
             NUtils.getUI().core.dispose();
         super.dispose();
@@ -790,12 +790,12 @@ public class NGameUI extends GameUI
     }
     
     private void toggleResourceTimerWindow() {
-        if(resourceTimerService != null) {
-            resourceTimerService.showTimerWindow();
+        if(localizedResourceTimerService != null) {
+            localizedResourceTimerService.showTimerWindow();
         }
     }
     
-    public AddResourceTimerWidget getAddResourceTimerWidget() {
-        return addResourceTimerWidget;
+    public LocalizedResourceTimerDialog getAddResourceTimerWidget() {
+        return localizedResourceTimerDialog;
     }
 }

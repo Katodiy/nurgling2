@@ -1,14 +1,14 @@
 package nurgling.widgets;
 
 import haven.*;
-import nurgling.ResourceTimer;
-import nurgling.ResourceTimerService;
+import nurgling.LocalizedResourceTimer;
+import nurgling.LocalizedResourceTimerService;
 
-public class AddResourceTimerWidget extends Window {
+public class LocalizedResourceTimerDialog extends Window {
     private MapFile.SMarker currentMarker;
     private String currentResourceDisplayName;
-    private ResourceTimer currentExistingTimer;
-    private ResourceTimerService currentService;
+    private LocalizedResourceTimer currentExistingTimer;
+    private LocalizedResourceTimerService currentService;
     
     private TextEntry hoursEntry;
     private TextEntry minutesEntry;
@@ -16,13 +16,13 @@ public class AddResourceTimerWidget extends Window {
     private Label existingTimerLabel;
     private Button removeButton;
     
-    public AddResourceTimerWidget() {
+    public LocalizedResourceTimerDialog() {
         super(UI.scale(new Coord(235, 140)), "Resource Timer");
         initializeWidgets();
         hide(); // Start hidden
     }
     
-    public void showForMarker(ResourceTimerService service, MapFile.SMarker marker, String resourceDisplayName) {
+    public void showForMarker(LocalizedResourceTimerService service, MapFile.SMarker marker, String resourceDisplayName) {
         this.currentService = service;
         this.currentMarker = marker;
         this.currentResourceDisplayName = resourceDisplayName;

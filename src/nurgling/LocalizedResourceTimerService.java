@@ -1,7 +1,7 @@
 package nurgling;
 
 import haven.*;
-import nurgling.widgets.AddResourceTimerWidget;
+import nurgling.widgets.LocalizedResourceTimerDialog;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -20,13 +20,13 @@ import java.util.stream.Stream;
  * Centralized service for all resource timer operations
  * Handles persistence, UI coordination, and map navigation
  */
-public class ResourceTimerService {
-    private final Map<String, ResourceTimer> timers = new ConcurrentHashMap<>();
+public class LocalizedResourceTimerService {
+    private final Map<String, LocalizedResourceTimer> timers = new ConcurrentHashMap<>();
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final String dataFile;
     private final NGameUI gui;
     
-    public ResourceTimerService(NGameUI gui) {
+    public LocalizedResourceTimerService(NGameUI gui) {
         this.gui = gui;
         this.dataFile = ((haven.HashDirCache) haven.ResCache.global).base + "\\..\\" + "resource_timers.nurgling.json";
         loadTimers();
@@ -49,7 +49,7 @@ public class ResourceTimerService {
      * Show the resource timer dialog
      */
     public void showResourceTimerDialog(MapFile.SMarker marker, String displayName) {
-        AddResourceTimerWidget widget = gui.getAddResourceTimerWidget();
+        LocalizedResourceTimerDialog widget = gui.getAddResourceTimerWidget();
         if (widget != null) {
             widget.showForMarker(this, marker, displayName);
         }
@@ -62,7 +62,7 @@ public class ResourceTimerService {
                            String resourceType, long duration, String description) {
         lock.writeLock().lock();
         try {
-            ResourceTimer timer = new ResourceTimer(segmentId, tileCoords, resourceName, 
+            LocalizedResourceTimer timer = new LocalizedResourceTimer(segmentId, tileCoords, resourceName,
                                                    resourceType, duration, description);
             timers.put(timer.getResourceId(), timer);
             saveTimers();
@@ -92,7 +92,7 @@ public class ResourceTimerService {
     /**
      * Get existing timer for a resource location
      */
-    public ResourceTimer getExistingTimer(long segmentId, haven.Coord tileCoords, String resourceType) {
+    public LocalizedResourceTimer getExistingTimer(long segmentId, haven.Coord tileCoords, String resourceType) {
         String resourceId = generateResourceId(segmentId, tileCoords, resourceType);
         return getTimer(resourceId);
     }
@@ -100,7 +100,7 @@ public class ResourceTimerService {
     /**
      * Get timer by resource ID
      */
-    public ResourceTimer getTimer(String resourceId) {
+    public LocalizedResourceTimer getTimer(String resourceId) {
         lock.readLock().lock();
         try {
             return timers.get(resourceId);
@@ -112,7 +112,7 @@ public class ResourceTimerService {
     /**
      * Get all timers for display
      */
-    public java.util.Collection<ResourceTimer> getAllTimers() {
+    public java.util.Collection<LocalizedResourceTimer> getAllTimers() {
         lock.readLock().lock();
         try {
             return new ArrayList<>(timers.values());
@@ -124,7 +124,7 @@ public class ResourceTimerService {
     /**
      * Get timers for a specific segment (for map display)
      */
-    public java.util.List<ResourceTimer> getTimersForSegment(long segmentId) {
+    public java.util.List<LocalizedResourceTimer> getTimersForSegment(long segmentId) {
         lock.readLock().lock();
         try {
             return timers.values().stream()
@@ -143,7 +143,7 @@ public class ResourceTimerService {
     /**
      * Navigate to a resource timer location
      */
-    public void navigateToResourceTimer(ResourceTimer timer) {
+    public void openMapAtLocalizedResourceLocation(LocalizedResourceTimer timer) {
         try {
             openMapWindowIfNeeded();
             
@@ -163,11 +163,11 @@ public class ResourceTimerService {
      * Show the timer window
      */
     public void showTimerWindow() {
-        if (gui.resourceTimersWindow != null) {
-            if (gui.resourceTimersWindow.visible()) {
-                gui.resourceTimersWindow.hide();
+        if (gui.localizedResourceTimersWindow != null) {
+            if (gui.localizedResourceTimersWindow.visible()) {
+                gui.localizedResourceTimersWindow.hide();
             } else {
-                gui.resourceTimersWindow.show();
+                gui.localizedResourceTimersWindow.show();
             }
         }
     }
@@ -183,8 +183,8 @@ public class ResourceTimerService {
      * Refresh the timer window display
      */
     private void refreshTimerWindow() {
-        if (gui.resourceTimersWindow != null) {
-            gui.resourceTimersWindow.refreshTimers();
+        if (gui.localizedResourceTimersWindow != null) {
+            gui.localizedResourceTimersWindow.refreshTimers();
         }
     }
     
@@ -237,7 +237,7 @@ public class ResourceTimerService {
                         JSONObject main = new JSONObject(contentBuilder.toString());
                         JSONArray array = main.getJSONArray("timers");
                         for (int i = 0; i < array.length(); i++) {
-                            ResourceTimer timer = new ResourceTimer(array.getJSONObject(i));
+                            LocalizedResourceTimer timer = new LocalizedResourceTimer(array.getJSONObject(i));
                             // Only load non-expired timers
                             if (!timer.isExpired()) {
                                 timers.put(timer.getResourceId(), timer);
@@ -261,7 +261,7 @@ public class ResourceTimerService {
         try {
             JSONObject main = new JSONObject();
             JSONArray jTimers = new JSONArray();
-            for (ResourceTimer timer : timers.values()) {
+            for (LocalizedResourceTimer timer : timers.values()) {
                 // Only save non-expired timers
                 if (!timer.isExpired()) {
                     jTimers.put(timer.toJson());

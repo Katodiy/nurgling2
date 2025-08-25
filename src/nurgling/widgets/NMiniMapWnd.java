@@ -225,8 +225,8 @@ public class NMiniMapWnd extends Widget{
                 
                 // Check if this is a localized resource (map resource) and handle through service
                 NGameUI gui = (NGameUI) NUtils.getGameUI();
-                if(gui != null && gui.resourceTimerService != null && 
-                   gui.resourceTimerService.handleResourceClick(smarker)) {
+                if(gui != null && gui.localizedResourceTimerService != null &&
+                   gui.localizedResourceTimerService.handleResourceClick(smarker)) {
                     return true;
                 }
             }

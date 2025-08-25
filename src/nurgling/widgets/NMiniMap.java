@@ -4,7 +4,7 @@ import haven.*;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
-import nurgling.ResourceTimer;
+import nurgling.LocalizedResourceTimer;
 import nurgling.NGameUI;
 import nurgling.tools.FogArea;
 
@@ -407,14 +407,14 @@ public class NMiniMap extends MiniMap {
         if(dloc == null) return;
 
         NGameUI gui = (NGameUI) NUtils.getGameUI();
-        if(gui == null || gui.resourceTimerService == null) return;
+        if(gui == null || gui.localizedResourceTimerService == null) return;
         
-        java.util.List<ResourceTimer> timers = gui.resourceTimerService.getTimersForSegment(dloc.seg.id);
+        java.util.List<LocalizedResourceTimer> timers = gui.localizedResourceTimerService.getTimersForSegment(dloc.seg.id);
 
         Coord hsz = sz.div(2);
         Text.Foundry timerFont = new Text.Foundry(Text.dfont, 9);
 
-        for(ResourceTimer timer : timers) {
+        for(LocalizedResourceTimer timer : timers) {
             // Calculate screen position for the timer
             Coord screenPos = timer.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
 
