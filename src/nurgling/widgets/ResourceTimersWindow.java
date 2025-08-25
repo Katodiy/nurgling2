@@ -249,13 +249,6 @@ public class ResourceTimersWindow extends Window {
         }
     }
     
-    private void disablePlayerFollowing(NGameUI gui) {
-        if(gui.mmap instanceof nurgling.widgets.NMiniMapWnd.Map) {
-            nurgling.widgets.NMiniMapWnd.Map miniMapWidget = (nurgling.widgets.NMiniMapWnd.Map) gui.mmap;
-            miniMapWidget.follow(null);
-        }
-    }
-    
     private void centerMaps(NGameUI gui, MiniMap.Location targetLoc) {
         // Only center the big map window, not the minimap
         if(gui.mapfile != null && gui.mapfile instanceof nurgling.widgets.NMapWnd) {
