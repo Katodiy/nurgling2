@@ -84,6 +84,20 @@ public class NStyle {
             Resource.loadtex("nurgling/hud/alarm/10"),
             Resource.loadtex("nurgling/hud/alarm/11")};
 
+    public static final Tex[] question = new Tex[]{
+            Resource.loadtex("nurgling/hud/question/0"),
+            Resource.loadtex("nurgling/hud/question/1"),
+            Resource.loadtex("nurgling/hud/question/2"),
+            Resource.loadtex("nurgling/hud/question/3"),
+            Resource.loadtex("nurgling/hud/question/4"),
+            Resource.loadtex("nurgling/hud/question/5"),
+            Resource.loadtex("nurgling/hud/question/6"),
+            Resource.loadtex("nurgling/hud/question/7"),
+            Resource.loadtex("nurgling/hud/question/8"),
+            Resource.loadtex("nurgling/hud/question/9"),
+            Resource.loadtex("nurgling/hud/question/10"),
+            Resource.loadtex("nurgling/hud/question/11")};
+
     public static final TexI[] canceli = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/u")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/d")),
