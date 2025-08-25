@@ -3,7 +3,6 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.ResourceTimer;
 import nurgling.ResourceTimerService;
-import nurgling.NUtils;
 
 public class AddResourceTimerWidget extends Window {
     private MapFile.SMarker currentMarker;
@@ -23,7 +22,7 @@ public class AddResourceTimerWidget extends Window {
         hide(); // Start hidden
     }
     
-    public void showForMarker(ResourceTimerService service, MapFile.SMarker marker, MiniMap.Location location, String resourceDisplayName) {
+    public void showForMarker(ResourceTimerService service, MapFile.SMarker marker, String resourceDisplayName) {
         this.currentService = service;
         this.currentMarker = marker;
         this.currentResourceDisplayName = resourceDisplayName;

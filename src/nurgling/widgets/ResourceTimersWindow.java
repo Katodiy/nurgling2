@@ -3,13 +3,10 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.ResourceTimer;
 import nurgling.ResourceTimerService;
-import nurgling.NUtils;
 import nurgling.NStyle;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 /**
  * Window for managing resource timers
@@ -17,17 +14,16 @@ import java.util.Comparator;
 public class ResourceTimersWindow extends Window {
     private static final Coord WINDOW_SIZE = UI.scale(new Coord(350, 250));
     
-    private ResourceTimerService service;
+    private final ResourceTimerService service;
     private final ArrayList<TimerItem> items = new ArrayList<>();
-    private TimerList timerList;
-    
+
     public ResourceTimersWindow(ResourceTimerService service) {
         super(WINDOW_SIZE, "Resource Timers");
         this.service = service;
         
         // Create the timer list
-        timerList = add(new TimerList(new Coord(WINDOW_SIZE.x - UI.scale(20), WINDOW_SIZE.y - UI.scale(40))), 
-                       UI.scale(new Coord(10, 30)));
+        add(new TimerList(new Coord(WINDOW_SIZE.x - UI.scale(20), WINDOW_SIZE.y - UI.scale(40))),
+                UI.scale(new Coord(10, 30)));
         
         hide(); // Start hidden
     }
@@ -57,19 +53,16 @@ public class ResourceTimersWindow extends Window {
             if(service != null) {
                 List<ResourceTimer> timers = new ArrayList<>(service.getAllTimers());
                 // Sort by remaining time (expired first, then by time remaining)
-                Collections.sort(timers, new Comparator<ResourceTimer>() {
-                    @Override
-                    public int compare(ResourceTimer a, ResourceTimer b) {
-                        boolean aExpired = a.isExpired();
-                        boolean bExpired = b.isExpired();
-                        
-                        if(aExpired != bExpired) {
-                            return aExpired ? -1 : 1; // Expired timers first
-                        }
-                        
-                        // Both expired or both active - sort by remaining time
-                        return Long.compare(a.getRemainingTime(), b.getRemainingTime());
+                timers.sort((a, b) -> {
+                    boolean aExpired = a.isExpired();
+                    boolean bExpired = b.isExpired();
+
+                    if (aExpired != bExpired) {
+                        return aExpired ? -1 : 1; // Expired timers first
                     }
+
+                    // Both expired or both active - sort by remaining time
+                    return Long.compare(a.getRemainingTime(), b.getRemainingTime());
                 });
                 
                 for(ResourceTimer timer : timers) {
@@ -82,9 +75,9 @@ public class ResourceTimersWindow extends Window {
     // TimerItem class - represents individual timer entries
     public class TimerItem extends Widget {
         private final ResourceTimer timer;
-        private Label nameLabel;
-        private Label timeLabel;
-        private IButton removeButton;
+        private final Label nameLabel;
+        private final Label timeLabel;
+        private final IButton removeButton;
         
         public TimerItem(ResourceTimer timer) {
             this.timer = timer;
@@ -188,7 +181,6 @@ public class ResourceTimersWindow extends Window {
             };
         }
         
-        
         @Override
         public void resize(Coord sz) {
             super.resize(sz);
@@ -206,16 +198,16 @@ public class ResourceTimersWindow extends Window {
             timer.isExpired() ? "Ready!" : "Cooling down"
         );
         
-        showMessage(details, java.awt.Color.CYAN);
+        showMessage(details);
         if(service != null) {
             service.navigateToResourceTimer(timer);
         }
     }
     
-    private void showMessage(String message, java.awt.Color color) {
+    private void showMessage(String message) {
         nurgling.NUI nui = getNUI();
         if(nui != null && nui.gui != null) {
-            nui.gui.msg(message, color);
+            nui.gui.msg(message);
         }
     }
     

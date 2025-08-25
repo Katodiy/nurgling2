@@ -19,23 +19,23 @@ public class ResourceTimerService {
     /**
      * Handle resource marker click for timer functionality
      */
-    public boolean handleResourceClick(MapFile.SMarker marker, MiniMap.Location location) {
+    public boolean handleResourceClick(MapFile.SMarker marker) {
         if (!isTimerSupportedResource(marker.res.name)) {
             return false;
         }
         
         String displayName = marker.nm != null ? marker.nm : marker.res.name;
-        showResourceTimerDialog(marker, location, displayName);
+        showResourceTimerDialog(marker, displayName);
         return true;
     }
     
     /**
      * Show the resource timer dialog
      */
-    public void showResourceTimerDialog(MapFile.SMarker marker, MiniMap.Location location, String displayName) {
+    public void showResourceTimerDialog(MapFile.SMarker marker, String displayName) {
         AddResourceTimerWidget widget = gui.getAddResourceTimerWidget();
         if (widget != null) {
-            widget.showForMarker(this, marker, location, displayName);
+            widget.showForMarker(this, marker, displayName);
         }
     }
     
