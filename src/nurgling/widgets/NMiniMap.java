@@ -4,6 +4,8 @@ import haven.*;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.LocalizedResourceTimer;
+import nurgling.NGameUI;
 import nurgling.tools.FogArea;
 
 import java.awt.*;
@@ -96,6 +98,7 @@ public class NMiniMap extends MiniMap {
 
         drawtempmarks(g);
         drawterrainname(g);
+        drawResourceTimers(g);
     }
 
     void drawview(GOut g) {
@@ -398,5 +401,48 @@ public class NMiniMap extends MiniMap {
             name = Character.toUpperCase(name.charAt(0)) + name.substring(1);
         }
         return name;
+    }
+
+    private void drawResourceTimers(GOut g) {
+        if(dloc == null) return;
+
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || gui.localizedResourceTimerService == null) return;
+        
+        java.util.List<LocalizedResourceTimer> timers = gui.localizedResourceTimerService.getTimersForSegment(dloc.seg.id);
+
+        Coord hsz = sz.div(2);
+        
+        // Create bordered text furnaces for timer display (like barrel names and character nicknames)
+        Text.Furnace readyTimerFurnace = new PUtils.BlurFurn(
+            new Text.Foundry(Text.dfont, UI.scale(9), Color.GREEN).aa(true), 
+            2, 1, Color.BLACK
+        );
+        Text.Furnace activeTimerFurnace = new PUtils.BlurFurn(
+            new Text.Foundry(Text.dfont, UI.scale(9), Color.WHITE).aa(true), 
+            2, 1, Color.BLACK
+        );
+
+        for(LocalizedResourceTimer timer : timers) {
+            // Calculate screen position for the timer
+            Coord screenPos = timer.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+
+            // Only draw if on screen
+            if(screenPos.x >= 0 && screenPos.x <= sz.x &&
+               screenPos.y >= 0 && screenPos.y <= sz.y) {
+
+                String timeText = timer.getFormattedRemainingTime();
+                
+                // Use appropriate furnace based on timer state
+                Text.Furnace furnace = timer.isExpired() ? readyTimerFurnace : activeTimerFurnace;
+                Text timerDisplay = furnace.render(timeText);
+
+                // Position text slightly below the resource icon
+                Coord textPos = screenPos.add(-timerDisplay.sz().x / 2, 15);
+
+                // Draw timer text with black border (no background needed)
+                g.image(timerDisplay.tex(), textPos);
+            }
+        }
     }
 }

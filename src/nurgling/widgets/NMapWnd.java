@@ -1,15 +1,11 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.NGameUI;
 import nurgling.NUtils;
 
-import java.awt.*;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
 
-import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
 
 public class NMapWnd extends MapWnd {
@@ -54,5 +50,45 @@ public class NMapWnd extends MapWnd {
         super.resize(sz);
         if(te!=null)
             te.c = view.pos("br").sub(UI.scale(200,20));
+    }
+    
+    @Override
+    public boolean mousedown(MouseDownEvent ev) {
+        // Check if the click is on the view area and it's a shift+right-click
+        if(ev.b == 3 && ui.modshift && view.c != null) {
+            // Convert global coordinates to view coordinates
+            Coord viewCoord = ev.c.sub(view.parentpos(this));
+            
+            // Check if the click is within the view bounds
+            if(viewCoord.x >= 0 && viewCoord.x < view.sz.x && 
+               viewCoord.y >= 0 && viewCoord.y < view.sz.y) {
+                
+                // Check if there's a resource marker at this location
+                if(handleResourceTimerClick(viewCoord)) {
+                    return true; // Consume the event
+                }
+            }
+        }
+        
+        return super.mousedown(ev);
+    }
+    
+    private boolean handleResourceTimerClick(Coord c) {
+        // Try to find a resource marker at the clicked location
+        MiniMap.Location clickLoc = view.xlate(c);
+        if(clickLoc == null) return false;
+        
+        MiniMap.DisplayMarker marker = view.markerat(clickLoc.tc);
+        if(marker != null && marker.m instanceof MapFile.SMarker) {
+            MapFile.SMarker smarker = (MapFile.SMarker) marker.m;
+            
+            // Handle through service
+            NGameUI gui = (NGameUI) NUtils.getGameUI();
+            if(gui != null && gui.localizedResourceTimerService != null) {
+                return gui.localizedResourceTimerService.handleResourceClick(smarker);
+            }
+        }
+        
+        return false;
     }
 }

@@ -5,6 +5,7 @@ import haven.res.ui.obj.buddy.Buddy;
 import nurgling.NAlarmManager;
 import nurgling.NStyle;
 import nurgling.NUtils;
+import nurgling.LocalizedResourceTimer;
 import nurgling.conf.NKinProp;
 import nurgling.overlays.NDirArrow;
 import nurgling.tools.Finder;
@@ -22,6 +23,8 @@ public class NAlarmWdg extends Widget
 {
     final public static ArrayList<Long> borkas = new ArrayList();
     final ArrayList<Long> alarms = new ArrayList<>();
+    final ArrayList<String> resourceTimerAlarms = new ArrayList<>(); // Resource timer IDs in alarm state
+    final ArrayList<String> resourceTimerWarnings = new ArrayList<>(); // Resource timer IDs in warning state (10min left)
     private static final Text.Furnace active_title = new PUtils.BlurFurn(new Text.Foundry(sans, 15, Color.WHITE).aa(true), 2, 1, new Color(36, 25, 25));
     TexI numberAlarm = null;
     public NAlarmWdg() {
@@ -100,8 +103,16 @@ public class NAlarmWdg extends Widget
             for (Long id : forRemove) {
                 alarms.remove(id);
             }
-            if (!alarms.isEmpty()) {
-                numberAlarm = new TexI(active_title.render(String.valueOf(alarms.size())).img);
+            
+            // Check resource timers for alarms and warnings
+            checkResourceTimers();
+            
+            // Update alarm count display (combine PvP alarms + resource alarms)
+            int totalAlarms = alarms.size() + resourceTimerAlarms.size();
+            if (totalAlarms > 0) {
+                numberAlarm = new TexI(active_title.render(String.valueOf(totalAlarms)).img);
+            } else {
+                numberAlarm = null;
             }
         }
     }
@@ -146,14 +157,84 @@ public class NAlarmWdg extends Widget
             alarms.add(id);
         }
     }
+    
+    /**
+     * Check all resource timers and update alarm/warning states
+     */
+    private void checkResourceTimers() {
+        if (NUtils.getGameUI() == null || NUtils.getGameUI().localizedResourceTimerService == null) {
+            return;
+        }
+        
+        java.util.Collection<LocalizedResourceTimer> allTimers = NUtils.getGameUI().localizedResourceTimerService.getAllTimers();
+        
+        // Clear old resource timer alarms/warnings for timers that no longer exist
+        resourceTimerAlarms.removeIf(timerId -> 
+            allTimers.stream().noneMatch(t -> t.getResourceId().equals(timerId)));
+        resourceTimerWarnings.removeIf(timerId -> 
+            allTimers.stream().noneMatch(t -> t.getResourceId().equals(timerId)));
+        
+        for (LocalizedResourceTimer timer : allTimers) {
+            String timerId = timer.getResourceId();
+            
+            if (timer.isExpired()) {
+                // Timer is ready - add to alarms if not already there
+                if (!resourceTimerAlarms.contains(timerId)) {
+                    resourceTimerAlarms.add(timerId);
+                    resourceTimerWarnings.remove(timerId); // Remove from warnings
+                    NAlarmManager.play("alarm/question"); // Different sound for ready resources
+                }
+            } else {
+                // Timer has more than 10 minutes - remove from both lists
+                resourceTimerAlarms.remove(timerId);
+                resourceTimerWarnings.remove(timerId);
+            }
+        }
+    }
 
     @Override
     public void draw(GOut g) {
+        int id = (int) (NUtils.getTickId() / 5) % 12;
+        
+        // Show urgent alarm animation for PvP threats
         if(!alarms.isEmpty()) {
-            int id = (int) (NUtils.getTickId() / 5) % 12;
             g.image(NStyle.alarm[id], new Coord(sz.x / 2 - NStyle.alarm[0].sz().x / 2, sz.y / 2 - NStyle.alarm[0].sz().y / 2));
-            g.image(numberAlarm, new Coord(sz.x / 2 + UI.scale(12), sz.y / 2 - UI.scale(24)));
+            if (numberAlarm != null) {
+                g.image(numberAlarm, new Coord(sz.x / 2 + UI.scale(12), sz.y / 2 - UI.scale(24)));
+            }
         }
+        // Show question animation for resource notifications (less urgent) with fade effect
+        else if(!resourceTimerAlarms.isEmpty()) {
+            // Create fade in/out effect using alpha (10% to 100% and back)
+            int fadeFrame = (int) (NUtils.getTickId() / 3) % 20; // Slower animation for smooth fade
+            float alpha;
+            
+            if (fadeFrame <= 10) {
+                // Fade in: 10% to 100%
+                alpha = 0.1f + (fadeFrame * 0.09f);
+            } else {
+                // Fade out: 100% to 10%
+                alpha = 1.0f - ((fadeFrame - 10) * 0.09f);
+            }
+            
+            // Apply alpha and draw question icon
+            g.chcolor(255, 255, 255, (int)(alpha * 255));
+            Coord questionPos = new Coord(sz.x / 2 - NStyle.question[0].sz().x / 2, sz.y / 2 - NStyle.question[0].sz().y / 2);
+            g.image(NStyle.question[0], questionPos);
+
+            // Place number badge in the top-right empty circle of the question mark
+            if (numberAlarm != null) {
+                // Position in top-right area where the small circle is
+                Coord numberPos = new Coord(
+                    questionPos.x + (NStyle.question[0].sz().x * 3 / 4) - numberAlarm.sz().x / 2,  // 3/4 right
+                    questionPos.y + (NStyle.question[0].sz().y / 4) - numberAlarm.sz().y / 2 - UI.scale(4)  // 1/4 down, then up 5 pixels
+                );
+                g.image(numberAlarm, numberPos);
+            }
+            
+            g.chcolor(); // Reset color
+        }
+        
         super.draw(g);
     }
 }

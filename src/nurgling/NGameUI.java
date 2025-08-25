@@ -15,8 +15,9 @@ import nurgling.widgets.SwimmingStatusBuff;
 import nurgling.widgets.TrackingStatusBuff;
 import nurgling.widgets.CrimeStatusBuff;
 import nurgling.widgets.AllowVisitingStatusBuff;
+import nurgling.widgets.LocalizedResourceTimersWindow;
+import nurgling.widgets.LocalizedResourceTimerDialog;
 
-import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
@@ -46,6 +47,9 @@ public class NGameUI extends GameUI
     private CrimeStatusBuff crimeBuff = null;
     private AllowVisitingStatusBuff allowVisitingBuff = null;
     public NRecentActionsPanel recentActionsPanel;
+    public LocalizedResourceTimersWindow localizedResourceTimersWindow = null;
+    private LocalizedResourceTimerDialog localizedResourceTimerDialog = null;
+    public LocalizedResourceTimerService localizedResourceTimerService;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -74,10 +78,15 @@ public class NGameUI extends GameUI
         add(routespec = new RouteSpecialization());
         routespec.hide();
         add(biw = new BotsInterruptWidget());
+        add(localizedResourceTimerDialog = new LocalizedResourceTimerDialog(), new Coord(200, 200));
+        localizedResourceTimerService = new LocalizedResourceTimerService(this);
+        add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
     }
 
     @Override
     public void dispose() {
+        if(localizedResourceTimerService != null)
+            localizedResourceTimerService.dispose();
         if(nurgling.NUtils.getUI().core!=null)
             NUtils.getUI().core.dispose();
         super.dispose();
@@ -770,6 +779,23 @@ public class NGameUI extends GameUI
     @Override
     public boolean keydown(KeyDownEvent ev) {
         nurgling.tasks.WaitKeyPress.setLastKeyPressed(ev.code);
+        
+        // Handle resource timer window shortcut (Ctrl+R)
+        if(ev.code == KeyEvent.VK_R && ui.modctrl) { // Ctrl+R
+            toggleResourceTimerWindow();
+            return true;
+        }
+        
         return super.keydown(ev);
+    }
+    
+    private void toggleResourceTimerWindow() {
+        if(localizedResourceTimerService != null) {
+            localizedResourceTimerService.showTimerWindow();
+        }
+    }
+    
+    public LocalizedResourceTimerDialog getAddResourceTimerWidget() {
+        return localizedResourceTimerDialog;
     }
 }

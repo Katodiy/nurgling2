@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import mapv4.StatusWdg;
 import nurgling.NConfig;
+import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
 
@@ -218,6 +219,18 @@ public class NMiniMapWnd extends Widget{
         }
 
         public boolean clickmarker(DisplayMarker mark, Location loc, int button, boolean press) {
+            // Handle shift+right-click on resource markers for timer functionality
+            if(button == 3 && ui.modshift && mark.m instanceof MapFile.SMarker) {
+                MapFile.SMarker smarker = (MapFile.SMarker) mark.m;
+                
+                // Check if this is a localized resource (map resource) and handle through service
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if(gui != null && gui.localizedResourceTimerService != null &&
+                   gui.localizedResourceTimerService.handleResourceClick(smarker)) {
+                    return true;
+                }
+            }
+            
             if(mark.m instanceof MapFile.SMarker) {
                 Gob gob = MarkerID.find(ui.sess.glob.oc, mark.m);
                 if(gob != null)
@@ -251,6 +264,7 @@ public class NMiniMapWnd extends Widget{
                 return(false);
             return(super.allowzoomout());
         }
+
     }
 
     @Override
