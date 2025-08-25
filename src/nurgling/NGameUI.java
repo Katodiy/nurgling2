@@ -798,10 +798,4 @@ public class NGameUI extends GameUI
     public AddResourceTimerWidget getAddResourceTimerWidget() {
         return addResourceTimerWidget;
     }
-    
-    public void refreshResourceTimerWindow() {
-        if(resourceTimersWindow != null) {
-            resourceTimersWindow.refreshTimers();
-        }
-    }
 }

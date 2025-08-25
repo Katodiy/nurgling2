@@ -95,7 +95,7 @@ public class ResourceTimerService {
                 }
             }
         } catch (Exception e) {
-            showMessage("Navigation error: " + e.getMessage(), java.awt.Color.RED);
+            showMessage("Navigation error: " + e.getMessage());
         }
     }
     
@@ -141,29 +141,24 @@ public class ResourceTimerService {
      * Center only the big map window, not the minimap
      */
     private void centerBigMapOnly(MiniMap.Location targetLoc) {
-        if (gui.mapfile != null && gui.mapfile instanceof nurgling.widgets.NMapWnd) {
-            nurgling.widgets.NMapWnd mapWnd = (nurgling.widgets.NMapWnd) gui.mapfile;
+        if (gui.mapfile != null) {
+            nurgling.widgets.NMapWnd mapWnd = gui.mapfile;
             mapWnd.view.center(targetLoc);
-            
-            if (mapWnd.view instanceof MiniMap) {
-                ((MiniMap) mapWnd.view).follow(null);
-            }
+            mapWnd.view.follow(null);
         }
     }
     
     /**
      * Show message to user
      */
-    private void showMessage(String message, java.awt.Color color) {
-        gui.msg(message, color);
+    private void showMessage(String message) {
+        gui.msg(message);
     }
     
     /**
      * Dispose the service and cleanup resources
      */
     public void dispose() {
-        if (manager != null) {
-            manager.dispose();
-        }
+        manager.dispose();
     }
 }
