@@ -235,7 +235,6 @@ public class ResourceTimersWindow extends Window {
                 MapFile.Segment segment = nui.gui.mmap.file.segments.get(timer.getSegmentId());
                 if(segment != null) {
                     MiniMap.Location targetLoc = new MiniMap.Location(segment, timer.getTileCoords());
-                    disablePlayerFollowing(nui.gui);
                     centerMaps(nui.gui, targetLoc);
                 }
             }
@@ -258,8 +257,7 @@ public class ResourceTimersWindow extends Window {
     }
     
     private void centerMaps(NGameUI gui, MiniMap.Location targetLoc) {
-        gui.mmap.center(targetLoc);
-        
+        // Only center the big map window, not the minimap
         if(gui.mapfile != null && gui.mapfile instanceof nurgling.widgets.NMapWnd) {
             nurgling.widgets.NMapWnd mapWnd = (nurgling.widgets.NMapWnd) gui.mapfile;
             mapWnd.view.center(targetLoc);
