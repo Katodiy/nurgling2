@@ -15,14 +15,14 @@ import java.util.Comparator;
 /**
  * Window for managing resource timers
  */
-public class ResourceTimerWindow extends Window {
+public class ResourceTimersWindow extends Window {
     private static final Coord WINDOW_SIZE = UI.scale(new Coord(350, 250));
     
     private ResourceTimerManager manager;
     private final ArrayList<TimerItem> items = new ArrayList<>();
     private TimerList timerList;
     
-    public ResourceTimerWindow() {
+    public ResourceTimersWindow() {
         super(WINDOW_SIZE, "Resource Timers");
         
         // Create the timer list
@@ -109,7 +109,7 @@ public class ResourceTimerWindow extends Window {
                 public void click() {
                     if(manager != null) {
                         manager.removeTimer(TimerItem.this.timer.getResourceId());
-                        ResourceTimerWindow.this.refreshTimers();
+                        ResourceTimersWindow.this.refreshTimers();
                     }
                 }
             }, UI.scale(new Coord(280, 0)));

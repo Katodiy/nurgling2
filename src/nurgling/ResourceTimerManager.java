@@ -21,17 +21,10 @@ public class ResourceTimerManager {
     private final Map<String, ResourceTimer> timers = new ConcurrentHashMap<>();
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final String dataFile;
-    private Thread cleanupThread;
     
     public ResourceTimerManager() {
         this.dataFile = ((haven.HashDirCache) haven.ResCache.global).base + "\\..\\" + "resource_timers.nurgling.json";
         loadTimers();
-        
-        // Start cleanup thread to remove expired timers periodically
-        cleanupThread = new Thread(this::cleanupExpiredTimers);
-        cleanupThread.setDaemon(true);
-        cleanupThread.setName("ResourceTimer-Cleanup");
-        cleanupThread.start();
     }
     
     /**
@@ -182,38 +175,9 @@ public class ResourceTimerManager {
     }
     
     /**
-     * Cleanup expired timers periodically
-     */
-    private void cleanupExpiredTimers() {
-        while (true) {
-            try {
-                Thread.sleep(60000); // Check every minute
-                
-                lock.writeLock().lock();
-                try {
-                    boolean hasExpired = timers.values().removeIf(ResourceTimer::isExpired);
-                    if (hasExpired) {
-                        saveTimers();
-                    }
-                } finally {
-                    lock.writeLock().unlock();
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            } catch (Exception e) {
-                System.err.println("Error in timer cleanup thread: " + e.getMessage());
-            }
-        }
-    }
-    
-    /**
-     * Dispose the manager and stop cleanup thread
+     * Dispose the manager
      */
     public void dispose() {
-        if (cleanupThread != null && cleanupThread.isAlive()) {
-            cleanupThread.interrupt();
-        }
         // Save any remaining timers
         lock.writeLock().lock();
         try {

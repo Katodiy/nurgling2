@@ -15,10 +15,9 @@ import nurgling.widgets.SwimmingStatusBuff;
 import nurgling.widgets.TrackingStatusBuff;
 import nurgling.widgets.CrimeStatusBuff;
 import nurgling.widgets.AllowVisitingStatusBuff;
-import nurgling.widgets.ResourceTimerWindow;
-import nurgling.widgets.ResourceTimerWidget;
+import nurgling.widgets.ResourceTimersWindow;
+import nurgling.widgets.AddResourceTimerWidget;
 
-import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
@@ -48,8 +47,8 @@ public class NGameUI extends GameUI
     private CrimeStatusBuff crimeBuff = null;
     private AllowVisitingStatusBuff allowVisitingBuff = null;
     public NRecentActionsPanel recentActionsPanel;
-    private ResourceTimerWindow resourceTimerWindow = null;
-    private ResourceTimerWidget resourceTimerWidget = null;
+    private ResourceTimersWindow resourceTimerWindow = null;
+    private AddResourceTimerWidget resourceTimerWidget = null;
     public ResourceTimerManager resourceTimerManager;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
@@ -79,9 +78,9 @@ public class NGameUI extends GameUI
         add(routespec = new RouteSpecialization());
         routespec.hide();
         add(biw = new BotsInterruptWidget());
-        add(resourceTimerWidget = new ResourceTimerWidget(), new Coord(200, 200));
+        add(resourceTimerWidget = new AddResourceTimerWidget(), new Coord(200, 200));
         resourceTimerManager = new ResourceTimerManager();
-        add(resourceTimerWindow = new ResourceTimerWindow(), new Coord(100, 100));
+        add(resourceTimerWindow = new ResourceTimersWindow(), new Coord(100, 100));
     }
 
     @Override
@@ -800,7 +799,7 @@ public class NGameUI extends GameUI
         }
     }
     
-    public ResourceTimerWidget getResourceTimerWidget() {
+    public AddResourceTimerWidget getResourceTimerWidget() {
         return resourceTimerWidget;
     }
     

@@ -1,7 +1,7 @@
 package nurgling;
 
 import haven.*;
-import nurgling.widgets.ResourceTimerWidget;
+import nurgling.widgets.AddResourceTimerWidget;
 
 /**
  * Utility class for resource timer functionality
@@ -16,7 +16,7 @@ public class ResourceTimerUtils {
         
         NGameUI gui = (NGameUI) NUtils.getGameUI();
         if(gui != null) {
-            ResourceTimerWidget widget = gui.getResourceTimerWidget();
+            AddResourceTimerWidget widget = gui.getResourceTimerWidget();
             if(widget != null) {
                 widget.showForMarker(marker, loc, displayName);
             }

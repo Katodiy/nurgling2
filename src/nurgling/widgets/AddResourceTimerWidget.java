@@ -5,7 +5,7 @@ import nurgling.ResourceTimer;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 
-public class ResourceTimerWidget extends Window {
+public class AddResourceTimerWidget extends Window {
     private MapFile.SMarker currentMarker;
     private String currentResourceDisplayName;
     private ResourceTimer currentExistingTimer;
@@ -16,7 +16,7 @@ public class ResourceTimerWidget extends Window {
     private Label existingTimerLabel;
     private Button removeButton;
     
-    public ResourceTimerWidget() {
+    public AddResourceTimerWidget() {
         super(UI.scale(new Coord(235, 140)), "Resource Timer");
         initializeWidgets();
         hide(); // Start hidden

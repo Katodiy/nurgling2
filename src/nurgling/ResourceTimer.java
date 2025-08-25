@@ -92,37 +92,9 @@ public class ResourceTimer {
         }
     }
     
-    /**
-     * Parse duration from strings like "8 hrs and 23 minutes" or "Come back in 8 hrs and 23 minutes"
-     */
-    public static long parseDurationString(String durationStr) {
-        durationStr = durationStr.toLowerCase();
-        long totalMs = 0;
-        
-        // Extract hours
-        java.util.regex.Pattern hoursPattern = java.util.regex.Pattern.compile("(\\d+)\\s*(?:hrs?|hours?)");
-        java.util.regex.Matcher hoursMatcher = hoursPattern.matcher(durationStr);
-        if (hoursMatcher.find()) {
-            int hours = Integer.parseInt(hoursMatcher.group(1));
-            totalMs += hours * 60 * 60 * 1000L;
-        }
-        
-        // Extract minutes
-        java.util.regex.Pattern minutesPattern = java.util.regex.Pattern.compile("(\\d+)\\s*(?:mins?|minutes?)");
-        java.util.regex.Matcher minutesMatcher = minutesPattern.matcher(durationStr);
-        if (minutesMatcher.find()) {
-            int minutes = Integer.parseInt(minutesMatcher.group(1));
-            totalMs += minutes * 60 * 1000L;
-        }
-        
-        return totalMs;
-    }
-    
     // Getters
     public String getResourceId() { return resourceId; }
     public long getSegmentId() { return segmentId; }
     public haven.Coord getTileCoords() { return tileCoords; }
-    public long getStartTime() { return startTime; }
-    public long getDuration() { return duration; }
     public String getDescription() { return description; }
 }
