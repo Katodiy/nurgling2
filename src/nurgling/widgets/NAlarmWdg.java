@@ -211,12 +211,36 @@ public class NAlarmWdg extends Widget
                 g.image(numberAlarm, new Coord(sz.x / 2 + UI.scale(12), sz.y / 2 - UI.scale(24)));
             }
         }
-        // Show question animation for resource notifications (less urgent)
+        // Show question animation for resource notifications (less urgent) with fade effect
         else if(!resourceTimerAlarms.isEmpty()) {
-            g.image(NStyle.question[id], new Coord(sz.x / 2 - NStyle.question[0].sz().x / 2, sz.y / 2 - NStyle.question[0].sz().y / 2));
-            if (numberAlarm != null) {
-                g.image(numberAlarm, new Coord(sz.x / 2 + UI.scale(12), sz.y / 2 - UI.scale(24)));
+            // Create fade in/out effect using alpha (10% to 100% and back)
+            int fadeFrame = (int) (NUtils.getTickId() / 3) % 20; // Slower animation for smooth fade
+            float alpha;
+            
+            if (fadeFrame <= 10) {
+                // Fade in: 10% to 100%
+                alpha = 0.1f + (fadeFrame * 0.09f);
+            } else {
+                // Fade out: 100% to 10%
+                alpha = 1.0f - ((fadeFrame - 10) * 0.09f);
             }
+            
+            // Apply alpha and draw question icon
+            g.chcolor(255, 255, 255, (int)(alpha * 255));
+            Coord questionPos = new Coord(sz.x / 2 - NStyle.question[0].sz().x / 2, sz.y / 2 - NStyle.question[0].sz().y / 2);
+            g.image(NStyle.question[0], questionPos);
+
+            // Place number badge in the top-right empty circle of the question mark
+            if (numberAlarm != null) {
+                // Position in top-right area where the small circle is
+                Coord numberPos = new Coord(
+                    questionPos.x + (NStyle.question[0].sz().x * 3 / 4) - numberAlarm.sz().x / 2,  // 3/4 right
+                    questionPos.y + (NStyle.question[0].sz().y / 4) - numberAlarm.sz().y / 2 - UI.scale(4)  // 1/4 down, then up 5 pixels
+                );
+                g.image(numberAlarm, numberPos);
+            }
+            
+            g.chcolor(); // Reset color
         }
         
         super.draw(g);
