@@ -184,13 +184,13 @@ public class NAlarmWdg extends Widget
                 if (!resourceTimerAlarms.contains(timerId)) {
                     resourceTimerAlarms.add(timerId);
                     resourceTimerWarnings.remove(timerId); // Remove from warnings
-                    NAlarmManager.play("alarm/alarm"); // Different sound for ready resources
+                    NAlarmManager.play("alarm/question"); // Different sound for ready resources
                 }
             } else if (remainingMs <= tenMinutesMs) {
                 // Timer has 10 minutes or less - add to warnings if not already there
                 if (!resourceTimerWarnings.contains(timerId) && !resourceTimerAlarms.contains(timerId)) {
                     resourceTimerWarnings.add(timerId);
-                    NAlarmManager.play("alarm/alarm"); // Warning sound
+                    NAlarmManager.play("alarm/question"); // Warning sound
                 }
             } else {
                 // Timer has more than 10 minutes - remove from both lists
