@@ -2,8 +2,7 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.ResourceTimer;
-import nurgling.ResourceTimerManager;
-import nurgling.NGameUI;
+import nurgling.ResourceTimerService;
 import nurgling.NUtils;
 import nurgling.NStyle;
 
@@ -18,12 +17,13 @@ import java.util.Comparator;
 public class ResourceTimersWindow extends Window {
     private static final Coord WINDOW_SIZE = UI.scale(new Coord(350, 250));
     
-    private ResourceTimerManager manager;
+    private ResourceTimerService service;
     private final ArrayList<TimerItem> items = new ArrayList<>();
     private TimerList timerList;
     
-    public ResourceTimersWindow() {
+    public ResourceTimersWindow(ResourceTimerService service) {
         super(WINDOW_SIZE, "Resource Timers");
+        this.service = service;
         
         // Create the timer list
         timerList = add(new TimerList(new Coord(WINDOW_SIZE.x - UI.scale(20), WINDOW_SIZE.y - UI.scale(40))), 
@@ -34,9 +34,6 @@ public class ResourceTimersWindow extends Window {
     
     @Override
     public void show() {
-        // Refresh manager reference when showing
-        NGameUI gui = (NGameUI) NUtils.getGameUI();
-        this.manager = gui != null ? gui.resourceTimerManager : null;
         refreshTimers();
         super.show();
     }
@@ -57,8 +54,8 @@ public class ResourceTimersWindow extends Window {
     public void refreshTimers() {
         synchronized (items) {
             items.clear();
-            if(manager != null) {
-                List<ResourceTimer> timers = new ArrayList<>(manager.getAllTimers());
+            if(service != null) {
+                List<ResourceTimer> timers = new ArrayList<>(service.getAllTimers());
                 // Sort by remaining time (expired first, then by time remaining)
                 Collections.sort(timers, new Comparator<ResourceTimer>() {
                     @Override
@@ -107,8 +104,8 @@ public class ResourceTimersWindow extends Window {
             removeButton = add(new IButton(NStyle.removei[0].back, NStyle.removei[1].back, NStyle.removei[2].back) {
                 @Override
                 public void click() {
-                    if(manager != null) {
-                        manager.removeTimer(TimerItem.this.timer.getResourceId());
+                    if(service != null) {
+                        service.removeTimer(TimerItem.this.timer.getResourceId());
                         ResourceTimersWindow.this.refreshTimers();
                     }
                 }
@@ -210,7 +207,9 @@ public class ResourceTimersWindow extends Window {
         );
         
         showMessage(details, java.awt.Color.CYAN);
-        navigateToResource(timer);
+        if(service != null) {
+            service.navigateToResourceTimer(timer);
+        }
     }
     
     private void showMessage(String message, java.awt.Color color) {
@@ -222,43 +221,6 @@ public class ResourceTimersWindow extends Window {
     
     private nurgling.NUI getNUI() {
         return (this.ui instanceof nurgling.NUI) ? (nurgling.NUI)this.ui : null;
-    }
-    
-    private void navigateToResource(ResourceTimer timer) {
-        try {
-            nurgling.NUI nui = getNUI();
-            if(nui == null || nui.gui == null) return;
-            
-            openMapWindowIfNeeded(nui.gui);
-            
-            if(nui.gui.mmap != null) {
-                MapFile.Segment segment = nui.gui.mmap.file.segments.get(timer.getSegmentId());
-                if(segment != null) {
-                    MiniMap.Location targetLoc = new MiniMap.Location(segment, timer.getTileCoords());
-                    centerMaps(nui.gui, targetLoc);
-                }
-            }
-        } catch(Exception e) {
-            showMessage("Navigation error: " + e.getMessage(), java.awt.Color.RED);
-        }
-    }
-    
-    private void openMapWindowIfNeeded(NGameUI gui) {
-        if(gui.mapfile == null || !gui.mapfile.visible()) {
-            gui.togglewnd(gui.mapfile);
-        }
-    }
-    
-    private void centerMaps(NGameUI gui, MiniMap.Location targetLoc) {
-        // Only center the big map window, not the minimap
-        if(gui.mapfile != null && gui.mapfile instanceof nurgling.widgets.NMapWnd) {
-            nurgling.widgets.NMapWnd mapWnd = (nurgling.widgets.NMapWnd) gui.mapfile;
-            mapWnd.view.center(targetLoc);
-            
-            if(mapWnd.view instanceof MiniMap) {
-                ((MiniMap) mapWnd.view).follow(null);
-            }
-        }
     }
     
     @Override

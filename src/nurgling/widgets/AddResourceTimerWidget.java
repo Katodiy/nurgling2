@@ -2,13 +2,14 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.ResourceTimer;
-import nurgling.NGameUI;
+import nurgling.ResourceTimerService;
 import nurgling.NUtils;
 
 public class AddResourceTimerWidget extends Window {
     private MapFile.SMarker currentMarker;
     private String currentResourceDisplayName;
     private ResourceTimer currentExistingTimer;
+    private ResourceTimerService currentService;
     
     private TextEntry hoursEntry;
     private TextEntry minutesEntry;
@@ -22,15 +23,13 @@ public class AddResourceTimerWidget extends Window {
         hide(); // Start hidden
     }
     
-    public void showForMarker(MapFile.SMarker marker, MiniMap.Location location, String resourceDisplayName) {
+    public void showForMarker(ResourceTimerService service, MapFile.SMarker marker, MiniMap.Location location, String resourceDisplayName) {
+        this.currentService = service;
         this.currentMarker = marker;
         this.currentResourceDisplayName = resourceDisplayName;
         
         // Check if timer already exists
-        NGameUI gui = getGameUI();
-        if(gui != null && gui.resourceTimerManager != null) {
-            this.currentExistingTimer = gui.resourceTimerManager.getTimer(marker.seg, marker.tc, marker.res.name);
-        }
+        this.currentExistingTimer = service.getExistingTimer(marker.seg, marker.tc, marker.res.name);
         
         updateWidgetContent();
         show();
@@ -148,15 +147,13 @@ public class AddResourceTimerWidget extends Window {
             
             long duration = (hours * 60L + minutes) * 60L * 1000L;
             
-            NGameUI gui = getGameUI();
-            if(gui != null && gui.resourceTimerManager != null) {
+            if(currentService != null) {
                 if(currentExistingTimer != null) {
-                    gui.resourceTimerManager.removeTimer(currentExistingTimer.getResourceId());
+                    currentService.removeTimer(currentExistingTimer.getResourceId());
                 }
                 
-                gui.resourceTimerManager.addTimer(currentMarker.seg, currentMarker.tc, currentMarker.nm, currentMarker.res.name, 
-                                               duration, currentResourceDisplayName);
-                gui.refreshResourceTimerWindow();
+                currentService.createTimer(currentMarker.seg, currentMarker.tc, currentMarker.nm, currentMarker.res.name, 
+                                         duration, currentResourceDisplayName);
             }
             
             close();
@@ -169,18 +166,10 @@ public class AddResourceTimerWidget extends Window {
     }
     
     private void removeTimer() {
-        if(currentExistingTimer != null) {
-            NGameUI gui = getGameUI();
-            if(gui != null && gui.resourceTimerManager != null) {
-                gui.resourceTimerManager.removeTimer(currentExistingTimer.getResourceId());
-                gui.refreshResourceTimerWindow();
-            }
+        if(currentExistingTimer != null && currentService != null) {
+            currentService.removeTimer(currentExistingTimer.getResourceId());
             close();
         }
-    }
-    
-    private NGameUI getGameUI() {
-        return (NGameUI) NUtils.getGameUI();
     }
     
     private int parseTimeInput(String input) {

@@ -47,9 +47,9 @@ public class NGameUI extends GameUI
     private CrimeStatusBuff crimeBuff = null;
     private AllowVisitingStatusBuff allowVisitingBuff = null;
     public NRecentActionsPanel recentActionsPanel;
-    private ResourceTimersWindow resourceTimersWindow = null;
+    public ResourceTimersWindow resourceTimersWindow = null;
     private AddResourceTimerWidget addResourceTimerWidget = null;
-    public ResourceTimerManager resourceTimerManager;
+    public ResourceTimerService resourceTimerService;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -79,14 +79,14 @@ public class NGameUI extends GameUI
         routespec.hide();
         add(biw = new BotsInterruptWidget());
         add(addResourceTimerWidget = new AddResourceTimerWidget(), new Coord(200, 200));
-        resourceTimerManager = new ResourceTimerManager();
-        add(resourceTimersWindow = new ResourceTimersWindow(), new Coord(100, 100));
+        resourceTimerService = new ResourceTimerService(this);
+        add(resourceTimersWindow = new ResourceTimersWindow(resourceTimerService), new Coord(100, 100));
     }
 
     @Override
     public void dispose() {
-        if(resourceTimerManager != null)
-            resourceTimerManager.dispose();
+        if(resourceTimerService != null)
+            resourceTimerService.dispose();
         if(nurgling.NUtils.getUI().core!=null)
             NUtils.getUI().core.dispose();
         super.dispose();
@@ -790,12 +790,8 @@ public class NGameUI extends GameUI
     }
     
     private void toggleResourceTimerWindow() {
-        if(resourceTimersWindow != null) {
-            if(resourceTimersWindow.visible()) {
-                resourceTimersWindow.hide();
-            } else {
-                resourceTimersWindow.show();
-            }
+        if(resourceTimerService != null) {
+            resourceTimerService.showTimerWindow();
         }
     }
     

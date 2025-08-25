@@ -1,8 +1,8 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.NGameUI;
 import nurgling.NUtils;
-import nurgling.ResourceTimerUtils;
 
 import java.util.Map;
 
@@ -82,10 +82,10 @@ public class NMapWnd extends MapWnd {
         if(marker != null && marker.m instanceof MapFile.SMarker) {
             MapFile.SMarker smarker = (MapFile.SMarker) marker.m;
             
-            // Check if this is a localized resource (map resource)
-            if(ResourceTimerUtils.isTimerSupportedResource(smarker.res.name)) {
-                ResourceTimerUtils.showResourceTimerDialog(smarker, clickLoc);
-                return true;
+            // Handle through service
+            NGameUI gui = (NGameUI) NUtils.getGameUI();
+            if(gui != null && gui.resourceTimerService != null) {
+                return gui.resourceTimerService.handleResourceClick(smarker, clickLoc);
             }
         }
         

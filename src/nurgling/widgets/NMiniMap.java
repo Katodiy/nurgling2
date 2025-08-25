@@ -407,9 +407,9 @@ public class NMiniMap extends MiniMap {
         if(dloc == null) return;
 
         NGameUI gui = (NGameUI) NUtils.getGameUI();
-        if(gui == null || gui.resourceTimerManager == null) return;
+        if(gui == null || gui.resourceTimerService == null) return;
         
-        java.util.List<ResourceTimer> timers = gui.resourceTimerManager.getTimersForSegment(dloc.seg.id);
+        java.util.List<ResourceTimer> timers = gui.resourceTimerService.getTimersForSegment(dloc.seg.id);
 
         Coord hsz = sz.div(2);
         Text.Foundry timerFont = new Text.Foundry(Text.dfont, 9);

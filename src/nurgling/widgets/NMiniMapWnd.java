@@ -3,9 +3,9 @@ package nurgling.widgets;
 import haven.*;
 import mapv4.StatusWdg;
 import nurgling.NConfig;
+import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
-import nurgling.ResourceTimerUtils;
 
 import java.net.MalformedURLException;
 
@@ -223,9 +223,10 @@ public class NMiniMapWnd extends Widget{
             if(button == 3 && ui.modshift && mark.m instanceof MapFile.SMarker) {
                 MapFile.SMarker smarker = (MapFile.SMarker) mark.m;
                 
-                // Check if this is a localized resource (map resource)
-                if(ResourceTimerUtils.isTimerSupportedResource(smarker.res.name)) {
-                    ResourceTimerUtils.showResourceTimerDialog(smarker, loc);
+                // Check if this is a localized resource (map resource) and handle through service
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if(gui != null && gui.resourceTimerService != null && 
+                   gui.resourceTimerService.handleResourceClick(smarker, loc)) {
                     return true;
                 }
             }
