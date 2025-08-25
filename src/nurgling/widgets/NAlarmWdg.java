@@ -176,8 +176,6 @@ public class NAlarmWdg extends Widget
         
         for (LocalizedResourceTimer timer : allTimers) {
             String timerId = timer.getResourceId();
-            long remainingMs = timer.getRemainingTime();
-            long tenMinutesMs = 10 * 60 * 1000; // 10 minutes in milliseconds
             
             if (timer.isExpired()) {
                 // Timer is ready - add to alarms if not already there
@@ -185,12 +183,6 @@ public class NAlarmWdg extends Widget
                     resourceTimerAlarms.add(timerId);
                     resourceTimerWarnings.remove(timerId); // Remove from warnings
                     NAlarmManager.play("alarm/question"); // Different sound for ready resources
-                }
-            } else if (remainingMs <= tenMinutesMs) {
-                // Timer has 10 minutes or less - add to warnings if not already there
-                if (!resourceTimerWarnings.contains(timerId) && !resourceTimerAlarms.contains(timerId)) {
-                    resourceTimerWarnings.add(timerId);
-                    NAlarmManager.play("alarm/question"); // Warning sound
                 }
             } else {
                 // Timer has more than 10 minutes - remove from both lists
