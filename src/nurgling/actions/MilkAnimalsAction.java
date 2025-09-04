@@ -10,6 +10,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitPose;
+import nurgling.tasks.WaitSound;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.areas.NArea;
@@ -91,8 +92,8 @@ public class MilkAnimalsAction implements Action {
             // Navigate to and milk the animal
             new DynamicPf(targetAnimal).run(gui);
             NUtils.activateGob(targetAnimal);
-            Gob pl = NUtils.player();
-            NUtils.getUI().core.addTask(new WaitPose(pl,"gfx/borka/idle"));
+
+            NUtils.getUI().core.addTask(new WaitSound("sfx/fx/water"));
 
             milkCount++;
             
