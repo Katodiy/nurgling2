@@ -10,6 +10,7 @@ import nurgling.actions.bots.ScenarioRunner;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
 import nurgling.scenarios.*;
+import nurgling.widgets.NScenarioButton;
 import nurgling.widgets.ScenarioBotSelectionDialog;
 import nurgling.widgets.StepSettingsPanel;
 
@@ -37,6 +38,7 @@ public class ScenarioPanel extends Panel {
 
     private ScenarioBotSelectionDialog stepDialog = null;
 
+
     public ScenarioPanel() {
         super("");
 
@@ -53,35 +55,56 @@ public class ScenarioPanel extends Panel {
         listPanel.add(new Label("Scenarios:"), new Coord(0, 0));
 
         int slistWidth = contentWidth - margin * 2;
-        scenarioList = listPanel.add(
-                new SListBox<Scenario, Widget>(new Coord(slistWidth, slistHeight), UI.scale(32)) {
-                    @Override
-                    protected List<Scenario> items() {
-                        return manager != null ? new ArrayList<>(manager.getScenarios().values()) : Collections.emptyList();
+        SListBox<Scenario, Widget> scenarioListBox = new SListBox<Scenario, Widget>(new Coord(slistWidth, slistHeight), UI.scale(32)) {
+            private NScenarioButton drag = null;
+            private UI.Grab grab = null;
+            
+            @Override
+            protected List<Scenario> items() {
+                return manager != null ? new ArrayList<>(manager.getScenarios().values()) : Collections.emptyList();
+            }
+            
+            @Override
+            public void draw(GOut g, boolean strict) {
+                super.draw(g, strict);
+                if(drag != null) {
+                    BufferedImage ds = drag.up;
+                    Coord dssz = new Coord(ds.getWidth(), ds.getHeight());
+                    ui.drawafter(new UI.AfterDraw() {
+                        public void draw(GOut g) {
+                            g.reclip(ui.mc.sub(dssz.div(2)), dssz);
+                            g.image(new TexI(ds), ui.mc);
+                        }
+                    });
+                }
+            }
+            
+            public void drag(NScenarioButton btn) {
+                if(grab == null)
+                    grab = ui.grabmouse(this);
+                drag = btn;
+            }
+            
+            @Override
+            public boolean mouseup(MouseUpEvent ev) {
+                if((grab != null) && (ev.b == 1)) {
+                    grab.remove();
+                    grab = null;
+                    if(drag != null) {
+                        DropTarget.dropthing(ui.root, ev.c.add(rootpos()), drag);
+                        drag = null;
                     }
-                    @Override
-                    protected Widget makeitem(Scenario item, int idx, Coord sz) {
-                        Widget w = new Widget(sz);
-                        Label label = new Label(item.getName());
-
-                        int btnW = UI.scale(60);
-                        int btnS = UI.scale(8);
-                        int rightPad = UI.scale(10);
-
-                        int runBtnX = sz.x - rightPad - btnW * 3 - btnS * 2;
-                        int editBtnX = sz.x - rightPad - btnW * 2 - btnS;
-                        int deleteBtnX = sz.x - rightPad - btnW;
-
-                        int labelAreaWidth = runBtnX - margin;
-                        int labelX = margin + (labelAreaWidth - label.sz.x) / 2;
-
-                        w.add(label, new Coord(labelX, (sz.y - label.sz.y) / 2));
-                        w.add(new Button(btnW, "Run", () -> runScenario(item)), new Coord(runBtnX, (sz.y - btnHeight) / 2));
-                        w.add(new Button(btnW, "Edit", () -> editScenario(item)), new Coord(editBtnX, (sz.y - btnHeight) / 2));
-                        w.add(new Button(btnW, "Delete", () -> deleteScenario(item)), new Coord(deleteBtnX, (sz.y - btnHeight) / 2));
-                        return w;
-                    }
-                },
+                    return true;
+                }
+                return super.mouseup(ev);
+            }
+            
+            @Override
+            protected Widget makeitem(Scenario item, int idx, Coord sz) {
+                return new ScenarioItemWidget(this, sz, item);
+            }
+        };
+        scenarioList = listPanel.add(scenarioListBox,
                 new Coord(margin, margin + UI.scale(32))
         );
 
@@ -395,4 +418,81 @@ public class ScenarioPanel extends Panel {
 
         t.start();
     }
+    
+    private class ScenarioItemWidget extends Widget {
+        private final Object parentList;
+        private final Scenario scenario;
+        private NScenarioButton scenarioBtn;
+        private Coord dp;
+        
+        ScenarioItemWidget(Object parentList, Coord sz, Scenario scenario) {
+            super(sz);
+            this.parentList = parentList;
+            this.scenario = scenario;
+            
+            Label label = new Label(scenario.getName());
+
+            int btnW = UI.scale(60);
+            int btnS = UI.scale(8);
+            int rightPad = UI.scale(10);
+            int scenarioBtnSize = UI.scale(20);
+
+            // Add draggable scenario button at the far left
+            scenarioBtn = new NScenarioButton(scenario);
+            add(scenarioBtn, new Coord(margin, (sz.y - scenarioBtnSize) / 2));
+
+            int runBtnX = sz.x - rightPad - btnW * 3 - btnS * 2;
+            int editBtnX = sz.x - rightPad - btnW * 2 - btnS;
+            int deleteBtnX = sz.x - rightPad - btnW;
+
+            // Adjust label position to account for scenario button
+            int labelX = margin + scenarioBtnSize + btnS;
+
+            add(label, new Coord(labelX, (sz.y - label.sz.y) / 2));
+            int itemBtnHeight = UI.scale(28);
+            add(new Button(btnW, "Run", () -> runScenario(scenario)), new Coord(runBtnX, (sz.y - itemBtnHeight) / 2));
+            add(new Button(btnW, "Edit", () -> editScenario(scenario)), new Coord(editBtnX, (sz.y - itemBtnHeight) / 2));
+            add(new Button(btnW, "Delete", () -> deleteScenario(scenario)), new Coord(deleteBtnX, (sz.y - itemBtnHeight) / 2));
+        }
+        
+        @Override
+        public boolean mousedown(MouseDownEvent ev) {
+            // Check if click is within scenario button area
+            Coord btnPos = scenarioBtn.c;
+            Coord btnSz = scenarioBtn.sz;
+            if(ev.c.isect(btnPos, btnSz)) {
+                if(ev.b == 1) {
+                    dp = ev.c;
+                    return true;
+                }
+            }
+            return super.mousedown(ev);
+        }
+        
+        @Override
+        public void mousemove(MouseMoveEvent ev) {
+            if((dp != null) && (ev.c.dist(dp) > 5)) {
+                dp = null;
+                // Use reflection to call the drag method
+                try {
+                    java.lang.reflect.Method dragMethod = parentList.getClass().getMethod("drag", NScenarioButton.class);
+                    dragMethod.invoke(parentList, scenarioBtn);
+                } catch (Exception e) {
+                    // Fallback - shouldn't happen
+                }
+            }
+            super.mousemove(ev);
+        }
+        
+        @Override
+        public boolean mouseup(MouseUpEvent ev) {
+            if(dp != null) {
+                dp = null;
+                return true;
+            }
+            return super.mouseup(ev);
+        }
+    }
+
+
 }

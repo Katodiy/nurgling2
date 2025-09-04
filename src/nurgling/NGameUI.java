@@ -6,6 +6,7 @@ import haven.Label;
 import haven.Window;
 import haven.res.ui.rbuff.*;
 import haven.res.ui.relcnt.RelCont;
+import java.awt.image.BufferedImage;
 import nurgling.conf.*;
 import nurgling.notifications.*;
 import nurgling.overlays.QualityOl;
@@ -561,6 +562,8 @@ public class NGameUI extends GameUI
                             ((BeltSlot)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                         else if (item instanceof NBotsMenu.NButton)
                             ((NBotsMenu.NButton)item).btn.draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
+                        else if (item instanceof ScenarioDisplayButton)
+                            ((ScenarioDisplayButton)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                     }
                 } catch (Loading ignored) {
                 }
@@ -577,10 +580,18 @@ public class NGameUI extends GameUI
                 NToolBeltProp prop = NToolBeltProp.get(name);
                 String path;
                 if((path = prop.custom.get(slot))!=null) {
-                    NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
-                    if(btn!=null) {
-                        btn.btn.click();
+                    if(path.startsWith("scenario:")) {
+                        // Handle scenario button execution
+                        String scenarioName = path.substring("scenario:".length());
+                        executeScenarioByName(scenarioName);
                         return;
+                    } else {
+                        // Handle regular bot button
+                        NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
+                        if(btn!=null) {
+                            btn.btn.click();
+                            return;
+                        }
                     }
                 }
                 super.keyact(slot);
@@ -603,10 +614,18 @@ public class NGameUI extends GameUI
             {
                 String path;
                 if((path = prop.custom.get(slot))!=null) {
-                    NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
-                    if(btn!=null) {
-                        btn.btn.click();
+                    if(path.startsWith("scenario:")) {
+                        // Handle scenario button execution
+                        String scenarioName = path.substring("scenario:".length());
+                        executeScenarioByName(scenarioName);
                         return true;
+                    } else {
+                        // Handle regular bot button
+                        NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
+                        if(btn!=null) {
+                            btn.btn.click();
+                            return true;
+                        }
                     }
                 }
             }
@@ -625,7 +644,17 @@ public class NGameUI extends GameUI
             }
             else
             {
-                return botsMenu.find(path);
+                if(path.startsWith("scenario:")) {
+                    String scenarioName = path.substring("scenario:".length());
+                    for(nurgling.scenarios.Scenario scenario : ui.core.scenarioManager.getScenarios().values()) {
+                        if(scenario.getName().equals(scenarioName)) {
+                            return new ScenarioDisplayButton(scenario);
+                        }
+                    }
+                    return null;
+                } else {
+                    return botsMenu.find(path);
+                }
             }
         }
 
@@ -682,6 +711,13 @@ public class NGameUI extends GameUI
                     NBotsMenu.NButton pag = (NBotsMenu.NButton)thing;
                     NToolBeltProp prop = NToolBeltProp.get(name);
                     prop.custom.put(slot,pag.path);
+                    NToolBeltProp.set(name,prop);
+                    return(true);
+                } else if(thing instanceof nurgling.widgets.NScenarioButton) {
+                    nurgling.widgets.NScenarioButton scenarioBtn = (nurgling.widgets.NScenarioButton)thing;
+                    NToolBeltProp prop = NToolBeltProp.get(name);
+                    // Use scenario name as the identifier for scenarios
+                    prop.custom.put(slot, "scenario:" + scenarioBtn.getScenario().getName());
                     NToolBeltProp.set(name,prop);
                     return(true);
                 }
@@ -757,6 +793,34 @@ public class NGameUI extends GameUI
 
     }
 
+    public static class ScenarioDisplayButton {
+        private final nurgling.scenarios.Scenario scenario;
+        private BufferedImage icon;
+        
+        public ScenarioDisplayButton(nurgling.scenarios.Scenario scenario) {
+            this.scenario = scenario;
+            loadIcon();
+        }
+        
+        private void loadIcon() {
+            try {
+                this.icon = nurgling.scenarios.ScenarioIcons.getIcon(scenario);
+            } catch (Exception e) {
+                this.icon = nurgling.scenarios.ScenarioIcons.getDefaultIcon();
+            }
+        }
+        
+        public void draw(GOut g) {
+            if(icon != null) {
+                g.image(icon, Coord.z);
+            }
+        }
+        
+        public nurgling.scenarios.Scenario getScenario() {
+            return scenario;
+        }
+    }
+
 
     public boolean msg(UI.Notice msg) {
         if (msg.message().contains("Quality")) {
@@ -793,6 +857,28 @@ public class NGameUI extends GameUI
         if(localizedResourceTimerService != null) {
             localizedResourceTimerService.showTimerWindow();
         }
+    }
+    
+    private void executeScenarioByName(String scenarioName) {
+        for(nurgling.scenarios.Scenario scenario : ui.core.scenarioManager.getScenarios().values()) {
+            if(scenario.getName().equals(scenarioName)) {
+                Thread t = new Thread(() -> {
+                    try {
+                        nurgling.actions.bots.ScenarioRunner runner = new nurgling.actions.bots.ScenarioRunner(scenario);
+                        runner.run(this);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } catch (Exception e) {
+                        error("Scenario execution failed: " + e.getMessage());
+                    }
+                }, "ScenarioRunner-" + scenarioName);
+                
+                biw.addObserve(t);
+                t.start();
+                return;
+            }
+        }
+        error("Scenario not found: " + scenarioName);
     }
     
     public LocalizedResourceTimerDialog getAddResourceTimerWidget() {
