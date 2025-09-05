@@ -5,7 +5,6 @@ import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.ActionWithFinal;
-import nurgling.actions.bots.RouteAutoRecorder;
 import nurgling.actions.bots.ScenarioRunner;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;

@@ -1,17 +1,13 @@
 package nurgling.widgets;
 
 import haven.*;
-import nurgling.NUtils;
-import nurgling.actions.ScenarioAction;
 import nurgling.scenarios.Scenario;
 import nurgling.scenarios.ScenarioIcons;
 
-import java.awt.image.BufferedImage;
 
 public class NScenarioButton extends IButton {
     private final Scenario scenario;
-    private final ScenarioAction action;
-    
+
     public NScenarioButton(Scenario scenario) {
         super(
             ScenarioIcons.loadScenarioIconUp(scenario),
@@ -19,8 +15,6 @@ public class NScenarioButton extends IButton {
             ScenarioIcons.loadScenarioIconHover(scenario)
         );
         this.scenario = scenario;
-        this.action = new ScenarioAction(scenario);
-        // No click action - handled by parent widget
     }
     
     @Override
