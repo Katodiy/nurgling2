@@ -1,19 +1,16 @@
 package nurgling.tasks;
 
-import haven.*;
 import nurgling.NUtils;
-import nurgling.actions.DynamicPf;
-import nurgling.tools.NParser;
 
 public class WaitSound extends NTask
 {
     String name;
-    long count;
+    long count = 0;
     boolean done = false;
     public WaitSound(String name)
     {
         NUtils.dropLastSfx();
-        count = NUtils.getTickId();
+        this.name = name;
     }
 
     @Override

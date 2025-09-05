@@ -1,6 +1,7 @@
 package nurgling.actions.bots.registry;
 
 import nurgling.actions.FillWaterskins;
+import nurgling.actions.MilkAnimalsAction;
 import nurgling.actions.bots.farmers.PumpkinFarmer;
 import nurgling.actions.bots.*;
 import nurgling.actions.bots.CarrotFarmerQ;
@@ -86,7 +87,6 @@ public class BotRegistry {
         bots.add(new BotDescriptor("wheat", BotDescriptor.BotType.FARMING, "Wheat Farmer", "Automatically harvests and replants wheat.", true, true, WheatFarmer.class, "wheat", false));
         bots.add(new BotDescriptor("poppy", BotDescriptor.BotType.FARMING, "Poppy Farmer", "Automatically harvests and replants poppies.", true, true, nurgling.actions.bots.farmers.PoppyFarmer.class, "poppy", true));
         bots.add(new BotDescriptor("pipeweed", BotDescriptor.BotType.FARMING, "Pipeweed Farmer", "Automatically harvests and replants pipeweed.", true, true, nurgling.actions.bots.farmers.PipeweedFarmer.class, "pipeweed", false));
-
         bots.add(new BotDescriptor("goats", BotDescriptor.BotType.FARMING, "Goat Manager", "Manages goat herds.", true, true, GoatsAction.class, "goats", false));
         bots.add(new BotDescriptor("sheeps", BotDescriptor.BotType.FARMING, "Sheep Manager", "Manages sheep herds.", true, true, SheepsAction.class, "sheeps", false));
         bots.add(new BotDescriptor("pigs", BotDescriptor.BotType.FARMING, "Pig Manager", "Manages pig herds.", true, true, PigsAction.class, "pigs", false));

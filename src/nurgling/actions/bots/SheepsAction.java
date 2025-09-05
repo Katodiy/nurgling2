@@ -81,6 +81,9 @@ public class SheepsAction implements Action {
             if(SheepsHerd.getCurrent()!=null) {
                 new MemorizeAnimalsAction(new NAlias("sheep"),"sheeps", Sheep.class).run(gui);
 
+                new MilkAnimalsAction(new NAlias("sheep")).run(gui);
+                gui.msg("Milking cycle done!");
+
                 new ShearWool(Specialisation.SpecName.sheeps, new NAlias("sheep")).run(gui);
 
                 new KillAnimalsAction<Sheep>(new NAlias("sheep"), "sheeps", comparator, Sheep.class, wpred, wlpred, SheepsHerd.getCurrent().adultSheeps).run(gui);

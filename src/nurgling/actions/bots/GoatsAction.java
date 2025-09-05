@@ -3,6 +3,7 @@ package nurgling.actions.bots;
 import haven.Coord;
 import haven.Gob;
 import haven.res.gfx.hud.rosters.goat.Goat;
+import haven.res.gfx.hud.rosters.sheep.Sheep;
 import haven.res.ui.croster.CattleId;
 import nurgling.NGameUI;
 import nurgling.NUtils;
@@ -83,6 +84,9 @@ public class GoatsAction implements Action {
             };
             if(GoatsHerd.getCurrent()!=null) {
                 new MemorizeAnimalsAction(new NAlias("goat"),"goats",Goat.class).run(gui);
+
+                new MilkAnimalsAction(new NAlias("goat")).run(gui);
+                gui.msg("Milking cycle done!");
 
                 new ShearWool(Specialisation.SpecName.goats, new NAlias("goat")).run(gui);
 

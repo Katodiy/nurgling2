@@ -79,7 +79,8 @@ public class Specialisation extends Window
         churn, deer, sswheel,
         compostBin,
         curdingTub,
-        cheeseRacks
+        cheeseRacks,
+        cistern
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -142,6 +143,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.compostBin.toString(),"Compost Bin",Resource.loadsimg("nurgling/categories/compostbin")));
         specialisation.add(new SpecialisationItem(SpecName.curdingTub.toString(),"Curding Tub",Resource.loadsimg("nurgling/categories/curding_tubl")));
         specialisation.add(new SpecialisationItem(SpecName.cheeseRacks.toString(),"Cheese Racks",Resource.loadsimg("nurgling/categories/cheese_rack")));
+        specialisation.add(new SpecialisationItem(SpecName.cistern.toString(),"Cistern",Resource.loadsimg("nurgling/categories/cheese_rack")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
