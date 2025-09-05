@@ -360,13 +360,6 @@ public class ScenarioPanel extends Panel {
         ui.root.add(stepDialog, this.c.add(50, 50));
     }
 
-    private void runScenario(Scenario scenario) {
-        if (scenario == null || NUtils.getGameUI() == null)
-            return;
-        ScenarioRunner runner = new ScenarioRunner(scenario);
-        start("scenario_runner", runner);
-    }
-
     private void updateStepSettingsPanel() {
         stepSettingsPanel.setStep(selectedStep);
     }
