@@ -218,8 +218,13 @@ public class NAreasWidget extends Window
                     areas.add(new AreaItem(area.name, area));
                 } else if (area.path.startsWith(path)) {
                     String cand = area.path.substring(path.length());
-                    String fname = cand.split("/")[1];
-                    folders.put(fname, new Folder(fname, path));
+                    if (cand.startsWith("/")) {
+                        String[] parts = cand.split("/");
+                        if (parts.length > 1) {
+                            String fname = parts[1];
+                            folders.put(fname, new Folder(fname, path));
+                        }
+                    }
                 }
             }
 
