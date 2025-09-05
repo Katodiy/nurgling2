@@ -450,7 +450,6 @@ public class ScenarioPanel extends Panel {
 
             add(label, new Coord(labelX, (sz.y - label.sz.y) / 2));
             int itemBtnHeight = UI.scale(28);
-            add(new Button(btnW, "Run", () -> runScenario(scenario)), new Coord(runBtnX, (sz.y - itemBtnHeight) / 2));
             add(new Button(btnW, "Edit", () -> editScenario(scenario)), new Coord(editBtnX, (sz.y - itemBtnHeight) / 2));
             add(new Button(btnW, "Delete", () -> deleteScenario(scenario)), new Coord(deleteBtnX, (sz.y - itemBtnHeight) / 2));
         }
