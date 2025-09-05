@@ -52,8 +52,4 @@ public class ScenarioDisplayButton extends IButton {
     public Scenario getScenario() {
         return scenario;
     }
-    
-    public String getDisplayName() {
-        return scenario != null ? scenario.getName() : "Unknown Scenario";
-    }
 }

@@ -11,7 +11,6 @@ import java.awt.RenderingHints;
 public class ScenarioIcons {
     
     public static BufferedImage loadScenarioIcon(Scenario scenario, String state) {
-        // Always generate text-based icons
         return generateTextIcon(scenario, state);
     }
     
@@ -27,27 +26,17 @@ public class ScenarioIcons {
         return loadScenarioIcon(scenario, "h");
     }
     
-    public static BufferedImage getIcon(Scenario scenario) {
-        return loadScenarioIconUp(scenario);
-    }
-    
-    public static BufferedImage getDefaultIcon() {
-        // Always generate a generic text icon
-        return generateTextIcon(null, "u");
-    }
-    
     private static BufferedImage generateTextIcon(Scenario scenario, String state) {
         String text = scenario != null ? getScenarioInitials(scenario.getName()) : "S";
-        
-        // Create a 32x32 icon with text (same size as bot icons)
+
         int size = UI.scale(32);
         BufferedImage icon = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = icon.createGraphics();
-        
+
         // Set rendering hints for better quality
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        
+
         // Background color based on state
         Color bgColor = getStateColor(state);
         Color textColor = Color.WHITE;
