@@ -561,6 +561,8 @@ public class NGameUI extends GameUI
                             ((BeltSlot)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                         else if (item instanceof NBotsMenu.NButton)
                             ((NBotsMenu.NButton)item).btn.draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
+                        else if (item instanceof NScenarioButton)
+                            ((NScenarioButton)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                     }
                 } catch (Loading ignored) {
                 }
@@ -577,10 +579,18 @@ public class NGameUI extends GameUI
                 NToolBeltProp prop = NToolBeltProp.get(name);
                 String path;
                 if((path = prop.custom.get(slot))!=null) {
-                    NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
-                    if(btn!=null) {
-                        btn.btn.click();
+                    if(path.startsWith("scenario:")) {
+                        // Handle scenario button execution
+                        String scenarioName = path.substring("scenario:".length());
+                        ui.core.scenarioManager.executeScenarioByName(scenarioName, ui.gui);
                         return;
+                    } else {
+                        // Handle regular bot button
+                        NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
+                        if(btn!=null) {
+                            btn.btn.click();
+                            return;
+                        }
                     }
                 }
                 super.keyact(slot);
@@ -603,10 +613,18 @@ public class NGameUI extends GameUI
             {
                 String path;
                 if((path = prop.custom.get(slot))!=null) {
-                    NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
-                    if(btn!=null) {
-                        btn.btn.click();
+                    if(path.startsWith("scenario:")) {
+                        // Handle scenario button execution
+                        String scenarioName = path.substring("scenario:".length());
+                        ui.core.scenarioManager.executeScenarioByName(scenarioName, ui.gui);
                         return true;
+                    } else {
+                        // Handle regular bot button
+                        NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
+                        if(btn!=null) {
+                            btn.btn.click();
+                            return true;
+                        }
                     }
                 }
             }
@@ -625,7 +643,17 @@ public class NGameUI extends GameUI
             }
             else
             {
-                return botsMenu.find(path);
+                if(path.startsWith("scenario:")) {
+                    String scenarioName = path.substring("scenario:".length());
+                    for(nurgling.scenarios.Scenario scenario : ui.core.scenarioManager.getScenarios().values()) {
+                        if(scenario.getName().equals(scenarioName)) {
+                            return new NScenarioButton(scenario);
+                        }
+                    }
+                    return null;
+                } else {
+                    return botsMenu.find(path);
+                }
             }
         }
 
@@ -682,6 +710,13 @@ public class NGameUI extends GameUI
                     NBotsMenu.NButton pag = (NBotsMenu.NButton)thing;
                     NToolBeltProp prop = NToolBeltProp.get(name);
                     prop.custom.put(slot,pag.path);
+                    NToolBeltProp.set(name,prop);
+                    return(true);
+                } else if(thing instanceof nurgling.widgets.NScenarioButton) {
+                    nurgling.widgets.NScenarioButton scenarioBtn = (nurgling.widgets.NScenarioButton)thing;
+                    NToolBeltProp prop = NToolBeltProp.get(name);
+                    // Use scenario name as the identifier for scenarios
+                    prop.custom.put(slot, "scenario:" + scenarioBtn.getScenario().getName());
                     NToolBeltProp.set(name,prop);
                     return(true);
                 }
@@ -756,6 +791,7 @@ public class NGameUI extends GameUI
 
 
     }
+
 
 
     public boolean msg(UI.Notice msg) {
