@@ -16,6 +16,7 @@ import static haven.MCache.tilesz;
 
 public class NMiniMap extends MiniMap {
     public int scale = 1;
+    private final int baselineScale = scale; // Capture initial scale for consistent fog recording
     public static final Coord _sgridsz = new Coord(100, 100);
     public static final Coord VIEW_SZ = UI.scale(_sgridsz.mul(9).div(tilesz.floor()));
     public static final Color VIEW_FOG_COLOR = new Color(255, 255, 0 , 120);
