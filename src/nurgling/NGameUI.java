@@ -9,7 +9,6 @@ import haven.res.ui.relcnt.RelCont;
 import nurgling.conf.*;
 import nurgling.notifications.*;
 import nurgling.overlays.QualityOl;
-import nurgling.scenarios.ScenarioDisplayButton;
 import nurgling.tools.*;
 import nurgling.widgets.*;
 import nurgling.widgets.SwimmingStatusBuff;
@@ -562,8 +561,8 @@ public class NGameUI extends GameUI
                             ((BeltSlot)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                         else if (item instanceof NBotsMenu.NButton)
                             ((NBotsMenu.NButton)item).btn.draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
-                        else if (item instanceof ScenarioDisplayButton)
-                            ((ScenarioDisplayButton)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
+                        else if (item instanceof NScenarioButton)
+                            ((NScenarioButton)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                     }
                 } catch (Loading ignored) {
                 }
@@ -648,7 +647,7 @@ public class NGameUI extends GameUI
                     String scenarioName = path.substring("scenario:".length());
                     for(nurgling.scenarios.Scenario scenario : ui.core.scenarioManager.getScenarios().values()) {
                         if(scenario.getName().equals(scenarioName)) {
-                            return new ScenarioDisplayButton(scenario);
+                            return new NScenarioButton(scenario);
                         }
                     }
                     return null;
