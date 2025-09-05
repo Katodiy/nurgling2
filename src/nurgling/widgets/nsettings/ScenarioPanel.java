@@ -487,8 +487,19 @@ public class ScenarioPanel extends Panel {
         @Override
         public boolean mouseup(MouseUpEvent ev) {
             if(dp != null) {
-                dp = null;
-                return true;
+                // Check if this was a click (no drag) within the button area
+                Coord btnPos = scenarioBtn.c;
+                Coord btnSz = scenarioBtn.sz;
+                if(ev.c.isect(btnPos, btnSz) && ev.c.dist(dp) <= 5) {
+                    // This was a click, not a drag - forward to the button
+                    dp = null;
+                    scenarioBtn.click();
+                    return true;
+                } else {
+                    // This was a drag or outside button area
+                    dp = null;
+                    return true;
+                }
             }
             return super.mouseup(ev);
         }
