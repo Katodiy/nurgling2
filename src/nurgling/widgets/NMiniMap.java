@@ -158,7 +158,8 @@ public class NMiniMap extends MiniMap {
                 Gob player = ui.gui.map.player();
                 if (player != null && dloc != null) {
                     Coord ul = player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz).floor(tilesz).add(sessloc.tc);
-                    Coord br = ul.add(VIEW_SZ);
+                    Coord unscaledViewSize = _sgridsz.mul(9).div(tilesz.floor());
+                    Coord br = ul.add(unscaledViewSize);
                     fogArea.addWithoutOverlaps(ul, br, curloc.seg.id);
                 }
             }
