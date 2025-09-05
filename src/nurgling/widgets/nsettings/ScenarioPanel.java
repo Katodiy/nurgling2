@@ -55,7 +55,7 @@ public class ScenarioPanel extends Panel {
         listPanel.add(new Label("Scenarios:"), new Coord(0, 0));
 
         int slistWidth = contentWidth - margin * 2;
-        SListBox<Scenario, Widget> scenarioListBox = new SListBox<Scenario, Widget>(new Coord(slistWidth, slistHeight), UI.scale(32)) {
+        SListBox<Scenario, Widget> scenarioListBox = new SListBox<Scenario, Widget>(new Coord(slistWidth, slistHeight), UI.scale(40)) {
             private NScenarioButton drag = null;
             private UI.Grab grab = null;
             
@@ -435,9 +435,10 @@ public class ScenarioPanel extends Panel {
             int btnW = UI.scale(60);
             int btnS = UI.scale(8);
             int rightPad = UI.scale(10);
-            int scenarioBtnSize = UI.scale(20);
+            int scenarioBtnSize = UI.scale(32); // Actual size of scenario button icons
+            int scenarioBtnSpacing = UI.scale(12); // More horizontal spacing between button and text
 
-            // Add draggable scenario button at the far left
+            // Add draggable scenario button at the far left with more margin
             scenarioBtn = new NScenarioButton(scenario);
             add(scenarioBtn, new Coord(margin, (sz.y - scenarioBtnSize) / 2));
 
@@ -445,8 +446,8 @@ public class ScenarioPanel extends Panel {
             int editBtnX = sz.x - rightPad - btnW * 2 - btnS;
             int deleteBtnX = sz.x - rightPad - btnW;
 
-            // Adjust label position to account for scenario button
-            int labelX = margin + scenarioBtnSize + btnS;
+            // Adjust label position to account for scenario button with more spacing
+            int labelX = margin + scenarioBtnSize + scenarioBtnSpacing;
 
             add(label, new Coord(labelX, (sz.y - label.sz.y) / 2));
             int itemBtnHeight = UI.scale(28);

@@ -1,10 +1,6 @@
 package nurgling.scenarios;
 
-import haven.Resource;
-import haven.GOut;
-import haven.Coord;
-import haven.Text;
-import haven.Utils;
+import haven.UI;
 
 import java.awt.image.BufferedImage;
 import java.awt.Color;
@@ -13,46 +9,10 @@ import java.awt.Font;
 import java.awt.RenderingHints;
 
 public class ScenarioIcons {
-    private static final String SCENARIO_ICON_DIR = "nurgling/scenarios/icons/";
-    private static final String[] FALLBACK_ICONS = {
-        "nurgling/hud/buttons/play/u", // Play button icon
-        "paginae/act/bash", // Action icon
-        "baubles/custom", // Custom icon
-        "ui/slp" // Simple icon
-    };
     
     public static BufferedImage loadScenarioIcon(Scenario scenario, String state) {
-        String iconPath = getScenarioIconPath(scenario);
-        
-        // Try custom scenario icon first
-        try {
-            return Resource.loadsimg(SCENARIO_ICON_DIR + iconPath + "/" + state);
-        } catch (Exception e) {
-            // Fallback to default scenario icon
-            try {
-                return Resource.loadsimg(SCENARIO_ICON_DIR + "default/" + state);
-            } catch (Exception fallbackException) {
-                // Generate a text-based icon as final fallback
-                return generateTextIcon(scenario, state);
-            }
-        }
-    }
-    
-    private static String getScenarioIconPath(Scenario scenario) {
-        if (scenario == null || scenario.getName() == null) {
-            return "default";
-        }
-        
-        // Convert scenario name to valid icon path
-        String iconName = scenario.getName().toLowerCase()
-                .replaceAll("[^a-z0-9]", "")
-                .replaceAll("\\s+", "");
-        
-        if (iconName.isEmpty()) {
-            return "default";
-        }
-        
-        return iconName;
+        // Always generate text-based icons
+        return generateTextIcon(scenario, state);
     }
     
     public static BufferedImage loadScenarioIconUp(Scenario scenario) {
@@ -72,25 +32,16 @@ public class ScenarioIcons {
     }
     
     public static BufferedImage getDefaultIcon() {
-        try {
-            return Resource.loadsimg(SCENARIO_ICON_DIR + "default/u");
-        } catch (Exception e) {
-            // Try fallback icons from game assets
-            for (String fallbackIcon : FALLBACK_ICONS) {
-                try {
-                    return Resource.loadsimg(fallbackIcon);
-                } catch (Exception ignored) {}
-            }
-            // Generate a generic text icon
-            return generateTextIcon(null, "u");
-        }
+        // Always generate a generic text icon
+        return generateTextIcon(null, "u");
     }
     
     private static BufferedImage generateTextIcon(Scenario scenario, String state) {
         String text = scenario != null ? getScenarioInitials(scenario.getName()) : "S";
         
-        // Create a 16x16 icon with text
-        BufferedImage icon = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+        // Create a 32x32 icon with text (same size as bot icons)
+        int size = UI.scale(32);
+        BufferedImage icon = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = icon.createGraphics();
         
         // Set rendering hints for better quality
@@ -101,23 +52,24 @@ public class ScenarioIcons {
         Color bgColor = getStateColor(state);
         Color textColor = Color.WHITE;
         
-        // Draw background
+        // Draw background (scaled for 32x32)
         g2d.setColor(bgColor);
-        g2d.fillRoundRect(1, 1, 14, 14, 3, 3);
+        g2d.fillRoundRect(2, 2, size - 4, size - 4, 6, 6);
         
-        // Draw border
+        // Draw border (scaled for 32x32)
         g2d.setColor(textColor);
-        g2d.drawRoundRect(1, 1, 14, 14, 3, 3);
+        g2d.drawRoundRect(2, 2, size - 4, size - 4, 6, 6);
         
-        // Draw text
-        Font font = new Font("SansSerif", Font.BOLD, 8);
+        // Draw text (scaled font size for 32x32)
+        Font font = new Font("SansSerif", Font.BOLD, UI.scale(12));
         g2d.setFont(font);
         g2d.setColor(textColor);
         
         // Center the text
         int textWidth = g2d.getFontMetrics().stringWidth(text);
-        int x = (16 - textWidth) / 2;
-        int y = 11; // Slightly below center for better visual balance
+        int textHeight = g2d.getFontMetrics().getAscent();
+        int x = (size - textWidth) / 2;
+        int y = (size + textHeight) / 2 - 2; // Slightly above center for better visual balance
         
         g2d.drawString(text, x, y);
         g2d.dispose();
