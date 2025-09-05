@@ -26,20 +26,12 @@ public class NScenarioButton extends IButton {
     @Override
     public Object tooltip(Coord c, Widget prev) {
         if (scenario != null) {
-            return scenario.getName() + "\nDrag to action bar";
+            return scenario.getName();
         }
         return super.tooltip(c, prev);
     }
     
     public Scenario getScenario() {
         return scenario;
-    }
-    
-    public ScenarioAction getScenarioAction() {
-        return action;
-    }
-    
-    public String getDisplayName() {
-        return scenario != null ? scenario.getName() : "Unknown Scenario";
     }
 }
