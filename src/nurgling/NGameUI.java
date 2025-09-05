@@ -10,6 +10,8 @@ import java.awt.image.BufferedImage;
 import nurgling.conf.*;
 import nurgling.notifications.*;
 import nurgling.overlays.QualityOl;
+import nurgling.scenarios.Scenario;
+import nurgling.scenarios.ScenarioDisplayButton;
 import nurgling.tools.*;
 import nurgling.widgets.*;
 import nurgling.widgets.SwimmingStatusBuff;
@@ -583,7 +585,7 @@ public class NGameUI extends GameUI
                     if(path.startsWith("scenario:")) {
                         // Handle scenario button execution
                         String scenarioName = path.substring("scenario:".length());
-                        executeScenarioByName(scenarioName);
+                        ui.core.scenarioManager.executeScenarioByName(scenarioName, ui.gui);
                         return;
                     } else {
                         // Handle regular bot button
@@ -617,7 +619,7 @@ public class NGameUI extends GameUI
                     if(path.startsWith("scenario:")) {
                         // Handle scenario button execution
                         String scenarioName = path.substring("scenario:".length());
-                        executeScenarioByName(scenarioName);
+                        ui.core.scenarioManager.executeScenarioByName(scenarioName, ui.gui);
                         return true;
                     } else {
                         // Handle regular bot button
@@ -793,33 +795,6 @@ public class NGameUI extends GameUI
 
     }
 
-    public static class ScenarioDisplayButton {
-        private final nurgling.scenarios.Scenario scenario;
-        private BufferedImage icon;
-        
-        public ScenarioDisplayButton(nurgling.scenarios.Scenario scenario) {
-            this.scenario = scenario;
-            loadIcon();
-        }
-        
-        private void loadIcon() {
-            try {
-                this.icon = nurgling.scenarios.ScenarioIcons.getIcon(scenario);
-            } catch (Exception e) {
-                this.icon = nurgling.scenarios.ScenarioIcons.getDefaultIcon();
-            }
-        }
-        
-        public void draw(GOut g) {
-            if(icon != null) {
-                g.image(icon, Coord.z);
-            }
-        }
-        
-        public nurgling.scenarios.Scenario getScenario() {
-            return scenario;
-        }
-    }
 
 
     public boolean msg(UI.Notice msg) {
@@ -857,28 +832,6 @@ public class NGameUI extends GameUI
         if(localizedResourceTimerService != null) {
             localizedResourceTimerService.showTimerWindow();
         }
-    }
-    
-    private void executeScenarioByName(String scenarioName) {
-        for(nurgling.scenarios.Scenario scenario : ui.core.scenarioManager.getScenarios().values()) {
-            if(scenario.getName().equals(scenarioName)) {
-                Thread t = new Thread(() -> {
-                    try {
-                        nurgling.actions.bots.ScenarioRunner runner = new nurgling.actions.bots.ScenarioRunner(scenario);
-                        runner.run(this);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    } catch (Exception e) {
-                        error("Scenario execution failed: " + e.getMessage());
-                    }
-                }, "ScenarioRunner-" + scenarioName);
-                
-                biw.addObserve(t);
-                t.start();
-                return;
-            }
-        }
-        error("Scenario not found: " + scenarioName);
     }
     
     public LocalizedResourceTimerDialog getAddResourceTimerWidget() {
