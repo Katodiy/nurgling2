@@ -71,7 +71,7 @@ public class MilkAnimalsAction implements Action {
         // Check if barrel contains milk - if so, empty it into cistern first
         if (NUtils.isOverlay(barrel, milkContent)) {
             // Barrel has milk - empty it into cistern
-            new PathFinder(cistern).run(gui);
+            new DynamicPf(cistern).run(gui);
             NUtils.activateGob(cistern);
             
             // Wait for barrel to become empty (no longer has milk overlay)
@@ -101,7 +101,7 @@ public class MilkAnimalsAction implements Action {
             int BATCH_SIZE = 4;
             if (milkCount >= BATCH_SIZE) {
                 // Navigate to cistern and empty barrel
-                new PathFinder(cistern).run(gui);
+                new DynamicPf(cistern).run(gui);
                 NUtils.activateGob(cistern);
                 
                 // Wait for barrel to empty
@@ -118,7 +118,7 @@ public class MilkAnimalsAction implements Action {
         
         // Final check - if barrel has milk, empty it into cistern before placing back
         if (NUtils.isOverlay(barrel, milkContent)) {
-            new PathFinder(cistern).run(gui);
+            new DynamicPf(cistern).run(gui);
             NUtils.activateGob(cistern);
             
             // Wait for barrel to empty
