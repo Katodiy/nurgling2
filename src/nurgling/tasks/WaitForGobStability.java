@@ -15,7 +15,7 @@ public class WaitForGobStability extends NTask {
     private long startTime = -1;
 
     public WaitForGobStability() {
-        this(600, 5000); // 200ms stability, 5s max wait
+        this(600, 5000);
     }
 
     public WaitForGobStability(long stabilityWindow, long maxWaitTime) {
