@@ -1,6 +1,5 @@
 package nurgling.tasks;
 
-import haven.Coord2d;
 import haven.Gob;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -15,8 +14,8 @@ public class WaitForGobStability extends NTask {
     private long lastGobCountChangeTime = -1;
     private long startTime = -1;
 
-    public WaitForGobStability(Coord2d center, double radius) {
-        this(200, 5000); // 200ms stability, 5s max wait
+    public WaitForGobStability() {
+        this(600, 5000); // 200ms stability, 5s max wait
     }
 
     public WaitForGobStability(long stabilityWindow, long maxWaitTime) {

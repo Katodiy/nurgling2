@@ -169,7 +169,7 @@ public class RoutePointNavigator implements Action {
                         NUtils.getUI().core.addTask(new WaitForMapLoadPF(nextPoint, gui));
                         NUtils.getUI().core.addTask(new WaitForGobWithHash(nextPoint.getConnection(currentPoint.id).gobHash));
                         // Wait for gob loading to stabilize (prevent missing cupboards/tools that load after door)
-                        NUtils.getUI().core.addTask(new WaitForGobStability(gui.map.player().rc, 50.0));
+                        NUtils.getUI().core.addTask(new WaitForGobStability());
                     } else {
                         // open gate if its closed
                         if(!GateDetector.isDoorOpen(gob)) {
