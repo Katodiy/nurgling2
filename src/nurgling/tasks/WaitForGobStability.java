@@ -25,34 +25,37 @@ public class WaitForGobStability extends NTask {
 
     @Override
     public boolean check() {
-        long currentTime = System.currentTimeMillis();
-
-        if (startTime == -1) {
-            startTime = currentTime;
-        }
-
-        // Safety timeout - don't wait forever
-        if (currentTime - startTime > maxWaitTime) {
-            return true;
-        }
-
-        // Count gobs in the specified area
+        boolean res = false;
         List<Gob> nearbyGobs = Finder.findGobs(new NAlias(""));
         int currentGobCount = nearbyGobs.size();
 
         // If gob count changed, reset stability timer
         if (currentGobCount != lastGobCount) {
             lastGobCount = currentGobCount;
-            lastGobCountChangeTime = currentTime;
-            return false;
+            lastGobCountChangeTime = System.currentTimeMillis();
+            res = false;
         }
 
         // If no change recorded yet, we're not stable
         if (lastGobCountChangeTime == -1) {
-            return false;
+            res = false;
         }
 
         // Check if we've been stable long enough
-        return (currentTime - lastGobCountChangeTime) >= stabilityWindow;
+        res = ((System.currentTimeMillis() - lastGobCountChangeTime) >= stabilityWindow);
+        if(res)
+        {
+            long currentTime = System.currentTimeMillis();
+
+            if (startTime == -1) {
+                startTime = currentTime;
+            }
+
+            // Safety timeout - don't wait forever
+            if (currentTime - startTime > maxWaitTime) {
+                return true;
+            }
+        }
+        return res;
     }
 }
