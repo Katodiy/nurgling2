@@ -55,6 +55,13 @@ public class NInventory extends Inventory
         super(sz);
     }
 
+    @Override
+    protected void added() {
+        super.added();
+        // Add Plan button for Study Desk after the widget is added to its parent
+        nurgling.widgets.StudyDeskInventoryExtension.addPlanButtonIfStudyDesk(this);
+    }
+
     public enum QualityType {
         High, Low
     }
