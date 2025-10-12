@@ -42,39 +42,13 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
     public StudyDeskPlannerWidget() {
         super(sqsz.mul(DESK_SIZE), "Study Desk Planner");
 
-        int margin = UI.scale(5);
-        int buttonHeight = UI.scale(25);
-
-        add(new Button(UI.scale(60), "Save") {
-            @Override
-            public void click() {
-                saveLayout();
-            }
-        }, new Coord(margin, sz.y - buttonHeight - margin));
-
-        add(new Button(UI.scale(60), "Load") {
-            @Override
-            public void click() {
-                loadLayout();
-            }
-        }, new Coord(margin + UI.scale(70), sz.y - buttonHeight - margin));
-
-        add(new Button(UI.scale(60), "Clear") {
-            @Override
-            public void click() {
-                clearLayout();
-            }
-        }, new Coord(margin + UI.scale(140), sz.y - buttonHeight - margin));
-
         loadLayout();
     }
 
     @Override
     public void cdraw(GOut g) {
-        // Position the grid with minimal margins
-        Coord gridSize = DESK_SIZE.mul(sqsz);
-        Coord windowContent = sz.sub(0, UI.scale(35)); // Leave space for buttons at bottom
-        Coord gridStart = new Coord(UI.scale(0), UI.scale(0)); // Small fixed margins from edges
+        // Position the grid at the top-left corner
+        Coord gridStart = new Coord(UI.scale(0), UI.scale(0));
 
         // Draw grid squares
         Coord c = new Coord();
@@ -146,7 +120,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         Coord contentCoord = ev.c.sub(deco.contarea().ul);
 
         // Use the same grid calculation as in cdraw()
-        Coord gridStart = new Coord(UI.scale(5), UI.scale(5));
+        Coord gridStart = new Coord(UI.scale(0), UI.scale(0));
         Coord gridEnd = gridStart.add(DESK_SIZE.mul(sqsz));
 
         if(contentCoord.isect(gridStart, DESK_SIZE.mul(sqsz))) {
@@ -218,7 +192,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         Coord contentCoord = cc.sub(deco.contarea().ul);
 
         // Use the same grid calculation as in cdraw()
-        Coord gridStart = new Coord(UI.scale(5), UI.scale(5));
+        Coord gridStart = new Coord(UI.scale(0), UI.scale(0));
 
         if(contentCoord.isect(gridStart, DESK_SIZE.mul(sqsz))) {
             Coord gridPos = contentCoord.sub(gridStart).div(sqsz);
