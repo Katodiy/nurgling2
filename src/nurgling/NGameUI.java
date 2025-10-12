@@ -17,6 +17,7 @@ import nurgling.widgets.CrimeStatusBuff;
 import nurgling.widgets.AllowVisitingStatusBuff;
 import nurgling.widgets.LocalizedResourceTimersWindow;
 import nurgling.widgets.LocalizedResourceTimerDialog;
+import nurgling.widgets.StudyDeskPlannerWidget;
 
 import java.awt.event.KeyEvent;
 import java.util.*;
@@ -50,6 +51,7 @@ public class NGameUI extends GameUI
     public LocalizedResourceTimersWindow localizedResourceTimersWindow = null;
     private LocalizedResourceTimerDialog localizedResourceTimerDialog = null;
     public LocalizedResourceTimerService localizedResourceTimerService;
+    public StudyDeskPlannerWidget studyDeskPlanner = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -821,6 +823,12 @@ public class NGameUI extends GameUI
             toggleResourceTimerWindow();
             return true;
         }
+
+        // Handle Study Desk Planner window shortcut (Ctrl+S)
+        if(ev.code == KeyEvent.VK_S && ui.modctrl) { // Ctrl+S
+            toggleStudyDeskPlanner();
+            return true;
+        }
         
         return super.keydown(ev);
     }
@@ -828,6 +836,18 @@ public class NGameUI extends GameUI
     private void toggleResourceTimerWindow() {
         if(localizedResourceTimerService != null) {
             localizedResourceTimerService.showTimerWindow();
+        }
+    }
+
+    private void toggleStudyDeskPlanner() {
+        if(studyDeskPlanner == null) {
+            studyDeskPlanner = new StudyDeskPlannerWidget();
+            add(studyDeskPlanner, new Coord(200, 100));
+        }
+        if(studyDeskPlanner.visible()) {
+            studyDeskPlanner.hide();
+        } else {
+            studyDeskPlanner.show();
         }
     }
     
