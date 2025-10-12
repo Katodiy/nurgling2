@@ -19,6 +19,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
     public static final Tex invsq;
 
     private final Map<Coord, PlannedCuriosity> plannedItems = new HashMap<>();
+    private final Map<Coord, PlannedCuriosity> originalLayout = new HashMap<>();
 
     static {
         Coord sz = sqsz.add(1, 1);
@@ -40,9 +41,10 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
     }
 
     public StudyDeskPlannerWidget() {
-        super(sqsz.mul(DESK_SIZE), "Study Desk Planner");
+        super(sqsz.mul(DESK_SIZE).add(0, UI.scale(40)), "Study Desk Planner");
 
         loadLayout();
+        addButtons();
     }
 
     @Override
@@ -374,6 +376,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
     private void loadLayout() {
         try {
             plannedItems.clear();
+            originalLayout.clear();
             String layoutStr = (String) NConfig.get(NConfig.Key.studyDeskLayout);
             if(layoutStr != null && !layoutStr.isEmpty()) {
                 JSONObject layout = new JSONObject(layoutStr);
@@ -393,7 +396,19 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
                     String resourceName = itemData.optString("resourceName", null);
 
-                    plannedItems.put(new Coord(x, y), new PlannedCuriosity(name, size, resourceName));
+                    // Load the actual Resource object from the resource name
+                    Resource itemResource = null;
+                    if (resourceName != null && !resourceName.isEmpty()) {
+                        try {
+                            itemResource = Resource.remote().loadwait(resourceName);
+                        } catch (Exception e) {
+                            // If resource loading fails, continue without it
+                        }
+                    }
+
+                    PlannedCuriosity curiosity = new PlannedCuriosity(name, size, resourceName, itemResource);
+                    plannedItems.put(new Coord(x, y), curiosity);
+                    originalLayout.put(new Coord(x, y), curiosity);
                 }
             }
         } catch(Exception e) {
@@ -417,6 +432,45 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
     public Map<Coord, PlannedCuriosity> getPlannedLayout() {
         return new HashMap<>(plannedItems);
+    }
+
+    private void addButtons() {
+        // Save button
+        Button saveButton = new Button(UI.scale(60), "Save") {
+            @Override
+            public void click() {
+                saveLayout();
+                // Update the original layout to match current state
+                originalLayout.clear();
+                originalLayout.putAll(plannedItems);
+            }
+        };
+
+        // Cancel button
+        Button cancelButton = new Button(UI.scale(60), "Cancel") {
+            @Override
+            public void click() {
+                cancelChanges();
+            }
+        };
+
+        // Position buttons below the grid
+        Coord gridBottom = sqsz.mul(DESK_SIZE);
+        int buttonY = gridBottom.y + UI.scale(8);
+
+        // Center the buttons horizontally
+        int totalButtonWidth = UI.scale(60) * 2 + UI.scale(10); // two buttons + gap
+        int startX = (gridBottom.x - totalButtonWidth) / 2;
+
+        add(saveButton, new Coord(startX, buttonY));
+        add(cancelButton, new Coord(startX + UI.scale(70), buttonY));
+    }
+
+    private void cancelChanges() {
+        // Restore to original layout
+        plannedItems.clear();
+        plannedItems.putAll(originalLayout);
+        NUtils.getGameUI().msg("Changes cancelled - layout restored", Color.YELLOW);
     }
 
     public static class PlannedCuriosity {

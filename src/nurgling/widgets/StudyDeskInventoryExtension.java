@@ -64,11 +64,14 @@ public class StudyDeskInventoryExtension {
             if (gameUI.studyDeskPlanner == null) {
                 gameUI.studyDeskPlanner = new StudyDeskPlannerWidget();
                 gameUI.add(gameUI.studyDeskPlanner, new Coord(200, 100));
-            }
-            if (gameUI.studyDeskPlanner.visible()) {
-                gameUI.studyDeskPlanner.hide();
+                gameUI.studyDeskPlanner.show(); // Explicitly show on first creation
             } else {
-                gameUI.studyDeskPlanner.show();
+                // Toggle visibility for subsequent clicks
+                if (gameUI.studyDeskPlanner.visible()) {
+                    gameUI.studyDeskPlanner.hide();
+                } else {
+                    gameUI.studyDeskPlanner.show();
+                }
             }
         }
     }
