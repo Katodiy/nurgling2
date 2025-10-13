@@ -5,12 +5,19 @@ import haven.Gob;
 import haven.WItem;
 import nurgling.*;
 import nurgling.actions.Action;
+import nurgling.actions.CloseTargetContainer;
 import nurgling.actions.OpenTargetContainer;
 import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
+import nurgling.actions.TakeWItemsFromContainer;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
+import nurgling.tasks.ISRemoved;
+import nurgling.tasks.NTask;
+import nurgling.tasks.WaitItems;
+import nurgling.tools.Container;
 import nurgling.tools.Finder;
+import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 import org.json.JSONObject;
 
@@ -77,6 +84,12 @@ public class StudyDeskFiller implements Action {
 
         // Step 9: Report results
         reportMissingItems(gui, missingItems);
+
+        // Step 10: Fetch and place missing items
+        if (!missingItems.isEmpty()) {
+            gui.msg("Starting to fetch and place missing items...", Color.CYAN);
+            fetchAndPlaceAllItems(gui, missingItems, studyDesk, studyDeskInv);
+        }
 
         return Results.SUCCESS();
     }
@@ -183,13 +196,270 @@ public class StudyDeskFiller implements Action {
             Map<String, Object> itemData = (Map<String, Object>) plannedEntry.getValue();
             String itemName = (String) itemData.get("name");
 
+            // Extract item size from the layout data
+            Coord itemSize = new Coord(1, 1); // Default size
+            if (itemData.containsKey("size")) {
+                Map<String, Object> sizeData = (Map<String, Object>) itemData.get("size");
+                itemSize = new Coord(
+                    ((Number) sizeData.get("x")).intValue(),
+                    ((Number) sizeData.get("y")).intValue()
+                );
+            }
+
             // Check if this position is empty in the current desk
             if (!currentItems.containsKey(plannedPos)) {
-                missingItems.add(new MissingItem(itemName, plannedPos));
+                missingItems.add(new MissingItem(itemName, plannedPos, itemSize));
             }
         }
 
         return missingItems;
+    }
+
+    /**
+     * Fetch and place all missing items into the study desk
+     */
+    private void fetchAndPlaceAllItems(NGameUI gui, List<MissingItem> missingItems, Gob studyDesk, NInventory studyDeskInv) throws InterruptedException {
+        // Group missing items by item name
+        Map<String, List<MissingItem>> itemGroups = new HashMap<>();
+        for (MissingItem missing : missingItems) {
+            itemGroups.computeIfAbsent(missing.itemName, k -> new ArrayList<>()).add(missing);
+        }
+
+        gui.msg("Processing " + itemGroups.size() + " unique item types...", Color.CYAN);
+
+        // Process each item type
+        for (Map.Entry<String, List<MissingItem>> entry : itemGroups.entrySet()) {
+            String itemName = entry.getKey();
+            List<MissingItem> itemsNeeded = entry.getValue();
+
+            gui.msg("Fetching " + itemsNeeded.size() + " x " + itemName, Color.YELLOW);
+
+            try {
+                fetchAndPlaceItemType(gui, itemName, itemsNeeded, studyDesk, studyDeskInv);
+            } catch (Exception e) {
+                // Skip this item if fetching fails, but continue with others
+                gui.msg("Failed to fetch " + itemName + ", skipping: " + e.getMessage(), Color.ORANGE);
+            }
+        }
+
+        gui.msg("Item placement complete!", Color.GREEN);
+    }
+
+    /**
+     * Fetch and place all items of a specific type
+     */
+    private void fetchAndPlaceItemType(NGameUI gui, String itemName, List<MissingItem> itemsNeeded, Gob studyDesk, NInventory studyDeskInv) throws InterruptedException {
+        // Get item size from the first item's planned data
+        Coord itemSize = itemsNeeded.get(0).itemSize;
+
+        // Create NContext to find storage
+        NContext context = new NContext(gui);
+        context.addInItem(itemName, null);
+
+        ArrayList<NContext.ObjectStorage> storages = context.getInStorages(itemName);
+        if (storages == null || storages.isEmpty()) {
+            gui.msg("No storage found for " + itemName + ", skipping", Color.ORANGE);
+            return;
+        }
+
+        // Process items in batches based on inventory capacity
+        List<MissingItem> remainingItems = new ArrayList<>(itemsNeeded);
+
+        while (!remainingItems.isEmpty()) {
+            // Check how many items can fit in player inventory
+            int canFit = gui.getInventory().getNumberFreeCoord(itemSize);
+
+            if (canFit == 0) {
+                gui.msg("Inventory full, cannot continue with " + itemName, Color.RED);
+                break;
+            }
+
+            // Take min(canFit, remaining) items
+            int toFetch = Math.min(canFit, remainingItems.size());
+            gui.msg("Fetching " + toFetch + " x " + itemName + " (capacity: " + canFit + ")", Color.CYAN);
+
+            // Fetch items from storage
+            int fetched = fetchItemsFromStorage(gui, storages, itemName, toFetch);
+
+            if (fetched == 0) {
+                gui.msg("Could not fetch any " + itemName + " from storage, skipping", Color.ORANGE);
+                break;
+            }
+
+            gui.msg("Fetched " + fetched + " items, now placing them...", Color.GREEN);
+
+            // Navigate back to study desk and place items
+            getStudyDeskArea(gui);
+            new PathFinder(studyDesk).run(gui);
+            new OpenTargetContainer("Study Desk", studyDesk).run(gui);
+
+            // Refresh study desk inventory reference
+            studyDeskInv = gui.getInventory("Study Desk");
+            if (studyDeskInv == null) {
+                gui.msg("ERROR: Lost study desk inventory reference!", Color.RED);
+                return;
+            }
+
+            // Place the fetched items
+            int placed = placeItemsInDesk(gui, itemName, remainingItems.subList(0, fetched), studyDeskInv);
+
+            // Remove placed items from remaining list
+            for (int i = 0; i < placed; i++) {
+                remainingItems.remove(0);
+            }
+
+            gui.msg("Placed " + placed + " items, " + remainingItems.size() + " remaining", Color.GREEN);
+        }
+    }
+
+    /**
+     * Fetch items from storage containers
+     */
+    private int fetchItemsFromStorage(NGameUI gui, ArrayList<NContext.ObjectStorage> storages, String itemName, int count) throws InterruptedException {
+        int totalFetched = 0;
+        NAlias itemAlias = new NAlias(itemName);
+
+        for (NContext.ObjectStorage storage : storages) {
+            if (totalFetched >= count) {
+                break;
+            }
+
+            try {
+                // Handle different storage types
+                if (storage instanceof Container) {
+                    Container container = (Container) storage;
+                    int fetched = fetchFromContainer(gui, container, itemAlias, count - totalFetched);
+                    totalFetched += fetched;
+                }
+                else if (storage instanceof NContext.Pile) {
+                    NContext.Pile pile = (NContext.Pile) storage;
+                    int fetched = fetchFromPile(gui, pile, itemAlias, count - totalFetched);
+                    totalFetched += fetched;
+                }
+                // Skip Barter for now as it's more complex
+            } catch (Exception e) {
+                // Skip this storage and try next one
+                gui.msg("Failed to fetch from storage, trying next...", Color.YELLOW);
+            }
+        }
+
+        return totalFetched;
+    }
+
+    /**
+     * Fetch items from a Container storage
+     */
+    private int fetchFromContainer(NGameUI gui, Container container, NAlias itemAlias, int count) throws InterruptedException {
+        // Navigate to container
+        Gob containerGob = Finder.findGob(container.gobid);
+        if (containerGob == null) {
+            return 0;
+        }
+
+        new PathFinder(containerGob).run(gui);
+
+        // Open container
+        new OpenTargetContainer(container.cap, containerGob).run(gui);
+        NInventory containerInv = gui.getInventory(container.cap);
+
+        int fetched = 0;
+        if (containerInv != null) {
+            // Get available items
+            ArrayList<WItem> availableItems = containerInv.getItems(itemAlias);
+            int toTake = Math.min(availableItems.size(), count);
+
+            // Take items to player inventory
+            if (toTake > 0) {
+                ArrayList<WItem> itemsToTake = new ArrayList<>(availableItems.subList(0, toTake));
+                for (WItem item : itemsToTake) {
+                    if (gui.getInventory().getNumberFreeCoord(item) > 0) {
+                        item.item.wdgmsg("transfer", Coord.z);
+                        NUtils.addTask(new ISRemoved(item.item.wdgid()));
+                        fetched++;
+                    } else {
+                        break; // Inventory full
+                    }
+                }
+            }
+        }
+
+        new CloseTargetContainer(container.cap).run(gui);
+        return fetched;
+    }
+
+    /**
+     * Fetch items from a Pile storage
+     */
+    private int fetchFromPile(NGameUI gui, NContext.Pile pile, NAlias itemAlias, int count) throws InterruptedException {
+        if (pile.pile == null) {
+            return 0;
+        }
+
+        // Navigate to pile
+        new PathFinder(pile.pile).run(gui);
+
+        int startCount = gui.getInventory().getItems(itemAlias).size();
+        int toTake = Math.min(count, gui.getInventory().calcFreeSpace());
+
+        // Take items from pile by right-clicking
+        for (int i = 0; i < toTake; i++) {
+            NUtils.rclickGob(pile.pile);
+            // Wait for item to appear in inventory
+            int expectedCount = startCount + i + 1;
+            NUtils.addTask(new WaitItems(gui.getInventory(), itemAlias, expectedCount));
+        }
+
+        int endCount = gui.getInventory().getItems(itemAlias).size();
+        return endCount - startCount;
+    }
+
+    /**
+     * Place items from player inventory into study desk at exact positions
+     */
+    private int placeItemsInDesk(NGameUI gui, String itemName, List<MissingItem> itemsToPlace, NInventory studyDeskInv) throws InterruptedException {
+        int placed = 0;
+        NAlias itemAlias = new NAlias(itemName);
+
+        // Get items from player inventory
+        ArrayList<WItem> itemsInInventory = gui.getInventory().getItems(itemAlias);
+
+        for (int i = 0; i < Math.min(itemsToPlace.size(), itemsInInventory.size()); i++) {
+            MissingItem target = itemsToPlace.get(i);
+            WItem item = itemsInInventory.get(i);
+
+            try {
+                // Take item to hand
+                NUtils.takeItemToHand(item);
+
+                // Wait a bit for item to be in hand
+                NUtils.getUI().core.addTask(new NTask() {
+                    @Override
+                    public boolean check() {
+                        return gui.vhand != null;
+                    }
+                });
+
+                // Drop at precise position
+                studyDeskInv.dropOn(target.position, itemName);
+
+                // Wait for slot to be filled
+                Coord finalPos = target.position;
+                NUtils.getUI().core.addTask(new NTask() {
+                    @Override
+                    public boolean check() {
+                        return !studyDeskInv.isSlotFree(finalPos);
+                    }
+                });
+
+                placed++;
+                gui.msg("Placed " + itemName + " at (" + target.position.x + ", " + target.position.y + ")", Color.GREEN);
+
+            } catch (Exception e) {
+                gui.msg("Failed to place item at position, skipping", Color.ORANGE);
+            }
+        }
+
+        return placed;
     }
 
     /**
@@ -223,10 +493,12 @@ public class StudyDeskFiller implements Action {
     private static class MissingItem {
         String itemName;
         Coord position;
+        Coord itemSize;
 
-        MissingItem(String itemName, Coord position) {
+        MissingItem(String itemName, Coord position, Coord itemSize) {
             this.itemName = itemName;
             this.position = position;
+            this.itemSize = itemSize;
         }
     }
 }
