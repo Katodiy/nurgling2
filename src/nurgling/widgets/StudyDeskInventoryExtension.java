@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import haven.Button;
 import haven.Label;
+import haven.Window;
 import haven.resutil.Curiosity;
 import nurgling.*;
 import nurgling.iteminfo.NCuriosity;
@@ -53,7 +54,7 @@ public class StudyDeskInventoryExtension {
         Button planButton = new Button(UI.scale(50), "Plan") {
             @Override
             public void click() {
-                openStudyDeskPlanner();
+                openStudyDeskPlanner(inventory);
             }
         };
 
@@ -65,24 +66,44 @@ public class StudyDeskInventoryExtension {
     }
 
     /**
-     * Opens the Study Desk Planner widget
+     * Opens the Study Desk Planner widget positioned next to the study desk inventory
      */
-    private static void openStudyDeskPlanner() {
+    private static void openStudyDeskPlanner(NInventory inventory) {
         NGameUI gameUI = NUtils.getGameUI();
         if (gameUI != null) {
+            // Calculate position to the right of the study desk window
+            Coord plannerPos = calculatePlannerPosition(inventory);
+
             if (gameUI.studyDeskPlanner == null) {
                 gameUI.studyDeskPlanner = new StudyDeskPlannerWidget();
-                gameUI.add(gameUI.studyDeskPlanner, new Coord(200, 100));
+                gameUI.add(gameUI.studyDeskPlanner, plannerPos);
                 gameUI.studyDeskPlanner.show(); // Explicitly show on first creation
             } else {
                 // Toggle visibility for subsequent clicks
                 if (gameUI.studyDeskPlanner.visible()) {
                     gameUI.studyDeskPlanner.hide();
                 } else {
+                    // Reposition before showing
+                    gameUI.studyDeskPlanner.move(plannerPos);
                     gameUI.studyDeskPlanner.show();
                 }
             }
         }
+    }
+
+    /**
+     * Calculates the position for the planner widget next to the study desk
+     */
+    private static Coord calculatePlannerPosition(NInventory inventory) {
+        if (inventory.parent != null && inventory.parent instanceof Window) {
+            Window window = (Window) inventory.parent;
+            // Position to the right of the window with a small gap
+            Coord windowPos = window.c;
+            Coord windowSize = window.sz;
+            return new Coord(windowPos.x + windowSize.x + UI.scale(10), windowPos.y);
+        }
+        // Fallback to default position if we can't determine window position
+        return new Coord(200, 100);
     }
 
     /**
