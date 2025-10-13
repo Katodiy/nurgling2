@@ -32,7 +32,7 @@ public class StudyDeskInventoryExtension {
      * @param inventory The inventory to check
      * @return true if this is a Study Desk inventory
      */
-    private static boolean isStudyDeskInventory(NInventory inventory) {
+    public static boolean isStudyDeskInventory(NInventory inventory) {
         if (inventory.parentGob == null) return false;
         // Get the drawable attribute from the gob
         Drawable drawable = inventory.parentGob.getattr(Drawable.class);

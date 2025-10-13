@@ -1479,6 +1479,15 @@ public class NInventory extends Inventory
                 ui.core.writeItemInfoForContainer(iis);
             }
         }
+
+        // Close Study Desk Planner if this is a study desk inventory
+        if (nurgling.widgets.StudyDeskInventoryExtension.isStudyDeskInventory(this)) {
+            NGameUI gameUI = NUtils.getGameUI();
+            if (gameUI != null && gameUI.studyDeskPlanner != null && gameUI.studyDeskPlanner.visible()) {
+                gameUI.studyDeskPlanner.hide();
+            }
+        }
+
         super.reqdestroy();
     }
 
