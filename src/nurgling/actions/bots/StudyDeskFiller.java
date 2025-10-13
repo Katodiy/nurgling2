@@ -278,9 +278,11 @@ public class StudyDeskFiller implements Action {
 
     /**
      * Fetch as many items as possible until inventory is full
+     * Removes items from remainingItems that cannot be fetched (storage depleted)
      */
     private List<FetchedItem> fetchBatchUntilFull(NGameUI gui, NContext context, List<MissingItem> remainingItems) throws InterruptedException {
         List<FetchedItem> fetchedItems = new ArrayList<>();
+        List<MissingItem> itemsToRemove = new ArrayList<>();
 
         // Group remaining items by type
         Map<String, List<MissingItem>> itemGroups = new HashMap<>();
@@ -303,7 +305,9 @@ public class StudyDeskFiller implements Action {
             // Get storage for this item
             ArrayList<NContext.ObjectStorage> storages = context.getInStorages(itemName);
             if (storages == null || storages.isEmpty()) {
-                gui.msg("No storage found for " + itemName + ", skipping", Color.ORANGE);
+                gui.msg("No storage found for " + itemName + ", removing from list", Color.ORANGE);
+                // Mark all items of this type for removal since there's no storage
+                itemsToRemove.addAll(itemsNeeded);
                 continue;
             }
 
@@ -327,7 +331,20 @@ public class StudyDeskFiller implements Action {
                     fetchedItems.add(new FetchedItem(item, target.position, target));
                 }
             }
+
+            // If we got fewer items than requested, storage is depleted
+            // Remove the unfetched items from remainingItems so we don't try again
+            if (actuallyFetched < toFetch) {
+                gui.msg("Storage depleted for " + itemName + " (got " + actuallyFetched + "/" + toFetch + ")", Color.ORANGE);
+                // Mark unfetched items for removal
+                for (int i = actuallyFetched; i < itemsNeeded.size(); i++) {
+                    itemsToRemove.add(itemsNeeded.get(i));
+                }
+            }
         }
+
+        // Remove items that couldn't be fetched
+        remainingItems.removeAll(itemsToRemove);
 
         return fetchedItems;
     }
