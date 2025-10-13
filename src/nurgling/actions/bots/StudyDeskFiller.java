@@ -262,12 +262,8 @@ public class StudyDeskFiller implements Action {
 
             // Place all fetched items
             for (FetchedItem fetchedItem : fetchedItems) {
-                try {
-                    placeItemInDesk(gui, fetchedItem.item, fetchedItem.targetPosition, studyDeskInv);
-                    remainingItems.remove(fetchedItem.originalMissingItem);
-                } catch (Exception e) {
-                    gui.msg("Failed to place item at position, skipping", Color.ORANGE);
-                }
+                placeItemInDesk(gui, fetchedItem.item, fetchedItem.targetPosition, studyDeskInv);
+                remainingItems.remove(fetchedItem.originalMissingItem);
             }
 
             gui.msg("Placed items successfully, " + remainingItems.size() + " remaining", Color.GREEN);
@@ -360,23 +356,15 @@ public class StudyDeskFiller implements Action {
             if (totalFetched >= count) {
                 break;
             }
-
-            try {
-                // Handle different storage types
-                if (storage instanceof Container) {
-                    Container container = (Container) storage;
-                    int fetched = fetchFromContainer(gui, container, itemAlias, count - totalFetched);
-                    totalFetched += fetched;
-                }
-                else if (storage instanceof NContext.Pile) {
-                    NContext.Pile pile = (NContext.Pile) storage;
-                    int fetched = fetchFromPile(gui, pile, itemAlias, count - totalFetched);
-                    totalFetched += fetched;
-                }
-                // Skip Barter for now as it's more complex
-            } catch (Exception e) {
-                // Skip this storage and try next one
-                gui.msg("Failed to fetch from storage, trying next...", Color.YELLOW);
+            if (storage instanceof Container) {
+                Container container = (Container) storage;
+                int fetched = fetchFromContainer(gui, container, itemAlias, count - totalFetched);
+                totalFetched += fetched;
+            }
+            else if (storage instanceof NContext.Pile) {
+                NContext.Pile pile = (NContext.Pile) storage;
+                int fetched = fetchFromPile(gui, pile, itemAlias, count - totalFetched);
+                totalFetched += fetched;
             }
         }
 

@@ -2,12 +2,9 @@ package nurgling.widgets;
 
 import haven.*;
 import haven.Button;
-import haven.Label;
-import haven.Window;
 import haven.resutil.Curiosity;
 import nurgling.*;
 import nurgling.iteminfo.NCuriosity;
-import nurgling.tools.NAlias;
 import org.json.*;
 
 import java.awt.*;
@@ -65,46 +62,42 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
     }
 
     private void updateGobHashInConfig(String hash) {
-        try {
-            String charName = NUtils.getGameUI().chrid;
+        String charName = NUtils.getGameUI().chrid;
 
-            // Load existing data
-            Object existingData = NConfig.get(NConfig.Key.studyDeskLayout);
-            Map<String, Object> allLayouts;
+        // Load existing data
+        Object existingData = NConfig.get(NConfig.Key.studyDeskLayout);
+        Map<String, Object> allLayouts;
 
-            if (existingData instanceof Map) {
-                allLayouts = (Map<String, Object>) existingData;
-            } else if (existingData instanceof String && !((String) existingData).isEmpty()) {
-                // Backward compatibility: convert old string format to Map
-                JSONObject jsonObj = new JSONObject((String) existingData);
-                allLayouts = jsonObj.toMap();
-            } else {
-                allLayouts = new HashMap<>();
-            }
+        if (existingData instanceof Map) {
+            allLayouts = (Map<String, Object>) existingData;
+        } else if (existingData instanceof String && !((String) existingData).isEmpty()) {
+            // Backward compatibility: convert old string format to Map
+            JSONObject jsonObj = new JSONObject((String) existingData);
+            allLayouts = jsonObj.toMap();
+        } else {
+            allLayouts = new HashMap<>();
+        }
 
-            // Get or create character data
-            Map<String, Object> charData;
-            if (allLayouts.containsKey(charName)) {
-                Object charObj = allLayouts.get(charName);
-                if (charObj instanceof Map) {
-                    charData = (Map<String, Object>) charObj;
-                } else {
-                    charData = new HashMap<>();
-                    allLayouts.put(charName, charData);
-                }
+        // Get or create character data
+        Map<String, Object> charData;
+        if (allLayouts.containsKey(charName)) {
+            Object charObj = allLayouts.get(charName);
+            if (charObj instanceof Map) {
+                charData = (Map<String, Object>) charObj;
             } else {
                 charData = new HashMap<>();
                 allLayouts.put(charName, charData);
             }
-
-            // Update only the gob hash
-            charData.put("gobHash", hash);
-
-            // Save back as Map (will be serialized as proper JSON by NConfig)
-            NConfig.set(NConfig.Key.studyDeskLayout, allLayouts);
-        } catch (Exception e) {
-            // Silently fail, not critical
+        } else {
+            charData = new HashMap<>();
+            allLayouts.put(charName, charData);
         }
+
+        // Update only the gob hash
+        charData.put("gobHash", hash);
+
+        // Save back as Map (will be serialized as proper JSON by NConfig)
+        NConfig.set(NConfig.Key.studyDeskLayout, allLayouts);
     }
 
     @Override
@@ -131,27 +124,22 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
             // Draw item image if available
             if(item.resource != null) {
-                try {
-                    // Get the original bright image using the same approach as UsingTools.java
-                    Resource.Image img = item.resource.layer(Resource.imgc);
-                    if(img != null) {
-                        // Use scaled image like UsingTools.java does
-                        TexI scaledImg = new TexI(img.scaled());
+                // Get the original bright image using the same approach as UsingTools.java
+                Resource.Image img = item.resource.layer(Resource.imgc);
+                if(img != null) {
+                    // Use scaled image like UsingTools.java does
+                    TexI scaledImg = new TexI(img.scaled());
 
-                        // Draw the image at its natural size, centered in the item area
-                        Coord imgNaturalSize = scaledImg.sz();
-                        Coord centerPos = pos.add(itemSizePx.div(2)).sub(imgNaturalSize.div(2));
+                    // Draw the image at its natural size, centered in the item area
+                    Coord imgNaturalSize = scaledImg.sz();
+                    Coord centerPos = pos.add(itemSizePx.div(2)).sub(imgNaturalSize.div(2));
 
-                        // Apply blueprint-like styling: blue tint and transparency
-                        g.defstate();
-                        g.chcolor(100, 150, 255, 180); // Blue tint with transparency
-                        g.image(scaledImg, centerPos);
-                        g.chcolor(); // Reset color
-                    } else {
-                        // Fallback: draw blueprint-style rectangle with text
-                        drawBlueprintItem(g, pos, itemSizePx, item.name);
-                    }
-                } catch(Exception e) {
+                    // Apply blueprint-like styling: blue tint and transparency
+                    g.defstate();
+                    g.chcolor(100, 150, 255, 180); // Blue tint with transparency
+                    g.image(scaledImg, centerPos);
+                    g.chcolor(); // Reset color
+                } else {
                     // Fallback: draw blueprint-style rectangle with text
                     drawBlueprintItem(g, pos, itemSizePx, item.name);
                 }
@@ -188,7 +176,6 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
         // Use the same grid calculation as in cdraw()
         Coord gridStart = new Coord(UI.scale(0), UI.scale(0));
-        Coord gridEnd = gridStart.add(DESK_SIZE.mul(sqsz));
 
         if(contentCoord.isect(gridStart, DESK_SIZE.mul(sqsz))) {
             Coord gridPos = contentCoord.sub(gridStart).div(sqsz);
@@ -246,15 +233,15 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
     @Override
     public boolean drop(Coord cc, Coord ul) {
-        return handleItemPlacement(cc, ul);
+        return handleItemPlacement(cc);
     }
 
     @Override
     public boolean iteminteract(Coord cc, Coord ul) {
-        return handleItemPlacement(cc, ul);
+        return handleItemPlacement(cc);
     }
 
-    private boolean handleItemPlacement(Coord cc, Coord ul) {
+    private boolean handleItemPlacement(Coord cc) {
         // Convert window coordinates to content coordinates
         Coord contentCoord = cc.sub(deco.contarea().ul);
 
@@ -305,86 +292,62 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
     }
 
     private String getItemName(WItem item) {
-        try {
-            if(item.item != null) {
-                // Try to get name from NGItem
-                if(item.item instanceof NGItem) {
-                    NGItem ngItem = (NGItem) item.item;
-                    String name = ngItem.name();
-                    if(name != null && !name.isEmpty()) {
-                        return name;
-                    }
-                }
-
-                // Fallback to resource name
-                if(item.item.getres() != null) {
-                    Resource res = item.item.getres();
-                    if(res.layers(Resource.Tooltip.class) != null) {
-                        for(Resource.Tooltip tt : res.layers(Resource.Tooltip.class)) {
-                            return tt.t;
-                        }
-                    }
-                    return res.name;
+        if(item.item != null) {
+            // Try to get name from NGItem
+            if(item.item instanceof NGItem) {
+                NGItem ngItem = (NGItem) item.item;
+                String name = ngItem.name();
+                if(name != null && !name.isEmpty()) {
+                    return name;
                 }
             }
-        } catch(Exception e) {
-            // Fallback
+            // Fallback to resource name
+            if(item.item.getres() != null) {
+                Resource res = item.item.getres();
+                if(res.layers(Resource.Tooltip.class) != null) {
+                    for(Resource.Tooltip tt : res.layers(Resource.Tooltip.class)) {
+                        return tt.t;
+                    }
+                }
+                return res.name;
+            }
         }
+
         return "Unknown Item";
     }
 
     private Coord getItemSize(WItem item) {
-        try {
-            if(item.item != null && item.item.spr != null) {
-                // Use the same approach as GetNumberFreeCoord: divide by UI.scale(32) but don't swap coordinates
-                Coord lc = item.item.spr.sz().div(UI.scale(32));
-                // Don't swap x and y - keep them as they are for proper orientation
-                return lc;
-            }
-        } catch(Exception e) {
-            // Fallback to 1x1
+        if(item.item != null && item.item.spr != null) {
+            // Use the same approach as GetNumberFreeCoord: divide by UI.scale(32) but don't swap coordinates
+            Coord lc = item.item.spr.sz().div(UI.scale(32));
+            // Don't swap x and y - keep them as they are for proper orientation
+            return lc;
         }
         return new Coord(1, 1);
     }
 
     private String getItemResourceName(WItem item) {
-        try {
-            if(item.item != null && item.item.getres() != null) {
-                return item.item.getres().name;
-            }
-        } catch(Exception e) {
-            // Fallback
+        if(item.item != null && item.item.getres() != null) {
+            return item.item.getres().name;
         }
         return null;
     }
 
     private Resource getItemResource(WItem item) {
-        try {
-            if(item.item != null && item.item.getres() != null) {
-                // Get a fresh resource instance to avoid any visual state from the hand item
-                Resource originalResource = item.item.getres();
-                String resourceName = originalResource.name;
-                if(resourceName != null) {
-                    // Load a clean version of the resource
-                    return Resource.remote().loadwait(resourceName);
-                }
-                return originalResource;
+        if(item.item != null && item.item.getres() != null) {
+            // Get a fresh resource instance to avoid any visual state from the hand item
+            Resource originalResource = item.item.getres();
+            String resourceName = originalResource.name;
+            if(resourceName != null) {
+                // Load a clean version of the resource
+                return Resource.remote().loadwait(resourceName);
             }
-        } catch(Exception e) {
-            // Fallback to original method
-            try {
-                if(item.item != null && item.item.getres() != null) {
-                    return item.item.getres();
-                }
-            } catch(Exception e2) {
-                // Fallback
-            }
+            return originalResource;
         }
         return null;
     }
 
     private int getStudyTime(WItem item) {
-        try {
             if(item.item != null) {
                 List<ItemInfo> info = item.item.info();
                 if(info != null) {
@@ -394,9 +357,6 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                     }
                 }
             }
-        } catch(Exception e) {
-            // Fallback
-        }
         return 0;
     }
 
@@ -430,14 +390,65 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
 
     private void saveLayout() {
-        try {
-            // Get character name
-            String charName = NUtils.getGameUI().chrid;
+        // Get character name
+        String charName = NUtils.getGameUI().chrid;
+        // Load existing data for all characters
+        Object existingData = NConfig.get(NConfig.Key.studyDeskLayout);
+        Map<String, Object> allLayouts;
+        if (existingData instanceof Map) {
+            allLayouts = (Map<String, Object>) existingData;
+        } else if (existingData instanceof String && !((String) existingData).isEmpty()) {
+            // Backward compatibility: convert old string format to Map
+            JSONObject jsonObj = new JSONObject((String) existingData);
+            allLayouts = jsonObj.toMap();
+        } else {
+            allLayouts = new HashMap<>();
+        }
+        // Create character data with gob hash and layout
+        Map<String, Object> charData = new HashMap<>();
 
-            // Load existing data for all characters
-            Object existingData = NConfig.get(NConfig.Key.studyDeskLayout);
+        // Store gob hash if available
+        if (studyDeskHash != null) {
+            charData.put("gobHash", studyDeskHash);
+        }
+
+        // Create layout
+        Map<String, Object> layout = new HashMap<>();
+        for(Map.Entry<Coord, PlannedCuriosity> entry : plannedItems.entrySet()) {
+            Coord pos = entry.getKey();
+            PlannedCuriosity item = entry.getValue();
+
+            Map<String, Object> itemData = new HashMap<>();
+            itemData.put("name", item.name);
+            itemData.put("sizeX", item.size.x);
+            itemData.put("sizeY", item.size.y);
+            itemData.put("studyTime", item.studyTime);
+            if(item.resourceName != null) {
+                itemData.put("resourceName", item.resourceName);
+            }
+            layout.put(pos.x + "," + pos.y, itemData);
+        }
+        charData.put("layout", layout);
+
+        // Save under character name
+        allLayouts.put(charName, charData);
+
+        // Save as Map (will be serialized as proper JSON by NConfig)
+        NConfig.set(NConfig.Key.studyDeskLayout, allLayouts);
+        NUtils.getGameUI().msg("Study desk layout saved!", Color.GREEN);
+    }
+
+    private void loadLayout() {
+        plannedItems.clear();
+        originalLayout.clear();
+
+        // Get character name
+        String charName = NUtils.getGameUI().chrid;
+
+        // Load all layouts
+        Object existingData = NConfig.get(NConfig.Key.studyDeskLayout);
+        if(existingData != null) {
             Map<String, Object> allLayouts;
-
             if (existingData instanceof Map) {
                 allLayouts = (Map<String, Object>) existingData;
             } else if (existingData instanceof String && !((String) existingData).isEmpty()) {
@@ -445,135 +456,66 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                 JSONObject jsonObj = new JSONObject((String) existingData);
                 allLayouts = jsonObj.toMap();
             } else {
-                allLayouts = new HashMap<>();
+                return; // No data to load
             }
 
-            // Create character data with gob hash and layout
-            Map<String, Object> charData = new HashMap<>();
+            // Get data for this character
+            if (allLayouts.containsKey(charName)) {
+                Object charObj = allLayouts.get(charName);
+                if (!(charObj instanceof Map)) {
+                    return; // Invalid data format
+                }
+                Map<String, Object> charData = (Map<String, Object>) charObj;
 
-            // Store gob hash if available
-            if (studyDeskHash != null) {
-                charData.put("gobHash", studyDeskHash);
-            }
-
-            // Create layout
-            Map<String, Object> layout = new HashMap<>();
-            for(Map.Entry<Coord, PlannedCuriosity> entry : plannedItems.entrySet()) {
-                Coord pos = entry.getKey();
-                PlannedCuriosity item = entry.getValue();
-
-                Map<String, Object> itemData = new HashMap<>();
-                itemData.put("name", item.name);
-                itemData.put("sizeX", item.size.x);
-                itemData.put("sizeY", item.size.y);
-                itemData.put("studyTime", item.studyTime);
-                if(item.resourceName != null) {
-                    itemData.put("resourceName", item.resourceName);
+                // Load gob hash if available
+                if (charData.containsKey("gobHash")) {
+                    String savedHash = (String) charData.get("gobHash");
+                    if (studyDeskHash == null) {
+                        studyDeskHash = savedHash;
+                    }
                 }
 
-                layout.put(pos.x + "," + pos.y, itemData);
-            }
-
-            charData.put("layout", layout);
-
-            // Save under character name
-            allLayouts.put(charName, charData);
-
-            // Save as Map (will be serialized as proper JSON by NConfig)
-            NConfig.set(NConfig.Key.studyDeskLayout, allLayouts);
-            NUtils.getGameUI().msg("Study desk layout saved!", Color.GREEN);
-        } catch(Exception e) {
-            NUtils.getGameUI().msg("Failed to save layout: " + e.getMessage(), Color.RED);
-        }
-    }
-
-    private void loadLayout() {
-        try {
-            plannedItems.clear();
-            originalLayout.clear();
-
-            // Get character name
-            String charName = NUtils.getGameUI().chrid;
-
-            // Load all layouts
-            Object existingData = NConfig.get(NConfig.Key.studyDeskLayout);
-            if(existingData != null) {
-                Map<String, Object> allLayouts;
-
-                if (existingData instanceof Map) {
-                    allLayouts = (Map<String, Object>) existingData;
-                } else if (existingData instanceof String && !((String) existingData).isEmpty()) {
-                    // Backward compatibility: convert old string format to Map
-                    JSONObject jsonObj = new JSONObject((String) existingData);
-                    allLayouts = jsonObj.toMap();
-                } else {
-                    return; // No data to load
-                }
-
-                // Get data for this character
-                if (allLayouts.containsKey(charName)) {
-                    Object charObj = allLayouts.get(charName);
-                    if (!(charObj instanceof Map)) {
-                        return; // Invalid data format
+                // Get layout
+                if (charData.containsKey("layout")) {
+                    Object layoutObj = charData.get("layout");
+                    if (!(layoutObj instanceof Map)) {
+                        return; // Invalid layout format
                     }
-                    Map<String, Object> charData = (Map<String, Object>) charObj;
+                    Map<String, Object> layout = (Map<String, Object>) layoutObj;
 
-                    // Load gob hash if available
-                    if (charData.containsKey("gobHash")) {
-                        String savedHash = (String) charData.get("gobHash");
-                        if (studyDeskHash == null) {
-                            studyDeskHash = savedHash;
+                    for(Map.Entry<String, Object> entry : layout.entrySet()) {
+                        String key = entry.getKey();
+                        String[] coords = key.split(",");
+                        int x = Integer.parseInt(coords[0]);
+                        int y = Integer.parseInt(coords[1]);
+
+                        if (!(entry.getValue() instanceof Map)) {
+                            continue; // Skip invalid item data
                         }
-                    }
+                        Map<String, Object> itemData = (Map<String, Object>) entry.getValue();
 
-                    // Get layout
-                    if (charData.containsKey("layout")) {
-                        Object layoutObj = charData.get("layout");
-                        if (!(layoutObj instanceof Map)) {
-                            return; // Invalid layout format
+                        String name = (String) itemData.get("name");
+
+                        // Load size (default to 1x1 for backward compatibility)
+                        int sizeX = itemData.containsKey("sizeX") ? ((Number) itemData.get("sizeX")).intValue() : 1;
+                        int sizeY = itemData.containsKey("sizeY") ? ((Number) itemData.get("sizeY")).intValue() : 1;
+                        Coord size = new Coord(sizeX, sizeY);
+
+                        String resourceName = (String) itemData.get("resourceName");
+                        int studyTime = itemData.containsKey("studyTime") ? ((Number) itemData.get("studyTime")).intValue() : 0;
+
+                        // Load the actual Resource object from the resource name
+                        Resource itemResource = null;
+                        if (resourceName != null && !resourceName.isEmpty()) {
+                            itemResource = Resource.remote().loadwait(resourceName);
                         }
-                        Map<String, Object> layout = (Map<String, Object>) layoutObj;
 
-                        for(Map.Entry<String, Object> entry : layout.entrySet()) {
-                            String key = entry.getKey();
-                            String[] coords = key.split(",");
-                            int x = Integer.parseInt(coords[0]);
-                            int y = Integer.parseInt(coords[1]);
-
-                            if (!(entry.getValue() instanceof Map)) {
-                                continue; // Skip invalid item data
-                            }
-                            Map<String, Object> itemData = (Map<String, Object>) entry.getValue();
-
-                            String name = (String) itemData.get("name");
-
-                            // Load size (default to 1x1 for backward compatibility)
-                            int sizeX = itemData.containsKey("sizeX") ? ((Number) itemData.get("sizeX")).intValue() : 1;
-                            int sizeY = itemData.containsKey("sizeY") ? ((Number) itemData.get("sizeY")).intValue() : 1;
-                            Coord size = new Coord(sizeX, sizeY);
-
-                            String resourceName = (String) itemData.get("resourceName");
-                            int studyTime = itemData.containsKey("studyTime") ? ((Number) itemData.get("studyTime")).intValue() : 0;
-
-                            // Load the actual Resource object from the resource name
-                            Resource itemResource = null;
-                            if (resourceName != null && !resourceName.isEmpty()) {
-                                try {
-                                    itemResource = Resource.remote().loadwait(resourceName);
-                                } catch (Exception e) {
-                                    // If resource loading fails, continue without it
-                                }
-                            }
-
-                            PlannedCuriosity curiosity = new PlannedCuriosity(name, size, resourceName, itemResource, studyTime);
-                            plannedItems.put(new Coord(x, y), curiosity);
-                            originalLayout.put(new Coord(x, y), curiosity);
-                        }
+                        PlannedCuriosity curiosity = new PlannedCuriosity(name, size, resourceName, itemResource, studyTime);
+                        plannedItems.put(new Coord(x, y), curiosity);
+                        originalLayout.put(new Coord(x, y), curiosity);
                     }
                 }
             }
-        } catch(Exception e) {
-            NUtils.getGameUI().msg("Failed to load layout: " + e.getMessage(), Color.RED);
         }
     }
 
@@ -685,15 +627,11 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
             for(ItemTimeInfo info : sortedItems) {
                 // Draw icon if available
                 if(info.resource != null) {
-                    try {
-                        Resource.Image img = info.resource.layer(Resource.imgc);
-                        if(img != null) {
-                            TexI scaledImg = new TexI(img.scaled());
-                            Coord iconSize = UI.scale(new Coord(16, 16));
-                            g.image(scaledImg, new Coord(0, y), iconSize);
-                        }
-                    } catch(Exception e) {
-                        // Skip icon if there's an issue
+                    Resource.Image img = info.resource.layer(Resource.imgc);
+                    if(img != null) {
+                        TexI scaledImg = new TexI(img.scaled());
+                        Coord iconSize = UI.scale(new Coord(16, 16));
+                        g.image(scaledImg, new Coord(0, y), iconSize);
                     }
                 }
 
