@@ -43,6 +43,8 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
     }
 
     private StudyTimePanel timePanel;
+    private Label totalLPLabel;
+    private Scrollport timeScrollport;
 
     public StudyDeskPlannerWidget() {
         // Width = grid + gap + time panel (200px)
@@ -228,6 +230,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                     Coord itemSize = getItemSize(handItem);
                     String resourceName = getItemResourceName(handItem);
                     Resource itemResource = getItemResource(handItem);
+                    int learningPoints = getLearningPoints(handItem);
 
                     // Check if item fits
                     if(canPlaceItem(gridPos, itemSize)) {
@@ -235,7 +238,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                         removeOverlappingItems(gridPos, itemSize);
 
                         // Create and place the item
-                        PlannedCuriosity curiosity = new PlannedCuriosity(itemName, itemSize, resourceName, itemResource, studyTime);
+                        PlannedCuriosity curiosity = new PlannedCuriosity(itemName, itemSize, resourceName, itemResource, studyTime, learningPoints);
                         plannedItems.put(new Coord(gridPos.x, gridPos.y), curiosity);
 
                         return true;
@@ -346,6 +349,23 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         return 0;
     }
 
+    private int getLearningPoints(WItem item) {
+        try {
+            if(item.item != null) {
+                List<ItemInfo> info = item.item.info();
+                if(info != null) {
+                    Curiosity curiosity = ItemInfo.find(Curiosity.class, info);
+                    if(curiosity != null) {
+                        return curiosity.exp;
+                    }
+                }
+            }
+        } catch(Exception e) {
+            // Fallback
+        }
+        return 0;
+    }
+
 
     private boolean canPlaceItem(Coord pos, Coord size) {
         // Check if item goes outside grid
@@ -387,6 +407,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                 itemData.put("sizeX", item.size.x);
                 itemData.put("sizeY", item.size.y);
                 itemData.put("studyTime", item.studyTime);
+                itemData.put("learningPoints", item.learningPoints);
                 if(item.resourceName != null) {
                     itemData.put("resourceName", item.resourceName);
                 }
@@ -424,6 +445,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
                     String resourceName = itemData.optString("resourceName", null);
                     int studyTime = itemData.optInt("studyTime", 0);
+                    int learningPoints = itemData.optInt("learningPoints", 0);
 
                     // Load the actual Resource object from the resource name
                     Resource itemResource = null;
@@ -435,7 +457,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                         }
                     }
 
-                    PlannedCuriosity curiosity = new PlannedCuriosity(name, size, resourceName, itemResource, studyTime);
+                    PlannedCuriosity curiosity = new PlannedCuriosity(name, size, resourceName, itemResource, studyTime, learningPoints);
                     plannedItems.put(new Coord(x, y), curiosity);
                     originalLayout.put(new Coord(x, y), curiosity);
                 }
@@ -467,10 +489,23 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         // Position the time panel to the right of the grid with a gap
         Coord gridEnd = sqsz.mul(DESK_SIZE);
         Coord panelPos = new Coord(gridEnd.x + UI.scale(10), 0);
-        Coord panelSize = new Coord(UI.scale(200), gridEnd.y);
 
-        timePanel = new StudyTimePanel(panelSize, this);
-        add(timePanel, panelPos);
+        // Reserve space for Total LP at the bottom (25px)
+        int scrollHeight = gridEnd.y - UI.scale(30);
+        Coord scrollSize = new Coord(UI.scale(200), scrollHeight);
+
+        // Create the content panel with scrolling support
+        // Start with a small initial size, it will auto-resize based on content
+        timePanel = new StudyTimePanel(new Coord(scrollSize.x, UI.scale(50)), this);
+
+        // Wrap in a Scrollport
+        timeScrollport = new Scrollport(scrollSize);
+        timeScrollport.cont.add(timePanel, Coord.z);
+        add(timeScrollport, panelPos);
+
+        // Add Total LP label below the scrollport
+        totalLPLabel = new Label("Total LP: 0");
+        add(totalLPLabel, new Coord(panelPos.x, panelPos.y + scrollHeight + UI.scale(5)));
     }
 
     private void addButtons() {
@@ -515,12 +550,14 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
     public static class StudyTimePanel extends Widget {
         private final StudyDeskPlannerWidget parent;
         private static final Text.Foundry fnd = new Text.Foundry(Text.sans, 12);
-        private static final int LINE_HEIGHT = UI.scale(20);
+        private static final int LINE_HEIGHT = UI.scale(38); // Increased for 2 lines per item
 
         public StudyTimePanel(Coord sz, StudyDeskPlannerWidget parent) {
             super(sz);
             this.parent = parent;
         }
+
+        private int lastItemCount = -1;
 
         @Override
         public void draw(GOut g) {
@@ -529,16 +566,25 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
             // Calculate study times for each unique item
             Map<String, ItemTimeInfo> itemTimes = calculateItemTimes();
 
+            // Check if we need to rebuild (item count changed)
+            if(itemTimes.size() != lastItemCount) {
+                lastItemCount = itemTimes.size();
+                rebuildContent(itemTimes);
+            }
+
             // Sort by resource name for consistent display
             List<ItemTimeInfo> sortedItems = new ArrayList<>(itemTimes.values());
             sortedItems.sort(Comparator.comparing(a -> a.name));
 
+            // Calculate total LP and update label
+            int totalLP = 0;
+            for(ItemTimeInfo info : itemTimes.values()) {
+                totalLP += info.totalLP;
+            }
+            updateTotalLP(totalLP);
+
             int y = 0;
             for(ItemTimeInfo info : sortedItems) {
-                if(y + LINE_HEIGHT > sz.y) {
-                    break; // Don't draw beyond panel bounds
-                }
-
                 // Draw icon if available
                 if(info.resource != null) {
                     try {
@@ -553,13 +599,44 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                     }
                 }
 
-                // Draw quantity and time text (convert to real time)
+                // Draw quantity and time text on first line (convert to real time)
                 int realTime = (int)(info.totalTime / NCuriosity.server_ratio);
-                String displayText = String.format("x%d - %s", info.count, formatTime(realTime));
-                Text t = fnd.render(displayText, Color.WHITE);
+                String timeText = String.format("x%d - %s", info.count, formatTime(realTime));
+                Text t = fnd.render(timeText, Color.WHITE);
                 g.image(t.tex(), new Coord(UI.scale(20), y + 2));
 
+                // Draw LP text on second line
+                String lpText = String.format("LP: %,d", info.totalLP);
+                Text lpTex = fnd.render(lpText, new Color(192, 192, 255));
+                g.image(lpTex.tex(), new Coord(UI.scale(20), y + UI.scale(18)));
+
                 y += LINE_HEIGHT;
+            }
+        }
+
+        private void rebuildContent(Map<String, ItemTimeInfo> itemTimes) {
+            // Calculate required height - ensure it's enough to trigger scrollbar
+            int contentHeight = itemTimes.size() * LINE_HEIGHT + UI.scale(10);
+            // Ensure minimum height
+            contentHeight = Math.max(contentHeight, UI.scale(50));
+
+            // Force resize if different
+            Coord newSize = new Coord(sz.x, contentHeight);
+            if(!sz.equals(newSize)) {
+                resize(newSize);
+
+                // IMPORTANT: Update scrollport container to recalculate scrollbar
+                if(parent.timeScrollport != null && parent.timeScrollport.cont != null) {
+                    parent.timeScrollport.cont.update();
+                }
+            }
+        }
+
+        private void updateTotalLP(int totalLP) {
+            if(parent.totalLPLabel != null) {
+                String totalText = String.format("Total LP: %,d", totalLP);
+                parent.totalLPLabel.settext(totalText);
+                parent.totalLPLabel.setcolor(new Color(255, 215, 0)); // Gold color
             }
         }
 
@@ -572,11 +649,12 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
                     ItemTimeInfo info = itemTimes.get(key);
                     if(info == null) {
-                        info = new ItemTimeInfo(item.name, item.resource, item.studyTime);
+                        info = new ItemTimeInfo(item.name, item.resource, item.studyTime, item.learningPoints);
                         itemTimes.put(key, info);
                     } else {
                         info.count++;
                         info.totalTime += item.studyTime;
+                        info.totalLP += item.learningPoints;
                     }
                 }
             }
@@ -618,14 +696,18 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
             String name;
             Resource resource;
             int studyTime;
+            int learningPoints;
             int count = 1;
             int totalTime;
+            int totalLP;
 
-            ItemTimeInfo(String name, Resource resource, int studyTime) {
+            ItemTimeInfo(String name, Resource resource, int studyTime, int learningPoints) {
                 this.name = name;
                 this.resource = resource;
                 this.studyTime = studyTime;
+                this.learningPoints = learningPoints;
                 this.totalTime = studyTime;
+                this.totalLP = learningPoints;
             }
         }
     }
@@ -636,17 +718,19 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         public final String resourceName;
         public final Resource resource;
         public final int studyTime; // Study time in seconds
+        public final int learningPoints; // Total LP from this curio
 
-        public PlannedCuriosity(String name, Coord size, String resourceName, Resource resource, int studyTime) {
+        public PlannedCuriosity(String name, Coord size, String resourceName, Resource resource, int studyTime, int learningPoints) {
             this.name = name;
             this.size = size != null ? size : new Coord(1, 1);
             this.resourceName = resourceName;
             this.resource = resource;
             this.studyTime = studyTime;
+            this.learningPoints = learningPoints;
         }
 
         public PlannedCuriosity(String name, Coord size, String resourceName) {
-            this(name, size, resourceName, null, 0);
+            this(name, size, resourceName, null, 0, 0);
         }
     }
 }
