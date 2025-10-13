@@ -4,14 +4,16 @@ import haven.*;
 import haven.Button;
 import haven.Label;
 import haven.Window;
+import haven.resutil.Curiosity;
 import nurgling.*;
+import nurgling.iteminfo.NCuriosity;
 import nurgling.tools.NAlias;
 import org.json.*;
 
 import java.awt.*;
 import java.awt.image.WritableRaster;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
 
 public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
     public static final Coord DESK_SIZE = new Coord(7, 7);
@@ -40,10 +42,14 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         invsq = new TexI(PUtils.rasterimg(buf));
     }
 
+    private StudyTimePanel timePanel;
+
     public StudyDeskPlannerWidget() {
-        super(sqsz.mul(DESK_SIZE).add(0, UI.scale(40)), "Study Desk Planner");
+        // Width = grid + gap + time panel (200px)
+        super(sqsz.mul(DESK_SIZE).add(UI.scale(160), UI.scale(40)), "Study Desk Planner");
 
         loadLayout();
+        addTimePanel();
         addButtons();
     }
 
@@ -82,38 +88,43 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                         Coord imgNaturalSize = scaledImg.sz();
                         Coord centerPos = pos.add(itemSizePx.div(2)).sub(imgNaturalSize.div(2));
 
-                        // Make sure graphics state is clean for bright rendering
+                        // Apply blueprint-like styling: blue tint and transparency
                         g.defstate();
+                        g.chcolor(100, 150, 255, 180); // Blue tint with transparency
                         g.image(scaledImg, centerPos);
+                        g.chcolor(); // Reset color
                     } else {
-                        // Fallback: draw gray rectangle with text
-                        drawFallbackItem(g, pos, itemSizePx, item.name);
+                        // Fallback: draw blueprint-style rectangle with text
+                        drawBlueprintItem(g, pos, itemSizePx, item.name);
                     }
                 } catch(Exception e) {
-                    // Fallback: draw gray rectangle with text
-                    drawFallbackItem(g, pos, itemSizePx, item.name);
+                    // Fallback: draw blueprint-style rectangle with text
+                    drawBlueprintItem(g, pos, itemSizePx, item.name);
                 }
             } else {
-                // Fallback: draw gray rectangle with text
-                drawFallbackItem(g, pos, itemSizePx, item.name);
+                // Fallback: draw blueprint-style rectangle with text
+                drawBlueprintItem(g, pos, itemSizePx, item.name);
             }
         }
     }
 
-    private void drawFallbackItem(GOut g, Coord pos, Coord size, String name) {
-        // Draw gray rectangle
-        g.chcolor(128, 128, 128, 200);
+    private void drawBlueprintItem(GOut g, Coord pos, Coord size, String name) {
+        // Draw a semi-transparent blue rectangle for blueprint effect
+        g.chcolor(80, 120, 200, 120);
         g.frect(pos.add(2, 2), size.sub(4, 4));
         g.chcolor();
 
-        // Draw border
-        g.chcolor(64, 64, 64, 255);
+        // Draw brighter blue border
+        g.chcolor(100, 150, 255, 220);
         g.rect(pos.add(2, 2), size.sub(4, 4));
         g.chcolor();
 
-        // Center text within the item's area
-        Coord textPos = pos.add(size.div(2));
-        g.atext(name, textPos, 0.5, 0.5);
+        // Draw name in light blue
+        if(name != null && !name.isEmpty()) {
+            Text nameText = Text.render(name, new java.awt.Color(150, 200, 255));
+            Coord textPos = pos.add(size.div(2)).sub(nameText.sz().div(2));
+            g.image(nameText.tex(), textPos);
+        }
     }
 
     @Override
@@ -205,6 +216,14 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                 WItem handItem = NUtils.getGameUI().vhand;
 
                 if(handItem != null && handItem.item != null) {
+                    // First check if this is a curio item
+                    int studyTime = getStudyTime(handItem);
+                    if(studyTime <= 0) {
+                        // Not a curio item, reject it
+                        NUtils.getGameUI().msg("Only curio items can be placed in the study desk planner!", Color.RED);
+                        return false;
+                    }
+
                     String itemName = getItemName(handItem);
                     Coord itemSize = getItemSize(handItem);
                     String resourceName = getItemResourceName(handItem);
@@ -216,24 +235,15 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                         removeOverlappingItems(gridPos, itemSize);
 
                         // Create and place the item
-                        PlannedCuriosity curiosity = new PlannedCuriosity(itemName, itemSize, resourceName, itemResource);
+                        PlannedCuriosity curiosity = new PlannedCuriosity(itemName, itemSize, resourceName, itemResource, studyTime);
                         plannedItems.put(new Coord(gridPos.x, gridPos.y), curiosity);
 
                         return true;
                     }
                 } else {
-                    // Fallback for when we can't detect the item
-                    String itemName = "Unknown Item";
-                    Coord itemSize = new Coord(1, 1);
-                    String resourceName = null;
-                    Resource itemResource = null;
-
-                    if(canPlaceItem(gridPos, itemSize)) {
-                        removeOverlappingItems(gridPos, itemSize);
-                        PlannedCuriosity curiosity = new PlannedCuriosity(itemName, itemSize, resourceName, itemResource);
-                        plannedItems.put(new Coord(gridPos.x, gridPos.y), curiosity);
-                        return true;
-                    }
+                    // Fallback for when we can't detect the item - still reject non-curios
+                    NUtils.getGameUI().msg("Cannot place item - no item information available!", Color.RED);
+                    return false;
                 }
             }
         }
@@ -319,6 +329,23 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         return null;
     }
 
+    private int getStudyTime(WItem item) {
+        try {
+            if(item.item != null) {
+                List<ItemInfo> info = item.item.info();
+                if(info != null) {
+                    Curiosity curiosity = ItemInfo.find(Curiosity.class, info);
+                    if(curiosity != null) {
+                        return curiosity.time;
+                    }
+                }
+            }
+        } catch(Exception e) {
+            // Fallback
+        }
+        return 0;
+    }
+
 
     private boolean canPlaceItem(Coord pos, Coord size) {
         // Check if item goes outside grid
@@ -359,6 +386,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                 itemData.put("name", item.name);
                 itemData.put("sizeX", item.size.x);
                 itemData.put("sizeY", item.size.y);
+                itemData.put("studyTime", item.studyTime);
                 if(item.resourceName != null) {
                     itemData.put("resourceName", item.resourceName);
                 }
@@ -395,6 +423,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                     Coord size = new Coord(sizeX, sizeY);
 
                     String resourceName = itemData.optString("resourceName", null);
+                    int studyTime = itemData.optInt("studyTime", 0);
 
                     // Load the actual Resource object from the resource name
                     Resource itemResource = null;
@@ -406,7 +435,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                         }
                     }
 
-                    PlannedCuriosity curiosity = new PlannedCuriosity(name, size, resourceName, itemResource);
+                    PlannedCuriosity curiosity = new PlannedCuriosity(name, size, resourceName, itemResource, studyTime);
                     plannedItems.put(new Coord(x, y), curiosity);
                     originalLayout.put(new Coord(x, y), curiosity);
                 }
@@ -432,6 +461,16 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
     public Map<Coord, PlannedCuriosity> getPlannedLayout() {
         return new HashMap<>(plannedItems);
+    }
+
+    private void addTimePanel() {
+        // Position the time panel to the right of the grid with a gap
+        Coord gridEnd = sqsz.mul(DESK_SIZE);
+        Coord panelPos = new Coord(gridEnd.x + UI.scale(10), 0);
+        Coord panelSize = new Coord(UI.scale(200), gridEnd.y);
+
+        timePanel = new StudyTimePanel(panelSize, this);
+        add(timePanel, panelPos);
     }
 
     private void addButtons() {
@@ -473,21 +512,141 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         NUtils.getGameUI().msg("Changes cancelled - layout restored", Color.YELLOW);
     }
 
+    public static class StudyTimePanel extends Widget {
+        private final StudyDeskPlannerWidget parent;
+        private static final Text.Foundry fnd = new Text.Foundry(Text.sans, 12);
+        private static final int LINE_HEIGHT = UI.scale(20);
+
+        public StudyTimePanel(Coord sz, StudyDeskPlannerWidget parent) {
+            super(sz);
+            this.parent = parent;
+        }
+
+        @Override
+        public void draw(GOut g) {
+            super.draw(g);
+
+            // Calculate study times for each unique item
+            Map<String, ItemTimeInfo> itemTimes = calculateItemTimes();
+
+            // Sort by resource name for consistent display
+            List<ItemTimeInfo> sortedItems = new ArrayList<>(itemTimes.values());
+            sortedItems.sort(Comparator.comparing(a -> a.name));
+
+            int y = 0;
+            for(ItemTimeInfo info : sortedItems) {
+                if(y + LINE_HEIGHT > sz.y) {
+                    break; // Don't draw beyond panel bounds
+                }
+
+                // Draw icon if available
+                if(info.resource != null) {
+                    try {
+                        Resource.Image img = info.resource.layer(Resource.imgc);
+                        if(img != null) {
+                            TexI scaledImg = new TexI(img.scaled());
+                            Coord iconSize = UI.scale(new Coord(16, 16));
+                            g.image(scaledImg, new Coord(0, y), iconSize);
+                        }
+                    } catch(Exception e) {
+                        // Skip icon if there's an issue
+                    }
+                }
+
+                // Draw quantity and time text (convert to real time)
+                int realTime = (int)(info.totalTime / NCuriosity.server_ratio);
+                String displayText = String.format("x%d - %s", info.count, formatTime(realTime));
+                Text t = fnd.render(displayText, Color.WHITE);
+                g.image(t.tex(), new Coord(UI.scale(20), y + 2));
+
+                y += LINE_HEIGHT;
+            }
+        }
+
+        private Map<String, ItemTimeInfo> calculateItemTimes() {
+            Map<String, ItemTimeInfo> itemTimes = new HashMap<>();
+
+            for(PlannedCuriosity item : parent.plannedItems.values()) {
+                if(item.studyTime > 0) {
+                    String key = item.resourceName != null ? item.resourceName : item.name;
+
+                    ItemTimeInfo info = itemTimes.get(key);
+                    if(info == null) {
+                        info = new ItemTimeInfo(item.name, item.resource, item.studyTime);
+                        itemTimes.put(key, info);
+                    } else {
+                        info.count++;
+                        info.totalTime += item.studyTime;
+                    }
+                }
+            }
+
+            return itemTimes;
+        }
+
+        private String formatTime(int seconds) {
+            if(seconds == 0) {
+                return "0s";
+            }
+
+            int days = seconds / 86400;
+            int hours = (seconds % 86400) / 3600;
+            int minutes = (seconds % 3600) / 60;
+            int secs = seconds % 60;
+
+            StringBuilder sb = new StringBuilder();
+            if(days > 0) {
+                sb.append(days).append("d");
+            }
+            if(hours > 0) {
+                if(sb.length() > 0) sb.append(" ");
+                sb.append(hours).append("h");
+            }
+            if(minutes > 0) {
+                if(sb.length() > 0) sb.append(" ");
+                sb.append(minutes).append("m");
+            }
+            if(secs > 0) {
+                if(sb.length() > 0) sb.append(" ");
+                sb.append(secs).append("s");
+            }
+
+            return sb.toString();
+        }
+
+        private static class ItemTimeInfo {
+            String name;
+            Resource resource;
+            int studyTime;
+            int count = 1;
+            int totalTime;
+
+            ItemTimeInfo(String name, Resource resource, int studyTime) {
+                this.name = name;
+                this.resource = resource;
+                this.studyTime = studyTime;
+                this.totalTime = studyTime;
+            }
+        }
+    }
+
     public static class PlannedCuriosity {
         public final String name;
         public final Coord size;
         public final String resourceName;
         public final Resource resource;
+        public final int studyTime; // Study time in seconds
 
-        public PlannedCuriosity(String name, Coord size, String resourceName, Resource resource) {
+        public PlannedCuriosity(String name, Coord size, String resourceName, Resource resource, int studyTime) {
             this.name = name;
             this.size = size != null ? size : new Coord(1, 1);
             this.resourceName = resourceName;
             this.resource = resource;
+            this.studyTime = studyTime;
         }
 
         public PlannedCuriosity(String name, Coord size, String resourceName) {
-            this(name, size, resourceName, null);
+            this(name, size, resourceName, null, 0);
         }
     }
 }
