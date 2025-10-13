@@ -40,8 +40,6 @@ public class StudyDeskFiller implements Action {
         String studyDeskHash = (String) charData.get("gobHash");
         Map<String, Object> plannedLayout = (Map<String, Object>) charData.get("layout");
 
-        gui.msg("Found layout config with " + plannedLayout.size() + " planned items", Color.GREEN);
-
         // Step 2: Navigate to study desk area
         NArea studyDeskArea = getStudyDeskArea(gui);
         if (studyDeskArea == null) {
@@ -50,20 +48,16 @@ public class StudyDeskFiller implements Action {
         }
 
         // Step 3: Find the specific study desk by hash
-        gui.msg("Looking for study desk with hash: " + studyDeskHash, Color.YELLOW);
         Gob studyDesk = Finder.findGob(studyDeskHash);
         if (studyDesk == null) {
             gui.msg("ERROR: Could not find study desk with hash: " + studyDeskHash, Color.RED);
             return Results.ERROR("Could not find study desk with hash: " + studyDeskHash);
         }
 
-        gui.msg("Found study desk! Navigating to it...", Color.GREEN);
-
         // Step 4: Navigate to the study desk
         new PathFinder(studyDesk).run(gui);
 
         // Step 5: Open the study desk
-        gui.msg("Opening study desk...", Color.YELLOW);
         new OpenTargetContainer("Study Desk", studyDesk).run(gui);
 
         // Step 6: Get the study desk inventory
@@ -73,11 +67,8 @@ public class StudyDeskFiller implements Action {
             return Results.ERROR("ERROR: Could not access study desk inventory!");
         }
 
-        gui.msg("Study desk opened successfully! Analyzing contents...", Color.GREEN);
-
         // Step 7: Build map of current item positions
         Map<Coord, WItem> currentItems = buildCurrentItemsMap(studyDeskInv);
-        gui.msg("Current desk has " + currentItems.size() + " items", Color.CYAN);
 
         // Step 8: Find missing items
         List<MissingItem> missingItems = findMissingItems(plannedLayout, currentItems);
@@ -87,7 +78,6 @@ public class StudyDeskFiller implements Action {
 
         // Step 10: Fetch and place missing items
         if (!missingItems.isEmpty()) {
-            gui.msg("Starting to fetch and place missing items...", Color.CYAN);
             fetchAndPlaceAllItems(gui, missingItems, studyDesk, studyDeskInv);
         }
 
@@ -153,7 +143,6 @@ public class StudyDeskFiller implements Action {
      * Get the study desk area using NContext
      */
     private NArea getStudyDeskArea(NGameUI gui) throws InterruptedException {
-        gui.msg("Navigating to study desks area...", Color.YELLOW);
         NContext context = new NContext(gui);
         return context.getSpecArea(Specialisation.SpecName.studyDesks);
     }
@@ -222,8 +211,6 @@ public class StudyDeskFiller implements Action {
         // Create a working list of items still needed
         List<MissingItem> remainingItems = new ArrayList<>(missingItems);
 
-        gui.msg("Processing " + remainingItems.size() + " missing items...", Color.CYAN);
-
         // Set up NContext once for all items
         NContext context = new NContext(gui);
         Set<String> uniqueItems = new HashSet<>();
@@ -236,17 +223,13 @@ public class StudyDeskFiller implements Action {
 
         // Keep fetching and placing until all items are done
         while (!remainingItems.isEmpty()) {
-            gui.msg("Fetching batch... " + remainingItems.size() + " items remaining", Color.YELLOW);
 
             // Fill inventory with as many items as possible
             List<FetchedItem> fetchedItems = fetchBatchUntilFull(gui, context, remainingItems);
 
             if (fetchedItems.isEmpty()) {
-                gui.msg("No more items available in storage", Color.ORANGE);
                 break;
             }
-
-            gui.msg("Fetched " + fetchedItems.size() + " items, now placing them...", Color.GREEN);
 
             // Navigate back to study desk and place everything
             getStudyDeskArea(gui);
@@ -265,11 +248,7 @@ public class StudyDeskFiller implements Action {
                 placeItemInDesk(gui, fetchedItem.item, fetchedItem.targetPosition, studyDeskInv);
                 remainingItems.remove(fetchedItem.originalMissingItem);
             }
-
-            gui.msg("Placed items successfully, " + remainingItems.size() + " remaining", Color.GREEN);
         }
-
-        gui.msg("Item placement complete!", Color.GREEN);
     }
 
     /**
@@ -467,8 +446,6 @@ public class StudyDeskFiller implements Action {
                 return !studyDeskInv.isSlotFree(finalPos);
             }
         });
-
-        gui.msg("Placed " + itemName + " at (" + targetPosition.x + ", " + targetPosition.y + ")", Color.GREEN);
     }
 
     /**
@@ -476,24 +453,11 @@ public class StudyDeskFiller implements Action {
      */
     private void reportMissingItems(NGameUI gui, List<MissingItem> missingItems) {
         if (missingItems.isEmpty()) {
-            gui.msg("SUCCESS: All planned items are present in the study desk!", Color.GREEN);
             return;
         }
 
-        gui.msg("=".repeat(50), Color.YELLOW);
-        gui.msg("MISSING ITEMS REPORT:", Color.YELLOW);
-        gui.msg("=".repeat(50), Color.YELLOW);
-
         // Sort by position for easier reading
         missingItems.sort(Comparator.comparing(a -> a.position.x * 100 + a.position.y));
-
-        for (MissingItem missing : missingItems) {
-            gui.msg(String.format("  Missing: %s at position (%d, %d)",
-                    missing.itemName, missing.position.x, missing.position.y), Color.ORANGE);
-        }
-
-        gui.msg("=".repeat(50), Color.YELLOW);
-        gui.msg("Total missing items: " + missingItems.size(), Color.YELLOW);
     }
 
     /**
