@@ -74,17 +74,29 @@ public class StudyDeskInventoryExtension {
             // Calculate position to the right of the study desk window
             Coord plannerPos = calculatePlannerPosition(inventory);
 
+            // Get study desk gob hash
+            String gobHash = null;
+            if (inventory.parentGob != null && inventory.parentGob.ngob != null) {
+                gobHash = inventory.parentGob.ngob.hash;
+            }
+
             if (gameUI.studyDeskPlanner == null) {
                 gameUI.studyDeskPlanner = new StudyDeskPlannerWidget();
                 gameUI.add(gameUI.studyDeskPlanner, plannerPos);
+                if (gobHash != null) {
+                    gameUI.studyDeskPlanner.setStudyDeskHash(gobHash);
+                }
                 gameUI.studyDeskPlanner.show(); // Explicitly show on first creation
             } else {
                 // Toggle visibility for subsequent clicks
                 if (gameUI.studyDeskPlanner.visible()) {
                     gameUI.studyDeskPlanner.hide();
                 } else {
-                    // Reposition before showing
+                    // Reposition and set gob hash before showing
                     gameUI.studyDeskPlanner.move(plannerPos);
+                    if (gobHash != null) {
+                        gameUI.studyDeskPlanner.setStudyDeskHash(gobHash);
+                    }
                     gameUI.studyDeskPlanner.show();
                 }
             }
