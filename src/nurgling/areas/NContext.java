@@ -169,6 +169,10 @@ public class NContext {
         return outAreas.get(item);
     }
 
+    public RoutePoint getRoutePoint(String areaId) {
+        return rps.get(areaId);
+    }
+
     public NArea getSpecArea(NContext.Workstation workstation) throws InterruptedException {
         if(!areas.containsKey(workstation.station)) {
             NArea area = findSpec(workstation_spec_map.get(workstation.station).toString());
