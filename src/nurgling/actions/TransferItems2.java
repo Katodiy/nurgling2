@@ -3,17 +3,17 @@ package nurgling.actions;
 import haven.WItem;
 import nurgling.NGItem;
 import nurgling.NGameUI;
+import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.areas.NContext;
+import nurgling.routes.RouteGraph;
+import nurgling.routes.RoutePoint;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.TreeMap;
+import java.util.*;
 
 public class TransferItems2 implements Action
 {
@@ -56,9 +56,25 @@ public class TransferItems2 implements Action
         this.items = items;
     }
 
+    /**
+     * Helper class to store item transfer information
+     */
+    private static class ItemTransfer {
+        String itemName;
+        double quality;
+        String areaId;
+
+        ItemTransfer(String itemName, double quality, String areaId) {
+            this.itemName = itemName;
+            this.quality = quality;
+            this.areaId = areaId;
+        }
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
+        // Step 1: Sort items into priority/non-priority (preserve existing orderList behavior)
         ArrayList<String> before = new ArrayList<>();
         ArrayList<String> after = new ArrayList<>();
 
@@ -76,33 +92,108 @@ public class TransferItems2 implements Action
         ArrayList<String> resitems = new ArrayList<>();
         resitems.addAll(before);
         resitems.addAll(after);
+
+        // Step 2: Group items by destination area
+        Map<String, List<ItemTransfer>> itemsByArea = new LinkedHashMap<>();
+
         for(String item : resitems) {
             TreeMap<Double,String> areas = cnt.getOutAreas(item);
-            if(areas!=null) {
-                for (Double key : areas.descendingKeySet()) {
-                    if (!NUtils.getGameUI().getInventory().getItems(new NAlias(item), key).isEmpty()) {
+            if(areas != null) {
+                for (Double quality : areas.descendingKeySet()) {
+                    if (!NUtils.getGameUI().getInventory().getItems(new NAlias(item), quality).isEmpty()) {
+                        String areaId = areas.get(quality);
+                        itemsByArea.computeIfAbsent(areaId, k -> new ArrayList<>())
+                            .add(new ItemTransfer(item, quality, areaId));
+                    }
+                }
+            }
+        }
 
-                        for (NContext.ObjectStorage output : cnt.getOutStorages(item, key)) {
-                            if (output instanceof NContext.Pile) {
-                                new TransferToPiles(cnt.getRCArea(areas.get(key)), new NAlias(item), key.intValue()).run(gui);
-                            }
-                            if (output instanceof Container) {
-                                new TransferToContainer((Container) output, new NAlias(item), key.intValue()).run(gui);
-                            }
-                            if (output instanceof NContext.Barrel) {
-                                new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel), new NAlias(item)).run(gui);
-                            }
-//                        if (output instanceof NContext.Barter) {
-//                            if (((NContext.Barter) output).getArea() != null)
-//                                new TransferToBarter(((NContext.Barter) output), new NAlias(item), key.intValue()).run(gui);
-//                        }
-                        }
+        // Step 3: Optimize area visit order using RouteGraph
+        List<String> optimizedAreaOrder = optimizeAreaVisitOrder(gui, itemsByArea);
+
+        // Step 4: Visit each area in optimized order and transfer all items for that area
+        for (String areaId : optimizedAreaOrder) {
+            List<ItemTransfer> itemsForArea = itemsByArea.get(areaId);
+
+            for (ItemTransfer itemTransfer : itemsForArea) {
+                // Get storages and perform the transfer
+                for (NContext.ObjectStorage output : cnt.getOutStorages(itemTransfer.itemName, itemTransfer.quality)) {
+                    if (output instanceof NContext.Pile) {
+                        new TransferToPiles(cnt.getRCArea(areaId), new NAlias(itemTransfer.itemName),
+                            (int)itemTransfer.quality).run(gui);
+                    }
+                    if (output instanceof Container) {
+                        new TransferToContainer((Container) output, new NAlias(itemTransfer.itemName),
+                            (int)itemTransfer.quality).run(gui);
+                    }
+                    if (output instanceof NContext.Barrel) {
+                        new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel),
+                            new NAlias(itemTransfer.itemName)).run(gui);
                     }
                 }
             }
         }
 
         return Results.SUCCESS();
+    }
+
+    /**
+     * Optimizes the order to visit areas using RouteGraph's greedy nearest-neighbor algorithm
+     */
+    private List<String> optimizeAreaVisitOrder(NGameUI gui, Map<String, List<ItemTransfer>> itemsByArea) {
+        if (itemsByArea.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        try {
+            RouteGraph graph = ((NMapView) gui.map).routeGraphManager.getGraph();
+            RoutePoint playerPos = graph.findNearestPointToPlayer(gui);
+
+            if (playerPos == null) {
+                return new ArrayList<>(itemsByArea.keySet());
+            }
+
+            // Get RoutePoints for each area
+            Map<String, RoutePoint> areaRoutePoints = new HashMap<>();
+            for (String areaId : itemsByArea.keySet()) {
+                RoutePoint rp = cnt.getRoutePoint(areaId);
+                if (rp != null) {
+                    areaRoutePoints.put(areaId, rp);
+                }
+            }
+
+            if (areaRoutePoints.isEmpty()) {
+                return new ArrayList<>(itemsByArea.keySet());
+            }
+
+            // Optimize the visit order
+            List<RoutePoint> optimizedRoutePoints = graph.optimizeVisitOrder(playerPos, areaRoutePoints.values());
+
+            // Convert back to area IDs
+            List<String> optimizedAreaIds = new ArrayList<>();
+            for (RoutePoint rp : optimizedRoutePoints) {
+                for (Map.Entry<String, RoutePoint> entry : areaRoutePoints.entrySet()) {
+                    if (entry.getValue().id == rp.id) {
+                        optimizedAreaIds.add(entry.getKey());
+                        break;
+                    }
+                }
+            }
+
+            // Add any areas that weren't in the optimized list (no route points)
+            for (String areaId : itemsByArea.keySet()) {
+                if (!optimizedAreaIds.contains(areaId)) {
+                    optimizedAreaIds.add(areaId);
+                }
+            }
+
+            return optimizedAreaIds;
+
+        } catch (Exception e) {
+            NUtils.getGameUI().error("Route optimization failed, using default order: " + e.getMessage());
+            return new ArrayList<>(itemsByArea.keySet());
+        }
     }
 
 }

@@ -334,4 +334,47 @@ public class RouteGraph {
     public void clearDoors() {
         this.doors.clear();
     }
+
+    /**
+     * Optimizes the order to visit multiple destinations using a greedy nearest-neighbor algorithm.
+     * This is an approximation to the traveling salesman problem.
+     *
+     * @param start The starting RoutePoint (typically player's current position)
+     * @param destinations Collection of RoutePoints to visit
+     * @return List of RoutePoints in optimized visit order, or empty list if no valid path exists
+     */
+    public List<RoutePoint> optimizeVisitOrder(RoutePoint start, Collection<RoutePoint> destinations) {
+        if (start == null || destinations == null || destinations.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<RoutePoint> optimizedPath = new ArrayList<>();
+        Set<RoutePoint> unvisited = new HashSet<>(destinations);
+        RoutePoint current = start;
+
+        while (!unvisited.isEmpty()) {
+            RoutePoint nearest = null;
+            int shortestDist = Integer.MAX_VALUE;
+
+            for (RoutePoint candidate : unvisited) {
+                List<RoutePoint> path = findPath(current, candidate);
+                if (path != null && path.size() < shortestDist) {
+                    shortestDist = path.size();
+                    nearest = candidate;
+                }
+            }
+
+            if (nearest != null) {
+                optimizedPath.add(nearest);
+                unvisited.remove(nearest);
+                current = nearest;
+            } else {
+                // No path found to remaining destinations, add them anyway for completeness
+                optimizedPath.addAll(unvisited);
+                break;
+            }
+        }
+
+        return optimizedPath;
+    }
 }
