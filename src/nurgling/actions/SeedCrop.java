@@ -161,8 +161,6 @@ public class SeedCrop implements Action {
                 fetchSeedsFromBarrel(gui, barrels);
             else if (!stockpiles.isEmpty())
                 fetchSeedsFromStockpiles(gui);
-            else
-                NUtils.getGameUI().msg("No items for seeding");
 
         }
 
