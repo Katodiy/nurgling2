@@ -17,6 +17,7 @@ import nurgling.widgets.CrimeStatusBuff;
 import nurgling.widgets.AllowVisitingStatusBuff;
 import nurgling.widgets.LocalizedResourceTimersWindow;
 import nurgling.widgets.LocalizedResourceTimerDialog;
+import nurgling.widgets.StudyDeskPlannerWidget;
 
 import java.awt.event.KeyEvent;
 import java.util.*;
@@ -50,6 +51,7 @@ public class NGameUI extends GameUI
     public LocalizedResourceTimersWindow localizedResourceTimersWindow = null;
     private LocalizedResourceTimerDialog localizedResourceTimerDialog = null;
     public LocalizedResourceTimerService localizedResourceTimerService;
+    public StudyDeskPlannerWidget studyDeskPlanner = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);

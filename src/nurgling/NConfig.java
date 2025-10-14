@@ -95,7 +95,8 @@ public class NConfig
         inventoryRightPanelShow,
         inventoryRightPanelMode,
         showTerrainName,
-        validateAllCropsBeforeHarvest
+        validateAllCropsBeforeHarvest,
+        studyDeskLayout
     }
 
 
@@ -181,6 +182,7 @@ public class NConfig
         conf.put(Key.inventoryRightPanelMode, "EXPANDED");
         conf.put(Key.showTerrainName, false);
         conf.put(Key.validateAllCropsBeforeHarvest, false);
+        conf.put(Key.studyDeskLayout, "");
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

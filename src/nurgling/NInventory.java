@@ -55,6 +55,13 @@ public class NInventory extends Inventory
         super(sz);
     }
 
+    @Override
+    protected void added() {
+        super.added();
+        // Add Plan button for Study Desk after the widget is added to its parent
+        nurgling.widgets.StudyDeskInventoryExtension.addPlanButtonIfStudyDesk(this);
+    }
+
     public enum QualityType {
         High, Low
     }
@@ -1472,6 +1479,15 @@ public class NInventory extends Inventory
                 ui.core.writeItemInfoForContainer(iis);
             }
         }
+
+        // Close Study Desk Planner if this is a study desk inventory
+        if (nurgling.widgets.StudyDeskInventoryExtension.isStudyDeskInventory(this)) {
+            NGameUI gameUI = NUtils.getGameUI();
+            if (gameUI != null && gameUI.studyDeskPlanner != null && gameUI.studyDeskPlanner.visible()) {
+                gameUI.studyDeskPlanner.hide();
+            }
+        }
+
         super.reqdestroy();
     }
 
