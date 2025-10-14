@@ -127,10 +127,10 @@ public class TransferItems2 implements Action
                         new TransferToContainer((Container) output, new NAlias(itemTransfer.itemName),
                             (int)itemTransfer.quality).run(gui);
                     }
-                    if (output instanceof NContext.Barrel) {
-                        new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel),
-                            new NAlias(itemTransfer.itemName)).run(gui);
-                    }
+//                    if (output instanceof NContext.Barrel) {
+//                        new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel),
+//                            new NAlias(itemTransfer.itemName)).run(gui);
+//                    }
                 }
             }
         }
