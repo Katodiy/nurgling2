@@ -117,7 +117,7 @@ public class NMiniMapWnd extends Widget{
 //        path.a = NConfiguration.getInstance().isPaths;
 
         // Resource Timers button using night vision icon - placed last in toggle panel
-        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/daynight", kb_resourcetimers, "Resource Timers"), (first.sz.x+UI.scale(3))*shift++, 0).state(() -> {
+        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/timer", kb_resourcetimers, "Resource Timers"), (first.sz.x+UI.scale(3))*shift++, 0).state(() -> {
             NGameUI gui = NUtils.getGameUI();
             return gui != null && gui.localizedResourceTimersWindow != null && gui.localizedResourceTimersWindow.visible();
         }).click(() -> {
