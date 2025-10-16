@@ -43,7 +43,6 @@ import nurgling.widgets.NMiniMap;
 
 import static haven.MCache.tilesz;
 import static haven.MCache.cmaps;
-import static haven.OCache.posres;
 import static haven.Utils.eq;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.*;
@@ -174,7 +173,7 @@ public class MapWnd extends Window implements Console.Directory {
 		    return(true);
 		}
 	    }
-	    if((ev.b == 1) && checkhit(c)) {
+		if((ev.b == 1) && (checkhit(c) || ui.modshift)) {
 		MapWnd.this.drag(parentpos(MapWnd.this, c));
 		return(true);
 	    }
