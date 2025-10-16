@@ -43,6 +43,7 @@ import nurgling.widgets.NMiniMap;
 
 import static haven.MCache.tilesz;
 import static haven.MCache.cmaps;
+import static haven.OCache.posres;
 import static haven.Utils.eq;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.*;
@@ -173,7 +174,7 @@ public class MapWnd extends Window implements Console.Directory {
 		    return(true);
 		}
 	    }
-	    if((ev.b == 1) && (checkhit(c) || ui.modshift)) {
+	    if((ev.b == 1) && checkhit(c)) {
 		MapWnd.this.drag(parentpos(MapWnd.this, c));
 		return(true);
 	    }
@@ -323,8 +324,42 @@ public class MapWnd extends Window implements Console.Directory {
 		return(true);
 	    }
 	    if(!press && (sessloc != null) && (loc.seg.id == sessloc.seg.id)) {
-		mvclick(mv, null, loc, null, button);
-		return(true);
+		// Handle ctrl+click for queued movement
+		if(ui.modctrl && (button == 1)) {
+		    synchronized(movementQueue) {
+			System.out.println("Ctrl+click: adding waypoint to queue. Current queue size: " + movementQueue.size());
+			// Check if we need to start movement (no current target)
+			boolean startMovement = (currentTarget == null);
+			movementQueue.add(loc);
+
+			// Only start movement if we weren't already moving
+			if(startMovement) {
+			    currentTarget = movementQueue.poll();
+			    if(currentTarget != null) {
+				System.out.println("Starting movement to first waypoint. Queue now has: " + movementQueue.size() + " remaining");
+				System.out.println("  Target: " + currentTarget.tc + ", Current: " + sessloc.tc);
+				// Call wdgmsg directly with modflags=0 to avoid ctrl flag
+				Coord mc = ui.mc;
+				mv.wdgmsg("click", mc,
+					  currentTarget.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),
+					  button, 0);
+			    }
+			} else {
+			    System.out.println("Waypoint queued. Total in queue: " + movementQueue.size() + ", already moving to current target");
+			}
+		    }
+		    return(true);
+		} else {
+		    // Normal click - clear queue and move to location
+		    synchronized(movementQueue) {
+			System.out.println("Normal click: clearing queue");
+			movementQueue.clear();
+			currentTarget = null;
+			currentTargetWorld = null;
+		    }
+		    mvclick(mv, null, loc, null, button);
+		    return(true);
+		}
 	    }
 	    return(false);
 	}
@@ -343,12 +378,121 @@ public class MapWnd extends Window implements Console.Directory {
 	    g.frect(Coord.z, sz);
 	    g.chcolor();
 	    super.draw(g);
+
+	    // Draw queued waypoints
+	    drawQueuedWaypoints(g);
+	}
+
+	private void drawQueuedWaypoints(GOut g) {
+	    synchronized(movementQueue) {
+		if((movementQueue.isEmpty() && currentTarget == null) || sessloc == null || dloc == null)
+		    return;
+
+		List<Location> allWaypoints = new ArrayList<>();
+		if(currentTarget != null)
+		    allWaypoints.add(currentTarget);
+		allWaypoints.addAll(movementQueue);
+
+		// Draw lines connecting waypoints
+		Location prev = sessloc;
+		g.chcolor(0, 255, 255, 200); // Cyan color for waypoint paths
+		for(Location waypoint : allWaypoints) {
+		    if(waypoint.seg.id != sessloc.seg.id)
+			continue;
+
+
+		    Coord prevC = xlate(prev);
+		    Coord waypointC = xlate(waypoint);
+
+		    if(prevC != null && waypointC != null) {
+			g.line(prevC, waypointC, 2);
+		    }
+		    prev = waypoint;
+		}
+
+		// Draw markers at each waypoint
+		int num = 1;
+		for(Location waypoint : allWaypoints) {
+		    if(waypoint.seg.id != sessloc.seg.id)
+			continue;
+
+		    Coord c = xlate(waypoint);
+		    if(c != null) {
+			// Draw circle
+			g.chcolor(255, 255, 0, 220); // Yellow marker
+			int radius = UI.scale(5);
+			g.fellipse(c, new Coord(radius, radius));
+
+			// Draw number
+			g.chcolor(0, 0, 0, 255);
+			Text numText = Text.render(String.valueOf(num));
+			g.aimage(numText.tex(), c, 0.5, 0.5);
+			numText.dispose();
+		    }
+		    num++;
+		}
+		g.chcolor();
+	    }
 	}
 
 	public boolean getcurs(CursorQuery ev) {
 	    if(domark)
 		return(ev.set(markcurs));
 	    return(false);
+	}
+
+	@Override
+	protected void processMovementQueue() {
+	    synchronized(movementQueue) {
+		// Check if we have a current target and if we're close to it
+		if(currentTarget != null && sessloc != null && currentTarget.seg.id == sessloc.seg.id) {
+		    try {
+			// Get player's current location in the same coordinate system as the target
+			// This uses the MapLocator logic from MiniMap.java
+			Coord mc = new Coord2d(mv.getcc()).floor(tilesz);
+			MCache.Grid plg = mv.ui.sess.glob.map.getgrid(mc.div(cmaps));
+			MapFile.GridInfo info = file.gridinfo.get(plg.id);
+
+			if(info != null && info.seg == currentTarget.seg.id) {
+			    // Convert to segment-relative tile coordinates
+			    Coord playerTc = info.sc.mul(cmaps).add(mc.sub(plg.ul));
+
+			    // Calculate distance in tile coordinates
+			    double dx = currentTarget.tc.x - playerTc.x;
+			    double dy = currentTarget.tc.y - playerTc.y;
+			    double dist = Math.sqrt(dx * dx + dy * dy);
+
+			    // Debug: print distance occasionally
+			    if(Math.random() < 0.016) {
+				System.out.println("Distance to waypoint: " + String.format("%.2f", dist) + " tiles (threshold: 5.0)");
+				System.out.println("  Player: " + playerTc + ", Target: " + currentTarget.tc);
+			    }
+
+			    // If we're within 5 tiles of the target, consider it reached
+			    if(dist < 5.0) {
+				System.out.println("Reached waypoint at distance " + String.format("%.2f", dist) + " tiles! Advancing to next...");
+				currentTarget = null;
+				currentTargetWorld = null;
+			    }
+			}
+		    } catch(Loading l) {
+			// Player position not available yet, skip this tick
+		    }
+		}
+
+		// If no current target, get next from queue
+		if(currentTarget == null && !movementQueue.isEmpty()) {
+		    currentTarget = movementQueue.poll();
+		    if(currentTarget != null && sessloc != null && currentTarget.seg.id == sessloc.seg.id) {
+			System.out.println("Moving to next waypoint in queue. Remaining: " + movementQueue.size());
+			// Send movement command to next waypoint - use modflags=0
+			Coord mc = ui.mc;
+			mv.wdgmsg("click", mc,
+				  currentTarget.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),
+				  1, 0);
+		    }
+		}
+	    }
 	}
     }
 
