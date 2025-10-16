@@ -378,69 +378,6 @@ public class MapWnd extends Window implements Console.Directory {
 	    g.frect(Coord.z, sz);
 	    g.chcolor();
 	    super.draw(g);
-
-	    // Draw queued waypoints
-	    drawQueuedWaypoints(g);
-	}
-
-	private void drawQueuedWaypoints(GOut g) {
-	    synchronized(movementQueue) {
-		if((movementQueue.isEmpty() && currentTarget == null) || sessloc == null || dloc == null)
-		    return;
-
-		List<Location> allWaypoints = new ArrayList<>();
-		if(currentTarget != null)
-		    allWaypoints.add(currentTarget);
-		allWaypoints.addAll(movementQueue);
-
-		// Get player's current position on the map for drawing the line
-		Coord playerScreenPos = null;
-		try {
-		    Coord2d playerWorld = new Coord2d(mv.getcc());
-		    playerScreenPos = p2c(playerWorld);
-		} catch(Loading l) {
-		    // Fall back to sessloc if player position not available
-		    playerScreenPos = xlate(sessloc);
-		}
-
-		// Draw lines connecting waypoints, starting from player position
-		g.chcolor(0, 255, 255, 200); // Cyan color for waypoint paths
-		Coord prevC = playerScreenPos;
-		for(Location waypoint : allWaypoints) {
-		    if(waypoint.seg.id != sessloc.seg.id)
-			continue;
-
-		    Coord waypointC = xlate(waypoint);
-
-		    if(prevC != null && waypointC != null) {
-			g.line(prevC, waypointC, 2);
-		    }
-		    prevC = waypointC;
-		}
-
-		// Draw markers at each waypoint
-		int num = 1;
-		for(Location waypoint : allWaypoints) {
-		    if(waypoint.seg.id != sessloc.seg.id)
-			continue;
-
-		    Coord c = xlate(waypoint);
-		    if(c != null) {
-			// Draw circle
-			g.chcolor(255, 255, 0, 220); // Yellow marker
-			int radius = UI.scale(5);
-			g.fellipse(c, new Coord(radius, radius));
-
-			// Draw number
-			g.chcolor(0, 0, 0, 255);
-			Text numText = Text.render(String.valueOf(num));
-			g.aimage(numText.tex(), c, 0.5, 0.5);
-			numText.dispose();
-		    }
-		    num++;
-		}
-		g.chcolor();
-	    }
 	}
 
 	public boolean getcurs(CursorQuery ev) {

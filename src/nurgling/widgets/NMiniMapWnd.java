@@ -248,12 +248,24 @@ public class NMiniMapWnd extends Widget{
         }
 
         public boolean clickloc(Location loc, int button, boolean press) {
-            // First let the parent handle ctrl+click queue logic
-            if(super.clickloc(loc, button, press)) {
-                return true;
+            // Handle ctrl+left-click for waypoint queueing
+            if(!press && button == 1 && ui.modctrl && sessloc != null && loc.seg.id == sessloc.seg.id) {
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if(gui != null && gui.waypointMovementService != null) {
+                    gui.waypointMovementService.addWaypoint(loc, sessloc);
+                    return true;
+                }
             }
 
-            // Original behavior for normal clicks
+            // Normal click - clear queue
+            if(!press && button == 1) {
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if(gui != null && gui.waypointMovementService != null) {
+                    gui.waypointMovementService.clearQueue();
+                }
+            }
+
+            // Handle press events normally
             if(press) {
                 mvclick(map, null, loc, null, button);
                 return(true);

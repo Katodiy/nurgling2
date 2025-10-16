@@ -104,14 +104,18 @@ public class NMiniMap extends MiniMap {
 
     // Draw queued waypoints visualization
     protected void drawQueuedWaypoints(GOut g) {
-        synchronized(movementQueue) {
-            if((movementQueue.isEmpty() && currentTarget == null) || sessloc == null || dloc == null)
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || gui.waypointMovementService == null) return;
+
+        synchronized(gui.waypointMovementService.movementQueue) {
+            if((gui.waypointMovementService.movementQueue.isEmpty() &&
+                gui.waypointMovementService.currentTarget == null) || sessloc == null || dloc == null)
                 return;
 
             java.util.List<Location> allWaypoints = new java.util.ArrayList<>();
-            if(currentTarget != null)
-                allWaypoints.add(currentTarget);
-            allWaypoints.addAll(movementQueue);
+            if(gui.waypointMovementService.currentTarget != null)
+                allWaypoints.add(gui.waypointMovementService.currentTarget);
+            allWaypoints.addAll(gui.waypointMovementService.movementQueue);
 
             // Get player's current position on the map for drawing the line
             Coord playerScreenPos = null;
@@ -229,6 +233,11 @@ public class NMiniMap extends MiniMap {
             }
         }
 
+        // Process waypoint movement queue through the centralized service
+        NGameUI gui = NUtils.getGameUI();
+        if(gui != null && gui.waypointMovementService != null) {
+            gui.waypointMovementService.processMovementQueue(file, sessloc);
+        }
     }
 
     private void drawtempmarks(GOut g) {
