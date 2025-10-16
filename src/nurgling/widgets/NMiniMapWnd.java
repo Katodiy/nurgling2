@@ -16,6 +16,7 @@ public class NMiniMapWnd extends Widget{
     public static final KeyBinding kb_night = KeyBinding.get("mwnd_night", KeyMatch.nil);
     public static final KeyBinding kb_fog = KeyBinding.get("mwnd_fog", KeyMatch.nil);
     public static final KeyBinding kb_nature = KeyBinding.get("mwnd_nature", KeyMatch.nil);
+    public static final KeyBinding kb_resourcetimers = KeyBinding.get("mwnd_resourcetimers", KeyMatch.nil);
     public static class NMenuCheckBox extends ICheckBox {
         public NMenuCheckBox(String base, KeyBinding gkey, String tooltip) {
             super(base, "/u", "/d", "/h", "/dh");
@@ -114,6 +115,17 @@ public class NMiniMapWnd extends Widget{
 
 //        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
 //        path.a = NConfiguration.getInstance().isPaths;
+
+        // Resource Timers button using night vision icon - placed last in toggle panel
+        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/daynight", kb_resourcetimers, "Resource Timers"), (first.sz.x+UI.scale(3))*shift++, 0).state(() -> {
+            NGameUI gui = NUtils.getGameUI();
+            return gui != null && gui.localizedResourceTimersWindow != null && gui.localizedResourceTimersWindow.visible();
+        }).click(() -> {
+            NGameUI gui = NUtils.getGameUI();
+            if (gui != null) {
+                gui.toggleResourceTimerWindow();
+            }
+        });
 
         map_box = add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/map", GameUI.kb_map, "Map"), miniMap.sz.x-(first.sz.x), 0).state(() -> NMiniMapWnd.this.ui.gui.wndstate(NMiniMapWnd.this.ui.gui.mapfile)).click(() -> {
             NUtils.getGameUI().togglewnd(NUtils.getGameUI().mapfile);

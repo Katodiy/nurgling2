@@ -817,17 +817,10 @@ public class NGameUI extends GameUI
     @Override
     public boolean keydown(KeyDownEvent ev) {
         nurgling.tasks.WaitKeyPress.setLastKeyPressed(ev.code);
-        
-        // Handle resource timer window shortcut (Ctrl+R)
-        if(ev.code == KeyEvent.VK_R && ui.modctrl) { // Ctrl+R
-            toggleResourceTimerWindow();
-            return true;
-        }
-        
         return super.keydown(ev);
     }
-    
-    private void toggleResourceTimerWindow() {
+
+    public void toggleResourceTimerWindow() {
         if(localizedResourceTimerService != null) {
             localizedResourceTimerService.showTimerWindow();
         }
