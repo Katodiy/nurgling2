@@ -248,6 +248,12 @@ public class NMiniMapWnd extends Widget{
         }
 
         public boolean clickloc(Location loc, int button, boolean press) {
+            // First let the parent handle ctrl+click queue logic
+            if(super.clickloc(loc, button, press)) {
+                return true;
+            }
+
+            // Original behavior for normal clicks
             if(press) {
                 mvclick(map, null, loc, null, button);
                 return(true);
