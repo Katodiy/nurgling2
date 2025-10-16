@@ -34,7 +34,6 @@ public class WaypointMovementService {
      */
     public void addWaypoint(MiniMap.Location loc, MiniMap.Location sessloc) {
         synchronized(movementQueue) {
-            System.out.println("Ctrl+click: adding waypoint to queue. Current queue size: " + movementQueue.size());
             // Check if we need to start movement (no current target)
             boolean startMovement = (currentTarget == null);
             movementQueue.add(loc);
@@ -43,11 +42,8 @@ public class WaypointMovementService {
             if(startMovement) {
                 currentTarget = movementQueue.poll();
                 if(currentTarget != null && sessloc != null) {
-                    System.out.println("Starting movement to first waypoint. Queue now has: " + movementQueue.size() + " remaining");
                     sendMovementCommand(currentTarget, sessloc);
                 }
-            } else {
-                System.out.println("Waypoint queued. Total in queue: " + movementQueue.size() + ", already moving to current target");
             }
         }
     }
@@ -57,7 +53,6 @@ public class WaypointMovementService {
      */
     public void clearQueue() {
         synchronized(movementQueue) {
-            System.out.println("Normal click: clearing queue");
             movementQueue.clear();
             currentTarget = null;
             currentTargetWorld = null;
@@ -100,11 +95,9 @@ public class WaypointMovementService {
                                 boolean shouldRetry = (Boolean) NConfig.get(NConfig.Key.waypointRetryOnStuck);
 
                                 if(shouldRetry) {
-                                    System.out.println("Player stuck! Retrying movement command...");
                                     sendMovementCommand(currentTarget, sessloc);
                                     lastMovementTime = currentTime;  // Reset timer after retry
                                 } else {
-                                    System.out.println("Player stuck! Clearing waypoint queue...");
                                     movementQueue.clear();
                                     currentTarget = null;
                                     currentTargetWorld = null;
@@ -135,7 +128,6 @@ public class WaypointMovementService {
             if(currentTarget == null && !movementQueue.isEmpty()) {
                 currentTarget = movementQueue.poll();
                 if(currentTarget != null && sessloc != null && currentTarget.seg.id == sessloc.seg.id) {
-                    System.out.println("Moving to next waypoint in queue. Remaining: " + movementQueue.size());
                     // Reset movement tracking
                     lastPlayerPos = null;
                     lastMovementTime = Utils.rtime();
