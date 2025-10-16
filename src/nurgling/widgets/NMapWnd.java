@@ -79,16 +79,26 @@ public class NMapWnd extends MapWnd {
 
     @Override
     public boolean mouseup(MouseUpEvent ev) {
-        // Handle ctrl+left-click for waypoint queueing on release
-        if(ev.b == 1 && ui.modctrl && view.c != null) {
+        if(view.c != null) {
             Coord viewCoord = ev.c.sub(view.parentpos(this));
 
             // Check if the click is within the view bounds
             if(viewCoord.x >= 0 && viewCoord.x < view.sz.x &&
                viewCoord.y >= 0 && viewCoord.y < view.sz.y) {
 
-                if(handleWaypointClick(viewCoord)) {
-                    return true; // Consume the event
+                // Ctrl+left-click for waypoint queueing
+                if(ev.b == 1 && ui.modctrl) {
+                    if(handleWaypointClick(viewCoord)) {
+                        return true; // Consume the event
+                    }
+                }
+
+                // Right-click to clear waypoint queue
+                if(ev.b == 3) {
+                    NGameUI gui = (NGameUI) NUtils.getGameUI();
+                    if(gui != null && gui.waypointMovementService != null) {
+                        gui.waypointMovementService.clearQueue();
+                    }
                 }
             }
         }

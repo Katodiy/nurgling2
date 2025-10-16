@@ -257,8 +257,8 @@ public class NMiniMapWnd extends Widget{
                 }
             }
 
-            // Normal click - clear queue
-            if(!press && button == 1) {
+            // Right-click to clear waypoint queue
+            if(!press && button == 3) {
                 NGameUI gui = (NGameUI) NUtils.getGameUI();
                 if(gui != null && gui.waypointMovementService != null) {
                     gui.waypointMovementService.clearQueue();
