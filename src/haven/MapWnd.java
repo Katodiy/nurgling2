@@ -393,21 +393,29 @@ public class MapWnd extends Window implements Console.Directory {
 		    allWaypoints.add(currentTarget);
 		allWaypoints.addAll(movementQueue);
 
-		// Draw lines connecting waypoints
-		Location prev = sessloc;
+		// Get player's current position on the map for drawing the line
+		Coord playerScreenPos = null;
+		try {
+		    Coord2d playerWorld = new Coord2d(mv.getcc());
+		    playerScreenPos = p2c(playerWorld);
+		} catch(Loading l) {
+		    // Fall back to sessloc if player position not available
+		    playerScreenPos = xlate(sessloc);
+		}
+
+		// Draw lines connecting waypoints, starting from player position
 		g.chcolor(0, 255, 255, 200); // Cyan color for waypoint paths
+		Coord prevC = playerScreenPos;
 		for(Location waypoint : allWaypoints) {
 		    if(waypoint.seg.id != sessloc.seg.id)
 			continue;
 
-
-		    Coord prevC = xlate(prev);
 		    Coord waypointC = xlate(waypoint);
 
 		    if(prevC != null && waypointC != null) {
 			g.line(prevC, waypointC, 2);
 		    }
-		    prev = waypoint;
+		    prevC = waypointC;
 		}
 
 		// Draw markers at each waypoint
@@ -457,6 +465,26 @@ public class MapWnd extends Window implements Console.Directory {
 			    // Convert to segment-relative tile coordinates
 			    Coord playerTc = info.sc.mul(cmaps).add(mc.sub(plg.ul));
 
+			    // Track player movement for interruption detection
+			    double currentTime = Utils.rtime();
+			    if(lastPlayerPos == null || !lastPlayerPos.equals(playerTc)) {
+				// Player moved
+				lastPlayerPos = playerTc;
+				lastMovementTime = currentTime;
+			    } else {
+				// Player hasn't moved - check if stuck
+				double timeSinceMove = currentTime - lastMovementTime;
+				if(timeSinceMove > 2.0) {  // 2 seconds without movement
+				    System.out.println("Player stuck! Retrying movement command...");
+				    // Retry the movement command
+				    Coord mc2 = ui.mc;
+				    mv.wdgmsg("click", mc2,
+					      currentTarget.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),
+					      1, 0);
+				    lastMovementTime = currentTime;  // Reset timer after retry
+				}
+			    }
+
 			    // Calculate distance in tile coordinates
 			    double dx = currentTarget.tc.x - playerTc.x;
 			    double dy = currentTarget.tc.y - playerTc.y;
@@ -473,6 +501,7 @@ public class MapWnd extends Window implements Console.Directory {
 				System.out.println("Reached waypoint at distance " + String.format("%.2f", dist) + " tiles! Advancing to next...");
 				currentTarget = null;
 				currentTargetWorld = null;
+				lastPlayerPos = null;  // Reset tracking for next waypoint
 			    }
 			}
 		    } catch(Loading l) {
@@ -485,6 +514,9 @@ public class MapWnd extends Window implements Console.Directory {
 		    currentTarget = movementQueue.poll();
 		    if(currentTarget != null && sessloc != null && currentTarget.seg.id == sessloc.seg.id) {
 			System.out.println("Moving to next waypoint in queue. Remaining: " + movementQueue.size());
+			// Reset movement tracking
+			lastPlayerPos = null;
+			lastMovementTime = Utils.rtime();
 			// Send movement command to next waypoint - use modflags=0
 			Coord mc = ui.mc;
 			mv.wdgmsg("click", mc,

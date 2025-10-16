@@ -74,6 +74,8 @@ public class MiniMap extends Widget
 	public final LinkedList<Location> movementQueue = new LinkedList<>();
 	public Location currentTarget = null;
 	public Coord2d currentTargetWorld = null;  // World coordinates of current target
+	public Coord lastPlayerPos = null;  // Track player position for movement detection
+	public double lastMovementTime = 0;  // Time when player last moved
 
     public MiniMap(Coord sz, MapFile file) {
 	super(sz);
