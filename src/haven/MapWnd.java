@@ -173,7 +173,7 @@ public class MapWnd extends Window implements Console.Directory {
 		    return(true);
 		}
 	    }
-		if((ev.b == 1) && (checkhit(c) || ui.modshift)) {
+	    if((ev.b == 1) && (checkhit(c) || ui.modshift)) {
 		MapWnd.this.drag(parentpos(MapWnd.this, c));
 		return(true);
 	    }
