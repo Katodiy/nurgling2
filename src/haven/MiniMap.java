@@ -70,13 +70,6 @@ public class MiniMap extends Widget
 
 	public boolean needUpdate = false;
 
-	// Movement queue for shift+click waypoints
-	public final LinkedList<Location> movementQueue = new LinkedList<>();
-	public Location currentTarget = null;
-	public Coord2d currentTargetWorld = null;  // World coordinates of current target
-	public Coord lastPlayerPos = null;  // Track player position for movement detection
-	public double lastMovementTime = 0;  // Time when player last moved
-
     public MiniMap(Coord sz, MapFile file) {
 	super(sz);
 	this.file = file;
@@ -230,23 +223,6 @@ public class MiniMap extends Widget
 	    }
 	}
 	icons = findicons(icons);
-
-	// Process movement queue
-	processMovementQueue();
-    }
-
-    // Process the movement queue - advance to next waypoint when current is reached
-    protected void processMovementQueue() {
-	synchronized(movementQueue) {
-	    if(currentTarget == null && !movementQueue.isEmpty()) {
-		// No current target, get next from queue
-		currentTarget = movementQueue.poll();
-		if(currentTarget != null && sessloc != null && currentTarget.seg.id == sessloc.seg.id) {
-		    // Send movement command to next waypoint
-		    // This needs to be overridden in MapWnd.View to call mvclick
-		}
-	    }
-	}
     }
 
     public void center(Locator loc) {

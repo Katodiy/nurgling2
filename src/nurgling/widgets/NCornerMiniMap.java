@@ -50,8 +50,10 @@ public class NCornerMiniMap extends NMiniMap implements Console.Directory {
     }
 
     public boolean clickloc(Location loc, int button, boolean press) {
-        // Clicks are now handled by NMiniMapWnd.Map.clickloc()
-        // which uses the centralized WaypointMovementService
+        if(press) {
+            mvclick(NUtils.getGameUI().map, null, loc, null, button);
+            return(true);
+        }
         return(false);
     }
 

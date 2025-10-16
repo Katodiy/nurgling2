@@ -324,42 +324,8 @@ public class MapWnd extends Window implements Console.Directory {
 		return(true);
 	    }
 	    if(!press && (sessloc != null) && (loc.seg.id == sessloc.seg.id)) {
-		// Handle ctrl+click for queued movement
-		if(ui.modctrl && (button == 1)) {
-		    synchronized(movementQueue) {
-			System.out.println("Ctrl+click: adding waypoint to queue. Current queue size: " + movementQueue.size());
-			// Check if we need to start movement (no current target)
-			boolean startMovement = (currentTarget == null);
-			movementQueue.add(loc);
-
-			// Only start movement if we weren't already moving
-			if(startMovement) {
-			    currentTarget = movementQueue.poll();
-			    if(currentTarget != null) {
-				System.out.println("Starting movement to first waypoint. Queue now has: " + movementQueue.size() + " remaining");
-				System.out.println("  Target: " + currentTarget.tc + ", Current: " + sessloc.tc);
-				// Call wdgmsg directly with modflags=0 to avoid ctrl flag
-				Coord mc = ui.mc;
-				mv.wdgmsg("click", mc,
-					  currentTarget.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),
-					  button, 0);
-			    }
-			} else {
-			    System.out.println("Waypoint queued. Total in queue: " + movementQueue.size() + ", already moving to current target");
-			}
-		    }
-		    return(true);
-		} else {
-		    // Normal click - clear queue and move to location
-		    synchronized(movementQueue) {
-			System.out.println("Normal click: clearing queue");
-			movementQueue.clear();
-			currentTarget = null;
-			currentTargetWorld = null;
-		    }
-		    mvclick(mv, null, loc, null, button);
-		    return(true);
-		}
+		mvclick(mv, null, loc, null, button);
+		return(true);
 	    }
 	    return(false);
 	}
@@ -384,84 +350,6 @@ public class MapWnd extends Window implements Console.Directory {
 	    if(domark)
 		return(ev.set(markcurs));
 	    return(false);
-	}
-
-	@Override
-	protected void processMovementQueue() {
-	    synchronized(movementQueue) {
-		// Check if we have a current target and if we're close to it
-		if(currentTarget != null && sessloc != null && currentTarget.seg.id == sessloc.seg.id) {
-		    try {
-			// Get player's current location in the same coordinate system as the target
-			// This uses the MapLocator logic from MiniMap.java
-			Coord mc = new Coord2d(mv.getcc()).floor(tilesz);
-			MCache.Grid plg = mv.ui.sess.glob.map.getgrid(mc.div(cmaps));
-			MapFile.GridInfo info = file.gridinfo.get(plg.id);
-
-			if(info != null && info.seg == currentTarget.seg.id) {
-			    // Convert to segment-relative tile coordinates
-			    Coord playerTc = info.sc.mul(cmaps).add(mc.sub(plg.ul));
-
-			    // Track player movement for interruption detection
-			    double currentTime = Utils.rtime();
-			    if(lastPlayerPos == null || !lastPlayerPos.equals(playerTc)) {
-				// Player moved
-				lastPlayerPos = playerTc;
-				lastMovementTime = currentTime;
-			    } else {
-				// Player hasn't moved - check if stuck
-				double timeSinceMove = currentTime - lastMovementTime;
-				if(timeSinceMove > 2.0) {  // 2 seconds without movement
-				    System.out.println("Player stuck! Retrying movement command...");
-				    // Retry the movement command
-				    Coord mc2 = ui.mc;
-				    mv.wdgmsg("click", mc2,
-					      currentTarget.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),
-					      1, 0);
-				    lastMovementTime = currentTime;  // Reset timer after retry
-				}
-			    }
-
-			    // Calculate distance in tile coordinates
-			    double dx = currentTarget.tc.x - playerTc.x;
-			    double dy = currentTarget.tc.y - playerTc.y;
-			    double dist = Math.sqrt(dx * dx + dy * dy);
-
-			    // Debug: print distance occasionally
-			    if(Math.random() < 0.016) {
-				System.out.println("Distance to waypoint: " + String.format("%.2f", dist) + " tiles (threshold: 5.0)");
-				System.out.println("  Player: " + playerTc + ", Target: " + currentTarget.tc);
-			    }
-
-			    // If we're within 5 tiles of the target, consider it reached
-			    if(dist < 5.0) {
-				System.out.println("Reached waypoint at distance " + String.format("%.2f", dist) + " tiles! Advancing to next...");
-				currentTarget = null;
-				currentTargetWorld = null;
-				lastPlayerPos = null;  // Reset tracking for next waypoint
-			    }
-			}
-		    } catch(Loading l) {
-			// Player position not available yet, skip this tick
-		    }
-		}
-
-		// If no current target, get next from queue
-		if(currentTarget == null && !movementQueue.isEmpty()) {
-		    currentTarget = movementQueue.poll();
-		    if(currentTarget != null && sessloc != null && currentTarget.seg.id == sessloc.seg.id) {
-			System.out.println("Moving to next waypoint in queue. Remaining: " + movementQueue.size());
-			// Reset movement tracking
-			lastPlayerPos = null;
-			lastMovementTime = Utils.rtime();
-			// Send movement command to next waypoint - use modflags=0
-			Coord mc = ui.mc;
-			mv.wdgmsg("click", mc,
-				  currentTarget.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),
-				  1, 0);
-		    }
-		}
-	    }
 	}
     }
 
