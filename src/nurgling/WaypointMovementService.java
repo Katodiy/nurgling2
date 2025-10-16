@@ -96,10 +96,21 @@ public class WaypointMovementService {
                             // Player hasn't moved - check if stuck
                             double timeSinceMove = currentTime - lastMovementTime;
                             if(timeSinceMove > 2.0) {  // 2 seconds without movement
-                                System.out.println("Player stuck! Retrying movement command...");
-                                // Retry the movement command
-                                sendMovementCommand(currentTarget, sessloc);
-                                lastMovementTime = currentTime;  // Reset timer after retry
+                                // Check config to determine retry behavior
+                                boolean shouldRetry = (Boolean) NConfig.get(NConfig.Key.waypointRetryOnStuck);
+
+                                if(shouldRetry) {
+                                    System.out.println("Player stuck! Retrying movement command...");
+                                    sendMovementCommand(currentTarget, sessloc);
+                                    lastMovementTime = currentTime;  // Reset timer after retry
+                                } else {
+                                    System.out.println("Player stuck! Clearing waypoint queue...");
+                                    movementQueue.clear();
+                                    currentTarget = null;
+                                    currentTargetWorld = null;
+                                    lastPlayerPos = null;
+                                    return;  // Exit immediately after clearing
+                                }
                             }
                         }
 
