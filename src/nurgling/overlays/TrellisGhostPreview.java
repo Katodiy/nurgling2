@@ -63,48 +63,64 @@ public class TrellisGhostPreview extends Sprite {
         // Find all valid positions
         ArrayList<NHitBoxD> obstacles = findObstacles(area, rotatedHitBox);
 
-        Coord inchMax = area.b.sub(area.a).floor();
-        Coord margin = rotatedHitBox.end.sub(rotatedHitBox.begin).floor(2, 2);
-
-        // Use small step size to pack trellises tightly together (like in actual build)
-        // The hitbox collision detection will prevent overlaps
-        int step = 2;
+        // Calculate which tiles are in the area
+        Coord tileBegin = area.a.floor(MCache.tilesz);
+        Coord tileEnd = area.b.sub(1, 1).floor(MCache.tilesz);
 
         int validPositions = 0;
-        for (int i = margin.x; i <= inchMax.x - margin.x; i += step) {
-            for (int j = margin.y; j <= inchMax.y - margin.y; j += step) {
-                Coord2d testPos = area.a.add(i, j);
-                Coord tile = testPos.floor(MCache.tilesz);
 
-                // Check tile limit
-                if (tileCount.getOrDefault(tile, 0) >= TRELLIS_PER_TILE) {
-                    continue;
-                }
+        // Iterate tile by tile to ensure proper alignment
+        for (int tx = tileBegin.x; tx <= tileEnd.x; tx++) {
+            for (int ty = tileBegin.y; ty <= tileEnd.y; ty++) {
+                Coord tile = new Coord(tx, ty);
 
-                // Check collisions
-                NHitBoxD testBox = new NHitBoxD(rotatedHitBox.begin, rotatedHitBox.end, testPos, 0);
-                boolean passed = true;
-                for (NHitBoxD obstacle : obstacles) {
-                    if (obstacle.intersects(testBox, false)) {
-                        passed = false;
-                        break;
+                // Calculate the bounds for this specific tile
+                Coord2d tileStart = tile.mul(MCache.tilesz);
+                Coord2d tileEndPos = tileStart.add(MCache.tilesz.x, MCache.tilesz.y);
+
+                // Clamp to the selected area
+                Coord2d searchStart = new Coord2d(
+                    Math.max(tileStart.x, area.a.x),
+                    Math.max(tileStart.y, area.a.y)
+                );
+                Coord2d searchEnd = new Coord2d(
+                    Math.min(tileEndPos.x, area.b.x),
+                    Math.min(tileEndPos.y, area.b.y)
+                );
+
+                Coord searchRange = searchEnd.sub(searchStart).floor();
+                Coord margin = rotatedHitBox.end.sub(rotatedHitBox.begin).floor(2, 2);
+
+                // Search within this tile only, using small step for tight packing
+                int step = 2;
+                int tileCount_local = 0;
+
+                for (int i = margin.x; i <= searchRange.x - margin.x && tileCount_local < TRELLIS_PER_TILE; i += step) {
+                    for (int j = margin.y; j <= searchRange.y - margin.y && tileCount_local < TRELLIS_PER_TILE; j += step) {
+                        Coord2d testPos = searchStart.add(i, j);
+
+                        // Check collisions
+                        NHitBoxD testBox = new NHitBoxD(rotatedHitBox.begin, rotatedHitBox.end, testPos, 0);
+                        boolean passed = true;
+                        for (NHitBoxD obstacle : obstacles) {
+                            if (obstacle.intersects(testBox, false)) {
+                                passed = false;
+                                break;
+                            }
+                        }
+
+                        if (passed) {
+                            // Calculate center position of the hitbox at testPos
+                            float centerX = (float)(testPos.x + (rotatedHitBox.end.x + rotatedHitBox.begin.x) / 2.0);
+                            float centerY = (float)(testPos.y + (rotatedHitBox.end.y + rotatedHitBox.begin.y) / 2.0);
+
+                            // Store location for this ghost position
+                            Location loc = Location.xlate(new Coord3f(centerX, -centerY, 0));
+                            ghostLocations.add(loc);
+                            tileCount_local++;
+                            validPositions++;
+                        }
                     }
-                }
-
-                if (passed) {
-                    // Calculate center position of the hitbox at testPos
-                    float centerX = (float)(testPos.x + (rotatedHitBox.end.x + rotatedHitBox.begin.x) / 2.0);
-                    float centerY = (float)(testPos.y + (rotatedHitBox.end.y + rotatedHitBox.begin.y) / 2.0);
-
-                    if (validPositions == 0) {
-                        System.out.println("  First position: testPos=" + testPos + ", center=(" + centerX + "," + centerY + ")");
-                    }
-
-                    // Store location for this ghost position
-                    Location loc = Location.xlate(new Coord3f(centerX, -centerY, 0));
-                    ghostLocations.add(loc);
-                    tileCount.put(tile, tileCount.getOrDefault(tile, 0) + 1);
-                    validPositions++;
                 }
             }
         }
@@ -122,7 +138,7 @@ public class TrellisGhostPreview extends Sprite {
         float u = (float) hitBox.begin.y;
         float r = (float) hitBox.end.x;
         float b = (float) hitBox.end.y;
-        float h = 25f; // Height of ghost box
+        float h = 16f; // Height of ghost box
 
         // Create vertices for the box (8 corners)
         java.nio.FloatBuffer posb = Utils.wfbuf(8 * 3);
