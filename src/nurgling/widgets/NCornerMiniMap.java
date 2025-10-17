@@ -15,6 +15,7 @@ import java.util.TreeMap;
 
 import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
+import static haven.OCache.posres;
 
 public class NCornerMiniMap extends NMiniMap implements Console.Directory {
 
@@ -105,4 +106,5 @@ public class NCornerMiniMap extends NMiniMap implements Console.Directory {
         }
         return (super.tooltip(c, prev));
     }
+
 }

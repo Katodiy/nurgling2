@@ -54,23 +54,74 @@ public class NMapWnd extends MapWnd {
     
     @Override
     public boolean mousedown(MouseDownEvent ev) {
-        // Check if the click is on the view area and it's a shift+right-click
-        if(ev.b == 3 && ui.modshift && view.c != null) {
+        // Handle ctrl+left-click for waypoint queueing (on button release handled below)
+        // Handle shift+right-click for resource timers
+        if(view.c != null) {
             // Convert global coordinates to view coordinates
             Coord viewCoord = ev.c.sub(view.parentpos(this));
-            
+
             // Check if the click is within the view bounds
-            if(viewCoord.x >= 0 && viewCoord.x < view.sz.x && 
+            if(viewCoord.x >= 0 && viewCoord.x < view.sz.x &&
                viewCoord.y >= 0 && viewCoord.y < view.sz.y) {
-                
-                // Check if there's a resource marker at this location
-                if(handleResourceTimerClick(viewCoord)) {
-                    return true; // Consume the event
+
+                // Shift+right-click for resource timers
+                if(ev.b == 3 && ui.modshift) {
+                    // Check if there's a resource marker at this location
+                    if(handleResourceTimerClick(viewCoord)) {
+                        return true; // Consume the event
+                    }
                 }
             }
         }
-        
+
         return super.mousedown(ev);
+    }
+
+    @Override
+    public boolean mouseup(MouseUpEvent ev) {
+        if(view.c != null) {
+            Coord viewCoord = ev.c.sub(view.parentpos(this));
+
+            // Check if the click is within the view bounds
+            if(viewCoord.x >= 0 && viewCoord.x < view.sz.x &&
+               viewCoord.y >= 0 && viewCoord.y < view.sz.y) {
+
+                // Ctrl+left-click for waypoint queueing
+                if(ev.b == 1 && ui.modctrl) {
+                    if(handleWaypointClick(viewCoord)) {
+                        return true; // Consume the event
+                    }
+                }
+
+                // Right-click to clear waypoint queue
+                if(ev.b == 3) {
+                    NGameUI gui = (NGameUI) NUtils.getGameUI();
+                    if(gui != null && gui.waypointMovementService != null) {
+                        gui.waypointMovementService.clearQueue();
+                    }
+                }
+            }
+        }
+
+        return super.mouseup(ev);
+    }
+
+    private boolean handleWaypointClick(Coord c) {
+        // Try to get the location at clicked coordinates
+        MiniMap.Location clickLoc = view.xlate(c);
+        if(clickLoc == null || view.sessloc == null) return false;
+
+        // Only handle if in same segment
+        if(clickLoc.seg.id != view.sessloc.seg.id) return false;
+
+        // Use the service to add waypoint
+        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        if(gui != null && gui.waypointMovementService != null) {
+            gui.waypointMovementService.addWaypoint(clickLoc, view.sessloc);
+            return true;
+        }
+
+        return false;
     }
     
     private boolean handleResourceTimerClick(Coord c) {

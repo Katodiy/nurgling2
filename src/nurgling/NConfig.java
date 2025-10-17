@@ -96,7 +96,8 @@ public class NConfig
         inventoryRightPanelMode,
         showTerrainName,
         validateAllCropsBeforeHarvest,
-        studyDeskLayout
+        studyDeskLayout,
+        waypointRetryOnStuck
     }
 
 
@@ -183,6 +184,7 @@ public class NConfig
         conf.put(Key.showTerrainName, false);
         conf.put(Key.validateAllCropsBeforeHarvest, false);
         conf.put(Key.studyDeskLayout, "");
+        conf.put(Key.waypointRetryOnStuck, true);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

@@ -51,6 +51,7 @@ public class NGameUI extends GameUI
     public LocalizedResourceTimersWindow localizedResourceTimersWindow = null;
     private LocalizedResourceTimerDialog localizedResourceTimerDialog = null;
     public LocalizedResourceTimerService localizedResourceTimerService;
+    public WaypointMovementService waypointMovementService;
     public StudyDeskPlannerWidget studyDeskPlanner = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
@@ -83,6 +84,7 @@ public class NGameUI extends GameUI
         add(localizedResourceTimerDialog = new LocalizedResourceTimerDialog(), new Coord(200, 200));
         localizedResourceTimerService = new LocalizedResourceTimerService(this);
         add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
+        waypointMovementService = new WaypointMovementService(this);
     }
 
     @Override
