@@ -21,16 +21,16 @@ public class TrellisGhostPreview extends Sprite {
     );
 
     private Pair<Coord2d, Coord2d> area;
-    private boolean needRotate;
+    private int orientation; // 0=NS-East, 1=NS-West, 2=EW-North, 3=EW-South
     private NHitBox trellisHitBox;
     private Model ghostModel;
     private List<Location> ghostLocations = new ArrayList<>();
     private List<RenderTree.Slot> slots = new ArrayList<>();
 
-    public TrellisGhostPreview(Owner owner, Pair<Coord2d, Coord2d> area, boolean needRotate, NHitBox hitBox) {
+    public TrellisGhostPreview(Owner owner, Pair<Coord2d, Coord2d> area, int orientation, NHitBox hitBox) {
         super(owner, null);
         this.area = area;
-        this.needRotate = needRotate;
+        this.orientation = orientation;
         this.trellisHitBox = hitBox;
         if (area != null) {
             calculateGhostPositions();
@@ -47,13 +47,9 @@ public class TrellisGhostPreview extends Sprite {
             return;
         }
 
+        // Determine if we need to rotate hitbox (EW orientations 2 and 3)
+        boolean needRotate = (orientation >= 2);
         NHitBox rotatedHitBox = needRotate ? trellisHitBox.rotate() : trellisHitBox;
-
-        System.out.println("TrellisGhostPreview:");
-        System.out.println("  needRotate: " + needRotate);
-        System.out.println("  Original hitBox: " + trellisHitBox.begin + " to " + trellisHitBox.end);
-        System.out.println("  Rotated hitBox: " + rotatedHitBox.begin + " to " + rotatedHitBox.end);
-        System.out.println("  Dimensions: " + (rotatedHitBox.end.x - rotatedHitBox.begin.x) + " x " + (rotatedHitBox.end.y - rotatedHitBox.begin.y));
 
         // Create the box model once (centered at origin)
         ghostModel = createGhostBoxModel(rotatedHitBox);
@@ -95,8 +91,16 @@ public class TrellisGhostPreview extends Sprite {
                 int step = 2;
                 int tileCount_local = 0;
 
-                for (int i = margin.x; i <= searchRange.x - margin.x && tileCount_local < TRELLIS_PER_TILE; i += step) {
-                    for (int j = margin.y; j <= searchRange.y - margin.y && tileCount_local < TRELLIS_PER_TILE; j += step) {
+                // Determine search order based on orientation to pack against specific edge
+                // 0=NS-East (pack to right), 1=NS-West (pack to left)
+                // 2=EW-North (pack to top), 3=EW-South (pack to bottom)
+                boolean reverseX = (orientation == 0); // NS-East: start from right
+                boolean reverseY = (orientation == 2); // EW-North: start from top
+
+                for (int ii = 0; ii <= searchRange.x - margin.x * 2 && tileCount_local < TRELLIS_PER_TILE; ii += step) {
+                    int i = reverseX ? (searchRange.x - margin.x - ii) : (margin.x + ii);
+                    for (int jj = 0; jj <= searchRange.y - margin.y * 2 && tileCount_local < TRELLIS_PER_TILE; jj += step) {
+                        int j = reverseY ? (searchRange.y - margin.y - jj) : (margin.y + jj);
                         Coord2d testPos = searchStart.add(i, j);
 
                         // Check collisions
@@ -248,43 +252,31 @@ public class TrellisGhostPreview extends Sprite {
     /**
      * Check if the preview needs to be updated (and therefore recreated)
      */
-    public boolean needsUpdate(Pair<Coord2d, Coord2d> newArea, boolean newRotation) {
+    public boolean needsUpdate(Pair<Coord2d, Coord2d> newArea, int newOrientation) {
         if (newArea != null && !newArea.equals(this.area)) {
             return true;
         }
-        if (this.needRotate != newRotation) {
+        if (this.orientation != newOrientation) {
             return true;
         }
         return false;
     }
 
     /**
-     * Update preview when area or rotation changes
+     * Update preview when area or orientation changes
      */
-    public void update(Pair<Coord2d, Coord2d> newArea, boolean newRotation) {
+    public void update(Pair<Coord2d, Coord2d> newArea, int newOrientation) {
         boolean changed = false;
         if (newArea != null && !newArea.equals(this.area)) {
             this.area = newArea;
             changed = true;
         }
-        if (this.needRotate != newRotation) {
-            this.needRotate = newRotation;
+        if (this.orientation != newOrientation) {
+            this.orientation = newOrientation;
             changed = true;
         }
         if (changed && area != null) {
             calculateGhostPositions();
-        }
-    }
-
-    /**
-     * Update preview when rotation changes
-     */
-    public void updateRotation(boolean newRotation) {
-        if (this.needRotate != newRotation) {
-            this.needRotate = newRotation;
-            if (area != null) {
-                calculateGhostPositions();
-            }
         }
     }
 }

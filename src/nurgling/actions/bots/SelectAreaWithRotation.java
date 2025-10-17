@@ -35,7 +35,7 @@ public class SelectAreaWithRotation implements Action {
     BufferedImage spr = null;
     NHitBox trellisHitBox = null;
     public NArea.Space result;
-    public boolean isRotated = false; // User's rotation choice
+    public int orientation = 0; // 0=NS-East, 1=NS-West, 2=EW-North, 3=EW-South
     private TrellisDirectionDialog dirDialog = null;
 
     @Override
@@ -55,25 +55,25 @@ public class SelectAreaWithRotation implements Action {
 
             // Use appropriate task based on whether we have a hitbox (for ghost previews)
             if (trellisHitBox != null) {
-                // Create rotation reference array that can be updated by the dialog
-                boolean[] rotationRef = new boolean[] { isRotated };
+                // Create orientation reference array that can be updated by the dialog
+                int[] orientationRef = new int[] { orientation };
                 boolean[] confirmRef = new boolean[] { false };
-                dirDialog.setReferences(rotationRef, confirmRef);
+                dirDialog.setReferences(orientationRef, confirmRef);
                 dirDialog.show();
                 dirDialog.raise();
 
                 nurgling.tasks.SelectAreaWithGhosts sa;
-                NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectAreaWithGhosts(trellisHitBox, rotationRef, confirmRef));
+                NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectAreaWithGhosts(trellisHitBox, orientationRef, confirmRef));
                 if (sa.getResult() != null) {
                     result = sa.getResult();
-                    isRotated = rotationRef[0];
+                    orientation = orientationRef[0];
                 }
             } else {
                 nurgling.tasks.SelectArea sa;
                 NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectArea());
                 if (sa.getResult() != null) {
                     result = sa.getResult();
-                    isRotated = false;
+                    orientation = 0;
                 }
             }
 
@@ -105,7 +105,12 @@ public class SelectAreaWithRotation implements Action {
         return null;
     }
 
+    public int getOrientation() {
+        return orientation;
+    }
+
     public boolean getRotation() {
-        return isRotated;
+        // For backward compatibility: orientation 2 and 3 are East-West
+        return orientation >= 2;
     }
 }

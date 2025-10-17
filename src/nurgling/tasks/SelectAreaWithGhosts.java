@@ -7,16 +7,16 @@ import nurgling.overlays.TrellisGhostPreview;
 
 public class SelectAreaWithGhosts extends NTask {
     private final NHitBox hitBox;
-    private final boolean[] rotationRef;
+    private final int[] orientationRef;
     private final boolean[] confirmRef;
     private TrellisGhostPreview ghostPreview = null;
     private NArea.Space result = null;
     private Gob player = null;
     private boolean waitingForConfirm = false;
 
-    public SelectAreaWithGhosts(NHitBox hitBox, boolean[] rotationRef, boolean[] confirmRef) {
+    public SelectAreaWithGhosts(NHitBox hitBox, int[] orientationRef, boolean[] confirmRef) {
         this.hitBox = hitBox;
-        this.rotationRef = rotationRef;
+        this.orientationRef = orientationRef;
         this.confirmRef = confirmRef;
     }
 
@@ -32,11 +32,11 @@ public class SelectAreaWithGhosts extends NTask {
                 if (ghostPreview == null && player == null) {
                     player = NUtils.player();
                     if (player != null) {
-                        ghostPreview = new TrellisGhostPreview(player, currentArea, rotationRef[0], hitBox);
+                        ghostPreview = new TrellisGhostPreview(player, currentArea, orientationRef[0], hitBox);
                         player.addcustomol(ghostPreview);
                     }
                 } else if (ghostPreview != null) {
-                    ghostPreview.update(currentArea, rotationRef[0]);
+                    ghostPreview.update(currentArea, orientationRef[0]);
                 }
             }
 
@@ -56,10 +56,10 @@ public class SelectAreaWithGhosts extends NTask {
                     if (player != null && finalArea != null) {
                         if (ghostPreview != null) {
                             // Update existing preview
-                            ghostPreview.update(finalArea, rotationRef[0]);
+                            ghostPreview.update(finalArea, orientationRef[0]);
                         } else {
                             // Create new preview
-                            ghostPreview = new TrellisGhostPreview(player, finalArea, rotationRef[0], hitBox);
+                            ghostPreview = new TrellisGhostPreview(player, finalArea, orientationRef[0], hitBox);
                             player.addcustomol(ghostPreview);
                         }
                     }
@@ -72,16 +72,16 @@ public class SelectAreaWithGhosts extends NTask {
                 if (ghostPreview != null && result != null && player != null) {
                     Pair<Coord2d, Coord2d> finalArea = convertAreaToCoords(result);
 
-                    // Check if rotation changed - if so, need to recreate sprite
-                    if (ghostPreview.needsUpdate(finalArea, rotationRef[0])) {
+                    // Check if orientation changed - if so, need to recreate sprite
+                    if (ghostPreview.needsUpdate(finalArea, orientationRef[0])) {
                         // Remove old sprite
                         Gob.Overlay ol = player.findol(TrellisGhostPreview.class);
                         if (ol != null) {
                             ol.remove();
                         }
 
-                        // Create new sprite with updated rotation
-                        ghostPreview = new TrellisGhostPreview(player, finalArea, rotationRef[0], hitBox);
+                        // Create new sprite with updated orientation
+                        ghostPreview = new TrellisGhostPreview(player, finalArea, orientationRef[0], hitBox);
                         player.addcustomol(ghostPreview);
                     }
                 }

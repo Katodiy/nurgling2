@@ -4,15 +4,23 @@ import haven.*;
 import nurgling.NHitBox;
 
 public class TrellisDirectionDialog extends Window {
-    private boolean isRotated = false;
-    private boolean[] rotationRef = null;
+    // 0 = NS-East, 1 = NS-West, 2 = EW-North, 3 = EW-South
+    private int orientation = 0;
+    private int[] orientationRef = null;
     private boolean[] confirmRef = null;
     private Label directionLabel;
     private Button rotateButton;
     private Button confirmButton;
 
+    private static final String[] ORIENTATION_NAMES = {
+        "North-South (East)",
+        "North-South (West)",
+        "East-West (North)",
+        "East-West (South)"
+    };
+
     public TrellisDirectionDialog() {
-        super(UI.scale(new Coord(200, 100)), "Trellis Placement");
+        super(UI.scale(new Coord(250, 100)), "Trellis Placement");
         initializeWidgets();
     }
 
@@ -20,12 +28,12 @@ public class TrellisDirectionDialog extends Window {
         int y = UI.scale(5);
 
         // Direction label
-        directionLabel = new Label("Direction: North-South");
+        directionLabel = new Label(ORIENTATION_NAMES[0]);
         add(directionLabel, UI.scale(new Coord(10, y)));
         y += UI.scale(25);
 
         // Rotate button
-        rotateButton = new Button(UI.scale(85), "Rotate") {
+        rotateButton = new Button(UI.scale(115), "Rotate") {
             @Override
             public void click() {
                 toggleDirection();
@@ -34,26 +42,26 @@ public class TrellisDirectionDialog extends Window {
         add(rotateButton, UI.scale(new Coord(10, y)));
 
         // Confirm button
-        confirmButton = new Button(UI.scale(85), "Confirm") {
+        confirmButton = new Button(UI.scale(115), "Confirm") {
             @Override
             public void click() {
                 confirm();
             }
         };
-        add(confirmButton, UI.scale(new Coord(105, y)));
+        add(confirmButton, UI.scale(new Coord(130, y)));
     }
 
-    public void setReferences(boolean[] rotationRef, boolean[] confirmRef) {
-        this.rotationRef = rotationRef;
+    public void setReferences(int[] orientationRef, boolean[] confirmRef) {
+        this.orientationRef = orientationRef;
         this.confirmRef = confirmRef;
-        this.isRotated = rotationRef[0];
+        this.orientation = orientationRef[0];
         updateDirectionLabel();
     }
 
     private void toggleDirection() {
-        isRotated = !isRotated;
-        if (rotationRef != null) {
-            rotationRef[0] = isRotated;
+        orientation = (orientation + 1) % 4;
+        if (orientationRef != null) {
+            orientationRef[0] = orientation;
         }
         updateDirectionLabel();
     }
@@ -66,8 +74,7 @@ public class TrellisDirectionDialog extends Window {
     }
 
     private void updateDirectionLabel() {
-        String direction = isRotated ? "East-West" : "North-South";
-        directionLabel.settext("Direction: " + direction);
+        directionLabel.settext(ORIENTATION_NAMES[orientation]);
     }
 
     @Override
