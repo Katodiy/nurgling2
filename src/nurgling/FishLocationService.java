@@ -2,6 +2,7 @@ package nurgling;
 
 import haven.*;
 import nurgling.tools.VSpec;
+import nurgling.widgets.NEquipory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -62,9 +63,13 @@ public class FishLocationService {
                 return;
             }
 
+            // Extract fishing equipment information
+            FishingEquipment equipment = getFishingEquipment();
+
             lock.writeLock().lock();
             try {
-                FishLocation location = new FishLocation(segmentId, segmentCoord, fishName, fishResource);
+                FishLocation location = new FishLocation(segmentId, segmentCoord, fishName, fishResource,
+                    equipment.fishingRod, equipment.hook, equipment.line, equipment.bait);
                 fishLocations.put(location.getLocationId(), location);
                 saveFishLocations();
                 gui.msg("Saved " + fishName + " location", java.awt.Color.GREEN);
@@ -235,5 +240,64 @@ public class FishLocationService {
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    /**
+     * Helper class to hold fishing equipment information
+     */
+    private static class FishingEquipment {
+        String fishingRod = "Unknown";
+        String hook = "Unknown";
+        String line = "Unknown";
+        String bait = "Unknown";
+    }
+
+    /**
+     * Extract fishing equipment information from equipped items
+     */
+    private FishingEquipment getFishingEquipment() {
+        FishingEquipment equipment = new FishingEquipment();
+
+        try {
+            // Get fishing rod from equipment (same pattern as RepairFishingRot)
+            NEquipory eq = NUtils.getEquipment();
+            if (eq == null) return equipment;
+
+            // Find fishing rod in equipment (check for both types)
+            WItem rod = eq.findItem("Primitive Casting-Rod");
+            if (rod == null) {
+                rod = eq.findItem("Bushcraft Fishingpole");
+            }
+
+            if (rod != null && rod.item instanceof NGItem) {
+                NGItem rodItem = (NGItem) rod.item;
+
+                // Get fishing rod name
+                equipment.fishingRod = rodItem.name() != null ? rodItem.name() : "Unknown";
+
+                // Get fishing rod contents (hook, line, bait)
+                ArrayList<NGItem.NContent> contents = rodItem.content();
+                for (NGItem.NContent content : contents) {
+                    String contentName = content.name();
+                    if (contentName == null) continue;
+
+                    // Identify item type based on name patterns
+                    if (contentName.contains("Hook")) {
+                        equipment.hook = contentName;
+                    } else if (contentName.contains("line") || contentName.contains("Line")) {
+                        equipment.line = contentName;
+                    } else {
+                        // Assume anything else is bait/lure
+                        equipment.bait = contentName;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error extracting fishing equipment: " + e);
+            e.printStackTrace();
+        }
+
+        return equipment;
     }
 }

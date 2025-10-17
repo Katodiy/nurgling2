@@ -431,7 +431,16 @@ public class NMiniMap extends MiniMap {
                         Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
 
                         if(c.dist(screenPos) < threshold) {
-                            return Text.render(loc.getFishName());
+                            // Build tooltip with fish name and equipment info
+                            StringBuilder tooltip = new StringBuilder();
+                            tooltip.append(loc.getFishName());
+                            tooltip.append("\n\nEquipment:");
+                            tooltip.append("\nRod: ").append(loc.getFishingRod());
+                            tooltip.append("\nHook: ").append(loc.getHook());
+                            tooltip.append("\nLine: ").append(loc.getLine());
+                            tooltip.append("\nBait: ").append(loc.getBait());
+                            tooltip.append("\n\nAlt+RClick - delete");
+                            return Text.render(tooltip.toString());
                         }
                     }
                 }

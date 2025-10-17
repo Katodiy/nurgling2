@@ -15,11 +15,22 @@ public class FishLocation {
     private final String fishResource;    // e.g., "gfx/invobjs/fish-asp"
     private final long timestamp;         // When it was saved
 
-    public FishLocation(long segmentId, Coord tileCoords, String fishName, String fishResource) {
+    // Fishing equipment information
+    private final String fishingRod;      // e.g., "Primitive Casting-Rod"
+    private final String hook;            // e.g., "Bone Hook"
+    private final String line;            // e.g., "Spindly Fishline"
+    private final String bait;            // e.g., "Woodfish Lure" or "Earthworm"
+
+    public FishLocation(long segmentId, Coord tileCoords, String fishName, String fishResource,
+                       String fishingRod, String hook, String line, String bait) {
         this.segmentId = segmentId;
         this.tileCoords = tileCoords;
         this.fishName = fishName;
         this.fishResource = fishResource;
+        this.fishingRod = fishingRod;
+        this.hook = hook;
+        this.line = line;
+        this.bait = bait;
         this.timestamp = System.currentTimeMillis();
         this.locationId = generateLocationId(segmentId, tileCoords, fishName);
     }
@@ -31,6 +42,12 @@ public class FishLocation {
         this.fishName = json.getString("fishName");
         this.fishResource = json.getString("fishResource");
         this.timestamp = json.getLong("timestamp");
+
+        // Load equipment info (with defaults for backwards compatibility)
+        this.fishingRod = json.optString("fishingRod", "Unknown");
+        this.hook = json.optString("hook", "Unknown");
+        this.line = json.optString("line", "Unknown");
+        this.bait = json.optString("bait", "Unknown");
     }
 
     private static String generateLocationId(long segmentId, Coord tileCoords, String fishName) {
@@ -47,6 +64,13 @@ public class FishLocation {
         json.put("fishName", fishName);
         json.put("fishResource", fishResource);
         json.put("timestamp", timestamp);
+
+        // Save equipment info
+        json.put("fishingRod", fishingRod);
+        json.put("hook", hook);
+        json.put("line", line);
+        json.put("bait", bait);
+
         return json;
     }
 
@@ -57,4 +81,8 @@ public class FishLocation {
     public String getFishName() { return fishName; }
     public String getFishResource() { return fishResource; }
     public long getTimestamp() { return timestamp; }
+    public String getFishingRod() { return fishingRod; }
+    public String getHook() { return hook; }
+    public String getLine() { return line; }
+    public String getBait() { return bait; }
 }
