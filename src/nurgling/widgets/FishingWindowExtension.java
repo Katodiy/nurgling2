@@ -70,8 +70,11 @@ public class FishingWindowExtension {
                 }
             };
 
-            // Position the button to the right of the fish label
-            Coord buttonPos = new Coord(fishLabel.c.x + fishLabel.sz.x + UI.scale(5), fishLabel.c.y);
+            // Position the button to the right of the fish label, vertically centered
+            int buttonX = fishLabel.c.x + fishLabel.sz.x + UI.scale(5);
+            // Center button vertically relative to label
+            int buttonY = fishLabel.c.y + (fishLabel.sz.y - saveBtn.sz.y) / 2;
+            Coord buttonPos = new Coord(buttonX, buttonY);
             window.add(saveBtn, buttonPos);
         }
     }
