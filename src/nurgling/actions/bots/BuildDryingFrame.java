@@ -1,15 +1,17 @@
 package nurgling.actions.bots;
 
 import haven.Coord;
+import haven.Gob;
 import haven.Resource;
 import nurgling.NGameUI;
+import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Build;
 import nurgling.actions.Results;
-import nurgling.tools.NAlias;
 import nurgling.overlays.BuildGhostPreview;
-import haven.Gob;
+import nurgling.overlays.NCustomBauble;
+import nurgling.tools.NAlias;
 
 public class BuildDryingFrame implements Action {
     @Override
@@ -46,6 +48,17 @@ public class BuildDryingFrame implements Action {
                 Gob.Overlay ghostOverlay = player.findol(BuildGhostPreview.class);
                 if (ghostOverlay != null) {
                     ghostOverlay.remove();
+                }
+
+                // Remove custom bauble overlay
+                Gob.Overlay baubleOverlay = player.findol(NCustomBauble.class);
+                if (baubleOverlay != null) {
+                    baubleOverlay.remove();
+                }
+
+                // Clean up area selection mode
+                if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+                    ((NMapView) NUtils.getGameUI().map).isAreaSelectionMode.set(false);
                 }
             }
         }

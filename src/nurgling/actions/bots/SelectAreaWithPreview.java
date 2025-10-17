@@ -66,8 +66,12 @@ public class SelectAreaWithPreview extends SelectArea {
             player.addcustomol(ghostPreview);
         }
 
-        // Cancel placement cursor - will be reactivated during building
-        NUtils.getGameUI().map.placing = null;
+        // Properly cancel placement cursor - will be reactivated during building
+        if (NUtils.getGameUI().map.placing != null) {
+            plob.delattr(ResDrawable.class);
+            NUtils.getGameUI().map.placing.cancel();
+            NUtils.getGameUI().map.placing = null;
+        }
 
         return Results.SUCCESS();
     }
