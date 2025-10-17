@@ -395,15 +395,44 @@ public class NMiniMap extends MiniMap {
             // Check for fish location tooltip first (check in screen space)
             NGameUI gui = NUtils.getGameUI();
             if(gui != null && gui.fishLocationService != null) {
-                java.util.List<nurgling.FishLocation> locations = gui.fishLocationService.getFishLocationsForSegment(sessloc.seg.id);
-                int threshold = UI.scale(10); // Screen pixels
+                // Check if markers are hidden (respect "Hide Markers" button)
+                MapWnd mapwnd = gui.mapfile;
+                boolean markersHidden = (mapwnd != null && Utils.eq(mapwnd.markcfg, MapWnd.MarkerConfig.hideall));
 
-                for(nurgling.FishLocation loc : locations) {
-                    // Convert segment-relative coordinates to screen coordinates (same as drawing)
-                    Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+                if(!markersHidden) {
+                    // Get search pattern from NMapWnd if we're inside one
+                    String searchPattern = null;
+                    Widget parentWidget = this.parent;
+                    while(parentWidget != null) {
+                        if(parentWidget instanceof NMapWnd) {
+                            searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                            break;
+                        }
+                        parentWidget = parentWidget.parent;
+                    }
 
-                    if(c.dist(screenPos) < threshold) {
-                        return Text.render(loc.getFishName());
+                    java.util.List<nurgling.FishLocation> locations = gui.fishLocationService.getFishLocationsForSegment(sessloc.seg.id);
+                    int threshold = UI.scale(10); // Screen pixels
+
+                    for(nurgling.FishLocation loc : locations) {
+                        // Apply search pattern filter (same as drawing)
+                        if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                            String fishName = loc.getFishName();
+                            if(fishName == null) {
+                                continue; // Skip fish with no name when searching
+                            }
+                            // Show only fish that contain the search pattern (case-insensitive)
+                            if(!fishName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                                continue; // Skip fish that don't match
+                            }
+                        }
+
+                        // Convert segment-relative coordinates to screen coordinates (same as drawing)
+                        Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+
+                        if(c.dist(screenPos) < threshold) {
+                            return Text.render(loc.getFishName());
+                        }
                     }
                 }
             }
