@@ -218,59 +218,76 @@ public class BuildTrellis implements Action {
         boolean reverseX = (orientation == 0); // NS-East: start from right
         boolean reverseY = (orientation == 3); // EW-South: start from bottom
 
-        int step = 2;
-        Coord margin = hitBox.end.sub(hitBox.begin).floor(2, 2);
+        // Width and length of hitbox (for tight packing)
+        // Add small spacing (0.1 units) to avoid collision detection with already-placed trellises
+        double hitboxWidth = hitBox.end.x - hitBox.begin.x + 0.1;
+        double hitboxLength = hitBox.end.y - hitBox.begin.y + 0.1;
 
         // Iterate tile by tile to ensure proper alignment
         for (int tx = tileBegin.x; tx <= tileEnd.x; tx++) {
             for (int ty = tileBegin.y; ty <= tileEnd.y; ty++) {
                 Coord tile = new Coord(tx, ty);
 
+                // How many trellises already placed in this tile?
+                int currentCount = tileCount.getOrDefault(tile, 0);
+
                 // Skip tiles that already have enough trellises
-                if(tileCount.getOrDefault(tile, 0) >= TRELLIS_PER_TILE) {
+                if(currentCount >= TRELLIS_PER_TILE) {
                     continue;
                 }
 
                 // Calculate the bounds for this specific tile
                 Coord2d tileStart = tile.mul(MCache.tilesz);
-                Coord2d tileEndPos = tileStart.add(MCache.tilesz.x, MCache.tilesz.y);
 
-                // Clamp to the selected area
-                Coord2d searchStart = new Coord2d(
-                    Math.max(tileStart.x, area.a.x),
-                    Math.max(tileStart.y, area.a.y)
-                );
-                Coord2d searchEnd = new Coord2d(
-                    Math.min(tileEndPos.x, area.b.x),
-                    Math.min(tileEndPos.y, area.b.y)
-                );
+                // Calculate position for next trellis based on orientation and current count
+                // Place them touching each other with no gap
+                Coord2d testPos;
 
-                Coord searchRange = searchEnd.sub(searchStart).floor();
+                if (orientation == 0) {
+                    // NS-East: pack from right edge, vertical orientation
+                    // Start from right and move left by hitbox width for each trellis
+                    testPos = tileStart.add(
+                        MCache.tilesz.x - hitBox.end.x - (currentCount * hitboxWidth),
+                        -hitBox.begin.y
+                    );
+                } else if (orientation == 1) {
+                    // NS-West: pack from left edge, vertical orientation
+                    // Start from left and move right by hitbox width for each trellis
+                    testPos = tileStart.add(
+                        -hitBox.begin.x + (currentCount * hitboxWidth),
+                        -hitBox.begin.y
+                    );
+                } else if (orientation == 2) {
+                    // EW-North: pack from top edge, horizontal orientation
+                    // Start from top and move down by hitbox length for each trellis
+                    testPos = tileStart.add(
+                        -hitBox.begin.x,
+                        -hitBox.begin.y + (currentCount * hitboxLength)
+                    );
+                } else {
+                    // EW-South: pack from bottom edge, horizontal orientation
+                    // Start from bottom and move up by hitbox length for each trellis
+                    testPos = tileStart.add(
+                        -hitBox.begin.x,
+                        MCache.tilesz.y - hitBox.end.y - (currentCount * hitboxLength)
+                    );
+                }
 
-                // Search within this tile only, using small step for tight packing
-                for (int ii = 0; ii <= searchRange.x - margin.x * 2; ii += step) {
-                    int i = reverseX ? (searchRange.x - margin.x - ii) : (margin.x + ii);
-                    for (int jj = 0; jj <= searchRange.y - margin.y * 2; jj += step) {
-                        int j = reverseY ? (searchRange.y - margin.y - jj) : (margin.y + jj);
-                        Coord2d testPos = searchStart.add(i, j);
-
-                        // Check collisions
-                        NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, testPos, 0);
-                        boolean passed = true;
-                        for (NHitBoxD significantHitbox : significantGobs) {
-                            if(significantHitbox.intersects(testGobBox, false)) {
-                                passed = false;
-                                break;
-                            }
-                        }
-
-                        if(passed) {
-                            // Calculate center position of the hitbox at testPos
-                            double centerX = testPos.x + (hitBox.end.x + hitBox.begin.x) / 2.0;
-                            double centerY = testPos.y + (hitBox.end.y + hitBox.begin.y) / 2.0;
-                            return new Coord2d(centerX, centerY);
-                        }
+                // Check collisions with existing objects (not with our own trellises)
+                NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, testPos, 0);
+                boolean passed = true;
+                for (NHitBoxD significantHitbox : significantGobs) {
+                    if(significantHitbox.intersects(testGobBox, false)) {
+                        passed = false;
+                        break;
                     }
+                }
+
+                if(passed) {
+                    // Calculate center position of the hitbox at testPos
+                    double centerX = testPos.x + (hitBox.end.x + hitBox.begin.x) / 2.0;
+                    double centerY = testPos.y + (hitBox.end.y + hitBox.begin.y) / 2.0;
+                    return new Coord2d(centerX, centerY);
                 }
             }
         }
