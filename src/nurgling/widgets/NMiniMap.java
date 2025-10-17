@@ -349,13 +349,39 @@ public class NMiniMap extends MiniMap {
     @Override
     public void drawmarkers(GOut g) {
         Coord hsz = sz.div(2);
+
+        // Get search pattern from NMapWnd if we're inside one
+        String searchPattern = null;
+        Widget parentWidget = this.parent;
+        while(parentWidget != null) {
+            if(parentWidget instanceof NMapWnd) {
+                searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                break;
+            }
+            parentWidget = parentWidget.parent;
+        }
+
         for(Coord c : dgext) {
             DisplayGrid dgrid = display[dgext.ri(c)];
             if(dgrid == null)
                 continue;
             for(DisplayMarker mark : dgrid.markers(true)) {
+                // First check the normal filter (marker config, etc.)
                 if(filter(mark))
                     continue;
+
+                // Then check search pattern filter
+                if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                    String markerName = mark.m.nm;
+                    if(markerName == null) {
+                        continue; // Hide markers with no name when searching
+                    }
+                    // Show only markers that contain the search pattern (case-insensitive)
+                    if(!markerName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                        continue; // Hide markers that don't match
+                    }
+                }
+
                 mark.draw(g, mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz));
             }
         }
@@ -551,12 +577,35 @@ public class NMiniMap extends MiniMap {
             return; // Don't draw fish locations when markers are hidden
         }
 
+        // Get search pattern from NMapWnd if we're inside one
+        String searchPattern = null;
+        Widget parentWidget = this.parent;
+        while(parentWidget != null) {
+            if(parentWidget instanceof NMapWnd) {
+                searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                break;
+            }
+            parentWidget = parentWidget.parent;
+        }
+
         // Use sessloc.seg.id like waypoints and markers do
         java.util.List<nurgling.FishLocation> fishLocations = gui.fishLocationService.getFishLocationsForSegment(sessloc.seg.id);
 
         Coord hsz = sz.div(2);
 
         for(nurgling.FishLocation fishLoc : fishLocations) {
+            // Apply search pattern filter to fish names
+            if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                String fishName = fishLoc.getFishName();
+                if(fishName == null) {
+                    continue; // Hide fish with no name when searching
+                }
+                // Show only fish that contain the search pattern (case-insensitive)
+                if(!fishName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                    continue; // Hide fish that don't match
+                }
+            }
+
             // Convert segment-relative coordinates to screen coordinates
             // Same approach as markers: mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz)
             Coord screenPos = fishLoc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
@@ -599,6 +648,35 @@ public class NMiniMap extends MiniMap {
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean filter(DisplayMarker mark) {
+        // Check if we're inside an NMapWnd and if it has an active search pattern
+        Widget parent = this.parent;
+        while(parent != null) {
+            if(parent instanceof NMapWnd) {
+                NMapWnd mapWnd = (NMapWnd) parent;
+                String searchPattern = mapWnd.searchPattern;
+
+                // If search pattern is active, filter by marker name
+                if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                    String markerName = mark.m.nm;
+                    if(markerName == null) {
+                        return true; // Hide markers with no name when searching
+                    }
+                    // Show only markers that contain the search pattern (case-insensitive)
+                    if(!markerName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                        return true; // Hide markers that don't match
+                    }
+                }
+                break;
+            }
+            parent = parent.parent;
+        }
+
+        // Default: don't filter (show the marker)
+        return false;
     }
 
     @Override

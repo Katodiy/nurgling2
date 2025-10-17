@@ -13,6 +13,7 @@ public class NMapWnd extends MapWnd {
     public Resource.Image searchRes = null;
     public boolean needUpdate = false;
     TextEntry te;
+
     public NMapWnd(MapFile file, MapView mv, Coord sz, String title) {
         super(file, mv, sz, title);
         searchRes = Resource.local().loadwait("alttex/selectedtex").layer(Resource.imgc);
