@@ -1,13 +1,13 @@
 package nurgling.actions.bots;
 
 import haven.*;
-import nurgling.NGameUI;
-import nurgling.NMapView;
-import nurgling.NUtils;
+import nurgling.*;
 import nurgling.actions.Action;
 import nurgling.actions.Results;
 import nurgling.areas.NArea;
 import nurgling.overlays.NCustomBauble;
+import nurgling.overlays.TrellisGhostPreview;
+import nurgling.widgets.TrellisDirectionDialog;
 
 import java.awt.image.BufferedImage;
 
@@ -26,11 +26,17 @@ public class SelectAreaWithRotation implements Action {
         this.spr = Spr;
     }
 
+    public SelectAreaWithRotation(BufferedImage image, NHitBox hitBox) {
+        this.image = image;
+        this.trellisHitBox = hitBox;
+    }
+
     BufferedImage image = null;
     BufferedImage spr = null;
+    NHitBox trellisHitBox = null;
     public NArea.Space result;
     public boolean isRotated = false; // User's rotation choice
-    private DirectionButton dirButton = null;
+    private TrellisDirectionDialog dirDialog = null;
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -39,25 +45,42 @@ public class SelectAreaWithRotation implements Action {
             Gob player = NUtils.player();
             ((NMapView) NUtils.getGameUI().map).isAreaSelectionMode.set(true);
 
-            // Add direction button to the UI
-            dirButton = new DirectionButton();
-            gui.add(dirButton, gui.sz.x - 150, 10); // Top-right corner
+            // Add direction dialog to the UI
+            dirDialog = new TrellisDirectionDialog();
+            gui.add(dirDialog, UI.scale(200, 200));
 
             if(image!=null && player!=null) {
                 player.addcustomol(new NCustomBauble(player,image, spr,((NMapView) NUtils.getGameUI().map).isAreaSelectionMode));
             }
 
-            nurgling.tasks.SelectArea sa;
-            NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectArea());
-            if (sa.getResult() != null) {
-                result = sa.getResult();
-                isRotated = dirButton.isRotated;
+            // Use appropriate task based on whether we have a hitbox (for ghost previews)
+            if (trellisHitBox != null) {
+                // Create rotation reference array that can be updated by the dialog
+                boolean[] rotationRef = new boolean[] { isRotated };
+                boolean[] confirmRef = new boolean[] { false };
+                dirDialog.setReferences(rotationRef, confirmRef);
+                dirDialog.show();
+                dirDialog.raise();
+
+                nurgling.tasks.SelectAreaWithGhosts sa;
+                NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectAreaWithGhosts(trellisHitBox, rotationRef, confirmRef));
+                if (sa.getResult() != null) {
+                    result = sa.getResult();
+                    isRotated = rotationRef[0];
+                }
+            } else {
+                nurgling.tasks.SelectArea sa;
+                NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectArea());
+                if (sa.getResult() != null) {
+                    result = sa.getResult();
+                    isRotated = false;
+                }
             }
 
-            // Clean up button
-            if(dirButton != null) {
-                dirButton.destroy();
-                dirButton = null;
+            // Clean up dialog
+            if(dirDialog != null) {
+                dirDialog.reqdestroy();
+                dirDialog = null;
             }
         }
         else {
@@ -84,48 +107,5 @@ public class SelectAreaWithRotation implements Action {
 
     public boolean getRotation() {
         return isRotated;
-    }
-
-    /**
-     * Direction button widget shown during area selection
-     */
-    private class DirectionButton extends Widget {
-        private boolean isRotated = false;
-        private Button btn;
-        private Text directionText;
-
-        public DirectionButton() {
-            super(new Coord(140, 60));
-
-            btn = new Button(120, "Rotate", this::toggle);
-            add(btn, 10, 30);
-
-            updateText();
-        }
-
-        private void toggle() {
-            isRotated = !isRotated;
-            updateText();
-        }
-
-        private void updateText() {
-            String direction = isRotated ? "East-West" : "North-South";
-            directionText = Text.render("Direction: " + direction);
-        }
-
-        @Override
-        public void draw(GOut g) {
-            // Draw background
-            g.chcolor(0, 0, 0, 180);
-            g.frect(Coord.z, sz);
-            g.chcolor();
-
-            // Draw direction text
-            if(directionText != null) {
-                g.image(directionText.tex(), new Coord(10, 5));
-            }
-
-            super.draw(g);
-        }
     }
 }

@@ -20,10 +20,6 @@ public class BuildTrellis implements Action {
         Build.Command command = new Build.Command();
         command.name = "Trellis";
 
-        NUtils.getGameUI().msg("Please, select build area and choose direction");
-        SelectAreaWithRotation buildarea = new SelectAreaWithRotation(Resource.loadsimg("baubles/buildArea"));
-        buildarea.run(NUtils.getGameUI());
-
         NUtils.getGameUI().msg("Please, select area for blocks");
         SelectArea blockarea = new SelectArea(Resource.loadsimg("baubles/blockIng"));
         blockarea.run(NUtils.getGameUI());
@@ -33,6 +29,35 @@ public class BuildTrellis implements Action {
         SelectArea stringarea = new SelectArea(Resource.loadsimg("baubles/stringsIng"));
         stringarea.run(NUtils.getGameUI());
         command.ingredients.add(new Build.Ingredient(new Coord(1,1), stringarea.getRCArea(), new NAlias("Flax Fibres", "Hemp Fibres", "Spindly Taproot", "Cattail Fibres", "Stinging Nettle", "Hide Strap", "Straw Twine", "Bark Cordage"), 1));
+
+        // Activate build menu to get the trellis hitbox
+        for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae) {
+            if (pag.button() != null && pag.button().name().equals(command.name)) {
+                pag.button().use(new MenuGrid.Interaction(1, 0));
+                break;
+            }
+        }
+
+        if(NUtils.getGameUI().map.placing == null) {
+            for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae) {
+                if (pag.button() != null && pag.button().name().equals(command.name)) {
+                    pag.button().use(new MenuGrid.Interaction(1, 0));
+                    break;
+                }
+            }
+        }
+
+        NUtils.addTask(new WaitPlob());
+        MapView.Plob plob = NUtils.getGameUI().map.placing.get();
+        NHitBox trellisHitBox = plob.ngob.hitBox;
+
+        // Cancel the placement for now - we'll restart it later
+        NUtils.getGameUI().map.placing = null;
+
+        // Now select build area with ghost previews
+        NUtils.getGameUI().msg("Please, select build area and choose direction");
+        SelectAreaWithRotation buildarea = new SelectAreaWithRotation(Resource.loadsimg("baubles/buildArea"), trellisHitBox);
+        buildarea.run(NUtils.getGameUI());
 
         Pair<Coord2d, Coord2d> area = buildarea.getRCArea();
         boolean needRotate = buildarea.getRotation();
@@ -86,7 +111,7 @@ public class BuildTrellis implements Action {
             }
 
             NUtils.addTask(new WaitPlob());
-            MapView.Plob plob = NUtils.getGameUI().map.placing.get();
+            plob = NUtils.getGameUI().map.placing.get();
             plob.a = needRotate ? Math.PI / 2 : 0;
 
             pos = findFreePlaceWithLimit(area, needRotate ? plob.ngob.hitBox.rotate() : plob.ngob.hitBox, tileCount);
