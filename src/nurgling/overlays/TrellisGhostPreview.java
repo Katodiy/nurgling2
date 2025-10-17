@@ -95,7 +95,7 @@ public class TrellisGhostPreview extends Sprite {
                 // 0=NS-East (pack to right), 1=NS-West (pack to left)
                 // 2=EW-North (pack to top), 3=EW-South (pack to bottom)
                 boolean reverseX = (orientation == 0); // NS-East: start from right
-                boolean reverseY = (orientation == 2); // EW-North: start from top
+                boolean reverseY = (orientation == 3); // EW-South: start from bottom
 
                 for (int ii = 0; ii <= searchRange.x - margin.x * 2 && tileCount_local < TRELLIS_PER_TILE; ii += step) {
                     int i = reverseX ? (searchRange.x - margin.x - ii) : (margin.x + ii);
