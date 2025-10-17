@@ -4,7 +4,7 @@ import haven.*;
 import nurgling.NHitBox;
 
 public class TrellisDirectionDialog extends Window {
-    // 0 = NS-East, 1 = NS-West, 2 = EW-North, 3 = EW-South
+    // 0 = NS-East, 1 = NS-West, 2 = EW-North, 3 = EW-South, 4 = NS-Center, 5 = EW-Center
     private int orientation = 0;
     private int[] orientationRef = null;
     private boolean[] confirmRef = null;
@@ -16,7 +16,9 @@ public class TrellisDirectionDialog extends Window {
         "North-South (East)",
         "North-South (West)",
         "East-West (North)",
-        "East-West (South)"
+        "East-West (South)",
+        "North-South (Center)",
+        "East-West (Center)"
     };
 
     public TrellisDirectionDialog() {
@@ -59,7 +61,7 @@ public class TrellisDirectionDialog extends Window {
     }
 
     private void toggleDirection() {
-        orientation = (orientation + 1) % 4;
+        orientation = (orientation + 1) % 6;
         if (orientationRef != null) {
             orientationRef[0] = orientation;
         }

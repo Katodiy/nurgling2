@@ -57,7 +57,8 @@ public class BuildTrellis implements Action {
 
                 Pair<Coord2d, Coord2d> area = buildarea.getRCArea();
                 int orientation = buildarea.orientation;
-                boolean needRotate = (orientation >= 2);
+                // Rotate for EW orientations: 2, 3, and 5
+                boolean needRotate = (orientation == 2 || orientation == 3 || orientation == 5);
 
                 // Now select resource areas
                 NUtils.getGameUI().msg("Please, select area for blocks");
@@ -244,6 +245,7 @@ public class BuildTrellis implements Action {
             // Determine search order based on orientation to pack against specific edge
             // 0=NS-East (pack to right), 1=NS-West (pack to left)
             // 2=EW-North (pack to top), 3=EW-South (pack to bottom)
+            // 4=NS-Center (centered, vertical), 5=EW-Center (centered, horizontal)
             boolean reverseX = (orientation == 0); // NS-East: start from right
             boolean reverseY = (orientation == 3); // EW-South: start from bottom
 
@@ -251,6 +253,10 @@ public class BuildTrellis implements Action {
             // Add small spacing (0.1 units) to avoid collision detection with already-placed trellises
             double hitboxWidth = hitBox.end.x - hitBox.begin.x + 0.1;
             double hitboxLength = hitBox.end.y - hitBox.begin.y + 0.1;
+
+            // Calculate total width/length occupied by 3 trellises for centering
+            double totalNSWidth = hitboxWidth * 3;
+            double totalEWLength = hitboxLength * 3;
 
             // Iterate tile by tile to ensure proper alignment
             for (int tx = tileBegin.x; tx <= tileEnd.x; tx++) {
@@ -269,36 +275,52 @@ public class BuildTrellis implements Action {
                     Coord2d tileStart = tile.mul(MCache.tilesz);
 
                     // Calculate position for next trellis based on orientation and current count
-                    // Place them touching each other with no gap
+                    // Place them touching each other
                     Coord2d testPos;
 
                     if (orientation == 0) {
-                        // NS-East: pack from right edge, vertical orientation
-                        // Start from right and move left by hitbox width for each trellis
+                        // NS-East: pack from right edge, centered on that edge, vertical orientation
+                        double centerOffsetY = (MCache.tilesz.y - hitboxLength) / 2.0;
                         testPos = tileStart.add(
                             MCache.tilesz.x - hitBox.end.x - (currentCount * hitboxWidth),
-                            -hitBox.begin.y
+                            -hitBox.begin.y + centerOffsetY
                         );
                     } else if (orientation == 1) {
-                        // NS-West: pack from left edge, vertical orientation
-                        // Start from left and move right by hitbox width for each trellis
+                        // NS-West: pack from left edge, centered on that edge, vertical orientation
+                        double centerOffsetY = (MCache.tilesz.y - hitboxLength) / 2.0;
                         testPos = tileStart.add(
                             -hitBox.begin.x + (currentCount * hitboxWidth),
-                            -hitBox.begin.y
+                            -hitBox.begin.y + centerOffsetY
                         );
                     } else if (orientation == 2) {
-                        // EW-North: pack from top edge, horizontal orientation
-                        // Start from top and move down by hitbox length for each trellis
+                        // EW-North: pack from top edge, centered on that edge, horizontal orientation
+                        double centerOffsetX = (MCache.tilesz.x - hitboxWidth) / 2.0;
                         testPos = tileStart.add(
-                            -hitBox.begin.x,
+                            -hitBox.begin.x + centerOffsetX,
                             -hitBox.begin.y + (currentCount * hitboxLength)
                         );
-                    } else {
-                        // EW-South: pack from bottom edge, horizontal orientation
-                        // Start from bottom and move up by hitbox length for each trellis
+                    } else if (orientation == 3) {
+                        // EW-South: pack from bottom edge, centered on that edge, horizontal orientation
+                        double centerOffsetX = (MCache.tilesz.x - hitboxWidth) / 2.0;
                         testPos = tileStart.add(
-                            -hitBox.begin.x,
+                            -hitBox.begin.x + centerOffsetX,
                             MCache.tilesz.y - hitBox.end.y - (currentCount * hitboxLength)
+                        );
+                    } else if (orientation == 4) {
+                        // NS-Center: all 3 trellises centered in the tile, vertical orientation
+                        double startX = (MCache.tilesz.x - totalNSWidth) / 2.0;
+                        double centerOffsetY = (MCache.tilesz.y - hitboxLength) / 2.0;
+                        testPos = tileStart.add(
+                            -hitBox.begin.x + startX + (currentCount * hitboxWidth),
+                            -hitBox.begin.y + centerOffsetY
+                        );
+                    } else {
+                        // EW-Center (orientation == 5): all 3 trellises centered in the tile, horizontal orientation
+                        double centerOffsetX = (MCache.tilesz.x - hitboxWidth) / 2.0;
+                        double startY = (MCache.tilesz.y - totalEWLength) / 2.0;
+                        testPos = tileStart.add(
+                            -hitBox.begin.x + centerOffsetX,
+                            -hitBox.begin.y + startY + (currentCount * hitboxLength)
                         );
                     }
 

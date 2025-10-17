@@ -21,7 +21,7 @@ public class TrellisGhostPreview extends Sprite {
     );
 
     private Pair<Coord2d, Coord2d> area;
-    private int orientation; // 0=NS-East, 1=NS-West, 2=EW-North, 3=EW-South
+    private int orientation; // 0=NS-East, 1=NS-West, 2=EW-North, 3=EW-South, 4=NS-Center, 5=EW-Center
     private NHitBox trellisHitBox;
     private Model ghostModel;
     private List<Location> ghostLocations = new ArrayList<>();
@@ -47,8 +47,8 @@ public class TrellisGhostPreview extends Sprite {
             return;
         }
 
-        // Determine if we need to rotate hitbox (EW orientations 2 and 3)
-        boolean needRotate = (orientation >= 2);
+        // Determine if we need to rotate hitbox (EW orientations: 2, 3, 5)
+        boolean needRotate = (orientation == 2 || orientation == 3 || orientation == 5);
         NHitBox rotatedHitBox = needRotate ? trellisHitBox.rotate() : trellisHitBox;
 
         // Create the box model once (centered at origin)
@@ -65,6 +65,14 @@ public class TrellisGhostPreview extends Sprite {
 
         int validPositions = 0;
 
+        // Width and length of hitbox (for tight packing)
+        double hitboxWidth = rotatedHitBox.end.x - rotatedHitBox.begin.x + 0.1;
+        double hitboxLength = rotatedHitBox.end.y - rotatedHitBox.begin.y + 0.1;
+
+        // Calculate total width/length occupied by 3 trellises for centering
+        double totalNSWidth = hitboxWidth * 3;
+        double totalEWLength = hitboxLength * 3;
+
         // Iterate tile by tile to ensure proper alignment
         for (int tx = tileBegin.x; tx <= tileEnd.x; tx++) {
             for (int ty = tileBegin.y; ty <= tileEnd.y; ty++) {
@@ -72,58 +80,76 @@ public class TrellisGhostPreview extends Sprite {
 
                 // Calculate the bounds for this specific tile
                 Coord2d tileStart = tile.mul(MCache.tilesz);
-                Coord2d tileEndPos = tileStart.add(MCache.tilesz.x, MCache.tilesz.y);
 
-                // Clamp to the selected area
-                Coord2d searchStart = new Coord2d(
-                    Math.max(tileStart.x, area.a.x),
-                    Math.max(tileStart.y, area.a.y)
-                );
-                Coord2d searchEnd = new Coord2d(
-                    Math.min(tileEndPos.x, area.b.x),
-                    Math.min(tileEndPos.y, area.b.y)
-                );
+                // Place exactly 3 trellises per tile, matching BuildTrellis logic
+                for (int trellisIndex = 0; trellisIndex < TRELLIS_PER_TILE; trellisIndex++) {
+                    Coord2d testPos;
 
-                Coord searchRange = searchEnd.sub(searchStart).floor();
-                Coord margin = rotatedHitBox.end.sub(rotatedHitBox.begin).floor(2, 2);
+                    if (orientation == 0) {
+                        // NS-East: pack from right edge, centered on that edge, vertical orientation
+                        double centerOffsetY = (MCache.tilesz.y - hitboxLength) / 2.0;
+                        testPos = tileStart.add(
+                            MCache.tilesz.x - rotatedHitBox.end.x - (trellisIndex * hitboxWidth),
+                            -rotatedHitBox.begin.y + centerOffsetY
+                        );
+                    } else if (orientation == 1) {
+                        // NS-West: pack from left edge, centered on that edge, vertical orientation
+                        double centerOffsetY = (MCache.tilesz.y - hitboxLength) / 2.0;
+                        testPos = tileStart.add(
+                            -rotatedHitBox.begin.x + (trellisIndex * hitboxWidth),
+                            -rotatedHitBox.begin.y + centerOffsetY
+                        );
+                    } else if (orientation == 2) {
+                        // EW-North: pack from top edge, centered on that edge, horizontal orientation
+                        double centerOffsetX = (MCache.tilesz.x - hitboxWidth) / 2.0;
+                        testPos = tileStart.add(
+                            -rotatedHitBox.begin.x + centerOffsetX,
+                            -rotatedHitBox.begin.y + (trellisIndex * hitboxLength)
+                        );
+                    } else if (orientation == 3) {
+                        // EW-South: pack from bottom edge, centered on that edge, horizontal orientation
+                        double centerOffsetX = (MCache.tilesz.x - hitboxWidth) / 2.0;
+                        testPos = tileStart.add(
+                            -rotatedHitBox.begin.x + centerOffsetX,
+                            MCache.tilesz.y - rotatedHitBox.end.y - (trellisIndex * hitboxLength)
+                        );
+                    } else if (orientation == 4) {
+                        // NS-Center: all 3 trellises centered in the tile, vertical orientation
+                        double startX = (MCache.tilesz.x - totalNSWidth) / 2.0;
+                        double centerOffsetY = (MCache.tilesz.y - hitboxLength) / 2.0;
+                        testPos = tileStart.add(
+                            -rotatedHitBox.begin.x + startX + (trellisIndex * hitboxWidth),
+                            -rotatedHitBox.begin.y + centerOffsetY
+                        );
+                    } else {
+                        // EW-Center (orientation == 5): all 3 trellises centered in the tile, horizontal orientation
+                        double centerOffsetX = (MCache.tilesz.x - hitboxWidth) / 2.0;
+                        double startY = (MCache.tilesz.y - totalEWLength) / 2.0;
+                        testPos = tileStart.add(
+                            -rotatedHitBox.begin.x + centerOffsetX,
+                            -rotatedHitBox.begin.y + startY + (trellisIndex * hitboxLength)
+                        );
+                    }
 
-                // Search within this tile only, using small step for tight packing
-                int step = 2;
-                int tileCount_local = 0;
-
-                // Determine search order based on orientation to pack against specific edge
-                // 0=NS-East (pack to right), 1=NS-West (pack to left)
-                // 2=EW-North (pack to top), 3=EW-South (pack to bottom)
-                boolean reverseX = (orientation == 0); // NS-East: start from right
-                boolean reverseY = (orientation == 3); // EW-South: start from bottom
-
-                for (int ii = 0; ii <= searchRange.x - margin.x * 2 && tileCount_local < TRELLIS_PER_TILE; ii += step) {
-                    int i = reverseX ? (searchRange.x - margin.x - ii) : (margin.x + ii);
-                    for (int jj = 0; jj <= searchRange.y - margin.y * 2 && tileCount_local < TRELLIS_PER_TILE; jj += step) {
-                        int j = reverseY ? (searchRange.y - margin.y - jj) : (margin.y + jj);
-                        Coord2d testPos = searchStart.add(i, j);
-
-                        // Check collisions
-                        NHitBoxD testBox = new NHitBoxD(rotatedHitBox.begin, rotatedHitBox.end, testPos, 0);
-                        boolean passed = true;
-                        for (NHitBoxD obstacle : obstacles) {
-                            if (obstacle.intersects(testBox, false)) {
-                                passed = false;
-                                break;
-                            }
+                    // Check collisions
+                    NHitBoxD testBox = new NHitBoxD(rotatedHitBox.begin, rotatedHitBox.end, testPos, 0);
+                    boolean passed = true;
+                    for (NHitBoxD obstacle : obstacles) {
+                        if (obstacle.intersects(testBox, false)) {
+                            passed = false;
+                            break;
                         }
+                    }
 
-                        if (passed) {
-                            // Calculate center position of the hitbox at testPos
-                            float centerX = (float)(testPos.x + (rotatedHitBox.end.x + rotatedHitBox.begin.x) / 2.0);
-                            float centerY = (float)(testPos.y + (rotatedHitBox.end.y + rotatedHitBox.begin.y) / 2.0);
+                    if (passed) {
+                        // Calculate center position of the hitbox at testPos
+                        float centerX = (float)(testPos.x + (rotatedHitBox.end.x + rotatedHitBox.begin.x) / 2.0);
+                        float centerY = (float)(testPos.y + (rotatedHitBox.end.y + rotatedHitBox.begin.y) / 2.0);
 
-                            // Store location for this ghost position
-                            Location loc = Location.xlate(new Coord3f(centerX, -centerY, 0));
-                            ghostLocations.add(loc);
-                            tileCount_local++;
-                            validPositions++;
-                        }
+                        // Store location for this ghost position
+                        Location loc = Location.xlate(new Coord3f(centerX, -centerY, 0));
+                        ghostLocations.add(loc);
+                        validPositions++;
                     }
                 }
             }
