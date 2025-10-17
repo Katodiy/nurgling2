@@ -51,25 +51,21 @@ public class BuildGhostPreview extends Sprite {
         // Find all obstacles in the area (same as Finder.getFreePlace)
         ArrayList<NHitBoxD> obstacles = findObstacles();
 
-        // Calculate building dimensions for grid spacing
-        int buildingWidth = (int)Math.ceil(buildingHitBox.end.x - buildingHitBox.begin.x);
-        int buildingDepth = (int)Math.ceil(buildingHitBox.end.y - buildingHitBox.begin.y);
-
-        // Add some padding to avoid tight packing
-        int stepX = Math.max(buildingWidth + 1, 1);
-        int stepY = Math.max(buildingDepth + 1, 1);
+        // Track placed buildings to avoid showing overlaps
+        ArrayList<NHitBoxD> placedBuildings = new ArrayList<>();
 
         Coord inchMax = area.b.sub(area.a).floor();
         Coord margin = buildingHitBox.end.sub(buildingHitBox.begin).floor(2, 2);
 
-        // Grid-based placement instead of pixel-by-pixel
-        for (int i = margin.x; i <= inchMax.x - margin.x; i += stepX) {
-            for (int j = margin.y; j <= inchMax.y - margin.y; j += stepY) {
+        // Simulate Finder.getFreePlace() behavior: pixel-by-pixel search
+        for (int i = margin.x; i <= inchMax.x - margin.x; i++) {
+            for (int j = margin.y; j <= inchMax.y - margin.y; j++) {
                 Coord2d testPos = area.a.add(i, j);
                 NHitBoxD testBox = new NHitBoxD(buildingHitBox.begin, buildingHitBox.end, testPos, 0);
 
-                // Check collisions
+                // Check collisions with obstacles AND already-placed buildings
                 boolean passed = true;
+
                 for (NHitBoxD obstacle : obstacles) {
                     if (obstacle.intersects(testBox, false)) {
                         passed = false;
@@ -78,13 +74,24 @@ public class BuildGhostPreview extends Sprite {
                 }
 
                 if (passed) {
-                    // Calculate center position of the hitbox at testPos
+                    for (NHitBoxD placed : placedBuildings) {
+                        if (placed.intersects(testBox, false)) {
+                            passed = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (passed) {
+                    // This position is valid - add it to preview and track it
                     float centerX = (float)(testBox.rc.x);
                     float centerY = (float)(testBox.rc.y);
 
-                    // Store location for this ghost position
                     Location loc = Location.xlate(new Coord3f(centerX, -centerY, 0));
                     ghostLocations.add(loc);
+
+                    // Add this building to placed list so we don't overlap it
+                    placedBuildings.add(new NHitBoxD(buildingHitBox.begin, buildingHitBox.end, testPos, 0));
                 }
             }
         }
