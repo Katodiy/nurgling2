@@ -128,8 +128,6 @@ public class TrellisGhostPreview extends Sprite {
                 }
             }
         }
-
-        System.out.println("  Total positions: " + validPositions);
     }
 
     /**
