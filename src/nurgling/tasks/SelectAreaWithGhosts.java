@@ -88,14 +88,8 @@ public class SelectAreaWithGhosts extends NTask {
 
                 // Check if confirmed
                 if (confirmRef != null && confirmRef[0]) {
-                    // Clean up ghost preview
-                    if (ghostPreview != null && player != null) {
-                        Gob.Overlay ol = player.findol(TrellisGhostPreview.class);
-                        if (ol != null) {
-                            ol.remove();
-                        }
-                        ghostPreview = null;
-                    }
+                    // Don't clean up ghost preview - let it persist for the build phase
+                    // It will be cleaned up in BuildTrellis.java's finally block
                     return true;
                 }
             }

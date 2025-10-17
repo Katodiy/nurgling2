@@ -194,7 +194,7 @@ public class BuildTrellis implements Action {
 
                 return Results.SUCCESS();
         } finally {
-            // Clean up ghost previews and overlays when interrupted or finished
+            // Always clean up ghost previews when bot finishes or is interrupted
             player = NUtils.player();
             if (player != null) {
                 // Remove ghost preview overlay
