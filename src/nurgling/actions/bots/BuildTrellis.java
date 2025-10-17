@@ -242,13 +242,6 @@ public class BuildTrellis implements Action {
             Coord tileBegin = area.a.floor(MCache.tilesz);
             Coord tileEnd = area.b.sub(1, 1).floor(MCache.tilesz);
 
-            // Determine search order based on orientation to pack against specific edge
-            // 0=NS-East (pack to right), 1=NS-West (pack to left)
-            // 2=EW-North (pack to top), 3=EW-South (pack to bottom)
-            // 4=NS-Center (centered, vertical), 5=EW-Center (centered, horizontal)
-            boolean reverseX = (orientation == 0); // NS-East: start from right
-            boolean reverseY = (orientation == 3); // EW-South: start from bottom
-
             // Width and length of hitbox (for tight packing)
             // Add small spacing (0.1 units) to avoid collision detection with already-placed trellises
             double hitboxWidth = hitBox.end.x - hitBox.begin.x + 0.1;

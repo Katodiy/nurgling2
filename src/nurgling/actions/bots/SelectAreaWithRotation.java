@@ -22,7 +22,7 @@ public class SelectAreaWithRotation implements Action {
     BufferedImage spr = null;
     NHitBox trellisHitBox = null;
     public NArea.Space result;
-    public int orientation = 0; // 0=NS-East, 1=NS-West, 2=EW-North, 3=EW-South
+    public int orientation = 0; // 0=NS-East, 1=NS-West, 2=EW-North, 3=EW-South, 4=NS-Center, 5=EW-Center
     private TrellisDirectionDialog dirDialog = null;
 
     @Override

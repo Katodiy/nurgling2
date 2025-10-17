@@ -258,16 +258,6 @@ public class TrellisGhostPreview extends Sprite {
         slots.remove(slot);
     }
 
-    /**
-     * Update all existing slots with new models
-     */
-    private void updateSlots() {
-        // Clear and re-add to existing slots
-        for (RenderTree.Slot slot : slots) {
-            // Can't easily remove, so we'll rely on sprite removal/re-add
-        }
-    }
-
     @Override
     public boolean tick(double dt) {
         return false; // Don't auto-remove
