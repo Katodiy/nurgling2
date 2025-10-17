@@ -99,6 +99,7 @@ public class NMiniMap extends MiniMap {
         drawtempmarks(g);
         drawterrainname(g);
         drawResourceTimers(g);
+        drawFishLocations(g);
         drawQueuedWaypoints(g);  // Draw waypoint visualization
     }
 
@@ -364,11 +365,18 @@ public class NMiniMap extends MiniMap {
     public Object tooltip(Coord c, Widget prev) {
         if(dloc != null) {
             Coord tc = c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
+
+            // Check for fish location tooltip first
+            nurgling.FishLocation fishLoc = fishLocationAt(tc);
+            if(fishLoc != null) {
+                return Text.render(fishLoc.getFishName());
+            }
+
             DisplayMarker mark = markerat(tc);
             if(mark != null) {
                 return(mark.tip);
             }
-            
+
             // Get terrain type tooltip
             String terrainInfo = getTerrainTooltip(c);
             if(terrainInfo != null) {
@@ -482,18 +490,18 @@ public class NMiniMap extends MiniMap {
 
         NGameUI gui = NUtils.getGameUI();
         if(gui == null || gui.localizedResourceTimerService == null) return;
-        
+
         java.util.List<LocalizedResourceTimer> timers = gui.localizedResourceTimerService.getTimersForSegment(dloc.seg.id);
 
         Coord hsz = sz.div(2);
-        
+
         // Create bordered text furnaces for timer display (like barrel names and character nicknames)
         Text.Furnace readyTimerFurnace = new PUtils.BlurFurn(
-            new Text.Foundry(Text.dfont, UI.scale(9), Color.GREEN).aa(true), 
+            new Text.Foundry(Text.dfont, UI.scale(9), Color.GREEN).aa(true),
             2, 1, Color.BLACK
         );
         Text.Furnace activeTimerFurnace = new PUtils.BlurFurn(
-            new Text.Foundry(Text.dfont, UI.scale(9), Color.WHITE).aa(true), 
+            new Text.Foundry(Text.dfont, UI.scale(9), Color.WHITE).aa(true),
             2, 1, Color.BLACK
         );
 
@@ -506,7 +514,7 @@ public class NMiniMap extends MiniMap {
                screenPos.y >= 0 && screenPos.y <= sz.y) {
 
                 String timeText = timer.getFormattedRemainingTime();
-                
+
                 // Use appropriate furnace based on timer state
                 Text.Furnace furnace = timer.isExpired() ? readyTimerFurnace : activeTimerFurnace;
                 Text timerDisplay = furnace.render(timeText);
@@ -518,5 +526,61 @@ public class NMiniMap extends MiniMap {
                 g.image(timerDisplay.tex(), textPos);
             }
         }
+    }
+
+    private void drawFishLocations(GOut g) {
+        if(sessloc == null) return;
+
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || gui.fishLocationService == null) return;
+
+        // Use sessloc.seg.id like waypoints do (line 137, 151)
+        java.util.List<nurgling.FishLocation> fishLocations = gui.fishLocationService.getFishLocationsForSegment(sessloc.seg.id);
+
+        for(nurgling.FishLocation fishLoc : fishLocations) {
+            // Convert tile coords to world coords (Coord2d), then to screen coords
+            // This is like how player position works: player.rc is Coord2d, converted with p2c()
+            // getTileCoords() is Coord, mul() converts to Coord2d
+            Coord2d worldPos = fishLoc.getTileCoords().mul(tilesz);
+            Coord screenPos = p2c(worldPos);
+
+            // Only draw if on screen
+            if(screenPos != null && screenPos.x >= 0 && screenPos.x <= sz.x &&
+               screenPos.y >= 0 && screenPos.y <= sz.y) {
+
+                try {
+                    // Load fish icon from resource path
+                    Resource fishRes = Resource.remote().loadwait(fishLoc.getFishResource());
+                    BufferedImage icon = fishRes.layer(Resource.imgc).img;
+                    TexI tex = new TexI(icon);
+
+                    // Draw scaled fish icon
+                    int dsz = Math.max(tex.sz().y, tex.sz().x);
+                    int targetSize = UI.scale(18);
+                    g.aimage(tex, screenPos, 0.5, 0.5, UI.scale(targetSize * tex.sz().x / dsz, targetSize * tex.sz().y / dsz));
+
+                } catch (Exception e) {
+                    // Fallback: draw colored dot if icon fails
+                    g.chcolor(0, 150, 255, 200); // Blue for fish
+                    g.fellipse(screenPos, new Coord(UI.scale(4), UI.scale(4)));
+                    g.chcolor();
+                }
+            }
+        }
+    }
+
+    private nurgling.FishLocation fishLocationAt(Coord tc) {
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || gui.fishLocationService == null || dloc == null) return null;
+
+        java.util.List<nurgling.FishLocation> locations = gui.fishLocationService.getFishLocationsForSegment(dloc.seg.id);
+        int threshold = UI.scale(10); // Click radius
+
+        for(nurgling.FishLocation loc : locations) {
+            if(loc.getTileCoords().dist(tc) < threshold) {
+                return loc;
+            }
+        }
+        return null;
     }
 }
