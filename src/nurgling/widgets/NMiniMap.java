@@ -363,15 +363,26 @@ public class NMiniMap extends MiniMap {
 
     @Override
     public Object tooltip(Coord c, Widget prev) {
-        if(dloc != null) {
-            Coord tc = c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
+        if(dloc != null && sessloc != null) {
+            Coord hsz = sz.div(2);
 
-            // Check for fish location tooltip first
-            nurgling.FishLocation fishLoc = fishLocationAt(tc);
-            if(fishLoc != null) {
-                return Text.render(fishLoc.getFishName());
+            // Check for fish location tooltip first (check in screen space)
+            NGameUI gui = NUtils.getGameUI();
+            if(gui != null && gui.fishLocationService != null) {
+                java.util.List<nurgling.FishLocation> locations = gui.fishLocationService.getFishLocationsForSegment(sessloc.seg.id);
+                int threshold = UI.scale(10); // Screen pixels
+
+                for(nurgling.FishLocation loc : locations) {
+                    // Convert segment-relative coordinates to screen coordinates (same as drawing)
+                    Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+
+                    if(c.dist(screenPos) < threshold) {
+                        return Text.render(loc.getFishName());
+                    }
+                }
             }
 
+            Coord tc = c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
             DisplayMarker mark = markerat(tc);
             if(mark != null) {
                 return(mark.tip);
@@ -529,23 +540,23 @@ public class NMiniMap extends MiniMap {
     }
 
     private void drawFishLocations(GOut g) {
-        if(sessloc == null) return;
+        if(sessloc == null || dloc == null) return;
 
         NGameUI gui = NUtils.getGameUI();
         if(gui == null || gui.fishLocationService == null) return;
 
-        // Use sessloc.seg.id like waypoints do (line 137, 151)
+        // Use sessloc.seg.id like waypoints and markers do
         java.util.List<nurgling.FishLocation> fishLocations = gui.fishLocationService.getFishLocationsForSegment(sessloc.seg.id);
 
+        Coord hsz = sz.div(2);
+
         for(nurgling.FishLocation fishLoc : fishLocations) {
-            // Convert tile coords to world coords (Coord2d), then to screen coords
-            // This is like how player position works: player.rc is Coord2d, converted with p2c()
-            // getTileCoords() is Coord, mul() converts to Coord2d
-            Coord2d worldPos = fishLoc.getTileCoords().mul(tilesz);
-            Coord screenPos = p2c(worldPos);
+            // Convert segment-relative coordinates to screen coordinates
+            // Same approach as markers: mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz)
+            Coord screenPos = fishLoc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
 
             // Only draw if on screen
-            if(screenPos != null && screenPos.x >= 0 && screenPos.x <= sz.x &&
+            if(screenPos.x >= 0 && screenPos.x <= sz.x &&
                screenPos.y >= 0 && screenPos.y <= sz.y) {
 
                 try {
@@ -582,5 +593,37 @@ public class NMiniMap extends MiniMap {
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean mousedown(MouseDownEvent ev) {
+        // Check for right-click on fish location
+        if(ev.b == 3 && dloc != null) { // Button 3 is right-click
+            Coord tc = ev.c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
+            nurgling.FishLocation fishLoc = fishLocationAt(tc);
+            if(fishLoc != null) {
+                // Handle right-click on fish - will be processed in mouseup
+                return true;
+            }
+        }
+        return super.mousedown(ev);
+    }
+
+    @Override
+    public boolean mouseup(MouseUpEvent ev) {
+        // Handle right-click release on fish location
+        if(ev.b == 3 && dloc != null) { // Button 3 is right-click
+            Coord tc = ev.c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
+            nurgling.FishLocation fishLoc = fishLocationAt(tc);
+            if(fishLoc != null) {
+                NGameUI gui = NUtils.getGameUI();
+                if(gui != null && gui.fishLocationService != null) {
+                    gui.fishLocationService.removeFishLocation(fishLoc.getLocationId());
+                    gui.msg("Removed " + fishLoc.getFishName() + " location", java.awt.Color.YELLOW);
+                }
+                return true;
+            }
+        }
+        return super.mouseup(ev);
     }
 }

@@ -71,6 +71,14 @@ public class NMapWnd extends MapWnd {
                         return true; // Consume the event
                     }
                 }
+
+                // Alt+right-click for fish locations
+                if(ev.b == 3 && ui.modmeta) {
+                    // Check if there's a fish location at this position
+                    if(handleFishLocationClick(viewCoord)) {
+                        return true; // Consume the event
+                    }
+                }
             }
         }
 
@@ -128,18 +136,44 @@ public class NMapWnd extends MapWnd {
         // Try to find a resource marker at the clicked location
         MiniMap.Location clickLoc = view.xlate(c);
         if(clickLoc == null) return false;
-        
+
         MiniMap.DisplayMarker marker = view.markerat(clickLoc.tc);
         if(marker != null && marker.m instanceof MapFile.SMarker) {
             MapFile.SMarker smarker = (MapFile.SMarker) marker.m;
-            
+
             // Handle through service
             NGameUI gui = (NGameUI) NUtils.getGameUI();
             if(gui != null && gui.localizedResourceTimerService != null) {
                 return gui.localizedResourceTimerService.handleResourceClick(smarker);
             }
         }
-        
+
+        return false;
+    }
+
+    private boolean handleFishLocationClick(Coord c) {
+        // c is in view coordinates, check for fish locations in screen space
+        if(view.sessloc == null || view.dloc == null) return false;
+
+        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        if(gui == null || gui.fishLocationService == null) return false;
+
+        // Find fish location at this position (check in screen space)
+        java.util.List<nurgling.FishLocation> locations = gui.fishLocationService.getFishLocationsForSegment(view.sessloc.seg.id);
+        int threshold = UI.scale(10); // Screen pixels
+        Coord hsz = view.sz.div(2);
+
+        for(nurgling.FishLocation loc : locations) {
+            // Convert segment-relative coordinates to screen coordinates (same as drawing)
+            Coord screenPos = loc.getTileCoords().sub(view.dloc.tc).div(view.scalef()).add(hsz);
+
+            if(c.dist(screenPos) < threshold) {
+                gui.fishLocationService.removeFishLocation(loc.getLocationId());
+                gui.msg("Removed " + loc.getFishName() + " location", java.awt.Color.YELLOW);
+                return true;
+            }
+        }
+
         return false;
     }
 }

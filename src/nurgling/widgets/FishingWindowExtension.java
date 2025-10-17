@@ -29,19 +29,26 @@ public class FishingWindowExtension {
         }
 
 
-        // Map fish labels to their positions
-        Map<String, Label> fishLabels = new HashMap<>();
+        // Collect all labels with ":" first (we iterate backwards, so collect in reverse order)
+        java.util.List<Label> colonLabels = new java.util.ArrayList<>();
         for (Widget tc = window.lchild; tc != null; tc = tc.prev) {
             if (tc instanceof Label) {
                 String text = ((Label)tc).text();
-                // Only include labels that end with ":" as those are fish names
                 if (text != null && text.endsWith(":")) {
-                    // Remove the trailing ":"
-                    String fishName = text.substring(0, text.length() - 1).trim();
-                    if (!fishName.isEmpty()) {
-                        fishLabels.put(fishName, (Label)tc);
-                    }
+                    colonLabels.add((Label)tc);
                 }
+            }
+        }
+
+        // Skip the last one in the list (which is the first/top one in the window - the title)
+        Map<String, Label> fishLabels = new HashMap<>();
+        for (int i = 0; i < colonLabels.size() - 1; i++) {
+            Label fishLabel = colonLabels.get(i);
+            String text = fishLabel.text();
+            // Remove the trailing ":"
+            String fishName = text.substring(0, text.length() - 1).trim();
+            if (!fishName.isEmpty()) {
+                fishLabels.put(fishName, fishLabel);
             }
         }
 

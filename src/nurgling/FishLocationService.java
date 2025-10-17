@@ -41,7 +41,8 @@ public class FishLocationService {
 
             // Get current grid and segment info
             MCache mcache = gui.map.glob.map;
-            Coord gridCoord = playerPosition.floor(MCache.tilesz).div(MCache.cmaps);
+            Coord tc = playerPosition.floor(MCache.tilesz);  // Tile coordinate in world
+            Coord gridCoord = tc.div(MCache.cmaps);  // Grid coordinate
             MCache.Grid grid = mcache.getgrid(gridCoord);
 
             MapFile mapFile = gui.mmap.file;
@@ -49,7 +50,10 @@ public class FishLocationService {
             if (info == null) return;
 
             long segmentId = info.seg;
-            Coord tileCoords = playerPosition.floor(MCache.tilesz);
+
+            // Calculate segment-relative coordinate (same as SMarker creation in MiniMap.java:773)
+            // sc = tc + (info.sc - grid.gc) * cmaps
+            Coord segmentCoord = tc.add(info.sc.sub(grid.gc).mul(MCache.cmaps));
 
             // Get fish resource path from VSpec
             String fishResource = getFishResourcePath(fishName);
@@ -60,7 +64,7 @@ public class FishLocationService {
 
             lock.writeLock().lock();
             try {
-                FishLocation location = new FishLocation(segmentId, tileCoords, fishName, fishResource);
+                FishLocation location = new FishLocation(segmentId, segmentCoord, fishName, fishResource);
                 fishLocations.put(location.getLocationId(), location);
                 saveFishLocations();
                 gui.msg("Saved " + fishName + " location", java.awt.Color.GREEN);
