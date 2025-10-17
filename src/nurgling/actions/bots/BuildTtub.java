@@ -8,15 +8,18 @@ import nurgling.actions.Action;
 import nurgling.actions.Build;
 import nurgling.actions.Results;
 import nurgling.tools.NAlias;
+import nurgling.overlays.BuildGhostPreview;
+import haven.Gob;
 
 public class BuildTtub implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        try {
         Build.Command command = new Build.Command();
         command.name = "Tanning Tub";
 
         NUtils.getGameUI().msg("Please, select build area");
-        SelectArea buildarea = new SelectArea(Resource.loadsimg("baubles/buildArea"));
+        SelectAreaWithPreview buildarea = new SelectAreaWithPreview(Resource.loadsimg("baubles/buildArea"), "Tanning Tub");
         buildarea.run(NUtils.getGameUI());
 
         NUtils.getGameUI().msg("Please, select area for board");
@@ -32,5 +35,15 @@ public class BuildTtub implements Action {
 
         new Build(command, buildarea.getRCArea()).run(gui);
         return Results.SUCCESS();
+        } finally {
+            // Always clean up ghost preview when bot finishes or is interrupted
+            Gob player = NUtils.player();
+            if (player != null) {
+                Gob.Overlay ghostOverlay = player.findol(BuildGhostPreview.class);
+                if (ghostOverlay != null) {
+                    ghostOverlay.remove();
+                }
+            }
+        }
     }
 }
