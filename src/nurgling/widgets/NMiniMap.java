@@ -545,6 +545,12 @@ public class NMiniMap extends MiniMap {
         NGameUI gui = NUtils.getGameUI();
         if(gui == null || gui.fishLocationService == null) return;
 
+        // Check if markers are hidden (respect "Hide Markers" button)
+        MapWnd mapwnd = gui.mapfile;
+        if(mapwnd != null && Utils.eq(mapwnd.markcfg, MapWnd.MarkerConfig.hideall)) {
+            return; // Don't draw fish locations when markers are hidden
+        }
+
         // Use sessloc.seg.id like waypoints and markers do
         java.util.List<nurgling.FishLocation> fishLocations = gui.fishLocationService.getFishLocationsForSegment(sessloc.seg.id);
 
