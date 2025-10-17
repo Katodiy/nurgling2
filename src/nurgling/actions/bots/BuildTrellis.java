@@ -20,8 +20,8 @@ public class BuildTrellis implements Action {
         Build.Command command = new Build.Command();
         command.name = "Trellis";
 
-        NUtils.getGameUI().msg("Please, select build area");
-        SelectArea buildarea = new SelectArea(Resource.loadsimg("baubles/buildArea"));
+        NUtils.getGameUI().msg("Please, select build area and choose direction");
+        SelectAreaWithRotation buildarea = new SelectAreaWithRotation(Resource.loadsimg("baubles/buildArea"));
         buildarea.run(NUtils.getGameUI());
 
         NUtils.getGameUI().msg("Please, select area for blocks");
@@ -35,7 +35,7 @@ public class BuildTrellis implements Action {
         command.ingredients.add(new Build.Ingredient(new Coord(1,1), stringarea.getRCArea(), new NAlias("Flax Fibres", "Hemp Fibres", "Spindly Taproot", "Cattail Fibres", "Stinging Nettle", "Hide Strap", "Straw Twine", "Bark Cordage"), 1));
 
         Pair<Coord2d, Coord2d> area = buildarea.getRCArea();
-        boolean needRotate = (Math.abs(area.b.x - area.a.x) < Math.abs(area.b.y - area.a.y));
+        boolean needRotate = buildarea.getRotation();
 
         for(Build.Ingredient ingredient: command.ingredients) {
             if (ingredient.area != null) {
