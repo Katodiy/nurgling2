@@ -13,19 +13,6 @@ import java.awt.image.BufferedImage;
 
 public class SelectAreaWithRotation implements Action {
 
-    public SelectAreaWithRotation() {
-
-    }
-
-    public SelectAreaWithRotation(BufferedImage image) {
-        this.image = image;
-    }
-
-    public SelectAreaWithRotation(BufferedImage image, BufferedImage Spr) {
-        this.image = image;
-        this.spr = Spr;
-    }
-
     public SelectAreaWithRotation(BufferedImage image, NHitBox hitBox) {
         this.image = image;
         this.trellisHitBox = hitBox;
@@ -103,10 +90,6 @@ public class SelectAreaWithRotation implements Action {
         if (begin != null)
             return new Pair<Coord2d, Coord2d>(begin.mul(MCache.tilesz), end.sub(1, 1).mul(MCache.tilesz).add(MCache.tilesz));
         return null;
-    }
-
-    public int getOrientation() {
-        return orientation;
     }
 
     public boolean getRotation() {

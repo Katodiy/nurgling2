@@ -60,7 +60,8 @@ public class BuildTrellis implements Action {
         buildarea.run(NUtils.getGameUI());
 
         Pair<Coord2d, Coord2d> area = buildarea.getRCArea();
-        boolean needRotate = buildarea.getRotation();
+        int orientation = buildarea.orientation;
+        boolean needRotate = (orientation >= 2);
 
         for(Build.Ingredient ingredient: command.ingredients) {
             if (ingredient.area != null) {
@@ -114,7 +115,7 @@ public class BuildTrellis implements Action {
             plob = NUtils.getGameUI().map.placing.get();
             plob.a = needRotate ? Math.PI / 2 : 0;
 
-            pos = findFreePlaceWithLimit(area, needRotate ? plob.ngob.hitBox.rotate() : plob.ngob.hitBox, tileCount);
+            pos = findFreePlaceWithLimit(area, needRotate ? plob.ngob.hitBox.rotate() : plob.ngob.hitBox, tileCount, orientation);
 
             if(pos == null) {
                 break;
@@ -187,7 +188,7 @@ public class BuildTrellis implements Action {
         return Results.SUCCESS();
     }
 
-    private Coord2d findFreePlaceWithLimit(Pair<Coord2d, Coord2d> area, NHitBox hitBox, HashMap<Coord, Integer> tileCount) {
+    private Coord2d findFreePlaceWithLimit(Pair<Coord2d, Coord2d> area, NHitBox hitBox, HashMap<Coord, Integer> tileCount, int orientation) {
         ArrayList<NHitBoxD> significantGobs = new ArrayList<>();
         NHitBoxD chekerOfArea = new NHitBoxD(area.a, area.b);
 
@@ -207,27 +208,70 @@ public class BuildTrellis implements Action {
             }
         }
 
-        Coord inchMax = area.b.sub(area.a).floor();
+        // Calculate which tiles are in the area
+        Coord tileBegin = area.a.floor(MCache.tilesz);
+        Coord tileEnd = area.b.sub(1, 1).floor(MCache.tilesz);
+
+        // Determine search order based on orientation to pack against specific edge
+        // 0=NS-East (pack to right), 1=NS-West (pack to left)
+        // 2=EW-North (pack to top), 3=EW-South (pack to bottom)
+        boolean reverseX = (orientation == 0); // NS-East: start from right
+        boolean reverseY = (orientation == 3); // EW-South: start from bottom
+
+        int step = 2;
         Coord margin = hitBox.end.sub(hitBox.begin).floor(2, 2);
 
-        for (int i = margin.x; i <= inchMax.x - margin.x; i++) {
-            for (int j = margin.y; j <= inchMax.y - margin.y; j++) {
-                Coord2d testPos = area.a.add(i, j);
-                Coord tile = testPos.floor(MCache.tilesz);
+        // Iterate tile by tile to ensure proper alignment
+        for (int tx = tileBegin.x; tx <= tileEnd.x; tx++) {
+            for (int ty = tileBegin.y; ty <= tileEnd.y; ty++) {
+                Coord tile = new Coord(tx, ty);
 
+                // Skip tiles that already have enough trellises
                 if(tileCount.getOrDefault(tile, 0) >= TRELLIS_PER_TILE) {
                     continue;
                 }
 
-                boolean passed = true;
-                NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, testPos, 0);
-                for (NHitBoxD significantHitbox : significantGobs) {
-                    if(significantHitbox.intersects(testGobBox, false))
-                        passed = false;
-                }
+                // Calculate the bounds for this specific tile
+                Coord2d tileStart = tile.mul(MCache.tilesz);
+                Coord2d tileEndPos = tileStart.add(MCache.tilesz.x, MCache.tilesz.y);
 
-                if(passed)
-                    return Coord2d.of(testGobBox.rc.x, testGobBox.rc.y);
+                // Clamp to the selected area
+                Coord2d searchStart = new Coord2d(
+                    Math.max(tileStart.x, area.a.x),
+                    Math.max(tileStart.y, area.a.y)
+                );
+                Coord2d searchEnd = new Coord2d(
+                    Math.min(tileEndPos.x, area.b.x),
+                    Math.min(tileEndPos.y, area.b.y)
+                );
+
+                Coord searchRange = searchEnd.sub(searchStart).floor();
+
+                // Search within this tile only, using small step for tight packing
+                for (int ii = 0; ii <= searchRange.x - margin.x * 2; ii += step) {
+                    int i = reverseX ? (searchRange.x - margin.x - ii) : (margin.x + ii);
+                    for (int jj = 0; jj <= searchRange.y - margin.y * 2; jj += step) {
+                        int j = reverseY ? (searchRange.y - margin.y - jj) : (margin.y + jj);
+                        Coord2d testPos = searchStart.add(i, j);
+
+                        // Check collisions
+                        NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, testPos, 0);
+                        boolean passed = true;
+                        for (NHitBoxD significantHitbox : significantGobs) {
+                            if(significantHitbox.intersects(testGobBox, false)) {
+                                passed = false;
+                                break;
+                            }
+                        }
+
+                        if(passed) {
+                            // Calculate center position of the hitbox at testPos
+                            double centerX = testPos.x + (hitBox.end.x + hitBox.begin.x) / 2.0;
+                            double centerY = testPos.y + (hitBox.end.y + hitBox.begin.y) / 2.0;
+                            return new Coord2d(centerX, centerY);
+                        }
+                    }
+                }
             }
         }
         return null;
