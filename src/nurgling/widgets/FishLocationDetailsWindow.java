@@ -20,37 +20,28 @@ public class FishLocationDetailsWindow extends Window {
         Widget content = add(new Widget(new Coord(UI.scale(280), UI.scale(200))), UI.scale(10), UI.scale(10));
 
         int y = 0;
-        int lineHeight = UI.scale(20);
+        int lineHeight = UI.scale(18);
 
-        // Fish name (title)
-        Text.Foundry titleFont = new Text.Foundry(Text.dfont, 14).aa(true);
-        content.add(new Label(fishLocation.getFishName(), titleFont), 0, y);
+        // All text uses same simple font
+        content.add(new Label(fishLocation.getFishName()), 0, y);
+        y += lineHeight + UI.scale(3);
+
+        content.add(new Label("Catch Rate: " + fishLocation.getPercentage()), 0, y);
         y += lineHeight + UI.scale(5);
 
-        // Percentage
-        Text.Foundry normalFont = new Text.Foundry(Text.dfont, 10).aa(true);
-        content.add(new Label("Catch Rate: " + fishLocation.getPercentage(), normalFont), 0, y);
+        content.add(new Label("Equipment:"), 0, y);
         y += lineHeight;
 
-        // Separator
-        y += UI.scale(5);
-
-        // Equipment section header
-        Text.Foundry headerFont = new Text.Foundry(Text.dfont, 12).aa(true);
-        content.add(new Label("Equipment Used:", headerFont), 0, y);
+        content.add(new Label("  Rod: " + fishLocation.getFishingRod()), 0, y);
         y += lineHeight;
 
-        // Equipment details
-        content.add(new Label("Rod: " + fishLocation.getFishingRod(), normalFont), UI.scale(10), y);
+        content.add(new Label("  Hook: " + fishLocation.getHook()), 0, y);
         y += lineHeight;
 
-        content.add(new Label("Hook: " + fishLocation.getHook(), normalFont), UI.scale(10), y);
+        content.add(new Label("  Line: " + fishLocation.getLine()), 0, y);
         y += lineHeight;
 
-        content.add(new Label("Line: " + fishLocation.getLine(), normalFont), UI.scale(10), y);
-        y += lineHeight;
-
-        content.add(new Label("Bait: " + fishLocation.getBait(), normalFont), UI.scale(10), y);
+        content.add(new Label("  Bait: " + fishLocation.getBait()), 0, y);
         y += lineHeight + UI.scale(10);
 
         // Buttons at the bottom
@@ -80,5 +71,14 @@ public class FishLocationDetailsWindow extends Window {
         add(closeBtn, UI.scale(170), buttonY);
 
         pack();
+    }
+
+    @Override
+    public void wdgmsg(Widget sender, String msg, Object... args) {
+        if (msg.equals("close")) {
+            destroy();
+        } else {
+            super.wdgmsg(sender, msg, args);
+        }
     }
 }

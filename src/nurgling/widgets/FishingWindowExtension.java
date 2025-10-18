@@ -47,16 +47,18 @@ public class FishingWindowExtension {
                 if (text != null && text.endsWith(":") && !text.equals("This is bait:") && !text.equals("There are fish around:")) {
                     String fishName = text.substring(0, text.length() - 1).trim();
 
-                    // Find the next label with a percentage
+                    // Find the LAST percentage label (there are 3 per fish, we want the final one)
                     String percentage = "Unknown";
                     for (int j = i + 1; j < widgetList.size(); j++) {
                         Widget next = widgetList.get(j);
                         if (next instanceof Label) {
                             String nextText = ((Label)next).text();
                             if (nextText != null && nextText.contains("%")) {
-                                percentage = nextText;
-                                break;
+                                percentage = nextText; // Keep updating to get the last one
                             }
+                        } else if (next instanceof Button) {
+                            // Stop when we hit a button (end of this fish's data)
+                            break;
                         }
                     }
 
