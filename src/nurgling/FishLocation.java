@@ -13,6 +13,7 @@ public class FishLocation {
     private final Coord tileCoords;
     private final String fishName;        // e.g., "Asp", "Salmon"
     private final String fishResource;    // e.g., "gfx/invobjs/fish-asp"
+    private final String percentage;      // e.g., "7%", "95%"
     private final long timestamp;         // When it was saved
 
     // Fishing equipment information
@@ -22,11 +23,12 @@ public class FishLocation {
     private final String bait;            // e.g., "Woodfish Lure" or "Earthworm"
 
     public FishLocation(long segmentId, Coord tileCoords, String fishName, String fishResource,
-                       String fishingRod, String hook, String line, String bait) {
+                       String percentage, String fishingRod, String hook, String line, String bait) {
         this.segmentId = segmentId;
         this.tileCoords = tileCoords;
         this.fishName = fishName;
         this.fishResource = fishResource;
+        this.percentage = percentage;
         this.fishingRod = fishingRod;
         this.hook = hook;
         this.line = line;
@@ -42,6 +44,9 @@ public class FishLocation {
         this.fishName = json.getString("fishName");
         this.fishResource = json.getString("fishResource");
         this.timestamp = json.getLong("timestamp");
+
+        // Load percentage (with default for backwards compatibility)
+        this.percentage = json.optString("percentage", "Unknown");
 
         // Load equipment info (with defaults for backwards compatibility)
         this.fishingRod = json.optString("fishingRod", "Unknown");
@@ -63,6 +68,7 @@ public class FishLocation {
         json.put("tileY", tileCoords.y);
         json.put("fishName", fishName);
         json.put("fishResource", fishResource);
+        json.put("percentage", percentage);
         json.put("timestamp", timestamp);
 
         // Save equipment info
@@ -80,6 +86,7 @@ public class FishLocation {
     public Coord getTileCoords() { return tileCoords; }
     public String getFishName() { return fishName; }
     public String getFishResource() { return fishResource; }
+    public String getPercentage() { return percentage; }
     public long getTimestamp() { return timestamp; }
     public String getFishingRod() { return fishingRod; }
     public String getHook() { return hook; }

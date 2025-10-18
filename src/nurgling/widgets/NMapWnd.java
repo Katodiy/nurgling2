@@ -72,14 +72,6 @@ public class NMapWnd extends MapWnd {
                         return true; // Consume the event
                     }
                 }
-
-                // Alt+right-click for fish locations
-                if(ev.b == 3 && ui.modmeta) {
-                    // Check if there's a fish location at this position
-                    if(handleFishLocationClick(viewCoord)) {
-                        return true; // Consume the event
-                    }
-                }
             }
         }
 
@@ -102,8 +94,14 @@ public class NMapWnd extends MapWnd {
                     }
                 }
 
-                // Right-click to clear waypoint queue
+                // Right-click for fish location details or clear waypoint queue
                 if(ev.b == 3) {
+                    // Check if there's a fish location at this position first
+                    if(handleFishLocationClick(viewCoord)) {
+                        return true; // Consume the event
+                    }
+
+                    // Otherwise, clear waypoint queue
                     NGameUI gui = (NGameUI) NUtils.getGameUI();
                     if(gui != null && gui.waypointMovementService != null) {
                         gui.waypointMovementService.clearQueue();
@@ -169,8 +167,9 @@ public class NMapWnd extends MapWnd {
             Coord screenPos = loc.getTileCoords().sub(view.dloc.tc).div(view.scalef()).add(hsz);
 
             if(c.dist(screenPos) < threshold) {
-                gui.fishLocationService.removeFishLocation(loc.getLocationId());
-                gui.msg("Removed " + loc.getFishName() + " location", java.awt.Color.YELLOW);
+                // Open details window for this fish location
+                FishLocationDetailsWindow detailsWnd = new FishLocationDetailsWindow(loc, gui);
+                gui.add(detailsWnd, new Coord(100, 100));
                 return true;
             }
         }

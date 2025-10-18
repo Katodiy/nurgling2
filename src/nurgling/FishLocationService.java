@@ -36,7 +36,7 @@ public class FishLocationService {
     /**
      * Save a fish location from the fishing menu
      */
-    public void saveFishLocation(String fishName, Coord2d playerPosition) {
+    public void saveFishLocation(String fishName, String percentage, Coord2d playerPosition) {
         try {
             if (gui.map == null) return;
 
@@ -69,10 +69,10 @@ public class FishLocationService {
             lock.writeLock().lock();
             try {
                 FishLocation location = new FishLocation(segmentId, segmentCoord, fishName, fishResource,
-                    equipment.fishingRod, equipment.hook, equipment.line, equipment.bait);
+                    percentage, equipment.fishingRod, equipment.hook, equipment.line, equipment.bait);
                 fishLocations.put(location.getLocationId(), location);
                 saveFishLocations();
-                gui.msg("Saved " + fishName + " location", java.awt.Color.GREEN);
+                gui.msg("Saved " + fishName + " location (" + percentage + ")", java.awt.Color.GREEN);
             } finally {
                 lock.writeLock().unlock();
             }

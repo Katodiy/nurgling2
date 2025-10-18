@@ -431,16 +431,8 @@ public class NMiniMap extends MiniMap {
                         Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
 
                         if(c.dist(screenPos) < threshold) {
-                            // Build tooltip with fish name and equipment info
-                            StringBuilder tooltip = new StringBuilder();
-                            tooltip.append(loc.getFishName());
-                            tooltip.append("\n\nEquipment:");
-                            tooltip.append("\nRod: ").append(loc.getFishingRod());
-                            tooltip.append("\nHook: ").append(loc.getHook());
-                            tooltip.append("\nLine: ").append(loc.getLine());
-                            tooltip.append("\nBait: ").append(loc.getBait());
-                            tooltip.append("\n\nAlt+RClick - delete");
-                            return Text.render(tooltip.toString());
+                            // Simple tooltip with just the fish name
+                            return Text.render(loc.getFishName());
                         }
                     }
                 }
@@ -733,17 +725,25 @@ public class NMiniMap extends MiniMap {
 
     @Override
     public boolean mouseup(MouseUpEvent ev) {
-        // Handle right-click release on fish location
-        if(ev.b == 3 && dloc != null) { // Button 3 is right-click
-            Coord tc = ev.c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
-            nurgling.FishLocation fishLoc = fishLocationAt(tc);
-            if(fishLoc != null) {
-                NGameUI gui = NUtils.getGameUI();
-                if(gui != null && gui.fishLocationService != null) {
-                    gui.fishLocationService.removeFishLocation(fishLoc.getLocationId());
-                    gui.msg("Removed " + fishLoc.getFishName() + " location", java.awt.Color.YELLOW);
+        // Handle right-click release on fish location - open details window
+        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-click
+            NGameUI gui = NUtils.getGameUI();
+            if(gui != null && gui.fishLocationService != null) {
+                // Check for fish location at click position (in screen space)
+                java.util.List<nurgling.FishLocation> locations = gui.fishLocationService.getFishLocationsForSegment(sessloc.seg.id);
+                int threshold = UI.scale(10);
+                Coord hsz = sz.div(2);
+
+                for(nurgling.FishLocation loc : locations) {
+                    Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+
+                    if(ev.c.dist(screenPos) < threshold) {
+                        // Open details window for this fish location
+                        FishLocationDetailsWindow detailsWnd = new FishLocationDetailsWindow(loc, gui);
+                        gui.add(detailsWnd, new Coord(100, 100));
+                        return true;
+                    }
                 }
-                return true;
             }
         }
         return super.mouseup(ev);
