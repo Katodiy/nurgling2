@@ -47,12 +47,14 @@ public class BuildTrellis implements Action {
                 MapView.Plob plob = NUtils.getGameUI().map.placing.get();
                 NHitBox trellisHitBox = plob.ngob.hitBox;
 
+
                 // Properly cancel the placement cursor - we'll restart it later
                 if (NUtils.getGameUI().map.placing != null) {
                     plob.delattr(ResDrawable.class);
                     NUtils.getGameUI().map.placing.cancel();
                     NUtils.getGameUI().map.placing = null;
                 }
+
 
                 // First select build area with ghost previews
                 NUtils.getGameUI().msg("Please, select build area and choose direction");
