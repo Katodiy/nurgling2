@@ -27,6 +27,12 @@ public class FishLocationDetailsWindow extends Window {
         y += lineHeight + UI.scale(3);
 
         content.add(new Label("Catch Rate: " + fishLocation.getPercentage()), 0, y);
+        y += lineHeight;
+
+        content.add(new Label("Time: " + fishLocation.getGameTime()), 0, y);
+        y += lineHeight;
+
+        content.add(new Label("Moon: " + fishLocation.getMoonPhase()), 0, y);
         y += lineHeight + UI.scale(5);
 
         content.add(new Label("Equipment:"), 0, y);

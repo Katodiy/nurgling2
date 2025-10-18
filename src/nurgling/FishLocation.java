@@ -16,6 +16,10 @@ public class FishLocation {
     private final String percentage;      // e.g., "7%", "95%"
     private final long timestamp;         // When it was saved
 
+    // In-game time and moon phase when saved
+    private final String gameTime;        // e.g., "12:45"
+    private final String moonPhase;       // e.g., "Full Moon"
+
     // Fishing equipment information
     private final String fishingRod;      // e.g., "Primitive Casting-Rod"
     private final String hook;            // e.g., "Bone Hook"
@@ -23,12 +27,15 @@ public class FishLocation {
     private final String bait;            // e.g., "Woodfish Lure" or "Earthworm"
 
     public FishLocation(long segmentId, Coord tileCoords, String fishName, String fishResource,
-                       String percentage, String fishingRod, String hook, String line, String bait) {
+                       String percentage, String gameTime, String moonPhase,
+                       String fishingRod, String hook, String line, String bait) {
         this.segmentId = segmentId;
         this.tileCoords = tileCoords;
         this.fishName = fishName;
         this.fishResource = fishResource;
         this.percentage = percentage;
+        this.gameTime = gameTime;
+        this.moonPhase = moonPhase;
         this.fishingRod = fishingRod;
         this.hook = hook;
         this.line = line;
@@ -47,6 +54,10 @@ public class FishLocation {
 
         // Load percentage (with default for backwards compatibility)
         this.percentage = json.optString("percentage", "Unknown");
+
+        // Load time and moon phase (with defaults for backwards compatibility)
+        this.gameTime = json.optString("gameTime", "Unknown");
+        this.moonPhase = json.optString("moonPhase", "Unknown");
 
         // Load equipment info (with defaults for backwards compatibility)
         this.fishingRod = json.optString("fishingRod", "Unknown");
@@ -71,6 +82,10 @@ public class FishLocation {
         json.put("percentage", percentage);
         json.put("timestamp", timestamp);
 
+        // Save time and moon phase
+        json.put("gameTime", gameTime);
+        json.put("moonPhase", moonPhase);
+
         // Save equipment info
         json.put("fishingRod", fishingRod);
         json.put("hook", hook);
@@ -88,6 +103,8 @@ public class FishLocation {
     public String getFishResource() { return fishResource; }
     public String getPercentage() { return percentage; }
     public long getTimestamp() { return timestamp; }
+    public String getGameTime() { return gameTime; }
+    public String getMoonPhase() { return moonPhase; }
     public String getFishingRod() { return fishingRod; }
     public String getHook() { return hook; }
     public String getLine() { return line; }

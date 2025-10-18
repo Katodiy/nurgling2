@@ -66,10 +66,28 @@ public class FishLocationService {
             // Extract fishing equipment information
             FishingEquipment equipment = getFishingEquipment();
 
+            // Get current in-game time and moon phase
+            String gameTime = "Unknown";
+            String moonPhase = "Unknown";
+            try {
+                if (gui.map != null && gui.map.glob != null && gui.map.glob.ast != null) {
+                    haven.Astronomy ast = gui.map.glob.ast;
+                    gameTime = String.format("%02d:%02d", ast.hh, ast.mm);
+
+                    // Calculate moon phase
+                    haven.Resource moon = haven.Resource.local().loadwait("gfx/hud/calendar/moon");
+                    haven.Resource.Anim moonAnim = moon.layer(haven.Resource.animc);
+                    int moonPhaseIndex = (int)Math.round(ast.mp * (double)moonAnim.f.length) % moonAnim.f.length;
+                    moonPhase = haven.Astronomy.phase[moonPhaseIndex];
+                }
+            } catch (Exception e) {
+                System.err.println("Error getting time/moon phase: " + e);
+            }
+
             lock.writeLock().lock();
             try {
                 FishLocation location = new FishLocation(segmentId, segmentCoord, fishName, fishResource,
-                    percentage, equipment.fishingRod, equipment.hook, equipment.line, equipment.bait);
+                    percentage, gameTime, moonPhase, equipment.fishingRod, equipment.hook, equipment.line, equipment.bait);
                 fishLocations.put(location.getLocationId(), location);
                 saveFishLocations();
                 gui.msg("Saved " + fishName + " location (" + percentage + ")", java.awt.Color.GREEN);
