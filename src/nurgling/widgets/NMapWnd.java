@@ -94,18 +94,14 @@ public class NMapWnd extends MapWnd {
                     }
                 }
 
-                // Right-click for fish location details or clear waypoint queue
-                if(ev.b == 3) {
-                    // Check if there's a fish location at this position first
-                    if(handleFishLocationClick(viewCoord)) {
-                        return true; // Consume the event
-                    }
-
-                    // Otherwise, clear waypoint queue
+                // Right-click for clearing waypoint queue (fish handling is in parent NMiniMap)
+                if(ev.b == 3 && !ui.modshift) {
+                    // Clear waypoint queue on regular right-click (if not on fish/marker)
                     NGameUI gui = (NGameUI) NUtils.getGameUI();
                     if(gui != null && gui.waypointMovementService != null) {
                         gui.waypointMovementService.clearQueue();
                     }
+                    // Let parent handle fish location clicks and other right-click behavior
                 }
             }
         }
@@ -144,33 +140,6 @@ public class NMapWnd extends MapWnd {
             NGameUI gui = (NGameUI) NUtils.getGameUI();
             if(gui != null && gui.localizedResourceTimerService != null) {
                 return gui.localizedResourceTimerService.handleResourceClick(smarker);
-            }
-        }
-
-        return false;
-    }
-
-    private boolean handleFishLocationClick(Coord c) {
-        // c is in view coordinates, check for fish locations in screen space
-        if(view.sessloc == null || view.dloc == null) return false;
-
-        NGameUI gui = (NGameUI) NUtils.getGameUI();
-        if(gui == null || gui.fishLocationService == null) return false;
-
-        // Find fish location at this position (check in screen space)
-        java.util.List<nurgling.FishLocation> locations = gui.fishLocationService.getFishLocationsForSegment(view.sessloc.seg.id);
-        int threshold = UI.scale(10); // Screen pixels
-        Coord hsz = view.sz.div(2);
-
-        for(nurgling.FishLocation loc : locations) {
-            // Convert segment-relative coordinates to screen coordinates (same as drawing)
-            Coord screenPos = loc.getTileCoords().sub(view.dloc.tc).div(view.scalef()).add(hsz);
-
-            if(c.dist(screenPos) < threshold) {
-                // Open details window for this fish location
-                FishLocationDetailsWindow detailsWnd = new FishLocationDetailsWindow(loc, gui);
-                gui.add(detailsWnd, new Coord(100, 100));
-                return true;
             }
         }
 
