@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.NGameUI;
 import nurgling.NGob;
 import nurgling.NUtils;
+import nurgling.overlays.BuildGhostPreview;
 import nurgling.tasks.*;
 import nurgling.tools.*;
 

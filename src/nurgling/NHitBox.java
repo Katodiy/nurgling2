@@ -167,7 +167,7 @@ public class NHitBox
     }
 
     public NHitBox rotate(){
-        return new NHitBox(new Coord((int) begin.y, (int) begin.x),new Coord((int) end.y, (int) end.x));
+        return new NHitBox(new Coord((int) begin.y, (int) begin.x),new Coord((int) end.y, (int) end.x), true);
     }
 
     @Override
