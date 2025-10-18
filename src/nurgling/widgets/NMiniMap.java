@@ -99,6 +99,7 @@ public class NMiniMap extends MiniMap {
         drawtempmarks(g);
         drawterrainname(g);
         drawResourceTimers(g);
+        drawFishLocations(g);
         drawQueuedWaypoints(g);  // Draw waypoint visualization
     }
 
@@ -348,13 +349,39 @@ public class NMiniMap extends MiniMap {
     @Override
     public void drawmarkers(GOut g) {
         Coord hsz = sz.div(2);
+
+        // Get search pattern from NMapWnd if we're inside one
+        String searchPattern = null;
+        Widget parentWidget = this.parent;
+        while(parentWidget != null) {
+            if(parentWidget instanceof NMapWnd) {
+                searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                break;
+            }
+            parentWidget = parentWidget.parent;
+        }
+
         for(Coord c : dgext) {
             DisplayGrid dgrid = display[dgext.ri(c)];
             if(dgrid == null)
                 continue;
             for(DisplayMarker mark : dgrid.markers(true)) {
+                // First check the normal filter (marker config, etc.)
                 if(filter(mark))
                     continue;
+
+                // Then check search pattern filter
+                if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                    String markerName = mark.m.nm;
+                    if(markerName == null) {
+                        continue; // Hide markers with no name when searching
+                    }
+                    // Show only markers that contain the search pattern (case-insensitive)
+                    if(!markerName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                        continue; // Hide markers that don't match
+                    }
+                }
+
                 mark.draw(g, mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz));
             }
         }
@@ -362,13 +389,61 @@ public class NMiniMap extends MiniMap {
 
     @Override
     public Object tooltip(Coord c, Widget prev) {
-        if(dloc != null) {
+        if(dloc != null && sessloc != null) {
+            Coord hsz = sz.div(2);
+
+            // Check for fish location tooltip first (check in screen space)
+            NGameUI gui = NUtils.getGameUI();
+            if(gui != null && gui.fishLocationService != null) {
+                // Check if markers are hidden (respect "Hide Markers" button)
+                MapWnd mapwnd = gui.mapfile;
+                boolean markersHidden = (mapwnd != null && Utils.eq(mapwnd.markcfg, MapWnd.MarkerConfig.hideall));
+
+                if(!markersHidden) {
+                    // Get search pattern from NMapWnd if we're inside one
+                    String searchPattern = null;
+                    Widget parentWidget = this.parent;
+                    while(parentWidget != null) {
+                        if(parentWidget instanceof NMapWnd) {
+                            searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                            break;
+                        }
+                        parentWidget = parentWidget.parent;
+                    }
+
+                    java.util.List<nurgling.FishLocation> locations = gui.fishLocationService.getFishLocationsForSegment(sessloc.seg.id);
+                    int threshold = UI.scale(10); // Screen pixels
+
+                    for(nurgling.FishLocation loc : locations) {
+                        // Apply search pattern filter (same as drawing)
+                        if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                            String fishName = loc.getFishName();
+                            if(fishName == null) {
+                                continue; // Skip fish with no name when searching
+                            }
+                            // Show only fish that contain the search pattern (case-insensitive)
+                            if(!fishName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                                continue; // Skip fish that don't match
+                            }
+                        }
+
+                        // Convert segment-relative coordinates to screen coordinates (same as drawing)
+                        Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+
+                        if(c.dist(screenPos) < threshold) {
+                            // Simple tooltip with just the fish name
+                            return Text.render(loc.getFishName());
+                        }
+                    }
+                }
+            }
+
             Coord tc = c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
             DisplayMarker mark = markerat(tc);
             if(mark != null) {
                 return(mark.tip);
             }
-            
+
             // Get terrain type tooltip
             String terrainInfo = getTerrainTooltip(c);
             if(terrainInfo != null) {
@@ -482,18 +557,18 @@ public class NMiniMap extends MiniMap {
 
         NGameUI gui = NUtils.getGameUI();
         if(gui == null || gui.localizedResourceTimerService == null) return;
-        
+
         java.util.List<LocalizedResourceTimer> timers = gui.localizedResourceTimerService.getTimersForSegment(dloc.seg.id);
 
         Coord hsz = sz.div(2);
-        
+
         // Create bordered text furnaces for timer display (like barrel names and character nicknames)
         Text.Furnace readyTimerFurnace = new PUtils.BlurFurn(
-            new Text.Foundry(Text.dfont, UI.scale(9), Color.GREEN).aa(true), 
+            new Text.Foundry(Text.dfont, UI.scale(9), Color.GREEN).aa(true),
             2, 1, Color.BLACK
         );
         Text.Furnace activeTimerFurnace = new PUtils.BlurFurn(
-            new Text.Foundry(Text.dfont, UI.scale(9), Color.WHITE).aa(true), 
+            new Text.Foundry(Text.dfont, UI.scale(9), Color.WHITE).aa(true),
             2, 1, Color.BLACK
         );
 
@@ -506,7 +581,7 @@ public class NMiniMap extends MiniMap {
                screenPos.y >= 0 && screenPos.y <= sz.y) {
 
                 String timeText = timer.getFormattedRemainingTime();
-                
+
                 // Use appropriate furnace based on timer state
                 Text.Furnace furnace = timer.isExpired() ? readyTimerFurnace : activeTimerFurnace;
                 Text timerDisplay = furnace.render(timeText);
@@ -518,5 +593,159 @@ public class NMiniMap extends MiniMap {
                 g.image(timerDisplay.tex(), textPos);
             }
         }
+    }
+
+    private void drawFishLocations(GOut g) {
+        if(sessloc == null || dloc == null) return;
+
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || gui.fishLocationService == null) return;
+
+        // Check if markers are hidden (respect "Hide Markers" button)
+        MapWnd mapwnd = gui.mapfile;
+        if(mapwnd != null && Utils.eq(mapwnd.markcfg, MapWnd.MarkerConfig.hideall)) {
+            return; // Don't draw fish locations when markers are hidden
+        }
+
+        // Get search pattern from NMapWnd if we're inside one
+        String searchPattern = null;
+        Widget parentWidget = this.parent;
+        while(parentWidget != null) {
+            if(parentWidget instanceof NMapWnd) {
+                searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                break;
+            }
+            parentWidget = parentWidget.parent;
+        }
+
+        // Use sessloc.seg.id like waypoints and markers do
+        java.util.List<nurgling.FishLocation> fishLocations = gui.fishLocationService.getFishLocationsForSegment(sessloc.seg.id);
+
+        Coord hsz = sz.div(2);
+
+        for(nurgling.FishLocation fishLoc : fishLocations) {
+            // Apply search pattern filter to fish names
+            if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                String fishName = fishLoc.getFishName();
+                if(fishName == null) {
+                    continue; // Hide fish with no name when searching
+                }
+                // Show only fish that contain the search pattern (case-insensitive)
+                if(!fishName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                    continue; // Hide fish that don't match
+                }
+            }
+
+            // Convert segment-relative coordinates to screen coordinates
+            // Same approach as markers: mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz)
+            Coord screenPos = fishLoc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+
+            // Only draw if on screen
+            if(screenPos.x >= 0 && screenPos.x <= sz.x &&
+               screenPos.y >= 0 && screenPos.y <= sz.y) {
+
+                try {
+                    // Load fish icon from resource path
+                    Resource fishRes = Resource.remote().loadwait(fishLoc.getFishResource());
+                    BufferedImage icon = fishRes.layer(Resource.imgc).img;
+                    TexI tex = new TexI(icon);
+
+                    // Draw scaled fish icon
+                    int dsz = Math.max(tex.sz().y, tex.sz().x);
+                    int targetSize = UI.scale(18);
+                    g.aimage(tex, screenPos, 0.5, 0.5, UI.scale(targetSize * tex.sz().x / dsz, targetSize * tex.sz().y / dsz));
+
+                } catch (Exception e) {
+                    // Fallback: draw colored dot if icon fails
+                    g.chcolor(0, 150, 255, 200); // Blue for fish
+                    g.fellipse(screenPos, new Coord(UI.scale(4), UI.scale(4)));
+                    g.chcolor();
+                }
+            }
+        }
+    }
+
+    private nurgling.FishLocation fishLocationAt(Coord tc) {
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || gui.fishLocationService == null || dloc == null) return null;
+
+        java.util.List<nurgling.FishLocation> locations = gui.fishLocationService.getFishLocationsForSegment(dloc.seg.id);
+        int threshold = UI.scale(10); // Click radius
+
+        for(nurgling.FishLocation loc : locations) {
+            if(loc.getTileCoords().dist(tc) < threshold) {
+                return loc;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean filter(DisplayMarker mark) {
+        // Check if we're inside an NMapWnd and if it has an active search pattern
+        Widget parent = this.parent;
+        while(parent != null) {
+            if(parent instanceof NMapWnd) {
+                NMapWnd mapWnd = (NMapWnd) parent;
+                String searchPattern = mapWnd.searchPattern;
+
+                // If search pattern is active, filter by marker name
+                if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                    String markerName = mark.m.nm;
+                    if(markerName == null) {
+                        return true; // Hide markers with no name when searching
+                    }
+                    // Show only markers that contain the search pattern (case-insensitive)
+                    if(!markerName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                        return true; // Hide markers that don't match
+                    }
+                }
+                break;
+            }
+            parent = parent.parent;
+        }
+
+        // Default: don't filter (show the marker)
+        return false;
+    }
+
+    @Override
+    public boolean mousedown(MouseDownEvent ev) {
+        // Check for right-click on fish location
+        if(ev.b == 3 && dloc != null) { // Button 3 is right-click
+            Coord tc = ev.c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
+            nurgling.FishLocation fishLoc = fishLocationAt(tc);
+            if(fishLoc != null) {
+                // Handle right-click on fish - will be processed in mouseup
+                return true;
+            }
+        }
+        return super.mousedown(ev);
+    }
+
+    @Override
+    public boolean mouseup(MouseUpEvent ev) {
+        // Handle right-click release on fish location - open details window
+        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-click
+            NGameUI gui = NUtils.getGameUI();
+            if(gui != null && gui.fishLocationService != null) {
+                // Check for fish location at click position (in screen space)
+                java.util.List<nurgling.FishLocation> locations = gui.fishLocationService.getFishLocationsForSegment(sessloc.seg.id);
+                int threshold = UI.scale(10);
+                Coord hsz = sz.div(2);
+
+                for(nurgling.FishLocation loc : locations) {
+                    Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+
+                    if(ev.c.dist(screenPos) < threshold) {
+                        // Open details window for this fish location
+                        FishLocationDetailsWindow detailsWnd = new FishLocationDetailsWindow(loc, gui);
+                        gui.add(detailsWnd, new Coord(100, 100));
+                        return true;
+                    }
+                }
+            }
+        }
+        return super.mouseup(ev);
     }
 }

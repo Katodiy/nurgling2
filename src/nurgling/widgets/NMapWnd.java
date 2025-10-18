@@ -13,6 +13,7 @@ public class NMapWnd extends MapWnd {
     public Resource.Image searchRes = null;
     public boolean needUpdate = false;
     TextEntry te;
+
     public NMapWnd(MapFile file, MapView mv, Coord sz, String title) {
         super(file, mv, sz, title);
         searchRes = Resource.local().loadwait("alttex/selectedtex").layer(Resource.imgc);
@@ -93,12 +94,14 @@ public class NMapWnd extends MapWnd {
                     }
                 }
 
-                // Right-click to clear waypoint queue
-                if(ev.b == 3) {
+                // Right-click for clearing waypoint queue (fish handling is in parent NMiniMap)
+                if(ev.b == 3 && !ui.modshift) {
+                    // Clear waypoint queue on regular right-click (if not on fish/marker)
                     NGameUI gui = (NGameUI) NUtils.getGameUI();
                     if(gui != null && gui.waypointMovementService != null) {
                         gui.waypointMovementService.clearQueue();
                     }
+                    // Let parent handle fish location clicks and other right-click behavior
                 }
             }
         }
@@ -128,18 +131,18 @@ public class NMapWnd extends MapWnd {
         // Try to find a resource marker at the clicked location
         MiniMap.Location clickLoc = view.xlate(c);
         if(clickLoc == null) return false;
-        
+
         MiniMap.DisplayMarker marker = view.markerat(clickLoc.tc);
         if(marker != null && marker.m instanceof MapFile.SMarker) {
             MapFile.SMarker smarker = (MapFile.SMarker) marker.m;
-            
+
             // Handle through service
             NGameUI gui = (NGameUI) NUtils.getGameUI();
             if(gui != null && gui.localizedResourceTimerService != null) {
                 return gui.localizedResourceTimerService.handleResourceClick(smarker);
             }
         }
-        
+
         return false;
     }
 }
