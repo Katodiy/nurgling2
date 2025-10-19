@@ -29,7 +29,8 @@ public class NMapWnd extends MapWnd {
             }
         }, view.pos("br").sub(UI.scale(200,20)));
 
-        // Add Fish button to the right of the search bar
+        // Add Fish button at top-right of map view
+        // Position it directly using view.c (top-left) + view width - button width
         add(fishMenuBtn = new Button(UI.scale(100), "Fish Search") {
             @Override
             public void click() {
@@ -52,7 +53,7 @@ public class NMapWnd extends MapWnd {
                     }
                 }
             }
-        }, view.pos("br").sub(UI.scale(100, 510)));
+        }, view.c.add(view.sz.x - UI.scale(95), UI.scale(5)));
     }
 
     public long playerSegmentId() {
@@ -79,9 +80,9 @@ public class NMapWnd extends MapWnd {
         if(te!=null)
             te.c = view.pos("br").sub(UI.scale(200,20));
 
-        // Position Fish button to the right of the search bar
+        // Position Fish button at top-right of map view
         if(fishMenuBtn != null)
-            fishMenuBtn.c = view.pos("br").sub(UI.scale(200, 20));
+            fishMenuBtn.c = view.c.add(view.sz.x - UI.scale(95), UI.scale(5));
     }
     
     @Override
