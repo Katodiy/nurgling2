@@ -14,6 +14,7 @@ public class NMapWnd extends MapWnd {
     public boolean needUpdate = false;
     TextEntry te;
     Button fishMenuBtn;
+    private static final int btnw = UI.scale(95);
 
     public NMapWnd(MapFile file, MapView mv, Coord sz, String title) {
         super(file, mv, sz, title);
@@ -28,8 +29,8 @@ public class NMapWnd extends MapWnd {
             }
         }, view.pos("br").sub(UI.scale(200,20)));
 
-        // Add Fish Menu button next to search bar
-        add(fishMenuBtn = new Button(UI.scale(80), "Fish Menu"){
+        // Add Fish button to the right of the search bar
+        add(fishMenuBtn = new Button(UI.scale(100), "Fish Search") {
             @Override
             public void click() {
                 NGameUI gui = (NGameUI) NUtils.getGameUI();
@@ -39,7 +40,7 @@ public class NMapWnd extends MapWnd {
                     fishWnd.show();
                 }
             }
-        }, view.pos("br").sub(UI.scale(290, 20)));
+        }, view.pos("br").sub(UI.scale(100, 510)));
     }
 
     public long playerSegmentId() {
@@ -65,8 +66,10 @@ public class NMapWnd extends MapWnd {
         super.resize(sz);
         if(te!=null)
             te.c = view.pos("br").sub(UI.scale(200,20));
-        if(fishMenuBtn!=null)
-            fishMenuBtn.c = view.pos("br").sub(UI.scale(290, 20));
+
+        // Position Fish button to the right of the search bar
+        if(fishMenuBtn != null)
+            fishMenuBtn.c = view.pos("br").sub(UI.scale(200, 20));
     }
     
     @Override
