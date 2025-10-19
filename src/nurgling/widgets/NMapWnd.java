@@ -35,9 +35,21 @@ public class NMapWnd extends MapWnd {
             public void click() {
                 NGameUI gui = (NGameUI) NUtils.getGameUI();
                 if (gui != null) {
-                    FishSearchWindow fishWnd = new FishSearchWindow(gui);
-                    gui.add(fishWnd, new Coord(100, 100));
-                    fishWnd.show();
+                    // Check if window already exists and is visible
+                    if (gui.fishSearchWindow != null) {
+                        // If window exists, toggle visibility
+                        if (gui.fishSearchWindow.visible()) {
+                            gui.fishSearchWindow.hide();
+                        } else {
+                            gui.fishSearchWindow.show();
+                            gui.fishSearchWindow.raise();
+                        }
+                    } else {
+                        // Create new window if it doesn't exist
+                        gui.fishSearchWindow = new FishSearchWindow(gui);
+                        gui.add(gui.fishSearchWindow, new Coord(100, 100));
+                        gui.fishSearchWindow.show();
+                    }
                 }
             }
         }, view.pos("br").sub(UI.scale(100, 510)));

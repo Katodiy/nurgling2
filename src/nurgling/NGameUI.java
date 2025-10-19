@@ -54,6 +54,7 @@ public class NGameUI extends GameUI
     public LocalizedResourceTimerService localizedResourceTimerService;
     public WaypointMovementService waypointMovementService;
     public FishLocationService fishLocationService;
+    public FishSearchWindow fishSearchWindow = null;
     public StudyDeskPlannerWidget studyDeskPlanner = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {

@@ -92,11 +92,11 @@ The details window has two buttons:
 
 ### Opening the Fish Search Menu
 
-On the full map window, look for the **"Fish Menu"** button near the bottom-right corner, next to the search bar.
+On the full map window, look for the **"Fish Search"** button near the top-right corner.
 
-**Add screenshot of Fish Menu button location on map**
+**Add screenshot of Fish Search button location on map**
 
-Click **Fish Menu** to open the search interface.
+Click **Fish Search** to open the search interface.
 
 ### Fish Search Window
 
