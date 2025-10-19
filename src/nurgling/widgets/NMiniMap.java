@@ -738,9 +738,19 @@ public class NMiniMap extends MiniMap {
                     Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
 
                     if(ev.c.dist(screenPos) < threshold) {
-                        // Open details window for this fish location
-                        FishLocationDetailsWindow detailsWnd = new FishLocationDetailsWindow(loc, gui);
-                        gui.add(detailsWnd, new Coord(100, 100));
+                        // Check if a window is already open for this fish location
+                        String locationId = loc.getLocationId();
+                        FishLocationDetailsWindow existingWnd = gui.openFishDetailWindows.get(locationId);
+
+                        if(existingWnd != null && existingWnd.visible()) {
+                            // Window already exists and is visible, just raise it
+                            existingWnd.raise();
+                        } else {
+                            // Create new window and track it
+                            FishLocationDetailsWindow detailsWnd = new FishLocationDetailsWindow(loc, gui);
+                            gui.add(detailsWnd, new Coord(100, 100));
+                            gui.openFishDetailWindows.put(locationId, detailsWnd);
+                        }
                         return true;
                     }
                 }

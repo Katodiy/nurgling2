@@ -87,4 +87,13 @@ public class FishLocationDetailsWindow extends Window {
             super.wdgmsg(sender, msg, args);
         }
     }
+
+    @Override
+    public void destroy() {
+        // Remove from tracking map when destroyed
+        if (gui != null && fishLocation != null) {
+            gui.openFishDetailWindows.remove(fishLocation.getLocationId());
+        }
+        super.destroy();
+    }
 }
