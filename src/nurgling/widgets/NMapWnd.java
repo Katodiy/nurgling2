@@ -13,6 +13,7 @@ public class NMapWnd extends MapWnd {
     public Resource.Image searchRes = null;
     public boolean needUpdate = false;
     TextEntry te;
+    Button fishMenuBtn;
 
     public NMapWnd(MapFile file, MapView mv, Coord sz, String title) {
         super(file, mv, sz, title);
@@ -26,6 +27,19 @@ public class NMapWnd extends MapWnd {
                 NUtils.getGameUI().mmap.needUpdate = true;
             }
         }, view.pos("br").sub(UI.scale(200,20)));
+
+        // Add Fish Menu button next to search bar
+        add(fishMenuBtn = new Button(UI.scale(80), "Fish Menu"){
+            @Override
+            public void click() {
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if (gui != null) {
+                    FishSearchWindow fishWnd = new FishSearchWindow(gui);
+                    gui.add(fishWnd, new Coord(100, 100));
+                    fishWnd.show();
+                }
+            }
+        }, view.pos("br").sub(UI.scale(290, 20)));
     }
 
     public long playerSegmentId() {
@@ -51,6 +65,8 @@ public class NMapWnd extends MapWnd {
         super.resize(sz);
         if(te!=null)
             te.c = view.pos("br").sub(UI.scale(200,20));
+        if(fishMenuBtn!=null)
+            fishMenuBtn.c = view.pos("br").sub(UI.scale(290, 20));
     }
     
     @Override
