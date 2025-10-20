@@ -21,6 +21,8 @@ public class Build implements Action{
     public static class Command
     {
         public String name;
+        public String windowName = null; // Window name if different from menu name
+        public nurgling.NHitBox customHitBox = null;
 
         public ArrayList<Ingredient> ingredients = new ArrayList<Ingredient>();
     }
@@ -92,6 +94,7 @@ public class Build implements Action{
                     return Results.ERROR("NO ITEMS");
             }
 
+            // Always activate build menu first
             for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae) {
                 if (pag.button() != null && pag.button().name().equals(cmd.name)) {
                     pag.button().use(new MenuGrid.Interaction(1, 0));
@@ -111,15 +114,24 @@ public class Build implements Action{
             NUtils.addTask(new WaitPlob());
             MapView.Plob plob = NUtils.getGameUI().map.placing.get();
             plob.a = needRotate ? Math.PI / 2 : 0;
-            pos = Finder.getFreePlace(area, needRotate?plob.ngob.hitBox.rotate():plob.ngob.hitBox);
 
-            PathFinder pf = new PathFinder(NGob.getDummy(pos, plob.a, plob.ngob.hitBox), true);
+            // Use game's hitbox if available, otherwise fall back to custom hitbox
+            nurgling.NHitBox hitBox = plob.ngob.hitBox;
+            if (hitBox == null && cmd.customHitBox != null) {
+                hitBox = cmd.customHitBox;
+            }
+
+            pos = Finder.getFreePlace(area, needRotate ? hitBox.rotate() : hitBox);
+
+            PathFinder pf = new PathFinder(NGob.getDummy(pos, plob.a, hitBox), true);
             pf.isHardMode = true;
             pf.run(gui);
 
             gui.map.wdgmsg("place", pos.floor(posres), (int) Math.round((needRotate ? Math.PI / 2 : 0) * 32768 / Math.PI), 1, 0);
             NUtils.addTask(new WaitConstructionObject(pos));
-            NUtils.addTask(new WaitWindow(cmd.name));
+
+            String windowName = cmd.windowName != null ? cmd.windowName : cmd.name;
+            NUtils.addTask(new WaitWindow(windowName));
             Gob gob;
             do {
                 if(needRefill(curings))
@@ -131,10 +143,10 @@ public class Build implements Action{
                         return Results.ERROR("Something went wrong, no gob");
                     new PathFinder(gob).run(gui);
                     NUtils.rclickGob(gob);
-                    NUtils.addTask(new WaitWindow(cmd.name));
+                    NUtils.addTask(new WaitWindow(windowName));
                 }
 
-                NUtils.startBuild(NUtils.getGameUI().getWindow(cmd.name));
+                NUtils.startBuild(NUtils.getGameUI().getWindow(windowName));
 
                 NUtils.addTask(new NTask() {
                     int count = 0;
@@ -172,7 +184,7 @@ public class Build implements Action{
                 NUtils.addTask(new WaitItems(NUtils.getGameUI().getInventory(),ingredient.name,ingredient.left));
             }
 
-            pos = Finder.getFreePlace(area, needRotate?plob.ngob.hitBox.rotate():plob.ngob.hitBox);
+            pos = Finder.getFreePlace(area, needRotate ? hitBox.rotate() : hitBox);
         }
         while (pos!=null);
         return Results.SUCCESS();
