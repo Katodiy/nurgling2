@@ -157,8 +157,8 @@ public class BuildGhostPreview extends Sprite {
                     return playerPos.z - 1;
                 }
             }
-        } catch (Exception e) {
-            // Fallback to 0
+        } catch (NullPointerException e) {
+            // Fallback to 0 if player or position unavailable
         }
         return 0f;
     }
