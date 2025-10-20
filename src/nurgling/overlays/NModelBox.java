@@ -130,6 +130,13 @@ public class NModelBox extends Sprite implements RenderTree.Node {
 
     Gob gob;
 
+    // Cache config values to avoid expensive lookups every frame
+    private boolean cachedShowBB = false;
+    private boolean cachedHideNature = false;
+    private Boolean cachedIsNature = null; // null = not yet calculated
+    private int configCacheCounter = 0;
+    private static final int CONFIG_CACHE_INTERVAL = 30; // Check config every 30 ticks
+
     public NModelBox(Gob gob)
     {
         super(null, null);
@@ -183,8 +190,20 @@ public class NModelBox extends Sprite implements RenderTree.Node {
 
     @Override
     public boolean tick(double dt) {
-        boolean newShowState = ((Boolean) NConfig.get(NConfig.Key.showBB) ||
-                (!(Boolean) NConfig.get(NConfig.Key.hideNature) && NUtils.isNatureObject(gob.ngob.name)));
+        // Only update config cache every CONFIG_CACHE_INTERVAL ticks for performance
+        if (++configCacheCounter >= CONFIG_CACHE_INTERVAL) {
+            cachedShowBB = (Boolean) NConfig.get(NConfig.Key.showBB);
+            cachedHideNature = (Boolean) NConfig.get(NConfig.Key.hideNature);
+            configCacheCounter = 0;
+        }
+
+        // Calculate isNature only once per object lifetime
+        if (cachedIsNature == null) {
+            cachedIsNature = NUtils.isNatureObject(gob.ngob.name);
+        }
+
+        // Use cached values instead of looking up config every frame
+        boolean newShowState = (cachedShowBB || (!cachedHideNature && cachedIsNature));
 
         if (newShowState != isShow) {
             isShow = newShowState;
