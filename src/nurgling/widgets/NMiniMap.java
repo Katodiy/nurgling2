@@ -23,8 +23,11 @@ public class NMiniMap extends MiniMap {
     public static final Color VIEW_BORDER_COLOR = new Color(0, 0, 0, 128);
     public static Coord2d TEMP_VIEW_SZ = new Coord2d(VIEW_SZ).floor().mul(tilesz).div(2).sub(tilesz.mul(5));
     public final FogArea fogArea = new FogArea(this);
-    
+
     private String currentTerrainName = null;
+
+    // Cache for fish icon textures to avoid reloading every frame
+    private final java.util.HashMap<String, TexI> fishIconCache = new java.util.HashMap<>();
 
     private static final Coord2d sgridsz = new Coord2d(new Coord(100,100));
     public NMiniMap(Coord sz, MapFile file) {
@@ -645,10 +648,16 @@ public class NMiniMap extends MiniMap {
                screenPos.y >= 0 && screenPos.y <= sz.y) {
 
                 try {
-                    // Load fish icon from resource path
-                    Resource fishRes = Resource.remote().loadwait(fishLoc.getFishResource());
-                    BufferedImage icon = fishRes.layer(Resource.imgc).img;
-                    TexI tex = new TexI(icon);
+                    String fishResource = fishLoc.getFishResource();
+                    TexI tex = fishIconCache.get(fishResource);
+
+                    // Load and cache if not already cached
+                    if(tex == null) {
+                        Resource fishRes = Resource.remote().loadwait(fishResource);
+                        BufferedImage icon = fishRes.layer(Resource.imgc).img;
+                        tex = new TexI(icon);
+                        fishIconCache.put(fishResource, tex);
+                    }
 
                     // Draw scaled fish icon
                     int dsz = Math.max(tex.sz().y, tex.sz().x);
