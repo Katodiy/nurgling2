@@ -77,8 +77,11 @@ public class NMapView extends MapView
     final ArrayList<String> tlays = new ArrayList<>();
     final HashMap<String, BufferedImage> cachedImages = new HashMap<>();
     long lastTooltipUpdate = 0;
-    final long tooltipThrottleTime = 100; // milliseconds for throttling
+    final long tooltipThrottleTime = 250; // milliseconds for throttling (increased from 100 for better performance)
     TexI oldttip = null;
+
+    // Fast text renderer for tooltip values (much faster than RichText)
+    private static final Text.Foundry tooltipFont = new Text.Foundry(Text.sans, 10);
     public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
     public AtomicBoolean isGobSelectionMode = new AtomicBoolean(false);
     public NArea.Space areaSpace = null;
@@ -269,93 +272,180 @@ public class NMapView extends MapView
                 }
 
                 imgs.add(img);
-                imgs.add(RichText.render(ttip.get(key), 0).img);
+                imgs.add(tooltipFont.render(ttip.get(key)).img);
             }
             if (ttip.get("gob") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[128,128,255]{%s}:", "Gob"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("gob"), 0).img);
+                String labelText = "$col[128,128,255]{Gob}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("gob")).img);
             }
-                BufferedImage mc = RichText.render(String.format("$col[128,128,255]{%s}:", "MouseCoord"), 0).img;
-                imgs.add(mc);
-                imgs.add(RichText.render(getLCoord().toString(), 0).img);
+            {
+                String labelText = "$col[128,128,255]{MouseCoord}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(getLCoord().toString()).img);
+            }
             if (ttip.get("rc") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[128,128,128]{%s}:", "Coord"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("rc"), 0).img);
+                String labelText = "$col[128,128,128]{Coord}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("rc")).img);
             }
             if (ttip.get("id") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[255,128,255]{%s}:", "id"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("id"), 0).img);
+                String labelText = "$col[255,128,255]{id}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("id")).img);
             }
             if (ttip.get("tile") != null) {
-                BufferedImage tile = RichText.render(String.format("$col[128,128,255]{%s}:", "Tile"), 0).img;
-                imgs.add(tile);
-                imgs.add(RichText.render(ttip.get("tile"), 0).img);
+                String labelText = "$col[128,128,255]{Tile}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("tile")).img);
             }
             if (ttip.get("tags") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[255,128,128]{%s}:", "Tags"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("tags"), 0).img);
+                String labelText = "$col[255,128,128]{Tags}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("tags")).img);
             }
             if (ttip.get("status") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[255,128,128]{%s}:", "Status"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("status"), 0).img);
+                String labelText = "$col[255,128,128]{Status}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("status")).img);
             }
             if (ttip.get("HitBox") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[255,128,255]{%s}:", "HitBox"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("HitBox"), 0).img);
+                String labelText = "$col[255,128,255]{HitBox}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("HitBox")).img);
             }
             if (ttip.get("dist") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[255,128,105]{%s}:", "dist"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("dist"), 0).img);
+                String labelText = "$col[255,128,105]{dist}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("dist")).img);
             }
             if (ttip.get("isDynamic") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[255,83,83]{%s}:", "isDynamic"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("isDynamic"), 0).img);
+                String labelText = "$col[255,83,83]{isDynamic}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("isDynamic")).img);
             }
             if (ttip.get("marker") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[255,83,83]{%s}:", "Marker"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("marker"), 0).img);
+                String labelText = "$col[255,83,83]{Marker}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("marker")).img);
             }
             if (ttip.get("cont") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[83,255,83]{%s}:", "Container"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("cont"), 0).img);
+                String labelText = "$col[83,255,83]{Container}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("cont")).img);
             }
             if (ttip.get("ols") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[83,255,155]{%s}:", "Overlays"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("ols"), 0).img);
+                String labelText = "$col[83,255,155]{Overlays}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("ols")).img);
             }
             if (ttip.get("pose") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[255,145,200]{%s}:", "Pose"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("pose"), 0).img);
+                String labelText = "$col[255,145,200]{Pose}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("pose")).img);
             }
             if (ttip.get("attr") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[155,255,83]{%s}:", "Attr"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("attr"), 0).img);
+                String labelText = "$col[155,255,83]{Attr}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("attr")).img);
             }
             if (!tlays.isEmpty() && false) {
-                BufferedImage gob = RichText.render(String.format("$col[155,32,176]{%s}:", "Layers"), 0).img;
-                imgs.add(gob);
+                String labelText = "$col[155,32,176]{Layers}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
                 for(String s: tlays)
                 {
-                    imgs.add(RichText.render(s, 0).img);
+                    imgs.add(tooltipFont.render(s).img);
                 }
             }
             if (ttip.get("poses") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[255,128,128]{%s}:", "Poses"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("poses"), 0).img);
+                String labelText = "$col[255,128,128]{Poses}:";
+                BufferedImage label = cachedImages.get(labelText);
+                if (label == null) {
+                    label = RichText.render(labelText, 0).img;
+                    cachedImages.put(labelText, label);
+                }
+                imgs.add(label);
+                imgs.add(tooltipFont.render(ttip.get("poses")).img);
             }
             return (oldttip = new TexI((ItemInfo.catimgs(0, imgs.toArray(new BufferedImage[0])))));
         }

@@ -50,6 +50,9 @@ public class NInventory extends Inventory
     public Gob parentGob = null;
     long lastUpdate = 0;
 
+    // Cache for slot number textures to avoid recreating them every time inventory changes
+    private static final java.util.HashMap<Integer, TexI> slotNumberCache = new java.util.HashMap<>();
+
     public NInventory(Coord sz)
     {
         super(sz);
@@ -88,7 +91,13 @@ public class NInventory extends Inventory
             for (int j = 0; j < isz.x; j++) {
                 if (inventory[i][j] == 0)
                 {
-                    numberMatrix[i][j] = new TexI(NStyle.slotnums.render(String.valueOf(counter)).img);
+                    // Use cached texture if available, otherwise create and cache it
+                    TexI tex = slotNumberCache.get(counter);
+                    if (tex == null) {
+                        tex = new TexI(NStyle.slotnums.render(String.valueOf(counter)).img);
+                        slotNumberCache.put(counter, tex);
+                    }
+                    numberMatrix[i][j] = tex;
                 }
                 else
                 {
