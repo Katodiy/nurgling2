@@ -87,7 +87,10 @@ public class BuildGhostPreview extends Sprite {
                     float centerX = (float)(testBox.rc.x);
                     float centerY = (float)(testBox.rc.y);
 
-                    Location loc = Location.xlate(new Coord3f(centerX, -centerY, 0));
+                    // Get terrain height at this position
+                    float terrainZ = getTerrainHeight();
+
+                    Location loc = Location.xlate(new Coord3f(centerX, -centerY, terrainZ));
                     ghostLocations.add(loc);
 
                     // Add this building to placed list so we don't overlap it
@@ -105,7 +108,7 @@ public class BuildGhostPreview extends Sprite {
         // Calculate half-dimensions to center the box at origin
         float halfWidth = (float)((hitBox.end.x - hitBox.begin.x) / 2.0);
         float halfDepth = (float)((hitBox.end.y - hitBox.begin.y) / 2.0);
-        float h = 16f; // Height of ghost box
+        float h = 7f; // Height of ghost box
 
         // Create vertices for the box centered at origin (8 corners)
         java.nio.FloatBuffer posb = Utils.wfbuf(8 * 3);
@@ -139,6 +142,25 @@ public class BuildGhostPreview extends Sprite {
         return new Model(Model.Mode.LINES, vbuf.data(),
             new Model.Indices(24, NumberFormat.UINT16, DataBuffer.Usage.STATIC,
                 DataBuffer.Filler.of(idx.array())));
+    }
+
+    /**
+     * Get terrain height at a position
+     */
+    private float getTerrainHeight() {
+        try {
+            Gob player = NUtils.player();
+            if (player != null) {
+                Coord3f playerPos = player.getc();
+                if (playerPos != null) {
+                    // Use player's Z coordinate as base reference
+                    return playerPos.z - 1;
+                }
+            }
+        } catch (NullPointerException e) {
+            // Fallback to 0 if player or position unavailable
+        }
+        return 0f;
     }
 
     /**

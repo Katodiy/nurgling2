@@ -146,8 +146,11 @@ public class TrellisGhostPreview extends Sprite {
                         float centerX = (float)(testPos.x + (rotatedHitBox.end.x + rotatedHitBox.begin.x) / 2.0);
                         float centerY = (float)(testPos.y + (rotatedHitBox.end.y + rotatedHitBox.begin.y) / 2.0);
 
+                        // Get terrain height at this position
+                        float terrainZ = getTerrainHeight();
+
                         // Store location for this ghost position
-                        Location loc = Location.xlate(new Coord3f(centerX, -centerY, 0));
+                        Location loc = Location.xlate(new Coord3f(centerX, -centerY, terrainZ));
                         ghostLocations.add(loc);
                         validPositions++;
                     }
@@ -166,7 +169,7 @@ public class TrellisGhostPreview extends Sprite {
         float u = (float) hitBox.begin.y;
         float r = (float) hitBox.end.x;
         float b = (float) hitBox.end.y;
-        float h = 16f; // Height of ghost box
+        float h = 7f; // Height of ghost box
 
         // Create vertices for the box (8 corners)
         java.nio.FloatBuffer posb = Utils.wfbuf(8 * 3);
@@ -292,5 +295,24 @@ public class TrellisGhostPreview extends Sprite {
         if (changed && area != null) {
             calculateGhostPositions();
         }
+    }
+
+    /**
+     * Get terrain height at a position
+     */
+    private float getTerrainHeight() {
+        try {
+            Gob player = NUtils.player();
+            if (player != null) {
+                Coord3f playerPos = player.getc();
+                if (playerPos != null) {
+                    // Use player's Z coordinate as base reference
+                    return playerPos.z - 1;
+                }
+            }
+        } catch (NullPointerException e) {
+            // Fallback to 0 if player or position unavailable
+        }
+        return 0f;
     }
 }
