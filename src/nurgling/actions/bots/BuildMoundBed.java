@@ -21,7 +21,8 @@ public class BuildMoundBed implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         try {
             Build.Command command = new Build.Command();
-            command.name = "Moundbed";
+            command.name = "Mound Bed";
+            command.windowName = "Moundbed"; // Window name is different from menu name
 
             // Get the custom hitbox we defined
             NHitBox moundBedHitBox = NHitBox.findCustom("gfx/terobjs/moundbed");
