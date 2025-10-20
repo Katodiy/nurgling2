@@ -21,6 +21,7 @@ public class Build implements Action{
     public static class Command
     {
         public String name;
+        public nurgling.NHitBox customHitBox = null;
 
         public ArrayList<Ingredient> ingredients = new ArrayList<Ingredient>();
     }
@@ -92,6 +93,7 @@ public class Build implements Action{
                     return Results.ERROR("NO ITEMS");
             }
 
+            // Always activate build menu first
             for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae) {
                 if (pag.button() != null && pag.button().name().equals(cmd.name)) {
                     pag.button().use(new MenuGrid.Interaction(1, 0));
@@ -111,9 +113,16 @@ public class Build implements Action{
             NUtils.addTask(new WaitPlob());
             MapView.Plob plob = NUtils.getGameUI().map.placing.get();
             plob.a = needRotate ? Math.PI / 2 : 0;
-            pos = Finder.getFreePlace(area, needRotate?plob.ngob.hitBox.rotate():plob.ngob.hitBox);
 
-            PathFinder pf = new PathFinder(NGob.getDummy(pos, plob.a, plob.ngob.hitBox), true);
+            // Use game's hitbox if available, otherwise fall back to custom hitbox
+            nurgling.NHitBox hitBox = plob.ngob.hitBox;
+            if (hitBox == null && cmd.customHitBox != null) {
+                hitBox = cmd.customHitBox;
+            }
+
+            pos = Finder.getFreePlace(area, needRotate ? hitBox.rotate() : hitBox);
+
+            PathFinder pf = new PathFinder(NGob.getDummy(pos, plob.a, hitBox), true);
             pf.isHardMode = true;
             pf.run(gui);
 
