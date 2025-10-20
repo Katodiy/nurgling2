@@ -508,11 +508,20 @@ public class Finder
 
         synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
             for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
-                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
-                    if(gob.ngob.hitBox != null && gob.getattr(Following.class)==null  && gob.id!= NUtils.player().id){
-                        NHitBoxD gobBox = new NHitBoxD(gob);
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector"))) {
+                    NHitBox effectiveHitBox = gob.ngob.hitBox;
+
+                    // If gob has no hitbox, check if there's a custom hitbox defined for it
+                    // (useful for things like mound beds that have null hitboxes but need collision during building)
+                    if (effectiveHitBox == null && gob.ngob.name != null) {
+                        effectiveHitBox = NHitBox.findCustom(gob.ngob.name);
+                    }
+
+                    if(effectiveHitBox != null && gob.getattr(Following.class)==null  && gob.id!= NUtils.player().id){
+                        NHitBoxD gobBox = new NHitBoxD(effectiveHitBox.begin, effectiveHitBox.end, gob.rc, gob.a);
                         if (gobBox.intersects(chekerOfArea,true))
                             significantGobs.add(gobBox);
+                    }
                 }
             }
         }
