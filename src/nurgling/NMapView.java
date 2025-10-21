@@ -7,8 +7,6 @@ import static haven.MCache.tilesz;
 
 import haven.Composite;
 import haven.res.ui.gobcp.Gobcopy;
-import nurgling.actions.Action;
-import nurgling.actions.ActionWithFinal;
 import nurgling.actions.QuickActionBot;
 import nurgling.actions.bots.ScenarioRunner;
 import nurgling.areas.*;

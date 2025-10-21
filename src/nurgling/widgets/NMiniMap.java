@@ -6,6 +6,7 @@ import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.LocalizedResourceTimer;
 import nurgling.NGameUI;
+import nurgling.overlays.map.MinimapClaimRenderer;
 import nurgling.tools.FogArea;
 
 import java.awt.*;
@@ -21,7 +22,6 @@ public class NMiniMap extends MiniMap {
     public static final Color VIEW_FOG_COLOR = new Color(255, 255, 0 , 120);
     public static final Color VIEW_BG_COLOR = new Color(255, 255, 255, 60);
     public static final Color VIEW_BORDER_COLOR = new Color(0, 0, 0, 128);
-    public static Coord2d TEMP_VIEW_SZ = new Coord2d(VIEW_SZ).floor().mul(tilesz).div(2).sub(tilesz.mul(5));
     public final FogArea fogArea = new FogArea(this);
 
     private String currentTerrainName = null;
@@ -74,12 +74,15 @@ public class NMiniMap extends MiniMap {
         }
     }
 
-
     @Override
     public void drawparts(GOut g) {
         if(NUtils.getGameUI()==null)
             return;
         drawmap(g);
+
+        // Render claim overlays (personal, village, realm)
+        MinimapClaimRenderer.renderClaims(this, g);
+
         boolean playerSegment = (sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id));
         if(zoomlevel <= 2 && (Boolean) NConfig.get(NConfig.Key.showGrid)) {drawgrid(g);}
         if(playerSegment && zoomlevel <= 1 && (Boolean)NConfig.get(NConfig.Key.showView)) {drawview(g);}
