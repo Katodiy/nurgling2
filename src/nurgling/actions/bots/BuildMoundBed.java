@@ -50,12 +50,12 @@ public class BuildMoundBed implements Action {
             }
 
             NUtils.getGameUI().msg("Please, select area for mulch");
-            SelectArea mulcharea = new SelectArea(Resource.loadsimg("baubles/custom"));
+            SelectArea mulcharea = new SelectArea(Resource.loadsimg("baubles/mulchArea"));
             mulcharea.run(NUtils.getGameUI());
             command.ingredients.add(new Build.Ingredient(new Coord(1,1), mulcharea.getRCArea(), new NAlias("Mulch"), 12));
 
             NUtils.getGameUI().msg("Please, select area for straw");
-            SelectArea strawarea = new SelectArea(Resource.loadsimg("baubles/custom"));
+            SelectArea strawarea = new SelectArea(Resource.loadsimg("baubles/strawArea"));
             strawarea.run(NUtils.getGameUI());
             command.ingredients.add(new Build.Ingredient(new Coord(1,1), strawarea.getRCArea(), new NAlias("Straw"), 6));
 
