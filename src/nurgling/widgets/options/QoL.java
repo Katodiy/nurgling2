@@ -28,6 +28,7 @@ public class QoL extends Panel {
     private CheckBox uniformBiomeColors;
     private CheckBox showTerrainName;
     private CheckBox waypointRetryOnStuck;
+    private CheckBox verboseCal;
 
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
@@ -56,6 +57,7 @@ public class QoL extends Panel {
         prev = uniformBiomeColors = add(new CheckBox("Uniform biome colors on minimap"), prev.pos("bl").adds(0, 5));
         prev = showTerrainName = add(new CheckBox("Show terrain name on minimap hover"), prev.pos("bl").adds(0, 5));
         prev = waypointRetryOnStuck = add(new CheckBox("Retry waypoint movement when stuck"), prev.pos("bl").adds(0, 5));
+        prev = verboseCal = add(new CheckBox("Verbose calendar"), prev.pos("bl").adds(0, 5));
         prev = debug = add(new CheckBox("DEBUG"), prev.pos("bl").adds(0, 5));
         prev = printpfmap = add(new CheckBox("Path Finder map in debug"), prev.pos("bl").adds(0, 5));
 
@@ -94,6 +96,7 @@ public class QoL extends Panel {
         uniformBiomeColors.a = getBool(NConfig.Key.uniformBiomeColors);
         showTerrainName.a = getBool(NConfig.Key.showTerrainName);
         waypointRetryOnStuck.a = getBool(NConfig.Key.waypointRetryOnStuck);
+        verboseCal.a = getBool(NConfig.Key.verboseCal);
 
         Object dist = NConfig.get(NConfig.Key.temsmarkdist);
         temsmarkdistEntry.settext(dist == null ? "" : dist.toString());
@@ -139,6 +142,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.shortCupboards, shortCupboards.a);
         NConfig.set(NConfig.Key.showTerrainName, showTerrainName.a);
         NConfig.set(NConfig.Key.waypointRetryOnStuck, waypointRetryOnStuck.a);
+        NConfig.set(NConfig.Key.verboseCal, verboseCal.a);
 
         // Save uniform biome colors and update minimap if changed
         boolean oldUniformColors = getBool(NConfig.Key.uniformBiomeColors);
