@@ -5,6 +5,17 @@ import nurgling.NConfig;
 
 public class NCal extends Cal {
     @Override
+    public void tick(double dt) {
+        super.tick(dt);
+        // TEST: Enable all icons
+        eventNames.clear();
+        eventNames.add("dawn");
+        eventNames.add("mantle");
+        eventNames.add("wolf");
+        eventNames.add("rain");
+    }
+
+    @Override
     public boolean checkhit(Coord c) {
         // Account for the centered calendar graphic in the larger widget
         Coord center = sz.div(2).sub(bg.sz().div(2));
@@ -44,13 +55,16 @@ public class NCal extends Cal {
     }
 
     private void drawDefaultMode(GOut g) {
-        // Draw event icons in a vertical column to the right of the calendar
-        int iconSpacing = UI.scale(20);
-        int iconX = sz.x / 2 + UI.scale(50);
+        // Draw event icons in a 2x2 grid to the right of the calendar
+        int horizontalSpacing = 30;
+        int verticalSpacing = 30;
+        int startX = sz.x / 2 + UI.scale(45);
         int startY = sz.y / 2 - UI.scale(10);
         int iconIndex = 0;
         for(String key : eventNames) {
-            Coord iconPos = new Coord(iconX, startY + (iconIndex * iconSpacing));
+            int row = iconIndex / 2;
+            int col = iconIndex % 2;
+            Coord iconPos = new Coord(startX + (col * horizontalSpacing), startY + (row * verticalSpacing));
             g.aimage(events.get(key), iconPos, 0.5, 0.5);
             iconIndex++;
         }
@@ -83,13 +97,16 @@ public class NCal extends Cal {
         g.atext(daysLeftLine, new Coord(leftX, baseY), 1, 0.5);
         g.atext(moonPhaseLine, new Coord(leftX, baseY + lineHeight), 1, 0.5);
 
-        // Draw event icons in a vertical column to the right (same as default mode)
-        int iconSpacing = UI.scale(20);
-        int iconX = sz.x / 2 + UI.scale(50);
+        // Draw event icons in a 2x2 grid to the right (same as default mode)
+        int horizontalSpacing = 30;
+        int verticalSpacing = 30;
+        int startX = sz.x / 2 + UI.scale(45);
         int startY = sz.y / 2 - UI.scale(10);
         int iconIndex = 0;
         for(String key : eventNames) {
-            Coord iconPos = new Coord(iconX, startY + (iconIndex * iconSpacing));
+            int row = iconIndex / 2;
+            int col = iconIndex % 2;
+            Coord iconPos = new Coord(startX + (col * horizontalSpacing), startY + (row * verticalSpacing));
             g.aimage(events.get(key), iconPos, 0.5, 0.5);
             iconIndex++;
         }
