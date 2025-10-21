@@ -15,12 +15,12 @@ import java.util.Collection;
 public class MinimapClaimRenderer {
     // Claim colors (semi-transparent to avoid obscuring terrain)
     private static final Color CPLOT_COLOR = new Color(0, 255, 0, 60);    // Personal - Green
-    private static final Color VLG_COLOR = new Color(255, 255, 0, 60);     // Village - Yellow
+    private static final Color VLG_COLOR = new Color(255, 128, 255, 60);   // Village - Pink
     private static final Color PROV_COLOR = new Color(255, 0, 255, 60);    // Realm - Magenta
 
     // Outline colors for better visibility
     private static final Color CPLOT_BORDER = new Color(0, 255, 0, 120);
-    private static final Color VLG_BORDER = new Color(255, 255, 0, 120);
+    private static final Color VLG_BORDER = new Color(255, 128, 255, 120);
     private static final Color PROV_BORDER = new Color(255, 0, 255, 120);
 
     /**
