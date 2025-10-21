@@ -6,7 +6,7 @@ import nurgling.widgets.NMiniMap;
 import java.awt.Color;
 
 /**
- * Renders personal claims, village claims, and realms on the minimap.
+ * Renders personal claims and village claims on the minimap.
  * Uses persistent MapFile data instead of runtime MCache, showing all discovered claims.
  * Synchronizes with the 3D map overlay visibility toggles.
  */
@@ -14,12 +14,6 @@ public class MinimapClaimRenderer {
     // Claim colors (semi-transparent to avoid obscuring terrain)
     private static final Color CPLOT_COLOR = new Color(0, 255, 0, 60);    // Personal - Green
     private static final Color VLG_COLOR = new Color(255, 128, 255, 60);   // Village - Pink
-    private static final Color PROV_COLOR = new Color(255, 0, 255, 60);    // Realm - Magenta
-
-    // Outline colors for better visibility
-    private static final Color CPLOT_BORDER = new Color(0, 255, 0, 120);
-    private static final Color VLG_BORDER = new Color(255, 128, 255, 120);
-    private static final Color PROV_BORDER = new Color(255, 0, 255, 120);
 
     /**
      * Main rendering method called from MiniMap's drawparts()
@@ -88,6 +82,11 @@ public class MinimapClaimRenderer {
 
                         // Check each tag to see if it matches a claim type we want to render
                         for (String tag : olinfo.tags()) {
+                            // Skip realm overlays for now
+                            if (tag.equals("prov") || tag.equals("realm")) {
+                                continue;
+                            }
+
                             // Check if this overlay type is enabled in the 3D map
                             if (!mv.visol(tag)) {
                                 continue;
@@ -95,10 +94,9 @@ public class MinimapClaimRenderer {
 
                             // Get color for this claim type
                             Color fillColor = getColorForTag(tag);
-                            Color borderColor = getBorderColorForTag(tag);
 
                             if (fillColor != null) {
-                                renderOverlay(map, g, overlay, disp, hsz, fillColor, borderColor);
+                                renderOverlay(map, g, overlay, disp, hsz, fillColor);
                                 break; // Only render once per overlay, even if it has multiple tags
                             }
                         }
@@ -122,8 +120,7 @@ public class MinimapClaimRenderer {
                                       MapFile.Overlay overlay,
                                       MiniMap.DisplayGrid disp,
                                       Coord hsz,
-                                      Color fillColor,
-                                      Color borderColor) {
+                                      Color fillColor) {
         try {
             // The overlay boolean array is indexed as: x + (y * cmaps.x)
             // where cmaps is the grid size (100x100 tiles typically)
@@ -194,12 +191,6 @@ public class MinimapClaimRenderer {
                     // Draw filled rectangle
                     g.chcolor(fillColor);
                     g.frect2(screenUL, screenBR);
-
-                    // Draw border
-                    if (borderColor != null) {
-                        g.chcolor(borderColor);
-                        g.rect2(screenUL, screenBR);
-                    }
                 }
             }
 
@@ -218,26 +209,6 @@ public class MinimapClaimRenderer {
                 return CPLOT_COLOR;
             case "vlg":
                 return VLG_COLOR;
-            case "prov":
-            case "realm":  // Support both "prov" and "realm" tags
-                return PROV_COLOR;
-            default:
-                return null;
-        }
-    }
-
-    /**
-     * Get border color for a claim tag
-     */
-    private static Color getBorderColorForTag(String tag) {
-        switch (tag) {
-            case "cplot":
-                return CPLOT_BORDER;
-            case "vlg":
-                return VLG_BORDER;
-            case "prov":
-            case "realm":
-                return PROV_BORDER;
             default:
                 return null;
         }
