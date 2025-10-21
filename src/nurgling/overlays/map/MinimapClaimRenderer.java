@@ -122,32 +122,60 @@ public class MinimapClaimRenderer {
                 return;
             }
 
-            // Merge adjacent tiles into rectangles for better performance
-            // Scan row by row and find horizontal runs of claimed tiles
+            // Merge adjacent tiles into large rectangles for better performance
             int width = area.br.x - area.ul.x;
             int height = area.br.y - area.ul.y;
+
+            // Track which tiles we've already rendered
+            boolean[] rendered = new boolean[mask.length];
             int rectsRendered = 0;
 
+            // Scan for rectangles
             for (int y = 0; y < height; y++) {
-                int x = 0;
-                while (x < width) {
-                    // Skip unclaimed tiles
-                    while (x < width && !mask[y * width + x]) {
-                        x++;
+                for (int x = 0; x < width; x++) {
+                    int idx = y * width + x;
+
+                    // Skip if not claimed or already rendered
+                    if (!mask[idx] || rendered[idx]) {
+                        continue;
                     }
 
-                    if (x >= width) break;
-
-                    // Found start of a run - find the end
-                    int runStart = x;
-                    while (x < width && mask[y * width + x]) {
-                        x++;
+                    // Find the width of the rectangle (horizontal extent)
+                    int rectWidth = 0;
+                    while (x + rectWidth < width &&
+                           mask[y * width + (x + rectWidth)] &&
+                           !rendered[y * width + (x + rectWidth)]) {
+                        rectWidth++;
                     }
-                    int runEnd = x;
 
-                    // Render this horizontal run as a single rectangle
-                    Coord tileUL = new Coord(area.ul.x + runStart, area.ul.y + y);
-                    Coord tileBR = new Coord(area.ul.x + runEnd, area.ul.y + y + 1);
+                    // Find the height of the rectangle (vertical extent)
+                    // Check how many rows below have the same horizontal span
+                    int rectHeight = 1;
+                    boolean canExtend = true;
+                    while (canExtend && y + rectHeight < height) {
+                        // Check if this entire row matches the width
+                        for (int dx = 0; dx < rectWidth; dx++) {
+                            int checkIdx = (y + rectHeight) * width + (x + dx);
+                            if (!mask[checkIdx] || rendered[checkIdx]) {
+                                canExtend = false;
+                                break;
+                            }
+                        }
+                        if (canExtend) {
+                            rectHeight++;
+                        }
+                    }
+
+                    // Mark all tiles in this rectangle as rendered
+                    for (int dy = 0; dy < rectHeight; dy++) {
+                        for (int dx = 0; dx < rectWidth; dx++) {
+                            rendered[(y + dy) * width + (x + dx)] = true;
+                        }
+                    }
+
+                    // Render this rectangle
+                    Coord tileUL = new Coord(area.ul.x + x, area.ul.y + y);
+                    Coord tileBR = new Coord(area.ul.x + x + rectWidth, area.ul.y + y + rectHeight);
 
                     // Convert to world coordinates
                     Coord2d worldUL = new Coord2d(tileUL).mul(MCache.tilesz);
