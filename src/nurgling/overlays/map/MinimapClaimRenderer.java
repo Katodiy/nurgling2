@@ -1,13 +1,13 @@
 package nurgling.overlays.map;
 
 import haven.*;
-import nurgling.NMapView;
+import nurgling.widgets.NMiniMap;
 
 import java.awt.Color;
-import java.util.Collection;
 
 /**
  * Renders personal claims, village claims, and realms on the minimap.
+ * Uses persistent MapFile data instead of runtime MCache, showing all discovered claims.
  * Synchronizes with the 3D map overlay visibility toggles.
  */
 public class MinimapClaimRenderer {
@@ -23,6 +23,7 @@ public class MinimapClaimRenderer {
 
     /**
      * Main rendering method called from MiniMap's drawparts()
+     * Queries persistent MapFile data from DisplayGrids to show all discovered claims.
      *
      * @param map The minimap instance
      * @param g   Graphics context
@@ -33,100 +34,111 @@ public class MinimapClaimRenderer {
         }
 
         MapView mv = map.ui.gui.map;
-        if (mv == null || map.dloc == null || map.sessloc == null || map.curloc == null) {
+        if (mv == null || map.dloc == null) {
             return;
         }
 
-        // Must be NMapView to access loaded overlays
-        if (!(mv instanceof NMapView)) {
+        // Must be NMiniMap to access display grids
+        if (!(map instanceof NMiniMap)) {
+            return;
+        }
+        NMiniMap nmap = (NMiniMap) map;
+
+        // Get the display grid array and extent
+        MiniMap.DisplayGrid[] display = nmap.getDisplay();
+        Area dgext = nmap.getDgext();
+
+        if (display == null || dgext == null) {
             return;
         }
 
         try {
-            // Get player's position in world-relative tile coordinates (NOT segment-absolute)
-            Gob player = mv.player();
-            if (player == null) {
-                return;
-            }
+            Coord hsz = map.sz.div(2);
 
-            Coord playerTileWorld = player.rc.div(MCache.tilesz).floor();
+            // Iterate through all display grids
+            for (Coord gc : dgext) {
+                MiniMap.DisplayGrid disp = display[dgext.ri(gc)];
+                if (disp == null) {
+                    continue;
+                }
 
-            // Query area around player in world-relative tile coordinates
-            // Smaller radius for better performance - claims are large, and we don't need to render far away
-            final int QUERY_RADIUS = 100; // tiles in each direction
-            Area queryArea = Area.sized(
-                playerTileWorld.sub(QUERY_RADIUS, QUERY_RADIUS),
-                new Coord(QUERY_RADIUS * 2, QUERY_RADIUS * 2)
-            );
+                // Get the underlying DataGrid from MapFile
+                MapFile.DataGrid grid;
+                try {
+                    grid = disp.gref.get();
+                } catch (Loading e) {
+                    // Grid data not loaded yet
+                    continue;
+                }
 
-            // Try to get overlays for this area
-            Collection<MCache.OverlayInfo> overlays;
-            try {
-                overlays = map.ui.sess.glob.map.getols(queryArea);
-            } catch (Loading e) {
-                // Data not loaded yet, skip this frame
-                return;
-            }
+                if (grid == null || grid.ols.isEmpty()) {
+                    continue;
+                }
 
-            if (overlays.isEmpty()) {
-                return;
-            }
+                // Process each overlay in this grid
+                for (MapFile.Overlay overlay : grid.ols) {
+                    try {
+                        // Get the overlay resource and its tags
+                        Resource res = overlay.olid.get();
+                        MCache.ResOverlay olinfo = res.flayer(MCache.ResOverlay.class);
 
-            // Render each overlay
-            for (MCache.OverlayInfo info : overlays) {
-                // Check each tag in this overlay
-                for (String tag : info.tags()) {
-                    // Check if this overlay type is enabled in the 3D map
-                    if (!mv.visol(tag)) {
-                        continue;
-                    }
+                        if (olinfo == null) {
+                            continue;
+                        }
 
-                    // Get color for this claim type
-                    Color fillColor = getColorForTag(tag);
-                    Color borderColor = getBorderColorForTag(tag);
+                        // Check each tag to see if it matches a claim type we want to render
+                        for (String tag : olinfo.tags()) {
+                            // Check if this overlay type is enabled in the 3D map
+                            if (!mv.visol(tag)) {
+                                continue;
+                            }
 
-                    if (fillColor != null) {
-                        renderOverlay(map, g, info, queryArea, fillColor, borderColor);
+                            // Get color for this claim type
+                            Color fillColor = getColorForTag(tag);
+                            Color borderColor = getBorderColorForTag(tag);
+
+                            if (fillColor != null) {
+                                renderOverlay(map, g, overlay, disp, hsz, fillColor, borderColor);
+                                break; // Only render once per overlay, even if it has multiple tags
+                            }
+                        }
+                    } catch (Loading e) {
+                        // Resource not loaded yet, skip this overlay
+                    } catch (Exception e) {
+                        // Silently handle other errors
                     }
                 }
             }
-
         } catch (Exception e) {
             // Silently handle errors
         }
     }
 
     /**
-     * Renders a single overlay on the minimap
+     * Renders a single overlay on the minimap using rectangle merging for performance.
+     * The overlay data comes from the persistent MapFile storage.
      */
     private static void renderOverlay(MiniMap map, GOut g,
-                                      MCache.OverlayInfo info,
-                                      Area area,
+                                      MapFile.Overlay overlay,
+                                      MiniMap.DisplayGrid disp,
+                                      Coord hsz,
                                       Color fillColor,
                                       Color borderColor) {
         try {
-            // Get the boolean mask for this overlay
-            boolean[] mask = new boolean[area.area()];
-            map.ui.sess.glob.map.getol(info, area, mask);
+            // The overlay boolean array is indexed as: x + (y * cmaps.x)
+            // where cmaps is the grid size (100x100 tiles typically)
+            int width = MCache.cmaps.x;
+            int height = MCache.cmaps.y;
+            boolean[] mask = overlay.ol;
 
-            // Check if we're viewing the current segment
-            if (map.sessloc == null || map.curloc == null) {
-                return;
+            if (mask.length != width * height) {
+                return; // Invalid mask size
             }
-
-            // Only render if in the same segment
-            if (map.curloc.seg.id != map.sessloc.seg.id) {
-                return;
-            }
-
-            // Merge adjacent tiles into large rectangles for better performance
-            int width = area.br.x - area.ul.x;
-            int height = area.br.y - area.ul.y;
 
             // Track which tiles we've already rendered
             boolean[] rendered = new boolean[mask.length];
 
-            // Scan for rectangles
+            // Scan for rectangles to merge
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     int idx = y * width + x;
@@ -145,7 +157,6 @@ public class MinimapClaimRenderer {
                     }
 
                     // Find the height of the rectangle (vertical extent)
-                    // Check how many rows below have the same horizontal span
                     int rectHeight = 1;
                     boolean canExtend = true;
                     while (canExtend && y + rectHeight < height) {
@@ -169,17 +180,16 @@ public class MinimapClaimRenderer {
                         }
                     }
 
-                    // Render this rectangle
-                    Coord tileUL = new Coord(area.ul.x + x, area.ul.y + y);
-                    Coord tileBR = new Coord(area.ul.x + x + rectWidth, area.ul.y + y + rectHeight);
+                    // Convert grid-local coordinates to segment tile coordinates
+                    // disp.sc is the grid coordinate (e.g., grid 5,3)
+                    // Each grid is cmaps tiles (e.g., 100x100)
+                    Coord tileUL = disp.sc.mul(MCache.cmaps).add(x, y);
+                    Coord tileBR = disp.sc.mul(MCache.cmaps).add(x + rectWidth, y + rectHeight);
 
-                    // Convert to world coordinates
-                    Coord2d worldUL = new Coord2d(tileUL).mul(MCache.tilesz);
-                    Coord2d worldBR = new Coord2d(tileBR).mul(MCache.tilesz);
-
-                    // Convert to screen coordinates
-                    Coord screenUL = map.p2c(worldUL);
-                    Coord screenBR = map.p2c(worldBR);
+                    // Convert to screen coordinates using the same formula as MiniMap.drawmap()
+                    // Formula: UI.scale(tile).sub(dloc.tc.div(scalef())).add(hsz)
+                    Coord screenUL = UI.scale(tileUL).sub(map.dloc.tc.div(map.scalef())).add(hsz);
+                    Coord screenBR = UI.scale(tileBR).sub(map.dloc.tc.div(map.scalef())).add(hsz);
 
                     // Draw filled rectangle
                     g.chcolor(fillColor);
@@ -195,7 +205,7 @@ public class MinimapClaimRenderer {
 
             g.chcolor(); // Reset color
         } catch (Exception e) {
-            // Silently handle errors (likely Loading exceptions for unloaded areas)
+            // Silently handle errors
         }
     }
 
