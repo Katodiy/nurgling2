@@ -47,7 +47,7 @@ public class NCal extends Cal {
         // Draw event icons in a vertical column to the right of the calendar
         int iconSpacing = UI.scale(20);
         int iconX = sz.x / 2 + UI.scale(50);
-        int startY = sz.y / 2 - UI.scale(30);
+        int startY = sz.y / 2 - UI.scale(10);
         int iconIndex = 0;
         for(String key : eventNames) {
             Coord iconPos = new Coord(iconX, startY + (iconIndex * iconSpacing));
@@ -86,7 +86,7 @@ public class NCal extends Cal {
         // Draw event icons in a vertical column to the right (same as default mode)
         int iconSpacing = UI.scale(20);
         int iconX = sz.x / 2 + UI.scale(50);
-        int startY = sz.y / 2 - UI.scale(18);
+        int startY = sz.y / 2 - UI.scale(10);
         int iconIndex = 0;
         for(String key : eventNames) {
             Coord iconPos = new Coord(iconX, startY + (iconIndex * iconSpacing));
