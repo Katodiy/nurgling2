@@ -23,6 +23,7 @@ public class NConfig
     public enum Key
     {
         vilol, claimol, realmol,
+        minimapVilol, minimapClaimol, minimapRealmol,
         showVarity,
         autoFlower,
         autoSplitter,
@@ -108,6 +109,9 @@ public class NConfig
         conf.put(Key.vilol, false);
         conf.put(Key.claimol, false);
         conf.put(Key.realmol, false);
+        conf.put(Key.minimapVilol, false);
+        conf.put(Key.minimapClaimol, false);
+        conf.put(Key.minimapRealmol, false);
         conf.put(Key.showVarity, false);
         conf.put(Key.autoFlower, false);
         conf.put(Key.autoSplitter, false);

@@ -1,6 +1,7 @@
 package nurgling.overlays.map;
 
 import haven.*;
+import nurgling.NConfig;
 import nurgling.widgets.NMiniMap;
 
 import java.awt.Color;
@@ -83,8 +84,8 @@ public class MinimapClaimRenderer {
 
                         // Check each tag to see if it matches a claim type we want to render
                         for (String tag : olinfo.tags()) {
-                            // Check if this overlay type is enabled in the 3D map
-                            if (!mv.visol(tag)) {
+                            // Check if this overlay type is enabled in QoL minimap settings
+                            if (!isMinimapOverlayEnabled(tag)) {
                                 continue;
                             }
 
@@ -210,6 +211,27 @@ public class MinimapClaimRenderer {
                 return PROV_COLOR;
             default:
                 return null;
+        }
+    }
+
+    /**
+     * Check if a minimap overlay is enabled in QoL settings
+     */
+    private static boolean isMinimapOverlayEnabled(String tag) {
+        Object val;
+        switch (tag) {
+            case "cplot":
+                val = NConfig.get(NConfig.Key.minimapClaimol);
+                return val instanceof Boolean ? (Boolean) val : false;
+            case "vlg":
+                val = NConfig.get(NConfig.Key.minimapVilol);
+                return val instanceof Boolean ? (Boolean) val : false;
+            case "prov":
+            case "realm":
+                val = NConfig.get(NConfig.Key.minimapRealmol);
+                return val instanceof Boolean ? (Boolean) val : false;
+            default:
+                return false;
         }
     }
 }

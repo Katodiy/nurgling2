@@ -29,6 +29,9 @@ public class QoL extends Panel {
     private CheckBox showTerrainName;
     private CheckBox waypointRetryOnStuck;
     private CheckBox verboseCal;
+    private CheckBox showPersonalClaims;
+    private CheckBox showVillageClaims;
+    private CheckBox showRealmOverlays;
 
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
@@ -82,6 +85,11 @@ public class QoL extends Panel {
         prev = debug = content.add(new CheckBox("DEBUG"), prev.pos("bl").adds(0, 5));
         prev = printpfmap = content.add(new CheckBox("Path Finder map in debug"), prev.pos("bl").adds(0, 5));
 
+        prev = content.add(new Label("Map overlays:"), prev.pos("bl").adds(0, 15));
+        prev = showPersonalClaims = content.add(new CheckBox("Show personal claims on minimap"), prev.pos("bl").adds(0, 5));
+        prev = showVillageClaims = content.add(new CheckBox("Show village claims on minimap"), prev.pos("bl").adds(0, 5));
+        prev = showRealmOverlays = content.add(new CheckBox("Show realm overlays on minimap"), prev.pos("bl").adds(0, 5));
+
         prev = content.add(new Label("Temporary marks:"), prev.pos("bl").adds(0, 15));
         prev = tempmark = content.add(new CheckBox("Save temporary marks"), prev.pos("bl").adds(0, 5));
         prev = content.add(new Label("Max distance (grids):"), prev.pos("bl").adds(0, 5));
@@ -122,6 +130,9 @@ public class QoL extends Panel {
         showTerrainName.a = getBool(NConfig.Key.showTerrainName);
         waypointRetryOnStuck.a = getBool(NConfig.Key.waypointRetryOnStuck);
         verboseCal.a = getBool(NConfig.Key.verboseCal);
+        showPersonalClaims.a = getBool(NConfig.Key.minimapClaimol);
+        showVillageClaims.a = getBool(NConfig.Key.minimapVilol);
+        showRealmOverlays.a = getBool(NConfig.Key.minimapRealmol);
 
         Object dist = NConfig.get(NConfig.Key.temsmarkdist);
         temsmarkdistEntry.settext(dist == null ? "" : dist.toString());
@@ -168,6 +179,11 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.showTerrainName, showTerrainName.a);
         NConfig.set(NConfig.Key.waypointRetryOnStuck, waypointRetryOnStuck.a);
         NConfig.set(NConfig.Key.verboseCal, verboseCal.a);
+
+        // Save minimap overlay settings (separate from 3D ground overlays)
+        NConfig.set(NConfig.Key.minimapClaimol, showPersonalClaims.a);
+        NConfig.set(NConfig.Key.minimapVilol, showVillageClaims.a);
+        NConfig.set(NConfig.Key.minimapRealmol, showRealmOverlays.a);
 
         // Save uniform biome colors and update minimap if changed
         boolean oldUniformColors = getBool(NConfig.Key.uniformBiomeColors);
