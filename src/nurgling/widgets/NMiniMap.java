@@ -22,7 +22,6 @@ public class NMiniMap extends MiniMap {
     public static final Color VIEW_FOG_COLOR = new Color(255, 255, 0 , 120);
     public static final Color VIEW_BG_COLOR = new Color(255, 255, 255, 60);
     public static final Color VIEW_BORDER_COLOR = new Color(0, 0, 0, 128);
-    public static Coord2d TEMP_VIEW_SZ = new Coord2d(VIEW_SZ).floor().mul(tilesz).div(2).sub(tilesz.mul(5));
     public final FogArea fogArea = new FogArea(this);
 
     private String currentTerrainName = null;
@@ -73,20 +72,6 @@ public class NMiniMap extends MiniMap {
             this.icon = new TexI(icon);
             this.loc = loc;
         }
-    }
-
-
-    // Public accessors for protected MiniMap fields (needed by MinimapClaimRenderer)
-    public Area getDgext() {
-        return dgext;
-    }
-
-    public Location getDloc() {
-        return dloc;
-    }
-
-    public int getDlvl() {
-        return dlvl;
     }
 
     @Override

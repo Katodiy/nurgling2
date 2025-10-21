@@ -2,8 +2,6 @@ package nurgling.overlays.map;
 
 import haven.*;
 import nurgling.NMapView;
-import nurgling.NUtils;
-import nurgling.widgets.NMiniMap;
 
 import java.awt.Color;
 import java.util.Collection;
@@ -43,7 +41,6 @@ public class MinimapClaimRenderer {
         if (!(mv instanceof NMapView)) {
             return;
         }
-        NMapView nmv = (NMapView) mv;
 
         try {
             // Get player's position in world-relative tile coordinates (NOT segment-absolute)
@@ -55,7 +52,7 @@ public class MinimapClaimRenderer {
             Coord playerTileWorld = player.rc.div(MCache.tilesz).floor();
 
             // Query area around player in world-relative tile coordinates
-            // Smaller radius for better performance - claims are large and we don't need to render far away
+            // Smaller radius for better performance - claims are large, and we don't need to render far away
             final int QUERY_RADIUS = 100; // tiles in each direction
             Area queryArea = Area.sized(
                 playerTileWorld.sub(QUERY_RADIUS, QUERY_RADIUS),
@@ -128,7 +125,6 @@ public class MinimapClaimRenderer {
 
             // Track which tiles we've already rendered
             boolean[] rendered = new boolean[mask.length];
-            int rectsRendered = 0;
 
             // Scan for rectangles
             for (int y = 0; y < height; y++) {
@@ -194,8 +190,6 @@ public class MinimapClaimRenderer {
                         g.chcolor(borderColor);
                         g.rect2(screenUL, screenBR);
                     }
-
-                    rectsRendered++;
                 }
             }
 
