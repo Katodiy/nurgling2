@@ -5,17 +5,6 @@ import nurgling.NConfig;
 
 public class NCal extends Cal {
     @Override
-    public void tick(double dt) {
-        super.tick(dt);
-        // TEST: Enable all icons
-        eventNames.clear();
-        eventNames.add("dawn");
-        eventNames.add("mantle");
-        eventNames.add("wolf");
-        eventNames.add("rain");
-    }
-
-    @Override
     public boolean checkhit(Coord c) {
         // Account for the centered calendar graphic in the larger widget
         Coord center = sz.div(2).sub(bg.sz().div(2));
