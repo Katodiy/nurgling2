@@ -56,6 +56,28 @@ public class NGameUI extends GameUI
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
+
+        // Replace Cal with NCal to keep calendar customizations in nurgling package
+        Widget oldCalendarWidget = null;
+        for(Widget wdg : children()) {
+            if(wdg instanceof NDraggableWidget) {
+                // Check if this draggable widget contains the Cal
+                for(Widget child : wdg.children()) {
+                    if(child instanceof Cal && !(child instanceof NCal)) {
+                        oldCalendarWidget = wdg;
+                        break;
+                    }
+                }
+                if(oldCalendarWidget != null) break;
+            }
+        }
+        if(oldCalendarWidget != null) {
+            Coord calPos = oldCalendarWidget.c;
+            oldCalendarWidget.destroy();
+            calendar = new NCal();
+            add(new NDraggableWidget(calendar, "Calendar", UI.scale(400,90)), calPos);
+        }
+
         itemsForSearch = new NSearchItem();
         add(new NDraggableWidget(alarmWdg = new NAlarmWdg(),"alarm",NStyle.alarm[0].sz().add(NDraggableWidget.delta)));
         add(new NDraggableWidget(nep = new NEquipProxy(NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT, NEquipory.Slots.BELT), "EquipProxy",  UI.scale(138, 55)));

@@ -28,43 +28,70 @@ public class QoL extends Panel {
     private CheckBox uniformBiomeColors;
     private CheckBox showTerrainName;
     private CheckBox waypointRetryOnStuck;
+    private CheckBox verboseCal;
 
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
 
+    private Scrollport scrollport;
+    private Widget content;
+
     public QoL() {
         super("");
         int margin = UI.scale(10);
+
+        // Create scrollport to contain all settings
+        int scrollWidth = UI.scale(560);
+        int scrollHeight = UI.scale(550);
+        scrollport = add(new Scrollport(new Coord(scrollWidth, scrollHeight)), new Coord(margin, margin));
+
+        // Create content widget that will hold all settings
+        content = new Widget(new Coord(scrollWidth - UI.scale(20), UI.scale(50))) {
+            @Override
+            public void pack() {
+                // Auto-resize based on children
+                resize(contentsz());
+            }
+        };
+        scrollport.cont.add(content, Coord.z);
+
+        // Add all settings to the content widget
         Widget prev = null;
+        int contentMargin = UI.scale(5);
 
-        prev = showCropStage = add(new CheckBox("Show crop stage"), new Coord(margin, margin));
-        prev = simpleCrops = add(new CheckBox("Simple crops"), prev.pos("bl").adds(0, 5));
-        prev = nightVision = add(new CheckBox("Night vision"), prev.pos("bl").adds(0, 5));
-        prev = autoDrink = add(new CheckBox("Auto-drink"), prev.pos("bl").adds(0, 5));
-        prev = showBB = add(new CheckBox("Bounding Boxes"), prev.pos("bl").adds(0, 5));
-        prev = showCSprite = add(new CheckBox("Show decorative objects (need reboot)"), prev.pos("bl").adds(0, 5));
-        prev = hideNature = add(new CheckBox("Hide nature objects"), prev.pos("bl").adds(0, 5));
-        prev = miningOL = add(new CheckBox("Show mining overlay"), prev.pos("bl").adds(0, 5));
-        prev = tracking = add(new CheckBox("Enable tracking when login"), prev.pos("bl").adds(0, 5));
-        prev = crime = add(new CheckBox("Enable criminal acting when login"), prev.pos("bl").adds(0, 5));
-        prev = swimming = add(new CheckBox("Enable swimming when login"), prev.pos("bl").adds(0, 5));
-        prev = disableMenugridKeys = add(new CheckBox("Disable menugrid keys"), prev.pos("bl").adds(0, 5));
-        prev = questNotified = add(new CheckBox("Enable quest notified"), prev.pos("bl").adds(0, 5));
-        prev = lpassistent = add(new CheckBox("Enable LP assistant"), prev.pos("bl").adds(0, 5));
-        prev = shortCupboards = add(new CheckBox("Short cupboards"), prev.pos("bl").adds(0, 5));
-        prev = useGlobalPf = add(new CheckBox("Use global PF"), prev.pos("bl").adds(0, 5));
-        prev = uniformBiomeColors = add(new CheckBox("Uniform biome colors on minimap"), prev.pos("bl").adds(0, 5));
-        prev = showTerrainName = add(new CheckBox("Show terrain name on minimap hover"), prev.pos("bl").adds(0, 5));
-        prev = waypointRetryOnStuck = add(new CheckBox("Retry waypoint movement when stuck"), prev.pos("bl").adds(0, 5));
-        prev = debug = add(new CheckBox("DEBUG"), prev.pos("bl").adds(0, 5));
-        prev = printpfmap = add(new CheckBox("Path Finder map in debug"), prev.pos("bl").adds(0, 5));
+        prev = showCropStage = content.add(new CheckBox("Show crop stage"), new Coord(contentMargin, contentMargin));
+        prev = simpleCrops = content.add(new CheckBox("Simple crops"), prev.pos("bl").adds(0, 5));
+        prev = nightVision = content.add(new CheckBox("Night vision"), prev.pos("bl").adds(0, 5));
+        prev = autoDrink = content.add(new CheckBox("Auto-drink"), prev.pos("bl").adds(0, 5));
+        prev = showBB = content.add(new CheckBox("Bounding Boxes"), prev.pos("bl").adds(0, 5));
+        prev = showCSprite = content.add(new CheckBox("Show decorative objects (need reboot)"), prev.pos("bl").adds(0, 5));
+        prev = hideNature = content.add(new CheckBox("Hide nature objects"), prev.pos("bl").adds(0, 5));
+        prev = miningOL = content.add(new CheckBox("Show mining overlay"), prev.pos("bl").adds(0, 5));
+        prev = tracking = content.add(new CheckBox("Enable tracking when login"), prev.pos("bl").adds(0, 5));
+        prev = crime = content.add(new CheckBox("Enable criminal acting when login"), prev.pos("bl").adds(0, 5));
+        prev = swimming = content.add(new CheckBox("Enable swimming when login"), prev.pos("bl").adds(0, 5));
+        prev = disableMenugridKeys = content.add(new CheckBox("Disable menugrid keys"), prev.pos("bl").adds(0, 5));
+        prev = questNotified = content.add(new CheckBox("Enable quest notified"), prev.pos("bl").adds(0, 5));
+        prev = lpassistent = content.add(new CheckBox("Enable LP assistant"), prev.pos("bl").adds(0, 5));
+        prev = shortCupboards = content.add(new CheckBox("Short cupboards"), prev.pos("bl").adds(0, 5));
+        prev = useGlobalPf = content.add(new CheckBox("Use global PF"), prev.pos("bl").adds(0, 5));
+        prev = uniformBiomeColors = content.add(new CheckBox("Uniform biome colors on minimap"), prev.pos("bl").adds(0, 5));
+        prev = showTerrainName = content.add(new CheckBox("Show terrain name on minimap hover"), prev.pos("bl").adds(0, 5));
+        prev = waypointRetryOnStuck = content.add(new CheckBox("Retry waypoint movement when stuck"), prev.pos("bl").adds(0, 5));
+        prev = verboseCal = content.add(new CheckBox("Verbose calendar"), prev.pos("bl").adds(0, 5));
+        prev = debug = content.add(new CheckBox("DEBUG"), prev.pos("bl").adds(0, 5));
+        prev = printpfmap = content.add(new CheckBox("Path Finder map in debug"), prev.pos("bl").adds(0, 5));
 
-        prev = add(new Label("Temporary marks:"), prev.pos("bl").adds(0, 15));
-        prev = tempmark = add(new CheckBox("Save temporary marks"), prev.pos("bl").adds(0, 5));
-        prev = add(new Label("Max distance (grids):"), prev.pos("bl").adds(0, 5));
-        prev = temsmarkdistEntry = add(new TextEntry.NumberValue(50, ""), prev.pos("bl").adds(0, 5));
-        prev = add(new Label("Storage duration (minutes):"), prev.pos("bl").adds(0, 5));
-        prev = temsmarktimeEntry = add(new TextEntry.NumberValue(50, ""), prev.pos("bl").adds(0, 5));
+        prev = content.add(new Label("Temporary marks:"), prev.pos("bl").adds(0, 15));
+        prev = tempmark = content.add(new CheckBox("Save temporary marks"), prev.pos("bl").adds(0, 5));
+        prev = content.add(new Label("Max distance (grids):"), prev.pos("bl").adds(0, 5));
+        prev = temsmarkdistEntry = content.add(new TextEntry.NumberValue(50, ""), prev.pos("bl").adds(0, 5));
+        prev = content.add(new Label("Storage duration (minutes):"), prev.pos("bl").adds(0, 5));
+        prev = temsmarktimeEntry = content.add(new TextEntry.NumberValue(50, ""), prev.pos("bl").adds(0, 5));
+
+        // Pack content and update scrollbar
+        content.pack();
+        scrollport.cont.update();
 
         pack();
     }
@@ -94,6 +121,7 @@ public class QoL extends Panel {
         uniformBiomeColors.a = getBool(NConfig.Key.uniformBiomeColors);
         showTerrainName.a = getBool(NConfig.Key.showTerrainName);
         waypointRetryOnStuck.a = getBool(NConfig.Key.waypointRetryOnStuck);
+        verboseCal.a = getBool(NConfig.Key.verboseCal);
 
         Object dist = NConfig.get(NConfig.Key.temsmarkdist);
         temsmarkdistEntry.settext(dist == null ? "" : dist.toString());
@@ -139,6 +167,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.shortCupboards, shortCupboards.a);
         NConfig.set(NConfig.Key.showTerrainName, showTerrainName.a);
         NConfig.set(NConfig.Key.waypointRetryOnStuck, waypointRetryOnStuck.a);
+        NConfig.set(NConfig.Key.verboseCal, verboseCal.a);
 
         // Save uniform biome colors and update minimap if changed
         boolean oldUniformColors = getBool(NConfig.Key.uniformBiomeColors);
