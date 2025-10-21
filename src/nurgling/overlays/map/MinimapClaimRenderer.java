@@ -55,16 +55,12 @@ public class MinimapClaimRenderer {
             Coord playerTileWorld = player.rc.div(MCache.tilesz).floor();
 
             // Query area around player in world-relative tile coordinates
+            // Smaller radius for better performance - claims are large and we don't need to render far away
             final int QUERY_RADIUS = 100; // tiles in each direction
             Area queryArea = Area.sized(
                 playerTileWorld.sub(QUERY_RADIUS, QUERY_RADIUS),
                 new Coord(QUERY_RADIUS * 2, QUERY_RADIUS * 2)
             );
-
-            System.out.println("=== CLAIM OVERLAY RENDERING ===");
-            System.out.println("Player tc (sessloc.tc): " + map.sessloc.tc);
-            System.out.println("Player tile (rc/tilesz): " + playerTileWorld);
-            System.out.println("Query area around player: " + queryArea);
 
             // Try to get overlays for this area
             Collection<MCache.OverlayInfo> overlays;
@@ -72,11 +68,8 @@ public class MinimapClaimRenderer {
                 overlays = map.ui.sess.glob.map.getols(queryArea);
             } catch (Loading e) {
                 // Data not loaded yet, skip this frame
-                System.out.println("Loading exception - data not loaded for query area");
                 return;
             }
-
-            System.out.println("Found " + overlays.size() + " overlays in query area");
 
             if (overlays.isEmpty()) {
                 return;
@@ -96,7 +89,6 @@ public class MinimapClaimRenderer {
                     Color borderColor = getBorderColorForTag(tag);
 
                     if (fillColor != null) {
-                        System.out.println("Rendering overlay with tag: " + tag);
                         renderOverlay(map, g, info, queryArea, fillColor, borderColor);
                     }
                 }
@@ -130,44 +122,55 @@ public class MinimapClaimRenderer {
                 return;
             }
 
-            // Render each claimed tile
-            int idx = 0;
-            int tilesRendered = 0;
-            int debugCount = 0;
-            for (Coord tc : area) {
-                if (mask[idx++]) {
-                    tilesRendered++;
+            // Merge adjacent tiles into rectangles for better performance
+            // Scan row by row and find horizontal runs of claimed tiles
+            int width = area.br.x - area.ul.x;
+            int height = area.br.y - area.ul.y;
+            int rectsRendered = 0;
 
-                    // Debug first tile to understand coordinate system
-                    if (debugCount == 0) {
-                        System.out.println("  First tile tc from iteration: " + tc);
-                        System.out.println("  sessloc.tc: " + map.sessloc.tc);
-                        debugCount++;
+            for (int y = 0; y < height; y++) {
+                int x = 0;
+                while (x < width) {
+                    // Skip unclaimed tiles
+                    while (x < width && !mask[y * width + x]) {
+                        x++;
                     }
 
-                    // tc is in world-relative tile coordinates
-                    // Convert to world coordinates, then to screen coordinates
-                    Coord2d tc2d = new Coord2d(tc);
-                    Coord2d worldUL = tc2d.mul(MCache.tilesz);
-                    Coord2d worldBR = worldUL.add(MCache.tilesz);
+                    if (x >= width) break;
 
+                    // Found start of a run - find the end
+                    int runStart = x;
+                    while (x < width && mask[y * width + x]) {
+                        x++;
+                    }
+                    int runEnd = x;
+
+                    // Render this horizontal run as a single rectangle
+                    Coord tileUL = new Coord(area.ul.x + runStart, area.ul.y + y);
+                    Coord tileBR = new Coord(area.ul.x + runEnd, area.ul.y + y + 1);
+
+                    // Convert to world coordinates
+                    Coord2d worldUL = new Coord2d(tileUL).mul(MCache.tilesz);
+                    Coord2d worldBR = new Coord2d(tileBR).mul(MCache.tilesz);
+
+                    // Convert to screen coordinates
                     Coord screenUL = map.p2c(worldUL);
                     Coord screenBR = map.p2c(worldBR);
 
-                    // Draw filled rectangle for the claim using frect2 like fog
+                    // Draw filled rectangle
                     g.chcolor(fillColor);
                     g.frect2(screenUL, screenBR);
 
-                    // Draw border for better visibility
+                    // Draw border
                     if (borderColor != null) {
                         g.chcolor(borderColor);
                         g.rect2(screenUL, screenBR);
                     }
+
+                    rectsRendered++;
                 }
             }
-            if (tilesRendered > 0) {
-                System.out.println("  Rendered " + tilesRendered + " tiles");
-            }
+
             g.chcolor(); // Reset color
         } catch (Exception e) {
             // Silently handle errors (likely Loading exceptions for unloaded areas)
