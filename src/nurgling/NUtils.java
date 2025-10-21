@@ -7,6 +7,7 @@ import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import mapv4.StatusWdg;
 import nurgling.areas.*;
+import nurgling.overlays.map.NOverlay;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.*;
@@ -80,6 +81,21 @@ public class NUtils
                         gob.hide();
                     }
                 }
+        }
+    }
+
+    public static void refreshAreaOverlays() {
+        if(NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+            NMapView map = (NMapView) NUtils.getGameUI().map;
+            // Force overlays to refresh by removing and re-adding them
+            HashMap<Integer, NOverlay> overlaysCopy = new HashMap<>(map.nols);
+            for(Map.Entry<Integer, NOverlay> entry : overlaysCopy.entrySet()) {
+                if(entry.getKey() >= 0) { // Only refresh area overlays, not special overlays like mining (-1)
+                    NOverlay overlay = entry.getValue();
+                    overlay.remove();
+                    map.addCustomOverlay(entry.getKey(), overlay);
+                }
+            }
         }
     }
 

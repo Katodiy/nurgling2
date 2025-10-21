@@ -12,6 +12,7 @@ public class NOverlay extends MapView.MapRaster
 {
     final Integer id;
     public boolean requpdate2 = false;
+    private boolean wasRendered = false; // Track if we've added to slot
 
     public boolean requpdate(){
         return false;
@@ -37,16 +38,65 @@ public class NOverlay extends MapView.MapRaster
 
     public void tick() {
         super.tick();
-        if(area != null) {
+
+        // Determine if we should show overlays based on config and window state
+        boolean hideWhenClosed = (Boolean)NConfig.get(NConfig.Key.showAreaOverlays);
+        boolean shouldShow = !hideWhenClosed; // Default: always show if unchecked
+
+        if(hideWhenClosed) {
+            // If checked, only show when Areas window is visible
+            boolean areasWindowVisible = NUtils.getGameUI() != null &&
+                                         NUtils.getGameUI().areas != null &&
+                                         NUtils.getGameUI().areas.visible;
+            shouldShow = areasWindowVisible;
+        }
+
+        // Dynamically add or remove overlay from slot based on visibility
+        if(shouldShow && !wasRendered && slot != null) {
+            // Need to show but not currently rendered - add to slot
+            try {
+                slot.add(base, new BaseColor(bc));
+                slot.add(outl, new BaseColor(200, 200, 200, 200));
+                wasRendered = true;
+            } catch(Exception e) {
+                // Ignore if slot is already removed
+            }
+        } else if(!shouldShow && wasRendered && slot != null) {
+            // Need to hide but currently rendered - clear slot
+            try {
+                slot.clear();
+                wasRendered = false;
+            } catch(Exception e) {
+                // Ignore if slot is already removed
+            }
+        }
+
+        // Only tick the grids if we're showing
+        if(shouldShow && area != null) {
             base.tick();
             outl.tick();
         }
     }
 
     public void added(RenderTree.Slot slot) {
+        // Determine if we should show overlays initially based on config and window state
+        boolean hideWhenClosed = (Boolean)NConfig.get(NConfig.Key.showAreaOverlays);
+        boolean shouldShow = !hideWhenClosed; // Default: always show if unchecked
+
+        if(hideWhenClosed) {
+            // If checked, only show when Areas window is visible
+            boolean areasWindowVisible = NUtils.getGameUI() != null &&
+                                         NUtils.getGameUI().areas != null &&
+                                         NUtils.getGameUI().areas.visible;
+            shouldShow = areasWindowVisible;
+        }
+
+        if(shouldShow) {
 //			Material overlay_mat = new Material(new BaseColor(194,194,65,56));
-        slot.add(base,new BaseColor(bc));
-        slot.add(outl, new BaseColor(200,200,200,200));
+            slot.add(base,new BaseColor(bc));
+            slot.add(outl, new BaseColor(200,200,200,200));
+            wasRendered = true;
+        }
         super.added(slot);
     }
 
