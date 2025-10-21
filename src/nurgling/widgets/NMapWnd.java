@@ -13,6 +13,9 @@ public class NMapWnd extends MapWnd {
     public Resource.Image searchRes = null;
     public boolean needUpdate = false;
     TextEntry te;
+    Button fishMenuBtn;
+    private static final int btnw = UI.scale(95);
+
     public NMapWnd(MapFile file, MapView mv, Coord sz, String title) {
         super(file, mv, sz, title);
         searchRes = Resource.local().loadwait("alttex/selectedtex").layer(Resource.imgc);
@@ -25,6 +28,32 @@ public class NMapWnd extends MapWnd {
                 NUtils.getGameUI().mmap.needUpdate = true;
             }
         }, view.pos("br").sub(UI.scale(200,20)));
+
+        // Add Fish button at top-right of map view
+        // Position it directly using view.c (top-left) + view width - button width
+        add(fishMenuBtn = new Button(UI.scale(100), "Fish Search") {
+            @Override
+            public void click() {
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if (gui != null) {
+                    // Check if window already exists and is visible
+                    if (gui.fishSearchWindow != null) {
+                        // If window exists, toggle visibility
+                        if (gui.fishSearchWindow.visible()) {
+                            gui.fishSearchWindow.hide();
+                        } else {
+                            gui.fishSearchWindow.show();
+                            gui.fishSearchWindow.raise();
+                        }
+                    } else {
+                        // Create new window if it doesn't exist
+                        gui.fishSearchWindow = new FishSearchWindow(gui);
+                        gui.add(gui.fishSearchWindow, new Coord(100, 100));
+                        gui.fishSearchWindow.show();
+                    }
+                }
+            }
+        }, view.c.add(view.sz.x - UI.scale(95), UI.scale(5)));
     }
 
     public long playerSegmentId() {
@@ -50,6 +79,10 @@ public class NMapWnd extends MapWnd {
         super.resize(sz);
         if(te!=null)
             te.c = view.pos("br").sub(UI.scale(200,20));
+
+        // Position Fish button at top-right of map view
+        if(fishMenuBtn != null)
+            fishMenuBtn.c = view.c.add(view.sz.x - UI.scale(95), UI.scale(5));
     }
     
     @Override
@@ -93,12 +126,14 @@ public class NMapWnd extends MapWnd {
                     }
                 }
 
-                // Right-click to clear waypoint queue
-                if(ev.b == 3) {
+                // Right-click for clearing waypoint queue (fish handling is in parent NMiniMap)
+                if(ev.b == 3 && !ui.modshift) {
+                    // Clear waypoint queue on regular right-click (if not on fish/marker)
                     NGameUI gui = (NGameUI) NUtils.getGameUI();
                     if(gui != null && gui.waypointMovementService != null) {
                         gui.waypointMovementService.clearQueue();
                     }
+                    // Let parent handle fish location clicks and other right-click behavior
                 }
             }
         }
@@ -128,18 +163,18 @@ public class NMapWnd extends MapWnd {
         // Try to find a resource marker at the clicked location
         MiniMap.Location clickLoc = view.xlate(c);
         if(clickLoc == null) return false;
-        
+
         MiniMap.DisplayMarker marker = view.markerat(clickLoc.tc);
         if(marker != null && marker.m instanceof MapFile.SMarker) {
             MapFile.SMarker smarker = (MapFile.SMarker) marker.m;
-            
+
             // Handle through service
             NGameUI gui = (NGameUI) NUtils.getGameUI();
             if(gui != null && gui.localizedResourceTimerService != null) {
                 return gui.localizedResourceTimerService.handleResourceClick(smarker);
             }
         }
-        
+
         return false;
     }
 }

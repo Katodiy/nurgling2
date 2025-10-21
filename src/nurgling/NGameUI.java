@@ -18,6 +18,7 @@ import nurgling.widgets.AllowVisitingStatusBuff;
 import nurgling.widgets.LocalizedResourceTimersWindow;
 import nurgling.widgets.LocalizedResourceTimerDialog;
 import nurgling.widgets.StudyDeskPlannerWidget;
+import nurgling.widgets.FishingWindowExtension;
 
 import java.awt.event.KeyEvent;
 import java.util.*;
@@ -52,6 +53,9 @@ public class NGameUI extends GameUI
     private LocalizedResourceTimerDialog localizedResourceTimerDialog = null;
     public LocalizedResourceTimerService localizedResourceTimerService;
     public WaypointMovementService waypointMovementService;
+    public FishLocationService fishLocationService;
+    public FishSearchWindow fishSearchWindow = null;
+    public final Map<String, FishLocationDetailsWindow> openFishDetailWindows = new HashMap<>();
     public StudyDeskPlannerWidget studyDeskPlanner = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
@@ -107,12 +111,15 @@ public class NGameUI extends GameUI
         localizedResourceTimerService = new LocalizedResourceTimerService(this);
         add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
         waypointMovementService = new WaypointMovementService(this);
+        fishLocationService = new FishLocationService(this);
     }
 
     @Override
     public void dispose() {
         if(localizedResourceTimerService != null)
             localizedResourceTimerService.dispose();
+        if(fishLocationService != null)
+            fishLocationService.dispose();
         if(nurgling.NUtils.getUI().core!=null)
             NUtils.getUI().core.dispose();
         super.dispose();
@@ -333,6 +340,15 @@ public class NGameUI extends GameUI
         else
         {
             super.addchild(child, args);
+
+            // Add fishing extension if this is the "This is bait" window
+            if (child instanceof Window) {
+                Window wnd = (Window) child;
+                if ("This is bait".equals(wnd.cap)) {
+                    FishingWindowExtension.addSaveFishButton(wnd, this);
+                }
+            }
+
             if (maininv != null && ((NInventory) maininv).searchwdg == null)
             {
                 ((NInventory) maininv).installMainInv();
