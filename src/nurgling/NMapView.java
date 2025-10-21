@@ -73,6 +73,52 @@ public class NMapView extends MapView
         basic.add(glob.oc.paths);
     }
 
+    /**
+     * Access loaded overlay information for minimap rendering.
+     * Uses reflection to access MapView's private ols field.
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<Object[]> getLoadedOverlays() {
+        try {
+            java.lang.reflect.Field olsField = MapView.class.getDeclaredField("ols");
+            olsField.setAccessible(true);
+            java.util.Map<?, ?> ols = (java.util.Map<?, ?>) olsField.get(this);
+
+            List<Object[]> result = new ArrayList<>();
+            for (java.util.Map.Entry<?, ?> entry : ols.entrySet()) {
+                result.add(new Object[] { entry.getKey(), entry.getValue() });
+            }
+            return result;
+        } catch (Exception e) {
+            System.out.println("ERROR accessing ols field: " + e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Get the loaded terrain area for overlay rendering.
+     * Uses reflection to access MapView's private terrain field.
+     */
+    public Area getLoadedTerrainArea() {
+        try {
+            java.lang.reflect.Field terrainField = MapView.class.getDeclaredField("terrain");
+            terrainField.setAccessible(true);
+            Object terrain = terrainField.get(this);
+
+            if (terrain != null) {
+                java.lang.reflect.Field areaField = terrain.getClass().getField("area");
+                Area area = (Area) areaField.get(terrain);
+                if (area != null) {
+                    // Terrain area is in cuts, multiply by cutsz to get tiles
+                    return area.mul(MCache.cutsz);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ERROR accessing terrain.area: " + e.getMessage());
+        }
+        return null;
+    }
+
     final HashMap<String, String> ttip = new HashMap<>();
     final ArrayList<String> tlays = new ArrayList<>();
     final HashMap<String, BufferedImage> cachedImages = new HashMap<>();

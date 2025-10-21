@@ -6,6 +6,7 @@ import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.LocalizedResourceTimer;
 import nurgling.NGameUI;
+import nurgling.overlays.map.MinimapClaimRenderer;
 import nurgling.tools.FogArea;
 
 import java.awt.*;
@@ -75,11 +76,28 @@ public class NMiniMap extends MiniMap {
     }
 
 
+    // Public accessors for protected MiniMap fields (needed by MinimapClaimRenderer)
+    public Area getDgext() {
+        return dgext;
+    }
+
+    public Location getDloc() {
+        return dloc;
+    }
+
+    public int getDlvl() {
+        return dlvl;
+    }
+
     @Override
     public void drawparts(GOut g) {
         if(NUtils.getGameUI()==null)
             return;
         drawmap(g);
+
+        // Render claim overlays (personal, village, realm)
+        MinimapClaimRenderer.renderClaims(this, g);
+
         boolean playerSegment = (sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id));
         if(zoomlevel <= 2 && (Boolean) NConfig.get(NConfig.Key.showGrid)) {drawgrid(g);}
         if(playerSegment && zoomlevel <= 1 && (Boolean)NConfig.get(NConfig.Key.showView)) {drawview(g);}
