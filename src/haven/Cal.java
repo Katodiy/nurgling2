@@ -84,17 +84,15 @@ public class Cal extends Widget {
 	g.image((a.night ? nlnd : dlnd)[a.is], center);
 	g.image(bg, center);
 
-	Coord2d dir = UI.scale(new Coord2d(50,-15));
-	int count = 0;
+	// Draw event icons in a vertical column to the right of the calendar
+	int iconSpacing = UI.scale(20);
+	int iconX = sz.x / 2 + UI.scale(50);
+	int startY = sz.y / 2 - UI.scale(18);
+	int iconIndex = 0;
 	for(String key : eventNames) {
-		g.aimage(events.get(key), dir.floor().add(sz.div(2)),0.5,0.5);
-		count +=1;
-		if(count>1)
-		{
-			count = 0;
-			dir.y +=30;
-		}
-		dir = UI.scale(new Coord2d(50+(30*count),dir.y));
+		Coord iconPos = new Coord(iconX, startY + (iconIndex * iconSpacing));
+		g.aimage(events.get(key), iconPos, 0.5, 0.5);
+		iconIndex++;
 	}
     }
 
