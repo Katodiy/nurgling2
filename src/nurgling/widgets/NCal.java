@@ -5,6 +5,13 @@ import nurgling.NConfig;
 
 public class NCal extends Cal {
     @Override
+    public boolean checkhit(Coord c) {
+        // Account for the centered calendar graphic in the larger widget
+        Coord center = sz.div(2).sub(bg.sz().div(2));
+        return Utils.checkhit(dsky.scaled(), c.sub(center).sub(dsky.o));
+    }
+
+    @Override
     public void draw(GOut g) {
         Astronomy a = ui.sess.glob.ast;
         long now = System.currentTimeMillis();
