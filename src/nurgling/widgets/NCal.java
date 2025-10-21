@@ -70,7 +70,7 @@ public class NCal extends Cal {
         // Left side text - right-aligned to point toward calendar
         int leftX = sz.x / 2 - UI.scale(40);
         int baseY = sz.y / 2;
-        int lineHeight = UI.scale(12);
+        int lineHeight = UI.scale(16);
 
         // Line 1: "Season: Summer"
         String seasonLine = String.format("Season: %s", a.season());
