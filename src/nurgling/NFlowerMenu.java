@@ -74,6 +74,20 @@ public class NFlowerMenu extends FlowerMenu
         }
         else
         {
+            // Handle custom "Save Tree Location" option
+            if(option.name.equals("Save Tree Location")) {
+                NCore.LastActions actions = NUtils.getUI().core.getLastActions();
+                if(actions != null && actions.gob != null) {
+                    NGameUI gui = (NGameUI) NUtils.getGameUI();
+                    if(gui != null && gui.treeLocationService != null) {
+                        gui.treeLocationService.saveTreeLocation(actions.gob);
+                    }
+                }
+                wdgmsg("cl", -1); // Close menu without sending to server
+                NUtils.getUI().core.setLastAction();
+                return;
+            }
+
             wdgmsg("cl", option.num, ui.modflags());
             NCore.LastActions actions = NUtils.getUI().core.getLastActions();
             if(actions!=null) {

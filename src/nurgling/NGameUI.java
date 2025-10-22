@@ -56,6 +56,8 @@ public class NGameUI extends GameUI
     public FishLocationService fishLocationService;
     public FishSearchWindow fishSearchWindow = null;
     public final Map<String, FishLocationDetailsWindow> openFishDetailWindows = new HashMap<>();
+    public TreeLocationService treeLocationService;
+    public TreeSearchWindow treeSearchWindow = null;
     public StudyDeskPlannerWidget studyDeskPlanner = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
@@ -112,6 +114,7 @@ public class NGameUI extends GameUI
         add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
         waypointMovementService = new WaypointMovementService(this);
         fishLocationService = new FishLocationService(this);
+        treeLocationService = new TreeLocationService(this);
     }
 
     @Override
