@@ -49,14 +49,14 @@ public class FlowerMenu extends Widget {
 	    for(int i = 0; i < args.length; i++)
 		opts[i] = (String)args[i];
 
-	    // Check if this is a tree and add "Save Tree Location" option
+	    // Check if this is a tree or bush and add "Save Tree Location" option
 	    try {
 		NCore.LastActions lastActions = ui.core.getLastActions();
 		if(lastActions != null && lastActions.gob != null) {
 		    Gob gob = lastActions.gob;
 		    Resource res = gob.getres();
-		    if(res != null && res.name.startsWith("gfx/terobjs/trees/") && !res.name.contains("log")) {
-			// This is a tree - add custom option
+		    if(res != null && ((res.name.startsWith("gfx/terobjs/trees/") && !res.name.contains("log")) || res.name.startsWith("gfx/terobjs/bushes/"))) {
+			// This is a tree or bush - add custom option
 			String[] newOpts = new String[opts.length + 1];
 			System.arraycopy(opts, 0, newOpts, 0, opts.length);
 			newOpts[opts.length] = "Save Tree Location";

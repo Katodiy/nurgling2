@@ -23,8 +23,12 @@ public class TreeLocationDetailsWindow extends Window {
         int y = 0;
         int lineHeight = UI.scale(18);
 
-        // Simple tree name label
+        // Tree name label
         content.add(new Label(treeLocation.getTreeName()), 0, y);
+        y += lineHeight;
+
+        // Quantity label
+        content.add(new Label("Quantity: " + treeLocation.getQuantity()), 0, y);
         y += lineHeight + UI.scale(10);
 
         // Buttons at the bottom

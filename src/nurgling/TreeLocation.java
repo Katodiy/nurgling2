@@ -14,12 +14,14 @@ public class TreeLocation {
     private final String treeName;        // e.g., "Oak Tree", "Birch Tree"
     private final String treeResource;    // e.g., "gfx/terobjs/trees/oak"
     private final long timestamp;         // When it was saved
+    private final int quantity;           // Number of nearby trees/bushes of the same type
 
-    public TreeLocation(long segmentId, Coord tileCoords, String treeName, String treeResource) {
+    public TreeLocation(long segmentId, Coord tileCoords, String treeName, String treeResource, int quantity) {
         this.segmentId = segmentId;
         this.tileCoords = tileCoords;
         this.treeName = treeName;
         this.treeResource = treeResource;
+        this.quantity = quantity;
         this.timestamp = System.currentTimeMillis();
         this.locationId = generateLocationId(segmentId, tileCoords, treeName);
     }
@@ -31,6 +33,7 @@ public class TreeLocation {
         this.treeName = json.getString("treeName");
         this.treeResource = json.getString("treeResource");
         this.timestamp = json.getLong("timestamp");
+        this.quantity = json.optInt("quantity", 1);  // Default to 1 for backward compatibility
     }
 
     private static String generateLocationId(long segmentId, Coord tileCoords, String treeName) {
@@ -47,6 +50,7 @@ public class TreeLocation {
         json.put("treeName", treeName);
         json.put("treeResource", treeResource);
         json.put("timestamp", timestamp);
+        json.put("quantity", quantity);
         return json;
     }
 
@@ -57,4 +61,5 @@ public class TreeLocation {
     public String getTreeName() { return treeName; }
     public String getTreeResource() { return treeResource; }
     public long getTimestamp() { return timestamp; }
+    public int getQuantity() { return quantity; }
 }

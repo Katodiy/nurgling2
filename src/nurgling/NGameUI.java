@@ -58,6 +58,7 @@ public class NGameUI extends GameUI
     public final Map<String, FishLocationDetailsWindow> openFishDetailWindows = new HashMap<>();
     public TreeLocationService treeLocationService;
     public TreeSearchWindow treeSearchWindow = null;
+    public final Map<String, TreeLocationDetailsWindow> openTreeDetailWindows = new HashMap<>();
     public StudyDeskPlannerWidget studyDeskPlanner = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {

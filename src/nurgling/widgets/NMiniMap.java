@@ -771,9 +771,12 @@ public class NMiniMap extends MiniMap {
                 try {
                     String treeResource = treeLoc.getTreeResource();
 
-                    // Convert tree resource path to minimap icon path
+                    // Convert tree/bush resource path to minimap icon path
                     // "gfx/terobjs/trees/oak" -> "gfx/terobjs/mm/trees/oak"
-                    String mmResource = treeResource.replace("gfx/terobjs/trees/", "gfx/terobjs/mm/trees/");
+                    // "gfx/terobjs/bushes/arrowwood" -> "gfx/terobjs/mm/bushes/arrowwood"
+                    String mmResource = treeResource
+                        .replace("gfx/terobjs/trees/", "gfx/terobjs/mm/trees/")
+                        .replace("gfx/terobjs/bushes/", "gfx/terobjs/mm/bushes/");
 
                     TexI tex = treeIconCache.get(mmResource);
 
@@ -873,9 +876,19 @@ public class NMiniMap extends MiniMap {
                     Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
 
                     if(ev.c.dist(screenPos) < threshold) {
-                        // Create and show tree details window
-                        TreeLocationDetailsWindow detailsWnd = new TreeLocationDetailsWindow(loc, gui);
-                        gui.add(detailsWnd, new Coord(100, 100));
+                        // Check if a window is already open for this tree location
+                        String locationId = loc.getLocationId();
+                        TreeLocationDetailsWindow existingWnd = gui.openTreeDetailWindows.get(locationId);
+
+                        if(existingWnd != null && existingWnd.visible()) {
+                            // Window already exists and is visible, just raise it
+                            existingWnd.raise();
+                        } else {
+                            // Create new window and track it
+                            TreeLocationDetailsWindow detailsWnd = new TreeLocationDetailsWindow(loc, gui);
+                            gui.add(detailsWnd, new Coord(100, 100));
+                            gui.openTreeDetailWindows.put(locationId, detailsWnd);
+                        }
                         return true;
                     }
                 }

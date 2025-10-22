@@ -1,6 +1,8 @@
 package nurgling;
 
 import haven.*;
+import nurgling.tools.Finder;
+import nurgling.tools.NAlias;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -32,15 +34,15 @@ public class TreeLocationService {
     }
 
     /**
-     * Save a tree location from a tree gob on the map
+     * Save a tree/bush location from a tree or bush gob on the map
      */
     public void saveTreeLocation(Gob treeGob) {
         try {
             if (gui.map == null) return;
 
-            // Get tree resource
+            // Get tree/bush resource
             Resource res = treeGob.getres();
-            if (res == null || !res.name.startsWith("gfx/terobjs/trees/")) {
+            if (res == null || (!res.name.startsWith("gfx/terobjs/trees/") && !res.name.startsWith("gfx/terobjs/bushes/"))) {
                 return;
             }
 
@@ -62,12 +64,15 @@ public class TreeLocationService {
             // Calculate segment-relative coordinate (same as SMarker creation in MiniMap.java:773)
             Coord segmentCoord = tc.add(info.sc.sub(grid.gc).mul(MCache.cmaps));
 
+            // Count nearby trees/bushes of the same type
+            int quantity = countNearbyTrees(treeGob, treeResource);
+
             lock.writeLock().lock();
             try {
-                TreeLocation location = new TreeLocation(segmentId, segmentCoord, treeName, treeResource);
+                TreeLocation location = new TreeLocation(segmentId, segmentCoord, treeName, treeResource, quantity);
                 treeLocations.put(location.getLocationId(), location);
                 saveTreeLocations();
-                gui.msg("Saved " + treeName + " location", java.awt.Color.GREEN);
+                gui.msg("Saved " + treeName + " location (quantity: " + quantity + ")", java.awt.Color.GREEN);
             } finally {
                 lock.writeLock().unlock();
             }
@@ -79,25 +84,47 @@ public class TreeLocationService {
     }
 
     /**
-     * Convert tree resource path to friendly name
+     * Count all trees/bushes of the same type on the map
+     */
+    private int countNearbyTrees(Gob centerGob, String resourceName) {
+        // Use Finder to find all gobs matching this resource name
+        NAlias alias = new NAlias(resourceName);
+        ArrayList<Gob> matchingGobs = Finder.findGobs(alias);
+        return matchingGobs.size();
+    }
+
+    /**
+     * Convert tree/bush resource path to friendly name
      * e.g., "gfx/terobjs/trees/oak" -> "Oak Tree"
+     * e.g., "gfx/terobjs/bushes/arrowwood" -> "Arrowwood Bush"
      */
     private String getTreeName(String resourcePath) {
-        if (!resourcePath.startsWith("gfx/terobjs/trees/")) {
-            return "Unknown Tree";
+        boolean isTree = resourcePath.startsWith("gfx/terobjs/trees/");
+        boolean isBush = resourcePath.startsWith("gfx/terobjs/bushes/");
+
+        if (!isTree && !isBush) {
+            return "Unknown";
         }
 
-        // Extract tree type from path
-        String treeType = resourcePath.substring("gfx/terobjs/trees/".length());
+        // Extract type from path
+        String type;
+        String suffix;
+        if (isTree) {
+            type = resourcePath.substring("gfx/terobjs/trees/".length());
+            suffix = " Tree";
+        } else {
+            type = resourcePath.substring("gfx/terobjs/bushes/".length());
+            suffix = " Bush";
+        }
 
         // Handle special cases with compound words
-        String friendlyName = splitCamelCase(treeType);
+        String friendlyName = splitCamelCase(type);
 
-        // Capitalize first letter and add "Tree" suffix
+        // Capitalize first letter and add suffix
         if (!friendlyName.isEmpty()) {
             friendlyName = Character.toUpperCase(friendlyName.charAt(0)) + friendlyName.substring(1);
-            if (!friendlyName.endsWith("Tree")) {
-                friendlyName += " Tree";
+            if (!friendlyName.endsWith("Tree") && !friendlyName.endsWith("Bush")) {
+                friendlyName += suffix;
             }
         }
 
