@@ -467,7 +467,18 @@ public class MarkdownToImageRenderer {
                     return ImageIO.read(stream);
                 }
             } else {
-                // Fallback 1: try loading from images directory
+                // Fallback 1: try with uppercase extension for current path
+                String upperCasePathAttempt1 = tryUppercaseExtension(resourcePath);
+                if (upperCasePathAttempt1 != null) {
+                    imageStream = MarkdownToImageRenderer.class.getResourceAsStream(upperCasePathAttempt1);
+                    if (imageStream != null) {
+                        try (InputStream stream = imageStream) {
+                            return ImageIO.read(stream);
+                        }
+                    }
+                }
+
+                // Fallback 2: try loading from images directory
                 resourcePath = "/nurgling/docs/images/" + imagePath;
                 imageStream = MarkdownToImageRenderer.class.getResourceAsStream(resourcePath);
                 if (imageStream != null) {
@@ -475,7 +486,7 @@ public class MarkdownToImageRenderer {
                         return ImageIO.read(stream);
                     }
                 } else {
-                    // Fallback 2: try loading from root docs directory
+                    // Fallback 3: try loading from root docs directory
                     resourcePath = "/nurgling/docs/" + imagePath;
                     imageStream = MarkdownToImageRenderer.class.getResourceAsStream(resourcePath);
                     if (imageStream != null) {
@@ -483,6 +494,16 @@ public class MarkdownToImageRenderer {
                             return ImageIO.read(stream);
                         }
                     } else {
+                        // Fallback 4: try with uppercase extension (Windows case issue)
+                        String upperCasePath = tryUppercaseExtension(resourcePath);
+                        if (upperCasePath != null) {
+                            imageStream = MarkdownToImageRenderer.class.getResourceAsStream(upperCasePath);
+                            if (imageStream != null) {
+                                try (InputStream stream = imageStream) {
+                                    return ImageIO.read(stream);
+                                }
+                            }
+                        }
                         System.err.println("Image not found in resources: " + imagePath + " (tried multiple paths including /nurgling/docs/images/)");
                         return null;
                     }
@@ -494,6 +515,20 @@ public class MarkdownToImageRenderer {
         }
     }
     
+    private static String tryUppercaseExtension(String path) {
+        // Handle Windows case sensitivity issues by trying uppercase extensions
+        if (path.endsWith(".png")) {
+            return path.substring(0, path.length() - 4) + ".PNG";
+        } else if (path.endsWith(".jpg")) {
+            return path.substring(0, path.length() - 4) + ".JPG";
+        } else if (path.endsWith(".jpeg")) {
+            return path.substring(0, path.length() - 5) + ".JPEG";
+        } else if (path.endsWith(".gif")) {
+            return path.substring(0, path.length() - 4) + ".GIF";
+        }
+        return null;
+    }
+
     private static String resolveRelativePath(String basePath, String relativePath) {
         // Handle relative paths like ../images/routes_main_ui.png
         if (relativePath.startsWith("./")) {
