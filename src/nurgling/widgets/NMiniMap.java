@@ -928,4 +928,17 @@ public class NMiniMap extends MiniMap {
         }
         return super.mouseup(ev);
     }
+
+    // Accessors for MinimapClaimRenderer to access protected MiniMap fields
+    public DisplayGrid[] getDisplay() {
+        return display;
+    }
+
+    public Area getDgext() {
+        return dgext;
+    }
+
+    public int getDlvl() {
+        return dlvl;
+    }
 }
