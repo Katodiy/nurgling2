@@ -74,8 +74,8 @@ public class NFlowerMenu extends FlowerMenu
         }
         else
         {
-            // Handle custom "Save Tree Location" option
-            if(option.name.equals("Save Tree Location")) {
+            // Handle custom "Save Tree Location" or "Save Bush Location" options
+            if(option.name.equals("Save Tree Location") || option.name.equals("Save Bush Location")) {
                 NCore.LastActions actions = NUtils.getUI().core.getLastActions();
                 if(actions != null && actions.gob != null) {
                     NGameUI gui = (NGameUI) NUtils.getGameUI();
