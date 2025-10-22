@@ -48,7 +48,6 @@ public class FlowerMenu extends Widget {
 	    String[] opts = new String[args.length];
 	    for(int i = 0; i < args.length; i++)
 		opts[i] = (String)args[i];
-
 	    return(new NFlowerMenu(opts, ui));
 	}
     }
