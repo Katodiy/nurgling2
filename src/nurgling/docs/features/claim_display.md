@@ -1,6 +1,6 @@
 # Claim Display on Map
 
-The **Claim Display** feature shows your land claims directly on the map.
+The **Claim Display** feature shows land claims directly on the map.
 
 ## Enabling Claim Display
 
