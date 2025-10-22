@@ -49,33 +49,7 @@ public class FlowerMenu extends Widget {
 	    for(int i = 0; i < args.length; i++)
 		opts[i] = (String)args[i];
 
-	    // Check if this is a tree or bush and add appropriate save option
-	    try {
-		NCore.LastActions lastActions = ui.core.getLastActions();
-		if(lastActions != null && lastActions.gob != null) {
-		    Gob gob = lastActions.gob;
-		    Resource res = gob.getres();
-		    if(res != null) {
-			String saveOption = null;
-			if(res.name.startsWith("gfx/terobjs/trees/") && !res.name.contains("log")) {
-			    saveOption = "Save Tree Location";
-			} else if(res.name.startsWith("gfx/terobjs/bushes/")) {
-			    saveOption = "Save Bush Location";
-			}
-
-			if(saveOption != null) {
-			    String[] newOpts = new String[opts.length + 1];
-			    System.arraycopy(opts, 0, newOpts, 0, opts.length);
-			    newOpts[opts.length] = saveOption;
-			    opts = newOpts;
-			}
-		    }
-		}
-	    } catch(Exception e) {
-		// Ignore errors - just don't add the option
-	    }
-
-	    return(new NFlowerMenu(opts));
+	    return(new NFlowerMenu(opts, ui));
 	}
     }
 
