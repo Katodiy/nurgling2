@@ -18,6 +18,9 @@ public class TreeSearchWindow extends Window {
 
     private Dropbox<String> treeTypeDropdown;
     private TreeResultsList resultsList;
+    private List<String> treeTypes;
+    private int controlX;
+    private int treeDropdownY;
 
     private static final int WINDOW_WIDTH = UI.scale(350);
     private static final int WINDOW_HEIGHT = UI.scale(400);
@@ -29,30 +32,13 @@ public class TreeSearchWindow extends Window {
 
         int y = UI.scale(10);
         int labelX = UI.scale(10);
-        int controlX = UI.scale(100);
+        controlX = UI.scale(100);
+        treeDropdownY = y;
         int lineHeight = UI.scale(30);
 
         // Tree type filter
         add(new Label("Tree Type:"), labelX, y + UI.scale(5));
-        List<String> treeTypes = getDistinctTreeTypes();
-        treeTypes.add(0, "Any"); // Add "Any" option at the beginning
-        treeTypeDropdown = add(new Dropbox<String>(UI.scale(230), treeTypes.size(), UI.scale(20)) {
-            @Override
-            protected String listitem(int i) {
-                return treeTypes.get(i);
-            }
-
-            @Override
-            protected int listitems() {
-                return treeTypes.size();
-            }
-
-            @Override
-            protected void drawitem(GOut g, String item, int i) {
-                g.text(item, Coord.z);
-            }
-        }, controlX, y);
-        treeTypeDropdown.change(treeTypes.get(0)); // Select "Any" by default
+        refreshTreeTypeDropdown();
         y += lineHeight;
 
         // Search button
@@ -85,6 +71,39 @@ public class TreeSearchWindow extends Window {
             .distinct()
             .sorted()
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Refresh the tree type dropdown with current saved tree types
+     */
+    private void refreshTreeTypeDropdown() {
+        // Remove old dropdown if it exists
+        if (treeTypeDropdown != null) {
+            ui.destroy(treeTypeDropdown);
+        }
+
+        // Get fresh tree types
+        treeTypes = getDistinctTreeTypes();
+        treeTypes.add(0, "Any"); // Add "Any" option at the beginning
+
+        // Create new dropdown
+        treeTypeDropdown = add(new Dropbox<String>(UI.scale(230), treeTypes.size(), UI.scale(20)) {
+            @Override
+            protected String listitem(int i) {
+                return treeTypes.get(i);
+            }
+
+            @Override
+            protected int listitems() {
+                return treeTypes.size();
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, Coord.z);
+            }
+        }, controlX, treeDropdownY);
+        treeTypeDropdown.change(treeTypes.get(0)); // Select "Any" by default
     }
 
     /**
@@ -178,6 +197,13 @@ public class TreeSearchWindow extends Window {
                 gui.msg("Tree location is in a different area", java.awt.Color.YELLOW);
             }
         }
+    }
+
+    @Override
+    public void show() {
+        // Refresh tree types when window is shown
+        refreshTreeTypeDropdown();
+        super.show();
     }
 
     @Override
