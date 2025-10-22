@@ -28,6 +28,7 @@ public class QoL extends Panel {
     private CheckBox uniformBiomeColors;
     private CheckBox showTerrainName;
     private CheckBox waypointRetryOnStuck;
+    private CheckBox showAreaOverlays;
     private CheckBox verboseCal;
 
     private TextEntry temsmarkdistEntry;
@@ -78,6 +79,7 @@ public class QoL extends Panel {
         prev = uniformBiomeColors = content.add(new CheckBox("Uniform biome colors on minimap"), prev.pos("bl").adds(0, 5));
         prev = showTerrainName = content.add(new CheckBox("Show terrain name on minimap hover"), prev.pos("bl").adds(0, 5));
         prev = waypointRetryOnStuck = content.add(new CheckBox("Retry waypoint movement when stuck"), prev.pos("bl").adds(0, 5));
+        prev = showAreaOverlays = content.add(new CheckBox("Hide area overlays"), prev.pos("bl").adds(0, 5));
         prev = verboseCal = content.add(new CheckBox("Verbose calendar"), prev.pos("bl").adds(0, 5));
         prev = debug = content.add(new CheckBox("DEBUG"), prev.pos("bl").adds(0, 5));
         prev = printpfmap = content.add(new CheckBox("Path Finder map in debug"), prev.pos("bl").adds(0, 5));
@@ -121,6 +123,7 @@ public class QoL extends Panel {
         uniformBiomeColors.a = getBool(NConfig.Key.uniformBiomeColors);
         showTerrainName.a = getBool(NConfig.Key.showTerrainName);
         waypointRetryOnStuck.a = getBool(NConfig.Key.waypointRetryOnStuck);
+        showAreaOverlays.a = getBool(NConfig.Key.showAreaOverlays);
         verboseCal.a = getBool(NConfig.Key.verboseCal);
 
         Object dist = NConfig.get(NConfig.Key.temsmarkdist);
@@ -168,6 +171,13 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.showTerrainName, showTerrainName.a);
         NConfig.set(NConfig.Key.waypointRetryOnStuck, waypointRetryOnStuck.a);
         NConfig.set(NConfig.Key.verboseCal, verboseCal.a);
+
+        // Save area overlays setting and refresh if changed
+        boolean oldShowAreaOverlays = getBool(NConfig.Key.showAreaOverlays);
+        NConfig.set(NConfig.Key.showAreaOverlays, showAreaOverlays.a);
+        if(oldShowAreaOverlays != showAreaOverlays.a) {
+            NUtils.refreshAreaOverlays();
+        }
 
         // Save uniform biome colors and update minimap if changed
         boolean oldUniformColors = getBool(NConfig.Key.uniformBiomeColors);
