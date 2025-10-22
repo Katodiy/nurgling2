@@ -31,7 +31,7 @@ public class NMapWnd extends MapWnd {
         }, view.pos("br").sub(UI.scale(200,20)));
 
         // Add Tree Menu button (left of Fish button)
-        add(treeMenuBtn = new Button(UI.scale(100), "Tree Menu") {
+        add(treeMenuBtn = new Button(UI.scale(100), "Tree Search") {
             @Override
             public void click() {
                 NGameUI gui = (NGameUI) NUtils.getGameUI();
