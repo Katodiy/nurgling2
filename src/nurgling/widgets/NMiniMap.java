@@ -29,6 +29,9 @@ public class NMiniMap extends MiniMap {
     // Cache for fish icon textures to avoid reloading every frame
     private final java.util.HashMap<String, TexI> fishIconCache = new java.util.HashMap<>();
 
+    // Cache for tree icon textures to avoid reloading every frame
+    private final java.util.HashMap<String, TexI> treeIconCache = new java.util.HashMap<>();
+
     private static final Coord2d sgridsz = new Coord2d(new Coord(100,100));
     public NMiniMap(Coord sz, MapFile file) {
         super(sz, file);
@@ -106,6 +109,7 @@ public class NMiniMap extends MiniMap {
         drawterrainname(g);
         drawResourceTimers(g);
         drawFishLocations(g);
+        drawTreeLocations(g);
         drawQueuedWaypoints(g);  // Draw waypoint visualization
     }
 
@@ -398,8 +402,47 @@ public class NMiniMap extends MiniMap {
         if(dloc != null && sessloc != null) {
             Coord hsz = sz.div(2);
 
-            // Check for fish location tooltip first (check in screen space)
+            // Check for tree location tooltip first (check in screen space)
             NGameUI gui = NUtils.getGameUI();
+            if(gui != null && gui.treeLocationService != null) {
+                // Check if markers are hidden (respect "Hide Markers" button)
+                MapWnd mapwnd = gui.mapfile;
+                boolean markersHidden = (mapwnd != null && Utils.eq(mapwnd.markcfg, MapWnd.MarkerConfig.hideall));
+
+                if(!markersHidden) {
+                    // Get search pattern (if any) for filtering
+                    String searchPattern = null;
+                    Widget parentWidget = this.parent;
+                    while(parentWidget != null) {
+                        if(parentWidget instanceof NMapWnd) {
+                            searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                            break;
+                        }
+                        parentWidget = parentWidget.parent;
+                    }
+
+                    java.util.List<nurgling.TreeLocation> treeLocations = gui.treeLocationService.getTreeLocationsForSegment(sessloc.seg.id);
+                    int threshold = UI.scale(10); // Screen pixels
+
+                    for(nurgling.TreeLocation loc : treeLocations) {
+                        // Apply search pattern filter (same as drawing)
+                        if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                            String treeName = loc.getTreeName();
+                            if(treeName == null || !treeName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                                continue; // Skip trees that don't match search
+                            }
+                        }
+
+                        Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+
+                        if(c.dist(screenPos) < threshold) {
+                            return Text.render(loc.getTreeName());
+                        }
+                    }
+                }
+            }
+
+            // Check for fish location tooltip (check in screen space)
             if(gui != null && gui.fishLocationService != null) {
                 // Check if markers are hidden (respect "Hide Markers" button)
                 MapWnd mapwnd = gui.mapfile;
@@ -677,6 +720,89 @@ public class NMiniMap extends MiniMap {
         }
     }
 
+    private void drawTreeLocations(GOut g) {
+        if(sessloc == null || dloc == null) return;
+
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || gui.treeLocationService == null) return;
+
+        // Check if markers are hidden (respect "Hide Markers" button)
+        MapWnd mapwnd = gui.mapfile;
+        if(mapwnd != null && Utils.eq(mapwnd.markcfg, MapWnd.MarkerConfig.hideall)) {
+            return; // Don't draw tree locations when markers are hidden
+        }
+
+        // Get search pattern from NMapWnd if we're inside one
+        String searchPattern = null;
+        Widget parentWidget = this.parent;
+        while(parentWidget != null) {
+            if(parentWidget instanceof NMapWnd) {
+                searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                break;
+            }
+            parentWidget = parentWidget.parent;
+        }
+
+        // Use sessloc.seg.id like waypoints and markers do
+        java.util.List<nurgling.TreeLocation> treeLocations = gui.treeLocationService.getTreeLocationsForSegment(sessloc.seg.id);
+
+        Coord hsz = sz.div(2);
+
+        for(nurgling.TreeLocation treeLoc : treeLocations) {
+            // Apply search pattern filter to tree names
+            if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                String treeName = treeLoc.getTreeName();
+                if(treeName == null) {
+                    continue; // Hide trees with no name when searching
+                }
+                // Show only trees that contain the search pattern (case-insensitive)
+                if(!treeName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                    continue; // Hide trees that don't match
+                }
+            }
+
+            // Convert segment-relative coordinates to screen coordinates
+            Coord screenPos = treeLoc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+
+            // Only draw if on screen
+            if(screenPos.x >= 0 && screenPos.x <= sz.x &&
+               screenPos.y >= 0 && screenPos.y <= sz.y) {
+
+                try {
+                    String treeResource = treeLoc.getTreeResource();
+
+                    // Convert tree/bush resource path to minimap icon path
+                    // "gfx/terobjs/trees/oak" -> "gfx/terobjs/mm/trees/oak"
+                    // "gfx/terobjs/bushes/arrowwood" -> "gfx/terobjs/mm/bushes/arrowwood"
+                    String mmResource = treeResource
+                        .replace("gfx/terobjs/trees/", "gfx/terobjs/mm/trees/")
+                        .replace("gfx/terobjs/bushes/", "gfx/terobjs/mm/bushes/");
+
+                    TexI tex = treeIconCache.get(mmResource);
+
+                    // Load and cache if not already cached
+                    if(tex == null) {
+                        Resource treeRes = Resource.remote().loadwait(mmResource);
+                        BufferedImage icon = treeRes.layer(Resource.imgc).img;
+                        tex = new TexI(icon);
+                        treeIconCache.put(mmResource, tex);
+                    }
+
+                    // Draw scaled tree icon (same size as fish icons)
+                    int dsz = Math.max(tex.sz().y, tex.sz().x);
+                    int targetSize = UI.scale(18);
+                    g.aimage(tex, screenPos, 0.5, 0.5, UI.scale(targetSize * tex.sz().x / dsz, targetSize * tex.sz().y / dsz));
+
+                } catch (Exception e) {
+                    // Fallback: draw green circle if icon fails
+                    g.chcolor(34, 139, 34, 255);
+                    g.fellipse(screenPos, new Coord(UI.scale(4), UI.scale(4)));
+                    g.chcolor();
+                }
+            }
+        }
+    }
+
     private nurgling.FishLocation fishLocationAt(Coord tc) {
         NGameUI gui = NUtils.getGameUI();
         if(gui == null || gui.fishLocationService == null || dloc == null) return null;
@@ -737,6 +863,38 @@ public class NMiniMap extends MiniMap {
 
     @Override
     public boolean mouseup(MouseUpEvent ev) {
+        // Handle right-click release on tree location - open details window
+        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-click
+            NGameUI gui = NUtils.getGameUI();
+            if(gui != null && gui.treeLocationService != null) {
+                // Check for tree location at click position (in screen space)
+                java.util.List<nurgling.TreeLocation> treeLocations = gui.treeLocationService.getTreeLocationsForSegment(sessloc.seg.id);
+                int threshold = UI.scale(10);
+                Coord hsz = sz.div(2);
+
+                for(nurgling.TreeLocation loc : treeLocations) {
+                    Coord screenPos = loc.getTileCoords().sub(dloc.tc).div(scalef()).add(hsz);
+
+                    if(ev.c.dist(screenPos) < threshold) {
+                        // Check if a window is already open for this tree location
+                        String locationId = loc.getLocationId();
+                        TreeLocationDetailsWindow existingWnd = gui.openTreeDetailWindows.get(locationId);
+
+                        if(existingWnd != null && existingWnd.visible()) {
+                            // Window already exists and is visible, just raise it
+                            existingWnd.raise();
+                        } else {
+                            // Create new window and track it
+                            TreeLocationDetailsWindow detailsWnd = new TreeLocationDetailsWindow(loc, gui);
+                            gui.add(detailsWnd, new Coord(100, 100));
+                            gui.openTreeDetailWindows.put(locationId, detailsWnd);
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+
         // Handle right-click release on fish location - open details window
         if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-click
             NGameUI gui = NUtils.getGameUI();

@@ -14,6 +14,7 @@ public class NMapWnd extends MapWnd {
     public boolean needUpdate = false;
     TextEntry te;
     Button fishMenuBtn;
+    Button treeMenuBtn;
     private static final int btnw = UI.scale(95);
 
     public NMapWnd(MapFile file, MapView mv, Coord sz, String title) {
@@ -28,6 +29,31 @@ public class NMapWnd extends MapWnd {
                 NUtils.getGameUI().mmap.needUpdate = true;
             }
         }, view.pos("br").sub(UI.scale(200,20)));
+
+        // Add Tree Menu button (left of Fish button)
+        add(treeMenuBtn = new Button(UI.scale(100), "Tree Search") {
+            @Override
+            public void click() {
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if (gui != null) {
+                    // Check if window already exists and is visible
+                    if (gui.treeSearchWindow != null) {
+                        // If window exists, toggle visibility
+                        if (gui.treeSearchWindow.visible()) {
+                            gui.treeSearchWindow.hide();
+                        } else {
+                            gui.treeSearchWindow.show();
+                            gui.treeSearchWindow.raise();
+                        }
+                    } else {
+                        // Create new window if it doesn't exist
+                        gui.treeSearchWindow = new TreeSearchWindow(gui);
+                        gui.add(gui.treeSearchWindow, new Coord(100, 100));
+                        gui.treeSearchWindow.show();
+                    }
+                }
+            }
+        }, view.c.add(view.sz.x - UI.scale(210), UI.scale(5)));
 
         // Add Fish button at top-right of map view
         // Position it directly using view.c (top-left) + view width - button width
@@ -80,6 +106,10 @@ public class NMapWnd extends MapWnd {
         if(te!=null)
             te.c = view.pos("br").sub(UI.scale(200,20));
 
+        // Position Tree Menu button (left of Fish button)
+        if(treeMenuBtn != null)
+            treeMenuBtn.c = view.c.add(view.sz.x - UI.scale(210), UI.scale(5));
+
         // Position Fish button at top-right of map view
         if(fishMenuBtn != null)
             fishMenuBtn.c = view.c.add(view.sz.x - UI.scale(95), UI.scale(5));
@@ -97,9 +127,13 @@ public class NMapWnd extends MapWnd {
             if(viewCoord.x >= 0 && viewCoord.x < view.sz.x &&
                viewCoord.y >= 0 && viewCoord.y < view.sz.y) {
 
-                // Shift+right-click for resource timers
+                // Shift+right-click for resource timers and tree locations
                 if(ev.b == 3 && ui.modshift) {
-                    // Check if there's a resource marker at this location
+                    // First check for tree icons
+                    if(handleTreeSaveClick(viewCoord)) {
+                        return true; // Consume the event
+                    }
+                    // Then check if there's a resource marker at this location
                     if(handleResourceTimerClick(viewCoord)) {
                         return true; // Consume the event
                     }
@@ -175,6 +209,13 @@ public class NMapWnd extends MapWnd {
             }
         }
 
+        return false;
+    }
+
+    private boolean handleTreeSaveClick(Coord c) {
+        // TODO: Implement tree saving from map click
+        // For now, trees can be saved through other means
+        // This would require access to gobs at the clicked location
         return false;
     }
 }
