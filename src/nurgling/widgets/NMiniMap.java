@@ -229,14 +229,8 @@ public class NMiniMap extends MiniMap {
                     Coord farScreenPos = new Coord((int)farPointTiles.x, (int)farPointTiles.y).sub(dloc.tc).div(scalef()).add(hsz);
 
                     // Draw the ray from origin toward far point
-                    g.chcolor(255, 100, 100, 200); // Red color for directional vectors
+                    g.chcolor(100, 150, 255, 200); // Blue color for directional vectors
                     g.line(originScreenPos, farScreenPos, 2);
-
-                    // Draw a marker at the origin point for clarity
-                    g.chcolor(255, 50, 50, 255);
-                    int markerSize = 4;
-                    g.frect(originScreenPos.sub(markerSize/2, markerSize/2), new Coord(markerSize, markerSize));
-
                     g.chcolor();
                 } catch(Exception e) {
                     // Skip this vector if there's an error
@@ -951,10 +945,6 @@ public class NMiniMap extends MiniMap {
 
                     // Check if click is within threshold
                     if(ev.c.dist(screenPos) < threshold) {
-                        System.out.println("=== Marker Click Debug ===");
-                        System.out.println("Marker tile coords (mark.m.tc): " + mark.m.tc);
-                        System.out.println("========================");
-
                         NGameUI gui = NUtils.getGameUI();
                         if(gui != null && gui.map instanceof NMapView) {
                             NMapView mapView = (NMapView) gui.map;

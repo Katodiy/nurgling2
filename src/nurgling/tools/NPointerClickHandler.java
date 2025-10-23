@@ -45,13 +45,6 @@ public class NPointerClickHandler {
             // Convert to segment-relative tile coordinates
             Coord targetTileCoords = worldCoords.div(MCache.tilesz).floor().add(sessloc.tc);
 
-            System.out.println("=== Adding Directional Vector ===");
-            System.out.println("Player tile coords: " + playerTileCoords);
-            System.out.println("Target tile coords: " + targetTileCoords);
-            Coord diff = targetTileCoords.sub(playerTileCoords);
-            System.out.println("Direction: " + new Coord2d(diff).norm());
-            System.out.println("================================");
-
             // Add a new directional vector from player position toward target
             mapView.addDirectionalVector(playerTileCoords, targetTileCoords, targetName, gobid);
 
