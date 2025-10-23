@@ -42,17 +42,4 @@ public class DirectionalVector {
         Coord2d dir = getDirection();
         return new Coord2d(originTileCoords).add(dir.mul(distance));
     }
-
-    /**
-     * Check if this vector is pointing toward the same target as another vector
-     */
-    public boolean sameTarget(DirectionalVector other) {
-        if(targetTileCoords != null && other.targetTileCoords != null) {
-            return targetTileCoords.equals(other.targetTileCoords);
-        }
-        if(targetGobId >= 0 && other.targetGobId >= 0) {
-            return targetGobId == other.targetGobId;
-        }
-        return false;
-    }
 }
