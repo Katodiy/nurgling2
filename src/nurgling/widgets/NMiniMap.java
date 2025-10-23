@@ -937,8 +937,9 @@ public class NMiniMap extends MiniMap {
                             System.out.println("Selected at tile coords: " + mark.m.tc);
                             NGameUI gui = NUtils.getGameUI();
                             if(gui != null && gui.map instanceof NMapView) {
-                                Coord2d worldPos = mark.m.tc.mul(MCache.tilesz).add(MCache.tilesz.div(2));
-                                System.out.println("World pos: " + worldPos);
+                                // Convert tile coords to world coords (relative to session location)
+                                Coord2d worldPos = mark.m.tc.sub(sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
+                                System.out.println("World pos (corrected): " + worldPos);
                                 ((NMapView)gui.map).setQuestGiverTarget(worldPos);
                             }
                         }
