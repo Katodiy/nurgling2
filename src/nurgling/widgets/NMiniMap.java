@@ -1,7 +1,6 @@
 package nurgling.widgets;
 
 import haven.*;
-import haven.MapFile.SMarker;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -898,7 +897,7 @@ public class NMiniMap extends MiniMap {
     @Override
     public boolean mousedown(MouseDownEvent ev) {
         // Check for right-click on fish location
-        if(ev.b == 3 && dloc != null) { // Button 3 is right-click
+        if(ev.b == 3 && dloc != null) { // Button 3 is right-clicked
             Coord tc = ev.c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
             nurgling.FishLocation fishLoc = fishLocationAt(tc);
             if(fishLoc != null) {
@@ -965,7 +964,7 @@ public class NMiniMap extends MiniMap {
         }
 
         // Handle right-click release on tree location - open details window
-        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-click
+        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-clicked
             NGameUI gui = NUtils.getGameUI();
             if(gui != null && gui.treeLocationService != null) {
                 // Check for tree location at click position (in screen space)
@@ -997,7 +996,7 @@ public class NMiniMap extends MiniMap {
         }
 
         // Handle right-click release on fish location - open details window
-        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-click
+        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-clicked
             NGameUI gui = NUtils.getGameUI();
             if(gui != null && gui.fishLocationService != null) {
                 // Check for fish location at click position (in screen space)
@@ -1037,9 +1036,5 @@ public class NMiniMap extends MiniMap {
 
     public Area getDgext() {
         return dgext;
-    }
-
-    public int getDlvl() {
-        return dlvl;
     }
 }

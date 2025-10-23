@@ -75,15 +75,6 @@ public class NQuestGiverLineOverlay implements RenderTree.Node, Rendered {
     }
 
     /**
-     * Clears the target (removes the line)
-     */
-    public void clearTarget() {
-        this.targetPos = null;
-        model = null;
-        updateSlots();
-    }
-
-    /**
      * Updates the line based on player and target positions
      */
     private void updateLine() {
@@ -145,9 +136,8 @@ public class NQuestGiverLineOverlay implements RenderTree.Node, Rendered {
 
     /**
      * Called each game tick to update the line
-     * @param dt Time delta
      */
-    public void tick(double dt) {
+    public void tick() {
         if(targetPos != null) {
             updateLine();
         }

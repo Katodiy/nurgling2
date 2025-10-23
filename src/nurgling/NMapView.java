@@ -594,7 +594,7 @@ public class NMapView extends MapView
         }
         // Update quest giver line overlay
         if(questGiverLineOverlay != null) {
-            questGiverLineOverlay.tick(dt);
+            questGiverLineOverlay.tick();
         }
         ArrayList<Long> forRemove = new ArrayList<>();
 //        for(Gob dummy : dummys.values())
