@@ -89,13 +89,14 @@ public class NMapView extends MapView
 
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
 
-    // Marker line overlay for showing path to selected marker
-    public NMarkerLineOverlay markerLineOverlay = null;
-    private RenderTree.Slot markerLineSlot = null;
+    // Directional vectors for triangulation (fixed position, not following player)
+    public java.util.List<nurgling.tools.DirectionalVector> directionalVectors = new java.util.ArrayList<>();
 
-    // Shared marker selection state (used by all minimap instances)
+    // Marker line system (lines to selected marker icon - follows player)
     public MiniMap.DisplayMarker selectedMarker = null;
     public Coord selectedMarkerTileCoords = null;
+    public NMarkerLineOverlay markerLineOverlay = null;
+    private RenderTree.Slot markerLineSlot = null;
 
     public static boolean hitNWidgetsInfo(Coord pc) {
         boolean isFound = false;
@@ -596,7 +597,7 @@ public class NMapView extends MapView
                 area.tick(dt);
             }
         }
-        // Update marker line overlay
+        // Update marker line overlay (follows player)
         if(markerLineOverlay != null) {
             markerLineOverlay.tick();
         }
@@ -866,6 +867,7 @@ public class NMapView extends MapView
                 }
             }
         }
+
         return super.keydown(ev);
     }
 
@@ -1161,8 +1163,35 @@ public class NMapView extends MapView
     }
 
     /**
-     * Sets the selected marker for line drawing (called from minimap clicks)
-     * @param marker The selected marker, or null to clear
+     * Adds a directional vector for triangulation
+     * @param originTileCoords Tile coordinates where vector starts (segment-relative)
+     * @param targetTileCoords Tile coordinates of the target (segment-relative)
+     * @param targetName Name of the target
+     * @param targetGobId Gob ID of the target (-1 if none)
+     */
+    public void addDirectionalVector(Coord originTileCoords, Coord targetTileCoords, String targetName, long targetGobId) {
+        // Skip if origin and target are the same
+        if(originTileCoords.equals(targetTileCoords)) {
+            return;
+        }
+
+        nurgling.tools.DirectionalVector vector = new nurgling.tools.DirectionalVector(
+            originTileCoords, targetTileCoords, targetName, targetGobId
+        );
+        directionalVectors.add(vector);
+    }
+
+    /**
+     * Clears all directional vectors
+     */
+    public void clearDirectionalVectors() {
+        directionalVectors.clear();
+    }
+
+    /**
+     * Sets the selected marker for line drawing (called from minimap icon clicks)
+     * Creates gold line on map and 3D line in world that follows player
+     * @param marker The selected marker
      * @param tileCoords Tile coordinates of the marker, or null to clear
      */
     public void setSelectedMarker(MiniMap.DisplayMarker marker, Coord tileCoords) {
@@ -1170,10 +1199,11 @@ public class NMapView extends MapView
         this.selectedMarkerTileCoords = tileCoords;
 
         // Update 3D line overlay
-        if(marker == null || tileCoords == null) {
+        if(tileCoords == null) {
+            // Clear selection
             setMarkerTarget(null);
         } else {
-            // Calculate world position from tile coords (will be recalculated in tick)
+            // Set selection (calculate world position from tile coords)
             NGameUI gui = NUtils.getGameUI();
             if(gui != null && gui.mmap != null && gui.mmap.sessloc != null) {
                 Coord2d worldPos = tileCoords.sub(gui.mmap.sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
@@ -1183,7 +1213,7 @@ public class NMapView extends MapView
     }
 
     /**
-     * Sets the marker target for line overlay drawing
+     * Sets the marker target for 3D line overlay drawing
      * @param targetPos World position of the marker, or null to clear
      */
     public void setMarkerTarget(Coord2d targetPos) {

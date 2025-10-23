@@ -218,4 +218,20 @@ public class NMapWnd extends MapWnd {
         // This would require access to gobs at the clicked location
         return false;
     }
+
+    @Override
+    public void recenter() {
+        super.recenter();
+
+        // Clear all directional vectors when home button is clicked
+        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        if(gui != null && gui.map instanceof nurgling.NMapView) {
+            nurgling.NMapView mapView = (nurgling.NMapView) gui.map;
+            if(!mapView.directionalVectors.isEmpty()) {
+                int count = mapView.directionalVectors.size();
+                mapView.clearDirectionalVectors();
+                gui.msg("Cleared " + count + " directional vector" + (count > 1 ? "s" : ""));
+            }
+        }
+    }
 }
