@@ -32,10 +32,6 @@ public class NMiniMap extends MiniMap {
     // Cache for tree icon textures to avoid reloading every frame
     private final java.util.HashMap<String, TexI> treeIconCache = new java.util.HashMap<>();
 
-    // Selected marker for line drawing
-    private MiniMap.DisplayMarker selectedMarker = null;
-    private Coord selectedMarkerTileCoords = null; // Store tile coords for recalculation
-
     private static final Coord2d sgridsz = new Coord2d(new Coord(100,100));
     public NMiniMap(Coord sz, MapFile file) {
         super(sz, file);
@@ -187,7 +183,12 @@ public class NMiniMap extends MiniMap {
 
     // Draw line from player to selected marker
     protected void drawMarkerLine(GOut g) {
-        if(selectedMarker == null || sessloc == null || dloc == null) return;
+        // Get selected marker from shared state in NMapView
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || !(gui.map instanceof NMapView)) return;
+        NMapView mapView = (NMapView) gui.map;
+
+        if(mapView.selectedMarker == null || sessloc == null || dloc == null) return;
 
         // Get player's current position on the minimap
         Coord playerScreenPos = null;
@@ -208,7 +209,7 @@ public class NMiniMap extends MiniMap {
 
         // Get marker position on minimap (works across segments)
         Coord hsz = sz.div(2);
-        Coord markerScreenPos = selectedMarker.m.tc.sub(dloc.tc).div(scalef()).add(hsz);
+        Coord markerScreenPos = mapView.selectedMarker.m.tc.sub(dloc.tc).div(scalef()).add(hsz);
 
         // Draw line from player to marker
         g.chcolor(255, 215, 0, 220); // Gold color for marker path
@@ -268,13 +269,15 @@ public class NMiniMap extends MiniMap {
         if(ui.gui.map==null)
             return;
 
+        NGameUI gui = NUtils.getGameUI();
+
         // Update 3D line target when session location changes (e.g., after teleport)
-        if(selectedMarkerTileCoords != null && sessloc != null) {
-            NGameUI gui = NUtils.getGameUI();
-            if(gui != null && gui.map instanceof NMapView) {
+        if(gui != null && gui.map instanceof NMapView) {
+            NMapView mapView = (NMapView) gui.map;
+            if(mapView.selectedMarkerTileCoords != null && sessloc != null) {
                 // Recalculate world position based on current session location
-                Coord2d worldPos = selectedMarkerTileCoords.sub(sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
-                ((NMapView)gui.map).setMarkerTarget(worldPos);
+                Coord2d worldPos = mapView.selectedMarkerTileCoords.sub(sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
+                mapView.setMarkerTarget(worldPos);
             }
         }
 
@@ -292,7 +295,6 @@ public class NMiniMap extends MiniMap {
         }
 
         // Process waypoint movement queue through the centralized service
-        NGameUI gui = NUtils.getGameUI();
         if(gui != null && gui.waypointMovementService != null) {
             gui.waypointMovementService.processMovementQueue(file, sessloc);
         }
@@ -930,33 +932,19 @@ public class NMiniMap extends MiniMap {
 
                     // Check if click is within threshold
                     if(ev.c.dist(screenPos) < threshold) {
-                        System.out.println("=== MARKER CLICKED ===");
-                        System.out.println("Marker: " + mark.m.nm);
-                        System.out.println("Type: " + mark.m.getClass().getSimpleName());
-                        System.out.println("Screen pos: " + screenPos);
+                        NGameUI gui = NUtils.getGameUI();
+                        if(gui != null && gui.map instanceof NMapView) {
+                            NMapView mapView = (NMapView) gui.map;
 
-                        // Toggle selection
-                        if(selectedMarker == mark) {
-                            selectedMarker = null;
-                            selectedMarkerTileCoords = null;
-                            System.out.println("Deselected");
-                            NGameUI gui = NUtils.getGameUI();
-                            if(gui != null && gui.map instanceof NMapView) {
-                                ((NMapView)gui.map).setMarkerTarget(null);
-                            }
-                        } else {
-                            selectedMarker = mark;
-                            selectedMarkerTileCoords = mark.m.tc; // Store tile coords
-                            System.out.println("Selected at tile coords: " + mark.m.tc);
-                            NGameUI gui = NUtils.getGameUI();
-                            if(gui != null && gui.map instanceof NMapView) {
-                                // Convert tile coords to world coords (relative to session location)
-                                Coord2d worldPos = mark.m.tc.sub(sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
-                                System.out.println("World pos (corrected): " + worldPos);
-                                ((NMapView)gui.map).setMarkerTarget(worldPos);
+                            // Toggle selection (stored in shared NMapView)
+                            if(mapView.selectedMarker == mark) {
+                                // Deselect
+                                mapView.setSelectedMarker(null, null);
+                            } else {
+                                // Select marker
+                                mapView.setSelectedMarker(mark, mark.m.tc);
                             }
                         }
-                        System.out.println("=== END ===");
                         return true;
                     }
                 }

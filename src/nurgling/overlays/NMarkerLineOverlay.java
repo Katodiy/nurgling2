@@ -95,8 +95,6 @@ public class NMarkerLineOverlay implements RenderTree.Node, Rendered {
             Coord3f playerPos = player.getc();
             Coord3f targetPos3f = new Coord3f((float)targetPos.x, (float)targetPos.y, 0);
 
-            System.out.println("Drawing 3D line - Player: " + playerPos + " Target: " + targetPos3f);
-
             // Get terrain height at target position if possible
             // For now, we'll use a fixed Z offset
             float[] data = new float[6];
