@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.render.RenderTree;
 
 import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
@@ -87,6 +88,14 @@ public class NMapView extends MapView
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
 
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
+
+    // Marker line overlay for showing path to selected marker
+    public NMarkerLineOverlay markerLineOverlay = null;
+    private RenderTree.Slot markerLineSlot = null;
+
+    // Shared marker selection state (used by all minimap instances)
+    public MiniMap.DisplayMarker selectedMarker = null;
+    public Coord selectedMarkerTileCoords = null;
 
     public static boolean hitNWidgetsInfo(Coord pc) {
         boolean isFound = false;
@@ -586,6 +595,10 @@ public class NMapView extends MapView
             {
                 area.tick(dt);
             }
+        }
+        // Update marker line overlay
+        if(markerLineOverlay != null) {
+            markerLineOverlay.tick();
         }
         ArrayList<Long> forRemove = new ArrayList<>();
 //        for(Gob dummy : dummys.values())
@@ -1144,6 +1157,50 @@ public class NMapView extends MapView
         } else {
             // For all other messages, use the parent implementation
             super.uimsg(msg, args);
+        }
+    }
+
+    /**
+     * Sets the selected marker for line drawing (called from minimap clicks)
+     * @param marker The selected marker, or null to clear
+     * @param tileCoords Tile coordinates of the marker, or null to clear
+     */
+    public void setSelectedMarker(MiniMap.DisplayMarker marker, Coord tileCoords) {
+        this.selectedMarker = marker;
+        this.selectedMarkerTileCoords = tileCoords;
+
+        // Update 3D line overlay
+        if(marker == null || tileCoords == null) {
+            setMarkerTarget(null);
+        } else {
+            // Calculate world position from tile coords (will be recalculated in tick)
+            NGameUI gui = NUtils.getGameUI();
+            if(gui != null && gui.mmap != null && gui.mmap.sessloc != null) {
+                Coord2d worldPos = tileCoords.sub(gui.mmap.sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
+                setMarkerTarget(worldPos);
+            }
+        }
+    }
+
+    /**
+     * Sets the marker target for line overlay drawing
+     * @param targetPos World position of the marker, or null to clear
+     */
+    public void setMarkerTarget(Coord2d targetPos) {
+        if(targetPos == null) {
+            // Clear the overlay
+            if(markerLineSlot != null) {
+                markerLineSlot.remove();
+                markerLineSlot = null;
+            }
+            markerLineOverlay = null;
+        } else {
+            // Create or update the overlay
+            if(markerLineOverlay == null) {
+                markerLineOverlay = new NMarkerLineOverlay(() -> player());
+                markerLineSlot = basic.add(markerLineOverlay);
+            }
+            markerLineOverlay.setTarget(targetPos);
         }
     }
 

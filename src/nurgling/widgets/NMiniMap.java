@@ -111,6 +111,7 @@ public class NMiniMap extends MiniMap {
         drawFishLocations(g);
         drawTreeLocations(g);
         drawQueuedWaypoints(g);  // Draw waypoint visualization
+        drawMarkerLine(g);       // Draw line to selected marker
     }
 
     // Draw queued waypoints visualization
@@ -180,6 +181,42 @@ public class NMiniMap extends MiniMap {
         }
     }
 
+    // Draw line from player to selected marker
+    protected void drawMarkerLine(GOut g) {
+        // Get selected marker from shared state in NMapView
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || !(gui.map instanceof NMapView)) return;
+        NMapView mapView = (NMapView) gui.map;
+
+        if(mapView.selectedMarker == null || sessloc == null || dloc == null) return;
+
+        // Get player's current position on the minimap
+        Coord playerScreenPos = null;
+        try {
+            if(ui != null && ui.gui != null && ui.gui.map != null) {
+                Coord2d playerWorld = new Coord2d(ui.gui.map.getcc());
+                playerScreenPos = p2c(playerWorld);
+            }
+        } catch(Loading l) {
+            // Fall back to sessloc if player position not available
+            playerScreenPos = xlate(sessloc);
+        } catch(Exception e) {
+            // Handle any other errors
+            return;
+        }
+
+        if(playerScreenPos == null) return;
+
+        // Get marker position on minimap (works across segments)
+        Coord hsz = sz.div(2);
+        Coord markerScreenPos = mapView.selectedMarker.m.tc.sub(dloc.tc).div(scalef()).add(hsz);
+
+        // Draw line from player to marker
+        g.chcolor(255, 215, 0, 220); // Gold color for marker path
+        g.line(playerScreenPos, markerScreenPos, 3); // Thicker line for visibility
+        g.chcolor();
+    }
+
     void drawview(GOut g) {
         if(ui.gui.map==null)
             return;
@@ -231,6 +268,19 @@ public class NMiniMap extends MiniMap {
         super.tick(dt);
         if(ui.gui.map==null)
             return;
+
+        NGameUI gui = NUtils.getGameUI();
+
+        // Update 3D line target when session location changes (e.g., after teleport)
+        if(gui != null && gui.map instanceof NMapView) {
+            NMapView mapView = (NMapView) gui.map;
+            if(mapView.selectedMarkerTileCoords != null && sessloc != null) {
+                // Recalculate world position based on current session location
+                Coord2d worldPos = mapView.selectedMarkerTileCoords.sub(sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
+                mapView.setMarkerTarget(worldPos);
+            }
+        }
+
         if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
             if ((sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id))) {
                 fogArea.tick(dt);
@@ -245,7 +295,6 @@ public class NMiniMap extends MiniMap {
         }
 
         // Process waypoint movement queue through the centralized service
-        NGameUI gui = NUtils.getGameUI();
         if(gui != null && gui.waypointMovementService != null) {
             gui.waypointMovementService.processMovementQueue(file, sessloc);
         }
@@ -850,7 +899,7 @@ public class NMiniMap extends MiniMap {
     @Override
     public boolean mousedown(MouseDownEvent ev) {
         // Check for right-click on fish location
-        if(ev.b == 3 && dloc != null) { // Button 3 is right-click
+        if(ev.b == 3 && dloc != null) { // Button 3 is right-clicked
             Coord tc = ev.c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
             nurgling.FishLocation fishLoc = fishLocationAt(tc);
             if(fishLoc != null) {
@@ -863,8 +912,47 @@ public class NMiniMap extends MiniMap {
 
     @Override
     public boolean mouseup(MouseUpEvent ev) {
+        // Handle right-click release on ANY marker - draw line to it
+        if(ev.b == 3 && dloc != null && sessloc != null && display != null && dgext != null) {
+            Coord hsz = sz.div(2);
+            int threshold = UI.scale(10); // Same threshold as fish/tree
+
+            // Loop through all markers and check if click is near one
+            for(Coord c : dgext) {
+                DisplayGrid dgrid = display[dgext.ri(c)];
+                if(dgrid == null)
+                    continue;
+
+                for(DisplayMarker mark : dgrid.markers(true)) {
+                    if(filter(mark))
+                        continue;
+
+                    // Calculate marker's screen position (same as drawmarkers)
+                    Coord screenPos = mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz);
+
+                    // Check if click is within threshold
+                    if(ev.c.dist(screenPos) < threshold) {
+                        NGameUI gui = NUtils.getGameUI();
+                        if(gui != null && gui.map instanceof NMapView) {
+                            NMapView mapView = (NMapView) gui.map;
+
+                            // Toggle selection (stored in shared NMapView)
+                            if(mapView.selectedMarker == mark) {
+                                // Deselect
+                                mapView.setSelectedMarker(null, null);
+                            } else {
+                                // Select marker
+                                mapView.setSelectedMarker(mark, mark.m.tc);
+                            }
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+
         // Handle right-click release on tree location - open details window
-        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-click
+        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-clicked
             NGameUI gui = NUtils.getGameUI();
             if(gui != null && gui.treeLocationService != null) {
                 // Check for tree location at click position (in screen space)
@@ -896,7 +984,7 @@ public class NMiniMap extends MiniMap {
         }
 
         // Handle right-click release on fish location - open details window
-        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-click
+        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-clicked
             NGameUI gui = NUtils.getGameUI();
             if(gui != null && gui.fishLocationService != null) {
                 // Check for fish location at click position (in screen space)
@@ -936,9 +1024,5 @@ public class NMiniMap extends MiniMap {
 
     public Area getDgext() {
         return dgext;
-    }
-
-    public int getDlvl() {
-        return dlvl;
     }
 }
