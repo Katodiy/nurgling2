@@ -35,6 +35,7 @@ public class NMiniMap extends MiniMap {
 
     // Selected quest giver for line drawing
     private MiniMap.DisplayMarker selectedQuestGiver = null;
+    private Coord selectedMarkerTileCoords = null; // Store tile coords for recalculation
 
     private static final Coord2d sgridsz = new Coord2d(new Coord(100,100));
     public NMiniMap(Coord sz, MapFile file) {
@@ -267,6 +268,17 @@ public class NMiniMap extends MiniMap {
         super.tick(dt);
         if(ui.gui.map==null)
             return;
+
+        // Update 3D line target when session location changes (e.g., after teleport)
+        if(selectedMarkerTileCoords != null && sessloc != null) {
+            NGameUI gui = NUtils.getGameUI();
+            if(gui != null && gui.map instanceof NMapView) {
+                // Recalculate world position based on current session location
+                Coord2d worldPos = selectedMarkerTileCoords.sub(sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
+                ((NMapView)gui.map).setQuestGiverTarget(worldPos);
+            }
+        }
+
         if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
             if ((sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id))) {
                 fogArea.tick(dt);
@@ -927,6 +939,7 @@ public class NMiniMap extends MiniMap {
                         // Toggle selection
                         if(selectedQuestGiver == mark) {
                             selectedQuestGiver = null;
+                            selectedMarkerTileCoords = null;
                             System.out.println("Deselected");
                             NGameUI gui = NUtils.getGameUI();
                             if(gui != null && gui.map instanceof NMapView) {
@@ -934,6 +947,7 @@ public class NMiniMap extends MiniMap {
                             }
                         } else {
                             selectedQuestGiver = mark;
+                            selectedMarkerTileCoords = mark.m.tc; // Store tile coords
                             System.out.println("Selected at tile coords: " + mark.m.tc);
                             NGameUI gui = NUtils.getGameUI();
                             if(gui != null && gui.map instanceof NMapView) {
