@@ -89,9 +89,9 @@ public class NMapView extends MapView
 
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
 
-    // Quest giver line overlay for showing path to selected quest giver
-    public NQuestGiverLineOverlay questGiverLineOverlay = null;
-    private RenderTree.Slot questGiverLineSlot = null;
+    // Marker line overlay for showing path to selected marker
+    public NMarkerLineOverlay markerLineOverlay = null;
+    private RenderTree.Slot markerLineSlot = null;
 
     public static boolean hitNWidgetsInfo(Coord pc) {
         boolean isFound = false;
@@ -592,9 +592,9 @@ public class NMapView extends MapView
                 area.tick(dt);
             }
         }
-        // Update quest giver line overlay
-        if(questGiverLineOverlay != null) {
-            questGiverLineOverlay.tick();
+        // Update marker line overlay
+        if(markerLineOverlay != null) {
+            markerLineOverlay.tick();
         }
         ArrayList<Long> forRemove = new ArrayList<>();
 //        for(Gob dummy : dummys.values())
@@ -1157,24 +1157,24 @@ public class NMapView extends MapView
     }
 
     /**
-     * Sets the quest giver target for line overlay drawing
-     * @param targetPos World position of the quest giver, or null to clear
+     * Sets the marker target for line overlay drawing
+     * @param targetPos World position of the marker, or null to clear
      */
-    public void setQuestGiverTarget(Coord2d targetPos) {
+    public void setMarkerTarget(Coord2d targetPos) {
         if(targetPos == null) {
             // Clear the overlay
-            if(questGiverLineSlot != null) {
-                questGiverLineSlot.remove();
-                questGiverLineSlot = null;
+            if(markerLineSlot != null) {
+                markerLineSlot.remove();
+                markerLineSlot = null;
             }
-            questGiverLineOverlay = null;
+            markerLineOverlay = null;
         } else {
             // Create or update the overlay
-            if(questGiverLineOverlay == null) {
-                questGiverLineOverlay = new NQuestGiverLineOverlay(() -> player());
-                questGiverLineSlot = basic.add(questGiverLineOverlay);
+            if(markerLineOverlay == null) {
+                markerLineOverlay = new NMarkerLineOverlay(() -> player());
+                markerLineSlot = basic.add(markerLineOverlay);
             }
-            questGiverLineOverlay.setTarget(targetPos);
+            markerLineOverlay.setTarget(targetPos);
         }
     }
 

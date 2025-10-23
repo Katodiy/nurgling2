@@ -32,8 +32,8 @@ public class NMiniMap extends MiniMap {
     // Cache for tree icon textures to avoid reloading every frame
     private final java.util.HashMap<String, TexI> treeIconCache = new java.util.HashMap<>();
 
-    // Selected quest giver for line drawing
-    private MiniMap.DisplayMarker selectedQuestGiver = null;
+    // Selected marker for line drawing
+    private MiniMap.DisplayMarker selectedMarker = null;
     private Coord selectedMarkerTileCoords = null; // Store tile coords for recalculation
 
     private static final Coord2d sgridsz = new Coord2d(new Coord(100,100));
@@ -115,7 +115,7 @@ public class NMiniMap extends MiniMap {
         drawFishLocations(g);
         drawTreeLocations(g);
         drawQueuedWaypoints(g);  // Draw waypoint visualization
-        drawQuestGiverLine(g);   // Draw line to selected quest giver
+        drawMarkerLine(g);       // Draw line to selected marker
     }
 
     // Draw queued waypoints visualization
@@ -185,9 +185,9 @@ public class NMiniMap extends MiniMap {
         }
     }
 
-    // Draw line from player to selected quest giver
-    protected void drawQuestGiverLine(GOut g) {
-        if(selectedQuestGiver == null || sessloc == null || dloc == null) return;
+    // Draw line from player to selected marker
+    protected void drawMarkerLine(GOut g) {
+        if(selectedMarker == null || sessloc == null || dloc == null) return;
 
         // Get player's current position on the minimap
         Coord playerScreenPos = null;
@@ -206,13 +206,13 @@ public class NMiniMap extends MiniMap {
 
         if(playerScreenPos == null) return;
 
-        // Get quest giver position on minimap (works across segments)
+        // Get marker position on minimap (works across segments)
         Coord hsz = sz.div(2);
-        Coord questGiverScreenPos = selectedQuestGiver.m.tc.sub(dloc.tc).div(scalef()).add(hsz);
+        Coord markerScreenPos = selectedMarker.m.tc.sub(dloc.tc).div(scalef()).add(hsz);
 
-        // Draw line from player to quest giver
-        g.chcolor(255, 215, 0, 220); // Gold color for quest giver path
-        g.line(playerScreenPos, questGiverScreenPos, 3); // Thicker line for visibility
+        // Draw line from player to marker
+        g.chcolor(255, 215, 0, 220); // Gold color for marker path
+        g.line(playerScreenPos, markerScreenPos, 3); // Thicker line for visibility
         g.chcolor();
     }
 
@@ -274,7 +274,7 @@ public class NMiniMap extends MiniMap {
             if(gui != null && gui.map instanceof NMapView) {
                 // Recalculate world position based on current session location
                 Coord2d worldPos = selectedMarkerTileCoords.sub(sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
-                ((NMapView)gui.map).setQuestGiverTarget(worldPos);
+                ((NMapView)gui.map).setMarkerTarget(worldPos);
             }
         }
 
@@ -936,16 +936,16 @@ public class NMiniMap extends MiniMap {
                         System.out.println("Screen pos: " + screenPos);
 
                         // Toggle selection
-                        if(selectedQuestGiver == mark) {
-                            selectedQuestGiver = null;
+                        if(selectedMarker == mark) {
+                            selectedMarker = null;
                             selectedMarkerTileCoords = null;
                             System.out.println("Deselected");
                             NGameUI gui = NUtils.getGameUI();
                             if(gui != null && gui.map instanceof NMapView) {
-                                ((NMapView)gui.map).setQuestGiverTarget(null);
+                                ((NMapView)gui.map).setMarkerTarget(null);
                             }
                         } else {
-                            selectedQuestGiver = mark;
+                            selectedMarker = mark;
                             selectedMarkerTileCoords = mark.m.tc; // Store tile coords
                             System.out.println("Selected at tile coords: " + mark.m.tc);
                             NGameUI gui = NUtils.getGameUI();
@@ -953,7 +953,7 @@ public class NMiniMap extends MiniMap {
                                 // Convert tile coords to world coords (relative to session location)
                                 Coord2d worldPos = mark.m.tc.sub(sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
                                 System.out.println("World pos (corrected): " + worldPos);
-                                ((NMapView)gui.map).setQuestGiverTarget(worldPos);
+                                ((NMapView)gui.map).setMarkerTarget(worldPos);
                             }
                         }
                         System.out.println("=== END ===");

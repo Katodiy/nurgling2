@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Draws a line from the player to a selected quest giver in the game world
+ * Draws a line from the player to a selected marker in the game world
  */
-public class NQuestGiverLineOverlay implements RenderTree.Node, Rendered {
+public class NMarkerLineOverlay implements RenderTree.Node, Rendered {
     /**
      * Vertex layout for line rendering
      */
@@ -23,7 +23,7 @@ public class NQuestGiverLineOverlay implements RenderTree.Node, Rendered {
     private static final float Z = 1f;
 
     /**
-     * Gold color for quest giver line
+     * Gold color for marker line
      */
     private static final Color LINE_COLOR = new Color(255, 215, 0, 255);
 
@@ -43,7 +43,7 @@ public class NQuestGiverLineOverlay implements RenderTree.Node, Rendered {
     private Model model;
 
     /**
-     * Target quest giver position
+     * Target marker position
      */
     private Coord2d targetPos;
 
@@ -53,10 +53,10 @@ public class NQuestGiverLineOverlay implements RenderTree.Node, Rendered {
     private final Supplier<Gob> playerSupplier;
 
     /**
-     * Creates new quest giver line overlay
+     * Creates new marker line overlay
      * @param playerSupplier Supplier to get the player Gob
      */
-    public NQuestGiverLineOverlay(Supplier<Gob> playerSupplier) {
+    public NMarkerLineOverlay(Supplier<Gob> playerSupplier) {
         this.playerSupplier = playerSupplier;
         this.state = Pipe.Op.compose(
                 new BaseColor(LINE_COLOR),
@@ -66,8 +66,8 @@ public class NQuestGiverLineOverlay implements RenderTree.Node, Rendered {
     }
 
     /**
-     * Sets the target quest giver position
-     * @param pos World position of quest giver
+     * Sets the target marker position
+     * @param pos World position of marker
      */
     public void setTarget(Coord2d pos) {
         this.targetPos = pos;
