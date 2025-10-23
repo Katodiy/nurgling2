@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.render.RenderTree;
 
 import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
@@ -87,6 +88,10 @@ public class NMapView extends MapView
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
 
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
+
+    // Quest giver line overlay for showing path to selected quest giver
+    public NQuestGiverLineOverlay questGiverLineOverlay = null;
+    private RenderTree.Slot questGiverLineSlot = null;
 
     public static boolean hitNWidgetsInfo(Coord pc) {
         boolean isFound = false;
@@ -586,6 +591,10 @@ public class NMapView extends MapView
             {
                 area.tick(dt);
             }
+        }
+        // Update quest giver line overlay
+        if(questGiverLineOverlay != null) {
+            questGiverLineOverlay.tick(dt);
         }
         ArrayList<Long> forRemove = new ArrayList<>();
 //        for(Gob dummy : dummys.values())
@@ -1144,6 +1153,28 @@ public class NMapView extends MapView
         } else {
             // For all other messages, use the parent implementation
             super.uimsg(msg, args);
+        }
+    }
+
+    /**
+     * Sets the quest giver target for line overlay drawing
+     * @param targetPos World position of the quest giver, or null to clear
+     */
+    public void setQuestGiverTarget(Coord2d targetPos) {
+        if(targetPos == null) {
+            // Clear the overlay
+            if(questGiverLineSlot != null) {
+                questGiverLineSlot.remove();
+                questGiverLineSlot = null;
+            }
+            questGiverLineOverlay = null;
+        } else {
+            // Create or update the overlay
+            if(questGiverLineOverlay == null) {
+                questGiverLineOverlay = new NQuestGiverLineOverlay(() -> player());
+                questGiverLineSlot = basic.add(questGiverLineOverlay);
+            }
+            questGiverLineOverlay.setTarget(targetPos);
         }
     }
 

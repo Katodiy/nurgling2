@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import haven.MapFile.SMarker;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -31,6 +32,9 @@ public class NMiniMap extends MiniMap {
 
     // Cache for tree icon textures to avoid reloading every frame
     private final java.util.HashMap<String, TexI> treeIconCache = new java.util.HashMap<>();
+
+    // Selected quest giver for line drawing
+    private MiniMap.DisplayMarker selectedQuestGiver = null;
 
     private static final Coord2d sgridsz = new Coord2d(new Coord(100,100));
     public NMiniMap(Coord sz, MapFile file) {
@@ -111,6 +115,7 @@ public class NMiniMap extends MiniMap {
         drawFishLocations(g);
         drawTreeLocations(g);
         drawQueuedWaypoints(g);  // Draw waypoint visualization
+        drawQuestGiverLine(g);   // Draw line to selected quest giver
     }
 
     // Draw queued waypoints visualization
@@ -178,6 +183,37 @@ public class NMiniMap extends MiniMap {
             }
             g.chcolor();
         }
+    }
+
+    // Draw line from player to selected quest giver
+    protected void drawQuestGiverLine(GOut g) {
+        if(selectedQuestGiver == null || sessloc == null || dloc == null) return;
+
+        // Get player's current position on the minimap
+        Coord playerScreenPos = null;
+        try {
+            if(ui != null && ui.gui != null && ui.gui.map != null) {
+                Coord2d playerWorld = new Coord2d(ui.gui.map.getcc());
+                playerScreenPos = p2c(playerWorld);
+            }
+        } catch(Loading l) {
+            // Fall back to sessloc if player position not available
+            playerScreenPos = xlate(sessloc);
+        } catch(Exception e) {
+            // Handle any other errors
+            return;
+        }
+
+        if(playerScreenPos == null) return;
+
+        // Get quest giver position on minimap (works across segments)
+        Coord hsz = sz.div(2);
+        Coord questGiverScreenPos = selectedQuestGiver.m.tc.sub(dloc.tc).div(scalef()).add(hsz);
+
+        // Draw line from player to quest giver
+        g.chcolor(255, 215, 0, 220); // Gold color for quest giver path
+        g.line(playerScreenPos, questGiverScreenPos, 3); // Thicker line for visibility
+        g.chcolor();
     }
 
     void drawview(GOut g) {
@@ -863,6 +899,56 @@ public class NMiniMap extends MiniMap {
 
     @Override
     public boolean mouseup(MouseUpEvent ev) {
+        // Handle right-click release on ANY marker - draw line to it
+        if(ev.b == 3 && dloc != null && sessloc != null && display != null && dgext != null) {
+            Coord hsz = sz.div(2);
+            int threshold = UI.scale(10); // Same threshold as fish/tree
+
+            // Loop through all markers and check if click is near one
+            for(Coord c : dgext) {
+                DisplayGrid dgrid = display[dgext.ri(c)];
+                if(dgrid == null)
+                    continue;
+
+                for(DisplayMarker mark : dgrid.markers(true)) {
+                    if(filter(mark))
+                        continue;
+
+                    // Calculate marker's screen position (same as drawmarkers)
+                    Coord screenPos = mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz);
+
+                    // Check if click is within threshold
+                    if(ev.c.dist(screenPos) < threshold) {
+                        System.out.println("=== MARKER CLICKED ===");
+                        System.out.println("Marker: " + mark.m.nm);
+                        System.out.println("Type: " + mark.m.getClass().getSimpleName());
+                        System.out.println("Screen pos: " + screenPos);
+
+                        // Toggle selection
+                        if(selectedQuestGiver == mark) {
+                            selectedQuestGiver = null;
+                            System.out.println("Deselected");
+                            NGameUI gui = NUtils.getGameUI();
+                            if(gui != null && gui.map instanceof NMapView) {
+                                ((NMapView)gui.map).setQuestGiverTarget(null);
+                            }
+                        } else {
+                            selectedQuestGiver = mark;
+                            System.out.println("Selected at tile coords: " + mark.m.tc);
+                            NGameUI gui = NUtils.getGameUI();
+                            if(gui != null && gui.map instanceof NMapView) {
+                                Coord2d worldPos = mark.m.tc.mul(MCache.tilesz).add(MCache.tilesz.div(2));
+                                System.out.println("World pos: " + worldPos);
+                                ((NMapView)gui.map).setQuestGiverTarget(worldPos);
+                            }
+                        }
+                        System.out.println("=== END ===");
+                        return true;
+                    }
+                }
+            }
+        }
+
         // Handle right-click release on tree location - open details window
         if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-click
             NGameUI gui = NUtils.getGameUI();
