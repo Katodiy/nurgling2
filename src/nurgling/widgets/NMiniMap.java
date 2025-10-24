@@ -181,6 +181,45 @@ public class NMiniMap extends MiniMap {
         }
     }
 
+    // Clip a line to a rectangle boundary using Liang-Barsky algorithm
+    private Coord2d[] clipLineToRect(Coord2d p1, Coord2d p2, Coord2d rectSize) {
+        double x1 = p1.x, y1 = p1.y;
+        double x2 = p2.x, y2 = p2.y;
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+
+        double t0 = 0.0, t1 = 1.0;
+
+        // Check all four edges
+        double[] pArr = {-dx, dx, -dy, dy};
+        double[] qArr = {x1, rectSize.x - x1, y1, rectSize.y - y1};
+
+        for(int i = 0; i < 4; i++) {
+            if(pArr[i] == 0) {
+                // Line is parallel to this edge
+                if(qArr[i] < 0) {
+                    return null; // Line is outside
+                }
+            } else {
+                double r = qArr[i] / pArr[i];
+                if(pArr[i] < 0) {
+                    // Entering edge
+                    if(r > t1) return null; // Line is outside
+                    if(r > t0) t0 = r;
+                } else {
+                    // Exiting edge
+                    if(r < t0) return null; // Line is outside
+                    if(r < t1) t1 = r;
+                }
+            }
+        }
+
+        // Line is at least partially inside
+        Coord2d newP1 = new Coord2d(x1 + t0 * dx, y1 + t0 * dy);
+        Coord2d newP2 = new Coord2d(x1 + t1 * dx, y1 + t1 * dy);
+        return new Coord2d[] {newP1, newP2};
+    }
+
     // Draw line from player to selected marker
     protected void drawMarkerLine(GOut g) {
         NGameUI gui = NUtils.getGameUI();
@@ -204,10 +243,14 @@ public class NMiniMap extends MiniMap {
                     Coord hsz = sz.div(2);
                     Coord markerScreenPos = mapView.selectedMarkerTileCoords.sub(dloc.tc).div(scalef()).add(hsz);
 
-                    // Draw gold line from player to marker
-                    g.chcolor(255, 215, 0, 220); // Gold color for marker path
-                    g.line(playerScreenPos, markerScreenPos, 3); // Thicker line for visibility
-                    g.chcolor();
+                    // Clip line to map bounds
+                    Coord2d[] clipped = clipLineToRect(new Coord2d(playerScreenPos), new Coord2d(markerScreenPos), new Coord2d(sz));
+                    if(clipped != null) {
+                        // Draw gold line from player to marker
+                        g.chcolor(255, 215, 0, 220); // Gold color for marker path
+                        g.line(clipped[0].floor(), clipped[1].floor(), 3); // Thicker line for visibility
+                        g.chcolor();
+                    }
                 }
             } catch(Exception e) {
                 // Ignore errors
@@ -228,10 +271,14 @@ public class NMiniMap extends MiniMap {
                     Coord2d farPointTiles = vector.getTilePointAt(rayLength);
                     Coord farScreenPos = new Coord((int)farPointTiles.x, (int)farPointTiles.y).sub(dloc.tc).div(scalef()).add(hsz);
 
-                    // Draw the ray from origin toward far point
-                    g.chcolor(100, 150, 255, 200); // Blue color for directional vectors
-                    g.line(originScreenPos, farScreenPos, 2);
-                    g.chcolor();
+                    // Clip the vector line to map bounds
+                    Coord2d[] clipped = clipLineToRect(new Coord2d(originScreenPos), new Coord2d(farScreenPos), new Coord2d(sz));
+                    if(clipped != null) {
+                        // Draw the ray from origin toward far point
+                        g.chcolor(100, 150, 255, 200); // Blue color for directional vectors
+                        g.line(clipped[0].floor(), clipped[1].floor(), 2);
+                        g.chcolor();
+                    }
                 } catch(Exception e) {
                     // Skip this vector if there's an error
                     continue;
