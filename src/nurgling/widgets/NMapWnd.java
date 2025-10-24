@@ -52,6 +52,11 @@ public class NMapWnd extends MapWnd {
                     ((NMiniMap) view).showTreeIcons = val;
                 }
             }
+
+            @Override
+            public Object tooltip(Coord c, Widget prev) {
+                return Text.render("Show/Hide Tree Icons");
+            }
         }, view.c.add(view.sz.x - UI.scale(225), UI.scale(15)));
 
         // Add Tree Menu button (left of Fish button)
@@ -98,6 +103,11 @@ public class NMapWnd extends MapWnd {
                 if (view instanceof NMiniMap) {
                     ((NMiniMap) view).showFishIcons = val;
                 }
+            }
+
+            @Override
+            public Object tooltip(Coord c, Widget prev) {
+                return Text.render("Show/Hide Fish Icons");
             }
         }, view.c.add(view.sz.x - UI.scale(110), UI.scale(15)));
 
