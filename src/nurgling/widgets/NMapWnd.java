@@ -52,7 +52,7 @@ public class NMapWnd extends MapWnd {
                     ((NMiniMap) view).showTreeIcons = val;
                 }
             }
-        }, view.c.add(view.sz.x - UI.scale(235), UI.scale(5)));
+        }, view.c.add(view.sz.x - UI.scale(225), UI.scale(15)));
 
         // Add Tree Menu button (left of Fish button)
         add(treeMenuBtn = new Button(UI.scale(100), "Tree Search") {
@@ -99,7 +99,7 @@ public class NMapWnd extends MapWnd {
                     ((NMiniMap) view).showFishIcons = val;
                 }
             }
-        }, view.c.add(view.sz.x - UI.scale(120), UI.scale(5)));
+        }, view.c.add(view.sz.x - UI.scale(110), UI.scale(15)));
 
         // Add Fish button at top-right of map view
         // Position it directly using view.c (top-left) + view width - button width
@@ -154,7 +154,7 @@ public class NMapWnd extends MapWnd {
 
         // Position tree icons checkbox (left of Tree Search button)
         if(treeIconsCheckbox != null)
-            treeIconsCheckbox.c = view.c.add(view.sz.x - UI.scale(235), UI.scale(5));
+            treeIconsCheckbox.c = view.c.add(view.sz.x - UI.scale(225), UI.scale(15));
 
         // Position Tree Menu button (left of Fish button)
         if(treeMenuBtn != null)
@@ -162,7 +162,7 @@ public class NMapWnd extends MapWnd {
 
         // Position fish icons checkbox (left of Fish Search button)
         if(fishIconsCheckbox != null)
-            fishIconsCheckbox.c = view.c.add(view.sz.x - UI.scale(120), UI.scale(5));
+            fishIconsCheckbox.c = view.c.add(view.sz.x - UI.scale(110), UI.scale(15));
 
         // Position Fish button at top-right of map view
         if(fishMenuBtn != null)
