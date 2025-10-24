@@ -15,6 +15,8 @@ public class NMapWnd extends MapWnd {
     TextEntry te;
     Button fishMenuBtn;
     Button treeMenuBtn;
+    CheckBox treeIconsCheckbox;
+    CheckBox fishIconsCheckbox;
     private static final int btnw = UI.scale(95);
 
     public NMapWnd(MapFile file, MapView mv, Coord sz, String title) {
@@ -29,6 +31,33 @@ public class NMapWnd extends MapWnd {
                 NUtils.getGameUI().mmap.needUpdate = true;
             }
         }, view.pos("br").sub(UI.scale(200,20)));
+
+        // Add checkbox for tree icons (to the left of Tree Search button)
+        add(treeIconsCheckbox = new CheckBox("") {
+            {
+                a = true; // Start checked (icons visible by default)
+            }
+            @Override
+            public void changed(boolean val) {
+                // Toggle tree icon visibility on both the minimap and map window
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+
+                // Update minimap
+                if (gui != null && gui.mmap != null && gui.mmap instanceof NMiniMap) {
+                    ((NMiniMap) gui.mmap).showTreeIcons = val;
+                }
+
+                // Update map window's view
+                if (view instanceof NMiniMap) {
+                    ((NMiniMap) view).showTreeIcons = val;
+                }
+            }
+
+            @Override
+            public Object tooltip(Coord c, Widget prev) {
+                return Text.render("Show/Hide Tree Icons");
+            }
+        }, view.c.add(view.sz.x - UI.scale(225), UI.scale(15)));
 
         // Add Tree Menu button (left of Fish button)
         add(treeMenuBtn = new Button(UI.scale(100), "Tree Search") {
@@ -54,6 +83,33 @@ public class NMapWnd extends MapWnd {
                 }
             }
         }, view.c.add(view.sz.x - UI.scale(210), UI.scale(5)));
+
+        // Add checkbox for fish icons (to the left of Fish Search button)
+        add(fishIconsCheckbox = new CheckBox("") {
+            {
+                a = true; // Start checked (icons visible by default)
+            }
+            @Override
+            public void changed(boolean val) {
+                // Toggle fish icon visibility on both the minimap and map window
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+
+                // Update minimap
+                if (gui != null && gui.mmap != null && gui.mmap instanceof NMiniMap) {
+                    ((NMiniMap) gui.mmap).showFishIcons = val;
+                }
+
+                // Update map window's view
+                if (view instanceof NMiniMap) {
+                    ((NMiniMap) view).showFishIcons = val;
+                }
+            }
+
+            @Override
+            public Object tooltip(Coord c, Widget prev) {
+                return Text.render("Show/Hide Fish Icons");
+            }
+        }, view.c.add(view.sz.x - UI.scale(110), UI.scale(15)));
 
         // Add Fish button at top-right of map view
         // Position it directly using view.c (top-left) + view width - button width
@@ -106,9 +162,17 @@ public class NMapWnd extends MapWnd {
         if(te!=null)
             te.c = view.pos("br").sub(UI.scale(200,20));
 
+        // Position tree icons checkbox (left of Tree Search button)
+        if(treeIconsCheckbox != null)
+            treeIconsCheckbox.c = view.c.add(view.sz.x - UI.scale(225), UI.scale(15));
+
         // Position Tree Menu button (left of Fish button)
         if(treeMenuBtn != null)
             treeMenuBtn.c = view.c.add(view.sz.x - UI.scale(210), UI.scale(5));
+
+        // Position fish icons checkbox (left of Fish Search button)
+        if(fishIconsCheckbox != null)
+            fishIconsCheckbox.c = view.c.add(view.sz.x - UI.scale(110), UI.scale(15));
 
         // Position Fish button at top-right of map view
         if(fishMenuBtn != null)

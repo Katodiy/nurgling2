@@ -32,6 +32,10 @@ public class NMiniMap extends MiniMap {
     // Cache for tree icon textures to avoid reloading every frame
     private final java.util.HashMap<String, TexI> treeIconCache = new java.util.HashMap<>();
 
+    // Visibility flags for tree and fish icons
+    public boolean showTreeIcons = true;
+    public boolean showFishIcons = true;
+
     private static final Coord2d sgridsz = new Coord2d(new Coord(100,100));
     public NMiniMap(Coord sz, MapFile file) {
         super(sz, file);
@@ -513,7 +517,7 @@ public class NMiniMap extends MiniMap {
 
             // Check for tree location tooltip first (check in screen space)
             NGameUI gui = NUtils.getGameUI();
-            if(gui != null && gui.treeLocationService != null) {
+            if(gui != null && gui.treeLocationService != null && showTreeIcons) {
                 // Check if markers are hidden (respect "Hide Markers" button)
                 MapWnd mapwnd = gui.mapfile;
                 boolean markersHidden = (mapwnd != null && Utils.eq(mapwnd.markcfg, MapWnd.MarkerConfig.hideall));
@@ -552,7 +556,7 @@ public class NMiniMap extends MiniMap {
             }
 
             // Check for fish location tooltip (check in screen space)
-            if(gui != null && gui.fishLocationService != null) {
+            if(gui != null && gui.fishLocationService != null && showFishIcons) {
                 // Check if markers are hidden (respect "Hide Markers" button)
                 MapWnd mapwnd = gui.mapfile;
                 boolean markersHidden = (mapwnd != null && Utils.eq(mapwnd.markcfg, MapWnd.MarkerConfig.hideall));
@@ -756,6 +760,9 @@ public class NMiniMap extends MiniMap {
     private void drawFishLocations(GOut g) {
         if(sessloc == null || dloc == null) return;
 
+        // Check if fish icons are hidden by checkbox
+        if(!showFishIcons) return;
+
         NGameUI gui = NUtils.getGameUI();
         if(gui == null || gui.fishLocationService == null) return;
 
@@ -831,6 +838,9 @@ public class NMiniMap extends MiniMap {
 
     private void drawTreeLocations(GOut g) {
         if(sessloc == null || dloc == null) return;
+
+        // Check if tree icons are hidden by checkbox
+        if(!showTreeIcons) return;
 
         NGameUI gui = NUtils.getGameUI();
         if(gui == null || gui.treeLocationService == null) return;
@@ -1013,7 +1023,7 @@ public class NMiniMap extends MiniMap {
         }
 
         // Handle right-click release on tree location - open details window
-        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-clicked
+        if(ev.b == 3 && dloc != null && sessloc != null && showTreeIcons) { // Button 3 is right-clicked
             NGameUI gui = NUtils.getGameUI();
             if(gui != null && gui.treeLocationService != null) {
                 // Check for tree location at click position (in screen space)
@@ -1045,7 +1055,7 @@ public class NMiniMap extends MiniMap {
         }
 
         // Handle right-click release on fish location - open details window
-        if(ev.b == 3 && dloc != null && sessloc != null) { // Button 3 is right-clicked
+        if(ev.b == 3 && dloc != null && sessloc != null && showFishIcons) { // Button 3 is right-clicked
             NGameUI gui = NUtils.getGameUI();
             if(gui != null && gui.fishLocationService != null) {
                 // Check for fish location at click position (in screen space)
