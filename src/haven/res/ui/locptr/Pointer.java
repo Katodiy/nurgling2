@@ -112,6 +112,19 @@ public class Pointer extends Widget {
     }
 
     public boolean mousedown(Coord c, int button) {
+	// Handle right-click for marker line (nurgling feature)
+	if(button == 3 && (lc != null) && lc.dist(c) < 20) {
+	    try {
+		Coord2d targetCoords = tc();
+		if(targetCoords != null) {
+		    nurgling.tools.NPointerClickHandler.handleRightClick(targetCoords, tip, gobid);
+		    return(true);
+		}
+	    } catch(Exception e) {
+		// Silently ignore if nurgling handler not available
+	    }
+	}
+
 	if(click && (lc != null)) {
 	    if(lc.dist(c) < 20) {
 		wdgmsg("click", button, ui.modflags());

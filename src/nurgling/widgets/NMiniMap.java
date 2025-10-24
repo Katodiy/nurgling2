@@ -181,40 +181,110 @@ public class NMiniMap extends MiniMap {
         }
     }
 
+    // Clip a line to a rectangle boundary using Liang-Barsky algorithm
+    private Coord2d[] clipLineToRect(Coord2d p1, Coord2d p2, Coord2d rectSize) {
+        double x1 = p1.x, y1 = p1.y;
+        double x2 = p2.x, y2 = p2.y;
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+
+        double t0 = 0.0, t1 = 1.0;
+
+        // Check all four edges
+        double[] pArr = {-dx, dx, -dy, dy};
+        double[] qArr = {x1, rectSize.x - x1, y1, rectSize.y - y1};
+
+        for(int i = 0; i < 4; i++) {
+            if(pArr[i] == 0) {
+                // Line is parallel to this edge
+                if(qArr[i] < 0) {
+                    return null; // Line is outside
+                }
+            } else {
+                double r = qArr[i] / pArr[i];
+                if(pArr[i] < 0) {
+                    // Entering edge
+                    if(r > t1) return null; // Line is outside
+                    if(r > t0) t0 = r;
+                } else {
+                    // Exiting edge
+                    if(r < t0) return null; // Line is outside
+                    if(r < t1) t1 = r;
+                }
+            }
+        }
+
+        // Line is at least partially inside
+        Coord2d newP1 = new Coord2d(x1 + t0 * dx, y1 + t0 * dy);
+        Coord2d newP2 = new Coord2d(x1 + t1 * dx, y1 + t1 * dy);
+        return new Coord2d[] {newP1, newP2};
+    }
+
     // Draw line from player to selected marker
     protected void drawMarkerLine(GOut g) {
-        // Get selected marker from shared state in NMapView
         NGameUI gui = NUtils.getGameUI();
         if(gui == null || !(gui.map instanceof NMapView)) return;
         NMapView mapView = (NMapView) gui.map;
 
-        if(mapView.selectedMarker == null || sessloc == null || dloc == null) return;
+        // Draw gold line to selected marker icon (follows player)
+        if(mapView.selectedMarkerTileCoords != null && sessloc != null && dloc != null) {
+            try {
+                // Get player's current position on the minimap
+                Coord playerScreenPos = null;
+                if(ui != null && ui.gui != null && ui.gui.map != null) {
+                    Coord2d playerWorld = new Coord2d(ui.gui.map.getcc());
+                    playerScreenPos = p2c(playerWorld);
+                } else {
+                    playerScreenPos = xlate(sessloc);
+                }
 
-        // Get player's current position on the minimap
-        Coord playerScreenPos = null;
-        try {
-            if(ui != null && ui.gui != null && ui.gui.map != null) {
-                Coord2d playerWorld = new Coord2d(ui.gui.map.getcc());
-                playerScreenPos = p2c(playerWorld);
+                if(playerScreenPos != null) {
+                    // Get marker position on minimap
+                    Coord hsz = sz.div(2);
+                    Coord markerScreenPos = mapView.selectedMarkerTileCoords.sub(dloc.tc).div(scalef()).add(hsz);
+
+                    // Clip line to map bounds
+                    Coord2d[] clipped = clipLineToRect(new Coord2d(playerScreenPos), new Coord2d(markerScreenPos), new Coord2d(sz));
+                    if(clipped != null) {
+                        // Draw gold line from player to marker
+                        g.chcolor(255, 215, 0, 220); // Gold color for marker path
+                        g.line(clipped[0].floor(), clipped[1].floor(), 3); // Thicker line for visibility
+                        g.chcolor();
+                    }
+                }
+            } catch(Exception e) {
+                // Ignore errors
             }
-        } catch(Loading l) {
-            // Fall back to sessloc if player position not available
-            playerScreenPos = xlate(sessloc);
-        } catch(Exception e) {
-            // Handle any other errors
-            return;
         }
 
-        if(playerScreenPos == null) return;
+        // Draw directional vectors (fixed rays, don't follow player)
+        if(!mapView.directionalVectors.isEmpty() && dloc != null) {
+            Coord hsz = sz.div(2);
 
-        // Get marker position on minimap (works across segments)
-        Coord hsz = sz.div(2);
-        Coord markerScreenPos = mapView.selectedMarker.m.tc.sub(dloc.tc).div(scalef()).add(hsz);
+            for(nurgling.tools.DirectionalVector vector : mapView.directionalVectors) {
+                try {
+                    // Convert tile coordinates to minimap screen coordinates
+                    Coord originScreenPos = vector.originTileCoords.sub(dloc.tc).div(scalef()).add(hsz);
 
-        // Draw line from player to marker
-        g.chcolor(255, 215, 0, 220); // Gold color for marker path
-        g.line(playerScreenPos, markerScreenPos, 3); // Thicker line for visibility
-        g.chcolor();
+                    // Calculate a far point along the vector direction
+                    double rayLength = 10000; // Tiles (effectively infinite on map scale)
+                    Coord2d farPointTiles = vector.getTilePointAt(rayLength);
+                    Coord farScreenPos = new Coord((int)farPointTiles.x, (int)farPointTiles.y).sub(dloc.tc).div(scalef()).add(hsz);
+
+                    // Clip the vector line to map bounds
+                    Coord2d[] clipped = clipLineToRect(new Coord2d(originScreenPos), new Coord2d(farScreenPos), new Coord2d(sz));
+                    if(clipped != null) {
+                        // Draw the ray from origin toward far point
+                        g.chcolor(100, 150, 255, 200); // Blue color for directional vectors
+                        g.line(clipped[0].floor(), clipped[1].floor(), 2);
+                        g.chcolor();
+                    }
+                } catch(Exception e) {
+                    // Skip this vector if there's an error
+                    continue;
+                }
+            }
+        }
     }
 
     void drawview(GOut g) {
@@ -270,16 +340,6 @@ public class NMiniMap extends MiniMap {
             return;
 
         NGameUI gui = NUtils.getGameUI();
-
-        // Update 3D line target when session location changes (e.g., after teleport)
-        if(gui != null && gui.map instanceof NMapView) {
-            NMapView mapView = (NMapView) gui.map;
-            if(mapView.selectedMarkerTileCoords != null && sessloc != null) {
-                // Recalculate world position based on current session location
-                Coord2d worldPos = mapView.selectedMarkerTileCoords.sub(sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
-                mapView.setMarkerTarget(worldPos);
-            }
-        }
 
         if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
             if ((sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id))) {
@@ -936,12 +996,13 @@ public class NMiniMap extends MiniMap {
                         if(gui != null && gui.map instanceof NMapView) {
                             NMapView mapView = (NMapView) gui.map;
 
-                            // Toggle selection (stored in shared NMapView)
-                            if(mapView.selectedMarker == mark) {
-                                // Deselect
+                            // Toggle selection based on coordinates (works for markers and pointers)
+                            if(mapView.selectedMarkerTileCoords != null &&
+                               mapView.selectedMarkerTileCoords.equals(mark.m.tc)) {
+                                // Deselect - same location clicked again
                                 mapView.setSelectedMarker(null, null);
                             } else {
-                                // Select marker
+                                // Select this marker
                                 mapView.setSelectedMarker(mark, mark.m.tc);
                             }
                         }
