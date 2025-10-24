@@ -1,6 +1,8 @@
 package nurgling.overlays.map;
 
 import haven.*;
+import haven.render.BaseColor;
+import haven.render.BufPipe;
 import nurgling.NConfig;
 import nurgling.widgets.NMiniMap;
 
@@ -89,8 +91,8 @@ public class MinimapClaimRenderer {
                                 continue;
                             }
 
-                            // Get color for this claim type
-                            Color fillColor = getColorForTag(tag);
+                            // Extract color from the resource's Material (supports enemy/friendly differentiation)
+                            Color fillColor = extractColorFromMaterial(olinfo, tag);
 
                             if (fillColor != null) {
                                 renderOverlay(map, g, overlay, disp, hsz, fillColor);
@@ -198,7 +200,39 @@ public class MinimapClaimRenderer {
     }
 
     /**
-     * Get fill color for a claim tag
+     * Extract color from the overlay's Material (supports different colors for enemy/friendly claims).
+     * Falls back to hardcoded tag-based colors if Material extraction fails.
+     */
+    private static Color extractColorFromMaterial(MCache.ResOverlay olinfo, String tag) {
+        try {
+            Material mat = olinfo.mat();
+            if (mat != null) {
+                BufPipe st = new BufPipe();
+                mat.states.apply(st);
+                if (st.get(BaseColor.slot) != null) {
+                    FColor bc = st.get(BaseColor.slot).color;
+                    // Convert to semi-transparent for minimap (alpha=60)
+                    return new Color(
+                        Math.round(bc.r * 255),
+                        Math.round(bc.g * 255),
+                        Math.round(bc.b * 255),
+                        60  // Semi-transparent to avoid obscuring terrain
+                    );
+                }
+            }
+        } catch (Loading e) {
+            // Material not loaded yet, will retry next frame
+            throw e;
+        } catch (Exception e) {
+            // Other errors - fall through to tag-based fallback
+        }
+
+        // Fallback to hardcoded tag-based colors if Material extraction fails
+        return getColorForTag(tag);
+    }
+
+    /**
+     * Get fallback fill color for a claim tag (used when Material extraction fails)
      */
     private static Color getColorForTag(String tag) {
         switch (tag) {
