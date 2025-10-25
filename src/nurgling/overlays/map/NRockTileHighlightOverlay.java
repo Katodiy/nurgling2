@@ -26,7 +26,7 @@ public class NRockTileHighlightOverlay extends NOverlay {
 
     public NRockTileHighlightOverlay() {
         super(ROCK_TILE_OVERLAY);
-        bc = new Color(255, 200, 100, 100); // Orange-ish color for rock highlights
+        bc = new Color(255, 200, 100, 80); // Orange-ish semi-transparent color
     }
 
     /**
@@ -122,16 +122,8 @@ public class NRockTileHighlightOverlay extends NOverlay {
         }
     }
 
-    // Directions for checking neighbors (N, E, S, W)
-    private static final Coord[] NEIGHBOR_OFFSETS = {
-        new Coord(0, -1),  // North
-        new Coord(1, 0),   // East
-        new Coord(0, 1),   // South
-        new Coord(-1, 0)   // West
-    };
-
-    // Corner coords for wall quads
-    private static final Coord[] WALL_CORNERS = {
+    // Corner coords for tile box
+    private static final Coord[] TILE_CORNERS = {
         new Coord(0, 0),
         new Coord(1, 0),
         new Coord(1, 1),
@@ -139,23 +131,27 @@ public class NRockTileHighlightOverlay extends NOverlay {
     };
 
     /**
-     * Checks if a tile at the given coordinate should have a wall on the given edge.
-     * A wall exists if the neighbor is not a rock tile or is out of bounds.
+     * Helper method to add a quad (4 vertices forming 2 triangles) to the mesh
      */
-    private boolean shouldHaveWall(MCache map, Coord gc, int direction) {
-        if (!shouldHighlightTile(gc)) {
-            return false;
-        }
+    private void addQuad(ArrayList<Float> vertices, ArrayList<Short> indices, short baseVertex,
+                        float x1, float y1, float z1,
+                        float x2, float y2, float z2,
+                        float x3, float y3, float z3,
+                        float x4, float y4, float z4) {
+        // Add 4 vertices
+        vertices.add(x1); vertices.add(y1); vertices.add(z1);
+        vertices.add(x2); vertices.add(y2); vertices.add(z2);
+        vertices.add(x3); vertices.add(y3); vertices.add(z3);
+        vertices.add(x4); vertices.add(y4); vertices.add(z4);
 
-        Coord neighbor = gc.add(NEIGHBOR_OFFSETS[direction]);
+        // Add 2 triangles (6 indices)
+        indices.add(baseVertex);
+        indices.add((short)(baseVertex + 1));
+        indices.add((short)(baseVertex + 2));
 
-        // If neighbor is highlighted rock, no wall needed
-        if (shouldHighlightTile(neighbor)) {
-            return false;
-        }
-
-        // Wall needed if neighbor is different type
-        return true;
+        indices.add(baseVertex);
+        indices.add((short)(baseVertex + 2));
+        indices.add((short)(baseVertex + 3));
     }
 
     @Override
@@ -171,8 +167,7 @@ public class NRockTileHighlightOverlay extends NOverlay {
             return null;
         }
 
-        // Wall height
-        final float wallHeight = 16.0f;
+        final float boxHeight = 18.0f; // Height of the colored box
 
         ArrayList<Float> vertices = new ArrayList<>();
         ArrayList<Short> indices = new ArrayList<>();
@@ -184,51 +179,62 @@ public class NRockTileHighlightOverlay extends NOverlay {
                 Coord lc = new Coord(tx, ty);
                 Coord gc = lc.add(mm.ul);
 
-                // Check each direction for walls
-                for (int dir = 0; dir < 4; dir++) {
-                    if (shouldHaveWall(map, gc, dir)) {
-                        // Create a vertical wall quad
-                        // Get the two corners for this wall edge
-                        Coord c1 = lc.add(WALL_CORNERS[(dir + 1) % 4]);
-                        Coord c2 = lc.add(WALL_CORNERS[dir]);
-
-                        // Get surface vertices at these corners
-                        Surface.Vertex sv1 = ms.fortile(c1);
-                        Surface.Vertex sv2 = ms.fortile(c2);
-
-                        // Bottom-left vertex
-                        vertices.add(sv1.x);
-                        vertices.add(sv1.y);
-                        vertices.add(sv1.z);
-
-                        // Bottom-right vertex
-                        vertices.add(sv2.x);
-                        vertices.add(sv2.y);
-                        vertices.add(sv2.z);
-
-                        // Top-right vertex
-                        vertices.add(sv2.x);
-                        vertices.add(sv2.y);
-                        vertices.add(sv2.z + wallHeight);
-
-                        // Top-left vertex
-                        vertices.add(sv1.x);
-                        vertices.add(sv1.y);
-                        vertices.add(sv1.z + wallHeight);
-
-                        // Create two triangles for the quad
-                        // Triangle 1: bottom-left, bottom-right, top-right
-                        indices.add(vertexCount);
-                        indices.add((short)(vertexCount + 1));
-                        indices.add((short)(vertexCount + 2));
-
-                        // Triangle 2: bottom-left, top-right, top-left
-                        indices.add(vertexCount);
-                        indices.add((short)(vertexCount + 2));
-                        indices.add((short)(vertexCount + 3));
-
-                        vertexCount += 4;
+                // Check if this tile should be highlighted
+                if (shouldHighlightTile(gc)) {
+                    // Get the 4 corner vertices for this tile
+                    Surface.Vertex[] corners = new Surface.Vertex[4];
+                    for (int i = 0; i < 4; i++) {
+                        corners[i] = ms.fortile(lc.add(TILE_CORNERS[i]));
                     }
+
+                    // Create a box with 6 faces around this tile
+                    // Bottom face (floor)
+                    addQuad(vertices, indices, vertexCount,
+                           corners[0].x, corners[0].y, corners[0].z,
+                           corners[1].x, corners[1].y, corners[1].z,
+                           corners[2].x, corners[2].y, corners[2].z,
+                           corners[3].x, corners[3].y, corners[3].z);
+                    vertexCount += 4;
+
+                    // Top face (ceiling)
+                    addQuad(vertices, indices, vertexCount,
+                           corners[0].x, corners[0].y, corners[0].z + boxHeight,
+                           corners[3].x, corners[3].y, corners[3].z + boxHeight,
+                           corners[2].x, corners[2].y, corners[2].z + boxHeight,
+                           corners[1].x, corners[1].y, corners[1].z + boxHeight);
+                    vertexCount += 4;
+
+                    // North wall (front)
+                    addQuad(vertices, indices, vertexCount,
+                           corners[0].x, corners[0].y, corners[0].z,
+                           corners[1].x, corners[1].y, corners[1].z,
+                           corners[1].x, corners[1].y, corners[1].z + boxHeight,
+                           corners[0].x, corners[0].y, corners[0].z + boxHeight);
+                    vertexCount += 4;
+
+                    // East wall (right)
+                    addQuad(vertices, indices, vertexCount,
+                           corners[1].x, corners[1].y, corners[1].z,
+                           corners[2].x, corners[2].y, corners[2].z,
+                           corners[2].x, corners[2].y, corners[2].z + boxHeight,
+                           corners[1].x, corners[1].y, corners[1].z + boxHeight);
+                    vertexCount += 4;
+
+                    // South wall (back)
+                    addQuad(vertices, indices, vertexCount,
+                           corners[2].x, corners[2].y, corners[2].z,
+                           corners[3].x, corners[3].y, corners[3].z,
+                           corners[3].x, corners[3].y, corners[3].z + boxHeight,
+                           corners[2].x, corners[2].y, corners[2].z + boxHeight);
+                    vertexCount += 4;
+
+                    // West wall (left)
+                    addQuad(vertices, indices, vertexCount,
+                           corners[3].x, corners[3].y, corners[3].z,
+                           corners[0].x, corners[0].y, corners[0].z,
+                           corners[0].x, corners[0].y, corners[0].z + boxHeight,
+                           corners[3].x, corners[3].y, corners[3].z + boxHeight);
+                    vertexCount += 4;
                 }
             }
         }
@@ -260,13 +266,11 @@ public class NRockTileHighlightOverlay extends NOverlay {
                 DataBuffer.Usage.STATIC, DataBuffer.Filler.of(idxb.array()))
         );
 
-        // Apply color to the walls
-        Pipe.Op colorOp = new BaseColor(new java.awt.Color(
-            bc.getRed(),
-            bc.getGreen(),
-            bc.getBlue(),
-            bc.getAlpha()
-        ));
+        // Apply semi-transparent color with disabled backface culling for visibility
+        Pipe.Op colorOp = Pipe.Op.compose(
+            new BaseColor(new java.awt.Color(bc.getRed(), bc.getGreen(), bc.getBlue(), bc.getAlpha())),
+            new States.Facecull(States.Facecull.Mode.NONE)  // Render both sides
+        );
 
         return new MapMesh.ShallowWrap(mod,
             Pipe.Op.compose(new MapMesh.NOLOrder(id), colorOp));
@@ -274,7 +278,7 @@ public class NRockTileHighlightOverlay extends NOverlay {
 
     @Override
     public RenderTree.Node makenolol(MapMesh mm, Long grid_id, Coord grid_ul) {
-        // No outline needed for wall highlighting
+        // No outline needed
         return null;
     }
 
