@@ -99,7 +99,8 @@ public class NConfig
         validateAllCropsBeforeHarvest,
         studyDeskLayout,
         waypointRetryOnStuck,
-        verboseCal
+        verboseCal,
+        highlightRockTiles
     }
 
 
@@ -191,6 +192,7 @@ public class NConfig
         conf.put(Key.studyDeskLayout, "");
         conf.put(Key.waypointRetryOnStuck, true);
         conf.put(Key.verboseCal, false);
+        conf.put(Key.highlightRockTiles, true);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

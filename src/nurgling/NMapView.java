@@ -70,6 +70,9 @@ public class NMapView extends MapView
         toggleol("hareas", true);
         toggleol("minesup", true);
         basic.add(glob.oc.paths);
+
+        // Note: Rock tile highlighting overlay will be initialized lazily on first access
+        // Can't initialize here because GameUI isn't fully set up yet
     }
 
     final HashMap<String, String> ttip = new HashMap<>();
@@ -147,6 +150,9 @@ public class NMapView extends MapView
 
     @Override
     public void draw(GOut g) {
+        // Initialize rock tile overlay on first draw (when GameUI is ready)
+        getRockTileOverlay();
+
         super.draw(g);
         synchronized (dummys) {
             for (Gob dummy : dummys.values()) {
@@ -245,11 +251,33 @@ public class NMapView extends MapView
         return null;
     }
 
+    public static NRockTileHighlightOverlay getRockTileOverlay()
+    {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            synchronized (NUtils.getGameUI().map)
+            {
+                NRockTileHighlightOverlay ro = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
+                if (ro == null)
+                {
+                    NUtils.getGameUI().map.addCustomOverlay(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY, new NRockTileHighlightOverlay());
+                }
+                ro = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
+                return ro;
+            }
+        }
+        return null;
+    }
+
     public static boolean isCustom(Integer id)
     {
         if(id == MINING_OVERLAY)
         {
             return NUtils.getGameUI().map.nols.get(MINING_OVERLAY)!=null;
+        }
+        if(id == NRockTileHighlightOverlay.ROCK_TILE_OVERLAY)
+        {
+            return NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY)!=null;
         }
         return false;
     }
