@@ -24,6 +24,7 @@ public class QoL extends Panel {
     private CheckBox debug;
     private CheckBox tempmark;
     private CheckBox shortCupboards;
+    private CheckBox shortWalls;
     private CheckBox printpfmap;
     private CheckBox uniformBiomeColors;
     private CheckBox showTerrainName;
@@ -77,6 +78,7 @@ public class QoL extends Panel {
         prev = questNotified = content.add(new CheckBox("Enable quest notified"), prev.pos("bl").adds(0, 5));
         prev = lpassistent = content.add(new CheckBox("Enable LP assistant"), prev.pos("bl").adds(0, 5));
         prev = shortCupboards = content.add(new CheckBox("Short cupboards"), prev.pos("bl").adds(0, 5));
+        prev = shortWalls = content.add(new CheckBox("Short mine walls"), prev.pos("bl").adds(0, 5));
         prev = useGlobalPf = content.add(new CheckBox("Use global PF"), prev.pos("bl").adds(0, 5));
         prev = uniformBiomeColors = content.add(new CheckBox("Uniform biome colors on minimap"), prev.pos("bl").adds(0, 5));
         prev = showTerrainName = content.add(new CheckBox("Show terrain name on minimap hover"), prev.pos("bl").adds(0, 5));
@@ -126,6 +128,7 @@ public class QoL extends Panel {
         printpfmap.a = getBool(NConfig.Key.printpfmap);
         tempmark.a = getBool(NConfig.Key.tempmark);
         shortCupboards.a = getBool(NConfig.Key.shortCupboards);
+        shortWalls.a = getBool(NConfig.Key.shortWalls);
         uniformBiomeColors.a = getBool(NConfig.Key.uniformBiomeColors);
         showTerrainName.a = getBool(NConfig.Key.showTerrainName);
         waypointRetryOnStuck.a = getBool(NConfig.Key.waypointRetryOnStuck);
@@ -176,6 +179,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.printpfmap, printpfmap.a);
         NConfig.set(NConfig.Key.tempmark, tempmark.a);
         NConfig.set(NConfig.Key.shortCupboards, shortCupboards.a);
+        NConfig.set(NConfig.Key.shortWalls, shortWalls.a);
         NConfig.set(NConfig.Key.showTerrainName, showTerrainName.a);
         NConfig.set(NConfig.Key.waypointRetryOnStuck, waypointRetryOnStuck.a);
         NConfig.set(NConfig.Key.verboseCal, verboseCal.a);

@@ -30,9 +30,11 @@ import java.util.*;
 import haven.*;
 import haven.MapMesh.Scan;
 import haven.Surface.Vertex;
+import nurgling.NConfig;
 
 public class CaveTile extends Tiler {
     public static final float h = 16;
+    public static final float shortH = 4; // 25% of normal height (same ratio as shortCupboards)
     public final Material wtex;
     public final Tiler ground;
 
@@ -53,9 +55,19 @@ public class CaveTile extends Tiler {
 	    if(wv[cs.o(tc)] == null) {
 		Random rnd = m.grnd(tc.add(m.ul));
 		Vertex[] buf = wv[cs.o(tc)] = new Vertex[4];
+		// Use short wall height if config is enabled
+		float wallHeight = h;
+		try {
+		    Boolean shortWalls = (Boolean) NConfig.get(NConfig.Key.shortWalls);
+		    if(shortWalls != null && shortWalls) {
+			wallHeight = shortH;
+		    }
+		} catch (Exception e) {
+		    // If config fails, use default height
+		}
 		buf[0] = ms.new Vertex(ms.fortile(tc));
 		for(int i = 1; i < buf.length; i++) {
-		    buf[i] = ms.new Vertex(buf[0].x, buf[0].y, buf[0].z + (i * h / (buf.length - 1)));
+		    buf[i] = ms.new Vertex(buf[0].x, buf[0].y, buf[0].z + (i * wallHeight / (buf.length - 1)));
 		    buf[i].x += (rnd.nextFloat() - 0.5f) * 3.0f;
 		    buf[i].y += (rnd.nextFloat() - 0.5f) * 3.0f;
 		    buf[i].z += (rnd.nextFloat() - 0.5f) * 3.5f;
