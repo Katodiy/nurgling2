@@ -12,6 +12,9 @@ import java.util.Set;
  */
 public class RockResourceMapper {
 
+    // Map from tile resource name to set of bumbling/inventory resource names
+    private static final Map<String, Set<String>> tileToGobMap = new HashMap<>();
+
     // Map from bumbling/inventory resource name to tile resource name
     private static final Map<String, String> gobToTileMap = new HashMap<>();
 
@@ -157,9 +160,23 @@ public class RockResourceMapper {
             "gfx/invobjs/gems/" + rockName
         };
 
+        Set<String> gobResources = new HashSet<>();
         for (String gobPattern : gobPatterns) {
+            gobResources.add(gobPattern);
             gobToTileMap.put(gobPattern, tileResource);
         }
+
+        tileToGobMap.put(tileResource, gobResources);
+    }
+
+    /**
+     * Given a tile resource name, returns all corresponding gob resource names.
+     * @param tileResource The tile resource (e.g., "gfx/tiles/rocks/feldspar")
+     * @return Set of gob resources, or empty set if none found
+     */
+    public static Set<String> getGobResourcesForTile(String tileResource) {
+        Set<String> result = tileToGobMap.get(tileResource);
+        return result != null ? result : new HashSet<>();
     }
 
     /**
@@ -169,6 +186,27 @@ public class RockResourceMapper {
      */
     public static String getTileResourceForGob(String gobResource) {
         return gobToTileMap.get(gobResource);
+    }
+
+    /**
+     * Checks if a tile resource should be highlighted based on selected gob resources.
+     * @param tileResource The tile resource to check
+     * @param selectedGobResources Set of selected gob resource names from Icon Settings
+     * @return true if the tile should be highlighted
+     */
+    public static boolean shouldHighlightTile(String tileResource, Set<String> selectedGobResources) {
+        Set<String> gobResources = getGobResourcesForTile(tileResource);
+        if (gobResources.isEmpty()) {
+            return false;
+        }
+
+        for (String gobResource : gobResources) {
+            if (selectedGobResources.contains(gobResource)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

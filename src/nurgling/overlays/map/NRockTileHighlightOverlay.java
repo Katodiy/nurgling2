@@ -2,7 +2,6 @@ package nurgling.overlays.map;
 
 import haven.*;
 import haven.render.*;
-import haven.resutil.CaveTile;
 import nurgling.*;
 import nurgling.tools.RockResourceMapper;
 
@@ -25,13 +24,10 @@ public class NRockTileHighlightOverlay extends NOverlay {
     // Cache for Icon Settings to detect changes
     private Map<GobIcon.Setting.ID, Boolean> lastIconStates = new HashMap<>();
 
-    // Animation state for color pulsation
-    private long animationStartTime = System.currentTimeMillis();
-    private static final long PULSE_PERIOD = 2000; // 2 seconds for full pulse cycle
-
     public NRockTileHighlightOverlay() {
         super(ROCK_TILE_OVERLAY);
-        bc = new Color(255, 200, 100, 80); // Orange-ish semi-transparent color (will be animated)
+        bc = new Color(255, 200, 100, 100); // Orange-ish color for rock highlights
+        System.out.println("Rock Tile Highlight Overlay initialized!");
     }
 
     /**
@@ -57,7 +53,7 @@ public class NRockTileHighlightOverlay extends NOverlay {
                     if (setting.show && setting.icon != null && setting.icon.res != null) {
                         String resName = setting.icon.res.name;
                         newSelectedGobResources.add(resName);
-                        currentStates.put(setting.id, true);
+                        currentStates.put(setting.id, setting.show);
                     }
                 }
             }
@@ -71,40 +67,34 @@ public class NRockTileHighlightOverlay extends NOverlay {
                 selectedTileResources = RockResourceMapper.getTileResourcesToHighlight(newSelectedGobResources);
                 needsUpdate = true;
                 requpdate2 = true;  // Trigger map re-render
+
+                // DEBUG: Print what we're highlighting
+                if (!selectedTileResources.isEmpty()) {
+                    System.out.println("=== ROCK TILE OVERLAY ===");
+                    System.out.println("Selected gob resources: " + newSelectedGobResources);
+                    System.out.println("Tile resources to highlight: " + selectedTileResources);
+                    System.out.println("========================");
+                    System.out.println("DEBUG: Setting requpdate2=true to trigger re-render");
+                }
             }
         } catch (Exception e) {
             // Silently ignore errors to avoid breaking the game
         }
     }
 
-    /**
-     * Gets the current color based on pulsation animation.
-     * Pulsates between blue and orange.
-     */
-    private Color getCurrentColor() {
-        long elapsed = System.currentTimeMillis() - animationStartTime;
-        double phase = (elapsed % PULSE_PERIOD) / (double) PULSE_PERIOD;
-
-        // Use sine wave for smooth pulsation (0 to 1 to 0)
-        double t = (Math.sin(phase * Math.PI * 2) + 1) / 2;
-
-        // Blue color (30, 144, 255, 80)
-        int blueR = 30, blueG = 144, blueB = 255;
-        // Orange color (255, 200, 100, 80)
-        int orangeR = 255, orangeG = 200, orangeB = 100;
-
-        // Interpolate between blue and orange
-        int r = (int)(blueR + t * (orangeR - blueR));
-        int g = (int)(blueG + t * (orangeG - blueG));
-        int b = (int)(blueB + t * (orangeB - blueB));
-
-        return new Color(r, g, b, 80);
-    }
+    // Track which tiles we've already printed to avoid spam
+    private Set<String> printedTileTypes = new HashSet<>();
+    private boolean hasLoggedCheck = false;
 
     /**
      * Checks if a tile should be highlighted based on its resource name.
      */
     private boolean shouldHighlightTile(Coord gc) {
+        if (!hasLoggedCheck) {
+            System.out.println("DEBUG: shouldHighlightTile() called! isEnabled=" + isEnabled + ", selectedTileResources.size=" + selectedTileResources.size());
+            hasLoggedCheck = true;
+        }
+
         if (!isEnabled || selectedTileResources.isEmpty()) {
             return false;
         }
@@ -124,7 +114,14 @@ public class NRockTileHighlightOverlay extends NOverlay {
 
             String tileResourceName = tileSpec.name;
 
+            // DEBUG: Print each unique tile type we encounter
+            if (!printedTileTypes.contains(tileResourceName)) {
+                System.out.println("DEBUG: Tile type encountered: " + tileResourceName);
+                printedTileTypes.add(tileResourceName);
+            }
+
             if (selectedTileResources.contains(tileResourceName)) {
+                System.out.println("ROCK TILE FOUND (MATCH): " + tileResourceName + " at " + gc);
                 return true;
             }
 
@@ -148,158 +145,156 @@ public class NRockTileHighlightOverlay extends NOverlay {
         // Periodically check if icon settings changed
         if (isEnabled) {
             updateSelectedRocks();
-            // Trigger continuous updates for smooth color animation
-            requpdate2 = true;
         }
-    }
-
-    // Corner coords for tile box
-    private static final Coord[] TILE_CORNERS = {
-        new Coord(0, 0),
-        new Coord(1, 0),
-        new Coord(1, 1),
-        new Coord(0, 1)
-    };
-
-    /**
-     * Helper method to add a quad (4 vertices forming 2 triangles) to the mesh
-     */
-    private void addQuad(ArrayList<Float> vertices, ArrayList<Short> indices, short baseVertex,
-                        float x1, float y1, float z1,
-                        float x2, float y2, float z2,
-                        float x3, float y3, float z3,
-                        float x4, float y4, float z4) {
-        // Add 4 vertices
-        vertices.add(x1); vertices.add(y1); vertices.add(z1);
-        vertices.add(x2); vertices.add(y2); vertices.add(z2);
-        vertices.add(x3); vertices.add(y3); vertices.add(z3);
-        vertices.add(x4); vertices.add(y4); vertices.add(z4);
-
-        // Add 2 triangles (6 indices)
-        indices.add(baseVertex);
-        indices.add((short)(baseVertex + 1));
-        indices.add((short)(baseVertex + 2));
-
-        indices.add(baseVertex);
-        indices.add((short)(baseVertex + 2));
-        indices.add((short)(baseVertex + 3));
     }
 
     @Override
     public RenderTree.Node makenol(MapMesh mm, Long grid_id, Coord grid_ul) {
-        if (selectedTileResources.isEmpty() || !isEnabled) {
-            return null;
+        System.out.println("DEBUG: makenol() called! grid_id=" + grid_id + " grid_ul=" + grid_ul);
+
+        if (mm.olvert == null) {
+            mm.olvert = mm.makeolvbuf();
         }
 
-        MapMesh.MapSurface ms = mm.data(MapMesh.gnd);
+        class Buf implements Tiler.MCons {
+            short[] fl = new short[16];
+            int fn = 0;
 
-        if (ms == null) {
-            return null;
-        }
-
-        // Check if short walls are enabled
-        boolean shortWalls = false;
-        try {
-            Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
-            shortWalls = (sw != null && sw);
-        } catch (Exception e) {
-            // Use default if config check fails
-        }
-
-        ArrayList<Float> vertices = new ArrayList<>();
-        ArrayList<Short> indices = new ArrayList<>();
-        short vertexCount = 0;
-
-        // Scan each tile in the mesh
-        for (int ty = 0; ty < mm.sz.y; ty++) {
-            for (int tx = 0; tx < mm.sz.x; tx++) {
-                Coord lc = new Coord(tx, ty);
-                Coord gc = lc.add(mm.ul);
-
-                // Check if this tile should be highlighted
-                if (shouldHighlightTile(gc)) {
-                    // Get the 4 corner vertices for this tile
-                    Surface.Vertex[] corners = new Surface.Vertex[4];
-                    for (int i = 0; i < 4; i++) {
-                        corners[i] = ms.fortile(lc.add(TILE_CORNERS[i]));
-                    }
-
-                    // Render just a horizontal plane slightly above the wall (short or tall)
-                    // Add small offset (0.1) so it's visible above the wall
-                    float planeHeight = shortWalls ? (CaveTile.SHORT_H + 0.1f) : (CaveTile.h + 0.1f);
-
-                    addQuad(vertices, indices, vertexCount,
-                           corners[0].x, corners[0].y, corners[0].z + planeHeight,
-                           corners[3].x, corners[3].y, corners[3].z + planeHeight,
-                           corners[2].x, corners[2].y, corners[2].z + planeHeight,
-                           corners[1].x, corners[1].y, corners[1].z + planeHeight);
-                    vertexCount += 4;
+            public void faces(MapMesh m, Tiler.MPart d) {
+                while (fn + d.f.length > fl.length) {
+                    fl = Utils.extend(fl, fl.length * 2);
+                }
+                for (int fi : d.f) {
+                    fl[fn++] = (short) mm.olvert.vl[d.v[fi].vi];
                 }
             }
         }
 
-        if (indices.isEmpty()) {
+        Coord t = new Coord();
+        Buf buf = new Buf();
+
+        System.out.println("DEBUG: Checking tiles in mesh, size=" + mm.sz);
+
+        int checkCount = 0;
+        // Check each tile in the mesh
+        for (t.y = 0; t.y < mm.sz.y; t.y++) {
+            for (t.x = 0; t.x < mm.sz.x; t.x++) {
+                checkCount++;
+                Coord gc = t.add(mm.ul);
+
+                if (shouldHighlightTile(gc)) {
+                    mm.map.tiler(mm.map.gettile(gc)).lay(mm, t, gc, buf, false);
+                }
+            }
+        }
+
+        System.out.println("DEBUG: Checked " + checkCount + " tiles");
+
+        if (buf.fn == 0) {
             return null;
         }
 
-        // Convert ArrayLists to buffers
-        java.nio.FloatBuffer posb = Utils.wfbuf(vertices.size());
-        for (Float v : vertices) {
-            posb.put(v);
-        }
-
-        java.nio.ShortBuffer idxb = Utils.wsbuf(indices.size());
-        for (Short i : indices) {
-            idxb.put(i);
-        }
-
-        // Create vertex buffer
-        VertexBuf.VertexData posa = new VertexBuf.VertexData(Utils.bufcp(posb));
-        VertexBuf vbuf = new VertexBuf(posa);
-
-        // Create model
         haven.render.Model mod = new haven.render.Model(
             haven.render.Model.Mode.TRIANGLES,
-            vbuf.data(),
-            new haven.render.Model.Indices(indices.size(), NumberFormat.UINT16,
-                DataBuffer.Usage.STATIC, DataBuffer.Filler.of(idxb.array()))
+            mm.olvert.dat,
+            new haven.render.Model.Indices(buf.fn, NumberFormat.UINT16, DataBuffer.Usage.STATIC,
+                DataBuffer.Filler.of(Arrays.copyOf(buf.fl, buf.fn)))
         );
 
-        // Get current pulsating color
-        Color currentColor = getCurrentColor();
-
-        // Apply semi-transparent pulsating color with disabled backface culling for visibility
-        Pipe.Op colorOp = Pipe.Op.compose(
-            new BaseColor(currentColor),
-            new States.Facecull(States.Facecull.Mode.NONE)  // Render both sides
-        );
-
-        return new MapMesh.ShallowWrap(mod,
-            Pipe.Op.compose(new MapMesh.NOLOrder(id), colorOp));
-    }
-
-    @Override
-    public void added(RenderTree.Slot slot) {
-        this.slot = slot;
-        // Add the base grid so makenol() gets called
-        // Use LE depth test so character and other objects can properly occlude the boxes
-        slot.add(base, new States.Depthtest(States.Depthtest.Test.LE));
-        // Don't call super.added() to avoid NOverlay's BaseColor null pointer
+        return new MapMesh.ShallowWrap(mod, new MapMesh.NOLOrder(id));
     }
 
     @Override
     public RenderTree.Node makenolol(MapMesh mm, Long grid_id, Coord grid_ul) {
-        // No outline needed
-        return null;
+        if (mm.olvert == null) {
+            mm.olvert = mm.makeolvbuf();
+        }
+
+        class Buf implements Tiler.MCons {
+            int mask;
+            short[] fl = new short[16];
+            int fn = 0;
+
+            public void faces(MapMesh m, Tiler.MPart d) {
+                byte[] ef = new byte[d.v.length];
+                for (int i = 0; i < d.v.length; i++) {
+                    if (d.tcy[i] == 0.0f) ef[i] |= 1;
+                    if (d.tcx[i] == 1.0f) ef[i] |= 2;
+                    if (d.tcy[i] == 1.0f) ef[i] |= 4;
+                    if (d.tcx[i] == 0.0f) ef[i] |= 8;
+                }
+                while (fn + (d.f.length * 2) > fl.length) {
+                    fl = Utils.extend(fl, fl.length * 2);
+                }
+                for (int i = 0; i < d.f.length; i += 3) {
+                    for (int a = 0; a < 3; a++) {
+                        int b = (a + 1) % 3;
+                        if ((ef[d.f[i + a]] & ef[d.f[i + b]] & mask) != 0) {
+                            fl[fn++] = (short) mm.olvert.vl[d.v[d.f[i + a]].vi];
+                            fl[fn++] = (short) mm.olvert.vl[d.v[d.f[i + b]].vi];
+                        }
+                    }
+                }
+            }
+        }
+
+        Area a = Area.sized(mm.ul, mm.sz);
+        Buf buf = new Buf();
+
+        // Create boolean grid to track highlighted tiles
+        boolean[][] highlighted = new boolean[mm.sz.x][mm.sz.y];
+        for (int y = 0; y < mm.sz.y; y++) {
+            for (int x = 0; x < mm.sz.x; x++) {
+                Coord gc = Coord.of(x, y).add(mm.ul);
+                highlighted[x][y] = shouldHighlightTile(gc);
+            }
+        }
+
+        // Draw borders only where highlighted tiles meet non-highlighted tiles
+        for (Coord t : a) {
+            int localX = t.x - mm.ul.x;
+            int localY = t.y - mm.ul.y;
+
+            if (localX >= 0 && localX < mm.sz.x && localY >= 0 && localY < mm.sz.y &&
+                highlighted[localX][localY]) {
+
+                buf.mask = 0;
+
+                // Check each cardinal direction
+                for (int d = 0; d < 4; d++) {
+                    Coord neighbor = t.add(Coord.uecw[d]);
+                    int nx = neighbor.x - mm.ul.x;
+                    int ny = neighbor.y - mm.ul.y;
+
+                    // If neighbor is out of bounds or not highlighted, draw border
+                    if (nx < 0 || nx >= mm.sz.x || ny < 0 || ny >= mm.sz.y || !highlighted[nx][ny]) {
+                        buf.mask |= 1 << d;
+                    }
+                }
+
+                if (buf.mask != 0) {
+                    mm.map.tiler(mm.map.gettile(t)).lay(mm, t.sub(a.ul), t, buf, false);
+                }
+            }
+        }
+
+        if (buf.fn == 0) {
+            return null;
+        }
+
+        haven.render.Model mod = new haven.render.Model(
+            haven.render.Model.Mode.LINES,
+            mm.olvert.dat,
+            new haven.render.Model.Indices(buf.fn, NumberFormat.UINT16, DataBuffer.Usage.STATIC,
+                DataBuffer.Filler.of(Arrays.copyOf(buf.fl, buf.fn)))
+        );
+
+        return new MapMesh.ShallowWrap(mod,
+            Pipe.Op.compose(new MapMesh.NOLOrder(id), new States.LineWidth(2)));
     }
 
     @Override
     public boolean requpdate() {
-        // Always return true when enabled to force continuous re-rendering for animation
-        if (isEnabled && !selectedTileResources.isEmpty()) {
-            return true;
-        }
-
         boolean result = needsUpdate;
         needsUpdate = false;
         if (result) {
