@@ -27,7 +27,6 @@ public class NRockTileHighlightOverlay extends NOverlay {
     public NRockTileHighlightOverlay() {
         super(ROCK_TILE_OVERLAY);
         bc = new Color(255, 200, 100, 100); // Orange-ish color for rock highlights
-        System.out.println("Rock Tile Highlight Overlay initialized!");
     }
 
     /**
@@ -67,34 +66,16 @@ public class NRockTileHighlightOverlay extends NOverlay {
                 selectedTileResources = RockResourceMapper.getTileResourcesToHighlight(newSelectedGobResources);
                 needsUpdate = true;
                 requpdate2 = true;  // Trigger map re-render
-
-                // DEBUG: Print what we're highlighting
-                if (!selectedTileResources.isEmpty()) {
-                    System.out.println("=== ROCK TILE OVERLAY ===");
-                    System.out.println("Selected gob resources: " + newSelectedGobResources);
-                    System.out.println("Tile resources to highlight: " + selectedTileResources);
-                    System.out.println("========================");
-                    System.out.println("DEBUG: Setting requpdate2=true to trigger re-render");
-                }
             }
         } catch (Exception e) {
             // Silently ignore errors to avoid breaking the game
         }
     }
 
-    // Track which tiles we've already printed to avoid spam
-    private Set<String> printedTileTypes = new HashSet<>();
-    private boolean hasLoggedCheck = false;
-
     /**
      * Checks if a tile should be highlighted based on its resource name.
      */
     private boolean shouldHighlightTile(Coord gc) {
-        if (!hasLoggedCheck) {
-            System.out.println("DEBUG: shouldHighlightTile() called! isEnabled=" + isEnabled + ", selectedTileResources.size=" + selectedTileResources.size());
-            hasLoggedCheck = true;
-        }
-
         if (!isEnabled || selectedTileResources.isEmpty()) {
             return false;
         }
@@ -114,14 +95,7 @@ public class NRockTileHighlightOverlay extends NOverlay {
 
             String tileResourceName = tileSpec.name;
 
-            // DEBUG: Print each unique tile type we encounter
-            if (!printedTileTypes.contains(tileResourceName)) {
-                System.out.println("DEBUG: Tile type encountered: " + tileResourceName);
-                printedTileTypes.add(tileResourceName);
-            }
-
             if (selectedTileResources.contains(tileResourceName)) {
-                System.out.println("ROCK TILE FOUND (MATCH): " + tileResourceName + " at " + gc);
                 return true;
             }
 
@@ -148,149 +122,160 @@ public class NRockTileHighlightOverlay extends NOverlay {
         }
     }
 
+    // Directions for checking neighbors (N, E, S, W)
+    private static final Coord[] NEIGHBOR_OFFSETS = {
+        new Coord(0, -1),  // North
+        new Coord(1, 0),   // East
+        new Coord(0, 1),   // South
+        new Coord(-1, 0)   // West
+    };
+
+    // Corner coords for wall quads
+    private static final Coord[] WALL_CORNERS = {
+        new Coord(0, 0),
+        new Coord(1, 0),
+        new Coord(1, 1),
+        new Coord(0, 1)
+    };
+
+    /**
+     * Checks if a tile at the given coordinate should have a wall on the given edge.
+     * A wall exists if the neighbor is not a rock tile or is out of bounds.
+     */
+    private boolean shouldHaveWall(MCache map, Coord gc, int direction) {
+        if (!shouldHighlightTile(gc)) {
+            return false;
+        }
+
+        Coord neighbor = gc.add(NEIGHBOR_OFFSETS[direction]);
+
+        // If neighbor is highlighted rock, no wall needed
+        if (shouldHighlightTile(neighbor)) {
+            return false;
+        }
+
+        // Wall needed if neighbor is different type
+        return true;
+    }
+
     @Override
     public RenderTree.Node makenol(MapMesh mm, Long grid_id, Coord grid_ul) {
-        System.out.println("DEBUG: makenol() called! grid_id=" + grid_id + " grid_ul=" + grid_ul);
-
-        if (mm.olvert == null) {
-            mm.olvert = mm.makeolvbuf();
-        }
-
-        class Buf implements Tiler.MCons {
-            short[] fl = new short[16];
-            int fn = 0;
-
-            public void faces(MapMesh m, Tiler.MPart d) {
-                while (fn + d.f.length > fl.length) {
-                    fl = Utils.extend(fl, fl.length * 2);
-                }
-                for (int fi : d.f) {
-                    fl[fn++] = (short) mm.olvert.vl[d.v[fi].vi];
-                }
-            }
-        }
-
-        Coord t = new Coord();
-        Buf buf = new Buf();
-
-        System.out.println("DEBUG: Checking tiles in mesh, size=" + mm.sz);
-
-        int checkCount = 0;
-        // Check each tile in the mesh
-        for (t.y = 0; t.y < mm.sz.y; t.y++) {
-            for (t.x = 0; t.x < mm.sz.x; t.x++) {
-                checkCount++;
-                Coord gc = t.add(mm.ul);
-
-                if (shouldHighlightTile(gc)) {
-                    mm.map.tiler(mm.map.gettile(gc)).lay(mm, t, gc, buf, false);
-                }
-            }
-        }
-
-        System.out.println("DEBUG: Checked " + checkCount + " tiles");
-
-        if (buf.fn == 0) {
+        if (selectedTileResources.isEmpty() || !isEnabled) {
             return null;
         }
 
+        MCache map = NUtils.getGameUI().map.glob.map;
+        MapMesh.MapSurface ms = mm.data(MapMesh.gnd);
+
+        if (ms == null) {
+            return null;
+        }
+
+        // Wall height
+        final float wallHeight = 16.0f;
+
+        ArrayList<Float> vertices = new ArrayList<>();
+        ArrayList<Short> indices = new ArrayList<>();
+        short vertexCount = 0;
+
+        // Scan each tile in the mesh
+        for (int ty = 0; ty < mm.sz.y; ty++) {
+            for (int tx = 0; tx < mm.sz.x; tx++) {
+                Coord lc = new Coord(tx, ty);
+                Coord gc = lc.add(mm.ul);
+
+                // Check each direction for walls
+                for (int dir = 0; dir < 4; dir++) {
+                    if (shouldHaveWall(map, gc, dir)) {
+                        // Create a vertical wall quad
+                        // Get the two corners for this wall edge
+                        Coord c1 = lc.add(WALL_CORNERS[(dir + 1) % 4]);
+                        Coord c2 = lc.add(WALL_CORNERS[dir]);
+
+                        // Get surface vertices at these corners
+                        Surface.Vertex sv1 = ms.fortile(c1);
+                        Surface.Vertex sv2 = ms.fortile(c2);
+
+                        // Bottom-left vertex
+                        vertices.add(sv1.x);
+                        vertices.add(sv1.y);
+                        vertices.add(sv1.z);
+
+                        // Bottom-right vertex
+                        vertices.add(sv2.x);
+                        vertices.add(sv2.y);
+                        vertices.add(sv2.z);
+
+                        // Top-right vertex
+                        vertices.add(sv2.x);
+                        vertices.add(sv2.y);
+                        vertices.add(sv2.z + wallHeight);
+
+                        // Top-left vertex
+                        vertices.add(sv1.x);
+                        vertices.add(sv1.y);
+                        vertices.add(sv1.z + wallHeight);
+
+                        // Create two triangles for the quad
+                        // Triangle 1: bottom-left, bottom-right, top-right
+                        indices.add(vertexCount);
+                        indices.add((short)(vertexCount + 1));
+                        indices.add((short)(vertexCount + 2));
+
+                        // Triangle 2: bottom-left, top-right, top-left
+                        indices.add(vertexCount);
+                        indices.add((short)(vertexCount + 2));
+                        indices.add((short)(vertexCount + 3));
+
+                        vertexCount += 4;
+                    }
+                }
+            }
+        }
+
+        if (indices.isEmpty()) {
+            return null;
+        }
+
+        // Convert ArrayLists to buffers
+        java.nio.FloatBuffer posb = Utils.wfbuf(vertices.size());
+        for (Float v : vertices) {
+            posb.put(v);
+        }
+
+        java.nio.ShortBuffer idxb = Utils.wsbuf(indices.size());
+        for (Short i : indices) {
+            idxb.put(i);
+        }
+
+        // Create vertex buffer
+        VertexBuf.VertexData posa = new VertexBuf.VertexData(Utils.bufcp(posb));
+        VertexBuf vbuf = new VertexBuf(posa);
+
+        // Create model
         haven.render.Model mod = new haven.render.Model(
             haven.render.Model.Mode.TRIANGLES,
-            mm.olvert.dat,
-            new haven.render.Model.Indices(buf.fn, NumberFormat.UINT16, DataBuffer.Usage.STATIC,
-                DataBuffer.Filler.of(Arrays.copyOf(buf.fl, buf.fn)))
+            vbuf.data(),
+            new haven.render.Model.Indices(indices.size(), NumberFormat.UINT16,
+                DataBuffer.Usage.STATIC, DataBuffer.Filler.of(idxb.array()))
         );
 
-        return new MapMesh.ShallowWrap(mod, new MapMesh.NOLOrder(id));
+        // Apply color to the walls
+        Pipe.Op colorOp = new BaseColor(new java.awt.Color(
+            bc.getRed(),
+            bc.getGreen(),
+            bc.getBlue(),
+            bc.getAlpha()
+        ));
+
+        return new MapMesh.ShallowWrap(mod,
+            Pipe.Op.compose(new MapMesh.NOLOrder(id), colorOp));
     }
 
     @Override
     public RenderTree.Node makenolol(MapMesh mm, Long grid_id, Coord grid_ul) {
-        if (mm.olvert == null) {
-            mm.olvert = mm.makeolvbuf();
-        }
-
-        class Buf implements Tiler.MCons {
-            int mask;
-            short[] fl = new short[16];
-            int fn = 0;
-
-            public void faces(MapMesh m, Tiler.MPart d) {
-                byte[] ef = new byte[d.v.length];
-                for (int i = 0; i < d.v.length; i++) {
-                    if (d.tcy[i] == 0.0f) ef[i] |= 1;
-                    if (d.tcx[i] == 1.0f) ef[i] |= 2;
-                    if (d.tcy[i] == 1.0f) ef[i] |= 4;
-                    if (d.tcx[i] == 0.0f) ef[i] |= 8;
-                }
-                while (fn + (d.f.length * 2) > fl.length) {
-                    fl = Utils.extend(fl, fl.length * 2);
-                }
-                for (int i = 0; i < d.f.length; i += 3) {
-                    for (int a = 0; a < 3; a++) {
-                        int b = (a + 1) % 3;
-                        if ((ef[d.f[i + a]] & ef[d.f[i + b]] & mask) != 0) {
-                            fl[fn++] = (short) mm.olvert.vl[d.v[d.f[i + a]].vi];
-                            fl[fn++] = (short) mm.olvert.vl[d.v[d.f[i + b]].vi];
-                        }
-                    }
-                }
-            }
-        }
-
-        Area a = Area.sized(mm.ul, mm.sz);
-        Buf buf = new Buf();
-
-        // Create boolean grid to track highlighted tiles
-        boolean[][] highlighted = new boolean[mm.sz.x][mm.sz.y];
-        for (int y = 0; y < mm.sz.y; y++) {
-            for (int x = 0; x < mm.sz.x; x++) {
-                Coord gc = Coord.of(x, y).add(mm.ul);
-                highlighted[x][y] = shouldHighlightTile(gc);
-            }
-        }
-
-        // Draw borders only where highlighted tiles meet non-highlighted tiles
-        for (Coord t : a) {
-            int localX = t.x - mm.ul.x;
-            int localY = t.y - mm.ul.y;
-
-            if (localX >= 0 && localX < mm.sz.x && localY >= 0 && localY < mm.sz.y &&
-                highlighted[localX][localY]) {
-
-                buf.mask = 0;
-
-                // Check each cardinal direction
-                for (int d = 0; d < 4; d++) {
-                    Coord neighbor = t.add(Coord.uecw[d]);
-                    int nx = neighbor.x - mm.ul.x;
-                    int ny = neighbor.y - mm.ul.y;
-
-                    // If neighbor is out of bounds or not highlighted, draw border
-                    if (nx < 0 || nx >= mm.sz.x || ny < 0 || ny >= mm.sz.y || !highlighted[nx][ny]) {
-                        buf.mask |= 1 << d;
-                    }
-                }
-
-                if (buf.mask != 0) {
-                    mm.map.tiler(mm.map.gettile(t)).lay(mm, t.sub(a.ul), t, buf, false);
-                }
-            }
-        }
-
-        if (buf.fn == 0) {
-            return null;
-        }
-
-        haven.render.Model mod = new haven.render.Model(
-            haven.render.Model.Mode.LINES,
-            mm.olvert.dat,
-            new haven.render.Model.Indices(buf.fn, NumberFormat.UINT16, DataBuffer.Usage.STATIC,
-                DataBuffer.Filler.of(Arrays.copyOf(buf.fl, buf.fn)))
-        );
-
-        return new MapMesh.ShallowWrap(mod,
-            Pipe.Op.compose(new MapMesh.NOLOrder(id), new States.LineWidth(2)));
+        // No outline needed for wall highlighting
+        return null;
     }
 
     @Override
