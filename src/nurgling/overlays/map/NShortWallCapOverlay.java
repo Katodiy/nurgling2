@@ -16,7 +16,7 @@ public class NShortWallCapOverlay extends NOverlay {
 
     public static final int SHORT_WALL_CAP_OVERLAY = -3;
     private static final float CAP_HEIGHT = CaveTile.SHORT_H; // 4 units - short wall height
-    private static final float CAP_THICKNESS = 3.0f; // How thick the cap is
+    // How thick the cap is
 
     // Corner coords for tile
     private static final Coord[] TILE_CORNERS = {
@@ -24,14 +24,6 @@ public class NShortWallCapOverlay extends NOverlay {
         new Coord(1, 0),
         new Coord(1, 1),
         new Coord(0, 1)
-    };
-
-    // Directions for checking neighboring tiles (N, E, S, W)
-    private static final Coord[] NEIGHBORS = {
-        new Coord(0, -1),  // North
-        new Coord(1, 0),   // East
-        new Coord(0, 1),   // South
-        new Coord(-1, 0)   // West
     };
 
     private boolean lastShortWallsState = false;
@@ -132,7 +124,7 @@ public class NShortWallCapOverlay extends NOverlay {
     @Override
     public RenderTree.Node makenol(MapMesh mm, Long grid_id, Coord grid_ul) {
         // Check if short walls are enabled
-        boolean shortWalls = false;
+        boolean shortWalls;
         try {
             Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
             shortWalls = (sw != null && sw);

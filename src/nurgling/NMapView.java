@@ -70,9 +70,6 @@ public class NMapView extends MapView
         toggleol("hareas", true);
         toggleol("minesup", true);
         basic.add(glob.oc.paths);
-
-        // Note: Rock tile highlighting overlay will be initialized lazily on first access
-        // Can't initialize here because GameUI isn't fully set up yet
     }
 
     final HashMap<String, String> ttip = new HashMap<>();

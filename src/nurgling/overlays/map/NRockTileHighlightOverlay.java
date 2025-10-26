@@ -57,7 +57,7 @@ public class NRockTileHighlightOverlay extends NOverlay {
                     if (setting.show && setting.icon != null && setting.icon.res != null) {
                         String resName = setting.icon.res.name;
                         newSelectedGobResources.add(resName);
-                        currentStates.put(setting.id, setting.show);
+                        currentStates.put(setting.id, true);
                     }
                 }
             }
@@ -191,7 +191,6 @@ public class NRockTileHighlightOverlay extends NOverlay {
             return null;
         }
 
-        MCache map = NUtils.getGameUI().map.glob.map;
         MapMesh.MapSurface ms = mm.data(MapMesh.gnd);
 
         if (ms == null) {
