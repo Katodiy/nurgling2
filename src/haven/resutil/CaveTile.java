@@ -140,14 +140,27 @@ public class CaveTile extends Tiler {
     }
 
     public void lay(MapMesh m, Random rnd, Coord lc, Coord gc) {
-	Walls w = null;
-	for(int i = 0; i < 4; i++) {
-	    int cid = m.map.gettile(gc.add(tces[i]));
-	    if(cid <= id || (m.map.tiler(cid) instanceof CaveTile))
-		continue;
-	    if(w == null) w = m.data(walls);
-	    mkwall(m, w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
+	// Check if short walls are enabled - if so, skip rendering walls entirely
+	// (the NShortWallCapOverlay will render the cap boxes instead)
+	boolean shortWalls = false;
+	try {
+	    Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
+	    shortWalls = (sw != null && sw);
+	} catch (Exception e) {
+	    // If config check fails, render normally
 	}
+
+	if (!shortWalls) {
+	    Walls w = null;
+	    for(int i = 0; i < 4; i++) {
+		int cid = m.map.gettile(gc.add(tces[i]));
+		if(cid <= id || (m.map.tiler(cid) instanceof CaveTile))
+		    continue;
+		if(w == null) w = m.data(walls);
+		mkwall(m, w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
+	    }
+	}
+
 	if(ground != null)
 	    ground.lay(m, rnd, lc, gc);
     }
