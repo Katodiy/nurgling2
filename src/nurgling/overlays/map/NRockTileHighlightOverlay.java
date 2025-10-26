@@ -2,6 +2,7 @@ package nurgling.overlays.map;
 
 import haven.*;
 import haven.render.*;
+import haven.resutil.CaveTile;
 import nurgling.*;
 import nurgling.tools.RockResourceMapper;
 
@@ -24,9 +25,13 @@ public class NRockTileHighlightOverlay extends NOverlay {
     // Cache for Icon Settings to detect changes
     private Map<GobIcon.Setting.ID, Boolean> lastIconStates = new HashMap<>();
 
+    // Animation state for color pulsation
+    private long animationStartTime = System.currentTimeMillis();
+    private static final long PULSE_PERIOD = 2000; // 2 seconds for full pulse cycle
+
     public NRockTileHighlightOverlay() {
         super(ROCK_TILE_OVERLAY);
-        bc = new Color(255, 200, 100, 80); // Orange-ish semi-transparent color
+        bc = new Color(255, 200, 100, 80); // Orange-ish semi-transparent color (will be animated)
     }
 
     /**
@@ -70,6 +75,30 @@ public class NRockTileHighlightOverlay extends NOverlay {
         } catch (Exception e) {
             // Silently ignore errors to avoid breaking the game
         }
+    }
+
+    /**
+     * Gets the current color based on pulsation animation.
+     * Pulsates between blue and orange.
+     */
+    private Color getCurrentColor() {
+        long elapsed = System.currentTimeMillis() - animationStartTime;
+        double phase = (elapsed % PULSE_PERIOD) / (double) PULSE_PERIOD;
+
+        // Use sine wave for smooth pulsation (0 to 1 to 0)
+        double t = (Math.sin(phase * Math.PI * 2) + 1) / 2;
+
+        // Blue color (30, 144, 255, 80)
+        int blueR = 30, blueG = 144, blueB = 255;
+        // Orange color (255, 200, 100, 80)
+        int orangeR = 255, orangeG = 200, orangeB = 100;
+
+        // Interpolate between blue and orange
+        int r = (int)(blueR + t * (orangeR - blueR));
+        int g = (int)(blueG + t * (orangeG - blueG));
+        int b = (int)(blueB + t * (orangeB - blueB));
+
+        return new Color(r, g, b, 80);
     }
 
     /**
@@ -119,6 +148,8 @@ public class NRockTileHighlightOverlay extends NOverlay {
         // Periodically check if icon settings changed
         if (isEnabled) {
             updateSelectedRocks();
+            // Trigger continuous updates for smooth color animation
+            requpdate2 = true;
         }
     }
 
@@ -167,7 +198,14 @@ public class NRockTileHighlightOverlay extends NOverlay {
             return null;
         }
 
-        final float boxHeight = 18.0f; // Height of the colored box
+        // Check if short walls are enabled
+        boolean shortWalls = false;
+        try {
+            Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
+            shortWalls = (sw != null && sw);
+        } catch (Exception e) {
+            // Use default if config check fails
+        }
 
         ArrayList<Float> vertices = new ArrayList<>();
         ArrayList<Short> indices = new ArrayList<>();
@@ -187,54 +225,68 @@ public class NRockTileHighlightOverlay extends NOverlay {
                         corners[i] = ms.fortile(lc.add(TILE_CORNERS[i]));
                     }
 
-                    // Create a box with 6 faces around this tile
-                    // Bottom face (floor)
-                    addQuad(vertices, indices, vertexCount,
-                           corners[0].x, corners[0].y, corners[0].z,
-                           corners[1].x, corners[1].y, corners[1].z,
-                           corners[2].x, corners[2].y, corners[2].z,
-                           corners[3].x, corners[3].y, corners[3].z);
-                    vertexCount += 4;
+                    if (shortWalls) {
+                        // For short walls, render just a horizontal plane slightly above the wall cap
+                        // Add small offset (0.1) so it's visible above the box
+                        float planeHeight = CaveTile.SHORT_H + 0.1f;
+                        addQuad(vertices, indices, vertexCount,
+                               corners[0].x, corners[0].y, corners[0].z + planeHeight,
+                               corners[3].x, corners[3].y, corners[3].z + planeHeight,
+                               corners[2].x, corners[2].y, corners[2].z + planeHeight,
+                               corners[1].x, corners[1].y, corners[1].z + planeHeight);
+                        vertexCount += 4;
+                    } else {
+                        // For tall walls, create a full box (6 faces)
+                        float boxHeight = 18.0f;
 
-                    // Top face (ceiling)
-                    addQuad(vertices, indices, vertexCount,
-                           corners[0].x, corners[0].y, corners[0].z + boxHeight,
-                           corners[3].x, corners[3].y, corners[3].z + boxHeight,
-                           corners[2].x, corners[2].y, corners[2].z + boxHeight,
-                           corners[1].x, corners[1].y, corners[1].z + boxHeight);
-                    vertexCount += 4;
+                        // Bottom face (floor)
+                        addQuad(vertices, indices, vertexCount,
+                               corners[0].x, corners[0].y, corners[0].z,
+                               corners[1].x, corners[1].y, corners[1].z,
+                               corners[2].x, corners[2].y, corners[2].z,
+                               corners[3].x, corners[3].y, corners[3].z);
+                        vertexCount += 4;
 
-                    // North wall (front)
-                    addQuad(vertices, indices, vertexCount,
-                           corners[0].x, corners[0].y, corners[0].z,
-                           corners[1].x, corners[1].y, corners[1].z,
-                           corners[1].x, corners[1].y, corners[1].z + boxHeight,
-                           corners[0].x, corners[0].y, corners[0].z + boxHeight);
-                    vertexCount += 4;
+                        // Top face (ceiling)
+                        addQuad(vertices, indices, vertexCount,
+                               corners[0].x, corners[0].y, corners[0].z + boxHeight,
+                               corners[3].x, corners[3].y, corners[3].z + boxHeight,
+                               corners[2].x, corners[2].y, corners[2].z + boxHeight,
+                               corners[1].x, corners[1].y, corners[1].z + boxHeight);
+                        vertexCount += 4;
 
-                    // East wall (right)
-                    addQuad(vertices, indices, vertexCount,
-                           corners[1].x, corners[1].y, corners[1].z,
-                           corners[2].x, corners[2].y, corners[2].z,
-                           corners[2].x, corners[2].y, corners[2].z + boxHeight,
-                           corners[1].x, corners[1].y, corners[1].z + boxHeight);
-                    vertexCount += 4;
+                        // North wall (front)
+                        addQuad(vertices, indices, vertexCount,
+                               corners[0].x, corners[0].y, corners[0].z,
+                               corners[1].x, corners[1].y, corners[1].z,
+                               corners[1].x, corners[1].y, corners[1].z + boxHeight,
+                               corners[0].x, corners[0].y, corners[0].z + boxHeight);
+                        vertexCount += 4;
 
-                    // South wall (back)
-                    addQuad(vertices, indices, vertexCount,
-                           corners[2].x, corners[2].y, corners[2].z,
-                           corners[3].x, corners[3].y, corners[3].z,
-                           corners[3].x, corners[3].y, corners[3].z + boxHeight,
-                           corners[2].x, corners[2].y, corners[2].z + boxHeight);
-                    vertexCount += 4;
+                        // East wall (right)
+                        addQuad(vertices, indices, vertexCount,
+                               corners[1].x, corners[1].y, corners[1].z,
+                               corners[2].x, corners[2].y, corners[2].z,
+                               corners[2].x, corners[2].y, corners[2].z + boxHeight,
+                               corners[1].x, corners[1].y, corners[1].z + boxHeight);
+                        vertexCount += 4;
 
-                    // West wall (left)
-                    addQuad(vertices, indices, vertexCount,
-                           corners[3].x, corners[3].y, corners[3].z,
-                           corners[0].x, corners[0].y, corners[0].z,
-                           corners[0].x, corners[0].y, corners[0].z + boxHeight,
-                           corners[3].x, corners[3].y, corners[3].z + boxHeight);
-                    vertexCount += 4;
+                        // South wall (back)
+                        addQuad(vertices, indices, vertexCount,
+                               corners[2].x, corners[2].y, corners[2].z,
+                               corners[3].x, corners[3].y, corners[3].z,
+                               corners[3].x, corners[3].y, corners[3].z + boxHeight,
+                               corners[2].x, corners[2].y, corners[2].z + boxHeight);
+                        vertexCount += 4;
+
+                        // West wall (left)
+                        addQuad(vertices, indices, vertexCount,
+                               corners[3].x, corners[3].y, corners[3].z,
+                               corners[0].x, corners[0].y, corners[0].z,
+                               corners[0].x, corners[0].y, corners[0].z + boxHeight,
+                               corners[3].x, corners[3].y, corners[3].z + boxHeight);
+                        vertexCount += 4;
+                    }
                 }
             }
         }
@@ -266,9 +318,12 @@ public class NRockTileHighlightOverlay extends NOverlay {
                 DataBuffer.Usage.STATIC, DataBuffer.Filler.of(idxb.array()))
         );
 
-        // Apply semi-transparent color with disabled backface culling for visibility
+        // Get current pulsating color
+        Color currentColor = getCurrentColor();
+
+        // Apply semi-transparent pulsating color with disabled backface culling for visibility
         Pipe.Op colorOp = Pipe.Op.compose(
-            new BaseColor(new java.awt.Color(bc.getRed(), bc.getGreen(), bc.getBlue(), bc.getAlpha())),
+            new BaseColor(currentColor),
             new States.Facecull(States.Facecull.Mode.NONE)  // Render both sides
         );
 
@@ -279,8 +334,9 @@ public class NRockTileHighlightOverlay extends NOverlay {
     @Override
     public void added(RenderTree.Slot slot) {
         this.slot = slot;
-        // Add the base grid so makenol() gets called, but we won't use area-based rendering
-        slot.add(base, new States.Depthtest(States.Depthtest.Test.TRUE));
+        // Add the base grid so makenol() gets called
+        // Use LE depth test so character and other objects can properly occlude the boxes
+        slot.add(base, new States.Depthtest(States.Depthtest.Test.LE));
         // Don't call super.added() to avoid NOverlay's BaseColor null pointer
     }
 
@@ -292,6 +348,11 @@ public class NRockTileHighlightOverlay extends NOverlay {
 
     @Override
     public boolean requpdate() {
+        // Always return true when enabled to force continuous re-rendering for animation
+        if (isEnabled && !selectedTileResources.isEmpty()) {
+            return true;
+        }
+
         boolean result = needsUpdate;
         needsUpdate = false;
         if (result) {
