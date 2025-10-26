@@ -89,6 +89,9 @@ public class NMapView extends MapView
 
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
 
+    // Track if overlays have been initialized to avoid repeated initialization checks
+    private boolean overlaysInitialized = false;
+
     // Directional vectors for triangulation (fixed position, not following player)
     public java.util.List<nurgling.tools.DirectionalVector> directionalVectors = new java.util.ArrayList<>();
 
@@ -147,10 +150,12 @@ public class NMapView extends MapView
 
     @Override
     public void draw(GOut g) {
-        // Initialize rock tile overlay on first draw (when GameUI is ready)
-        getRockTileOverlay();
-        // Initialize short wall cap overlay
-        getShortWallCapOverlay();
+        // Initialize overlays only once on first draw (when GameUI is ready)
+        if (!overlaysInitialized) {
+            getRockTileOverlay();
+            getShortWallCapOverlay();
+            overlaysInitialized = true;
+        }
 
         super.draw(g);
         synchronized (dummys) {

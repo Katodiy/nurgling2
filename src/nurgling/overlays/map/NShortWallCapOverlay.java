@@ -6,17 +6,23 @@ import haven.resutil.CaveTile;
 import nurgling.*;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Overlay that renders textured horizontal caps on top of short mine walls.
  * When shortWalls config is enabled, this adds a visible horizontal surface
  * on top of cave walls at the reduced height (4 units).
+ *
+ * Performance optimizations:
+ * - Material lookups cached per tile ID
+ * - CaveTile checks cached per mesh
+ * - Only exterior walls rendered (no interior/bottom faces)
+ * - Geometry batched by material
  */
 public class NShortWallCapOverlay extends NOverlay {
 
     public static final int SHORT_WALL_CAP_OVERLAY = -3;
     private static final float CAP_HEIGHT = CaveTile.SHORT_H; // 4 units - short wall height
-    // How thick the cap is
 
     // Corner coords for tile
     private static final Coord[] TILE_CORNERS = {
@@ -25,6 +31,20 @@ public class NShortWallCapOverlay extends NOverlay {
         new Coord(1, 1),
         new Coord(0, 1)
     };
+
+    // Edge directions: N, E, S, W
+    private static final Coord[] EDGE_DIRS = {
+        new Coord(0, -1), // North
+        new Coord(1, 0),  // East
+        new Coord(0, 1),  // South
+        new Coord(-1, 0)  // West
+    };
+
+    // Material cache: tileId -> Material (for ground texture)
+    private static final Map<Integer, Material> materialCache = new ConcurrentHashMap<>();
+
+    // CaveTile cache: mesh key -> Map<Coord, Boolean>
+    private final Map<String, Map<Coord, Boolean>> caveTileCache = new HashMap<>();
 
     private boolean lastShortWallsState = false;
 
@@ -54,6 +74,8 @@ public class NShortWallCapOverlay extends NOverlay {
 
         if (currentState != lastShortWallsState) {
             lastShortWallsState = currentState;
+            // Clear caches
+            caveTileCache.clear();
             // Trigger map regeneration when setting changes
             if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null &&
                 NUtils.getGameUI().map.glob != null && NUtils.getGameUI().map.glob.map != null) {
@@ -63,32 +85,84 @@ public class NShortWallCapOverlay extends NOverlay {
     }
 
     /**
-     * Check if a tile is a cave tile and return the CaveTile instance
+     * Check if a tile is a cave tile (cached per mesh)
      */
-    private CaveTile getCaveTile(MCache map, Coord gc) {
+    private boolean isCaveTile(MCache map, Coord gc, String meshKey) {
+        Map<Coord, Boolean> meshCache = caveTileCache.get(meshKey);
+        if (meshCache == null) {
+            meshCache = new HashMap<>();
+            caveTileCache.put(meshKey, meshCache);
+        }
+
+        Boolean cached = meshCache.get(gc);
+        if (cached != null) {
+            return cached;
+        }
+
+        boolean isCave = false;
         try {
             int tileId = map.gettile(gc);
-            if (tileId < 0 || tileId >= map.nsets.length) {
-                return null;
-            }
-
-            Resource.Spec tileSpec = map.nsets[tileId];
-            if (tileSpec == null) {
-                return null;
-            }
-
-            // Check if tile's tiler is a CaveTile
-            Tileset ts = map.tileset(tileId);
-            if (ts != null) {
-                Tiler tiler = ts.tfac().create(tileId, ts);
-                if (tiler instanceof CaveTile) {
-                    return (CaveTile) tiler;
+            if (tileId >= 0 && tileId < map.nsets.length) {
+                Resource.Spec tileSpec = map.nsets[tileId];
+                if (tileSpec != null) {
+                    // Skip "gfx/tiles/cave" tiles - they don't need caps
+                    if ("gfx/tiles/cave".equals(tileSpec.name)) {
+                        isCave = false;
+                    } else {
+                        // Check if tile's tiler is a CaveTile
+                        Tileset ts = map.tileset(tileId);
+                        if (ts != null) {
+                            Tiler tiler = ts.tfac().create(tileId, ts);
+                            isCave = (tiler instanceof CaveTile);
+                        }
+                    }
                 }
             }
         } catch (Exception e) {
-            // Ignore
+            // Default to false on error
         }
-        return null;
+
+        meshCache.put(gc, isCave);
+        return isCave;
+    }
+
+    /**
+     * Get cached material for a tile ID
+     */
+    private Material getMaterialForTile(MCache map, int tileId) {
+        Material cached = materialCache.get(tileId);
+        if (cached != null) {
+            return cached;
+        }
+
+        Material material = null;
+        try {
+            Tileset ts = map.tileset(tileId);
+            if (ts != null && ts.getres() != null) {
+                Resource res = ts.getres();
+                // Look for material layer in the resource
+                for (Resource.Layer layer : res.layers(Material.Res.class)) {
+                    Material.Res mres = (Material.Res) layer;
+                    material = mres.get();
+                    break; // Use first material found
+                }
+            }
+
+            // Fallback: get wall texture from CaveTile
+            if (material == null) {
+                Tiler tiler = ts != null ? ts.tfac().create(tileId, ts) : null;
+                if (tiler instanceof CaveTile) {
+                    material = ((CaveTile) tiler).wtex;
+                }
+            }
+        } catch (Exception e) {
+            // Return null on error
+        }
+
+        if (material != null) {
+            materialCache.put(tileId, material);
+        }
+        return material;
     }
 
     /**
@@ -143,75 +217,59 @@ public class NShortWallCapOverlay extends NOverlay {
             return null;
         }
 
-        // We'll need to group tiles by their material texture
-        // Map from Material to list of tile coordinates that use that material
-        Map<Material, java.util.List<Coord>> tilesByMaterial = new HashMap<>();
+        // Create unique key for this mesh (for caching)
+        String meshKey = grid_id != null ? grid_id.toString() : (mm.ul.x + "_" + mm.ul.y);
 
-        // Scan each tile in the mesh and group by material
+        // Group tiles by their material texture
+        Map<Material, java.util.List<TileData>> tilesByMaterial = new HashMap<>();
+
+        // First pass: identify cave tiles and group by material
         for (int ty = 0; ty < mm.sz.y; ty++) {
             for (int tx = 0; tx < mm.sz.x; tx++) {
                 Coord lc = new Coord(tx, ty);
                 Coord gc = lc.add(mm.ul);
 
-                // Check if this is a cave tile
-                CaveTile caveTile = getCaveTile(map, gc);
-                if (caveTile == null) {
+                // Check if this is a cave tile (using cache)
+                if (!isCaveTile(map, gc, meshKey)) {
                     continue;
                 }
 
-                // Skip tiles with resource "gfx/tiles/cave" - these don't need caps
-                try {
-                    int tileId = map.gettile(gc);
-                    if (tileId >= 0 && tileId < map.nsets.length) {
-                        Resource.Spec tileSpec = map.nsets[tileId];
-                        if (tileSpec != null && "gfx/tiles/cave".equals(tileSpec.name)) {
-                            continue; // Skip this tile
-                        }
-                    }
-                } catch (Exception e) {
-                    // If we can't check, proceed with rendering
-                }
-
-                // Get ground/floor texture for THIS specific tile
+                // Get material for this tile (using cache)
                 Material tileTexture = null;
                 try {
                     int tileId = map.gettile(gc);
-                    Tileset ts = map.tileset(tileId);
-                    if (ts != null && ts.getres() != null) {
-                        // Try to get ground material from the tile resource
-                        Resource res = ts.getres();
-                        // Look for material layer in the resource
-                        for (Resource.Layer layer : res.layers(Material.Res.class)) {
-                            Material.Res mres = (Material.Res) layer;
-                            tileTexture = mres.get();
-                            break; // Use first material found
-                        }
-                    }
+                    tileTexture = getMaterialForTile(map, tileId);
                 } catch (Exception e) {
-                    // Fall back to wall texture if we can't get ground texture
-                    tileTexture = caveTile.wtex;
+                    // Skip on error
+                    continue;
                 }
 
-                // Final fallback to wall texture
                 if (tileTexture == null) {
-                    tileTexture = caveTile.wtex;
+                    continue; // Skip if no material
                 }
 
-                // Group this tile with others using the same material
+                // Determine which edges are exterior (adjacent to non-cave tiles)
+                boolean[] exteriorEdges = new boolean[4];
+                for (int i = 0; i < 4; i++) {
+                    Coord neighbor = gc.add(EDGE_DIRS[i]);
+                    exteriorEdges[i] = !isCaveTile(map, neighbor, meshKey);
+                }
+
+                // Store tile data
+                TileData td = new TileData(lc, exteriorEdges);
                 if (!tilesByMaterial.containsKey(tileTexture)) {
                     tilesByMaterial.put(tileTexture, new ArrayList<>());
                 }
-                tilesByMaterial.get(tileTexture).add(lc);
+                tilesByMaterial.get(tileTexture).add(td);
             }
         }
 
-        // Now render all tiles grouped by material
-        // This minimizes the number of separate render nodes we create
+        // Second pass: render geometry grouped by material
         java.util.List<RenderTree.Node> nodes = new ArrayList<>();
 
-        for (Map.Entry<Material, java.util.List<Coord>> entry : tilesByMaterial.entrySet()) {
+        for (Map.Entry<Material, java.util.List<TileData>> entry : tilesByMaterial.entrySet()) {
             Material capTexture = entry.getKey();
-            java.util.List<Coord> tiles = entry.getValue();
+            java.util.List<TileData> tiles = entry.getValue();
 
             ArrayList<Float> vertices = new ArrayList<>();
             ArrayList<Float> texCoords = new ArrayList<>();
@@ -219,7 +277,9 @@ public class NShortWallCapOverlay extends NOverlay {
             short vertexCount = 0;
 
             // Process each tile with this material
-            for (Coord lc : tiles) {
+            for (TileData td : tiles) {
+                Coord lc = td.coord;
+                boolean[] exteriorEdges = td.exteriorEdges;
 
                 // Get the 4 corner vertices for this tile
                 Surface.Vertex[] corners = new Surface.Vertex[4];
@@ -227,18 +287,7 @@ public class NShortWallCapOverlay extends NOverlay {
                     corners[i] = ms.fortile(lc.add(TILE_CORNERS[i]));
                 }
 
-                // Create a box with all 6 faces (full 11x11 tile size)
-                // The box sits at ground level and extends upward by CAP_HEIGHT
-
-                // Bottom face (at ground level)
-                addQuad(vertices, texCoords, indices, vertexCount,
-                       corners[0].x, corners[0].y, corners[0].z, 0, 0,
-                       corners[1].x, corners[1].y, corners[1].z, 1, 0,
-                       corners[2].x, corners[2].y, corners[2].z, 1, 1,
-                       corners[3].x, corners[3].y, corners[3].z, 0, 1);
-                vertexCount += 4;
-
-                // Top face (CAP_HEIGHT units above ground)
+                // Always render top face (horizontal cap)
                 addQuad(vertices, texCoords, indices, vertexCount,
                        corners[0].x, corners[0].y, corners[0].z + CAP_HEIGHT, 0, 0,
                        corners[3].x, corners[3].y, corners[3].z + CAP_HEIGHT, 0, 1,
@@ -246,37 +295,47 @@ public class NShortWallCapOverlay extends NOverlay {
                        corners[1].x, corners[1].y, corners[1].z + CAP_HEIGHT, 1, 0);
                 vertexCount += 4;
 
-                // North wall (front) - vertical texture mapping
-                addQuad(vertices, texCoords, indices, vertexCount,
-                       corners[0].x, corners[0].y, corners[0].z, 0, 0,
-                       corners[1].x, corners[1].y, corners[1].z, 1, 0,
-                       corners[1].x, corners[1].y, corners[1].z + CAP_HEIGHT, 1, 1,
-                       corners[0].x, corners[0].y, corners[0].z + CAP_HEIGHT, 0, 1);
-                vertexCount += 4;
+                // Only render exterior walls (where adjacent tile is not a cave tile)
 
-                // East wall (right) - vertical texture mapping
-                addQuad(vertices, texCoords, indices, vertexCount,
-                       corners[1].x, corners[1].y, corners[1].z, 0, 0,
-                       corners[2].x, corners[2].y, corners[2].z, 1, 0,
-                       corners[2].x, corners[2].y, corners[2].z + CAP_HEIGHT, 1, 1,
-                       corners[1].x, corners[1].y, corners[1].z + CAP_HEIGHT, 0, 1);
-                vertexCount += 4;
+                // North wall (index 0)
+                if (exteriorEdges[0]) {
+                    addQuad(vertices, texCoords, indices, vertexCount,
+                           corners[0].x, corners[0].y, corners[0].z, 0, 0,
+                           corners[1].x, corners[1].y, corners[1].z, 1, 0,
+                           corners[1].x, corners[1].y, corners[1].z + CAP_HEIGHT, 1, 1,
+                           corners[0].x, corners[0].y, corners[0].z + CAP_HEIGHT, 0, 1);
+                    vertexCount += 4;
+                }
 
-                // South wall (back) - vertical texture mapping
-                addQuad(vertices, texCoords, indices, vertexCount,
-                       corners[2].x, corners[2].y, corners[2].z, 0, 0,
-                       corners[3].x, corners[3].y, corners[3].z, 1, 0,
-                       corners[3].x, corners[3].y, corners[3].z + CAP_HEIGHT, 1, 1,
-                       corners[2].x, corners[2].y, corners[2].z + CAP_HEIGHT, 0, 1);
-                vertexCount += 4;
+                // East wall (index 1)
+                if (exteriorEdges[1]) {
+                    addQuad(vertices, texCoords, indices, vertexCount,
+                           corners[1].x, corners[1].y, corners[1].z, 0, 0,
+                           corners[2].x, corners[2].y, corners[2].z, 1, 0,
+                           corners[2].x, corners[2].y, corners[2].z + CAP_HEIGHT, 1, 1,
+                           corners[1].x, corners[1].y, corners[1].z + CAP_HEIGHT, 0, 1);
+                    vertexCount += 4;
+                }
 
-                // West wall (left) - vertical texture mapping
-                addQuad(vertices, texCoords, indices, vertexCount,
-                       corners[3].x, corners[3].y, corners[3].z, 0, 0,
-                       corners[0].x, corners[0].y, corners[0].z, 1, 0,
-                       corners[0].x, corners[0].y, corners[0].z + CAP_HEIGHT, 1, 1,
-                       corners[3].x, corners[3].y, corners[3].z + CAP_HEIGHT, 0, 1);
-                vertexCount += 4;
+                // South wall (index 2)
+                if (exteriorEdges[2]) {
+                    addQuad(vertices, texCoords, indices, vertexCount,
+                           corners[2].x, corners[2].y, corners[2].z, 0, 0,
+                           corners[3].x, corners[3].y, corners[3].z, 1, 0,
+                           corners[3].x, corners[3].y, corners[3].z + CAP_HEIGHT, 1, 1,
+                           corners[2].x, corners[2].y, corners[2].z + CAP_HEIGHT, 0, 1);
+                    vertexCount += 4;
+                }
+
+                // West wall (index 3)
+                if (exteriorEdges[3]) {
+                    addQuad(vertices, texCoords, indices, vertexCount,
+                           corners[3].x, corners[3].y, corners[3].z, 0, 0,
+                           corners[0].x, corners[0].y, corners[0].z, 1, 0,
+                           corners[0].x, corners[0].y, corners[0].z + CAP_HEIGHT, 1, 1,
+                           corners[3].x, corners[3].y, corners[3].z + CAP_HEIGHT, 0, 1);
+                    vertexCount += 4;
+                }
             }
 
             if (indices.isEmpty()) {
@@ -312,19 +371,11 @@ public class NShortWallCapOverlay extends NOverlay {
                     DataBuffer.Usage.STATIC, DataBuffer.Filler.of(idxb.array()))
             );
 
-            // Apply this material's texture (depth testing handled in added() method)
-            Pipe.Op renderOp;
-            if (capTexture != null) {
-                renderOp = Pipe.Op.compose(
-                    capTexture,
-                    new States.Facecull(States.Facecull.Mode.NONE)  // Render both sides
-                );
-            } else {
-                renderOp = Pipe.Op.compose(
-                    new BaseColor(new java.awt.Color(150, 150, 150, 180)),  // Fallback gray color
-                    new States.Facecull(States.Facecull.Mode.NONE)
-                );
-            }
+            // Apply this material's texture
+            Pipe.Op renderOp = Pipe.Op.compose(
+                capTexture,
+                new States.Facecull(States.Facecull.Mode.NONE)  // Render both sides
+            );
 
             nodes.add(new MapMesh.ShallowWrap(mod,
                 Pipe.Op.compose(new MapMesh.NOLOrder(id), renderOp)));
@@ -348,6 +399,19 @@ public class NShortWallCapOverlay extends NOverlay {
                 }
             }
         };
+    }
+
+    /**
+     * Helper class to store tile rendering data
+     */
+    private static class TileData {
+        final Coord coord;
+        final boolean[] exteriorEdges; // N, E, S, W
+
+        TileData(Coord coord, boolean[] exteriorEdges) {
+            this.coord = coord;
+            this.exteriorEdges = exteriorEdges;
+        }
     }
 
     @Override
