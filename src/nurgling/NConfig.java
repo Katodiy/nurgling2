@@ -89,6 +89,7 @@ public class NConfig
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, cleanupQContainers, autoEquipTravellersSacks, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
         temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
         shortCupboards,
+        shortWalls,
         fillCompostWithSwill,
         ignoreStrawInFarmers,
         persistentBarrelLabels,
@@ -99,7 +100,8 @@ public class NConfig
         validateAllCropsBeforeHarvest,
         studyDeskLayout,
         waypointRetryOnStuck,
-        verboseCal
+        verboseCal,
+        highlightRockTiles
     }
 
 
@@ -178,6 +180,7 @@ public class NConfig
         conf.put(Key.ropeAfterFeeding, false);
         conf.put(Key.ropeAfterTaiming, true);
         conf.put(Key.shortCupboards, false);
+        conf.put(Key.shortWalls, false);
         conf.put(Key.fillCompostWithSwill, false);
         conf.put(Key.ignoreStrawInFarmers, false);
         conf.put(Key.printpfmap, false);
@@ -191,6 +194,7 @@ public class NConfig
         conf.put(Key.studyDeskLayout, "");
         conf.put(Key.waypointRetryOnStuck, true);
         conf.put(Key.verboseCal, false);
+        conf.put(Key.highlightRockTiles, true);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
