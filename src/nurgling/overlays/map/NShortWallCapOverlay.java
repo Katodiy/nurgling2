@@ -34,8 +34,40 @@ public class NShortWallCapOverlay extends NOverlay {
         new Coord(-1, 0)   // West
     };
 
+    private boolean lastShortWallsState = false;
+
     public NShortWallCapOverlay() {
         super(SHORT_WALL_CAP_OVERLAY);
+        // Initialize with current state
+        try {
+            Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
+            lastShortWallsState = (sw != null && sw);
+        } catch (Exception e) {
+            // Use default
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        // Check if shortWalls setting changed
+        boolean currentState = false;
+        try {
+            Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
+            currentState = (sw != null && sw);
+        } catch (Exception e) {
+            // Use default
+        }
+
+        if (currentState != lastShortWallsState) {
+            lastShortWallsState = currentState;
+            // Trigger map regeneration when setting changes
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null &&
+                NUtils.getGameUI().map.glob != null && NUtils.getGameUI().map.glob.map != null) {
+                NUtils.getGameUI().map.glob.map.trimall();
+            }
+        }
     }
 
     /**
