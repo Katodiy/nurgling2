@@ -1,6 +1,8 @@
 package nurgling.resutil;
 
 import haven.*;
+import haven.MapMesh.Scan;
+import haven.Surface.Vertex;
 import haven.resutil.CaveTile;
 import nurgling.NConfig;
 
@@ -12,6 +14,10 @@ import java.util.Random;
  * This class extends CaveTile without modifying haven code.
  */
 public class NCaveTile extends CaveTile {
+    // Short wall height (25% of normal, similar to shortCupboards scale)
+    public static final float SHORT_HEIGHT = 4;
+
+
     public NCaveTile(int id, Tileset set, Material wtex, Tiler ground) {
         super(id, set, wtex, ground);
     }
