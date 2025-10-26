@@ -2,9 +2,11 @@ package nurgling;
 
 import haven.*;
 import haven.render.*;
+import nurgling.resutil.NCaveTile;
 
 import java.awt.*;
 import java.awt.image.*;
+import java.lang.reflect.Field;
 import java.util.*;
 
 public class NStyle {
@@ -347,4 +349,20 @@ public class NStyle {
         iconName.put("mm/plow", "Plow");
         iconName.put("mm/clay-cave", "Cave clay");
     }
+
+    // Factory replacement disabled - causes MapSurface initialization issues
+    /*
+    static {
+        try {
+            Field rnamesField = Tiler.class.getDeclaredField("rnames");
+            rnamesField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Tiler.Factory> rnames = (java.util.Map<String, Tiler.Factory>) rnamesField.get(null);
+            rnames.put("cave", new NCaveTile.Factory());
+        } catch (Exception e) {
+            System.err.println("Failed to replace cave tile factory: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    */
 }

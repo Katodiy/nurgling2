@@ -277,6 +277,14 @@ public class NRockTileHighlightOverlay extends NOverlay {
     }
 
     @Override
+    public void added(RenderTree.Slot slot) {
+        this.slot = slot;
+        // Add the base grid so makenol() gets called, but we won't use area-based rendering
+        slot.add(base, new States.Depthtest(States.Depthtest.Test.TRUE));
+        // Don't call super.added() to avoid NOverlay's BaseColor null pointer
+    }
+
+    @Override
     public RenderTree.Node makenolol(MapMesh mm, Long grid_id, Coord grid_ul) {
         // No outline needed
         return null;
