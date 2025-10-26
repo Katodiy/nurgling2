@@ -203,55 +203,79 @@ public class NShortWallCapOverlay extends NOverlay {
                     corners[i] = ms.fortile(lc.add(TILE_CORNERS[i]));
                 }
 
-                // Create a horizontal cap box on top of the wall
-                // The cap sits at height CAP_HEIGHT (4 units) and extends upward by CAP_THICKNESS
+                // Calculate tile center for insetting
+                float centerX = (corners[0].x + corners[1].x + corners[2].x + corners[3].x) / 4.0f;
+                float centerY = (corners[0].y + corners[1].y + corners[2].y + corners[3].y) / 4.0f;
 
-                // Bottom face (sits at wall height) - map texture from 0,0 to 1,1
+                // Inset each edge by this amount (0.25 units from each side creates 0.5 unit gaps)
+                float inset = 0.25f;
+
+                // Calculate inset corner positions
+                float[] x = new float[4];
+                float[] y = new float[4];
+                for (int i = 0; i < 4; i++) {
+                    float dx = corners[i].x - centerX;
+                    float dy = corners[i].y - centerY;
+                    float dist = (float)Math.sqrt(dx * dx + dy * dy);
+                    if (dist > 0) {
+                        float scale = Math.max(0, dist - inset) / dist;
+                        x[i] = centerX + dx * scale;
+                        y[i] = centerY + dy * scale;
+                    } else {
+                        x[i] = corners[i].x;
+                        y[i] = corners[i].y;
+                    }
+                }
+
+                // Create a box with all 6 faces
+                // The box sits at ground level and extends upward by CAP_HEIGHT
+
+                // Bottom face (at ground level)
                 addQuad(vertices, texCoords, indices, vertexCount,
-                       corners[0].x, corners[0].y, corners[0].z + CAP_HEIGHT, 0, 0,
-                       corners[1].x, corners[1].y, corners[1].z + CAP_HEIGHT, 1, 0,
-                       corners[2].x, corners[2].y, corners[2].z + CAP_HEIGHT, 1, 1,
-                       corners[3].x, corners[3].y, corners[3].z + CAP_HEIGHT, 0, 1);
+                       x[0], y[0], corners[0].z, 0, 0,
+                       x[1], y[1], corners[1].z, 1, 0,
+                       x[2], y[2], corners[2].z, 1, 1,
+                       x[3], y[3], corners[3].z, 0, 1);
                 vertexCount += 4;
 
-                // Top face (CAP_THICKNESS units above wall height) - map texture from 0,0 to 1,1
+                // Top face (CAP_HEIGHT units above ground)
                 addQuad(vertices, texCoords, indices, vertexCount,
-                       corners[0].x, corners[0].y, corners[0].z + CAP_HEIGHT + CAP_THICKNESS, 0, 0,
-                       corners[3].x, corners[3].y, corners[3].z + CAP_HEIGHT + CAP_THICKNESS, 0, 1,
-                       corners[2].x, corners[2].y, corners[2].z + CAP_HEIGHT + CAP_THICKNESS, 1, 1,
-                       corners[1].x, corners[1].y, corners[1].z + CAP_HEIGHT + CAP_THICKNESS, 1, 0);
+                       x[0], y[0], corners[0].z + CAP_HEIGHT, 0, 0,
+                       x[3], y[3], corners[3].z + CAP_HEIGHT, 0, 1,
+                       x[2], y[2], corners[2].z + CAP_HEIGHT, 1, 1,
+                       x[1], y[1], corners[1].z + CAP_HEIGHT, 1, 0);
                 vertexCount += 4;
 
                 // North wall (front) - vertical texture mapping
                 addQuad(vertices, texCoords, indices, vertexCount,
-                       corners[0].x, corners[0].y, corners[0].z + CAP_HEIGHT, 0, 0,
-                       corners[1].x, corners[1].y, corners[1].z + CAP_HEIGHT, 1, 0,
-                       corners[1].x, corners[1].y, corners[1].z + CAP_HEIGHT + CAP_THICKNESS, 1, 1,
-                       corners[0].x, corners[0].y, corners[0].z + CAP_HEIGHT + CAP_THICKNESS, 0, 1);
+                       x[0], y[0], corners[0].z, 0, 0,
+                       x[1], y[1], corners[1].z, 1, 0,
+                       x[1], y[1], corners[1].z + CAP_HEIGHT, 1, 1,
+                       x[0], y[0], corners[0].z + CAP_HEIGHT, 0, 1);
                 vertexCount += 4;
 
                 // East wall (right) - vertical texture mapping
                 addQuad(vertices, texCoords, indices, vertexCount,
-                       corners[1].x, corners[1].y, corners[1].z + CAP_HEIGHT, 0, 0,
-                       corners[2].x, corners[2].y, corners[2].z + CAP_HEIGHT, 1, 0,
-                       corners[2].x, corners[2].y, corners[2].z + CAP_HEIGHT + CAP_THICKNESS, 1, 1,
-                       corners[1].x, corners[1].y, corners[1].z + CAP_HEIGHT + CAP_THICKNESS, 0, 1);
+                       x[1], y[1], corners[1].z, 0, 0,
+                       x[2], y[2], corners[2].z, 1, 0,
+                       x[2], y[2], corners[2].z + CAP_HEIGHT, 1, 1,
+                       x[1], y[1], corners[1].z + CAP_HEIGHT, 0, 1);
                 vertexCount += 4;
 
                 // South wall (back) - vertical texture mapping
                 addQuad(vertices, texCoords, indices, vertexCount,
-                       corners[2].x, corners[2].y, corners[2].z + CAP_HEIGHT, 0, 0,
-                       corners[3].x, corners[3].y, corners[3].z + CAP_HEIGHT, 1, 0,
-                       corners[3].x, corners[3].y, corners[3].z + CAP_HEIGHT + CAP_THICKNESS, 1, 1,
-                       corners[2].x, corners[2].y, corners[2].z + CAP_HEIGHT + CAP_THICKNESS, 0, 1);
+                       x[2], y[2], corners[2].z, 0, 0,
+                       x[3], y[3], corners[3].z, 1, 0,
+                       x[3], y[3], corners[3].z + CAP_HEIGHT, 1, 1,
+                       x[2], y[2], corners[2].z + CAP_HEIGHT, 0, 1);
                 vertexCount += 4;
 
                 // West wall (left) - vertical texture mapping
                 addQuad(vertices, texCoords, indices, vertexCount,
-                       corners[3].x, corners[3].y, corners[3].z + CAP_HEIGHT, 0, 0,
-                       corners[0].x, corners[0].y, corners[0].z + CAP_HEIGHT, 1, 0,
-                       corners[0].x, corners[0].y, corners[0].z + CAP_HEIGHT + CAP_THICKNESS, 1, 1,
-                       corners[3].x, corners[3].y, corners[3].z + CAP_HEIGHT + CAP_THICKNESS, 0, 1);
+                       x[3], y[3], corners[3].z, 0, 0,
+                       x[0], y[0], corners[0].z, 1, 0,
+                       x[0], y[0], corners[0].z + CAP_HEIGHT, 1, 1,
+                       x[3], y[3], corners[3].z + CAP_HEIGHT, 0, 1);
                 vertexCount += 4;
             }
 
@@ -288,7 +312,7 @@ public class NShortWallCapOverlay extends NOverlay {
                     DataBuffer.Usage.STATIC, DataBuffer.Filler.of(idxb.array()))
             );
 
-            // Apply this material's texture
+            // Apply this material's texture with proper depth handling
             Pipe.Op renderOp;
             if (capTexture != null) {
                 renderOp = Pipe.Op.compose(
@@ -329,8 +353,9 @@ public class NShortWallCapOverlay extends NOverlay {
     @Override
     public void added(RenderTree.Slot slot) {
         this.slot = slot;
-        // Add the base grid so makenol() gets called, but we won't use area-based rendering
-        slot.add(base, new States.Depthtest(States.Depthtest.Test.TRUE));
+        // Add the base grid so makenol() gets called
+        // Use LE depth test so character and other objects can properly occlude the boxes
+        slot.add(base, new States.Depthtest(States.Depthtest.Test.LE));
         // Don't call super.added() to avoid NOverlay's BaseColor null pointer
     }
 
