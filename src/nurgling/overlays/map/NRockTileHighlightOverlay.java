@@ -225,68 +225,16 @@ public class NRockTileHighlightOverlay extends NOverlay {
                         corners[i] = ms.fortile(lc.add(TILE_CORNERS[i]));
                     }
 
-                    if (shortWalls) {
-                        // For short walls, render just a horizontal plane slightly above the wall cap
-                        // Add small offset (0.1) so it's visible above the box
-                        float planeHeight = CaveTile.SHORT_H + 0.1f;
-                        addQuad(vertices, indices, vertexCount,
-                               corners[0].x, corners[0].y, corners[0].z + planeHeight,
-                               corners[3].x, corners[3].y, corners[3].z + planeHeight,
-                               corners[2].x, corners[2].y, corners[2].z + planeHeight,
-                               corners[1].x, corners[1].y, corners[1].z + planeHeight);
-                        vertexCount += 4;
-                    } else {
-                        // For tall walls, create a full box (6 faces)
-                        float boxHeight = 18.0f;
+                    // Render just a horizontal plane slightly above the wall (short or tall)
+                    // Add small offset (0.1) so it's visible above the wall
+                    float planeHeight = shortWalls ? (CaveTile.SHORT_H + 0.1f) : (CaveTile.h + 0.1f);
 
-                        // Bottom face (floor)
-                        addQuad(vertices, indices, vertexCount,
-                               corners[0].x, corners[0].y, corners[0].z,
-                               corners[1].x, corners[1].y, corners[1].z,
-                               corners[2].x, corners[2].y, corners[2].z,
-                               corners[3].x, corners[3].y, corners[3].z);
-                        vertexCount += 4;
-
-                        // Top face (ceiling)
-                        addQuad(vertices, indices, vertexCount,
-                               corners[0].x, corners[0].y, corners[0].z + boxHeight,
-                               corners[3].x, corners[3].y, corners[3].z + boxHeight,
-                               corners[2].x, corners[2].y, corners[2].z + boxHeight,
-                               corners[1].x, corners[1].y, corners[1].z + boxHeight);
-                        vertexCount += 4;
-
-                        // North wall (front)
-                        addQuad(vertices, indices, vertexCount,
-                               corners[0].x, corners[0].y, corners[0].z,
-                               corners[1].x, corners[1].y, corners[1].z,
-                               corners[1].x, corners[1].y, corners[1].z + boxHeight,
-                               corners[0].x, corners[0].y, corners[0].z + boxHeight);
-                        vertexCount += 4;
-
-                        // East wall (right)
-                        addQuad(vertices, indices, vertexCount,
-                               corners[1].x, corners[1].y, corners[1].z,
-                               corners[2].x, corners[2].y, corners[2].z,
-                               corners[2].x, corners[2].y, corners[2].z + boxHeight,
-                               corners[1].x, corners[1].y, corners[1].z + boxHeight);
-                        vertexCount += 4;
-
-                        // South wall (back)
-                        addQuad(vertices, indices, vertexCount,
-                               corners[2].x, corners[2].y, corners[2].z,
-                               corners[3].x, corners[3].y, corners[3].z,
-                               corners[3].x, corners[3].y, corners[3].z + boxHeight,
-                               corners[2].x, corners[2].y, corners[2].z + boxHeight);
-                        vertexCount += 4;
-
-                        // West wall (left)
-                        addQuad(vertices, indices, vertexCount,
-                               corners[3].x, corners[3].y, corners[3].z,
-                               corners[0].x, corners[0].y, corners[0].z,
-                               corners[0].x, corners[0].y, corners[0].z + boxHeight,
-                               corners[3].x, corners[3].y, corners[3].z + boxHeight);
-                        vertexCount += 4;
-                    }
+                    addQuad(vertices, indices, vertexCount,
+                           corners[0].x, corners[0].y, corners[0].z + planeHeight,
+                           corners[3].x, corners[3].y, corners[3].z + planeHeight,
+                           corners[2].x, corners[2].y, corners[2].z + planeHeight,
+                           corners[1].x, corners[1].y, corners[1].z + planeHeight);
+                    vertexCount += 4;
                 }
             }
         }
