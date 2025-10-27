@@ -152,8 +152,8 @@ public class NMapView extends MapView
     public void draw(GOut g) {
         // Initialize overlays only once on first draw (when GameUI is ready)
         if (!overlaysInitialized) {
-            // getRockTileOverlay(); // No longer needed - CaveTile renders highlights directly
-            // getShortWallCapOverlay(); // No longer needed - CaveTile renders caps directly
+            getRockTileOverlay(); // Initialize rock tile highlighting overlay
+            // getShortWallCapOverlay(); // No longer needed - NCaveTile renders caps directly
             overlaysInitialized = true;
         }
 
@@ -250,6 +250,24 @@ public class NMapView extends MapView
                 }
                 mo = (NMiningOverlay) NUtils.getGameUI().map.nols.get(MINING_OVERLAY);
                 return mo;
+            }
+        }
+        return null;
+    }
+
+    public static NRockTileHighlightOverlay getRockTileOverlay()
+    {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            synchronized (NUtils.getGameUI().map)
+            {
+                NRockTileHighlightOverlay overlay = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
+                if (overlay == null)
+                {
+                    NUtils.getGameUI().map.addCustomOverlay(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY, new NRockTileHighlightOverlay());
+                }
+                overlay = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
+                return overlay;
             }
         }
         return null;
