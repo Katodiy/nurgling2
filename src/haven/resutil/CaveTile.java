@@ -47,6 +47,7 @@ public class CaveTile extends Tiler {
 	public final Scan cs;
 	public final Vertex[][] wv;
 	public final Vertex[][] hv; // Highlight vertices (offset above wall vertices)
+	public final java.util.Map<Coord, Vertex[]> crossVertices; // Cross shape vertices for highlighting
 	private MapMesh.MapSurface ms;
 	public String resname; // Resource name to determine if short walls should apply
 
@@ -56,6 +57,7 @@ public class CaveTile extends Tiler {
 	    cs = new Scan(Coord.z, m.sz.add(1, 1));
 	    wv = new Vertex[cs.l][];
 	    hv = new Vertex[cs.l][]; // Initialize highlight vertex cache
+	    crossVertices = new java.util.HashMap<>(); // Initialize cross vertices cache
 	    this.resname = null;
 	}
 
@@ -63,9 +65,22 @@ public class CaveTile extends Tiler {
 	    if(hv[cs.o(tc)] == null) {
 		// Get the base wall vertices
 		Vertex[] base = fortile(tc);
-		// Create highlight vertices offset above the top vertex
+
+		// Use different offset based on wall type
+		// Check wall height to determine appropriate offset
+		float wallHeight = base[3].z - base[0].z;
+		float highlightOffset;
+
+		if(wallHeight <= SHORT_H) {
+		    // Short walls: need bigger offset (3.0) to be clearly visible above cap
+		    highlightOffset = 1.0f;
+		} else {
+		    // Tall walls: smaller offset (1.5) works fine
+		    highlightOffset = 0.5f;
+		}
+
 		Vertex[] buf = hv[cs.o(tc)] = new Vertex[1];
-		buf[0] = ms.new Vertex(base[3].x, base[3].y, base[3].z + 0.1f);
+		buf[0] = ms.new Vertex(base[3].x, base[3].y, base[3].z + highlightOffset);
 	    }
 	    return(hv[cs.o(tc)]);
 	}
@@ -185,13 +200,24 @@ public class CaveTile extends Tiler {
     }
 
     private void modelhighlight(Walls w, Coord lc) {
-	// Create highlight vertices for each corner (offset above wall vertices)
+	// Get the 4 corner highlight vertices (already offset 8 units above cap)
 	Vertex[] h0 = w.forhighlight(lc.add(0, 0));
 	Vertex[] h1 = w.forhighlight(lc.add(1, 0));
 	Vertex[] h2 = w.forhighlight(lc.add(1, 1));
 	Vertex[] h3 = w.forhighlight(lc.add(0, 1));
 
-	// Create highlight face geometry (will be textured during lay phase)
+	// Simple full-tile square for maximum visibility
+	// Just cache the 4 corners - we'll create a simple quad
+	Vertex[] crossVerts = new Vertex[4];
+	crossVerts[0] = h0[0];
+	crossVerts[1] = h1[0];
+	crossVerts[2] = h2[0];
+	crossVerts[3] = h3[0];
+
+	// Cache the vertices
+	w.crossVertices.put(lc, crossVerts);
+
+	// Create Surface faces for simple square (2 triangles)
 	w.ms.new Face(h0[0], h3[0], h2[0]);
 	w.ms.new Face(h0[0], h2[0], h1[0]);
     }
@@ -226,15 +252,6 @@ public class CaveTile extends Tiler {
 		w.resname = resname;
 	    }
 	    modelcap(w, lc);
-	}
-
-	// If this tile should be highlighted, create highlight geometry
-	if(shouldHighlight()) {
-	    if(w == null) {
-		w = m.data(walls);
-		w.resname = resname;
-	    }
-	    modelhighlight(w, lc);
 	}
     }
 
@@ -284,49 +301,33 @@ public class CaveTile extends Tiler {
 	mod.new Face(cv[0], cv[2], cv[1]);
     }
 
-    private static java.awt.Color getPulsatingColor() {
-	long PULSE_PERIOD = 2000; // 2 seconds for full pulse cycle
-	long elapsed = System.currentTimeMillis();
-	double phase = (elapsed % PULSE_PERIOD) / (double) PULSE_PERIOD;
-
-	// Use sine wave for smooth pulsation (0 to 1 to 0)
-	double t = (Math.sin(phase * Math.PI * 2) + 1) / 2;
-
-	// Blue color (30, 144, 255)
-	int blueR = 30, blueG = 144, blueB = 255;
-	// Orange color (255, 200, 100)
-	int orangeR = 255, orangeG = 200, orangeB = 100;
-
-	// Interpolate between blue and orange
-	int r = (int)(blueR + t * (orangeR - blueR));
-	int g = (int)(blueG + t * (orangeG - blueG));
-	int b = (int)(blueB + t * (orangeB - blueB));
-
-	return new java.awt.Color(r, g, b, 80); // Semi-transparent
+    private static java.awt.Color getHighlightColor() {
+	// Bright red color for maximum visibility
+	return new java.awt.Color(255, 0, 0, 120); // Bright red with slight transparency
     }
 
     private void mkhighlight(MapMesh m, Walls w, Coord lc) {
-	// Get the highlight vertices (already created during model() phase)
-	Vertex[] h0 = w.forhighlight(lc.add(0, 0));
-	Vertex[] h1 = w.forhighlight(lc.add(1, 0));
-	Vertex[] h2 = w.forhighlight(lc.add(1, 1));
-	Vertex[] h3 = w.forhighlight(lc.add(0, 1));
+	// Get the cached highlight vertices (created during model() phase)
+	Vertex[] crossVerts = w.crossVertices.get(lc);
+	if (crossVerts == null) {
+	    return; // No highlight vertices cached, skip
+	}
 
-	// Create a simple colored material for the highlight
-	java.awt.Color color = getPulsatingColor();
+	// Create a bright red colored material for the highlight
+	java.awt.Color color = getHighlightColor();
 	Material highlightMat = new Material(new BaseColor(color));
 
 	// Get model with the highlight material
 	MapMesh.Model mod = MapMesh.Model.get(m, highlightMat);
 
-	// Create mesh vertices from the cached highlight vertices
+	// Create mesh vertices from the cached vertices (4 corners)
 	MeshBuf.Vertex[] cv = new MeshBuf.Vertex[4];
-	cv[0] = new Surface.MeshVertex(mod, h0[0]);
-	cv[1] = new Surface.MeshVertex(mod, h1[0]);
-	cv[2] = new Surface.MeshVertex(mod, h2[0]);
-	cv[3] = new Surface.MeshVertex(mod, h3[0]);
+	cv[0] = new Surface.MeshVertex(mod, crossVerts[0]); // h0
+	cv[1] = new Surface.MeshVertex(mod, crossVerts[1]); // h1
+	cv[2] = new Surface.MeshVertex(mod, crossVerts[2]); // h2
+	cv[3] = new Surface.MeshVertex(mod, crossVerts[3]); // h3
 
-	// Add colored triangles for the highlight
+	// Create MapMesh.Model faces for simple square (matching Surface faces from modelhighlight)
 	mod.new Face(cv[0], cv[3], cv[2]);
 	mod.new Face(cv[0], cv[2], cv[1]);
     }
@@ -361,15 +362,6 @@ public class CaveTile extends Tiler {
 		w.resname = resname;
 	    }
 	    mkcap(m, w, lc);
-	}
-
-	// If this tile should be highlighted, add pulsating highlight
-	if(shouldHighlight()) {
-	    if(w == null) {
-		w = m.data(walls);
-		w.resname = resname;
-	    }
-	    mkhighlight(m, w, lc);
 	}
 
 	if(ground != null)
