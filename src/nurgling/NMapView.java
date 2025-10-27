@@ -152,8 +152,8 @@ public class NMapView extends MapView
     public void draw(GOut g) {
         // Initialize overlays only once on first draw (when GameUI is ready)
         if (!overlaysInitialized) {
-            getRockTileOverlay();
-            getShortWallCapOverlay();
+            // getRockTileOverlay(); // No longer needed - CaveTile renders highlights directly
+            // getShortWallCapOverlay(); // No longer needed - CaveTile renders caps directly
             overlaysInitialized = true;
         }
 
