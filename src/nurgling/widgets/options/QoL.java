@@ -2,6 +2,7 @@ package nurgling.widgets.options;
 
 import haven.*;
 import nurgling.NConfig;
+import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.widgets.nsettings.Panel;
 
@@ -179,7 +180,36 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.printpfmap, printpfmap.a);
         NConfig.set(NConfig.Key.tempmark, tempmark.a);
         NConfig.set(NConfig.Key.shortCupboards, shortCupboards.a);
+
+        // Save shortWalls and trigger map re-render if changed
+        boolean oldShortWalls = getBool(NConfig.Key.shortWalls);
         NConfig.set(NConfig.Key.shortWalls, shortWalls.a);
+        if(oldShortWalls != shortWalls.a) {
+            // Force map mesh rebuild when short walls setting changes
+            if(NUtils.getGameUI() != null && NUtils.getGameUI().map != null && NUtils.getGameUI().map.glob != null) {
+                MCache map = NUtils.getGameUI().map.glob.map;
+                synchronized(map.grids) {
+                    // Invalidate all loaded grids to trigger mesh rebuild
+                    for(Coord gc : map.grids.keySet()) {
+                        map.invalidate(gc);
+                    }
+                }
+
+                // Also rebuild the rock tile highlight overlay since it uses wall height
+                try {
+                    NMapView rockTileOverlay = (NMapView) NUtils.getGameUI().map;
+                    if(rockTileOverlay != null) {
+                        nurgling.overlays.map.NRockTileHighlightOverlay overlay = NMapView.getRockTileOverlay();
+                        if(overlay != null) {
+                            overlay.forceRebuild();
+                        }
+                    }
+                } catch(Exception e) {
+                    // Silently ignore if overlay doesn't exist
+                }
+            }
+        }
+
         NConfig.set(NConfig.Key.showTerrainName, showTerrainName.a);
         NConfig.set(NConfig.Key.waypointRetryOnStuck, waypointRetryOnStuck.a);
         NConfig.set(NConfig.Key.verboseCal, verboseCal.a);

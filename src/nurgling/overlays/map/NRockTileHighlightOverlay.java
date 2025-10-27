@@ -311,4 +311,12 @@ public class NRockTileHighlightOverlay extends NOverlay {
     public boolean isEnabled() {
         return isEnabled;
     }
+
+    /**
+     * Forces a rebuild of the overlay mesh.
+     * Useful when settings change that affect the overlay's appearance (like wall height).
+     */
+    public void forceRebuild() {
+        needsRebuild = true;
+    }
 }
