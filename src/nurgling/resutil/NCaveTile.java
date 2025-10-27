@@ -153,8 +153,8 @@ public class NCaveTile extends Tiler {
             modelwall(w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
         }
 
-        // If short walls enabled, create cap geometry
-        if(shortWalls) {
+        // If short walls enabled, create cap geometry (but not for gfx/tiles/cave)
+        if(shortWalls && !"gfx/tiles/cave".equals(resname)) {
             if(w == null) {
                 w = m.data(walls);
             }
@@ -230,8 +230,8 @@ public class NCaveTile extends Tiler {
             mkwall(m, w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
         }
 
-        // If short walls enabled, add horizontal cap on top
-        if(shortWalls) {
+        // If short walls enabled, add horizontal cap on top (but not for gfx/tiles/cave)
+        if(shortWalls && !"gfx/tiles/cave".equals(resname)) {
             if(w == null) {
                 w = m.data(walls);
             }
