@@ -100,8 +100,7 @@ public class CaveTile extends Tiler {
 	    int cid = m.map.gettile(gc.add(tces[i]));
 	    if(cid <= id || (m.map.tiler(cid) instanceof CaveTile))
 		continue;
-	    if(w == null)
-		w = m.data(walls);
+	    if(w == null) w = m.data(walls);
 	    modelwall(w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
 	}
     }
@@ -109,8 +108,6 @@ public class CaveTile extends Tiler {
     private void mkwall(MapMesh m, Walls w, Coord ltc, Coord rtc) {
 	Vertex[] lw = w.fortile(ltc), rw = w.fortile(rtc);
 	MapMesh.Model mod = MapMesh.Model.get(m, wtex);
-
-	// Render vertical wall between two tile corners
 	MeshBuf.Vertex[] lv = new MeshBuf.Vertex[lw.length], rv = new MeshBuf.Vertex[rw.length];
 	MeshBuf.Tex tex = mod.layer(mod.tex);
 	for(int i = 0; i < lv.length; i++) {
@@ -132,8 +129,7 @@ public class CaveTile extends Tiler {
 	    int cid = m.map.gettile(gc.add(tces[i]));
 	    if(cid <= id || (m.map.tiler(cid) instanceof CaveTile))
 		continue;
-	    if(w == null)
-		w = m.data(walls);
+	    if(w == null) w = m.data(walls);
 	    mkwall(m, w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
 	}
 	if(ground != null)
