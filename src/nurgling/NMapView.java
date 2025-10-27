@@ -283,10 +283,6 @@ public class NMapView extends MapView
         {
             return NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY)!=null;
         }
-        if(id == NShortWallCapOverlay.SHORT_WALL_CAP_OVERLAY)
-        {
-            return NUtils.getGameUI().map.nols.get(NShortWallCapOverlay.SHORT_WALL_CAP_OVERLAY)!=null;
-        }
         return false;
     }
 

@@ -139,6 +139,7 @@ public class RockResourceMapper {
         registerRock("germanite");
         registerRock("argyrodite");
         registerRock("canfieldite");
+        registerRock("blackcoal");
     }
 
     /**

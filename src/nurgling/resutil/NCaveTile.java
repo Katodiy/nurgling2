@@ -143,14 +143,30 @@ public class NCaveTile extends Tiler {
         }
 
         Walls w = null;
-        for(int i = 0; i < 4; i++) {
-            int cid = m.map.gettile(gc.add(tces[i]));
-            if(cid <= id || (m.map.tiler(cid) instanceof NCaveTile))
-                continue;
-            if(w == null) {
-                w = m.data(walls);
+
+        // For short walls, create walls on ALL sides to make complete boxes
+        // For full-height walls, only create walls at cave/non-cave boundaries
+        if(shortWalls) {
+            // Create walls on all 4 sides for box-like appearance
+            w = m.data(walls);
+            for(int i = 0; i < 4; i++) {
+                int cid = m.map.gettile(gc.add(tces[i]));
+                // Only skip if adjacent tile is the same cave tile type (avoid duplicate walls)
+                if(cid == id)
+                    continue;
+                modelwall(w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
             }
-            modelwall(w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
+        } else {
+            // Original behavior: only create walls at boundaries
+            for(int i = 0; i < 4; i++) {
+                int cid = m.map.gettile(gc.add(tces[i]));
+                if(cid <= id || (m.map.tiler(cid) instanceof NCaveTile))
+                    continue;
+                if(w == null) {
+                    w = m.data(walls);
+                }
+                modelwall(w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
+            }
         }
 
         // If short walls enabled, create cap geometry (but not for gfx/tiles/cave)
@@ -218,16 +234,31 @@ public class NCaveTile extends Tiler {
             // If config check fails, render normally
         }
 
-        // Always render walls (height is determined by fortile() vertices)
         Walls w = null;
-        for(int i = 0; i < 4; i++) {
-            int cid = m.map.gettile(gc.add(tces[i]));
-            if(cid <= id || (m.map.tiler(cid) instanceof NCaveTile))
-                continue;
-            if(w == null) {
-                w = m.data(walls);
+
+        // For short walls, render walls on ALL sides to make complete boxes
+        // For full-height walls, only render walls at cave/non-cave boundaries
+        if(shortWalls) {
+            // Render walls on all 4 sides for box-like appearance
+            w = m.data(walls);
+            for(int i = 0; i < 4; i++) {
+                int cid = m.map.gettile(gc.add(tces[i]));
+                // Only skip if adjacent tile is the same cave tile type (avoid duplicate walls)
+                if(cid == id)
+                    continue;
+                mkwall(m, w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
             }
-            mkwall(m, w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
+        } else {
+            // Original behavior: only render walls at boundaries
+            for(int i = 0; i < 4; i++) {
+                int cid = m.map.gettile(gc.add(tces[i]));
+                if(cid <= id || (m.map.tiler(cid) instanceof NCaveTile))
+                    continue;
+                if(w == null) {
+                    w = m.data(walls);
+                }
+                mkwall(m, w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
+            }
         }
 
         // If short walls enabled, add horizontal cap on top (but not for gfx/tiles/cave)
