@@ -255,42 +255,6 @@ public class NMapView extends MapView
         return null;
     }
 
-    public static NRockTileHighlightOverlay getRockTileOverlay()
-    {
-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
-        {
-            synchronized (NUtils.getGameUI().map)
-            {
-                NRockTileHighlightOverlay ro = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
-                if (ro == null)
-                {
-                    NUtils.getGameUI().map.addCustomOverlay(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY, new NRockTileHighlightOverlay());
-                }
-                ro = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
-                return ro;
-            }
-        }
-        return null;
-    }
-
-    public static NShortWallCapOverlay getShortWallCapOverlay()
-    {
-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
-        {
-            synchronized (NUtils.getGameUI().map)
-            {
-                NShortWallCapOverlay swc = (NShortWallCapOverlay) NUtils.getGameUI().map.nols.get(NShortWallCapOverlay.SHORT_WALL_CAP_OVERLAY);
-                if (swc == null)
-                {
-                    NUtils.getGameUI().map.addCustomOverlay(NShortWallCapOverlay.SHORT_WALL_CAP_OVERLAY, new NShortWallCapOverlay());
-                }
-                swc = (NShortWallCapOverlay) NUtils.getGameUI().map.nols.get(NShortWallCapOverlay.SHORT_WALL_CAP_OVERLAY);
-                return swc;
-            }
-        }
-        return null;
-    }
-
     public static boolean isCustom(Integer id)
     {
         if(id == MINING_OVERLAY)

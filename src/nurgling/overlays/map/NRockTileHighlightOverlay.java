@@ -4,6 +4,7 @@ import haven.*;
 import haven.render.*;
 import haven.resutil.CaveTile;
 import nurgling.*;
+import nurgling.resutil.NCaveTile;
 import nurgling.tools.RockResourceMapper;
 
 import java.awt.*;
@@ -226,7 +227,7 @@ public class NRockTileHighlightOverlay extends NOverlay {
 
                     // Render just a horizontal plane slightly above the wall (short or tall)
                     // Add small offset (0.1) so it's visible above the wall
-                    float planeHeight = shortWalls ? (CaveTile.SHORT_H + 0.1f) : (CaveTile.h + 0.1f);
+                    float planeHeight = shortWalls ? (NCaveTile.SHORT_H + 0.1f) : (CaveTile.h + 0.1f);
 
                     addQuad(vertices, indices, vertexCount,
                            corners[0].x, corners[0].y, corners[0].z + planeHeight,

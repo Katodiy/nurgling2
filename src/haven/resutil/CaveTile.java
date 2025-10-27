@@ -30,90 +30,35 @@ import java.util.*;
 import haven.*;
 import haven.MapMesh.Scan;
 import haven.Surface.Vertex;
-import haven.render.BaseColor;
-import nurgling.NConfig;
-import nurgling.NUtils;
-import nurgling.tools.RockResourceMapper;
 
 public class CaveTile extends Tiler {
     public static final float h = 16;
-    public static final float SHORT_H = 4; // 25% of normal height for short walls
     public final Material wtex;
     public final Tiler ground;
-    private final String resname;
 
     public static class Walls {
 	public final MapMesh m;
 	public final Scan cs;
 	public final Vertex[][] wv;
-	public final Vertex[][] hv; // Highlight vertices (offset above wall vertices)
-	public final java.util.Map<Coord, Vertex[]> crossVertices; // Cross shape vertices for highlighting
 	private MapMesh.MapSurface ms;
-	public String resname; // Resource name to determine if short walls should apply
 
 	public Walls(MapMesh m) {
 	    this.m = m;
 	    this.ms = m.data(MapMesh.gnd);
 	    cs = new Scan(Coord.z, m.sz.add(1, 1));
 	    wv = new Vertex[cs.l][];
-	    hv = new Vertex[cs.l][]; // Initialize highlight vertex cache
-	    crossVertices = new java.util.HashMap<>(); // Initialize cross vertices cache
-	    this.resname = null;
-	}
-
-	public Vertex[] forhighlight(Coord tc) {
-	    if(hv[cs.o(tc)] == null) {
-		// Get the base wall vertices
-		Vertex[] base = fortile(tc);
-
-		// Use different offset based on wall type
-		// Check wall height to determine appropriate offset
-		float wallHeight = base[3].z - base[0].z;
-		float highlightOffset;
-
-		if(wallHeight <= SHORT_H) {
-		    // Short walls: need bigger offset (3.0) to be clearly visible above cap
-		    highlightOffset = 1.0f;
-		} else {
-		    // Tall walls: smaller offset (1.5) works fine
-		    highlightOffset = 0.5f;
-		}
-
-		Vertex[] buf = hv[cs.o(tc)] = new Vertex[1];
-		buf[0] = ms.new Vertex(base[3].x, base[3].y, base[3].z + highlightOffset);
-	    }
-	    return(hv[cs.o(tc)]);
 	}
 
 	public Vertex[] fortile(Coord tc) {
 	    if(wv[cs.o(tc)] == null) {
 		Random rnd = m.grnd(tc.add(m.ul));
 		Vertex[] buf = wv[cs.o(tc)] = new Vertex[4];
-
-		// Use configurable wall height based on shortWalls setting
-		float wallHeight = h;
-		boolean shortWalls = false;
-		try {
-		    Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
-		    if(sw != null && sw) {
-			wallHeight = SHORT_H;
-			shortWalls = true;
-		    }
-		} catch (Exception e) {
-		    // If config check fails, use default height
-		}
-
 		buf[0] = ms.new Vertex(ms.fortile(tc));
 		for(int i = 1; i < buf.length; i++) {
-		    buf[i] = ms.new Vertex(buf[0].x, buf[0].y, buf[0].z + (i * wallHeight / (buf.length - 1)));
-
-		    // Only add random offsets for full-height walls (natural cave look)
-		    // Skip randomization for short walls to get clean, straight boxes
-		    if(!shortWalls) {
-			buf[i].x += (rnd.nextFloat() - 0.5f) * 3.0f;
-			buf[i].y += (rnd.nextFloat() - 0.5f) * 3.0f;
-			buf[i].z += (rnd.nextFloat() - 0.5f) * 3.5f;
-		    }
+		    buf[i] = ms.new Vertex(buf[0].x, buf[0].y, buf[0].z + (i * h / (buf.length - 1)));
+		    buf[i].x += (rnd.nextFloat() - 0.5f) * 3.0f;
+		    buf[i].y += (rnd.nextFloat() - 0.5f) * 3.0f;
+		    buf[i].z += (rnd.nextFloat() - 0.5f) * 3.5f;
 		}
 	    }
 	    return(wv[cs.o(tc)]);
@@ -127,16 +72,14 @@ public class CaveTile extends Tiler {
 	    KeywordArgs desc = new KeywordArgs(set.ta, set.getres().pool);
 	    Material wtex = set.getres().flayer(Material.Res.class, Utils.iv(desc.get("wmat"))).get();
 	    Tiler ground = desc.oget("gnd").map(r -> Utils.irv(r).get().flayer(Tileset.class)).map(ts -> ts.tfac().create(id, ts)).orElse(null);
-	    String resname = set.getres().name;
-	    return(new CaveTile(id, set, wtex, ground, resname));
+	    return(new CaveTile(id, set, wtex, ground));
 	}
     }
 
-    public CaveTile(int id, Tileset set, Material wtex, Tiler ground, String resname) {
+    public CaveTile(int id, Tileset set, Material wtex, Tiler ground) {
 	super(id);
 	this.wtex = wtex;
 	this.ground = ground;
-	this.resname = resname;
     }
 
     private static final Coord[] tces = {new Coord(0, -1), new Coord(1, 0), new Coord(0, 1), new Coord(-1, 0)};
@@ -150,108 +93,16 @@ public class CaveTile extends Tiler {
 	}
     }
 
-    private void modelcap(Walls w, Coord lc) {
-	// Get the 4 corner vertices for this tile (creating them if needed)
-	Vertex[] c0 = w.fortile(lc.add(0, 0));
-	Vertex[] c1 = w.fortile(lc.add(1, 0));
-	Vertex[] c2 = w.fortile(lc.add(1, 1));
-	Vertex[] c3 = w.fortile(lc.add(0, 1));
-
-	// Create horizontal cap face using top vertices (index 3)
-	w.ms.new Face(c0[3], c3[3], c2[3]);
-	w.ms.new Face(c0[3], c2[3], c1[3]);
-    }
-
-    private boolean shouldHighlight() {
-	try {
-	    // Check if highlighting is enabled
-	    Boolean enabled = (Boolean) NConfig.get(NConfig.Key.highlightRockTiles);
-	    if (enabled == null || !enabled) {
-		return false;
-	    }
-
-	    // Check if we have a game UI
-	    if (NUtils.getGameUI() == null || NUtils.getGameUI().iconconf == null) {
-		return false;
-	    }
-
-	    // Get selected icons from settings
-	    Set<String> selectedGobResources = new HashSet<>();
-	    synchronized (NUtils.getGameUI().iconconf.settings) {
-		for (GobIcon.Setting setting : NUtils.getGameUI().iconconf.settings.values()) {
-		    if (setting.show && setting.icon != null && setting.icon.res != null) {
-			selectedGobResources.add(setting.icon.res.name);
-		    }
-		}
-	    }
-
-	    if (selectedGobResources.isEmpty()) {
-		return false;
-	    }
-
-	    // Convert selected gob resources to tile resources and check if this tile matches
-	    Set<String> selectedTileResources = RockResourceMapper.getTileResourcesToHighlight(selectedGobResources);
-	    return selectedTileResources.contains(resname);
-
-	} catch (Exception e) {
-	    // Silently fail
-	    return false;
-	}
-    }
-
-    private void modelhighlight(Walls w, Coord lc) {
-	// Get the 4 corner highlight vertices (already offset 8 units above cap)
-	Vertex[] h0 = w.forhighlight(lc.add(0, 0));
-	Vertex[] h1 = w.forhighlight(lc.add(1, 0));
-	Vertex[] h2 = w.forhighlight(lc.add(1, 1));
-	Vertex[] h3 = w.forhighlight(lc.add(0, 1));
-
-	// Simple full-tile square for maximum visibility
-	// Just cache the 4 corners - we'll create a simple quad
-	Vertex[] crossVerts = new Vertex[4];
-	crossVerts[0] = h0[0];
-	crossVerts[1] = h1[0];
-	crossVerts[2] = h2[0];
-	crossVerts[3] = h3[0];
-
-	// Cache the vertices
-	w.crossVertices.put(lc, crossVerts);
-
-	// Create Surface faces for simple square (2 triangles)
-	w.ms.new Face(h0[0], h3[0], h2[0]);
-	w.ms.new Face(h0[0], h2[0], h1[0]);
-    }
-
     public void model(MapMesh m, Random rnd, Coord lc, Coord gc) {
 	super.model(m, rnd, lc, gc);
-
-	boolean shortWalls = false;
-	try {
-	    Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
-	    shortWalls = (sw != null && sw);
-	} catch (Exception e) {
-	    // Use default
-	}
-
 	Walls w = null;
 	for(int i = 0; i < 4; i++) {
 	    int cid = m.map.gettile(gc.add(tces[i]));
 	    if(cid <= id || (m.map.tiler(cid) instanceof CaveTile))
 		continue;
-	    if(w == null) {
+	    if(w == null)
 		w = m.data(walls);
-		w.resname = resname; // Set resource name for wall height calculation
-	    }
 	    modelwall(w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
-	}
-
-	// If short walls enabled, create cap geometry
-	if(shortWalls) {
-	    if(w == null) {
-		w = m.data(walls);
-		w.resname = resname;
-	    }
-	    modelcap(w, lc);
 	}
     }
 
@@ -275,95 +126,16 @@ public class CaveTile extends Tiler {
 	}
     }
 
-    private void mkcap(MapMesh m, Walls w, Coord lc) {
-	// Get the 4 corner vertices (already created during model() phase)
-	Vertex[] c0 = w.fortile(lc.add(0, 0));
-	Vertex[] c1 = w.fortile(lc.add(1, 0));
-	Vertex[] c2 = w.fortile(lc.add(1, 1));
-	Vertex[] c3 = w.fortile(lc.add(0, 1));
-
-	// Apply texture to the cap using the top vertex (index 3) from each corner
-	MapMesh.Model mod = MapMesh.Model.get(m, wtex);
-	MeshBuf.Tex tex = mod.layer(mod.tex);
-
-	MeshBuf.Vertex[] cv = new MeshBuf.Vertex[4];
-	cv[0] = new Surface.MeshVertex(mod, c0[3]);
-	tex.set(cv[0], new Coord3f(0, 0, 0));
-	cv[1] = new Surface.MeshVertex(mod, c1[3]);
-	tex.set(cv[1], new Coord3f(1, 0, 0));
-	cv[2] = new Surface.MeshVertex(mod, c2[3]);
-	tex.set(cv[2], new Coord3f(1, 1, 0));
-	cv[3] = new Surface.MeshVertex(mod, c3[3]);
-	tex.set(cv[3], new Coord3f(0, 1, 0));
-
-	// Add textured triangles for the cap
-	mod.new Face(cv[0], cv[3], cv[2]);
-	mod.new Face(cv[0], cv[2], cv[1]);
-    }
-
-    private static java.awt.Color getHighlightColor() {
-	// Bright red color for maximum visibility
-	return new java.awt.Color(255, 0, 0, 120); // Bright red with slight transparency
-    }
-
-    private void mkhighlight(MapMesh m, Walls w, Coord lc) {
-	// Get the cached highlight vertices (created during model() phase)
-	Vertex[] crossVerts = w.crossVertices.get(lc);
-	if (crossVerts == null) {
-	    return; // No highlight vertices cached, skip
-	}
-
-	// Create a bright red colored material for the highlight
-	java.awt.Color color = getHighlightColor();
-	Material highlightMat = new Material(new BaseColor(color));
-
-	// Get model with the highlight material
-	MapMesh.Model mod = MapMesh.Model.get(m, highlightMat);
-
-	// Create mesh vertices from the cached vertices (4 corners)
-	MeshBuf.Vertex[] cv = new MeshBuf.Vertex[4];
-	cv[0] = new Surface.MeshVertex(mod, crossVerts[0]); // h0
-	cv[1] = new Surface.MeshVertex(mod, crossVerts[1]); // h1
-	cv[2] = new Surface.MeshVertex(mod, crossVerts[2]); // h2
-	cv[3] = new Surface.MeshVertex(mod, crossVerts[3]); // h3
-
-	// Create MapMesh.Model faces for simple square (matching Surface faces from modelhighlight)
-	mod.new Face(cv[0], cv[3], cv[2]);
-	mod.new Face(cv[0], cv[2], cv[1]);
-    }
-
     public void lay(MapMesh m, Random rnd, Coord lc, Coord gc) {
-	// Check if short walls are enabled
-	boolean shortWalls = false;
-	try {
-	    Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
-	    shortWalls = (sw != null && sw);
-	} catch (Exception e) {
-	    // If config check fails, render normally
-	}
-
-	// Always render walls (height is determined by fortile() vertices)
 	Walls w = null;
 	for(int i = 0; i < 4; i++) {
 	    int cid = m.map.gettile(gc.add(tces[i]));
 	    if(cid <= id || (m.map.tiler(cid) instanceof CaveTile))
 		continue;
-	    if(w == null) {
+	    if(w == null)
 		w = m.data(walls);
-		w.resname = resname; // Set resource name for wall height calculation
-	    }
 	    mkwall(m, w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
 	}
-
-	// If short walls enabled, add horizontal cap on top
-	if(shortWalls) {
-	    if(w == null) {
-		w = m.data(walls);
-		w.resname = resname;
-	    }
-	    mkcap(m, w, lc);
-	}
-
 	if(ground != null)
 	    ground.lay(m, rnd, lc, gc);
     }

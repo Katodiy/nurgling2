@@ -4,6 +4,7 @@ import haven.*;
 import haven.render.*;
 import haven.resutil.CaveTile;
 import nurgling.*;
+import nurgling.resutil.NCaveTile;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NShortWallCapOverlay extends NOverlay {
 
     public static final int SHORT_WALL_CAP_OVERLAY = -3;
-    private static final float CAP_HEIGHT = CaveTile.SHORT_H; // 4 units - short wall height
+    private static final float CAP_HEIGHT = NCaveTile.SHORT_H; // 4 units - short wall height
 
     // Corner coords for tile
     private static final Coord[] TILE_CORNERS = {
