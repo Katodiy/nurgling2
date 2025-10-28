@@ -30,11 +30,9 @@ import java.util.*;
 import haven.*;
 import haven.MapMesh.Scan;
 import haven.Surface.Vertex;
-import nurgling.NConfig;
 
 public class CaveTile extends Tiler {
     public static final float h = 16;
-    public static final float SHORT_H = 4; // 25% of normal height for short walls
     public final Material wtex;
     public final Tiler ground;
 
@@ -55,21 +53,9 @@ public class CaveTile extends Tiler {
 	    if(wv[cs.o(tc)] == null) {
 		Random rnd = m.grnd(tc.add(m.ul));
 		Vertex[] buf = wv[cs.o(tc)] = new Vertex[4];
-
-		// Use configurable wall height based on shortWalls setting
-		float wallHeight = h;
-		try {
-		    Boolean shortWalls = (Boolean) NConfig.get(NConfig.Key.shortWalls);
-		    if(shortWalls != null && shortWalls) {
-			wallHeight = SHORT_H;
-		    }
-		} catch (Exception e) {
-		    // If config check fails, use default height
-		}
-
 		buf[0] = ms.new Vertex(ms.fortile(tc));
 		for(int i = 1; i < buf.length; i++) {
-		    buf[i] = ms.new Vertex(buf[0].x, buf[0].y, buf[0].z + (i * wallHeight / (buf.length - 1)));
+		    buf[i] = ms.new Vertex(buf[0].x, buf[0].y, buf[0].z + (i * h / (buf.length - 1)));
 		    buf[i].x += (rnd.nextFloat() - 0.5f) * 3.0f;
 		    buf[i].y += (rnd.nextFloat() - 0.5f) * 3.0f;
 		    buf[i].z += (rnd.nextFloat() - 0.5f) * 3.5f;
@@ -122,8 +108,6 @@ public class CaveTile extends Tiler {
     private void mkwall(MapMesh m, Walls w, Coord ltc, Coord rtc) {
 	Vertex[] lw = w.fortile(ltc), rw = w.fortile(rtc);
 	MapMesh.Model mod = MapMesh.Model.get(m, wtex);
-
-	// Standard wall rendering (overlay will handle short wall caps)
 	MeshBuf.Vertex[] lv = new MeshBuf.Vertex[lw.length], rv = new MeshBuf.Vertex[rw.length];
 	MeshBuf.Tex tex = mod.layer(mod.tex);
 	for(int i = 0; i < lv.length; i++) {
@@ -140,27 +124,14 @@ public class CaveTile extends Tiler {
     }
 
     public void lay(MapMesh m, Random rnd, Coord lc, Coord gc) {
-	// Check if short walls are enabled - if so, skip rendering walls entirely
-	// (the NShortWallCapOverlay will render the cap boxes instead)
-	boolean shortWalls = false;
-	try {
-	    Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
-	    shortWalls = (sw != null && sw);
-	} catch (Exception e) {
-	    // If config check fails, render normally
+	Walls w = null;
+	for(int i = 0; i < 4; i++) {
+	    int cid = m.map.gettile(gc.add(tces[i]));
+	    if(cid <= id || (m.map.tiler(cid) instanceof CaveTile))
+		continue;
+	    if(w == null) w = m.data(walls);
+	    mkwall(m, w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
 	}
-
-	if (!shortWalls) {
-	    Walls w = null;
-	    for(int i = 0; i < 4; i++) {
-		int cid = m.map.gettile(gc.add(tces[i]));
-		if(cid <= id || (m.map.tiler(cid) instanceof CaveTile))
-		    continue;
-		if(w == null) w = m.data(walls);
-		mkwall(m, w, lc.add(tccs[(i + 1) % 4]), lc.add(tccs[i]));
-	    }
-	}
-
 	if(ground != null)
 	    ground.lay(m, rnd, lc, gc);
     }

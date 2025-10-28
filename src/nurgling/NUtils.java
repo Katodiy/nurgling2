@@ -28,6 +28,16 @@ import static haven.OCache.posres;
 
 public class NUtils
 {
+    static {
+        // Trigger NCaveTile class loading early to ensure factory replacement happens
+        // before any cave tiles are created
+        try {
+            Class.forName("nurgling.resutil.NCaveTile");
+        } catch (ClassNotFoundException e) {
+            System.err.println("[NUtils] Failed to load NCaveTile: " + e.getMessage());
+        }
+    }
+
     public static long getTickId()
     {
         if(NUtils.getGameUI()!= null )

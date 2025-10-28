@@ -89,6 +89,9 @@ public class NMapView extends MapView
 
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
 
+    // Track if overlays have been initialized to avoid repeated initialization checks
+    private boolean overlaysInitialized = false;
+
     // Directional vectors for triangulation (fixed position, not following player)
     public java.util.List<nurgling.tools.DirectionalVector> directionalVectors = new java.util.ArrayList<>();
 
@@ -147,10 +150,12 @@ public class NMapView extends MapView
 
     @Override
     public void draw(GOut g) {
-        // Initialize rock tile overlay on first draw (when GameUI is ready)
-        getRockTileOverlay();
-        // Initialize short wall cap overlay
-        getShortWallCapOverlay();
+        // Initialize overlays only once on first draw (when GameUI is ready)
+        if (!overlaysInitialized) {
+            getRockTileOverlay(); // Initialize rock tile highlighting overlay
+            // getShortWallCapOverlay(); // No longer needed - NCaveTile renders caps directly
+            overlaysInitialized = true;
+        }
 
         super.draw(g);
         synchronized (dummys) {
@@ -256,31 +261,13 @@ public class NMapView extends MapView
         {
             synchronized (NUtils.getGameUI().map)
             {
-                NRockTileHighlightOverlay ro = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
-                if (ro == null)
+                NRockTileHighlightOverlay overlay = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
+                if (overlay == null)
                 {
                     NUtils.getGameUI().map.addCustomOverlay(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY, new NRockTileHighlightOverlay());
                 }
-                ro = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
-                return ro;
-            }
-        }
-        return null;
-    }
-
-    public static NShortWallCapOverlay getShortWallCapOverlay()
-    {
-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
-        {
-            synchronized (NUtils.getGameUI().map)
-            {
-                NShortWallCapOverlay swc = (NShortWallCapOverlay) NUtils.getGameUI().map.nols.get(NShortWallCapOverlay.SHORT_WALL_CAP_OVERLAY);
-                if (swc == null)
-                {
-                    NUtils.getGameUI().map.addCustomOverlay(NShortWallCapOverlay.SHORT_WALL_CAP_OVERLAY, new NShortWallCapOverlay());
-                }
-                swc = (NShortWallCapOverlay) NUtils.getGameUI().map.nols.get(NShortWallCapOverlay.SHORT_WALL_CAP_OVERLAY);
-                return swc;
+                overlay = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
+                return overlay;
             }
         }
         return null;
@@ -295,10 +282,6 @@ public class NMapView extends MapView
         if(id == NRockTileHighlightOverlay.ROCK_TILE_OVERLAY)
         {
             return NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY)!=null;
-        }
-        if(id == NShortWallCapOverlay.SHORT_WALL_CAP_OVERLAY)
-        {
-            return NUtils.getGameUI().map.nols.get(NShortWallCapOverlay.SHORT_WALL_CAP_OVERLAY)!=null;
         }
         return false;
     }

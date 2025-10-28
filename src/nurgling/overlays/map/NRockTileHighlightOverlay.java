@@ -2,7 +2,6 @@ package nurgling.overlays.map;
 
 import haven.*;
 import haven.render.*;
-import haven.resutil.CaveTile;
 import nurgling.*;
 import nurgling.tools.RockResourceMapper;
 
@@ -13,31 +12,49 @@ import java.util.*;
  * Overlay that highlights rock tiles in mines when corresponding bumbling icons are selected.
  * This allows users to see both surface rocks (bumblings) and underground rock tiles
  * when they enable a rock type in Icon Settings.
+ *
+ * Optimized to avoid FPS drops by:
+ * - Pre-caching which tiles to highlight instead of checking every tile every frame
+ * - Only updating when icon selection changes or config toggles
+ * - Using static color instead of animated pulsing
  */
 public class NRockTileHighlightOverlay extends NOverlay {
 
     public static final int ROCK_TILE_OVERLAY = -2;
 
+    // Cache of tile resource names that should be highlighted
     private Set<String> selectedTileResources = new HashSet<>();
-    private boolean needsUpdate = false;
-    private boolean isEnabled = true;
+
+    // Tracks when we need to rebuild the mesh
+    private boolean needsRebuild = false;
+
+    // Tracks if feature is enabled
+    private boolean isEnabled = false;
 
     // Cache for Icon Settings to detect changes
     private Map<GobIcon.Setting.ID, Boolean> lastIconStates = new HashMap<>();
 
-    // Animation state for color pulsation
-    private long animationStartTime = System.currentTimeMillis();
-    private static final long PULSE_PERIOD = 2000; // 2 seconds for full pulse cycle
+    // Bright red color for border
+    private static final Color HIGHLIGHT_COLOR = new Color(255, 0, 0, 255); // Bright red
 
     public NRockTileHighlightOverlay() {
         super(ROCK_TILE_OVERLAY);
-        bc = new Color(255, 200, 100, 80); // Orange-ish semi-transparent color (will be animated)
+        bc = HIGHLIGHT_COLOR;
+
+        // Initialize enabled state from config
+        try {
+            Boolean enabled = (Boolean) NConfig.get(NConfig.Key.highlightRockTiles);
+            isEnabled = (enabled != null && enabled);
+        } catch (Exception e) {
+            isEnabled = false;
+        }
     }
 
     /**
      * Updates which rock tile resources should be highlighted based on Icon Settings.
+     * Only called when we detect icon settings may have changed.
      */
-    public void updateSelectedRocks() {
+    private void updateSelectedRocks() {
         if (NUtils.getGameUI() == null || NUtils.getGameUI().ui == null) {
             return;
         }
@@ -63,75 +80,15 @@ public class NRockTileHighlightOverlay extends NOverlay {
             }
 
             // Check if anything changed
-            boolean changed = !currentStates.equals(lastIconStates);
-            lastIconStates = currentStates;
+            if (!currentStates.equals(lastIconStates)) {
+                lastIconStates = currentStates;
 
-            if (changed) {
                 // Convert selected gob resources to tile resources
                 selectedTileResources = RockResourceMapper.getTileResourcesToHighlight(newSelectedGobResources);
-                needsUpdate = true;
-                requpdate2 = true;  // Trigger map re-render
+                needsRebuild = true;
             }
         } catch (Exception e) {
             // Silently ignore errors to avoid breaking the game
-        }
-    }
-
-    /**
-     * Gets the current color based on pulsation animation.
-     * Pulsates between blue and orange.
-     */
-    private Color getCurrentColor() {
-        long elapsed = System.currentTimeMillis() - animationStartTime;
-        double phase = (elapsed % PULSE_PERIOD) / (double) PULSE_PERIOD;
-
-        // Use sine wave for smooth pulsation (0 to 1 to 0)
-        double t = (Math.sin(phase * Math.PI * 2) + 1) / 2;
-
-        // Blue color (30, 144, 255, 80)
-        int blueR = 30, blueG = 144, blueB = 255;
-        // Orange color (255, 200, 100, 80)
-        int orangeR = 255, orangeG = 200, orangeB = 100;
-
-        // Interpolate between blue and orange
-        int r = (int)(blueR + t * (orangeR - blueR));
-        int g = (int)(blueG + t * (orangeG - blueG));
-        int b = (int)(blueB + t * (orangeB - blueB));
-
-        return new Color(r, g, b, 80);
-    }
-
-    /**
-     * Checks if a tile should be highlighted based on its resource name.
-     */
-    private boolean shouldHighlightTile(Coord gc) {
-        if (!isEnabled || selectedTileResources.isEmpty()) {
-            return false;
-        }
-
-        try {
-            MCache map = NUtils.getGameUI().map.glob.map;
-            int tileId = map.gettile(gc);
-
-            if (tileId < 0 || tileId >= map.nsets.length) {
-                return false;
-            }
-
-            Resource.Spec tileSpec = map.nsets[tileId];
-            if (tileSpec == null) {
-                return false;
-            }
-
-            String tileResourceName = tileSpec.name;
-
-            if (selectedTileResources.contains(tileResourceName)) {
-                return true;
-            }
-
-            return false;
-
-        } catch (Exception e) {
-            return false;
         }
     }
 
@@ -140,100 +97,162 @@ public class NRockTileHighlightOverlay extends NOverlay {
         super.tick();
 
         // Check if feature is enabled in config
-        boolean configEnabled = (Boolean) NConfig.get(NConfig.Key.highlightRockTiles);
-        if (isEnabled != configEnabled) {
-            setEnabled(configEnabled);
+        try {
+            Boolean configEnabled = (Boolean) NConfig.get(NConfig.Key.highlightRockTiles);
+            boolean newEnabled = (configEnabled != null && configEnabled);
+
+            if (isEnabled != newEnabled) {
+                isEnabled = newEnabled;
+                needsRebuild = true;
+            }
+        } catch (Exception e) {
+            // Ignore
         }
 
-        // Periodically check if icon settings changed
+        // Only check icon settings if enabled (avoids unnecessary work)
         if (isEnabled) {
             updateSelectedRocks();
-            // Trigger continuous updates for smooth color animation
-            requpdate2 = true;
         }
+
+        // Signal map to rebuild if needed
+        requpdate2 = requpdate();
     }
 
-    // Corner coords for tile box
-    private static final Coord[] TILE_CORNERS = {
-        new Coord(0, 0),
-        new Coord(1, 0),
-        new Coord(1, 1),
-        new Coord(0, 1)
-    };
-
-    /**
-     * Helper method to add a quad (4 vertices forming 2 triangles) to the mesh
-     */
-    private void addQuad(ArrayList<Float> vertices, ArrayList<Short> indices, short baseVertex,
-                        float x1, float y1, float z1,
-                        float x2, float y2, float z2,
-                        float x3, float y3, float z3,
-                        float x4, float y4, float z4) {
-        // Add 4 vertices
-        vertices.add(x1); vertices.add(y1); vertices.add(z1);
-        vertices.add(x2); vertices.add(y2); vertices.add(z2);
-        vertices.add(x3); vertices.add(y3); vertices.add(z3);
-        vertices.add(x4); vertices.add(y4); vertices.add(z4);
-
-        // Add 2 triangles (6 indices)
-        indices.add(baseVertex);
-        indices.add((short)(baseVertex + 1));
-        indices.add((short)(baseVertex + 2));
-
-        indices.add(baseVertex);
-        indices.add((short)(baseVertex + 2));
-        indices.add((short)(baseVertex + 3));
+    @Override
+    public boolean requpdate() {
+        if (needsRebuild) {
+            needsRebuild = false;
+            return true;
+        }
+        return false;
     }
 
     @Override
     public RenderTree.Node makenol(MapMesh mm, Long grid_id, Coord grid_ul) {
-        if (selectedTileResources.isEmpty() || !isEnabled) {
+        // No fill - only render outline
+        return null;
+    }
+
+    @Override
+    public RenderTree.Node makenolol(MapMesh mm, Long grid_id, Coord grid_ul) {
+        // Don't render if disabled or no rocks selected
+        if (!isEnabled || selectedTileResources.isEmpty()) {
             return null;
         }
 
+        MCache map = mm.map;
         MapMesh.MapSurface ms = mm.data(MapMesh.gnd);
 
         if (ms == null) {
             return null;
         }
 
-        // Check if short walls are enabled
+        // Check if short walls are enabled to determine wall height
         boolean shortWalls = false;
+        float wallHeight = 16.0f; // Default to full height
         try {
             Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
-            shortWalls = (sw != null && sw);
+            if (sw != null && sw) {
+                shortWalls = true;
+                wallHeight = 4.0f; // SHORT_H from NCaveTile
+            }
         } catch (Exception e) {
-            // Use default if config check fails
+            // Use default
         }
 
+        // Build boolean grid (same as makenol)
+        boolean[][] highlightGrid = new boolean[mm.sz.x][mm.sz.y];
+
+        for (int ty = 0; ty < mm.sz.y; ty++) {
+            for (int tx = 0; tx < mm.sz.x; tx++) {
+                Coord gc = new Coord(tx, ty).add(mm.ul);
+
+                try {
+                    int tileId = map.gettile(gc);
+
+                    if (tileId >= 0 && tileId < map.nsets.length) {
+                        Resource.Spec tileSpec = map.nsets[tileId];
+
+                        if (tileSpec != null && selectedTileResources.contains(tileSpec.name)) {
+                            highlightGrid[tx][ty] = true;
+                        }
+                    }
+                } catch (Exception e) {
+                    // Skip
+                }
+            }
+        }
+
+        // Create custom outline geometry for expanded tiles
         ArrayList<Float> vertices = new ArrayList<>();
         ArrayList<Short> indices = new ArrayList<>();
         short vertexCount = 0;
 
-        // Scan each tile in the mesh
+        // Same expansion as fill overlay
+        final float EXPAND = 0.15f;
+
         for (int ty = 0; ty < mm.sz.y; ty++) {
             for (int tx = 0; tx < mm.sz.x; tx++) {
-                Coord lc = new Coord(tx, ty);
-                Coord gc = lc.add(mm.ul);
+                if (highlightGrid[tx][ty]) {
+                    Coord lc = new Coord(tx, ty);
 
-                // Check if this tile should be highlighted
-                if (shouldHighlightTile(gc)) {
-                    // Get the 4 corner vertices for this tile
-                    Surface.Vertex[] corners = new Surface.Vertex[4];
-                    for (int i = 0; i < 4; i++) {
-                        corners[i] = ms.fortile(lc.add(TILE_CORNERS[i]));
+                    // Get the 4 corner vertices
+                    Surface.Vertex v0 = ms.fortile(lc.add(0, 0));
+                    Surface.Vertex v1 = ms.fortile(lc.add(1, 0));
+                    Surface.Vertex v2 = ms.fortile(lc.add(1, 1));
+                    Surface.Vertex v3 = ms.fortile(lc.add(0, 1));
+
+                    // Calculate tile center
+                    float cx = (v0.x + v1.x + v2.x + v3.x) / 4.0f;
+                    float cy = (v0.y + v1.y + v2.y + v3.y) / 4.0f;
+                    float cz = (v0.z + v1.z + v2.z + v3.z) / 4.0f;
+
+                    // Create expanded vertices at the TOP of the wall (ground + wallHeight)
+                    float[] ev0 = {cx + (v0.x - cx),
+                                   cy + (v0.y - cy),
+                                   cz + (v0.z - cz) + wallHeight + 0.1f};
+                    float[] ev1 = {cx + (v1.x - cx),
+                                   cy + (v1.y - cy),
+                                   cz + (v1.z - cz) + wallHeight + 0.1f};
+                    float[] ev2 = {cx + (v2.x - cx),
+                                   cy + (v2.y - cy),
+                                   cz + (v2.z - cz) + wallHeight + 0.1f};
+                    float[] ev3 = {cx + (v3.x - cx),
+                                   cy + (v3.y - cy),
+                                   cz + (v3.z - cz) + wallHeight + 0.1f};
+
+                    // Check which edges are boundaries (no adjacent highlighted tile)
+                    boolean[] edges = new boolean[4]; // bottom, right, top, left
+                    edges[0] = (ty == 0 || !highlightGrid[tx][ty - 1]); // Bottom
+                    edges[1] = (tx == mm.sz.x - 1 || !highlightGrid[tx + 1][ty]); // Right
+                    edges[2] = (ty == mm.sz.y - 1 || !highlightGrid[tx][ty + 1]); // Top
+                    edges[3] = (tx == 0 || !highlightGrid[tx - 1][ty]); // Left
+
+                    // Add line segments for boundary edges
+                    if (edges[0]) { // Bottom edge: v0 -> v1
+                        vertices.add(ev0[0]); vertices.add(ev0[1]); vertices.add(ev0[2]);
+                        vertices.add(ev1[0]); vertices.add(ev1[1]); vertices.add(ev1[2]);
+                        indices.add(vertexCount); indices.add((short)(vertexCount + 1));
+                        vertexCount += 2;
                     }
-
-                    // Render just a horizontal plane slightly above the wall (short or tall)
-                    // Add small offset (0.1) so it's visible above the wall
-                    float planeHeight = shortWalls ? (CaveTile.SHORT_H + 0.1f) : (CaveTile.h + 0.1f);
-
-                    addQuad(vertices, indices, vertexCount,
-                           corners[0].x, corners[0].y, corners[0].z + planeHeight,
-                           corners[3].x, corners[3].y, corners[3].z + planeHeight,
-                           corners[2].x, corners[2].y, corners[2].z + planeHeight,
-                           corners[1].x, corners[1].y, corners[1].z + planeHeight);
-                    vertexCount += 4;
+                    if (edges[1]) { // Right edge: v1 -> v2
+                        vertices.add(ev1[0]); vertices.add(ev1[1]); vertices.add(ev1[2]);
+                        vertices.add(ev2[0]); vertices.add(ev2[1]); vertices.add(ev2[2]);
+                        indices.add(vertexCount); indices.add((short)(vertexCount + 1));
+                        vertexCount += 2;
+                    }
+                    if (edges[2]) { // Top edge: v2 -> v3
+                        vertices.add(ev2[0]); vertices.add(ev2[1]); vertices.add(ev2[2]);
+                        vertices.add(ev3[0]); vertices.add(ev3[1]); vertices.add(ev3[2]);
+                        indices.add(vertexCount); indices.add((short)(vertexCount + 1));
+                        vertexCount += 2;
+                    }
+                    if (edges[3]) { // Left edge: v3 -> v0
+                        vertices.add(ev3[0]); vertices.add(ev3[1]); vertices.add(ev3[2]);
+                        vertices.add(ev0[0]); vertices.add(ev0[1]); vertices.add(ev0[2]);
+                        indices.add(vertexCount); indices.add((short)(vertexCount + 1));
+                        vertexCount += 2;
+                    }
                 }
             }
         }
@@ -257,55 +276,23 @@ public class NRockTileHighlightOverlay extends NOverlay {
         VertexBuf.VertexData posa = new VertexBuf.VertexData(Utils.bufcp(posb));
         VertexBuf vbuf = new VertexBuf(posa);
 
-        // Create model
+        // Create outline mesh
         haven.render.Model mod = new haven.render.Model(
-            haven.render.Model.Mode.TRIANGLES,
+            haven.render.Model.Mode.LINES,
             vbuf.data(),
             new haven.render.Model.Indices(indices.size(), NumberFormat.UINT16,
                 DataBuffer.Usage.STATIC, DataBuffer.Filler.of(idxb.array()))
         );
 
-        // Get current pulsating color
-        Color currentColor = getCurrentColor();
-
-        // Apply semi-transparent pulsating color with disabled backface culling for visibility
-        Pipe.Op colorOp = Pipe.Op.compose(
-            new BaseColor(currentColor),
-            new States.Facecull(States.Facecull.Mode.NONE)  // Render both sides
-        );
-
         return new MapMesh.ShallowWrap(mod,
-            Pipe.Op.compose(new MapMesh.NOLOrder(id), colorOp));
+            Pipe.Op.compose(new MapMesh.NOLOrder(id), new States.LineWidth(3)));
     }
 
     @Override
     public void added(RenderTree.Slot slot) {
         this.slot = slot;
-        // Add the base grid so makenol() gets called
-        // Use LE depth test so character and other objects can properly occlude the boxes
-        slot.add(base, new States.Depthtest(States.Depthtest.Test.LE));
-        // Don't call super.added() to avoid NOverlay's BaseColor null pointer
-    }
-
-    @Override
-    public RenderTree.Node makenolol(MapMesh mm, Long grid_id, Coord grid_ul) {
-        // No outline needed
-        return null;
-    }
-
-    @Override
-    public boolean requpdate() {
-        // Always return true when enabled to force continuous re-rendering for animation
-        if (isEnabled && !selectedTileResources.isEmpty()) {
-            return true;
-        }
-
-        boolean result = needsUpdate;
-        needsUpdate = false;
-        if (result) {
-            requpdate2 = false;  // Reset after update processed
-        }
-        return result;
+        // Only add outline with red color (no fill)
+        slot.add(outl, new BaseColor(255, 0, 0, 255)); // Bright red outline
     }
 
     /**
@@ -314,7 +301,7 @@ public class NRockTileHighlightOverlay extends NOverlay {
     public void setEnabled(boolean enabled) {
         if (this.isEnabled != enabled) {
             this.isEnabled = enabled;
-            needsUpdate = true;
+            needsRebuild = true;
         }
     }
 
@@ -323,5 +310,13 @@ public class NRockTileHighlightOverlay extends NOverlay {
      */
     public boolean isEnabled() {
         return isEnabled;
+    }
+
+    /**
+     * Forces a rebuild of the overlay mesh.
+     * Useful when settings change that affect the overlay's appearance (like wall height).
+     */
+    public void forceRebuild() {
+        needsRebuild = true;
     }
 }
