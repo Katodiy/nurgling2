@@ -161,5 +161,13 @@ public class CropRegistry {
                         new CropStage(4, new NAlias("Pipeweed Seeds"), StorageBehavior.BARREL)
                 )
         );
+
+        // Grape (Trellis crop)
+        HARVESTABLE.put(
+                new NAlias("plants/wine"),
+                Arrays.asList(
+                        new CropStage(6, new NAlias("Grapes"), StorageBehavior.STOCKPILE)
+                )
+        );
     }
 }
