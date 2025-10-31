@@ -3,11 +3,7 @@ package nurgling.actions.bots;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
-import nurgling.actions.Action;
-import nurgling.actions.HarvestResultConfig;
-import nurgling.actions.HarvestTrellis;
-import nurgling.actions.Results;
-import nurgling.actions.Validator;
+import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.conf.CropRegistry;
@@ -18,22 +14,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class GrapeFarmer implements Action {
+public class PeaFarmer implements Action {
+    private static final NAlias PLANT_ALIAS = new NAlias("plants/pea");
+    private static final NAlias SEED_ALIAS = new NAlias("Peapod");
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
 
-        // Define required crop area with "Grape" sub-specialization
+        // Crop area with "Pea" sub-specialization
         NArea.Specialisation crop = new NArea.Specialisation(
             Specialisation.SpecName.crop.toString(),
-            "Grape"
+            "Pea"
         );
 
-        // Find PUT area for grapes (like straw collection in BarleyFarmerQ)
-        NArea grapePutArea = NContext.findOut("Grapes", 1);
+        // PUT area for peapods (both harvest output AND replanting source)
+        NArea peapodPutArea = NContext.findOut("Peapod", 1);
 
-        if (grapePutArea == null) {
-            return Results.ERROR("PUT Area for Grapes required, but not found!");
+        if (peapodPutArea == null) {
+            return Results.ERROR("PUT Area for Peapod required, but not found!");
         }
 
         // Validate crop area exists
@@ -43,22 +42,23 @@ public class GrapeFarmer implements Action {
         if (new Validator(req, new ArrayList<>()).run(gui).IsSuccess()) {
             NUtils.stackSwitch(true);
 
-            // Create single-item harvest result config
+            NArea cropArea = NContext.findSpec(crop);
+
+            // ===== PHASE 1: HARVEST ALL MATURE PEAS =====
             List<HarvestResultConfig> results = Arrays.asList(
                 new HarvestResultConfig(
-                    new NAlias("Grapes"),
-                    grapePutArea,
-                    1,  // Priority (only one item)
+                    SEED_ALIAS,
+                    peapodPutArea,
+                    1,
                     CropRegistry.StorageBehavior.STOCKPILE
                 )
             );
 
-            // Harvest trellis crops using modified HarvestTrellis
-            new HarvestTrellis(
-                NContext.findSpec(crop),
-                new NAlias("plants/wine"),
-                results
-            ).run(gui);
+            new HarvestTrellis(cropArea, PLANT_ALIAS, results).run(gui);
+
+            NUtils.stackSwitch(false);
+            // ===== PHASE 2: REPLANT ALL EMPTY TRELLIS =====
+            new PlantTrellis(cropArea, PLANT_ALIAS, SEED_ALIAS, peapodPutArea).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
             return Results.SUCCESS();

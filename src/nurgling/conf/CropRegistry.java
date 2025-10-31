@@ -6,17 +6,23 @@ import java.util.*;
 
 public class CropRegistry {
 
-    public enum StorageBehavior { BARREL, STOCKPILE }
+    public enum StorageBehavior { BARREL, STOCKPILE, CONTAINER }
 
     public static class CropStage {
         public final int stage;
         public final NAlias result;
         public final StorageBehavior storageBehavior;
+        public final boolean isHybridTrellis;
 
         public CropStage(int stage, NAlias result, StorageBehavior storageBehavior) {
+            this(stage, result, storageBehavior, false);
+        }
+
+        public CropStage(int stage, NAlias result, StorageBehavior storageBehavior, boolean isHybridTrellis) {
             this.stage = stage;
             this.result = result;
             this.storageBehavior = storageBehavior;
+            this.isHybridTrellis = isHybridTrellis;
         }
     }
 
@@ -167,6 +173,31 @@ public class CropRegistry {
                 new NAlias("plants/wine"),
                 Arrays.asList(
                         new CropStage(6, new NAlias("Grapes"), StorageBehavior.STOCKPILE)
+                )
+        );
+
+        // Hops (Trellis crop - Multiple harvest results)
+        HARVESTABLE.put(
+                new NAlias("plants/hops"),
+                Arrays.asList(
+                        new CropStage(6, new NAlias("Unusually Large Hop Cone"), StorageBehavior.STOCKPILE),
+                        new CropStage(6, new NAlias("Hop Cones"), StorageBehavior.STOCKPILE)
+                )
+        );
+
+        // Peppercorn (Trellis crop - Container storage)
+        HARVESTABLE.put(
+                new NAlias("plants/pepper"),
+                Arrays.asList(
+                        new CropStage(6, new NAlias("Peppercorn"), StorageBehavior.CONTAINER)
+                )
+        );
+
+        // Pea (Hybrid Trellis crop - plant disappears after harvest)
+        HARVESTABLE.put(
+                new NAlias("plants/pea"),
+                Arrays.asList(
+                        new CropStage(6, new NAlias("Peapods"), StorageBehavior.STOCKPILE, true)
                 )
         );
     }

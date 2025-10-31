@@ -18,22 +18,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class GrapeFarmer implements Action {
+public class HopsFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
 
-        // Define required crop area with "Grape" sub-specialization
+        // Define required crop area with "Hops" sub-specialization
         NArea.Specialisation crop = new NArea.Specialisation(
             Specialisation.SpecName.crop.toString(),
-            "Grape"
+            "Hops"
         );
 
-        // Find PUT area for grapes (like straw collection in BarleyFarmerQ)
-        NArea grapePutArea = NContext.findOut("Grapes", 1);
+        // Find PUT areas for both hop cone types
+        NArea largeConeArea = NContext.findOut("Unusually Large Hop Cone", 1);
+        NArea regularConeArea = NContext.findOut("Hop Cones", 1);
 
-        if (grapePutArea == null) {
-            return Results.ERROR("PUT Area for Grapes required, but not found!");
+        if (largeConeArea == null) {
+            return Results.ERROR("PUT Area for 'Unusually Large Hop Cone' required, but not found!");
+        }
+
+        if (regularConeArea == null) {
+            return Results.ERROR("PUT Area for 'Hop Cones' required, but not found!");
         }
 
         // Validate crop area exists
@@ -43,12 +48,18 @@ public class GrapeFarmer implements Action {
         if (new Validator(req, new ArrayList<>()).run(gui).IsSuccess()) {
             NUtils.stackSwitch(true);
 
-            // Create single-item harvest result config
+            // Create multi-result harvest configs with priority
             List<HarvestResultConfig> results = Arrays.asList(
                 new HarvestResultConfig(
-                    new NAlias("Grapes"),
-                    grapePutArea,
-                    1,  // Priority (only one item)
+                    new NAlias("Unusually Large Hop Cone"),
+                    largeConeArea,
+                    1,  // Priority 1 - drop first (rare item)
+                    CropRegistry.StorageBehavior.STOCKPILE
+                ),
+                new HarvestResultConfig(
+                    new NAlias("Hop Cones"),
+                    regularConeArea,
+                    2,  // Priority 2 - drop second (common item)
                     CropRegistry.StorageBehavior.STOCKPILE
                 )
             );
@@ -56,7 +67,7 @@ public class GrapeFarmer implements Action {
             // Harvest trellis crops using modified HarvestTrellis
             new HarvestTrellis(
                 NContext.findSpec(crop),
-                new NAlias("plants/wine"),
+                new NAlias("plants/hops"),
                 results
             ).run(gui);
 
