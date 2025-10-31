@@ -6,6 +6,8 @@ import nurgling.areas.NArea;
 import nurgling.conf.CropRegistry;
 import nurgling.tasks.WaitGobModelAttrChange;
 import nurgling.tasks.WaitMoreItems;
+import nurgling.tools.Container;
+import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -91,7 +93,7 @@ public class HarvestTrellis implements Action {
 
             // Wait for any harvest item to appear in inventory
             // For multi-result crops, we wait for the first result config item
-            NUtils.getUI().core.addTask(new WaitMoreItems(gui.getInventory(), harvestResults.get(1).itemAlias, 1));
+            NUtils.getUI().core.addTask(new WaitMoreItems(gui.getInventory(), harvestResults.get(harvestResults.size() - 1).itemAlias, 1));
 
             // Check if we need to drop off
             if (gui.getInventory().getFreeSpace() < 3) {
@@ -139,6 +141,9 @@ public class HarvestTrellis implements Action {
             } else if (result.storageBehavior == CropRegistry.StorageBehavior.BARREL) {
                 // Drop to barrels
                 dropToBarrels(gui, result.itemAlias, result.targetArea);
+            } else if (result.storageBehavior == CropRegistry.StorageBehavior.CONTAINER) {
+                // Drop to containers
+                dropToContainers(gui, result.itemAlias, result.targetArea);
             }
         }
     }
@@ -164,6 +169,40 @@ public class HarvestTrellis implements Action {
         // If still items remaining, all barrels full
         if (!gui.getInventory().getItems(item).isEmpty()) {
             throw new RuntimeException("All barrels full, cannot store " + item.getDefault());
+        }
+    }
+
+    private void dropToContainers(NGameUI gui, NAlias item, NArea containerArea) throws InterruptedException {
+        // Find all containers in the area (using Context.contcaps pattern from HarvestCrop)
+        ArrayList<Container> containers = new ArrayList<>();
+        for (Gob sm : Finder.findGobs(containerArea.getRCArea(),
+                                       new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
+            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+            cand.initattr(Container.Space.class);
+            containers.add(cand);
+        }
+
+        if (containers.isEmpty()) {
+            throw new RuntimeException("No containers found in storage area for " + item.getDefault());
+        }
+
+        // Try each container sequentially until all items transferred
+        for (Container container : containers) {
+            // Skip if no items left to transfer
+            if (gui.getInventory().getItems(item).isEmpty()) {
+                return;
+            }
+
+            // Transfer items to this container (partial fill is OK)
+            new TransferToContainer(container, item).run(gui);
+            new CloseTargetContainer(container).run(gui);
+
+            // Container might be full now, but we continue to next container if items remain
+        }
+
+        // After trying all containers, check if items still remain
+        if (!gui.getInventory().getItems(item).isEmpty()) {
+            throw new RuntimeException("All containers full, cannot store " + item.getDefault());
         }
     }
 }

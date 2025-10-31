@@ -6,7 +6,7 @@ import java.util.*;
 
 public class CropRegistry {
 
-    public enum StorageBehavior { BARREL, STOCKPILE }
+    public enum StorageBehavior { BARREL, STOCKPILE, CONTAINER }
 
     public static class CropStage {
         public final int stage;
@@ -176,6 +176,14 @@ public class CropRegistry {
                 Arrays.asList(
                         new CropStage(6, new NAlias("Unusually Large Hop Cone"), StorageBehavior.STOCKPILE),
                         new CropStage(6, new NAlias("Hop Cones"), StorageBehavior.STOCKPILE)
+                )
+        );
+
+        // Peppercorn (Trellis crop - Container storage)
+        HARVESTABLE.put(
+                new NAlias("plants/pepper"),
+                Arrays.asList(
+                        new CropStage(6, new NAlias("Peppercorn"), StorageBehavior.CONTAINER)
                 )
         );
     }

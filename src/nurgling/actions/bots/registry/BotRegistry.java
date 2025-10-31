@@ -89,6 +89,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("pipeweed", BotDescriptor.BotType.FARMING, "Pipeweed Farmer", "Automatically harvests and replants pipeweed.", true, true, nurgling.actions.bots.farmers.PipeweedFarmer.class, "pipeweed", false));
         bots.add(new BotDescriptor("grape", BotDescriptor.BotType.FARMING, "Grape Farmer", "Automatically harvests grapes from trellis.", true, true, GrapeFarmer.class, "grape", false));
         bots.add(new BotDescriptor("hops", BotDescriptor.BotType.FARMING, "Hops Farmer", "Automatically harvests hops from trellis.", true, true, HopsFarmer.class, "hops", false));
+        bots.add(new BotDescriptor("peppercorn", BotDescriptor.BotType.FARMING, "Peppercorn Farmer", "Automatically harvests peppercorn from trellis.", true, true, PeppercornFarmer.class, "peppercorn", false));
         bots.add(new BotDescriptor("goats", BotDescriptor.BotType.FARMING, "Goat Manager", "Manages goat herds.", true, true, GoatsAction.class, "goats", false));
         bots.add(new BotDescriptor("sheeps", BotDescriptor.BotType.FARMING, "Sheep Manager", "Manages sheep herds.", true, true, SheepsAction.class, "sheeps", false));
         bots.add(new BotDescriptor("pigs", BotDescriptor.BotType.FARMING, "Pig Manager", "Manages pig herds.", true, true, PigsAction.class, "pigs", false));
