@@ -12,11 +12,17 @@ public class CropRegistry {
         public final int stage;
         public final NAlias result;
         public final StorageBehavior storageBehavior;
+        public final boolean isHybridTrellis;
 
         public CropStage(int stage, NAlias result, StorageBehavior storageBehavior) {
+            this(stage, result, storageBehavior, false);
+        }
+
+        public CropStage(int stage, NAlias result, StorageBehavior storageBehavior, boolean isHybridTrellis) {
             this.stage = stage;
             this.result = result;
             this.storageBehavior = storageBehavior;
+            this.isHybridTrellis = isHybridTrellis;
         }
     }
 
@@ -184,6 +190,14 @@ public class CropRegistry {
                 new NAlias("plants/pepper"),
                 Arrays.asList(
                         new CropStage(6, new NAlias("Peppercorn"), StorageBehavior.CONTAINER)
+                )
+        );
+
+        // Pea (Hybrid Trellis crop - plant disappears after harvest)
+        HARVESTABLE.put(
+                new NAlias("plants/pea"),
+                Arrays.asList(
+                        new CropStage(6, new NAlias("Peapods"), StorageBehavior.STOCKPILE, true)
                 )
         );
     }

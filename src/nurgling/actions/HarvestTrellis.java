@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.*;
 import nurgling.areas.NArea;
 import nurgling.conf.CropRegistry;
+import nurgling.tasks.NoGob;
 import nurgling.tasks.WaitGobModelAttrChange;
 import nurgling.tasks.WaitMoreItems;
 import nurgling.tools.Container;
@@ -88,8 +89,16 @@ public class HarvestTrellis implements Action {
             // Harvest the plant
             new SelectFlowerAction("Harvest", plant).run(gui);
 
-            // Wait for stage to reset (plant persists, stage changes)
-            NUtils.getUI().core.addTask(new WaitGobModelAttrChange(plant, currentStage));
+            // Check if hybrid trellis (plant disappears) or true trellis (plant persists)
+            boolean isHybrid = cropStages.get(0).isHybridTrellis;
+
+            if (isHybrid) {
+                // Hybrid trellis: wait for plant to disappear
+                NUtils.getUI().core.addTask(new NoGob(plant.id));
+            } else {
+                // True trellis: wait for stage to reset (plant persists, stage changes)
+                NUtils.getUI().core.addTask(new WaitGobModelAttrChange(plant, currentStage));
+            }
 
             // Wait for any harvest item to appear in inventory
             // For multi-result crops, we wait for the first result config item
