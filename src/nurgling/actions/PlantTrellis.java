@@ -30,6 +30,10 @@ public class PlantTrellis implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         replantEmptyTrellis(gui);
+
+        // Drop off any remaining seeds back to PUT area
+        dropOffRemainingSeeds(gui);
+
         return Results.SUCCESS();
     }
 
@@ -109,7 +113,6 @@ public class PlantTrellis implements Action {
      */
     private boolean hasPlantOnTrellis(Gob trellis, ArrayList<Gob> plants) {
         for (Gob plant : plants) {
-            System.out.println(plant.rc.dist(trellis.rc));
             if (plant.rc.dist(trellis.rc) == 0) {
                 return true;
             }
@@ -145,7 +148,7 @@ public class PlantTrellis implements Action {
 
         // Calculate how many seeds we can take based on free inventory space
         int freeSpace = gui.getInventory().getFreeSpace();
-        int seedsToTake = Math.min(freeSpace, 20);  // Take up to 20 seeds at once
+        int seedsToTake = freeSpace;
 
         if (seedsToTake == 0) {
             throw new RuntimeException("No inventory space for seeds!");
@@ -178,5 +181,19 @@ public class PlantTrellis implements Action {
                 }
             }
         }
+    }
+
+    /**
+     * Drops off any remaining seeds back to the PUT area stockpile.
+     * Called after all planting is complete to return unused seeds.
+     */
+    private void dropOffRemainingSeeds(NGameUI gui) throws InterruptedException {
+        // Check if there are any seeds in inventory
+        if (gui.getInventory().getItems(seedAlias).isEmpty()) {
+            return;  // No seeds to return
+        }
+
+        // Transfer remaining seeds to stockpile
+        new TransferToPiles(seedPutArea.getRCArea(), seedAlias).run(gui);
     }
 }
