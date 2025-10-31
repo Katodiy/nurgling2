@@ -169,5 +169,14 @@ public class CropRegistry {
                         new CropStage(6, new NAlias("Grapes"), StorageBehavior.STOCKPILE)
                 )
         );
+
+        // Hops (Trellis crop - Multiple harvest results)
+        HARVESTABLE.put(
+                new NAlias("plants/hops"),
+                Arrays.asList(
+                        new CropStage(6, new NAlias("Unusually Large Hop Cone"), StorageBehavior.STOCKPILE),
+                        new CropStage(6, new NAlias("Hop Cones"), StorageBehavior.STOCKPILE)
+                )
+        );
     }
 }
