@@ -105,7 +105,7 @@ public class HarvestTrellis implements Action {
             NUtils.getUI().core.addTask(new WaitMoreItems(gui.getInventory(), harvestResults.get(harvestResults.size() - 1).itemAlias, 1));
 
             // Check if we need to drop off
-            if (gui.getInventory().getFreeSpace() < 3) {
+            if (gui.getInventory().getFreeSpace() <= 8) {
                 dropOffAllResults(gui);
             }
         }

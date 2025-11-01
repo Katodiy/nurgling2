@@ -3,11 +3,7 @@ package nurgling.actions.bots;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NUtils;
-import nurgling.actions.Action;
-import nurgling.actions.HarvestResultConfig;
-import nurgling.actions.HarvestTrellis;
-import nurgling.actions.Results;
-import nurgling.actions.Validator;
+import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.conf.CropRegistry;
@@ -19,6 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class HopsFarmer implements Action {
+    private static final NAlias PLANT_ALIAS = new NAlias("plants/hops");
+    private static final NAlias SEED_ALIAS = new NAlias("Hop Cones");
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
@@ -48,6 +47,8 @@ public class HopsFarmer implements Action {
         if (new Validator(req, new ArrayList<>()).run(gui).IsSuccess()) {
             NUtils.stackSwitch(true);
 
+            NArea cropArea = NContext.findSpec(crop);
+
             // Create multi-result harvest configs with priority
             List<HarvestResultConfig> results = Arrays.asList(
                 new HarvestResultConfig(
@@ -70,6 +71,10 @@ public class HopsFarmer implements Action {
                 new NAlias("plants/hops"),
                 results
             ).run(gui);
+
+            NUtils.stackSwitch(false);
+            // ===== PHASE 2: REPLANT ALL EMPTY TRELLIS =====
+            new PlantTrellis(cropArea, PLANT_ALIAS, SEED_ALIAS, regularConeArea).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
             return Results.SUCCESS();
