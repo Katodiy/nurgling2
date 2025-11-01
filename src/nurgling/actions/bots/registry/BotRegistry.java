@@ -91,6 +91,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("hops", BotDescriptor.BotType.FARMING, "Hops Farmer", "Automatically harvests hops from trellis.", true, true, HopsFarmer.class, "hops", false));
         bots.add(new BotDescriptor("peppercorn", BotDescriptor.BotType.FARMING, "Peppercorn Farmer", "Automatically harvests peppercorn from trellis.", true, true, PeppercornFarmer.class, "peppercorn", false));
         bots.add(new BotDescriptor("pea", BotDescriptor.BotType.FARMING, "Pea Farmer", "Automatically harvests and replants peas.", true, true, PeaFarmer.class, "pea", false));
+        bots.add(new BotDescriptor("cucumber", BotDescriptor.BotType.FARMING, "Cucumber Farmer", "Automatically harvests and replants cucumbers.", true, true, CucumberFarmer.class, "cucumber", false));
         bots.add(new BotDescriptor("goats", BotDescriptor.BotType.FARMING, "Goat Manager", "Manages goat herds.", true, true, GoatsAction.class, "goats", false));
         bots.add(new BotDescriptor("sheeps", BotDescriptor.BotType.FARMING, "Sheep Manager", "Manages sheep herds.", true, true, SheepsAction.class, "sheeps", false));
         bots.add(new BotDescriptor("pigs", BotDescriptor.BotType.FARMING, "Pig Manager", "Manages pig herds.", true, true, PigsAction.class, "pigs", false));

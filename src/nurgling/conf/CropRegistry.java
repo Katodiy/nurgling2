@@ -200,5 +200,14 @@ public class CropRegistry {
                         new CropStage(6, new NAlias("Peapods"), StorageBehavior.STOCKPILE, true)
                 )
         );
+
+        // Cucumber (Hybrid Trellis crop - plant disappears after harvest, Mixed storage: barrel + stockpile)
+        HARVESTABLE.put(
+                new NAlias("plants/cucumber"),
+                Arrays.asList(
+                        new CropStage(6, new NAlias("Seeds of Cucumber"), StorageBehavior.BARREL, true),
+                        new CropStage(6, new NAlias("Cucumbers"), StorageBehavior.STOCKPILE, true)
+                )
+        );
     }
 }
