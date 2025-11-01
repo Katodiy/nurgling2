@@ -54,59 +54,71 @@ public class HarvestTrellis implements Action {
                 break;
             }
 
-            // Harvest first plant
-            Gob plant = plants.get(0);
-            long currentStage = plant.ngob.getModelAttribute();
-
-            // Calculate pathfinder endpoint at edge of tile
-            // Check all 4 sides of the tile and use first reachable one
-            Coord plantTile = plant.rc.div(MCache.tilesz).floor();
-            Coord2d tileBase = plantTile.mul(MCache.tilesz);
-
-            // Try all 4 edges of the tile
-            Coord2d[] tileEdges = new Coord2d[] {
-                tileBase.add(MCache.tilehsz.x, 0),                    // North edge
-                tileBase.add(MCache.tilehsz.x, MCache.tilesz.y),      // South edge
-                tileBase.add(0, MCache.tilehsz.y),                    // West edge
-                tileBase.add(MCache.tilesz.x, MCache.tilehsz.y)       // East edge
-            };
-
-            Coord2d pathfinderEndpoint = null;
-            for (Coord2d edge : tileEdges) {
-                if (PathFinder.isAvailable(edge)) {
-                    pathfinderEndpoint = edge;
-                    break;
-                }
-            }
-
-            // Navigate to reachable tile edge, or fallback to plant
-            if (pathfinderEndpoint != null) {
-                new PathFinder(pathfinderEndpoint).run(gui);
-            } else {
-                new PathFinder(plant).run(gui);
-            }
-
-            // Harvest the plant
-            new SelectFlowerAction("Harvest", plant).run(gui);
+            // Group plants by tile for optimized pathfinding
+            Map<Coord, ArrayList<Gob>> plantsByTile = groupGobsByTile(plants);
 
             // Check if hybrid trellis (plant disappears) or true trellis (plant persists)
             boolean isHybrid = cropStages.get(0).isHybridTrellis;
 
-            if (isHybrid) {
-                // Hybrid trellis: wait for plant to disappear
-                NUtils.getUI().core.addTask(new NoGob(plant.id));
-            } else {
-                // True trellis: wait for stage to reset (plant persists, stage changes)
-                NUtils.getUI().core.addTask(new WaitGobModelAttrChange(plant, currentStage));
-            }
+            // Process each tile
+            for (Map.Entry<Coord, ArrayList<Gob>> entry : plantsByTile.entrySet()) {
+                Coord tile = entry.getKey();
+                ArrayList<Gob> plantsOnTile = entry.getValue();
 
-            // Wait for any harvest item to appear in inventory
-            // For multi-result crops, we wait for the first result config item
-            NUtils.getUI().core.addTask(new WaitMoreItems(gui.getInventory(), harvestResults.get(harvestResults.size() - 1).itemAlias, 1));
+                // Get first plant for pathfinding
+                Gob firstPlant = plantsOnTile.get(0);
 
-            // Check if we need to drop off
-            if (gui.getInventory().getFreeSpace() <= 8) {
-                dropOffAllResults(gui);
+                // Calculate pathfinder endpoint at edge of tile
+                // Check all 4 sides of the tile and use first reachable one
+                Coord2d tileBase = tile.mul(MCache.tilesz);
+
+                // Try all 4 edges of the tile
+                Coord2d[] tileEdges = new Coord2d[] {
+                    tileBase.add(MCache.tilehsz.x, 0),                    // North edge
+                    tileBase.add(MCache.tilehsz.x, MCache.tilesz.y),      // South edge
+                    tileBase.add(0, MCache.tilehsz.y),                    // West edge
+                    tileBase.add(MCache.tilesz.x, MCache.tilehsz.y)       // East edge
+                };
+
+                Coord2d pathfinderEndpoint = null;
+                for (Coord2d edge : tileEdges) {
+                    if (PathFinder.isAvailable(edge)) {
+                        pathfinderEndpoint = edge;
+                        break;
+                    }
+                }
+
+                // Navigate to reachable tile edge, or fallback to first plant
+                if (pathfinderEndpoint != null) {
+                    new PathFinder(pathfinderEndpoint).run(gui);
+                } else {
+                    new PathFinder(firstPlant).run(gui);
+                }
+
+                // Harvest ALL plants on this tile
+                for (Gob plant : plantsOnTile) {
+                    long currentStage = plant.ngob.getModelAttribute();
+
+                    // Harvest the plant
+                    new SelectFlowerAction("Harvest", plant).run(gui);
+
+                    if (isHybrid) {
+                        // Hybrid trellis: wait for plant to disappear
+                        NUtils.getUI().core.addTask(new NoGob(plant.id));
+                    } else {
+                        // True trellis: wait for stage to reset (plant persists, stage changes)
+                        NUtils.getUI().core.addTask(new WaitGobModelAttrChange(plant, currentStage));
+                    }
+
+                    // Wait for any harvest item to appear in inventory
+                    // For multi-result crops, we wait for the first result config item
+                    NUtils.getUI().core.addTask(new WaitMoreItems(gui.getInventory(), harvestResults.get(harvestResults.size() - 1).itemAlias, 1));
+                }
+
+                // Drop off after processing each tile
+                if (gui.getInventory().getFreeSpace() <= 8) {
+                    dropOffAllResults(gui);
+                }
             }
         }
 
@@ -213,5 +225,24 @@ public class HarvestTrellis implements Action {
         if (!gui.getInventory().getItems(item).isEmpty()) {
             throw new RuntimeException("All containers full, cannot store " + item.getDefault());
         }
+    }
+
+    /**
+     * Groups gobs by their tile coordinate for optimized pathfinding.
+     * Instead of pathfinding to each gob individually, we pathfind once per tile
+     * and process all gobs on that tile.
+     *
+     * @param gobs List of gobs to group
+     * @return Map of tile coordinates to lists of gobs on that tile
+     */
+    private Map<Coord, ArrayList<Gob>> groupGobsByTile(ArrayList<Gob> gobs) {
+        Map<Coord, ArrayList<Gob>> gobsByTile = new LinkedHashMap<>();
+
+        for (Gob gob : gobs) {
+            Coord tile = gob.rc.floor(tilesz);
+            gobsByTile.computeIfAbsent(tile, k -> new ArrayList<>()).add(gob);
+        }
+
+        return gobsByTile;
     }
 }

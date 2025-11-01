@@ -16,7 +16,7 @@ import java.util.List;
 
 public class HopsFarmer implements Action {
     private static final NAlias PLANT_ALIAS = new NAlias("plants/hops");
-    private static final NAlias SEED_ALIAS = new NAlias("Hop Cones");
+    private static final NAlias SEED_ALIAS = new NAlias("cones");
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {

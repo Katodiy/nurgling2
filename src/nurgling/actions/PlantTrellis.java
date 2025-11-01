@@ -58,29 +58,40 @@ public class PlantTrellis implements Action {
                 fetchSeeds(gui);
             }
 
-            // Plant seeds until inventory empty or no more empty trellis
-            for (Gob trellis : emptyTrellis) {
-                ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
-                if (seeds.isEmpty()) {
-                    break;  // Out of seeds, will refetch in next iteration
-                }
+            // Group empty trellis by tile for optimized pathfinding
+            Map<Coord, ArrayList<Gob>> trellisByTile = groupGobsByTile(emptyTrellis);
 
-                // Check stamina periodically during planting
+            // Process each tile
+            for (Map.Entry<Coord, ArrayList<Gob>> entry : trellisByTile.entrySet()) {
+                Coord tile = entry.getKey();
+                ArrayList<Gob> trellisOnTile = entry.getValue();
+
+                // Get first trellis for pathfinding
+                Gob firstTrellis = trellisOnTile.get(0);
+
+                // Navigate once to this tile
+                new PathFinder(firstTrellis).run(gui);
+
+                // Check stamina after pathfinding to tile
                 checkStamina(gui);
 
-                // Navigate to empty trellis
-                new PathFinder(trellis).run(gui);
+                // Plant ALL empty trellis on this tile
+                for (Gob trellis : trellisOnTile) {
+                    ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
+                    if (seeds.isEmpty()) {
+                        break;  // Out of seeds, will refetch in next iteration
+                    }
 
-                // Get tile coordinate and count plants before planting
-                Coord tileBefore = trellis.rc.floor(tilesz);
-                int plantCountBefore = countPlantsOnTile(tileBefore);
+                    // Count plants before planting
+                    int plantCountBefore = countPlantsOnTile(tile);
 
-                // Take seed to hand and plant ON trellis gob
-                NUtils.takeItemToHand(seeds.get(0));
-                NUtils.activateItem(trellis, false);
+                    // Take seed to hand and plant ON trellis gob
+                    NUtils.takeItemToHand(seeds.get(0));
+                    NUtils.activateItem(trellis, false);
 
-                // Wait for plant to appear (count increased by 1)
-                NUtils.getUI().core.addTask(new WaitPlantOnTrellis(tileBefore, plantAlias, plantCountBefore + 1));
+                    // Wait for plant to appear (count increased by 1)
+                    NUtils.getUI().core.addTask(new WaitPlantOnTrellis(tile, plantAlias, plantCountBefore + 1));
+                }
             }
 
             // If inventory still has seeds, all trellis planted
@@ -195,5 +206,24 @@ public class PlantTrellis implements Action {
 
         // Transfer remaining seeds to stockpile
         new TransferToPiles(seedPutArea.getRCArea(), seedAlias).run(gui);
+    }
+
+    /**
+     * Groups gobs by their tile coordinate for optimized pathfinding.
+     * Instead of pathfinding to each gob individually, we pathfind once per tile
+     * and process all gobs on that tile.
+     *
+     * @param gobs List of gobs to group
+     * @return Map of tile coordinates to lists of gobs on that tile
+     */
+    private Map<Coord, ArrayList<Gob>> groupGobsByTile(ArrayList<Gob> gobs) {
+        Map<Coord, ArrayList<Gob>> gobsByTile = new LinkedHashMap<>();
+
+        for (Gob gob : gobs) {
+            Coord tile = gob.rc.floor(tilesz);
+            gobsByTile.computeIfAbsent(tile, k -> new ArrayList<>()).add(gob);
+        }
+
+        return gobsByTile;
     }
 }
