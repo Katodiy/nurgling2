@@ -69,19 +69,26 @@ public class HarvestTrellis implements Action {
                 Gob firstPlant = plantsOnTile.get(0);
 
                 // Calculate pathfinder endpoint at edge of tile
-                // Check all 4 sides of the tile and use first reachable one
-                Coord2d tileBase = tile.mul(MCache.tilesz);
+                // For trellis, only check front and back edges (perpendicular to trellis orientation)
+                Coord2d tileCenter = tile.mul(MCache.tilesz).add(MCache.tilehsz);
 
-                // Try all 4 edges of the tile
-                Coord2d[] tileEdges = new Coord2d[] {
-                    tileBase.add(MCache.tilehsz.x, 0),                    // North edge
-                    tileBase.add(MCache.tilehsz.x, MCache.tilesz.y),      // South edge
-                    tileBase.add(0, MCache.tilehsz.y),                    // West edge
-                    tileBase.add(MCache.tilesz.x, MCache.tilehsz.y)       // East edge
+                // Get trellis angle to determine front/back orientation
+                double angle = firstPlant.a;
+
+                // Calculate front and back positions (perpendicular to trellis face)
+                // Front is in direction of angle, back is opposite (angle + PI)
+                double frontX = tileCenter.x + Math.cos(angle) * MCache.tilehsz.x;
+                double frontY = tileCenter.y + Math.sin(angle) * MCache.tilehsz.y;
+                double backX = tileCenter.x + Math.cos(angle + Math.PI) * MCache.tilehsz.x;
+                double backY = tileCenter.y + Math.sin(angle + Math.PI) * MCache.tilehsz.y;
+
+                Coord2d[] trellisFrontBack = new Coord2d[] {
+                    new Coord2d(frontX, frontY),  // Front edge
+                    new Coord2d(backX, backY)     // Back edge
                 };
 
                 Coord2d pathfinderEndpoint = null;
-                for (Coord2d edge : tileEdges) {
+                for (Coord2d edge : trellisFrontBack) {
                     if (PathFinder.isAvailable(edge)) {
                         pathfinderEndpoint = edge;
                         break;
@@ -97,6 +104,11 @@ public class HarvestTrellis implements Action {
 
                 // Harvest ALL plants on this tile
                 for (Gob plant : plantsOnTile) {
+                    Gob plantGob = Finder.findGob(plant.id);
+                    if (plantGob == null || plantGob.ngob.getModelAttribute() != harvestStage) {
+                        continue;
+                    }
+
                     long currentStage = plant.ngob.getModelAttribute();
 
                     // Harvest the plant

@@ -69,8 +69,39 @@ public class PlantTrellis implements Action {
                 // Get first trellis for pathfinding
                 Gob firstTrellis = trellisOnTile.get(0);
 
-                // Navigate once to this tile
-                new PathFinder(firstTrellis).run(gui);
+                // Calculate pathfinder endpoint at edge of tile
+                // For trellis, only check front and back edges (perpendicular to trellis orientation)
+                Coord2d tileCenter = tile.mul(MCache.tilesz).add(MCache.tilehsz);
+
+                // Get trellis angle to determine front/back orientation
+                double angle = firstTrellis.a;
+
+                // Calculate front and back positions (perpendicular to trellis face)
+                // Front is in direction of angle, back is opposite (angle + PI)
+                double frontX = tileCenter.x + Math.cos(angle) * MCache.tilehsz.x;
+                double frontY = tileCenter.y + Math.sin(angle) * MCache.tilehsz.y;
+                double backX = tileCenter.x + Math.cos(angle + Math.PI) * MCache.tilehsz.x;
+                double backY = tileCenter.y + Math.sin(angle + Math.PI) * MCache.tilehsz.y;
+
+                Coord2d[] trellisFrontBack = new Coord2d[] {
+                    new Coord2d(frontX, frontY),  // Front edge
+                    new Coord2d(backX, backY)     // Back edge
+                };
+
+                Coord2d pathfinderEndpoint = null;
+                for (Coord2d edge : trellisFrontBack) {
+                    if (PathFinder.isAvailable(edge)) {
+                        pathfinderEndpoint = edge;
+                        break;
+                    }
+                }
+
+                // Navigate to reachable tile edge, or fallback to first trellis
+                if (pathfinderEndpoint != null) {
+                    new PathFinder(pathfinderEndpoint).run(gui);
+                } else {
+                    new PathFinder(firstTrellis).run(gui);
+                }
 
                 // Check stamina after pathfinding to tile
                 checkStamina(gui);
