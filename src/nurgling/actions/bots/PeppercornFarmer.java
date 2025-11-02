@@ -18,22 +18,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class GrapeFarmer implements Action {
+public class PeppercornFarmer implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         boolean oldStackingValue = ((NInventory) NUtils.getGameUI().maininv).bundle.a;
 
-        // Define required crop area with "Grape" sub-specialization
+        // Define required crop area with "Peppercorn" sub-specialization
         NArea.Specialisation crop = new NArea.Specialisation(
             Specialisation.SpecName.crop.toString(),
-            "Grape"
+            "Peppercorn"
         );
 
-        // Find PUT area for grapes (like straw collection in BarleyFarmerQ)
-        NArea grapePutArea = NContext.findOut("Grapes", 1);
+        // Find PUT area for peppercorn storage (contains containers)
+        NArea peppercornPutArea = NContext.findOut("Peppercorn", 1);
 
-        if (grapePutArea == null) {
-            return Results.ERROR("PUT Area for Grapes required, but not found!");
+        if (peppercornPutArea == null) {
+            return Results.ERROR("PUT Area for Peppercorn required, but not found!");
         }
 
         // Validate crop area exists
@@ -43,20 +43,20 @@ public class GrapeFarmer implements Action {
         if (new Validator(req, new ArrayList<>()).run(gui).IsSuccess()) {
             NUtils.stackSwitch(true);
 
-            // Create single-item harvest result config
+            // Create single-item CONTAINER result config
             List<HarvestResultConfig> results = Arrays.asList(
                 new HarvestResultConfig(
-                    new NAlias("Grapes"),
-                    grapePutArea,
+                    new NAlias("Peppercorn"),
+                    peppercornPutArea,
                     1,  // Priority (only one item)
-                    CropRegistry.StorageBehavior.STOCKPILE
+                    CropRegistry.StorageBehavior.CONTAINER
                 )
             );
 
             // Harvest trellis crops using modified HarvestTrellis
             new HarvestTrellis(
                 NContext.findSpec(crop),
-                new NAlias("plants/wine"),
+                new NAlias("plants/pepper"),
                 results
             ).run(gui);
 
