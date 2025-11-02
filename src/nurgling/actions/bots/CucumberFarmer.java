@@ -17,7 +17,7 @@ import java.util.List;
 public class CucumberFarmer implements Action {
     private static final NAlias PLANT_ALIAS = new NAlias("plants/cucumber");
     private static final NAlias SEED_ALIAS = new NAlias("Seeds of Cucumber");
-    private static final NAlias CUCUMBER_ALIAS = new NAlias("Cucumbers");
+    private static final NAlias CUCUMBER_ALIAS = new NAlias("Cucumber");
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -36,10 +36,10 @@ public class CucumberFarmer implements Action {
         );
 
         // PUT area for cucumbers (stockpile storage)
-        NArea cucumberPutArea = NContext.findOut("Cucumbers", 1);
+        NArea cucumberPutArea = NContext.findOut(CUCUMBER_ALIAS, 1);
 
         if (cucumberPutArea == null) {
-            return Results.ERROR("PUT Area for 'Cucumbers' required, but not found!");
+            return Results.ERROR("PUT Area for 'Cucumber' required, but not found!");
         }
 
         // Validate crop area and seed area exist
