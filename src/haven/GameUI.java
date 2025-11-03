@@ -286,7 +286,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	menugridc = brframe.c.add(UI.scale(20), UI.scale(34));
 	Img rbtnimg =add(new Img(rbtnbg), 0, sz.y - rbtnbg.sz().y);
 	rbtnimg.hide();
-	add(new NDraggableWidget(new MainMenu(), "mainmenu", UI.scale(385,52)));
+	add(new NDraggableWidget(new MainMenu(), "mainmenu", UI.scale(260,109)));
 	menubuttons(rbtnimg);
 	portrait = add(new NDraggableWidget(Frame.with(new Avaview(Avaview.dasz, plid, "avacam"), false),"portrait", UI.scale(120, 108)));
 	add(new NDraggableWidget(buffs = new Bufflist(),"bufflist",Coord.z));
@@ -1241,15 +1241,19 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public class MainMenu extends Widget {
 	public MainMenu() {
 	    super(Coord.z);
-	    prev = add(new MenuCheckBox("rbtn/inv/", kb_inv, "Inventory"), 0, 0).state(() -> wndstate(invwnd)).click(() -> togglewnd(invwnd));
+	    // Top row - 5 buttons: Inventory, Equipment, Character Sheet, Kith & Kin, Options
+	    Widget firstButton = prev = add(new MenuCheckBox("rbtn/inv/", kb_inv, "Inventory"), 0, 0).state(() -> wndstate(invwnd)).click(() -> togglewnd(invwnd));
 	    prev = add(new MenuCheckBox("rbtn/equ/", kb_equ, "Equipment"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(equwnd)).click(() -> togglewnd(equwnd));
 	    prev = add(new MenuCheckBox("rbtn/chr/", kb_chr, "Character Sheet"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(chrwdg)).click(() -> togglewnd(chrwdg));
-	    prev = add(new MenuCheckBox("rbtn/areas/", kb_areas, "Areas Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(areas)).click(() -> togglewnd(areas));
+	    prev = add(new MenuCheckBox("rbtn/bud/", kb_bud, "Kith & Kin"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(zerg)).click(() -> togglewnd(zerg));
+	    prev = add(new MenuCheckBox("rbtn/opt/", kb_opt, "Options"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(opts)).click(() -> togglewnd(opts));
+
+		// Bottom row - 4 buttons: Areas, Routes, Cook Book, Encyclopedia
+		int secondRowY = firstButton.sz.y + UI.scale(5);
+		prev = add(new MenuCheckBox("rbtn/areas/", kb_areas, "Areas Settings"), 0, secondRowY).state(() -> wndstate(areas)).click(() -> togglewnd(areas));
 		prev = add(new MenuCheckBox("rbtn/routes/", kb_routes, "Routes Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(routesWidget)).click(() -> togglewnd(routesWidget));
-        prev = add(new MenuCheckBox("rbtn/cookbook/", kb_cookbook, "Cook Book"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(cookBook)).click(() -> togglewnd(cookBook));
-        prev = add(new MenuCheckBox("rbtn/encyclopedia/", null, "Encyclopedia"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(encyclopediaWindow)).click(() -> togglewnd(encyclopediaWindow));
-        prev = add(new MenuCheckBox("rbtn/bud/", kb_bud, "Kith & Kin"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(zerg)).click(() -> togglewnd(zerg));
-	    add(new MenuCheckBox("rbtn/opt/", kb_opt, "Options"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(opts)).click(() -> togglewnd(opts));
+		prev = add(new MenuCheckBox("rbtn/cookbook/", kb_cookbook, "Cook Book"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(cookBook)).click(() -> togglewnd(cookBook));
+        add(new MenuCheckBox("rbtn/encyclopedia/", null, "Encyclopedia"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(encyclopediaWindow)).click(() -> togglewnd(encyclopediaWindow));
 		pack();
 	}
 
