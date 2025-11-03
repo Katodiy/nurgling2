@@ -150,6 +150,15 @@ public class EncyclopediaWindow extends Window {
     
 
     @Override
+    public void show() {
+        // Center the window on screen when showing
+        if (parent != null) {
+            c = new Coord(parent.sz.x / 2 - sz.x / 2, parent.sz.y / 2 - sz.y / 2);
+        }
+        super.show();
+    }
+
+    @Override
     public void wdgmsg(Widget sender, String msg, Object... args) {
         if (msg.equals("close")) {
             hide();
