@@ -58,13 +58,9 @@ public class TreeLocationService {
             return; // Not ready yet, will try again next time
         }
 
-        // Check if config enabled
-        if ((Boolean) NConfig.get(NConfig.Key.autoRecordTrees)) {
-            registerAutoDiscovery();
-            System.out.println("[TreeLocationService] Auto-discovery initialized successfully!");
-        } else {
-            System.out.println("[TreeLocationService] Auto-discovery disabled in config");
-        }
+        // Always register callback - the callback itself checks if enabled
+        registerAutoDiscovery();
+        System.out.println("[TreeLocationService] Auto-discovery initialized (toggleable via QoL settings)");
 
         autoDiscoveryInitialized = true;
     }
@@ -94,6 +90,11 @@ public class TreeLocationService {
      */
     private void autoSaveTreeIfNeeded(Gob gob) {
         try {
+            // Check if auto-recording is enabled
+            if (!(Boolean) NConfig.get(NConfig.Key.autoRecordTrees)) {
+                return; // Disabled in settings
+            }
+
             if (gui.map == null) return;
 
             Resource res = gob.getres();
