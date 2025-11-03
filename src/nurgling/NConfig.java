@@ -101,7 +101,8 @@ public class NConfig
         studyDeskLayout,
         waypointRetryOnStuck,
         verboseCal,
-        highlightRockTiles
+        highlightRockTiles,
+        autoRecordTrees
     }
 
 
@@ -195,6 +196,7 @@ public class NConfig
         conf.put(Key.waypointRetryOnStuck, true);
         conf.put(Key.verboseCal, false);
         conf.put(Key.highlightRockTiles, true);
+        conf.put(Key.autoRecordTrees, true);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
