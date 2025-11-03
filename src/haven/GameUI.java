@@ -66,6 +66,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	public RoutesWidget routesWidget;
 	public SearchWidget searchWidget;
     public NCookBook cookBook;
+	public EncyclopediaWindow encyclopediaWindow;
     public final Collection<Polity> polities = new ArrayList<Polity>();
     public HelpWnd help;
     public OptWnd opts;
@@ -301,6 +302,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	cookBook.hide();
 	add(routesWidget = new RoutesWidget(),new Coord(300, 300 ));
 	routesWidget.hide();
+	add(encyclopediaWindow = new EncyclopediaWindow(),new Coord(sz.x/2 - 400,sz.y/2 - 300 ));
+	encyclopediaWindow.hide();
     }
 
     protected void attached() {
@@ -1244,6 +1247,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	    prev = add(new MenuCheckBox("rbtn/areas/", kb_areas, "Areas Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(areas)).click(() -> togglewnd(areas));
 		prev = add(new MenuCheckBox("rbtn/routes/", kb_routes, "Routes Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(routesWidget)).click(() -> togglewnd(routesWidget));
         prev = add(new MenuCheckBox("rbtn/cookbook/", kb_cookbook, "Cook Book"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(cookBook)).click(() -> togglewnd(cookBook));
+        prev = add(new MenuCheckBox("rbtn/encyclopedia/", null, "Encyclopedia"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(encyclopediaWindow)).click(() -> togglewnd(encyclopediaWindow));
         prev = add(new MenuCheckBox("rbtn/bud/", kb_bud, "Kith & Kin"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(zerg)).click(() -> togglewnd(zerg));
 	    add(new MenuCheckBox("rbtn/opt/", kb_opt, "Options"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(opts)).click(() -> togglewnd(opts));
 		pack();
