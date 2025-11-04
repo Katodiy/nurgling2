@@ -3,6 +3,7 @@ package nurgling.actions;
 import haven.*;
 import nurgling.*;
 import nurgling.areas.NArea;
+import nurgling.tasks.HandIsFree;
 import nurgling.tasks.WaitPlantOnTrellis;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -119,6 +120,7 @@ public class PlantTrellis implements Action {
                     // Take seed to hand and plant ON trellis gob
                     NUtils.takeItemToHand(seeds.get(0));
                     NUtils.activateItem(trellis, false);
+                    NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
 
                     // Wait for plant to appear (count increased by 1)
                     NUtils.getUI().core.addTask(new WaitPlantOnTrellis(tile, plantAlias, plantCountBefore + 1));
