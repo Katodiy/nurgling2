@@ -11,6 +11,7 @@ public class QoL extends Panel {
     private CheckBox simpleCrops;
     private CheckBox nightVision;
     private CheckBox autoDrink;
+    private CheckBox autoRecordTrees;
     private CheckBox showBB;
     private CheckBox showCSprite;
     private CheckBox hideNature;
@@ -68,6 +69,7 @@ public class QoL extends Panel {
         prev = simpleCrops = content.add(new CheckBox("Simple crops"), prev.pos("bl").adds(0, 5));
         prev = nightVision = content.add(new CheckBox("Night vision"), prev.pos("bl").adds(0, 5));
         prev = autoDrink = content.add(new CheckBox("Auto-drink"), prev.pos("bl").adds(0, 5));
+        prev = autoRecordTrees = content.add(new CheckBox("Auto-record tree locations"), prev.pos("bl").adds(0, 5));
         prev = showBB = content.add(new CheckBox("Bounding Boxes"), prev.pos("bl").adds(0, 5));
         prev = showCSprite = content.add(new CheckBox("Show decorative objects (need reboot)"), prev.pos("bl").adds(0, 5));
         prev = hideNature = content.add(new CheckBox("Hide nature objects"), prev.pos("bl").adds(0, 5));
@@ -113,6 +115,7 @@ public class QoL extends Panel {
         simpleCrops.a = getBool(NConfig.Key.simplecrops);
         nightVision.a = getBool(NConfig.Key.nightVision);
         autoDrink.a = getBool(NConfig.Key.autoDrink);
+        autoRecordTrees.a = getBool(NConfig.Key.autoRecordTrees);
         showBB.a = getBool(NConfig.Key.showBB);
         showCSprite.a = getBool(NConfig.Key.nextshowCSprite);
 
@@ -165,6 +168,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.simplecrops, simpleCrops.a);
         NConfig.set(NConfig.Key.nightVision, nightVision.a);
         NConfig.set(NConfig.Key.autoDrink, autoDrink.a);
+        NConfig.set(NConfig.Key.autoRecordTrees, autoRecordTrees.a);
         NConfig.set(NConfig.Key.showBB, showBB.a);
         NConfig.set(NConfig.Key.nextshowCSprite, showCSprite.a);
         NConfig.set(NConfig.Key.hideNature, newHideNature);

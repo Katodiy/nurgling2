@@ -360,6 +360,16 @@ public class NGameUI extends GameUI
         }
     }
 
+    @Override
+    public void tick(double dt) {
+        super.tick(dt);
+
+        // Try to initialize tree auto-discovery once map is available
+        if (treeLocationService != null && map != null) {
+            treeLocationService.tryInitAutoDiscovery();
+        }
+    }
+
     public void tickmsg(String msg) {
         msg("TICK#" + NUtils.getTickId() + " MSG: " + msg);
     }
