@@ -30,7 +30,6 @@ public class NCaveTile extends Tiler {
             @SuppressWarnings("unchecked")
             Map<String, Tiler.Factory> rnames = (Map<String, Tiler.Factory>) rnamesField.get(null);
             rnames.put("cave", new NCaveTile.Factory());
-            System.out.println("[NCaveTile] Successfully replaced 'cave' tiler factory");
         } catch (Exception e) {
             System.err.println("[NCaveTile] Failed to replace cave factory: " + e.getMessage());
             e.printStackTrace();
