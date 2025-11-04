@@ -2,6 +2,7 @@ package nurgling.actions.bots;
 
 import haven.Coord;
 import haven.Gob;
+import haven.UI;
 import haven.WItem;
 import nurgling.*;
 import nurgling.actions.Action;
@@ -70,15 +71,24 @@ public class StudyDeskFiller implements Action {
         // Step 7: Build map of current item positions
         Map<Coord, WItem> currentItems = buildCurrentItemsMap(studyDeskInv);
 
-        // Step 8: Find missing items
-        List<MissingItem> missingItems = findMissingItems(plannedLayout, currentItems);
+        // Step 8: Find missing items and conflicts
+        List<ConflictItem> conflicts = new ArrayList<>();
+        List<MissingItem> missingItems = findMissingItems(plannedLayout, currentItems, conflicts);
 
         // Step 9: Report results
         reportMissingItems(gui, missingItems);
+        reportConflicts(gui, conflicts);
 
         // Step 10: Fetch and place missing items
         if (!missingItems.isEmpty()) {
             fetchAndPlaceAllItems(gui, missingItems, studyDesk, studyDeskInv);
+        }
+
+        // Step 11: Final status message
+        if (missingItems.isEmpty() && conflicts.isEmpty()) {
+            gui.msg("Study desk layout matches plan perfectly!", Color.GREEN);
+        } else if (missingItems.isEmpty() && !conflicts.isEmpty()) {
+            gui.msg("Study desk has conflicts that need manual resolution.", Color.ORANGE);
         }
 
         return Results.SUCCESS();
@@ -166,9 +176,78 @@ public class StudyDeskFiller implements Action {
     }
 
     /**
+     * Check if placing an item at the given position would collide with existing items
+     */
+    private boolean isPositionOccupied(Coord plannedPos, Coord plannedSize, Map<Coord, WItem> currentItems) throws InterruptedException {
+        // Check if any existing item would overlap with the planned item area
+        for (Map.Entry<Coord, WItem> entry : currentItems.entrySet()) {
+            Coord existingPos = entry.getKey();
+            WItem existingItem = entry.getValue();
+
+            // Get size of existing item
+            Coord existingSize = getItemSize(existingItem);
+
+            // Check for rectangle overlap using standard algorithm
+            // Two rectangles overlap if ALL of these are true:
+            // - planned left edge is left of existing right edge
+            // - planned right edge is right of existing left edge
+            // - planned top edge is above existing bottom edge
+            // - planned bottom edge is below existing top edge
+            boolean overlaps = (plannedPos.x < existingPos.x + existingSize.x) &&
+                              (plannedPos.x + plannedSize.x > existingPos.x) &&
+                              (plannedPos.y < existingPos.y + existingSize.y) &&
+                              (plannedPos.y + plannedSize.y > existingPos.y);
+
+            if (overlaps) {
+                return true; // Collision detected
+            }
+        }
+
+        return false; // No collision, position is free
+    }
+
+    /**
+     * Check if the current item matches the planned item (same name and size)
+     */
+    private boolean isMatchingItem(WItem currentItem, String plannedName, Coord plannedSize) throws InterruptedException {
+        if (currentItem == null || currentItem.item == null) {
+            return false;
+        }
+
+        // Get current item name
+        String currentName = null;
+        if (currentItem.item instanceof NGItem) {
+            currentName = ((NGItem) currentItem.item).name();
+        }
+
+        if (currentName == null || !currentName.equals(plannedName)) {
+            return false;
+        }
+
+        // Get current item size
+        Coord currentSize = getItemSize(currentItem);
+
+        // Check if sizes match
+        return currentSize.equals(plannedSize);
+    }
+
+    /**
+     * Get the size of a WItem in grid coordinates
+     */
+    private Coord getItemSize(WItem item) {
+        if (item != null && item.item != null && item.item.spr != null) {
+            // Use same approach as planner widget: divide by UI.scale(32)
+            Coord size = item.item.spr.sz().div(UI.scale(32));
+            return size;
+        }
+        // Default to 1x1 if size cannot be determined
+        return new Coord(1, 1);
+    }
+
+    /**
      * Find missing items by comparing planned layout vs current items
      */
-    private List<MissingItem> findMissingItems(Map<String, Object> plannedLayout, Map<Coord, WItem> currentItems) {
+    private List<MissingItem> findMissingItems(Map<String, Object> plannedLayout, Map<Coord, WItem> currentItems, List<ConflictItem> conflicts) throws InterruptedException {
         List<MissingItem> missingItems = new ArrayList<>();
 
         for (Map.Entry<String, Object> plannedEntry : plannedLayout.entrySet()) {
@@ -187,7 +266,14 @@ public class StudyDeskFiller implements Action {
 
             // Extract item size from the layout data
             Coord itemSize = new Coord(1, 1); // Default size
-            if (itemData.containsKey("size")) {
+            if (itemData.containsKey("sizeX") && itemData.containsKey("sizeY")) {
+                // New format: sizeX and sizeY as separate keys
+                itemSize = new Coord(
+                    ((Number) itemData.get("sizeX")).intValue(),
+                    ((Number) itemData.get("sizeY")).intValue()
+                );
+            } else if (itemData.containsKey("size")) {
+                // Old format: size as nested object (backward compatibility)
                 Map<String, Object> sizeData = (Map<String, Object>) itemData.get("size");
                 itemSize = new Coord(
                     ((Number) sizeData.get("x")).intValue(),
@@ -195,13 +281,71 @@ public class StudyDeskFiller implements Action {
                 );
             }
 
-            // Check if this position is empty in the current desk
-            if (!currentItems.containsKey(plannedPos)) {
-                missingItems.add(new MissingItem(itemName, plannedPos, itemSize));
+            // First check: Is the exact item already at this position?
+            WItem currentItem = currentItems.get(plannedPos);
+            if (currentItem != null && isMatchingItem(currentItem, itemName, itemSize)) {
+                // Item is already correctly placed, skip
+                continue;
             }
+
+            // Second check: Would placing this item cause a collision?
+            if (isPositionOccupied(plannedPos, itemSize, currentItems)) {
+                // Cannot place - area is occupied by something else
+                // Find which item is blocking
+                String blockingItemName = findBlockingItemName(plannedPos, itemSize, currentItems);
+                Coord blockingPos = findBlockingItemPosition(plannedPos, itemSize, currentItems);
+                conflicts.add(new ConflictItem(itemName, plannedPos, itemSize, blockingItemName, blockingPos));
+                continue;
+            }
+
+            // Item is missing and can be placed
+            missingItems.add(new MissingItem(itemName, plannedPos, itemSize));
         }
 
         return missingItems;
+    }
+
+    /**
+     * Find the name of the item blocking the planned position
+     */
+    private String findBlockingItemName(Coord plannedPos, Coord plannedSize, Map<Coord, WItem> currentItems) throws InterruptedException {
+        for (Map.Entry<Coord, WItem> entry : currentItems.entrySet()) {
+            Coord existingPos = entry.getKey();
+            WItem existingItem = entry.getValue();
+            Coord existingSize = getItemSize(existingItem);
+
+            boolean overlaps = (plannedPos.x < existingPos.x + existingSize.x) &&
+                              (plannedPos.x + plannedSize.x > existingPos.x) &&
+                              (plannedPos.y < existingPos.y + existingSize.y) &&
+                              (plannedPos.y + plannedSize.y > existingPos.y);
+
+            if (overlaps && existingItem.item instanceof NGItem) {
+                String name = ((NGItem) existingItem.item).name();
+                return name != null ? name : "Unknown Item";
+            }
+        }
+        return "Unknown Item";
+    }
+
+    /**
+     * Find the position of the item blocking the planned position
+     */
+    private Coord findBlockingItemPosition(Coord plannedPos, Coord plannedSize, Map<Coord, WItem> currentItems) throws InterruptedException {
+        for (Map.Entry<Coord, WItem> entry : currentItems.entrySet()) {
+            Coord existingPos = entry.getKey();
+            WItem existingItem = entry.getValue();
+            Coord existingSize = getItemSize(existingItem);
+
+            boolean overlaps = (plannedPos.x < existingPos.x + existingSize.x) &&
+                              (plannedPos.x + plannedSize.x > existingPos.x) &&
+                              (plannedPos.y < existingPos.y + existingSize.y) &&
+                              (plannedPos.y + plannedSize.y > existingPos.y);
+
+            if (overlaps) {
+                return existingPos;
+            }
+        }
+        return null;
     }
 
     /**
@@ -461,6 +605,26 @@ public class StudyDeskFiller implements Action {
     }
 
     /**
+     * Report conflicts to the user
+     */
+    private void reportConflicts(NGameUI gui, List<ConflictItem> conflicts) {
+        if (conflicts.isEmpty()) {
+            return;
+        }
+
+        gui.msg("WARNING: " + conflicts.size() + " planned items cannot be placed due to conflicts", Color.ORANGE);
+
+        for (ConflictItem conflict : conflicts) {
+            String sizeStr = conflict.plannedSize.x + "x" + conflict.plannedSize.y;
+            gui.msg("  [" + sizeStr + "] " + conflict.plannedItemName + " at (" +
+                   conflict.plannedPosition.x + "," + conflict.plannedPosition.y +
+                   ") blocked by " + conflict.blockingItemName +
+                   " at (" + conflict.blockingPosition.x + "," + conflict.blockingPosition.y + ")",
+                   Color.ORANGE);
+        }
+    }
+
+    /**
      * Helper class to store information about missing items
      */
     private static class MissingItem {
@@ -472,6 +636,26 @@ public class StudyDeskFiller implements Action {
             this.itemName = itemName;
             this.position = position;
             this.itemSize = itemSize;
+        }
+    }
+
+    /**
+     * Helper class to store information about conflicting items
+     */
+    private static class ConflictItem {
+        String plannedItemName;
+        Coord plannedPosition;
+        Coord plannedSize;
+        String blockingItemName;
+        Coord blockingPosition;
+
+        ConflictItem(String plannedItemName, Coord plannedPosition, Coord plannedSize,
+                    String blockingItemName, Coord blockingPosition) {
+            this.plannedItemName = plannedItemName;
+            this.plannedPosition = plannedPosition;
+            this.plannedSize = plannedSize;
+            this.blockingItemName = blockingItemName;
+            this.blockingPosition = blockingPosition;
         }
     }
 
