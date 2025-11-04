@@ -266,7 +266,14 @@ public class StudyDeskFiller implements Action {
 
             // Extract item size from the layout data
             Coord itemSize = new Coord(1, 1); // Default size
-            if (itemData.containsKey("size")) {
+            if (itemData.containsKey("sizeX") && itemData.containsKey("sizeY")) {
+                // New format: sizeX and sizeY as separate keys
+                itemSize = new Coord(
+                    ((Number) itemData.get("sizeX")).intValue(),
+                    ((Number) itemData.get("sizeY")).intValue()
+                );
+            } else if (itemData.containsKey("size")) {
+                // Old format: size as nested object (backward compatibility)
                 Map<String, Object> sizeData = (Map<String, Object>) itemData.get("size");
                 itemSize = new Coord(
                     ((Number) sizeData.get("x")).intValue(),
