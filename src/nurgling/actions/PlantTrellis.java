@@ -112,23 +112,18 @@ public class PlantTrellis implements Action {
                 // Check stamina after pathfinding to tile
                 checkStamina(gui);
 
-                // Plant ALL empty trellis on this tile
-                for (Gob trellis : trellisOnTile) {
-                    ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
-                    if (seeds.isEmpty()) {
-                        break;  // Out of seeds, will refetch in next iteration
-                    }
+                // Detect seed type and use appropriate planting method
+                ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
+                if (seeds.isEmpty()) {
+                    break; // Out of seeds, will refetch in next outer loop iteration
+                }
 
-                    // Count plants before planting
-                    int plantCountBefore = countPlantsOnTile(tile);
+                boolean isStacked = isSeedStacked(seeds);
 
-                    // Take seed to hand and plant ON trellis gob
-                    NUtils.takeItemToHand(seeds.get(0));
-                    NUtils.activateItem(trellis, false);
-                    NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
-
-                    // Wait for plant to appear (count increased by 1)
-                    NUtils.getUI().core.addTask(new WaitPlantOnTrellis(tile, plantAlias, plantCountBefore + 1));
+                if (isStacked) {
+                    plantTrellisWithStackedSeeds(gui, trellisOnTile, tile);
+                } else {
+                    plantTrellisWithIndividualSeeds(gui, trellisOnTile, tile);
                 }
             }
 
@@ -373,6 +368,106 @@ public class PlantTrellis implements Action {
             return StorageType.STOCKPILE;
         } else {
             throw new RuntimeException("No storage containers (barrels or stockpiles) found in seed area!");
+        }
+    }
+
+    /**
+     * Checks if seeds come in stacks (have Amount info).
+     * Stacked seeds (from barrels) have GItem.Amount.
+     * Individual seeds (from stockpiles) do not.
+     *
+     * @param seeds List of seed items in inventory
+     * @return true if seeds are stacked (from barrels), false if individual (from stockpiles)
+     */
+    private boolean isSeedStacked(ArrayList<WItem> seeds) {
+        if (seeds.isEmpty()) {
+            return false;
+        }
+
+        WItem firstSeed = seeds.get(0);
+        GItem.Amount amount = ((NGItem) firstSeed.item).getInfo(GItem.Amount.class);
+        return amount != null;
+    }
+
+    /**
+     * Plants trellis using stacked seeds (from barrels).
+     * Takes stack to hand once, then plants multiple trellis until stack depletes.
+     * Handles insufficient stack amounts (< 5 seeds) by dropping back to inventory.
+     */
+    private void plantTrellisWithStackedSeeds(NGameUI gui, ArrayList<Gob> trellisOnTile, Coord tile)
+            throws InterruptedException {
+
+        // Take first seed stack to hand (if hand empty)
+        if (gui.vhand == null) {
+            ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
+            if (!seeds.isEmpty()) {
+                NUtils.takeItemToHand(seeds.get(0));
+            } else {
+                return; // No seeds available
+            }
+        }
+
+        // Plant all trellis on this tile
+        for (Gob trellis : trellisOnTile) {
+            // Check if hand has enough seeds (need 5 to plant on trellis)
+            if (gui.vhand != null) {
+                GItem.Amount amount = ((NGItem) gui.vhand.item).getInfo(GItem.Amount.class);
+                if (amount != null && amount.itemnum() < 5) {
+                    // Not enough seeds in hand, drop back to inventory
+                    NUtils.dropToInv();
+                    // Hand is now empty, will pick up next stack below
+                }
+            }
+
+            // Check if hand is empty (stack depleted or dropped due to insufficient amount)
+            if (gui.vhand == null) {
+                // Try to get more seeds
+                ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
+                if (seeds.isEmpty()) {
+                    return; // No more seeds, will refetch in outer loop
+                }
+                // Take next stack to hand
+                NUtils.takeItemToHand(seeds.get(0));
+            }
+
+            // Count plants before planting
+            int plantCountBefore = countPlantsOnTile(tile);
+
+            // Activate on trellis (consumes 5 seeds from stack in hand)
+            NUtils.activateItem(trellis, false);
+
+            // Wait for plant to appear
+            NUtils.getUI().core.addTask(new WaitPlantOnTrellis(tile, plantAlias, plantCountBefore + 1));
+
+            // NOTE: Stack stays in hand, will be used for next trellis
+            // When stack depletes to 0, hand becomes free automatically
+        }
+    }
+
+    /**
+     * Plants trellis using individual seeds (from stockpiles).
+     * Takes one seed to hand per trellis, waits for hand free after each plant.
+     * This preserves the original PlantTrellis behavior for backward compatibility.
+     */
+    private void plantTrellisWithIndividualSeeds(NGameUI gui, ArrayList<Gob> trellisOnTile, Coord tile)
+            throws InterruptedException {
+
+        for (Gob trellis : trellisOnTile) {
+            ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
+            if (seeds.isEmpty()) {
+                return; // Out of seeds, will refetch in outer loop
+            }
+
+            // Count plants before planting
+            int plantCountBefore = countPlantsOnTile(tile);
+
+            // Take seed to hand and plant ON trellis gob
+            NUtils.takeItemToHand(seeds.get(0));
+            NUtils.activateItem(trellis, false);
+            NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
+
+            // Wait for plant to appear
+            NUtils.getUI().core.addTask(new WaitPlantOnTrellis(tile, plantAlias, plantCountBefore + 1));
         }
     }
 }
