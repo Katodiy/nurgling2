@@ -197,7 +197,7 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/pea"),
                 Arrays.asList(
-                        new CropStage(6, new NAlias("Peapods"), StorageBehavior.STOCKPILE, true)
+                        new CropStage(4, new NAlias("Peapods"), StorageBehavior.STOCKPILE, true)
                 )
         );
 
@@ -205,8 +205,8 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/cucumber"),
                 Arrays.asList(
-                        new CropStage(6, new NAlias("Seeds of Cucumber"), StorageBehavior.BARREL, true),
-                        new CropStage(6, new NAlias("Cucumbers"), StorageBehavior.STOCKPILE, true)
+                        new CropStage(4, new NAlias("Seeds of Cucumber"), StorageBehavior.BARREL, true),
+                        new CropStage(4, new NAlias("Cucumbers"), StorageBehavior.STOCKPILE, true)
                 )
         );
     }
