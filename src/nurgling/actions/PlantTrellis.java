@@ -37,6 +37,11 @@ public class PlantTrellis implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         replantEmptyTrellis(gui);
 
+        // Drop any seeds remaining in hand back to inventory
+        if (gui.vhand != null) {
+            NUtils.dropToInv();
+        }
+
         // Drop off any remaining seeds back to PUT area
         dropOffRemainingSeeds(gui);
 
