@@ -16,6 +16,11 @@ import static haven.OCache.posres;
 public class PlantTrellis implements Action {
     private static final NAlias TRELLIS_ALIAS = new NAlias("gfx/terobjs/plants/trellis");
 
+    private enum StorageType {
+        BARREL,
+        STOCKPILE
+    }
+
     private final NArea cropArea;
     private final NAlias plantAlias;
     private final NAlias seedAlias;
@@ -31,6 +36,11 @@ public class PlantTrellis implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         replantEmptyTrellis(gui);
+
+        // Drop any seeds remaining in hand back to inventory
+        if (gui.vhand != null) {
+            NUtils.dropToInv();
+        }
 
         // Drop off any remaining seeds back to PUT area
         dropOffRemainingSeeds(gui);
@@ -107,23 +117,18 @@ public class PlantTrellis implements Action {
                 // Check stamina after pathfinding to tile
                 checkStamina(gui);
 
-                // Plant ALL empty trellis on this tile
-                for (Gob trellis : trellisOnTile) {
-                    ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
-                    if (seeds.isEmpty()) {
-                        break;  // Out of seeds, will refetch in next iteration
-                    }
+                // Detect seed type and use appropriate planting method
+                ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
+                if (seeds.isEmpty()) {
+                    break; // Out of seeds, will refetch in next outer loop iteration
+                }
 
-                    // Count plants before planting
-                    int plantCountBefore = countPlantsOnTile(tile);
+                boolean isStacked = isSeedStacked(seeds);
 
-                    // Take seed to hand and plant ON trellis gob
-                    NUtils.takeItemToHand(seeds.get(0));
-                    NUtils.activateItem(trellis, false);
-                    NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
-
-                    // Wait for plant to appear (count increased by 1)
-                    NUtils.getUI().core.addTask(new WaitPlantOnTrellis(tile, plantAlias, plantCountBefore + 1));
+                if (isStacked) {
+                    plantTrellisWithStackedSeeds(gui, trellisOnTile, tile);
+                } else {
+                    plantTrellisWithIndividualSeeds(gui, trellisOnTile, tile);
                 }
             }
 
@@ -180,23 +185,68 @@ public class PlantTrellis implements Action {
     }
 
     /**
-     * Fetches as many seeds as possible from PUT area stockpiles.
-     * Fills inventory to maximize seeds per trip.
+     * Fetches seeds from storage area.
+     * Automatically detects storage type (barrels or stockpiles) and uses appropriate method.
      */
     private void fetchSeeds(NGameUI gui) throws InterruptedException {
+        int freeSpace = gui.getInventory().getFreeSpace();
+        if (freeSpace == 0) {
+            throw new RuntimeException("No inventory space for seeds!");
+        }
+
+        StorageType storageType = detectStorageType();
+
+        switch (storageType) {
+            case BARREL:
+                fetchSeedsFromBarrels(gui);
+                break;
+            case STOCKPILE:
+                fetchSeedsFromStockpiles(gui);
+                break;
+        }
+    }
+
+    /**
+     * Fetches seeds from barrels in seed specialization area.
+     * Pattern from SeedCrop.java - uses TakeFromBarrel action.
+     */
+    private void fetchSeedsFromBarrels(NGameUI gui) throws InterruptedException {
+        ArrayList<Gob> barrels = Finder.findGobs(seedPutArea, new NAlias("barrel"));
+
+        // Try to fetch seeds from each barrel until inventory has seeds
+        for (Gob barrel : barrels) {
+            // Stop if we have seeds in inventory
+            if (!gui.getInventory().getItems(seedAlias).isEmpty()) {
+                return;
+            }
+
+            // Check if barrel has content before attempting to take
+            if (NUtils.barrelHasContent(barrel)) {
+                // Use TakeFromBarrel action without count (takes all available)
+                new TakeFromBarrel(barrel, seedAlias).run(gui);
+            }
+        }
+
+        // If still no seeds after trying all barrels, throw error
+        if (gui.getInventory().getItems(seedAlias).isEmpty()) {
+            throw new RuntimeException("No " + seedAlias.getDefault() + " available in barrels for replanting!");
+        }
+    }
+
+    /**
+     * Fetches seeds from stockpiles in PUT area.
+     * Original PlantTrellis implementation preserved for backward compatibility.
+     */
+    private void fetchSeedsFromStockpiles(NGameUI gui) throws InterruptedException {
         ArrayList<Gob> seedPiles = Finder.findGobs(seedPutArea, seedAlias);
 
         if (seedPiles.isEmpty()) {
-            throw new RuntimeException("No " + seedAlias.getDefault() + " available in PUT area for replanting!");
+            throw new RuntimeException("No " + seedAlias.getDefault() + " available in stockpiles for replanting!");
         }
 
         // Calculate how many seeds we can take based on free inventory space
         int freeSpace = gui.getInventory().getFreeSpace();
         int seedsToTake = freeSpace;
-
-        if (seedsToTake == 0) {
-            throw new RuntimeException("No inventory space for seeds!");
-        }
 
         // Navigate to first seed pile, open stockpile, and take seeds
         Gob pile = seedPiles.get(0);
@@ -228,7 +278,8 @@ public class PlantTrellis implements Action {
     }
 
     /**
-     * Drops off any remaining seeds back to the PUT area stockpile.
+     * Drops off any remaining seeds back to storage area.
+     * Automatically detects storage type (barrels or stockpiles) and uses appropriate method.
      * Called after all planting is complete to return unused seeds.
      */
     private void dropOffRemainingSeeds(NGameUI gui) throws InterruptedException {
@@ -237,6 +288,50 @@ public class PlantTrellis implements Action {
             return;  // No seeds to return
         }
 
+        StorageType storageType = detectStorageType();
+
+        switch (storageType) {
+            case BARREL:
+                dropOffSeedsToBarrels(gui);
+                break;
+            case STOCKPILE:
+                dropOffSeedsToStockpiles(gui);
+                break;
+        }
+    }
+
+    /**
+     * Drops off seeds to barrels in seed specialization area.
+     * Pattern from SeedCrop.java - uses TransferToBarrel action.
+     */
+    private void dropOffSeedsToBarrels(NGameUI gui) throws InterruptedException {
+        ArrayList<Gob> barrels = Finder.findGobs(seedPutArea, new NAlias("barrel"));
+
+        if (barrels.isEmpty()) {
+            throw new RuntimeException("No barrels found in seed area for drop-off!");
+        }
+
+        // Transfer seeds to barrels until inventory empty or all barrels full
+        for (Gob barrel : barrels) {
+            if (gui.getInventory().getItems(seedAlias).isEmpty()) {
+                return;  // All seeds transferred
+            }
+
+            TransferToBarrel tb = new TransferToBarrel(barrel, seedAlias);
+            tb.run(gui);
+
+            // If this barrel is now full, try next barrel
+            if (!tb.isFull()) {
+                return;  // Barrel has space, all seeds should be transferred
+            }
+        }
+    }
+
+    /**
+     * Drops off seeds to stockpiles in PUT area.
+     * Original PlantTrellis implementation preserved for backward compatibility.
+     */
+    private void dropOffSeedsToStockpiles(NGameUI gui) throws InterruptedException {
         // Transfer remaining seeds to stockpile
         new TransferToPiles(seedPutArea.getRCArea(), seedAlias).run(gui);
     }
@@ -258,5 +353,126 @@ public class PlantTrellis implements Action {
         }
 
         return gobsByTile;
+    }
+
+    /**
+     * Detects the storage type in the seed area (barrels or stockpiles).
+     * Barrels are used in seed specialization areas (field crop pattern).
+     * Stockpiles are used in PUT areas (trellis output pattern).
+     *
+     * @return StorageType.BARREL if barrels found, StorageType.STOCKPILE if stockpiles found
+     * @throws RuntimeException if no storage containers found
+     */
+    private StorageType detectStorageType() throws InterruptedException {
+        ArrayList<Gob> barrels = Finder.findGobs(seedPutArea, new NAlias("barrel"));
+        ArrayList<Gob> stockpiles = Finder.findGobs(seedPutArea, new NAlias("stockpile"));
+
+        if (!barrels.isEmpty()) {
+            return StorageType.BARREL;
+        } else if (!stockpiles.isEmpty()) {
+            return StorageType.STOCKPILE;
+        } else {
+            throw new RuntimeException("No storage containers (barrels or stockpiles) found in seed area!");
+        }
+    }
+
+    /**
+     * Checks if seeds come in stacks (have Amount info).
+     * Stacked seeds (from barrels) have GItem.Amount.
+     * Individual seeds (from stockpiles) do not.
+     *
+     * @param seeds List of seed items in inventory
+     * @return true if seeds are stacked (from barrels), false if individual (from stockpiles)
+     */
+    private boolean isSeedStacked(ArrayList<WItem> seeds) {
+        if (seeds.isEmpty()) {
+            return false;
+        }
+
+        WItem firstSeed = seeds.get(0);
+        GItem.Amount amount = ((NGItem) firstSeed.item).getInfo(GItem.Amount.class);
+        return amount != null;
+    }
+
+    /**
+     * Plants trellis using stacked seeds (from barrels).
+     * Takes stack to hand once, then plants multiple trellis until stack depletes.
+     * Handles insufficient stack amounts (< 5 seeds) by dropping back to inventory.
+     */
+    private void plantTrellisWithStackedSeeds(NGameUI gui, ArrayList<Gob> trellisOnTile, Coord tile)
+            throws InterruptedException {
+
+        // Take first seed stack to hand (if hand empty)
+        if (gui.vhand == null) {
+            ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
+            if (!seeds.isEmpty()) {
+                NUtils.takeItemToHand(seeds.get(0));
+            } else {
+                return; // No seeds available
+            }
+        }
+
+        // Plant all trellis on this tile
+        for (Gob trellis : trellisOnTile) {
+            // Check if hand has enough seeds (need 5 to plant on trellis)
+            if (gui.vhand != null) {
+                GItem.Amount amount = ((NGItem) gui.vhand.item).getInfo(GItem.Amount.class);
+                if (amount != null && amount.itemnum() < 5) {
+                    // Not enough seeds in hand, drop back to inventory
+                    NUtils.dropToInv();
+                    // Hand is now empty, will pick up next stack below
+                }
+            }
+
+            // Check if hand is empty (stack depleted or dropped due to insufficient amount)
+            if (gui.vhand == null) {
+                // Try to get more seeds
+                ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
+                if (seeds.isEmpty()) {
+                    return; // No more seeds, will refetch in outer loop
+                }
+                // Take next stack to hand
+                NUtils.takeItemToHand(seeds.get(0));
+            }
+
+            // Count plants before planting
+            int plantCountBefore = countPlantsOnTile(tile);
+
+            // Activate on trellis (consumes 5 seeds from stack in hand)
+            NUtils.activateItem(trellis, false);
+
+            // Wait for plant to appear
+            NUtils.getUI().core.addTask(new WaitPlantOnTrellis(tile, plantAlias, plantCountBefore + 1));
+
+            // NOTE: Stack stays in hand, will be used for next trellis
+            // When stack depletes to 0, hand becomes free automatically
+        }
+    }
+
+    /**
+     * Plants trellis using individual seeds (from stockpiles).
+     * Takes one seed to hand per trellis, waits for hand free after each plant.
+     * This preserves the original PlantTrellis behavior for backward compatibility.
+     */
+    private void plantTrellisWithIndividualSeeds(NGameUI gui, ArrayList<Gob> trellisOnTile, Coord tile)
+            throws InterruptedException {
+
+        for (Gob trellis : trellisOnTile) {
+            ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
+            if (seeds.isEmpty()) {
+                return; // Out of seeds, will refetch in outer loop
+            }
+
+            // Count plants before planting
+            int plantCountBefore = countPlantsOnTile(tile);
+
+            // Take seed to hand and plant ON trellis gob
+            NUtils.takeItemToHand(seeds.get(0));
+            NUtils.activateItem(trellis, false);
+            NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
+
+            // Wait for plant to appear
+            NUtils.getUI().core.addTask(new WaitPlantOnTrellis(tile, plantAlias, plantCountBefore + 1));
+        }
     }
 }

@@ -128,7 +128,7 @@ public class HarvestTrellis implements Action {
                 }
 
                 // Drop off after processing each tile
-                if (gui.getInventory().getFreeSpace() <= 8) {
+                if (gui.getInventory().getFreeSpace() <= 8 || (gui.getInventory().getFreeSpace() <= 20 && plantAlias.getKeys().get(0).contains("cucumber"))) {
                     dropOffAllResults(gui);
                 }
             }
