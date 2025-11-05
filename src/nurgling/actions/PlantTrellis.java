@@ -16,6 +16,11 @@ import static haven.OCache.posres;
 public class PlantTrellis implements Action {
     private static final NAlias TRELLIS_ALIAS = new NAlias("gfx/terobjs/plants/trellis");
 
+    private enum StorageType {
+        BARREL,
+        STOCKPILE
+    }
+
     private final NArea cropArea;
     private final NAlias plantAlias;
     private final NAlias seedAlias;
@@ -180,23 +185,68 @@ public class PlantTrellis implements Action {
     }
 
     /**
-     * Fetches as many seeds as possible from PUT area stockpiles.
-     * Fills inventory to maximize seeds per trip.
+     * Fetches seeds from storage area.
+     * Automatically detects storage type (barrels or stockpiles) and uses appropriate method.
      */
     private void fetchSeeds(NGameUI gui) throws InterruptedException {
+        int freeSpace = gui.getInventory().getFreeSpace();
+        if (freeSpace == 0) {
+            throw new RuntimeException("No inventory space for seeds!");
+        }
+
+        StorageType storageType = detectStorageType();
+
+        switch (storageType) {
+            case BARREL:
+                fetchSeedsFromBarrels(gui);
+                break;
+            case STOCKPILE:
+                fetchSeedsFromStockpiles(gui);
+                break;
+        }
+    }
+
+    /**
+     * Fetches seeds from barrels in seed specialization area.
+     * Pattern from SeedCrop.java - uses TakeFromBarrel action.
+     */
+    private void fetchSeedsFromBarrels(NGameUI gui) throws InterruptedException {
+        ArrayList<Gob> barrels = Finder.findGobs(seedPutArea, new NAlias("barrel"));
+
+        // Try to fetch seeds from each barrel until inventory has seeds
+        for (Gob barrel : barrels) {
+            // Stop if we have seeds in inventory
+            if (!gui.getInventory().getItems(seedAlias).isEmpty()) {
+                return;
+            }
+
+            // Check if barrel has content before attempting to take
+            if (NUtils.barrelHasContent(barrel)) {
+                // Use TakeFromBarrel action without count (takes all available)
+                new TakeFromBarrel(barrel, seedAlias).run(gui);
+            }
+        }
+
+        // If still no seeds after trying all barrels, throw error
+        if (gui.getInventory().getItems(seedAlias).isEmpty()) {
+            throw new RuntimeException("No " + seedAlias.getDefault() + " available in barrels for replanting!");
+        }
+    }
+
+    /**
+     * Fetches seeds from stockpiles in PUT area.
+     * Original PlantTrellis implementation preserved for backward compatibility.
+     */
+    private void fetchSeedsFromStockpiles(NGameUI gui) throws InterruptedException {
         ArrayList<Gob> seedPiles = Finder.findGobs(seedPutArea, seedAlias);
 
         if (seedPiles.isEmpty()) {
-            throw new RuntimeException("No " + seedAlias.getDefault() + " available in PUT area for replanting!");
+            throw new RuntimeException("No " + seedAlias.getDefault() + " available in stockpiles for replanting!");
         }
 
         // Calculate how many seeds we can take based on free inventory space
         int freeSpace = gui.getInventory().getFreeSpace();
         int seedsToTake = freeSpace;
-
-        if (seedsToTake == 0) {
-            throw new RuntimeException("No inventory space for seeds!");
-        }
 
         // Navigate to first seed pile, open stockpile, and take seeds
         Gob pile = seedPiles.get(0);
@@ -228,7 +278,8 @@ public class PlantTrellis implements Action {
     }
 
     /**
-     * Drops off any remaining seeds back to the PUT area stockpile.
+     * Drops off any remaining seeds back to storage area.
+     * Automatically detects storage type (barrels or stockpiles) and uses appropriate method.
      * Called after all planting is complete to return unused seeds.
      */
     private void dropOffRemainingSeeds(NGameUI gui) throws InterruptedException {
@@ -237,6 +288,50 @@ public class PlantTrellis implements Action {
             return;  // No seeds to return
         }
 
+        StorageType storageType = detectStorageType();
+
+        switch (storageType) {
+            case BARREL:
+                dropOffSeedsToBarrels(gui);
+                break;
+            case STOCKPILE:
+                dropOffSeedsToStockpiles(gui);
+                break;
+        }
+    }
+
+    /**
+     * Drops off seeds to barrels in seed specialization area.
+     * Pattern from SeedCrop.java - uses TransferToBarrel action.
+     */
+    private void dropOffSeedsToBarrels(NGameUI gui) throws InterruptedException {
+        ArrayList<Gob> barrels = Finder.findGobs(seedPutArea, new NAlias("barrel"));
+
+        if (barrels.isEmpty()) {
+            throw new RuntimeException("No barrels found in seed area for drop-off!");
+        }
+
+        // Transfer seeds to barrels until inventory empty or all barrels full
+        for (Gob barrel : barrels) {
+            if (gui.getInventory().getItems(seedAlias).isEmpty()) {
+                return;  // All seeds transferred
+            }
+
+            TransferToBarrel tb = new TransferToBarrel(barrel, seedAlias);
+            tb.run(gui);
+
+            // If this barrel is now full, try next barrel
+            if (!tb.isFull()) {
+                return;  // Barrel has space, all seeds should be transferred
+            }
+        }
+    }
+
+    /**
+     * Drops off seeds to stockpiles in PUT area.
+     * Original PlantTrellis implementation preserved for backward compatibility.
+     */
+    private void dropOffSeedsToStockpiles(NGameUI gui) throws InterruptedException {
         // Transfer remaining seeds to stockpile
         new TransferToPiles(seedPutArea.getRCArea(), seedAlias).run(gui);
     }
@@ -258,5 +353,26 @@ public class PlantTrellis implements Action {
         }
 
         return gobsByTile;
+    }
+
+    /**
+     * Detects the storage type in the seed area (barrels or stockpiles).
+     * Barrels are used in seed specialization areas (field crop pattern).
+     * Stockpiles are used in PUT areas (trellis output pattern).
+     *
+     * @return StorageType.BARREL if barrels found, StorageType.STOCKPILE if stockpiles found
+     * @throws RuntimeException if no storage containers found
+     */
+    private StorageType detectStorageType() throws InterruptedException {
+        ArrayList<Gob> barrels = Finder.findGobs(seedPutArea, new NAlias("barrel"));
+        ArrayList<Gob> stockpiles = Finder.findGobs(seedPutArea, new NAlias("stockpile"));
+
+        if (!barrels.isEmpty()) {
+            return StorageType.BARREL;
+        } else if (!stockpiles.isEmpty()) {
+            return StorageType.STOCKPILE;
+        } else {
+            throw new RuntimeException("No storage containers (barrels or stockpiles) found in seed area!");
+        }
     }
 }
