@@ -2821,4 +2821,30 @@ public class VSpec {
         }
         return result;
     }
+
+    /**
+     * Returns a comprehensive NAlias containing all plantable seeds including:
+     * - Fruits and bush seeds from "Seed of Tree or Bush" category
+     * - Actual tree seeds from object mappings (pods, catkins, samaras, etc.)
+     *
+     * This ensures the tree planting bot can find all types of plantable items.
+     */
+    public static NAlias getAllPlantableSeeds() {
+        ArrayList<String> allSeeds = new ArrayList<>();
+
+        // Add all items from "Seed of Tree or Bush" category (fruits + bush seeds)
+        ArrayList<String> categorySeeds = getCategoryContent("Seed of Tree or Bush");
+        if (categorySeeds != null) {
+            allSeeds.addAll(categorySeeds);
+        }
+
+        // Add all tree seeds from object mappings
+        for (ArrayList<String> treeProducts : object.values()) {
+            if (treeProducts != null) {
+                allSeeds.addAll(treeProducts);
+            }
+        }
+
+        return new NAlias(allSeeds);
+    }
 }

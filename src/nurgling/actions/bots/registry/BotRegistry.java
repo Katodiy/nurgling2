@@ -148,7 +148,6 @@ public class BotRegistry {
         bots.add(new BotDescriptor("freeinv", BotDescriptor.BotType.UTILS, "Free inventory", "Free inventory with Area system.", false, true, FreeInvBot.class, "freeinv", false));
         bots.add(new BotDescriptor("travellerssack", BotDescriptor.BotType.UTILS, "Equip travellers sacks", "Equip travellers sacks.", false, true, EquipTravellersSacksFromBelt.class, "travellerssack", false));
         bots.add(new BotDescriptor("studytable", BotDescriptor.BotType.UTILS, "Fill study desk", "Fill study desk", true, true, StudyDeskFiller.class, "studytable", false));
-        bots.add(new BotDescriptor("areatotrough", BotDescriptor.BotType.UTILS, "Area to Trough", "Transfers stockpile items from selected area to food trough.", false, true, AreaToTroughBot.class, "selectItem", false));
 
         // BUILD
         bots.add(new BotDescriptor("dframe", BotDescriptor.BotType.BUILD, "Build Drying Frame", "Builds drying frame.", false, true, BuildDryingFrame.class, "dframe", true));
@@ -165,6 +164,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("trellis", BotDescriptor.BotType.BUILD, "Build Trellis", "Builds trellis.", false, true, BuildTrellis.class, "trellis", false));
         bots.add(new BotDescriptor("htable", BotDescriptor.BotType.BUILD, "Build Herbalist Tables", "Builds herbalist tables.", false, true, BuildHerbalistTable.class, "htable", true));
         bots.add(new BotDescriptor("moundbed", BotDescriptor.BotType.BUILD, "Build Mound Bed", "Builds mound bed.", false, true, BuildMoundBed.class, "moundbed", true));
+        bots.add(new BotDescriptor("plant_trees", BotDescriptor.BotType.BUILD, "Plant Trees", "Plants trees in selected area with configurable spacing.", false, true, PlantTrees.class, "test35", false));
 
         // TOOLS (for debug)
         bots.add(new BotDescriptor("test1", BotDescriptor.BotType.TOOLS, "Test 1", "Debug test 1.", false, true, TESTMapv4.class, "test1", false));
