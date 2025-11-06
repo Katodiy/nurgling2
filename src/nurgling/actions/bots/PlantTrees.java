@@ -5,6 +5,7 @@ import nurgling.*;
 import nurgling.actions.*;
 import nurgling.NMapView;
 import nurgling.tasks.WaitPose;
+import nurgling.tasks.NFlowerMenuIsClosed;
 import nurgling.tools.*;
 import nurgling.widgets.TreeSpacingDialog;
 import nurgling.overlays.TreeGhostPreview;
@@ -350,8 +351,19 @@ public class PlantTrees implements Action {
             WItem seed = seeds.get(0);
             NUtils.takeItemToHand(seed);
 
-            // Right-click on the planting position
-            gui.map.wdgmsg("click", Coord.z, position.floor(OCache.posres), 3, 0);
+            // Activate item (seed) at the planting position
+            NUtils.activateItem(position);
+
+            // Wait for flower menu to appear and select option 1
+            NFlowerMenu fm = NUtils.findFlowerMenu();
+            if (fm != null && fm.nopts.length > 0) {
+                // Select option 1 (index 0)
+                fm.nchoose(fm.nopts[0]);
+                // Wait for flower menu to close
+                NUtils.addTask(new NFlowerMenuIsClosed());
+            } else {
+                return Results.ERROR("No flower menu appeared after activating seed");
+            }
 
             // Wait for planting action to complete
             NUtils.addTask(new WaitPose(NUtils.player(), "gfx/borka/shoveldig"));
