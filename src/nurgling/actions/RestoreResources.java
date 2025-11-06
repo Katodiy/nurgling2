@@ -23,19 +23,19 @@ public class RestoreResources implements Action{
             if ( NUtils.getStamina() < 0.5 ) {
                 if (!new Drink(0.9, false).run(gui).IsSuccess()) {
                     new FillWaterskins(true).run(gui);
-
                     if (!new Drink(0.9, false).run(gui).IsSuccess()) {
-                       Results.FAIL();
+                        return Results.ERROR("Failed to restore stamina - no water available");
                     }
                 }
             }
             if(NUtils.getEnergy()<0.35)
             {
                 Eater eater = new Eater(true);
-                eater.run(gui);
+                Results eatResult = eater.run(gui);
+                if (!eatResult.IsSuccess()) {
+                    return Results.ERROR("Failed to restore energy - no food available");
+                }
             }
-
             return Results.SUCCESS();
-
     }
 }

@@ -3,6 +3,7 @@ package nurgling.actions.bots;
 import haven.*;
 import haven.res.lib.itemtex.ItemTex;
 import haven.res.ui.relcnt.RelCont;
+import haven.res.ui.tt.cn.CustomName;
 import nurgling.*;
 import nurgling.actions.*;
 import nurgling.areas.*;
@@ -43,6 +44,20 @@ public class Craft implements Action {
     int count = 0;
 
     boolean isGlobalMode = false;
+
+    private int getActualItemCount(WItem item) {
+        if (item.item.info != null) {
+            for (ItemInfo inf : item.item.info) {
+                if (inf instanceof CustomName) {
+                    float count = ((CustomName) inf).count;
+                    if (count > 0) {
+                        return (int) (count * 100);
+                    }
+                }
+            }
+        }
+        return 1;
+    }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -117,7 +132,13 @@ public class Craft implements Action {
         }
 
 
-        while (left.get() > 0 && crafting(ncontext,gui,size,left));
+        Results craftResult = null;
+        while (left.get() > 0) {
+            craftResult = crafting(ncontext, gui, size, left);
+            if (!craftResult.IsSuccess()) {
+                return craftResult;
+            }
+        }
 
         for (NMakewindow.Spec s : mwnd.inputs) {
             String item = s.ing == null ? s.name : s.ing.name;
@@ -134,8 +155,23 @@ public class Craft implements Action {
         return Results.SUCCESS();
     }
 
-    boolean crafting(NContext ncontext, NGameUI gui, int size, AtomicInteger left) throws InterruptedException {
+    Results crafting(NContext ncontext, NGameUI gui, int size, AtomicInteger left) throws InterruptedException {
+
+        double currentEnergy = NUtils.getEnergy();
+
+        if (currentEnergy < 0.25) {
+            if (!new RestoreResources().run(gui).IsSuccess()) {
+                return Results.ERROR("Energy too low and failed to restore resources");
+            }
+        }
+        
         int for_craft = Math.min(left.get(), NUtils.getGameUI().getInventory().getFreeSpace() / size);
+        
+
+        if (for_craft <= 0) {
+            return Results.ERROR("Not enough inventory space");
+        }
+        
         for (NMakewindow.Spec s : mwnd.inputs) {
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
@@ -147,20 +183,24 @@ public class Craft implements Action {
                     new TransferBarrelToWorkstation(ncontext, item).run(gui);
                 }
             } else {
-                if (!new TakeItems2(ncontext, s.ing == null ? s.name : s.ing.name, s.count * for_craft).run(gui).IsSuccess())
-                    return false;
+                if (!new TakeItems2(ncontext, s.ing == null ? s.name : s.ing.name, s.count * for_craft).run(gui).IsSuccess()) {
+                    return Results.ERROR("Failed to take items: " + item);
+                }
             }
         }
 
 
 
         if (ncontext.workstation != null) {
-            if (!new PrepareWorkStation(ncontext, ncontext.workstation.station).run(gui).IsSuccess())
-                return false;
-            if (ncontext.workstation.targetPoint != null)
+            if (!new PrepareWorkStation(ncontext, ncontext.workstation.station).run(gui).IsSuccess()) {
+                return Results.ERROR("Failed to prepare workstation");
+            }
+            if (ncontext.workstation.targetPoint != null) {
                 new PathFinder(ncontext.workstation.targetPoint.getCurrentCoord()).run(gui);
-            if (!new UseWorkStation(ncontext).run(gui).IsSuccess())
-                return false;
+            }
+            if (!new UseWorkStation(ncontext).run(gui).IsSuccess()) {
+                return Results.ERROR("Failed to use workstation");
+            }
         }
         else if (ncontext.bwaused) {
             NArea barrelwa = ncontext.getSpecArea(Specialisation.SpecName.barrelworkarea);
@@ -199,11 +239,22 @@ public class Craft implements Action {
         int resfc = for_craft;
         for (NMakewindow.Spec s : mwnd.outputs) {
             resfc = s.count * for_craft;
+            String outputItem = s.ing != null ? s.ing.name : s.name;
+            
+            ArrayList<WItem> currentItems;
             if (s.ing != null) {
-                resfc += NUtils.getGameUI().getInventory().getItems(new NAlias(s.ing.name)).size();
+                currentItems = NUtils.getGameUI().getInventory().getItems(new NAlias(s.ing.name));
             } else {
-                resfc += NUtils.getGameUI().getInventory().getItems(new NAlias(s.name)).size();
+                currentItems = NUtils.getGameUI().getInventory().getItems(new NAlias(s.name));
             }
+            
+            int actualCurrentCount = 0;
+            for (WItem item : currentItems) {
+                actualCurrentCount += getActualItemCount(item);
+            }
+            
+            resfc += actualCurrentCount;
+            
         }
 
         mwnd.wdgmsg("make", 1);
@@ -242,10 +293,9 @@ public class Craft implements Action {
 
         }
         if (!mwnd.noTransfer.a) {
-
             new FreeInventory2(ncontext).run(gui);
         }
         left.set(left.get() - for_craft);
-        return true;
+        return Results.SUCCESS();
     }
 }
