@@ -34,6 +34,7 @@ public class QoL extends Panel {
     private CheckBox showPersonalClaims;
     private CheckBox showVillageClaims;
     private CheckBox showRealmOverlays;
+    private CheckBox showFullPathLines;
 
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
@@ -87,6 +88,7 @@ public class QoL extends Panel {
         prev = verboseCal = content.add(new CheckBox("Verbose calendar"), prev.pos("bl").adds(0, 5));
         prev = debug = content.add(new CheckBox("DEBUG"), prev.pos("bl").adds(0, 5));
         prev = printpfmap = content.add(new CheckBox("Path Finder map in debug"), prev.pos("bl").adds(0, 5));
+        prev = showFullPathLines = content.add(new CheckBox("Show full path lines to destinations"), prev.pos("bl").adds(0, 5));
 
         prev = content.add(new Label("Map overlays:"), prev.pos("bl").adds(0, 15));
         prev = showPersonalClaims = content.add(new CheckBox("Show personal claims on minimap"), prev.pos("bl").adds(0, 5));
@@ -134,6 +136,7 @@ public class QoL extends Panel {
         showTerrainName.a = getBool(NConfig.Key.showTerrainName);
         waypointRetryOnStuck.a = getBool(NConfig.Key.waypointRetryOnStuck);
         verboseCal.a = getBool(NConfig.Key.verboseCal);
+        showFullPathLines.a = getBool(NConfig.Key.showFullPathLines);
         showPersonalClaims.a = getBool(NConfig.Key.minimapClaimol);
         showVillageClaims.a = getBool(NConfig.Key.minimapVilol);
         showRealmOverlays.a = getBool(NConfig.Key.minimapRealmol);
@@ -213,6 +216,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.showTerrainName, showTerrainName.a);
         NConfig.set(NConfig.Key.waypointRetryOnStuck, waypointRetryOnStuck.a);
         NConfig.set(NConfig.Key.verboseCal, verboseCal.a);
+        NConfig.set(NConfig.Key.showFullPathLines, showFullPathLines.a);
 
         // Save minimap overlay settings (separate from 3D ground overlays)
         NConfig.set(NConfig.Key.minimapClaimol, showPersonalClaims.a);

@@ -122,7 +122,7 @@ public class PlantTrees implements Action {
             NUtils.getUI().msg("Select area for tree planting...");
 
             // Use basic area selection without rotation UI
-            SelectArea selector = new SelectArea(Resource.loadsimg("baubles/buildArea"));
+            SelectArea selector = new SelectArea(Resource.loadsimg("baubles/plantTrees"));
 
             selector.run(gui);
 

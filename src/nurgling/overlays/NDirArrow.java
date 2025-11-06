@@ -3,6 +3,7 @@ package nurgling.overlays;
 import haven.*;
 import haven.render.*;
 import haven.render.Model.Indices;
+import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.tools.Finder;
 import nurgling.widgets.NAlarmWdg;
@@ -73,7 +74,23 @@ public class NDirArrow extends Sprite implements RenderTree.Node, PView.Render2D
     private void setDir(Render g, Coord2d dir, double dist) {
         FloatBuffer posb = posa.data;
         dir.y = -dir.y;
-        double cur_r = Math.min(r,0.2*dist);
+
+        // Check if full path lines are enabled
+        boolean showFullLines = false;
+        try {
+            showFullLines = (Boolean) NConfig.get(NConfig.Key.showFullPathLines);
+        } catch (Exception e) {
+            // Fallback to default behavior if config not available
+        }
+
+        double cur_r;
+        if (showFullLines) {
+            // Full length arrow - use full distance
+            cur_r = Math.min(r, dist);
+        } else {
+            // Original behavior - 20% of distance
+            cur_r = Math.min(r, 0.2*dist);
+        }
         posb.put(0, (float)(1.2*cur_r*dir.x)).put(      1, (float)(1.2*cur_r*dir.y)).put(     2,  height);
         markerPos = new Coord3f(0.6f*posb.get(0),0.6f*posb.get(1), posb.get(2));
         Coord2d newDir = new Coord2d(dir.x*cur_r, dir.y*cur_r).rotate(-Math.PI/6);
