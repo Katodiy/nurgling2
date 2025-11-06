@@ -217,7 +217,7 @@ public class NMapWnd extends MapWnd {
             if(viewCoord.x >= 0 && viewCoord.x < view.sz.x &&
                viewCoord.y >= 0 && viewCoord.y < view.sz.y) {
 
-                // Shift+left-click for waypoint queueing
+                // alt+left-click for waypoint queueing
                 if(ev.b == 1 && ui.modmeta) {
                     if(handleWaypointClick(viewCoord)) {
                         return true; // Consume the event
