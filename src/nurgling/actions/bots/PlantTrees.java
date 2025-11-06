@@ -182,6 +182,8 @@ public class PlantTrees implements Action {
             }
 
             if (userCancelled) {
+                // Remove ghost preview when user cancels
+                removeGhostPreview();
                 return Results.FAIL();
             }
 
@@ -455,11 +457,13 @@ public class PlantTrees implements Action {
         userConfirmed = false;
         userCancelled = false;
 
+        // Clean up any existing ghost preview before resetting
+        removeGhostPreview();
+
         // Reset state variables
         selectedArea = null;
         plantingPositions = null;
         spacingDialog = null;
-        ghostPreview = null;
         selectedSpacing = 2; // Reset to default
     }
 }
