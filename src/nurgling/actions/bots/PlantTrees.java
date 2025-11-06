@@ -359,13 +359,16 @@ public class PlantTrees implements Action {
             // Activate item (seed) at the planting position
             NUtils.activateItem(position);
 
-            // Wait for flower menu to appear and select option 1
+            // Wait for flower menu to appear and select "Plant tree" option
             NFlowerMenu fm = NUtils.findFlowerMenu();
             if (fm != null && fm.nopts.length > 0) {
-                // Select option 1 (index 0)
-                fm.nchoose(fm.nopts[0]);
-                // Wait for flower menu to close
-                NUtils.addTask(new NFlowerMenuIsClosed());
+                // Look for "Plant tree" option specifically
+                if (fm.chooseOpt("Plant tree")) {
+                    // Wait for flower menu to close
+                    NUtils.addTask(new NFlowerMenuIsClosed());
+                } else {
+                    return Results.ERROR("No 'Plant tree' option found in flower menu");
+                }
             } else {
                 return Results.ERROR("No flower menu appeared after activating seed");
             }
