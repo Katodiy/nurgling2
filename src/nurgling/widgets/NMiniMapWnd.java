@@ -260,8 +260,8 @@ public class NMiniMapWnd extends Widget{
         }
 
         public boolean clickloc(Location loc, int button, boolean press) {
-            // Handle ctrl+left-click for waypoint queueing
-            if(!press && button == 1 && ui.modctrl && sessloc != null && loc.seg.id == sessloc.seg.id) {
+            // Handle shift+left-click for waypoint queueing
+            if(!press && button == 1 && ui.modmeta && sessloc != null && loc.seg.id == sessloc.seg.id) {
                 NGameUI gui = (NGameUI) NUtils.getGameUI();
                 if(gui != null && gui.waypointMovementService != null) {
                     gui.waypointMovementService.addWaypoint(loc, sessloc);

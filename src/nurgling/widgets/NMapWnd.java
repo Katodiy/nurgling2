@@ -181,7 +181,7 @@ public class NMapWnd extends MapWnd {
     
     @Override
     public boolean mousedown(MouseDownEvent ev) {
-        // Handle ctrl+left-click for waypoint queueing (on button release handled below)
+        // Handle alt+left-click for waypoint queueing (on button release handled below)
         // Handle shift+right-click for resource timers
         if(view.c != null) {
             // Convert global coordinates to view coordinates
@@ -217,8 +217,8 @@ public class NMapWnd extends MapWnd {
             if(viewCoord.x >= 0 && viewCoord.x < view.sz.x &&
                viewCoord.y >= 0 && viewCoord.y < view.sz.y) {
 
-                // Ctrl+left-click for waypoint queueing
-                if(ev.b == 1 && ui.modctrl) {
+                // Shift+left-click for waypoint queueing
+                if(ev.b == 1 && ui.modmeta) {
                     if(handleWaypointClick(viewCoord)) {
                         return true; // Consume the event
                     }
