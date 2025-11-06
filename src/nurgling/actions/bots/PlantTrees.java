@@ -43,6 +43,9 @@ public class PlantTrees implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         try {
+            // Reset state for reusability
+            resetState();
+
             // Phase 1: Validation
             Results validation = validateEquipmentAndSeeds(gui);
             if (!validation.IsSuccess()) {
@@ -442,5 +445,21 @@ public class PlantTrees implements Action {
      */
     public int getPlantingCount() {
         return plantingPositions != null ? plantingPositions.size() : 0;
+    }
+
+    /**
+     * Resets state variables for bot reusability
+     */
+    private void resetState() {
+        // Reset user interaction flags
+        userConfirmed = false;
+        userCancelled = false;
+
+        // Reset state variables
+        selectedArea = null;
+        plantingPositions = null;
+        spacingDialog = null;
+        ghostPreview = null;
+        selectedSpacing = 2; // Reset to default
     }
 }
