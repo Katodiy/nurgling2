@@ -16,7 +16,7 @@ import java.util.List;
 
 public class CucumberFarmer implements Action {
     private static final NAlias PLANT_ALIAS = new NAlias("plants/cucumber");
-    private static final NAlias SEED_ALIAS = new NAlias("Seeds of Cucumber");
+    private static final NAlias SEED_ALIAS = new NAlias("Cucumber Seeds");
     private static final NAlias CUCUMBER_ALIAS = new NAlias("Cucumber");
 
     @Override
