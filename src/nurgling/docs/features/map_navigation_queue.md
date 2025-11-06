@@ -10,7 +10,7 @@ The queue system lets you add multiple destinations that will be processed seque
 
 ### How to Use
 
-1. Ctrl+left-click on the map to queue waypoints for travel.
+1. Alt+left-click on the map to queue waypoints for travel.
 2. Your character will navigate to queued destinations in order
 3. The map displays all pending destinations
 4. To clear the path right-click anywhere on the map.
