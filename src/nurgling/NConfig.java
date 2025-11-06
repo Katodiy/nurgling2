@@ -101,7 +101,8 @@ public class NConfig
         studyDeskLayout,
         waypointRetryOnStuck,
         verboseCal,
-        highlightRockTiles
+        highlightRockTiles,
+        showFullPathLines
     }
 
 
@@ -195,6 +196,7 @@ public class NConfig
         conf.put(Key.waypointRetryOnStuck, true);
         conf.put(Key.verboseCal, false);
         conf.put(Key.highlightRockTiles, true);
+        conf.put(Key.showFullPathLines, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -747,6 +749,8 @@ public class NConfig
         res.add(NPathVisualizer.PathCategory.OTHER);
         res.add(NPathVisualizer.PathCategory.FRIEND);
         res.add(NPathVisualizer.PathCategory.GPF);
+        res.add(NPathVisualizer.PathCategory.QUEUED);
+        res.add(NPathVisualizer.PathCategory.PF);
         return res;
     }
 
