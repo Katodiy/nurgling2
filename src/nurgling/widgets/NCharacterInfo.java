@@ -74,7 +74,10 @@ public class NCharacterInfo extends Widget {
 
     public NCharacterInfo(String chrid, NUI nui) {
         this.chrid = chrid;
-        path = ((HashDirCache) ResCache.global).base + "\\..\\" + (nui.sessInfo==null?"":nui.sessInfo.username) + "_" + chrid.trim() + ".dat";
+        // Sanitize username - remove directory separators and "steam" prefix
+        String username = nui.sessInfo == null ? "" : nui.sessInfo.username;
+        username = username.replace("\\", "_").replace("/", "_").replace("steam", "");
+        path = ((HashDirCache) ResCache.global).base + "\\..\\" + username + "_" + chrid.trim() + ".dat";
         read();
     }
 

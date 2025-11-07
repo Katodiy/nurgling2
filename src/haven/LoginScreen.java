@@ -57,17 +57,22 @@ public class LoginScreen extends Widget {
 	optbtn.setgkey(GameUI.kb_opt);
 //	if(HttpStatus.mond.get() != null)
 //	    adda(new StatusLabel(HttpStatus.mond.get(), 1.0), sz.x - UI.scale(10), UI.scale(10), 1.0, 0.0);
-	switch(authmech.get()) {
-	case "native":
-	    login = new Credbox();
-	    break;
-	case "steam":
-	    login = new Steambox();
-	    break;
-	default:
-	    throw(new RuntimeException("Unknown authmech: " + authmech.get()));
-	}
+	
+	// Always show normal login form
+	login = new Credbox();
 	adda(login, bgc.adds(0, 10), 0.5, 0.0).hide();
+	
+	// Add Steam login button if Steam is available
+	if("steam".equals(authmech.get())) {
+	    Button steambtn = adda(new Button(UI.scale(150), "Login with Steam"), bgc.adds(0, -50), 0.5, 0.0);
+	    steambtn.action(() -> {
+		try {
+		    wdgmsg("login", new SteamCreds(), false);
+		} catch(java.io.IOException e) {
+		    error(e.getMessage());
+		}
+	    });
+	}
     }
 
     public static final KeyBinding kb_savtoken = KeyBinding.get("login/savtoken", KeyMatch.forchar('R', KeyMatch.M));
@@ -245,7 +250,7 @@ public class LoginScreen extends Widget {
 	}
     }
 
-    private static boolean steam_autologin = true;
+    private static boolean steam_autologin = false; // Disabled auto-login
     public class Steambox extends Widget {
 
 	private Steambox() {
@@ -274,10 +279,7 @@ public class LoginScreen extends Widget {
 
 	public void tick(double dt) {
 	    super.tick(dt);
-	    if(steam_autologin) {
-		enter();
-		steam_autologin = false;
-	    }
+	    // Auto-login disabled
 	}
     }
 
