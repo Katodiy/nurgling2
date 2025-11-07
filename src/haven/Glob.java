@@ -30,6 +30,7 @@ import java.util.*;
 import java.awt.Color;
 import haven.render.*;
 import haven.render.sl.*;
+import nurgling.NConfig;
 import nurgling.NUtils;
 
 public class Glob {
@@ -132,6 +133,7 @@ public class Glob {
 		lightang = olightang + a * Utils.cangle(tlightang - olightang);
 		lightelev = olightelev + a * Utils.cangle(tlightelev - olightelev);
 	    }
+		brighten();
 	}
     }
 
@@ -243,6 +245,7 @@ public class Glob {
 			lightang = tlightang;
 			lightelev = tlightelev;
 			lchange = -1;
+			brighten();
 		    }
 		}
 	    } else if(t == "sky") {
@@ -364,4 +367,20 @@ public class Glob {
 
 	public String toString() {return(String.format("#<globinfo @%fs>", globtime));}
     }
+
+	public Color blightamb = null, blightdif = null, blightspc = null;
+	public void brighten(){
+		synchronized(this) {
+			double coef = (Boolean)NConfig.get(NConfig.Key.nightVision)?0.65:0.0;
+			if(lightamb != null) {
+				blightamb = Utils.blendcol(lightamb, Color.WHITE, coef);
+			}
+			if(lightdif != null) {
+				blightdif = Utils.blendcol(lightdif, Color.WHITE, coef);
+			}
+			if(lightspc != null) {
+				blightspc = Utils.blendcol(lightspc, Color.WHITE, coef);
+			}
+		}
+	}
 }

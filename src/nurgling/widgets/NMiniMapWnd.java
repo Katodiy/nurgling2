@@ -189,9 +189,13 @@ public class NMiniMapWnd extends Widget{
                 
                 break;
             }
-            case "night": {
-                NConfig.set(NConfig.Key.nightVision,a);
-//                ((OptWnd.NQolPanel)NUtils.getGameUI().opts.nqolwnd).q.night.a = a;
+            case "night":
+            {
+                NConfig.set(NConfig.Key.nightVision, a);
+                if (ui.sess != null && ui.sess.glob != null)
+                {
+                    ui.sess.glob.brighten();
+                }
                 break;
             }
         }

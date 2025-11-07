@@ -1082,7 +1082,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
     private void amblight() {
 	synchronized(glob) {
 	    if(glob.lightamb != null) {
-		amblight = new DirLight(glob.lightamb, glob.lightdif, glob.lightspc, Coord3f.o.sadd((float)glob.lightelev, (float)glob.lightang, 1f));
+		amblight = new DirLight(glob.blightamb, glob.blightdif, glob.blightspc, Coord3f.o.sadd((float)glob.lightelev, (float)glob.lightang, 1f));
 		amblight.prio(100);
 	    } else {
 		amblight = null;
