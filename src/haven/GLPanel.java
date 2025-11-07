@@ -506,7 +506,7 @@ public interface GLPanel extends UIPanel, UI.Context {
 	{
 	    if(Utils.getprefb("glcrash", false)) {
 		Warning.warn("enabling GL debug-mode due to GL crash flag being set");
-		Utils.setprefb("glcrash", true);
+		Utils.setprefb("glcrash", false);
 		haven.error.ErrorHandler errh = haven.error.ErrorHandler.find();
 		if(errh != null)
 		    errh.lsetprop("gl.debug", Boolean.TRUE);
