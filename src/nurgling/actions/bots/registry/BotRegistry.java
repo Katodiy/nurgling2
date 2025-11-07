@@ -5,6 +5,9 @@ import nurgling.actions.MilkAnimalsAction;
 import nurgling.actions.bots.farmers.PumpkinFarmer;
 import nurgling.actions.bots.*;
 import nurgling.actions.bots.CarrotFarmerQ;
+import nurgling.actions.bots.silk.ArrangeSilkmothPairs;
+import nurgling.actions.bots.silk.RefillSilkwormFeedingCupboards;
+import nurgling.actions.bots.silk.SilkProductionBot;
 import nurgling.actions.bots.farmers.WheatFarmer;
 import nurgling.actions.bots.farmers.YellowOnionFarmer;
 import nurgling.actions.test.*;
@@ -61,6 +64,10 @@ public class BotRegistry {
         bots.add(new BotDescriptor("lye", BotDescriptor.BotType.PRODUCTIONS, "Lye Boiler", "Boils lye.", true, true, LyeBoiler.class, "lye", true));
         bots.add(new BotDescriptor("steel", BotDescriptor.BotType.PRODUCTIONS, "Steel Action", "Makes steel.", true, true, SteelAction.class, "steel", true));
         bots.add(new BotDescriptor("fineryforge", BotDescriptor.BotType.PRODUCTIONS, "Forging ", "Forging.", true, true, FFAction.class, "fineryforge", true));
+
+        // Silk
+        bots.add(new BotDescriptor("mulberry_leaf_refiller", BotDescriptor.BotType.PRODUCTIONS, "Refill silkworm cupboards with mulberry leafs", "Refill silkworm cupboards with mulberry leafs.", true, true, RefillSilkwormFeedingCupboards.class, "mulberry_leaf", false));
+        bots.add(new BotDescriptor("silk_production", BotDescriptor.BotType.PRODUCTIONS, "Manages silk production starting at eggs all the way to silkworm cocoons.", "Silk cocoons production.", true, true, SilkProductionBot.class, "silkworm_cocoon", false));
 
         // BATTLE
         bots.add(new BotDescriptor("reagro", BotDescriptor.BotType.BATTLE, "Reagro", "Reagros enemies.", true, true, Reagro.class, "reagro", false));

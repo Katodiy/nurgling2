@@ -1,7 +1,5 @@
 package nurgling.actions;
 
-import haven.WItem;
-import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -9,10 +7,12 @@ import nurgling.areas.NContext;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.Container;
-import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.TreeMap;
 import java.util.*;
 
 public class TransferItems2 implements Action

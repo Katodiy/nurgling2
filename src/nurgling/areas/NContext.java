@@ -59,6 +59,7 @@ public class NContext {
         contcaps.put("gfx/terobjs/furn/table-cottage", "Table");
         contcaps.put("gfx/terobjs/map/jotunclam", "Jotun Clam");
         contcaps.put("gfx/terobjs/studydesk", "Study Desk");
+        contcaps.put("gfx/terobjs/htable", "Herbalist Table");
     }
 
     public static HashMap<String, String> customTool = new HashMap<>();
@@ -285,6 +286,49 @@ public class NContext {
         }
         navigateToAreaIfNeeded(name.toString());
         return areas.get(name.toString());
+    }
+
+    public ArrayList<ObjectStorage> getSpecStorages(Specialisation.SpecName name) throws InterruptedException {
+
+        ArrayList<ObjectStorage> inputs = new ArrayList<>();
+        NArea area = getSpecArea(name);
+
+        if(area == null) {
+            return null;
+        }
+
+        navigateToAreaIfNeeded(String.valueOf(name));
+
+        for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
+            String hash = gob.ngob.hash;
+            if(containers.containsKey(hash))
+            {
+                inputs.add(containers.get(hash));
+            }
+            else {
+                Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                ic.initattr(Container.Space.class);
+                containers.put(gob.ngob.hash, ic);
+                inputs.add(ic);
+            }
+        }
+
+        for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
+            inputs.add(new Pile(gob));
+        }
+        if (inputs.isEmpty()) {
+            inputs.add(new Pile(null));
+        }
+
+        inputs.sort(new Comparator<ObjectStorage>() {
+            @Override
+            public int compare(ObjectStorage o1, ObjectStorage o2) {
+                if (o1 instanceof Pile && o2 instanceof Pile)
+                    return NUtils.d_comp.compare(((Pile) o1).pile, ((Pile) o2).pile);
+                return 0;
+            }
+        });
+        return inputs;
     }
 
     public ArrayList<ObjectStorage> getInStorages(String item) throws InterruptedException {
