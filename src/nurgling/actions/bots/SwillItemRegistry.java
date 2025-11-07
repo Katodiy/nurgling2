@@ -9,13 +9,6 @@ import java.util.HashSet;
  */
 public class SwillItemRegistry {
 
-    public enum SwillCategory {
-        HIGH_VALUE,      // >0.3L swill value
-        STANDARD,        // 0.1L swill value
-        LOW_VALUE,       // 0.05L and below
-        SEEDS           // 0.02L, separate category for optional collection
-    }
-
     // High value items (>0.3L swill value)
     public static final Set<String> HIGH_VALUE_SWILL = Set.of(
         "Giant Pumpkin",     // 1.6L
@@ -82,66 +75,5 @@ public class SwillItemRegistry {
         }
 
         return false;
-    }
-
-    /**
-     * Get the swill category for a given item.
-     *
-     * @param itemName The exact item name as it appears in game
-     * @return The SwillCategory or null if not a swill item
-     */
-    public static SwillCategory getCategory(String itemName) {
-        if (HIGH_VALUE_SWILL.contains(itemName)) {
-            return SwillCategory.HIGH_VALUE;
-        } else if (STANDARD_SWILL.contains(itemName)) {
-            return SwillCategory.STANDARD;
-        } else if (LOW_VALUE_SWILL.contains(itemName)) {
-            return SwillCategory.LOW_VALUE;
-        } else if (SEED_SWILL.contains(itemName)) {
-            return SwillCategory.SEEDS;
-        }
-        return null;
-    }
-
-    /**
-     * Get all swill items for validation purposes.
-     *
-     * @return Set containing all defined swill item names
-     */
-    public static Set<String> getAllSwillItems() {
-        return new HashSet<>(ALL_SWILL_ITEMS);
-    }
-
-    /**
-     * Get the estimated swill value in liters for an item.
-     *
-     * @param itemName The exact item name as it appears in game
-     * @return Swill value in liters, or 0.0 if not a swill item
-     */
-    public static double getSwillValue(String itemName) {
-        if (itemName.equals("Giant Pumpkin")) return 1.6;
-        if (itemName.equals("Clover") || itemName.equals("Rabbit Food")) return 0.5;
-        if (itemName.equals("Head of Lettuce")) return 0.33;
-        if (STANDARD_SWILL.contains(itemName)) return 0.1;
-        if (itemName.equals("Lettuce Leaf") || itemName.equals("Wildflower")) return 0.05;
-        if (SEED_SWILL.contains(itemName)) return 0.02;
-        if (itemName.equals("Mulberry Leaf")) return 0.01;
-        return 0.0;
-    }
-
-    /**
-     * Get items prioritized by value for collection planning.
-     * Higher value items should be collected first when inventory space is limited.
-     *
-     * @return Array of item sets in priority order (high to low)
-     */
-    public static Set<String>[] getItemsByPriority() {
-        @SuppressWarnings("unchecked")
-        Set<String>[] priorities = new Set[4];
-        priorities[0] = HIGH_VALUE_SWILL;
-        priorities[1] = STANDARD_SWILL;
-        priorities[2] = LOW_VALUE_SWILL;
-        priorities[3] = SEED_SWILL;
-        return priorities;
     }
 }
