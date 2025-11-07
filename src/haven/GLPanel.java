@@ -341,7 +341,7 @@ public interface GLPanel extends UIPanel, UI.Context {
 		    buf.submit(new ProfileTick(rprofc, "wait"));
 		    Fence curframe = new Fence();
 		    if(syncmode == SyncMode.FRAME)
-				buf.submit(curframe);
+			buf.submit(curframe);
 
 		    boolean tickwait = (syncmode == SyncMode.FRAME) || (syncmode == SyncMode.TICK);
 		    if(!tickwait) {
@@ -398,7 +398,7 @@ public interface GLPanel extends UIPanel, UI.Context {
 			buf.submit(new ProfileTick(rprofc, "finish"));
 		    }
 		    if(syncmode != SyncMode.FRAME)
-		    buf.submit(curframe);
+			buf.submit(curframe);
 		    if(profile.get())
 			buf.submit(rprofc = new ProfileCycle(rprof, rprofc, "aux"));
 		    else
