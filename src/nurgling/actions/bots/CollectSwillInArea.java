@@ -32,27 +32,7 @@ import java.util.*;
  */
 public class CollectSwillInArea implements Action {
 
-    private final boolean includeLowValue;
-    private final boolean includeSeeds;
     private RoutePoint closestRoutePoint = null;
-
-    /**
-     * Create swill collection action with default settings.
-     */
-    public CollectSwillInArea() {
-        this(false, false);
-    }
-
-    /**
-     * Create swill collection action with specific configuration.
-     *
-     * @param includeLowValue Include low-value items (leaves, wildflowers)
-     * @param includeSeeds Include crop seeds
-     */
-    public CollectSwillInArea(boolean includeLowValue, boolean includeSeeds) {
-        this.includeLowValue = includeLowValue;
-        this.includeSeeds = includeSeeds;
-    }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -178,13 +158,8 @@ public class CollectSwillInArea implements Action {
         // Add all swill items from registry
         allSwillItems.addAll(SwillItemRegistry.HIGH_VALUE_SWILL);
         allSwillItems.addAll(SwillItemRegistry.STANDARD_SWILL);
-
-        if (includeLowValue) {
-            allSwillItems.addAll(SwillItemRegistry.LOW_VALUE_SWILL);
-        }
-        if (includeSeeds) {
-            allSwillItems.addAll(SwillItemRegistry.SEED_SWILL);
-        }
+        allSwillItems.addAll(SwillItemRegistry.LOW_VALUE_SWILL);
+        allSwillItems.addAll(SwillItemRegistry.SEED_SWILL);
 
         return new NAlias(allSwillItems.toArray(new String[0]));
     }
@@ -270,7 +245,7 @@ public class CollectSwillInArea implements Action {
      * Check if an item name matches swill criteria.
      */
     private boolean isSwillItem(String itemName) {
-        return SwillItemRegistry.isSwillItem(itemName, includeLowValue, includeSeeds);
+        return SwillItemRegistry.isSwillItem(itemName);
     }
 
 }

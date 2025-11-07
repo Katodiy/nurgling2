@@ -57,20 +57,18 @@ public class SwillItemRegistry {
      * Check if an item can be used as swill based on configuration options.
      *
      * @param itemName The exact item name as it appears in game
-     * @param includeLowValue Whether to include low-value items (leaves, wildflowers)
-     * @param includeSeeds Whether to include crop seeds
      * @return true if the item should be collected as swill
      */
-    public static boolean isSwillItem(String itemName, boolean includeLowValue, boolean includeSeeds) {
+    public static boolean isSwillItem(String itemName) {
         if (HIGH_VALUE_SWILL.contains(itemName) || STANDARD_SWILL.contains(itemName)) {
             return true;
         }
 
-        if (includeLowValue && LOW_VALUE_SWILL.contains(itemName)) {
+        if (LOW_VALUE_SWILL.contains(itemName)) {
             return true;
         }
 
-        if (includeSeeds && SEED_SWILL.contains(itemName)) {
+        if (SEED_SWILL.contains(itemName)) {
             return true;
         }
 
