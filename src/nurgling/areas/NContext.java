@@ -1031,4 +1031,26 @@ public class NContext {
         }
         return res;
     }
+
+    /**
+     * Find swill delivery areas (areas with swill or trough specialization).
+     * Returns areas prioritized by distance from player.
+     */
+    public static List<NArea> findSwillDeliveryAreas() {
+        List<NArea> areas = new ArrayList<>();
+//
+//        // Find areas with swill specialization
+//        NArea swillArea = findSpec("swill");
+//        if (swillArea != null) {
+//            areas.add(swillArea);
+//        }
+
+        // Find areas with trough specialization
+        NArea troughArea = findSpec("trough");
+        if (troughArea != null && !areas.contains(troughArea)) {
+            areas.add(troughArea);
+        }
+
+        return areas;
+    }
 }

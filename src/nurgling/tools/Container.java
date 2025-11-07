@@ -18,10 +18,19 @@ import java.util.Map;
 public class Container implements NContext.ObjectStorage {
     public long gobid;
     public String cap;
+    public Gob gob; // Cached gob reference
 
     public Container(Gob gob, String cap) {
         this.gobid = gob.id;
         this.cap = cap;
+        this.gob = gob; // Cache gob reference
+    }
+
+    /**
+     * Get the game object associated with this container.
+     */
+    public Gob getGob() {
+        return Finder.findGob(gobid);
     }
 
     public Map<Class<? extends Updater>, Updater> updaters = new HashMap<Class<? extends Updater>, Updater>();
@@ -307,7 +316,6 @@ public class Container implements NContext.ObjectStorage {
             res.put(MAXNUM,i);
         }
     }
-
 
 
     public <C extends Updater> C getattr(Class<C> c) {

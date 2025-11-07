@@ -1,13 +1,13 @@
 package nurgling.actions.bots.registry;
 
 import nurgling.actions.FillWaterskins;
-import nurgling.actions.MilkAnimalsAction;
 import nurgling.actions.bots.farmers.PumpkinFarmer;
 import nurgling.actions.bots.*;
 import nurgling.actions.bots.CarrotFarmerQ;
 import nurgling.actions.bots.silk.ArrangeSilkmothPairs;
 import nurgling.actions.bots.silk.RefillSilkwormFeedingCupboards;
 import nurgling.actions.bots.silk.SilkProductionBot;
+import nurgling.actions.bots.CollectSwillInArea;
 import nurgling.actions.bots.farmers.WheatFarmer;
 import nurgling.actions.bots.farmers.YellowOnionFarmer;
 import nurgling.actions.test.*;
@@ -113,6 +113,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("compostbin", BotDescriptor.BotType.FARMING, "Compost Bin", "Pull mulch out of compost bins.", true, true, CompostBinUnloader.class, "compostbin", false));
         bots.add(new BotDescriptor("curdingtub", BotDescriptor.BotType.FARMING, "Unload curding Tubs", "Pull curd out of curding tubs.", true, true, CurdingTubUnloader.class, "cheese_empty", false));
         bots.add(new BotDescriptor("cheese", BotDescriptor.BotType.FARMING, "Cheese Production Bot", "Process cheese orders.", true, true, CheeseProductionBot.class, "cheese", false));
+        bots.add(new BotDescriptor("swill_collector", BotDescriptor.BotType.FARMING, "Swill Collector", "Collects swill items from area and feeds to troughs/cisterns.", false, true, CollectSwillInArea.class, "test35", false));
 
         // FARMING QUALITY
         bots.add(new BotDescriptor("turnipq", BotDescriptor.BotType.FARMING_QUALITY, "Turnip Farmer Quality", "Automatically harvests and replants turnips in X*Y cell patches.", true, true, TurnipsFarmerQ.class, "turnipq", false));
