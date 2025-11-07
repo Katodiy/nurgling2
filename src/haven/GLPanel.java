@@ -340,7 +340,7 @@ public interface GLPanel extends UIPanel, UI.Context {
 		    if(frameprof != null) buf.submit(frameprof.start);
 		    buf.submit(new ProfileTick(rprofc, "wait"));
 		    Fence curframe = new Fence();
-			if(syncmode == SyncMode.FRAME)
+		    if(syncmode == SyncMode.FRAME)
 				buf.submit(curframe);
 
 		    boolean tickwait = (syncmode == SyncMode.FRAME) || (syncmode == SyncMode.TICK);
@@ -397,7 +397,7 @@ public interface GLPanel extends UIPanel, UI.Context {
 			buf.submit(new GLFinish());
 			buf.submit(new ProfileTick(rprofc, "finish"));
 		    }
-			if(syncmode != SyncMode.FRAME)
+		    if(syncmode != SyncMode.FRAME)
 		    buf.submit(curframe);
 		    if(profile.get())
 			buf.submit(rprofc = new ProfileCycle(rprof, rprofc, "aux"));
