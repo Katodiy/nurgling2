@@ -324,7 +324,8 @@ public class CollectSwillInArea implements Action {
         for (Container container : containers) {
             try {
                 // Navigate to container
-                Results pathResult = new PathFinder(container.gob).run(gui);
+                Gob containerGob = Finder.findGob(container.gobid);
+                Results pathResult = new PathFinder(containerGob).run(gui);
                 if (!pathResult.IsSuccess()) {
                     gui.msg("Warning: Cannot reach container " + container.gobid);
                     continue;
