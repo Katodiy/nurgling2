@@ -74,7 +74,6 @@ public class TransferItems2 implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        System.out.println("[TransferItems2] Starting transfer for " + items.size() + " item types");
         // Step 1: Sort items into priority/non-priority (preserve existing orderList behavior)
         ArrayList<String> before = new ArrayList<>();
         ArrayList<String> after = new ArrayList<>();
@@ -99,12 +98,10 @@ public class TransferItems2 implements Action
 
         for(String item : resitems) {
             TreeMap<Double,String> areas = cnt.getOutAreas(item);
-            System.out.println("[TransferItems2] Item: " + item + ", output areas: " + (areas != null ? areas.size() : "none"));
             if(areas != null) {
                 for (Double quality : areas.descendingKeySet()) {
                     if (!NUtils.getGameUI().getInventory().getItems(new NAlias(item), quality).isEmpty()) {
                         String areaId = areas.get(quality);
-                        System.out.println("[TransferItems2]   -> Quality: " + quality + ", Area: " + areaId);
                         itemsByArea.computeIfAbsent(areaId, k -> new ArrayList<>())
                             .add(new ItemTransfer(item, quality, areaId));
                     }
@@ -116,29 +113,22 @@ public class TransferItems2 implements Action
         List<String> optimizedAreaOrder = optimizeAreaVisitOrder(gui, itemsByArea);
 
         // Step 4: Visit each area in optimized order and transfer all items for that area
-        System.out.println("[TransferItems2] Visiting " + optimizedAreaOrder.size() + " areas in optimized order");
         for (String areaId : optimizedAreaOrder) {
             List<ItemTransfer> itemsForArea = itemsByArea.get(areaId);
-            System.out.println("[TransferItems2] Processing area: " + areaId + " with " + itemsForArea.size() + " items");
 
             for (ItemTransfer itemTransfer : itemsForArea) {
-                System.out.println("[TransferItems2]   Item: " + itemTransfer.itemName + ", quality: " + itemTransfer.quality);
                 // Get storages and perform the transfer
                 ArrayList<NContext.ObjectStorage> storages = cnt.getOutStorages(itemTransfer.itemName, itemTransfer.quality);
-                System.out.println("[TransferItems2]     Found " + storages.size() + " storages");
                 for (NContext.ObjectStorage output : storages) {
                     if (output instanceof NContext.Pile) {
-                        System.out.println("[TransferItems2]     -> Transferring to Pile");
                         new TransferToPiles(cnt.getRCArea(areaId), new NAlias(itemTransfer.itemName),
                             (int)itemTransfer.quality).run(gui);
                     }
                     if (output instanceof Container) {
-                        System.out.println("[TransferItems2]     -> Transferring to Container");
                         new TransferToContainer((Container) output, new NAlias(itemTransfer.itemName),
                             (int)itemTransfer.quality).run(gui);
                     }
                     if (output instanceof NContext.Barrel) {
-                        System.out.println("[TransferItems2]     -> Transferring to Barrel (ID: " + ((NContext.Barrel) output).barrel + ")");
                         new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel),
                             new NAlias(itemTransfer.itemName)).run(gui);
                     }

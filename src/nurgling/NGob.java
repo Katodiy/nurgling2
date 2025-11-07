@@ -6,6 +6,7 @@ import haven.render.Transform;
 import haven.res.gfx.fx.eq.Equed;
 import haven.res.gfx.hud.mmap.plo.Player;
 import haven.res.gfx.terobjs.consobj.Consobj;
+import haven.res.lib.globfx.GlobEffector;
 import haven.res.lib.tree.TreeScale;
 import haven.res.lib.vmat.Mapping;
 import haven.res.lib.vmat.Materials;
@@ -33,6 +34,7 @@ import static haven.OCache.posres;
 
 public class NGob
 {
+    public boolean effector = false;
     public NHitBox hitBox = null;
     public String name = null;
     public boolean isQuested = true;
@@ -199,6 +201,12 @@ public class NGob
         // Early exit for null attributes
         if (a == null && !(prev instanceof Moving))
         {
+            return;
+        }
+
+        if(a instanceof GlobEffector)
+        {
+            effector = true;
             return;
         }
 
@@ -795,14 +803,17 @@ public class NGob
             return 0;
         } else if (name.equals("gfx/terobjs/barrel"))
         {
-            for (Gob.Overlay ol : parent.ols)
+            synchronized (parent.ols)
             {
-                if (ol.spr instanceof StaticSprite)
+                for (Gob.Overlay ol : parent.ols)
                 {
-                    return 4;
+                    if (ol.spr instanceof StaticSprite)
+                    {
+                        return 4;
+                    }
                 }
+                return 0;
             }
-            return 0;
         } else if (name.equals("gfx/terobjs/cheeserack"))
         {
             int counter = 0;

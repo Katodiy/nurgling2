@@ -165,7 +165,14 @@ public class Craft implements Action {
             }
         }
         
-        int for_craft = Math.min(left.get(), NUtils.getGameUI().getInventory().getFreeSpace() / size);
+        int freeSpace = NUtils.getGameUI().getInventory().getFreeSpace();
+
+        int for_craft;
+        if (size == 0) {
+            for_craft = left.get();
+        } else {
+            for_craft = Math.min(left.get(), freeSpace / size);
+        }
         
 
         if (for_craft <= 0) {
@@ -210,7 +217,8 @@ public class Craft implements Action {
         }
 
         int count = 0;
-        for (Long barrelid : ncontext.barrelsid) {
+
+        for (Long barrelid : GetBarrelsIds(ncontext)) {
             Gob barrel = Finder.findGob(barrelid);
             gui.map.wdgmsg("click", Coord.z, barrel.rc.floor(posres), 3, 0, 0, (int) barrel.id,
                     barrel.rc.floor(posres), 0, -1);
@@ -224,27 +232,41 @@ public class Craft implements Action {
             });
         }
         ArrayList<Window> windows = NUtils.getGameUI().getWindows("Barrel");
+        boolean hasEnoughResources = true;
         for (NMakewindow.Spec s : mwnd.inputs) {
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 double val = gui.findBarrelContent(windows, new NAlias(item));
-                if(val < s.count)
+                double valInMilligrams = val * 100;
+                if(valInMilligrams < s.count)
                 {
+                    hasEnoughResources = false;
                     break;
                 }
             }
         }
+        
+        if (!hasEnoughResources) {
+            for (NMakewindow.Spec s : mwnd.inputs) {
+                String item = s.ing == null ? s.name : s.ing.name;
+                if (ncontext.isInBarrel(item)) {
+                    new ReturnBarrelFromWorkArea(ncontext, item).run(gui);
+                }
+            }
+            return Results.ERROR("Not enough resources in barrels");
+        }
 
         new Drink(0.9, false).run(gui);
         int resfc = for_craft;
+        String targetName = null;
         for (NMakewindow.Spec s : mwnd.outputs) {
             resfc = s.count * for_craft;
-            String outputItem = s.ing != null ? s.ing.name : s.name;
-            
             ArrayList<WItem> currentItems;
             if (s.ing != null) {
+                targetName = s.ing.name;
                 currentItems = NUtils.getGameUI().getInventory().getItems(new NAlias(s.ing.name));
             } else {
+                targetName = s.name;
                 currentItems = NUtils.getGameUI().getInventory().getItems(new NAlias(s.name));
             }
             
@@ -258,20 +280,25 @@ public class Craft implements Action {
         }
 
         mwnd.wdgmsg("make", 1);
-        NUtils.addTask(new NTask() {
-            @Override
-            public boolean check() {
-                return gui.prog != null && gui.prog.prog > 0 && (ncontext.workstation == null || ncontext.workstation.selected ==-1 || NUtils.isWorkStationReady(ncontext.workstation.station,Finder.findGob(ncontext.workstation.selected)));
-            }
-        });
         int finalResfc = resfc;
+        String finalTargetName = targetName;
         NUtils.addTask(new NTask() {
             @Override
             public boolean check() {
-                return gui.prog == null || !gui.prog.visible;
+
+                return (((gui.prog != null) && (gui.prog.prog > 0) && ((ncontext.workstation == null) || (ncontext.workstation.selected == -1) || NUtils.isWorkStationReady(ncontext.workstation.station, Finder.findGob(ncontext.workstation.selected)))));
             }
         });
-
+        NUtils.addTask(new NTask() {
+            @Override
+            public boolean check() {
+                GetItems gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(finalTargetName));
+                gi.check();
+                return gui.prog == null || !gui.prog.visible || gi.getResult().size() >= finalResfc;
+            }
+        });
+        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),3, 0);
+        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),1, 0);
         for (NMakewindow.Spec s : mwnd.outputs) {
             if (s.ing != null) {
                 NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(s.ing.name), resfc));
@@ -297,5 +324,21 @@ public class Craft implements Action {
         }
         left.set(left.get() - for_craft);
         return Results.SUCCESS();
+    }
+
+    ArrayList<Long> GetBarrelsIds(NContext ncontext) throws InterruptedException
+    {
+        ArrayList<Long> ids = new ArrayList<>();
+        for (NMakewindow.Spec s : mwnd.inputs)
+        {
+            String item = s.ing == null ? s.name : s.ing.name;
+            if (ncontext.isInBarrel(item))
+            {
+                Gob barrel = ncontext.getBarrelInWorkArea(item);
+                if (barrel != null)
+                    ids.add(barrel.id);
+            }
+        }
+        return ids;
     }
 }

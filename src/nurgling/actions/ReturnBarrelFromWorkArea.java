@@ -32,32 +32,30 @@ public class ReturnBarrelFromWorkArea implements Action{
             context.getSpecArea(context.workstation);
         long barrelid = -1;
 
-        for(Long gobid : context.barrelsid)
+        Gob gob = context.getBarrelInWorkArea(item);
+        if(NUtils.barrelHasContent(gob) && NUtils.getContentsOfBarrel(gob).equals(context.getBarrelStorage(item).olname))
         {
-            Gob gob = Finder.findGob(gobid);
-            if(NUtils.barrelHasContent(gob) && NUtils.getContentsOfBarrel(gob).equals(context.getBarrelStorage(item).olname))
-            {
-                new LiftObject(gob).run(gui);
-                barrelid = gob.id;
-                break;
-            }
+            new LiftObject(gob).run(gui);
+            barrelid = gob.id;
         }
 
         if(barrelid == -1)
         {
-            for(Long gobid : context.barrelsid)
+
+            gob = context.getBarrelInWorkArea(item);
+            if(!NUtils.barrelHasContent(gob))
             {
-                Gob gob = Finder.findGob(gobid);
-                if(!NUtils.barrelHasContent(gob))
-                {
-                    new LiftObject(gob).run(gui);
-                    barrelid = gob.id;
-                    break;
-                }
+                new LiftObject(gob).run(gui);
+                barrelid = gob.id;
             }
+
         }
         context.navigateToBarrelArea(item);
         new PlaceObject(Finder.findGob(barrelid),context.getBarrelStorage(item).coord.getCurrentCoord(),0).run(gui);
+        if(context.workstation==null)
+            context.getSpecArea(Specialisation.SpecName.barrelworkarea);
+        else
+            context.getSpecArea(context.workstation);
         return Results.SUCCESS();
     }
 }

@@ -26,7 +26,6 @@ public class NContext {
     private HashMap<String, NArea> areas = new HashMap<>();
     private HashMap<String, RoutePoint> rps = new HashMap<>();
     private HashMap<String, ObjectStorage> containers = new HashMap<>();
-    public HashSet<Long> barrelsid = new HashSet<>();
 
     public boolean bwaused = false;
     int counter = 0;
@@ -235,6 +234,30 @@ public class NContext {
             {
                 barrelstorage.put(item,new BarrelStorage(new NGlobalCoord(gob.rc), NUtils.getContentsOfBarrel(gob)));
                 return gob;
+            }
+        }
+        return null;
+
+    }
+
+
+    public Gob getBarrelInWorkArea(String item) throws InterruptedException {
+        NArea area;
+        if(workstation==null)
+            area = getSpecArea(Specialisation.SpecName.barrelworkarea);
+        else
+            area = getSpecArea(workstation);
+        if(area==null)
+            return null;
+        if(barrelstorage.containsKey(item))
+        {
+            for (Gob gob : Finder.findGobs(area, new NAlias("barrel")))
+            {
+                String content = NUtils.getContentsOfBarrel(gob);
+                if (content != null && (content.equalsIgnoreCase(barrelstorage.get(item).olname)))
+                {
+                    return gob;
+                }
             }
         }
         return null;
@@ -525,6 +548,7 @@ public class NContext {
             new RoutePointNavigator(rps.get(areaId), area.id).run(gui);
         }
     }
+
     public String createArea(String msg, BufferedImage bauble) throws InterruptedException {
         return createArea(msg, bauble,null);
     }
