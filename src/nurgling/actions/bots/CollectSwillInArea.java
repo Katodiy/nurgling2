@@ -58,19 +58,21 @@ public class CollectSwillInArea implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         gui.msg("Starting swill collection...");
 
-        // Let user select area
-        SelectArea insa;
-        gui.msg("Please, select area for swill collection");
-        (insa = new SelectArea(Resource.loadsimg("baubles/inputArea"))).run(gui);
-        Pair<Coord2d, Coord2d> area = insa.getRCArea();
-
-        if (area == null) {
-            return Results.ERROR("No area selected");
-        }
-
-        gui.msg("Collecting swill from selected area");
-
         try {
+            // Initialize NContext for proper area management
+            NContext context = new NContext(gui);
+
+            // Let user select area using NContext.createArea()
+            gui.msg("Please, select area for swill collection");
+            String collectionAreaId = context.createArea("Please, select area for swill collection",
+                Resource.loadsimg("baubles/inputArea"));
+
+            if (collectionAreaId == null) {
+                return Results.ERROR("No area selected");
+            }
+
+            gui.msg("Area registered in NContext with ID: " + collectionAreaId);
+
             // Get delivery areas first (we'll need them for the cycle)
             List<NArea> deliveryAreas = NContext.findSwillDeliveryAreas();
             if (deliveryAreas.isEmpty()) {
@@ -85,14 +87,46 @@ public class CollectSwillInArea implements Action {
             gui.msg("Starting collection/delivery cycle...");
 
             // Main collection/delivery cycle
-            while (hasMoreItems && cycleCount < maxCycles) {
+            while (cycleCount < maxCycles) {
                 cycleCount++;
                 gui.msg("=== Starting new collection cycle " + cycleCount + " ===");
 
-                // Navigate to collection area (important after delivery cycles)
-                Results collectionNavResult = navigateToCollectionArea(gui, area);
-                if (!collectionNavResult.IsSuccess()) {
-                    gui.msg("Could not navigate to collection area - ending cycle");
+                // Force navigation to collection area by checking distance first
+                Pair<Coord2d, Coord2d> area = context.getRCArea(collectionAreaId);
+                if (area == null) {
+                    gui.msg("Could not get collection area coordinates - ending cycle");
+                    break;
+                }
+
+                // Check if we're actually close to the collection area
+                Coord2d areaCenter = new Coord2d((area.a.x + area.b.x) / 2, (area.a.y + area.b.y) / 2);
+                double distanceToArea = areaCenter.dist(NUtils.player().rc);
+
+                if (distanceToArea > 500) {
+                    gui.msg("Too far from collection area (" + (int)distanceToArea + " units), forcing route navigation...");
+
+                    // Create a new NContext and force re-navigation
+                    try {
+                        NContext freshContext = new NContext(gui);
+                        // Try to get the area again, which should force navigation
+                        Pair<Coord2d, Coord2d> navigatedArea = freshContext.getRCArea(collectionAreaId);
+                        if (navigatedArea != null) {
+                            area = navigatedArea; // Update with fresh coordinates
+                            gui.msg("Successfully navigated to collection area via route");
+                        } else {
+                            gui.msg("Route navigation failed");
+                        }
+                    } catch (Exception e) {
+                        gui.msg("Navigation error: " + e.getMessage());
+                    }
+                } else {
+                    gui.msg("Already near collection area (" + (int)distanceToArea + " units)");
+                }
+
+                // Check if there are still items to collect in this area (now that we're here)
+                hasMoreItems = hasMoreSwillItemsInArea(gui, area);
+                if (!hasMoreItems) {
+                    gui.msg("No more swill items found in collection area - stopping");
                     break;
                 }
 
@@ -120,13 +154,10 @@ public class CollectSwillInArea implements Action {
                     gui.msg("Warning: Some items could not be delivered");
                 }
 
-                // Check if there are more items to collect in the area
-                hasMoreItems = hasMoreSwillItemsInArea(gui, area);
-                if (!hasMoreItems) {
-                    gui.msg("No more swill items detected in collection area");
-                }
-
+                gui.msg("Delivery completed");
                 gui.msg("=== Cycle " + cycleCount + " completed ===");
+
+                // Will check for more items at the beginning of next cycle after navigating back
             }
 
             if (cycleCount >= maxCycles) {
@@ -748,35 +779,4 @@ public class CollectSwillInArea implements Action {
         }
     }
 
-    /**
-     * Navigate back to the collection area using coordinates.
-     * This ensures we return to the selected area after delivery cycles.
-     */
-    private Results navigateToCollectionArea(NGameUI gui, Pair<Coord2d, Coord2d> area) throws InterruptedException {
-        try {
-            gui.msg("Navigating back to collection area...");
-
-            // Calculate center of collection area
-            Coord2d center = new Coord2d(
-                (area.a.x + area.b.x) / 2,
-                (area.a.y + area.b.y) / 2
-            );
-
-            gui.msg("Collection area center: " + center);
-
-            // Navigate to collection area center
-            Results navResult = new PathFinder(center).run(gui);
-            if (navResult.IsSuccess()) {
-                gui.msg("Successfully returned to collection area");
-                return Results.SUCCESS();
-            } else {
-                gui.msg("Failed to navigate to collection area center");
-                return Results.FAIL();
-            }
-
-        } catch (Exception e) {
-            gui.msg("Error navigating to collection area: " + e.getMessage());
-            return Results.FAIL();
-        }
-    }
 }
