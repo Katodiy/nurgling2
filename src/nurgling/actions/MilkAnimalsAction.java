@@ -171,18 +171,24 @@ public class MilkAnimalsAction implements Action {
     }
 
     public void initBot(NAlias animalAlias) {
-        if (Objects.equals(animalAlias.getKeys().getFirst(), "cattle")) {
-            this.animalAreaName = "cows";
-            this.milkAreaName = "Cow Milk";
-            this.lactatingPredicate = createCowLactatingPredicate();
-        } else if (Objects.equals(animalAlias.getKeys().getFirst(), "goat")) {
-            this.animalAreaName = "goats";
-            this.milkAreaName = "Goat Milk";
-            this.lactatingPredicate = createGoatLactatingPredicate();
-        } else if (Objects.equals(animalAlias.getKeys().getFirst(), "sheep")) {
-            this.animalAreaName = "sheeps";
-            this.milkAreaName = "Sheep Milk";
-            this.lactatingPredicate = createSheepLactatingPredicate();
+        if(!animalAlias.getKeys().isEmpty())
+        {
+            if (Objects.equals(animalAlias.getKeys().get(0), "cattle"))
+            {
+                this.animalAreaName = "cows";
+                this.milkAreaName = "Cow Milk";
+                this.lactatingPredicate = createCowLactatingPredicate();
+            } else if (Objects.equals(animalAlias.getKeys().get(0), "goat"))
+            {
+                this.animalAreaName = "goats";
+                this.milkAreaName = "Goat Milk";
+                this.lactatingPredicate = createGoatLactatingPredicate();
+            } else if (Objects.equals(animalAlias.getKeys().get(0), "sheep"))
+            {
+                this.animalAreaName = "sheeps";
+                this.milkAreaName = "Sheep Milk";
+                this.lactatingPredicate = createSheepLactatingPredicate();
+            }
         }
     }
 
