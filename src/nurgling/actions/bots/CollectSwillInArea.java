@@ -21,6 +21,7 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.StockpileUtils;
 import nurgling.tasks.FilledTrough;
+import nurgling.widgets.Specialisation;
 
 import java.util.*;
 import java.util.List;
@@ -86,7 +87,14 @@ public class CollectSwillInArea implements Action {
             // Main collection/delivery cycle
             while (hasMoreItems && cycleCount < maxCycles) {
                 cycleCount++;
-                gui.msg("=== Starting new collection cycle ===");
+                gui.msg("=== Starting new collection cycle " + cycleCount + " ===");
+
+                // Navigate to collection area (important after delivery cycles)
+                Results collectionNavResult = navigateToCollectionArea(gui, area);
+                if (!collectionNavResult.IsSuccess()) {
+                    gui.msg("Could not navigate to collection area - ending cycle");
+                    break;
+                }
 
                 // Phase 1: Collect from containers until inventory full
                 int cycleItems = collectFromContainers(gui, area);
@@ -118,7 +126,7 @@ public class CollectSwillInArea implements Action {
                     gui.msg("No more swill items detected in collection area");
                 }
 
-                gui.msg("=== Cycle completed ===");
+                gui.msg("=== Cycle " + cycleCount + " completed ===");
             }
 
             if (cycleCount >= maxCycles) {
@@ -629,8 +637,11 @@ public class CollectSwillInArea implements Action {
 
     /**
      * Deliver all swill items to trough areas, ensuring complete delivery.
+     * Uses proper NContext navigation for potentially distant areas.
      */
     private Results deliverAllSwillItems(NGameUI gui, List<NArea> deliveryAreas, ArrayList<WItem> swillItems) throws InterruptedException {
+        NContext context = new NContext(gui);
+
         while (!swillItems.isEmpty()) {
             int itemsBefore = swillItems.size();
 
@@ -640,26 +651,56 @@ public class CollectSwillInArea implements Action {
                 try {
                     gui.msg("Attempting delivery to area: " + area.name);
 
-                    // Get area coordinates
-                    Pair<Coord2d, Coord2d> areaCoords = area.getRCArea();
-                    if (areaCoords == null) continue;
+                    // Navigate to the area using proper NContext routing (handles distant areas)
+                    if (area.name.toLowerCase().contains("trough")) {
+                        // Navigate to trough specialization area
+                        NArea troughArea = context.getSpecArea(Specialisation.SpecName.trough);
+                        if (troughArea == null) {
+                            gui.msg("Could not find or navigate to trough area");
+                            continue;
+                        }
+                    } else if (area.name.toLowerCase().contains("swill")) {
+                        // Navigate to swill specialization area (if it gets re-enabled later)
+                        gui.msg("Swill area navigation - assuming trough for now");
+                        NArea troughArea = context.getSpecArea(Specialisation.SpecName.trough);
+                        if (troughArea == null) {
+                            gui.msg("Could not find or navigate to trough area");
+                            continue;
+                        }
+                    }
 
-                    // Look for troughs and cisterns in the area
+                    gui.msg("Successfully navigated to delivery area: " + area.name);
+
+                    // Now look for troughs and cisterns in the area (after proper navigation)
+                    Pair<Coord2d, Coord2d> areaCoords = area.getRCArea();
+                    if (areaCoords == null) {
+                        gui.msg("Could not get area coordinates after navigation");
+                        continue;
+                    }
+
                     ArrayList<Gob> feedingContainers = Finder.findGobs(areaCoords,
                         new NAlias("Trough", "Cistern", "Stone Cistern"));
 
-                    if (feedingContainers.isEmpty()) continue;
+                    if (feedingContainers.isEmpty()) {
+                        gui.msg("No feeding containers found in area after navigation");
+                        continue;
+                    }
 
-                    // Try to feed each container
+                    gui.msg("Found " + feedingContainers.size() + " feeding containers in area");
+
+                    // Try to feed each container (now we're already in the right area)
                     for (Gob container : feedingContainers) {
                         if (swillItems.isEmpty()) break;
 
                         try {
                             gui.msg("Navigating to " + container.ngob.name + " at " + container.rc);
 
-                            // Navigate directly to the container
+                            // Short-distance navigation to the container (within area)
                             Results pathResult = new PathFinder(container).run(gui);
-                            if (!pathResult.IsSuccess()) continue;
+                            if (!pathResult.IsSuccess()) {
+                                gui.msg("Could not reach " + container.ngob.name + " within area");
+                                continue;
+                            }
 
                             // Deliver items to this container
                             Results feedResult = deliverToContainer(gui, container, swillItems);
@@ -704,6 +745,38 @@ public class CollectSwillInArea implements Action {
             return !containers.isEmpty() || !stockpiles.isEmpty();
         } catch (Exception e) {
             return false; // Assume no more items if we can't check
+        }
+    }
+
+    /**
+     * Navigate back to the collection area using coordinates.
+     * This ensures we return to the selected area after delivery cycles.
+     */
+    private Results navigateToCollectionArea(NGameUI gui, Pair<Coord2d, Coord2d> area) throws InterruptedException {
+        try {
+            gui.msg("Navigating back to collection area...");
+
+            // Calculate center of collection area
+            Coord2d center = new Coord2d(
+                (area.a.x + area.b.x) / 2,
+                (area.a.y + area.b.y) / 2
+            );
+
+            gui.msg("Collection area center: " + center);
+
+            // Navigate to collection area center
+            Results navResult = new PathFinder(center).run(gui);
+            if (navResult.IsSuccess()) {
+                gui.msg("Successfully returned to collection area");
+                return Results.SUCCESS();
+            } else {
+                gui.msg("Failed to navigate to collection area center");
+                return Results.FAIL();
+            }
+
+        } catch (Exception e) {
+            gui.msg("Error navigating to collection area: " + e.getMessage());
+            return Results.FAIL();
         }
     }
 }
