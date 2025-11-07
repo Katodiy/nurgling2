@@ -10,7 +10,6 @@ import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
 import nurgling.actions.TakeItemsFromContainer;
 import nurgling.actions.TakeItemsFromPile;
-import nurgling.actions.bots.SelectArea;
 import nurgling.actions.OpenTargetContainer;
 import nurgling.actions.CloseTargetContainer;
 import nurgling.areas.NArea;
@@ -80,7 +79,7 @@ public class CollectSwillInArea implements Action {
             }
 
             int totalItemsProcessed = 0;
-            boolean hasMoreItems = true;
+            boolean hasMoreItems;
             int cycleCount = 0;
             int maxCycles = 20; // Safety limit to prevent infinite loops
 
@@ -124,7 +123,7 @@ public class CollectSwillInArea implements Action {
                 }
 
                 // Check if there are still items to collect in this area (now that we're here)
-                hasMoreItems = hasMoreSwillItemsInArea(gui, area);
+                hasMoreItems = hasMoreSwillItemsInArea(area);
                 if (!hasMoreItems) {
                     gui.msg("No more swill items found in collection area - stopping");
                     break;
@@ -142,7 +141,6 @@ public class CollectSwillInArea implements Action {
                 ArrayList<WItem> swillItems = getSwillItemsFromInventory(gui);
                 if (swillItems.isEmpty()) {
                     gui.msg("No more swill items found in area");
-                    hasMoreItems = false;
                     break;
                 }
 
@@ -233,90 +231,6 @@ public class CollectSwillInArea implements Action {
         return itemsCollected;
     }
 
-    /**
-     * Collect swill items from stockpiles in the area.
-     */
-    private int collectSwillFromStockpiles(NGameUI gui, ArrayList<Gob> stockpiles) throws InterruptedException {
-        int totalSwillItems = 0;
-
-        for (Gob pile : stockpiles) {
-            try {
-                if (!PathFinder.isAvailable(pile)) {
-                    gui.msg("Skipping inaccessible stockpile");
-                    continue;
-                }
-
-                gui.msg("Processing stockpile " + pile.id);
-
-                // Navigate to stockpile
-                Results pathResult = new PathFinder(pile).run(gui);
-                if (!pathResult.IsSuccess()) {
-                    gui.msg("Could not reach stockpile " + pile.id);
-                    continue;
-                }
-
-                // Open stockpile
-                Results openResult = new OpenTargetContainer("Stockpile", pile).run(gui);
-                if (!openResult.IsSuccess()) {
-                    gui.msg("Could not open stockpile " + pile.id);
-                    continue;
-                }
-
-                // Get stockpile interface
-                NISBox spbox = gui.getStockpile();
-                if (spbox == null) {
-                    gui.msg("Could not access stockpile interface");
-                    continue;
-                }
-
-                // Check inventory space
-                Coord size = StockpileUtils.itemMaxSize.get(pile.ngob.name);
-                if (size == null) size = new Coord(1, 1);
-
-                int freeSpace = gui.getInventory().getNumberFreeCoord(size);
-                if (freeSpace == 0) {
-                    gui.msg("No inventory space for stockpile items");
-                    continue;
-                }
-
-                // Take items from pile and filter for swill
-                int target_size = Math.min(spbox.calcCount(), freeSpace);
-                if (target_size > 0) {
-                    TakeItemsFromPile tifp = new TakeItemsFromPile(pile, spbox, target_size);
-                    Results takeResult = tifp.run(gui);
-
-                    if (takeResult.IsSuccess()) {
-                        // Count swill items from what we took
-                        int swillCount = 0;
-                        for (NGItem item : tifp.newItems()) {
-                            if (item.name() != null && isSwillItem(item.name())) {
-                                swillCount++;
-                                gui.msg("Collected swill item from stockpile: " + item.name());
-                            } else {
-                                gui.msg("Collected non-swill item: " + item.name());
-                            }
-                        }
-                        totalSwillItems += swillCount;
-
-                        if (swillCount > 0) {
-                            gui.msg("Found " + swillCount + " swill items in stockpile");
-                        } else {
-                            gui.msg("No swill items in this stockpile");
-                        }
-                    }
-                }
-
-                Thread.sleep(200); // Small delay between stockpiles
-
-            } catch (InterruptedException e) {
-                throw e;
-            } catch (Exception e) {
-                gui.msg("Error processing stockpile " + pile.id + ": " + e.getMessage());
-            }
-        }
-
-        return totalSwillItems;
-    }
 
     /**
      * Check if an item name matches swill criteria.
@@ -326,109 +240,11 @@ public class CollectSwillInArea implements Action {
     }
 
     /**
-     * Deliver collected swill items to swill/trough areas automatically using NContext.
-     */
-    private Results deliverSwillToDestinations(NGameUI gui) throws InterruptedException {
-        gui.msg("Starting automatic swill delivery...");
-
-        // Get swill items from player inventory
-        ArrayList<WItem> swillItems = new ArrayList<>();
-        for (WItem item : gui.getInventory().getItems()) {
-            String itemName = ((NGItem)item.item).name();
-            if (itemName != null && isSwillItem(itemName)) {
-                swillItems.add(item);
-            }
-        }
-
-        if (swillItems.isEmpty()) {
-            gui.msg("No swill items in inventory to deliver");
-            return Results.SUCCESS();
-        }
-
-        gui.msg("Found " + swillItems.size() + " swill items in inventory");
-
-        // Find swill delivery areas using NContext
-        List<NArea> deliveryAreas = NContext.findSwillDeliveryAreas();
-        if (deliveryAreas.isEmpty()) {
-            gui.msg("No swill or trough areas found in NContext");
-            return Results.FAIL();
-        }
-
-        gui.msg("Found " + deliveryAreas.size() + " delivery areas");
-
-        // Try to deliver to each area
-        for (NArea area : deliveryAreas) {
-            if (swillItems.isEmpty()) {
-                break; // All items delivered
-            }
-
-            try {
-                gui.msg("Attempting delivery to area: " + area.name);
-
-                // Get area coordinates
-                Pair<Coord2d, Coord2d> areaCoords = area.getRCArea();
-                if (areaCoords == null) {
-                    gui.msg("Could not get coordinates for area: " + area.name);
-                    continue;
-                }
-
-                // Look for troughs and cisterns in the area first
-                ArrayList<Gob> feedingContainers = Finder.findGobs(areaCoords,
-                    new NAlias("Trough", "Cistern", "Stone Cistern"));
-
-                if (feedingContainers.isEmpty()) {
-                    gui.msg("No feeding containers found in area: " + area.name);
-                    continue;
-                }
-
-                gui.msg("Found " + feedingContainers.size() + " feeding containers in area");
-
-                // Navigate to each container directly (more reliable than area center)
-                for (Gob container : feedingContainers) {
-                    if (swillItems.isEmpty()) {
-                        break; // All items delivered
-                    }
-
-                    try {
-                        gui.msg("Navigating to " + container.ngob.name + " at " + container.rc);
-
-                        // Navigate directly to the container
-                        Results pathResult = new PathFinder(container).run(gui);
-                        if (!pathResult.IsSuccess()) {
-                            gui.msg("Could not reach " + container.ngob.name);
-                            continue;
-                        }
-
-                        // Deliver items to this container
-                        Results feedResult = deliverToContainer(gui, container, swillItems);
-                        if (feedResult.IsSuccess()) {
-                            gui.msg("Successfully delivered items to " + container.ngob.name);
-                        }
-                    } catch (Exception e) {
-                        gui.msg("Error feeding container: " + e.getMessage());
-                    }
-                }
-
-            } catch (Exception e) {
-                gui.msg("Error processing delivery area " + area.name + ": " + e.getMessage());
-            }
-        }
-
-        if (!swillItems.isEmpty()) {
-            gui.msg("Could not deliver all items. " + swillItems.size() + " items remaining in inventory.");
-            return Results.FAIL();
-        }
-
-        return Results.SUCCESS();
-    }
-
-    /**
      * Deliver swill items to a specific feeding container (trough/cistern) using proper transfer pattern.
      * Assumes we are already at the container location.
      */
     private Results deliverToContainer(NGameUI gui, Gob container, ArrayList<WItem> swillItems) throws InterruptedException {
         // Use exact TransferToTrough pattern: while loop with item refresh
-        try {
             int itemsDelivered = 0;
 
             // Build dynamic NAlias based on actual swill items in inventory
@@ -445,7 +261,7 @@ public class CollectSwillInArea implements Action {
                 return Results.FAIL();
             }
 
-            gui.msg("Creating alias for items: " + swillItemNames.toString());
+            gui.msg("Creating alias for items: " + swillItemNames);
             NAlias swillAlias = new NAlias(swillItemNames.toArray(new String[0]));
 
             ArrayList<WItem> witems;
@@ -489,11 +305,6 @@ public class CollectSwillInArea implements Action {
                 gui.msg("No items could be delivered to " + container.ngob.name);
                 return Results.FAIL();
             }
-
-        } catch (Exception e) {
-            gui.msg("Error feeding container: " + e.getMessage());
-            return Results.FAIL();
-        }
     }
 
     /**
@@ -503,8 +314,8 @@ public class CollectSwillInArea implements Action {
         int itemsCollected = 0;
 
         ArrayList<Container> containers = new ArrayList<>();
-        for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+        for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet())))) {
+            Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name));
             containers.add(cand);
         }
 
@@ -761,12 +572,12 @@ public class CollectSwillInArea implements Action {
     /**
      * Check if there are more swill items to collect in the area.
      */
-    private boolean hasMoreSwillItemsInArea(NGameUI gui, Pair<Coord2d, Coord2d> area) {
+    private boolean hasMoreSwillItemsInArea(Pair<Coord2d, Coord2d> area) {
         try {
             // Check containers
             ArrayList<Container> containers = new ArrayList<>();
-            for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-                Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+            for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet())))) {
+                Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name));
                 containers.add(cand);
             }
 
