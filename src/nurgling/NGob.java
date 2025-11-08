@@ -135,8 +135,16 @@ public class NGob
     /**
      * Updates cached configuration values to reduce NConfig.get calls.
      */
-    private void updateConfigCache() {
-        if (configCacheCounter <= 0 || ++configCacheCounter >= CONFIG_CACHE_INTERVAL) {
+    public void updateConfigCache() {
+        updateConfigCache(false);
+    }
+    
+    /**
+     * Updates cached configuration values.
+     * @param force if true, forces cache update regardless of counter
+     */
+    public void updateConfigCache(boolean force) {
+        if (force || configCacheCounter <= 0 || ++configCacheCounter >= CONFIG_CACHE_INTERVAL) {
             cachedShowCropStage = (Boolean) NConfig.get(NConfig.Key.showCropStage);
             cachedShortCupboards = (Boolean) NConfig.get(NConfig.Key.shortCupboards);
             cachedQuestNotified = (Boolean) NConfig.get(NConfig.Key.questNotified);

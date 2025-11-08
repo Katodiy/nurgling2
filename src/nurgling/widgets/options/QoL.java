@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.overlays.NLPassistant;
 import nurgling.widgets.nsettings.Panel;
 
 public class QoL extends Panel {
@@ -177,7 +178,40 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.swimming, swimming.a);
         NConfig.set(NConfig.Key.disableMenugridKeys, disableMenugridKeys.a);
         NConfig.set(NConfig.Key.questNotified, questNotified.a);
+        
+        // Handle LP assistant setting change - remove overlays if disabled
+        boolean oldLpassistent = getBool(NConfig.Key.lpassistent);
         NConfig.set(NConfig.Key.lpassistent, lpassistent.a);
+        if(oldLpassistent != lpassistent.a) {
+            if(!lpassistent.a) {
+                // LP assistant was disabled - remove all LP assistant overlays
+                if(NUtils.getGameUI() != null && NUtils.getGameUI().ui != null && NUtils.getGameUI().ui.sess != null) {
+                    OCache oc = NUtils.getGameUI().ui.sess.glob.oc;
+                    synchronized(oc) {
+                        for(Gob gob : oc) {
+                            if(gob != null) {
+                                Gob.Overlay ol = gob.findol(NLPassistant.class);
+                                if(ol != null) {
+                                    ol.remove();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // Force update config cache in all NGob instances to reflect the change immediately
+            if(NUtils.getGameUI() != null && NUtils.getGameUI().ui != null && NUtils.getGameUI().ui.sess != null) {
+                OCache oc = NUtils.getGameUI().ui.sess.glob.oc;
+                synchronized(oc) {
+                    for(Gob gob : oc) {
+                        if(gob != null && gob.ngob != null) {
+                            gob.ngob.updateConfigCache(true);
+                        }
+                    }
+                }
+            }
+        }
+        
         NConfig.set(NConfig.Key.useGlobalPf, useGlobalPf.a);
         NConfig.set(NConfig.Key.debug, debug.a);
         NConfig.set(NConfig.Key.printpfmap, printpfmap.a);
