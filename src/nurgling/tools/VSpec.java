@@ -1981,6 +1981,7 @@ public class VSpec {
 
         ArrayList<JSONObject> silkcocoon = new ArrayList<>();
         silkcocoon.add(new JSONObject("{\"static\":\"gfx/invobjs/silkcocoon\",\"name\":\"Silkworm Cocoon\"}"));
+        silkcocoon.add(new JSONObject("{\"static\":\"gfx/invobjs/deathchrysalis\",\"name\":\"Death's Head Chrysalis\"}"));
         categories.put("Silkworm Cocoon", silkcocoon);
 
         ArrayList<JSONObject> wickerItems = new ArrayList<>();
