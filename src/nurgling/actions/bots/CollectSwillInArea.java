@@ -15,13 +15,11 @@ import nurgling.actions.OpenTargetContainer;
 import nurgling.actions.TransferToTroughArea;
 import nurgling.NMapView;
 import nurgling.routes.RoutePoint;
-import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.StockpileUtils;
-import nurgling.widgets.Specialisation;
 
 import java.util.*;
 
@@ -51,7 +49,6 @@ public class CollectSwillInArea implements Action {
 
         // Build swill alias once
         NAlias swillAlias = createSwillAlias();
-        NContext context = new NContext(gui);
 
         // Process containers first (like FreeContainers)
         ArrayList<Container> containers = new ArrayList<>();
@@ -74,7 +71,7 @@ public class CollectSwillInArea implements Action {
 
                     // If inventory full, deliver and return
                     if (gui.getInventory().getFreeSpace() == 0) {
-                        if (!deliverSwillToTrough(gui, context, swillAlias)) {
+                        if (!deliverSwillToTrough(gui, swillAlias)) {
                             return Results.SUCCESS(); // Stop collection gracefully
                         }
                         returnToAreaIfNeeded(gui, area);
@@ -103,7 +100,7 @@ public class CollectSwillInArea implements Action {
                                 int target_size = gui.getInventory().getNumberFreeCoord((size != null) ? size : new Coord(1, 1));
                                 if (target_size == 0) {
                                     // Inventory full - deliver and return
-                                    if (!deliverSwillToTrough(gui, context, swillAlias)) {
+                                    if (!deliverSwillToTrough(gui, swillAlias)) {
                                         return Results.SUCCESS(); // Stop collection gracefully
                                     }
                                     returnToAreaIfNeeded(gui, area);
@@ -131,7 +128,7 @@ public class CollectSwillInArea implements Action {
                             }
                         } else {
                             // Inventory full - deliver and return
-                            if (!deliverSwillToTrough(gui, context, swillAlias)) {
+                            if (!deliverSwillToTrough(gui, swillAlias)) {
                                 return Results.SUCCESS(); // Stop collection gracefully
                             }
                             returnToAreaIfNeeded(gui, area);
@@ -146,7 +143,7 @@ public class CollectSwillInArea implements Action {
         }
 
         // Final delivery of any remaining items
-        deliverSwillToTrough(gui, context, swillAlias);
+        deliverSwillToTrough(gui, swillAlias);
         return Results.SUCCESS();
     }
 
@@ -180,7 +177,7 @@ public class CollectSwillInArea implements Action {
      * Deliver swill items to troughs using TransferToTroughArea for efficient multi-trough distribution.
      * @return true if delivery succeeded or should continue collection, false if all troughs are full and should stop
      */
-    private boolean deliverSwillToTrough(NGameUI gui, NContext context, NAlias swillAlias) throws InterruptedException {
+    private boolean deliverSwillToTrough(NGameUI gui, NAlias swillAlias) throws InterruptedException {
         // Check if we have swill items to deliver
         ArrayList<WItem> swillItems = new ArrayList<>();
         for (WItem item : gui.getInventory().getItems()) {
