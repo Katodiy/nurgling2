@@ -141,7 +141,11 @@ public class NGItem extends GItem
             {
                 if(NUtils.getGameUI().map.clickedGob!=null)
                 {
-                    VSpec.checkLpExplorer(NUtils.getGameUI().map.clickedGob.gob, name);
+                    // Exclude tools from LPExplorer tracking
+                    if(!name.contains(" Axe") && !name.contains(" Saw"))
+                    {
+                        VSpec.checkLpExplorer(NUtils.getGameUI().map.clickedGob.gob, name);
+                    }
                 }
             }
 
