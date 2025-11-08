@@ -1979,6 +1979,10 @@ public class VSpec {
         soil.add(new JSONObject("{\"static\":\"gfx/invobjs/soil\",\"name\":\"Soil\"}"));
         categories.put("Soil", soil);
 
+        ArrayList<JSONObject> silkcocoon = new ArrayList<>();
+        silkcocoon.add(new JSONObject("{\"static\":\"gfx/invobjs/silkcocoon\",\"name\":\"Silkworm Cocoon\"}"));
+        categories.put("Silkworm Cocoon", silkcocoon);
+
         ArrayList<JSONObject> wickerItems = new ArrayList<>();
         wickerItems.add(new JSONObject("{\"static\":\"gfx/invobjs/branch\",\"name\":\"Branch\"}"));
         wickerItems.add(new JSONObject("{\"static\":\"gfx/invobjs/branch-olive\",\"name\":\"Olive Branch\"}"));
