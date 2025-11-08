@@ -113,7 +113,6 @@ public class BotRegistry {
         bots.add(new BotDescriptor("compostbin", BotDescriptor.BotType.FARMING, "Compost Bin", "Pull mulch out of compost bins.", true, true, CompostBinUnloader.class, "compostbin", false));
         bots.add(new BotDescriptor("curdingtub", BotDescriptor.BotType.FARMING, "Unload curding Tubs", "Pull curd out of curding tubs.", true, true, CurdingTubUnloader.class, "cheese_empty", false));
         bots.add(new BotDescriptor("cheese", BotDescriptor.BotType.FARMING, "Cheese Production Bot", "Process cheese orders.", true, true, CheeseProductionBot.class, "cheese", false));
-        bots.add(new BotDescriptor("swill_collector", BotDescriptor.BotType.FARMING, "Swill Collector", "Collects swill items from area and feeds to troughs/cisterns.", false, true, CollectSwillInArea.class, "test35", false));
 
         // FARMING QUALITY
         bots.add(new BotDescriptor("turnipq", BotDescriptor.BotType.FARMING_QUALITY, "Turnip Farmer Quality", "Automatically harvests and replants turnips in X*Y cell patches.", true, true, TurnipsFarmerQ.class, "turnipq", false));
@@ -157,6 +156,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("freeinv", BotDescriptor.BotType.UTILS, "Free inventory", "Free inventory with Area system.", false, true, FreeInvBot.class, "freeinv", false));
         bots.add(new BotDescriptor("travellerssack", BotDescriptor.BotType.UTILS, "Equip travellers sacks", "Equip travellers sacks.", false, true, EquipTravellersSacksFromBelt.class, "travellerssack", false));
         bots.add(new BotDescriptor("studytable", BotDescriptor.BotType.UTILS, "Fill study desk", "Fill study desk", true, true, StudyDeskFiller.class, "studytable", false));
+        bots.add(new BotDescriptor("swill_collector", BotDescriptor.BotType.UTILS, "Swill Collector", "Collects swill items from area and feeds to troughs/cisterns.", false, true, CollectSwillInArea.class, "swillcollector", false));
 
         // BUILD
         bots.add(new BotDescriptor("dframe", BotDescriptor.BotType.BUILD, "Build Drying Frame", "Builds drying frame.", false, true, BuildDryingFrame.class, "dframe", true));
