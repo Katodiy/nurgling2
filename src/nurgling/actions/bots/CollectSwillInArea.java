@@ -12,16 +12,14 @@ import nurgling.actions.Results;
 import nurgling.actions.TakeItemsFromContainer;
 import nurgling.actions.TakeItemsFromPile;
 import nurgling.actions.OpenTargetContainer;
-import nurgling.actions.TransferToTrough;
+import nurgling.actions.TransferToTroughArea;
 import nurgling.NMapView;
 import nurgling.routes.RoutePoint;
-import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.StockpileUtils;
-import nurgling.widgets.Specialisation;
 
 import java.util.*;
 
@@ -51,7 +49,6 @@ public class CollectSwillInArea implements Action {
 
         // Build swill alias once
         NAlias swillAlias = createSwillAlias();
-        NContext context = new NContext(gui);
 
         // Process containers first (like FreeContainers)
         ArrayList<Container> containers = new ArrayList<>();
@@ -61,7 +58,6 @@ public class CollectSwillInArea implements Action {
         }
 
         if (!containers.isEmpty()) {
-            gui.msg("Processing " + containers.size() + " containers");
             for (Container container : containers) {
                 try {
                     new PathFinder(Finder.findGob(container.gobid)).run(gui);
@@ -75,7 +71,9 @@ public class CollectSwillInArea implements Action {
 
                     // If inventory full, deliver and return
                     if (gui.getInventory().getFreeSpace() == 0) {
-                        deliverSwillToTrough(gui, context, swillAlias);
+                        if (!deliverSwillToTrough(gui, swillAlias)) {
+                            return Results.SUCCESS(); // Stop collection gracefully
+                        }
                         returnToAreaIfNeeded(gui, area);
                     }
                 } catch (InterruptedException e) {
@@ -102,7 +100,9 @@ public class CollectSwillInArea implements Action {
                                 int target_size = gui.getInventory().getNumberFreeCoord((size != null) ? size : new Coord(1, 1));
                                 if (target_size == 0) {
                                     // Inventory full - deliver and return
-                                    deliverSwillToTrough(gui, context, swillAlias);
+                                    if (!deliverSwillToTrough(gui, swillAlias)) {
+                                        return Results.SUCCESS(); // Stop collection gracefully
+                                    }
                                     returnToAreaIfNeeded(gui, area);
                                     if (Finder.findGob(pile.id) != null) {
                                         new PathFinder(pile).run(gui);
@@ -122,15 +122,15 @@ public class CollectSwillInArea implements Action {
                                                 swillCount++;
                                             }
                                         }
-                                        if (swillCount > 0) {
-                                            gui.msg("Collected " + swillCount + " swill items from stockpile");
-                                        }
+                                        // Continue processing
                                     }
                                 }
                             }
                         } else {
                             // Inventory full - deliver and return
-                            deliverSwillToTrough(gui, context, swillAlias);
+                            if (!deliverSwillToTrough(gui, swillAlias)) {
+                                return Results.SUCCESS(); // Stop collection gracefully
+                            }
                             returnToAreaIfNeeded(gui, area);
                             if (Finder.findGob(pile.id) != null) {
                                 new PathFinder(pile).run(gui);
@@ -143,9 +143,7 @@ public class CollectSwillInArea implements Action {
         }
 
         // Final delivery of any remaining items
-        deliverSwillToTrough(gui, context, swillAlias);
-
-        gui.msg("Swill collection completed");
+        deliverSwillToTrough(gui, swillAlias);
         return Results.SUCCESS();
     }
 
@@ -176,9 +174,10 @@ public class CollectSwillInArea implements Action {
     }
 
     /**
-     * Deliver swill items to trough using proper navigation and TransferToTrough.
+     * Deliver swill items to troughs using TransferToTroughArea for efficient multi-trough distribution.
+     * @return true if delivery succeeded or should continue collection, false if all troughs are full and should stop
      */
-    private void deliverSwillToTrough(NGameUI gui, NContext context, NAlias swillAlias) throws InterruptedException {
+    private boolean deliverSwillToTrough(NGameUI gui, NAlias swillAlias) throws InterruptedException {
         // Check if we have swill items to deliver
         ArrayList<WItem> swillItems = new ArrayList<>();
         for (WItem item : gui.getInventory().getItems()) {
@@ -189,39 +188,28 @@ public class CollectSwillInArea implements Action {
         }
 
         if (swillItems.isEmpty()) {
-            return; // Nothing to deliver
+            return true; // Nothing to deliver, continue collection
         }
 
-        gui.msg("Delivering " + swillItems.size() + " swill items to trough");
-
         try {
-            // Navigate to trough area
-            NArea troughArea = context.getSpecArea(Specialisation.SpecName.trough);
-            if (troughArea != null) {
-                gui.msg("Navigated to trough area");
+            // Use TransferToTroughArea for efficient multi-trough distribution
+            TransferToTroughArea transferAction = new TransferToTroughArea(gui, swillAlias);
+            Results result = transferAction.run(gui);
 
-                // Find a trough in the area
-                Pair<Coord2d, Coord2d> areaCoords = troughArea.getRCArea();
-                if (areaCoords != null) {
-                    ArrayList<Gob> troughs = Finder.findGobs(areaCoords, new NAlias("Trough", "Cistern", "Stone Cistern"));
-                    if (!troughs.isEmpty()) {
-                        Gob trough = troughs.get(0);
-                        new PathFinder(trough).run(gui);
-
-                        // Use TransferToTrough with the found trough
-                        new TransferToTrough(trough, swillAlias).run(gui);
-                        gui.msg("Swill delivery completed");
-                    } else {
-                        gui.msg("No trough found in trough area");
-                    }
-                } else {
-                    gui.msg("Could not get trough area coordinates");
-                }
+            if (result.IsSuccess()) {
+                return true; // Success, continue collection
             } else {
-                gui.msg("Could not find trough area");
+                // Check if we still have items after attempted delivery
+                ArrayList<WItem> remainingItems = gui.getInventory().getItems(swillAlias);
+                if (!remainingItems.isEmpty()) {
+                    return false; // Stop collection, troughs are full
+                }
+                return true; // No items remaining, can continue
             }
+        } catch (IllegalArgumentException e) {
+            return false; // Can't deliver anywhere, stop collection
         } catch (Exception e) {
-            gui.msg("Error during delivery: " + e.getMessage());
+            return false; // Delivery error, stop collection
         }
     }
 
@@ -235,7 +223,6 @@ public class CollectSwillInArea implements Action {
             double distance = areaCenter.dist(NUtils.player().rc);
 
             if (distance > 500) {
-                gui.msg("Returning to collection area via route navigation");
                 new RoutePointNavigator(closestRoutePoint).run(gui);
             }
         }
