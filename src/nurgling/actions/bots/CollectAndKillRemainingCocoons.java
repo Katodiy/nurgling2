@@ -26,6 +26,7 @@ public class CollectAndKillRemainingCocoons implements Action {
         NContext context = new NContext(gui);
         String cocoons = "Silkworm Cocoon";
         String moth = "Silkmoth";
+        String chrysalis = "Death's Head Chrysalis";
         
         // Get silkworm feeding area
         NArea feedingArea = context.getSpecArea(Specialisation.SpecName.silkwormFeeding);
@@ -48,7 +49,7 @@ public class CollectAndKillRemainingCocoons implements Action {
         }
         
         // Collect all remaining cocoons from feeding containers
-        NAlias cocoonAlias = new NAlias(cocoons, moth);
+        NAlias cocoonAlias = new NAlias(cocoons, moth, chrysalis);
         boolean foundCocoons = false;
         
         for (Container container : feedingContainers) {
