@@ -53,6 +53,10 @@ public class NGUIInfo extends Window
     {
         NUtils.getUI().core.mode = NCore.Mode.IDLE;
         NConfig.set(NConfig.Key.show_drag_menu, false);
+        // Force save config when exiting DRAG mode to ensure widget visibility states are persisted
+        if (NUtils.getUI().core.config.isUpdated()) {
+            NUtils.getUI().core.config.write();
+        }
         this.hide();
     }
 }
