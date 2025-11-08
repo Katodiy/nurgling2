@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.Locked;
 import nurgling.widgets.LocalizedResourceTimerDialog;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -148,10 +149,12 @@ public class LocalizedResourceTimerService {
             openMapWindowIfNeeded();
             
             if (gui.mmap != null) {
-                MapFile.Segment segment = gui.mmap.file.segments.get(timer.getSegmentId());
-                if (segment != null) {
-                    MiniMap.Location targetLoc = new MiniMap.Location(segment, timer.getTileCoords());
-                    centerBigMapOnly(targetLoc);
+                try (Locked lk = new Locked(gui.mmap.file.lock.readLock())) {
+                    MapFile.Segment segment = gui.mmap.file.segments.get(timer.getSegmentId());
+                    if (segment != null) {
+                        MiniMap.Location targetLoc = new MiniMap.Location(segment, timer.getTileCoords());
+                        centerBigMapOnly(targetLoc);
+                    }
                 }
             }
         } catch (Exception e) {

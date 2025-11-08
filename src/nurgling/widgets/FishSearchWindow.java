@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import haven.Locked;
 import nurgling.FishLocation;
 import nurgling.FishLocationService;
 import nurgling.NGameUI;
@@ -241,16 +242,18 @@ public class FishSearchWindow extends Window {
 
         // Get the segment for this fish location
         if (gui.mmap != null && gui.mmap.file != null) {
-            MapFile.Segment segment = gui.mmap.file.segments.get(location.getSegmentId());
-            if (segment != null) {
-                // Create a location for the fish coordinates
-                MiniMap.Location targetLoc = new MiniMap.Location(segment, location.getTileCoords());
-                // Center the map view on this location
-                mapWnd.view.center(targetLoc);
-                mapWnd.view.follow(null);
-                gui.msg("Map centered on " + location.getFishName() + " location", java.awt.Color.GREEN);
-            } else {
-                gui.msg("Fish location is in a different area", java.awt.Color.YELLOW);
+            try (Locked lk = new Locked(gui.mmap.file.lock.readLock())) {
+                MapFile.Segment segment = gui.mmap.file.segments.get(location.getSegmentId());
+                if (segment != null) {
+                    // Create a location for the fish coordinates
+                    MiniMap.Location targetLoc = new MiniMap.Location(segment, location.getTileCoords());
+                    // Center the map view on this location
+                    mapWnd.view.center(targetLoc);
+                    mapWnd.view.follow(null);
+                    gui.msg("Map centered on " + location.getFishName() + " location", java.awt.Color.GREEN);
+                } else {
+                    gui.msg("Fish location is in a different area", java.awt.Color.YELLOW);
+                }
             }
         }
     }
