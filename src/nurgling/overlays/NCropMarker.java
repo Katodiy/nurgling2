@@ -10,8 +10,12 @@ import nurgling.*;
 public class NCropMarker extends Sprite implements RenderTree.Node, PView.Render2D {
     /** The image displayed for the crop marker */
     private TexI img = null;
-    /** Position of the crop marker */
-    private Coord3f pos = new Coord3f(0, 0, 0);
+    /** Position of the crop marker - cached and reused */
+    private static final Coord3f MARKER_POS = new Coord3f(0, 0, 0);
+    /** Cached screen coordinate to avoid recalculation */
+    private Coord cachedScreenCoord = null;
+    /** Frame counter for screen coord cache invalidation */
+    private double lastFrameUpdate = -1;
 
     /** Current growth stage of the crop */
     private long currentStage = -2;
@@ -97,9 +101,22 @@ public class NCropMarker extends Sprite implements RenderTree.Node, PView.Render
 
 	@Override
     public void draw(GOut g, Pipe state) {
-        if (showCropStage && img != null) {
-            Coord sc = Homo3D.obj2view(pos, state, Area.sized(g.sz())).round2();
-            g.aimage(img, sc, 0.5, 0.5);
+        // Early exit if disabled or no image
+        if (!showCropStage || img == null) {
+            return;
         }
+        
+        // Get current frame counter from Gob
+        Gob gob = (Gob) owner;
+        double currentFrame = gob.glob.globtime();
+        
+        // Cache screen coordinate for this frame to avoid repeated obj2view calls
+        if (cachedScreenCoord == null || lastFrameUpdate != currentFrame) {
+            Coord3f screenPos = Homo3D.obj2view(MARKER_POS, state, Area.sized(g.sz()));
+            cachedScreenCoord = screenPos.round2();
+            lastFrameUpdate = currentFrame;
+        }
+        
+        g.aimage(img, cachedScreenCoord, 0.5, 0.5);
     }
 }
