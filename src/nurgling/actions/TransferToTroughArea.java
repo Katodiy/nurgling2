@@ -60,8 +60,6 @@ public class TransferToTroughArea implements Action {
             return Results.ERROR("No troughs found in trough area");
         }
 
-        gui.msg("Found " + allTroughs.size() + " troughs in area");
-
         // Continue until all items are transferred or all troughs are full
         while (!gui.getInventory().getItems(items).isEmpty()) {
             // Find all NON-full troughs
@@ -73,19 +71,14 @@ public class TransferToTroughArea implements Action {
             }
 
             if (availableTroughs.isEmpty()) {
-                gui.msg("All troughs are full - stopping transfer");
                 break;
             }
 
-            gui.msg("Found " + availableTroughs.size() + " available (non-full) troughs");
-
             // Pick the first available trough and fill it completely using TransferToTrough pattern
             Gob currentTrough = availableTroughs.get(0);
-            gui.msg("Filling trough " + currentTrough.id + " completely");
 
             Results result = fillTroughCompletely(gui, currentTrough);
             if (!result.IsSuccess()) {
-                gui.msg("Failed to fill trough " + currentTrough.id + ": " + result.msg);
                 // Remove this problematic trough from our list to avoid infinite loops
                 allTroughs.remove(currentTrough);
                 if (allTroughs.isEmpty()) {
@@ -97,7 +90,6 @@ public class TransferToTroughArea implements Action {
         // Check final result
         ArrayList<WItem> remainingItems = gui.getInventory().getItems(items);
         if (remainingItems.isEmpty()) {
-            gui.msg("All items successfully transferred to troughs!");
             return Results.SUCCESS();
         } else {
             return Results.ERROR("Could not transfer all items - " + remainingItems.size() + " items remaining. All accessible troughs may be full.");
@@ -118,7 +110,6 @@ public class TransferToTroughArea implements Action {
         while (!(witems = gui.getInventory().getItems(items)).isEmpty()) {
             // Check if trough is full (same check as TransferToTrough)
             if (trough.ngob.getModelAttribute() == 7) {
-                gui.msg("Trough " + trough.id + " is now full (model attribute = 7)");
                 break;
             }
 
