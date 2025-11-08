@@ -76,6 +76,9 @@ public class NGob
     private boolean cachedLpassistent = false;
     private int configCacheCounter = 0;
     private static final int CONFIG_CACHE_INTERVAL = 30;
+    
+    // Flag to track if crop marker was already added
+    private boolean cropMarkerAdded = false;
 
     public void changedPose(String currentPose)
     {
@@ -419,9 +422,10 @@ public class NGob
                         NAlarmWdg.addBorka(parent.id);
                     }
 
-                    if (NParser.checkName(name, PLANTS_ALIAS) && cachedShowCropStage)
+                    if (NParser.checkName(name, PLANTS_ALIAS) && cachedShowCropStage && !cropMarkerAdded)
                     {
                         parent.addcustomol(new NCropMarker(parent));
+                        cropMarkerAdded = true;
                     } else
                     {
                         if (NParser.checkName(name, MINEBEAM_ALIAS))
@@ -803,17 +807,14 @@ public class NGob
             return 0;
         } else if (name.equals("gfx/terobjs/barrel"))
         {
-            synchronized (parent.ols)
+            for (Gob.Overlay ol : parent.ols)
             {
-                for (Gob.Overlay ol : parent.ols)
+                if (ol.spr instanceof StaticSprite)
                 {
-                    if (ol.spr instanceof StaticSprite)
-                    {
-                        return 4;
-                    }
+                    return 4;
                 }
-                return 0;
             }
+            return 0;
         } else if (name.equals("gfx/terobjs/cheeserack"))
         {
             int counter = 0;

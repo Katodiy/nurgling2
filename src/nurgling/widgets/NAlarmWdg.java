@@ -71,9 +71,7 @@ public class NAlarmWdg extends Widget
 
                                         }
                                         if (kinProp.arrow) {
-                                            synchronized (player.ols) {
-                                                player.addol(new NDirArrow(NUtils.player(), Color.WHITE, 50, gob, null));
-                                            }
+                                            player.addol(new NDirArrow(NUtils.player(), Color.WHITE, 50, gob, null));
                                         }
                                     } else {
                                         if (buddy.b != null) {
@@ -82,9 +80,7 @@ public class NAlarmWdg extends Widget
                                                 addAlarm(id);
                                             }
                                             if (kinProp.arrow) {
-                                                synchronized (player.ols) {
-                                                    player.addol(new NDirArrow(NUtils.player(), BuddyWnd.gc[buddy.b.group], 50, gob, null));
-                                                }
+                                                player.addol(new NDirArrow(NUtils.player(), BuddyWnd.gc[buddy.b.group], 50, gob, null));
                                             }
                                         }
                                     }

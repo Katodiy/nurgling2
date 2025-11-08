@@ -18,11 +18,11 @@ public class NCropMarker extends Sprite implements RenderTree.Node, PView.Render
     /** Crop properties such as specific stage and max stage */
     private NProperties.Crop crop;
     /** Indicates whether the crop stage should be shown */
-    private boolean showCropStage = false;
-    /** Counter to determine when to check the config again */
-    private int configCheckCounter = 0;
-    /** Interval for checking the config */
-    private static final int CONFIG_CHECK_INTERVAL = 30;
+    private static boolean showCropStage = false;
+    /** Timestamp of last config check */
+    private static long lastConfigCheck = 0;
+    /** Flag to track initialization */
+    private static boolean initialized = false;
 
     /**
      * Creates a new NCropMarker for a specific Gob.
@@ -32,7 +32,7 @@ public class NCropMarker extends Sprite implements RenderTree.Node, PView.Render
     public NCropMarker(Gob gob) {
         super(gob, null);
         this.crop = NProperties.Crop.getCrop((Gob) owner);
-        this.showCropStage = (Boolean) NConfig.get(NConfig.Key.showCropStage);
+        // Config is now static and checked globally
     }
 
 	@Override
@@ -42,10 +42,18 @@ public class NCropMarker extends Sprite implements RenderTree.Node, PView.Render
 
 	@Override
     public boolean tick(double dt) {
-        // Check configuration every 30 ticks for performance
-        if (++configCheckCounter != CONFIG_CHECK_INTERVAL) {
+        // Initialize on first run
+        if (!initialized) {
             showCropStage = (Boolean) NConfig.get(NConfig.Key.showCropStage);
-            configCheckCounter = 0;
+            lastConfigCheck = System.currentTimeMillis();
+            initialized = true;
+        }
+        
+        // Check configuration globally every second across all instances
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastConfigCheck > 1000) { // Check every second max
+            showCropStage = (Boolean) NConfig.get(NConfig.Key.showCropStage);
+            lastConfigCheck = currentTime;
         }
 
         // Early exit if stage display is disabled
