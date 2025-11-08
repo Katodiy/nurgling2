@@ -62,138 +62,75 @@ public class TransferToTroughArea implements Action {
 
         gui.msg("Found " + allTroughs.size() + " troughs in area");
 
-        ArrayList<WItem> remainingItems;
-        int troughsAttempted = 0;
-        int troughsFilled = 0;
-
         // Continue until all items are transferred or all troughs are full
-        while (!(remainingItems = gui.getInventory().getItems(items)).isEmpty()) {
-            boolean progressMade = false;
-
-            gui.msg("Attempting to distribute " + remainingItems.size() + " items across troughs");
-
-            // Try each trough until we find one that accepts items
+        while (!gui.getInventory().getItems(items).isEmpty()) {
+            // Find all NON-full troughs
+            ArrayList<Gob> availableTroughs = new ArrayList<>();
             for (Gob trough : allTroughs) {
-                if (remainingItems.isEmpty()) {
-                    break; // No more items to transfer
-                }
-
-                try {
-                    gui.msg("Trying trough at " + trough.rc + " (ID: " + trough.id + ")");
-
-                    // Navigate to this trough
-                    Results pathResult = new PathFinder(trough).run(gui);
-                    if (!pathResult.IsSuccess()) {
-                        gui.msg("Could not reach trough " + trough.id);
-                        continue;
-                    }
-
-                    troughsAttempted++;
-
-                    // Try to feed this trough
-                    int itemsBeforeFeeding = gui.getInventory().getItems(items).size();
-                    Results feedResult = feedSingleTrough(gui, trough);
-                    int itemsAfterFeeding = gui.getInventory().getItems(items).size();
-
-                    if (feedResult.IsSuccess() && itemsAfterFeeding < itemsBeforeFeeding) {
-                        progressMade = true;
-                        troughsFilled++;
-                        gui.msg("Successfully fed items to trough " + trough.id);
-
-                        // Update remaining items list for next iteration
-                        remainingItems = gui.getInventory().getItems(items);
-
-                        if (remainingItems.isEmpty()) {
-                            gui.msg("All items successfully distributed to troughs");
-                            return Results.SUCCESS();
-                        }
-                    } else {
-                        gui.msg("Trough " + trough.id + " appears to be full or could not accept items");
-                    }
-
-                } catch (Exception e) {
-                    gui.msg("Error feeding trough " + trough.id + ": " + e.getMessage());
-                    continue;
+                if (!isTroughLikelyFull(trough)) {
+                    availableTroughs.add(trough);
                 }
             }
 
-            // Check if we made any progress this round
-            if (!progressMade) {
-                gui.msg("No troughs could accept more items - all troughs may be full");
+            if (availableTroughs.isEmpty()) {
+                gui.msg("All troughs are full - stopping transfer");
                 break;
+            }
+
+            gui.msg("Found " + availableTroughs.size() + " available (non-full) troughs");
+
+            // Pick the first available trough and fill it completely using TransferToTrough pattern
+            Gob currentTrough = availableTroughs.get(0);
+            gui.msg("Filling trough " + currentTrough.id + " completely");
+
+            Results result = fillTroughCompletely(gui, currentTrough);
+            if (!result.IsSuccess()) {
+                gui.msg("Failed to fill trough " + currentTrough.id + ": " + result.msg);
+                // Remove this problematic trough from our list to avoid infinite loops
+                allTroughs.remove(currentTrough);
+                if (allTroughs.isEmpty()) {
+                    return Results.ERROR("No more troughs available");
+                }
             }
         }
 
-        // Final status report
-        remainingItems = gui.getInventory().getItems(items);
+        // Check final result
+        ArrayList<WItem> remainingItems = gui.getInventory().getItems(items);
         if (remainingItems.isEmpty()) {
-            gui.msg("Transfer completed successfully! Fed " + troughsFilled + " troughs");
+            gui.msg("All items successfully transferred to troughs!");
             return Results.SUCCESS();
         } else {
-            return Results.ERROR("Could not transfer all items - " + remainingItems.size() + " items remaining. " +
-                    "Attempted " + troughsAttempted + " troughs, successfully fed " + troughsFilled + " troughs. " +
-                    "All accessible troughs may be full.");
+            return Results.ERROR("Could not transfer all items - " + remainingItems.size() + " items remaining. All accessible troughs may be full.");
         }
     }
 
     /**
-     * Feed a single trough using the same pattern as TransferToTrough.
-     * Returns SUCCESS if items were successfully fed, FAIL if trough is full or unreachable.
+     * Fill a single trough completely using the exact TransferToTrough pattern.
+     * This method is fast because it stays focused on one trough until it's full.
      */
-    private Results feedSingleTrough(NGameUI gui, Gob trough) throws InterruptedException {
-        ArrayList<WItem> itemsToFeed = gui.getInventory().getItems(items);
-        if (itemsToFeed.isEmpty()) {
-            return Results.SUCCESS(); // No items to feed
-        }
+    private Results fillTroughCompletely(NGameUI gui, Gob trough) throws InterruptedException {
+        // Navigate to the trough first
+        new PathFinder(trough).run(gui);
 
-        int itemsFed = 0;
-        int maxFeedAttempts = 20; // Prevent infinite loops on problematic troughs
-        int feedAttempts = 0;
+        ArrayList<WItem> witems;
 
-        try {
-            // Feed items one by one using TransferToTrough pattern
-            while (feedAttempts < maxFeedAttempts) {
-                // Refresh item list
-                itemsToFeed = gui.getInventory().getItems(items);
-                if (itemsToFeed.isEmpty()) {
-                    break; // No more items
-                }
-
-                feedAttempts++;
-                WItem item = itemsToFeed.get(0);
-
-                // Handle cistern mechanism (from TransferToTrough)
-                if (trough.ngob.getModelAttribute() == 7) {
-                    // Trough is full - stop feeding this trough
-                    gui.msg("Trough " + trough.id + " is full (model attribute = 7)");
-                    break;
-                }
-
-                // Take item to hand and drop into trough (exact TransferToTrough pattern)
-                NUtils.takeItemToHand(item);
-                NUtils.dropsame(trough);
-
-                // Wait for trough to process the item
-                NUtils.getUI().core.addTask(new FilledTrough(trough, items));
-
-                itemsFed++;
-
-                // Small delay to prevent overwhelming the trough
-                Thread.sleep(100);
+        // Use the exact same loop as TransferToTrough - fast and efficient
+        while (!(witems = gui.getInventory().getItems(items)).isEmpty()) {
+            // Check if trough is full (same check as TransferToTrough)
+            if (trough.ngob.getModelAttribute() == 7) {
+                gui.msg("Trough " + trough.id + " is now full (model attribute = 7)");
+                break;
             }
 
-            if (itemsFed > 0) {
-                gui.msg("Fed " + itemsFed + " items to trough " + trough.id);
-                return Results.SUCCESS();
-            } else {
-                gui.msg("Could not feed any items to trough " + trough.id + " (may be full)");
-                return Results.FAIL();
-            }
+            // Take item to hand and drop into trough (exact TransferToTrough pattern)
+            NUtils.takeItemToHand(witems.get(0));
+            NUtils.dropsame(trough);
 
-        } catch (Exception e) {
-            gui.msg("Error feeding trough " + trough.id + ": " + e.getMessage());
-            return Results.FAIL();
+            // Wait for trough to process the item (exact TransferToTrough pattern)
+            NUtils.getUI().core.addTask(new FilledTrough(trough, items));
         }
+
+        return Results.SUCCESS();
     }
 
     /**

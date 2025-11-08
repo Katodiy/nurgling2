@@ -12,7 +12,7 @@ import nurgling.actions.Results;
 import nurgling.actions.TakeItemsFromContainer;
 import nurgling.actions.TakeItemsFromPile;
 import nurgling.actions.OpenTargetContainer;
-import nurgling.actions.TransferToTrough;
+import nurgling.actions.TransferToTroughArea;
 import nurgling.NMapView;
 import nurgling.routes.RoutePoint;
 import nurgling.areas.NArea;
@@ -176,7 +176,7 @@ public class CollectSwillInArea implements Action {
     }
 
     /**
-     * Deliver swill items to trough using proper navigation and TransferToTrough.
+     * Deliver swill items to troughs using TransferToTroughArea for efficient multi-trough distribution.
      */
     private void deliverSwillToTrough(NGameUI gui, NContext context, NAlias swillAlias) throws InterruptedException {
         // Check if we have swill items to deliver
@@ -192,34 +192,21 @@ public class CollectSwillInArea implements Action {
             return; // Nothing to deliver
         }
 
-        gui.msg("Delivering " + swillItems.size() + " swill items to trough");
+        gui.msg("Delivering " + swillItems.size() + " swill items to troughs");
 
         try {
-            // Navigate to trough area
-            NArea troughArea = context.getSpecArea(Specialisation.SpecName.trough);
-            if (troughArea != null) {
-                gui.msg("Navigated to trough area");
+            // Use TransferToTroughArea for efficient multi-trough distribution
+            TransferToTroughArea transferAction = new TransferToTroughArea(gui, swillAlias);
+            Results result = transferAction.run(gui);
 
-                // Find a trough in the area
-                Pair<Coord2d, Coord2d> areaCoords = troughArea.getRCArea();
-                if (areaCoords != null) {
-                    ArrayList<Gob> troughs = Finder.findGobs(areaCoords, new NAlias("Trough", "Cistern", "Stone Cistern"));
-                    if (!troughs.isEmpty()) {
-                        Gob trough = troughs.get(0);
-                        new PathFinder(trough).run(gui);
-
-                        // Use TransferToTrough with the found trough
-                        new TransferToTrough(trough, swillAlias).run(gui);
-                        gui.msg("Swill delivery completed");
-                    } else {
-                        gui.msg("No trough found in trough area");
-                    }
-                } else {
-                    gui.msg("Could not get trough area coordinates");
-                }
+            if (result.IsSuccess()) {
+                gui.msg("Swill delivery completed successfully");
             } else {
-                gui.msg("Could not find trough area");
+                gui.msg("Swill delivery failed");
+                // Error message is already displayed by Results.ERROR() constructor
             }
+        } catch (IllegalArgumentException e) {
+            gui.msg("No trough area found: " + e.getMessage());
         } catch (Exception e) {
             gui.msg("Error during delivery: " + e.getMessage());
         }
