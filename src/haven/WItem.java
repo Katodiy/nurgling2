@@ -81,6 +81,7 @@ public class WItem extends Widget implements DTarget {
     private double hoverstart;
     private ItemTip shorttip = null, longtip = null;
     private List<ItemInfo> ttinfo = null;
+    private boolean lastModshift = false;
     public Object tooltip(Coord c, Widget prev) {
 	double now = Utils.rtime();
 	if(prev == this) {
@@ -96,6 +97,11 @@ public class WItem extends Widget implements DTarget {
 	List<ItemInfo> info = item.info();
 	if(info.size() < 1)
 		return(null);
+	// Reset tooltip cache if Shift state changed
+	if(ui.modshift != lastModshift) {
+		shorttip = longtip = null;
+		lastModshift = ui.modshift;
+	}
 	if(info != ttinfo) {
 		shorttip = longtip = null;
 		ttinfo = info;

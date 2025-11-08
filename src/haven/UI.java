@@ -890,7 +890,7 @@ public class UI {
 	return(dispatchq(root, new CursorQuery(c)).ret);
     }
 
-    private Widget prevtt = null;
+    protected Widget prevtt = null;
     public Object tooltip(Coord c) {
 	Widget.TooltipQuery q = dispatchq(root, new Widget.TooltipQuery(c, prevtt));
 	prevtt = q.from;

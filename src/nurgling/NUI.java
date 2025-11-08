@@ -325,11 +325,17 @@ public class NUI extends UI
         }
         lastModifiersNUI = mod;
         
+        boolean oldModshift = modshift;
         modshift = (mod & InputEvent.SHIFT_DOWN_MASK) != 0;
         modctrl = (mod & InputEvent.CTRL_DOWN_MASK) != 0;
         modmeta = (mod & (InputEvent.META_DOWN_MASK | InputEvent.ALT_DOWN_MASK)) != 0;
 
         cachedModFlags = -1;
+        
+        // Reset tooltip cache when Shift state changes to force tooltip refresh
+        if (oldModshift != modshift) {
+            prevtt = null;
+        }
     }
 
     /**
