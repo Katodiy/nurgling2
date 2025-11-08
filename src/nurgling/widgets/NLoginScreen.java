@@ -29,9 +29,9 @@ public class NLoginScreen extends LoginScreen
     {
         super(hostname);
         add(new LoginList(new Coord(UI.scale(200), UI.scale(bg.sz().y - marg * 2))), new Coord(marg, marg));
-        optbtn.move(new Coord(UI.scale(680), UI.scale(30)));
+        optbtn.move(new Coord(UI.scale(bg.sz().x-UI.scale(130)), UI.scale(30)));
 
-        adda(new StatusLabel(HttpStatus.mond.get(), 0.5), bgc.x, bg.sz().y, 0.5, 1);
+        adda(new StatusLabel(HttpStatus.mond.get(), 0.5), bg.sz().x/2, bg.sz().y, 0.5, 1);
         ArrayList<NLoginData> logpass = (ArrayList<NLoginData>) NConfig.get(NConfig.Key.credentials);
         if (logpass != null)
         {
