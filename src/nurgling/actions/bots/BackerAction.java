@@ -51,6 +51,16 @@ public class BackerAction implements Action {
                 NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 4));
                 new FreeContainers(containers).run(gui);
                 
+                // Check if ovens are not empty after freeing
+                for(Container oven : containers) {
+                    oven.update();
+                    Container.Space space = oven.getattr(Container.Space.class);
+                    Integer freeSpace = (Integer)space.getRes().get(Container.Space.FREESPACE);
+                    if(freeSpace != null && freeSpace != 8) {
+                        return Results.ERROR("Cannot unload pies from ovens");
+                    }
+                }
+                
                 // Fill containers with ANY available dough type
                 res = fillContainersWithAnyDough(gui, context, containers, doughs, ovens);
                 
