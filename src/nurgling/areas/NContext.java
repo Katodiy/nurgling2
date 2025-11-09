@@ -358,33 +358,39 @@ public class NContext {
 
         ArrayList<ObjectStorage> inputs = new ArrayList<>();
         String id = inAreas.get(item);
+
         if(id!=null) {
             navigateToAreaIfNeeded(inAreas.get(item));
 
             NArea area = areas.get(id);
-            NArea.Ingredient ingredient = area.getInput(item);
-            switch (ingredient.type) {
-                case BARTER:
-                    inputs.add(new Barter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
-                            Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
-                    break;
-                case CONTAINER: {
-                    for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
-                        String hash = gob.ngob.hash;
-                        if(containers.containsKey(hash))
-                        {
-                            inputs.add(containers.get(hash));
+            if(area != null) {
+                NArea.Ingredient ingredient = area.getInput(item);
+                if(ingredient == null) {
+                } else {
+                    switch (ingredient.type) {
+                    case BARTER:
+                        inputs.add(new Barter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
+                                Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
+                        break;
+                    case CONTAINER: {
+                        for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
+                            String hash = gob.ngob.hash;
+                            if(containers.containsKey(hash))
+                            {
+                                inputs.add(containers.get(hash));
+                            }
+                            else {
+                                Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                                containers.put(gob.ngob.hash, ic);
+                                inputs.add(ic);
+                            }
                         }
-                        else {
-                            Container ic = new Container(gob, contcaps.get(gob.ngob.name));
-                            containers.put(gob.ngob.hash, ic);
-                            inputs.add(ic);
+                        for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
+                            inputs.add(new Pile(gob));
                         }
-                    }
-                    for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
-                        inputs.add(new Pile(gob));
-                    }
 
+                    }
+                    }
                 }
             }
             inputs.sort(new Comparator<ObjectStorage>() {
@@ -538,7 +544,7 @@ public class NContext {
         return Finder.findGob(id);
     }
 
-    private void navigateToAreaIfNeeded(String areaId) throws InterruptedException {
+    public void navigateToAreaIfNeeded(String areaId) throws InterruptedException {
         NArea area = areas.get(areaId);
         if(area == null) {
             gui.msg(areaId + " Not found!");

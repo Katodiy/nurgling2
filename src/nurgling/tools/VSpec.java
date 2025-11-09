@@ -1480,6 +1480,81 @@ public class VSpec {
         flours.add(new JSONObject("{\"static\":\"gfx/invobjs/flour-wheatflour\",\"name\":\"Wheat Flour\"}"));
         categories.put("Flour", flours);
 
+        ArrayList<JSONObject> pies = new ArrayList<>();
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/applepie\",\"name\":\"Apple Pie\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/bakedbirchdream\",\"name\":\"Baked Birchbark Bream\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/barkbread\",\"name\":\"Bark Bread\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/birthdaycake\",\"name\":\"Birthday Cake\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/blueberrypie\",\"name\":\"Blueberry Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/bread\",\"name\":\"Bread\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/butterscones\",\"name\":\"Butter Scones\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/carrotcake\",\"name\":\"Carrot Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/cheesecake\",\"name\":\"Cheesecake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/dreamcookies\",\"name\":\"Dream Cookies\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/eggcake\",\"name\":\"Egg Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/fishpie\",\"name\":\"Fishpie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/fruitpie\",\"name\":\"Fruit Pie\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/gingerbreadheart\",\"name\":\"Gingerbread Heart\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/gingerbreadman\",\"name\":\"Gingerbread Man\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/gingerbreadwoman\",\"name\":\"Gingerbread Woman\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/greenleafpie\",\"name\":\"Greenleaf Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/grubpie\",\"name\":\"Grub Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/honeybun\",\"name\":\"Honeybun\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/jellycake\",\"name\":\"Jelly Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/lardycake\",\"name\":\"Lardy Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/lingonloaf\",\"name\":\"Lingon Loaf\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/linseedloaf\",\"name\":\"Linseed Loaf\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/magpie\",\"name\":\"Magpie (Pie)\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/marrowcake\",\"name\":\"Marrow Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/meatpie\",\"name\":\"Meatpie\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/mushroompirozhki\",\"name\":\"Mushroom & Onion Pirozhki\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/mushroompie\",\"name\":\"Mushroom Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/olivebread\",\"name\":\"Olive Bread\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/peapie\",\"name\":\"Pea Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/plumpudding\",\"name\":\"Plum Pudding\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/poultrypotpie\",\"name\":\"Poultry Pot Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/pumpkinbread\",\"name\":\"Pumpkin Bread\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/pumpkinpie\",\"name\":\"Pumpkin Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/raisinbuttercake\",\"name\":\"Raisin Butter-Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/ringofbrodgar\",\"name\":\"Ring of Brodgar (Baking)\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/seedcrispflatbread\",\"name\":\"Seedcrisp Flatbread\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/shepherdspie\",\"name\":\"Shepherd's Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/strawberrycake\",\"name\":\"Strawberry Cake\"}"));
+        categories.put("Pie", pies);
+
+        ArrayList<JSONObject> doughs = new ArrayList<>();
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-applepie\",\"name\":\"Unbaked Apple Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-barkbread\",\"name\":\"Unbaked Bark Bread\"}"));
+//        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-birthdaycake\",\"name\":\"Unbaked Birthday Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-bread\",\"name\":\"Bread Dough\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-carrotcake\",\"name\":\"Unbaked Carrot Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-cheesecake\",\"name\":\"Unbaked Cheesecake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-dreamcookies\",\"name\":\"Unbaked Dream Cookies\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-eggcake\",\"name\":\"Unbaked Egg Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-fishpie\",\"name\":\"Unbaked Fishpie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-fruitpie\",\"name\":\"Unbaked Fruit Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-greenleafpie\",\"name\":\"Unbaked Greenleaf Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-grubpie\",\"name\":\"Unbaked Grub Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-honeybun\",\"name\":\"Unbaked Honeybun\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-jellycake\",\"name\":\"Unbaked Jelly Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-lardycake\",\"name\":\"Unbaked Lardy Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-lingonloaf\",\"name\":\"Unbaked Lingon Loaf\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-linseedloaf\",\"name\":\"Unbaked Linseed Loaf\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-marrowcake\",\"name\":\"Unbaked Marrow Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-meatpie\",\"name\":\"Unbaked Meatpie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-mushroompie\",\"name\":\"Unbaked Mushroom Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-olivebread\",\"name\":\"Unbaked Olive Bread\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-peapie\",\"name\":\"Unbaked Pea Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-plumpudding\",\"name\":\"Unbaked Plum Pudding\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-poultrypotpie\",\"name\":\"Unbaked Poultry Pot Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-pumpkinbread\",\"name\":\"Unbaked Pumpkin Bread\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-pumpkinpie\",\"name\":\"Unbaked Pumpkin Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-raisinbuttercake\",\"name\":\"Unbaked Raisin Butter-Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-ringofbrodgar\",\"name\":\"Unbaked Ring of Brodgar\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-shepherdspie\",\"name\":\"Unbaked Shepherd's Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-strawberrycake\",\"name\":\"Unbaked Strawberry Cake\"}"));
+        categories.put("Dough", doughs);
+
         ArrayList<JSONObject> giantAntItems = new ArrayList<>();
         giantAntItems.add(new JSONObject("{\"static\":\"gfx/invobjs/ants-larvae\",\"name\":\"Ant Larvae\"}"));
         giantAntItems.add(new JSONObject("{\"static\":\"gfx/invobjs/ants-pupae\",\"name\":\"Ant Pupae\"}"));
@@ -2779,18 +2854,12 @@ public class VSpec {
     }
 
     public static void checkLpExplorer(Gob clickedGob, String name) {
-        System.out.println("[LPExplorer] checkLpExplorer called with name: " + name);
         if(clickedGob!=null) {
-            System.out.println("[LPExplorer] clickedGob is not null, gob.ngob.name: " + clickedGob.ngob.name);
             if (clickedGob.ngob.name != null && object.containsKey(clickedGob.ngob.name)) {
-                System.out.println("[LPExplorer] Object contains key: " + clickedGob.ngob.name);
                 if (object.get(clickedGob.ngob.name).contains(name)) {
-                    System.out.println("[LPExplorer] Product list contains item: " + name);
                     boolean objectExists = NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name);
-                    System.out.println("[LPExplorer] Object already in LPExplorer: " + objectExists);
-                    
+
                     if (!objectExists) {
-                        System.out.println("[LPExplorer] Adding new object to LPExplorer: " + clickedGob.ngob.name + " -> " + name);
                         NUtils.getGameUI().getCharInfo().LpExplorerAdd(clickedGob.ngob.name,name);
                         NUtils.getGameUI().getCharInfo().newLpExplorer = true;
 
@@ -2799,30 +2868,17 @@ public class VSpec {
                         int totalSize = object.get(clickedGob.ngob.name).size();
                         boolean productExists = NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name, name);
                         
-                        System.out.println("[LPExplorer] Current products count: " + currentSize + "/" + totalSize);
-                        System.out.println("[LPExplorer] Product already registered: " + productExists);
-                        
+
                         if (currentSize != totalSize) {
                             if (object.get(clickedGob.ngob.name).contains(name) && !productExists) {
-                                System.out.println("[LPExplorer] Adding new product to existing object: " + clickedGob.ngob.name + " -> " + name);
                                 NUtils.getGameUI().getCharInfo().LpExplorerAdd(clickedGob.ngob.name,name);
                                 NUtils.getGameUI().getCharInfo().newLpExplorer = true;
-                            } else {
-                                System.out.println("[LPExplorer] Skipping: product already registered");
                             }
-                        } else {
-                            System.out.println("[LPExplorer] Skipping: all products already registered (" + currentSize + "/" + totalSize + ")");
                         }
                     }
-                } else {
-                    System.out.println("[LPExplorer] Product list does NOT contain item: " + name);
                 }
-            } else {
-                System.out.println("[LPExplorer] Object does not contain key or ngob.name is null");
             }
             NUtils.getGameUI().map.clickedGob = null;
-        } else {
-            System.out.println("[LPExplorer] clickedGob is null - skipping");
         }
     }
 
