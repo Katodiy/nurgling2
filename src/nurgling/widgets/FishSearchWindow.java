@@ -38,7 +38,7 @@ public class FishSearchWindow extends Window {
         add(new Label("Fish Name:"), labelX, y + UI.scale(5));
         List<String> fishNames = getDistinctFishNames();
         fishNames.add(0, "Any"); // Add "Any" option at the beginning
-        fishNameDropdown = add(new Dropbox<String>(UI.scale(250), fishNames.size(), UI.scale(20)) {
+        fishNameDropdown = add(new Dropbox<String>(UI.scale(250), Math.min(fishNames.size(), 10), UI.scale(20)) {
             @Override
             protected String listitem(int i) {
                 return fishNames.get(i);
@@ -61,7 +61,7 @@ public class FishSearchWindow extends Window {
         add(new Label("Moon Phase:"), labelX, y + UI.scale(5));
         List<String> moonPhases = getDistinctMoonPhases();
         moonPhases.add(0, "Any"); // Add "Any" option at the beginning
-        moonPhaseDropdown = add(new Dropbox<String>(UI.scale(250), moonPhases.size(), UI.scale(20)) {
+        moonPhaseDropdown = add(new Dropbox<String>(UI.scale(250), Math.min(moonPhases.size(), 10), UI.scale(20)) {
             @Override
             protected String listitem(int i) {
                 return moonPhases.get(i);

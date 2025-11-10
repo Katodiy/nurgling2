@@ -88,7 +88,7 @@ public class TreeSearchWindow extends Window {
         treeTypes.add(0, "Any"); // Add "Any" option at the beginning
 
         // Create new dropdown
-        treeTypeDropdown = add(new Dropbox<String>(UI.scale(230), treeTypes.size(), UI.scale(20)) {
+        treeTypeDropdown = add(new Dropbox<String>(UI.scale(230), Math.min(treeTypes.size(), 10), UI.scale(20)) {
             @Override
             protected String listitem(int i) {
                 return treeTypes.get(i);
