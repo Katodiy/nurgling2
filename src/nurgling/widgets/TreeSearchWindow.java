@@ -152,8 +152,8 @@ public class TreeSearchWindow extends Window {
         protected Widget makeitem(TreeLocation location, int idx, Coord sz) {
             return new ItemWidget<TreeLocation>(this, sz, location) {
                 {
-                    int deleteButtonWidth = UI.scale(20);
-                    int panButtonWidth = sz.x - deleteButtonWidth - UI.scale(2);
+                    int deleteButtonWidth = UI.scale(22); // crossSquare button size
+                    int panButtonWidth = sz.x - deleteButtonWidth - UI.scale(4);
 
                     // Main button for panning to location
                     Button panBtn = add(new Button(panButtonWidth, "") {
@@ -170,8 +170,10 @@ public class TreeSearchWindow extends Window {
                         }
                     }, Coord.z);
 
-                    // X button for deletion
-                    Button deleteBtn = add(new Button(deleteButtonWidth, "X") {
+                    // X button for deletion using crossSquare style
+                    add(new IButton(nurgling.NStyle.crossSquare[0].back,
+                                   nurgling.NStyle.crossSquare[1].back,
+                                   nurgling.NStyle.crossSquare[2].back) {
                         @Override
                         public void click() {
                             if (gui != null && gui.treeLocationService != null) {
@@ -181,7 +183,7 @@ public class TreeSearchWindow extends Window {
                                 performSearch();
                             }
                         }
-                    }, panButtonWidth + UI.scale(2), 0);
+                    }, new Coord(panButtonWidth + UI.scale(2), (sz.y - UI.scale(22)) / 2));
                 }
             };
         }
