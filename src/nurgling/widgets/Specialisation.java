@@ -83,7 +83,8 @@ public class Specialisation extends Window
         cistern,
         studyDesks,
         silkmothBreeding,
-        silkwormFeeding
+        silkwormFeeding,
+        unbox
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -152,6 +153,9 @@ public class Specialisation extends Window
         // silk
         specialisation.add(new SpecialisationItem(SpecName.silkmothBreeding.toString(),"Silkmoth Breeding",Resource.loadsimg("nurgling/categories/silkmoth1")));
         specialisation.add(new SpecialisationItem(SpecName.silkwormFeeding.toString(),"Silkworm Feeding",Resource.loadsimg("nurgling/categories/silkmoth2")));
+
+        // unbox zone
+        specialisation.add(new SpecialisationItem(SpecName.unbox.toString(),"Unbox Zone",Resource.loadsimg("nurgling/categories/unbox")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
