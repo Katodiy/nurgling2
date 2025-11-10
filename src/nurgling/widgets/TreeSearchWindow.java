@@ -152,7 +152,11 @@ public class TreeSearchWindow extends Window {
         protected Widget makeitem(TreeLocation location, int idx, Coord sz) {
             return new ItemWidget<TreeLocation>(this, sz, location) {
                 {
-                    Button panBtn = add(new Button(sz.x, "") {
+                    int deleteButtonWidth = UI.scale(20);
+                    int panButtonWidth = sz.x - deleteButtonWidth - UI.scale(2);
+
+                    // Main button for panning to location
+                    Button panBtn = add(new Button(panButtonWidth, "") {
                         @Override
                         public void draw(GOut g) {
                             // Custom drawing to show tree info with quantity
@@ -165,6 +169,19 @@ public class TreeSearchWindow extends Window {
                             panMapToLocation(location);
                         }
                     }, Coord.z);
+
+                    // X button for deletion
+                    Button deleteBtn = add(new Button(deleteButtonWidth, "X") {
+                        @Override
+                        public void click() {
+                            if (gui != null && gui.treeLocationService != null) {
+                                gui.treeLocationService.removeTreeLocation(location.getLocationId());
+                                gui.msg("Removed " + location.getTreeName() + " location", java.awt.Color.YELLOW);
+                                // Refresh the search results to remove the deleted item
+                                performSearch();
+                            }
+                        }
+                    }, panButtonWidth + UI.scale(2), 0);
                 }
             };
         }
