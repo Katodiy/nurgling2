@@ -33,7 +33,7 @@ public class GoatRoster extends CattleRoster<Goat> {
 	new Column<Goat>(Resource.classres(GoatRoster.class).pool.load("gfx/hud/rosters/breedingquality", 1), Comparator.comparing((Goat e) -> e.seedq).reversed()),
 	new Column<Goat>(Resource.local().load("nurgling/hud/rang", 1), Comparator.comparing(Goat::rang).reversed())
     );
-    protected List<Column> cols() {return(cols);}
+    protected List<Column<? super Goat>> cols() {return((List)cols);}
 
     public static CattleRoster mkwidget(UI ui, Object... args) {
 	return(new GoatRoster());

@@ -33,7 +33,7 @@ public class SheepRoster extends CattleRoster<Sheep> {
 	new Column<Sheep>(Resource.classres(SheepRoster.class).pool.load("gfx/hud/rosters/breedingquality", 1), Comparator.comparing((Sheep e) -> e.seedq).reversed()),
 	new Column<Sheep>(Resource.local().load("nurgling/hud/rang", 1), Comparator.comparing(Sheep::rang).reversed())
     );
-    protected List<Column> cols() {return(cols);}
+    protected List<Column<? super Sheep>> cols() {return((List)cols);}
 
     public static CattleRoster mkwidget(UI ui, Object... args) {
 	return(new SheepRoster());

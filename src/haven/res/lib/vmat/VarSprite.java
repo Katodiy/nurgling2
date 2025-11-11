@@ -13,6 +13,8 @@ public class VarSprite extends ModSprite {
 	private Mapping cmats;
     public VarSprite(Owner owner, Resource res, Message sdt) {
 	super(owner, res, sdt);
+	// Add custom material override for ModSprite system
+	imod(new MaterialOverride());
     }
 
     public Mapping mats() {
@@ -42,10 +44,18 @@ public class VarSprite extends ModSprite {
 
     public boolean tick(double dt) {
 	Mapping bmats = mats(), mats;
-	if(gob.isEmpty() || (mats = gob.get().ngob.mats(bmats))==null)
-	{
+
+	if(gob.isEmpty()) {
 		mats = bmats;
+	} else {
+		Mapping customMats = gob.get().ngob.mats(bmats);
+		if(customMats == null) {
+			mats = bmats;
+		} else {
+			mats = customMats;
+		}
 	}
+
 	Mapping pmats = this.cmats;
 	if(mats != pmats) {
 	    try {
@@ -56,5 +66,50 @@ public class VarSprite extends ModSprite {
 	    }
 	}
 	return(super.tick(dt));
+    }
+
+    /**
+     * Custom ModSprite Mod that overrides mesh materials with our custom materials.
+     * This replaces the old iparts() method and integrates with the new ModSprite architecture.
+     */
+    private class MaterialOverride implements Mod {
+        @Override
+        public void operate(Cons cons) {
+            // Apply custom materials to mesh parts if we have custom materials
+            if (cmats != null && cmats instanceof Materials) {
+                Materials customMats = (Materials) cmats;
+
+                // Override materials for each mesh part
+                for (Part part : cons.parts) {
+                    if (part.obj instanceof FastMesh) {
+                        FastMesh mesh = (FastMesh) part.obj;
+
+                        // Try to find the mesh resource to get its material slot ID
+                        for (FastMesh.MeshRes mr : res.layers(FastMesh.MeshRes.class)) {
+                            if (mr.m == mesh) {
+                                String sid = mr.rdat.get("vm");
+                                int mid = (sid == null) ? -1 : Integer.parseInt(sid);
+
+                                // Apply custom material if available for this slot
+                                if (mid >= 0 && customMats.mats.containsKey(mid)) {
+                                    Material customMat = customMats.mats.get(mid);
+                                    if (customMat != null) {
+                                        // Replace the material in the part
+                                        part.state.clear(); // Clear existing material state
+                                        part.state.add(customMat); // Add our custom material
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        public int order() {
+            return 5000; // Run after mesh creation but before final rendering
+        }
     }
 }

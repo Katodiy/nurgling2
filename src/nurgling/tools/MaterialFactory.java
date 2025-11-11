@@ -16,11 +16,15 @@ public class MaterialFactory {
     
     private static TexR getTexR(String path, int layer) {
         String key = path + "#" + layer;
-        return texCache.computeIfAbsent(key, k -> Resource.local().loadwait(path).layer(TexR.class, layer));
+        return texCache.computeIfAbsent(key, k -> {
+            return Resource.local().loadwait(path).layer(TexR.class, layer);
+        });
     }
     
     private static TexR getTexR(String path) {
-        return texCache.computeIfAbsent(path, k -> Resource.local().loadwait(path).layer(TexR.class));
+        return texCache.computeIfAbsent(path, k -> {
+            return Resource.local().loadwait(path).layer(TexR.class);
+        });
     }
 
     public static Map<Integer, Material> getMaterials(String name, Status status, Material mat) {
@@ -34,24 +38,45 @@ public class MaterialFactory {
                         TexR rt0 = getTexR("nurgling/tex/pinefree-tex", 0);
                         TexR rt1 = getTexR("nurgling/tex/pinefree-tex", 2);
                         Map<Integer, Material> result = new HashMap<>();
-                        result.put(0, constructMaterial(rt0,mat));
-                        result.put(1, constructMaterial(rt1,mat));
+                        Material mat0 = constructMaterial(rt0,mat);
+                        Material mat1 = constructMaterial(rt1,mat);
+
+                        result.put(0, mat0);
+                        result.put(1, mat1);
+                        result.put(2, mat0);
+                        result.put(3, mat1);
+                        result.put(4, mat0);
+
                         return result;
                     }
                     case FULL: {
                         TexR rt0 = getTexR("nurgling/tex/pinefull-tex", 0);
                         TexR rt1 = getTexR("nurgling/tex/pinefree-tex", 2);
                         Map<Integer, Material> result = new HashMap<>();
-                        result.put(0, constructMaterial(rt0,mat));
-                        result.put(1, constructMaterial(rt1,mat));
+                        Material mat0 = constructMaterial(rt0,mat);
+                        Material mat1 = constructMaterial(rt1,mat);
+
+                        // Try replacing MORE slots to find where the wood texture actually is
+                        result.put(0, mat0);
+                        result.put(1, mat1);
+                        result.put(2, mat0); // Try slot 2 with main texture
+                        result.put(3, mat1); // Try slot 3 with secondary texture
+                        result.put(4, mat0); // Try slot 4 with main texture
                         return result;
                     }
                     case NOTFREE: {
                         TexR rt0 = getTexR("nurgling/tex/pinenf-tex", 0);
                         TexR rt1 = getTexR("nurgling/tex/pinefree-tex", 2);
                         Map<Integer, Material> result = new HashMap<>();
-                        result.put(0, constructMaterial(rt0,mat));
-                        result.put(1, constructMaterial(rt1,mat));
+                        Material mat0 = constructMaterial(rt0,mat);
+                        Material mat1 = constructMaterial(rt1,mat);
+
+                        // Try replacing MORE slots to find where the wood texture actually is
+                        result.put(0, mat0);
+                        result.put(1, mat1);
+                        result.put(2, mat0); // Try slot 2 with main texture
+                        result.put(3, mat1); // Try slot 3 with secondary texture
+                        result.put(4, mat0); // Try slot 4 with main texture
                         return result;
                     }
                 }
@@ -200,10 +225,13 @@ public class MaterialFactory {
             case "gfx/terobjs/chest":
             case "gfx/terobjs/cupboard":
             {
-                if((mask & ~VSpec.chest_state.get(NStyle.Container.FREE)) == 0) {
+                int freeMask = VSpec.chest_state.get(NStyle.Container.FREE);
+                int fullMask = VSpec.chest_state.get(NStyle.Container.FULL);
+
+                if((mask & ~freeMask) == 0) {
                     return Status.FREE;
                 }
-                else if((mask & VSpec.chest_state.get(NStyle.Container.FULL)) == VSpec.chest_state.get(NStyle.Container.FULL))
+                else if((mask & fullMask) == fullMask)
                 {
                     return Status.FULL;
                 }
