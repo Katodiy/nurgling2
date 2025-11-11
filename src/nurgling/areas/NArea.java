@@ -255,6 +255,9 @@ public class NArea
 
     public Area getArea()
     {
+        if (NUtils.getGameUI() == null || NUtils.getGameUI().map == null) {
+            return null;
+        }
         Coord begin = null;
         Coord end = null;
         for (Long id : space.space.keySet())

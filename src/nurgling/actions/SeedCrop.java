@@ -66,10 +66,14 @@ public class SeedCrop implements Action {
         if (stockPiles.isEmpty() && allowedToPlantFromStockpiles)
             return Results.ERROR("No stockpiles for seed");
 
+        Area fieldArea = field.getArea();
+        if (fieldArea == null) {
+            return Results.ERROR("Field area is not available - GUI not ready");
+        }
 
         ArrayList<Coord2d> tiles = field.getTiles(new NAlias("field"));
 
-        Coord start = gui.map.player().rc.dist(field.getArea().br.mul(MCache.tilesz)) < gui.map.player().rc.dist(field.getArea().ul.mul(MCache.tilesz)) ? field.getArea().br.sub(1, 1) : field.getArea().ul;
+        Coord start = gui.map.player().rc.dist(fieldArea.br.mul(MCache.tilesz)) < gui.map.player().rc.dist(fieldArea.ul.mul(MCache.tilesz)) ? fieldArea.br.sub(1, 1) : fieldArea.ul;
         Coord pos = new Coord(start);
         boolean rev = (pos.equals(field.getArea().ul));
 
