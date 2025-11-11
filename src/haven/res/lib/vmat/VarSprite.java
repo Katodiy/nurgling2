@@ -75,32 +75,37 @@ public class VarSprite extends ModSprite {
     private class MaterialOverride implements Mod {
         @Override
         public void operate(Cons cons) {
-            // Apply custom materials to mesh parts if we have custom materials
-            if (cmats != null && cmats instanceof Materials) {
-                Materials customMats = (Materials) cmats;
+            // Early return if no custom materials
+            if (cmats == null || !(cmats instanceof Materials)) {
+                return;
+            }
 
-                // Override materials for each mesh part
-                for (Part part : cons.parts) {
-                    if (part.obj instanceof FastMesh) {
-                        FastMesh mesh = (FastMesh) part.obj;
+            Materials customMats = (Materials) cmats;
+            if (customMats.mats.isEmpty()) {
+                return;
+            }
 
-                        // Try to find the mesh resource to get its material slot ID
-                        for (FastMesh.MeshRes mr : res.layers(FastMesh.MeshRes.class)) {
-                            if (mr.m == mesh) {
-                                String sid = mr.rdat.get("vm");
-                                int mid = (sid == null) ? -1 : Integer.parseInt(sid);
+            // Build mesh-to-slot mapping for efficient lookup
+            Map<FastMesh, Integer> meshSlots = new HashMap<>();
+            for (FastMesh.MeshRes mr : res.layers(FastMesh.MeshRes.class)) {
+                String sid = mr.rdat.get("vm");
+                int mid = (sid == null) ? -1 : Integer.parseInt(sid);
+                if (mid >= 0) {
+                    meshSlots.put(mr.m, mid);
+                }
+            }
 
-                                // Apply custom material if available for this slot
-                                if (mid >= 0 && customMats.mats.containsKey(mid)) {
-                                    Material customMat = customMats.mats.get(mid);
-                                    if (customMat != null) {
-                                        // Replace the material in the part
-                                        part.state.clear(); // Clear existing material state
-                                        part.state.add(customMat); // Add our custom material
-                                    }
-                                }
-                                break;
-                            }
+            // Apply custom materials to mesh parts
+            for (Part part : cons.parts) {
+                if (part.obj instanceof FastMesh) {
+                    FastMesh mesh = (FastMesh) part.obj;
+                    Integer slotId = meshSlots.get(mesh);
+
+                    if (slotId != null && customMats.mats.containsKey(slotId)) {
+                        Material customMat = customMats.mats.get(slotId);
+                        if (customMat != null) {
+                            part.state.clear();
+                            part.state.add(customMat);
                         }
                     }
                 }
@@ -109,7 +114,7 @@ public class VarSprite extends ModSprite {
 
         @Override
         public int order() {
-            return 5000; // Run after mesh creation but before final rendering
+            return 5000;
         }
     }
 }

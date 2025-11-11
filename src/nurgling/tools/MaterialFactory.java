@@ -13,6 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MaterialFactory {
     // Cache for loaded TexR objects to avoid duplicate loading
     private static final Map<String, TexR> texCache = new ConcurrentHashMap<>();
+
+    // Texture path constants
+    private static final String TEX_PINEFREE = "nurgling/tex/pinefree-tex";
+    private static final String TEX_PINEFULL = "nurgling/tex/pinefull-tex";
+    private static final String TEX_PINENF = "nurgling/tex/pinenf-tex";
     
     private static TexR getTexR(String path, int layer) {
         String key = path + "#" + layer;
@@ -27,6 +32,18 @@ public class MaterialFactory {
         });
     }
 
+    /**
+     * Helper method to create standard material mapping for containers
+     */
+    private static Map<Integer, Material> createContainerMaterials(String tex0Path, int layer0, String tex1Path, int layer1, Material baseMat) {
+        TexR rt0 = getTexR(tex0Path, layer0);
+        TexR rt1 = getTexR(tex1Path, layer1);
+        Map<Integer, Material> result = new HashMap<>();
+        result.put(0, constructMaterial(rt0, baseMat));
+        result.put(1, constructMaterial(rt1, baseMat));
+        return result;
+    }
+
     public static Map<Integer, Material> getMaterials(String name, Status status, Material mat) {
         switch (name){
             case "gfx/terobjs/cupboard":
@@ -34,40 +51,12 @@ public class MaterialFactory {
             case "gfx/terobjs/map/jotunclam":
                 switch (status)
                 {
-                    case FREE: {
-                        TexR rt0 = getTexR("nurgling/tex/pinefree-tex", 0);
-                        TexR rt1 = getTexR("nurgling/tex/pinefree-tex", 2);
-                        Map<Integer, Material> result = new HashMap<>();
-                        Material mat0 = constructMaterial(rt0,mat);
-                        Material mat1 = constructMaterial(rt1,mat);
-
-                        result.put(0, mat0);
-                        result.put(1, mat1);
-
-                        return result;
-                    }
-                    case FULL: {
-                        TexR rt0 = getTexR("nurgling/tex/pinefull-tex", 0);
-                        TexR rt1 = getTexR("nurgling/tex/pinefree-tex", 2);
-                        Map<Integer, Material> result = new HashMap<>();
-                        Material mat0 = constructMaterial(rt0,mat);
-                        Material mat1 = constructMaterial(rt1,mat);
-
-                        result.put(0, mat0);
-                        result.put(1, mat1);
-                        return result;
-                    }
-                    case NOTFREE: {
-                        TexR rt0 = getTexR("nurgling/tex/pinenf-tex", 0);
-                        TexR rt1 = getTexR("nurgling/tex/pinefree-tex", 2);
-                        Map<Integer, Material> result = new HashMap<>();
-                        Material mat0 = constructMaterial(rt0,mat);
-                        Material mat1 = constructMaterial(rt1,mat);
-
-                        result.put(0, mat0);
-                        result.put(1, mat1);
-                        return result;
-                    }
+                    case FREE:
+                        return createContainerMaterials(TEX_PINEFREE, 0, TEX_PINEFREE, 2, mat);
+                    case FULL:
+                        return createContainerMaterials(TEX_PINEFULL, 0, TEX_PINEFREE, 2, mat);
+                    case NOTFREE:
+                        return createContainerMaterials(TEX_PINENF, 0, TEX_PINEFREE, 2, mat);
                 }
                 break;
             case "gfx/terobjs/chest":
