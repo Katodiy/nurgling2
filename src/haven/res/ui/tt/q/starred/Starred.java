@@ -9,7 +9,7 @@ import haven.res.ui.tt.q.qbuff.*;
 import haven.res.ui.tt.q.quality.*;
 
 /* >tt: Starred */
-@haven.FromResource(name = "ui/tt/q/starred", version = 3)
+@haven.FromResource(name = "ui/tt/q/starred", version = 4)
 public class Starred extends ItemInfo.Tip implements QBuff.Modifier {
     public Starred(Owner owner) {
 	super(owner);

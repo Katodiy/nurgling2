@@ -11,7 +11,7 @@ import haven.MenuGrid.Pagina;
 import nurgling.NGItem;
 
 /* >tt: Quality */
-@haven.FromResource(name = "ui/tt/q/quality", version = 26)
+@haven.FromResource(name = "ui/tt/q/quality", version = 27)
 public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
     public static boolean show = Utils.getprefb("qtoggle", false);
     NGItem ownitem = null;
