@@ -170,7 +170,11 @@ public class BotRegistry {
         bots.add(new BotDescriptor("test10", BotDescriptor.BotType.TOOLS, "Test 10", "Debug test 10.", false, true, TESTGlobalPf.class, "test10", false));
         bots.add(new BotDescriptor("test11", BotDescriptor.BotType.TOOLS, "Test 11", "Debug test 11.", false, true, TESTGlobalPFCheckOrphans.class, "test11", false));
         bots.add(new BotDescriptor("test12", BotDescriptor.BotType.TOOLS, "Test 12", "Debug test 12.", false, true, TestBot.class, "test12", false));
-        bots.add(new BotDescriptor("test13", BotDescriptor.BotType.TOOLS, "Boat Hopper", "Debug boat hopper.", false, true, BoatHopper.class, "test13", false));
+        bots.add(new BotDescriptor("test13", BotDescriptor.BotType.TOOLS, "Boat Hopper South", "Debug boat hopper (South).", false, true, BoatHopper.class, "test13", false));
+        bots.add(new BotDescriptor("test14", BotDescriptor.BotType.TOOLS, "Boat Hopper North", "Debug boat hopper (North).", false, true, BoatHopperNorth.class, "test14", false));
+        bots.add(new BotDescriptor("test15", BotDescriptor.BotType.TOOLS, "Boat Hopper West", "Debug boat hopper (West).", false, true, BoatHopperWest.class, "test15", false));
+        bots.add(new BotDescriptor("test16", BotDescriptor.BotType.TOOLS, "Boat Hopper East", "Debug boat hopper (East).", false, true, BoatHopperEast.class, "test16", false));
+        bots.add(new BotDescriptor("test17", BotDescriptor.BotType.TOOLS, "Boat Hopper Continuous", "Debug boat hopper (Player Direction - Continuous).", false, true, BoatHopperContinuous.class, "test17", false));
 
     }
 

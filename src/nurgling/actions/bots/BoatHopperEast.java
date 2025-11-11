@@ -5,12 +5,12 @@ import nurgling.actions.Results;
 import nurgling.actions.Action;
 
 /**
- * Boat hopper that moves south.
+ * Boat hopper that moves east.
  */
-public class BoatHopper implements Action {
+public class BoatHopperEast implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        // South direction = PI/2 radians (90 degrees)
-        return new BoatHopAction(Math.PI / 2, "South").run(gui);
+        // East direction = 0 radians (0 degrees)
+        return new BoatHopAction(0, "East").run(gui);
     }
 }
