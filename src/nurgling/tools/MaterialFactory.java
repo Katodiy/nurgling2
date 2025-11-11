@@ -43,9 +43,6 @@ public class MaterialFactory {
 
                         result.put(0, mat0);
                         result.put(1, mat1);
-                        result.put(2, mat0);
-                        result.put(3, mat1);
-                        result.put(4, mat0);
 
                         return result;
                     }
@@ -56,12 +53,8 @@ public class MaterialFactory {
                         Material mat0 = constructMaterial(rt0,mat);
                         Material mat1 = constructMaterial(rt1,mat);
 
-                        // Try replacing MORE slots to find where the wood texture actually is
                         result.put(0, mat0);
                         result.put(1, mat1);
-                        result.put(2, mat0); // Try slot 2 with main texture
-                        result.put(3, mat1); // Try slot 3 with secondary texture
-                        result.put(4, mat0); // Try slot 4 with main texture
                         return result;
                     }
                     case NOTFREE: {
@@ -71,12 +64,8 @@ public class MaterialFactory {
                         Material mat0 = constructMaterial(rt0,mat);
                         Material mat1 = constructMaterial(rt1,mat);
 
-                        // Try replacing MORE slots to find where the wood texture actually is
                         result.put(0, mat0);
                         result.put(1, mat1);
-                        result.put(2, mat0); // Try slot 2 with main texture
-                        result.put(3, mat1); // Try slot 3 with secondary texture
-                        result.put(4, mat0); // Try slot 4 with main texture
                         return result;
                     }
                 }
