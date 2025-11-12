@@ -88,7 +88,7 @@ public class TreeSearchWindow extends Window {
         treeTypes.add(0, "Any"); // Add "Any" option at the beginning
 
         // Create new dropdown
-        treeTypeDropdown = add(new Dropbox<String>(UI.scale(230), treeTypes.size(), UI.scale(20)) {
+        treeTypeDropdown = add(new Dropbox<String>(UI.scale(230), Math.min(treeTypes.size(), 10), UI.scale(20)) {
             @Override
             protected String listitem(int i) {
                 return treeTypes.get(i);
@@ -152,7 +152,11 @@ public class TreeSearchWindow extends Window {
         protected Widget makeitem(TreeLocation location, int idx, Coord sz) {
             return new ItemWidget<TreeLocation>(this, sz, location) {
                 {
-                    Button panBtn = add(new Button(sz.x, "") {
+                    int deleteButtonWidth = UI.scale(22); // crossSquare button size
+                    int panButtonWidth = sz.x - deleteButtonWidth - UI.scale(4);
+
+                    // Main button for panning to location
+                    Button panBtn = add(new Button(panButtonWidth, "") {
                         @Override
                         public void draw(GOut g) {
                             // Custom drawing to show tree info with quantity
@@ -165,6 +169,21 @@ public class TreeSearchWindow extends Window {
                             panMapToLocation(location);
                         }
                     }, Coord.z);
+
+                    // X button for deletion using crossSquare style
+                    add(new IButton(nurgling.NStyle.crossSquare[0].back,
+                                   nurgling.NStyle.crossSquare[1].back,
+                                   nurgling.NStyle.crossSquare[2].back) {
+                        @Override
+                        public void click() {
+                            if (gui != null && gui.treeLocationService != null) {
+                                gui.treeLocationService.removeTreeLocation(location.getLocationId());
+                                gui.msg("Removed " + location.getTreeName() + " location", java.awt.Color.YELLOW);
+                                // Refresh the search results to remove the deleted item
+                                performSearch();
+                            }
+                        }
+                    }, new Coord(panButtonWidth + UI.scale(2), (sz.y - UI.scale(22)) / 2));
                 }
             };
         }
