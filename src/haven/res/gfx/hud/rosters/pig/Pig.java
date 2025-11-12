@@ -7,7 +7,7 @@ import haven.*;
 import haven.res.ui.croster.*;
 import nurgling.conf.PigsHerd;
 
-@haven.FromResource(name = "gfx/hud/rosters/pig", version = 63)
+@haven.FromResource(name = "gfx/hud/rosters/pig", version = 64)
 public class Pig extends Entry {
     public int meat, milk;
     public int meatq, milkq, hideq;
