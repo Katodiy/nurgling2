@@ -32,7 +32,7 @@ public class TeimdeerRoster extends CattleRoster<Teimdeer> {
 	new Column<Teimdeer>(Resource.classres(TeimdeerRoster.class).pool.load("gfx/hud/rosters/breedingquality", 1), Comparator.comparing((Teimdeer e) -> e.seedq).reversed()),
 	new Column<Teimdeer>(Resource.local().load("nurgling/hud/rang", 1), Comparator.comparing(Teimdeer::rang).reversed())
     );
-    protected List<Column> cols() {return(cols);}
+    protected List<Column<? super Teimdeer>> cols() {return((List)cols);}
 
     public static CattleRoster mkwidget(UI ui, Object... args) {
 	return(new TeimdeerRoster());

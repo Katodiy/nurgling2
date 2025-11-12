@@ -35,7 +35,7 @@ public class HorseRoster extends CattleRoster<Horse> {
 	new Column<Horse>(Resource.classres(HorseRoster.class).pool.load("gfx/hud/rosters/breedingquality", 1), Comparator.comparing((Horse e) -> e.seedq).reversed()),
 	new Column<Horse>(Resource.local().load("nurgling/hud/rang", 1), Comparator.comparing(Horse::rang).reversed())
     );
-    protected List<Column> cols() {return(cols);}
+    protected List<Column<? super Horse>> cols() {return((List)cols);}
 
     public static CattleRoster mkwidget(UI ui, Object... args) {
 	return(new HorseRoster());

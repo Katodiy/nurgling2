@@ -2,6 +2,7 @@ package nurgling;
 
 import haven.*;
 import haven.render.Location;
+import haven.render.Pipe;
 import haven.render.Transform;
 import haven.res.gfx.fx.eq.Equed;
 import haven.res.gfx.hud.mmap.plo.Player;
@@ -710,21 +711,29 @@ public class NGob
     public Materials mats(Mapping mapping)
     {
         Material mat = null;
+        Materials originalMaterials = null;
         if (mapping instanceof Materials)
         {
-            mat = ((Materials) mapping).mats.get(0);
+            originalMaterials = (Materials) mapping;
+            mat = originalMaterials.mats.get(0);
         }
         if (name != null)
         {
-            MaterialFactory.Status status = MaterialFactory.getStatus(name, customMask ? mask() : (int) getModelAttribute());
-            if (status == MaterialFactory.Status.NOTDEFINED)
+            int maskValue = customMask ? mask() : (int) getModelAttribute();
+            MaterialFactory.Status status = MaterialFactory.getStatus(name, maskValue);
+
+            if (status == MaterialFactory.Status.NOTDEFINED) {
                 return null;
+            }
+
             if (!altMats.containsKey(status))
             {
                 Map<Integer, Material> mats = MaterialFactory.getMaterials(name, status, mat);
-                if (mats != null)
+                if (mats != null) {
                     altMats.put(status, new Materials(parent, mats));
+                }
             }
+
             return altMats.get(status);
         }
         return null;

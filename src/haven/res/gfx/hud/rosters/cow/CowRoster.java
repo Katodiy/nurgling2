@@ -31,7 +31,7 @@ public class CowRoster extends CattleRoster<Ochs> {
 	new Column<Ochs>(Resource.classres(CowRoster.class).pool.load("gfx/hud/rosters/breedingquality", 1), Comparator.comparing((Ochs e) -> e.seedq).reversed()),
 	new Column<Ochs>(Resource.local().load("nurgling/hud/rang", 1), Comparator.comparing(Ochs::rang).reversed())
     );
-    protected List<Column> cols() {return(cols);}
+    protected List<Column<? super Ochs>> cols() {return((List)cols);}
 
     public static CattleRoster mkwidget(UI ui, Object... args) {
 	return(new CowRoster());
