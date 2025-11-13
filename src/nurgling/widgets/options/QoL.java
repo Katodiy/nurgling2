@@ -38,6 +38,7 @@ public class QoL extends Panel {
     private CheckBox showFullPathLines;
 
     private Dropbox<String> preferredSpeedDropbox;
+    private Dropbox<String> preferredHorseSpeedDropbox;
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
 
@@ -126,6 +127,40 @@ public class QoL extends Panel {
             }
         }, prev.pos("bl").adds(0, 5));
 
+        // Horse speed setting
+        prev = content.add(new Label("Preferred horse speed on mount:"), prev.pos("bl").adds(0, 10));
+        prev = preferredHorseSpeedDropbox = content.add(new Dropbox<String>(UI.scale(150), 4, UI.scale(16)) {
+            private final String[] speeds = {"Crawl", "Walk", "Run", "Sprint"};
+
+            @Override
+            protected String listitem(int i) {
+                return speeds[i];
+            }
+
+            @Override
+            protected int listitems() {
+                return speeds.length;
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, Coord.z);
+            }
+
+            @Override
+            public void change(String item) {
+                super.change(item);
+                // Save to config when changed
+                for (int i = 0; i < speeds.length; i++) {
+                    if (speeds[i].equals(item)) {
+                        NConfig.set(NConfig.Key.preferredHorseSpeed, i);
+                        NConfig.needUpdate();
+                        break;
+                    }
+                }
+            }
+        }, prev.pos("bl").adds(0, 5));
+
         prev = content.add(new Label("Map overlays:"), prev.pos("bl").adds(0, 15));
         prev = showPersonalClaims = content.add(new CheckBox("Show personal claims on minimap"), prev.pos("bl").adds(0, 5));
         prev = showVillageClaims = content.add(new CheckBox("Show village claims on minimap"), prev.pos("bl").adds(0, 5));
@@ -186,6 +221,17 @@ public class QoL extends Panel {
         if (speedIndex >= 0 && speedIndex < 4) {
             String[] speeds = {"Crawl", "Walk", "Run", "Sprint"};
             preferredSpeedDropbox.change(speeds[speedIndex]);
+        }
+
+        // Load preferred horse speed
+        Object horseSpeedPref = NConfig.get(NConfig.Key.preferredHorseSpeed);
+        int horseSpeedIndex = 2; // Default to Run
+        if (horseSpeedPref instanceof Number) {
+            horseSpeedIndex = ((Number) horseSpeedPref).intValue();
+        }
+        if (horseSpeedIndex >= 0 && horseSpeedIndex < 4) {
+            String[] horseSpeeds = {"Crawl", "Walk", "Run", "Sprint"};
+            preferredHorseSpeedDropbox.change(horseSpeeds[horseSpeedIndex]);
         }
 
         Object dist = NConfig.get(NConfig.Key.temsmarkdist);

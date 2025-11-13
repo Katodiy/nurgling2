@@ -103,7 +103,8 @@ public class NConfig
         verboseCal,
         highlightRockTiles,
         showFullPathLines,
-        preferredMovementSpeed
+        preferredMovementSpeed,
+        preferredHorseSpeed
     }
 
 
@@ -266,6 +267,7 @@ public class NConfig
 
         // Movement speed setting (0=Crawl, 1=Walk, 2=Run, 3=Sprint)
         conf.put(Key.preferredMovementSpeed, 2);  // Default to Run (unchanged)
+        conf.put(Key.preferredHorseSpeed, 2);     // Default to Run for horses (unchanged)
     }
 
 
