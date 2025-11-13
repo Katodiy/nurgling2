@@ -37,12 +37,15 @@ public class LoginScreen extends Widget {
 	textf = new Text.Foundry(Text.sans, 16).aa(true),
 	textfs = new Text.Foundry(Text.sans, 14).aa(true);
     public static final Tex bg = Resource.loadtex("nurgling/hud/loginscr");
+    public static final Tex loadingbg = Resource.loadtex("nurgling/hud/loginscr2");
     public static final Position bgc = new Position(UI.scale(420, 300));
     public final Widget login;
     public final String hostname;
     private Text error, progress;
     protected Button optbtn;
     private OptWnd opts;
+    private Img bgimg;
+    private boolean isLoading = false;
 
     private String getpref(String name, String def) {
 	return(Utils.getpref(name + "@" + hostname, def));
@@ -52,7 +55,7 @@ public class LoginScreen extends Widget {
 	super(bg.sz());
 	this.hostname = hostname;
 	setfocustab(true);
-	add(new Img(bg), Coord.z);
+	bgimg = add(new Img(bg), Coord.z);
 	optbtn = adda(new Button(UI.scale(100), "Options"), pos("cbl").add(10, -10), 0, 1);
 	optbtn.setgkey(GameUI.kb_opt);
 //	if(HttpStatus.mond.get() != null)
@@ -348,8 +351,21 @@ public class LoginScreen extends Widget {
     protected void progress(String p) {
 	if(progress != null)
 	    progress = null;
-	if(p != null)
+	if(p != null) {
 	    progress = textf.render(p, java.awt.Color.WHITE);
+	    setLoadingScreen(true);
+	} else {
+	    setLoadingScreen(false);
+	}
+    }
+
+    private void setLoadingScreen(boolean loading) {
+	if(isLoading != loading) {
+	    isLoading = loading;
+	    if(bgimg != null) {
+		bgimg.img = loading ? loadingbg : bg;
+	    }
+	}
     }
 
     private void clear() {
@@ -411,7 +427,13 @@ public class LoginScreen extends Widget {
 	super.draw(g);
 	if(error != null)
 	    g.aimage(error.tex(), bgc.adds(0, 150), 0.5, 0.0);
-	if(progress != null)
-	    g.aimage(progress.tex(), bgc.adds(0, 50), 0.5, 0.0);
+	if(progress != null) {
+	    if(isLoading) {
+		// Center text on loading screen
+		g.aimage(progress.tex(), sz.div(2), 0.5, 0.5);
+	    } else {
+		g.aimage(progress.tex(), bgc.adds(0, 50), 0.5, 0.0);
+	    }
+	}
     }
 }
