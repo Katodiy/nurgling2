@@ -38,10 +38,10 @@ public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
         BufferedImage text = null;
         if (ownitem != null && !ownitem.content().isEmpty()) {
             withContent = true;
-            text = GItem.NumberInfo.numrender((int) Math.round(ownitem.content().get(0).quality()), new Color(97, 121, 227, 255));
+            text = GItem.NumberInfo.numrender((int) Math.round(ownitem.content().get(0).quality()), Color.WHITE);
         } else {
             withContent = false;
-            text = GItem.NumberInfo.numrender((int) Math.round(q), new Color(35, 245, 245, 255));
+            text = GItem.NumberInfo.numrender((int) Math.round(q), Color.WHITE);
         }
         BufferedImage bi = new BufferedImage(text.getWidth(), text.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = bi.createGraphics();
@@ -53,6 +53,6 @@ public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
     }
 
     public void drawoverlay(GOut g, Tex ol) {
-        g.aimage(ol, new Coord(g.sz().x - ol.sz().x, ol.sz().y), 0, 1);
+        g.aimage(ol, new Coord(0, g.sz().y - ol.sz().y), 0, 0);
     }
 }
