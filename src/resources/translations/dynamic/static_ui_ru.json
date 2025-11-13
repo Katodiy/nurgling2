@@ -260,5 +260,14 @@
 
   "_combat_saves": "Combat saves",
   "Pursue": "Изучать",
-  "Saved school %d": "Сохраненная школа %d"
+  "Saved school %d": "Сохраненная школа %d",
+
+  "_quest_tabs": "Quest log tabs",
+  "Current": "Текущие",
+  "Completed": "Завершенные",
+
+  "_skill_tabs": "Skill window tabs",
+  "Skills": "Навыки",
+  "Credos": "Кредо",
+  "Lore": "Знания"
 }

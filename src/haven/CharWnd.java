@@ -367,7 +367,7 @@ public class CharWnd extends Window {
 		TB(String nm, Tabs.Tab tab, String tip) {
 		    super("gfx/hud/chr/" + nm, "u", "d", null);
 		    this.tab = tab;
-		    settip(tip);
+		    settip(nurgling.translation.TranslationManager.getInstance().translateStatic(tip));
 		}
 
 		public void click() {

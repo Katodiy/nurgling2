@@ -680,8 +680,8 @@ public class QuestWnd extends Widget {
 	}
 	lists.pack();
 	addhlp(lists.c.add(0, lists.sz.y + UI.scale(5)), UI.scale(5), lists.sz.x,
-		     lists.new TabButton(0, "Current",   cqst),
-		     lists.new TabButton(0, "Completed", dqst));
+		     lists.new TabButton(0, nurgling.translation.TranslationManager.getInstance().translateStatic("Current"), cqst),
+		     lists.new TabButton(0, nurgling.translation.TranslationManager.getInstance().translateStatic("Completed"), dqst));
 	pack();
     }
 

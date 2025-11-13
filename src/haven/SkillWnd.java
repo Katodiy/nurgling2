@@ -487,9 +487,9 @@ public class SkillWnd extends Widget {
 	}
 	lists.pack();
 	addhlp(lists.c.add(0, lists.sz.y + UI.scale(5)), UI.scale(5), lists.sz.x,
-	      lists.new TabButton(0, "Skills", sktab),
-	      lists.new TabButton(0, "Credos", credos),
-	      lists.new TabButton(0, "Lore",   exps));
+	      lists.new TabButton(0, nurgling.translation.TranslationManager.getInstance().translateStatic("Skills"), sktab),
+	      lists.new TabButton(0, nurgling.translation.TranslationManager.getInstance().translateStatic("Credos"), credos),
+	      lists.new TabButton(0, nurgling.translation.TranslationManager.getInstance().translateStatic("Lore"), exps));
 	pack();
     }
 
