@@ -132,7 +132,7 @@ public class FightWnd extends Widget {
 	int u = 0;
 	for(Action act : acts)
 	    u += act.u;
-	count.settext(String.format(nurgling.translation.TranslationManager.getInstance().translateStatic("Used:") + " %d/%d", u, maxact));
+	count.settext(String.format(nurgling.translation.L10n.get("Used:") + " %d/%d", u, maxact));
 	count.setcolor((u > maxact)?Color.RED:Color.WHITE);
     }
 
@@ -604,7 +604,7 @@ public class FightWnd extends Widget {
     private Text getUnusedSaveText() {
         if (unused == null) {
             unused = new Text.Foundry(attrf.font.deriveFont(java.awt.Font.ITALIC)).aa(true)
-                    .render(nurgling.translation.TranslationManager.getInstance().translateStatic("Unused save"));
+                    .render(nurgling.translation.L10n.get("Unused save"));
         }
         return unused;
     }

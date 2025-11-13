@@ -43,7 +43,7 @@ public class CharWnd extends Window {
 
     // Helper method for translated category headers
     public static Tex renderTranslatedCategory(String text) {
-        return catf.render(nurgling.translation.TranslationManager.getInstance().translateStatic(text)).tex();
+        return catf.render(nurgling.translation.L10n.get(text)).tex();
     }
     public static final Text.Furnace failf = new BlurFurn(new TexFurn(new Text.Foundry(Text.fraktur, 25).aa(true), Resource.loadimg("gfx/hud/fontred")), UI.scale(3), UI.scale(2), new Color(96, 48, 0));
     public static final Text.Foundry attrf = new Text.Foundry(Text.fraktur.deriveFont((float)Math.floor(UI.scale(16.0)))).aa(true);
@@ -367,7 +367,7 @@ public class CharWnd extends Window {
 		TB(String nm, Tabs.Tab tab, String tip) {
 		    super("gfx/hud/chr/" + nm, "u", "d", null);
 		    this.tab = tab;
-		    settip(nurgling.translation.TranslationManager.getInstance().translateStatic(tip));
+		    settip(nurgling.translation.L10n.get(tip));
 		}
 
 		public void click() {

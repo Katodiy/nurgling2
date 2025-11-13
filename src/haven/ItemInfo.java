@@ -280,7 +280,7 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 	private static Text.Line ch = null;
 	private static Text.Line getCh() {
 	    if (ch == null) {
-	        ch = Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Contents:"));
+	        ch = Text.render(nurgling.translation.L10n.get("Contents:"));
 	    }
 	    return ch;
 	}

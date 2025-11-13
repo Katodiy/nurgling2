@@ -91,14 +91,14 @@ public class QuestWnd extends Widget {
 
 	private static Tex getQuestCompletedTex() {
 	    if (qcmp == null) {
-	        qcmp = catf.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Quest completed")).tex();
+	        qcmp = catf.render(nurgling.translation.L10n.get("Quest completed")).tex();
 	    }
 	    return qcmp;
 	}
 
 	private static Tex getQuestFailedTex() {
 	    if (qfail == null) {
-	        qfail = failf.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Quest failed")).tex();
+	        qfail = failf.render(nurgling.translation.L10n.get("Quest failed")).tex();
 	    }
 	    return qfail;
 	}
@@ -680,8 +680,8 @@ public class QuestWnd extends Widget {
 	}
 	lists.pack();
 	addhlp(lists.c.add(0, lists.sz.y + UI.scale(5)), UI.scale(5), lists.sz.x,
-		     lists.new TabButton(0, nurgling.translation.TranslationManager.getInstance().translateStatic("Current"), cqst),
-		     lists.new TabButton(0, nurgling.translation.TranslationManager.getInstance().translateStatic("Completed"), dqst));
+		     lists.new TabButton(0, nurgling.translation.L10n.get("Current"), cqst),
+		     lists.new TabButton(0, nurgling.translation.L10n.get("Completed"), dqst));
 	pack();
     }
 

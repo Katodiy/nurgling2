@@ -160,8 +160,8 @@ public class SkillWnd extends Widget {
 
 	public SkillGrid(Coord sz) {
 	    super(sz);
-	    nsk = new Group(UI.scale(40, 40), new Coord(-1, 5), nurgling.translation.TranslationManager.getInstance().translateStatic("Available Skills"), Collections.emptyList());
-	    csk = new Group(UI.scale(40, 40), new Coord(-1, 5), nurgling.translation.TranslationManager.getInstance().translateStatic("Known Skills"), Collections.emptyList());
+	    nsk = new Group(UI.scale(40, 40), new Coord(-1, 5), nurgling.translation.L10n.get("Available Skills"), Collections.emptyList());
+	    csk = new Group(UI.scale(40, 40), new Coord(-1, 5), nurgling.translation.L10n.get("Known Skills"), Collections.emptyList());
 	    itemtooltip = Skill::tooltip;
 	}
 
@@ -214,15 +214,15 @@ public class SkillWnd extends Widget {
 	private boolean loading = false;
 
 	private Tex getPursuingCategory() {
-	    return GridList.dcatf.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Pursuing")).tex();
+	    return GridList.dcatf.render(nurgling.translation.L10n.get("Pursuing")).tex();
 	}
 
 	private Tex getCredosAvailableCategory() {
-	    return GridList.dcatf.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Credos Available")).tex();
+	    return GridList.dcatf.render(nurgling.translation.L10n.get("Credos Available")).tex();
 	}
 
 	private Tex getCredosAcquiredCategory() {
-	    return GridList.dcatf.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Credos Acquired")).tex();
+	    return GridList.dcatf.render(nurgling.translation.L10n.get("Credos Acquired")).tex();
 	}
 
 	public CredoGrid(Coord sz) {
@@ -487,9 +487,9 @@ public class SkillWnd extends Widget {
 	}
 	lists.pack();
 	addhlp(lists.c.add(0, lists.sz.y + UI.scale(5)), UI.scale(5), lists.sz.x,
-	      lists.new TabButton(0, nurgling.translation.TranslationManager.getInstance().translateStatic("Skills"), sktab),
-	      lists.new TabButton(0, nurgling.translation.TranslationManager.getInstance().translateStatic("Credos"), credos),
-	      lists.new TabButton(0, nurgling.translation.TranslationManager.getInstance().translateStatic("Lore"), exps));
+	      lists.new TabButton(0, nurgling.translation.L10n.get("Skills"), sktab),
+	      lists.new TabButton(0, nurgling.translation.L10n.get("Credos"), credos),
+	      lists.new TabButton(0, nurgling.translation.L10n.get("Lore"), exps));
 	pack();
     }
 

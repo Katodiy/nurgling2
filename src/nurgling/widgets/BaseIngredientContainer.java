@@ -21,10 +21,10 @@ public class BaseIngredientContainer extends Widget implements DTarget, Scrollab
 
     private static void initLabels() {
         if (freeLabel == null) {
-            freeLabel = new TexI(Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Drag and drop an item here")).img);
+            freeLabel = new TexI(Text.render(nurgling.translation.L10n.get("Drag and drop an item here")).img);
         }
         if (freeLabel2 == null) {
-            freeLabel2 = new TexI(Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("or select it from the categories")).img);
+            freeLabel2 = new TexI(Text.render(nurgling.translation.L10n.get("or select it from the categories")).img);
         }
     }
 

@@ -204,7 +204,7 @@ public class NCatSelection extends Window {
                     addToInput();
                 }
             }, UI.scale(145, desiredHeight/2 - NStyle.toTake[0].sz().y/2));
-            addToInputButton.tooltip = Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Add to 'Take'")).tex();
+            addToInputButton.tooltip = Text.render(nurgling.translation.L10n.get("Add to 'Take'")).tex();
 
             // Инициализация кнопки для добавления в OUT
             addToOutputButton = add(new IButton(NStyle.toPut[0].back,NStyle.toPut[1].back,NStyle.toPut[2].back){
@@ -213,7 +213,7 @@ public class NCatSelection extends Window {
                     addToOutput();
                 }
             }, UI.scale(165, desiredHeight/2 - NStyle.toTake[0].sz().y/2));
-            addToOutputButton.tooltip = Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Add to 'Put'")).tex();
+            addToOutputButton.tooltip = Text.render(nurgling.translation.L10n.get("Add to 'Put'")).tex();
             pack();
         }
         // Метод для добавления в IN
@@ -281,7 +281,7 @@ public class NCatSelection extends Window {
                     addToInput();
                 }
             }, UI.scale(64 + 230, desiredHeight/2 - NStyle.toTake[0].sz().y/2));
-            addToInputButton.tooltip = Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Add to 'Take'")).tex();
+            addToInputButton.tooltip = Text.render(nurgling.translation.L10n.get("Add to 'Take'")).tex();
 
             // Инициализация кнопки для добавления в OUT
             addToOutputButton = add(new IButton(NStyle.toPut[0].back,NStyle.toPut[1].back,NStyle.toPut[2].back){
@@ -290,7 +290,7 @@ public class NCatSelection extends Window {
                     addToOutput();
                 }
             }, UI.scale(64 + 250, desiredHeight/2 - NStyle.toTake[0].sz().y/2));
-            addToOutputButton.tooltip = Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Add to 'Put'")).tex();
+            addToOutputButton.tooltip = Text.render(nurgling.translation.L10n.get("Add to 'Put'")).tex();
             pack();
             sz.y = desiredHeight;
         }

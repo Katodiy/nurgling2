@@ -41,14 +41,14 @@ public class Makewindow extends Widget {
 
     private static Text getQmodl() {
         if (qmodl == null) {
-            qmodl = Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Quality:"));
+            qmodl = Text.render(nurgling.translation.L10n.get("Quality:"));
         }
         return qmodl;
     }
 
     private static Text getTooll() {
         if (tooll == null) {
-            tooll = Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Tools:"));
+            tooll = Text.render(nurgling.translation.L10n.get("Tools:"));
         }
         return tooll;
     }

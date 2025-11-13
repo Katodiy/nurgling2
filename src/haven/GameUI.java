@@ -1225,7 +1225,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	MenuCheckBox(String base, KeyBinding gkey, String tooltip) {
 	    super("nurgling/hud/buttons/" + base, "u", "d", "h", "dh");
 	    setgkey(gkey);
-	    settip(nurgling.translation.TranslationManager.getInstance().translateStatic(tooltip));
+	    settip(nurgling.translation.L10n.get(tooltip));
 	}
     }
 

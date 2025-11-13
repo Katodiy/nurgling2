@@ -59,7 +59,7 @@ public class BAttrWnd extends Widget {
 	    super(Coord.of(attrw, attrf.height() + UI.scale(2)), glob, attr);
 	    Resource res = Loading.waitfor(this.attr.res());
 	    String attributeName = res.flayer(Resource.tooltip).t;
-	    String translatedName = nurgling.translation.TranslationManager.getInstance().translateStatic(attributeName);
+	    String translatedName = nurgling.translation.L10n.get(attributeName);
 	    this.rnm = attrf.render(translatedName);
 	    this.img = new TexI(convolve(res.flayer(Resource.imgc).img, new Coord(this.sz.y, this.sz.y), iconfilter));
 	    this.bg = bg;
