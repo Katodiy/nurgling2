@@ -6,6 +6,7 @@ import haven.Window;
 import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import mapv4.StatusWdg;
+import nurgling.actions.Results;
 import nurgling.areas.*;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
@@ -392,10 +393,10 @@ public class NUtils
         return 0;
     }
 
-    public static void drop(WItem item) throws InterruptedException {
+    public static void drop(WItem item) {
         item.item.wdgmsg("drop", item.sz, getGameUI().map.player().rc, 0);
     }
-
+    
     public static void itemact(WItem item) throws InterruptedException {
         item.item.wdgmsg ( "itemact", 0 );
     }

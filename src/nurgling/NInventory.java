@@ -679,6 +679,7 @@ public class NInventory extends Inventory
             }
         }, pw.pos("bl").add(UI.scale(new Coord(0, 5))));
         pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/autosplittor/u").flayer(Resource.tooltip).t);
+        ((ICheckBox)pw).a = (Boolean)NConfig.get(NConfig.Key.autoSplitter);
 
         pw = toggles.add(new ICheckBox(dropperi[0], dropperi[1], dropperi[2], dropperi[3]) {
             @Override
@@ -688,6 +689,7 @@ public class NInventory extends Inventory
             }
         }, pw.pos("bl").add(UI.scale(new Coord(0, 5))));
         pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/dropper/u").flayer(Resource.tooltip).t);
+        ((ICheckBox)pw).a = (Boolean)NConfig.get(NConfig.Key.autoDropper);
 
         toggles.pack();
 
