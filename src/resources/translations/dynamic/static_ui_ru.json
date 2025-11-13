@@ -286,7 +286,8 @@
   "Unarmed Combat": "Рукопашный бой",
   "Melee Combat": "Ближний бой",
   "Ranged Combat": "Дальний бой",
-  "Explore": "Исследование",
+  "Marksmanship": "Дальний бой",
+  "Exploration": "Исследование",
   "Stealth": "Скрытность",
   "Sewing": "Шитье",
   "Smithing": "Кузнечное дело",
@@ -294,6 +295,6 @@
   "Carpentry": "Плотничество",
   "Cooking": "Кулинария",
   "Farming": "Фермерство",
-  "Survive": "Выживание",
+  "Survival": "Выживание",
   "Lore": "Знания"
 }
