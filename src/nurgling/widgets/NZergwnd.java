@@ -39,7 +39,7 @@ public class NZergwnd extends GameUI.Hidewnd
     public NZergwnd() {
         super(Coord.z, "Kith & Kin", true);
         kin = add(new NZergwnd.TButton("kin", false));
-        kin.tooltip = Text.render("Kin");
+        kin.tooltip = Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Kin"));
         pol = add(new NZergwnd.TButton("pol", true));
         pol2 = add(new NZergwnd.TButton("rlm", true));
     }

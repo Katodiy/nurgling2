@@ -55,7 +55,7 @@ public class NMapWnd extends MapWnd {
 
             @Override
             public Object tooltip(Coord c, Widget prev) {
-                return Text.render("Show/Hide Tree Icons");
+                return Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Show/Hide Tree Icons"));
             }
         }, view.c.add(view.sz.x - UI.scale(225), UI.scale(15)));
 
@@ -107,7 +107,7 @@ public class NMapWnd extends MapWnd {
 
             @Override
             public Object tooltip(Coord c, Widget prev) {
-                return Text.render("Show/Hide Fish Icons");
+                return Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Show/Hide Fish Icons"));
             }
         }, view.c.add(view.sz.x - UI.scale(110), UI.scale(15)));
 
