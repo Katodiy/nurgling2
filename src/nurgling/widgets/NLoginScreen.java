@@ -119,6 +119,11 @@ public class NLoginScreen extends LoginScreen
         // Check if we've exceeded maximum retry attempts
         if (retryAttempt >= MAX_RETRY_ATTEMPTS) {
             System.err.println("[NLoginScreen] Maximum retry attempts (" + MAX_RETRY_ATTEMPTS + ") reached. Auto-login disabled to prevent ban.");
+            System.err.println("[NLoginScreen] Terminating game to prevent further connection attempts.");
+
+            // Terminate the game process - same pattern used by scenario bots
+            // No need to logout since we never successfully logged in
+            System.exit(1); // Exit code 1 indicates failure
             return;
         }
 
