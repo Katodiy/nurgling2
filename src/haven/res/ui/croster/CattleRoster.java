@@ -37,8 +37,8 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
     public Column<? super T> mousecol, ordercol;
     public boolean revorder;
 
-	ICheckBox settings;
-	final Coord shift = UI.scale(16,5);
+    ICheckBox settings;
+    final Coord shift = UI.scale(16,5);
     public CattleRoster() {
 	super(new Coord(WIDTH, UI.scale(400)));
 	this.type = (Class<T>) ((ParameterizedType) getClass()
@@ -206,14 +206,15 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	pack();
     }
 
-	Deers dset = null;
-	Cows cset = null;
-	Goats gset = null;
-	Sheeps sset = null;
-	Pigs pset = null;
-	Horses hset = null;
+    Deers dset = null;
+    Cows cset = null;
+    Goats gset = null;
+    Sheeps sset = null;
+    Pigs pset = null;
+    Horses hset = null;
 
-    public static <E extends Entry>  List<Column> initcols(Column... attrs) {
+    @SafeVarargs
+    public static <E extends Entry>  List<Column<? super E>> initcols(Column<? super E>... attrs) {
 	for(int i = 0, x = CheckBox.sbox.sz().x + UI.scale(10); i < attrs.length; i++) {
 	    Column<? super E> attr = attrs[i];
 	    attr.x = x;
@@ -382,14 +383,14 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	return(ret);
     }
 
-	private final Class<T> type;
-	public Class<T> getGenType() {
-		return this.type;
-	}
+    private final Class<T> type;
+    public Class<T> getGenType() {
+	return this.type;
+    }
 
-	@Override
-	public void resize(Coord sz) {
-		super.resize(sz);
-		settings.move(new Coord(sz.x-settings.sz.x ,0));
-	}
+    @Override
+    public void resize(Coord sz) {
+	super.resize(sz);
+	settings.move(new Coord(sz.x-settings.sz.x ,0));
+    }
 }

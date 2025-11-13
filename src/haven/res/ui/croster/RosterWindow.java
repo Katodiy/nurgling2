@@ -15,7 +15,7 @@ import haven.res.gfx.hud.rosters.horse.Horse;
 import haven.res.gfx.hud.rosters.pig.Pig;
 import haven.res.gfx.hud.rosters.sheep.Sheep;
 
-@haven.FromResource(name = "ui/croster", version = 75)
+@haven.FromResource(name = "ui/croster", version = 76)
 public class RosterWindow extends Window {
     public static final Map<Glob, RosterWindow> rosters = new HashMap<>();
     public static int rmseq = 0;
@@ -57,50 +57,50 @@ public class RosterWindow extends Window {
 	super.wdgmsg(sender, msg, args);
     }
 
-	public <C extends Entry> void show(Class<C> cClass){
-		for(Widget ch : children()){
-			if(ch instanceof CattleRoster){
-				if(((CattleRoster)ch).getGenType() == cClass)
-					show((CattleRoster)ch);
-			}
-		}
+    public <C extends Entry> void show(Class<C> cClass){
+	for(Widget ch : children()){
+	    if(ch instanceof CattleRoster){
+		if(((CattleRoster)ch).getGenType() == cClass)
+		    show((CattleRoster)ch);
+	    }
 	}
+    }
 
-	public boolean allLoaded(Class<? extends Entry> cattleRoster){
-		if(!isLoaded(Goat.class)){
-			return false;
-		}
-		if(!isLoaded(Ochs.class)){
-			return false;
-		}
-		if(!isLoaded(Sheep.class)){
-			return false;
-		}
-		if(!isLoaded(Horse.class)){
-			return false;
-		}
-		return isLoaded(Pig.class);
+    public boolean allLoaded(Class<? extends Entry> cattleRoster){
+	if(!isLoaded(Goat.class)){
+	    return false;
 	}
+	if(!isLoaded(Ochs.class)){
+	    return false;
+	}
+	if(!isLoaded(Sheep.class)){
+	    return false;
+	}
+	if(!isLoaded(Horse.class)){
+	    return false;
+	}
+	return isLoaded(Pig.class);
+    }
 
-	public <C extends Entry>  boolean isLoaded(Class<C> cClass){
-		for(Widget ch : children()){
-			if(ch instanceof CattleRoster){
-				if(((CattleRoster)ch).getGenType() == cClass)
-					return true;
-			}
-		}
-		return false;
+    public <C extends Entry>  boolean isLoaded(Class<C> cClass){
+	for(Widget ch : children()){
+	    if(ch instanceof CattleRoster){
+		if(((CattleRoster)ch).getGenType() == cClass)
+		    return true;
+	    }
 	}
+	return false;
+    }
 
-	public <C extends Entry> CattleRoster roster(Class<C> cClass){
-		for(Widget ch : children()){
-			if(ch instanceof CattleRoster){
-				if(((CattleRoster)ch).getGenType() == cClass)
-					return ((CattleRoster)ch);
-			}
-		}
-		return null;
+    public <C extends Entry> CattleRoster roster(Class<C> cClass){
+	for(Widget ch : children()){
+	    if(ch instanceof CattleRoster){
+		if(((CattleRoster)ch).getGenType() == cClass)
+		    return ((CattleRoster)ch);
+	    }
 	}
+	return null;
+    }
 }
 
 /* >pagina: RosterButton$Fac */
