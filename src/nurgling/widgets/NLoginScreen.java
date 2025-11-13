@@ -25,6 +25,15 @@ public class NLoginScreen extends LoginScreen
 
     int marg = UI.scale(10);
 
+    // Retry and backoff state for bot mode
+    private boolean autoLoginInProgress = false;
+    private long lastAutoLoginTime = 0;
+    private int retryAttempt = 0;
+    private long nextRetryTime = 0;
+    private static final int MAX_RETRY_ATTEMPTS = 5;
+    private static final long BASE_RETRY_DELAY_MS = 1000; // Start with 1 second
+    private static final long MAX_RETRY_DELAY_MS = 30000; // Cap at 30 seconds
+
     public NLoginScreen(String hostname)
     {
         super(hostname);
@@ -95,8 +104,96 @@ public class NLoginScreen extends LoginScreen
         super.progress(p);
         if (NConfig.isBotMod())
         {
-            wdgmsg("login", new Object[]{new AuthClient.NativeCred(NConfig.botmod.user, NConfig.botmod.pass), false});
+            attemptAutoLogin();
         }
+    }
+
+    /**
+     * Attempts auto-login with retry logic and exponential backoff.
+     * Prevents infinite retry loops that cause account bans.
+     */
+    private void attemptAutoLogin()
+    {
+        long currentTime = System.currentTimeMillis();
+
+        // Check if we've exceeded maximum retry attempts
+        if (retryAttempt >= MAX_RETRY_ATTEMPTS) {
+            System.err.println("[NLoginScreen] Maximum retry attempts (" + MAX_RETRY_ATTEMPTS + ") reached. Auto-login disabled to prevent ban.");
+            return;
+        }
+
+        // Check if we're already in the process of logging in
+        if (autoLoginInProgress) {
+            return; // Don't send duplicate login attempts
+        }
+
+        // Check if we need to wait for backoff delay
+        if (currentTime < nextRetryTime) {
+            long remainingWait = nextRetryTime - currentTime;
+            if (remainingWait > 1000) { // Only log if more than 1 second remaining
+                System.out.println("[NLoginScreen] Auto-login waiting " + (remainingWait / 1000) + " seconds before retry attempt " + (retryAttempt + 1));
+            }
+            return;
+        }
+
+        // Check if this is too soon after last attempt (prevents rapid-fire retries)
+        if (currentTime - lastAutoLoginTime < 500) { // Minimum 500ms between attempts
+            return;
+        }
+
+        try {
+            // Mark login as in progress to prevent duplicates
+            autoLoginInProgress = true;
+            lastAutoLoginTime = currentTime;
+
+            System.out.println("[NLoginScreen] Auto-login attempt " + (retryAttempt + 1) + "/" + MAX_RETRY_ATTEMPTS);
+
+            // Send the login credentials
+            wdgmsg("login", new Object[]{new AuthClient.NativeCred(NConfig.botmod.user, NConfig.botmod.pass), false});
+
+            // Prepare for potential retry with exponential backoff
+            retryAttempt++;
+            long backoffDelay = Math.min(BASE_RETRY_DELAY_MS * (1L << retryAttempt), MAX_RETRY_DELAY_MS);
+            nextRetryTime = currentTime + backoffDelay;
+
+            // Reset login progress flag after a short delay to allow for success
+            // This gets reset earlier if login succeeds via onLoginSuccess()
+            new Thread(() -> {
+                try {
+                    Thread.sleep(2000); // Give 2 seconds for login to potentially succeed
+                    if (autoLoginInProgress) {
+                        autoLoginInProgress = false; // Reset if still in progress
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }).start();
+
+        } catch (Exception e) {
+            System.err.println("[NLoginScreen] Auto-login attempt failed: " + e.getMessage());
+            autoLoginInProgress = false;
+        }
+    }
+
+    /**
+     * Call this when login succeeds to reset retry state
+     */
+    private void onLoginSuccess() {
+        System.out.println("[NLoginScreen] Auto-login successful, resetting retry state");
+        autoLoginInProgress = false;
+        retryAttempt = 0;
+        nextRetryTime = 0;
+        lastAutoLoginTime = 0;
+    }
+
+    /**
+     * Call this to reset retry state (e.g., when user manually logs in)
+     */
+    public void resetAutoLoginState() {
+        autoLoginInProgress = false;
+        retryAttempt = 0;
+        nextRetryTime = 0;
+        lastAutoLoginTime = 0;
     }
 
     public void wdgmsg(
@@ -121,6 +218,12 @@ public class NLoginScreen extends LoginScreen
 
             }
         }
+
+        // Reset auto-login retry state when any login attempt is made
+        if ("login".equals(msg) && NConfig.isBotMod()) {
+            resetAutoLoginState();
+        }
+
         super.wdgmsg(sender, msg, args);
     }
 
@@ -307,6 +410,8 @@ public class NLoginScreen extends LoginScreen
             if (!res)
             {
                 msgMode = true;
+                // Reset auto-login state when user manually selects login
+                NLoginScreen.this.resetAutoLoginState();
                 if (!nd.isTokenUsed)
                     NLoginScreen.this.wdgmsg("login", new Object[]{new AuthClient.NativeCred(nd.name, nd.pass), false});
                 else
