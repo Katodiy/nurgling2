@@ -83,7 +83,7 @@ public class NUI extends UI
         // Initialize session info once
         if (sessInfo == null && sess != null)
         {
-            sessInfo = new NSessInfo(sess.username);
+            sessInfo = new NSessInfo(sess.user.name);
         }
         
         // Only check for verification/subscription periodically to reduce CPU load

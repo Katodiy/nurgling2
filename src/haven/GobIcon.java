@@ -169,15 +169,15 @@ public class GobIcon extends GAttrib {
 
 	private int markdata() {
 
-	    byte[] data = res.flayer(Resource.imgc).info.getOrDefault("mm/mark", 0);
-	    if(data == null) {
+	    int data = Utils.iv(res.flayer(Resource.imgc).info.getOrDefault("mm/mark", 0));
+	    if(data != 0) {
 			if(res.name.equals("mm/up") || res.name.equals("mm/down"))
 			{
 				return 1;
 			}
 			return (0);
 		}
-	    return(Utils.iv(data, 0));
+	    return data;
 	}
 
 	public Markable markable() {

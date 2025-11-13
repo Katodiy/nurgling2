@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class NTabStrip<T> extends Widget {
-    public static final IBox frame = new IBox("nurgling/hud/tab", "tl", "tr", "bl", "br", "extvl", "extvr", "extht", "exthb");
+    public static final IBox frame = new IBox.Scaled("nurgling/hud/tab", "tl", "tr", "bl", "br", "extvl", "extvr", "extht", "exthb");
     private final List<Button<T>> buttons = new ArrayList<Button<T>>();
     private Button<T> selected;
     private Color selectedColor = null;

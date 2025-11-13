@@ -699,7 +699,7 @@ public class Widget {
 	    else if(args[0] instanceof String)
         {
             cursorRes = (String) args[0];
-		    cursor = Resource.remote().load((String)args[0], Utils.iv(args[1]));
+            cursor = Resource.remote().load((String) args[0], Utils.iv(args[1]));
         }
 	    else
 		cursor = ui.sess.getresv(args[0]);

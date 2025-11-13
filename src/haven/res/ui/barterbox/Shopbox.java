@@ -27,7 +27,7 @@ public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Own
     public int leftNum;
     public int pnum, pq;
     private Text pnumt, pqt;
-    private GSprite spr;
+    public GSprite spr;
     private Object[] info = {};
     private Button spipe, bpipe, bbtn, cbtn;
     private TextEntry pnume, pqe;

@@ -95,6 +95,7 @@ public interface IBox {
 	    super(base, ctl, ctr, cbl, cbr, bl, br, bt, bb);
 	}
 
+
     public void draw(GOut g, Coord tl, Coord sz)
 	{
 		g.image(bt, tl.add(new Coord(ctl.sz().x + ctl.sz().x / 2 - ctl.sz().x / 4, ctl.sz().y / 2 - ctl.sz().x / 4)), new Coord(sz.x - ctr.sz().x - ctl.sz().x - ctl.sz().x + ctl.sz().x / 2, bt.sz().y));
@@ -107,3 +108,5 @@ public interface IBox {
 		g.image(cbr, new Coord(sz.x - cbr.sz().x + tl.x - ctl.sz().x / 2 + ctl.sz().x / 4, sz.y - cbr.sz().y + tl.y - ctl.sz().y / 2 + ctl.sz().x / 4));
 	}
 }
+}
+
