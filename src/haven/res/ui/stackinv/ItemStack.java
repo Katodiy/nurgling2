@@ -6,7 +6,7 @@ import java.util.*;
 import static haven.Inventory.*;
 
 /* >wdg: ItemStack */
-@haven.FromResource(name = "ui/stackinv", version = 1)
+@haven.FromResource(name = "ui/stackinv", version = 2)
 public class ItemStack extends Widget implements DTarget {
     public final List<GItem> order = new ArrayList<>();
     public final Map<GItem, WItem> wmap = new HashMap<>();
@@ -55,12 +55,12 @@ public class ItemStack extends Widget implements DTarget {
 	dirty = true;
     }
 
-    public boolean mousewheel(Coord c, int amount) {
+    public boolean mousewheel(MouseWheelEvent ev) {
 	if(ui.modshift) {
 	    Inventory minv = getparent(GameUI.class).maininv;
-	    if(amount < 0)
+	    if(ev.a < 0)
 		wdgmsg("invxf", minv.wdgid(), 1);
-	    else if(amount > 0)
+	    else if(ev.a > 0)
 		minv.wdgmsg("invxf", this.wdgid(), 1);
 	}
 	return(true);
