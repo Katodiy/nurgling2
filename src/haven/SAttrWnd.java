@@ -198,7 +198,7 @@ public class SAttrWnd extends Widget {
 
     public SAttrWnd(Glob glob) {
 	Widget prev;
-	prev = add(CharWnd.settip(new Img(catf.render("Abilities").tex()), "gfx/hud/chr/tips/sattr"), Coord.z);
+	prev = add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Abilities")), "gfx/hud/chr/tips/sattr"), Coord.z);
 	attrs = new ArrayList<>();
 	SAttr aw;
 	attrs.add(aw = add(new SAttr(glob, "unarmed", every), prev.pos("bl").adds(5, 0).add(wbox.btloff())));
@@ -216,15 +216,15 @@ public class SAttrWnd extends Widget {
 	attrs.add(aw = add(new SAttr(glob, "lore", every), aw.pos("bl")));
 	Widget lframe = Frame.around(this, attrs);
 
-	prev = add(CharWnd.settip(new Img(catf.render("Study Report").tex()), "gfx/hud/chr/tips/study"), width, 0);
+	prev = add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Study Report")), "gfx/hud/chr/tips/study"), width, 0);
 	studyc = prev.pos("bl").adds(5, 0);
 	Widget bframe = adda(new Frame(new Coord(attrw, UI.scale(105)), true), prev.pos("bl").adds(5, 0).x, lframe.pos("br").y, 0.0, 1.0);
 	int rx = bframe.pos("iur").subs(10, 0).x;
-	prev = add(new Label("Experience points:"), bframe.pos("iul").adds(10, 5));
+	prev = add(new Label(nurgling.translation.TranslationManager.getInstance().translateStatic("Experience points:")), bframe.pos("iul").adds(10, 5));
 	adda(enclabel(), new Coord(rx, prev.pos("ul").y), 1.0, 0.0);
-	prev = add(new Label("Learning points:"), prev.pos("bl").adds(0, 2));
+	prev = add(new Label(nurgling.translation.TranslationManager.getInstance().translateStatic("Learning points:")), prev.pos("bl").adds(0, 2));
 	adda(explabel(), new Coord(rx, prev.pos("ul").y), 1.0, 0.0);
-	prev = add(new Label("Learning cost:"), prev.pos("bl").adds(0, 2));
+	prev = add(new Label(nurgling.translation.TranslationManager.getInstance().translateStatic("Learning cost:")), prev.pos("bl").adds(0, 2));
 	adda(new RLabel<Integer>(() -> scost, Utils::thformat, n -> (n > chr.exp) ? debuff : Color.WHITE), new Coord(rx, prev.pos("ul").y), 1.0, 0.0);
 	prev = adda(new Button(UI.scale(75), "Buy").action(this::buy), bframe.pos("ibr").subs(5, 5), 1.0, 1.0);
 	adda(new Button(UI.scale(75), "Reset").action(this::reset), prev.pos("bl").subs(5, 0), 1.0, 1.0);

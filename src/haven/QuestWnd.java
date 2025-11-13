@@ -86,8 +86,22 @@ public class QuestWnd extends Widget {
 	    }
 	}
 
-	private static final Tex qcmp = catf.render("Quest completed").tex();
-	private static final Tex qfail = failf.render("Quest failed").tex();
+	private static Tex qcmp = null;
+	private static Tex qfail = null;
+
+	private static Tex getQuestCompletedTex() {
+	    if (qcmp == null) {
+	        qcmp = catf.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Quest completed")).tex();
+	    }
+	    return qcmp;
+	}
+
+	private static Tex getQuestFailedTex() {
+	    if (qfail == null) {
+	        qfail = failf.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Quest failed")).tex();
+	    }
+	    return qfail;
+	}
 	public void done(GameUI parent) {
 	    parent.add(new Widget() {
 		    double a = 0.0;
@@ -116,7 +130,7 @@ public class QuestWnd extends Widget {
 			    try {
 				title = (done == QST_DONE?catf:failf).render(title()).tex();
 				img = res.get().flayer(Resource.imgc).tex();
-				msg = (done == QST_DONE)?qcmp:qfail;
+				msg = (done == QST_DONE)?getQuestCompletedTex():getQuestFailedTex();
 				/*
 				resize(new Coord(Math.max(img.sz().x + 25 + title.sz().x, msg.sz().x),
 						 Math.max(img.sz().y, title.sz().y) + 25 + msg.sz().y));
@@ -638,7 +652,7 @@ public class QuestWnd extends Widget {
     public QuestWnd() {
 	Widget prev;
 
-	prev = add(CharWnd.settip(new Img(catf.render("Quest Log").tex()), "gfx/hud/chr/tips/quests"), new Coord(0, 0));
+	prev = add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Quest Log")), "gfx/hud/chr/tips/quests"), new Coord(0, 0));
 	questbox = add(new Widget(new Coord(attrw, height)) {
 		public void draw(GOut g) {
 		    g.chcolor(0, 0, 0, 128);

@@ -36,8 +36,22 @@ import java.awt.image.BufferedImage;
 import static haven.Inventory.invsq;
 
 public class Makewindow extends Widget {
-    public static final Text qmodl = Text.render("Quality:");
-    public static final Text tooll = Text.render("Tools:");
+    private static Text qmodl = null;
+    private static Text tooll = null;
+
+    private static Text getQmodl() {
+        if (qmodl == null) {
+            qmodl = Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Quality:"));
+        }
+        return qmodl;
+    }
+
+    private static Text getTooll() {
+        if (tooll == null) {
+            tooll = Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Tools:"));
+        }
+        return tooll;
+    }
     public static final Coord boff = UI.scale(new Coord(7, 9));
     public String rcpnm;
     public List<Input> inputs = Collections.emptyList();
@@ -337,8 +351,8 @@ public class Makewindow extends Widget {
     public void draw(GOut g) {
 	int x = 0;
 	if(!qmod.isEmpty()) {
-	    g.aimage(qmodl.tex(), new Coord(x, qmy + (qmodsz.y / 2)), 0, 0.5);
-	    x += qmodl.sz().x + UI.scale(5);
+	    g.aimage(getQmodl().tex(), new Coord(x, qmy + (qmodsz.y / 2)), 0, 0.5);
+	    x += getQmodl().sz().x + UI.scale(5);
 	    x = Math.max(x, xoff);
 	    qmx = x;
 	    for(Indir<Resource> qm : qmod) {
@@ -352,8 +366,8 @@ public class Makewindow extends Widget {
 	    x += UI.scale(25);
 	}
 	if(!tools.isEmpty()) {
-	    g.aimage(tooll.tex(), new Coord(x, qmy + (qmodsz.y / 2)), 0, 0.5);
-	    x += tooll.sz().x + UI.scale(5);
+	    g.aimage(getTooll().tex(), new Coord(x, qmy + (qmodsz.y / 2)), 0, 0.5);
+	    x += getTooll().sz().x + UI.scale(5);
 	    x = Math.max(x, xoff);
 	    toolx = x;
 	    for(Indir<Resource> tool : tools) {

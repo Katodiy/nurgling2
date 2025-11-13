@@ -277,7 +277,13 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 
     public static class Contents extends Tip {
 	public final List<ItemInfo> sub;
-	private static final Text.Line ch = Text.render("Contents:");
+	private static Text.Line ch = null;
+	private static Text.Line getCh() {
+	    if (ch == null) {
+	        ch = Text.render(nurgling.translation.TranslationManager.getInstance().translateStatic("Contents:"));
+	    }
+	    return ch;
+	}
 	
 	public Contents(Owner owner, List<ItemInfo> sub) {
 	    super(owner);
@@ -288,7 +294,7 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 	    BufferedImage stip = longtip(sub);
 	    BufferedImage img = TexI.mkbuf(Coord.of(stip.getWidth(), stip.getHeight()).add(UI.scale(10, 15)));
 	    Graphics g = img.getGraphics();
-	    g.drawImage(ch.img, 0, 0, null);
+	    g.drawImage(getCh().img, 0, 0, null);
 	    g.drawImage(stip, UI.scale(10), UI.scale(15), null);
 	    g.dispose();
 	    return(img);

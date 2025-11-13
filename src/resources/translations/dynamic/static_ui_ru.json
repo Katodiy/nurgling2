@@ -210,5 +210,55 @@
   "Update": "Обновить",
   "Load": "Загрузить",
   "Export": "Экспорт",
-  "Import": "Импорт"
+  "Import": "Импорт",
+
+  "_character_sheet_detailed": "Character sheet categories",
+  "Base Attributes": "Базовые атрибуты",
+  "Food Event Points": "Очки пищевых событий",
+  "Food Satiations": "Сытость от пищи",
+  "Hunger Level": "Уровень голода",
+  "Lore & Skills": "Знания и навыки",
+  "Martial Arts & Combat Schools": "Боевые искусства и школы боя",
+  "Health & Wounds": "Здоровье и раны",
+  "Quest Log": "Журнал заданий",
+  "Abilities": "Способности",
+  "Study Report": "Отчет об изучении",
+  "Entries": "Записи",
+  "Pursuing": "Изучаемое",
+  "Credos Available": "Доступные кредо",
+  "Credos Acquired": "Полученные кредо",
+  "Quest completed": "Задание выполнено",
+
+  "_crafting_ui": "Crafting interface",
+  "Quality:": "Качество:",
+  "Tools:": "Инструменты:",
+  "Contents:": "Содержимое:",
+
+  "_item_tooltips": "Item tooltips",
+  "Gilding:": "Позолота:",
+  "As gilding:": "Как позолота:",
+  "Any": "Любое",
+
+  "_misc_ui_labels": "Miscellaneous UI labels",
+  "Kin": "Родня",
+  "You": "Вы",
+  "Total:": "Всего:",
+  "IP:": "IP:",
+  "Unused save": "Неиспользованное сохранение",
+  "Saved school": "Сохраненная школа",
+  "Bind a key to an element": "Привяжите клавишу к элементу",
+
+  "_abilities_experience": "Abilities and experience",
+  "Experience points:": "Очки опыта:",
+  "Learning points:": "Очки изучения:",
+  "Learning cost:": "Стоимость изучения:",
+  "Buy": "Купить",
+  "Reset": "Сброс",
+
+  "_quest_system": "Quest system",
+  "Quest failed": "Задание провалено",
+
+  "_combat_saves": "Combat saves",
+  "Pursue": "Изучать",
+  "Saved school %d": "Сохраненная школа %d"
 }
