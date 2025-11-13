@@ -104,7 +104,10 @@ public class NConfig
         highlightRockTiles,
         showFullPathLines,
         preferredMovementSpeed,
-        preferredHorseSpeed
+        preferredHorseSpeed,
+        uiOpacity,
+        useSolidBackground,
+        windowBackgroundColor
     }
 
 
@@ -268,6 +271,11 @@ public class NConfig
         // Movement speed setting (0=Crawl, 1=Walk, 2=Run, 3=Sprint)
         conf.put(Key.preferredMovementSpeed, 2);  // Default to Run (unchanged)
         conf.put(Key.preferredHorseSpeed, 2);     // Default to Run for horses (unchanged)
+
+        // UI Opacity settings
+        conf.put(Key.uiOpacity, 1.0f);  // Default to fully opaque
+        conf.put(Key.useSolidBackground, false);  // Default to texture mode
+        conf.put(Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));  // Default dark gray
     }
 
 

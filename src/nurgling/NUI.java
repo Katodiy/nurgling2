@@ -29,9 +29,15 @@ public class NUI extends UI
     private static final double DELTA_Z_DIVISOR = 10.0;
     /** Periodicity for session verification checks */
     private static final int SESSION_CHECK_PERIOD = 60;
+    /** Global UI opacity (0.0 = transparent, 1.0 = opaque) */
+    private float uiOpacity = 1.0f;
     /** Horse mounting state tracking */
     private boolean wasMountedOnHorse = false;
     private long lastHorseSpeedCheck = 0;
+    /** Window background mode (true = solid color, false = textures) */
+    private boolean useSolidBackground = false;
+    /** Window background color for solid mode */
+    private java.awt.Color windowBackgroundColor = new java.awt.Color(32, 32, 32);
 
     /** Container for session data and verification */
     public class NSessInfo
@@ -71,6 +77,9 @@ public class NUI extends UI
             bind(core, 7001);
             core.debug = (Boolean) NConfig.get(NConfig.Key.debug);
             dataTables = new NDataTables();
+
+            // Load opacity settings from config
+            loadOpacitySettings();
         }
     }
 
@@ -485,4 +494,73 @@ public class NUI extends UI
             System.err.println("[NUI] Failed to apply preferred walking speed: " + e.getMessage());
         }
     }
+
+    /**
+     * Set global UI opacity
+     * @param opacity Value between 0.0 (transparent) and 1.0 (opaque)
+     */
+    public void setUIOpacity(float opacity) {
+        this.uiOpacity = Math.max(0.0f, Math.min(1.0f, opacity));
+    }
+
+    /**
+     * Get current global UI opacity
+     * @return Current opacity value between 0.0 and 1.0
+     */
+    public float getUIOpacity() {
+        return this.uiOpacity;
+    }
+
+    /**
+     * Set whether to use solid color background for windows
+     * @param useSolid true for solid color, false for textures
+     */
+    public void setUseSolidBackground(boolean useSolid) {
+        this.useSolidBackground = useSolid;
+    }
+
+    /**
+     * Get whether solid color background is enabled
+     * @return true if using solid color, false if using textures
+     */
+    public boolean getUseSolidBackground() {
+        return this.useSolidBackground;
+    }
+
+    /**
+     * Set window background color for solid mode
+     * @param color The background color to use
+     */
+    public void setWindowBackgroundColor(java.awt.Color color) {
+        this.windowBackgroundColor = color;
+    }
+
+    /**
+     * Get window background color for solid mode
+     * @return The current background color
+     */
+    public java.awt.Color getWindowBackgroundColor() {
+        return this.windowBackgroundColor;
+    }
+
+    /**
+     * Load opacity settings from NConfig at startup
+     */
+    private void loadOpacitySettings() {
+        Object configOpacityObj = NConfig.get(NConfig.Key.uiOpacity);
+        Boolean configUseSolid = (Boolean) NConfig.get(NConfig.Key.useSolidBackground);
+        java.awt.Color configColor = NConfig.getColor(NConfig.Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));
+
+        // Handle opacity with proper type conversion (JSON may return BigDecimal)
+        float opacity = 1.0f; // default
+        if (configOpacityObj instanceof Number) {
+            opacity = ((Number) configOpacityObj).floatValue();
+        }
+
+        // Apply loaded settings
+        this.uiOpacity = opacity;
+        this.useSolidBackground = configUseSolid != null ? configUseSolid : false;
+        this.windowBackgroundColor = configColor;
+    }
+
 }
