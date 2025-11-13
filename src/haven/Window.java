@@ -243,6 +243,12 @@ public class Window extends Widget {
 	}
 
 	protected void drawbg(GOut g,boolean floftar) {
+	    // Apply window opacity from NUI if available
+	    if (ui instanceof nurgling.NUI) {
+	        float opacity = ((nurgling.NUI)ui).getUIOpacity();
+	        g.chcolor(255, 255, 255, (int)(255 * opacity));
+	    }
+
 		if(floftar)
 	    g.usestate(bgblend);
 	    Coord bgc = new Coord();
@@ -258,6 +264,11 @@ public class Window extends Widget {
 	    bgc.x = ca.br.x - bgr.sz().x;
 	    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgr.sz().y)
 		g.image(bgr, bgc, ca.ul, ca.br);
+
+	    // Reset color state
+	    if (ui instanceof nurgling.NUI) {
+	        g.chcolor();
+	    }
 	}
 	protected void drawbg(GOut g) {
 		drawbg(g, true);

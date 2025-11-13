@@ -29,6 +29,8 @@ public class NUI extends UI
     private static final double DELTA_Z_DIVISOR = 10.0;
     /** Periodicity for session verification checks */
     private static final int SESSION_CHECK_PERIOD = 60;
+    /** Global UI opacity (0.0 = transparent, 1.0 = opaque) */
+    private float uiOpacity = 1.0f;
     /** Horse mounting state tracking */
     private boolean wasMountedOnHorse = false;
     private long lastHorseSpeedCheck = 0;
@@ -485,4 +487,21 @@ public class NUI extends UI
             System.err.println("[NUI] Failed to apply preferred walking speed: " + e.getMessage());
         }
     }
+
+    /**
+     * Set global UI opacity
+     * @param opacity Value between 0.0 (transparent) and 1.0 (opaque)
+     */
+    public void setUIOpacity(float opacity) {
+        this.uiOpacity = Math.max(0.0f, Math.min(1.0f, opacity));
+    }
+
+    /**
+     * Get current global UI opacity
+     * @return Current opacity value between 0.0 and 1.0
+     */
+    public float getUIOpacity() {
+        return this.uiOpacity;
+    }
+
 }
