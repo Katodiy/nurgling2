@@ -132,6 +132,20 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 	    g2d.dispose();
 	    return scaled;
 	}
+
+	public static BufferedImage quantityrender(int num, Color col) {
+	    // Render quantity with "x" prefix for compact display
+	    BufferedImage fullSize = Utils.outline2(Text.render("x" + Integer.toString(num), col).img, Utils.contrast(col));
+	    // Scale to 80% of original size for more compact appearance
+	    int newWidth = (int)(fullSize.getWidth() * 0.8);
+	    int newHeight = (int)(fullSize.getHeight() * 0.8);
+	    BufferedImage scaled = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+	    Graphics2D g2d = scaled.createGraphics();
+	    g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+	    g2d.drawImage(fullSize, 0, 0, newWidth, newHeight, null);
+	    g2d.dispose();
+	    return scaled;
+	}
     }
 
     public interface MeterInfo {
@@ -172,18 +186,8 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 	}
 	public Tex overlay()
 	{
-		if (owner instanceof NGItem)
-		{
-			if (((NGItem) owner).name() != null)
-			{
-				name_checked = true;
-				if (((NGItem) owner).name().contains("Truffle") && num >= 5)
-				{
-					return (new TexI(GItem.NumberInfo.numrender(itemnum(), Color.WHITE)));
-				}
-			}
-		}
-		return NumberInfo.super.overlay();
+		// Always use quantityrender for amounts to include "x" prefix
+		return (new TexI(GItem.NumberInfo.quantityrender(itemnum(), Color.WHITE)));
 	}
 	}
 
