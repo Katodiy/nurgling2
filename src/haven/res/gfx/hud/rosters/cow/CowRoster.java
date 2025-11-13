@@ -7,9 +7,9 @@ import haven.*;
 import haven.res.ui.croster.*;
 import java.util.*;
 
-@haven.FromResource(name = "gfx/hud/rosters/cow", version = 75)
+@haven.FromResource(name = "gfx/hud/rosters/cow", version = 76)
 public class CowRoster extends CattleRoster<Ochs> {
-    public static List<Column> cols = initcols(
+    public static List<Column<? super Ochs>> cols = initcols(
 	new Column<Entry>("Name", Comparator.comparing((Entry e) -> e.name), 200),
 
 	new Column<Ochs>(Resource.classres(CowRoster.class).pool.load("gfx/hud/rosters/sex", 2),      Comparator.comparing((Ochs e) -> e.bull).reversed(), 20).runon(),
@@ -31,7 +31,7 @@ public class CowRoster extends CattleRoster<Ochs> {
 	new Column<Ochs>(Resource.classres(CowRoster.class).pool.load("gfx/hud/rosters/breedingquality", 1), Comparator.comparing((Ochs e) -> e.seedq).reversed()),
 	new Column<Ochs>(Resource.local().load("nurgling/hud/rang", 1), Comparator.comparing(Ochs::rang).reversed())
     );
-    protected List<Column<? super Ochs>> cols() {return((List)cols);}
+    protected List<Column<? super Ochs>> cols() {return(cols);}
 
     public static CattleRoster mkwidget(UI ui, Object... args) {
 	return(new CowRoster());
