@@ -1,6 +1,7 @@
 package nurgling.widgets.nsettings;
 
 import haven.*;
+import nurgling.NConfig;
 import nurgling.NUI;
 import nurgling.widgets.NColorWidget;
 
@@ -60,28 +61,51 @@ public class OpacitySettings extends Panel {
 
     @Override
     public void load() {
+        // Load settings from NConfig
+        Object configOpacityObj = NConfig.get(NConfig.Key.uiOpacity);
+        Boolean configUseSolid = (Boolean) NConfig.get(NConfig.Key.useSolidBackground);
+        java.awt.Color configColor = NConfig.getColor(NConfig.Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));
+
+        // Handle opacity with proper type conversion (JSON may return BigDecimal)
+        float opacity = 1.0f; // default
+        if (configOpacityObj instanceof Number) {
+            opacity = ((Number) configOpacityObj).floatValue();
+        }
+        boolean useSolid = configUseSolid != null ? configUseSolid : false;
+
+        // Update UI controls
+        opacitySlider.val = (int)(opacity * 100);
+        opacitySlider.changed(); // Update label
+        useSolidBackgroundBox.a = useSolid;
+        backgroundColorWidget.color = configColor;
+
+        // Apply settings to NUI for immediate effect
         NUI ui = (NUI) UI.getInstance();
         if (ui != null) {
-            float currentOpacity = ui.getUIOpacity();
-            opacitySlider.val = (int)(currentOpacity * 100);
-            opacitySlider.changed(); // Update label
-
-            // Load background mode settings
-            useSolidBackgroundBox.a = ui.getUseSolidBackground();
-            backgroundColorWidget.color = ui.getWindowBackgroundColor();
-            updateBackgroundMode();
+            ui.setUIOpacity(opacity);
+            ui.setUseSolidBackground(useSolid);
+            ui.setWindowBackgroundColor(configColor);
         }
+
+        updateBackgroundMode();
     }
 
     @Override
     public void save() {
         NUI ui = (NUI) UI.getInstance();
         if (ui != null) {
-            // Apply background mode settings
+            // Apply settings to NUI (for immediate effect)
+            float opacity = opacitySlider.val / 100.0f;
+            ui.setUIOpacity(opacity);
             ui.setUseSolidBackground(useSolidBackgroundBox.a);
             ui.setWindowBackgroundColor(backgroundColorWidget.color);
+
+            // Persist settings to NConfig
+            NConfig.set(NConfig.Key.uiOpacity, opacity);
+            NConfig.set(NConfig.Key.useSolidBackground, useSolidBackgroundBox.a);
+            NConfig.setColor(NConfig.Key.windowBackgroundColor, backgroundColorWidget.color);
+            NConfig.needUpdate();
         }
-        // Opacity is applied immediately by the slider
     }
 
     private void updateBackgroundMode() {

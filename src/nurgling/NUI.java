@@ -77,6 +77,9 @@ public class NUI extends UI
             bind(core, 7001);
             core.debug = (Boolean) NConfig.get(NConfig.Key.debug);
             dataTables = new NDataTables();
+
+            // Load opacity settings from config
+            loadOpacitySettings();
         }
     }
 
@@ -538,6 +541,26 @@ public class NUI extends UI
      */
     public java.awt.Color getWindowBackgroundColor() {
         return this.windowBackgroundColor;
+    }
+
+    /**
+     * Load opacity settings from NConfig at startup
+     */
+    private void loadOpacitySettings() {
+        Object configOpacityObj = NConfig.get(NConfig.Key.uiOpacity);
+        Boolean configUseSolid = (Boolean) NConfig.get(NConfig.Key.useSolidBackground);
+        java.awt.Color configColor = NConfig.getColor(NConfig.Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));
+
+        // Handle opacity with proper type conversion (JSON may return BigDecimal)
+        float opacity = 1.0f; // default
+        if (configOpacityObj instanceof Number) {
+            opacity = ((Number) configOpacityObj).floatValue();
+        }
+
+        // Apply loaded settings
+        this.uiOpacity = opacity;
+        this.useSolidBackground = configUseSolid != null ? configUseSolid : false;
+        this.windowBackgroundColor = configColor;
     }
 
 }
