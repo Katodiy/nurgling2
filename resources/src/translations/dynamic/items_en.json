@@ -1,0 +1,20 @@
+{
+  "_comment": "English Item Translations (Default/Fallback)",
+  "_note": "Keys should be lowercase for case-insensitive matching",
+
+  "chicken egg": "Chicken Egg",
+  "poppy flower": "Poppy Flower",
+  "straw": "Straw",
+
+  "_additional_common_items": "Additional items for testing",
+  "apple": "Apple",
+  "carrot": "Carrot",
+  "bread": "Bread",
+  "water": "Water",
+  "wood": "Wood",
+  "stone": "Stone",
+  "iron ore": "Iron Ore",
+  "clay": "Clay",
+  "wheat": "Wheat",
+  "leather": "Leather"
+}

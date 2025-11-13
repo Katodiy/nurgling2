@@ -1,0 +1,15 @@
+{
+  "_comment": "English Skill Translations (Default/Fallback)",
+  "_note": "Keys should be lowercase for case-insensitive matching",
+
+  "carpentry": "Carpentry",
+  "farming": "Farming",
+  "cooking": "Cooking",
+  "smithing": "Smithing",
+  "survival": "Survival",
+  "exploration": "Exploration",
+  "combat": "Combat",
+  "archery": "Archery",
+  "pottery": "Pottery",
+  "weaving": "Weaving"
+}

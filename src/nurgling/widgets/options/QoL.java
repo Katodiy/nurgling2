@@ -39,6 +39,7 @@ public class QoL extends Panel {
 
     private Dropbox<String> preferredSpeedDropbox;
     private Dropbox<String> preferredHorseSpeedDropbox;
+    private Dropbox<String> languageDropbox;
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
 
@@ -169,6 +170,43 @@ public class QoL extends Panel {
             }
         }, leftPrev.pos("bl").adds(0, 5));
 
+        leftPrev = leftColumn.add(new Label("Language:"), leftPrev.pos("bl").adds(0, 10));
+        leftPrev = languageDropbox = leftColumn.add(new Dropbox<String>(UI.scale(150), 2, UI.scale(16)) {
+            private final String[] languages = {"English", "Russian"};
+            private final String[] languageCodes = {"en", "ru"};
+
+            @Override
+            protected String listitem(int i) {
+                return languages[i];
+            }
+
+            @Override
+            protected int listitems() {
+                return languages.length;
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, Coord.z);
+            }
+
+            @Override
+            public void change(String item) {
+                super.change(item);
+                for (int i = 0; i < languages.length; i++) {
+                    if (languages[i].equals(item)) {
+                        NConfig.set(NConfig.Key.language, languageCodes[i]);
+                        NConfig.needUpdate();
+                        // Apply language change
+                        nurgling.translation.TranslationManager.getInstance().setLanguage(languageCodes[i]);
+                        // Test translations
+                        nurgling.translation.TranslationTest.testTranslations();
+                        break;
+                    }
+                }
+            }
+        }, leftPrev.pos("bl").adds(0, 5));
+
         leftPrev = leftColumn.add(new Label("● Map Overlays"), leftPrev.pos("bl").adds(0, 15));
         leftPrev = miningOL = leftColumn.add(new CheckBox("Show mining overlay"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = showPersonalClaims = leftColumn.add(new CheckBox("Show personal claims on minimap"), leftPrev.pos("bl").adds(0, 5));
@@ -263,6 +301,21 @@ public class QoL extends Panel {
         if (horseSpeedIndex >= 0 && horseSpeedIndex < 4) {
             String[] horseSpeeds = {"Crawl", "Walk", "Run", "Sprint"};
             preferredHorseSpeedDropbox.change(horseSpeeds[horseSpeedIndex]);
+        }
+
+        // Load language preference
+        Object langPref = NConfig.get(NConfig.Key.language);
+        String currentLang = "en"; // Default to English
+        if (langPref instanceof String) {
+            currentLang = (String) langPref;
+        }
+        String[] languageCodes = {"en", "ru"};
+        String[] languageNames = {"English", "Russian"};
+        for (int i = 0; i < languageCodes.length; i++) {
+            if (languageCodes[i].equals(currentLang)) {
+                languageDropbox.change(languageNames[i]);
+                break;
+            }
         }
 
         Object dist = NConfig.get(NConfig.Key.temsmarkdist);

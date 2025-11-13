@@ -210,7 +210,7 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 	}
 
 	public Name(Owner owner, String str) {
-	    this(owner, Text.render(str));
+	    this(owner, Text.render(nurgling.translation.ItemTranslationHook.translateItemName(str)));
 	}
 
 	public BufferedImage tipimg() {
