@@ -17,8 +17,10 @@ public class TranslationTest {
 
         // Test static UI translations
         System.out.println("Static UI Test:");
-        System.out.println("  button.ok = " + tm.translateStatic("button.ok"));
-        System.out.println("  menu.settings = " + tm.translateStatic("menu.settings"));
+        System.out.println("  Back = " + tm.translateStatic("Back"));
+        System.out.println("  Video settings = " + tm.translateStatic("Video settings"));
+        System.out.println("  Close = " + tm.translateStatic("Close"));
+        System.out.println("  Master audio volume = " + tm.translateStatic("Master audio volume"));
 
         // Test dynamic item translations
         System.out.println("Dynamic Item Test:");

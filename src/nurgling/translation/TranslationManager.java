@@ -19,8 +19,8 @@ public class TranslationManager {
     private String currentLanguage = "en";
     private String fallbackLanguage = "en";
 
-    // Layer 1: Static UI translations (ResourceBundle style)
-    private Properties staticTranslations;
+    // Layer 1: Static UI translations (JSON style)
+    private Map<String, String> staticTranslations;
 
     // Layer 2: Dynamic content translations (JSON dictionaries)
     private Map<String, String> itemTranslations;
@@ -75,33 +75,13 @@ public class TranslationManager {
     }
 
     /**
-     * Load static UI translations from properties files
+     * Load static UI translations from JSON files
      */
     private void loadStaticTranslations() {
-        staticTranslations = new Properties();
+        // Load static UI translations using the same JSON method as dynamic content
+        staticTranslations = loadJsonTranslations("static_ui");
 
-        // Try to load current language
-        String staticPath = "/resources/translations/static/ui_" + currentLanguage + ".properties";
-        InputStream is = getClass().getResourceAsStream(staticPath);
-
-        if (is == null && !currentLanguage.equals(fallbackLanguage)) {
-            // Fall back to default language
-            staticPath = "/resources/translations/static/ui_" + fallbackLanguage + ".properties";
-            is = getClass().getResourceAsStream(staticPath);
-        }
-
-        if (is != null) {
-            try {
-                staticTranslations.load(new InputStreamReader(is, "UTF-8"));
-                logger.info("Loaded static translations from: " + staticPath);
-            } catch (IOException e) {
-                logger.warning("Failed to load static translations: " + e.getMessage());
-            } finally {
-                try { is.close(); } catch (IOException e) {}
-            }
-        } else {
-            logger.warning("No static translation file found for language: " + currentLanguage);
-        }
+        logger.info("Loaded static UI translations: " + staticTranslations.size() + " entries");
     }
 
     /**
@@ -130,12 +110,16 @@ public class TranslationManager {
 
         if (is != null) {
             try (InputStreamReader reader = new InputStreamReader(is, "UTF-8")) {
-                Map<String, String> translations = parseSimpleJson(reader);
-                logger.info("Loaded " + category + " translations from: " + jsonPath);
+                boolean preserveCase = category.startsWith("static_ui");
+                Map<String, String> translations = parseSimpleJson(reader, preserveCase);
+                logger.info("Loaded " + category + " translations from: " + jsonPath + " (" + translations.size() + " entries)");
                 return translations != null ? translations : new HashMap<>();
             } catch (Exception e) {
                 logger.warning("Failed to load " + category + " translations: " + e.getMessage());
+                e.printStackTrace();
             }
+        } else {
+            logger.warning("Could not find translation file: " + jsonPath);
         }
 
         return new HashMap<>();
@@ -145,7 +129,7 @@ public class TranslationManager {
      * Simple JSON parser for basic string-to-string mappings
      * Avoids external dependencies
      */
-    private Map<String, String> parseSimpleJson(InputStreamReader reader) throws IOException {
+    private Map<String, String> parseSimpleJson(InputStreamReader reader, boolean preserveCase) throws IOException {
         Map<String, String> result = new HashMap<>();
         StringBuilder content = new StringBuilder();
         int ch;
@@ -180,12 +164,18 @@ public class TranslationManager {
                 value = removeQuotes(value);
 
                 if (!key.isEmpty() && !value.isEmpty()) {
-                    result.put(key.toLowerCase(), value);
+                    String finalKey = preserveCase ? key : key.toLowerCase();
+                    result.put(finalKey, value);
                 }
             }
         }
 
         return result;
+    }
+
+    // Compatibility method for existing calls
+    private Map<String, String> parseSimpleJson(InputStreamReader reader) throws IOException {
+        return parseSimpleJson(reader, false);
     }
 
     private String removeQuotes(String str) {
@@ -196,7 +186,7 @@ public class TranslationManager {
     }
 
     private void loadFallbackTranslations() {
-        staticTranslations = new Properties();
+        staticTranslations = new HashMap<>();
         itemTranslations = new HashMap<>();
         skillTranslations = new HashMap<>();
     }
@@ -208,7 +198,7 @@ public class TranslationManager {
         if (!initialized) initialize();
 
         if (staticTranslations != null && staticTranslations.containsKey(key)) {
-            return staticTranslations.getProperty(key);
+            return staticTranslations.get(key);
         }
 
         return key; // Return original if no translation found

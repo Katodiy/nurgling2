@@ -88,7 +88,8 @@ public class Button extends SIWidget {
 
     public Button(int w, String text, boolean lg, Runnable action) {
 	this(w, lg);
-	this.text = nf.render(text);
+	String translatedText = nurgling.translation.TranslationManager.getInstance().translateStatic(text);
+	this.text = nf.render(translatedText);
 	this.cont = this.text.img;
 	this.action = action;
     }
@@ -153,7 +154,8 @@ public class Button extends SIWidget {
     }
     
     public void change(String text) {
-	this.text = nf.render(text);
+	String translatedText = nurgling.translation.TranslationManager.getInstance().translateStatic(text);
+	this.text = nf.render(translatedText);
 	this.cont = this.text.img;
 	redraw();
     }

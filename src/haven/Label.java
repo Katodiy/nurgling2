@@ -47,14 +47,18 @@ public class Label extends Widget {
     public Label(String text, int w, Text.Foundry f) {
 	super(Coord.z);
 	this.f = f;
-	this.text = f.renderwrap(texts = text, this.col, w);
+	String translatedText = nurgling.translation.TranslationManager.getInstance().translateStatic(text);
+	this.text = f.renderwrap(texts = translatedText, this.col, w);
+	this.texts = translatedText;
 	resize(this.text.sz());
     }
 
     public Label(String text, Text.Foundry f) {
 	super(Coord.z);
 	this.f = f;
-	this.text = f.render(texts = text, this.col);
+	String translatedText = nurgling.translation.TranslationManager.getInstance().translateStatic(text);
+	this.text = f.render(translatedText, this.col);
+	this.texts = translatedText;
 	resize(this.text.sz());
     }
 
