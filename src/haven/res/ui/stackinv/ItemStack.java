@@ -55,12 +55,12 @@ public class ItemStack extends Widget implements DTarget {
 	dirty = true;
     }
 
-    public boolean mousewheel(Coord c, int amount) {
+    public boolean mousewheel(MouseWheelEvent ev) {
 	if(ui.modshift) {
 	    Inventory minv = getparent(GameUI.class).maininv;
-	    if(amount < 0)
+	    if(ev.a < 0)
 		wdgmsg("invxf", minv.wdgid(), 1);
-	    else if(amount > 0)
+	    else if(ev.a > 0)
 		minv.wdgmsg("invxf", this.wdgid(), 1);
 	}
 	return(true);

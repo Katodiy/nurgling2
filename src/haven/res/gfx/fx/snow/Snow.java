@@ -14,7 +14,7 @@ import haven.res.lib.globfx.*;
 import haven.res.lib.env.*;
 
 /* >wtr: Snow */
-@haven.FromResource(name = "gfx/fx/snow", version = 1)
+@haven.FromResource(name = "gfx/fx/snow", version = 2)
 public class Snow implements Glob.Weather, RenderTree.Node, TickList.Ticking, TickList.TickNode {
     public static final int maxflakes = 50000;
     public static final VertexArray.Layout fmt =
@@ -333,7 +333,7 @@ public class Snow implements Glob.Weather, RenderTree.Node, TickList.Ticking, Ti
 	for(int i = 0; i < n; i++)
 	    addflake();
 	move(dt);
-	return(nf == 0);
+	return((nf == 0) && false);
     }
 
     public void addflake(Flake flake) {

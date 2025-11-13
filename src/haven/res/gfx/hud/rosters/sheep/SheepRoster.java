@@ -9,7 +9,7 @@ import java.util.*;
 
 @haven.FromResource(name = "gfx/hud/rosters/sheep", version = 66)
 public class SheepRoster extends CattleRoster<Sheep> {
-    public static List<Column> cols = initcols(
+    public static List<Column<? super Sheep>> cols = initcols(
 	new Column<Entry>("Name", Comparator.comparing((Entry e) -> e.name), 200),
 
 	new Column<Sheep>(Resource.classres(SheepRoster.class).pool.load("gfx/hud/rosters/sex", 2),      Comparator.comparing((Sheep e) -> e.ram).reversed(), 20).runon(),
@@ -33,7 +33,7 @@ public class SheepRoster extends CattleRoster<Sheep> {
 	new Column<Sheep>(Resource.classres(SheepRoster.class).pool.load("gfx/hud/rosters/breedingquality", 1), Comparator.comparing((Sheep e) -> e.seedq).reversed()),
 	new Column<Sheep>(Resource.local().load("nurgling/hud/rang", 1), Comparator.comparing(Sheep::rang).reversed())
     );
-    protected List<Column<? super Sheep>> cols() {return((List)cols);}
+    protected List<Column<? super Sheep>> cols() {return(cols);}
 
     public static CattleRoster mkwidget(UI ui, Object... args) {
 	return(new SheepRoster());

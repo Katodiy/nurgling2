@@ -43,32 +43,32 @@ public class Goat extends Entry {
 	super.draw(g);
     }
 
-    public boolean mousedown(Coord c, int button) {
-	if(GoatRoster.cols.get(1).hasx(c.x)) {
+    public boolean mousedown(MouseDownEvent ev) {
+	if(GoatRoster.cols.get(1).hasx(ev.c.x)) {
 	    markall(Goat.class, o -> (o.billy == this.billy));
 	    return(true);
 	}
-	if(GoatRoster.cols.get(2).hasx(c.x)) {
+	if(GoatRoster.cols.get(2).hasx(ev.c.x)) {
 	    markall(Goat.class, o -> (o.kid == this.kid));
 	    return(true);
 	}
-	if(GoatRoster.cols.get(3).hasx(c.x)) {
+	if(GoatRoster.cols.get(3).hasx(ev.c.x)) {
 	    markall(Goat.class, o -> (o.dead == this.dead));
 	    return(true);
 	}
-	if(GoatRoster.cols.get(4).hasx(c.x)) {
+	if(GoatRoster.cols.get(4).hasx(ev.c.x)) {
 	    markall(Goat.class, o -> (o.pregnant == this.pregnant));
 	    return(true);
 	}
-	if(GoatRoster.cols.get(5).hasx(c.x)) {
+	if(GoatRoster.cols.get(5).hasx(ev.c.x)) {
 	    markall(Goat.class, o -> (o.lactate == this.lactate));
 	    return(true);
 	}
-	if(GoatRoster.cols.get(6).hasx(c.x)) {
+	if(GoatRoster.cols.get(6).hasx(ev.c.x)) {
 	    markall(Goat.class, o -> ((o.owned == this.owned) && (o.mine == this.mine)));
 	    return(true);
 	}
-	return(super.mousedown(c, button));
+	return(super.mousedown(ev));
     }
 
 	public double rang() {

@@ -9,8 +9,8 @@ import java.util.*;
 
 @haven.FromResource(name = "gfx/hud/rosters/horse", version = 64)
 public class HorseRoster extends CattleRoster<Horse> {
-    public static List<Column> cols = initcols(
-	new Column<Entry>("Name", Comparator.comparing((Entry e) -> e.name), 150),
+    public static List<Column<? super Horse>> cols = initcols(
+	new Column<Entry>("Name", Comparator.comparing((Entry e) -> e.name), 200),
 
 	new Column<Horse>(Resource.classres(HorseRoster.class).pool.load("gfx/hud/rosters/sex", 2),      Comparator.comparing((Horse e) -> e.stallion).reversed(), 20).runon(),
 	new Column<Horse>(Resource.classres(HorseRoster.class).pool.load("gfx/hud/rosters/growth", 2),   Comparator.comparing((Horse e) -> e.foal).reversed(), 20).runon(),
@@ -35,7 +35,7 @@ public class HorseRoster extends CattleRoster<Horse> {
 	new Column<Horse>(Resource.classres(HorseRoster.class).pool.load("gfx/hud/rosters/breedingquality", 1), Comparator.comparing((Horse e) -> e.seedq).reversed()),
 	new Column<Horse>(Resource.local().load("nurgling/hud/rang", 1), Comparator.comparing(Horse::rang).reversed())
     );
-    protected List<Column<? super Horse>> cols() {return((List)cols);}
+    protected List<Column<? super Horse>> cols() {return(cols);}
 
     public static CattleRoster mkwidget(UI ui, Object... args) {
 	return(new HorseRoster());
