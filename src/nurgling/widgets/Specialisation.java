@@ -135,7 +135,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.anvil.toString(),"Anvil",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.dreamcatcher.toString(),"Dream Catcher",Resource.loadsimg("nurgling/categories/dream-catcher")));
         specialisation.add(new SpecialisationItem(SpecName.meatgrinder.toString(),"Meat Grinder",Resource.loadsimg("nurgling/categories/meat_grinder")));
-        specialisation.add(new SpecialisationItem(SpecName.churn.toString(),"Churn",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.churn.toString(),"Churn",Resource.loadsimg("nurgling/categories/churn")));
         specialisation.add(new SpecialisationItem(SpecName.loom.toString(),"Loom",Resource.loadsimg("nurgling/categories/loom")));
         specialisation.add(new SpecialisationItem(SpecName.ropewalk.toString(),"Rope Walk",Resource.loadsimg("nurgling/categories/rope_walk")));
         specialisation.add(new SpecialisationItem(SpecName.crucible.toString(),"Crucible",Resource.loadsimg("nurgling/categories/crucible")));
