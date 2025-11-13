@@ -37,6 +37,7 @@ public class QoL extends Panel {
     private CheckBox showRealmOverlays;
     private CheckBox showFullPathLines;
 
+    private Dropbox<String> preferredSpeedDropbox;
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
 
@@ -91,6 +92,40 @@ public class QoL extends Panel {
         prev = printpfmap = content.add(new CheckBox("Path Finder map in debug"), prev.pos("bl").adds(0, 5));
         prev = showFullPathLines = content.add(new CheckBox("Show full path lines to destinations"), prev.pos("bl").adds(0, 5));
 
+        // Movement speed setting
+        prev = content.add(new Label("Preferred movement speed on login:"), prev.pos("bl").adds(0, 15));
+        prev = preferredSpeedDropbox = content.add(new Dropbox<String>(UI.scale(150), 4, UI.scale(16)) {
+            private final String[] speeds = {"Crawl", "Walk", "Run", "Sprint"};
+
+            @Override
+            protected String listitem(int i) {
+                return speeds[i];
+            }
+
+            @Override
+            protected int listitems() {
+                return speeds.length;
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, Coord.z);
+            }
+
+            @Override
+            public void change(String item) {
+                super.change(item);
+                // Save to config when changed
+                for (int i = 0; i < speeds.length; i++) {
+                    if (speeds[i].equals(item)) {
+                        NConfig.set(NConfig.Key.preferredMovementSpeed, i);
+                        NConfig.needUpdate();
+                        break;
+                    }
+                }
+            }
+        }, prev.pos("bl").adds(0, 5));
+
         prev = content.add(new Label("Map overlays:"), prev.pos("bl").adds(0, 15));
         prev = showPersonalClaims = content.add(new CheckBox("Show personal claims on minimap"), prev.pos("bl").adds(0, 5));
         prev = showVillageClaims = content.add(new CheckBox("Show village claims on minimap"), prev.pos("bl").adds(0, 5));
@@ -141,6 +176,17 @@ public class QoL extends Panel {
         showPersonalClaims.a = getBool(NConfig.Key.minimapClaimol);
         showVillageClaims.a = getBool(NConfig.Key.minimapVilol);
         showRealmOverlays.a = getBool(NConfig.Key.minimapRealmol);
+
+        // Load preferred movement speed
+        Object speedPref = NConfig.get(NConfig.Key.preferredMovementSpeed);
+        int speedIndex = 2; // Default to Run
+        if (speedPref instanceof Number) {
+            speedIndex = ((Number) speedPref).intValue();
+        }
+        if (speedIndex >= 0 && speedIndex < 4) {
+            String[] speeds = {"Crawl", "Walk", "Run", "Sprint"};
+            preferredSpeedDropbox.change(speeds[speedIndex]);
+        }
 
         Object dist = NConfig.get(NConfig.Key.temsmarkdist);
         temsmarkdistEntry.settext(dist == null ? "" : dist.toString());

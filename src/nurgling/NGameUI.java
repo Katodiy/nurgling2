@@ -345,6 +345,11 @@ public class NGameUI extends GameUI
         {
             super.addchild(child, args);
 
+            // Apply preferred movement speed when Speedget widget is loaded
+            if (place != null && place.equals("meter") && child instanceof haven.Speedget) {
+                applyUserPreferredSpeed();
+            }
+
             // Add fishing extension if this is the "This is bait" window
             if (child instanceof Window) {
                 Window wnd = (Window) child;
@@ -872,5 +877,32 @@ public class NGameUI extends GameUI
     
     public LocalizedResourceTimerDialog getAddResourceTimerWidget() {
         return localizedResourceTimerDialog;
+    }
+
+    /**
+     * Apply user's preferred movement speed from config
+     */
+    private void applyUserPreferredSpeed() {
+        try {
+            Object speedPref = NConfig.get(NConfig.Key.preferredMovementSpeed);
+            if (speedPref instanceof Number) {
+                int preferredSpeed = ((Number) speedPref).intValue();
+                if (preferredSpeed >= 0 && preferredSpeed <= 3) { // Valid range
+                    // Small delay to ensure speedget is fully initialized
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(100); // Brief pause
+                            NUtils.setSpeed(preferredSpeed);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        } catch (Exception e) {
+                            System.err.println("[NGameUI] Failed to set preferred speed: " + e.getMessage());
+                        }
+                    }).start();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[NGameUI] Failed to apply preferred movement speed: " + e.getMessage());
+        }
     }
 }

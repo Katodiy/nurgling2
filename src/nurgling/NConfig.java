@@ -102,7 +102,8 @@ public class NConfig
         waypointRetryOnStuck,
         verboseCal,
         highlightRockTiles,
-        showFullPathLines
+        showFullPathLines,
+        preferredMovementSpeed
     }
 
 
@@ -262,6 +263,9 @@ public class NConfig
         arearadprop.add(new NAreaRad("gfx/kritter/wolverine/wolverine", 100));
         arearadprop.add(new NAreaRad("gfx/kritter/troll/troll", 200));
         conf.put(Key.animalrad, arearadprop);
+
+        // Movement speed setting (0=Crawl, 1=Walk, 2=Run, 3=Sprint)
+        conf.put(Key.preferredMovementSpeed, 2);  // Default to Run (unchanged)
     }
 
 
