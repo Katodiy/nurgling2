@@ -279,20 +279,20 @@ public class Window extends Widget {
 	    } else {
 	        // Fallback to original behavior if not NUI
 		if(floftar)
-		    g.usestate(bgblend);
-		Coord bgc = new Coord();
-		for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bg.sz().y) {
+		g.usestate(bgblend);
+	    Coord bgc = new Coord();
+	    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bg.sz().y) {
 		    for(bgc.x = ca.ul.x; bgc.x < ca.br.x; bgc.x += bg.sz().x)
-			g.image(bg, bgc, ca.ul, ca.br);
-		}
+		    g.image(bg, bgc, ca.ul, ca.br);
+	    }
 		if(floftar)
-		    g.defstate();
+		g.defstate();
 		bgc.x = ca.ul.x;
 		for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgl.sz().y)
-		    g.image(bgl, bgc, ca.ul, ca.br);
+		g.image(bgl, bgc, ca.ul, ca.br);
 		bgc.x = ca.br.x - bgr.sz().x;
 		for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgr.sz().y)
-		    g.image(bgr, bgc, ca.ul, ca.br);
+		g.image(bgr, bgc, ca.ul, ca.br);
 	    }
 	}
 	protected void drawbg(GOut g) {
