@@ -34,6 +34,10 @@ public class NUI extends UI
     /** Horse mounting state tracking */
     private boolean wasMountedOnHorse = false;
     private long lastHorseSpeedCheck = 0;
+    /** Window background mode (true = solid color, false = textures) */
+    private boolean useSolidBackground = false;
+    /** Window background color for solid mode */
+    private java.awt.Color windowBackgroundColor = new java.awt.Color(32, 32, 32);
 
     /** Container for session data and verification */
     public class NSessInfo
@@ -502,6 +506,38 @@ public class NUI extends UI
      */
     public float getUIOpacity() {
         return this.uiOpacity;
+    }
+
+    /**
+     * Set whether to use solid color background for windows
+     * @param useSolid true for solid color, false for textures
+     */
+    public void setUseSolidBackground(boolean useSolid) {
+        this.useSolidBackground = useSolid;
+    }
+
+    /**
+     * Get whether solid color background is enabled
+     * @return true if using solid color, false if using textures
+     */
+    public boolean getUseSolidBackground() {
+        return this.useSolidBackground;
+    }
+
+    /**
+     * Set window background color for solid mode
+     * @param color The background color to use
+     */
+    public void setWindowBackgroundColor(java.awt.Color color) {
+        this.windowBackgroundColor = color;
+    }
+
+    /**
+     * Get window background color for solid mode
+     * @return The current background color
+     */
+    public java.awt.Color getWindowBackgroundColor() {
+        return this.windowBackgroundColor;
     }
 
 }

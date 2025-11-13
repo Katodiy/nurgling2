@@ -2,10 +2,13 @@ package nurgling.widgets.nsettings;
 
 import haven.*;
 import nurgling.NUI;
+import nurgling.widgets.NColorWidget;
 
 public class OpacitySettings extends Panel {
     private HSlider opacitySlider;
     private Label opacityLabel;
+    private CheckBox useSolidBackgroundBox;
+    private NColorWidget backgroundColorWidget;
 
     public OpacitySettings() {
         super("UI Opacity");
@@ -38,7 +41,20 @@ public class OpacitySettings extends Panel {
                     }
                 }, opacityLabel);
 
-        // Load current opacity setting
+        // Background mode setting
+        add(new Label("Background Mode:"), UI.scale(10, 90));
+        useSolidBackgroundBox = add(new CheckBox("Use solid color background") {
+            @Override
+            public void set(boolean val) {
+                super.set(val);
+                updateBackgroundMode();
+            }
+        }, UI.scale(10, 110));
+
+        // Background color picker
+        backgroundColorWidget = add(new NColorWidget("Background Color"), UI.scale(10, 140));
+
+        // Load current settings
         load();
     }
 
@@ -49,12 +65,38 @@ public class OpacitySettings extends Panel {
             float currentOpacity = ui.getUIOpacity();
             opacitySlider.val = (int)(currentOpacity * 100);
             opacitySlider.changed(); // Update label
+
+            // Load background mode settings
+            useSolidBackgroundBox.a = ui.getUseSolidBackground();
+            backgroundColorWidget.color = ui.getWindowBackgroundColor();
+            updateBackgroundMode();
         }
     }
 
     @Override
     public void save() {
-        // Opacity is applied immediately, no need to save to config
-        // The slider automatically applies changes as it moves
+        NUI ui = (NUI) UI.getInstance();
+        if (ui != null) {
+            // Apply background mode settings
+            ui.setUseSolidBackground(useSolidBackgroundBox.a);
+            ui.setWindowBackgroundColor(backgroundColorWidget.color);
+        }
+        // Opacity is applied immediately by the slider
+    }
+
+    private void updateBackgroundMode() {
+        NUI ui = (NUI) UI.getInstance();
+        if (ui != null) {
+            // Apply background mode settings immediately
+            ui.setUseSolidBackground(useSolidBackgroundBox.a);
+            ui.setWindowBackgroundColor(backgroundColorWidget.color);
+        }
+
+        // Show/hide color picker based on mode
+        if (useSolidBackgroundBox.a) {
+            backgroundColorWidget.show();
+        } else {
+            backgroundColorWidget.hide();
+        }
     }
 }

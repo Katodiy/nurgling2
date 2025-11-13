@@ -243,31 +243,56 @@ public class Window extends Widget {
 	}
 
 	protected void drawbg(GOut g,boolean floftar) {
-	    // Apply window opacity from NUI if available
 	    if (ui instanceof nurgling.NUI) {
-	        float opacity = ((nurgling.NUI)ui).getUIOpacity();
-	        g.chcolor(255, 255, 255, (int)(255 * opacity));
-	    }
+	        nurgling.NUI nui = (nurgling.NUI)ui;
+	        float opacity = nui.getUIOpacity();
 
-		if(floftar)
-	    g.usestate(bgblend);
-	    Coord bgc = new Coord();
-	    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bg.sz().y) {
-		for(bgc.x = ca.ul.x; bgc.x < ca.br.x; bgc.x += bg.sz().x)
-		    g.image(bg, bgc, ca.ul, ca.br);
-	    }
-		if(floftar)
-	    g.defstate();
-	    bgc.x = ca.ul.x;
-	    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgl.sz().y)
-		g.image(bgl, bgc, ca.ul, ca.br);
-	    bgc.x = ca.br.x - bgr.sz().x;
-	    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgr.sz().y)
-		g.image(bgr, bgc, ca.ul, ca.br);
+	        if (nui.getUseSolidBackground()) {
+	            // Solid color mode
+	            java.awt.Color bgColor = nui.getWindowBackgroundColor();
+	            int alpha = (int)(255 * opacity);
+	            g.chcolor(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue(), alpha);
+	            g.frect(ca.ul, ca.sz());
+	            g.chcolor();
+	        } else {
+	            // Texture mode (original behavior)
+	            g.chcolor(255, 255, 255, (int)(255 * opacity));
 
-	    // Reset color state
-	    if (ui instanceof nurgling.NUI) {
-	        g.chcolor();
+		    if(floftar)
+		        g.usestate(bgblend);
+		    Coord bgc = new Coord();
+		    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bg.sz().y) {
+			for(bgc.x = ca.ul.x; bgc.x < ca.br.x; bgc.x += bg.sz().x)
+			    g.image(bg, bgc, ca.ul, ca.br);
+		    }
+		    if(floftar)
+		        g.defstate();
+		    bgc.x = ca.ul.x;
+		    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgl.sz().y)
+			g.image(bgl, bgc, ca.ul, ca.br);
+		    bgc.x = ca.br.x - bgr.sz().x;
+		    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgr.sz().y)
+			g.image(bgr, bgc, ca.ul, ca.br);
+
+		    g.chcolor();
+	        }
+	    } else {
+	        // Fallback to original behavior if not NUI
+		if(floftar)
+		    g.usestate(bgblend);
+		Coord bgc = new Coord();
+		for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bg.sz().y) {
+		    for(bgc.x = ca.ul.x; bgc.x < ca.br.x; bgc.x += bg.sz().x)
+			g.image(bg, bgc, ca.ul, ca.br);
+		}
+		if(floftar)
+		    g.defstate();
+		bgc.x = ca.ul.x;
+		for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgl.sz().y)
+		    g.image(bgl, bgc, ca.ul, ca.br);
+		bgc.x = ca.br.x - bgr.sz().x;
+		for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgr.sz().y)
+		    g.image(bgr, bgc, ca.ul, ca.br);
 	    }
 	}
 	protected void drawbg(GOut g) {
