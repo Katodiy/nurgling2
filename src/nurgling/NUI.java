@@ -29,6 +29,9 @@ public class NUI extends UI
     private static final double DELTA_Z_DIVISOR = 10.0;
     /** Periodicity for session verification checks */
     private static final int SESSION_CHECK_PERIOD = 60;
+    /** Horse mounting state tracking */
+    private boolean wasMountedOnHorse = false;
+    private long lastHorseSpeedCheck = 0;
 
     /** Container for session data and verification */
     public class NSessInfo
@@ -88,7 +91,12 @@ public class NUI extends UI
         {
             checkSessionVerification();
         }
-        
+
+        // Check for horse mount/dismount periodically (every 10 ticks = ~0.5 seconds)
+        if (gui != null && periodicCheckTick % 10 == 0) {
+            checkHorseMountState();
+        }
+
         super.tick();
     }
 
@@ -371,6 +379,110 @@ public class NUI extends UI
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Check if player has mounted or dismounted a horse and apply preferred speed
+     */
+    private void checkHorseMountState() {
+        try {
+            // Throttle checks to prevent excessive processing
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastHorseSpeedCheck < 500) { // 0.5 second minimum interval
+                return;
+            }
+            lastHorseSpeedCheck = currentTime;
+
+            // Check if player exists and game is ready
+            if (gui.map == null || NUtils.player() == null) {
+                return;
+            }
+
+            // Check for Following attribute (indicates mounted on something)
+            haven.Following following = NUtils.player().getattr(haven.Following.class);
+            boolean currentlyMounted = false;
+
+            if (following != null) {
+                // Player is mounted on something, check if it's a horse
+                haven.Gob mount = gui.ui.sess.glob.oc.getgob(following.tgt);
+                if (mount != null && mount.ngob != null && mount.ngob.name != null) {
+                    // Check if the mount is a horse by checking the resource path
+                    String mountName = mount.ngob.name.toLowerCase();
+                    currentlyMounted = mountName.contains("horse") ||
+                                     mountName.contains("stallion") ||
+                                     mountName.contains("mare");
+                }
+            }
+
+            // Detect state change
+            if (currentlyMounted && !wasMountedOnHorse) {
+                // Just mounted a horse - apply preferred horse speed
+                applyPreferredHorseSpeed();
+                wasMountedOnHorse = true;
+            } else if (!currentlyMounted && wasMountedOnHorse) {
+                // Just dismounted - apply preferred walking speed
+                applyPreferredWalkingSpeed();
+                wasMountedOnHorse = false;
+            }
+
+        } catch (Exception e) {
+            // Silently handle any errors to prevent spam
+            System.err.println("[NUI] Horse mount check failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Apply user's preferred horse speed
+     */
+    private void applyPreferredHorseSpeed() {
+        try {
+            Object speedPref = NConfig.get(NConfig.Key.preferredHorseSpeed);
+            if (speedPref instanceof Number) {
+                int preferredSpeed = ((Number) speedPref).intValue();
+                if (preferredSpeed >= 0 && preferredSpeed <= 3) {
+                    // Small delay to ensure mount is fully processed
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(200); // Brief pause for mount to complete
+                            NUtils.setSpeed(preferredSpeed);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        } catch (Exception e) {
+                            System.err.println("[NUI] Failed to set preferred horse speed: " + e.getMessage());
+                        }
+                    }).start();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[NUI] Failed to apply preferred horse speed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Apply user's preferred walking speed when dismounting
+     */
+    private void applyPreferredWalkingSpeed() {
+        try {
+            Object speedPref = NConfig.get(NConfig.Key.preferredMovementSpeed);
+            if (speedPref instanceof Number) {
+                int preferredSpeed = ((Number) speedPref).intValue();
+                if (preferredSpeed >= 0 && preferredSpeed <= 3) {
+                    // Small delay to ensure dismount is fully processed
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(200); // Brief pause for dismount to complete
+                            NUtils.setSpeed(preferredSpeed);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        } catch (Exception e) {
+                            System.err.println("[NUI] Failed to set preferred walking speed: " + e.getMessage());
+                        }
+                    }).start();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[NUI] Failed to apply preferred walking speed: " + e.getMessage());
         }
     }
 }

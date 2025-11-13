@@ -37,22 +37,26 @@ public class QoL extends Panel {
     private CheckBox showRealmOverlays;
     private CheckBox showFullPathLines;
 
+    private Dropbox<String> preferredSpeedDropbox;
+    private Dropbox<String> preferredHorseSpeedDropbox;
     private TextEntry temsmarkdistEntry;
     private TextEntry temsmarktimeEntry;
 
     private Scrollport scrollport;
     private Widget content;
+    private Widget leftColumn;
+    private Widget rightColumn;
 
     public QoL() {
         super("");
         int margin = UI.scale(10);
 
-        // Create scrollport to contain all settings
-        int scrollWidth = UI.scale(560);
+        // Create scrollport to contain all settings (wider for 2 columns)
+        int scrollWidth = UI.scale(720);
         int scrollHeight = UI.scale(550);
         scrollport = add(new Scrollport(new Coord(scrollWidth, scrollHeight)), new Coord(margin, margin));
 
-        // Create content widget that will hold all settings
+        // Create main content container
         content = new Widget(new Coord(scrollWidth - UI.scale(20), UI.scale(50))) {
             @Override
             public void pack() {
@@ -62,46 +66,143 @@ public class QoL extends Panel {
         };
         scrollport.cont.add(content, Coord.z);
 
-        // Add all settings to the content widget
-        Widget prev = null;
+        // Create two columns
+        int columnWidth = UI.scale(340);
         int contentMargin = UI.scale(5);
 
-        prev = showCropStage = content.add(new CheckBox("Show crop stage"), new Coord(contentMargin, contentMargin));
-        prev = simpleCrops = content.add(new CheckBox("Simple crops"), prev.pos("bl").adds(0, 5));
-        prev = nightVision = content.add(new CheckBox("Night vision"), prev.pos("bl").adds(0, 5));
-        prev = autoDrink = content.add(new CheckBox("Auto-drink"), prev.pos("bl").adds(0, 5));
-        prev = showBB = content.add(new CheckBox("Bounding Boxes"), prev.pos("bl").adds(0, 5));
-        prev = showCSprite = content.add(new CheckBox("Show decorative objects (need reboot)"), prev.pos("bl").adds(0, 5));
-        prev = hideNature = content.add(new CheckBox("Hide nature objects"), prev.pos("bl").adds(0, 5));
-        prev = miningOL = content.add(new CheckBox("Show mining overlay"), prev.pos("bl").adds(0, 5));
-        prev = tracking = content.add(new CheckBox("Enable tracking when login"), prev.pos("bl").adds(0, 5));
-        prev = crime = content.add(new CheckBox("Enable criminal acting when login"), prev.pos("bl").adds(0, 5));
-        prev = swimming = content.add(new CheckBox("Enable swimming when login"), prev.pos("bl").adds(0, 5));
-        prev = disableMenugridKeys = content.add(new CheckBox("Disable menugrid keys"), prev.pos("bl").adds(0, 5));
-        prev = questNotified = content.add(new CheckBox("Enable quest notified"), prev.pos("bl").adds(0, 5));
-        prev = lpassistent = content.add(new CheckBox("Enable LP assistant"), prev.pos("bl").adds(0, 5));
-        prev = shortCupboards = content.add(new CheckBox("Short cupboards"), prev.pos("bl").adds(0, 5));
-        prev = shortWalls = content.add(new CheckBox("Short mine walls"), prev.pos("bl").adds(0, 5));
-        prev = useGlobalPf = content.add(new CheckBox("Use global PF"), prev.pos("bl").adds(0, 5));
-        prev = uniformBiomeColors = content.add(new CheckBox("Uniform biome colors on minimap"), prev.pos("bl").adds(0, 5));
-        prev = showTerrainName = content.add(new CheckBox("Show terrain name on minimap hover"), prev.pos("bl").adds(0, 5));
-        prev = waypointRetryOnStuck = content.add(new CheckBox("Retry waypoint movement when stuck"), prev.pos("bl").adds(0, 5));
-        prev = verboseCal = content.add(new CheckBox("Verbose calendar"), prev.pos("bl").adds(0, 5));
-        prev = debug = content.add(new CheckBox("DEBUG"), prev.pos("bl").adds(0, 5));
-        prev = printpfmap = content.add(new CheckBox("Path Finder map in debug"), prev.pos("bl").adds(0, 5));
-        prev = showFullPathLines = content.add(new CheckBox("Show full path lines to destinations"), prev.pos("bl").adds(0, 5));
+        leftColumn = new Widget(new Coord(columnWidth, UI.scale(50))) {
+            @Override
+            public void pack() {
+                resize(contentsz());
+            }
+        };
 
-        prev = content.add(new Label("Map overlays:"), prev.pos("bl").adds(0, 15));
-        prev = showPersonalClaims = content.add(new CheckBox("Show personal claims on minimap"), prev.pos("bl").adds(0, 5));
-        prev = showVillageClaims = content.add(new CheckBox("Show village claims on minimap"), prev.pos("bl").adds(0, 5));
-        prev = showRealmOverlays = content.add(new CheckBox("Show realm overlays on minimap"), prev.pos("bl").adds(0, 5));
+        rightColumn = new Widget(new Coord(columnWidth, UI.scale(50))) {
+            @Override
+            public void pack() {
+                resize(contentsz());
+            }
+        };
 
-        prev = content.add(new Label("Temporary marks:"), prev.pos("bl").adds(0, 15));
-        prev = tempmark = content.add(new CheckBox("Save temporary marks"), prev.pos("bl").adds(0, 5));
-        prev = content.add(new Label("Max distance (grids):"), prev.pos("bl").adds(0, 5));
-        prev = temsmarkdistEntry = content.add(new TextEntry.NumberValue(50, ""), prev.pos("bl").adds(0, 5));
-        prev = content.add(new Label("Storage duration (minutes):"), prev.pos("bl").adds(0, 5));
-        prev = temsmarktimeEntry = content.add(new TextEntry.NumberValue(50, ""), prev.pos("bl").adds(0, 5));
+        content.add(leftColumn, new Coord(contentMargin, contentMargin));
+        content.add(rightColumn, new Coord(contentMargin + columnWidth + UI.scale(10), contentMargin));
+
+        // LEFT COLUMN - Visual & Interface Settings
+        Widget leftPrev = leftColumn.add(new Label("● Visual & Interface"), new Coord(5, 5));
+        leftPrev = showCropStage = leftColumn.add(new CheckBox("Show crop stage"), leftPrev.pos("bl").adds(0, 10));
+        leftPrev = simpleCrops = leftColumn.add(new CheckBox("Simple crops"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = nightVision = leftColumn.add(new CheckBox("Night vision"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = showBB = leftColumn.add(new CheckBox("Bounding Boxes"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = showCSprite = leftColumn.add(new CheckBox("Show decorative objects (need reboot)"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = hideNature = leftColumn.add(new CheckBox("Hide nature objects"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = uniformBiomeColors = leftColumn.add(new CheckBox("Uniform biome colors on minimap"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = showTerrainName = leftColumn.add(new CheckBox("Show terrain name on minimap hover"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = shortCupboards = leftColumn.add(new CheckBox("Short cupboards"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = shortWalls = leftColumn.add(new CheckBox("Short mine walls"), leftPrev.pos("bl").adds(0, 5));
+
+        leftPrev = leftColumn.add(new Label("● Login Settings"), leftPrev.pos("bl").adds(0, 15));
+        leftPrev = tracking = leftColumn.add(new CheckBox("Enable tracking when login"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = crime = leftColumn.add(new CheckBox("Enable criminal acting when login"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = swimming = leftColumn.add(new CheckBox("Enable swimming when login"), leftPrev.pos("bl").adds(0, 5));
+
+        leftPrev = leftColumn.add(new Label("Preferred movement speed on login:"), leftPrev.pos("bl").adds(0, 10));
+        leftPrev = preferredSpeedDropbox = leftColumn.add(new Dropbox<String>(UI.scale(150), 4, UI.scale(16)) {
+            private final String[] speeds = {"Crawl", "Walk", "Run", "Sprint"};
+
+            @Override
+            protected String listitem(int i) {
+                return speeds[i];
+            }
+
+            @Override
+            protected int listitems() {
+                return speeds.length;
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, Coord.z);
+            }
+
+            @Override
+            public void change(String item) {
+                super.change(item);
+                for (int i = 0; i < speeds.length; i++) {
+                    if (speeds[i].equals(item)) {
+                        NConfig.set(NConfig.Key.preferredMovementSpeed, i);
+                        NConfig.needUpdate();
+                        break;
+                    }
+                }
+            }
+        }, leftPrev.pos("bl").adds(0, 5));
+
+        leftPrev = leftColumn.add(new Label("Preferred horse speed on mount:"), leftPrev.pos("bl").adds(0, 10));
+        leftPrev = preferredHorseSpeedDropbox = leftColumn.add(new Dropbox<String>(UI.scale(150), 4, UI.scale(16)) {
+            private final String[] speeds = {"Crawl", "Walk", "Run", "Sprint"};
+
+            @Override
+            protected String listitem(int i) {
+                return speeds[i];
+            }
+
+            @Override
+            protected int listitems() {
+                return speeds.length;
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, Coord.z);
+            }
+
+            @Override
+            public void change(String item) {
+                super.change(item);
+                for (int i = 0; i < speeds.length; i++) {
+                    if (speeds[i].equals(item)) {
+                        NConfig.set(NConfig.Key.preferredHorseSpeed, i);
+                        NConfig.needUpdate();
+                        break;
+                    }
+                }
+            }
+        }, leftPrev.pos("bl").adds(0, 5));
+
+        leftPrev = leftColumn.add(new Label("● Map Overlays"), leftPrev.pos("bl").adds(0, 15));
+        leftPrev = miningOL = leftColumn.add(new CheckBox("Show mining overlay"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = showPersonalClaims = leftColumn.add(new CheckBox("Show personal claims on minimap"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = showVillageClaims = leftColumn.add(new CheckBox("Show village claims on minimap"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = showRealmOverlays = leftColumn.add(new CheckBox("Show realm overlays on minimap"), leftPrev.pos("bl").adds(0, 5));
+
+        // RIGHT COLUMN - Advanced Settings
+        Widget rightPrev = null;
+        rightPrev = rightColumn.add(new Label("● Pathfinding & Navigation"), new Coord(5, 5));
+        rightPrev = useGlobalPf = rightColumn.add(new CheckBox("Use global PF"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = waypointRetryOnStuck = rightColumn.add(new CheckBox("Retry waypoint movement when stuck"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = showFullPathLines = rightColumn.add(new CheckBox("Show full path lines to destinations"), rightPrev.pos("bl").adds(0, 5));
+
+        rightPrev = rightColumn.add(new Label("● Quality of Life"), rightPrev.pos("bl").adds(0, 15));
+        rightPrev = autoDrink = rightColumn.add(new CheckBox("Auto-drink"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = questNotified = rightColumn.add(new CheckBox("Enable quest notified"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = lpassistent = rightColumn.add(new CheckBox("Enable LP assistant"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = disableMenugridKeys = rightColumn.add(new CheckBox("Disable menugrid keys"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = verboseCal = rightColumn.add(new CheckBox("Verbose calendar"), rightPrev.pos("bl").adds(0, 5));
+
+        rightPrev = rightColumn.add(new Label("● Debug & Development"), rightPrev.pos("bl").adds(0, 15));
+        rightPrev = debug = rightColumn.add(new CheckBox("DEBUG"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = printpfmap = rightColumn.add(new CheckBox("Path Finder map in debug"), rightPrev.pos("bl").adds(0, 5));
+
+        rightPrev = rightColumn.add(new Label("● Temporary Marks"), rightPrev.pos("bl").adds(0, 15));
+        rightPrev = tempmark = rightColumn.add(new CheckBox("Save temporary marks"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = rightColumn.add(new Label("Max distance (grids):"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = temsmarkdistEntry = rightColumn.add(new TextEntry.NumberValue(50, ""), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = rightColumn.add(new Label("Storage duration (minutes):"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = temsmarktimeEntry = rightColumn.add(new TextEntry.NumberValue(50, ""), rightPrev.pos("bl").adds(0, 5));
+
+        // Pack columns and update content
+        leftColumn.pack();
+        rightColumn.pack();
 
         // Pack content and update scrollbar
         content.pack();
@@ -141,6 +242,28 @@ public class QoL extends Panel {
         showPersonalClaims.a = getBool(NConfig.Key.minimapClaimol);
         showVillageClaims.a = getBool(NConfig.Key.minimapVilol);
         showRealmOverlays.a = getBool(NConfig.Key.minimapRealmol);
+
+        // Load preferred movement speed
+        Object speedPref = NConfig.get(NConfig.Key.preferredMovementSpeed);
+        int speedIndex = 2; // Default to Run
+        if (speedPref instanceof Number) {
+            speedIndex = ((Number) speedPref).intValue();
+        }
+        if (speedIndex >= 0 && speedIndex < 4) {
+            String[] speeds = {"Crawl", "Walk", "Run", "Sprint"};
+            preferredSpeedDropbox.change(speeds[speedIndex]);
+        }
+
+        // Load preferred horse speed
+        Object horseSpeedPref = NConfig.get(NConfig.Key.preferredHorseSpeed);
+        int horseSpeedIndex = 2; // Default to Run
+        if (horseSpeedPref instanceof Number) {
+            horseSpeedIndex = ((Number) horseSpeedPref).intValue();
+        }
+        if (horseSpeedIndex >= 0 && horseSpeedIndex < 4) {
+            String[] horseSpeeds = {"Crawl", "Walk", "Run", "Sprint"};
+            preferredHorseSpeedDropbox.change(horseSpeeds[horseSpeedIndex]);
+        }
 
         Object dist = NConfig.get(NConfig.Key.temsmarkdist);
         temsmarkdistEntry.settext(dist == null ? "" : dist.toString());
