@@ -6,7 +6,7 @@ import java.util.*;
 import java.awt.image.BufferedImage;
 
 /* >tt: Ingredient */
-@haven.FromResource(name = "ui/tt/ingred", version = 25)
+@haven.FromResource(name = "ui/tt/ingred", version = 26)
 public class Ingredient extends ItemInfo.Tip {
     public final String name;
     public final Double val;
