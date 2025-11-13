@@ -1,0 +1,20 @@
+{
+  "_comment": "Russian Item Translations",
+  "_note": "Keys should be lowercase for case-insensitive matching",
+
+  "chicken egg": "Куриное яйцо",
+  "poppy flower": "Цветок мака",
+  "straw": "Солома",
+
+  "_additional_common_items": "Additional items for testing",
+  "apple": "Яблоко",
+  "carrot": "Морковь",
+  "bread": "Хлеб",
+  "water": "Вода",
+  "wood": "Дерево",
+  "stone": "Камень",
+  "iron ore": "Железная руда",
+  "clay": "Глина",
+  "wheat": "Пшеница",
+  "leather": "Кожа"
+}
