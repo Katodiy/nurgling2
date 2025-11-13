@@ -696,10 +696,13 @@ public class Widget {
 	} else if(msg == "curs") {
 	    if(args.length == 0)
 		cursor = null;
-	    else {
-			cursorRes = (String) args[0];
-			cursor = Resource.remote().load((String) args[0], Utils.iv(args[1]));
-		}
+	    else if(args[0] instanceof String)
+        {
+            cursorRes = (String) args[0];
+		    cursor = Resource.remote().load((String)args[0], Utils.iv(args[1]));
+        }
+	    else
+		cursor = ui.sess.getresv(args[0]);
 	} else if(msg == "tip") {
 	    int a = 0;
 	    Object tt = args[a++];
@@ -768,13 +771,15 @@ public class Widget {
 	    next = wdg.next;
 	    if(!wdg.visible)
 		continue;
-	    Coord cc = xlate(wdg.c, true);
-	    GOut g2;
-	    if(strict)
-		g2 = g.reclip(cc, wdg.sz);
-	    else
-		g2 = g.reclipl(cc, wdg.sz);
-	    wdg.draw(g2);
+	    try(CPUProfile.Current prof = CPUProfile.begin(wdg)) {
+		Coord cc = xlate(wdg.c, true);
+		GOut g2;
+		if(strict)
+		    g2 = g.reclip(cc, wdg.sz);
+		else
+		    g2 = g.reclipl(cc, wdg.sz);
+		wdg.draw(g2);
+	    }
 	}
     }
     
@@ -821,16 +826,23 @@ public class Widget {
 	    return(phandled);
 	}
 
+	public boolean fpropagate(Widget from) {
+	    propagate = true;
+	    return(propagate(from));
+	}
+
 	public boolean dispatch(Widget w) {
-	    Widget phandling = handling;
-	    handling = w;
-	    try {
-		propagate = true;
-		if(w.handle(this))
-		    return(true);
-		return(propagate(w));
-	    } finally {
-		handling = phandling;
+	    try(CPUProfile.Current prof = CPUProfile.begin(w)) {
+		Widget phandling = handling;
+		handling = w;
+		try {
+		    propagate = true;
+		    if(w.handle(this))
+			return(true);
+		    return(propagate(w));
+		} finally {
+		    handling = phandling;
+		}
 	    }
 	}
     }
@@ -969,7 +981,12 @@ public class Widget {
 	public MouseEvent(MouseEvent from, Coord c) {super(from, c);}
     }
 
-    public static abstract class MouseButtonEvent extends MouseEvent {
+    public static abstract class MouseActionEvent extends MouseEvent {
+	public MouseActionEvent(Coord c) {super(c);}
+	public MouseActionEvent(MouseEvent from, Coord c) {super(from, c);}
+    }
+
+    public static abstract class MouseButtonEvent extends MouseActionEvent {
 	public final int b;
 
 	public MouseButtonEvent(Coord c, int b) {
@@ -1046,7 +1063,7 @@ public class Widget {
 	}
     }
 
-    public static class MouseWheelEvent extends MouseEvent {
+    public static class MouseWheelEvent extends MouseActionEvent {
 	public final int a;
 
 	public MouseWheelEvent(Coord c, int a) {
@@ -1213,6 +1230,7 @@ public class Widget {
 	public QueryEvent(Coord c) {
 	    super(c);
 	    root = this;
+	    ret = defvalue();
 	}
 	public QueryEvent(QueryEvent<R> from, Coord c) {
 	    super(from, c);
@@ -1225,6 +1243,8 @@ public class Widget {
 	    root.ret = ret;
 	    return(true);
 	}
+
+	protected R defvalue() {return(null);}
     }
 
     public static class TooltipQuery extends PointerEvent {
@@ -1260,7 +1280,9 @@ public class Widget {
 	}
     }
 
-    public static class CursorQuery extends QueryEvent<Resource> {
+    public static class CursorQuery extends QueryEvent<Object> {
+	public static final Resource defcurs = Resource.local().loadwait("gfx/hud/curs/arw");
+
 	public CursorQuery(Coord c) {super(c);}
 	public CursorQuery(CursorQuery from, Coord c) {super(from, c);}
 	public CursorQuery derive(Coord c) {return(new CursorQuery(this, c));}
@@ -1282,6 +1304,8 @@ public class Widget {
 	    }
 	    return(super.shandle(w));
 	}
+
+	protected Object defvalue() {return(defcurs);}
     }
 
     /* XXX: Remove me! */
