@@ -137,8 +137,8 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 	    // Render quantity with "x" prefix for compact display
 	    BufferedImage fullSize = Utils.outline2(Text.render("x" + Integer.toString(num), col).img, Utils.contrast(col));
 	    // Scale to 80% of original size for more compact appearance
-	    int newWidth = (int)(fullSize.getWidth() * 0.8);
-	    int newHeight = (int)(fullSize.getHeight() * 0.8);
+	    int newWidth = (int)(fullSize.getWidth() * 0.85);
+	    int newHeight = (int)(fullSize.getHeight() * 0.85);
 	    BufferedImage scaled = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
 	    Graphics2D g2d = scaled.createGraphics();
 	    g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
