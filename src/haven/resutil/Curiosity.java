@@ -77,13 +77,13 @@ public class Curiosity extends ItemInfo.Tip implements GItem.ColorInfo {
     public BufferedImage tipimg() {
 	StringBuilder buf = new StringBuilder();
 	if(exp > 0)
-	    buf.append(String.format("Learning points: $col[192,192,255]{%s} ($col[192,192,255]{%s}/h)\n", Utils.thformat(exp), Utils.thformat(Math.round(exp / (time / 3600.0)))));
+	    buf.append(String.format(nurgling.translation.TranslationManager.getInstance().translateStatic("Learning points:") + " $col[192,192,255]{%s} ($col[192,192,255]{%s}/h)\n", Utils.thformat(exp), Utils.thformat(Math.round(exp / (time / 3600.0)))));
 	if(time > 0)
-	    buf.append(String.format("Study time: $col[192,255,192]{%s}\n", timefmt(time)));
+	    buf.append(String.format(nurgling.translation.TranslationManager.getInstance().translateStatic("Study time:") + " $col[192,255,192]{%s}\n", timefmt(time)));
 	if(mw > 0)
-	    buf.append(String.format("Mental weight: $col[255,192,255]{%d}\n", mw));
+	    buf.append(String.format(nurgling.translation.TranslationManager.getInstance().translateStatic("Mental weight:") + " $col[255,192,255]{%d}\n", mw));
 	if(enc > 0)
-	    buf.append(String.format("Experience cost: $col[255,255,192]{%d}\n", enc));
+	    buf.append(String.format(nurgling.translation.TranslationManager.getInstance().translateStatic("Experience cost:") + " $col[255,255,192]{%d}\n", enc));
 	return(RichText.render(buf.toString(), 0).img);
     }
 

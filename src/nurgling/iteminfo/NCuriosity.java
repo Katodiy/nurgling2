@@ -29,19 +29,19 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     public BufferedImage tipimg() {
         StringBuilder buf = new StringBuilder();
         if(exp > 0)
-            buf.append(String.format("Learning points: $col[192,192,255]{%s} ($col[192,192,255]{%s}/h)\n", Utils.thformat(exp), Utils.thformat(Math.round(exp / (time / 3600.0)))));
+            buf.append(String.format(nurgling.translation.TranslationManager.getInstance().translateStatic("Learning points:") + " $col[192,192,255]{%s} ($col[192,192,255]{%s}/h)\n", Utils.thformat(exp), Utils.thformat(Math.round(exp / (time / 3600.0)))));
         if(time > 0) {
-            buf.append(String.format("Study time: $col[192,255,192]{%s} ($col[192,255,255]{%s})\n", timefmt(time), timefmt((int)(time/server_ratio))));
+            buf.append(String.format(nurgling.translation.TranslationManager.getInstance().translateStatic("Study time:") + " $col[192,255,192]{%s} ($col[192,255,255]{%s})\n", timefmt(time), timefmt((int)(time/server_ratio))));
         }
         rm = (int)(remaining()/server_ratio);
         if(rm!=time)
         {
-            buf.append(String.format("Remaining time: $col[192,255,192]{%s}\n", timefmt(rm)));
+            buf.append(String.format(nurgling.translation.TranslationManager.getInstance().translateStatic("Remaining time:") + " $col[192,255,192]{%s}\n", timefmt(rm)));
         }
         if(mw > 0)
-            buf.append(String.format("Mental weight: $col[255,192,255]{%d}\n", mw));
+            buf.append(String.format(nurgling.translation.TranslationManager.getInstance().translateStatic("Mental weight:") + " $col[255,192,255]{%d}\n", mw));
         if(enc > 0)
-            buf.append(String.format("Experience cost: $col[255,255,192]{%d}\n", enc));
+            buf.append(String.format(nurgling.translation.TranslationManager.getInstance().translateStatic("Experience cost:") + " $col[255,255,192]{%d}\n", enc));
         if(lph>0) {
             buf.append(String.format("LP/H: $col[192,255,255]{%d}\n", lph(this.lph)));
             buf.append(String.format("LP/H/Weight: $col[192,255,255]{%d}\n", lph(this.lph / mw)));

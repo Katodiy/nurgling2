@@ -132,7 +132,7 @@ public class FightWnd extends Widget {
 	int u = 0;
 	for(Action act : acts)
 	    u += act.u;
-	count.settext(String.format("Used: %d/%d", u, maxact));
+	count.settext(String.format(nurgling.translation.TranslationManager.getInstance().translateStatic("Used:") + " %d/%d", u, maxact));
 	count.setcolor((u > maxact)?Color.RED:Color.WHITE);
     }
 

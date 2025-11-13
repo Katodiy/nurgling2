@@ -160,8 +160,8 @@ public class SkillWnd extends Widget {
 
 	public SkillGrid(Coord sz) {
 	    super(sz);
-	    nsk = new Group(UI.scale(40, 40), new Coord(-1, 5), "Available Skills", Collections.emptyList());
-	    csk = new Group(UI.scale(40, 40), new Coord(-1, 5), "Known Skills", Collections.emptyList());
+	    nsk = new Group(UI.scale(40, 40), new Coord(-1, 5), nurgling.translation.TranslationManager.getInstance().translateStatic("Available Skills"), Collections.emptyList());
+	    csk = new Group(UI.scale(40, 40), new Coord(-1, 5), nurgling.translation.TranslationManager.getInstance().translateStatic("Known Skills"), Collections.emptyList());
 	    itemtooltip = Skill::tooltip;
 	}
 

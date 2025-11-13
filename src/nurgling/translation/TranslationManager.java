@@ -154,10 +154,12 @@ public class TranslationManager {
             // Skip comments
             if (pair.startsWith("\"_")) continue;
 
-            int colonIndex = pair.indexOf(':');
-            if (colonIndex > 0) {
-                String key = pair.substring(0, colonIndex).trim();
-                String value = pair.substring(colonIndex + 1).trim();
+            // Find the separator colon - look for ": pattern (end of quoted key + separator colon)
+            int quoteColonIndex = pair.indexOf("\":");
+            if (quoteColonIndex > 0) {
+                // Include the closing quote in the key, skip the separator colon for value
+                String key = pair.substring(0, quoteColonIndex + 1).trim(); // Include the closing quote
+                String value = pair.substring(quoteColonIndex + 2).trim();  // Skip ": separator
 
                 // Remove quotes
                 key = removeQuotes(key);
