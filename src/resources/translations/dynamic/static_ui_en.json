@@ -48,5 +48,9 @@
 
   "_login_interface": "Login screen interface",
   "Login saved": "Login saved",
-  "Forget me": "Forget me"
+  "Forget me": "Forget me",
+
+  "_settings_window": "Settings window interface",
+  "Fonts": "Fonts",
+  "Autorunner scenarios": "Autorunner scenarios"
 }
