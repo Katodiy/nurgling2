@@ -316,5 +316,46 @@
   "_login_screen": "Login screen translations",
   "User name": "Имя пользователя",
   "Password": "Пароль",
-  "Remember me": "Запомнить меня"
+  "Remember me": "Запомнить меня",
+
+  "_priority_missing": "Critical missing translations from Ender client",
+  "Food efficacy": "Эффективность еды",
+  "Kin": "Знакомства",
+  "Kith & Kin": "Родичи и Знакомые",
+  "Optional": "Необязательный",
+  "Softcap:": "Мягкий лимит:",
+
+  "_seasons": "Season translations",
+  "Spring": "Весна",
+  "Summer": "Лето",
+  "Autumn": "Осень",
+  "Winter": "Зима",
+
+  "_calendar": "Calendar and time translations",
+  "Moon: ": "Фаза луны: ",
+  "New Moon": "Новолуние",
+  "Waxing Crescent": "Молодая Луна",
+  "First Quarter": "Первая четверть",
+  "Waxing Gibbous": "Растущая Луна",
+  "Full Moon": "Полнолуние",
+  "Waning Gibbous": "Убывающая Луна",
+  "Last Quarter": "Последняя четверть",
+  "Waning Crescent": "Старая Луна",
+
+  "_common_buttons": "Common button translations from Ender",
+  "Accept": "Принять",
+  "Quit": "Выход",
+
+  "_action_menu": "Common right-click action menu translations",
+  "Pick": "Собрать",
+  "Drink": "Пить",
+  "Eat": "Есть",
+  "Open": "Открыть",
+  "Close": "Закрыть",
+  "Light": "Зажечь",
+  "Extinguish": "Потушить",
+  "Study": "Изучать",
+  "Inspect": "Осмотреть",
+  "Take": "Взять",
+  "Drop": "Бросить"
 }

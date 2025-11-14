@@ -469,7 +469,7 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	super(new Coord(width, 0));
 	setfocustab(true);
 	Widget prev;
-        prev = add(new Img(CharWnd.catf.render("Kin").tex()));
+        prev = add(new Img(CharWnd.catf.render(nurgling.translation.L10n.get("Kin")).tex()));
 
 	bl = add(new BuddyList(Coord.of(sz.x - Window.wbox.bisz().x, UI.scale(140))), prev.pos("bl").add(Window.wbox.btloff()));
 	prev = Frame.around(this, Collections.singletonList(bl));

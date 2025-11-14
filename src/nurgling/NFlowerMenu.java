@@ -175,7 +175,7 @@ public class NFlowerMenu extends FlowerMenu
             super(Coord.z);
             this.name = name;
             this.num = num;
-            text = NStyle.flower.render(name);
+            text = NStyle.flower.render(nurgling.translation.L10n.get(name));
             textnum = NStyle.flower.render(String.valueOf(num));
             resize(text.sz().x + bl.sz().x + br.sz().x + UI.scale(30), ph);
         }

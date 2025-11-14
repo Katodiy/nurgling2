@@ -451,7 +451,7 @@ public class BAttrWnd extends Widget {
 	private Tex rtip = null;
 	public Object tooltip(Coord c, Widget prev) {
 	    if(rtip == null) {
-		rtip = RichText.render(String.format("%s: %.1f\u2030\nFood efficacy: %d%%", lbl, glut * 1000, Math.round(gmod * 100)), -1).tex();
+		rtip = RichText.render(String.format("%s: %.1f\u2030\n%s: %d%%", lbl, glut * 1000, nurgling.translation.L10n.get("Food efficacy"), Math.round(gmod * 100)), -1).tex();
 	    }
 	    return(rtip);
 	}

@@ -492,7 +492,7 @@ public class NMakewindow extends Widget {
                 if (softTex != null) {
                     softTex.dispose();
                 }
-                softTexLabel = new TexI(fnd.render("Softcap:").img);
+                softTexLabel = new TexI(fnd.render(nurgling.translation.L10n.get("Softcap:")).img);
                 softTex = new TexI(fnd2.render(format).img);
             }
             g.image(softTexLabel, p.add(UI.scale(5), UI.scale(-2)));
@@ -722,7 +722,7 @@ public class NMakewindow extends Widget {
 
 
     public static class Optional extends ItemInfo.Tip {
-        public static final Text text = RichText.render(String.format("$i{%s}", "Optional"), 0);
+        public static final Text text = RichText.render(String.format("$i{%s}", nurgling.translation.L10n.get("Optional")), 0);
         public Optional(Owner owner) {
             super(owner);
         }

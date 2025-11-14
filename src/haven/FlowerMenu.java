@@ -62,7 +62,7 @@ public class FlowerMenu extends Widget {
 	public Petal(String name) {
 	    super(Coord.z);
 	    this.name = name;
-	    text = ptf.render(name, ptc);
+	    text = ptf.render(nurgling.translation.L10n.get(name), ptc);
 	    resize(text.sz().x + UI.scale(25), ph);
 	}
 

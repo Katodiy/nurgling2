@@ -91,6 +91,7 @@ public class L10n {
             loadTranslations("static_ui");
             loadTranslations("items");
             loadTranslations("skills");
+            loadTranslations("flower");
 
             initialized = true;
             logger.info("L10n initialized successfully for language: " + currentLanguage +
