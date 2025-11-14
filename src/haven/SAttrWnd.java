@@ -58,9 +58,7 @@ public class SAttrWnd extends Widget {
 	    super(Coord.of(attrw, attrf.height() + UI.scale(2)), glob, attr);
 	    Resource res = Loading.waitfor(this.attr.res());
 	    this.img = new TexI(convolve(res.flayer(Resource.imgc).img, new Coord(this.sz.y, this.sz.y), iconfilter));
-	    String abilityName = res.flayer(Resource.tooltip).t;
-	    String translatedName = nurgling.translation.L10n.get(abilityName);
-	    this.rnm = attrf.render(translatedName);
+	    this.rnm = attrf.render(nurgling.translation.L10n.get(res.flayer(Resource.tooltip).t));
 	    this.bg = bg;
 	    add = adda(new IButton("gfx/hud/buttons/add", "u", "d", "h").action(() -> adj(1)),
 		       sz.x - UI.scale(5), sz.y / 2, 1, 0.5);

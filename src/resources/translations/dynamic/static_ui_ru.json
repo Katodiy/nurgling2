@@ -305,5 +305,16 @@
   "Cooking": "Кулинария",
   "Farming": "Фермерство",
   "Survival": "Выживание",
-  "Lore": "Знания"
+  "Lore": "Знания",
+
+  "_crafting_window": "Crafting window translations",
+  "Input:": "Ввод:",
+  "Result:": "Результат:",
+  "Craft": "Ремесло",
+  "Craft All": "Ремесло всё",
+
+  "_login_screen": "Login screen translations",
+  "User name": "Имя пользователя",
+  "Password": "Пароль",
+  "Remember me": "Запомнить меня"
 }

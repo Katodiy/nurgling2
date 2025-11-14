@@ -15,18 +15,6 @@ import java.util.*;
 
 public class BaseIngredientContainer extends Widget implements DTarget, Scrollable {
     static Color bg = new Color(30,40,40,160);
-    // Note: These should be initialized dynamically since they need translation
-    private static TexI freeLabel = null;
-    private static TexI freeLabel2 = null;
-
-    private static void initLabels() {
-        if (freeLabel == null) {
-            freeLabel = new TexI(Text.render(nurgling.translation.L10n.get("Drag and drop an item here")).img);
-        }
-        if (freeLabel2 == null) {
-            freeLabel2 = new TexI(Text.render(nurgling.translation.L10n.get("or select it from the categories")).img);
-        }
-    }
 
     public Scrollbar sb;
     protected int maxy = 0;
@@ -58,10 +46,9 @@ public class BaseIngredientContainer extends Widget implements DTarget, Scrollab
         g.chcolor(bg);
         g.frect(Coord.z, g.sz());
         if(items.isEmpty()) {
-            initLabels();
             g.chcolor(Color.WHITE);
-            g.image(freeLabel, UI.scale(5,5));
-            g.image(freeLabel2, UI.scale(5,20));
+            g.image(new TexI(Text.render(nurgling.translation.L10n.get("Drag and drop an item here")).img), UI.scale(5,5));
+            g.image(new TexI(Text.render(nurgling.translation.L10n.get("or select it from the categories")).img), UI.scale(5,20));
         }
         super.draw(g);
     }
