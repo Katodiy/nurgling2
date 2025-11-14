@@ -25,14 +25,14 @@ public class Ingredient extends ItemInfo.Tip {
 	int a = 1;
 	String name;
 	if(args[a] instanceof String) {
-	    name = nurgling.translation.L10n.get((String)args[a++]);
+	    name = (String)args[a++];
 	} else if(args[1] instanceof Integer) {
 	    Indir<Resource> res = owner.context(Resource.Resolver.class).getres((Integer)args[a++]);
 	    Message sdt = Message.nil;
 	    if((args.length > a) && (args[a] instanceof byte[]))
 		sdt = new MessageBuf((byte[])args[a++]);
 	    ItemSpec spec = new ItemSpec(owner, new ResData(res, sdt), null);
-	    name = nurgling.translation.L10n.get(spec.name());
+	    name = spec.name();
 	} else {
 	    throw(new IllegalArgumentException());
 	}

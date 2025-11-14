@@ -108,7 +108,7 @@ public class QoL extends Panel {
 
         leftPrev = leftColumn.add(new Label("Preferred movement speed on login:"), leftPrev.pos("bl").adds(0, 10));
         leftPrev = preferredSpeedDropbox = leftColumn.add(new Dropbox<String>(UI.scale(150), 4, UI.scale(16)) {
-            private final String[] speeds = {"Crawl", "Walk", "Run", "Sprint"};
+            private final String[] speeds = {nurgling.translation.L10n.get("Crawl"), nurgling.translation.L10n.get("Walk"), nurgling.translation.L10n.get("Run"), nurgling.translation.L10n.get("Sprint")};
 
             @Override
             protected String listitem(int i) {
@@ -140,7 +140,7 @@ public class QoL extends Panel {
 
         leftPrev = leftColumn.add(new Label("Preferred horse speed on mount:"), leftPrev.pos("bl").adds(0, 10));
         leftPrev = preferredHorseSpeedDropbox = leftColumn.add(new Dropbox<String>(UI.scale(150), 4, UI.scale(16)) {
-            private final String[] speeds = {"Crawl", "Walk", "Run", "Sprint"};
+            private final String[] speeds = {nurgling.translation.L10n.get("Crawl"), nurgling.translation.L10n.get("Walk"), nurgling.translation.L10n.get("Run"), nurgling.translation.L10n.get("Sprint")};
 
             @Override
             protected String listitem(int i) {
@@ -172,7 +172,7 @@ public class QoL extends Panel {
 
         leftPrev = leftColumn.add(new Label("Language:"), leftPrev.pos("bl").adds(0, 10));
         leftPrev = languageDropbox = leftColumn.add(new Dropbox<String>(UI.scale(150), 2, UI.scale(16)) {
-            private final String[] languages = {"English", "Russian"};
+            private final String[] languages = {nurgling.translation.L10n.get("English"), nurgling.translation.L10n.get("Russian")};
             private final String[] languageCodes = {"en", "ru"};
 
             @Override
@@ -284,7 +284,7 @@ public class QoL extends Panel {
             speedIndex = ((Number) speedPref).intValue();
         }
         if (speedIndex >= 0 && speedIndex < 4) {
-            String[] speeds = {"Crawl", "Walk", "Run", "Sprint"};
+            String[] speeds = {nurgling.translation.L10n.get("Crawl"), nurgling.translation.L10n.get("Walk"), nurgling.translation.L10n.get("Run"), nurgling.translation.L10n.get("Sprint")};
             preferredSpeedDropbox.change(speeds[speedIndex]);
         }
 
@@ -306,7 +306,7 @@ public class QoL extends Panel {
             currentLang = (String) langPref;
         }
         String[] languageCodes = {"en", "ru"};
-        String[] languageNames = {"English", "Russian"};
+        String[] languageNames = {nurgling.translation.L10n.get("English"), nurgling.translation.L10n.get("Russian")};
         for (int i = 0; i < languageCodes.length; i++) {
             if (languageCodes[i].equals(currentLang)) {
                 languageDropbox.change(languageNames[i]);

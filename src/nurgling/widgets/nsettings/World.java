@@ -92,7 +92,7 @@ public class World extends Panel {
         lineWidthSlider = add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
             public void changed() {
                 tempSettings.boxLineWidth = val;
-                lineWidthLabel.settext("Line width: " + val);
+                lineWidthLabel.settext(nurgling.translation.L10n.get("Line width: ") + val);
             }
         }, UI.scale(50, 390));
 
@@ -130,7 +130,7 @@ public class World extends Panel {
         fillColorWidget.color = tempSettings.boxFillColor;
         edgeColorWidget.color = tempSettings.boxEdgeColor;
         lineWidthSlider.val = tempSettings.boxLineWidth;
-        lineWidthLabel.settext("Line width: " + tempSettings.boxLineWidth);
+        lineWidthLabel.settext(nurgling.translation.L10n.get("Line width:") + " " + tempSettings.boxLineWidth);
     }
 
     @Override

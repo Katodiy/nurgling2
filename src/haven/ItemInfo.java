@@ -210,7 +210,7 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 	}
 
 	public Name(Owner owner, String str) {
-	    this(owner, Text.render(nurgling.translation.L10n.get(str)));
+	    this(owner, Text.render(str));
 	}
 
 	public BufferedImage tipimg() {
@@ -287,7 +287,7 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 	    BufferedImage stip = longtip(sub);
 	    BufferedImage img = TexI.mkbuf(Coord.of(stip.getWidth(), stip.getHeight()).add(UI.scale(10, 15)));
 	    Graphics g = img.getGraphics();
-	    g.drawImage(Text.render(nurgling.translation.L10n.get("Contents:")).img, 0, 0, null);
+	    g.drawImage(Text.render("Contents:").img, 0, 0, null);
 	    g.drawImage(stip, UI.scale(10), UI.scale(15), null);
 	    g.dispose();
 	    return(img);

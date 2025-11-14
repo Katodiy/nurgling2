@@ -117,11 +117,11 @@ public class IconItem extends Widget
                 ArrayList<String> opt = new ArrayList<String>() {
                     {
                         if (parent instanceof IngredientContainer || parent instanceof DropContainer)
-                            add("Threshold");
-                        add("Delete");
+                            add(nurgling.translation.L10n.get("Threshold"));
+                        add(nurgling.translation.L10n.get("Delete"));
                         if (parent instanceof IngredientContainer) {
-                            add("Mark as barter");
-                            add("Mark as barrel");
+                            add(nurgling.translation.L10n.get("Mark as barter"));
+                            add(nurgling.translation.L10n.get("Mark as barrel"));
                         }
                     }
                 };
@@ -132,11 +132,11 @@ public class IconItem extends Widget
                 ArrayList<String> uopt = new ArrayList<String>(){
                     {
                         if(parent instanceof IngredientContainer || parent instanceof DropContainer) {
-                            add("Threshold");
+                            add(nurgling.translation.L10n.get("Threshold"));
                         }
-                        add("Delete");
+                        add(nurgling.translation.L10n.get("Delete"));
                         if(parent instanceof IngredientContainer) {
-                            add("Unmark");
+                            add(nurgling.translation.L10n.get("Unmark"));
                         }
                     }
                 };
@@ -160,7 +160,7 @@ public class IconItem extends Widget
                 {
                     if(option!=null)
                     {
-                        if (option.name.equals("Threshold"))
+                        if (option.name.equals(nurgling.translation.L10n.get("Threshold")))
                         {
                             Widget par = IconItem.this.parent;
                             Coord pos = IconItem.this.c.add(UI.scale(32, 38));
@@ -173,19 +173,19 @@ public class IconItem extends Widget
                             ui.root.add(st, pos);
 
                         }
-                        else if(option.name.equals("Delete"))
+                        else if(option.name.equals(nurgling.translation.L10n.get("Delete")))
                         {
                             ((BaseIngredientContainer)IconItem.this.parent).delete(IconItem.this.name);
                         }
-                        else if(option.name.equals("Mark as barter"))
+                        else if(option.name.equals(nurgling.translation.L10n.get("Mark as barter")))
                         {
                             ((IngredientContainer)IconItem.this.parent).setType(IconItem.this.name, NArea.Ingredient.Type.BARTER);
                         }
-                        else if(option.name.equals("Mark as barrel"))
+                        else if(option.name.equals(nurgling.translation.L10n.get("Mark as barrel")))
                         {
                             ((IngredientContainer)IconItem.this.parent).setType(IconItem.this.name, NArea.Ingredient.Type.BARREL);
                         }
-                        else if(option.name.equals("Unmark"))
+                        else if(option.name.equals(nurgling.translation.L10n.get("Unmark")))
                         {
                             ((IngredientContainer)IconItem.this.parent).setType(IconItem.this.name, NArea.Ingredient.Type.CONTAINER);
                         }
@@ -215,10 +215,10 @@ public class IconItem extends Widget
     {
         public SetThreshold(int val)
         {
-            super(UI.scale(140,25), "Threshold");
+            super(UI.scale(140,25), nurgling.translation.L10n.get("Threshold"));
             TextEntry te;
             prev = add(te = new TextEntry(UI.scale(80),String.valueOf(val)));
-            add(new Button(UI.scale(50),"Set"){
+            add(new Button(UI.scale(50),nurgling.translation.L10n.get("Set")){
                 @Override
                 public void click()
                 {

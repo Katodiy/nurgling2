@@ -16,11 +16,11 @@ public class Fonts extends Panel {
     );
 
     public enum FontType {
-        DEFAULT("Default font"),
-        UI("Interface font"),
-        QUESTS("Quests list"),
-        BARRELS("Barrels labels"),
-        CHARACTERS("Characters names");
+        DEFAULT(nurgling.translation.L10n.get("Default font")),
+        UI(nurgling.translation.L10n.get("Interface font")),
+        QUESTS(nurgling.translation.L10n.get("Quests list")),
+        BARRELS(nurgling.translation.L10n.get("Barrels labels")),
+        CHARACTERS(nurgling.translation.L10n.get("Characters names"));
 
         final String displayName;
         FontType(String displayName) {

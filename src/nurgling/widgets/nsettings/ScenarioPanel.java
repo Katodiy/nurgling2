@@ -314,7 +314,7 @@ public class ScenarioPanel extends Panel {
     }
 
     private void addScenario() {
-        editingScenario = new Scenario(getNextScenarioId(), "New Scenario");
+        editingScenario = new Scenario(getNextScenarioId(), nurgling.translation.L10n.get("New Scenario"));
         showEditorPanel();
     }
 

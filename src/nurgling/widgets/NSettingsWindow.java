@@ -33,7 +33,7 @@ public class NSettingsWindow extends Widget {
         container = add(new Widget(Coord.z));
         list = add(new SettingsList(UI.scale(200, 580)), UI.scale(10, 10));
 
-        saveBtn = add(new Button(UI.scale(100), nurgling.translation.L10n.get("Save")) {
+        saveBtn = add(new Button(UI.scale(100), "Save") {
             public void click() {
                 if(currentPanel != null) {
                     currentPanel.save();
@@ -41,7 +41,7 @@ public class NSettingsWindow extends Widget {
             }
         }, UI.scale(680, 560));
 
-        cancelBtn = add(new Button(UI.scale(100), nurgling.translation.L10n.get("Cancel")) {
+        cancelBtn = add(new Button(UI.scale(100), "Cancel") {
             public void click() {
                 if(currentPanel != null) {
                     currentPanel.load();
@@ -51,7 +51,7 @@ public class NSettingsWindow extends Widget {
 
         // Add Back button only if back action is provided
         if(backAction != null) {
-            backBtn = add(new Button(UI.scale(100), nurgling.translation.L10n.get("Back")) {
+            backBtn = add(new Button(UI.scale(100), "Back") {
                 public void click() {
                     backAction.run();
                 }
@@ -72,27 +72,27 @@ public class NSettingsWindow extends Widget {
 
 
     private void fillSettings() {
-        SettingsCategory general = new SettingsCategory(nurgling.translation.L10n.get("General"), new Panel(nurgling.translation.L10n.get("General")), container);
-        general.addChild(new SettingsItem(nurgling.translation.L10n.get("Fonts"), new Fonts(), container));
-        general.addChild(new SettingsItem(nurgling.translation.L10n.get("Quality of life"), qol = new QoL(), container));
-        general.addChild(new SettingsItem(nurgling.translation.L10n.get("Database"), new DatabaseSettings(), container));
-        general.addChild(new SettingsItem(nurgling.translation.L10n.get("Auto Mapper"), new AutoMapper(), container));
-        general.addChild(new SettingsItem(nurgling.translation.L10n.get("Auto Selection"), as = new AutoSelection(), container));
-        general.addChild(new SettingsItem(nurgling.translation.L10n.get("Quick Actions"), qa = new QuickActions(), container));
+        SettingsCategory general = new SettingsCategory("General", new Panel("General"), container);
+        general.addChild(new SettingsItem("Fonts", new Fonts(), container));
+        general.addChild(new SettingsItem("Quality of life", qol = new QoL(), container));
+        general.addChild(new SettingsItem("Database", new DatabaseSettings(), container));
+        general.addChild(new SettingsItem("Auto Mapper", new AutoMapper(), container));
+        general.addChild(new SettingsItem("Auto Selection", as = new AutoSelection(), container));
+        general.addChild(new SettingsItem("Quick Actions", qa = new QuickActions(), container));
 
-        SettingsCategory gameenvironment = new SettingsCategory(nurgling.translation.L10n.get("Game environment"), new Panel(nurgling.translation.L10n.get("Game environment")), container);
-        gameenvironment.addChild(new SettingsItem(nurgling.translation.L10n.get("World"),world = new World(), container));
-        gameenvironment.addChild(new SettingsItem(nurgling.translation.L10n.get("Animal rings"), new NRingSettings(), container));
+        SettingsCategory gameenvironment = new SettingsCategory("Game environment", new Panel("Game environment"), container);
+        gameenvironment.addChild(new SettingsItem("World",world = new World(), container));
+        gameenvironment.addChild(new SettingsItem("Animal rings", new NRingSettings(), container));
 
-        SettingsCategory scenarios = new SettingsCategory(nurgling.translation.L10n.get("Autorunner"), new Panel(nurgling.translation.L10n.get("Autorunner scenarios")), container);
-        scenarios.addChild(new SettingsItem(nurgling.translation.L10n.get("Scenarios"), new ScenarioPanel(), container));
+        SettingsCategory scenarios = new SettingsCategory("Autorunner", new Panel("Autorunner scenarios"), container);
+        scenarios.addChild(new SettingsItem("Scenarios", new ScenarioPanel(), container));
 
-        SettingsCategory bots = new SettingsCategory(nurgling.translation.L10n.get("Bots"), new Panel(nurgling.translation.L10n.get("Bots")), container);
-        bots.addChild(new SettingsItem(nurgling.translation.L10n.get("Feed Clover"), new FeedClover(), container));
-        bots.addChild(new SettingsItem(nurgling.translation.L10n.get("Auto Drop settings"), new Dropper(), container));
-        bots.addChild(new SettingsItem(nurgling.translation.L10n.get("Eating bot"), new Eater(), container));
-        bots.addChild(new SettingsItem(nurgling.translation.L10n.get("Farming Settings"), new FarmingSettingsPanel(), container));
-        bots.addChild(new SettingsItem(nurgling.translation.L10n.get("Cheese orders"), new CheeseOrdersPanel(), container));
+        SettingsCategory bots = new SettingsCategory("Bots", new Panel("Bots"), container);
+        bots.addChild(new SettingsItem("Feed Clover", new FeedClover(), container));
+        bots.addChild(new SettingsItem("Auto Drop settings", new Dropper(), container));
+        bots.addChild(new SettingsItem("Eating bot", new Eater(), container));
+        bots.addChild(new SettingsItem("Farming Settings", new FarmingSettingsPanel(), container));
+        bots.addChild(new SettingsItem("Cheese orders", new CheeseOrdersPanel(), container));
 
         list.addCategory(general);
         list.addCategory(gameenvironment);
@@ -193,7 +193,7 @@ public class NSettingsWindow extends Widget {
         private SettingsItem parent;
 
         public SettingsItem(String name, Widget panel, Widget container) {
-            this.name = name;
+            this.name = nurgling.translation.L10n.get(name);
             this.panel = panel;
             container.add(panel, UI.scale(210,0));
             panel.hide();

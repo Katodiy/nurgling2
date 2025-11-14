@@ -1414,7 +1414,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 
     public void msg(String msg, Color color) {
     msgtime = Utils.rtime();
-    lastmsg = RootWidget.msgfoundry.render(msg, color);
+    lastmsg = RootWidget.msgfoundry.render(nurgling.translation.L10n.get(msg), color);
     syslog.append(new ChatUI.Channel.SimpleMessage(msg, color));
     }
 

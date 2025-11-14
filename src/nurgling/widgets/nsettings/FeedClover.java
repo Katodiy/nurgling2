@@ -12,14 +12,12 @@ public class FeedClover extends Panel {
 
         int margin = UI.scale(10);
 
-        Widget prev = add(new Label("Feed Clover options:"), new Coord(margin, margin));
-
-        prev = ropeAfterFeeding = add(new CheckBox("Tie the animal on a rope after feeding it") {
+        Widget prev = ropeAfterFeeding = add(new CheckBox("Tie the animal on a rope after feeding it") {
             public void set(boolean val) {
                 tempUseRope = val;
                 a = val;
             }
-        }, prev.pos("bl").adds(0, 10));
+        }, new Coord(margin, margin));
 
     }
 

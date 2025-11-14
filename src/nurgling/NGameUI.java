@@ -146,7 +146,7 @@ public class NGameUI extends GameUI
         for ( Widget w = lchild ; w != null ; w = w.prev ) {
             if ( w instanceof Window ) {
                 Window wnd = ( Window ) w;
-                if ( wnd.cap != null && wnd.cap.equals(cap)) {
+                if ( wnd.cap != null && wnd.cap.equals(nurgling.translation.L10n.get(cap))) {
                     return wnd;
                 }
             }
