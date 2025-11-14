@@ -307,7 +307,7 @@ public class Text implements Disposable {
     }
 	
     public static Line render(String text, Color c) {
-	return(std.render(text, c));
+	return(std.render(nurgling.translation.L10n.get(text), c));
     }
 	
     public static Line renderf(Color c, String text, Object... args) {

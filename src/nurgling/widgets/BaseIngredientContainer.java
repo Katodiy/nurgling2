@@ -47,8 +47,8 @@ public class BaseIngredientContainer extends Widget implements DTarget, Scrollab
         g.frect(Coord.z, g.sz());
         if(items.isEmpty()) {
             g.chcolor(Color.WHITE);
-            g.image(new TexI(Text.render(nurgling.translation.L10n.get("Drag and drop an item here")).img), UI.scale(5,5));
-            g.image(new TexI(Text.render(nurgling.translation.L10n.get("or select it from the categories")).img), UI.scale(5,20));
+            g.image(new TexI(Text.render("Drag and drop an item here").img), UI.scale(5,5));
+            g.image(new TexI(Text.render("or select it from the categories").img), UI.scale(5,20));
         }
         super.draw(g);
     }

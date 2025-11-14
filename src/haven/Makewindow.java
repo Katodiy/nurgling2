@@ -36,8 +36,8 @@ import java.awt.image.BufferedImage;
 import static haven.Inventory.invsq;
 
 public class Makewindow extends Widget {
-    private static Text qmodl = Text.render(nurgling.translation.L10n.get("Quality:"));
-    private static Text tooll = Text.render(nurgling.translation.L10n.get("Tools:"));
+    private static Text qmodl = Text.render("Quality:");
+    private static Text tooll = Text.render("Tools:");
     public static final Coord boff = UI.scale(new Coord(7, 9));
     public String rcpnm;
     public List<Input> inputs = Collections.emptyList();

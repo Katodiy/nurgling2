@@ -178,7 +178,7 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
 	if(rawinfo != null)
 	    return(ItemInfo.shorttip(info()));
 	if(tt != null)
-	    return(Text.render(nurgling.translation.L10n.get(tt)).img);
+	    return(Text.render(tt).img);
 	String ret = nurgling.translation.L10n.get(res.get().flayer(Resource.tooltip).t);
 	if(ameter >= 0)
 	    ret = ret + " (" + ameter + "%)";
