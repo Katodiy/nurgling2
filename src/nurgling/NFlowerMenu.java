@@ -258,7 +258,8 @@ public class NFlowerMenu extends FlowerMenu
     {
         for(NPetal petal: nopts)
         {
-            if(petal.name.equals(value))
+            String translatedName = nurgling.translation.L10n.get(petal.name);
+            if(petal.name.equals(value) || translatedName.equals(value))
             {
                 nchoose(petal);
                 return true;
