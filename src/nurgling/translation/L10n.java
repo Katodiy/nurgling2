@@ -64,6 +64,29 @@ public class L10n {
     }
 
     /**
+     * Get translated resource name with fallback logic
+     * For English: returns displayName
+     * For other languages: looks up resourceName, falls back to displayName if not found
+     */
+    public static String getResourceName(String resourceName, String displayName) {
+        if (!initialized) initialize();
+
+        // If English, always return display name
+        if ("en".equals(currentLanguage)) {
+            return displayName;
+        }
+
+        // For other languages, try resource name lookup first
+        String translated = translations.get(resourceName);
+        if (translated != null) {
+            return translated;
+        }
+
+        // Fallback to display name if no translation found
+        return displayName;
+    }
+
+    /**
      * Clear translation cache
      */
     public static void clearCache() {

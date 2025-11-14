@@ -164,7 +164,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 		spr = GSprite.create(this, res, Message.nil);
 	    return(spr);
 	}
-	public String name() {return(nurgling.translation.L10n.get(res.name));}
+	public String name() {return(nurgling.translation.L10n.getResourceName(res.name, act().name));}
 	public KeyMatch hotkey() {
 	    char hk = act().hk;
 	    if(hk == 0)
