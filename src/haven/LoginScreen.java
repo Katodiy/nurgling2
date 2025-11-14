@@ -153,8 +153,8 @@ public class LoginScreen extends Widget {
 	    pwbox.hide();
 
 	    add(tkbox = new Widget(new Coord(this.sz.x, 0)), user.pos("bl").adds(0, 10));
-	    tkbox.add(prev = new Label("Login saved", textfs), UI.scale(0, 25));
-	    tkbox.adda(fbtn = new Button(UI.scale(100), "Forget me"), prev.pos("mid").x(this.sz.x), 1.0, 0.5).action(this::forget);
+	    tkbox.add(prev = new Label(nurgling.translation.L10n.get("Login saved"), textfs), UI.scale(0, 25));
+	    tkbox.adda(fbtn = new Button(UI.scale(100), nurgling.translation.L10n.get("Forget me")), prev.pos("mid").x(this.sz.x), 1.0, 0.5).action(this::forget);
 	    fbtn.setgkey(kb_deltoken);
 	    tkbox.pack();
 	    tkbox.hide();
@@ -342,14 +342,14 @@ public class LoginScreen extends Widget {
 	if(this.error != null)
 	    this.error = null;
 	if(error != null)
-	    this.error = textf.render(error, java.awt.Color.RED);
+	    this.error = textf.render(nurgling.translation.L10n.get(error), java.awt.Color.RED);
     }
 
     protected void progress(String p) {
 	if(progress != null)
 	    progress = null;
 	if(p != null)
-	    progress = textf.render(p, java.awt.Color.WHITE);
+	    progress = textf.render(nurgling.translation.L10n.get(p), java.awt.Color.WHITE);
     }
 
     private void clear() {

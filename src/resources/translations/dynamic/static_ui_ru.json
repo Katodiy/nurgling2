@@ -496,5 +496,9 @@
   "Raft": "Паром",
   "Knarr": "Кнорр",
   "Metal Plow": "Металлический плуг",
-  "Wooden Plow": "Деревянный плуг"
+  "Wooden Plow": "Деревянный плуг",
+
+  "_login_interface": "Login screen interface",
+  "Login saved": "Логин сохранён",
+  "Forget me": "Забыть меня"
 }
