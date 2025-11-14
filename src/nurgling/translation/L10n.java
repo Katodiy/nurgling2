@@ -92,6 +92,7 @@ public class L10n {
             loadTranslations("items");
             loadTranslations("skills");
             loadTranslations("flower");
+            loadTranslations("action");
 
             initialized = true;
             logger.info("L10n initialized successfully for language: " + currentLanguage +
@@ -148,8 +149,46 @@ public class L10n {
             json = json.substring(1, json.length() - 1).trim();
         }
 
-        // Split by commas, but be careful about commas inside strings
-        String[] pairs = json.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+        // Parse JSON more safely without complex regex
+        List<String> pairs = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+        boolean escapeNext = false;
+
+        for (int i = 0; i < json.length(); i++) {
+            char c = json.charAt(i);
+
+            if (escapeNext) {
+                current.append(c);
+                escapeNext = false;
+                continue;
+            }
+
+            if (c == '\\') {
+                current.append(c);
+                escapeNext = true;
+                continue;
+            }
+
+            if (c == '"') {
+                inQuotes = !inQuotes;
+                current.append(c);
+                continue;
+            }
+
+            if (c == ',' && !inQuotes) {
+                pairs.add(current.toString().trim());
+                current = new StringBuilder();
+                continue;
+            }
+
+            current.append(c);
+        }
+
+        // Add the last pair
+        if (current.length() > 0) {
+            pairs.add(current.toString().trim());
+        }
 
         for (String pair : pairs) {
             pair = pair.trim();
