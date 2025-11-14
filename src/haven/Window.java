@@ -122,7 +122,7 @@ public class Window extends Widget {
 
     private Window(Coord sz, String cap, boolean lg, Deco deco, boolean defdeco) {
 	super(sz);
-	this.cap = (cap != null) ? nurgling.translation.L10n.get(cap) : null;
+	this.cap = nurgling.translation.L10n.get(cap);
 	this.large = lg;
 	setfocustab(true);
 	chdeco(defdeco ? makedeco() : deco);
@@ -154,7 +154,7 @@ public class Window extends Widget {
     }
 
     public void chcap(String cap) {
-	this.cap = (cap != null) ? nurgling.translation.L10n.get(cap) : null;
+	this.cap = nurgling.translation.L10n.get(cap);
     }
 
     public void chdeco(Deco deco) {

@@ -197,10 +197,6 @@ public class QoL extends Panel {
                     if (languages[i].equals(item)) {
                         NConfig.set(NConfig.Key.language, languageCodes[i]);
                         NConfig.needUpdate();
-                        // Apply language change
-                        nurgling.translation.TranslationManager.getInstance().setLanguage(languageCodes[i]);
-                        // Test translations
-                        nurgling.translation.TranslationTest.testTranslations();
                         break;
                     }
                 }

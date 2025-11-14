@@ -22,7 +22,22 @@ public class L10n {
      */
     public static String get(String key) {
         if (!initialized) initialize();
-        return translations.getOrDefault(key, key);
+
+        // Try exact match first
+        String result = translations.get(key);
+        if (result != null) {
+            return result;
+        }
+
+        // Try case insensitive match for items
+        String lowerKey = key.toLowerCase();
+        result = translations.get(lowerKey);
+        if (result != null) {
+            return result;
+        }
+
+        // Return original key if no translation found
+        return key;
     }
 
     /**

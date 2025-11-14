@@ -86,22 +86,8 @@ public class QuestWnd extends Widget {
 	    }
 	}
 
-	private static Tex qcmp = null;
-	private static Tex qfail = null;
-
-	private static Tex getQuestCompletedTex() {
-	    if (qcmp == null) {
-	        qcmp = catf.render(nurgling.translation.L10n.get("Quest completed")).tex();
-	    }
-	    return qcmp;
-	}
-
-	private static Tex getQuestFailedTex() {
-	    if (qfail == null) {
-	        qfail = failf.render(nurgling.translation.L10n.get("Quest failed")).tex();
-	    }
-	    return qfail;
-	}
+	private static Tex qcmp = catf.render(nurgling.translation.L10n.get("Quest completed")).tex();
+	private static Tex qfail = failf.render(nurgling.translation.L10n.get("Quest failed")).tex();
 	public void done(GameUI parent) {
 	    parent.add(new Widget() {
 		    double a = 0.0;
@@ -130,7 +116,7 @@ public class QuestWnd extends Widget {
 			    try {
 				title = (done == QST_DONE?catf:failf).render(title()).tex();
 				img = res.get().flayer(Resource.imgc).tex();
-				msg = (done == QST_DONE)?getQuestCompletedTex():getQuestFailedTex();
+				msg = (done == QST_DONE)?qcmp:qfail;
 				/*
 				resize(new Coord(Math.max(img.sz().x + 25 + title.sz().x, msg.sz().x),
 						 Math.max(img.sz().y, title.sz().y) + 25 + msg.sz().y));

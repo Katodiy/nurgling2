@@ -213,23 +213,11 @@ public class SkillWnd extends Widget {
 	private final Button pbtn, qbtn;
 	private boolean loading = false;
 
-	private Tex getPursuingCategory() {
-	    return GridList.dcatf.render(nurgling.translation.L10n.get("Pursuing")).tex();
-	}
-
-	private Tex getCredosAvailableCategory() {
-	    return GridList.dcatf.render(nurgling.translation.L10n.get("Credos Available")).tex();
-	}
-
-	private Tex getCredosAcquiredCategory() {
-	    return GridList.dcatf.render(nurgling.translation.L10n.get("Credos Acquired")).tex();
-	}
-
 	public CredoGrid(Coord sz) {
 	    super(sz);
-	    pcrc = new Img(getPursuingCategory());
-	    ncrc = new Img(getCredosAvailableCategory());
-	    ccrc = new Img(getCredosAcquiredCategory());
+	    pcrc = new Img(GridList.dcatf.render(nurgling.translation.L10n.get("Pursuing")).tex());
+	    ncrc = new Img(GridList.dcatf.render(nurgling.translation.L10n.get("Credos Available")).tex());
+	    ccrc = new Img(GridList.dcatf.render(nurgling.translation.L10n.get("Credos Acquired")).tex());
 	    pbtn = new Button(btnw, "Pursue", false) {
 		    public void click() {
 			if(sel != null)
