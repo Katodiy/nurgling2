@@ -18,7 +18,8 @@ import java.util.ArrayList;
  */
 public class KillCocoons implements Action {
     private static final String COCOON_NAME = "Silkworm Cocoon";
-    private static final NAlias COCOON_ALIAS = new NAlias(COCOON_NAME);
+    private static final String CHRYSALIS = "Death's Head Chrysalis";
+    private static final NAlias COCOON_ALIAS = new NAlias(COCOON_NAME, CHRYSALIS);
     
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
