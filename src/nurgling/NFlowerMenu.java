@@ -90,7 +90,8 @@ public class NFlowerMenu extends FlowerMenu
             } else {
                 ArrayList<String> autoPetal = NUtils.getPetals();
                 for (NPetal opt : nopts) {
-                    if (autoPetal.contains(opt.name)) {
+                    String translatedName = nurgling.translation.L10n.get(opt.name);
+                    if (autoPetal.contains(opt.name) || autoPetal.contains(translatedName)) {
                         nchoose(opt);
                         break;
                     }
