@@ -519,7 +519,7 @@ public class FightWnd extends Widget {
 		if(ev.b == 1) {
 		    double now = Utils.rtime();
 		    Savelist.this.change(n);
-		    if(((now - lt) < 0.5) && (ev.c.dist(lc) < 10) && (saves[n] != getUnusedSaveText())) {
+		    if(((now - lt) < 0.5) && (ev.c.dist(lc) < 10) && (saves[n] != unused)) {
 			if(n == usesave) {
 			    ed = ReadLine.make(this, saves[n].text);
 			    redit = null;
@@ -582,7 +582,7 @@ public class FightWnd extends Widget {
     public void save(int n) {
 	List<Object> args = new LinkedList<Object>();
 	args.add(n);
-	if(saves[n] != getUnusedSaveText())
+	if(saves[n] != unused)
 	    args.add(saves[n].text);
 	for(int i = 0; i < order.length; i++) {
 	    if(order[i] == null) {
@@ -599,15 +599,8 @@ public class FightWnd extends Widget {
 	wdgmsg("use", n);
     }
 
-    private Text unused = null;
+    private Text unused = new Text.Foundry(attrf.font.deriveFont(java.awt.Font.ITALIC)).aa(true).render(nurgling.translation.L10n.get("Unused save"));
 
-    private Text getUnusedSaveText() {
-        if (unused == null) {
-            unused = new Text.Foundry(attrf.font.deriveFont(java.awt.Font.ITALIC)).aa(true)
-                    .render(nurgling.translation.L10n.get("Unused save"));
-        }
-        return unused;
-    }
     public FightWnd(int nsave, int nact, int max) {
 	super(Coord.z);
 	this.nsave = nsave;
@@ -615,13 +608,13 @@ public class FightWnd extends Widget {
 	this.order = new Action[nact];
 	this.saves = new Text[nsave];
 	for(int i = 0; i < nsave; i++)
-	    saves[i] = getUnusedSaveText();
+	    saves[i] = unused;
 
 	Widget p;
 	info = add(new ImageInfoBox(UI.scale(new Coord(223, 160))), UI.scale(new Coord(5, 35)).add(wbox.btloff()));
 	Frame.around(this, Collections.singletonList(info));
 
-	add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Martial Arts & Combat Schools")), "gfx/hud/chr/tips/combat"), 0, 0);
+	add(CharWnd.settip(new Img(CharWnd.catf.render(nurgling.translation.L10n.get("Martial Arts & Combat Schools")).tex()), "gfx/hud/chr/tips/combat"), 0, 0);
 	actlist = add(new Actions(UI.scale(250, 160)), UI.scale(new Coord(245, 35)).add(wbox.btloff()));
 	Frame.around(this, Collections.singletonList(actlist));
 
@@ -698,7 +691,7 @@ public class FightWnd extends Widget {
 		    else
 			saves[i] = attrf.render(String.format("Saved school %d", i + 1));
 		} else {
-		    saves[i] = getUnusedSaveText();
+		    saves[i] = unused;
 		}
 	    }
 	} else if(nm == "use") {

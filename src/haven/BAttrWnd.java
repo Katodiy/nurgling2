@@ -58,9 +58,7 @@ public class BAttrWnd extends Widget {
 	private Attr(Glob glob, String attr, Color bg) {
 	    super(Coord.of(attrw, attrf.height() + UI.scale(2)), glob, attr);
 	    Resource res = Loading.waitfor(this.attr.res());
-	    String attributeName = res.flayer(Resource.tooltip).t;
-	    String translatedName = nurgling.translation.L10n.get(attributeName);
-	    this.rnm = attrf.render(translatedName);
+	    this.rnm = attrf.render(nurgling.translation.L10n.get(res.flayer(Resource.tooltip).t));
 	    this.img = new TexI(convolve(res.flayer(Resource.imgc).img, new Coord(this.sz.y, this.sz.y), iconfilter));
 	    this.bg = bg;
 	}
@@ -461,7 +459,7 @@ public class BAttrWnd extends Widget {
 
     public BAttrWnd(Glob glob) {
 	Widget prev;
-	prev = add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Base Attributes")), "gfx/hud/chr/tips/base"), Coord.z);
+	prev = add(CharWnd.settip(new Img(CharWnd.catf.render(nurgling.translation.L10n.get("Base Attributes")).tex()), "gfx/hud/chr/tips/base"), Coord.z);
 	attrs = new ArrayList<>();
 	Attr aw;
 	attrs.add(aw = add(new Attr(glob, "str", every), prev.pos("bl").adds(5, 0).add(wbox.btloff())));
@@ -474,14 +472,14 @@ public class BAttrWnd extends Widget {
 	attrs.add(aw = add(new Attr(glob, "wil", other), aw.pos("bl")));
 	attrs.add(aw = add(new Attr(glob, "psy", every), aw.pos("bl")));
 	prev = Frame.around(this, attrs);
-	prev = add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Food Event Points")), "gfx/hud/chr/tips/fep"), prev.pos("bl").x(0).adds(0, 10));
+	prev = add(CharWnd.settip(new Img(CharWnd.catf.render(nurgling.translation.L10n.get("Food Event Points")).tex()), "gfx/hud/chr/tips/fep"), prev.pos("bl").x(0).adds(0, 10));
 	feps = add(new FoodMeter(), prev.pos("bl").adds(5, 2));
 
 	int ah = attrs.get(attrs.size() - 1).pos("bl").y - attrs.get(0).pos("ul").y;
-	prev = add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Food Satiations")), "gfx/hud/chr/tips/constip"), width, 0);
+	prev = add(CharWnd.settip(new Img(CharWnd.catf.render(nurgling.translation.L10n.get("Food Satiations")).tex()), "gfx/hud/chr/tips/constip"), width, 0);
 	cons = add(new Constipations(Coord.of(attrw, ah)), prev.pos("bl").adds(5, 0).add(wbox.btloff()));
 	prev = Frame.around(this, Collections.singletonList(cons));
-	prev = add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Hunger Level")), "gfx/hud/chr/tips/hunger"), prev.pos("bl").x(width).adds(0, 10));
+	prev = add(CharWnd.settip(new Img(CharWnd.catf.render(nurgling.translation.L10n.get("Hunger Level")).tex()), "gfx/hud/chr/tips/hunger"), prev.pos("bl").x(width).adds(0, 10));
 	glut = add(new GlutMeter(), prev.pos("bl").adds(5, 2));
 	pack();
     }

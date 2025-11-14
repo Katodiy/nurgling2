@@ -45,8 +45,7 @@ public class CheckBox extends ACheckBox {
     }
 
     public CheckBox(String lbl, boolean lg) {
-	String translatedLbl = (lbl.length() > 0) ? nurgling.translation.L10n.get(lbl) : lbl;
-	this.lbl = (translatedLbl.length() > 0) ? Text.std.render(translatedLbl, java.awt.Color.WHITE) : null;
+	this.lbl = (lbl.length() > 0) ? Text.std.render(nurgling.translation.L10n.get(lbl), java.awt.Color.WHITE) : null;
 	if(lg) {
 	    box = lbox; mark = lmark;
 	    loff = UI.scale(0, 6);

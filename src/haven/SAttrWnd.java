@@ -200,7 +200,7 @@ public class SAttrWnd extends Widget {
 
     public SAttrWnd(Glob glob) {
 	Widget prev;
-	prev = add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Abilities")), "gfx/hud/chr/tips/sattr"), Coord.z);
+	prev = add(CharWnd.settip(new Img(CharWnd.catf.render(nurgling.translation.L10n.get("Abilities")).tex()), "gfx/hud/chr/tips/sattr"), Coord.z);
 	attrs = new ArrayList<>();
 	SAttr aw;
 	attrs.add(aw = add(new SAttr(glob, "unarmed", every), prev.pos("bl").adds(5, 0).add(wbox.btloff())));
@@ -218,7 +218,7 @@ public class SAttrWnd extends Widget {
 	attrs.add(aw = add(new SAttr(glob, "lore", every), aw.pos("bl")));
 	Widget lframe = Frame.around(this, attrs);
 
-	prev = add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Study Report")), "gfx/hud/chr/tips/study"), width, 0);
+	prev = add(CharWnd.settip(new Img(CharWnd.catf.render(nurgling.translation.L10n.get("Study Report")).tex()), "gfx/hud/chr/tips/study"), width, 0);
 	studyc = prev.pos("bl").adds(5, 0);
 	Widget bframe = adda(new Frame(new Coord(attrw, UI.scale(105)), true), prev.pos("bl").adds(5, 0).x, lframe.pos("br").y, 0.0, 1.0);
 	int rx = bframe.pos("iur").subs(10, 0).x;

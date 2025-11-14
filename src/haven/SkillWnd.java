@@ -416,12 +416,12 @@ public class SkillWnd extends Widget {
     public SkillWnd() {
 	Widget prev;
 
-	prev = add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Lore & Skills")), "gfx/hud/chr/tips/skills"), Coord.z);
+	prev = add(CharWnd.settip(new Img(CharWnd.catf.render(nurgling.translation.L10n.get("Lore & Skills")).tex()), "gfx/hud/chr/tips/skills"), Coord.z);
 	LoadingTextBox info = add(new LoadingTextBox(new Coord(attrw, height), "", ifnd), prev.pos("bl").adds(5, 0).add(wbox.btloff()));
 	info.bg = new Color(0, 0, 0, 128);
 	Frame.around(this, Collections.singletonList(info));
 
-	prev = add(new Img(CharWnd.renderTranslatedCategory("Entries")), width, 0);
+	prev = add(new Img(CharWnd.catf.render(nurgling.translation.L10n.get("Entries")).tex()), width, 0);
 	Tabs lists = new Tabs(prev.pos("bl").adds(5, 0), new Coord(attrw + wbox.bisz().x, 0), this);
 	int gh = UI.scale(241);
 	Tabs.Tab sktab = lists.add();

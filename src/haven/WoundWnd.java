@@ -328,7 +328,7 @@ public class WoundWnd extends Widget {
     public WoundWnd() {
 	Widget prev;
 
-	prev = add(CharWnd.settip(new Img(CharWnd.renderTranslatedCategory("Health & Wounds")), "gfx/hud/chr/tips/wounds"), 0, 0);
+	prev = add(CharWnd.settip(new Img(CharWnd.catf.render(nurgling.translation.L10n.get("Health & Wounds")).tex()), "gfx/hud/chr/tips/wounds"), 0, 0);
 	this.wounds = add(new WoundList(Coord.of(attrw, height)), prev.pos("bl").x(width + UI.scale(5)).add(wbox.btloff()));
 	Frame.around(this, Collections.singletonList(this.wounds));
 	woundbox = add(new Widget(new Coord(attrw, this.wounds.sz.y)) {
