@@ -1323,7 +1323,7 @@ public class Resource implements Serializable {
 	public final String text;
 		
 	public Pagina(Message buf) {
-	    text = new String(buf.bytes(), Utils.utf8);
+	    text = nurgling.translation.L10n.get(new String(buf.bytes(), Utils.utf8));
 	}
 		
 	public void init() {}

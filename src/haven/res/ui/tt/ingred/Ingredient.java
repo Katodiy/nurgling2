@@ -25,14 +25,14 @@ public class Ingredient extends ItemInfo.Tip {
 	int a = 1;
 	String name;
 	if(args[a] instanceof String) {
-	    name = (String)args[a++];
+	    name = nurgling.translation.L10n.get((String)args[a++]);
 	} else if(args[1] instanceof Integer) {
 	    Indir<Resource> res = owner.context(Resource.Resolver.class).getres((Integer)args[a++]);
 	    Message sdt = Message.nil;
 	    if((args.length > a) && (args[a] instanceof byte[]))
 		sdt = new MessageBuf((byte[])args[a++]);
 	    ItemSpec spec = new ItemSpec(owner, new ResData(res, sdt), null);
-	    name = spec.name();
+	    name = nurgling.translation.L10n.get(spec.name());
 	} else {
 	    throw(new IllegalArgumentException());
 	}
@@ -50,7 +50,7 @@ public class Ingredient extends ItemInfo.Tip {
 	public BufferedImage tipimg() {
 	    StringBuilder buf = new StringBuilder();
 	    Collections.sort(all, (a, b) -> a.name.compareTo(b.name));
-	    buf.append("Made with ");
+	    buf.append(nurgling.translation.L10n.get("Made from "));
 	    buf.append(all.get(0).descr());
 	    if(all.size() > 2) {
 		for(int i = 1; i < all.size() - 1; i++) {
@@ -59,7 +59,7 @@ public class Ingredient extends ItemInfo.Tip {
 		}
 	    }
 	    if(all.size() > 1) {
-		buf.append(" and ");
+		buf.append(nurgling.translation.L10n.get(" and "));
 		buf.append(all.get(all.size() - 1).descr());
 	    }
 	    return(RichText.render(buf.toString(), UI.scale(250)).img);

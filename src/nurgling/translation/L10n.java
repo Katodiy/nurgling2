@@ -93,6 +93,11 @@ public class L10n {
             loadTranslations("skills");
             loadTranslations("flower");
             loadTranslations("action");
+            loadTranslations("tooltip");
+            loadTranslations("pagina");
+            loadTranslations("msg");
+            loadTranslations("ingredient");
+            loadTranslations("biome");
 
             initialized = true;
             logger.info("L10n initialized successfully for language: " + currentLanguage +
