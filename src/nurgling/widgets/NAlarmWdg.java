@@ -27,6 +27,8 @@ public class NAlarmWdg extends Widget
     final ArrayList<String> resourceTimerWarnings = new ArrayList<>(); // Resource timer IDs in warning state (10min left)
     private static final Text.Furnace active_title = new PUtils.BlurFurn(new Text.Foundry(sans, 15, Color.WHITE).aa(true), 2, 1, new Color(36, 25, 25));
     TexI numberAlarm = null;
+    // Cache last known group for each character to handle temporary null buddy during group changes
+    private final HashMap<Long, Integer> lastKnownGroup = new HashMap<>();
     public NAlarmWdg() {
         super();
         sz = NStyle.alarm[0].sz();
@@ -54,36 +56,76 @@ public class NAlarmWdg extends Widget
                 }
             }
             borkas.removeAll(forRemove);
+            // Clean up cached groups for removed characters
+            for (Long id : forRemove) {
+                lastKnownGroup.remove(id);
+            }
             Gob player = NUtils.player();
             if (player != null) {
+                // Check all borkas and manage alarms/arrows dynamically
                 for (Long id : borkas) {
-                    if (!alarms.contains(id)) {
-                        Gob gob = Finder.findGob(id);
-                        if(gob!=null) {
-                            String pose = gob.pose();
-                            if (pose != null) {
-                                if (NParser.checkName(pose, new NAlias("dead"))) {
-                                    Buddy buddy = gob.getattr(Buddy.class);
-                                    if (buddy == null) {
-                                        NKinProp kinProp = NKinProp.get(0);
-                                        if (kinProp.alarm) {
-                                            addAlarm(id);
-
-                                        }
-                                        if (kinProp.arrow) {
-                                            player.addol(new NDirArrow(NUtils.player(), Color.WHITE, 50, gob, null));
-                                        }
-                                    } else {
-                                        if (buddy.b != null) {
-                                            NKinProp kinProp = NKinProp.get(buddy.b.group);
-                                            if (kinProp.alarm) {
-                                                addAlarm(id);
-                                            }
-                                            if (kinProp.arrow) {
-                                                player.addol(new NDirArrow(NUtils.player(), BuddyWnd.gc[buddy.b.group], 50, gob, null));
-                                            }
+                    Gob gob = Finder.findGob(id);
+                    if(gob!=null) {
+                        String pose = gob.pose();
+                        if (pose == null || !NParser.checkName(pose, new NAlias("dead"))) {
+                            Buddy buddy = gob.getattr(Buddy.class);
+                            
+                            // Determine actual group - use cached if buddy is temporarily null
+                            int group = 0;
+                            boolean buddyLoaded = (buddy != null && buddy.b != null);
+                            
+                            if (buddyLoaded) {
+                                group = buddy.b.group;
+                                lastKnownGroup.put(id, group); // Cache the group
+                            } else if (lastKnownGroup.containsKey(id)) {
+                                // Use cached group if buddy is temporarily null during group change
+                                group = lastKnownGroup.get(id);
+                            }
+                            // If buddy is null and no cache, treat as unknown (group 0 - white)
+                            
+                            NKinProp kinProp = NKinProp.get(group);
+                            Color arrowColor = BuddyWnd.gc[group];
+                            
+                            // Check if should be in alarm (only WHITE and RED groups)
+                            boolean isWhiteOrRed = (arrowColor.equals(Color.WHITE) || arrowColor.equals(Color.RED));
+                            boolean shouldAlarm = kinProp.alarm && isWhiteOrRed;
+                            boolean isAlarmed = alarms.contains(id);
+                            
+                            if (shouldAlarm && !isAlarmed) {
+                                // Add alarm if needed
+                                addAlarm(id);
+                            } else if (!shouldAlarm && isAlarmed) {
+                                // Remove alarm if settings changed or group changed
+                                alarms.remove(id);
+                                // Arrow will auto-remove via tick() when not in alarm
+                            }
+                            
+                            // Check arrow separately - manage arrow color changes
+                            if (shouldAlarm && kinProp.arrow) {
+                                // Find existing arrow for this gob
+                                NDirArrow existingArrow = null;
+                                Gob.Overlay existingOverlay = null;
+                                for (Gob.Overlay ol : new ArrayList<>(player.ols)) {
+                                    if (ol.spr instanceof NDirArrow) {
+                                        NDirArrow arrow = (NDirArrow) ol.spr;
+                                        if (arrow.target == gob) {
+                                            existingArrow = arrow;
+                                            existingOverlay = ol;
+                                            break;
                                         }
                                     }
+                                }
+                                
+                                if (existingArrow != null) {
+                                    // Arrow exists - check if color matches
+                                    if (!existingArrow.arrowColor.equals(arrowColor)) {
+                                        // Color changed - remove old and create new
+                                        existingOverlay.remove();
+                                        player.addol(new NDirArrow(NUtils.player(), arrowColor, 50, gob, null));
+                                    }
+                                } else {
+                                    // No arrow - create new
+                                    player.addol(new NDirArrow(NUtils.player(), arrowColor, 50, gob, null));
                                 }
                             }
                         }
@@ -123,19 +165,22 @@ public class NAlarmWdg extends Widget
             if(gob == null)
                 return false;
             Buddy buddy = gob.getattr(Buddy.class);
+            
+            // Get kin properties for this character
+            NKinProp kinProp = (buddy == null || buddy.b == null) ? NKinProp.get(0) : NKinProp.get(buddy.b.group);
+            
+            // Arrow should only exist if arrow setting is enabled
+            if (!kinProp.arrow) {
+                return false;
+            }
+            
             if (buddy == null) {
+                // Unknown player - should be in alarm (white group)
                 return true;
-            } else {
-                if (buddy != null && buddy.b != null) {
-                    if (BuddyWnd.gc[buddy.b.group] == Color.WHITE || BuddyWnd.gc[buddy.b.group] == Color.RED) {
-                        return true;
-                    }
-                }
-                else
-                {
-                    NUtils.getGameUI().alarmWdg.alarms.remove(id);
-                    return false;
-                }
+            } else if (buddy.b != null) {
+                // Known player - check if WHITE or RED
+                Color groupColor = BuddyWnd.gc[buddy.b.group];
+                return (groupColor.equals(Color.WHITE) || groupColor.equals(Color.RED));
             }
         }
         return false;
