@@ -51,6 +51,7 @@ public class NConfig
         horseprop,
         goatsprop,
         chopperprop,
+        autofloweractionprop,
         carrierprop,
         prepblockprop,
         prepboardprop,
@@ -419,6 +420,9 @@ public class NConfig
                                 break;
                             case "NChopperProp":
                                 res.add(new NChopperProp(obj));
+                                break;
+                            case "NAutoFlowerActionProp":
+                                res.add(new NAutoFlowerActionProp(obj));
                                 break;
                             case "NChipperProp":
                                 res.add(new NChipperProp(obj));
