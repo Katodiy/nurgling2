@@ -209,5 +209,54 @@ public class CropRegistry {
                         new CropStage(4, new NAlias("Cucumbers"), StorageBehavior.STOCKPILE, true)
                 )
         );
+
+        // String Grass
+        HARVESTABLE.put(
+                new NAlias("plants/stringgrass"),
+                Arrays.asList(
+                        new CropStage(3, new NAlias("String Grass Seeds"), StorageBehavior.BARREL)
+                )
+        );
+
+        // Wild Kale
+        HARVESTABLE.put(
+                new NAlias("plants/wildkale"),
+                Arrays.asList(
+                        new CropStage(4, new NAlias("Wild Kale Seeds"), StorageBehavior.BARREL)
+                )
+        );
+
+        // Wild Onion
+        HARVESTABLE.put(
+                new NAlias("plants/wildonion"),
+                Arrays.asList(
+                        new CropStage(3, new NAlias("Wild Onion"), StorageBehavior.STOCKPILE)
+                )
+        );
+
+        // Wild Tuber
+        HARVESTABLE.put(
+                new NAlias("plants/wildtuber"),
+                Arrays.asList(
+                        new CropStage(3, new NAlias("Wild Tuber"), StorageBehavior.STOCKPILE)
+                )
+        );
+
+        // Wild Gourd (Hybrid Trellis crop - Mixed storage: barrel + stockpile)
+        HARVESTABLE.put(
+                new NAlias("plants/wildgourd"),
+                Arrays.asList(
+                        new CropStage(4, new NAlias("Wild Gourd Seeds"), StorageBehavior.BARREL, true),
+                        new CropStage(4, new NAlias("Wild Gourd"), StorageBehavior.STOCKPILE, true)
+                )
+        );
+
+        // Wild Flower
+        HARVESTABLE.put(
+                new NAlias("plants/wildflower"),
+                Arrays.asList(
+                        new CropStage(4, new NAlias("Wild Flower Seeds"), StorageBehavior.BARREL)
+                )
+        );
     }
 }

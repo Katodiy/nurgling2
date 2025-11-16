@@ -8,7 +8,7 @@ public class SpecialisationData {
     public final static HashMap<String, ArrayList<String>> data = new HashMap<>();
     static
     {
-        ArrayList<String> crops = new ArrayList<>(Arrays.asList("Flax", "Turnip", "Carrot", "Hemp", "Millet", "Wheat", "Barley", "Poppy", "Beetroot", "Red Onion", "Yellow Onion", "Garlic", "Pipeweed", "Lettuce", "Pumpkin", "Green Kale", "Leek", "Grape", "Hops", "Peppercorn", "Pea", "Cucumber"));
+        ArrayList<String> crops = new ArrayList<>(Arrays.asList("Flax", "Turnip", "Carrot", "Hemp", "Millet", "Wheat", "Barley", "Poppy", "Beetroot", "Red Onion", "Yellow Onion", "Garlic", "Pipeweed", "Lettuce", "Pumpkin", "Green Kale", "Leek", "Grape", "Hops", "Peppercorn", "Pea", "Cucumber", "String Grass", "Wild Kale", "Wild Onion", "Wild Tuber", "Wild Gourd", "Wild Flower"));
         data.put("crop",crops);
         data.put("seed",crops);
         ArrayList<String> fuel = new ArrayList<>(Arrays.asList("Branch", "Coal", "Block", "Log"));

@@ -10,6 +10,11 @@ import nurgling.actions.bots.silk.SilkProductionBot;
 import nurgling.actions.bots.CollectSwillInArea;
 import nurgling.actions.bots.farmers.WheatFarmer;
 import nurgling.actions.bots.farmers.YellowOnionFarmer;
+import nurgling.actions.bots.farmers.StringGrassFarmer;
+import nurgling.actions.bots.farmers.WildKaleFarmer;
+import nurgling.actions.bots.farmers.WildOnionFarmer;
+import nurgling.actions.bots.farmers.WildTuberFarmer;
+import nurgling.actions.bots.farmers.WildFlowerFarmer;
 import nurgling.actions.test.*;
 
 import java.util.*;
@@ -109,6 +114,12 @@ public class BotRegistry {
         bots.add(new BotDescriptor("chicken", BotDescriptor.BotType.FARMING, "Chicken Manager", "Manages chicken coops.", true, true, KFC.class, "chicken", true));
         bots.add(new BotDescriptor("rabbit", BotDescriptor.BotType.FARMING, "Rabbit Manager", "Manages rabbit hutches.", true, true, RabbitMaster.class, "rabbit", false));
         bots.add(new BotDescriptor("bee", BotDescriptor.BotType.FARMING, "Beehive Manager", "Collects honey and wax from beehives.", true, true, HoneyAndWaxCollector.class, "bee", true));
+        bots.add(new BotDescriptor("stringgrass", BotDescriptor.BotType.FARMING, "String Grass Farmer", "Automatically harvests and replants string grass.", true, true, StringGrassFarmer.class, "stringgrass", false));
+        bots.add(new BotDescriptor("wildkale", BotDescriptor.BotType.FARMING, "Wild Kale Farmer", "Automatically harvests and replants wild kale.", true, true, WildKaleFarmer.class, "wildkale", false));
+        bots.add(new BotDescriptor("wildonion", BotDescriptor.BotType.FARMING, "Wild Onion Farmer", "Automatically harvests and replants wild onions.", true, true, WildOnionFarmer.class, "wildonion", false));
+        bots.add(new BotDescriptor("wildtuber", BotDescriptor.BotType.FARMING, "Wild Tuber Farmer", "Automatically harvests and replants wild tubers.", true, true, WildTuberFarmer.class, "wildtuber", false));
+        bots.add(new BotDescriptor("wildgourd", BotDescriptor.BotType.FARMING, "Wild Gourd Farmer", "Automatically harvests wild gourds from trellis.", true, true, WildGourdFarmer.class, "wildgourd", false));
+        bots.add(new BotDescriptor("wildflower", BotDescriptor.BotType.FARMING, "Wild Flower Farmer", "Automatically harvests and replants wild flowers.", true, true, WildFlowerFarmer.class, "wildflower", false));
 
         bots.add(new BotDescriptor("compostbin", BotDescriptor.BotType.FARMING, "Compost Bin", "Pull mulch out of compost bins.", true, true, CompostBinUnloader.class, "compostbin", false));
         bots.add(new BotDescriptor("curdingtub", BotDescriptor.BotType.FARMING, "Unload curding Tubs", "Pull curd out of curding tubs.", true, true, CurdingTubUnloader.class, "cheese_empty", false));

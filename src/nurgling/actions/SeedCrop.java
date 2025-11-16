@@ -211,7 +211,12 @@ public class SeedCrop implements Action {
                 stacks_size = NUtils.getGameUI().getInventory().getItems(iseed).size();
             }
 
-            NUtils.getGameUI().getInventory().activateItem(iseed);
+            WItem seedItem = NUtils.getGameUI().getInventory().getItem(iseed);
+            if (seedItem == null) {
+                NUtils.getGameUI().msg("No seeds available for planting");
+                return;
+            }
+            NUtils.getGameUI().getInventory().activateItem(seedItem);
             NUtils.getUI().core.addTask(new GetCurs("harvest"));
 
             if (rev) {
