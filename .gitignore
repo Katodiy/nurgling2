@@ -11,3 +11,5 @@ nurgling2.iml
 CLAUDE.md
 .claude
 .agent-os
+__pycache__/
+*.pyc
