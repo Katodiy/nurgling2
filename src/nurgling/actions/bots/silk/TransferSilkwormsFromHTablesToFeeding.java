@@ -88,6 +88,13 @@ public class TransferSilkwormsFromHTablesToFeeding implements Action {
                             // Inventory full - drop off and continue
                             dropOffWormsToFeedingContainers(gui, feedingContainers, wormsAlias, context);
                             context.getSpecArea(Specialisation.SpecName.htable, "Silkworm Egg");
+
+                            new PathFinder(Finder.findGob(htableContainer.gobid)).run(gui);
+                            new OpenTargetContainer(htableContainer).run(gui);
+
+                            // Refresh silkworm items list (may have changed)
+                            silkwormItems = gui.getInventory(htableContainer.cap).getItems(wormsAlias);
+
                             continue;
                         }
                         
