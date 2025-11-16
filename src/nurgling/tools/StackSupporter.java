@@ -10,7 +10,10 @@ import java.util.HashSet;
 public class StackSupporter {
     private static final HashMap<HashSet<String>,Integer> catSize = new HashMap<>();
     private static final HashSet<String> catExceptions = new HashSet<>();
+    private static final HashMap<String, Integer> customStackSizes = new HashMap<>();
     static {
+        // Custom stack sizes for items that differ from their category defaults
+        customStackSizes.put("Earthworm", 5);
         HashSet<String> size3 = new HashSet<>();
         size3.add("Spices");
         size3.add("Tuber");
@@ -74,7 +77,6 @@ public class StackSupporter {
         size3.add("Dried Fish");
         size3.add("Medicine");
         size3.add("Intestines");
-        size3.add("Bait");
         catSize.put(size3,3);
 
         HashSet<String> size4 = new HashSet<>();
@@ -84,6 +86,7 @@ public class StackSupporter {
         size4.add("Coal");
         size4.add("Wool");
         size4.add("Leaf");
+        size4.add("Bait");
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
@@ -156,6 +159,12 @@ public class StackSupporter {
 
     public static int getMaxStackSize(String name)
     {
+        // Check custom stack sizes first
+        if(customStackSizes.containsKey(name))
+        {
+            return customStackSizes.get(name);
+        }
+        
         if(catExceptions.contains(name))
         {
             return 1;
