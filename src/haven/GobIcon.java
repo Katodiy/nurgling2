@@ -168,15 +168,12 @@ public class GobIcon extends GAttrib {
 	}
 
 	private int markdata() {
-
 	    int data = Utils.iv(res.flayer(Resource.imgc).info.getOrDefault("mm/mark", 0));
-	    if(data != 0) {
-			if(res.name.equals("mm/up") || res.name.equals("mm/down"))
-			{
-				return 1;
-			}
-			return (0);
-		}
+	    if(data == 0) {
+		// Special case for mm/up and mm/down - they should be markable even without mm/mark data
+		if(res.name.equals("mm/up") || res.name.equals("mm/down"))
+		    return 1;
+	    }
 	    return data;
 	}
 
@@ -342,13 +339,18 @@ public class GobIcon extends GAttrib {
 	}
 
 	public boolean getmarkablep() {
-	    return(icon.markable() != Icon.Markable.UNMARKABLE);
+	    if(icon != null)
+		return(icon.markable() != Icon.Markable.UNMARKABLE);
+	    // Fallback check using res.name for mm/up and mm/down when icon is not yet loaded
+	    return(res.name.equals("mm/up") || res.name.equals("mm/down"));
 	}
 
 	public boolean getmarkp() {
 	    if(markset)
 		return(mark);
-	    return(icon.markable() == Icon.Markable.DEFAULT);
+	    if(icon != null)
+		return(icon.markable() == Icon.Markable.DEFAULT);
+	    return(false);
 	}
     }
 
@@ -434,8 +436,10 @@ public class GobIcon extends GAttrib {
 			continue;
 		    }
 		    Icon.Factory fac = getfac(res);
+		    Map<Setting.ID, Icon> iconMap = new HashMap<>();
 		    for(Icon icon : fac.enumerate(Settings.this, res, new MessageBuf(r.data))) {
 			Setting set = new Setting(icon, r);
+			iconMap.put(set.id, icon);
 			Setting def = defaults.get(r);
 			if(def != null)
 			    merge(set, def);
@@ -446,14 +450,22 @@ public class GobIcon extends GAttrib {
 			    else
 				advbuf.add(icon);
 			    nset.put(set.id, set);
+			} else if(prev.icon == null) {
+			    // Update icon if prev version matches but icon wasn't loaded yet
+			    prev.icon = icon;
 			}
 		    }
 		    Collection<Setting> sets = resolve.remove(r);
 		    if(sets != null) {
 			for(Setting conf : sets) {
 			    Setting set = nset.get(conf.id);
-			    if(set != null)
+			    if(set != null) {
 				merge(set, conf);
+				// Update icon if it wasn't set (loaded from file)
+				Icon loadedIcon = iconMap.get(conf.id);
+				if(set.icon == null && loadedIcon != null)
+				    set.icon = loadedIcon;
+			    }
 			}
 		    }
 		    r = null;
@@ -757,7 +769,11 @@ public class GobIcon extends GAttrib {
 				sz.x - UI.scale(2) - (sz.y / 2), sz.y / 2, 0.5, 0.5);
 		    prev = adda(new CheckBox("").state(() -> icon.conf.show).set(andsave(val -> icon.conf.show = val)).settip("Display"),
 				prev.c.x - UI.scale(2) - (sz.y / 2), sz.y / 2, 0.5, 0.5);
-			add(SListWidget.IconText.of(Coord.of(prev.c.x - UI.scale(2), sz.y), item.conf.icon::image, item.conf.icon::name), Coord.z);
+			if(item.conf.icon != null) {
+			    add(SListWidget.IconText.of(Coord.of(prev.c.x - UI.scale(2), sz.y), item.conf.icon::image, item.conf.icon::name), Coord.z);
+			} else {
+			    add(new Label(item.name), Coord.z);
+			}
 		}
 	    }
 
@@ -776,7 +792,8 @@ public class GobIcon extends GAttrib {
 		    ArrayList<ListIcon> ordered = new ArrayList<>(cur.size());
 		    for(Setting conf : cur.values()) {
 				if(groupBy.sel!=null && !(groupBy.sel.contains("Display") || groupBy.sel.contains("Notify"))) {
-					if (groupBy.patterns.get(groupBy.sel).matcher(conf.icon.res.name).matches()) {
+					String resName = (conf.icon != null) ? conf.icon.res.name : conf.res.name;
+					if (groupBy.patterns.get(groupBy.sel).matcher(resName).matches()) {
 						ordered.add(new ListIcon(conf));
 					}
 				}
