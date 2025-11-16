@@ -40,7 +40,7 @@ public class InspectQualityBot implements Action {
         NUtils.getGameUI().msg("Found " + gobs.size() + " objects to inspect");
         
         // Sort gobs by distance from player
-        gobs.sort(NUtils.d_comp);
+        gobs.sort(NUtils.y_min_comp);
         
         // Iterate through each object
         for (Gob gob : gobs) {

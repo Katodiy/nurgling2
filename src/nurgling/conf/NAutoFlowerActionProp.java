@@ -7,12 +7,16 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 public class NAutoFlowerActionProp implements JConf {
     final private String username;
     final private String chrid;
     public String action = "";
     public boolean transfer = false;
+    public List<String> actionHistory = new ArrayList<>();
+    private static final int MAX_HISTORY_SIZE = 30;
 
     public NAutoFlowerActionProp(String username, String chrid) {
         this.username = username;
@@ -26,6 +30,8 @@ public class NAutoFlowerActionProp implements JConf {
             action = (String) values.get("action");
         if (values.get("transfer") != null)
             transfer = (Boolean) values.get("transfer");
+        if (values.get("actionHistory") != null)
+            actionHistory = (List<String>) values.get("actionHistory");
     }
 
     public static void set(NAutoFlowerActionProp prop) {
@@ -50,6 +56,25 @@ public class NAutoFlowerActionProp implements JConf {
         return "NAutoFlowerActionProp[" + username + "|" + chrid + "]";
     }
 
+    public void addToHistory(String actionName) {
+        if (actionName == null || actionName.trim().isEmpty()) {
+            return;
+        }
+        
+        LinkedHashSet<String> uniqueHistory = new LinkedHashSet<>(actionHistory);
+        uniqueHistory.remove(actionName);
+        
+        List<String> newHistory = new ArrayList<>();
+        newHistory.add(actionName);
+        newHistory.addAll(uniqueHistory);
+        
+        if (newHistory.size() > MAX_HISTORY_SIZE) {
+            newHistory = newHistory.subList(0, MAX_HISTORY_SIZE);
+        }
+        
+        actionHistory = newHistory;
+    }
+
     @Override
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
@@ -58,6 +83,7 @@ public class NAutoFlowerActionProp implements JConf {
         json.put("chrid", chrid);
         json.put("action", action);
         json.put("transfer", transfer);
+        json.put("actionHistory", actionHistory);
         return json;
     }
 

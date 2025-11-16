@@ -48,7 +48,7 @@ public class AutoFlowerActionBot implements Action {
         
         SelectGob selgob;
         NUtils.getGameUI().msg("Please select target object");
-        (selgob = new SelectGob(Resource.loadsimg("baubles/selectItem"))).run(gui);
+        (selgob = new SelectGob(Resource.loadsimg("baubles/selectobject"))).run(gui);
         Gob targetGob = selgob.result;
         
         if (targetGob == null) {
@@ -61,15 +61,16 @@ public class AutoFlowerActionBot implements Action {
                 gobs.add(gob);
             }
         }
-        
+
+
         if (gobs.isEmpty()) {
             NUtils.getGameUI().msg("No objects found in selected area");
             return Results.SUCCESS();
         }
         
         NUtils.getGameUI().msg("Found " + gobs.size() + " objects to process");
-        
-        gobs.sort(NUtils.d_comp);
+
+        gobs.sort(NUtils.y_min_comp);
         
         for (Gob gob : gobs) {
             if (!PathFinder.isAvailable(gob)) {
