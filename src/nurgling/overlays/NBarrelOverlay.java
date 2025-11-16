@@ -26,6 +26,12 @@ public class NBarrelOverlay extends NObjectTexLabel
     @Override
     public boolean tick(double dt)
     {
+        // Check if persistent barrel labels are enabled
+        Boolean persistentLabels = (Boolean) NConfig.get(NConfig.Key.persistentBarrelLabels);
+        if (persistentLabels != null) {
+            forced = persistentLabels;
+        }
+        
         boolean found = false;
         for (Gob.Overlay ol : gob.ols) {
             if (ol.spr instanceof StaticSprite) {

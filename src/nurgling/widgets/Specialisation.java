@@ -78,7 +78,15 @@ public class Specialisation extends Window
         cauldron,
         potterswheel,
         barrelworkarea,
-        churn, deer, sswheel
+        churn, deer, sswheel,
+        compostBin,
+        curdingTub,
+        cheeseRacks,
+        cistern,
+        studyDesks,
+        silkmothBreeding,
+        silkwormFeeding,
+        unbox
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -132,7 +140,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.anvil.toString(),"Anvil",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.dreamcatcher.toString(),"Dream Catcher",Resource.loadsimg("nurgling/categories/dream-catcher")));
         specialisation.add(new SpecialisationItem(SpecName.meatgrinder.toString(),"Meat Grinder",Resource.loadsimg("nurgling/categories/meat_grinder")));
-        specialisation.add(new SpecialisationItem(SpecName.churn.toString(),"Churn",Resource.loadsimg("nurgling/categories/anvil")));
+        specialisation.add(new SpecialisationItem(SpecName.churn.toString(),"Churn",Resource.loadsimg("nurgling/categories/churn")));
         specialisation.add(new SpecialisationItem(SpecName.loom.toString(),"Loom",Resource.loadsimg("nurgling/categories/loom")));
         specialisation.add(new SpecialisationItem(SpecName.ropewalk.toString(),"Rope Walk",Resource.loadsimg("nurgling/categories/rope_walk")));
         specialisation.add(new SpecialisationItem(SpecName.crucible.toString(),"Crucible",Resource.loadsimg("nurgling/categories/crucible")));
@@ -141,6 +149,18 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.barrelworkarea.toString(),"Craft area with barrels",Resource.loadsimg("nurgling/categories/barrel_work_area")));
         specialisation.add(new SpecialisationItem(SpecName.deer.toString(),"Deer",Resource.loadsimg("nurgling/categories/reindeers")));
         specialisation.add(new SpecialisationItem(SpecName.sswheel.toString(),"Spininng Wheel",Resource.loadsimg("nurgling/categories/swheel")));
+        specialisation.add(new SpecialisationItem(SpecName.compostBin.toString(),"Compost Bin",Resource.loadsimg("nurgling/categories/compostbin")));
+        specialisation.add(new SpecialisationItem(SpecName.curdingTub.toString(),"Curding Tub",Resource.loadsimg("nurgling/categories/curding_tubl")));
+        specialisation.add(new SpecialisationItem(SpecName.cheeseRacks.toString(),"Cheese Racks",Resource.loadsimg("nurgling/categories/cheese_rack")));
+        specialisation.add(new SpecialisationItem(SpecName.cistern.toString(),"Cistern",Resource.loadsimg("nurgling/categories/cistern")));
+        specialisation.add(new SpecialisationItem(SpecName.studyDesks.toString(),"Study Desks",Resource.loadsimg("nurgling/categories/studytable")));
+
+        // silk
+        specialisation.add(new SpecialisationItem(SpecName.silkmothBreeding.toString(),"Silkmoth Breeding",Resource.loadsimg("nurgling/categories/silkmoth1")));
+        specialisation.add(new SpecialisationItem(SpecName.silkwormFeeding.toString(),"Silkworm Feeding",Resource.loadsimg("nurgling/categories/silkmoth2")));
+
+        // unbox zone
+        specialisation.add(new SpecialisationItem(SpecName.unbox.toString(),"Unbox Zone",Resource.loadsimg("nurgling/categories/unbox")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override

@@ -29,6 +29,7 @@ package haven;
 import haven.render.*;
 import nurgling.*;
 import nurgling.conf.*;
+import nurgling.widgets.EncyclopediaWindow;
 import nurgling.widgets.NMiniMapWnd;
 import nurgling.widgets.NSettingsWindow;
 import nurgling.widgets.options.*;
@@ -601,6 +602,93 @@ public class OptWnd extends Window {
 			       },
 			   dpy);
 		}
+
+		// UI Opacity Controls
+		prev = add(new Label("UI Opacity:"), prev.pos("bl").adds(0, UI.scale(10)).x(0));
+		{
+		    Label opacityLabel = new Label("100%");
+		    HSlider opacitySlider = new HSlider(UI.scale(200), 0, 100, 100) {
+			protected void added() {
+			    updateOpacityLabel();
+			    loadOpacity();
+			}
+
+			public void changed() {
+			    updateOpacityLabel();
+			    applyOpacity();
+			}
+
+			private void updateOpacityLabel() {
+			    opacityLabel.settext(val + "%");
+			}
+
+			private void loadOpacity() {
+			    Object configOpacityObj = NConfig.get(NConfig.Key.uiOpacity);
+			    if (configOpacityObj instanceof Number) {
+				val = (int)(((Number) configOpacityObj).floatValue() * 100);
+			    }
+			    updateOpacityLabel();
+			}
+
+			private void applyOpacity() {
+			    float opacity = val / 100.0f;
+			    NConfig.set(NConfig.Key.uiOpacity, opacity);
+			    NConfig.needUpdate();
+
+			    // Apply immediately to NUI
+			    if (ui instanceof nurgling.NUI) {
+				((nurgling.NUI) ui).setUIOpacity(opacity);
+			    }
+			}
+		    };
+		    addhlp(prev.pos("bl").adds(0, UI.scale(5)).x(0), UI.scale(5), opacitySlider, opacityLabel);
+		    prev = opacitySlider;
+		}
+
+		// Background Mode Controls
+		prev = add(new Label("Background Mode:"), prev.pos("bl").adds(0, UI.scale(10)).x(0));
+		CheckBox useSolidBackgroundBox = add(new CheckBox("Use solid color background") {
+		    @Override
+		    public void set(boolean val) {
+			super.set(val);
+			NConfig.set(NConfig.Key.useSolidBackground, val);
+			NConfig.needUpdate();
+
+			// Apply immediately to NUI
+			if (ui instanceof nurgling.NUI) {
+			    ((nurgling.NUI) ui).setUseSolidBackground(val);
+			}
+		    }
+
+		    @Override
+		    protected void added() {
+			Boolean configUseSolid = (Boolean) NConfig.get(NConfig.Key.useSolidBackground);
+			this.a = configUseSolid != null ? configUseSolid : false;
+		    }
+		}, prev.pos("bl").adds(0, UI.scale(5)).x(0));
+
+		// Background Color Button
+		prev = add(new Label("Background Color:"), useSolidBackgroundBox.pos("bl").adds(0, UI.scale(5)).x(0));
+		Button colorButton = add(new Button(UI.scale(100), "Select Color") {
+		    @Override
+		    public void click() {
+			// Open color chooser in separate thread
+			new Thread(() -> {
+			    java.awt.Color currentColor = NConfig.getColor(NConfig.Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));
+			    java.awt.Color newColor = javax.swing.JColorChooser.showDialog(null, "Select Background Color", currentColor);
+			    if (newColor != null) {
+				NConfig.setColor(NConfig.Key.windowBackgroundColor, newColor);
+				NConfig.needUpdate();
+
+				// Apply immediately to NUI
+				if (ui instanceof nurgling.NUI) {
+				    ((nurgling.NUI) ui).setWindowBackgroundColor(newColor);
+				}
+			    }
+			}).start();
+		    }
+		}, prev.pos("bl").adds(0, UI.scale(5)).x(0));
+		prev = colorButton;
 	    }
 	    add(new PButton(UI.scale(200), "Back", 27, back), prev.pos("bl").adds(0, 30).x(0));
 	    pack();
@@ -667,9 +755,10 @@ public class OptWnd extends Window {
 		y = addbtn(cont, "Quick action (Alt.)", NMapView.kb_quickignaction, y);
 		y = addbtn(cont, "Show/hide nature objects", NMiniMapWnd.kb_nature, y);
 		y = addbtn(cont, "Night vision", NMiniMapWnd.kb_night, y);
-		y = addbtn(cont, "Player grid box", NMapView.kb_displaypbox, y);
-		y = addbtn(cont, "Player FOV box", NMapView.kb_displayfov, y);
-		y = addbtn(cont, "Grid box", NMapView.kb_displaygrid, y);
+//		y = addbtn(cont, "Player grid box", NMapView.kb_displaypbox, y);
+//		y = addbtn(cont, "Player FOV box", NMapView.kb_displayfov, y);
+//		y = addbtn(cont, "Grid box", NMapView.kb_displaygrid, y);
+		y = addbtn(cont, "Toggle bounding boxes", NMapView.kb_togglebb, y);
 
 		y = cont.adda(new Label("Tool belt"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
 		for(int i = 0 ; i < (Integer)NConfig.get(NConfig.Key.numbelts); i++)
@@ -899,33 +988,14 @@ public class OptWnd extends Window {
 		public NSettingsPanel(Panel prev1) {
 			super();
 
-			settingsWindow = add(new NSettingsWindow(), Coord.z);
+			// Create NSettingsWindow with back action to return to main options menu
+			settingsWindow = add(new NSettingsWindow(() -> {
+				chpanel(prev1);
+				if (settingsWindow.currentPanel != null) {
+					settingsWindow.currentPanel.load();
+				}
+			}), Coord.z);
 
-//			save = add(new Button(UI.scale(200), "Save") {
-//				@Override
-//				public void click() {
-//					if (settingsWindow.currentPanel != null) {
-//						settingsWindow.currentPanel.save();
-//					}
-//				}
-//			}, settingsWindow.pos("bl").adds(0, UI.scale(5)));
-//			back = add(new Button(UI.scale(200), "Back") {
-//				@Override
-//				public void click() {
-//					chpanel(prev1);
-//					if (settingsWindow.currentPanel != null) {
-//						settingsWindow.currentPanel.load();
-//					}
-//				}
-//
-//				public boolean keydown(KeyDownEvent ev) {
-//					if ((ev.c == 27)) {
-//						chpanel(prev1);
-//						return (true);
-//					}
-//					return (false);
-//				}
-//			}, settingsWindow.pos("bl").adds(save.sz.x + UI.scale(5), UI.scale(5)));
 			pack();
 		}
 	}

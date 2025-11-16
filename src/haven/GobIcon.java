@@ -109,15 +109,12 @@ public class GobIcon extends GAttrib {
 	    this.img = img;
 	    this.tex = tex;
 	    this.cc = tex.sz().div(2);
-	    byte[] data = rimg.kvdata.get("mm/rot");
+	    Object data = rimg.info.get("mm/rot");
 	    if(data != null) {
 		this.rot = true;
-		this.ao = Utils.float32d(data, 0) * (Math.PI / 180f);
+		this.ao = Utils.fv(data) * (Math.PI / 180f);
 	    }
-	    this.z = rimg.z;
-	    data = rimg.kvdata.get("mm/z");
-	    if(data != null)
-		this.z = Utils.intvard(data, 0);
+	    this.z = Utils.iv(rimg.info.getOrDefault("mm/z", rimg.z));
 	}
 
 	public static Image get(Resource res) {
@@ -172,15 +169,15 @@ public class GobIcon extends GAttrib {
 
 	private int markdata() {
 
-	    byte[] data = res.flayer(Resource.imgc).kvdata.get("mm/mark");
-	    if(data == null) {
+	    int data = Utils.iv(res.flayer(Resource.imgc).info.getOrDefault("mm/mark", 0));
+	    if(data != 0) {
 			if(res.name.equals("mm/up") || res.name.equals("mm/down"))
 			{
 				return 1;
 			}
 			return (0);
 		}
-	    return(Utils.intvard(data, 0));
+	    return data;
 	}
 
 	public Markable markable() {

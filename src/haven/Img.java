@@ -29,7 +29,7 @@ package haven;
 import java.awt.image.BufferedImage;
 
 public class Img extends Widget {
-    private Tex img;
+    protected Tex img;
     private BufferedImage rimg;
     public boolean hit = false, opaque = false;
 	

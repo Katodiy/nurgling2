@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-@haven.FromResource(name = "ui/tt/q/qbuff", version = 7)
+@haven.FromResource(name = "ui/tt/q/qbuff", version = 8)
 public class QBuff extends ItemInfo.Tip {
     public BufferedImage icon;
     public String name;
@@ -30,7 +30,7 @@ public class QBuff extends ItemInfo.Tip {
 	public final List<QBuff> ql = new ArrayList<>();
 	public final List<Modifier> mods = new ArrayList<>();
 
-	QList() {super(null);}
+	QList(Owner owner) {super(owner);}
 
 	void sort() {
 	    Collections.sort(ql, new Comparator<QBuff>() {
@@ -44,6 +44,8 @@ public class QBuff extends ItemInfo.Tip {
     }
 
     public static class Table extends QList {
+	public Table(Owner owner) {super(owner);}
+
 	public int order() {return(10);}
 
 	public void layout(Layout l) {
@@ -64,11 +66,11 @@ public class QBuff extends ItemInfo.Tip {
 	}
     }
 
-    public static final Layout.ID<Table> lid = new Layout.ID<Table>() {
-	public Table make() {return(new Table());}
-    };
+    public static final Layout.TipID<Table> lid = Table::new;
 
     public static class Summary extends QList {
+	public Summary(Owner owner) {super(owner);}
+
 	public int order() {return(10);}
 
 	public void layout(Layout l) {
@@ -84,9 +86,7 @@ public class QBuff extends ItemInfo.Tip {
 	}
     }
 
-    public static final Layout.ID<Summary> sid = new Layout.ID<Summary>() {
-	public Summary make() {return(new Summary());}
-    };
+    public static final Layout.TipID<Summary> sid = Summary::new;
 
     public void prepare(Layout l) {
 	l.intern(lid).ql.add(this);

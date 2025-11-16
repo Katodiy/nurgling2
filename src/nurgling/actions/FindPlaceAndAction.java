@@ -12,6 +12,7 @@ import nurgling.tools.Finder;
 import static nurgling.tools.Finder.findLiftedbyPlayer;
 
 public class FindPlaceAndAction implements Action {
+    boolean dynamicPf = false;
     public FindPlaceAndAction(Gob gob, Pair<Coord2d, Coord2d> rcArea) {
         this.placed = gob;
         this.area = rcArea;
@@ -25,7 +26,8 @@ public class FindPlaceAndAction implements Action {
         if ( placed != null ) {
             Coord2d pos = Finder.getFreePlace(area, placed);
             if(pos!=null) {
-                new PlaceObject(placed, pos,0).run(gui);
+
+                new PlaceObject(placed, pos,0, dynamicPf).run(gui);
                 return Results.SUCCESS();
             }
             else
@@ -43,6 +45,16 @@ public class FindPlaceAndAction implements Action {
     {
         this.placed = gob;
         this.area = area.getRCArea();
+    }
+
+    public FindPlaceAndAction(
+            Gob gob,
+            NArea area,
+            boolean dynamicPf)
+    {
+        this.placed = gob;
+        this.area = area.getRCArea();
+        this.dynamicPf = dynamicPf;
     }
 
     public Gob getPlaced() {

@@ -61,7 +61,9 @@ public class NDraggableWidget extends Widget
             public void changed(boolean val)
             {
                 super.changed(val);
-                content.visible = val;
+                if(content != null) {
+                    content.visible = val;
+                }
                 if(NDraggableWidget.this.parent instanceof GameUI)
                 {
                     NDragProp prop = new NDragProp(NDraggableWidget.this.c, btnLock.a, val, name);
@@ -107,6 +109,10 @@ public class NDraggableWidget extends Widget
         {
             this.target_c = new Coord(Coord.z);
             this.btnVis.a = true;
+        }
+        // Apply loaded visibility state to content if it exists
+        if(content != null) {
+            content.visible = btnVis.a;
         }
     }
 
@@ -204,7 +210,7 @@ public class NDraggableWidget extends Widget
     public boolean mouseup(MouseUpEvent ev) {
         if (dm != null && ui.core.mode == NCore.Mode.DRAG)
         {
-            NDragProp res = new NDragProp(NDraggableWidget.this.c, btnLock.a, name);
+            NDragProp res = new NDragProp(NDraggableWidget.this.c, btnLock.a, btnVis.a, name);
             res.flip = btnFlip.a;
             NDragProp.set(name, res);
             target_c.x = this.c.x;

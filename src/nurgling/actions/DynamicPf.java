@@ -15,6 +15,7 @@ import nurgling.tasks.DynMovingCompleted;
 import nurgling.tasks.IsMoving;
 import nurgling.tasks.MovingCompleted;
 import nurgling.tasks.WaitPath;
+import nurgling.tools.Finder;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -25,6 +26,7 @@ import static haven.OCache.posres;
 public class DynamicPf implements Action
 {
     Gob target;
+    boolean isVirtual = false;
 
     public DynamicPf(Gob gob)
     {
@@ -32,9 +34,12 @@ public class DynamicPf implements Action
     }
 
     public DynamicPf(Gob dummy, boolean b) {
+        this.target = dummy;
+        this.isVirtual = b;
     }
 
     boolean virtual = false;
+    public boolean isHardMode = false;
     public class WorkerPf implements Runnable
     {
         public LinkedList<Graph.Vertex> path;
@@ -43,8 +48,9 @@ public class DynamicPf implements Action
         @Override
         public void run() {
             try {
-                PathFinder pf = new PathFinder(target);
+                PathFinder pf = (isVirtual) ? new PathFinder(target, isVirtual) : new PathFinder(target);
                 pf.isDynamic = true;
+                pf.isHardMode = isHardMode;
                 path = pf.construct();
                 pfMap = pf.pfmap;
                 ready.set(true);
@@ -54,14 +60,17 @@ public class DynamicPf implements Action
         }
 
         public boolean checkDN() {
-            PathFinder pf = new PathFinder(target);
+
+            PathFinder pf = (isVirtual) ? new PathFinder(target, isVirtual) : new PathFinder(target);
+            pf.isDynamic = true;
+            pf.isHardMode = isHardMode;
             try {
                 path = pf.construct();
 
             } catch (InterruptedException e) {
 
             }
-            return pf.getDNStatus();
+            return pf.getDNStatus() || (pf.start_pos!=null && pf.end_poses.contains(pf.start_pos));
         }
     }
 
@@ -97,9 +106,41 @@ public class DynamicPf implements Action
                     updatePath(path, wpf,target);
                 }
             }
+            
+            // Проверяем достижение цели перед проверкой DN статуса
+            if (isTargetReached()) {
+                break;
+            }
         }
         while (!wpf.checkDN());
         return Results.SUCCESS();
+    }
+
+    /**
+     * Проверяет, достигнута ли цель
+     */
+    private boolean isTargetReached() {
+        if (target == null || NUtils.player() == null) {
+            return false;
+        }
+        
+        // Получаем текущую позицию игрока и цели
+        Coord2d playerPos = NUtils.player().rc;
+        Coord2d targetPos;
+        
+        if (isVirtual) {
+            targetPos = target.rc;
+        } else {
+            Gob actualTarget = Finder.findGob(target.id);
+            if (actualTarget == null) {
+                return true; // Цель исчезла, считаем задачу выполненной
+            }
+            targetPos = actualTarget.rc;
+        }
+        
+        // Проверяем расстояние до цели (примерно один тайл)
+        double distance = playerPos.dist(targetPos);
+        return distance <= MCache.tilesz.x * 1.5;
     }
 
     private static void updatePath(LinkedList<Graph.Vertex> path, WorkerPf wpf, Gob target) {

@@ -57,7 +57,7 @@ public class FreeInventory2 implements Action
                 });
             }
         }while (fordrop !=null);
-
+        
         ArrayList<WItem> items = gui.getInventory().getItems();
         items.sort(new Comparator<WItem>() {
             @Override
@@ -72,11 +72,14 @@ public class FreeInventory2 implements Action
         for(WItem item : items)
         {
             String name = ((NGItem)item.item).name();
-            if(context.addOutItem(name, null, ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1))
+            double quality = ((NGItem)item.item).quality!=null?((NGItem)item.item).quality:1;
+            if(context.addOutItem(name, null, quality)) {
                 targets.add(name);
+            } else {
+            }
         }
 
-            new TransferItems2(context, targets).run(gui);
+        new TransferItems2(context, targets).run(gui);
 
         return Results.SUCCESS();
     }

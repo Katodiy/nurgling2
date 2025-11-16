@@ -23,6 +23,7 @@ public class NConfig
     public enum Key
     {
         vilol, claimol, realmol,
+        minimapVilol, minimapClaimol, minimapRealmol,
         showVarity,
         autoFlower,
         autoSplitter,
@@ -86,8 +87,28 @@ public class NConfig
         smokeprop,
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
-        serverNode, serverUser, serverPass, ndbenable, harvestautorefill, cleanupQContainers, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, fonts
+        serverNode, serverUser, serverPass, ndbenable, harvestautorefill, cleanupQContainers, autoEquipTravellersSacks, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
+        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
+        shortCupboards,
+        shortWalls,
+        fillCompostWithSwill,
+        ignoreStrawInFarmers,
+        persistentBarrelLabels,
+        uniformBiomeColors,
+        inventoryRightPanelShow,
+        inventoryRightPanelMode,
+        showTerrainName,
+        validateAllCropsBeforeHarvest,
+        studyDeskLayout,
+        waypointRetryOnStuck,
+        verboseCal,
+        highlightRockTiles,
+        showFullPathLines,
+        preferredMovementSpeed,
+        preferredHorseSpeed,
+        uiOpacity,
+        useSolidBackground,
+        windowBackgroundColor
     }
 
 
@@ -97,6 +118,9 @@ public class NConfig
         conf.put(Key.vilol, false);
         conf.put(Key.claimol, false);
         conf.put(Key.realmol, false);
+        conf.put(Key.minimapVilol, false);
+        conf.put(Key.minimapClaimol, false);
+        conf.put(Key.minimapRealmol, false);
         conf.put(Key.showVarity, false);
         conf.put(Key.autoFlower, false);
         conf.put(Key.autoSplitter, false);
@@ -143,6 +167,7 @@ public class NConfig
         conf.put(Key.ndbenable, false);
         conf.put(Key.harvestautorefill, false);
         conf.put(Key.cleanupQContainers, false);
+        conf.put(Key.autoEquipTravellersSacks, false);
         conf.put(Key.qualityGrindSeedingPatter, "4x1");
         conf.put(Key.useGlobalPf, false);
         conf.put(Key.useHFinGlobalPF, false);
@@ -162,7 +187,23 @@ public class NConfig
         conf.put(Key.fonts, new FontSettings());
         conf.put(Key.ropeAfterFeeding, false);
         conf.put(Key.ropeAfterTaiming, true);
-
+        conf.put(Key.shortCupboards, false);
+        conf.put(Key.shortWalls, false);
+        conf.put(Key.fillCompostWithSwill, false);
+        conf.put(Key.ignoreStrawInFarmers, false);
+        conf.put(Key.printpfmap, false);
+        conf.put(Key.boxLineWidth, 4);
+        conf.put(Key.persistentBarrelLabels, false);
+        conf.put(Key.uniformBiomeColors, false);
+        conf.put(Key.inventoryRightPanelShow, false);
+        conf.put(Key.inventoryRightPanelMode, "EXPANDED");
+        conf.put(Key.showTerrainName, false);
+        conf.put(Key.validateAllCropsBeforeHarvest, false);
+        conf.put(Key.studyDeskLayout, "");
+        conf.put(Key.waypointRetryOnStuck, true);
+        conf.put(Key.verboseCal, false);
+        conf.put(Key.highlightRockTiles, true);
+        conf.put(Key.showFullPathLines, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -228,6 +269,15 @@ public class NConfig
         arearadprop.add(new NAreaRad("gfx/kritter/wolverine/wolverine", 100));
         arearadprop.add(new NAreaRad("gfx/kritter/troll/troll", 200));
         conf.put(Key.animalrad, arearadprop);
+
+        // Movement speed setting (0=Crawl, 1=Walk, 2=Run, 3=Sprint)
+        conf.put(Key.preferredMovementSpeed, 2);  // Default to Run (unchanged)
+        conf.put(Key.preferredHorseSpeed, 2);     // Default to Run for horses (unchanged)
+
+        // UI Opacity settings
+        conf.put(Key.uiOpacity, 1.0f);  // Default to fully opaque
+        conf.put(Key.useSolidBackground, false);  // Default to texture mode
+        conf.put(Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));  // Default dark gray
     }
 
 
@@ -245,6 +295,7 @@ public class NConfig
             .toString();
     public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
     public String path_scenarios = ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
+    public String path_cheese_orders = ((HashDirCache) ResCache.global).base + "\\..\\" + "cheese_orders.nurgling.json";
 
     public boolean isUpdated()
     {
@@ -440,7 +491,6 @@ public class NConfig
             for (Map.Entry<String, Object> entry : map.entrySet())
             {
                 try {
-
                     if (entry.getValue() instanceof HashMap<?, ?>) {
                         HashMap<String, Object> hobj = ((HashMap<String, Object>) entry.getValue());
                         String type;
@@ -452,7 +502,24 @@ public class NConfig
                                 case "FontSettings":
                                     conf.put(Key.fonts, new FontSettings(hobj));
                                     break;
+                                case "Color":
+                                    try {
+                                        int red = ((Number) hobj.get("red")).intValue();
+                                        int green = ((Number) hobj.get("green")).intValue();
+                                        int blue = ((Number) hobj.get("blue")).intValue();
+                                        int alpha = ((Number) hobj.get("alpha")).intValue();
+                                        Color col = new Color(red, green, blue, alpha);
+                                        conf.put(Key.valueOf(entry.getKey()), col);
+                                    } catch (Exception e) {
+                                        conf.put(Key.valueOf(entry.getKey()), entry.getValue());
+                                    }
+                                    break;
+                                default:
+                                    conf.put(Key.valueOf(entry.getKey()), entry.getValue());
+                                    break;
                             }
+                        } else {
+                            conf.put(Key.valueOf(entry.getKey()), entry.getValue());
                         }
                     } else if (Key.valueOf(entry.getKey()) != null && entry.getValue() instanceof ArrayList<?>) {
                         conf.put(Key.valueOf(entry.getKey()), readArray((ArrayList<HashMap<String, Object>>) entry.getValue()));
@@ -507,6 +574,18 @@ public class NConfig
             else if (entry.getValue() instanceof ArrayList<?>)
             {
                 prep.put(entry.getKey().toString(), prepareArray((ArrayList<Object>) entry.getValue()));
+            }
+            else if (entry.getValue() instanceof Color)
+            {
+                // Convert Color objects back to Map format for JSON serialization
+                Color color = (Color) entry.getValue();
+                Map<String, Object> colorMap = new HashMap<>();
+                colorMap.put("type", "Color");
+                colorMap.put("red", color.getRed());
+                colorMap.put("green", color.getGreen());
+                colorMap.put("blue", color.getBlue());
+                colorMap.put("alpha", color.getAlpha());
+                prep.put(entry.getKey().toString(), colorMap);
             }
             else
             {
@@ -689,6 +768,8 @@ public class NConfig
         res.add(NPathVisualizer.PathCategory.OTHER);
         res.add(NPathVisualizer.PathCategory.FRIEND);
         res.add(NPathVisualizer.PathCategory.GPF);
+        res.add(NPathVisualizer.PathCategory.QUEUED);
+        res.add(NPathVisualizer.PathCategory.PF);
         return res;
     }
 
@@ -714,18 +795,23 @@ public class NConfig
             return (Color) colorObj;
         } else if (colorObj instanceof Map) {
             Map<String, Object> colorMap = (Map<String, Object>) colorObj;
-            return new Color(
-                    ((Number)colorMap.get("red")).intValue(),
-                    ((Number)colorMap.get("green")).intValue(),
-                    ((Number)colorMap.get("blue")).intValue(),
-                    ((Number)colorMap.get("alpha")).intValue()
-            );
+            try {
+                return new Color(
+                        ((Number)colorMap.get("red")).intValue(),
+                        ((Number)colorMap.get("green")).intValue(),
+                        ((Number)colorMap.get("blue")).intValue(),
+                        ((Number)colorMap.get("alpha")).intValue()
+                );
+        } catch (Exception e) {
+                return defaultColor;
+            }
         }
         return defaultColor;
     }
 
     public static void setColor(Key key, Color color) {
         Map<String, Object> colorMap = new HashMap<>();
+        colorMap.put("type", "Color");
         colorMap.put("red", color.getRed());
         colorMap.put("green", color.getGreen());
         colorMap.put("blue", color.getBlue());

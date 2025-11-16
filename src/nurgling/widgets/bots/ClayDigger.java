@@ -14,7 +14,7 @@ public class ClayDigger extends Window implements Checkable {
         NClayDiggerProp startprop = NClayDiggerProp.get(NUtils.getUI().sessInfo);
         prev = add(new Label("Digger Settings:"));
 
-        prev = add(usingSovels = new UsingTools(UsingTools.Tools.shovels, true), prev.pos("bl").add(UI.scale(10,0)));
+        prev = add(usingSovels = new UsingTools(UsingTools.Tools.shovels, true), prev.pos("bl").add(UI.scale(0,5)));
         if(startprop.shovel!=null)
         {
             for(UsingTools.Tool tl : UsingTools.Tools.shovels)

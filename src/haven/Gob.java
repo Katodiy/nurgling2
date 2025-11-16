@@ -27,6 +27,7 @@
 package haven;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.*;
 import haven.render.*;
 import nurgling.*;
@@ -42,7 +43,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
     public boolean removed = false;
     public final Glob glob;
     public Map<Class<? extends GAttrib>, GAttrib> attr = new HashMap<Class<? extends GAttrib>, GAttrib>();
-    public final Collection<Overlay> ols = new ArrayList<Overlay>();
+    public final Collection<Overlay> ols = new CopyOnWriteArrayList<Overlay>();
     public final Collection<RenderTree.Slot> slots = new ArrayList<>(1);
     public int updateseq = 0, lastolid = 0;
     private final Collection<SetupMod> setupmods = new ArrayList<>();
@@ -75,7 +76,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	}
 
 	public Overlay(Gob gob, int id, Indir<Resource> res, Message sdt) {
-	    this(gob, id, owner -> Sprite.create(owner, res.get(), sdt));
+	    this(gob, id, Sprite.Mill.of(res, sdt));
 	}
 
 	public Overlay(Gob gob, Sprite spr) {
@@ -459,8 +460,8 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
     public void ctick(double dt) {
 	for(GAttrib a : attr.values())
 		a.ctick(dt);
-	for(Iterator<Overlay> i = ols.iterator(); i.hasNext();) {
-	    Overlay ol = i.next();
+	List<Overlay> toRemove = new ArrayList<>();
+	for(Overlay ol : ols) {
 	    if(ol.slots == null) {
 		try {
 		    ol.init();
@@ -469,14 +470,16 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 		boolean done = ol.tick(dt);
 		if((!ol.delign || (ol.spr instanceof Sprite.CDel)) && done) {
 		    ol.remove0();
-		    i.remove();
+		    toRemove.add(ol);
 		}
 	    }
 	}
+	ols.removeAll(toRemove);
 	updstate();
 	if(virtual && ols.isEmpty() && (getattr(Drawable.class) == null))
 	    glob.oc.remove(this);
-	ngob.tick(dt);
+	if(!ngob.effector)
+		ngob.tick(dt);
     }
 
     public void gtick(Render g) {
@@ -586,10 +589,8 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	}
 
 	public void findoraddol(Overlay ol) {
-		synchronized (ols) {
-			if (findol(ol.spr.getClass()) == null)
-				addol(ol, true);
-		}
+		if (findol(ol.spr.getClass()) == null)
+			addol(ol, true);
 	}
 	public void addcustomol(Sprite ol) {
 		findoraddol(new Overlay(this, ol));

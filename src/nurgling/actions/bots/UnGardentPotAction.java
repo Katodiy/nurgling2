@@ -9,7 +9,6 @@ import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
-import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
@@ -57,15 +56,11 @@ public class UnGardentPotAction implements Action {
                 lighted.add(cont.gobid);
             }
 
-            Context icontext = new Context();
-            for (NArea area : NContext.findAllIn(new NAlias("Unfired Garden Pot"))) {
-                for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-                    Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
-                    cand.initattr(Container.Space.class);
-                    cand.initattr(Container.TargetItems.class);
-                    cand.getattr(Container.TargetItems.class).addTarget("Unfired Garden Pot");
-                    icontext.icontainers.add(cand);
-                }
+            NContext icontext = new NContext(gui);
+            try {
+                icontext.addInItem("Unfired Garden Pot", null);
+            } catch (InterruptedException e) {
+                return Results.ERROR("Failed to add input items");
             }
 
             Results res = null;

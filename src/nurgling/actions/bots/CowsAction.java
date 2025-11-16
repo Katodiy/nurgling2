@@ -77,13 +77,15 @@ public class CowsAction implements Action {
                 public boolean test(Gob gob) {
                     Ochs p1 = (Ochs) (NUtils.getAnimalEntity(gob, Ochs.class));
                     ;
-                    return !p1.bull && !p1.dead && p1.lactate;
+                    return !p1.bull && !p1.dead && !p1.calf;
                 }
             };
             if(CowsHerd.getCurrent()!=null) {
                 new MemorizeAnimalsAction(new NAlias("cattle"),"cows", Ochs.class).run(gui);
 
 
+                new MilkAnimalsAction(new NAlias("cattle")).run(gui);
+                gui.msg("Milking cycle done!");
                 new KillAnimalsAction<Ochs>(new NAlias("cattle"), "cows", comparator, Ochs.class, wpred, wlpred, CowsHerd.getCurrent().adultCows).run(gui);
                 gui.msg("Female cows cycle done!");
                 new KillAnimalsAction<Ochs>(new NAlias("cattle"), "cows", comparator, Ochs.class, mpred, mlpred, 1).run(gui);

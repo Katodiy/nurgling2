@@ -1,0 +1,226 @@
+package nurgling.overlays;
+
+import haven.*;
+import haven.render.*;
+import nurgling.NHitBox;
+import nurgling.NUtils;
+import nurgling.pf.NHitBoxD;
+
+import java.awt.Color;
+import java.util.*;
+
+/**
+ * Generic ghost preview overlay showing where buildings will be placed
+ * Simpler than TrellisGhostPreview - just shows all valid positions in the area
+ */
+public class BuildGhostPreview extends Sprite {
+    private static final Pipe.Op ghostColor = Pipe.Op.compose(
+            new BaseColor(new Color(0, 255, 0, 255)),  // Bright green
+            new States.Facecull(States.Facecull.Mode.NONE),
+            new States.LineWidth(3)
+    );
+
+    private Pair<Coord2d, Coord2d> area;
+    private NHitBox buildingHitBox;
+    private Model ghostModel;
+    private List<Location> ghostLocations = new ArrayList<>();
+    private List<RenderTree.Slot> slots = new ArrayList<>();
+
+    public BuildGhostPreview(Owner owner, Pair<Coord2d, Coord2d> area, NHitBox hitBox) {
+        super(owner, null);
+        this.area = area;
+        this.buildingHitBox = hitBox;
+        if (area != null && hitBox != null) {
+            calculateGhostPositions();
+        }
+    }
+
+    /**
+     * Calculate all valid building positions using the same logic as Finder.getFreePlace()
+     */
+    private void calculateGhostPositions() {
+        ghostLocations.clear();
+
+        if (buildingHitBox == null || area == null) {
+            return;
+        }
+
+        // Create the box model once (centered at origin)
+        ghostModel = createGhostBoxModel(buildingHitBox);
+
+        // Find all obstacles in the area (same as Finder.getFreePlace)
+        ArrayList<NHitBoxD> obstacles = findObstacles();
+
+        // Track placed buildings to avoid showing overlaps
+        ArrayList<NHitBoxD> placedBuildings = new ArrayList<>();
+
+        Coord inchMax = area.b.sub(area.a).floor();
+        Coord margin = buildingHitBox.end.sub(buildingHitBox.begin).floor(2, 2);
+
+        // Simulate Finder.getFreePlace() behavior: pixel-by-pixel search
+        for (int i = margin.x; i <= inchMax.x - margin.x; i++) {
+            for (int j = margin.y; j <= inchMax.y - margin.y; j++) {
+                Coord2d testPos = area.a.add(i, j);
+                NHitBoxD testBox = new NHitBoxD(buildingHitBox.begin, buildingHitBox.end, testPos, 0);
+
+                // Check collisions with obstacles AND already-placed buildings
+                boolean passed = true;
+
+                for (NHitBoxD obstacle : obstacles) {
+                    if (obstacle.intersects(testBox, false)) {
+                        passed = false;
+                        break;
+                    }
+                }
+
+                if (passed) {
+                    for (NHitBoxD placed : placedBuildings) {
+                        if (placed.intersects(testBox, false)) {
+                            passed = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (passed) {
+                    // This position is valid - add it to preview and track it
+                    float centerX = (float)(testBox.rc.x);
+                    float centerY = (float)(testBox.rc.y);
+
+                    // Get terrain height at this position
+                    float terrainZ = getTerrainHeight();
+
+                    Location loc = Location.xlate(new Coord3f(centerX, -centerY, terrainZ));
+                    ghostLocations.add(loc);
+
+                    // Add this building to placed list so we don't overlap it
+                    placedBuildings.add(new NHitBoxD(buildingHitBox.begin, buildingHitBox.end, testPos, 0));
+                }
+            }
+        }
+    }
+
+    /**
+     * Create a simple wireframe box model for a ghost building
+     * Box is centered at origin and will be positioned via Location transforms
+     */
+    private Model createGhostBoxModel(NHitBox hitBox) {
+        // Calculate half-dimensions to center the box at origin
+        float halfWidth = (float)((hitBox.end.x - hitBox.begin.x) / 2.0);
+        float halfDepth = (float)((hitBox.end.y - hitBox.begin.y) / 2.0);
+        float h = 7f; // Height of ghost box
+
+        // Create vertices for the box centered at origin (8 corners)
+        java.nio.FloatBuffer posb = Utils.wfbuf(8 * 3);
+
+        // Bottom vertices (0-3) - centered at origin in XY plane
+        posb.put(-halfWidth).put(-halfDepth).put(0f);
+        posb.put(halfWidth).put(-halfDepth).put(0f);
+        posb.put(halfWidth).put(halfDepth).put(0f);
+        posb.put(-halfWidth).put(halfDepth).put(0f);
+
+        // Top vertices (4-7)
+        posb.put(-halfWidth).put(-halfDepth).put(h);
+        posb.put(halfWidth).put(-halfDepth).put(h);
+        posb.put(halfWidth).put(halfDepth).put(h);
+        posb.put(-halfWidth).put(halfDepth).put(h);
+
+        VertexBuf.VertexData posa = new VertexBuf.VertexData(Utils.bufcp(posb));
+        VertexBuf vbuf = new VertexBuf(posa);
+
+        // Create wireframe using LINES mode - just the edges
+        java.nio.ShortBuffer idx = Utils.wsbuf(24);
+        short[] indices = {
+            0,1, 1,2, 2,3, 3,0,  // Bottom edges
+            4,5, 5,6, 6,7, 7,4,  // Top edges
+            0,4, 1,5, 2,6, 3,7   // Vertical edges
+        };
+        for (short i : indices) {
+            idx.put(i);
+        }
+
+        return new Model(Model.Mode.LINES, vbuf.data(),
+            new Model.Indices(24, NumberFormat.UINT16, DataBuffer.Usage.STATIC,
+                DataBuffer.Filler.of(idx.array())));
+    }
+
+    /**
+     * Get terrain height at a position
+     */
+    private float getTerrainHeight() {
+        try {
+            Gob player = NUtils.player();
+            if (player != null) {
+                Coord3f playerPos = player.getc();
+                if (playerPos != null) {
+                    // Use player's Z coordinate as base reference
+                    return playerPos.z - 1;
+                }
+            }
+        } catch (NullPointerException e) {
+            // Fallback to 0 if player or position unavailable
+        }
+        return 0f;
+    }
+
+    /**
+     * Find obstacles in area (same logic as Finder.getFreePlace)
+     */
+    private ArrayList<NHitBoxD> findObstacles() {
+        ArrayList<NHitBoxD> obstacles = new ArrayList<>();
+        NHitBoxD areaBox = new NHitBoxD(area.a, area.b);
+
+        try {
+            synchronized (NUtils.getGameUI().ui.sess.glob.oc) {
+                for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc) {
+                    if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() ||
+                          gob.getClass().getName().contains("GlobEffector"))) {
+                        if (gob.ngob.hitBox != null && gob.getattr(Following.class) == null &&
+                            gob.id != NUtils.player().id) {
+                            NHitBoxD gobBox = new NHitBoxD(gob);
+                            if (gobBox.intersects(areaBox, true)) {
+                                obstacles.add(gobBox);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Silently handle exceptions finding obstacles
+        }
+
+        return obstacles;
+    }
+
+    @Override
+    public void added(RenderTree.Slot slot) {
+        slots.add(slot);
+
+        // Set initial state similar to NBoxOverlay
+        slot.ostate(Pipe.Op.compose(
+            Rendered.postpfx,
+            new States.Facecull(States.Facecull.Mode.NONE),
+            p -> p.put(Homo3D.loc, null)
+        ));
+
+        // Add all ghost boxes to this slot (reuse single model, different locations)
+        if (ghostModel != null) {
+            for (Location loc : ghostLocations) {
+                slot.add(ghostModel, Pipe.Op.compose(
+                    ghostColor,
+                    loc
+                ));
+            }
+        }
+    }
+
+    @Override
+    public void removed(RenderTree.Slot slot) {
+        slots.remove(slot);
+    }
+
+    @Override
+    public boolean tick(double dt) {
+        return false; // Don't auto-remove
+    }
+}

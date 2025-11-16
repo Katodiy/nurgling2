@@ -174,6 +174,7 @@ public class NCore extends Widget
         if(!(Boolean) NConfig.get(NConfig.Key.ndbenable) && poolManager != null)
         {
             poolManager.shutdown();
+            poolManager = null;
         }
 
         if(autoDrink == null && (Boolean)NConfig.get(NConfig.Key.autoDrink))
@@ -284,6 +285,7 @@ public class NCore extends Widget
         if(poolManager!=null)
         {
             poolManager.shutdown();
+            poolManager = null;
         }
         super.dispose();
     }
@@ -428,14 +430,15 @@ public class NCore extends Widget
         poolManager.submitTask(ngItemWriter);
     }
 
-    public void writeContainerInfo(NInventory.ParentGob gob)
+    public void writeContainerInfo(Gob gob)
     {
-        if(gob.gob!=null) {
+        if(gob!=null) {
             ContainerWatcher cw = new ContainerWatcher(gob);
             try {
                 cw.connection = poolManager.getConnection();
             } catch (SQLException e) {
                 e.printStackTrace();
+                return;
             }
             poolManager.submitTask(cw);
         }

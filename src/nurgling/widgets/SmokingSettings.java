@@ -16,6 +16,7 @@ import nurgling.widgets.options.QuickActions;
 import org.json.JSONObject;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,11 +77,18 @@ public class SmokingSettings extends Window implements Checkable {
             for(NSmokProp p : smprop)
             {
                 JSONObject icon = (JSONObject)((JSONObject) p.toJson().get("data")).get("icon");
-                IconItem item = new IconItem(p.iconName, ItemTex.create(icon), this);
-                item.src = icon;
-                Recipe recipe = new Recipe(item,(String) ((JSONObject) p.toJson().get("data")).get("fuel"));
-                recipe.isEnabled.a = (Boolean) ((JSONObject) p.toJson().get("data")).get("isSelected");
-                recipes.add(recipe);
+                if(icon!=null)
+                {
+                    BufferedImage img = ItemTex.create(icon);
+                    if(img!=null)
+                    {
+                        IconItem item = new IconItem(p.iconName, img, this);
+                        item.src = icon;
+                        Recipe recipe = new Recipe(item, (String) ((JSONObject) p.toJson().get("data")).get("fuel"));
+                        recipe.isEnabled.a = (Boolean) ((JSONObject) p.toJson().get("data")).get("isSelected");
+                        recipes.add(recipe);
+                    }
+                }
             }
         }
     }

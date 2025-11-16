@@ -65,7 +65,7 @@ public class Window extends Widget {
 		return(rasterimg(blurmask2(text.img.getRaster(), UI.rscale(0.75), UI.rscale(1.0), Color.BLACK)));
 	    }
 	};
-    public static final IBox wbox = new IBox("nurgling/hud/box", "tl", "tr", "bl", "br", "extvl", "extvr", "extht", "exthb") {
+    public static final IBox wbox = new IBox.Scaled("nurgling/hud/box", "tl", "tr", "bl", "br", "extvl", "extvr", "extht", "exthb") {
 	    final Coord co = UI.scale(3, 3), bo = UI.scale(2, 2);
 
 	    public Coord btloff() {return(super.btloff().sub(bo));}
@@ -243,6 +243,41 @@ public class Window extends Widget {
 	}
 
 	protected void drawbg(GOut g,boolean floftar) {
+	    if (ui instanceof nurgling.NUI) {
+	        nurgling.NUI nui = (nurgling.NUI)ui;
+	        float opacity = nui.getUIOpacity();
+
+	        if (nui.getUseSolidBackground()) {
+	            // Solid color mode
+	            java.awt.Color bgColor = nui.getWindowBackgroundColor();
+	            int alpha = (int)(255 * opacity);
+	            g.chcolor(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue(), alpha);
+	            g.frect(ca.ul, ca.sz());
+	            g.chcolor();
+	        } else {
+	            // Texture mode (original behavior)
+	            g.chcolor(255, 255, 255, (int)(255 * opacity));
+
+		    if(floftar)
+		        g.usestate(bgblend);
+		    Coord bgc = new Coord();
+		    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bg.sz().y) {
+			for(bgc.x = ca.ul.x; bgc.x < ca.br.x; bgc.x += bg.sz().x)
+			    g.image(bg, bgc, ca.ul, ca.br);
+		    }
+		    if(floftar)
+		        g.defstate();
+		    bgc.x = ca.ul.x;
+		    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgl.sz().y)
+			g.image(bgl, bgc, ca.ul, ca.br);
+		    bgc.x = ca.br.x - bgr.sz().x;
+		    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgr.sz().y)
+			g.image(bgr, bgc, ca.ul, ca.br);
+
+		    g.chcolor();
+	        }
+	    } else {
+	        // Fallback to original behavior if not NUI
 		if(floftar)
 	    g.usestate(bgblend);
 	    Coord bgc = new Coord();
@@ -258,6 +293,7 @@ public class Window extends Widget {
 	    bgc.x = ca.br.x - bgr.sz().x;
 	    for(bgc.y = ca.ul.y; bgc.y < ca.br.y; bgc.y += bgr.sz().y)
 		g.image(bgr, bgc, ca.ul, ca.br);
+	    }
 	}
 	protected void drawbg(GOut g) {
 		drawbg(g, true);

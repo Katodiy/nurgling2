@@ -1,15 +1,11 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.NGameUI;
 import nurgling.NUtils;
 
-import java.awt.*;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
 
-import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
 
 public class NMapWnd extends MapWnd {
@@ -17,6 +13,12 @@ public class NMapWnd extends MapWnd {
     public Resource.Image searchRes = null;
     public boolean needUpdate = false;
     TextEntry te;
+    Button fishMenuBtn;
+    Button treeMenuBtn;
+    CheckBox treeIconsCheckbox;
+    CheckBox fishIconsCheckbox;
+    private static final int btnw = UI.scale(95);
+
     public NMapWnd(MapFile file, MapView mv, Coord sz, String title) {
         super(file, mv, sz, title);
         searchRes = Resource.local().loadwait("alttex/selectedtex").layer(Resource.imgc);
@@ -29,6 +31,111 @@ public class NMapWnd extends MapWnd {
                 NUtils.getGameUI().mmap.needUpdate = true;
             }
         }, view.pos("br").sub(UI.scale(200,20)));
+
+        // Add checkbox for tree icons (to the left of Tree Search button)
+        add(treeIconsCheckbox = new CheckBox("") {
+            {
+                a = true; // Start checked (icons visible by default)
+            }
+            @Override
+            public void changed(boolean val) {
+                // Toggle tree icon visibility on both the minimap and map window
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+
+                // Update minimap
+                if (gui != null && gui.mmap != null && gui.mmap instanceof NMiniMap) {
+                    ((NMiniMap) gui.mmap).showTreeIcons = val;
+                }
+
+                // Update map window's view
+                if (view instanceof NMiniMap) {
+                    ((NMiniMap) view).showTreeIcons = val;
+                }
+            }
+
+            @Override
+            public Object tooltip(Coord c, Widget prev) {
+                return Text.render("Show/Hide Tree Icons");
+            }
+        }, view.c.add(view.sz.x - UI.scale(225), UI.scale(15)));
+
+        // Add Tree Menu button (left of Fish button)
+        add(treeMenuBtn = new Button(UI.scale(100), "Tree Search") {
+            @Override
+            public void click() {
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if (gui != null) {
+                    // Check if window already exists and is visible
+                    if (gui.treeSearchWindow != null) {
+                        // If window exists, toggle visibility
+                        if (gui.treeSearchWindow.visible()) {
+                            gui.treeSearchWindow.hide();
+                        } else {
+                            gui.treeSearchWindow.show();
+                            gui.treeSearchWindow.raise();
+                        }
+                    } else {
+                        // Create new window if it doesn't exist
+                        gui.treeSearchWindow = new TreeSearchWindow(gui);
+                        gui.add(gui.treeSearchWindow, new Coord(100, 100));
+                        gui.treeSearchWindow.show();
+                    }
+                }
+            }
+        }, view.c.add(view.sz.x - UI.scale(210), UI.scale(5)));
+
+        // Add checkbox for fish icons (to the left of Fish Search button)
+        add(fishIconsCheckbox = new CheckBox("") {
+            {
+                a = true; // Start checked (icons visible by default)
+            }
+            @Override
+            public void changed(boolean val) {
+                // Toggle fish icon visibility on both the minimap and map window
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+
+                // Update minimap
+                if (gui != null && gui.mmap != null && gui.mmap instanceof NMiniMap) {
+                    ((NMiniMap) gui.mmap).showFishIcons = val;
+                }
+
+                // Update map window's view
+                if (view instanceof NMiniMap) {
+                    ((NMiniMap) view).showFishIcons = val;
+                }
+            }
+
+            @Override
+            public Object tooltip(Coord c, Widget prev) {
+                return Text.render("Show/Hide Fish Icons");
+            }
+        }, view.c.add(view.sz.x - UI.scale(110), UI.scale(15)));
+
+        // Add Fish button at top-right of map view
+        // Position it directly using view.c (top-left) + view width - button width
+        add(fishMenuBtn = new Button(UI.scale(100), "Fish Search") {
+            @Override
+            public void click() {
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if (gui != null) {
+                    // Check if window already exists and is visible
+                    if (gui.fishSearchWindow != null) {
+                        // If window exists, toggle visibility
+                        if (gui.fishSearchWindow.visible()) {
+                            gui.fishSearchWindow.hide();
+                        } else {
+                            gui.fishSearchWindow.show();
+                            gui.fishSearchWindow.raise();
+                        }
+                    } else {
+                        // Create new window if it doesn't exist
+                        gui.fishSearchWindow = new FishSearchWindow(gui);
+                        gui.add(gui.fishSearchWindow, new Coord(100, 100));
+                        gui.fishSearchWindow.show();
+                    }
+                }
+            }
+        }, view.c.add(view.sz.x - UI.scale(95), UI.scale(5)));
     }
 
     public long playerSegmentId() {
@@ -54,5 +161,141 @@ public class NMapWnd extends MapWnd {
         super.resize(sz);
         if(te!=null)
             te.c = view.pos("br").sub(UI.scale(200,20));
+
+        // Position tree icons checkbox (left of Tree Search button)
+        if(treeIconsCheckbox != null)
+            treeIconsCheckbox.c = view.c.add(view.sz.x - UI.scale(225), UI.scale(15));
+
+        // Position Tree Menu button (left of Fish button)
+        if(treeMenuBtn != null)
+            treeMenuBtn.c = view.c.add(view.sz.x - UI.scale(210), UI.scale(5));
+
+        // Position fish icons checkbox (left of Fish Search button)
+        if(fishIconsCheckbox != null)
+            fishIconsCheckbox.c = view.c.add(view.sz.x - UI.scale(110), UI.scale(15));
+
+        // Position Fish button at top-right of map view
+        if(fishMenuBtn != null)
+            fishMenuBtn.c = view.c.add(view.sz.x - UI.scale(95), UI.scale(5));
+    }
+    
+    @Override
+    public boolean mousedown(MouseDownEvent ev) {
+        // Handle alt+left-click for waypoint queueing (on button release handled below)
+        // Handle shift+right-click for resource timers
+        if(view.c != null) {
+            // Convert global coordinates to view coordinates
+            Coord viewCoord = ev.c.sub(view.parentpos(this));
+
+            // Check if the click is within the view bounds
+            if(viewCoord.x >= 0 && viewCoord.x < view.sz.x &&
+               viewCoord.y >= 0 && viewCoord.y < view.sz.y) {
+
+                // Shift+right-click for resource timers and tree locations
+                if(ev.b == 3 && ui.modshift) {
+                    // First check for tree icons
+                    if(handleTreeSaveClick(viewCoord)) {
+                        return true; // Consume the event
+                    }
+                    // Then check if there's a resource marker at this location
+                    if(handleResourceTimerClick(viewCoord)) {
+                        return true; // Consume the event
+                    }
+                }
+            }
+        }
+
+        return super.mousedown(ev);
+    }
+
+    @Override
+    public boolean mouseup(MouseUpEvent ev) {
+        if(view.c != null) {
+            Coord viewCoord = ev.c.sub(view.parentpos(this));
+
+            // Check if the click is within the view bounds
+            if(viewCoord.x >= 0 && viewCoord.x < view.sz.x &&
+               viewCoord.y >= 0 && viewCoord.y < view.sz.y) {
+
+                // alt+left-click for waypoint queueing
+                if(ev.b == 1 && ui.modmeta) {
+                    if(handleWaypointClick(viewCoord)) {
+                        return true; // Consume the event
+                    }
+                }
+
+                // Right-click for clearing waypoint queue (fish handling is in parent NMiniMap)
+                if(ev.b == 3 && !ui.modshift) {
+                    // Clear waypoint queue on regular right-click (if not on fish/marker)
+                    NGameUI gui = (NGameUI) NUtils.getGameUI();
+                    if(gui != null && gui.waypointMovementService != null) {
+                        gui.waypointMovementService.clearQueue();
+                    }
+                    // Let parent handle fish location clicks and other right-click behavior
+                }
+            }
+        }
+
+        return super.mouseup(ev);
+    }
+
+    private boolean handleWaypointClick(Coord c) {
+        // Try to get the location at clicked coordinates
+        MiniMap.Location clickLoc = view.xlate(c);
+        if(clickLoc == null || view.sessloc == null) return false;
+
+        // Only handle if in same segment
+        if(clickLoc.seg.id != view.sessloc.seg.id) return false;
+
+        // Use the service to add waypoint
+        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        if(gui != null && gui.waypointMovementService != null) {
+            gui.waypointMovementService.addWaypoint(clickLoc, view.sessloc);
+            return true;
+        }
+
+        return false;
+    }
+    
+    private boolean handleResourceTimerClick(Coord c) {
+        // Try to find a resource marker at the clicked location
+        MiniMap.Location clickLoc = view.xlate(c);
+        if(clickLoc == null) return false;
+
+        MiniMap.DisplayMarker marker = view.markerat(clickLoc.tc);
+        if(marker != null && marker.m instanceof MapFile.SMarker) {
+            MapFile.SMarker smarker = (MapFile.SMarker) marker.m;
+
+            // Handle through service
+            NGameUI gui = (NGameUI) NUtils.getGameUI();
+            if(gui != null && gui.localizedResourceTimerService != null) {
+                return gui.localizedResourceTimerService.handleResourceClick(smarker);
+            }
+        }
+
+        return false;
+    }
+
+    private boolean handleTreeSaveClick(Coord c) {
+        // TODO: Implement tree saving from map click
+        // For now, trees can be saved through other means
+        // This would require access to gobs at the clicked location
+        return false;
+    }
+
+    @Override
+    public void recenter() {
+        super.recenter();
+
+        // Clear all directional vectors when home button is clicked
+        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        if(gui != null && gui.map instanceof nurgling.NMapView) {
+            nurgling.NMapView mapView = (nurgling.NMapView) gui.map;
+            if(!mapView.directionalVectors.isEmpty()) {
+                int count = mapView.directionalVectors.size();
+                mapView.clearDirectionalVectors();
+                gui.msg("Cleared " + count + " directional vector" + (count > 1 ? "s" : ""));
+            }
+        }
     }
 }

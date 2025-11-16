@@ -26,7 +26,6 @@ public class NContext {
     private HashMap<String, NArea> areas = new HashMap<>();
     private HashMap<String, RoutePoint> rps = new HashMap<>();
     private HashMap<String, ObjectStorage> containers = new HashMap<>();
-    public HashSet<Long> barrelsid = new HashSet<>();
 
     public boolean bwaused = false;
     int counter = 0;
@@ -59,6 +58,7 @@ public class NContext {
         contcaps.put("gfx/terobjs/furn/table-cottage", "Table");
         contcaps.put("gfx/terobjs/map/jotunclam", "Jotun Clam");
         contcaps.put("gfx/terobjs/studydesk", "Study Desk");
+        contcaps.put("gfx/terobjs/htable", "Herbalist Table");
     }
 
     public static HashMap<String, String> customTool = new HashMap<>();
@@ -169,6 +169,10 @@ public class NContext {
         return outAreas.get(item);
     }
 
+    public RoutePoint getRoutePoint(String areaId) {
+        return rps.get(areaId);
+    }
+
     public NArea getSpecArea(NContext.Workstation workstation) throws InterruptedException {
         if(!areas.containsKey(workstation.station)) {
             NArea area = findSpec(workstation_spec_map.get(workstation.station).toString());
@@ -236,6 +240,30 @@ public class NContext {
 
     }
 
+
+    public Gob getBarrelInWorkArea(String item) throws InterruptedException {
+        NArea area;
+        if(workstation==null)
+            area = getSpecArea(Specialisation.SpecName.barrelworkarea);
+        else
+            area = getSpecArea(workstation);
+        if(area==null)
+            return null;
+        if(barrelstorage.containsKey(item))
+        {
+            for (Gob gob : Finder.findGobs(area, new NAlias("barrel")))
+            {
+                String content = NUtils.getContentsOfBarrel(gob);
+                if (content != null && (content.equalsIgnoreCase(barrelstorage.get(item).olname)))
+                {
+                    return gob;
+                }
+            }
+        }
+        return null;
+
+    }
+
     public void navigateToBarrelArea(String item) throws InterruptedException {
         String areaid = barrels.get(item);
         navigateToAreaIfNeeded(areaid);
@@ -283,37 +311,86 @@ public class NContext {
         return areas.get(name.toString());
     }
 
+    public ArrayList<ObjectStorage> getSpecStorages(Specialisation.SpecName name) throws InterruptedException {
+
+        ArrayList<ObjectStorage> inputs = new ArrayList<>();
+        NArea area = getSpecArea(name);
+
+        if(area == null) {
+            return null;
+        }
+
+        navigateToAreaIfNeeded(String.valueOf(name));
+
+        for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
+            String hash = gob.ngob.hash;
+            if(containers.containsKey(hash))
+            {
+                inputs.add(containers.get(hash));
+            }
+            else {
+                Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                ic.initattr(Container.Space.class);
+                containers.put(gob.ngob.hash, ic);
+                inputs.add(ic);
+            }
+        }
+
+        for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
+            inputs.add(new Pile(gob));
+        }
+        if (inputs.isEmpty()) {
+            inputs.add(new Pile(null));
+        }
+
+        inputs.sort(new Comparator<ObjectStorage>() {
+            @Override
+            public int compare(ObjectStorage o1, ObjectStorage o2) {
+                if (o1 instanceof Pile && o2 instanceof Pile)
+                    return NUtils.d_comp.compare(((Pile) o1).pile, ((Pile) o2).pile);
+                return 0;
+            }
+        });
+        return inputs;
+    }
+
     public ArrayList<ObjectStorage> getInStorages(String item) throws InterruptedException {
 
         ArrayList<ObjectStorage> inputs = new ArrayList<>();
         String id = inAreas.get(item);
+
         if(id!=null) {
             navigateToAreaIfNeeded(inAreas.get(item));
 
             NArea area = areas.get(id);
-            NArea.Ingredient ingredient = area.getInput(item);
-            switch (ingredient.type) {
-                case BARTER:
-                    inputs.add(new Barter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
-                            Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
-                    break;
-                case CONTAINER: {
-                    for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
-                        String hash = gob.ngob.hash;
-                        if(containers.containsKey(hash))
-                        {
-                            inputs.add(containers.get(hash));
+            if(area != null) {
+                NArea.Ingredient ingredient = area.getInput(item);
+                if(ingredient == null) {
+                } else {
+                    switch (ingredient.type) {
+                    case BARTER:
+                        inputs.add(new Barter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
+                                Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
+                        break;
+                    case CONTAINER: {
+                        for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
+                            String hash = gob.ngob.hash;
+                            if(containers.containsKey(hash))
+                            {
+                                inputs.add(containers.get(hash));
+                            }
+                            else {
+                                Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                                containers.put(gob.ngob.hash, ic);
+                                inputs.add(ic);
+                            }
                         }
-                        else {
-                            Container ic = new Container(gob, contcaps.get(gob.ngob.name));
-                            containers.put(gob.ngob.hash, ic);
-                            inputs.add(ic);
+                        for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
+                            inputs.add(new Pile(gob));
                         }
-                    }
-                    for (Gob gob : Finder.findGobs(area, new NAlias("stockpile"))) {
-                        inputs.add(new Pile(gob));
-                    }
 
+                    }
+                    }
                 }
             }
             inputs.sort(new Comparator<ObjectStorage>() {
@@ -467,16 +544,17 @@ public class NContext {
         return Finder.findGob(id);
     }
 
-    private void navigateToAreaIfNeeded(String areaId) throws InterruptedException {
+    public void navigateToAreaIfNeeded(String areaId) throws InterruptedException {
         NArea area = areas.get(areaId);
         if(area == null) {
             gui.msg(areaId + " Not found!");
             return;
         }
-        if((!area.isVisible() || area.getCenter2d().dist(NUtils.player().rc)>450) && rps.containsKey(areaId)) {
+        if((!area.isVisible() || area.getCenter2d() == null || area.getCenter2d().dist(NUtils.player().rc)>450) && rps.containsKey(areaId)) {
             new RoutePointNavigator(rps.get(areaId), area.id).run(gui);
         }
     }
+
     public String createArea(String msg, BufferedImage bauble) throws InterruptedException {
         return createArea(msg, bauble,null);
     }
@@ -982,5 +1060,27 @@ public class NContext {
             }
         }
         return res;
+    }
+
+    /**
+     * Find swill delivery areas (areas with swill or trough specialization).
+     * Returns areas prioritized by distance from player.
+     */
+    public static List<NArea> findSwillDeliveryAreas() {
+        List<NArea> areas = new ArrayList<>();
+//
+//        // Find areas with swill specialization
+//        NArea swillArea = findSpec("swill");
+//        if (swillArea != null) {
+//            areas.add(swillArea);
+//        }
+
+        // Find areas with trough specialization
+        NArea troughArea = findSpec("trough");
+        if (troughArea != null && !areas.contains(troughArea)) {
+            areas.add(troughArea);
+        }
+
+        return areas;
     }
 }

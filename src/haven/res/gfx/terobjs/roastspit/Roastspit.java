@@ -7,36 +7,47 @@ import java.util.*;
 import java.util.function.*;
 
 /* >spr: Roastspit */
-@haven.FromResource(name = "gfx/terobjs/roastspit", version = 55)
-public class Roastspit extends SkelSprite {
-    private RenderTree.Node equed;
-    private Pipe.Op eqp;
+@haven.FromResource(name = "gfx/terobjs/roastspit", version = 56)
+public class Roastspit extends ModSprite {
+    private Equed equed;
 
     public Roastspit(Owner owner, Resource res, Message sdt) {
-	super(owner, res, new MessageBuf(sdt.bytes(1)));
-	equed = mkeq(sdt.uint16());
-	update();
+	super(owner, res, sdt);
     }
 
-    public void update(Message sdt) {
-	byte[] b = sdt.bytes(1);
-	equed = mkeq(sdt.uint16());
-	super.update(new MessageBuf(b));
+    protected void decdata(Message sdt) {
+	flags = sdt.eom() ? 0 : sdt.uint8();
+	int eqid = sdt.eom() ? 65535 : sdt.uint16();
+	Resource eqres = (eqid == 65535) ? null : owner.context(Resource.Resolver.class).getres(eqid).get();
+	equed = (eqres == null) ? null : new Equed(eqres);
     }
 
-    private RenderTree.Node mkeq(int eqid) {
-	if(eqid == 65535)
-	    return(null);
-	Resource eqr = owner.context(Resource.Resolver.class).getres(eqid).get();
-	Sprite eqs = Sprite.create(owner, eqr, Message.nil);
-	Skeleton.BoneOffset bo = eqr.layer(Skeleton.BoneOffset.class, "s");
-	return(RUtils.StateTickNode.from(eqs, bo.from(this)));
+    public class Equed implements Mod {
+	public final Resource res;
+	private RenderTree.Node equed = null;
+
+	public Equed(Resource res) {
+	    this.res = res;
+	}
+
+	public void operate(Cons cons) {
+	    if(equed == null) {
+		Sprite eqs = Sprite.create(owner, res, Message.nil);
+		Skeleton.BoneOffset bo = res.layer(Skeleton.BoneOffset.class, "s");
+		equed = RUtils.StateTickNode.of(eqs, bo.from(Roastspit.this));
+	    }
+	    cons.add(new Part(equed));
+	}
+
+	public int order() {
+	    return(2000);
+	}
     }
 
-    public void iparts(int mask, Collection<RenderTree.Node> rbuf, Collection<Runnable> tbuf, Collection<Consumer<Render>> gbuf) {
-	super.iparts(mask, rbuf, tbuf, gbuf);
+    protected void modifiers(Cons cons) {
+	super.modifiers(cons);
 	if(equed != null)
-	    rbuf.add(equed);
+	    cons.add(equed);
     }
 
 	public String getContent() {

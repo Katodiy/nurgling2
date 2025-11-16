@@ -1,15 +1,9 @@
 package nurgling.gattrr;
 
-import java.awt.Color;
-import java.util.Random;
-
 import haven.GAttrib;
 import haven.Gob;
 import haven.Matrix4f;
-import haven.Utils;
 import haven.render.*;
-import haven.resutil.CrackTex;
-import nurgling.overlays.*;
 
 public class NCustomScale extends GAttrib implements Gob.SetupMod {
 

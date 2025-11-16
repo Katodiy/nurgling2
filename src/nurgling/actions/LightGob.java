@@ -38,25 +38,24 @@ public class LightGob implements Action
             return Results.SUCCESS();
         }
 
-        Gob candelabrum = Finder.findGob(new NAlias("gfx/terobjs/candelabrum"));
-        if(candelabrum == null || candelabrum.ngob.getModelAttribute() !=3 )
-            candelabrum = null;
-        if(candelabrum!=null) {
+        ArrayList<Gob> candelabrums = Finder.findGobs(new NAlias("gfx/terobjs/candelabrum"));
+        for(Gob candelabrum : candelabrums)
+        {
+            if (candelabrum == null || candelabrum.ngob.getModelAttribute() != 3)
+                continue;
             Coord2d pos = new Coord2d(candelabrum.rc.x, candelabrum.rc.y);
             new LiftObject(candelabrum).run(gui);
-            for (Long gobid : gobs) {
+            for (Long gobid : gobs)
+            {
                 Gob gob = Finder.findGob(gobid);
-                if ((gob.ngob.getModelAttribute() & flame_flag) == 0) {
+                if ((gob.ngob.getModelAttribute() & flame_flag) == 0)
+                {
                     new PathFinder(gob).run(gui);
-                    NUtils.activateGob ( gob );
-                    NUtils.getUI().core.addTask(new WaitGobModelAttr(gob,flame_flag));
+                    NUtils.activateGob(gob);
+                    NUtils.getUI().core.addTask(new WaitGobModelAttr(gob, flame_flag));
                 }
             }
             new PlaceObject(candelabrum, pos, 0).run(gui);
-        }
-        else
-        {
-            return Results.FAIL();
         }
         return Results.SUCCESS();
     }

@@ -562,273 +562,273 @@ public class VSpec {
         object.put("gfx/terobjs/bushes/boxwood", boxwoodOp);
 
         ArrayList<String> acaciaOp_log = new ArrayList<>();
-        acaciaOp_log.add("Acacia Board"); // Доска
-        acaciaOp_log.add("Acacia Block"); // Блок
+        acaciaOp_log.add("Board of Acacia"); // Доска
+        acaciaOp_log.add("Block of Acacia"); // Блок
         object.put("gfx/terobjs/trees/acacialog", acaciaOp_log);
 
         ArrayList<String> alderOp_log = new ArrayList<>();
-        alderOp_log.add("Alder Board"); // Доска
-        alderOp_log.add("Alder Block"); // Блок
+        alderOp_log.add("Board of Alder"); // Доска
+        alderOp_log.add("Block of Alder"); // Блок
         object.put("gfx/terobjs/trees/alderlog", alderOp_log);
 
         ArrayList<String> almondOp_log = new ArrayList<>();
-        almondOp_log.add("Almond Board"); // Доска
-        almondOp_log.add("Almond Block"); // Блок
+        almondOp_log.add("Board of Almond"); // Доска
+        almondOp_log.add("Block of Almond"); // Блок
         object.put("gfx/terobjs/trees/almondtreelog", almondOp_log);
 
         ArrayList<String> appleOp_log = new ArrayList<>();
-        appleOp_log.add("Apple Board"); // Доска
-        appleOp_log.add("Apple Block"); // Блок
+        appleOp_log.add("Board of Apple"); // Доска
+        appleOp_log.add("Block of Apple"); // Блок
         object.put("gfx/terobjs/trees/appletreelog", appleOp_log);
 
         ArrayList<String> ashOp_log = new ArrayList<>();
-        ashOp_log.add("Ash Board"); // Доска
-        ashOp_log.add("Ash Block"); // Блок
+        ashOp_log.add("Board of Ash"); // Доска
+        ashOp_log.add("Block of Ash"); // Блок
         object.put("gfx/terobjs/trees/ashlog", ashOp_log);
 
         ArrayList<String> aspenOp_log = new ArrayList<>();
-        aspenOp_log.add("Aspen Board"); // Доска
-        aspenOp_log.add("Aspen Block"); // Блок
+        aspenOp_log.add("Board of Aspen"); // Доска
+        aspenOp_log.add("Block of Aspen"); // Блок
         object.put("gfx/terobjs/trees/aspenlog", aspenOp_log);
 
         ArrayList<String> baywillowOp_log = new ArrayList<>();
-        baywillowOp_log.add("Bay Willow Board"); // Доска
-        baywillowOp_log.add("Bay Willow Block"); // Блок
+        baywillowOp_log.add("Board of Bay Willow"); // Доска
+        baywillowOp_log.add("Block of Bay Willow"); // Блок
         object.put("gfx/terobjs/trees/baywillowlog", baywillowOp_log);
 
         ArrayList<String> beechOp_log = new ArrayList<>();
-        beechOp_log.add("Beech Board"); // Доска
-        beechOp_log.add("Beech Block"); // Блок
+        beechOp_log.add("Board of Beech"); // Доска
+        beechOp_log.add("Block of Beech"); // Блок
         object.put("gfx/terobjs/trees/beechlog", beechOp_log);
 
         ArrayList<String> birchOp_log = new ArrayList<>();
-        birchOp_log.add("Birch Board"); // Доска
-        birchOp_log.add("Birch Block"); // Блок
+        birchOp_log.add("Board of Birch"); // Доска
+        birchOp_log.add("Block of Birch"); // Блок
         object.put("gfx/terobjs/trees/birchlog", birchOp_log);
 
         ArrayList<String> birdcherryOp_log = new ArrayList<>();
-        birdcherryOp_log.add("Birdcherry Board"); // Доска
-        birdcherryOp_log.add("Bird Cherry Block"); // Блок
+        birdcherryOp_log.add("Board of Birdcherry"); // Доска
+        birdcherryOp_log.add("Block of Bird Cherry"); // Блок
         object.put("gfx/terobjs/trees/birdcherrytreelog", birdcherryOp_log);
 
         ArrayList<String> blackpineOp_log = new ArrayList<>();
-        blackpineOp_log.add("Black Pine Board"); // Доска
-        blackpineOp_log.add("Black Pine Block"); // Блок
+        blackpineOp_log.add("Board of Black Pine"); // Доска
+        blackpineOp_log.add("Block of Black Pine"); // Блок
         object.put("gfx/terobjs/trees/blackpinelog", blackpineOp_log);
 
         ArrayList<String> blackpOp_loglarOp_log = new ArrayList<>();
-        blackpOp_loglarOp_log.add("Black POp_loglar Board"); // Доска
-        blackpOp_loglarOp_log.add("Black POp_loglar Block"); // Блок
+        blackpOp_loglarOp_log.add("Board of Black POp_loglar"); // Доска
+        blackpOp_loglarOp_log.add("Block of Black POp_loglar"); // Блок
         object.put("gfx/terobjs/trees/blackpOp_loglarlog", blackpOp_loglarOp_log);
 
         ArrayList<String> briarwoodOp_log = new ArrayList<>();
-        briarwoodOp_log.add("Briarwood Board (Heath)"); // Доска
-        briarwoodOp_log.add("Tree Heath Block"); // Блок
+        briarwoodOp_log.add("Board of Briarwood (Heath)"); // Доска
+        briarwoodOp_log.add("Block of Tree Heath"); // Блок
         object.put("gfx/terobjs/trees/treeheathlog", briarwoodOp_log);
 
         ArrayList<String> buckthornOp_log = new ArrayList<>();
-        buckthornOp_log.add("Buckthorn Board"); // Доска
-        buckthornOp_log.add("Buckthorn Block"); // Блок
+        buckthornOp_log.add("Board of Buckthorn"); // Доска
+        buckthornOp_log.add("Block of Buckthorn"); // Блок
         object.put("gfx/terobjs/trees/buckthornlog", buckthornOp_log);
 
         ArrayList<String> carobOp_log = new ArrayList<>();
-        carobOp_log.add("Carob Board"); // Доска
-        carobOp_log.add("Carob Block"); // Блок
+        carobOp_log.add("Board of Carob"); // Доска
+        carobOp_log.add("Block of Carob"); // Блок
         object.put("gfx/terobjs/trees/carobtreelog", carobOp_log);
 
         ArrayList<String> cedarOp_log = new ArrayList<>();
-        cedarOp_log.add("Cedar Board"); // Доска
-        cedarOp_log.add("Cedar Block"); // Блок
+        cedarOp_log.add("Board of Cedar"); // Доска
+        cedarOp_log.add("Block of Cedar"); // Блок
         object.put("gfx/terobjs/trees/cedarlog", cedarOp_log);
 
         ArrayList<String> charredOp_log = new ArrayList<>();
-        charredOp_log.add("Charred Board (Valhalla)"); // Доска
-        charredOp_log.add("Charred Block"); // Блок
+        charredOp_log.add("Board of Charred (Valhalla)"); // Доска
+        charredOp_log.add("Block of Charred"); // Блок
         object.put("gfx/terobjs/trees/charredtreelog", charredOp_log);
 
         ArrayList<String> chasteOp_log = new ArrayList<>();
-        chasteOp_log.add("Chaste Board"); // Доска
-        chasteOp_log.add("Chaste Tree Block"); // Блок
+        chasteOp_log.add("Board of Chaste"); // Доска
+        chasteOp_log.add("Block of Chaste Tree"); // Блок
         object.put("gfx/terobjs/trees/chastetreelog", chasteOp_log);
 
         ArrayList<String> checkerOp_log = new ArrayList<>();
-        checkerOp_log.add("Checker Board"); // Доска
-        checkerOp_log.add("Checker Tree Block"); // Блок
+        checkerOp_log.add("Board of Checker"); // Доска
+        checkerOp_log.add("Block of Checker Tree"); // Блок
         object.put("gfx/terobjs/trees/checkertreelog", checkerOp_log);
 
         ArrayList<String> cherryOp_log = new ArrayList<>();
-        cherryOp_log.add("Cherry Board"); // Доска
-        cherryOp_log.add("Cherry Block"); // Блок
+        cherryOp_log.add("Board of Cherry"); // Доска
+        cherryOp_log.add("Block of Cherry"); // Блок
         object.put("gfx/terobjs/trees/cherrylog", cherryOp_log);
 
         ArrayList<String> chestnutOp_log = new ArrayList<>();
-        chestnutOp_log.add("Chestnut Board"); // Доска
-        chestnutOp_log.add("Chestnut Block"); // Блок
+        chestnutOp_log.add("Board of Chestnutwood"); // Доска
+        chestnutOp_log.add("Block of Chestnutwood"); // Блок
         object.put("gfx/terobjs/trees/chestnuttreelog", chestnutOp_log);
 
         ArrayList<String> conkerOp_log = new ArrayList<>();
-        conkerOp_log.add("Conker Board"); // Доска
-        conkerOp_log.add("Conker Block"); // Блок
+        conkerOp_log.add("Board of Conker"); // Доска
+        conkerOp_log.add("Block of Conker"); // Блок
         object.put("gfx/terobjs/trees/conkertreelog", conkerOp_log);
 
         ArrayList<String> corkOakOp_log = new ArrayList<>();
-        corkOakOp_log.add("Cork Oak Board"); // Доска
-        corkOakOp_log.add("Cork Oak Block"); // Блок
+        corkOakOp_log.add("Board of Cork Oak"); // Доска
+        corkOakOp_log.add("Block of Cork Oak"); // Блок
         object.put("gfx/terobjs/trees/corkoaklog", corkOakOp_log);
 
         ArrayList<String> crabappleOp_log = new ArrayList<>();
-        crabappleOp_log.add("Crabapple Board"); // Доска
-        crabappleOp_log.add("Crabapple Block"); // Блок
+        crabappleOp_log.add("Board of Crabapple"); // Доска
+        crabappleOp_log.add("Block of Crabapple"); // Блок
         object.put("gfx/terobjs/trees/crabappletreelog", crabappleOp_log);
 
         ArrayList<String> cypressOp_log = new ArrayList<>();
-        cypressOp_log.add("Cypress Board"); // Доска
-        cypressOp_log.add("Cypress Block"); // Блок
+        cypressOp_log.add("Board of Cypress"); // Доска
+        cypressOp_log.add("Block of Cypress"); // Блок
         object.put("gfx/terobjs/trees/cypresslog", cypressOp_log);
 
         ArrayList<String> dogwoodOp_log = new ArrayList<>();
-        dogwoodOp_log.add("Dogwood Board"); // Доска
-        dogwoodOp_log.add("Dogwood Block"); // Блок
+        dogwoodOp_log.add("Board of Dogwood"); // Доска
+        dogwoodOp_log.add("Block of Dogwood"); // Блок
         object.put("gfx/terobjs/trees/dogwoodlog", dogwoodOp_log);
 
         ArrayList<String> dwarfpineOp_log = new ArrayList<>();
-        dwarfpineOp_log.add("Dwarf Pine Board"); // Доска
-        dwarfpineOp_log.add("Dwarf Pine Block"); // Блок
+        dwarfpineOp_log.add("Board of Dwarf Pine"); // Доска
+        dwarfpineOp_log.add("Block of Dwarf Pine"); // Блок
         object.put("gfx/terobjs/trees/dwarfpinelog", dwarfpineOp_log);
 
         ArrayList<String> elmOp_log = new ArrayList<>();
-        elmOp_log.add("Elm Board"); // Доска
-        elmOp_log.add("Elm Block"); // Блок
+        elmOp_log.add("Board of Elm"); // Доска
+        elmOp_log.add("Block of Elm"); // Блок
         object.put("gfx/terobjs/trees/elmlog", elmOp_log);
 
         ArrayList<String> figOp_log = new ArrayList<>();
-        figOp_log.add("Fig Board"); // Доска
-        figOp_log.add("Fig Block"); // Блок
+        figOp_log.add("Board of Fig"); // Доска
+        figOp_log.add("Block of Fig"); // Блок
         object.put("gfx/terobjs/trees/figtreelog", figOp_log);
 
         ArrayList<String> firOp_log = new ArrayList<>();
-        firOp_log.add("Fir Board"); // Доска
-        firOp_log.add("Fir Block"); // Блок
+        firOp_log.add("Board of Fir"); // Доска
+        firOp_log.add("Block of Fir"); // Блок
         object.put("gfx/terobjs/trees/firlog", firOp_log);
 
         ArrayList<String> gloomcapOp_log = new ArrayList<>();
-        gloomcapOp_log.add("Gloomcap Board"); // Доска
-        gloomcapOp_log.add("Gloomcap Block"); // Блок
+        gloomcapOp_log.add("Board of Gloomcap"); // Доска
+        gloomcapOp_log.add("Block of Gloomcap"); // Блок
         object.put("gfx/terobjs/trees/gloomcaplog", gloomcapOp_log);
 
         ArrayList<String> gnomeshatOp_log = new ArrayList<>();
-        gnomeshatOp_log.add("Gnome's Hat Board"); // Доска
-        gnomeshatOp_log.add("Gnome's Hat Block"); // Блок
+        gnomeshatOp_log.add("Board of Gnome's Hat"); // Доска
+        gnomeshatOp_log.add("Block of Gnome's Hat"); // Блок
         object.put("gfx/terobjs/trees/gnomeshatlog", gnomeshatOp_log);
 
         ArrayList<String> goldenchainOp_log = new ArrayList<>();
-        goldenchainOp_log.add("Golden-chain Board"); // Доска
-        goldenchainOp_log.add("Golden Chain Block"); // Блок
+        goldenchainOp_log.add("Board of Golden-chain"); // Доска
+        goldenchainOp_log.add("Block of Golden Chain"); // Блок
         object.put("gfx/terobjs/trees/goldenchainlog", goldenchainOp_log);
 
         ArrayList<String> grayalderOp_log = new ArrayList<>();
-        grayalderOp_log.add("Gray Alder Board"); // Доска
-        grayalderOp_log.add("Gray Alder Block"); // Блок
+        grayalderOp_log.add("Board of Gray Alder"); // Доска
+        grayalderOp_log.add("Block of Gray Alder"); // Блок
         object.put("gfx/terobjs/trees/grayalderlog", grayalderOp_log);
 
         ArrayList<String> hazelOp_log = new ArrayList<>();
-        hazelOp_log.add("Hazel Board"); // Доска
-        hazelOp_log.add("Hazel Block"); // Блок
+        hazelOp_log.add("Board of Hazel"); // Доска
+        hazelOp_log.add("Block of Hazel"); // Блок
         object.put("gfx/terobjs/trees/hazellog", hazelOp_log);
 
         ArrayList<String> hornbeamOp_log = new ArrayList<>();
-        hornbeamOp_log.add("Hornbeam Board"); // Доска
-        hornbeamOp_log.add("Hornbeam Block"); // Блок
+        hornbeamOp_log.add("Board of Hornbeam"); // Доска
+        hornbeamOp_log.add("Block of Hornbeam"); // Блок
         object.put("gfx/terobjs/trees/hornbeamlog", hornbeamOp_log);
 
         ArrayList<String> juniperOp_log = new ArrayList<>();
-        juniperOp_log.add("Juniper Board"); // Доска
-        juniperOp_log.add("Juniper Block"); // Блок
+        juniperOp_log.add("Board of Juniper"); // Доска
+        juniperOp_log.add("Block of Juniper"); // Блок
         object.put("gfx/terobjs/trees/juniperlog", juniperOp_log);
 
         ArrayList<String> kingsoakOp_log = new ArrayList<>();
-        kingsoakOp_log.add("King's Oak Board"); // Доска
-        kingsoakOp_log.add("King's Oak Block"); // Блок
+        kingsoakOp_log.add("Board of King's Oak"); // Доска
+        kingsoakOp_log.add("Block of King's Oak"); // Блок
         object.put("gfx/terobjs/trees/kingsoaklog", kingsoakOp_log);
 
         ArrayList<String> larchOp_log = new ArrayList<>();
-        larchOp_log.add("Larch Board"); // Доска
-        larchOp_log.add("Larch Block"); // Блок
+        larchOp_log.add("Board of Larch"); // Доска
+        larchOp_log.add("Block of Larch"); // Блок
         object.put("gfx/terobjs/trees/larchlog", larchOp_log);
 
         ArrayList<String> laurelOp_log = new ArrayList<>();
-        laurelOp_log.add("Laurel Board"); // Доска
-        laurelOp_log.add("Laurel Block"); // Блок
+        laurelOp_log.add("Board of Laurel"); // Доска
+        laurelOp_log.add("Block of Laurel"); // Блок
         object.put("gfx/terobjs/trees/laurellog", laurelOp_log);
 
         ArrayList<String> lemonOp_log = new ArrayList<>();
-        lemonOp_log.add("Lemon Board"); // Доска
-        lemonOp_log.add("Lemon Block"); // Блок
+        lemonOp_log.add("Board of Lemon"); // Доска
+        lemonOp_log.add("Block of Lemon"); // Блок
         object.put("gfx/terobjs/trees/lemontreelog", lemonOp_log);
 
         ArrayList<String> lindenOp_log = new ArrayList<>();
-        lindenOp_log.add("Linden Board"); // Доска
-        lindenOp_log.add("Linden Block"); // Блок
+        lindenOp_log.add("Board of Linden"); // Доска
+        lindenOp_log.add("Block of Linden"); // Блок
         object.put("gfx/terobjs/trees/lindenlog", lindenOp_log);
 
         ArrayList<String> loteOp_log = new ArrayList<>();
-        loteOp_log.add("Lote Board"); // Доска
-        loteOp_log.add("Lote Tree Block"); // Блок
+        loteOp_log.add("Board of Lotewood"); // Доска
+        loteOp_log.add("Block of Lotewood"); // Блок
         object.put("gfx/terobjs/trees/lotetreelog", loteOp_log);
 
         ArrayList<String> mapleOp_log = new ArrayList<>();
-        mapleOp_log.add("Maple Board"); // Доска
-        mapleOp_log.add("Maple Block"); // Блок
+        mapleOp_log.add("Board of Maple"); // Доска
+        mapleOp_log.add("Block of Maple"); // Блок
         object.put("gfx/terobjs/trees/maplelog", mapleOp_log);
 
         ArrayList<String> mayflowerOp_log = new ArrayList<>();
-        mayflowerOp_log.add("Mayflower Board"); // Доска
-        mayflowerOp_log.add("Mayflower Block"); // Блок
+        mayflowerOp_log.add("Board of Mayflower"); // Доска
+        mayflowerOp_log.add("Block of Mayflower"); // Блок
         object.put("gfx/terobjs/trees/mayflowerlog", mayflowerOp_log);
 
         ArrayList<String> medlarOp_log = new ArrayList<>();
-        medlarOp_log.add("Medlar Board"); // Доска
-        medlarOp_log.add("Medlar Block"); // Блок
+        medlarOp_log.add("Board of Medlar"); // Доска
+        medlarOp_log.add("Block of Medlar"); // Блок
         object.put("gfx/terobjs/trees/medlartreelog", medlarOp_log);
 
         ArrayList<String> moundOp_log = new ArrayList<>();
-        moundOp_log.add("Mound Board"); // Доска
-        moundOp_log.add("Mound Block"); // Блок
+        moundOp_log.add("Board of Mound"); // Доска
+        moundOp_log.add("Block of Mound"); // Блок
         object.put("gfx/terobjs/trees/moundtreelog", moundOp_log);
 
         ArrayList<String> mulberryOp_log = new ArrayList<>();
-        mulberryOp_log.add("Mulberry Board"); // Доска
-        mulberryOp_log.add("Mulberry Block"); // Блок
+        mulberryOp_log.add("Board of Mulberry"); // Доска
+        mulberryOp_log.add("Block of Mulberry"); // Блок
         object.put("gfx/terobjs/trees/mulberrylog", mulberryOp_log);
 
         ArrayList<String> oakOp_log = new ArrayList<>();
-        oakOp_log.add("Oak Board"); // Доска
-        oakOp_log.add("Oak Block"); // Блок
+        oakOp_log.add("Board of Oak"); // Доска
+        oakOp_log.add("Block of Oak"); // Блок
         object.put("gfx/terobjs/trees/oaklog", oakOp_log);
 
         ArrayList<String> oliveOp_log = new ArrayList<>();
-        oliveOp_log.add("Olive Board"); // Доска
-        oliveOp_log.add("Olive Block"); // Блок
+        oliveOp_log.add("Board of Olive"); // Доска
+        oliveOp_log.add("Block of Olive"); // Блок
         object.put("gfx/terobjs/trees/olivetreelog", oliveOp_log);
 
         ArrayList<String> orangeOp_log = new ArrayList<>();
-        orangeOp_log.add("Orange Board"); // Доска
-        orangeOp_log.add("Orange Block"); // Блок
+        orangeOp_log.add("Board of Orange"); // Доска
+        orangeOp_log.add("Block of Orange"); // Блок
         object.put("gfx/terobjs/trees/orangetreelog", orangeOp_log);
 
         ArrayList<String> osierOp_log = new ArrayList<>();
-        osierOp_log.add("Osier Board"); // Доска
-        osierOp_log.add("Osier Block"); // Блок
+        osierOp_log.add("Board of Osier"); // Доска
+        osierOp_log.add("Block of Osier"); // Блок
         object.put("gfx/terobjs/trees/osierlog", osierOp_log);
 
         ArrayList<String> pearOp_log = new ArrayList<>();
-        pearOp_log.add("Pear Board"); // Доска
-        pearOp_log.add("Pear Block"); // Блок
+        pearOp_log.add("Board of Pear"); // Доска
+        pearOp_log.add("Block of Pear"); // Блок
         object.put("gfx/terobjs/trees/peartreelog", pearOp_log);
 
         ArrayList<String> persimmonOp_log = new ArrayList<>();
-        persimmonOp_log.add("Persimmon Board"); // Доска
-        persimmonOp_log.add("Persimmon Block"); // Блок
+        persimmonOp_log.add("Board of Persimmon"); // Доска
+        persimmonOp_log.add("Block of Persimmon"); // Блок
         object.put("gfx/terobjs/trees/persimmontreelog", persimmonOp_log);
 
         ArrayList<String> pineOp_log = new ArrayList<>();
@@ -837,123 +837,123 @@ public class VSpec {
         object.put("gfx/terobjs/trees/pinelog", pineOp_log);
 
         ArrayList<String> planeOp_log = new ArrayList<>();
-        planeOp_log.add("Plane Board"); // Доска
-        planeOp_log.add("Plane Block"); // Блок
+        planeOp_log.add("Board of Plane"); // Доска
+        planeOp_log.add("Block of Plane"); // Блок
         object.put("gfx/terobjs/trees/planetreelog", planeOp_log);
 
         ArrayList<String> plumOp_log = new ArrayList<>();
-        plumOp_log.add("Plum Board"); // Доска
-        plumOp_log.add("Plum Block"); // Блок
+        plumOp_log.add("Board of Plum"); // Доска
+        plumOp_log.add("Block of Plum"); // Блок
         object.put("gfx/terobjs/trees/plumtreelog", plumOp_log);
 
         ArrayList<String> pOp_loglarOp_log = new ArrayList<>();
-        pOp_loglarOp_log.add("POp_loglar Board"); // Доска
-        pOp_loglarOp_log.add("POp_loglar Block"); // Блок
+        pOp_loglarOp_log.add("Board of POp_loglar"); // Доска
+        pOp_loglarOp_log.add("Block of POp_loglar"); // Блок
         object.put("gfx/terobjs/trees/pOp_loglarlog", pOp_loglarOp_log);
 
         ArrayList<String> quinceOp_log = new ArrayList<>();
-        quinceOp_log.add("Quince Board"); // Доска
-        quinceOp_log.add("Quince Block"); // Блок
+        quinceOp_log.add("Board of Quince"); // Доска
+        quinceOp_log.add("Block of Quince"); // Блок
         object.put("gfx/terobjs/trees/quincetreelog", quinceOp_log);
 
         ArrayList<String> rowanOp_log = new ArrayList<>();
-        rowanOp_log.add("Rowan Board"); // Доска
-        rowanOp_log.add("Rowan Block"); // Блок
+        rowanOp_log.add("Board of Rowan"); // Доска
+        rowanOp_log.add("Block of Rowan"); // Блок
         object.put("gfx/terobjs/trees/rowanlog", rowanOp_log);
 
         ArrayList<String> sallowOp_log = new ArrayList<>();
-        sallowOp_log.add("Sallow Board"); // Доска
-        sallowOp_log.add("Sallow Block"); // Блок
+        sallowOp_log.add("Board of Sallow"); // Доска
+        sallowOp_log.add("Block of Sallow"); // Блок
         object.put("gfx/terobjs/trees/sallowlog", sallowOp_log);
 
         ArrayList<String> silverfirOp_log = new ArrayList<>();
-        silverfirOp_log.add("Silver Fir Board"); // Доска
-        silverfirOp_log.add("Silver Fir Block"); // Блок
+        silverfirOp_log.add("Board of Silver Fir"); // Доска
+        silverfirOp_log.add("Block of Silver Fir"); // Блок
         object.put("gfx/terobjs/trees/silverfirlog", silverfirOp_log);
 
         ArrayList<String> sorbOp_log = new ArrayList<>();
-        sorbOp_log.add("Sorb Board"); // Доска
-        sorbOp_log.add("Sorb Block"); // Блок
+        sorbOp_log.add("Board of Sorb"); // Доска
+        sorbOp_log.add("Block of Sorb"); // Блок
         object.put("gfx/terobjs/trees/sorbtreelog", sorbOp_log);
 
         ArrayList<String> spruceOp_log = new ArrayList<>();
-        spruceOp_log.add("Spruce Board"); // Доска
+        spruceOp_log.add("Board of Spruce"); // Доска
         spruceOp_log.add("Block of Spruce"); // Блок
         object.put("gfx/terobjs/trees/sprucelog", spruceOp_log);
 
         ArrayList<String> stonepineOp_log = new ArrayList<>();
-        stonepineOp_log.add("Stone Pine Board"); // Доска
-        stonepineOp_log.add("Stone Pine Block"); // Блок
+        stonepineOp_log.add("Board of Stone Pine"); // Доска
+        stonepineOp_log.add("Block of Stone Pine"); // Блок
         object.put("gfx/terobjs/trees/stonepinelog", stonepineOp_log);
 
         ArrayList<String> sweetgumOp_log = new ArrayList<>();
-        sweetgumOp_log.add("Sweetgum Board"); // Доска
-        sweetgumOp_log.add("Sweetgum Block"); // Блок
+        sweetgumOp_log.add("Board of Sweetgum"); // Доска
+        sweetgumOp_log.add("Block of Sweetgum"); // Блок
         object.put("gfx/terobjs/trees/sweetgumlog", sweetgumOp_log);
 
         ArrayList<String> sycamoreOp_log = new ArrayList<>();
-        sycamoreOp_log.add("Sycamore Board"); // Доска
-        sycamoreOp_log.add("Sycamore Block"); // Блок
+        sycamoreOp_log.add("Board of Sycamore"); // Доска
+        sycamoreOp_log.add("Block of Sycamore"); // Блок
         object.put("gfx/terobjs/trees/sycamorelog", sycamoreOp_log);
 
         ArrayList<String> tamariskOp_log = new ArrayList<>();
-        tamariskOp_log.add("Tamarisk Board"); // Доска
-        tamariskOp_log.add("Tamarisk Block"); // Блок
+        tamariskOp_log.add("Board of Tamarisk"); // Доска
+        tamariskOp_log.add("Block of Tamarisk"); // Блок
         object.put("gfx/terobjs/trees/tamarisklog", tamariskOp_log);
 
         ArrayList<String> terebinthOp_log = new ArrayList<>();
-        terebinthOp_log.add("Terebinth Board"); // Доска
-        terebinthOp_log.add("Terebinth Block"); // Блок
+        terebinthOp_log.add("Board of Terebinth"); // Доска
+        terebinthOp_log.add("Block of Terebinth"); // Блок
         object.put("gfx/terobjs/trees/terebinthlog", terebinthOp_log);
 
         ArrayList<String> towercapOp_log = new ArrayList<>();
-        towercapOp_log.add("Towercap Board"); // Доска
-        towercapOp_log.add("Towercap Block"); // Блок
+        towercapOp_log.add("Board of Towercap"); // Доска
+        towercapOp_log.add("Block of Towercap"); // Блок
         object.put("gfx/terobjs/trees/towercaplog", towercapOp_log);
 
         ArrayList<String> trombonechantrelleOp_log = new ArrayList<>();
-        trombonechantrelleOp_log.add("Trumpet Chantrelle Board"); // Доска
-        trombonechantrelleOp_log.add("Trombone Chantrelle Block"); // Блок
+        trombonechantrelleOp_log.add("Board of Trumpet Chantrelle"); // Доска
+        trombonechantrelleOp_log.add("Block of Trombone Chantrelle"); // Блок
         object.put("gfx/terobjs/trees/trombonechantrellelog", trombonechantrelleOp_log);
 
         ArrayList<String> walnutOp_log = new ArrayList<>();
-        walnutOp_log.add("Walnut Board"); // Доска
-        walnutOp_log.add("Walnut Block"); // Блок
+        walnutOp_log.add("Board of Walnut"); // Доска
+        walnutOp_log.add("Block of Walnut"); // Блок
         object.put("gfx/terobjs/trees/walnuttreelog", walnutOp_log);
 
         ArrayList<String> wartybirchOp_log = new ArrayList<>();
-        wartybirchOp_log.add("Warty Birch Board"); // Доска
-        wartybirchOp_log.add("Warty Birch Block"); // Блок
+        wartybirchOp_log.add("Board of Warty Birch"); // Доска
+        wartybirchOp_log.add("Block of Warty Birch"); // Блок
         object.put("gfx/terobjs/trees/wartybirchlog", wartybirchOp_log);
 
         ArrayList<String> whitebeamOp_log = new ArrayList<>();
-        whitebeamOp_log.add("Whitebeam Board"); // Доска
-        whitebeamOp_log.add("Whitebeam Block"); // Блок
+        whitebeamOp_log.add("Board of Whitebeam"); // Доска
+        whitebeamOp_log.add("Block of Whitebeam"); // Блок
         object.put("gfx/terobjs/trees/whitebeamlog", whitebeamOp_log);
 
         ArrayList<String> willowOp_log = new ArrayList<>();
-        willowOp_log.add("Willow Board"); // Доска
-        willowOp_log.add("Willow Block"); // Блок
+        willowOp_log.add("Board of Willow"); // Доска
+        willowOp_log.add("Block of Willow"); // Блок
         object.put("gfx/terobjs/trees/willowlog", willowOp_log);
 
         ArrayList<String> woodStrawberryOp_log = new ArrayList<>();
-        woodStrawberryOp_log.add("Wood Strawberry Board"); // Доска
-        woodStrawberryOp_log.add("Wood Strawberry Block"); // Блок
+        woodStrawberryOp_log.add("Board of Wood Strawberry"); // Доска
+        woodStrawberryOp_log.add("Block of Wood Strawberry"); // Блок
         object.put("gfx/terobjs/trees/strawberrytreelog", woodStrawberryOp_log);
 
         ArrayList<String> wychelmOp_log = new ArrayList<>();
-        wychelmOp_log.add("Wych Elm Board"); // Доска
-        wychelmOp_log.add("Wych Elm Block"); // Блок
+        wychelmOp_log.add("Board of Wych Elm"); // Доска
+        wychelmOp_log.add("Block of Wych Elm"); // Блок
         object.put("gfx/terobjs/trees/wychelmlog", wychelmOp_log);
 
         ArrayList<String> yewOp_log = new ArrayList<>();
-        yewOp_log.add("Yew Board"); // Доска
-        yewOp_log.add("Yew Block"); // Блок
+        yewOp_log.add("Board of Yew"); // Доска
+        yewOp_log.add("Block of Yew"); // Блок
         object.put("gfx/terobjs/trees/yewlog", yewOp_log);
 
         ArrayList<String> zelkovaOp_log = new ArrayList<>();
-        zelkovaOp_log.add("Zelkova Board"); // Доска
-        zelkovaOp_log.add("Zelkova Block"); // Блок
+        zelkovaOp_log.add("Board of Zelkova"); // Доска
+        zelkovaOp_log.add("Block of Zelkova"); // Блок
         object.put("gfx/terobjs/trees/zelkovalog", zelkovaOp_log);
         ArrayList<String> alabasterOp = new ArrayList<>();
         alabasterOp.add("Alabaster"); // Камень
@@ -1480,6 +1480,81 @@ public class VSpec {
         flours.add(new JSONObject("{\"static\":\"gfx/invobjs/flour-wheatflour\",\"name\":\"Wheat Flour\"}"));
         categories.put("Flour", flours);
 
+        ArrayList<JSONObject> pies = new ArrayList<>();
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/applepie\",\"name\":\"Apple Pie\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/bakedbirchdream\",\"name\":\"Baked Birchbark Bream\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/barkbread\",\"name\":\"Bark Bread\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/birthdaycake\",\"name\":\"Birthday Cake\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/blueberrypie\",\"name\":\"Blueberry Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/bread\",\"name\":\"Bread\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/butterscones\",\"name\":\"Butter Scones\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/carrotcake\",\"name\":\"Carrot Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/cheesecake\",\"name\":\"Cheesecake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/dreamcookies\",\"name\":\"Dream Cookies\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/eggcake\",\"name\":\"Egg Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/fishpie\",\"name\":\"Fishpie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/fruitpie\",\"name\":\"Fruit Pie\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/gingerbreadheart\",\"name\":\"Gingerbread Heart\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/gingerbreadman\",\"name\":\"Gingerbread Man\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/gingerbreadwoman\",\"name\":\"Gingerbread Woman\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/greenleafpie\",\"name\":\"Greenleaf Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/grubpie\",\"name\":\"Grub Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/honeybun\",\"name\":\"Honeybun\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/jellycake\",\"name\":\"Jelly Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/lardycake\",\"name\":\"Lardy Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/lingonloaf\",\"name\":\"Lingon Loaf\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/linseedloaf\",\"name\":\"Linseed Loaf\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/magpie\",\"name\":\"Magpie (Pie)\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/marrowcake\",\"name\":\"Marrow Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/meatpie\",\"name\":\"Meatpie\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/mushroompirozhki\",\"name\":\"Mushroom & Onion Pirozhki\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/mushroompie\",\"name\":\"Mushroom Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/olivebread\",\"name\":\"Olive Bread\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/peapie\",\"name\":\"Pea Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/plumpudding\",\"name\":\"Plum Pudding\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/poultrypotpie\",\"name\":\"Poultry Pot Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/pumpkinbread\",\"name\":\"Pumpkin Bread\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/pumpkinpie\",\"name\":\"Pumpkin Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/raisinbuttercake\",\"name\":\"Raisin Butter-Cake\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/ringofbrodgar\",\"name\":\"Ring of Brodgar (Baking)\"}"));
+//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/seedcrispflatbread\",\"name\":\"Seedcrisp Flatbread\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/shepherdspie\",\"name\":\"Shepherd's Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/strawberrycake\",\"name\":\"Strawberry Cake\"}"));
+        categories.put("Pie", pies);
+
+        ArrayList<JSONObject> doughs = new ArrayList<>();
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-applepie\",\"name\":\"Unbaked Apple Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-barkbread\",\"name\":\"Unbaked Bark Bread\"}"));
+//        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-birthdaycake\",\"name\":\"Unbaked Birthday Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-bread\",\"name\":\"Bread Dough\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-carrotcake\",\"name\":\"Unbaked Carrot Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-cheesecake\",\"name\":\"Unbaked Cheesecake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-dreamcookies\",\"name\":\"Unbaked Dream Cookies\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-eggcake\",\"name\":\"Unbaked Egg Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-fishpie\",\"name\":\"Unbaked Fishpie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-fruitpie\",\"name\":\"Unbaked Fruit Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-greenleafpie\",\"name\":\"Unbaked Greenleaf Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-grubpie\",\"name\":\"Unbaked Grub Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-honeybun\",\"name\":\"Unbaked Honeybun\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-jellycake\",\"name\":\"Unbaked Jelly Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-lardycake\",\"name\":\"Unbaked Lardy Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-lingonloaf\",\"name\":\"Unbaked Lingon Loaf\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-linseedloaf\",\"name\":\"Unbaked Linseed Loaf\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-marrowcake\",\"name\":\"Unbaked Marrow Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-meatpie\",\"name\":\"Unbaked Meatpie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-mushroompie\",\"name\":\"Unbaked Mushroom Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-olivebread\",\"name\":\"Unbaked Olive Bread\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-peapie\",\"name\":\"Unbaked Pea Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-plumpudding\",\"name\":\"Unbaked Plum Pudding\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-poultrypotpie\",\"name\":\"Unbaked Poultry Pot Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-pumpkinbread\",\"name\":\"Unbaked Pumpkin Bread\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-pumpkinpie\",\"name\":\"Unbaked Pumpkin Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-raisinbuttercake\",\"name\":\"Unbaked Raisin Butter-Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-ringofbrodgar\",\"name\":\"Unbaked Ring of Brodgar\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-shepherdspie\",\"name\":\"Unbaked Shepherd's Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-strawberrycake\",\"name\":\"Unbaked Strawberry Cake\"}"));
+        categories.put("Dough", doughs);
+
         ArrayList<JSONObject> giantAntItems = new ArrayList<>();
         giantAntItems.add(new JSONObject("{\"static\":\"gfx/invobjs/ants-larvae\",\"name\":\"Ant Larvae\"}"));
         giantAntItems.add(new JSONObject("{\"static\":\"gfx/invobjs/ants-pupae\",\"name\":\"Ant Pupae\"}"));
@@ -1975,6 +2050,15 @@ public class VSpec {
         finerPlantFibres.add(new JSONObject("{\"static\":\"gfx/invobjs/hempfibre\",\"name\":\"Hemp Fibre\"}"));
         categories.put("Finer Plant Fibre", finerPlantFibres);
 
+        ArrayList<JSONObject> soil = new ArrayList<>();
+        soil.add(new JSONObject("{\"static\":\"gfx/invobjs/soil\",\"name\":\"Soil\"}"));
+        categories.put("Soil", soil);
+
+        ArrayList<JSONObject> silkcocoon = new ArrayList<>();
+        silkcocoon.add(new JSONObject("{\"static\":\"gfx/invobjs/silkcocoon\",\"name\":\"Silkworm Cocoon\"}"));
+        silkcocoon.add(new JSONObject("{\"static\":\"gfx/invobjs/deathchrysalis\",\"name\":\"Death's Head Chrysalis\"}"));
+        categories.put("Silkworm Cocoon", silkcocoon);
+
         ArrayList<JSONObject> wickerItems = new ArrayList<>();
         wickerItems.add(new JSONObject("{\"static\":\"gfx/invobjs/branch\",\"name\":\"Branch\"}"));
         wickerItems.add(new JSONObject("{\"static\":\"gfx/invobjs/branch-olive\",\"name\":\"Olive Branch\"}"));
@@ -2223,182 +2307,182 @@ public class VSpec {
 
         ArrayList<JSONObject> boards = new ArrayList<>();
         //boards.add(new JSONObject("{\"static\":\"gfx/invobjs/small/board\",\"name\":\"Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-acacia\",\"name\":\"Acacia Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-alder\",\"name\":\"Alder Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-almondtree\",\"name\":\"Almond Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-appletree\",\"name\":\"Apple Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-ash\",\"name\":\"Ash Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-aspen\",\"name\":\"Aspen Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-baywillow\",\"name\":\"Bay Willow Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-beech\",\"name\":\"Beech Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-birch\",\"name\":\"Birch Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-birdcherrytree\",\"name\":\"Birdcherry Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-blackpine\",\"name\":\"Black Pine Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-blackpoplar\",\"name\":\"Black Poplar Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-treeheath\",\"name\":\"Briarwood Board (Heath)\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-buckthorn\",\"name\":\"Buckthorn Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-carobtree\",\"name\":\"Carob Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-cedar\",\"name\":\"Cedar Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-charredtree\",\"name\":\"Charred Board (Valhalla)\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-chastetree\",\"name\":\"Chaste Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-checkertree\",\"name\":\"Checker Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-cherry\",\"name\":\"Cherry Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-chestnuttree\",\"name\":\"Chestnut Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-conkertree\",\"name\":\"Conker Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-corkoak\",\"name\":\"Cork Oak Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-crabappletree\",\"name\":\"Crabapple Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-cypress\",\"name\":\"Cypress Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-dogwood\",\"name\":\"Dogwood Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-dwarfpine\",\"name\":\"Dwarf Pine Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-elm\",\"name\":\"Elm Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-figtree\",\"name\":\"Fig Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-fir\",\"name\":\"Fir Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-gloomcap\",\"name\":\"Gloomcap Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-gnomeshat\",\"name\":\"Gnome's Hat Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-goldenchain\",\"name\":\"Golden-chain Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-grayalder\",\"name\":\"Gray Alder Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-hazel\",\"name\":\"Hazel Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-hornbeam\",\"name\":\"Hornbeam Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-juniper\",\"name\":\"Juniper Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-kingsoak\",\"name\":\"King's Oak Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-larch\",\"name\":\"Larch Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-laurel\",\"name\":\"Laurel Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-lemontree\",\"name\":\"Lemon Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-linden\",\"name\":\"Linden Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-lotetree\",\"name\":\"Lote Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-maple\",\"name\":\"Maple Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-mayflower\",\"name\":\"Mayflower Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-medlartree\",\"name\":\"Medlar Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-moundtree\",\"name\":\"Mound Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-mulberry\",\"name\":\"Mulberry Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-oak\",\"name\":\"Oak Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-olivetree\",\"name\":\"Olive Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-orangetree\",\"name\":\"Orange Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-osier\",\"name\":\"Osier Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-peartree\",\"name\":\"Pear Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-persimmontree\",\"name\":\"Persimmon Board\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-acacia\",\"name\":\"Board of Acacia\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-alder\",\"name\":\"Board of Alder\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-almondtree\",\"name\":\"Board of Almond\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-appletree\",\"name\":\"Board of Apple\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-ash\",\"name\":\"Board of Ash\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-aspen\",\"name\":\"Board of Aspen\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-baywillow\",\"name\":\"Board of Bay Willow\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-beech\",\"name\":\"Board of Beech\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-birch\",\"name\":\"Board of Birch\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-birdcherrytree\",\"name\":\"Board of Birdcherry\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-blackpine\",\"name\":\"Board of Black Pine\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-blackpoplar\",\"name\":\"Board of Black Poplar\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-treeheath\",\"name\":\"Board of Briarwood (Heath)\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-buckthorn\",\"name\":\"Board of Buckthorn\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-carobtree\",\"name\":\"Board of Carob\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-cedar\",\"name\":\"Board of Cedar\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-charredtree\",\"name\":\"Board of Charred (Valhalla)\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-chastetree\",\"name\":\"Board of Chaste\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-checkertree\",\"name\":\"Board of Checker\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-cherry\",\"name\":\"Board of Cherry\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-chestnuttree\",\"name\":\"Board of Chestnutwood\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-conkertree\",\"name\":\"Board of Conker\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-corkoak\",\"name\":\"Board of Cork Oak\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-crabappletree\",\"name\":\"Board of Crabapple\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-cypress\",\"name\":\"Board of Cypress\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-dogwood\",\"name\":\"Board of Dogwood\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-dwarfpine\",\"name\":\"Board of Dwarf Pine\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-elm\",\"name\":\"Board of Elm\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-figtree\",\"name\":\"Board of Fig\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-fir\",\"name\":\"Board of Fir\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-gloomcap\",\"name\":\"Board of Gloomcap\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-gnomeshat\",\"name\":\"Board of Gnome's Hat\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-goldenchain\",\"name\":\"Board of Golden-chain\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-grayalder\",\"name\":\"Board of Gray Alder\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-hazel\",\"name\":\"Board of Hazel\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-hornbeam\",\"name\":\"Board of Hornbeam\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-juniper\",\"name\":\"Board of Juniper\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-kingsoak\",\"name\":\"Board of King's Oak\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-larch\",\"name\":\"Board of Larch\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-laurel\",\"name\":\"Board of Laurel\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-lemontree\",\"name\":\"Board of Lemon\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-linden\",\"name\":\"Board of Linden\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-lotetree\",\"name\":\"Board of Lotewood\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-maple\",\"name\":\"Board of Maple\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-mayflower\",\"name\":\"Board of Mayflower\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-medlartree\",\"name\":\"Board of Medlar\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-moundtree\",\"name\":\"Board of Mound\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-mulberry\",\"name\":\"Board of Mulberry\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-oak\",\"name\":\"Board of Oak\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-olivetree\",\"name\":\"Board of Olive\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-orangetree\",\"name\":\"Board of Orange\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-osier\",\"name\":\"Board of Osier\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-peartree\",\"name\":\"Board of Pear\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-persimmontree\",\"name\":\"Board of Persimmon\"}"));
         boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-pine\",\"name\":\"Board of Pine\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-planetree\",\"name\":\"Plane Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-plumtree\",\"name\":\"Plum Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-poplar\",\"name\":\"Poplar Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-quincetree\",\"name\":\"Quince Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-rowan\",\"name\":\"Rowan Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-sallow\",\"name\":\"Sallow Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-silverfir\",\"name\":\"Silver Fir Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-sorbtree\",\"name\":\"Sorb Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-spruce\",\"name\":\"Spruce Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-stonepine\",\"name\":\"Stone Pine Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-sweetgum\",\"name\":\"Sweetgum Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-sycamore\",\"name\":\"Sycamore Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-tamarisk\",\"name\":\"Tamarisk Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-terebinth\",\"name\":\"Terebinth Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-towercap\",\"name\":\"Towercap Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-trombonechantrelle\",\"name\":\"Trumpet Chantrelle Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-walnuttree\",\"name\":\"Walnut Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-wartybirch\",\"name\":\"Warty Birch Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-whitebeam\",\"name\":\"Whitebeam Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-willow\",\"name\":\"Willow Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-strawberrytree\",\"name\":\"Wood Strawberry Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-wychelm\",\"name\":\"Wych Elm Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-yew\",\"name\":\"Yew Board\"}"));
-        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-zelkova\",\"name\":\"Zelkova Board\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-planetree\",\"name\":\"Board of Plane\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-plumtree\",\"name\":\"Board of Plum\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-poplar\",\"name\":\"Board of Poplar\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-quincetree\",\"name\":\"Board of Quince\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-rowan\",\"name\":\"Board of Rowan\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-sallow\",\"name\":\"Board of Sallow\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-silverfir\",\"name\":\"Board of Silver Fir\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-sorbtree\",\"name\":\"Board of Sorb\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-spruce\",\"name\":\"Board of Spruce\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-stonepine\",\"name\":\"Board of Stone Pine\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-sweetgum\",\"name\":\"Board of Sweetgum\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-sycamore\",\"name\":\"Board of Sycamore\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-tamarisk\",\"name\":\"Board of Tamarisk\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-terebinth\",\"name\":\"Board of Terebinth\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-towercap\",\"name\":\"Board of Towercap\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-trombonechantrelle\",\"name\":\"Board of Trumpet Chantrelle\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-walnuttree\",\"name\":\"Board of Walnut\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-wartybirch\",\"name\":\"Board of Warty Birch\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-whitebeam\",\"name\":\"Board of Whitebeam\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-willow\",\"name\":\"Board of Willow\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-strawberrytree\",\"name\":\"Board of Wood Strawberry\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-wychelm\",\"name\":\"Board of Wych Elm\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-yew\",\"name\":\"Board of Yew\"}"));
+        boards.add(new JSONObject("{\"static\":\"gfx/invobjs/board-zelkova\",\"name\":\"Board of Zelkova\"}"));
         categories.put("Board", boards);
 
         ArrayList<JSONObject> blocks = new ArrayList<>();
         //blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-driftwood\",\"name\":\"Beaver Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-charredtree\",\"name\":\"Charred Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-driftwood\",\"name\":\"Driftwood Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-mirkwood\",\"name\":\"Mirkwood Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-blackthorn\",\"name\":\"Blackthorn Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-boxwood\",\"name\":\"Boxwood Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-crampbark\",\"name\":\"Crampbark Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-elderberrybush\",\"name\":\"Elderberry Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-woodbine\",\"name\":\"Woodbine Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-gooseberrybush\",\"name\":\"Gooseberry Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-hawthorn\",\"name\":\"Hawthorn Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-hoarwithy\",\"name\":\"Hoarwithy Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-mastic\",\"name\":\"Mastic Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-spindlebush\",\"name\":\"Spindlewood Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-teabush\",\"name\":\"Tea Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-witherstand\",\"name\":\"Witherstand Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-acacia\",\"name\":\"Acacia Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-alder\",\"name\":\"Alder Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-almondtree\",\"name\":\"Almond Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-appletree\",\"name\":\"Apple Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-ash\",\"name\":\"Ash Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-aspen\",\"name\":\"Aspen Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-baywillow\",\"name\":\"Bay Willow Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-beech\",\"name\":\"Beech Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-birch\",\"name\":\"Birch Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-birdcherrytree\",\"name\":\"Bird Cherry Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-blackpine\",\"name\":\"Black Pine Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-blackpoplar\",\"name\":\"Black Poplar Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-treeheath\",\"name\":\"Tree Heath Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-buckthorn\",\"name\":\"Buckthorn Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-carobtree\",\"name\":\"Carob Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-cedar\",\"name\":\"Cedar Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-chastetree\",\"name\":\"Chaste Tree Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-checkertree\",\"name\":\"Checker Tree Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-cherry\",\"name\":\"Cherry Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-chestnuttree\",\"name\":\"Chestnut Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-conkertree\",\"name\":\"Conker Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-corkoak\",\"name\":\"Cork Oak Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-crabappletree\",\"name\":\"Crabapple Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-cypress\",\"name\":\"Cypress Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-dogwood\",\"name\":\"Dogwood Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-dwarfpine\",\"name\":\"Dwarf Pine Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-elm\",\"name\":\"Elm Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-figtree\",\"name\":\"Fig Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-fir\",\"name\":\"Fir Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-gloomcap\",\"name\":\"Gloomcap Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-gnomeshat\",\"name\":\"Gnome's Hat Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-goldenchain\",\"name\":\"Golden Chain Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-grayalder\",\"name\":\"Gray Alder Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-hazel\",\"name\":\"Hazel Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-hornbeam\",\"name\":\"Hornbeam Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-juniper\",\"name\":\"Juniper Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-kingsoak\",\"name\":\"King's Oak Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-larch\",\"name\":\"Larch Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-laurel\",\"name\":\"Laurel Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-lemontree\",\"name\":\"Lemon Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-linden\",\"name\":\"Linden Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-lotetree\",\"name\":\"Lote Tree Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-maple\",\"name\":\"Maple Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-mayflower\",\"name\":\"Mayflower Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-medlartree\",\"name\":\"Medlar Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-moundtree\",\"name\":\"Mound Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-mulberry\",\"name\":\"Mulberry Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-oak\",\"name\":\"Oak Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-olivetree\",\"name\":\"Olive Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-orangetree\",\"name\":\"Orange Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-osier\",\"name\":\"Osier Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-peartree\",\"name\":\"Pear Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-persimmontree\",\"name\":\"Persimmon Block\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-charredtree\",\"name\":\"Block of Charred\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-driftwood\",\"name\":\"Block of Driftwood\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-mirkwood\",\"name\":\"Block of Mirkwood\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-blackthorn\",\"name\":\"Block of Blackthorn\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-boxwood\",\"name\":\"Block of Boxwood\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-crampbark\",\"name\":\"Block of Crampbark\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-elderberrybush\",\"name\":\"Block of Elderberry\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-woodbine\",\"name\":\"Block of Woodbine\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-gooseberrybush\",\"name\":\"Block of Gooseberry\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-hawthorn\",\"name\":\"Block of Hawthorn\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-hoarwithy\",\"name\":\"Block of Hoarwithy\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-mastic\",\"name\":\"Block of Mastic\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-spindlebush\",\"name\":\"Block of Spindlewood\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-teabush\",\"name\":\"Block of Tea\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-witherstand\",\"name\":\"Block of Witherstand\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-acacia\",\"name\":\"Block of Acacia\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-alder\",\"name\":\"Block of Alder\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-almondtree\",\"name\":\"Block of Almond\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-appletree\",\"name\":\"Block of Apple\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-ash\",\"name\":\"Block of Ash\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-aspen\",\"name\":\"Block of Aspen\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-baywillow\",\"name\":\"Block of Bay Willow\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-beech\",\"name\":\"Block of Beech\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-birch\",\"name\":\"Block of Birch\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-birdcherrytree\",\"name\":\"Block of Bird Cherry\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-blackpine\",\"name\":\"Block of Black Pine\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-blackpoplar\",\"name\":\"Block of Black Poplar\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-treeheath\",\"name\":\"Block of Tree Heath\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-buckthorn\",\"name\":\"Block of Buckthorn\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-carobtree\",\"name\":\"Block of Carob\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-cedar\",\"name\":\"Block of Cedar\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-chastetree\",\"name\":\"Block of Chaste Tree\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-checkertree\",\"name\":\"Block of Checker Tree\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-cherry\",\"name\":\"Block of Cherry\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-chestnuttree\",\"name\":\"Block of Chestnutwood\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-conkertree\",\"name\":\"Block of Conker\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-corkoak\",\"name\":\"Block of Cork Oak\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-crabappletree\",\"name\":\"Block of Crabapple\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-cypress\",\"name\":\"Block of Cypress\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-dogwood\",\"name\":\"Block of Dogwood\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-dwarfpine\",\"name\":\"Block of Dwarf Pine\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-elm\",\"name\":\"Block of Elm\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-figtree\",\"name\":\"Block of Fig\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-fir\",\"name\":\"Block of Fir\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-gloomcap\",\"name\":\"Block of Gloomcap\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-gnomeshat\",\"name\":\"Block of Gnome's Hat\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-goldenchain\",\"name\":\"Block of Golden Chain\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-grayalder\",\"name\":\"Block of Gray Alder\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-hazel\",\"name\":\"Block of Hazel\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-hornbeam\",\"name\":\"Block of Hornbeam\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-juniper\",\"name\":\"Block of Juniper\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-kingsoak\",\"name\":\"Block of King's Oak\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-larch\",\"name\":\"Block of Larch\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-laurel\",\"name\":\"Block of Laurel\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-lemontree\",\"name\":\"Block of Lemon\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-linden\",\"name\":\"Block of Linden\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-lotetree\",\"name\":\"Block of Lotewood\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-maple\",\"name\":\"Block of Maple\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-mayflower\",\"name\":\"Block of Mayflower\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-medlartree\",\"name\":\"Block of Medlar\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-moundtree\",\"name\":\"Block of Mound\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-mulberry\",\"name\":\"Block of Mulberry\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-oak\",\"name\":\"Block of Oak\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-olivetree\",\"name\":\"Block of Olive\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-orangetree\",\"name\":\"Block of Orange\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-osier\",\"name\":\"Block of Osier\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-peartree\",\"name\":\"Block of Pear\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-persimmontree\",\"name\":\"Block of Persimmon\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-pine\",\"name\":\"Block of Pine\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-planetree\",\"name\":\"Plane Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-plumtree\",\"name\":\"Plum Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-poplar\",\"name\":\"Poplar Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-quincetree\",\"name\":\"Quince Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-rowan\",\"name\":\"Rowan Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sallow\",\"name\":\"Sallow Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-silverfir\",\"name\":\"Silver Fir Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sorbtree\",\"name\":\"Sorb Block\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-planetree\",\"name\":\"Block of Plane\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-plumtree\",\"name\":\"Block of Plum\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-poplar\",\"name\":\"Block of Poplar\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-quincetree\",\"name\":\"Block of Quince\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-rowan\",\"name\":\"Block of Rowan\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sallow\",\"name\":\"Block of Sallow\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-silverfir\",\"name\":\"Block of Silver Fir\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sorbtree\",\"name\":\"Block of Sorb\"}"));
         blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-spruce\",\"name\":\"Block of Spruce\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-stonepine\",\"name\":\"Stone Pine Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sweetgum\",\"name\":\"Sweetgum Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sycamore\",\"name\":\"Sycamore Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-tamarisk\",\"name\":\"Tamarisk Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-terebinth\",\"name\":\"Terebinth Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-towercap\",\"name\":\"Towercap Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-trombonechantrelle\",\"name\":\"Trombone Chantrelle Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-walnuttree\",\"name\":\"Walnut Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-wartybirch\",\"name\":\"Warty Birch Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-whitebeam\",\"name\":\"Whitebeam Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-willow\",\"name\":\"Willow Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-strawberrytree\",\"name\":\"Wood Strawberry Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-wychelm\",\"name\":\"Wych Elm Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-yew\",\"name\":\"Yew Block\"}"));
-        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-zelkova\",\"name\":\"Zelkova Block\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-stonepine\",\"name\":\"Block of Stone Pine\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sweetgum\",\"name\":\"Block of Sweetgum\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-sycamore\",\"name\":\"Block of Sycamore\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-tamarisk\",\"name\":\"Block of Tamarisk\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-terebinth\",\"name\":\"Block of Terebinth\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-towercap\",\"name\":\"Block of Towercap\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-trombonechantrelle\",\"name\":\"Block of Trombone Chantrelle\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-walnuttree\",\"name\":\"Block of Walnut\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-wartybirch\",\"name\":\"Block of Warty Birch\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-whitebeam\",\"name\":\"Block of Whitebeam\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-willow\",\"name\":\"Block of Willow\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-strawberrytree\",\"name\":\"Block of Wood Strawberry\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-wychelm\",\"name\":\"Block of Wych Elm\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-yew\",\"name\":\"Block of Yew\"}"));
+        blocks.add(new JSONObject("{\"static\":\"gfx/invobjs/wblock-zelkova\",\"name\":\"Block of Zelkova\"}"));
         categories.put("Block of Wood", blocks);
 
         ArrayList<JSONObject> ore = new ArrayList<>();
@@ -2678,6 +2762,50 @@ public class VSpec {
 
         categories.put("Medicine", medicine);
 
+        // Cheese category with all cheese types
+        ArrayList<JSONObject> cheeses = new ArrayList<>();
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-creamycamembert\",\"name\":\"Creamy Camembert\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-muskymilben\",\"name\":\"Musky Milben\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-midnightblue\",\"name\":\"Midnight Blue Cheese\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-cavecheddar\",\"name\":\"Cave Cheddar\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-sunlitstilton\",\"name\":\"Sunlit Stilton\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-halloumi\",\"name\":\"Halloumi\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-caciotta\",\"name\":\"Caciotta\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-cabrales\",\"name\":\"Cabrales\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-manchego\",\"name\":\"Manchego\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-roncal\",\"name\":\"Roncal\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-oscypki\",\"name\":\"Oscypki\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-robiola\",\"name\":\"Robiola\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-picodon\",\"name\":\"Picodon\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-garrotxa\",\"name\":\"Garrotxa\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-formaela\",\"name\":\"Formaela\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-majorero\",\"name\":\"Majorero\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-kasseri\",\"name\":\"Kasseri\"}"));
+        // Intermediate cheeses
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-temmentaler\",\"name\":\"Tasty Emmentaler\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-cellarcheddar\",\"name\":\"Cellar Cheddar\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-brodgarblue\",\"name\":\"Brodgar Blue Cheese\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-jorbonzola\",\"name\":\"Jorbonzola\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-mothzarella\",\"name\":\"Mothzarella\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-harmesan\",\"name\":\"Harmesan Cheese\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-feta\",\"name\":\"Feta\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-pecorino\",\"name\":\"Pecorino\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-gbejna\",\"name\":\"Gbejna\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-abbaye\",\"name\":\"Abbaye\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-zamorano\",\"name\":\"Zamorano\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-brique\",\"name\":\"Brique\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-banon\",\"name\":\"Banon\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-bucheron\",\"name\":\"Bucheron\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-graviera\",\"name\":\"Graviera\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-gevrik\",\"name\":\"Gevrik\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-chabichou\",\"name\":\"Chabichou\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/cheese-chabis\",\"name\":\"Chabis\"}"));
+        // Curds
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/curd-cow\",\"name\":\"Cow's Curd\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/curd-goat\",\"name\":\"Goat's Curd\"}"));
+        cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/curd-sheep\",\"name\":\"Sheep's Curd\"}"));
+        categories.put("Cheese", cheeses);
+
 
     }
 
@@ -2729,14 +2857,20 @@ public class VSpec {
         if(clickedGob!=null) {
             if (clickedGob.ngob.name != null && object.containsKey(clickedGob.ngob.name)) {
                 if (object.get(clickedGob.ngob.name).contains(name)) {
-                    if (!NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name)) {
+                    boolean objectExists = NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name);
 
+                    if (!objectExists) {
                         NUtils.getGameUI().getCharInfo().LpExplorerAdd(clickedGob.ngob.name,name);
                         NUtils.getGameUI().getCharInfo().newLpExplorer = true;
 
                     } else {
-                        if (NUtils.getGameUI().getCharInfo().LpExplorerGetSize(clickedGob.ngob.name) != object.get(clickedGob.ngob.name).size()) {
-                            if (object.get(clickedGob.ngob.name).contains(name) && !NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name, name)) {
+                        int currentSize = NUtils.getGameUI().getCharInfo().LpExplorerGetSize(clickedGob.ngob.name);
+                        int totalSize = object.get(clickedGob.ngob.name).size();
+                        boolean productExists = NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name, name);
+                        
+
+                        if (currentSize != totalSize) {
+                            if (object.get(clickedGob.ngob.name).contains(name) && !productExists) {
                                 NUtils.getGameUI().getCharInfo().LpExplorerAdd(clickedGob.ngob.name,name);
                                 NUtils.getGameUI().getCharInfo().newLpExplorer = true;
                             }
@@ -2772,5 +2906,31 @@ public class VSpec {
             result.add(res.getString("name"));
         }
         return result;
+    }
+
+    /**
+     * Returns a comprehensive NAlias containing all plantable seeds including:
+     * - Fruits and bush seeds from "Seed of Tree or Bush" category
+     * - Actual tree seeds from object mappings (pods, catkins, samaras, etc.)
+     *
+     * This ensures the tree planting bot can find all types of plantable items.
+     */
+    public static NAlias getAllPlantableSeeds() {
+        ArrayList<String> allSeeds = new ArrayList<>();
+
+        // Add all items from "Seed of Tree or Bush" category (fruits + bush seeds)
+        ArrayList<String> categorySeeds = getCategoryContent("Seed of Tree or Bush");
+        if (categorySeeds != null) {
+            allSeeds.addAll(categorySeeds);
+        }
+
+        // Add all tree seeds from object mappings
+        for (ArrayList<String> treeProducts : object.values()) {
+            if (treeProducts != null) {
+                allSeeds.addAll(treeProducts);
+            }
+        }
+
+        return new NAlias(allSeeds);
     }
 }

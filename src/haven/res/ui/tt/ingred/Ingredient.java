@@ -6,7 +6,7 @@ import java.util.*;
 import java.awt.image.BufferedImage;
 
 /* >tt: Ingredient */
-@haven.FromResource(name = "ui/tt/ingred", version = 26)
+@haven.FromResource(name = "ui/tt/ingred", version = 27)
 public class Ingredient extends ItemInfo.Tip {
     public final String name;
     public final Double val;
@@ -45,7 +45,7 @@ public class Ingredient extends ItemInfo.Tip {
     public static class Line extends Tip {
 	final List<Ingredient> all = new ArrayList<Ingredient>();
 
-	Line() {super(null);}
+	Line(Owner owner) {super(owner);}
 
 	public BufferedImage tipimg() {
 	    StringBuilder buf = new StringBuilder();
@@ -65,7 +65,7 @@ public class Ingredient extends ItemInfo.Tip {
 	    return(RichText.render(buf.toString(), UI.scale(250)).img);
 	}
     }
-    public static final Layout.ID<Line> id = Line::new;
+    public static final Layout.TipID<Line> id = Line::new;
 
     public void prepare(Layout l) {
 	l.intern(id).all.add(this);

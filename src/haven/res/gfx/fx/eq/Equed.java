@@ -9,7 +9,7 @@ import java.util.function.*;
   >spr: Equed
   >rlink: Equed
 */
-@haven.FromResource(name = "gfx/fx/eq", version = 20)
+@haven.FromResource(name = "gfx/fx/eq", version = 21)
 public class Equed extends Sprite {
     private final Sprite espr;
     private final RenderTree.Node eqd;
@@ -17,7 +17,7 @@ public class Equed extends Sprite {
     public Equed(Owner owner, Resource res, Sprite espr, Skeleton.BoneOffset bo) {
 	super(owner, res);
 	this.espr = espr;
-	this.eqd = RUtils.StateTickNode.from(this.espr, bo.from(owner.fcontext(EquipTarget.class, false)));
+	this.eqd = RUtils.StateTickNode.of(this.espr, bo.from(owner.fcontext(EquipTarget.class, false)));
     }
 
     public static Resource ctxres(Owner owner) {
@@ -45,27 +45,33 @@ public class Equed extends Sprite {
     }
 
     public static RenderLink mkrlink(Resource res, Object... args) {
-	String epn = (String)args[0];
-	String fl = (String)args[1];
-	Resource eres = res.pool.load((String)args[2], Utils.iv(args[3])).get();
+	KeywordArgs p = new KeywordArgs(args, res.pool, "eq", "from", "@res", "args");
+	String epn = (String)p.get("eq");
+	String epf = (String)p.get("from", "");
+	Resource eres = (Resource)((Indir)p.get("res")).get();
 	Function<Owner, Skeleton.BoneOffset> ep;
-	if(fl.indexOf('l') >= 0) {
+	switch((String)p.get("from", "")) {
+	case "l": case "linked": {
 	    Skeleton.BoneOffset bo = eres.flayer(Skeleton.BoneOffset.class, epn);
 	    ep = owner -> bo;
-	} else if(fl.indexOf("c") >= 0) {
+	    break;
+	}
+	case "c": case "object": {
 	    ep = owner -> ctxres(owner).flayer(Skeleton.BoneOffset.class,epn);
-	} else if(fl.indexOf("o") >= 0) {
+	    break;
+	}
+	case "o": case "this": default: {
 	    Skeleton.BoneOffset bo = res.flayer(Skeleton.BoneOffset.class, epn);
 	    ep = owner -> bo;
-	} else {
-	    Skeleton.BoneOffset bo = res.flayer(Skeleton.BoneOffset.class, epn);
-	    ep = owner -> bo;
+	    break;
+	}
 	}
 	Sprite.Mill<?> mill;
-	if((args.length > 4) && (args[4] instanceof byte[])) {
-	    mill = owner -> Sprite.create(owner, eres, new MessageBuf((byte[])args[4]));
-	} else if((args.length > 4) && (args[4] instanceof Object[])) {
-	    RenderLink rl = eres.getcode(RenderLink.ArgLink.class, true).parse(res, (Object[])args[4]);
+	Object targs = p.get("args", null);
+	if((targs instanceof byte[])) {
+	    mill = owner -> Sprite.create(owner, eres, new MessageBuf((byte[])targs));
+	} else if((targs instanceof Object[])) {
+	    RenderLink rl = eres.getcode(RenderLink.ArgLink.class, true).parse(res, (Object[])targs);
 	    mill = owner -> {
 		RenderTree.Node n = rl.make(owner);
 		if(!(n instanceof Sprite))

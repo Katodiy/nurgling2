@@ -1,0 +1,271 @@
+package nurgling.overlays.map;
+
+import haven.*;
+import haven.render.BaseColor;
+import haven.render.BufPipe;
+import nurgling.NConfig;
+import nurgling.widgets.NMiniMap;
+
+import java.awt.Color;
+
+/**
+ * Renders personal claims, village claims, and realm overlays on the minimap.
+ * Uses persistent MapFile data instead of runtime MCache, showing all discovered claims.
+ * Synchronizes with the 3D map overlay visibility toggles.
+ */
+public class MinimapClaimRenderer {
+    // Claim colors (semi-transparent to avoid obscuring terrain)
+    private static final Color CPLOT_COLOR = new Color(0, 255, 0, 60);    // Personal - Green
+    private static final Color VLG_COLOR = new Color(255, 128, 255, 60);   // Village - Pink
+    private static final Color PROV_COLOR = new Color(255, 0, 255, 60);    // Realm - Magenta
+
+    /**
+     * Main rendering method called from MiniMap's drawparts()
+     * Queries persistent MapFile data from DisplayGrids to show all discovered claims.
+     *
+     * @param map The minimap instance
+     * @param g   Graphics context
+     */
+    public static void renderClaims(MiniMap map, GOut g) {
+        if (map.ui == null || map.ui.gui == null || map.ui.gui.map == null) {
+            return;
+        }
+
+        MapView mv = map.ui.gui.map;
+        if (mv == null || map.dloc == null) {
+            return;
+        }
+
+        // Must be NMiniMap to access display grids
+        if (!(map instanceof NMiniMap)) {
+            return;
+        }
+        NMiniMap nmap = (NMiniMap) map;
+
+        // Get the display grid array and extent
+        MiniMap.DisplayGrid[] display = nmap.getDisplay();
+        Area dgext = nmap.getDgext();
+
+        if (display == null || dgext == null) {
+            return;
+        }
+
+        try {
+            Coord hsz = map.sz.div(2);
+
+            // Iterate through all display grids
+            for (Coord gc : dgext) {
+                MiniMap.DisplayGrid disp = display[dgext.ri(gc)];
+                if (disp == null) {
+                    continue;
+                }
+
+                // Get the underlying DataGrid from MapFile
+                MapFile.DataGrid grid;
+                try {
+                    grid = disp.gref.get();
+                } catch (Loading e) {
+                    // Grid data not loaded yet
+                    continue;
+                }
+
+                if (grid == null || grid.ols.isEmpty()) {
+                    continue;
+                }
+
+                // Process each overlay in this grid
+                for (MapFile.Overlay overlay : grid.ols) {
+                    try {
+                        // Get the overlay resource and its tags
+                        Resource res = overlay.olid.get();
+                        MCache.ResOverlay olinfo = res.flayer(MCache.ResOverlay.class);
+
+                        if (olinfo == null) {
+                            continue;
+                        }
+
+                        // Check each tag to see if it matches a claim type we want to render
+                        for (String tag : olinfo.tags()) {
+                            // Check if this overlay type is enabled in QoL minimap settings
+                            if (!isMinimapOverlayEnabled(tag)) {
+                                continue;
+                            }
+
+                            // Extract color from the resource's Material (supports enemy/friendly differentiation)
+                            Color fillColor = extractColorFromMaterial(olinfo, tag);
+
+                            if (fillColor != null) {
+                                renderOverlay(map, g, overlay, disp, hsz, fillColor);
+                                break; // Only render once per overlay, even if it has multiple tags
+                            }
+                        }
+                    } catch (Loading e) {
+                        // Resource not loaded yet, skip this overlay
+                    } catch (Exception e) {
+                        // Silently handle other errors
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Silently handle errors
+        }
+    }
+
+    /**
+     * Renders a single overlay on the minimap using rectangle merging for performance.
+     * The overlay data comes from the persistent MapFile storage.
+     */
+    private static void renderOverlay(MiniMap map, GOut g,
+                                      MapFile.Overlay overlay,
+                                      MiniMap.DisplayGrid disp,
+                                      Coord hsz,
+                                      Color fillColor) {
+        try {
+            // The overlay boolean array is indexed as: x + (y * cmaps.x)
+            // where cmaps is the grid size (100x100 tiles typically)
+            int width = MCache.cmaps.x;
+            int height = MCache.cmaps.y;
+            boolean[] mask = overlay.ol;
+
+            if (mask.length != width * height) {
+                return; // Invalid mask size
+            }
+
+            // Track which tiles we've already rendered
+            boolean[] rendered = new boolean[mask.length];
+
+            // Scan for rectangles to merge
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int idx = y * width + x;
+
+                    // Skip if not claimed or already rendered
+                    if (!mask[idx] || rendered[idx]) {
+                        continue;
+                    }
+
+                    // Find the width of the rectangle (horizontal extent)
+                    int rectWidth = 0;
+                    while (x + rectWidth < width &&
+                           mask[y * width + (x + rectWidth)] &&
+                           !rendered[y * width + (x + rectWidth)]) {
+                        rectWidth++;
+                    }
+
+                    // Find the height of the rectangle (vertical extent)
+                    int rectHeight = 1;
+                    boolean canExtend = true;
+                    while (canExtend && y + rectHeight < height) {
+                        // Check if this entire row matches the width
+                        for (int dx = 0; dx < rectWidth; dx++) {
+                            int checkIdx = (y + rectHeight) * width + (x + dx);
+                            if (!mask[checkIdx] || rendered[checkIdx]) {
+                                canExtend = false;
+                                break;
+                            }
+                        }
+                        if (canExtend) {
+                            rectHeight++;
+                        }
+                    }
+
+                    // Mark all tiles in this rectangle as rendered
+                    for (int dy = 0; dy < rectHeight; dy++) {
+                        for (int dx = 0; dx < rectWidth; dx++) {
+                            rendered[(y + dy) * width + (x + dx)] = true;
+                        }
+                    }
+
+                    // Convert grid-local coordinates to segment tile coordinates
+                    // disp.sc is the grid coordinate (e.g., grid 5,3)
+                    // Each grid is cmaps tiles (e.g., 100x100)
+                    Coord tileUL = disp.sc.mul(MCache.cmaps).add(x, y);
+                    Coord tileBR = disp.sc.mul(MCache.cmaps).add(x + rectWidth, y + rectHeight);
+
+                    // Convert to screen coordinates using the same formula as MiniMap.drawmap()
+                    // Formula: UI.scale(tile).sub(dloc.tc.div(scalef())).add(hsz)
+                    Coord screenUL = UI.scale(tileUL).sub(map.dloc.tc.div(map.scalef())).add(hsz);
+                    Coord screenBR = UI.scale(tileBR).sub(map.dloc.tc.div(map.scalef())).add(hsz);
+
+                    // Draw filled rectangle
+                    g.chcolor(fillColor);
+                    g.frect2(screenUL, screenBR);
+                }
+            }
+
+            g.chcolor(); // Reset color
+        } catch (Exception e) {
+            // Silently handle errors
+        }
+    }
+
+    /**
+     * Extract color from the overlay's Material (supports different colors for enemy/friendly claims).
+     * Falls back to hardcoded tag-based colors if Material extraction fails.
+     */
+    private static Color extractColorFromMaterial(MCache.ResOverlay olinfo, String tag) {
+        try {
+            Material mat = olinfo.mat();
+            if (mat != null) {
+                BufPipe st = new BufPipe();
+                mat.states.apply(st);
+                if (st.get(BaseColor.slot) != null) {
+                    FColor bc = st.get(BaseColor.slot).color;
+                    // Convert to semi-transparent for minimap (alpha=60)
+                    return new Color(
+                        Math.round(bc.r * 255),
+                        Math.round(bc.g * 255),
+                        Math.round(bc.b * 255),
+                        60  // Semi-transparent to avoid obscuring terrain
+                    );
+                }
+            }
+        } catch (Loading e) {
+            // Material not loaded yet, will retry next frame
+            throw e;
+        } catch (Exception e) {
+            // Other errors - fall through to tag-based fallback
+        }
+
+        // Fallback to hardcoded tag-based colors if Material extraction fails
+        return getColorForTag(tag);
+    }
+
+    /**
+     * Get fallback fill color for a claim tag (used when Material extraction fails)
+     */
+    private static Color getColorForTag(String tag) {
+        switch (tag) {
+            case "cplot":
+                return CPLOT_COLOR;
+            case "vlg":
+                return VLG_COLOR;
+            case "prov":
+            case "realm":
+                return PROV_COLOR;
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Check if a minimap overlay is enabled in QoL settings
+     */
+    private static boolean isMinimapOverlayEnabled(String tag) {
+        Object val;
+        switch (tag) {
+            case "cplot":
+                val = NConfig.get(NConfig.Key.minimapClaimol);
+                return val instanceof Boolean ? (Boolean) val : false;
+            case "vlg":
+                val = NConfig.get(NConfig.Key.minimapVilol);
+                return val instanceof Boolean ? (Boolean) val : false;
+            case "prov":
+            case "realm":
+                val = NConfig.get(NConfig.Key.minimapRealmol);
+                return val instanceof Boolean ? (Boolean) val : false;
+            default:
+                return false;
+        }
+    }
+}

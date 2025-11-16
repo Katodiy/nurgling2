@@ -58,7 +58,7 @@ public class NAreaLabel extends Sprite implements RenderTree.Node, PView.Render2
     @Override
     public boolean tick(double dt) {
         if(NUtils.getGameUI()!=null) {
-            isSelected = NUtils.getGameUI().areas.al.sel.area == area;
+            isSelected = NUtils.getGameUI().areas.al.sel != null && NUtils.getGameUI().areas.al.sel.area == area;
             if (NUtils.getGameUI() != null) {
                 if (area.spec.size() != sizeSpec) {
                     sizeSpec = area.spec.size();
@@ -85,6 +85,8 @@ public class NAreaLabel extends Sprite implements RenderTree.Node, PView.Render2
     }
 
     public boolean isect(Coord pc) {
+        if(sc == null)
+            return false;
         Coord ul = sc.sub(label.sz().div(2));
         return pc.isect(ul, label.sz());
     }

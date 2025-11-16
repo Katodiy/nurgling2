@@ -532,46 +532,53 @@ public class UI {
     }
 
     public <E extends Event>  Grab<E> grab(Widget owner, Class<E> etype, EventHandler<? super E> handler) {
+	if(owner == null)
+	    throw(new NullPointerException());
 	Grab<E> g = new Grab<>(owner, etype, handler);
 	grabs.add(0, g);
 	return(g);
     }
 
+    public static class WidgetGrab implements EventHandler<Event> {
+	public final Widget wdg;
+
+	public WidgetGrab(Widget wdg) {
+	    this.wdg = wdg;
+	}
+
+	public boolean handle(Event ev) {
+	    return(ev.dispatch(wdg));
+	}
+    }
+
     public static class PointerGrab<E extends PointerEvent> implements EventHandler<E> {
 	public final Widget wdg;
-	public final Predicate<? super E> sel;
+	public final EventHandler<? super E> bk;
 
-	public PointerGrab(Widget wdg, Predicate<? super E> sel) {
+	public PointerGrab(Widget wdg, EventHandler<? super E> bk) {
 	    this.wdg = wdg;
-	    this.sel = sel;
+	    this.bk = bk;
 	}
 
 	public boolean handle(E ev) {
-	    if(sel.test(ev)) {
-		Coord xl = ev.c.add(ev.target.rootpos()).sub(wdg.rootpos());
-		return(ev.derive(xl).dispatch(wdg));
-	    }
-	    return(false);
+	    Coord xl = ev.c.add(ev.target.rootpos()).sub(wdg.rootpos());
+	    @SuppressWarnings("unchecked")
+	    E dev = (E)ev.derive(xl);
+	    return(bk.handle(dev));
 	}
     }
 
     public Grab grabmouse(Widget wdg) {
-	if(wdg == null) throw(new NullPointerException());
-	Grab g = grab(wdg, PointerEvent.class, new PointerGrab<>(wdg, ev -> (
+	Predicate<Event> sel = ev -> (
+	    /* XXX? These are just the traditionally mouse-grabbed events. Is grabmouse() itself obsolete? */
 	    (ev instanceof MouseDownEvent) || (ev instanceof MouseUpEvent) ||
-	    (ev instanceof MouseWheelEvent) || (ev instanceof CursorQuery))
-	));
-	return(g);
+	    (ev instanceof MouseWheelEvent) || (ev instanceof CursorQuery));
+	return(grab(wdg, PointerEvent.class, new PointerGrab<>(wdg, new EventHandler.Filter<>(new WidgetGrab(wdg), sel))));
     }
 
     public Grab grabkeys(Widget wdg) {
-	if(wdg == null) throw(new NullPointerException());
-	Grab g = grab(wdg, KbdEvent.class, ev -> {
-		if((ev instanceof KeyDownEvent) || (ev instanceof KeyUpEvent))
-		    return(ev.dispatch(wdg));
-		return(false);
-	});
-	return(g);
+	Predicate<Event> sel = ev -> ((ev instanceof KeyDownEvent) || (ev instanceof KeyUpEvent));
+	return(grab(wdg, KbdEvent.class, new EventHandler.Filter<>(new WidgetGrab(wdg), sel)));
     }
 
     private void removeid(Widget wdg) {
@@ -599,14 +606,16 @@ public class UI {
     }
 
     public boolean dispatch(Widget to, Event ev) {
-	ev.target = to;
-	ev.grabbed = true;
-	for(Grab<?> g : grabs) {
-	    if(g.check(ev))
-		return(true);
+	try(CPUProfile.Current prof = CPUProfile.begin(ev)) {
+	    ev.target = to;
+	    ev.grabbed = true;
+	    for(Grab<?> g : grabs) {
+		if(g.check(ev))
+		    return(true);
+	    }
+	    ev.grabbed = false;
+	    return(ev.dispatch(to));
 	}
-	ev.grabbed = false;
-	return(ev.dispatch(to));
     }
 
     public <E extends Event> E dispatchq(Widget to, E ev) {
@@ -844,6 +853,7 @@ public class UI {
     private Grab[] c(Collection<Grab> g) {return(g.toArray(new Grab[0]));}
 
     public void keydown(KeyEvent ev) {
+	setmods(ev);
 	if(!dispatch(root, new KeyDownEvent(ev)))
 	    dispatch(root, new GlobKeyEvent(ev));
     }
@@ -885,11 +895,18 @@ public class UI {
 	dispatch(root, new Widget.MouseWheelEvent(c, amount));
     }
 
-    public Resource getcurs(Coord c) {
+    public static enum Cursor {
+	DEFAULT, POINTER, HAND, MOVE,
+	WAIT, CARET, CROSSHAIR,
+	SIZE_N, SIZE_NE, SIZE_E, SIZE_SE,
+	SIZE_S, SIZE_SW, SIZE_W, SIZE_NW,
+    }
+
+    public Object getcurs(Coord c) {
 	return(dispatchq(root, new CursorQuery(c)).ret);
     }
 
-    private Widget prevtt = null;
+    protected Widget prevtt = null;
     public Object tooltip(Coord c) {
 	Widget.TooltipQuery q = dispatchq(root, new Widget.TooltipQuery(c, prevtt));
 	prevtt = q.from;

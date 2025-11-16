@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import mapv4.StatusWdg;
 import nurgling.NConfig;
+import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
 
@@ -15,6 +16,7 @@ public class NMiniMapWnd extends Widget{
     public static final KeyBinding kb_night = KeyBinding.get("mwnd_night", KeyMatch.nil);
     public static final KeyBinding kb_fog = KeyBinding.get("mwnd_fog", KeyMatch.nil);
     public static final KeyBinding kb_nature = KeyBinding.get("mwnd_nature", KeyMatch.nil);
+    public static final KeyBinding kb_resourcetimers = KeyBinding.get("mwnd_resourcetimers", KeyMatch.nil);
     public static class NMenuCheckBox extends ICheckBox {
         public NMenuCheckBox(String base, KeyBinding gkey, String tooltip) {
             super(base, "/u", "/d", "/h", "/dh");
@@ -114,6 +116,17 @@ public class NMiniMapWnd extends Widget{
 //        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
 //        path.a = NConfiguration.getInstance().isPaths;
 
+        // Resource Timers button using night vision icon - placed last in toggle panel
+        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/timer", kb_resourcetimers, "Resource Timers"), (first.sz.x+UI.scale(3))*shift++, 0).state(() -> {
+            NGameUI gui = NUtils.getGameUI();
+            return gui != null && gui.localizedResourceTimersWindow != null && gui.localizedResourceTimersWindow.visible();
+        }).click(() -> {
+            NGameUI gui = NUtils.getGameUI();
+            if (gui != null) {
+                gui.toggleResourceTimerWindow();
+            }
+        });
+
         map_box = add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/map", GameUI.kb_map, "Map"), miniMap.sz.x-(first.sz.x), 0).state(() -> NMiniMapWnd.this.ui.gui.wndstate(NMiniMapWnd.this.ui.gui.mapfile)).click(() -> {
             NUtils.getGameUI().togglewnd(NUtils.getGameUI().mapfile);
             if(NUtils.getGameUI().mapfile != null)
@@ -160,13 +173,29 @@ public class NMiniMapWnd extends Widget{
             case "natura": {
                 NConfig.set(NConfig.Key.hideNature,a);
                 NUtils.showHideNature();
-//                NUtils.getGameUI().nsw.world.setNatureStatus(a);
-
+                
+                // Sync with World settings panel
+                if (NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
+                    ((OptWnd.NSettingsPanel)NUtils.getGameUI().opts.nqolwnd).settingsWindow.world.setNatureStatus(a);
+                }
+                
+                // Sync with QoL panel
+                if (NUtils.getGameUI() != null && NUtils.getGameUI().opts != null && NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
+                    OptWnd.NSettingsPanel panel = (OptWnd.NSettingsPanel) NUtils.getGameUI().opts.nqolwnd;
+                    if (panel.settingsWindow != null && panel.settingsWindow.qol != null) {
+                        panel.settingsWindow.qol.syncHideNature();
+                    }
+                }
+                
                 break;
             }
-            case "night": {
-                NConfig.set(NConfig.Key.nightVision,a);
-//                ((OptWnd.NQolPanel)NUtils.getGameUI().opts.nqolwnd).q.night.a = a;
+            case "night":
+            {
+                NConfig.set(NConfig.Key.nightVision, a);
+                if (ui.sess != null && ui.sess.glob != null)
+                {
+                    ui.sess.glob.brighten();
+                }
                 break;
             }
         }
@@ -206,6 +235,18 @@ public class NMiniMapWnd extends Widget{
         }
 
         public boolean clickmarker(DisplayMarker mark, Location loc, int button, boolean press) {
+            // Handle shift+right-click on resource markers for timer functionality
+            if(button == 3 && ui.modshift && mark.m instanceof MapFile.SMarker) {
+                MapFile.SMarker smarker = (MapFile.SMarker) mark.m;
+                
+                // Check if this is a localized resource (map resource) and handle through service
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if(gui != null && gui.localizedResourceTimerService != null &&
+                   gui.localizedResourceTimerService.handleResourceClick(smarker)) {
+                    return true;
+                }
+            }
+            
             if(mark.m instanceof MapFile.SMarker) {
                 Gob gob = MarkerID.find(ui.sess.glob.oc, mark.m);
                 if(gob != null)
@@ -223,6 +264,24 @@ public class NMiniMapWnd extends Widget{
         }
 
         public boolean clickloc(Location loc, int button, boolean press) {
+            // Handle alt+left-click for waypoint queueing
+            if(!press && button == 1 && ui.modmeta && sessloc != null && loc.seg.id == sessloc.seg.id) {
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if(gui != null && gui.waypointMovementService != null) {
+                    gui.waypointMovementService.addWaypoint(loc, sessloc);
+                    return true;
+                }
+            }
+
+            // Right-click to clear waypoint queue
+            if(!press && button == 3) {
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if(gui != null && gui.waypointMovementService != null) {
+                    gui.waypointMovementService.clearQueue();
+                }
+            }
+
+            // Handle press events normally
             if(press) {
                 mvclick(map, null, loc, null, button);
                 return(true);
@@ -239,6 +298,7 @@ public class NMiniMapWnd extends Widget{
                 return(false);
             return(super.allowzoomout());
         }
+
     }
 
     @Override

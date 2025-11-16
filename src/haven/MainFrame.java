@@ -277,12 +277,13 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
     }
 
     public static Session connect(Object[] args) {
-	String username;
+	Session.User acct;
 	byte[] cookie;
 	if((Bootstrap.authuser.get() != null) && (Bootstrap.authck.get() != null)) {
-	    username = Bootstrap.authuser.get();
+	    acct = new Session.User(Bootstrap.authuser.get());
 	    cookie = Bootstrap.authck.get();
 	} else {
+	    String username;
 	    if(Bootstrap.authuser.get() != null) {
 		username = Bootstrap.authuser.get();
 	    } else {
@@ -296,7 +297,7 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 		AuthClient cl = new AuthClient((Bootstrap.authserv.get() == null) ? Bootstrap.defserv.get() : Bootstrap.authserv.get(), Bootstrap.authport.get());
 		try {
 		    try {
-			username = new AuthClient.TokenCred(username, Utils.hex2byte(token)).tryauth(cl);
+			acct = new Session.User(new AuthClient.TokenCred(username, Utils.hex.dec(token)).tryauth(cl));
 		    } catch(AuthClient.Credentials.AuthException e) {
 			throw(new ConnectionError("authentication with saved token failed"));
 		    }
@@ -309,7 +310,7 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 	    }
 	}
 	try {
-	    return(new Session(new java.net.InetSocketAddress(java.net.InetAddress.getByName(Bootstrap.defserv.get()), Bootstrap.mainport.get()), username, cookie, args));
+	    return(new Session(new java.net.InetSocketAddress(java.net.InetAddress.getByName(Bootstrap.defserv.get()), Bootstrap.mainport.get()), acct, Connection.encrypt.get(), cookie, args));
 	} catch(Connection.SessionError e) {
 	    throw(new ConnectionError(e.getMessage()));
 	} catch(InterruptedException exc) {
@@ -483,6 +484,11 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
     public static void main(final String[] args) {
 	config = new NConfig();
 	config.read();
+	
+	// Initialize FileLogger and redirect System.err as early as possible
+	haven.error.FileLogger.redirectSystemErr();
+	haven.error.FileLogger.log("Application starting...");
+	
 	/* Set up the error handler as early as humanly possible. */
 	ThreadGroup g = new ThreadGroup("Haven main group");
 	String ed = Utils.getprop("haven.errorurl", "");
@@ -499,8 +505,17 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 		g = hg;
 		new DeadlockWatchdog(hg).start();
 	    } catch(java.net.MalformedURLException | java.net.URISyntaxException e) {
+		haven.error.FileLogger.logError("Failed to initialize ErrorHandler", e);
 	    }
 	}
+	
+	// Add global uncaught exception handler
+	Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+	    public void uncaughtException(Thread t, Throwable e) {
+		haven.error.FileLogger.logError("Uncaught exception in thread: " + t.getName(), e);
+	    }
+	});
+	
 	Thread main = new HackThread(g, () -> main2(args), "Haven main thread");
 	main.start();
     }

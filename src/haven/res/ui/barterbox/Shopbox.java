@@ -9,7 +9,7 @@ import java.util.*;
 import java.awt.Color;
 
 /* >wdg: haven.res.ui.barterbox.Shopbox */
-@haven.FromResource(name = "ui/barterbox", version = 74)
+@haven.FromResource(name = "ui/barterbox", version = 75)
 public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Owner {
     public static final Text qlbl = Text.render("Quality:");
     public static final Text any = Text.render("Any");
@@ -24,11 +24,11 @@ public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Own
     public ResData res;
     public ItemSpec price;
     public Text num;
-	public int leftNum;
+    public int leftNum;
     public int pnum, pq;
     private Text pnumt, pqt;
     public GSprite spr;
-    public Object[] info = {};
+    private Object[] info = {};
     private Button spipe, bpipe, bbtn, cbtn;
     private TextEntry pnume, pqe;
     public final boolean admin;
@@ -206,12 +206,12 @@ public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Own
 	}
     }
 
-    public boolean mousedown(Coord c, int button) {
-	if((button == 3) && c.isect(pricec, sqsz) && (price != null)) {
+    public boolean mousedown(MouseDownEvent ev) {
+	if((ev.b == 3) && ev.c.isect(pricec, sqsz) && (price != null)) {
 	    wdgmsg("pclear");
 	    return(true);
 	}
-	return(super.mousedown(c, button));
+	return(super.mousedown(ev));
     }
 
     public void wdgmsg(Widget sender, String msg, Object... args) {
@@ -265,7 +265,7 @@ public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Own
 	} else if(name == "n") {
 	    int num = (Integer)args[0];
 	    this.num = Text.render(String.format("%d left", num));
-		this.leftNum = num;
+	    this.leftNum = num;
 	} else if(name == "price") {
 	    int a = 0;
 	    if(args[a] == null) {
@@ -300,31 +300,29 @@ public class Shopbox extends Widget implements ItemInfo.SpriteOwner, GSprite.Own
 	}
     }
 
-	public static class ShopItem
-	{
-		public GSprite spr;
-		public String name;
+    public static class ShopItem {
+	public GSprite spr;
+	public String name;
 
-		public ShopItem(GSprite res, String name)
-		{
-			this.spr = res;
-			this.name = name;
-		}
+	public ShopItem(GSprite res, String name) {
+	    this.spr = res;
+	    this.name = name;
 	}
+    }
 
-	public ShopItem getPrice(){
-		if(price == null)
-			return null;
-		return new ShopItem(price.spr,price.name());
-	}
+    public ShopItem getPrice() {
+	if(price == null)
+	    return null;
+	return new ShopItem(price.spr(), price.name());
+    }
 
-	public ShopItem getOffer(){
-		if(price == null)
-			return null;
-		ItemInfo.Name nm = ItemInfo.find(ItemInfo.Name.class, info());
-		if(nm == null)
-			return(null);
-		String name = nm.str.text;
-		return new ShopItem(spr,name);
-	}
+    public ShopItem getOffer() {
+	if(price == null)
+	    return null;
+	ItemInfo.Name nm = ItemInfo.find(ItemInfo.Name.class, info());
+	if(nm == null)
+	    return(null);
+	String name = nm.str.text;
+	return new ShopItem(spr, name);
+    }
 }

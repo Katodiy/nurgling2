@@ -6,6 +6,7 @@ import haven.Window;
 import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import mapv4.StatusWdg;
+import nurgling.actions.Results;
 import nurgling.areas.*;
 import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
@@ -15,6 +16,7 @@ import nurgling.widgets.options.AutoSelection;
 import nurgling.widgets.options.QuickActions;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.text.*;
@@ -27,6 +29,16 @@ import static haven.OCache.posres;
 
 public class NUtils
 {
+    static {
+        // Trigger NCaveTile class loading early to ensure factory replacement happens
+        // before any cave tiles are created
+        try {
+            Class.forName("nurgling.resutil.NCaveTile");
+        } catch (ClassNotFoundException e) {
+            System.err.println("[NUtils] Failed to load NCaveTile: " + e.getMessage());
+        }
+    }
+
     public static long getTickId()
     {
         if(NUtils.getGameUI()!= null )
@@ -400,10 +412,10 @@ public class NUtils
         return 0;
     }
 
-    public static void drop(WItem item) throws InterruptedException {
+    public static void drop(WItem item) {
         item.item.wdgmsg("drop", item.sz, getGameUI().map.player().rc, 0);
     }
-
+    
     public static void itemact(WItem item) throws InterruptedException {
         item.item.wdgmsg ( "itemact", 0 );
     }
@@ -411,6 +423,19 @@ public class NUtils
     public static void addTask(NTask task) throws InterruptedException {
         if(NUtils.getUI()!=null)
             NUtils.getUI().core.addTask(task);
+    }
+
+    /**
+     * Waits for debug input by pressing 'N' key.
+     * This method is used for debugging purposes to pause bot execution until user input.
+     * Use this function to pause bots when you need to stop execution for debugging purposes.
+     * The bot will wait indefinitely until the 'N' key is pressed.
+     * 
+     * @throws InterruptedException if the task is interrupted
+     */
+    public static void waitForDebugInput() throws InterruptedException {
+        NUtils.getGameUI().msg("Press N");
+        addTask(new nurgling.tasks.WaitKeyPress(KeyEvent.VK_N));
     }
 
     public static void setQuestConds(int id, Object... args)

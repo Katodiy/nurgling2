@@ -4,13 +4,12 @@
 package haven.res.gfx.hud.rosters.teimdeer;
 
 import haven.*;
-import haven.res.gfx.hud.rosters.cow.Ochs;
 import haven.res.ui.croster.*;
 import java.util.*;
 
-@haven.FromResource(name = "gfx/hud/rosters/teimdeer", version = 2)
+@haven.FromResource(name = "gfx/hud/rosters/teimdeer", version = 3)
 public class TeimdeerRoster extends CattleRoster<Teimdeer> {
-    public static List<Column> cols = initcols(
+    public static List<Column<? super Teimdeer>> cols = initcols(
 	new Column<Entry>("Name", Comparator.comparing((Entry e) -> e.name), 200),
 
 	new Column<Teimdeer>(Resource.classres(TeimdeerRoster.class).pool.load("gfx/hud/rosters/sex", 2),      Comparator.comparing((Teimdeer e) -> e.buck).reversed(), 20).runon(),
@@ -32,7 +31,7 @@ public class TeimdeerRoster extends CattleRoster<Teimdeer> {
 	new Column<Teimdeer>(Resource.classres(TeimdeerRoster.class).pool.load("gfx/hud/rosters/breedingquality", 1), Comparator.comparing((Teimdeer e) -> e.seedq).reversed()),
 	new Column<Teimdeer>(Resource.local().load("nurgling/hud/rang", 1), Comparator.comparing(Teimdeer::rang).reversed())
     );
-    protected List<Column> cols() {return(cols);}
+    protected List<Column<? super Teimdeer>> cols() {return(cols);}
 
     public static CattleRoster mkwidget(UI ui, Object... args) {
 	return(new TeimdeerRoster());

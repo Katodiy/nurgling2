@@ -73,7 +73,7 @@ public class Material implements Pipe.Op {
 	    case '_': return BlendMode.Function.RSUB;
 	    case '>': return BlendMode.Function.MAX;
 	    case '<': return BlendMode.Function.MIN;
-	    default: throw(new Resource.LoadException("Unknown blend function: " + desc, res));
+	    default: throw(new Resource.UnknownFormatException(res, "blend function", desc));
 	    }
 	}
 
@@ -85,7 +85,7 @@ public class Material implements Pipe.Op {
 	    case 'A': return BlendMode.Factor.INV_SRC_ALPHA;
 	    case 'c': return BlendMode.Factor.SRC_COLOR;
 	    case 'C': return BlendMode.Factor.INV_SRC_COLOR;
-	    default: throw(new Resource.LoadException("Unknown blend factor: " + desc, res));
+	    default: throw(new Resource.UnknownFormatException(res, "blend factor", desc));
 	    }
 	}
 
@@ -94,7 +94,7 @@ public class Material implements Pipe.Op {
 	    BlendMode.Factor csrc, cdst, asrc, adst;
 	    String desc = (String)args[0];
 	    if(desc.length() < 3)
-		throw(new Resource.LoadException("Bad blend description: " + desc, res));
+		throw(new Resource.UnknownFormatException(res, "blend description", desc));
 	    cfn = fn(res, desc.charAt(0));
 	    csrc = fac(res, desc.charAt(1));
 	    cdst = fac(res, desc.charAt(2));
@@ -130,7 +130,7 @@ public class Material implements Pipe.Op {
 	    } else if(nm.equals("postmap")) {
 		return(MapMesh.postmap);
 	    } else {
-		throw(new Resource.LoadException("Unknown draw order: " + nm, res));
+		throw(new Resource.UnknownFormatException(res, "draw order", nm));
 	    }
 	}
     }
@@ -234,14 +234,18 @@ public class Material implements Pipe.Op {
 			MaterialFactory.Status status = MaterialFactory.getStatus(getres().name, mask);
 			if(status!= MaterialFactory.Status.NOTDEFINED) {
 				if (!hm.containsKey(status)) {
+					// Clear states lists before resolving to avoid accumulation
+					List<Pipe.Op> newStates = new LinkedList<>();
+					List<Pipe.Op> newDynStates = new LinkedList<>();
+					
 					for (Iterator<Resolver> i = left.iterator(); i.hasNext(); ) {
 						Resolver r = i.next();
 						if (r instanceof CustomResolver) {
 							((CustomResolver) r).setCustomTex(MaterialFactory.getMaterial(getres().name, status, r));
 						}
-						r.resolve(states, dynstates);
+						r.resolve(newStates, newDynStates);
 					}
-					Material m = new Material(states.toArray(new Pipe.Op[0]), dynstates.toArray(new Pipe.Op[0])) {
+					Material m = new Material(newStates.toArray(new Pipe.Op[0]), newDynStates.toArray(new Pipe.Op[0])) {
 						public String toString() {
 							return (super.toString() + "@" + getres().name);
 						}
@@ -301,17 +305,21 @@ public class Material implements Pipe.Op {
 			    if(mat == null)
 				throw(new Resource.LoadException("No such material in " + lres.get() + ": " + id, res));
 			    TexR texR;
-				if((texR = getCustomTex(id))==null) {
-					Material m = mat.get();
-					if (m.states != Pipe.Op.nil)
-						buf.add(m.states);
-					if(m.dynstates != Pipe.Op.nil)
-						dynbuf.add(m.dynstates);
-				}
-				else
-				{
-					buf.add(MaterialFactory.constructMaterial(texR,mat.get()).states);
-				}
+					if((texR = getCustomTex(id))==null) {
+						Material m = mat.get();
+						if (m.states != Pipe.Op.nil)
+							buf.add(m.states);
+						if(m.dynstates != Pipe.Op.nil)
+							dynbuf.add(m.dynstates);
+					}
+					else
+					{
+						Material customMat = MaterialFactory.constructMaterial(texR, mat.get());
+						if (customMat.states != Pipe.Op.nil)
+							buf.add(customMat.states);
+						if (customMat.dynstates != Pipe.Op.nil)
+							dynbuf.add(customMat.dynstates);
+					}
 			} else {
 			    Material mat = fromres((Owner)null, lres.get(), Message.nil);
 			    if(mat == null)

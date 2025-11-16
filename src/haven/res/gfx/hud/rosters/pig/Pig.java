@@ -7,7 +7,9 @@ import haven.*;
 import haven.res.ui.croster.*;
 import nurgling.conf.PigsHerd;
 
-@haven.FromResource(name = "gfx/hud/rosters/pig", version = 63)
+import java.util.*;
+
+@haven.FromResource(name = "gfx/hud/rosters/pig", version = 64)
 public class Pig extends Entry {
     public int meat, milk;
     public int meatq, milkq, hideq;
@@ -41,32 +43,32 @@ public class Pig extends Entry {
 	super.draw(g);
     }
 
-    public boolean mousedown(Coord c, int button) {
-	if(PigRoster.cols.get(1).hasx(c.x)) {
+    public boolean mousedown(MouseDownEvent ev) {
+	if(PigRoster.cols.get(1).hasx(ev.c.x)) {
 	    markall(Pig.class, o -> (o.hog == this.hog));
 	    return(true);
 	}
-	if(PigRoster.cols.get(2).hasx(c.x)) {
+	if(PigRoster.cols.get(2).hasx(ev.c.x)) {
 	    markall(Pig.class, o -> (o.piglet == this.piglet));
 	    return(true);
 	}
-	if(PigRoster.cols.get(3).hasx(c.x)) {
+	if(PigRoster.cols.get(3).hasx(ev.c.x)) {
 	    markall(Pig.class, o -> (o.dead == this.dead));
 	    return(true);
 	}
-	if(PigRoster.cols.get(4).hasx(c.x)) {
+	if(PigRoster.cols.get(4).hasx(ev.c.x)) {
 	    markall(Pig.class, o -> (o.pregnant == this.pregnant));
 	    return(true);
 	}
-	if(PigRoster.cols.get(5).hasx(c.x)) {
+	if(PigRoster.cols.get(5).hasx(ev.c.x)) {
 	    markall(Pig.class, o -> (o.lactate == this.lactate));
 	    return(true);
 	}
-	if(PigRoster.cols.get(6).hasx(c.x)) {
+	if(PigRoster.cols.get(6).hasx(ev.c.x)) {
 	    markall(Pig.class, o -> ((o.owned == this.owned) && (o.mine == this.mine)));
 	    return(true);
 	}
-	return(super.mousedown(c, button));
+	return(super.mousedown(ev));
     }
 
 	public double rang() {

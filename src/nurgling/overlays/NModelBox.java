@@ -91,10 +91,12 @@ public class NModelBox extends Sprite implements RenderTree.Node {
             Color fillColor = NConfig.getColor(NConfig.Key.boxFillColor, new Color(227, 28, 1, 195));
             Color edgeColor = NConfig.getColor(NConfig.Key.boxEdgeColor, new Color(224, 193, 79, 255));
 
-            this.lmat = Pipe.Op.compose(Rendered.last, States.Depthtest.none, States.maskdepth,
-                    new States.Facecull(), new States.LineWidth(4),
-                    new BaseColor(fillColor));
-            this.emat = Pipe.Op.compose(new BaseColor(edgeColor));
+            this.lmat = Pipe.Op.compose(new Rendered.Order.Default(6000), States.Depthtest.none, States.maskdepth,
+                    FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
+                            BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), new States.Facecull(), new States.LineWidth((Integer) NConfig.get(NConfig.Key.boxLineWidth)),
+                    new BaseColor(edgeColor));
+            this.emat = Pipe.Op.compose(new Rendered.Order.Default(6000), FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
+                    BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), new BaseColor(fillColor));
         }
 
         private FillBuffer fill(VertexArray.Buffer dst, Environment env) {
@@ -150,6 +152,33 @@ public class NModelBox extends Sprite implements RenderTree.Node {
             }
         }
 
+    }
+
+    /**
+     * Updates materials for rendering the bounding box with new colors.
+     */
+    public void updateMaterials() {
+        if (isVisible && slot != null) {
+            // Clear current slots and re-add with updated materials
+            slot.clear();
+            for (RenderTree.Node n : nodes) {
+                try {
+                    if (n instanceof HidePol) {
+                        ((HidePol) n).updateMaterials();
+                    }
+                    slot.add(n);
+                } catch (RenderTree.SlotRemoved e) {
+                    // Ignore removed slots
+                }
+            }
+        } else {
+            // Just update materials without re-adding to slots
+            for (RenderTree.Node node : nodes) {
+                if (node instanceof HidePol) {
+                    ((HidePol) node).updateMaterials();
+                }
+            }
+        }
     }
 
     @Override

@@ -27,7 +27,14 @@ public class NWItem extends WItem
                 if (!ol.inf.tick(dt))
                     ol.data = ol.inf.overlay();
         }
+        
         search();
+        
+        if((Boolean)NConfig.get(NConfig.Key.autoDropper) && ((NGItem) item).isSearched) {
+            if(parent instanceof NInventory && NUtils.getGameUI() !=null && NUtils.getGameUI().maininv == parent) {
+                NUtils.drop(this);
+            }
+        }
     }
 
     private void search()

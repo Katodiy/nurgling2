@@ -19,7 +19,7 @@ public class TakeItemsFromContainer implements Action
     Container cont;
     HashSet<String> names;
     NAlias pattern;
-    int minSize = Integer.MAX_VALUE;
+    public int minSize = Integer.MAX_VALUE;
     public TakeItemsFromContainer(Container cont, HashSet<String> names, NAlias pattern)
     {
         this.cont = cont;

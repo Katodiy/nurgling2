@@ -10,7 +10,6 @@ import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tasks.WaitForFirstBurnout;
 import nurgling.tools.Container;
-import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
@@ -58,18 +57,12 @@ public class LyeBoiler implements Action {
             }
 
             Results res = null;
-            Context icontext = new Context();
-            Pair<Coord2d, Coord2d> area = NContext.findIn(new NAlias("Ashes")).getRCArea();
-            if (area == null) {
-                return Results.ERROR("Ashes not found");
+            NContext icontext = new NContext(gui);
+            try {
+                icontext.addInItem("Ashes", null);
+            } catch (InterruptedException e) {
+                return Results.ERROR("Failed to add input items");
             }
-            ArrayList<Gob> barrels = Finder.findGobs(area, new NAlias("barrel"));
-            for (Gob gob : barrels) {
-                if (NUtils.barrelHasContent(gob) && NUtils.isOverlay(gob, new NAlias("ash"))) {
-                    icontext.addInput("Ashes", new Context.InputBarrel(gob));
-                }
-            }
-
 
             while (res == null || res.IsSuccess()) {
                 NUtils.getUI().core.addTask(new WaitForFirstBurnout(lighted, 12));

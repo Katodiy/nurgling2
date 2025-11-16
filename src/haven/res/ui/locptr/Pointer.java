@@ -13,7 +13,7 @@ import static haven.MCache.tilesz;
 import static java.lang.Math.*;
 
 /* >wdg: Pointer */
-@haven.FromResource(name = "ui/locptr", version = 21)
+@haven.FromResource(name = "ui/locptr", version = 22)
 public class Pointer extends Widget {
     public static final BaseColor col = new BaseColor(new Color(241, 227, 157, 255));
     public Indir<Resource> icon;
@@ -112,6 +112,19 @@ public class Pointer extends Widget {
     }
 
     public boolean mousedown(Coord c, int button) {
+	// Handle right-click for marker line (nurgling feature)
+	if(button == 3 && (lc != null) && lc.dist(c) < 20) {
+	    try {
+		Coord2d targetCoords = tc();
+		if(targetCoords != null) {
+		    nurgling.tools.NPointerClickHandler.handleRightClick(targetCoords, tip, gobid);
+		    return(true);
+		}
+	    } catch(Exception e) {
+		// Silently ignore if nurgling handler not available
+	    }
+	}
+
 	if(click && (lc != null)) {
 	    if(lc.dist(c) < 20) {
 		wdgmsg("click", button, ui.modflags());

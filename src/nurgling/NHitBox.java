@@ -129,6 +129,7 @@ public class NHitBox
             put("gfx/terobjs/vehicle/wagon", new NHitBox(new Coord(-14,-8),new Coord(12,8)));
             put("gfx/terobjs/dovecote", new NHitBox(new Coord(-7,-7),new Coord(7,7)));
             put("gfx/terobjs/anvil", new NHitBox(new Coord(-7,-2),new Coord(5,2)));
+            put("gfx/terobjs/moundbed", new NHitBox(new Coord2d(-15.4, -10.45),new Coord2d(15.4, 10.45)));
         }
     };
     static NHitBox fromObstacle(Coord2d[][] p)
@@ -168,7 +169,7 @@ public class NHitBox
     }
 
     public NHitBox rotate(){
-        return new NHitBox(new Coord((int) begin.y, (int) begin.x),new Coord((int) end.y, (int) end.x));
+        return new NHitBox(new Coord((int) begin.y, (int) begin.x),new Coord((int) end.y, (int) end.x), true);
     }
 
     @Override

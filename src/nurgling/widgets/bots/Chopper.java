@@ -96,7 +96,7 @@ public class Chopper extends Window implements Checkable {
 
         }
 
-        add(usingSovels = new UsingTools(UsingTools.Tools.shovels, false), prev.pos("ur").add(UI.scale(10,0)));
+        add(usingSovels = new UsingTools(UsingTools.Tools.shovels, false), usingTools.pos("ur").add(UI.scale(10,usingTools.l.sz.y)));
         if(startprop.shovel!=null)
         {
             for(UsingTools.Tool tl : UsingTools.Tools.shovels)

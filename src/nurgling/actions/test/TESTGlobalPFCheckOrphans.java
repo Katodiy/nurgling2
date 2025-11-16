@@ -1,16 +1,22 @@
 package nurgling.actions.test;
 
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Results;
+import nurgling.routes.Route;
 import nurgling.routes.RouteGraph;
 import nurgling.routes.RoutePoint;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * An action that scans the global RouteGraph for "orphan" references.
@@ -34,6 +40,54 @@ public class TESTGlobalPFCheckOrphans implements Action {
      */
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        File f = new File(nurgling.NConfig.current.path_routes);
+        Set<Integer> trueDuplicates = new HashSet<>();
+        Map<Integer, String> idToConnections = new HashMap<>();
+        Map<Integer, String> idToNeighbors = new HashMap<>();
+
+        if (f.exists()) {
+            StringBuilder contentBuilder = new StringBuilder();
+            try {
+                List<String> lines = Files.readAllLines(Paths.get(NConfig.current.path_routes), StandardCharsets.UTF_8);
+                for (String s : lines) {
+                    contentBuilder.append(s).append("\n");
+                }
+            } catch (Exception ignore) {}
+
+            if (!contentBuilder.toString().isEmpty()) {
+                JSONObject main = new JSONObject(contentBuilder.toString());
+                JSONArray routesArray = main.getJSONArray("routes");
+                for (int i = 0; i < routesArray.length(); i++) {
+                    JSONObject routeObj = routesArray.getJSONObject(i);
+                    if (!routeObj.has("waypoints")) continue;
+                    JSONArray waypoints = routeObj.getJSONArray("waypoints");
+                    for (int j = 0; j < waypoints.length(); j++) {
+                        JSONObject rp = waypoints.getJSONObject(j);
+                        int id = rp.getInt("id");
+                        String conns = rp.opt("connections") == null ? "" : rp.get("connections").toString();
+                        String neighs = rp.opt("neighbors") == null ? "" : rp.get("neighbors").toString();
+                        boolean duplicate = false;
+                        if (idToConnections.containsKey(id)) {
+                            if (!idToConnections.get(id).equals(conns) || !idToNeighbors.get(id).equals(neighs)) {
+                                trueDuplicates.add(id);
+                                duplicate = true;
+                            }
+                        }
+                        if (!duplicate) {
+                            idToConnections.put(id, conns);
+                            idToNeighbors.put(id, neighs);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (trueDuplicates.isEmpty()) {
+            gui.msg("No duplicate RoutePoints with same id but different connections/neighbors found in JSON.");
+        } else {
+            gui.msg("Duplicate RoutePoint ids with different connections/neighbors in JSON: " + trueDuplicates);
+        }
+
         RouteGraph graph = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph();
 
         Set<Integer> allIds = new HashSet<>();

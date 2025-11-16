@@ -1,13 +1,13 @@
 package nurgling;
 
 import haven.*;
+import haven.render.RenderTree;
 
 import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
 
 import haven.Composite;
-import nurgling.actions.Action;
-import nurgling.actions.ActionWithFinal;
+import haven.res.ui.gobcp.Gobcopy;
 import nurgling.actions.QuickActionBot;
 import nurgling.actions.bots.ScenarioRunner;
 import nurgling.areas.*;
@@ -26,18 +26,43 @@ import java.awt.event.KeyEvent;
 import java.awt.image.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.Supplier;
 
 public class NMapView extends MapView
 {
     public static final KeyBinding kb_quickaction = KeyBinding.get("quickaction", KeyMatch.forcode(KeyEvent.VK_Q, 0));
     public static final KeyBinding kb_quickignaction = KeyBinding.get("quickignaction", KeyMatch.forcode(KeyEvent.VK_Q, 1));
+    public static final KeyBinding kb_mousequickaction = KeyBinding.get("mousequickaction", KeyMatch.forcode(KeyEvent.VK_Q, KeyMatch.M));
     public static final KeyBinding kb_displaypbox = KeyBinding.get("pgridbox",  KeyMatch.nil);
     public static final KeyBinding kb_displayfov = KeyBinding.get("pfovbox",  KeyMatch.nil);
     public static final KeyBinding kb_displaygrid = KeyBinding.get("gridbox",  KeyMatch.nil);
+    public static final KeyBinding kb_togglebb = KeyBinding.get("togglebb",  KeyMatch.forcode(KeyEvent.VK_N, KeyMatch.C));
+    public static final KeyBinding kb_togglenature = KeyBinding.get("togglenature",  KeyMatch.forcode(KeyEvent.VK_H, KeyMatch.C));
     public static final int MINING_OVERLAY = - 1;
     public NGlobalCoord lastGC = null;
 
     public final List<NMiniMap.TempMark> tempMarkList = new ArrayList<NMiniMap.TempMark>();
+    
+    // Route point dragging state
+    private RouteLabel draggedRouteLabel = null;
+    private boolean isDraggingRoutePoint = false;
+    private UI.Grab dragGrab = null;
+    
+    // Find RouteLabel at screen coordinate
+    private RouteLabel getRouteLabeAt(Coord screenCoord) {
+        // Check all virtual game objects for RouteLabel overlays
+        for(Gob gob : routeDummys.values()) {
+            for(Gob.Overlay ol : gob.ols) {
+                if(ol.spr instanceof RouteLabel) {
+                    RouteLabel routeLabel = (RouteLabel) ol.spr;
+                    if(routeLabel.checkDragStart(screenCoord)) {
+                        return routeLabel;
+                    }
+                }
+            }
+        }
+        return null;
+    }
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
         super(sz, glob, cc, plgob);
@@ -49,16 +74,32 @@ public class NMapView extends MapView
 
     final HashMap<String, String> ttip = new HashMap<>();
     final ArrayList<String> tlays = new ArrayList<>();
-
+    final HashMap<String, BufferedImage> cachedImages = new HashMap<>();
+    long lastTooltipUpdate = 0;
+    final long tooltipThrottleTime = 100; // milliseconds for throttling
+    TexI oldttip = null;
     public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
     public AtomicBoolean isGobSelectionMode = new AtomicBoolean(false);
     public NArea.Space areaSpace = null;
     public Gob selectedGob = null;
+    public static boolean isRecordingRoutePoint = false;
 
     public HashMap<Long, Gob> dummys = new HashMap<>();
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
 
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
+
+    // Track if overlays have been initialized to avoid repeated initialization checks
+    private boolean overlaysInitialized = false;
+
+    // Directional vectors for triangulation (fixed position, not following player)
+    public java.util.List<nurgling.tools.DirectionalVector> directionalVectors = new java.util.ArrayList<>();
+
+    // Marker line system (lines to selected marker icon - follows player)
+    public MiniMap.DisplayMarker selectedMarker = null;
+    public Coord selectedMarkerTileCoords = null;
+    public NMarkerLineOverlay markerLineOverlay = null;
+    private RenderTree.Slot markerLineSlot = null;
 
     public static boolean hitNWidgetsInfo(Coord pc) {
         boolean isFound = false;
@@ -109,10 +150,18 @@ public class NMapView extends MapView
 
     @Override
     public void draw(GOut g) {
+        // Initialize overlays only once on first draw (when GameUI is ready)
+        if (!overlaysInitialized) {
+            getRockTileOverlay(); // Initialize rock tile highlighting overlay
+            // getShortWallCapOverlay(); // No longer needed - NCaveTile renders caps directly
+            overlaysInitialized = true;
+        }
+
         super.draw(g);
-        for(Gob dummy : dummys.values())
-        {
-            dummy.gtick(g.out);
+        synchronized (dummys) {
+            for (Gob dummy : dummys.values()) {
+                dummy.gtick(g.out);
+            }
         }
     }
 
@@ -151,10 +200,11 @@ public class NMapView extends MapView
 
     public void createRouteLabel(Integer id) {
         Route route = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(id);
-        NUtils.getGameUI().routesWidget.updateWaypoints();
-
-        if (route != null && route.waypoints != null) {
-            for (RoutePoint point : route.waypoints) {
+        if (route == null) return;
+        synchronized (route.waypoints) {
+            NUtils.getGameUI().routesWidget.updateWaypoints();
+            List<RoutePoint> waypointsCopy = new ArrayList<>(route.waypoints);
+            for (RoutePoint point : waypointsCopy) {
                 Coord2d absCoord = point.toCoord2d(glob.map);
                 if (absCoord != null) {
                     OCache.Virtual dummy = glob.oc.new Virtual(absCoord, 0);
@@ -205,19 +255,62 @@ public class NMapView extends MapView
         return null;
     }
 
+    public static NRockTileHighlightOverlay getRockTileOverlay()
+    {
+        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+        {
+            synchronized (NUtils.getGameUI().map)
+            {
+                NRockTileHighlightOverlay overlay = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
+                if (overlay == null)
+                {
+                    NUtils.getGameUI().map.addCustomOverlay(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY, new NRockTileHighlightOverlay());
+                }
+                overlay = (NRockTileHighlightOverlay) NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY);
+                return overlay;
+            }
+        }
+        return null;
+    }
+
     public static boolean isCustom(Integer id)
     {
         if(id == MINING_OVERLAY)
         {
             return NUtils.getGameUI().map.nols.get(MINING_OVERLAY)!=null;
         }
+        if(id == NRockTileHighlightOverlay.ROCK_TILE_OVERLAY)
+        {
+            return NUtils.getGameUI().map.nols.get(NRockTileHighlightOverlay.ROCK_TILE_OVERLAY)!=null;
+        }
         return false;
     }
 
     public Object tooltip(Coord c, Widget prev) {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastTooltipUpdate < tooltipThrottleTime) {
+            if(oldttip!=null)
+                return oldttip;
+            else
+                return (super.tooltip(c, prev));
+        }
+        lastTooltipUpdate = currentTime;
+
         if (NUtils.getGameUI()!=null && !ttip.isEmpty() && NUtils.getGameUI().ui.core.isInspectMode()) {
 
-            Collection<BufferedImage> imgs = new LinkedList<BufferedImage>();
+            Collection<BufferedImage> imgs = new LinkedList<>();
+
+            for (String key : ttip.keySet()) {
+                String text = String.format("$col[128,128,255]{%s}:", key);
+                BufferedImage img = cachedImages.get(text);
+                if (img == null) {
+                    img = RichText.render(text, 0).img;
+                    cachedImages.put(text, img);
+                }
+
+                imgs.add(img);
+                imgs.add(RichText.render(ttip.get(key), 0).img);
+            }
             if (ttip.get("gob") != null) {
                 BufferedImage gob = RichText.render(String.format("$col[128,128,255]{%s}:", "Gob"), 0).img;
                 imgs.add(gob);
@@ -304,8 +397,9 @@ public class NMapView extends MapView
                 imgs.add(gob);
                 imgs.add(RichText.render(ttip.get("poses"), 0).img);
             }
-            return new TexI((ItemInfo.catimgs(0, imgs.toArray(new BufferedImage[0]))));
+            return (oldttip = new TexI((ItemInfo.catimgs(0, imgs.toArray(new BufferedImage[0])))));
         }
+        oldttip = null;
         return (super.tooltip(c, prev));
     }
 
@@ -535,6 +629,10 @@ public class NMapView extends MapView
                 area.tick(dt);
             }
         }
+        // Update marker line overlay (follows player)
+        if(markerLineOverlay != null) {
+            markerLineOverlay.tick();
+        }
         ArrayList<Long> forRemove = new ArrayList<>();
 //        for(Gob dummy : dummys.values())
 //        {
@@ -596,6 +694,18 @@ public class NMapView extends MapView
     @Override
     public boolean mousedown(MouseDownEvent ev)
     {
+        // Check for route point drag start
+        if(ev.b == 1 && !isDraggingRoutePoint) { // Left mouse button
+            RouteLabel clickedLabel = getRouteLabeAt(ev.c);
+            if(clickedLabel != null) {
+                isDraggingRoutePoint = true;
+                draggedRouteLabel = clickedLabel;
+                draggedRouteLabel.startDrag();
+                dragGrab = ui.grabmouse(this);
+                return true;
+            }
+        }
+        
         if ( isAreaSelectionMode.get() )
         {
             if (selection == null)
@@ -616,7 +726,70 @@ public class NMapView extends MapView
     @Override
     public void mousemove(MouseMoveEvent ev) {
         lastCoord = ev.c;
+        
+        // Handle route point dragging
+        if(isDraggingRoutePoint && draggedRouteLabel != null) {
+            // Update preview position immediately with screen coordinates
+            draggedRouteLabel.updateDragPreview(ev.c);
+            
+            // Capture the reference to avoid race conditions with async Hittest
+            final RouteLabel currentDraggedLabel = draggedRouteLabel;
+            
+            // Check if coordinates are within valid bounds before attempting Hittest
+            if(ev.c.x >= 0 && ev.c.y >= 0 && ev.c.x < sz.x && ev.c.y < sz.y) {
+                try {
+                    // Convert screen coordinate to world coordinate using Hittest
+                    new Hittest(ev.c) {
+                        public void hit(Coord pc, Coord2d mc, ClickData inf) {
+                            if(mc != null && currentDraggedLabel != null) {
+                                currentDraggedLabel.updatePosition(mc);
+                            }
+                        }
+                        
+                        protected void nohit(Coord pc) {
+                            // Ignore if no hit - mouse outside valid map area
+                        }
+                    }.run();
+                } catch (Exception e) {
+                    // Ignore hittest errors when mouse is outside valid area
+                }
+            }
+            return;
+        }
+        
         super.mousemove(ev);
+    }
+    
+    @Override
+    public boolean mouseup(MouseUpEvent ev) {
+        if(isDraggingRoutePoint) {
+            if(ev.b == 1) {
+                // Left mouse button - finalize drag
+                isDraggingRoutePoint = false;
+                if(dragGrab != null) {
+                    dragGrab.remove();
+                    dragGrab = null;
+                }
+                if(draggedRouteLabel != null) {
+                    draggedRouteLabel.finalizeDrag();
+                    draggedRouteLabel = null;
+                }
+                return true;
+            } else if(ev.b == 3) {
+                // Right mouse button - cancel drag
+                isDraggingRoutePoint = false;
+                if(dragGrab != null) {
+                    dragGrab.remove();
+                    dragGrab = null;
+                }
+                if(draggedRouteLabel != null) {
+                    draggedRouteLabel.cancelDrag();
+                    draggedRouteLabel = null;
+                }
+                return true;
+            }
+        }
+        return super.mouseup(ev);
     }
 
     public Coord2d getLCoord() {
@@ -633,16 +806,20 @@ public class NMapView extends MapView
 
     @Override
     public boolean keyup(KeyUpEvent ev) {
-        if(ev.code == 16)
+        if(ev.code == 16) {
             shiftPressed = false;
+            ttip.clear();
+        }
         return super.keyup(ev);
     }
 
     @Override
     public boolean keydown(KeyDownEvent ev) {
-        if(ev.code == 16)
+        if(ev.code == 16) {
             shiftPressed = true;
-        if(kb_quickaction.key().match(ev) || kb_quickignaction.key().match(ev)) {
+            inspect(lastCoord);
+        }
+        if(kb_quickaction.key().match(ev) || kb_quickignaction.key().match(ev) || kb_mousequickaction.key().match(ev)) {
             Thread t;
             (t = new Thread(new Runnable()
             {
@@ -652,9 +829,11 @@ public class NMapView extends MapView
                     try
                     {
                         if(kb_quickaction.key().match(ev))
-                            new QuickActionBot(false).run(NUtils.getGameUI());
-                        else
-                            new QuickActionBot(true).run(NUtils.getGameUI());
+                            new QuickActionBot(false, false).run(NUtils.getGameUI());
+                        else if(kb_quickignaction.key().match(ev))
+                            new QuickActionBot(true, false).run(NUtils.getGameUI());
+                        else if(kb_mousequickaction.key().match(ev))
+                            new QuickActionBot(false, true).run(NUtils.getGameUI());
                     }
                     catch (InterruptedException e)
                     {
@@ -681,6 +860,46 @@ public class NMapView extends MapView
             NConfig.set(NConfig.Key.gridbox, !val);
             NUtils.getGameUI().msg("Gridbox: " + !val);
         }
+        if(kb_togglebb.key().match(ev)) {
+            boolean val = (Boolean) NConfig.get(NConfig.Key.showBB);
+            NConfig.set(NConfig.Key.showBB, !val);
+            NUtils.getGameUI().msg("Bounding Boxes: " + (!val ? "enabled" : "disabled"));
+            
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().opts != null && NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
+                OptWnd.NSettingsPanel panel = (OptWnd.NSettingsPanel) NUtils.getGameUI().opts.nqolwnd;
+                if (panel.settingsWindow != null && panel.settingsWindow.qol != null) {
+                    panel.settingsWindow.qol.syncShowBB();
+                }
+            }
+        }
+        if(kb_togglenature.key().match(ev)) {
+            boolean val = (Boolean) NConfig.get(NConfig.Key.hideNature);
+            NConfig.set(NConfig.Key.hideNature, !val);
+            NUtils.getGameUI().msg("Hide Nature: " + (!val ? "enabled" : "disabled"));
+            NUtils.showHideNature();
+            
+            // Sync with mini map
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().mmapw != null) {
+                NUtils.getGameUI().mmapw.natura.a = !(!val);
+            }
+            
+            // Sync with QoL panel
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().opts != null && NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
+                OptWnd.NSettingsPanel panel = (OptWnd.NSettingsPanel) NUtils.getGameUI().opts.nqolwnd;
+                if (panel.settingsWindow != null && panel.settingsWindow.qol != null) {
+                    panel.settingsWindow.qol.syncHideNature();
+                }
+            }
+            
+            // Sync with World settings panel
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().opts != null && NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
+                OptWnd.NSettingsPanel panel = (OptWnd.NSettingsPanel) NUtils.getGameUI().opts.nqolwnd;
+                if (panel.settingsWindow != null && panel.settingsWindow.world != null) {
+                    panel.settingsWindow.world.setNatureStatus(!val);
+                }
+            }
+        }
+
         return super.keydown(ev);
     }
 
@@ -894,5 +1113,157 @@ public class NMapView extends MapView
         }
     }
 
+    // Extended Plob class with bounding box support
+    public class NPlob extends Plob {
+        private NModelBox boundingBox;
+
+        public NPlob(Indir<Resource> res, Message sdt) {
+            super(res, sdt);
+            // Add bounding box support for temporal objects
+            addPlobBoundingBox(res, sdt);
+        }
+
+        // Add bounding box support for Plob objects using Gobcopy hitbox
+        private void addPlobBoundingBox(Indir<Resource> res, Message sdt)
+        {
+            // Get the Gob copy that will be placed to extract its hitbox
+            ResDrawable drawable = getattr(ResDrawable.class);
+            if (drawable != null && drawable.spr instanceof Gobcopy)
+            {
+                Gobcopy gobcopy = (Gobcopy) drawable.spr;
+                Gob targetGob = gobcopy.gob;
+
+                // Check if the target Gob has a hitbox
+                if (targetGob != null && targetGob.ngob != null && targetGob.ngob.hitBox != null)
+                {
+                    // Add NModelBox overlay using the existing hitbox from the target Gob
+                    boundingBox = new NModelBox(targetGob);
+                    addcustomol(boundingBox);
+                }
+            }
+        }
+    }
+
+    // Override uimsg to use NPlob instead of Plob
+    @Override
+    public void uimsg(String msg, Object... args) {
+        if(msg.equals("place")) {
+            Loader.Future<Plob> placing = this.placing;
+            if(placing != null) {
+                if(!placing.cancel()) {
+                    Plob ob = placing.get();
+                    synchronized(ob) {
+                        ob.slot.remove();
+                    }
+                }
+                this.placing = null;
+            }
+            int a = 0;
+            Indir<Resource> res = ui.sess.getresv(args[a++]);
+            Message sdt;
+            if((args.length > a) && (args[a] instanceof byte[]))
+                sdt = new MessageBuf((byte[])args[a++]);
+            else
+                sdt = Message.nil;
+            int oa = a;
+            // Use NPlob instead of Plob
+            this.placing = glob.loader.defer(new Supplier<Plob>() {
+                int a = oa;
+                Plob ret = null;
+                public Plob get() {
+                    if(ret == null)
+                        ret = new NPlob(res, new MessageBuf(sdt)); // Use NPlob here
+                    while(a < args.length) {
+                        int a2 = a;
+                        Indir<Resource> ores = ui.sess.getresv(args[a2++]);
+                        Message odt;
+                        if((args.length > a2) && (args[a2] instanceof byte[]))
+                            odt = new MessageBuf((byte[])args[a2++]);
+                        else
+                            odt = Message.nil;
+                        ret.addol(ores, odt);
+                        a = a2;
+                    }
+                    ret.place();
+                    return(ret);
+                }
+            });
+        } else {
+            // For all other messages, use the parent implementation
+            super.uimsg(msg, args);
+        }
+    }
+
+    /**
+     * Adds a directional vector for triangulation
+     * @param originTileCoords Tile coordinates where vector starts (segment-relative)
+     * @param targetTileCoords Tile coordinates of the target (segment-relative)
+     * @param targetName Name of the target
+     * @param targetGobId Gob ID of the target (-1 if none)
+     */
+    public void addDirectionalVector(Coord originTileCoords, Coord targetTileCoords, String targetName, long targetGobId) {
+        // Skip if origin and target are the same
+        if(originTileCoords.equals(targetTileCoords)) {
+            return;
+        }
+
+        nurgling.tools.DirectionalVector vector = new nurgling.tools.DirectionalVector(
+            originTileCoords, targetTileCoords, targetName, targetGobId
+        );
+        directionalVectors.add(vector);
+    }
+
+    /**
+     * Clears all directional vectors
+     */
+    public void clearDirectionalVectors() {
+        directionalVectors.clear();
+    }
+
+    /**
+     * Sets the selected marker for line drawing (called from minimap icon clicks)
+     * Creates gold line on map and 3D line in world that follows player
+     * @param marker The selected marker
+     * @param tileCoords Tile coordinates of the marker, or null to clear
+     */
+    public void setSelectedMarker(MiniMap.DisplayMarker marker, Coord tileCoords) {
+        this.selectedMarker = marker;
+        this.selectedMarkerTileCoords = tileCoords;
+
+        // Update 3D line overlay
+        if(tileCoords == null) {
+            // Clear selection
+            setMarkerTarget(null);
+        } else {
+            // Set selection (calculate world position from tile coords)
+            NGameUI gui = NUtils.getGameUI();
+            if(gui != null && gui.mmap != null && gui.mmap.sessloc != null) {
+                Coord2d worldPos = tileCoords.sub(gui.mmap.sessloc.tc).mul(MCache.tilesz).add(MCache.tilesz.div(2));
+                setMarkerTarget(worldPos);
+            }
+        }
+    }
+
+    /**
+     * Sets the marker target for 3D line overlay drawing
+     * @param targetPos World position of the marker, or null to clear
+     */
+    public void setMarkerTarget(Coord2d targetPos) {
+        if(targetPos == null) {
+            // Clear the overlay
+            if(markerLineSlot != null) {
+                markerLineSlot.remove();
+                markerLineSlot = null;
+            }
+            markerLineOverlay = null;
+        } else {
+            // Create or update the overlay
+            if(markerLineOverlay == null) {
+                markerLineOverlay = new NMarkerLineOverlay(() -> player());
+                markerLineSlot = basic.add(markerLineOverlay);
+            }
+            markerLineOverlay.setTarget(targetPos);
+        }
+    }
 
 }

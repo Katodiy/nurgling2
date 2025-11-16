@@ -36,15 +36,15 @@ import java.util.HashMap;
 
 public class Cal extends Widget {
     public static final double hbr = UI.scale(20.0);
-    static final Tex bg = Resource.loadtex("nurgling/hud/calendar/glass");
-    static final Tex[] dlnd = new Tex[4];
-    static final Tex[] nlnd = new Tex[4];
-    static final Resource.Image dsky = Resource.loadrimg("gfx/hud/calendar/daysky");
-    static final Resource.Image nsky = Resource.loadrimg("gfx/hud/calendar/nightsky");
-    static final Resource.Anim sun = Resource.local().loadwait("gfx/hud/calendar/sun").layer(Resource.animc);
-    static final Resource.Anim moon = Resource.local().loadwait("gfx/hud/calendar/moon").layer(Resource.animc);
+    protected static final Tex bg = Resource.loadtex("nurgling/hud/calendar/glass");
+    protected static final Tex[] dlnd = new Tex[4];
+    protected static final Tex[] nlnd = new Tex[4];
+    protected static final Resource.Image dsky = Resource.loadrimg("gfx/hud/calendar/daysky");
+    protected static final Resource.Image nsky = Resource.loadrimg("gfx/hud/calendar/nightsky");
+    protected static final Resource.Anim sun = Resource.local().loadwait("gfx/hud/calendar/sun").layer(Resource.animc);
+    protected static final Resource.Anim moon = Resource.local().loadwait("gfx/hud/calendar/moon").layer(Resource.animc);
 
-	static final HashMap<String,TexI> events = new HashMap<>();
+	protected static final HashMap<String,TexI> events = new HashMap<>();
 	static {
 	events.put("dawn",new TexI(Resource.loadimg("nurgling/hud/cal/dawn")));
 	events.put("mantle",new TexI(Resource.loadimg("nurgling/hud/cal/mantle")));
@@ -52,8 +52,8 @@ public class Cal extends Widget {
 	events.put("rain",new TexI(Resource.loadimg("nurgling/hud/cal/rain")));
 	}
 
-	ArrayList<String> eventNames = new ArrayList<>();
-	String weather = null;
+	protected ArrayList<String> eventNames = new ArrayList<>();
+	protected String weather = null;
 
     static {
 	for(int i = 0; i < dlnd.length; i++) {

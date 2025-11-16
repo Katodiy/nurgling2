@@ -51,18 +51,21 @@ public class TransferToBarrel implements Action{
                 }
                 for (ItemInfo inf : item.item.info) {
                     if (inf instanceof GItem.Amount) {
-                        if(sum + ((GItem.Amount) inf).itemnum()<10000) {
-                            sum += ((GItem.Amount) inf).itemnum();
+                        int itemNum = ((GItem.Amount) inf).itemnum();
+                        if(sum + itemNum<10000) {
+                            sum += itemNum;
                             targetItems.add(item);
                             break;
                         }
                     }
                     if (inf instanceof CustomName)
                     {
-                        if(((CustomName) inf).count>0 && sum + ((CustomName) inf).count<100) {
-                            sum+=((CustomName)inf).count;
+                        float count = ((CustomName) inf).count;
+                        if(count > 0 && sum + count < 100) {
+                            sum += count;
                             targetItems.add(item);
                             break;
+                        } else {
                         }
                     }
                 }

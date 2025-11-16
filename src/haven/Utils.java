@@ -29,6 +29,7 @@ package haven;
 import java.awt.RenderingHints;
 import java.io.*;
 import java.nio.*;
+import java.nio.channels.*;
 import java.nio.file.*;
 import java.net.*;
 import java.lang.ref.*;
@@ -115,6 +116,31 @@ public class Utils {
 	} catch(java.net.URISyntaxException e) {
 	    throw(new IllegalArgumentException(String.valueOf(cl) + " has a malformed location", e));
 	}
+    }
+
+    public static SocketChannel connect(String host, int port) throws IOException {
+	IOException lerr = null;
+	for(InetAddress haddr : InetAddress.getAllByName(host)) {
+	    SocketChannel sk = null;
+	    boolean fin = false;
+	    try {
+		sk = SocketChannel.open();
+		sk.socket().setSoTimeout(5000);
+		sk.connect(new InetSocketAddress(haddr, port));
+		fin = true;
+		return(sk);
+	    } catch(IOException e) {
+		if(lerr != null)
+		    e.addSuppressed(lerr);
+		lerr = e;
+	    } finally {
+		if(!fin && (sk != null))
+		    sk.close();
+	    }
+	}
+	if(lerr != null)
+	    throw(lerr);
+	throw(new UnknownHostException(host));
     }
 
     public static int drawtext(Graphics g, String text, Coord c) {
@@ -430,12 +456,50 @@ public class Utils {
 	}
     }
 
+    public static class ArgumentFormatException extends RuntimeException {
+	public final String expected;
+	public final Object got;
+
+	public ArgumentFormatException(String expected, Object got) {
+	    this.expected = expected;
+	    this.got = got;
+	}
+
+	public String getMessage() {
+	    String got;
+	    try {
+		got = String.valueOf(this.got);
+	    } catch(Throwable t) {
+		got = "!formatting error (" + t + ")";
+	    }
+	    return(String.format("expected %s, got %s", expected, got));
+	}
+
+	public static <T> T check(Object x, Class<T> expected, String fname) {
+	    if(!expected.isInstance(x))
+		throw(new ArgumentFormatException(fname, x));
+	    return(expected.cast(x));
+	}
+
+	public static <T> T check(Object x, Class<T> expected) {
+	    return(check(x, expected, expected.getSimpleName()));
+	}
+    }
+
     public static String sv(Object arg) {
-	return((String)arg);
+	return(ArgumentFormatException.check(arg, String.class));
+    }
+
+    public static List<?> olv(Object arg) {
+	if(arg instanceof Object[])
+	    return(Arrays.asList((Object[])arg));
+	if(arg instanceof List)
+	    return((List<?>)arg);
+	throw(new ArgumentFormatException("object-list", arg));
     }
 
     public static int iv(Object arg) {
-	return(((Number)arg).intValue());
+	return(ArgumentFormatException.check(arg, Number.class, "int").intValue());
     }
 
     public static long uiv(Object arg) {
@@ -443,20 +507,30 @@ public class Utils {
     }
 
     public static float fv(Object arg) {
-	return(((Number)arg).floatValue());
+	return(ArgumentFormatException.check(arg, Number.class, "float").floatValue());
     }
 
     public static double dv(Object arg) {
-	return(((Number)arg).doubleValue());
+	return(ArgumentFormatException.check(arg, Number.class, "double").doubleValue());
     }
 
     public static boolean bv(Object arg) {
-	return(iv(arg) != 0);
+	if(arg instanceof Boolean)
+	    return((Boolean)arg);
+	return(ArgumentFormatException.check(arg, Number.class, "bool").intValue() != 0);
     }
 
     public static Indir<Resource> irv(Object arg) {
-	Indir<?> s = (Indir)arg;
+	Indir s = ArgumentFormatException.check(arg, Indir.class);
 	return(() -> (Resource)s.get());
+    }
+
+    public static Resource resv(Object arg) {
+	if(arg instanceof Resource)
+	    return((Resource)arg);
+	Indir s = ArgumentFormatException.check(arg, Indir.class);
+	Resource ret = ArgumentFormatException.check(s.get(), Resource.class);
+	return(ret);
     }
 
     /* Nested format: [[KEY, VALUE], [KEY, VALUE], ...] */
@@ -503,6 +577,10 @@ public class Utils {
 
     public static int sb(int n, int b) {
 	return((n << (32 - b)) >> (32 - b));
+    }
+
+    public static long sb(long n, int b) {
+	return((n << (64 - b)) >> (64 - b));
     }
 
     public static int ub(byte b) {
@@ -683,14 +761,19 @@ public class Utils {
 	return(Coord3f.of(buf[0], buf[1], buf[2]));
     }
 
-    static char num2hex(int num) {
+    public static interface BinAscii {
+	public String enc(byte[] data);
+	public byte[] dec(String data);
+    }
+
+    public static char num2hex(int num, boolean upper) {
 	if(num < 10)
 	    return((char)('0' + num));
 	else
-	    return((char)('A' + num - 10));
+	    return((char)((upper ? 'A' : 'a') + num - 10));
     }
 
-    static int hex2num(char hex) {
+    public static int hex2num(char hex) {
 	if((hex >= '0') && (hex <= '9'))
 	    return(hex - '0');
 	else if((hex >= 'a') && (hex <= 'f'))
@@ -701,78 +784,137 @@ public class Utils {
 	    throw(new IllegalArgumentException());
     }
 
-    public static String byte2hex(byte[] in) {
-	StringBuilder buf = new StringBuilder();
-	for(byte b : in) {
-	    buf.append(num2hex((b & 0xf0) >> 4));
-	    buf.append(num2hex(b & 0x0f));
-	}
-	return(buf.toString());
-    }
-
-    public static byte[] hex2byte(String hex) {
-	if(hex.length() % 2 != 0)
-	    throw(new IllegalArgumentException("Invalid hex-encoded string"));
-	byte[] ret = new byte[hex.length() / 2];
-	for(int i = 0, o = 0; i < hex.length(); i += 2, o++)
-	    ret[o] = (byte)((hex2num(hex.charAt(i)) << 4) | hex2num(hex.charAt(i + 1)));
-	return(ret);
-    }
-
-    private final static String base64set = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    private final static int[] base64rev;
-    static {
-	int[] rev = new int[128];
-	for(int i = 0; i < 128; rev[i++] = -1);
-	for(int i = 0; i < base64set.length(); i++)
-	    rev[base64set.charAt(i)] = i;
-	base64rev = rev;
-    }
-    public static String base64enc(byte[] in) {
-	StringBuilder buf = new StringBuilder();
-	int p = 0;
-	while(in.length - p >= 3) {
-	    buf.append(base64set.charAt( (in[p + 0] & 0xfc) >> 2));
-	    buf.append(base64set.charAt(((in[p + 0] & 0x03) << 4) | ((in[p + 1] & 0xf0) >> 4)));
-	    buf.append(base64set.charAt(((in[p + 1] & 0x0f) << 2) | ((in[p + 2] & 0xc0) >> 6)));
-	    buf.append(base64set.charAt(  in[p + 2] & 0x3f));
-	    p += 3;
-	}
-	if(in.length == p + 1) {
-	    buf.append(base64set.charAt( (in[p + 0] & 0xfc) >> 2));
-	    buf.append(base64set.charAt( (in[p + 0] & 0x03) << 4));
-	    buf.append("==");
-	} else if(in.length == p + 2) {
-	    buf.append(base64set.charAt( (in[p + 0] & 0xfc) >> 2));
-	    buf.append(base64set.charAt(((in[p + 0] & 0x03) << 4) | ((in[p + 1] & 0xf0) >> 4)));
-	    buf.append(base64set.charAt( (in[p + 1] & 0x0f) << 2));
-	    buf.append("=");
-	}
-	return(buf.toString());
-    }
-    public static byte[] base64dec(String in) {
-	ByteArrayOutputStream buf = new ByteArrayOutputStream();
-	int cur = 0, b = 8;
-	for(int i = 0; i < in.length(); i++) {
-	    char c = in.charAt(i);
-	    if(c >= 128)
-		throw(new IllegalArgumentException());
-	    if(c == '=')
-		break;
-	    int d = base64rev[c];
-	    if(d == -1)
-		throw(new IllegalArgumentException());
-	    b -= 6;
-	    if(b <= 0) {
-		cur |= d >> -b;
-		buf.write(cur);
-		b += 8;
-		cur = 0;
+    public static final BinAscii hex = new BinAscii() {
+	    public String enc(byte[] in) {
+		StringBuilder buf = new StringBuilder();
+		for(byte b : in) {
+		    buf.append(num2hex((b & 0xf0) >> 4, true));
+		    buf.append(num2hex(b & 0x0f, true));
+		}
+		return(buf.toString());
 	    }
-	    cur |= d << b;
+
+	    public byte[] dec(String hex) {
+		if(hex.length() % 2 != 0)
+		    throw(new IllegalArgumentException("Invalid hex-encoded string"));
+		byte[] ret = new byte[hex.length() / 2];
+		for(int i = 0, o = 0; i < hex.length(); i += 2, o++)
+		    ret[o] = (byte)((hex2num(hex.charAt(i)) << 4) | hex2num(hex.charAt(i + 1)));
+		return(ret);
+	    }
+	};
+
+    public static final BinAscii bprint = new BinAscii() {
+	    public String enc(byte[] in) {
+		StringBuilder buf = new StringBuilder();
+		for(byte b : in) {
+		    if((char)b == '\\') {
+			buf.append("\\\\'");
+		    } else if((b >= 33) && (b < 127)) {
+			buf.append((char)b);
+		    } else {
+			buf.append('\\');
+			buf.append(num2hex((b & 0xf0) >> 4, false));
+			buf.append(num2hex(b & 0x0f, false));
+		    }
+		}
+		return(buf.toString());
+	    }
+
+	    public byte[] dec(String in) {
+		byte[] buf = new byte[in.length()];
+		int n = 0;
+		for(int i = 0; i < in.length();) {
+		    char c = in.charAt(i++);
+		    if(c == '\\') {
+			if(in.charAt(i) == '\\') {
+			    buf[n++] = '\\';
+			    i++;
+			} else {
+			    buf[n++] = (byte)((hex2num(in.charAt(i++)) << 4) | hex2num(in.charAt(i++)));
+			}
+		    } else {
+			buf[n++] = (byte)c;
+		    }
+		}
+		return(Utils.splice(buf, 0, n));
+	    }
+	};
+
+    public static class Base64 implements BinAscii {
+	public final String set;
+	public final char pad;
+	private final byte[] rev;
+
+	public Base64(String set, char pad) {
+	    this.set = set;
+	    rev = new byte[128];
+	    Arrays.fill(rev, (byte)-1);
+	    for(int i = 0; i < set.length(); i++)
+		rev[set.charAt(i)] = (byte)i;
+	    this.pad = pad;
 	}
-	return(buf.toByteArray());
+
+	public String enc(byte[] in) {
+	    StringBuilder buf = new StringBuilder();
+	    int p = 0;
+	    while(in.length - p >= 3) {
+		buf.append(set.charAt( (in[p + 0] & 0xfc) >> 2));
+		buf.append(set.charAt(((in[p + 0] & 0x03) << 4) | ((in[p + 1] & 0xf0) >> 4)));
+		buf.append(set.charAt(((in[p + 1] & 0x0f) << 2) | ((in[p + 2] & 0xc0) >> 6)));
+		buf.append(set.charAt(  in[p + 2] & 0x3f));
+		p += 3;
+	    }
+	    if(in.length == p + 1) {
+		buf.append(set.charAt( (in[p + 0] & 0xfc) >> 2));
+		buf.append(set.charAt( (in[p + 0] & 0x03) << 4));
+		if(pad != '\0') {
+		    buf.append(pad); buf.append(pad);
+		}
+	    } else if(in.length == p + 2) {
+		buf.append(set.charAt( (in[p + 0] & 0xfc) >> 2));
+		buf.append(set.charAt(((in[p + 0] & 0x03) << 4) | ((in[p + 1] & 0xf0) >> 4)));
+		buf.append(set.charAt( (in[p + 1] & 0x0f) << 2));
+		if(pad != '\0') {
+		    buf.append(pad);
+		}
+	    }
+	    return(buf.toString());
+	}
+
+	public byte[] dec(String in) {
+	    ByteArrayOutputStream buf = new ByteArrayOutputStream();
+	    int cur = 0, b = 8;
+	    for(int i = 0; i < in.length(); i++) {
+		char c = in.charAt(i);
+		if(c >= 128)
+		    throw(new IllegalArgumentException());
+		if(c == pad)
+		    break;
+		int d = rev[c];
+		if(d == -1)
+		    throw(new IllegalArgumentException());
+		b -= 6;
+		if(b <= 0) {
+		    cur |= d >> -b;
+		    buf.write(cur);
+		    b += 8;
+		    cur = 0;
+		}
+		cur |= d << b;
+	    }
+	    return(buf.toByteArray());
+	}
     }
+
+    public static final Base64 b64 = new Base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", '=');
+    public static final Base64 b64np = new Base64(b64.set, '\0');
+    public static final Base64 ub64 = new Base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", '\0');
+
+    @Deprecated public static String byte2hex(byte[] in) {return(hex.enc(in));}
+    @Deprecated public static byte[] hex2byte(String in) {return(hex.dec(in));}
+    @Deprecated public static String base64enc(byte[] in) {return(b64.enc(in));}
+    @Deprecated public static byte[] base64dec(String in) {return(b64.dec(in));}
 
     public static String[] splitwords(String text) {
 	ArrayList<String> words = new ArrayList<String>();
@@ -1096,6 +1238,19 @@ public class Utils {
 
     public static String titlecase(String str) {
 	return(Character.toTitleCase(str.charAt(0)) + str.substring(1));
+    }
+
+    public static final Color[] vgapal;
+    static {
+	vgapal = new Color[16];
+	for(int i = 0; i < 16; i++) {
+	    int lo = ((i & 8) == 0) ? 0x00 : 0x55;
+	    int hi = ((i & 8) == 0) ? 0xaa : 0xff;
+	    int r =  ((i & 4) != 0) ? hi : lo;
+	    int g =  ((i & 2) != 0) ? hi : lo;
+	    int b =  ((i & 1) != 0) ? hi : lo;
+	    vgapal[i] = new Color(r, g, b);
+	}
     }
 
     public static Color contrast(Color col) {
@@ -1618,6 +1773,12 @@ public class Utils {
 	return(ret);
     }
 
+    public static <K, V> V pop(Map<K, V> map, K key, V def) {
+	if(!map.containsKey(key))
+	    return(def);
+	return(map.remove(key));
+    }
+
     public static <T> List<T> reversed(List<T> ls) {
 	return(new AbstractList<T>() {
 		public int size() {
@@ -1768,7 +1929,7 @@ public class Utils {
 	       ((c >= '0') && (c <= '9')) || (c == '.')) {
 		buf.append((char)c);
 	    } else {
-		buf.append("%" + Utils.num2hex((c & 0xf0) >> 4) + Utils.num2hex(c & 0x0f));
+		buf.append("%" + Utils.num2hex((c & 0xf0) >> 4, true) + Utils.num2hex(c & 0x0f, true));
 	    }
 	}
 	return(buf.toString());
@@ -1835,6 +1996,17 @@ public class Utils {
 	}
     }
 
+    public static <K, V> MapBuilder<K, V> map() {
+	return(new MapBuilder<K, V>(new HashMap<K, V>()));
+    }
+
+    public static <K, V> Map<K, V> index(Collection<? extends V> values, Function<? super V, ? extends K> key) {
+	Map<K, V> ret = new HashMap<>();
+	for(V val : values)
+	    ret.put(key.apply(val), val);
+	return(ret);
+    }
+
     public static class Range extends AbstractList<Integer> {
 	public final int min, max, step;
 
@@ -1890,10 +2062,6 @@ public class Utils {
 		    return(res);
 		}
 	    });
-    }
-
-    public static <K, V> MapBuilder<K, V> map() {
-	return(new MapBuilder<K, V>(new HashMap<K, V>()));
     }
 
     public static <F, T> Iterator<T> map(Iterator<F> from, Function<? super F, ? extends T> fn) {
@@ -2016,10 +2184,18 @@ public class Utils {
 	return(0);
     }
 
-    public static final Object formatter(String fmt, Object... args) {
+    public static Object formatter(String fmt, Object... args) {
 	return(new Object() {
 		public String toString() {
 		    return(String.format(fmt, args));
+		}
+	    });
+    }
+
+    public static Object formatter(Supplier<String> str) {
+	return(new Object() {
+		public String toString() {
+		    return(str.get());
 		}
 	    });
     }

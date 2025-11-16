@@ -8,11 +8,11 @@ public class ISRemovedLoftar extends NTask {
 
     int oldSize;
     ItemStack is;
-    public ISRemovedLoftar(int id, ItemStack is) {
+    public ISRemovedLoftar(int id, ItemStack is, int originalSize) {
         super();
         this.id = id;
         this.is = is;
-        oldSize = is.wmap.size();
+        oldSize = originalSize;
     }
 
     @Override

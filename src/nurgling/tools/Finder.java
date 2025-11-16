@@ -109,6 +109,27 @@ public class Finder
         return result;
     }
 
+    public static ArrayList<Gob> findGobs(Coord pos) {
+        ArrayList<Gob> result = new ArrayList<> ();
+        Pair<Coord2d,Coord2d> space = new Pair<>(new Coord2d(pos.x*MCache.tilesz.x,pos.y*MCache.tilesz.y),new Coord2d((pos.x + 1) *MCache.tilesz.x,(pos.y+1)*MCache.tilesz.y));
+//        NUtils.getGameUI().msg(space.a + " " +  space.b);
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
+                {
+                    // Только внутри тайла, без пересечений
+                    if (gob.id!= NUtils.playerID() && gob.rc.x >=space.a.x && gob.rc.y >=space.a.y && gob.rc.x <=space.b.x && gob.rc.y <=space.b.y)
+                    {
+                        result.add(gob);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     public static ArrayList<Coord2d> findTilesInArea (
             NAlias name,
             Pair<Coord2d,Coord2d> area_rc
@@ -518,11 +539,20 @@ public class Finder
 
         synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
             for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
-                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
-                    if(gob.ngob.hitBox != null && gob.getattr(Following.class)==null  && gob.id!= NUtils.player().id){
-                        NHitBoxD gobBox = new NHitBoxD(gob);
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector"))) {
+                    NHitBox effectiveHitBox = gob.ngob.hitBox;
+
+                    // If gob has no hitbox, check if there's a custom hitbox defined for it
+                    // (useful for things like mound beds that have null hitboxes but need collision during building)
+                    if (effectiveHitBox == null && gob.ngob.name != null) {
+                        effectiveHitBox = NHitBox.findCustom(gob.ngob.name);
+                    }
+
+                    if(effectiveHitBox != null && gob.getattr(Following.class)==null  && gob.id!= NUtils.player().id){
+                        NHitBoxD gobBox = new NHitBoxD(effectiveHitBox.begin, effectiveHitBox.end, gob.rc, gob.a);
                         if (gobBox.intersects(chekerOfArea,true))
                             significantGobs.add(gobBox);
+                    }
                 }
             }
         }
@@ -615,6 +645,32 @@ public class Finder
                             if(pattern.matcher(gob.ngob.name).matches()) {
                                 double new_dist;
                                 if (gob.id != NUtils.playerID() && (new_dist = gob.rc.dist(NUtils.player().rc)) < dist) {
+                                    if(!(Boolean)NConfig.get(NConfig.Key.q_visitor) || (!(NParser.checkName(gob.ngob.name, new NAlias("palisadebiggate","palisadegate"))) || gob.findol(Equed.class)==null)) {
+                                        result.add(gob);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public static ArrayList<Gob> findGobByPatternsAroundPoint(ArrayList<Pattern> qaPatterns, double dist, Coord2d centerPoint) {
+        ArrayList<Gob> result = new ArrayList<>();
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc)
+        {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc)
+            {
+                if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
+                {
+                    if(gob.ngob!=null && gob.ngob.name!=null) {
+                        for(Pattern pattern : qaPatterns) {
+                            if(pattern.matcher(gob.ngob.name).matches()) {
+                                double new_dist;
+                                if (gob.id != NUtils.playerID() && (new_dist = gob.rc.dist(centerPoint)) < dist) {
                                     if(!(Boolean)NConfig.get(NConfig.Key.q_visitor) || (!(NParser.checkName(gob.ngob.name, new NAlias("palisadebiggate","palisadegate"))) || gob.findol(Equed.class)==null)) {
                                         result.add(gob);
                                     }

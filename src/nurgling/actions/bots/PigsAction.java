@@ -75,7 +75,7 @@ public class PigsAction implements Action {
                 public boolean test(Gob gob) {
                     Pig p1 = (Pig) (NUtils.getAnimalEntity(gob, Pig.class));
                     ;
-                    return !p1.hog && !p1.dead && p1.lactate;
+                    return !p1.hog && !p1.dead && !p1.piglet;
                 }
             };
             if(PigsHerd.getCurrent()!=null) {

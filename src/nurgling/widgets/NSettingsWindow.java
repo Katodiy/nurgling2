@@ -17,11 +17,18 @@ public class NSettingsWindow extends Widget {
     public World world;
     Widget container;
     public Panel currentPanel = null;
-    private Button saveBtn, cancelBtn;
+    private Button saveBtn, cancelBtn, backBtn;
     public QuickActions qa;
     public AutoSelection as;
+    public QoL qol;
+    private Runnable backAction;
 
     public NSettingsWindow() {
+        this(null);
+    }
+
+    public NSettingsWindow(Runnable backAction) {
+        this.backAction = backAction;
         sz = UI.scale(800, 600);
         container = add(new Widget(Coord.z));
         list = add(new SettingsList(UI.scale(200, 580)), UI.scale(10, 10));
@@ -42,6 +49,23 @@ public class NSettingsWindow extends Widget {
             }
         }, UI.scale(580, 560));
 
+        // Add Back button only if back action is provided
+        if(backAction != null) {
+            backBtn = add(new Button(UI.scale(100), "Back") {
+                public void click() {
+                    backAction.run();
+                }
+                
+                public boolean keydown(KeyDownEvent ev) {
+                    if(ev.c == 27) { // ESC key
+                        backAction.run();
+                        return true;
+                    }
+                    return super.keydown(ev);
+                }
+            }, UI.scale(480, 560));
+        }
+
         fillSettings();
         container.resize(UI.scale(800, 600));
     }
@@ -50,7 +74,7 @@ public class NSettingsWindow extends Widget {
     private void fillSettings() {
         SettingsCategory general = new SettingsCategory("General", new Panel("General"), container);
         general.addChild(new SettingsItem("Fonts", new Fonts(), container));
-        general.addChild(new SettingsItem("Quality of life", new QoL(), container));
+        general.addChild(new SettingsItem("Quality of life", qol = new QoL(), container));
         general.addChild(new SettingsItem("Database", new DatabaseSettings(), container));
         general.addChild(new SettingsItem("Auto Mapper", new AutoMapper(), container));
         general.addChild(new SettingsItem("Auto Selection", as = new AutoSelection(), container));
@@ -68,6 +92,7 @@ public class NSettingsWindow extends Widget {
         bots.addChild(new SettingsItem("Auto Drop settings", new Dropper(), container));
         bots.addChild(new SettingsItem("Eating bot", new Eater(), container));
         bots.addChild(new SettingsItem("Farming Settings", new FarmingSettingsPanel(), container));
+        bots.addChild(new SettingsItem("Cheese orders", new CheeseOrdersPanel(), container));
 
         list.addCategory(general);
         list.addCategory(gameenvironment);

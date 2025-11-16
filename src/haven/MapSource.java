@@ -26,6 +26,7 @@
 
 package haven;
 
+import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.widgets.NMapWnd;
 
@@ -75,9 +76,23 @@ public interface MapSource {
 		}
 		BufferedImage tex = tileimg(m, texes, t);
 		int rgb = 0;
-		if(tex != null)
-		    rgb = tex.getRGB(Utils.floormod(c.x + a.ul.x, tex.getWidth()),
-				     Utils.floormod(c.y + a.ul.y, tex.getHeight()));
+		if(tex != null) {
+		    // Check if uniform biome colors is enabled
+		    boolean uniformColors = false;
+		    if(NConfig.get(NConfig.Key.uniformBiomeColors) instanceof Boolean) {
+		        uniformColors = (Boolean) NConfig.get(NConfig.Key.uniformBiomeColors);
+		    }
+		    if(uniformColors) {
+		        // Always use color from pixel (0,0) for uniform biome colors
+		        int color = tex.getRGB(0, 0);
+		        // Force full opacity
+		        rgb = (color & 0x00FFFFFF) | 0xFF000000;
+		    } else {
+		        // Use normal texture coordinates
+		        rgb = tex.getRGB(Utils.floormod(c.x + a.ul.x, tex.getWidth()),
+		                         Utils.floormod(c.y + a.ul.y, tex.getHeight()));
+		    }
+		}
 		buf.setRGB(c.x, c.y, rgb);
 	    }
 	}

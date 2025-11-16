@@ -12,6 +12,9 @@ import nurgling.tools.*;
 import nurgling.widgets.NPopupWidget;
 import nurgling.widgets.NSearchWidget;
 
+import java.util.Map;
+import java.util.HashMap;
+
 import java.awt.*;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
@@ -25,38 +28,46 @@ public class NInventory extends Inventory
 {
     public NSearchWidget searchwdg;
     public NPopupWidget toggles;
+    public NPopupWidget rightTogglesExpanded;
+    public NPopupWidget rightTogglesCompact;
+    public ICheckBox checkBoxForRight;
+    public Scrollport itemListContainer;
+    public Widget itemListContent;
+    public Scrollport compactListContainer;
+    public Widget compactListContent;
+    public Dropbox<String> sortTypeDropbox;
+    public Dropbox<String> orderDropbox;
     public ICheckBox bundle;
     public MenuGrid.PagButton pagBundle = null;
     boolean showPopup = false;
+    boolean showRightPanel = false;
+    RightPanelMode rightPanelMode = RightPanelMode.EXPANDED;
+    boolean compactNameAscending = true;
+    boolean compactQuantityAscending = false;
+    String compactLastSortType = "quantity"; // Track which was clicked last
     BufferedImage numbers = null;
     short[][] oldinv = null;
-    public ParentGob parentGob = null;
+    public Gob parentGob = null;
     long lastUpdate = 0;
-    public static class ParentGob
-    {
-        public Gob gob;
-        public long grid_id;
-        public Coord coord;
-        public String hash;
 
-        public ParentGob(Gob gob) {
-            this.gob = gob;
-            if(gob!=null) {
-                Coord pltc = (new Coord2d(gob.rc.x / MCache.tilesz.x, gob.rc.y / MCache.tilesz.y)).floor();
-                MCache.Grid g = NUtils.getGameUI().ui.sess.glob.map.getgridt(pltc);
-                this.grid_id = g.id;
-                this.coord = pltc.sub(g.ul);
-                this.hash = gob.ngob.hash;
-            }
-        }
-    }
     public NInventory(Coord sz)
     {
         super(sz);
     }
 
+    @Override
+    protected void added() {
+        super.added();
+        // Add Plan button for Study Desk after the widget is added to its parent
+        nurgling.widgets.StudyDeskInventoryExtension.addPlanButtonIfStudyDesk(this);
+    }
+
     public enum QualityType {
         High, Low
+    }
+    
+    public enum RightPanelMode {
+        COMPACT, EXPANDED
     }
 
     @Override
@@ -288,8 +299,10 @@ public class NInventory extends Inventory
         super.resize(new Coord(sz));
         searchwdg.resize(new Coord(sz.x , 0));
         searchwdg.move(new Coord(0,sz.y + UI.scale(5)));
+        moveCheckbox();
         parent.pack();
         movePopup(parent.c);
+        moveCheckboxAfterPack();
     }
 
     public void movePopup(Coord c) {
@@ -297,8 +310,108 @@ public class NInventory extends Inventory
         {
             toggles.move(new Coord(c.x - toggles.sz.x + toggles.atl.x +UI.scale(10),c.y + UI.scale(35)));
         }
+        // Update both right panels
+        updateRightPanelPositions(c);
         if(searchwdg!=null && searchwdg.history!=null) {
             searchwdg.history.move(new Coord(c.x  + ((Window)parent).ca().ul.x + UI.scale(7), c.y + parent.sz.y- UI.scale(37)));
+        }
+    }
+
+    public void moveCheckbox() {
+        if(checkBoxForRight != null) {
+            // Since the button is positioned relative to sz.x, it should automatically 
+            // adjust when the inventory resizes. Only reposition if needed.
+            checkBoxForRight.c = new Coord(sz.x - UI.scale(40), 0);
+        }
+    }
+
+    public void moveCheckboxAfterPack() {
+        if(checkBoxForRight != null) {
+            // Since the button is positioned relative to sz.x, it should automatically
+            // adjust when the inventory resizes. Only reposition if needed.
+            checkBoxForRight.c = new Coord(sz.x + UI.scale(4), UI.scale(27));
+        }
+    }
+    
+    
+    private void updateRightPanelPositions(Coord c) {
+        int invH = this.sz.y;
+        int insetY = UI.scale(8); // Default inset
+        int desiredInner = Math.round(invH * 1.2f);
+        int outerH = desiredInner;
+        int panelW = UI.scale(250);
+        int compactPanelW = UI.scale(100); // Smaller width for compact mode
+        int compactOuterH = Math.round(invH * 1.2f); // Taller than expanded but still smaller than inventory
+        
+        if (rightTogglesExpanded != null) {
+            rightTogglesExpanded.move(new Coord(
+                    c.x + parent.sz.x - rightTogglesExpanded.atl.x - UI.scale(6),
+                    c.y + UI.scale(20)
+            ));
+            rightTogglesExpanded.resize(panelW, outerH);
+            
+            if (itemListContainer != null) {
+                // Resize expanded list container
+                int insetX = rightTogglesExpanded.atl.x;
+                insetY = rightTogglesExpanded.atl.y;
+                int contentLeft = insetX;
+                int contentRight = rightTogglesExpanded.sz.x - insetX;
+                int contentBottom = rightTogglesExpanded.sz.y - insetY;
+                int listTopY = itemListContainer.c.y;
+                int sidePad = UI.scale(12);
+                int bottomPad = UI.scale(8);
+                
+                int listWidth = Math.max(0, (contentRight - contentLeft) - sidePad * 2);
+                int listHeight = Math.max(0, contentBottom - listTopY - bottomPad);
+                
+                itemListContainer.resize(new Coord(listWidth, listHeight));
+                rebuildItemList();
+            }
+        }
+        
+        if (rightTogglesCompact != null) {
+            rightTogglesCompact.move(new Coord(
+                    c.x + parent.sz.x - rightTogglesCompact.atl.x - UI.scale(6),
+                    c.y + UI.scale(20)
+            ));
+            rightTogglesCompact.resize(compactPanelW, compactOuterH);
+            
+            if (compactListContainer != null) {
+                // Resize compact list container  
+                int insetX = rightTogglesCompact.atl.x;
+                insetY = rightTogglesCompact.atl.y;
+                int contentLeft = insetX;
+                int contentRight = rightTogglesCompact.sz.x - insetX;
+                int contentBottom = rightTogglesCompact.sz.y - insetY;
+                int listTopY = compactListContainer.c.y;
+                int sidePad = UI.scale(4);
+                int bottomPad = UI.scale(8);
+                
+                int listWidth = Math.max(0, (contentRight - contentLeft) - sidePad * 2);
+                int listHeight = Math.max(0, contentBottom - listTopY - bottomPad);
+                
+                compactListContainer.resize(new Coord(listWidth, listHeight));
+                rebuildCompactList();
+            }
+        }
+    }
+    
+    private void updateRightPanelVisibility() {
+        if (rightTogglesExpanded != null) {
+            if (showRightPanel && rightPanelMode == RightPanelMode.EXPANDED) {
+                rightTogglesExpanded.show();
+            } else {
+                rightTogglesExpanded.hide();
+            }
+        }
+        
+        if (rightTogglesCompact != null) {
+            if (showRightPanel && rightPanelMode == RightPanelMode.COMPACT) {
+                rightTogglesCompact.show();
+                rebuildCompactList();
+            } else {
+                rightTogglesCompact.hide();
+            }
         }
     }
 
@@ -348,6 +461,24 @@ public class NInventory extends Inventory
             numbers = null;
         if(toggles !=null)
             toggles.visible = parent.visible && showPopup;
+        if(rightTogglesExpanded != null) {
+            rightTogglesExpanded.visible = parent.visible && showRightPanel && (rightPanelMode == RightPanelMode.EXPANDED);
+            if (showRightPanel && rightPanelMode == RightPanelMode.EXPANDED) {
+                // Update expanded panel contents periodically
+                if (NUtils.getTickId() % 10 == 0) { // Update every 10 ticks
+                    updateRightPanelItems();
+                }
+            }
+        }
+        if(rightTogglesCompact != null) {
+            rightTogglesCompact.visible = parent.visible && showRightPanel && (rightPanelMode == RightPanelMode.COMPACT);
+            if (showRightPanel && rightPanelMode == RightPanelMode.COMPACT) {
+                // Update compact panel contents periodically
+                if (NUtils.getTickId() % 20 == 0) { // Update every 20 ticks (less frequent)
+                    rebuildCompactList();
+                }
+            }
+        }
     }
 
     private static final TexI[] collapsei = new TexI[]{
@@ -355,6 +486,33 @@ public class NInventory extends Inventory
             new TexI(Resource.loadsimg("nurgling/hud/buttons/itogglec/d")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/itogglec/h")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/itogglec/dh"))};
+
+    // Mirrored versions for right-side toggle
+    private static final TexI[] collapseiRight = createMirroredTextures(collapsei);
+    
+    // Helper method to create horizontally mirrored textures
+    private static TexI[] createMirroredTextures(TexI[] original) {
+        TexI[] mirrored = new TexI[original.length];
+        for (int i = 0; i < original.length; i++) {
+            BufferedImage img = original[i].back;
+
+            // Use ARGB format to ensure compatibility
+            int imageType = img.getType();
+            if (imageType == 0) {
+                imageType = BufferedImage.TYPE_INT_ARGB;
+            }
+
+            BufferedImage flippedImg = new BufferedImage(img.getWidth(), img.getHeight(), imageType);
+
+            // Create mirrored image using Graphics2D for better handling
+            java.awt.Graphics2D g2d = flippedImg.createGraphics();
+            g2d.drawImage(img, img.getWidth(), 0, 0, img.getHeight(), 0, 0, img.getWidth(), img.getHeight(), null);
+            g2d.dispose();
+
+            mirrored[i] = new TexI(flippedImg);
+        }
+        return mirrored;
+    }
 
     private static final TexI[] gildingi = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/gilding/u")),
@@ -417,9 +575,40 @@ public class NInventory extends Inventory
                    }
                 , new Coord(-gildingi[0].sz().x + UI.scale(2), UI.scale(27)));
 
-        parent.pack();
-        toggles = NUtils.getGameUI().add(new NPopupWidget(new Coord(UI.scale(50), UI.scale(80)), NPopupWidget.Type.RIGHT));
 
+        checkBoxForRight = new ICheckBox(collapseiRight[0], collapseiRight[1], collapseiRight[2], collapseiRight[3]) {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+                showRightPanel = val;
+                NConfig.set(NConfig.Key.inventoryRightPanelShow, val);
+                updateRightPanelVisibility();
+            }
+        };
+
+        parent.pack();
+
+        // Right panel toggle button - using mirrored textures
+        parent.add(checkBoxForRight, new Coord(sz.x + UI.scale(4), UI.scale(27)));
+
+        toggles = NUtils.getGameUI().add(new NPopupWidget(new Coord(UI.scale(50), UI.scale(80)), NPopupWidget.Type.RIGHT));
+        
+        // Create expanded panel
+        int panelW = UI.scale(250);
+        rightTogglesExpanded = NUtils.getGameUI().add(
+                new NPopupWidget(new Coord(panelW, UI.scale(100)), NPopupWidget.Type.LEFT)
+        );
+        int insetY = rightTogglesExpanded.atl.y;
+        int desiredInner = Math.round(this.sz.y * 0.80f);
+        int outerH = desiredInner + insetY * 2;
+        rightTogglesExpanded.resize(panelW, outerH);
+        
+        // Create compact panel (taller than expanded)
+        int compactPanelW = UI.scale(120);
+        int compactOuterH = Math.round(this.sz.y * 0.90f) + rightTogglesExpanded.atl.y * 2;
+        rightTogglesCompact = NUtils.getGameUI().add(
+                new NPopupWidget(new Coord(compactPanelW, compactOuterH), NPopupWidget.Type.LEFT)
+        );
 
         Widget pw = toggles.add(new ICheckBox(gildingi[0], gildingi[1], gildingi[2], gildingi[3]) {
             @Override
@@ -490,6 +679,7 @@ public class NInventory extends Inventory
             }
         }, pw.pos("bl").add(UI.scale(new Coord(0, 5))));
         pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/autosplittor/u").flayer(Resource.tooltip).t);
+        ((ICheckBox)pw).a = (Boolean)NConfig.get(NConfig.Key.autoSplitter);
 
         pw = toggles.add(new ICheckBox(dropperi[0], dropperi[1], dropperi[2], dropperi[3]) {
             @Override
@@ -499,10 +689,563 @@ public class NInventory extends Inventory
             }
         }, pw.pos("bl").add(UI.scale(new Coord(0, 5))));
         pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/dropper/u").flayer(Resource.tooltip).t);
+        ((ICheckBox)pw).a = (Boolean)NConfig.get(NConfig.Key.autoDropper);
 
         toggles.pack();
+
+        // Setup both right panels
+        setupExpandedPanel();
+        setupCompactPanel();
+
+        // Load settings from NConfig
+        Boolean showPanelConfig = (Boolean) NConfig.get(NConfig.Key.inventoryRightPanelShow);
+        showRightPanel = showPanelConfig != null ? showPanelConfig : false;
+        
+        String panelModeStr = (String) NConfig.get(NConfig.Key.inventoryRightPanelMode);
+        if ("COMPACT".equals(panelModeStr)) {
+            rightPanelMode = RightPanelMode.COMPACT;
+        } else {
+            rightPanelMode = RightPanelMode.EXPANDED;
+        }
+        
+        checkBoxForRight.a = showRightPanel;
+        updateRightPanelVisibility();
+
         movePopup(parent.c);
         toggles.pack();
+    }
+
+    private void setupExpandedPanel() {
+        int panelMargin = UI.scale(8);
+        Coord headerPos = rightTogglesExpanded.atl.add(new Coord(panelMargin, panelMargin));
+
+        // View toggle button in top-right of expanded panel  
+        ICheckBox viewToggle = new ICheckBox(
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/dh"))
+        ) {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+                rightPanelMode = RightPanelMode.COMPACT;
+                NConfig.set(NConfig.Key.inventoryRightPanelMode, "COMPACT");
+                updateRightPanelVisibility();
+            }
+        };
+        viewToggle.a = false; // Start in expanded mode
+        viewToggle.settip("Switch to compact view");
+        rightTogglesExpanded.add(viewToggle, new Coord(rightTogglesExpanded.sz.x - UI.scale(50), headerPos.y));
+
+        // Position for dropdowns - below header
+        Coord dropdownPos = headerPos.add(new Coord(8, 0));
+        
+        // Sort type dropdown (smaller, cleaner)
+        sortTypeDropbox = new Dropbox<String>(UI.scale(85), 4, UI.scale(16)) {
+            @Override
+            protected String listitem(int i) {
+                String[] options = {"Count", "Name", "Resource", "Quality"};
+                return options[i];
+            }
+            
+            @Override
+            protected int listitems() { return 4; }
+            
+            @Override
+            protected void drawitem(GOut g, String item, int idx) {
+                g.text(item, new Coord(3, 2));
+            }
+            
+            @Override
+            public void change(String item) {
+                super.change(item);
+                applySorting();
+            }
+        };
+        sortTypeDropbox.change("Count");
+        rightTogglesExpanded.add(sortTypeDropbox, dropdownPos);
+        
+        // Order dropdown (smaller, right aligned)
+        orderDropbox = new Dropbox<String>(UI.scale(60), 2, UI.scale(16)) {
+            @Override
+            protected String listitem(int i) {
+                String[] options = {"Asc", "Desc"};
+                return options[i];
+            }
+            
+            @Override
+            protected int listitems() { return 2; }
+            
+            @Override
+            protected void drawitem(GOut g, String item, int idx) {
+                g.text(item, new Coord(3, 2));
+            }
+            
+            @Override
+            public void change(String item) {
+                super.change(item);
+                applySorting();
+            }
+        };
+        orderDropbox.change("Asc");  // Default to descending
+        rightTogglesExpanded.add(orderDropbox, dropdownPos.add(new Coord(UI.scale(90), 0)));
+
+        
+        // Create Scrollport for item list - following CheeseOrdersPanel pattern
+        Coord listPos = dropdownPos.add(new Coord(0, UI.scale(25)));
+        int listWidth = UI.scale(220);
+        int listHeight = UI.scale(150);
+        
+        itemListContainer = rightTogglesExpanded.add(new Scrollport(new Coord(listWidth, listHeight)), listPos);
+        itemListContent = new Widget(new Coord(listWidth, UI.scale(50))) {
+            @Override
+            public void pack() {
+                // Auto-resize based on children
+                resize(contentsz());
+            }
+        };
+        itemListContainer.cont.add(itemListContent, Coord.z);
+        
+        // Initial population of items
+        rebuildItemList();
+    }
+    
+    private void setupCompactPanel() {
+        int panelMargin = UI.scale(4);
+        Coord headerPos = rightTogglesCompact.atl.add(new Coord(panelMargin, panelMargin));
+        
+        // View toggle button in top-right of compact panel
+        ICheckBox viewToggle = new ICheckBox(
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/dh"))
+        ) {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+                rightPanelMode = RightPanelMode.EXPANDED;
+                NConfig.set(NConfig.Key.inventoryRightPanelMode, "EXPANDED");
+                updateRightPanelVisibility();
+            }
+        };
+        viewToggle.a = false; // Will switch to expanded mode
+        viewToggle.settip("Switch to expanded view");
+        rightTogglesCompact.add(viewToggle, new Coord(rightTogglesCompact.sz.x - UI.scale(40), headerPos.y));
+        
+        // Sorting buttons for compact mode
+        // Name sort button (above icons area)
+        ICheckBox nameSortButton = new ICheckBox(
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/UP/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/DOWN/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/UP/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/DOWN/h"))
+        ) {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+                compactNameAscending = !val; // false = ascending, true = descending
+                compactLastSortType = "name"; // Mark name as last clicked
+                rebuildCompactList();
+            }
+        };
+        nameSortButton.a = false; // Start with ascending (up arrow)
+        nameSortButton.settip("Sort by name (ascending/descending)");
+        rightTogglesCompact.add(nameSortButton, new Coord(headerPos.x + UI.scale(3), headerPos.y));
+        
+        // Quantity sort button (above quantities area)  
+        ICheckBox quantitySortButton = new ICheckBox(
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/UP/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/DOWN/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/UP/h")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v2/DOWN/h"))
+        ) {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+                compactQuantityAscending = !val; // false = ascending, true = descending
+                compactLastSortType = "quantity"; // Mark quantity as last clicked
+                rebuildCompactList();
+            }
+        };
+        quantitySortButton.a = true; // Start with descending (down arrow) for quantities
+        quantitySortButton.settip("Sort by quantity (ascending/descending)");
+        rightTogglesCompact.add(quantitySortButton, new Coord(headerPos.x + UI.scale(20), headerPos.y));
+
+        // Create compact Scrollport for item list (below the sorting buttons)
+        Coord listPos = headerPos.add(new Coord(0, UI.scale(25)));
+        int listWidth = UI.scale(90);
+        int listHeight = UI.scale(180);
+        
+        compactListContainer = rightTogglesCompact.add(new Scrollport(new Coord(listWidth, listHeight)), listPos);
+        compactListContent = new Widget(new Coord(listWidth, UI.scale(50))) {
+            @Override
+            public void pack() {
+                resize(contentsz());
+            }
+        };
+        compactListContainer.cont.add(compactListContent, Coord.z);
+        
+        // Initial population
+        rebuildCompactList();
+    }
+
+    private void applySorting() {
+        // Trigger re-population of items with current sort settings
+        rebuildItemList();
+    }
+
+    private void updateRightPanelItems() {
+        rebuildItemList();
+    }
+    
+    // Helper class to group items by name
+    private static class ItemGroup {
+        String name;
+        int totalQuantity = 0;
+        double averageQuality = 0;
+        java.util.List<NGItem> items = new ArrayList<>();
+        
+        ItemGroup(String name) {
+            this.name = name;
+        }
+        
+        void addItem(NGItem item) {
+            items.add(item);
+            recalculate();
+        }
+        
+        void recalculate() {
+            // Recalculate total quantity and quality
+            totalQuantity = 0;
+            double totalQuality = 0;
+            int qualityCount = 0;
+            
+            for (NGItem item : items) {
+                // Get proper stack count using Amount info like GetTotalAmountItems does
+                int stackSize = 1;
+                try {
+                    GItem.Amount amount = item.getInfo(GItem.Amount.class);
+                    if (amount != null && amount.itemnum() > 0) {
+                        stackSize = amount.itemnum();
+                    }
+                } catch (Exception e) {
+                    stackSize = 1;
+                }
+
+                totalQuantity += stackSize;
+
+                // Calculate quality - try to get stack quality first, then fallback to item quality
+                double itemQuality = 0;
+                if(stackSize > 1) {
+                    // Try to get stack quality info for stacked items
+                    Stack stackInfo = item.getInfo(Stack.class);
+                    if (stackInfo != null && stackInfo.quality > 0) {
+                        itemQuality = stackInfo.quality;
+                    } else if (item.quality != null && item.quality > 0) {
+                        // Fallback to individual item quality if no stack quality
+                        itemQuality = item.quality;
+                    }
+                } else {
+                    // Fallback to individual item quality on any error
+                    try {
+                        if (item.quality != null && item.quality > 0) {
+                            itemQuality = item.quality;
+                        }
+                    } catch (Exception e2) {
+                        // Ignore and continue with 0 quality
+                        itemQuality = 0;
+                    }
+                }
+
+                
+                if (itemQuality > 0) {
+                    // Weight quality by stack size for accurate average
+                    totalQuality += itemQuality * stackSize;
+                    qualityCount += stackSize;
+                }
+            }
+            
+            if (qualityCount > 0) {
+                averageQuality = totalQuality / qualityCount;
+            } else {
+                averageQuality = 0;
+            }
+        }
+        
+        NGItem getRepresentativeItem() {
+            return items.isEmpty() ? null : items.get(0);
+        }
+    }
+    
+    private void rebuildItemList() {
+        if (itemListContent == null) return;
+        
+        // Clear existing widgets from content
+        for (Widget child : new ArrayList<>(itemListContent.children())) {
+            child.destroy();
+        }
+        
+        // Get current inventory items and group by name
+        Map<String, ItemGroup> itemGroupMap = new HashMap<>();
+        
+        // Access parent inventory's children
+        for (Widget widget = this.child; widget != null; widget = widget.next) {
+            if (widget instanceof WItem) {
+                WItem wItem = (WItem) widget;
+                if (wItem.item instanceof NGItem) {
+                    NGItem nitem = (NGItem) wItem.item;
+                    String itemName = nitem.name();
+                    
+                    if (itemName != null) {
+                        ItemGroup group = itemGroupMap.get(itemName);
+                        if (group == null) {
+                            group = new ItemGroup(itemName);
+                            itemGroupMap.put(itemName, group);
+                        }
+                        group.addItem(nitem);
+                    }
+                }
+            }
+        }
+        
+        // Sort the items based on current dropdown selections
+        List<ItemGroup> itemGroups = new ArrayList<>(itemGroupMap.values());
+        itemGroups.sort((a, b) -> {
+            int result = 0;
+            
+            if (sortTypeDropbox != null && sortTypeDropbox.sel != null) {
+                switch (sortTypeDropbox.sel) {
+                    case "Count":
+                        result = Integer.compare(a.totalQuantity, b.totalQuantity);
+                        break;
+                    case "Name":
+                        result = a.name.compareTo(b.name);
+                        break;
+                    case "Resource":
+                        result = a.name.compareTo(b.name); // Same as name for now
+                        break;
+                    case "Quality":
+                        result = Double.compare(a.averageQuality, b.averageQuality);
+                        break;
+                    default:
+                        result = 0;
+                }
+            }
+            
+            // Apply ascending/descending order
+            if (orderDropbox != null && "Asc".equals(orderDropbox.sel)) {
+                return result;
+            } else {
+                return -result; // Descending
+            }
+        });
+        
+        // Create widgets for expanded mode (original list layout)
+        int y = 0;
+        int contentWidth = itemListContainer.cont.sz.x;
+        int itemHeight = UI.scale(20);
+        
+        for (ItemGroup group : itemGroups) {
+            Widget itemWidget = createItemWidget(group, new Coord(contentWidth, itemHeight));
+            itemListContent.add(itemWidget, new Coord(0, y));
+            y += itemHeight + UI.scale(1);
+        }
+        
+        // Let the content widget auto-resize and update scrollbar
+        itemListContent.pack();
+        itemListContainer.cont.update();
+    }
+    
+    private void rebuildCompactList() {
+        if (compactListContent == null) return;
+        
+        // Clear existing widgets from content
+        for (Widget child : new ArrayList<>(compactListContent.children())) {
+            child.destroy();
+        }
+        
+        // Get current inventory items and group by name (same logic as expanded)
+        Map<String, ItemGroup> itemGroupMap = new HashMap<>();
+        
+        for (Widget widget = this.child; widget != null; widget = widget.next) {
+            if (widget instanceof WItem) {
+                WItem wItem = (WItem) widget;
+                if (wItem.item instanceof NGItem) {
+                    NGItem nitem = (NGItem) wItem.item;
+                    String itemName = nitem.name();
+                    
+                    if (itemName != null) {
+                        ItemGroup group = itemGroupMap.get(itemName);
+                        if (group == null) {
+                            group = new ItemGroup(itemName);
+                            itemGroupMap.put(itemName, group);
+                        }
+                        group.addItem(nitem);
+                    }
+                }
+            }
+        }
+        
+        // Sort items - whatever was clicked last becomes the primary sort
+        List<ItemGroup> itemGroups = new ArrayList<>(itemGroupMap.values());
+        itemGroups.sort((a, b) -> {
+            if ("name".equals(compactLastSortType)) {
+                // Name is primary sort
+                int nameResult = a.name.compareTo(b.name);
+                if (!compactNameAscending) nameResult = -nameResult;
+                
+                // Secondary sort by quantity for ties
+                if (nameResult == 0) {
+                    int quantityResult = Integer.compare(a.totalQuantity, b.totalQuantity);
+                    return compactQuantityAscending ? quantityResult : -quantityResult;
+                }
+                return nameResult;
+            } else {
+                // Quantity is primary sort (default)
+                int quantityResult = Integer.compare(a.totalQuantity, b.totalQuantity);
+                if (!compactQuantityAscending) quantityResult = -quantityResult;
+                
+                // Secondary sort by name for ties
+                if (quantityResult == 0) {
+                    int nameResult = a.name.compareTo(b.name);
+                    return compactNameAscending ? nameResult : -nameResult;
+                }
+                return quantityResult;
+            }
+        });
+        
+        // Create compact list layout - one line per item
+        int y = 0;
+        int contentWidth = compactListContainer.cont.sz.x;
+        int itemHeight = UI.scale(18); // Single line height
+        
+        for (ItemGroup group : itemGroups) {
+            Widget compactWidget = createCompactItemWidget(group, new Coord(contentWidth, itemHeight));
+            compactListContent.add(compactWidget, new Coord(0, y));
+            y += itemHeight + UI.scale(1);
+        }
+        
+        // Let the content widget auto-resize and update scrollbar
+        compactListContent.pack();
+        compactListContainer.cont.update();
+    }
+    
+    private Widget createItemWidget(ItemGroup group, Coord sz) {
+        return new Widget(sz) {
+            @Override
+            public void draw(GOut g) {
+                int iconSize = UI.scale(19);
+                int margin = UI.scale(1);
+                int textY = UI.scale(2);
+                
+                // Draw item icon
+                NGItem representativeItem = group.getRepresentativeItem();
+                if (representativeItem != null) {
+                    Coord iconPos = new Coord(margin, margin);
+                    
+                    try {
+                        Resource.Image img = representativeItem.getres().layer(Resource.imgc);
+                        if (img != null) {
+                            g.image(img.tex(), iconPos, new Coord(iconSize, iconSize));
+                        } else {
+                            // Fallback: draw colored placeholder
+                            g.chcolor(100, 150, 100, 200);
+                            g.frect(iconPos, new Coord(iconSize, iconSize));
+                            g.chcolor();
+                        }
+                    } catch (Exception e) {
+                        // Fallback: draw colored placeholder
+                        g.chcolor(100, 150, 100, 200);
+                        g.frect(iconPos, new Coord(iconSize, iconSize));
+                        g.chcolor();
+                    }
+                }
+                
+                // Calculate text positions
+                int textStartX = margin + iconSize + UI.scale(4);
+                int quantityWidth = UI.scale(25);
+                int nameStartX = textStartX + quantityWidth;
+                int qualityX = sz.x - UI.scale(35);
+                
+                // Draw quantity with "x" prefix
+                String quantityText = "x" + group.totalQuantity;
+                g.text(quantityText, new Coord(textStartX, textY));
+                
+                // Draw item name
+                g.text(group.name, new Coord(nameStartX, textY));
+                
+                // Draw quality if available
+                if (group.averageQuality > 0) {
+                    // Draw blue quality dot
+                    try {
+                        Tex qualityIcon = new TexI(Resource.remote().loadwait("ui/tt/q/quality").layer(Resource.imgc, 0).scaled());
+                        int dotSize = UI.scale(12);
+                        int dotX = qualityX - dotSize - UI.scale(2);
+                        g.image(qualityIcon, new Coord(dotX, textY), new Coord(dotSize, dotSize));
+                    } catch (Exception e) {
+                        // Ignore if icon fails to load
+                    }
+                    
+                    // Draw quality value
+                    String qualityText = String.format("%.1f", group.averageQuality);
+                    g.text(qualityText, new Coord(qualityX, textY));
+                }
+            }
+        };
+    }
+    
+    private Widget createCompactItemWidget(ItemGroup group, Coord sz) {
+        return new Widget(sz) {
+            @Override
+            public void draw(GOut g) {
+                int iconSize = UI.scale(16);
+                int margin = UI.scale(1);
+                int textY = UI.scale(2);
+                
+                // Draw item icon
+                NGItem representativeItem = group.getRepresentativeItem();
+                if (representativeItem != null) {
+                    Coord iconPos = new Coord(margin, margin);
+                    
+                    try {
+                        Resource.Image img = representativeItem.getres().layer(Resource.imgc);
+                        if (img != null) {
+                            g.image(img.tex(), iconPos, new Coord(iconSize, iconSize));
+                        } else {
+                            // Fallback: draw colored placeholder
+                            g.chcolor(100, 150, 100, 200);
+                            g.frect(iconPos, new Coord(iconSize, iconSize));
+                            g.chcolor();
+                        }
+                    } catch (Exception e) {
+                        // Fallback: draw colored placeholder
+                        g.chcolor(100, 150, 100, 200);
+                        g.frect(iconPos, new Coord(iconSize, iconSize));
+                        g.chcolor();
+                    }
+                }
+                
+                // Draw just the quantity next to the icon
+                int textStartX = margin + iconSize + UI.scale(4);
+                String quantityText = "x" + group.totalQuantity;
+                g.text(quantityText, new Coord(textStartX, textY));
+            }
+            
+            @Override
+            public Object tooltip(Coord c, Widget prev) {
+                // Show item name as tooltip when hovering over the icon area
+                int iconSize = UI.scale(16);
+                int margin = UI.scale(1);
+                Coord iconArea = new Coord(margin + iconSize, iconSize + margin * 2);
+                
+                if (c.isect(new Coord(margin, margin), iconArea)) {
+                    return group.name;
+                }
+                return super.tooltip(c, prev);
+            }
+        };
     }
 
     public short[][] containerMatrix()
@@ -527,9 +1270,9 @@ public class NInventory extends Inventory
             if (widget instanceof WItem)
             {
                 WItem item = (WItem) widget;
-                if (((NGItem) item.item).spr != null)
+                if (item.item.spr != null)
                 {
-                    Coord size = ((NGItem) item.item).spr.sz().div(UI.scale(32));
+                    Coord size = item.item.spr.sz().div(UI.scale(32));
                     int xSize = size.x;
                     int ySize = size.y;
                     int xLoc = item.c.div(Inventory.sqsz).x;
@@ -732,12 +1475,21 @@ public class NInventory extends Inventory
 
     @Override
     public void reqdestroy() {
-        if(parentGob!=null && parentGob.gob!=null)
+        if(parentGob!=null && parentGob.ngob.hash!=null)
         {
             if((Boolean)NConfig.get(NConfig.Key.ndbenable)) {
                 ui.core.writeItemInfoForContainer(iis);
             }
         }
+
+        // Close Study Desk Planner if this is a study desk inventory
+        if (nurgling.widgets.StudyDeskInventoryExtension.isStudyDeskInventory(this)) {
+            NGameUI gameUI = NUtils.getGameUI();
+            if (gameUI != null && gameUI.studyDeskPlanner != null && gameUI.studyDeskPlanner.visible()) {
+                gameUI.studyDeskPlanner.hide();
+            }
+        }
+
         super.reqdestroy();
     }
 

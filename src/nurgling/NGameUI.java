@@ -11,8 +11,15 @@ import nurgling.notifications.*;
 import nurgling.overlays.QualityOl;
 import nurgling.tools.*;
 import nurgling.widgets.*;
+import nurgling.widgets.SwimmingStatusBuff;
+import nurgling.widgets.TrackingStatusBuff;
+import nurgling.widgets.CrimeStatusBuff;
+import nurgling.widgets.AllowVisitingStatusBuff;
+import nurgling.widgets.LocalizedResourceTimersWindow;
+import nurgling.widgets.LocalizedResourceTimerDialog;
+import nurgling.widgets.StudyDeskPlannerWidget;
+import nurgling.widgets.FishingWindowExtension;
 
-import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
@@ -37,9 +44,47 @@ public class NGameUI extends GameUI
     public RouteSpecialization routespec;
     public BotsInterruptWidget biw;
     public NEquipProxy nep;
+    private SwimmingStatusBuff swimmingBuff = null;
+    private TrackingStatusBuff trackingBuff = null;
+    private CrimeStatusBuff crimeBuff = null;
+    private AllowVisitingStatusBuff allowVisitingBuff = null;
+    public NRecentActionsPanel recentActionsPanel;
+    public LocalizedResourceTimersWindow localizedResourceTimersWindow = null;
+    private LocalizedResourceTimerDialog localizedResourceTimerDialog = null;
+    public LocalizedResourceTimerService localizedResourceTimerService;
+    public WaypointMovementService waypointMovementService;
+    public FishLocationService fishLocationService;
+    public FishSearchWindow fishSearchWindow = null;
+    public final Map<String, FishLocationDetailsWindow> openFishDetailWindows = new HashMap<>();
+    public TreeLocationService treeLocationService;
+    public TreeSearchWindow treeSearchWindow = null;
+    public final Map<String, TreeLocationDetailsWindow> openTreeDetailWindows = new HashMap<>();
+    public StudyDeskPlannerWidget studyDeskPlanner = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
+
+        // Replace Cal with NCal to keep calendar customizations in nurgling package
+        Widget oldCalendarWidget = null;
+        for(Widget wdg : children()) {
+            if(wdg instanceof NDraggableWidget) {
+                // Check if this draggable widget contains the Cal
+                for(Widget child : wdg.children()) {
+                    if(child instanceof Cal && !(child instanceof NCal)) {
+                        oldCalendarWidget = wdg;
+                        break;
+                    }
+                }
+                if(oldCalendarWidget != null) break;
+            }
+        }
+        if(oldCalendarWidget != null) {
+            Coord calPos = oldCalendarWidget.c;
+            oldCalendarWidget.destroy();
+            calendar = new NCal();
+            add(new NDraggableWidget(calendar, "Calendar", UI.scale(400,90)), calPos);
+        }
+
         itemsForSearch = new NSearchItem();
         add(new NDraggableWidget(alarmWdg = new NAlarmWdg(),"alarm",NStyle.alarm[0].sz().add(NDraggableWidget.delta)));
         add(new NDraggableWidget(nep = new NEquipProxy(NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT, NEquipory.Slots.BELT), "EquipProxy",  UI.scale(138, 55)));
@@ -52,6 +97,7 @@ public class NGameUI extends GameUI
 
         add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
         add(new NDraggableWidget(questinfo = new NQuestInfo(), "quests", questinfo.sz.add(NDraggableWidget.delta)));
+        add(new NDraggableWidget(recentActionsPanel = new NRecentActionsPanel(), "recentactions", recentActionsPanel.sz.add(NDraggableWidget.delta)));
         add(guiinfo = new NGUIInfo(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
         if(!(Boolean) NConfig.get(NConfig.Key.show_drag_menu))
             guiinfo.hide();
@@ -64,10 +110,20 @@ public class NGameUI extends GameUI
         add(routespec = new RouteSpecialization());
         routespec.hide();
         add(biw = new BotsInterruptWidget());
+        add(localizedResourceTimerDialog = new LocalizedResourceTimerDialog(), new Coord(200, 200));
+        localizedResourceTimerService = new LocalizedResourceTimerService(this);
+        add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
+        waypointMovementService = new WaypointMovementService(this);
+        fishLocationService = new FishLocationService(this);
+        treeLocationService = new TreeLocationService(this);
     }
 
     @Override
     public void dispose() {
+        if(localizedResourceTimerService != null)
+            localizedResourceTimerService.dispose();
+        if(fishLocationService != null)
+            fishLocationService.dispose();
         if(nurgling.NUtils.getUI().core!=null)
             NUtils.getUI().core.dispose();
         super.dispose();
@@ -224,6 +280,66 @@ public class NGameUI extends GameUI
         return realmBuff;
     }
 
+    /**
+     * Called when swimming toggle state changes (event-driven)
+     */
+    public void onSwimmingStateChanged(boolean isSwimmingEnabled) {
+        if (isSwimmingEnabled && swimmingBuff == null) {
+            // Create and add swimming status buff
+            swimmingBuff = new SwimmingStatusBuff();
+            buffs.addchild(swimmingBuff);
+        } else if (!isSwimmingEnabled && swimmingBuff != null) {
+            // Remove swimming status buff
+            swimmingBuff.reqdestroy();
+            swimmingBuff = null;
+        }
+    }
+
+    /**
+     * Called when tracking toggle state changes (event-driven)
+     */
+    public void onTrackingStateChanged(boolean isTrackingEnabled) {
+        if (isTrackingEnabled && trackingBuff == null) {
+            // Create and add tracking status buff
+            trackingBuff = new TrackingStatusBuff();
+            buffs.addchild(trackingBuff);
+        } else if (!isTrackingEnabled && trackingBuff != null) {
+            // Remove tracking status buff
+            trackingBuff.reqdestroy();
+            trackingBuff = null;
+        }
+    }
+
+    /**
+     * Called when crime toggle state changes (event-driven)
+     */
+    public void onCrimeStateChanged(boolean isCrimeEnabled) {
+        if (isCrimeEnabled && crimeBuff == null) {
+            // Create and add crime status buff
+            crimeBuff = new CrimeStatusBuff();
+            buffs.addchild(crimeBuff);
+        } else if (!isCrimeEnabled && crimeBuff != null) {
+            // Remove crime status buff
+            crimeBuff.reqdestroy();
+            crimeBuff = null;
+        }
+    }
+
+    /**
+     * Called when allow visiting toggle state changes (event-driven)
+     */
+    public void onAllowVisitingStateChanged(boolean isAllowVisitingEnabled) {
+        if (isAllowVisitingEnabled && allowVisitingBuff == null) {
+            // Create and add allow visiting status buff
+            allowVisitingBuff = new AllowVisitingStatusBuff();
+            buffs.addchild(allowVisitingBuff);
+        } else if (!isAllowVisitingEnabled && allowVisitingBuff != null) {
+            // Remove allow visiting status buff
+            allowVisitingBuff.reqdestroy();
+            allowVisitingBuff = null;
+        }
+    }
+
     @Override
     public void addchild(Widget child, Object... args)
     {
@@ -240,6 +356,20 @@ public class NGameUI extends GameUI
         else
         {
             super.addchild(child, args);
+
+            // Apply preferred movement speed when Speedget widget is loaded
+            if (place != null && place.equals("meter") && child instanceof haven.Speedget) {
+                applyUserPreferredSpeed();
+            }
+
+            // Add fishing extension if this is the "This is bait" window
+            if (child instanceof Window) {
+                Window wnd = (Window) child;
+                if ("This is bait".equals(wnd.cap)) {
+                    FishingWindowExtension.addSaveFishButton(wnd, this);
+                }
+            }
+
             if (maininv != null && ((NInventory) maininv).searchwdg == null)
             {
                 ((NInventory) maininv).installMainInv();
@@ -494,6 +624,8 @@ public class NGameUI extends GameUI
                             ((BeltSlot)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                         else if (item instanceof NBotsMenu.NButton)
                             ((NBotsMenu.NButton)item).btn.draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
+                        else if (item instanceof NScenarioButton)
+                            ((NScenarioButton)item).draw(g.reclip(c.add(1, 1), invsq.sz().sub(2, 2)));
                     }
                 } catch (Loading ignored) {
                 }
@@ -510,10 +642,18 @@ public class NGameUI extends GameUI
                 NToolBeltProp prop = NToolBeltProp.get(name);
                 String path;
                 if((path = prop.custom.get(slot))!=null) {
-                    NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
-                    if(btn!=null) {
-                        btn.btn.click();
+                    if(path.startsWith("scenario:")) {
+                        // Handle scenario button execution
+                        String scenarioName = path.substring("scenario:".length());
+                        ui.core.scenarioManager.executeScenarioByName(scenarioName, ui.gui);
                         return;
+                    } else {
+                        // Handle regular bot button
+                        NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
+                        if(btn!=null) {
+                            btn.btn.click();
+                            return;
+                        }
                     }
                 }
                 super.keyact(slot);
@@ -536,10 +676,18 @@ public class NGameUI extends GameUI
             {
                 String path;
                 if((path = prop.custom.get(slot))!=null) {
-                    NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
-                    if(btn!=null) {
-                        btn.btn.click();
+                    if(path.startsWith("scenario:")) {
+                        // Handle scenario button execution
+                        String scenarioName = path.substring("scenario:".length());
+                        ui.core.scenarioManager.executeScenarioByName(scenarioName, ui.gui);
                         return true;
+                    } else {
+                        // Handle regular bot button
+                        NBotsMenu.NButton btn = NUtils.getGameUI().botsMenu.find(path);
+                        if(btn!=null) {
+                            btn.btn.click();
+                            return true;
+                        }
                     }
                 }
             }
@@ -558,7 +706,17 @@ public class NGameUI extends GameUI
             }
             else
             {
-                return botsMenu.find(path);
+                if(path.startsWith("scenario:")) {
+                    String scenarioName = path.substring("scenario:".length());
+                    for(nurgling.scenarios.Scenario scenario : ui.core.scenarioManager.getScenarios().values()) {
+                        if(scenario.getName().equals(scenarioName)) {
+                            return new NScenarioButton(scenario);
+                        }
+                    }
+                    return null;
+                } else {
+                    return botsMenu.find(path);
+                }
             }
         }
 
@@ -615,6 +773,13 @@ public class NGameUI extends GameUI
                     NBotsMenu.NButton pag = (NBotsMenu.NButton)thing;
                     NToolBeltProp prop = NToolBeltProp.get(name);
                     prop.custom.put(slot,pag.path);
+                    NToolBeltProp.set(name,prop);
+                    return(true);
+                } else if(thing instanceof nurgling.widgets.NScenarioButton) {
+                    nurgling.widgets.NScenarioButton scenarioBtn = (nurgling.widgets.NScenarioButton)thing;
+                    NToolBeltProp prop = NToolBeltProp.get(name);
+                    // Use scenario name as the identifier for scenarios
+                    prop.custom.put(slot, "scenario:" + scenarioBtn.getScenario().getName());
                     NToolBeltProp.set(name,prop);
                     return(true);
                 }
@@ -691,6 +856,7 @@ public class NGameUI extends GameUI
     }
 
 
+
     public boolean msg(UI.Notice msg) {
         if (msg.message().contains("Quality")) {
             if(map.clickedGob!=null)
@@ -707,5 +873,48 @@ public class NGameUI extends GameUI
             }
         }
         return super.msg(msg);
+    }
+
+    @Override
+    public boolean keydown(KeyDownEvent ev) {
+        nurgling.tasks.WaitKeyPress.setLastKeyPressed(ev.code);
+        return super.keydown(ev);
+    }
+
+    public void toggleResourceTimerWindow() {
+        if(localizedResourceTimerService != null) {
+            localizedResourceTimerService.showTimerWindow();
+        }
+    }
+    
+    public LocalizedResourceTimerDialog getAddResourceTimerWidget() {
+        return localizedResourceTimerDialog;
+    }
+
+    /**
+     * Apply user's preferred movement speed from config
+     */
+    private void applyUserPreferredSpeed() {
+        try {
+            Object speedPref = NConfig.get(NConfig.Key.preferredMovementSpeed);
+            if (speedPref instanceof Number) {
+                int preferredSpeed = ((Number) speedPref).intValue();
+                if (preferredSpeed >= 0 && preferredSpeed <= 3) { // Valid range
+                    // Small delay to ensure speedget is fully initialized
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(100); // Brief pause
+                            NUtils.setSpeed(preferredSpeed);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        } catch (Exception e) {
+                            System.err.println("[NGameUI] Failed to set preferred speed: " + e.getMessage());
+                        }
+                    }).start();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[NGameUI] Failed to apply preferred movement speed: " + e.getMessage());
+        }
     }
 }

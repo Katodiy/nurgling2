@@ -3,8 +3,8 @@ package nurgling.actions;
 import haven.Coord;
 import nurgling.NGameUI;
 import nurgling.NUtils;
+import nurgling.areas.NContext;
 import nurgling.tools.Container;
-import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -14,10 +14,10 @@ public class FillContainersFromAreas implements Action
 {
     ArrayList<Container> conts;
     NAlias transferedItems;
-    Context context;
+    NContext context;
     ArrayList<Container> currentContainers = new ArrayList<>();
 
-    public FillContainersFromAreas(ArrayList<Container> conts, NAlias transferedItems, Context context) {
+    public FillContainersFromAreas(ArrayList<Container> conts, NAlias transferedItems, NContext context) {
         this.conts = conts;
         this.context = context;
         this.transferedItems = transferedItems;
@@ -25,37 +25,62 @@ public class FillContainersFromAreas implements Action
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+
         for (Container cont : conts) {
             while(!isReady(cont)) {
                 if (gui.getInventory().getItems(transferedItems).isEmpty()) {
                     int target_size = calculateTargetSize();
-                    if(context.icontainers.isEmpty()) {
-                        if(!context.getInputs(transferedItems.getDefault()).isEmpty())
-                        {
-                            for(Context.Input input : context.getInputs(transferedItems.getDefault())) {
-                                if(input instanceof Context.Barrel)
-                                {
-                                    new TakeFromBarrel(((Context.Barrel) input).barrel,transferedItems,target_size).run(gui);
-                                }
+
+                    ArrayList<NContext.ObjectStorage> storages = new ArrayList<>();
+                    for(String itemName : transferedItems.keys) {
+                        ArrayList<NContext.ObjectStorage> itemStorages = context.getInStorages(itemName);
+                        if(!itemStorages.isEmpty()) {
+                            storages.addAll(itemStorages);
+                            break;
+                        }
+                    }
+
+                    if(storages.isEmpty()) {
+                        return Results.ERROR("NO ITEMS");
+                    }
+                    
+                    boolean hasContainers = false;
+                    for(NContext.ObjectStorage storage : storages) {
+                        if(storage instanceof Container) {
+                            hasContainers = true;
+                            break;
+                        }
+                    }
+
+                    if(!hasContainers) {
+                        for(NContext.ObjectStorage storage : storages) {
+                            if(storage instanceof NContext.Barrel) {
+                                new TakeFromBarrel(Finder.findGob(((NContext.Barrel) storage).barrel), transferedItems, target_size).run(gui);
+                                break;
                             }
                         }
                     }
                     else {
-                        for (Container container : context.icontainers) {
-                            if (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.TargetItems.class).getTargets(transferedItems) > 0) {
-                                new PathFinder(Finder.findGob(container.gobid)).run(gui);
-                                new OpenTargetContainer(container).run(gui);
-                                TakeAvailableItemsFromContainer tifc = new TakeAvailableItemsFromContainer(container, transferedItems, target_size);
-                                tifc.run(gui);
-                                target_size -= tifc.getCount();
-                                new CloseTargetContainer(container).run(gui);
-                                if (target_size == 0 || !tifc.getResult())
-                                    break;
+                        for(NContext.ObjectStorage storage : storages) {
+                            if(storage instanceof Container) {
+                                Container container = (Container) storage;
+                                if (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.TargetItems.class).getTargets(transferedItems) > 0) {
+                                    new PathFinder(Finder.findGob(container.gobid)).run(gui);
+                                    new OpenTargetContainer(container).run(gui);
+                                    TakeAvailableItemsFromContainer tifc = new TakeAvailableItemsFromContainer(container, transferedItems, target_size);
+                                    tifc.run(gui);
+                                    target_size -= tifc.getCount();
+                                    new CloseTargetContainer(container).run(gui);
+                                    if (target_size == 0 || !tifc.getResult())
+                                        break;
+                                }
                             }
                         }
                     }
-                    if (gui.getInventory().getItems(transferedItems).isEmpty())
+                    
+                    if (gui.getInventory().getItems(transferedItems).isEmpty()) {
                         return Results.ERROR("NO ITEMS");
+                    }
                 }
                 TransferToContainer ttc = new TransferToContainer(cont, transferedItems);
                 ttc.run(gui);

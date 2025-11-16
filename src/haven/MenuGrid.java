@@ -584,6 +584,17 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	} else {
 	    r.pag.anew = r.pag.tnew = 0;
 	    r.use(iact);
+
+		if (parent instanceof nurgling.widgets.NMenuGridWdg) {
+			nurgling.widgets.NMenuGridWdg menuGridWdg = (nurgling.widgets.NMenuGridWdg) parent;
+			if (menuGridWdg.parent != null && menuGridWdg.parent.parent instanceof nurgling.NGameUI) {
+				nurgling.NGameUI gameUI = (nurgling.NGameUI) menuGridWdg.parent.parent;
+				if (gameUI.recentActionsPanel != null) {
+					gameUI.recentActionsPanel.addRecentAction(r.pag);
+				}
+			}
+		}
+
 	    if(reset)
 		change(null);
 	}
@@ -680,6 +691,12 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 				{
 					pag.button().use(new Interaction());
 					swimmingIsInstall = (Boolean) NConfig.get(NConfig.Key.swimming);
+				}
+
+				// Delegate toggle handling to NMenuGridWdg if it exists (for swimming, tracking, crime, and nopeace)
+				if (parent instanceof nurgling.widgets.NMenuGridWdg && 
+				    (ref.equals("paginae/act/swim") || ref.equals("paginae/act/tracking") || ref.equals("paginae/act/crime") || ref.equals("paginae/act/nopeace"))) {
+					((nurgling.widgets.NMenuGridWdg) parent).handleToggleBuffs(pag);
 				}
 			}
 

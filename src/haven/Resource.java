@@ -186,7 +186,7 @@ public class Resource implements Serializable {
 		@SuppressWarnings("unchecked") Indir<Resource> ret = (Indir<Resource>)desc;
 		return(ret);
 	    }
-	    throw(new ClassCastException("unknown type for resource id: " + desc));
+	    throw(new Utils.ArgumentFormatException("res-desc: ", desc));
 	}
 
 	public class ResourceMap implements Resource.Resolver {
@@ -914,6 +914,21 @@ public class Resource implements Serializable {
 	}
     }
 
+    public static class UnknownFormatException extends LoadException {
+	public final String thing;
+	public final Object found;
+
+	public UnknownFormatException(Resource res, String thing, Object found) {
+	    super((String)null, res);
+	    this.thing = thing;
+	    this.found = found;
+	}
+
+	public String getMessage() {
+	    return("Unknown " + thing + " in " + res.name + ": " + String.valueOf(found));
+	}
+    }
+
     public static class LoadWarning extends Warning {
 	public final Resource res;
 
@@ -1053,48 +1068,89 @@ public class Resource implements Serializable {
 	public final int z, subz;
 	public final boolean nooff;
 	public final int id;
-	public final Map<String, byte[]> kvdata;
+	public final Map<String, Object> info;
 	public float scale = 1;
 	public Coord sz, o, so, tsz, ssz, stsz;
 
 	public Image(Message buf) {
-	    z = buf.int16();
-	    subz = buf.int16();
-	    int fl = buf.uint8();
-	    /* Obsolete flag 1: Layered */
-	    nooff = (fl & 2) != 0;
-	    id = buf.int16();
-	    o = cdec(buf);
-	    so = UI.scale(o);
 	    boolean hasscale = false;
-	    Map<String, byte[]> kvdata = new HashMap<>();
-	    if((fl & 4) != 0) {
-		while(true) {
-		    String key = buf.string();
-		    if(key.equals(""))
-			break;
-		    int len = buf.uint8();
-		    if((len & 0x80) != 0)
-			len = buf.int32();
-		    byte[] data = buf.bytes(len);
-		    Message val = new MessageBuf(data);
-		    if(key.equals("tsz")) {
-			tsz = val.coord();
-		    } else if(key.equals("scale")) {
-			scale = val.float32();
-			hasscale = true;
-		    } else {
-			kvdata.put(key, data);
+	    int ver = buf.uint8();
+	    if(ver < 128) {
+		z = (buf.int8() * 256) + ver;
+		subz = buf.int16();
+		int fl = buf.uint8();
+		/* Obsolete flag 1: Layered */
+		nooff = (fl & 2) != 0;
+		id = buf.int16();
+		o = cdec(buf);
+		Map<String, Object> info = new HashMap<>();
+		if((fl & 4) != 0) {
+		    while(true) {
+			String key = buf.string();
+			if(key.equals(""))
+			    break;
+			int len = buf.uint8();
+			if((len & 0x80) != 0)
+			    len = buf.int32();
+			byte[] data = buf.bytes(len);
+			Message val = new MessageBuf(data);
+			if(key.equals("tsz")) {
+			    tsz = val.coord();
+			} else if(key.equals("scale")) {
+			    scale = val.float32();
+			    hasscale = true;
+			} else {
+			    if(data.length == 1) {
+				info.put(key, Utils.intvard(data, 0));
+			    } else if(data.length == 4) {
+				info.put(key, val.float32());
+			    } else if(data.length == 8) {
+				info.put(key, val.coord());
+			    } else {
+				info.put(key, data);
+			    }
+			}
 		    }
 		}
-	    }
-	    this.kvdata = kvdata.isEmpty() ? Collections.emptyMap() : kvdata;
-	    try {
-		img = readimage(new MessageInputStream(buf));
-	    } catch(IOException e) {
-		throw(new LoadException(e, Resource.this));
+		this.info = info.isEmpty() ? Collections.emptyMap() : info;
+		try {
+		    img = readimage(new MessageInputStream(buf));
+		} catch(IOException e) {
+		    throw(new LoadException(e, Resource.this));
+		}
+	    } else {
+		ver = ver - 128;
+		if(ver == 1) {
+		    id = buf.int16();
+		    Map<String, Object> info = new HashMap<>();
+		    while(true) {
+			String key = buf.string();
+			if(key.equals(""))
+			    break;
+			Object val = buf.tto(resmapper());
+			info.put(key, val);
+		    }
+		    z = Utils.iv(Utils.pop(info, "z", 0));
+		    subz = Utils.iv(Utils.pop(info, "subz", 0));
+		    nooff = Utils.bv(Utils.pop(info, "nooff", false));
+		    o = (Coord)Utils.pop(info, "off", Coord.z);
+		    tsz = (Coord)info.remove("tsz");
+		    if(info.containsKey("scale")) {
+			scale = Utils.fv(info.remove("scale"));
+			hasscale = true;
+		    }
+		    this.info = info.isEmpty() ? Collections.emptyMap() : info;
+		    try {
+			img = readimage(new MessageInputStream(buf));
+		    } catch(IOException e) {
+			throw(new LoadException(e, Resource.this));
+		    }
+		} else {
+		    throw(new UnknownFormatException(Resource.this, "image version", ver));
+		}
 	    }
 	    sz = Utils.imgsz(img);
+	    so = UI.scale(o);
 	    if(tsz == null)
 		tsz = sz.add(o);
 	    ssz = Coord.of(Math.round(UI.scale(sz.x / scale)), Math.round(UI.scale(sz.y / scale)));
@@ -1195,7 +1251,7 @@ public class Resource implements Serializable {
 	public Props(Message buf) {
 	    int ver = buf.uint8();
 	    if(ver != 1)
-		throw(new LoadException("Unknown property layer version: " + ver, getres()));
+		throw(new UnknownFormatException(getres(), "property layer version", ver));
 	    Object[] raw = buf.list(resmapper());
 	    for(int a = 0; a < raw.length - 1; a += 2)
 		props.put((String)raw[a], raw[a + 1]);
@@ -1433,6 +1489,14 @@ public class Resource implements Serializable {
 	    };
 	}
 	public static final Map<PublishedCode, Instancer> instancers = new WeakHashMap<>();
+
+	@dolda.jglob.Discoverable
+	@Target(ElementType.TYPE)
+	@Retention(RetentionPolicy.RUNTIME)
+	public static @interface Builtin {
+	    public Class<?> type();
+	    public String name();
+	}
     }
 
     @LayerName("code")
@@ -1565,6 +1629,16 @@ public class Resource implements Serializable {
 	}
     }
 
+    private static final Map<Pair<Class<?>, String>, Class<?>> builtinents = new HashMap<>();
+    static {
+	for(Class<?> cl : dolda.jglob.Loader.get(PublishedCode.Builtin.class).classes()) {
+	    PublishedCode.Builtin spec = cl.getAnnotation(PublishedCode.Builtin.class);
+	    if(spec.type().getAnnotation(PublishedCode.class) == null)
+		throw(new AssertionError(spec.type() + " is not a res-published class (on " + cl + ")"));
+	    builtinents.put(Pair.of(spec.type(), spec.name()), cl);
+	}
+    }
+
     @LayerName("codeentry")
     public class CodeEntry extends Layer {
 	private final Map<String, Code> clmap = new HashMap<>();
@@ -1586,7 +1660,7 @@ public class Resource implements Serializable {
 			    break;
 			pe.put(en, cn);
 			if(t == 3)
-			    pa.put(en, buf.list());
+			    pa.put(en, buf.list(resmapper()));
 		    }
 		} else if(t == 2) {
 		    while(true) {
@@ -1596,8 +1670,24 @@ public class Resource implements Serializable {
 			int ver = buf.uint16();
 			classpath.add(pool.load(ln, ver));
 		    }
+		} else if(t == 4) {
+		    Object[] data = buf.list(resmapper());
+		    for(int i = 0; i < data.length; i++) {
+			Object[] datum = (Object[])data[i];
+			switch(Utils.sv(datum[0])) {
+			case "ent":
+			    pe.put(Utils.sv(datum[1]), Utils.sv(datum[2]));
+			    if(datum.length > 3)
+				pa.put(Utils.sv(datum[1]), (Object[])datum[3]);
+			    break;
+			case "use":
+			    for(int o = 1; o < datum.length; o++)
+				classpath.add(Utils.irv(datum[o]));
+			    break;
+			}
+		    }
 		} else {
-		    throw(new LoadException("Unknown codeentry data type: " + t, Resource.this));
+		    throw(new UnknownFormatException(Resource.this, "codeentry data type", t));
 		}
 	    }
 	}
@@ -1639,16 +1729,18 @@ public class Resource implements Serializable {
 			    throw(new RuntimeException("Tried to fetch non-present res-loaded class " + cl.getName() + " from " + Resource.this.name));
 			return(null);
 		    }
-		    try {
-				try  {
-					String path = "haven.res." + name.replaceAll("/", ".") + "." + clnm;
-					Class.forName(path);
-					clnm = path;
-				}  catch (ClassNotFoundException ignored) {
-				}
-			ret = loader().loadClass(clnm);
-		    } catch(ClassNotFoundException e) {
-			throw(new LoadException(e, Resource.this));
+		    if((ret = builtinents.get(Pair.of(cl, clnm))) == null) {
+			try {
+                try  {
+                    String path = "haven.res." + name.replaceAll("/", ".") + "." + clnm;
+                    Class.forName(path);
+                    clnm = path;
+                }  catch (ClassNotFoundException ignored) {
+                }
+			    ret = loader().loadClass(clnm);
+			} catch(ClassNotFoundException e) {
+			    throw(new LoadException(e, Resource.this));
+			}
 		    }
 		    lpe.put(entry.name(), ret);
 		}
@@ -1746,7 +1838,7 @@ public class Resource implements Serializable {
 		    bvol = buf.uint16() * 0.001;
 		this.coded = buf.bytes();
 	    } else {
-		throw(new LoadException("Unknown audio layer version: " + ver, getres()));
+		throw(new UnknownFormatException(getres(), "audio layer version", ver));
 	    }
 	}
 
@@ -1796,10 +1888,10 @@ public class Resource implements Serializable {
 			throw(new RuntimeException(e));
 		    }
 		} else {
-		    throw(new LoadException("Unknown font type: " + type, Resource.this));
+		    throw(new UnknownFormatException(Resource.this, "font type", type));
 		}
 	    } else {
-		throw(new LoadException("Unknown font layer version: " + ver, Resource.this));
+		throw(new UnknownFormatException(Resource.this, "font layer version", ver));
 	    }
 	}
 

@@ -11,14 +11,13 @@ import haven.MenuGrid.Pagina;
 import nurgling.NGItem;
 
 /* >tt: Quality */
-@haven.FromResource(name = "ui/tt/q/quality", version = 26)
+@haven.FromResource(name = "ui/tt/q/quality", version = 27)
 public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
     public static boolean show = Utils.getprefb("qtoggle", false);
     NGItem ownitem = null;
     boolean withContent = false;
-    private static final BufferedImage icon = Resource.remote().loadwait("ui/tt/q/quality").layer(Resource.imgc, 0).scaled();
     public Quality(Owner owner, double q) {
-	super(owner, icon, "Quality", q);
+	super(owner, Resource.classres(Quality.class).layer(Resource.imgc, 0).scaled(), "Quality", q);
     if (owner instanceof NGItem) {
         ownitem = (NGItem) owner;
         ownitem.quality = (float) q;

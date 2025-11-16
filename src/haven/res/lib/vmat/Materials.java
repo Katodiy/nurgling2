@@ -38,6 +38,8 @@ public class Materials extends Mapping {
 	if(!mats.containsKey(mid))
 	    return(orig);
 	Material var = mats.get(mid);
+	if(var == null)
+	    return(orig);
 	return(stdmerge(orig, var));
     }
 

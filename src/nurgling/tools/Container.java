@@ -309,7 +309,6 @@ public class Container implements NContext.ObjectStorage {
     }
 
 
-
     public <C extends Updater> C getattr(Class<C> c) {
         Updater attr = this.updaters.get(attrclass(c));
         if(!c.isInstance(attr))

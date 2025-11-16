@@ -19,7 +19,8 @@ public class TransferToTrough implements Action {
     @Override
     public Results run ( NGameUI gui )
             throws InterruptedException {
-
+            if(trough == null)
+                return Results.ERROR("NO THROUGH");
             ArrayList<WItem> witems;
 
             while(!(witems = gui.getInventory ().getItems( items )).isEmpty()) {

@@ -3,6 +3,7 @@ package nurgling.actions.bots;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
+import nurgling.areas.NContext;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 
@@ -33,7 +34,7 @@ public class FreeContainersInArea implements Action {
 
         ArrayList<Gob> gobs;
         HashSet<String> targets = new HashSet<>();
-        Context context = new Context();
+        NContext context = new NContext(gui);
         while(!(gobs = Finder.findGobs(area, new NAlias("stockpile"))).isEmpty())
         {
             for (Gob pile : gobs) {
@@ -52,7 +53,7 @@ public class FreeContainersInArea implements Action {
                                     }
                                     target_size = NUtils.getGameUI().getInventory().getNumberFreeCoord((size != null) ?size:new Coord(1,1));
                                     if (target_size == 0) {
-                                        new TransferItems(context, targets).run(gui);
+                                        new FreeInventory2(context).run(gui);
                                         if(Finder.findGob(pile.id)==null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
                                             new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
                                         }
@@ -73,7 +74,7 @@ public class FreeContainersInArea implements Action {
                         }
                     else
                         {
-                            new TransferItems(context, targets).run(gui);
+                            new FreeInventory2(context).run(gui);
                             if(Finder.findGob(pile.id) == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
                                 new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
                             }
@@ -85,7 +86,7 @@ public class FreeContainersInArea implements Action {
                 }
             }
         }
-        new TransferItems(context, targets).run(gui);
+        new FreeInventory2(context).run(gui);
 
 
         return Results.SUCCESS();

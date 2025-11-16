@@ -32,7 +32,7 @@ public class NLPassistant extends Sprite implements RenderTree.Node
     public NLPassistant(Owner owner)
     {
         super(owner, null);
-        сt = new TexI(Resource.loadimg("marks/lpassistant")).st();
+        сt = new TexI(Resource.loadimg("marks/newlpassistant")).st();
         gob = (Gob) owner;
         name = gob.ngob.name;
         targetSize = VSpec.object.get(name).size();
@@ -40,10 +40,10 @@ public class NLPassistant extends Sprite implements RenderTree.Node
         if(gob.ngob.hitBox!=null)
             len = Math.max(gob.ngob.hitBox.end.dist(gob.ngob.hitBox.begin),len);
         float[] data = {
-                (float) len, (float) len, 10f, 1, 1,
-                -(float) len, (float) len, 10f, 1, 0,
-                -(float) len, -(float) len, 10f, 0, 0,
-                (float) len, -(float) len, 10f, 0, 1,
+                (float) len, (float) len, 5f, 1, 1,
+                -(float) len, (float) len, 5f, 1, 0,
+                -(float) len, -(float) len, 5f, 0, 0,
+                (float) len, -(float) len, 5f, 0, 1,
         };
         VertexArray va = new VertexArray(pfmt,
                 new VertexArray.Buffer((4) * pfmt.inputs[0].stride, DataBuffer.Usage.STATIC,
@@ -54,7 +54,9 @@ public class NLPassistant extends Sprite implements RenderTree.Node
 
     public void added(RenderTree.Slot slot)
     {
-        Pipe.Op rmat = Pipe.Op.compose(сt,Rendered.postpfx);
+        Pipe.Op rmat = Pipe.Op.compose(new Rendered.Order.Default(-100), new States.Depthtest(States.Depthtest.Test.LE), States.maskdepth,
+            FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
+                BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), сt, Rendered.postpfx);
         slot.add(emod,rmat);
     }
 

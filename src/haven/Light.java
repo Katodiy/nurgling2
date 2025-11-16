@@ -277,7 +277,7 @@ public abstract class Light implements RenderTree.Node {
 			hexp = true;
 			exp = (float)buf.cpfloat();
 		    } else {
-			throw(new Resource.LoadException("Unknown light data: " + t, getres()));
+			throw(new Resource.UnknownFormatException(getres(), "light data", t));
 		    }
 		}
 	    } else if(ver == 1) {
@@ -301,11 +301,11 @@ public abstract class Light implements RenderTree.Node {
 			hexp = true;
 			exp = buf.float32();
 		    } else {
-			throw(new Resource.LoadException("Unknown light data: " + t, getres()));
+			throw(new Resource.UnknownFormatException(getres(), "light data", t));
 		    }
 		}
 	    } else {
-		throw(new Resource.LoadException("Unknown light version: " + ver, getres()));
+		throw(new Resource.UnknownFormatException(getres(), "light version", ver));
 	    }
 	}
 	

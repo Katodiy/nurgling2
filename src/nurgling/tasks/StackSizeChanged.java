@@ -6,10 +6,10 @@ import nurgling.tasks.NTask;
 public class StackSizeChanged extends NTask {
     ItemStack is;
     int oldSize;
-    public StackSizeChanged(ItemStack is) {
+    public StackSizeChanged(ItemStack is, int originalSize) {
         super();
         this.is = is;
-        oldSize = is.wmap.size();
+        oldSize = originalSize;
     }
 
     @Override

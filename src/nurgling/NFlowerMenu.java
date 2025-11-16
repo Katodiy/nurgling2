@@ -22,6 +22,14 @@ public class NFlowerMenu extends FlowerMenu
 
     int len = 0;
     public boolean shiftMode = false;
+
+    // Constructor called by FlowerMenu Factory - includes tree/bush detection
+    public NFlowerMenu(String[] opts, UI ui)
+    {
+        this(processOptions(opts, ui));
+    }
+
+    // Constructor for custom menus - no tree/bush detection
     public NFlowerMenu(String[] opts)
     {
         super();
@@ -40,6 +48,37 @@ public class NFlowerMenu extends FlowerMenu
         {
             nopts[i].resize(len, bl.sz().y);
         }
+    }
+
+    /**
+     * Process options to add tree/bush save option if right-clicked on a tree or bush
+     */
+    private static String[] processOptions(String[] opts, UI ui) {
+        try {
+            NCore.LastActions lastActions = ui.core.getLastActions();
+            if(lastActions != null && lastActions.gob != null) {
+                Gob gob = lastActions.gob;
+                Resource res = gob.getres();
+                if(res != null) {
+                    String saveOption = null;
+                    if(res.name.startsWith("gfx/terobjs/trees/") && !res.name.contains("log") && !res.name.contains("trunk")) {
+                        saveOption = "Save Tree Location";
+                    } else if(res.name.startsWith("gfx/terobjs/bushes/")) {
+                        saveOption = "Save Bush Location";
+                    }
+
+                    if(saveOption != null) {
+                        String[] newOpts = new String[opts.length + 1];
+                        System.arraycopy(opts, 0, newOpts, 0, opts.length);
+                        newOpts[opts.length] = saveOption;
+                        return newOpts;
+                    }
+                }
+            }
+        } catch(Exception e) {
+            // Ignore errors - just don't add the option
+        }
+        return opts;
     }
 
     @Override
@@ -74,6 +113,20 @@ public class NFlowerMenu extends FlowerMenu
         }
         else
         {
+            // Handle custom "Save Tree Location" or "Save Bush Location" options
+            if(option.name.equals("Save Tree Location") || option.name.equals("Save Bush Location")) {
+                NCore.LastActions actions = NUtils.getUI().core.getLastActions();
+                if(actions != null && actions.gob != null) {
+                    NGameUI gui = (NGameUI) NUtils.getGameUI();
+                    if(gui != null && gui.treeLocationService != null) {
+                        gui.treeLocationService.saveTreeLocation(actions.gob);
+                    }
+                }
+                wdgmsg("cl", -1); // Close menu without sending to server
+                NUtils.getUI().core.setLastAction();
+                return;
+            }
+
             wdgmsg("cl", option.num, ui.modflags());
             NCore.LastActions actions = NUtils.getUI().core.getLastActions();
             if(actions!=null) {

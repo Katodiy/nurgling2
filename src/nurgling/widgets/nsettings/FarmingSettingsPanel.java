@@ -7,6 +7,10 @@ public class FarmingSettingsPanel extends Panel {
     private TextEntry xEntry, yEntry;
     private CheckBox harvestRefillCheck;
     private CheckBox cleanupQContainersCheck;
+    private CheckBox fillCompostWithSwill;
+    private CheckBox ignoreStrawInFarmers;
+    private CheckBox autoEquipTravellersSacksCheck;
+    private CheckBox validateAllCropsBeforeHarvestCheck;
 
     public FarmingSettingsPanel() {
         super("Farming Settings");
@@ -22,7 +26,7 @@ public class FarmingSettingsPanel extends Panel {
         y += UI.scale(28);
 
         cleanupQContainersCheck = new CheckBox(
-                "Keep quality grind containers at most half full.") {
+                "Keep quality grind containers at most half full") {
             public void set(boolean val) {
                 a = val;
             }
@@ -30,8 +34,48 @@ public class FarmingSettingsPanel extends Panel {
         add(cleanupQContainersCheck, new Coord(margin, y));
         y += UI.scale(18);
 
-        add(new Label("Excess lowest quality seeds will be moved to the trough if defined."),
+        add(new Label("Excess lowest quality seeds will be moved to the trough if defined"),
                 new Coord(UI.scale(30), y));
+        y += UI.scale(28);
+
+        fillCompostWithSwill = new CheckBox(
+                "Fill compost bins with swill") {
+            public void set(boolean val) {
+                a = val;
+            }
+        };
+
+        add(fillCompostWithSwill, new Coord(margin, y));
+        y += UI.scale(28);
+
+        ignoreStrawInFarmers = new CheckBox(
+                "Do NOT pick up straw in farmers.") {
+            public void set(boolean val) {
+                a = val;
+            }
+        };
+
+        add(ignoreStrawInFarmers, new Coord(margin, y));
+        y += UI.scale(28);
+
+        autoEquipTravellersSacksCheck = new CheckBox(
+                "Auto equip traveller's sacks after harvesting") {
+            public void set(boolean val) {
+                a = val;
+            }
+        };
+
+        add(autoEquipTravellersSacksCheck, new Coord(margin, y));
+        y += UI.scale(28);
+
+        validateAllCropsBeforeHarvestCheck = new CheckBox(
+                "Validate all crops are ready before harvesting") {
+            public void set(boolean val) {
+                a = val;
+            }
+        };
+
+        add(validateAllCropsBeforeHarvestCheck, new Coord(margin, y));
         y += UI.scale(28);
 
         add(new Label("Seeding Pattern X (columns):"), new Coord(margin, y));
@@ -66,6 +110,18 @@ public class FarmingSettingsPanel extends Panel {
         Boolean cleanupQContainers = (Boolean) NConfig.get(NConfig.Key.cleanupQContainers);
         cleanupQContainersCheck.a = cleanupQContainers != null && cleanupQContainers;
 
+        Boolean fillConstBinsWithSwill = (Boolean) NConfig.get(NConfig.Key.fillCompostWithSwill);
+        fillCompostWithSwill.a = fillConstBinsWithSwill != null && fillConstBinsWithSwill;
+
+        Boolean ignoreStraw = (Boolean) NConfig.get(NConfig.Key.ignoreStrawInFarmers);
+        ignoreStrawInFarmers.a = ignoreStraw != null && ignoreStraw;
+
+        Boolean autoEquipSacks = (Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks);
+        autoEquipTravellersSacksCheck.a = autoEquipSacks != null && autoEquipSacks;
+
+        Boolean validateAllCrops = (Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest);
+        validateAllCropsBeforeHarvestCheck.a = validateAllCrops != null && validateAllCrops;
+
         String pat = (String) NConfig.get(NConfig.Key.qualityGrindSeedingPatter);
         if (pat == null || !pat.matches("\\d+x\\d+")) pat = "3x3";
         String[] parts = pat.split("x");
@@ -77,6 +133,10 @@ public class FarmingSettingsPanel extends Panel {
     public void save() {
         NConfig.set(NConfig.Key.harvestautorefill, harvestRefillCheck.a);
         NConfig.set(NConfig.Key.cleanupQContainers, cleanupQContainersCheck.a);
+        NConfig.set(NConfig.Key.ignoreStrawInFarmers, ignoreStrawInFarmers.a);
+        NConfig.set(NConfig.Key.fillCompostWithSwill, fillCompostWithSwill.a);
+        NConfig.set(NConfig.Key.autoEquipTravellersSacks, autoEquipTravellersSacksCheck.a);
+        NConfig.set(NConfig.Key.validateAllCropsBeforeHarvest, validateAllCropsBeforeHarvestCheck.a);
         String xVal = xEntry.text();
         String yVal = yEntry.text();
         if (!xVal.matches("\\d+")) xVal = "3";
