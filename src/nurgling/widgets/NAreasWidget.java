@@ -32,6 +32,7 @@ public class NAreasWidget extends Window
     public AreaList al;
     public boolean createMode = false;
     public String currentPath = "";
+    public String searchQuery = "";
     final static Tex folderIcon = new TexI(Resource.loadsimg("nurgling/hud/folder/d"));
     final static Tex openfolderIcon = new TexI(Resource.loadsimg("nurgling/hud/folder/u"));
     NCatSelection catSelection;
@@ -129,7 +130,19 @@ public class NAreasWidget extends Window
         },importbt.pos("ur").adds(UI.scale(5,0)));
         exportbt.settip("Export");
 
-        prev = add(al = new AreaList(UI.scale(new Coord(400,170))), prev.pos("bl").adds(0, 10));
+        TextEntry searchField;
+        prev = add(searchField = new TextEntry(UI.scale(580), "") {
+            @Override
+            public boolean keydown(KeyDownEvent ev) {
+                boolean result = super.keydown(ev);
+                searchQuery = text().toLowerCase();
+                updateFilteredList();
+                return result;
+            }
+        }, createNewFolder.pos("bl").adds(0, 10));
+        searchField.settip("Search areas by name, category, or items");
+
+        prev = add(al = new AreaList(UI.scale(new Coord(400,170))), searchField.pos("bl").adds(0, 25));
         Widget lab = add(new Label("Specialisation",NStyle.areastitle), prev.pos("bl").add(UI.scale(0,5)));
 
         add(csl = new CurrentSpecialisationList(UI.scale(164,190)),lab.pos("bl").add(UI.scale(0,5)));
@@ -257,6 +270,68 @@ public class NAreasWidget extends Window
                 }
             }
 
+    }
+
+    private void updateFilteredList() {
+        if (searchQuery.isEmpty()) {
+            showPath(currentPath);
+            return;
+        }
+
+        synchronized (items) {
+            items.clear();
+            ArrayList<AreaItem> filteredAreas = new ArrayList<>();
+            
+            for (NArea area : ((NMapView) NUtils.getGameUI().map).glob.map.areas.values()) {
+                if (matchesSearch(area)) {
+                    filteredAreas.add(new AreaItem(area.name, area));
+                }
+            }
+            
+            items.addAll(filteredAreas);
+        }
+        
+        if (!items.isEmpty()) {
+            al.sel = items.get(0);
+            if (al.sel.area != null) {
+                select(al.sel.area.id);
+            }
+        } else {
+            select();
+        }
+    }
+
+    private boolean matchesSearch(NArea area) {
+        String query = searchQuery.toLowerCase();
+        
+        if (area.name.toLowerCase().contains(query)) {
+            return true;
+        }
+        
+        for (NArea.Specialisation spec : area.spec) {
+            if (spec.name.toLowerCase().contains(query)) {
+                return true;
+            }
+            if (spec.subtype != null && spec.subtype.toLowerCase().contains(query)) {
+                return true;
+            }
+        }
+        
+        for (int i = 0; i < area.jin.length(); i++) {
+            String itemName = (String) ((JSONObject) area.jin.get(i)).get("name");
+            if (itemName.toLowerCase().contains(query)) {
+                return true;
+            }
+        }
+        
+        for (int i = 0; i < area.jout.length(); i++) {
+            String itemName = (String) ((JSONObject) area.jout.get(i)).get("name");
+            if (itemName.toLowerCase().contains(query)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     public class AreaItem extends Widget{
