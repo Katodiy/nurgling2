@@ -2,7 +2,6 @@ package nurgling.actions;
 
 import haven.Widget;
 import haven.WItem;
-import haven.res.ui.stackinv.ItemStack;
 import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NGItem;
@@ -17,7 +16,7 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
-public class GlobalFreshFillingPhase implements Action {
+public class GlobalExtractionPhase implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -26,33 +25,21 @@ public class GlobalFreshFillingPhase implements Action {
             nurgling.areas.NArea jarArea = context.getSpecArea(Specialisation.SpecName.picklingJars);
             if (jarArea == null) return Results.FAIL();
 
-            int availableSpace = countAvailableJarSpace(gui, jarArea);
-            if (availableSpace == 0) break;
+            int extractableItems = countExtractableItems(gui, jarArea);
+            if (extractableItems == 0) break;
 
-            if (!collectBeetroots(gui)) break;
+            extractFromJars(gui, jarArea);
 
-            fillJars(gui, jarArea);
+            if (isInventoryFull(gui)) {
+                new FreeInventory2(new NContext(gui)).run(gui);
+            }
         }
 
         new FreeInventory2(new NContext(gui)).run(gui);
         return Results.SUCCESS();
     }
 
-    private boolean collectBeetroots(NGameUI gui) throws InterruptedException {
-        NContext context = new NContext(gui);
-        context.addInItem("Beetroot", null);
-
-        int maxItems = gui.getInventory().getNumberFreeCoord(haven.Coord.of(1, 1));
-        if (maxItems <= 0) return false;
-
-        Results result = new TakeItems2(context, "Beetroot", maxItems).run(gui);
-        if (!result.isSuccess) return false;
-
-        context.getSpecArea(Specialisation.SpecName.picklingJars);
-        return gui.getInventory().getItems(new NAlias("Beetroot")).size() > 0;
-    }
-
-    private void fillJars(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {
+    private void extractFromJars(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {
         for (Container container : findAllContainers(jarArea)) {
             new OpenTargetContainer(container).run(gui);
             NInventory inventory = gui.getInventory(container.cap);
@@ -60,16 +47,22 @@ public class GlobalFreshFillingPhase implements Action {
 
             ArrayList<WItem> jars = inventory.getItems(new NAlias("Pickling Jar"));
             for (WItem jar : jars) {
-                if (getBrineLevel(jar) > 1.5) continue;
-                fillSingleJar(gui, jar);
-                if (countBeetroots(gui) == 0) break;
+                extractFromSingleJar(gui, jar);
+                if (isInventoryFull(gui)) {
+                    new CloseTargetContainer(container).run(gui);
+                    new FreeInventory2(new NContext(gui)).run(gui);
+                    // Navigate back to jar area after dropping off items
+                    NContext context = new NContext(gui);
+                    context.getSpecArea(Specialisation.SpecName.picklingJars);
+                    new OpenTargetContainer(container).run(gui);
+                }
             }
 
             new CloseTargetContainer(container).run(gui);
         }
     }
 
-    private void fillSingleJar(NGameUI gui, WItem jar) throws InterruptedException {
+    private void extractFromSingleJar(NGameUI gui, WItem jar) throws InterruptedException {
         NUtils.addTask(new NTask() {
             @Override
             public boolean check() {
@@ -80,47 +73,37 @@ public class GlobalFreshFillingPhase implements Action {
         if (jar.item.contents == null) return;
 
         NInventory jarInventory = (NInventory) jar.item.contents;
-        int availableSpace = jarInventory.getNumberFreeCoord(haven.Coord.of(1, 1));
-        if (availableSpace <= 0) return;
+        ArrayList<WItem> beetroots = findBeetroots(jarInventory);
 
-        for (int i = 0; i < availableSpace; i++) {
-            ArrayList<WItem> beetroots = findBeetroots(gui.getInventory());
-            if (beetroots.isEmpty()) break;
+        for (WItem beetroot : beetroots) {
+            if (isInventoryFull(gui)) break;
 
-            WItem beetroot = beetroots.get(0);
-            if (beetroot.parent instanceof ItemStack) {
-                ((ItemStack) beetroot.parent).wdgmsg("invxf", jarInventory.wdgid(), 1);
-            } else {
-                beetroot.item.wdgmsg("invxf", jarInventory.wdgid(), 1);
-            }
-
+            beetroot.item.wdgmsg("transfer", haven.Coord.z);
             NUtils.addTask(new ISRemoved(beetroot.item.wdgid()));
         }
     }
 
-    private int countAvailableJarSpace(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {
-        int totalSpace = 0;
+    private int countExtractableItems(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {
+        int totalItems = 0;
         for (Container container : findAllContainers(jarArea)) {
             new OpenTargetContainer(container).run(gui);
             NInventory inventory = gui.getInventory(container.cap);
             if (inventory != null) {
                 for (WItem jar : inventory.getItems(new NAlias("Pickling Jar"))) {
-                    if (getBrineLevel(jar) <= 1.5) {
-                        NUtils.addTask(new NTask() {
-                            @Override
-                            public boolean check() {
-                                return jar.item.contents != null;
-                            }
-                        });
-                        if (jar.item.contents != null) {
-                            totalSpace += ((NInventory) jar.item.contents).getNumberFreeCoord(haven.Coord.of(1, 1));
+                    NUtils.addTask(new NTask() {
+                        @Override
+                        public boolean check() {
+                            return jar.item.contents != null;
                         }
+                    });
+                    if (jar.item.contents != null) {
+                        totalItems += findBeetroots((NInventory) jar.item.contents).size();
                     }
                 }
             }
             new CloseTargetContainer(container).run(gui);
         }
-        return totalSpace;
+        return totalItems;
     }
 
     private ArrayList<WItem> findBeetroots(NInventory inventory) {
@@ -147,24 +130,8 @@ public class GlobalFreshFillingPhase implements Action {
                (resource != null && resource.contains("gfx/invobjs/beet"));
     }
 
-    private int countBeetroots(NGameUI gui) {
-        return findBeetroots(gui.getInventory()).size();
-    }
-
-    private double getBrineLevel(WItem jarItem) {
-        NGItem ngItem = (NGItem) jarItem.item;
-        for (NGItem.NContent content : ngItem.content()) {
-            String contentName = content.name();
-            if (contentName.contains("l of Pickling Brine")) {
-                String[] parts = contentName.split(" ");
-                for (int i = 0; i < parts.length; i++) {
-                    if (parts[i].equals("l") && i > 0) {
-                        return Double.parseDouble(parts[i - 1]);
-                    }
-                }
-            }
-        }
-        return 0.0;
+    private boolean isInventoryFull(NGameUI gui) throws InterruptedException {
+        return gui.getInventory().getNumberFreeCoord(haven.Coord.of(1, 1)) <= 2;
     }
 
     private ArrayList<Container> findAllContainers(nurgling.areas.NArea jarArea) throws InterruptedException {
