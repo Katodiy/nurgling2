@@ -9,6 +9,7 @@ import nurgling.NInventory;
 import nurgling.NGItem;
 import nurgling.NUtils;
 import nurgling.tasks.ISRemoved;
+import nurgling.tasks.NTask;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -87,7 +88,7 @@ public class GlobalFreshFillingPhase implements Action {
             }
 
             cycleNumber++;
-            Thread.sleep(1000); // Brief pause between cycles
+            // No artificial delay between cycles - let tasks handle timing
         }
 
         System.out.println("=== GLOBAL FRESH FILLING PHASE SUMMARY ===");
@@ -243,8 +244,28 @@ public class GlobalFreshFillingPhase implements Action {
         int itemsFilled = 0;
 
         try {
+            // Check brine level first - skip jars with > 1.5l brine
+            double brineLevel = getBrineLevel(jar);
+            if (brineLevel > 1.5) {
+                System.out.println("      → Jar has " + brineLevel + "l brine (> 1.5l) - skipping");
+                return itemsFilled;
+            }
+
+            System.out.println("      → Jar has " + brineLevel + "l brine (≤ 1.5l) - proceeding to fill");
+
             // Get jar's internal inventory using direct contents access (Test37 method)
             haven.GItem jarGItem = jar.item;
+
+            // Add additional wait for jar contents to become accessible
+            NUtils.addTask(new NTask() {
+                int attempts = 0;
+                @Override
+                public boolean check() {
+                    attempts++;
+                    return jarGItem.contents != null || attempts == 200;
+                }
+            });
+
             if (jarGItem.contents == null) {
                 System.out.println("      → Cannot access jar contents");
                 return itemsFilled;
@@ -286,7 +307,9 @@ public class GlobalFreshFillingPhase implements Action {
                         beetroot.item.wdgmsg("invxf", jarDirectInventory.wdgid(), 1);
                     }
 
-                    Thread.sleep(300);
+                    // Wait for transfer to complete using task-based waiting
+                    NUtils.addTask(new ISRemoved(beetroot.item.wdgid()));
+
                     itemsFilled++;
                     System.out.println("        → Transferred beetroot to jar contents inventory (ID: " + jarDirectInventory.wdgid() + ")");
 
@@ -305,24 +328,32 @@ public class GlobalFreshFillingPhase implements Action {
 
     /**
      * Get available space in jar's internal inventory
+     * Uses same method as PicklingJarAnalyzer for consistency
      */
     private int getJarAvailableSpace(NInventory jarInventory) {
         try {
-            // Count current items in jar
+            // Count current items using direct widget access (same as PicklingJarAnalyzer)
             int currentItems = 0;
             Widget widget = jarInventory.child;
             while (widget != null) {
                 if (widget instanceof WItem) {
-                    currentItems++;
+                    WItem wItem = (WItem) widget;
+                    if (NGItem.validateItem(wItem)) {
+                        currentItems++;
+                    }
                 }
                 widget = widget.next;
             }
 
-            // Jar capacity is typically 4-6 items, let's assume 4 for safety
-            int maxCapacity = 4;
-            return Math.max(0, maxCapacity - currentItems);
+            // Pickling jar inventory is 3x3 = 9 slots total
+            int maxCapacity = 9;
+            int freeSlots = Math.max(0, maxCapacity - currentItems);
+
+            System.out.println("        DEBUG: Current items=" + currentItems + ", Free slots=" + freeSlots);
+            return freeSlots;
 
         } catch (Exception e) {
+            System.out.println("        DEBUG: Error counting items - " + e.getMessage());
             return 0;
         }
     }
@@ -389,6 +420,34 @@ public class GlobalFreshFillingPhase implements Action {
     }
 
     /**
+     * Get brine level from jar (same method as GlobalBrinePhase)
+     */
+    private double getBrineLevel(WItem jarItem) {
+        try {
+            NGItem ngItem = (NGItem) jarItem.item;
+
+            for (NGItem.NContent content : ngItem.content()) {
+                String contentName = content.name();
+                if (contentName.contains("l of Pickling Brine")) {
+                    String[] parts = contentName.split(" ");
+                    for (int i = 0; i < parts.length; i++) {
+                        if (parts[i].equals("l") && i > 0) {
+                            try {
+                                return Double.parseDouble(parts[i - 1]);
+                            } catch (NumberFormatException e) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return 0.0;
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
+    /**
      * Count total available space across all jars in all containers
      * Returns the number of vegetable slots available
      */
@@ -410,22 +469,52 @@ public class GlobalFreshFillingPhase implements Action {
                 ArrayList<WItem> jars = inventory.getItems(picklingJarAlias);
 
                 int containerAvailableSpace = 0;
+                int jarsWithSpace = 0;
+                int totalJarsChecked = 0;
+
                 for (WItem jar : jars) {
+                    totalJarsChecked++;
                     try {
+                        // Check brine level first
+                        double brineLevel = getBrineLevel(jar);
+                        if (brineLevel > 1.5) {
+                            System.out.println("    → Jar " + totalJarsChecked + ": " + brineLevel + "l brine (skipped - too high)");
+                            continue; // Skip this jar
+                        }
+
                         NGItem jarNGItem = (NGItem) jar.item;
+                        // Add additional wait for jar contents to become accessible
+                        NUtils.addTask(new NTask() {
+                            int attempts = 0;
+                            @Override
+                            public boolean check() {
+                                attempts++;
+                                return jar.item.contents != null || attempts == 200;
+                            }
+                        });
                         NInventory jarInventory = (NInventory) jarNGItem.contents;
 
                         if (jarInventory != null) {
                             int jarSpace = getJarAvailableSpace(jarInventory);
-                            containerAvailableSpace += jarSpace;
+                            if (jarSpace > 0) {
+                                jarsWithSpace++;
+                                containerAvailableSpace += jarSpace;
+                                System.out.println("    → Jar " + totalJarsChecked + ": " + brineLevel + "l brine, " + jarSpace + " slots available");
+                            } else {
+                                System.out.println("    → Jar " + totalJarsChecked + ": " + brineLevel + "l brine, 0 slots (full)");
+                            }
+                        } else {
+                            System.out.println("    → Jar " + totalJarsChecked + ": " + brineLevel + "l brine, cannot access contents");
                         }
                     } catch (Exception e) {
-                        // Ignore errors, continue checking
+                        System.out.println("    → Jar " + totalJarsChecked + ": ERROR checking - " + e.getMessage());
                     }
                 }
 
                 if (containerAvailableSpace > 0) {
-                    System.out.println("  " + container.cap + " has " + containerAvailableSpace + " available jar slots");
+                    System.out.println("  " + container.cap + " summary: " + jarsWithSpace + "/" + totalJarsChecked + " jars have space, " + containerAvailableSpace + " total slots");
+                } else {
+                    System.out.println("  " + container.cap + " summary: " + jarsWithSpace + "/" + totalJarsChecked + " jars have space, 0 total slots");
                 }
                 totalAvailableSpace += containerAvailableSpace;
             }
@@ -495,7 +584,8 @@ public class GlobalFreshFillingPhase implements Action {
     private boolean openContainer(NGameUI gui, Container container) throws InterruptedException {
         try {
             new OpenTargetContainer(container).run(gui);
-            Thread.sleep(1000);
+            // OpenTargetContainer handles waiting with FindNInventory task
+
             return gui.getInventory(container.cap) != null;
         } catch (Exception e) {
             return false;
@@ -505,7 +595,7 @@ public class GlobalFreshFillingPhase implements Action {
     private void closeContainer(NGameUI gui, Container container) {
         try {
             new CloseTargetContainer(container).run(gui);
-            Thread.sleep(500);
+            // CloseTargetContainer handles waiting with WindowIsClosed task
         } catch (Exception e) {
             // Ignore errors
         }
