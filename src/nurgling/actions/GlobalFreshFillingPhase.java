@@ -338,8 +338,16 @@ public class GlobalFreshFillingPhase implements Action {
             while (widget != null) {
                 if (widget instanceof WItem) {
                     WItem wItem = (WItem) widget;
-                    if (NGItem.validateItem(wItem)) {
-                        currentItems++;
+                    // Don't use validateItem() - just count all WItem widgets like PicklingJarAnalyzer does
+                    currentItems++;
+
+                    // Debug: show what items we're finding
+                    try {
+                        NGItem ngItem = (NGItem) wItem.item;
+                        String itemName = ngItem.name() != null ? ngItem.name() : "Unknown";
+                        System.out.println("        DEBUG: Found item: " + itemName);
+                    } catch (Exception e) {
+                        System.out.println("        DEBUG: Found item: (error getting name)");
                     }
                 }
                 widget = widget.next;
