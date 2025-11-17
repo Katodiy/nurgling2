@@ -195,6 +195,7 @@ public class BotRegistry {
 
         bots.add(new BotDescriptor("test39", BotDescriptor.BotType.TOOLS, "Pickling Brine Filler", "Fills pickling jars with brine from nearby barrels. Takes multiple trips as needed.", false, true, GlobalBrinePhase.class, "test39", false));
         bots.add(new BotDescriptor("test40", BotDescriptor.BotType.TOOLS, "Debug Container Contents", "Debug tool to see what items are actually in containers and test alias matching.", false, true, DebugContainerContents.class, "test40", false));
+        bots.add(new BotDescriptor("test41", BotDescriptor.BotType.TOOLS, "Global Fresh Filling Phase", "Fills pickling jars with beetroots from vegetable storage area. Uses global phase processing for efficiency.", false, true, GlobalFreshFillingPhase.class, "test41", false));
 
     }
 
