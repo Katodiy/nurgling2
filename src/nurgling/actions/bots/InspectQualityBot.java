@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import static haven.OCache.posres;
 
 /**
- * Bot that inspects quality of all objects in selected area.
+ * Bot that inspects quality of selected object types in selected area.
  * For each object: navigates to it, activates inspect pagina, 
  * left clicks to inspect, waits for quality overlay, then cancels inspect.
  */
@@ -29,8 +29,23 @@ public class InspectQualityBot implements Action {
         NUtils.getGameUI().msg("Please select area for quality inspection");
         (selectArea = new SelectArea(Resource.loadsimg("baubles/inputArea"))).run(gui);
         
-        // Get all gobs in the selected area
-        ArrayList<Gob> gobs = Finder.findGobs(selectArea.getRCArea(), null);
+        // Prompt user to select target object type
+        SelectGob selgob;
+        NUtils.getGameUI().msg("Please select target object type");
+        (selgob = new SelectGob(Resource.loadsimg("baubles/selectobject"))).run(gui);
+        Gob targetGob = selgob.result;
+        
+        if (targetGob == null) {
+            return Results.ERROR("Target object not selected");
+        }
+        
+        // Get all gobs of selected type in the area
+        ArrayList<Gob> gobs = new ArrayList<>();
+        for (Gob gob : Finder.findGobs(selectArea.getRCArea(), null)) {
+            if (gob.ngob.name.equals(targetGob.ngob.name)) {
+                gobs.add(gob);
+            }
+        }
         
         if (gobs.isEmpty()) {
             NUtils.getGameUI().msg("No objects found in selected area");
@@ -64,11 +79,11 @@ public class InspectQualityBot implements Action {
                 NUtils.getGameUI().map.clickedGob = new MapView.ClickedGob(gob,1);
                 
                 // Wait for QualityOl overlay to appear on the object
-                final Gob targetGob = gob;
+                final Gob tGob = gob;
                 NUtils.getUI().core.addTask(new NTask() {
                     @Override
                     public boolean check() {
-                        return targetGob.findol(QualityOl.class) != null;
+                        return tGob.findol(QualityOl.class) != null;
                     }
                 });
                 
