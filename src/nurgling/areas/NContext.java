@@ -111,6 +111,20 @@ public class NContext {
         workstation_spec_map.put("gfx/terobjs/anvil",Specialisation.SpecName.anvil);
     }
 
+    public static HashSet<String> doubleOutputItems;
+    static {
+        doubleOutputItems = new HashSet<>();
+        doubleOutputItems.add("Silk Filament");
+    }
+
+    public static int getOutputMultiplier(String itemName) {
+        if (doubleOutputItems.contains(itemName)) {
+            ///TODO FIX SKILL
+            return 2;
+        }
+        return 1;
+    }
+
 
     public static class Barter implements ObjectStorage
     {

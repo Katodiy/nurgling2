@@ -260,7 +260,9 @@ public class Craft implements Action {
         int resfc = for_craft;
         String targetName = null;
         for (NMakewindow.Spec s : mwnd.outputs) {
-            resfc = s.count * for_craft;
+            String itemName = s.ing != null ? s.ing.name : s.name;
+            int outputMultiplier = NContext.getOutputMultiplier(itemName);
+            resfc = s.count * for_craft * outputMultiplier;
             ArrayList<WItem> currentItems;
             if (s.ing != null) {
                 targetName = s.ing.name;
