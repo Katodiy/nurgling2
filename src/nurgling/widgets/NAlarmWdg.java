@@ -29,6 +29,9 @@ public class NAlarmWdg extends Widget
     TexI numberAlarm = null;
     // Cache last known group for each character to handle temporary null buddy during group changes
     private final HashMap<Long, Integer> lastKnownGroup = new HashMap<>();
+    // Track frame counter for characters without buddy to delay alarm
+    private final HashMap<Long, Integer> unknownPlayerFrameCounter = new HashMap<>();
+    private static final int ALARM_DELAY_FRAMES = 20;
     public NAlarmWdg() {
         super();
         sz = NStyle.alarm[0].sz();
@@ -56,9 +59,10 @@ public class NAlarmWdg extends Widget
                 }
             }
             borkas.removeAll(forRemove);
-            // Clean up cached groups for removed characters
+            // Clean up cached groups and frame counters for removed characters
             for (Long id : forRemove) {
                 lastKnownGroup.remove(id);
+                unknownPlayerFrameCounter.remove(id);
             }
             Gob player = NUtils.player();
             if (player != null) {
@@ -73,26 +77,38 @@ public class NAlarmWdg extends Widget
                             // Determine actual group - use cached if buddy is temporarily null
                             int group = 0;
                             boolean buddyLoaded = (buddy != null && buddy.b != null);
+                            boolean shouldDelayAlarm = false;
                             
                             if (buddyLoaded) {
                                 group = buddy.b.group;
                                 lastKnownGroup.put(id, group); // Cache the group
+                                unknownPlayerFrameCounter.remove(id); // Reset counter if buddy loaded
                             } else if (lastKnownGroup.containsKey(id)) {
                                 // Use cached group if buddy is temporarily null during group change
                                 group = lastKnownGroup.get(id);
+                                unknownPlayerFrameCounter.remove(id); // Reset counter if we have cache
+                            } else {
+                                // Buddy is null and no cache - might be loading, delay alarm
+                                int frameCount = unknownPlayerFrameCounter.getOrDefault(id, 0);
+                                frameCount++;
+                                unknownPlayerFrameCounter.put(id, frameCount);
+                                
+                                if (frameCount < ALARM_DELAY_FRAMES) {
+                                    shouldDelayAlarm = true;
+                                }
+                                // After delay frames elapsed, treat as unknown (group 0 - white)
                             }
-                            // If buddy is null and no cache, treat as unknown (group 0 - white)
                             
                             NKinProp kinProp = NKinProp.get(group);
                             Color arrowColor = BuddyWnd.gc[group];
                             
                             // Check if should be in alarm (only WHITE and RED groups)
                             boolean isWhiteOrRed = (arrowColor.equals(Color.WHITE) || arrowColor.equals(Color.RED));
-                            boolean shouldAlarm = kinProp.alarm && isWhiteOrRed;
+                            boolean shouldAlarm = kinProp.alarm && isWhiteOrRed && !shouldDelayAlarm;
                             boolean isAlarmed = alarms.contains(id);
                             
                             if (shouldAlarm && !isAlarmed) {
-                                // Add alarm if needed
+                                // Add alarm if needed (only after delay period)
                                 addAlarm(id);
                             } else if (!shouldAlarm && isAlarmed) {
                                 // Remove alarm if settings changed or group changed
