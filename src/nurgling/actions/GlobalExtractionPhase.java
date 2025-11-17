@@ -42,21 +42,29 @@ public class GlobalExtractionPhase implements Action {
     private void extractFromJars(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {
         for (Container container : findAllContainers(jarArea)) {
             new OpenTargetContainer(container).run(gui);
-            NInventory inventory = gui.getInventory(container.cap);
-            if (inventory == null) continue;
 
-            ArrayList<WItem> jars = inventory.getItems(new NAlias("Pickling Jar"));
-            for (WItem jar : jars) {
-                extractFromSingleJar(gui, jar);
-                if (isInventoryFull(gui)) {
-                    new CloseTargetContainer(container).run(gui);
-                    new FreeInventory2(new NContext(gui)).run(gui);
-                    // Navigate back to jar area after dropping off items
-                    NContext context = new NContext(gui);
-                    context.getSpecArea(Specialisation.SpecName.picklingJars);
-                    new OpenTargetContainer(container).run(gui);
+            boolean containerNeedsReprocessing;
+            do {
+                containerNeedsReprocessing = false;
+                NInventory inventory = gui.getInventory(container.cap);
+                if (inventory == null) break;
+
+                ArrayList<WItem> jars = inventory.getItems(new NAlias("Pickling Jar"));
+                for (WItem jar : jars) {
+                    extractFromSingleJar(gui, jar);
+                    if (isInventoryFull(gui)) {
+                        new CloseTargetContainer(container).run(gui);
+                        new FreeInventory2(new NContext(gui)).run(gui);
+                        // Navigate back to jar area after dropping off items
+                        NContext context = new NContext(gui);
+                        context.getSpecArea(Specialisation.SpecName.picklingJars);
+                        new OpenTargetContainer(container).run(gui);
+
+                        containerNeedsReprocessing = true;
+                        break; // Break out of jar loop to refetch jar list
+                    }
                 }
-            }
+            } while (containerNeedsReprocessing);
 
             new CloseTargetContainer(container).run(gui);
         }
