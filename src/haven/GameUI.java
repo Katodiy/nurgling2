@@ -305,7 +305,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	routesWidget.hide();
 	add(encyclopediaWindow = new EncyclopediaWindow(),new Coord(sz.x/2 - 400,sz.y/2 - 300 ));
 	encyclopediaWindow.hide();
-	add(treeGardenWidget = new TreeGardenBlueprintWidget(), new Coord(sz.x/2 - 400, sz.y/2 - 300));
+	add(treeGardenWidget = new TreeGardenBlueprintWidget(), new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
 	treeGardenWidget.hide();
     }
 

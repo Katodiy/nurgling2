@@ -409,6 +409,7 @@ public class NGameUI extends GameUI
         nean.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
         spec.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
         biw.move(new Coord(sz.x / 2 - biw.sz.x / 2, sz.y / 2 - biw.sz.y / 2));
+        treeGardenWidget.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
     }
 
     public List<IMeter.Meter> getmeters (String name ) {

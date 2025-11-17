@@ -2,6 +2,7 @@ package nurgling.widgets;
 
 import haven.*;
 import haven.Label;
+import haven.Scrollbar;
 import haven.Window;
 import nurgling.*;
 import org.json.*;
@@ -17,13 +18,30 @@ import java.util.List;
 
 public class TreeGardenBlueprintWidget extends Window
 {
-    private int gridWidth = 10;
-    private int gridHeight = 10;
+    private int gridWidth = 20;
+    private int gridHeight = 20;
     private GridPanel gridPanel;
     private TreeListPanel treeListPanel;
     private TreeItem selectedTree = null;
     private TreeItem draggingTree = null;
-    private Scrollport gridScroll;
+    private GridScrollArea gridScrollArea;
+    private static String currentBlueprintName = "Blueprint 1";
+    private static Map<String, BlueprintData> blueprints = new HashMap<>();
+    private static boolean blueprintsLoaded = false;
+    private Dropbox<String> blueprintSelector;
+    private TextEntry widthEntry;
+    private TextEntry heightEntry;
+    
+    private static class BlueprintData {
+        int width;
+        int height;
+        Map<Coord, String> trees = new HashMap<>();
+        
+        BlueprintData(int width, int height) {
+            this.width = width;
+            this.height = height;
+        }
+    }
     
     private static class TreeDef {
         String resName;
@@ -121,54 +139,73 @@ public class TreeGardenBlueprintWidget extends Window
     public TreeGardenBlueprintWidget() {
         super(UI.scale(new Coord(800, 600)), "Tree Garden Blueprint");
         
+        // Load blueprints from file only once
+        if (!blueprintsLoaded) {
+            loadBlueprintsFromFile();
+            if (blueprints.isEmpty()) {
+                blueprints.put(currentBlueprintName, new BlueprintData(gridWidth, gridHeight));
+            }
+            blueprintsLoaded = true;
+        }
+        
         Widget prev;
         
-        prev = add(new Label("Grid Size:"), new Coord(UI.scale(10), UI.scale(10)));
+        // Blueprint selector
+        Widget firstRow = add(new Label("Blueprint:"), new Coord(UI.scale(10), UI.scale(10)));
+        int baseY = firstRow.c.y;
         
-        TextEntry widthEntry;
-        prev = add(widthEntry = new TextEntry(UI.scale(50), String.valueOf(gridWidth)), 
-                   prev.pos("ur").adds(UI.scale(10), 0));
+        prev = add(blueprintSelector = new Dropbox<String>(UI.scale(150), 5, UI.scale(16)) {
+            @Override
+            protected String listitem(int i) {
+                return new ArrayList<>(blueprints.keySet()).get(i);
+            }
+            
+            @Override
+            protected int listitems() {
+                return blueprints.size();
+            }
+            
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, Coord.z);
+            }
+            
+            @Override
+            public void change(String item) {
+                super.change(item);
+                loadBlueprint(item);
+            }
+        }, new Coord(firstRow.c.x + firstRow.sz.x + UI.scale(10), baseY));
+        blueprintSelector.change(currentBlueprintName);
         
-        prev = add(new Label("x"), prev.pos("ur").adds(UI.scale(5), 0));
-        
-        TextEntry heightEntry;
-        prev = add(heightEntry = new TextEntry(UI.scale(50), String.valueOf(gridHeight)), 
-                   prev.pos("ur").adds(UI.scale(5), 0));
-        
-        IButton applySize;
-        prev = add(applySize = new IButton(NStyle.add[0].back, NStyle.add[1].back, NStyle.add[2].back) {
+        IButton addBlueprint;
+        prev = add(addBlueprint = new IButton(NStyle.add[0].back, NStyle.add[1].back, NStyle.add[2].back) {
             @Override
             public void click() {
                 super.click();
-                try {
-                    int newWidth = Integer.parseInt(widthEntry.text());
-                    int newHeight = Integer.parseInt(heightEntry.text());
-                    if (newWidth > 0 && newWidth <= 50 && newHeight > 0 && newHeight <= 50) {
-                        gridWidth = newWidth;
-                        gridHeight = newHeight;
-                        recreateGrid();
-                    } else {
-                        NUtils.getGameUI().msg("Grid size must be between 1 and 50");
-                    }
-                } catch (NumberFormatException e) {
-                    NUtils.getGameUI().msg("Invalid grid size");
-                }
+                createNewBlueprintDialog();
             }
-        }, prev.pos("ur").adds(UI.scale(10), 0));
-        applySize.settip("Apply grid size");
+        }, new Coord(prev.c.x + prev.sz.x + UI.scale(5), baseY));
+        addBlueprint.settip("Create new blueprint");
         
-        IButton clear;
-        prev = add(clear = new IButton(NStyle.remove[0].back, NStyle.remove[1].back, NStyle.remove[2].back) {
-            @Override
-            public void click() {
-                super.click();
-                if (gridPanel != null) {
-                    gridPanel.clear();
-                }
+        // Grid size inputs
+        prev = add(new Label("Grid:"), new Coord(prev.c.x + prev.sz.x + UI.scale(15), baseY));
+        
+        prev = add(widthEntry = new TextEntry(UI.scale(50), String.valueOf(gridWidth)) {
+            public void changed() {
+                updateGridSize(this, null);
             }
-        }, prev.pos("ur").adds(UI.scale(10), 0));
-        clear.settip("Clear all trees");
+        }, new Coord(prev.c.x + prev.sz.x + UI.scale(5), baseY));
         
+        prev = add(new Label("x"), new Coord(prev.c.x + prev.sz.x + UI.scale(5), baseY));
+        
+        prev = add(heightEntry = new TextEntry(UI.scale(50), String.valueOf(gridHeight)) {
+            public void changed() {
+                updateGridSize(null, this);
+            }
+        }, new Coord(prev.c.x + prev.sz.x + UI.scale(5), baseY));
+        
+        // Export/Import buttons
         IButton save;
         prev = add(save = new IButton(NStyle.exportb[0].back, NStyle.exportb[1].back, NStyle.exportb[2].back) {
             @Override
@@ -176,8 +213,8 @@ public class TreeGardenBlueprintWidget extends Window
                 super.click();
                 saveBlueprintDialog();
             }
-        }, prev.pos("ur").adds(UI.scale(10), 0));
-        save.settip("Save blueprint");
+        }, new Coord(prev.c.x + prev.sz.x + UI.scale(15), baseY));
+        save.settip("Export blueprint");
         
         IButton load;
         prev = add(load = new IButton(NStyle.importb[0].back, NStyle.importb[1].back, NStyle.importb[2].back) {
@@ -186,8 +223,8 @@ public class TreeGardenBlueprintWidget extends Window
                 super.click();
                 loadBlueprintDialog();
             }
-        }, prev.pos("ur").adds(UI.scale(10), 0));
-        load.settip("Load blueprint");
+        }, new Coord(prev.c.x + prev.sz.x + UI.scale(5), baseY));
+        load.settip("Import blueprint");
         
         int contentY = UI.scale(45);
         
@@ -197,12 +234,129 @@ public class TreeGardenBlueprintWidget extends Window
         treeListPanel = new TreeListPanel(UI.scale(new Coord(180, 500)));
         prev = add(treeListPanel, prev.pos("bl").adds(0, UI.scale(5)));
         
+        gridScrollArea = add(new GridScrollArea(UI.scale(new Coord(550, 500))),
+                             new Coord(prev.pos("ur").x + UI.scale(10), contentY + UI.scale(25)));
         gridPanel = new GridPanel(gridWidth, gridHeight);
-        gridScroll = add(new Scrollport(UI.scale(new Coord(550, 500))), 
-                         new Coord(prev.pos("ur").x + UI.scale(10), contentY + UI.scale(25)));
-        gridScroll.add(gridPanel);
+        gridScrollArea.setGrid(gridPanel);
+        
+        // Load trees from current blueprint after gridPanel is created
+        if (blueprints.containsKey(currentBlueprintName)) {
+            BlueprintData data = blueprints.get(currentBlueprintName);
+            gridPanel.trees.putAll(data.trees);
+        }
         
         pack();
+    }
+    
+    private void updateGridSize(TextEntry widthEntry, TextEntry heightEntry) {
+        try {
+            if (widthEntry != null) {
+                int newWidth = Integer.parseInt(widthEntry.text());
+                if (newWidth > 0 && newWidth <= 50) {
+                    gridWidth = newWidth;
+                    getCurrentBlueprint().width = newWidth;
+                    recreateGrid();
+                    saveBlueprintsToFile();
+                }
+            }
+            if (heightEntry != null) {
+                int newHeight = Integer.parseInt(heightEntry.text());
+                if (newHeight > 0 && newHeight <= 50) {
+                    gridHeight = newHeight;
+                    getCurrentBlueprint().height = newHeight;
+                    recreateGrid();
+                    saveBlueprintsToFile();
+                }
+            }
+        } catch (NumberFormatException e) {
+            // Ignore invalid input while typing
+        }
+    }
+    
+    private BlueprintData getCurrentBlueprint() {
+        return blueprints.get(currentBlueprintName);
+    }
+    
+    private void saveCurrentBlueprint() {
+        if (gridPanel == null)
+            return;
+        BlueprintData data = getCurrentBlueprint();
+        data.trees.clear();
+        data.trees.putAll(gridPanel.trees);
+    }
+    
+    private void loadBlueprint(String name) {
+        if (name == null || !blueprints.containsKey(name))
+            return;
+        
+        // Save current blueprint before switching
+        String oldName = currentBlueprintName;
+        if (!oldName.equals(name)) {
+            saveCurrentBlueprint();
+        }
+        
+        currentBlueprintName = name;
+        
+        BlueprintData data = getCurrentBlueprint();
+        gridWidth = data.width;
+        gridHeight = data.height;
+        
+        // Update text entries
+        if (widthEntry != null)
+            widthEntry.settext(String.valueOf(gridWidth));
+        if (heightEntry != null)
+            heightEntry.settext(String.valueOf(gridHeight));
+        
+        if (gridPanel != null) {
+            recreateGrid();
+            gridPanel.trees.putAll(data.trees);
+        }
+    }
+    
+    private void createNewBlueprintDialog() {
+        Window dialog = new Window(UI.scale(new Coord(300, 100)), "New Blueprint") {
+            {
+                Widget prev;
+                prev = add(new Label("Name:"), new Coord(UI.scale(10), UI.scale(10)));
+                TextEntry nameEntry;
+                prev = add(nameEntry = new TextEntry(UI.scale(200), "Blueprint " + (blueprints.size() + 1)), 
+                          prev.pos("ur").adds(UI.scale(10), 0));
+                
+                add(new haven.Button(UI.scale(80), "OK") {
+                    public void click() {
+                        String name = nameEntry.text().trim();
+                        if (!name.isEmpty() && !blueprints.containsKey(name)) {
+                            saveCurrentBlueprint();
+                            blueprints.put(name, new BlueprintData(20, 20));
+                            currentBlueprintName = name;
+                            blueprintSelector.change(name);
+                            parent.reqdestroy();
+                        } else if (blueprints.containsKey(name)) {
+                            NUtils.getGameUI().msg("Blueprint name already exists");
+                        }
+                    }
+                }, new Coord(UI.scale(60), UI.scale(60)));
+                
+                add(new haven.Button(UI.scale(80), "Cancel") {
+                    public void click() {
+                        parent.reqdestroy();
+                    }
+                }, new Coord(UI.scale(160), UI.scale(60)));
+                
+                pack();
+            }
+            
+            @Override
+            public void wdgmsg(String msg, Object... args) {
+                if (msg.equals("close")) {
+                    reqdestroy();
+                } else {
+                    super.wdgmsg(msg, args);
+                }
+            }
+        };
+        
+        ui.root.add(dialog, new Coord(ui.root.sz.x / 2 - dialog.sz.x / 2, ui.root.sz.y / 2 - dialog.sz.y / 2));
     }
     
     private void recreateGrid() {
@@ -210,9 +364,7 @@ public class TreeGardenBlueprintWidget extends Window
             gridPanel.destroy();
         }
         gridPanel = new GridPanel(gridWidth, gridHeight);
-        gridScroll.add(gridPanel);
-        gridScroll.cont.update();
-        gridScroll.pack();
+        gridScrollArea.setGrid(gridPanel);
     }
     
     private void saveBlueprintDialog() {
@@ -298,9 +450,90 @@ public class TreeGardenBlueprintWidget extends Window
     @Override
     public void wdgmsg(Widget sender, String msg, Object... args) {
         if (msg.equals("close")) {
+            saveCurrentBlueprint();
+            saveBlueprintsToFile();
             hide();
         } else {
             super.wdgmsg(sender, msg, args);
+        }
+    }
+    
+    private void saveBlueprintsToFile() {
+        try {
+            JSONObject root = new JSONObject();
+            root.put("current", currentBlueprintName);
+            
+            JSONArray blueprintArray = new JSONArray();
+            for (Map.Entry<String, BlueprintData> entry : blueprints.entrySet()) {
+                JSONObject bp = new JSONObject();
+                bp.put("name", entry.getKey());
+                bp.put("width", entry.getValue().width);
+                bp.put("height", entry.getValue().height);
+                
+                JSONArray treesArray = new JSONArray();
+                for (Map.Entry<Coord, String> treeEntry : entry.getValue().trees.entrySet()) {
+                    JSONObject tree = new JSONObject();
+                    tree.put("x", treeEntry.getKey().x);
+                    tree.put("y", treeEntry.getKey().y);
+                    tree.put("type", treeEntry.getValue());
+                    treesArray.put(tree);
+                }
+                bp.put("trees", treesArray);
+                blueprintArray.put(bp);
+            }
+            root.put("blueprints", blueprintArray);
+            
+            File configFile = new File("tree_garden_blueprints.json");
+            Files.write(configFile.toPath(), root.toString(2).getBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void loadBlueprintsFromFile() {
+        try {
+            File configFile = new File("tree_garden_blueprints.json");
+            if (!configFile.exists())
+                return;
+            
+            String content = new String(Files.readAllBytes(configFile.toPath()));
+            JSONObject root = new JSONObject(content);
+            
+            if (root.has("current")) {
+                currentBlueprintName = root.getString("current");
+            }
+            
+            JSONArray blueprintArray = root.getJSONArray("blueprints");
+            for (int i = 0; i < blueprintArray.length(); i++) {
+                JSONObject bp = blueprintArray.getJSONObject(i);
+                String name = bp.getString("name");
+                int width = bp.getInt("width");
+                int height = bp.getInt("height");
+                
+                BlueprintData data = new BlueprintData(width, height);
+                
+                if (bp.has("trees")) {
+                    JSONArray treesArray = bp.getJSONArray("trees");
+                    for (int j = 0; j < treesArray.length(); j++) {
+                        JSONObject tree = treesArray.getJSONObject(j);
+                        int x = tree.getInt("x");
+                        int y = tree.getInt("y");
+                        String type = tree.getString("type");
+                        data.trees.put(new Coord(x, y), type);
+                    }
+                }
+                
+                blueprints.put(name, data);
+            }
+            
+            // Set grid dimensions from current blueprint
+            if (blueprints.containsKey(currentBlueprintName)) {
+                BlueprintData current = blueprints.get(currentBlueprintName);
+                gridWidth = current.width;
+                gridHeight = current.height;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
     
@@ -449,6 +682,187 @@ public class TreeGardenBlueprintWidget extends Window
         }
     }
     
+    private class GridScrollArea extends Widget {
+        private final GridViewport viewport;
+        private final HScrollbar hbar;
+        private final Scrollbar vbar;
+        private final int sbsz = UI.scale(16);
+        
+        GridScrollArea(Coord sz) {
+            super(sz);
+            Coord viewsz = sz.sub(sbsz, sbsz);
+            
+            // Add viewport that contains the grid
+            viewport = add(new GridViewport(viewsz), Coord.z);
+            
+            // Add scrollbars
+            hbar = add(new HScrollbar(viewsz.x, 0, 100) {
+                @Override
+                public void changed() {
+                    viewport.updateOffset(new Coord(val, viewport.off.y));
+                }
+            }, new Coord(0, viewsz.y));
+            
+            vbar = add(new Scrollbar(viewsz.y, 0, 100) {
+                @Override
+                public void changed() {
+                    viewport.updateOffset(new Coord(viewport.off.x, val));
+                }
+            }, new Coord(viewsz.x, 0));
+        }
+        
+        void setGrid(GridPanel grid) {
+            viewport.setGrid(grid);
+            update();
+        }
+        
+        void update() {
+            Coord csz = viewport.contentSize();
+            Coord viewsz = viewport.sz;
+            hbar.max = Math.max(0, csz.x - viewsz.x);
+            vbar.max = Math.max(0, csz.y - viewsz.y);
+            hbar.val = Math.min(hbar.val, hbar.max);
+            vbar.val = Math.min(vbar.val, vbar.max);
+            viewport.updateOffset(new Coord(hbar.val, vbar.val));
+        }
+        
+        @Override
+        public boolean mousewheel(MouseWheelEvent ev) {
+            vbar.ch(ev.a * UI.scale(15));
+            return true;
+        }
+    }
+    
+    private static class GridViewport extends Widget {
+        private GridPanel grid;
+        Coord off = Coord.z;
+        
+        GridViewport(Coord sz) {
+            super(sz);
+        }
+        
+        void setGrid(GridPanel grid) {
+            if (this.grid != null) {
+                this.grid.destroy();
+            }
+            this.grid = add(grid, Coord.z);
+            updateOffset(off);
+        }
+        
+        void updateOffset(Coord off) {
+            this.off = off;
+            if (grid != null) {
+                grid.c = off.inv();
+            }
+        }
+        
+        Coord contentSize() {
+            return grid != null ? grid.sz : Coord.z;
+        }
+        
+        @Override
+        public void draw(GOut g) {
+            // Draw background
+            g.chcolor(new Color(0, 0, 0, 100));
+            g.frect(Coord.z, sz);
+            g.chcolor();
+            
+            // Draw grid with clipping
+            if (grid != null && grid.visible) {
+                Coord cc = grid.c;
+                // Only draw if any part is visible
+                if ((cc.x + grid.sz.x > 0) && (cc.y + grid.sz.y > 0) &&
+                    (cc.x < sz.x) && (cc.y < sz.y)) {
+                    grid.draw(g.reclip(cc, grid.sz));
+                }
+            }
+        }
+    }
+    
+    private static class HScrollbar extends Widget {
+        public int val, min, max;
+        private UI.Grab drag = null;
+        
+        public HScrollbar(int w, int min, int max) {
+            super(new Coord(w, Scrollbar.width));
+            this.min = min;
+            this.max = max;
+            this.val = min;
+        }
+        
+        public boolean vis() {
+            return max > min;
+        }
+        
+        @Override
+        public void draw(GOut g) {
+            if (vis()) {
+                // Rotate textures 90 degrees for horizontal scrollbar
+                Coord chainSz = Scrollbar.schain.sz();
+                Coord flapSz = Scrollbar.sflarp.sz();
+                int cy = (flapSz.x / 2) - (chainSz.x / 2);
+                int ew = sz.x + Scrollbar.chcut, cw = chainSz.y;
+                int n = Math.max((ew + cw - 1) / cw, 2);
+                for (int i = 0; i < n; i++) {
+                    Coord pos = Coord.of(((ew - cw) * i) / (n - 1), cy);
+                    g.rotimage(Scrollbar.schain, pos.add(chainSz.swapXY().div(2)), chainSz.div(2), Math.PI / 2);
+                }
+                double a = (double) val / (double) (max - min);
+                int fx = (int) ((sz.x - flapSz.y) * a);
+                g.rotimage(Scrollbar.sflarp, new Coord(fx + flapSz.y / 2, flapSz.x / 2), flapSz.div(2), Math.PI / 2);
+            }
+        }
+        
+        private void update(Coord c) {
+            Coord flapSz = Scrollbar.sflarp.sz();
+            double a = (double) (c.x - (flapSz.y / 2)) / (double) (sz.x - flapSz.y);
+            if (a < 0) a = 0;
+            if (a > 1) a = 1;
+            int val = (int) Math.round(a * (max - min)) + min;
+            if (val != this.val) {
+                this.val = val;
+                changed();
+            }
+        }
+        
+        @Override
+        public boolean mousedown(MouseDownEvent ev) {
+            if (ev.b != 1) return super.mousedown(ev);
+            if (!vis()) return false;
+            drag = ui.grabmouse(this);
+            update(ev.c);
+            return true;
+        }
+        
+        @Override
+        public void mousemove(MouseMoveEvent ev) {
+            super.mousemove(ev);
+            if (drag != null) update(ev.c);
+        }
+        
+        @Override
+        public boolean mouseup(MouseUpEvent ev) {
+            if (ev.b != 1) return super.mouseup(ev);
+            if (drag == null) return false;
+            drag.remove();
+            drag = null;
+            return true;
+        }
+        
+        public void changed() {}
+        
+        public void ch(int a) {
+            int val = this.val + a;
+            if (val > max) val = max;
+            if (val < min) val = min;
+            if (this.val != val) {
+                this.val = val;
+                changed();
+            }
+        }
+    }
+    
+    
     private class GridPanel extends Widget implements DropTarget {
         private final int cols;
         private final int rows;
@@ -479,16 +893,57 @@ public class TreeGardenBlueprintWidget extends Window
         
         @Override
         public void draw(GOut g) {
-            g.chcolor(Color.WHITE);
+            // Calculate viewport boundaries in grid coordinate space
+            // g.ul and g.br are absolute screen coordinates
+            // g.tx is the translation offset for this widget
+            int viewportX1 = Math.max(0, g.ul.x - g.tx.x);
+            int viewportY1 = Math.max(0, g.ul.y - g.tx.y);
+            int viewportX2 = Math.min(sz.x, g.br.x - g.tx.x);
+            int viewportY2 = Math.min(sz.y, g.br.y - g.tx.y);
             
-            for (int x = 0; x <= cols; x++) {
-                int px = x * cellSize;
-                g.line(new Coord(px, 0), new Coord(px, rows * cellSize), 1);
+            // Don't draw if nothing is visible
+            if (viewportX2 <= viewportX1 || viewportY2 <= viewportY1) {
+                return;
             }
             
-            for (int y = 0; y <= rows; y++) {
+            // Calculate which grid lines to draw
+            int startX = viewportX1 / cellSize;
+            int endX = (viewportX2 + cellSize - 1) / cellSize;
+            int startY = viewportY1 / cellSize;
+            int endY = (viewportY2 + cellSize - 1) / cellSize;
+            
+            // Clamp to actual grid size
+            startX = Math.max(0, startX);
+            endX = Math.min(cols, endX);
+            startY = Math.max(0, startY);
+            endY = Math.min(rows, endY);
+            
+            g.chcolor(Color.WHITE);
+            
+            // Draw vertical lines - only if they're within viewport
+            for (int x = startX; x <= endX; x++) {
+                int px = x * cellSize;
+                // Skip if line is outside viewport horizontally
+                if (px < viewportX1 || px > viewportX2) continue;
+                
+                int y1 = Math.max(viewportY1, 0);
+                int y2 = Math.min(viewportY2, rows * cellSize);
+                if (y2 > y1) {
+                    g.line(new Coord(px, y1), new Coord(px, y2), 1);
+                }
+            }
+            
+            // Draw horizontal lines - only if they're within viewport
+            for (int y = startY; y <= endY; y++) {
                 int py = y * cellSize;
-                g.line(new Coord(0, py), new Coord(cols * cellSize, py), 1);
+                // Skip if line is outside viewport vertically
+                if (py < viewportY1 || py > viewportY2) continue;
+                
+                int x1 = Math.max(viewportX1, 0);
+                int x2 = Math.min(viewportX2, cols * cellSize);
+                if (x2 > x1) {
+                    g.line(new Coord(x1, py), new Coord(x2, py), 1);
+                }
             }
             
             for (Map.Entry<Coord, String> entry : trees.entrySet()) {
@@ -527,6 +982,7 @@ public class TreeGardenBlueprintWidget extends Window
         
         @Override
         public boolean mousedown(MouseDownEvent ev) {
+            boolean changed = false;
             if (ev.b == 1) {
                 int cellX = ev.c.x / cellSize;
                 int cellY = ev.c.y / cellSize;
@@ -537,8 +993,10 @@ public class TreeGardenBlueprintWidget extends Window
                     if (selectedTree != null) {
                         if (trees.containsKey(cell)) {
                             trees.remove(cell);
+                            changed = true;
                         } else {
                             trees.put(cell, selectedTree.resName);
+                            changed = true;
                         }
                     }
                 }
@@ -548,8 +1006,15 @@ public class TreeGardenBlueprintWidget extends Window
                 
                 if (cellX >= 0 && cellX < cols && cellY >= 0 && cellY < rows) {
                     Coord cell = new Coord(cellX, cellY);
-                    trees.remove(cell);
+                    if (trees.remove(cell) != null) {
+                        changed = true;
+                    }
                 }
+            }
+            
+            if (changed) {
+                saveCurrentBlueprint();
+                saveBlueprintsToFile();
             }
             
             return super.mousedown(ev);
@@ -567,11 +1032,37 @@ public class TreeGardenBlueprintWidget extends Window
                     if (!trees.containsKey(cell)) {
                         trees.put(cell, treeItem.resName);
                         selectedTree = treeItem;
+                        saveCurrentBlueprint();
+                        saveBlueprintsToFile();
                     }
                     return true;
                 }
             }
             return false;
+        }
+        
+        @Override
+        public Object tooltip(Coord c, Widget prev) {
+            int cellX = c.x / cellSize;
+            int cellY = c.y / cellSize;
+            
+            if (cellX >= 0 && cellX < cols && cellY >= 0 && cellY < rows) {
+                Coord cell = new Coord(cellX, cellY);
+                String treeResName = trees.get(cell);
+                
+                if (treeResName != null) {
+                    // Find tree display name from resName
+                    for (TreeDef treeDef : AVAILABLE_TREES) {
+                        if (treeDef.resName.equals(treeResName)) {
+                            return Text.render(treeDef.displayName).tex();
+                        }
+                    }
+                    // Fallback to resource name if not found
+                    return Text.render(treeResName).tex();
+                }
+            }
+            
+            return super.tooltip(c, prev);
         }
     }
 }
