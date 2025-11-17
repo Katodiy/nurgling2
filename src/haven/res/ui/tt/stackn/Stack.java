@@ -33,7 +33,7 @@ public class Stack extends ItemInfo.Name implements GItem.OverlayInfo<Tex> {
 		if(count>0) {
 			q = q / count;
 			quality = q;
-			BufferedImage text = GItem.NumberInfo.numrender((int) Math.round(q), new Color(245, 245, 65, 255));
+			BufferedImage text = GItem.NumberInfo.numrender((int) Math.round(q), Color.WHITE);
 			BufferedImage bi = new BufferedImage(text.getWidth(), text.getHeight(), BufferedImage.TYPE_INT_ARGB);
 			Graphics2D graphics = bi.createGraphics();
 			Color rgb = new Color(0, 0, 0, 115);
@@ -47,7 +47,7 @@ public class Stack extends ItemInfo.Name implements GItem.OverlayInfo<Tex> {
 
 	public void drawoverlay(GOut g, Tex ol) {
 		if(show && ol!=null) {
-			g.aimage(ol, new Coord(g.sz().x - ol.sz().x, ol.sz().y), 0, 1);
+			g.aimage(ol, new Coord(0, g.sz().y - ol.sz().y), 0, 0);
 		}
 	}
 
