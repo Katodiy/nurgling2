@@ -4,13 +4,14 @@ import nurgling.actions.*;
 import nurgling.actions.bots.farmers.PumpkinFarmer;
 import nurgling.actions.bots.*;
 import nurgling.actions.bots.CarrotFarmerQ;
-import nurgling.actions.bots.silk.ArrangeSilkmothPairs;
+import nurgling.actions.bots.pickling.GlobalFreshFillingPhase;
 import nurgling.actions.bots.silk.RefillSilkwormFeedingCupboards;
 import nurgling.actions.bots.silk.SilkProductionBot;
 import nurgling.actions.bots.CollectSwillInArea;
 import nurgling.actions.bots.farmers.WheatFarmer;
 import nurgling.actions.bots.farmers.YellowOnionFarmer;
 import nurgling.actions.test.*;
+import nurgling.actions.bots.pickling.PicklingBot;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -68,6 +69,8 @@ public class BotRegistry {
         // Silk
         bots.add(new BotDescriptor("mulberry_leaf_refiller", BotDescriptor.BotType.PRODUCTIONS, "Refill silkworm cupboards with mulberry leafs", "Refill silkworm cupboards with mulberry leafs.", true, true, RefillSilkwormFeedingCupboards.class, "mulberry_leaf", false));
         bots.add(new BotDescriptor("silk_production", BotDescriptor.BotType.PRODUCTIONS, "Manages silk production starting at eggs all the way to silkworm cocoons.", "Silk cocoons production.", true, true, SilkProductionBot.class, "silkworm_cocoon", false));
+
+        bots.add(new BotDescriptor("pickling", BotDescriptor.BotType.PRODUCTIONS, "Pickling Bot", "Complete automated pickling system. Manages brine levels, fills jars with fresh vegetables, extracts ready pickled items, and maintains continuous production cycle.", true, true, PicklingBot.class, "pickle", true));
 
         // BATTLE
         bots.add(new BotDescriptor("reagro", BotDescriptor.BotType.BATTLE, "Reagro", "Reagros enemies.", true, true, Reagro.class, "reagro", false));
@@ -193,10 +196,10 @@ public class BotRegistry {
         bots.add(new BotDescriptor("test37", BotDescriptor.BotType.TOOLS, "Jar Filler With Beetroots", "Finds pickling jars with available space and fills them with beetroots from player inventory.", false, true, JarFillerWithBeetroots.class, "test37", false));
         bots.add(new BotDescriptor("test38", BotDescriptor.BotType.TOOLS, "Pickling Brine Filler", "Fills pickling jars with brine from nearby barrels. Takes multiple trips as needed.", false, true, PicklingBrineFiller.class, "test38", false));
 
-        bots.add(new BotDescriptor("test39", BotDescriptor.BotType.TOOLS, "Pickling Brine Filler", "Fills pickling jars with brine from nearby barrels. Takes multiple trips as needed.", false, true, GlobalBrinePhase.class, "test39", false));
+        bots.add(new BotDescriptor("test39", BotDescriptor.BotType.TOOLS, "Pickling Brine Filler", "Fills pickling jars with brine from nearby barrels. Takes multiple trips as needed.", false, true, nurgling.actions.bots.pickling.GlobalBrinePhase.class, "test39", false));
         bots.add(new BotDescriptor("test40", BotDescriptor.BotType.TOOLS, "Debug Container Contents", "Debug tool to see what items are actually in containers and test alias matching.", false, true, DebugContainerContents.class, "test40", false));
         bots.add(new BotDescriptor("test41", BotDescriptor.BotType.TOOLS, "Global Fresh Filling Phase", "Fills pickling jars with beetroots from vegetable storage area. Uses global phase processing for efficiency.", false, true, GlobalFreshFillingPhase.class, "test41", true));
-        bots.add(new BotDescriptor("test42", BotDescriptor.BotType.TOOLS, "Global Fresh Filling Phase", "Fills pickling jars with beetroots from vegetable storage area. Uses global phase processing for efficiency.", false, true, GlobalExtractionPhase.class, "test42", false));
+        bots.add(new BotDescriptor("test42", BotDescriptor.BotType.TOOLS, "Global Fresh Filling Phase", "Fills pickling jars with beetroots from vegetable storage area. Uses global phase processing for efficiency.", false, true, nurgling.actions.bots.pickling.GlobalExtractionPhase.class, "test42", false));
     }
 
     public static BotDescriptor byId(String id) {

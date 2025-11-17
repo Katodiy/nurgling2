@@ -1,4 +1,4 @@
-package nurgling.actions;
+package nurgling.actions.bots.pickling;
 
 import haven.Widget;
 import haven.WItem;
@@ -7,6 +7,7 @@ import nurgling.NGameUI;
 import nurgling.NInventory;
 import nurgling.NGItem;
 import nurgling.NUtils;
+import nurgling.actions.*;
 import nurgling.tasks.ISRemoved;
 import nurgling.tasks.NTask;
 import nurgling.tools.Container;
