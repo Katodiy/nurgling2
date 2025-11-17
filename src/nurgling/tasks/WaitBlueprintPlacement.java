@@ -8,7 +8,6 @@ public class WaitBlueprintPlacement extends NTask {
     
     public WaitBlueprintPlacement(BlueprintPlob blueprintPlob) {
         this.blueprintPlob = blueprintPlob;
-        System.out.println("[WaitBlueprintPlacement] Waiting for blueprint placement (click to place)...");
     }
     
     @Override
