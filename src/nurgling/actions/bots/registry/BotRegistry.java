@@ -11,6 +11,10 @@ import nurgling.actions.bots.CollectSwillInArea;
 import nurgling.actions.bots.farmers.WheatFarmer;
 import nurgling.actions.bots.farmers.YellowOnionFarmer;
 import nurgling.actions.test.*;
+import nurgling.actions.PicklingJarAnalyzer;
+import nurgling.actions.PicklingJarFinderAndLogger;
+import nurgling.actions.JarFillerWithBeetroots;
+import nurgling.actions.ReadyItemExtractor;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -186,6 +190,11 @@ public class BotRegistry {
         bots.add(new BotDescriptor("test10", BotDescriptor.BotType.TOOLS, "Test 10", "Debug test 10.", false, true, TESTGlobalPf.class, "test10", false));
         bots.add(new BotDescriptor("test11", BotDescriptor.BotType.TOOLS, "Test 11", "Debug test 11.", false, true, TESTGlobalPFCheckOrphans.class, "test11", false));
         bots.add(new BotDescriptor("test12", BotDescriptor.BotType.TOOLS, "Test 12", "Debug test 12.", false, true, TestBot.class, "test12", false));
+
+        // Pickling Research Utilities
+        bots.add(new BotDescriptor("test35", BotDescriptor.BotType.TOOLS, "Pickling Jar Analyzer", "Analyzes individual pickling jars for readiness and content data.", false, true, PicklingJarAnalyzer.class, "test35", false));
+        bots.add(new BotDescriptor("test36", BotDescriptor.BotType.TOOLS, "Pickling Jar Collector", "Finds containers with pickling jars and collects them to player inventory.", false, true, PicklingJarFinderAndLogger.class, "test36", false));
+        bots.add(new BotDescriptor("test37", BotDescriptor.BotType.TOOLS, "Jar Filler With Beetroots", "Finds pickling jars with available space and fills them with beetroots from player inventory.", false, true, JarFillerWithBeetroots.class, "test37", false));
 
     }
 
