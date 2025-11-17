@@ -202,7 +202,7 @@ public class GlobalBrinePhase implements Action {
     /**
      * Find jars needing brine in a specific container
      */
-    private ArrayList<WItem> findJarsNeedingBrineInContainer(NGameUI gui, Container container) {
+    private ArrayList<WItem> findJarsNeedingBrineInContainer(NGameUI gui, Container container) throws InterruptedException {
         ArrayList<WItem> jarsNeedingBrine = new ArrayList<>();
 
         NInventory inventory = gui.getInventory(container.cap);
@@ -210,20 +210,16 @@ public class GlobalBrinePhase implements Action {
             return jarsNeedingBrine;
         }
 
-        // Direct widget access to find pickling jars
-        Widget widget = inventory.child;
-        while (widget != null) {
-            if (widget instanceof WItem) {
-                WItem wItem = (WItem) widget;
-                if (isPicklingJar(wItem)) {
-                    double brineLevel = getBrineLevel(wItem);
-                    if (brineLevel < 1.0) {
-                        jarsNeedingBrine.add(wItem);
-                        System.out.println("    → Found jar needing brine: " + brineLevel + "L");
-                    }
-                }
+        // Now we can use getItems() since validateItem() fix allows pickling jars
+        NAlias picklingJarAlias = new NAlias("Pickling Jar");
+        ArrayList<WItem> allPicklingJars = inventory.getItems(picklingJarAlias);
+
+        for (WItem jar : allPicklingJars) {
+            double brineLevel = getBrineLevel(jar);
+            if (brineLevel < 1.0) {
+                jarsNeedingBrine.add(jar);
+                System.out.println("    → Found jar needing brine: " + brineLevel + "L");
             }
-            widget = widget.next;
         }
 
         return jarsNeedingBrine;
@@ -465,21 +461,10 @@ public class GlobalBrinePhase implements Action {
         }
     }
 
-    private ArrayList<WItem> findJarsInInventory(NInventory inventory) {
-        ArrayList<WItem> jars = new ArrayList<>();
-
-        Widget widget = inventory.child;
-        while (widget != null) {
-            if (widget instanceof WItem) {
-                WItem wItem = (WItem) widget;
-                if (isPicklingJar(wItem)) {
-                    jars.add(wItem);
-                }
-            }
-            widget = widget.next;
-        }
-
-        return jars;
+    private ArrayList<WItem> findJarsInInventory(NInventory inventory) throws InterruptedException {
+        // Now we can use getItems() since validateItem() fix allows pickling jars
+        NAlias picklingJarAlias = new NAlias("Pickling Jar");
+        return inventory.getItems(picklingJarAlias);
     }
 
     private ArrayList<Container> findAllContainers(NGameUI gui) {
