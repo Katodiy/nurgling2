@@ -178,16 +178,27 @@ public class Craft implements Action {
         if (for_craft <= 0) {
             return Results.ERROR("Not enough inventory space");
         }
-        
+
         for (NMakewindow.Spec s : mwnd.inputs) {
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
-                if(ncontext.workstation == null) {
+                if (ncontext.workstation == null) {
                     new TransferBarrelInWorkArea(ncontext, item).run(gui);
-                }
-                else if(ncontext.workstation.targetPoint == null)
-                {
-                    new TransferBarrelToWorkstation(ncontext, item).run(gui);
+                } else {
+                    boolean needsReposition = false;
+                    if (ncontext.workstation.targetPoint == null) {
+                        needsReposition = true;
+                    } else {
+                        Gob barrelAtPoint = ncontext.getBarrelInWorkArea(item);
+                        if (barrelAtPoint == null ||
+                                barrelAtPoint.rc.dist(ncontext.workstation.targetPoint.getCurrentCoord()) > 20) {
+                            needsReposition = true;
+                            ncontext.workstation.targetPoint = null;
+                        }
+                    }
+                    if (needsReposition) {
+                        new TransferBarrelToWorkstation(ncontext, item).run(gui);
+                    }
                 }
             } else {
                 if (!new TakeItems2(ncontext, s.ing == null ? s.name : s.ing.name, s.count * for_craft).run(gui).IsSuccess()) {
@@ -195,8 +206,6 @@ public class Craft implements Action {
                 }
             }
         }
-
-
 
         if (ncontext.workstation != null) {
             if (!new PrepareWorkStation(ncontext, ncontext.workstation.station).run(gui).IsSuccess()) {
