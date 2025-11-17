@@ -207,8 +207,6 @@ public class Craft implements Action {
             }
         }
 
-
-
         if (ncontext.workstation != null) {
             if (!new PrepareWorkStation(ncontext, ncontext.workstation.station).run(gui).IsSuccess()) {
                 return Results.ERROR("Failed to prepare workstation");
@@ -243,7 +241,6 @@ public class Craft implements Action {
             });
         }
         ArrayList<Window> windows = NUtils.getGameUI().getWindows("Barrel");
-        //if windows = hull - exception
         boolean hasEnoughResources = true;
         for (NMakewindow.Spec s : mwnd.inputs) {
             String item = s.ing == null ? s.name : s.ing.name;
