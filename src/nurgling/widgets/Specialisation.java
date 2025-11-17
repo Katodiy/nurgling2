@@ -159,7 +159,7 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.unbox.toString(),"Unbox Zone",Resource.loadsimg("nurgling/categories/unbox")));
 
         // pickling
-        specialisation.add(new SpecialisationItem(SpecName.picklingJars.toString(),"Pickling Jars",Resource.loadsimg("nurgling/categories/unbox")));
+        specialisation.add(new SpecialisationItem(SpecName.picklingJars.toString(),"Pickling Jars",Resource.loadsimg("nurgling/categories/picklingjar")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
