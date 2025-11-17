@@ -60,15 +60,6 @@ public class NBotsMenu extends Widget
             }
         }
 
-//        if (NUtils.getUI().core.debug) {
-//            NLayout tests = new NLayout("toolsNords");
-//            tests.elements.add(new NButton("nords1", new TestAction()));
-//            tests.elements.add(new NButton("nords2", new FillBucket())); //PiAction()
-//            tests.elements.add(new NButton("nords3", new FillJarWithVeges()));
-//            tests.elements.add(new NButton("nords3", new FillJarWithJuice()));
-//            addLayout(tests);
-//        }
-
         for (NLayout layout : layouts.values()) {
             if (!layout.elements.isEmpty())
                 addLayout(layout);

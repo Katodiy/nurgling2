@@ -168,7 +168,7 @@ public class SeedCrop implements Action {
 
         }
 
-        Area.Tile[][] tiles = area.getTiles(area, new NAlias("gfx/terobjs/moundbed"));
+        Area.Tile[][] tiles = area.getTiles(area, new NAlias("gfx/terobjs/moundbed", "gfx/terobjs/items/straw"));
         int count;
         int total = 0;
         count = 0;
@@ -204,13 +204,15 @@ public class SeedCrop implements Action {
                     }
                 }
             }
-//            int stacks_size = NUtils.getGameUI().getInventory().getTotalAmountItems(iseed);
-//            if(stacks_size >=20){
             int stacks_size = 0;
             if (!barrels.isEmpty()) {
                 stacks_size = NUtils.getGameUI().getInventory().getTotalAmountItems(iseed);
             } else {
                 stacks_size = NUtils.getGameUI().getInventory().getItems(iseed).size();
+            }
+
+            if(stacks_size >=20){
+                gui.msg("There is stack of les than 20 in inv!");
             }
 
             NUtils.getGameUI().getInventory().activateItem(iseed);

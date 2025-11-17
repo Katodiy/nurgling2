@@ -26,7 +26,8 @@ public class BotDescriptor {
         LIVESTOCK,
         UTILS,
         BUILD,
-        TOOLS
+        TOOLS,
+        NORDS
     }
 
     public BotDescriptor(String id, BotType type, String displayName,  String description, boolean allowedAsStepInScenario, boolean allowedAsItemInBotMenu, Class<? extends Action> clazz, String iconPath, boolean disStacks) {

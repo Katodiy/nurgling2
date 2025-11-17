@@ -9,6 +9,7 @@ import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.FindNInventory;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tasks.WaitItems;
@@ -27,7 +28,7 @@ public class PiAction implements Action {
         Gob player = NUtils.player();
         Coord current_coord = NUtils.toGC(player.rc);
 
-        NArea body = NArea.findSpec(Specialisation.SpecName.swamp.toString());
+        NArea body = NContext.findSpec(Specialisation.SpecName.swamp.toString());
 
         for (Gob drowned : Finder.findGobs(body, new NAlias("gfx/borka/body"))) {
             if(drowned == null || NParser.checkName(drowned.pose(), "gfx/borka/drowned")){

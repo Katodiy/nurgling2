@@ -7,6 +7,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.*;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
@@ -28,7 +29,7 @@ public class FillBucket implements Action {
         NArea.Specialisation barrels_s = new NArea.Specialisation(Specialisation.SpecName.barrel.toString(), "Picklebrine");
         if(barrels_s == null)
             return Results.ERROR("Barrels spec not found");
-        NArea area = NArea.findSpec(barrels_s);
+        NArea area = NContext.findSpec(barrels_s);
         if (bucket != null && area != null) {
             ArrayList<Gob> all_barrels = Finder.findGobs(area, new NAlias("barrel"));
             ArrayList<Gob> brine_barrels = new ArrayList<>();

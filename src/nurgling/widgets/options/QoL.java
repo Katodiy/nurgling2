@@ -208,19 +208,6 @@ public class QoL extends Panel {
         content.pack();
         scrollport.cont.update();
 
-        prev = add(new CheckBox("PF DEBUG") {
-            {
-                a = (Boolean) NConfig.get(NConfig.Key.pfdebug);
-            }
-
-            public void set(boolean val) {
-                NConfig.set(NConfig.Key.pfdebug, val);
-                NUtils.getUI().core.pfdebug = val;
-                a = val;
-            }
-
-        }, prev.pos("bl").adds(0, 5));
-
         pack();
     }
 
