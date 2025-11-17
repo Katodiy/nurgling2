@@ -91,6 +91,8 @@ public class GlobalFreshFillingPhase implements Action {
             // No artificial delay between cycles - let tasks handle timing
         }
 
+        new FreeInventory2(new NContext(gui)).run(gui);
+
         System.out.println("=== GLOBAL FRESH FILLING PHASE SUMMARY ===");
         System.out.println("Total cycles: " + (cycleNumber - 1));
         System.out.println("Total items filled: " + totalItemsFilled);
