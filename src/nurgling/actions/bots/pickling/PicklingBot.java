@@ -75,8 +75,6 @@ public class PicklingBot implements Action {
     }
 
     private boolean processVegetable(NGameUI gui, VegetableConfig vegetableConfig) throws InterruptedException {
-        NContext context = new NContext(gui);
-
         // Check if required areas exist
         NArea jarArea = NContext.findSpecGlobal(Specialisation.SpecName.picklingJars.toString(), vegetableConfig.subSpec);
 
@@ -88,7 +86,7 @@ public class PicklingBot implements Action {
         boolean processed = false;
 
         // Phase 1: Fill pickling jars with fresh inputs
-        Results fillResult = new GlobalFreshFillingPhase(jarArea, vegetableConfig).run(gui);
+        Results fillResult = new GlobalFreshFillingPhase(vegetableConfig).run(gui);
         if (fillResult.isSuccess) {
             processed = true;
         }
@@ -100,13 +98,13 @@ public class PicklingBot implements Action {
         }
 
         // Phase 3: Extract all ready items
-        Results extractResult = new GlobalExtractionPhase(jarArea, vegetableConfig).run(gui);
+        Results extractResult = new GlobalExtractionPhase(vegetableConfig).run(gui);
         if (extractResult.isSuccess) {
             processed = true;
         }
 
         // Phase 4: Fill pickling jars with fresh inputs again (to maximize utilization)
-        Results refillResult = new GlobalFreshFillingPhase(jarArea, vegetableConfig).run(gui);
+        Results refillResult = new GlobalFreshFillingPhase(vegetableConfig).run(gui);
         if (refillResult.isSuccess) {
             processed = true;
         }

@@ -20,11 +20,9 @@ import java.util.ArrayList;
 
 public class GlobalFreshFillingPhase implements Action {
 
-    private final NArea jarArea;
     private final PicklingBot.VegetableConfig vegetableConfig;
 
-    public GlobalFreshFillingPhase(NArea jarArea, PicklingBot.VegetableConfig vegetableConfig) {
-        this.jarArea = jarArea;
+    public GlobalFreshFillingPhase(PicklingBot.VegetableConfig vegetableConfig) {
         this.vegetableConfig = vegetableConfig;
     }
 
@@ -69,6 +67,7 @@ public class GlobalFreshFillingPhase implements Action {
         boolean anyJarsFilled = false;
 
         for (Container container : findAllContainers(jarArea)) {
+            new PathFinder(Finder.findGob(container.gobid)).run(gui);
             new OpenTargetContainer(container).run(gui);
             NInventory inventory = gui.getInventory(container.cap);
             if (inventory == null) continue;
@@ -124,6 +123,7 @@ public class GlobalFreshFillingPhase implements Action {
     private int countAvailableJarSpace(NGameUI gui, NArea jarArea) throws InterruptedException {
         int totalSpace = 0;
         for (Container container : findAllContainers(jarArea)) {
+            new PathFinder(Finder.findGob(container.gobid)).run(gui);
             new OpenTargetContainer(container).run(gui);
             NInventory inventory = gui.getInventory(container.cap);
             if (inventory != null) {

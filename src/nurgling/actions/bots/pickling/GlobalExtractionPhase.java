@@ -3,10 +3,8 @@ package nurgling.actions.bots.pickling;
 import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NInventory;
-import nurgling.NGItem;
 import nurgling.NUtils;
 import nurgling.actions.*;
-import nurgling.areas.NArea;
 import nurgling.tasks.ISRemoved;
 import nurgling.tasks.NTask;
 import nurgling.tools.Container;
@@ -19,11 +17,9 @@ import java.util.ArrayList;
 
 public class GlobalExtractionPhase implements Action {
 
-    private final NArea jarArea;
     private final PicklingBot.VegetableConfig vegetableConfig;
 
-    public GlobalExtractionPhase(NArea jarArea, PicklingBot.VegetableConfig vegetableConfig) {
-        this.jarArea = jarArea;
+    public GlobalExtractionPhase(PicklingBot.VegetableConfig vegetableConfig) {
         this.vegetableConfig = vegetableConfig;
     }
 
@@ -56,6 +52,7 @@ public class GlobalExtractionPhase implements Action {
         boolean anyItemsExtracted = false;
 
         for (Container container : findAllContainers(jarArea)) {
+            new PathFinder(Finder.findGob(container.gobid)).run(gui);
             new OpenTargetContainer(container).run(gui);
 
             boolean containerNeedsReprocessing;
@@ -75,6 +72,7 @@ public class GlobalExtractionPhase implements Action {
                         // Navigate back to jar area after dropping off items
                         NContext context = new NContext(gui);
                         context.getSpecArea(Specialisation.SpecName.picklingJars);
+                        new PathFinder(Finder.findGob(container.gobid)).run(gui);
                         new OpenTargetContainer(container).run(gui);
 
                         containerNeedsReprocessing = true;
@@ -117,6 +115,7 @@ public class GlobalExtractionPhase implements Action {
     private int countExtractableItems(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {
         int totalItems = 0;
         for (Container container : findAllContainers(jarArea)) {
+            new PathFinder(Finder.findGob(container.gobid)).run(gui);
             new OpenTargetContainer(container).run(gui);
             NInventory inventory = gui.getInventory(container.cap);
             if (inventory != null) {
