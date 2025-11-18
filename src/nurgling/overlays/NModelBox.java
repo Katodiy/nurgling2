@@ -171,14 +171,8 @@ public class NModelBox extends Sprite implements RenderTree.Node {
                     // Ignore removed slots
                 }
             }
-        } else {
-            // Just update materials without re-adding to slots
-            for (RenderTree.Node node : nodes) {
-                if (node instanceof HidePol) {
-                    ((HidePol) node).updateMaterials();
-                }
-            }
         }
+        // If not visible, materials will be initialized when box becomes visible
     }
 
     @Override
@@ -193,9 +187,7 @@ public class NModelBox extends Sprite implements RenderTree.Node {
                     isVisible = true;
                     for (RenderTree.Node n : nodes) {
                         try {
-                            if (n instanceof HidePol) {
-                                ((HidePol)n).updateMaterials();
-                            }
+                            // Materials are already initialized in HidePol constructor
                             slot.add(n);
                         } catch (RenderTree.SlotRemoved e) {
                             return true;
