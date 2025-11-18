@@ -133,6 +133,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     @Override
     public boolean tick(double dt)
     {
-        return true;
+        // Update overlay when remaining time changes
+        return !needUpdate();
     }
 }

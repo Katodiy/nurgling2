@@ -55,4 +55,20 @@ public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
     public void drawoverlay(GOut g, Tex ol) {
         g.aimage(ol, new Coord(g.sz().x - ol.sz().x, ol.sz().y), 0, 1);
     }
+
+    private double lastQuality = -1.0;
+    private boolean lastWithContent = false;
+    @Override
+    public boolean tick(double dt) {
+        // Check if quality or content state changed
+        boolean currentWithContent = ownitem != null && !ownitem.content().isEmpty();
+        double currentQuality = currentWithContent ? ownitem.content().get(0).quality() : q;
+        
+        if (lastQuality != currentQuality || lastWithContent != currentWithContent) {
+            lastQuality = currentQuality;
+            lastWithContent = currentWithContent;
+            return false; // Need to update overlay
+        }
+        return true; // No update needed
+    }
 }

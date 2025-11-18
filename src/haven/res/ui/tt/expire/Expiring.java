@@ -43,4 +43,15 @@ public class Expiring extends ItemInfo implements GItem.MeterInfo, GItem.Overlay
     public void drawoverlay(GOut g, Tex ol) {
         g.aimage(ol, new Coord(0, g.sz().y - ol.sz().y), 0, 0);
     }
+
+    private int lastPercent = -1;
+    @Override
+    public boolean tick(double dt) {
+        int currentPercent = (int)(meter() * 100);
+        if (lastPercent != currentPercent) {
+            lastPercent = currentPercent;
+            return false; // Need to update overlay
+        }
+        return true; // No update needed
+    }
 }

@@ -17,11 +17,16 @@ public class NWItem extends WItem
     public void tick(double dt)
     {
         super.tick(dt);
+        // Update overlays only when their tick() method indicates a change is needed
         GItem.InfoOverlay<Tex>[] ols = (GItem.InfoOverlay<Tex>[]) getItemols().get();
         if(ols != null) {
-            for(GItem.InfoOverlay<Tex> ol : ols)
-                if (!ol.inf.tick(dt))
+            for(GItem.InfoOverlay<Tex> ol : ols) {
+                // tick() returns false when overlay needs to be updated
+                // Only recreate texture when actually needed
+                if (!ol.inf.tick(dt)) {
                     ol.data = ol.inf.overlay();
+                }
+            }
         }
         
         search();

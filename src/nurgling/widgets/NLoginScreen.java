@@ -63,7 +63,10 @@ public class NLoginScreen extends LoginScreen
                 }
                 FileOutputStream fos = null;
                 fos = new FileOutputStream("tmp_ver");
-                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                if(rbc!=null)
+                    fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                else
+                    return;
                 BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get("tmp_ver")), StandardCharsets.UTF_8));
                 String line = reader.readLine();
                 reader.close();
