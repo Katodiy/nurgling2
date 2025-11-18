@@ -100,6 +100,15 @@ public class GetItems extends NTask
                 } else {
                     if (name == null || NParser.checkName(((NGItem)item.item).name(), name)) {
                         if (item.item.contents != null) {
+                            // Special case: pickling jars should be added to results even though they have contents
+                            String resourceName = ((NGItem) item.item).res != null ? ((NGItem) item.item).res.get().name : null;
+                            if (resourceName != null && resourceName.contains("gfx/invobjs/picklingjar")) {
+                                if (th == 1)
+                                    result.add(item);
+                                else if ((((NGItem) item.item).quality) != null && ((quality == QualityType.High || quality == null) && ((NGItem) item.item).quality >= th) || (quality == QualityType.Low && ((NGItem) item.item).quality <= th))
+                                    result.add(item);
+                            }
+
                             if(checkContainer(item.item.contents.child))
                                 return true;
                         }
