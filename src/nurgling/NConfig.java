@@ -107,7 +107,15 @@ public class NConfig
         preferredHorseSpeed,
         uiOpacity,
         useSolidBackground,
-        windowBackgroundColor
+        windowBackgroundColor,
+        picklingBeetroots,
+        picklingCarrots,
+        picklingEggs,
+        picklingHerring,
+        picklingOlives,
+        picklingCucumbers,
+        picklingRedOnion,
+        picklingYellowOnion
     }
 
 
@@ -276,6 +284,16 @@ public class NConfig
         conf.put(Key.uiOpacity, 1.0f);  // Default to fully opaque
         conf.put(Key.useSolidBackground, false);  // Default to texture mode
         conf.put(Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));  // Default dark gray
+
+        // Pickling settings
+        conf.put(Key.picklingBeetroots, true);
+        conf.put(Key.picklingCarrots, true);
+        conf.put(Key.picklingEggs, true);
+        conf.put(Key.picklingHerring, true);
+        conf.put(Key.picklingOlives, true);
+        conf.put(Key.picklingCucumbers, true);
+        conf.put(Key.picklingRedOnion, true);
+        conf.put(Key.picklingYellowOnion, true);
     }
 
 

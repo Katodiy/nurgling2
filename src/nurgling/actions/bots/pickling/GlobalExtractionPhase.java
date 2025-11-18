@@ -81,7 +81,7 @@ public class GlobalExtractionPhase implements Action {
         if (jar.item.contents == null) return;
 
         NInventory jarInventory = (NInventory) jar.item.contents;
-        ArrayList<WItem> beetroots = jarInventory.getItems(new NAlias("Beetroot"));
+        ArrayList<WItem> beetroots = jarInventory.getItems(new NAlias("pickledbeetroot"));
 
         for (WItem beetroot : beetroots) {
             if (isInventoryFull(gui)) break;
