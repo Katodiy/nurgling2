@@ -1,6 +1,5 @@
 package nurgling.actions.bots.pickling;
 
-import haven.Widget;
 import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.NInventory;
@@ -82,7 +81,7 @@ public class GlobalExtractionPhase implements Action {
         if (jar.item.contents == null) return;
 
         NInventory jarInventory = (NInventory) jar.item.contents;
-        ArrayList<WItem> beetroots = findBeetroots(jarInventory);
+        ArrayList<WItem> beetroots = jarInventory.getItems(new NAlias("Beetroot"));
 
         for (WItem beetroot : beetroots) {
             if (isInventoryFull(gui)) break;
@@ -106,7 +105,7 @@ public class GlobalExtractionPhase implements Action {
                         }
                     });
                     if (jar.item.contents != null) {
-                        totalItems += findBeetroots((NInventory) jar.item.contents).size();
+                        totalItems += ((NInventory) jar.item.contents).getItems(new NAlias("Beetroot")).size();
                     }
                 }
             }
@@ -115,29 +114,6 @@ public class GlobalExtractionPhase implements Action {
         return totalItems;
     }
 
-    private ArrayList<WItem> findBeetroots(NInventory inventory) {
-        ArrayList<WItem> beetroots = new ArrayList<>();
-        Widget widget = inventory.child;
-        while (widget != null) {
-            if (widget instanceof WItem) {
-                WItem item = (WItem) widget;
-                if (isBeetroot(item)) {
-                    beetroots.add(item);
-                }
-            }
-            widget = widget.next;
-        }
-        return beetroots;
-    }
-
-    private boolean isBeetroot(WItem item) {
-        if (item == null || item.item == null) return false;
-        NGItem ngItem = (NGItem) item.item;
-        String name = ngItem.name();
-        String resource = ngItem.res != null ? ngItem.res.get().name : null;
-        return (name != null && name.toLowerCase().contains("beetroot")) ||
-               (resource != null && resource.contains("gfx/invobjs/beet"));
-    }
 
     private boolean isInventoryFull(NGameUI gui) throws InterruptedException {
         return gui.getInventory().getNumberFreeCoord(haven.Coord.of(1, 1)) <= 2;
