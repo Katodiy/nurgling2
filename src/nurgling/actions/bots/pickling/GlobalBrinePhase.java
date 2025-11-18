@@ -29,6 +29,8 @@ public class GlobalBrinePhase implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        boolean workDone = false;
+
         while (true) {
             NContext context = new NContext(gui);
             nurgling.areas.NArea jarArea = context.getSpecArea(Specialisation.SpecName.picklingJars, vegetableConfig.subSpec);
@@ -53,13 +55,15 @@ public class GlobalBrinePhase implements Action {
 
             // If no valid barrel found, skip filling but continue (graceful degradation)
             if (validBarrel != null) {
-                fillJarsAtBarrel(gui, barrels, validBarrel);
+                if (fillJarsAtBarrel(gui, barrels, validBarrel)) {
+                    workDone = true;
+                }
             }
 
             context.getSpecArea(Specialisation.SpecName.picklingJars, vegetableConfig.subSpec);
             returnJarsToContainers(gui, jarArea);
         }
-        return Results.SUCCESS();
+        return workDone ? Results.SUCCESS() : Results.FAIL();
     }
 
     private boolean collectJarsNeedingBrine(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {
@@ -89,12 +93,13 @@ public class GlobalBrinePhase implements Action {
         return jarsCollected > 0;
     }
 
-    private void fillJarsAtBarrel(NGameUI gui, ArrayList<haven.Gob> barrels, haven.Gob currentBarrel) throws InterruptedException {
+    private boolean fillJarsAtBarrel(NGameUI gui, ArrayList<haven.Gob> barrels, haven.Gob currentBarrel) throws InterruptedException {
         new nurgling.actions.PathFinder(currentBarrel).run(gui);
 
         NInventory playerInventory = gui.getInventory();
         ArrayList<WItem> jars = playerInventory.getItems(new NAlias("Pickling Jar"));
 
+        boolean anyJarsFilled = false;
         haven.Gob activeBarrel = currentBarrel;
         for (WItem jar : jars) {
             if (getBrineLevel(jar) >= 1.0) continue;
@@ -121,11 +126,15 @@ public class GlobalBrinePhase implements Action {
             }
 
             double originalBrineLevel = getBrineLevel(jar);
-            if (!fillSingleJar(gui, activeBarrel, originalBrineLevel)) {
+            if (fillSingleJar(gui, activeBarrel, originalBrineLevel)) {
+                anyJarsFilled = true;
+            } else {
                 // Barrel ran out during this jar, mark it as empty for next iteration
                 activeBarrel = null;
             }
         }
+
+        return anyJarsFilled;
     }
 
     private boolean fillSingleJar(NGameUI gui, haven.Gob barrel, double originalBrineLevel) throws InterruptedException {

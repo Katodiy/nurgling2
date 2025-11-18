@@ -43,27 +43,22 @@ public class PicklingBot implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        while (true) {
-            List<VegetableConfig> enabledVegetables = getEnabledVegetables();
-            if (enabledVegetables.isEmpty()) {
-                NUtils.getGameUI().msg("No vegetables enabled for pickling. Check Pickling Settings.");
-                return Results.SUCCESS();
-            }
+        List<VegetableConfig> enabledVegetables = getEnabledVegetables();
+        if (enabledVegetables.isEmpty()) {
+            NUtils.getGameUI().msg("No vegetables enabled for pickling. Check Pickling Settings.");
+            return Results.SUCCESS();
+        }
 
-            boolean anyProcessed = false;
+        boolean anyProcessed = false;
 
-            // Process each enabled vegetable individually
-            for (VegetableConfig vegetableConfig : enabledVegetables) {
-                if (processVegetable(gui, vegetableConfig)) {
-                    anyProcessed = true;
-                }
-            }
-
-            if (!anyProcessed) {
-                break;
+        // Process each enabled vegetable individually
+        for (VegetableConfig vegetableConfig : enabledVegetables) {
+            if (processVegetable(gui, vegetableConfig)) {
+                anyProcessed = true;
             }
         }
-        return Results.SUCCESS();
+
+        return anyProcessed ? Results.SUCCESS() : Results.FAIL();
     }
 
     private List<VegetableConfig> getEnabledVegetables() {

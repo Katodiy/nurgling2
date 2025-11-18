@@ -29,6 +29,8 @@ public class GlobalExtractionPhase implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        boolean workDone = false;
+
         while (true) {
             NContext context = new NContext(gui);
             nurgling.areas.NArea jarArea = context.getSpecArea(Specialisation.SpecName.picklingJars, vegetableConfig.subSpec);
@@ -37,7 +39,9 @@ public class GlobalExtractionPhase implements Action {
             int extractableItems = countExtractableItems(gui, jarArea);
             if (extractableItems == 0) break;
 
-            extractFromJars(gui, jarArea);
+            if (extractFromJars(gui, jarArea)) {
+                workDone = true;
+            }
 
             if (isInventoryFull(gui)) {
                 new FreeInventory2(new NContext(gui)).run(gui);
@@ -45,10 +49,12 @@ public class GlobalExtractionPhase implements Action {
         }
 
         new FreeInventory2(new NContext(gui)).run(gui);
-        return Results.SUCCESS();
+        return workDone ? Results.SUCCESS() : Results.FAIL();
     }
 
-    private void extractFromJars(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {
+    private boolean extractFromJars(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {
+        boolean anyItemsExtracted = false;
+
         for (Container container : findAllContainers(jarArea)) {
             new OpenTargetContainer(container).run(gui);
 
@@ -60,7 +66,9 @@ public class GlobalExtractionPhase implements Action {
 
                 ArrayList<WItem> jars = inventory.getItems(new NAlias("Pickling Jar"));
                 for (WItem jar : jars) {
-                    extractFromSingleJar(gui, jar);
+                    if (extractFromSingleJar(gui, jar)) {
+                        anyItemsExtracted = true;
+                    }
                     if (isInventoryFull(gui)) {
                         new CloseTargetContainer(container).run(gui);
                         new FreeInventory2(new NContext(gui)).run(gui);
@@ -77,9 +85,11 @@ public class GlobalExtractionPhase implements Action {
 
             new CloseTargetContainer(container).run(gui);
         }
+
+        return anyItemsExtracted;
     }
 
-    private void extractFromSingleJar(NGameUI gui, WItem jar) throws InterruptedException {
+    private boolean extractFromSingleJar(NGameUI gui, WItem jar) throws InterruptedException {
         NUtils.addTask(new NTask() {
             @Override
             public boolean check() {
@@ -87,17 +97,21 @@ public class GlobalExtractionPhase implements Action {
             }
         });
 
-        if (jar.item.contents == null) return;
+        if (jar.item.contents == null) return false;
 
         NInventory jarInventory = (NInventory) jar.item.contents;
         ArrayList<WItem> pickledItems = jarInventory.getItems(new NAlias(vegetableConfig.pickledAlias));
 
+        boolean itemsExtracted = false;
         for (WItem pickledItem : pickledItems) {
             if (isInventoryFull(gui)) break;
 
             pickledItem.item.wdgmsg("transfer", haven.Coord.z);
             NUtils.addTask(new ISRemoved(pickledItem.item.wdgid()));
+            itemsExtracted = true;
         }
+
+        return itemsExtracted;
     }
 
     private int countExtractableItems(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {

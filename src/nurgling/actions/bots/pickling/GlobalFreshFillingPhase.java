@@ -30,6 +30,8 @@ public class GlobalFreshFillingPhase implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        boolean workDone = false;
+
         while (true) {
             NContext context = new NContext(gui);
             nurgling.areas.NArea jarArea = context.getSpecArea(Specialisation.SpecName.picklingJars, vegetableConfig.subSpec);
@@ -40,11 +42,13 @@ public class GlobalFreshFillingPhase implements Action {
 
             if (!collectVegetables(gui)) break;
 
-            fillJars(gui, jarArea);
+            if (fillJars(gui, jarArea)) {
+                workDone = true;
+            }
         }
 
         new FreeInventory2(new NContext(gui)).run(gui);
-        return Results.SUCCESS();
+        return workDone ? Results.SUCCESS() : Results.FAIL();
     }
 
     private boolean collectVegetables(NGameUI gui) throws InterruptedException {
@@ -61,7 +65,9 @@ public class GlobalFreshFillingPhase implements Action {
         return !gui.getInventory().getItems(new NAlias(vegetableConfig.freshAlias)).isEmpty();
     }
 
-    private void fillJars(NGameUI gui, NArea jarArea) throws InterruptedException {
+    private boolean fillJars(NGameUI gui, NArea jarArea) throws InterruptedException {
+        boolean anyJarsFilled = false;
+
         for (Container container : findAllContainers(jarArea)) {
             new OpenTargetContainer(container).run(gui);
             NInventory inventory = gui.getInventory(container.cap);
@@ -70,15 +76,19 @@ public class GlobalFreshFillingPhase implements Action {
             ArrayList<WItem> jars = inventory.getItems(new NAlias("Pickling Jar"));
             for (WItem jar : jars) {
                 if (getBrineLevel(jar) > 1.5) continue;
-                fillSingleJar(gui, jar);
+                if (fillSingleJar(gui, jar)) {
+                    anyJarsFilled = true;
+                }
                 if (countVegetables(gui) == 0) break;
             }
 
             new CloseTargetContainer(container).run(gui);
         }
+
+        return anyJarsFilled;
     }
 
-    private void fillSingleJar(NGameUI gui, WItem jar) throws InterruptedException {
+    private boolean fillSingleJar(NGameUI gui, WItem jar) throws InterruptedException {
         NUtils.addTask(new NTask() {
             @Override
             public boolean check() {
@@ -86,12 +96,13 @@ public class GlobalFreshFillingPhase implements Action {
             }
         });
 
-        if (jar.item.contents == null) return;
+        if (jar.item.contents == null) return false;
 
         NInventory jarInventory = (NInventory) jar.item.contents;
         int availableSpace = jarInventory.getNumberFreeCoord(haven.Coord.of(1, 1));
-        if (availableSpace <= 0) return;
+        if (availableSpace <= 0) return false;
 
+        boolean itemsAdded = false;
         for (int i = 0; i < availableSpace; i++) {
             ArrayList<WItem> vegetables = findVegetables(gui.getInventory());
             if (vegetables.isEmpty()) break;
@@ -104,7 +115,10 @@ public class GlobalFreshFillingPhase implements Action {
             }
 
             NUtils.addTask(new ISRemoved(vegetable.item.wdgid()));
+            itemsAdded = true;
         }
+
+        return itemsAdded;
     }
 
     private int countAvailableJarSpace(NGameUI gui, NArea jarArea) throws InterruptedException {
