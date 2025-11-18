@@ -6,6 +6,7 @@ import nurgling.NInventory;
 import nurgling.NGItem;
 import nurgling.NUtils;
 import nurgling.actions.*;
+import nurgling.areas.NArea;
 import nurgling.tasks.ISRemoved;
 import nurgling.tasks.NTask;
 import nurgling.tools.Container;
@@ -18,11 +19,19 @@ import java.util.ArrayList;
 
 public class GlobalExtractionPhase implements Action {
 
+    private final NArea jarArea;
+    private final PicklingBot.VegetableConfig vegetableConfig;
+
+    public GlobalExtractionPhase(NArea jarArea, PicklingBot.VegetableConfig vegetableConfig) {
+        this.jarArea = jarArea;
+        this.vegetableConfig = vegetableConfig;
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         while (true) {
             NContext context = new NContext(gui);
-            nurgling.areas.NArea jarArea = context.getSpecArea(Specialisation.SpecName.picklingJars);
+            nurgling.areas.NArea jarArea = context.getSpecArea(Specialisation.SpecName.picklingJars, vegetableConfig.subSpec);
             if (jarArea == null) return Results.FAIL();
 
             int extractableItems = countExtractableItems(gui, jarArea);
@@ -81,13 +90,13 @@ public class GlobalExtractionPhase implements Action {
         if (jar.item.contents == null) return;
 
         NInventory jarInventory = (NInventory) jar.item.contents;
-        ArrayList<WItem> beetroots = jarInventory.getItems(new NAlias("pickledbeetroot"));
+        ArrayList<WItem> pickledItems = jarInventory.getItems(new NAlias(vegetableConfig.pickledAlias));
 
-        for (WItem beetroot : beetroots) {
+        for (WItem pickledItem : pickledItems) {
             if (isInventoryFull(gui)) break;
 
-            beetroot.item.wdgmsg("transfer", haven.Coord.z);
-            NUtils.addTask(new ISRemoved(beetroot.item.wdgid()));
+            pickledItem.item.wdgmsg("transfer", haven.Coord.z);
+            NUtils.addTask(new ISRemoved(pickledItem.item.wdgid()));
         }
     }
 
@@ -105,7 +114,7 @@ public class GlobalExtractionPhase implements Action {
                         }
                     });
                     if (jar.item.contents != null) {
-                        totalItems += ((NInventory) jar.item.contents).getItems(new NAlias("Beetroot")).size();
+                        totalItems += ((NInventory) jar.item.contents).getItems(new NAlias(vegetableConfig.pickledAlias)).size();
                     }
                 }
             }

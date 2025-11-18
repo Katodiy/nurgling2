@@ -21,11 +21,17 @@ import java.util.ArrayList;
 
 public class GlobalBrinePhase implements Action {
 
+    private final PicklingBot.VegetableConfig vegetableConfig;
+
+    public GlobalBrinePhase(PicklingBot.VegetableConfig vegetableConfig) {
+        this.vegetableConfig = vegetableConfig;
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         while (true) {
             NContext context = new NContext(gui);
-            nurgling.areas.NArea jarArea = context.getSpecArea(Specialisation.SpecName.picklingJars);
+            nurgling.areas.NArea jarArea = context.getSpecArea(Specialisation.SpecName.picklingJars, vegetableConfig.subSpec);
             if (jarArea == null) return Results.FAIL();
 
             if (!collectJarsNeedingBrine(gui, jarArea)) break;
@@ -50,7 +56,7 @@ public class GlobalBrinePhase implements Action {
                 fillJarsAtBarrel(gui, barrels, validBarrel);
             }
 
-            context.getSpecArea(Specialisation.SpecName.picklingJars);
+            context.getSpecArea(Specialisation.SpecName.picklingJars, vegetableConfig.subSpec);
             returnJarsToContainers(gui, jarArea);
         }
         return Results.SUCCESS();
