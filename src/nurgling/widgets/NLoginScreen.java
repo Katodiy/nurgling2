@@ -49,55 +49,74 @@ public class NLoginScreen extends LoginScreen
                 loginItems.add(new NLoginDataItem(item));
             }
         }
+        // Check for version updates - failures are silently ignored
         try
         {
             if (new File("ver").exists())
             {
                 URL upd_url = new URL((String) Objects.requireNonNull(NConfig.get(NConfig.Key.baseurl)));
                 ReadableByteChannel rbc = null;
-                try {
-                    rbc = Channels.newChannel(upd_url.openStream());
-                }
-                catch (Exception ignored)
-                {
-                }
                 FileOutputStream fos = null;
-                fos = new FileOutputStream("tmp_ver");
-                if(rbc!=null)
+                BufferedReader reader = null;
+                BufferedReader reader2 = null;
+                
+                try {
+                    // Attempt to download version file
+                    rbc = Channels.newChannel(upd_url.openStream());
+                    
+                    // Check if channel was successfully created before proceeding
+                    if(rbc == null) {
+                        return; // Silently skip version check if update URL is unavailable
+                    }
+                    
+                    fos = new FileOutputStream("tmp_ver");
                     fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-                else
-                    return;
-                BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get("tmp_ver")), StandardCharsets.UTF_8));
-                String line = reader.readLine();
-                reader.close();
-                BufferedReader reader2 = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get("ver")), StandardCharsets.UTF_8));
-                String line2 = reader2.readLine();
-                reader2.close();
-                if (!line2.contains(line))
-                {
-                    Window win = adda(new Window(new Coord(UI.scale(150, 40)), "Attention")
+                    fos.close();
+                    
+                    // Read remote version
+                    reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get("tmp_ver")), StandardCharsets.UTF_8));
+                    String line = reader.readLine();
+                    reader.close();
+                    
+                    // Read local version
+                    reader2 = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get("ver")), StandardCharsets.UTF_8));
+                    String line2 = reader2.readLine();
+                    reader2.close();
+                    
+                    // Compare versions
+                    if (line != null && line2 != null && !line2.contains(line))
                     {
-                        @Override
-                        public void wdgmsg(String msg, Object... args)
+                        Window win = adda(new Window(new Coord(UI.scale(150, 40)), "Attention")
                         {
-                            if (msg.equals("close"))
+                            @Override
+                            public void wdgmsg(String msg, Object... args)
                             {
-                                hide();
+                                if (msg.equals("close"))
+                                {
+                                    hide();
+                                }
+                                else
+                                {
+                                    super.wdgmsg(msg, args);
+                                }
                             }
-                            else
-                            {
-                                super.wdgmsg(msg, args);
-                            }
-                        }
-                    }, bgc.x, bg.sz().y / 8, 0.5, 0.5);
+                        }, bgc.x, bg.sz().y / 8, 0.5, 0.5);
 
-                    win.add(new Label("New version available!"));
+                        win.add(new Label("New version available!"));
+                    }
+                } finally {
+                    // Ensure all resources are properly closed
+                    try { if (rbc != null) rbc.close(); } catch (IOException ignored) {}
+                    try { if (fos != null) fos.close(); } catch (IOException ignored) {}
+                    try { if (reader != null) reader.close(); } catch (IOException ignored) {}
+                    try { if (reader2 != null) reader2.close(); } catch (IOException ignored) {}
                 }
             }
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            throw new RuntimeException(e);
+            // Silently ignore all version check errors to prevent login screen crashes
+            System.err.println("[NLoginScreen] Version check failed: " + e.getMessage());
         }
     }
 
