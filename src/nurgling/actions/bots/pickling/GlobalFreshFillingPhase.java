@@ -53,7 +53,7 @@ public class GlobalFreshFillingPhase implements Action {
         NContext context = new NContext(gui);
         context.addInItem(vegetableConfig.freshAlias, null);
 
-        int maxItems = gui.getInventory().getNumberFreeCoord(haven.Coord.of(1, 1));
+        int maxItems = gui.getInventory().getNumberFreeCoord(vegetableConfig.itemSize);
         if (maxItems <= 0) return false;
 
         Results result = new TakeItems2(context, vegetableConfig.freshAlias, maxItems).run(gui);
@@ -98,7 +98,7 @@ public class GlobalFreshFillingPhase implements Action {
         if (jar.item.contents == null) return false;
 
         NInventory jarInventory = (NInventory) jar.item.contents;
-        int availableSpace = jarInventory.getNumberFreeCoord(haven.Coord.of(1, 1));
+        int availableSpace = jarInventory.getNumberFreeCoord(vegetableConfig.itemSize);
         if (availableSpace <= 0) return false;
 
         boolean itemsAdded = false;
@@ -136,7 +136,7 @@ public class GlobalFreshFillingPhase implements Action {
                             }
                         });
                         if (jar.item.contents != null) {
-                            totalSpace += ((NInventory) jar.item.contents).getNumberFreeCoord(haven.Coord.of(1, 1));
+                            totalSpace += ((NInventory) jar.item.contents).getNumberFreeCoord(vegetableConfig.itemSize);
                         }
                     }
                 }

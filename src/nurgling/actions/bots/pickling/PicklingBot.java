@@ -19,25 +19,27 @@ public class PicklingBot implements Action {
     private static final Map<NConfig.Key, VegetableConfig> VEGETABLE_CONFIGS = new HashMap<>();
 
     static {
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingBeetroots, new VegetableConfig("Beetroots", "Beetroot", "Pickled Beetroot"));
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingCarrots, new VegetableConfig("Carrots", "Carrot", "Pickled Carrot"));
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingEggs, new VegetableConfig("Eggs", "Egg", "Pickled Egg"));
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingHerring, new VegetableConfig("Herring", "Herring", "Pickled Herring"));
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingOlives, new VegetableConfig("Olives", "Olive", "Pickled Olive"));
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingCucumbers, new VegetableConfig("Cucumbers", "Cucumber", "Pickled Cucumber"));
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingRedOnion, new VegetableConfig("Red Onion", "Red Onion", "Pickled Onion"));
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingYellowOnion, new VegetableConfig("Yellow Onion", "Yellow Onion", "Pickled Onion"));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingBeetroots, new VegetableConfig("Beetroots", "Beetroot", "Pickled Beetroot", haven.Coord.of(1, 1)));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingCarrots, new VegetableConfig("Carrots", "Carrot", "Pickled Carrot", haven.Coord.of(1, 1)));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingEggs, new VegetableConfig("Eggs", "Egg", "Pickled Egg", haven.Coord.of(1, 1)));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingHerring, new VegetableConfig("Herring", "Herring", "Pickled Herring", haven.Coord.of(1, 1)));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingOlives, new VegetableConfig("Olives", "Olive", "Pickled Olive", haven.Coord.of(1, 1)));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingCucumbers, new VegetableConfig("Cucumbers", "Cucumber", "Pickled Cucumber", haven.Coord.of(2, 1)));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingRedOnion, new VegetableConfig("Red Onion", "Red Onion", "Pickled Onion", haven.Coord.of(1, 1)));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingYellowOnion, new VegetableConfig("Yellow Onion", "Yellow Onion", "Pickled Onion", haven.Coord.of(1, 1)));
     }
 
     public static class VegetableConfig {
         public final String subSpec;
         public final String freshAlias;
         public final String pickledAlias;
+        public final haven.Coord itemSize;
 
-        public VegetableConfig(String subSpec, String freshAlias, String pickledAlias) {
+        public VegetableConfig(String subSpec, String freshAlias, String pickledAlias, haven.Coord itemSize) {
             this.subSpec = subSpec;
             this.freshAlias = freshAlias;
             this.pickledAlias = pickledAlias;
+            this.itemSize = itemSize;
         }
     }
 
