@@ -16,7 +16,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.List;
 
-public class TreeGardenBlueprintWidget extends Window
+public class BlueprintWidget extends Window
 {
     private int gridWidth = 20;
     private int gridHeight = 20;
@@ -31,6 +31,7 @@ public class TreeGardenBlueprintWidget extends Window
     private Dropbox<String> blueprintSelector;
     private TextEntry widthEntry;
     private TextEntry heightEntry;
+    private static final Map<String, BufferedImage> iconCache = new HashMap<>();
     
     private static class BlueprintData {
         int width;
@@ -136,8 +137,8 @@ public class TreeGardenBlueprintWidget extends Window
         new TreeDef("gfx/terobjs/mm/trees/zelkova", "Zelkova")
     );
 
-    public TreeGardenBlueprintWidget() {
-        super(UI.scale(new Coord(800, 600)), "Tree Garden Blueprint");
+    public BlueprintWidget() {
+        super(UI.scale(new Coord(800, 600)), "Blueprint Manager");
         
         // Load blueprints from file only once
         if (!blueprintsLoaded) {
@@ -543,15 +544,11 @@ public class TreeGardenBlueprintWidget extends Window
         if (draggingTree != null) {
             ui.drawafter(new UI.AfterDraw() {
                 public void draw(GOut g) {
-                    try {
-                        Resource res = Resource.remote().loadwait(draggingTree.resName);
-                        Resource.Image img = res.layer(Resource.imgc);
-                        if (img != null) {
-                            BufferedImage icon = PUtils.convolvedown(img.img, new Coord(UI.scale(32), UI.scale(32)), CharWnd.iconfilter);
-                            Coord hsz = new Coord(icon.getWidth() / 2, icon.getHeight() / 2);
-                            g.image(icon, ui.mc.sub(hsz));
-                        }
-                    } catch (Exception e) {
+                    BufferedImage icon = loadTreeIcon(draggingTree.resName);
+                    if (icon != null) {
+                        Coord hsz = new Coord(icon.getWidth() / 2, icon.getHeight() / 2);
+                        g.image(icon, ui.mc.sub(hsz));
+                    } else {
                         g.chcolor(new Color(34, 139, 34, 180));
                         g.frect(ui.mc.sub(UI.scale(16), UI.scale(16)), UI.scale(new Coord(32, 32)));
                         g.chcolor();
@@ -568,6 +565,25 @@ public class TreeGardenBlueprintWidget extends Window
             return (parts[0].charAt(0) + "" + parts[1].charAt(0)).toUpperCase();
         }
         return treeName.substring(0, Math.min(2, treeName.length())).toUpperCase();
+    }
+    
+    private static BufferedImage loadTreeIcon(String resName) {
+        if (iconCache.containsKey(resName)) {
+            return iconCache.get(resName);
+        }
+        
+        try {
+            Resource res = Resource.remote().loadwait(resName);
+            Resource.Image img = res.layer(Resource.imgc);
+            if (img != null) {
+                BufferedImage icon = PUtils.convolvedown(img.img, new Coord(UI.scale(32), UI.scale(32)), CharWnd.iconfilter);
+                iconCache.put(resName, icon);
+                return icon;
+            }
+        } catch (Exception e) {
+            // Failed to load, return null
+        }
+        return null;
     }
     
     private class TreeListPanel extends SListBox<TreeItem, Widget> implements DTarget {
@@ -591,15 +607,9 @@ public class TreeGardenBlueprintWidget extends Window
         protected Widget makeitem(TreeItem item, int idx, Coord sz) {
             return new ItemWidget<TreeItem>(this, sz, item) {
                 {
-                    try {
-                        Resource res = Resource.remote().loadwait(item.resName);
-                        Resource.Image img = res.layer(Resource.imgc);
-                        if (img != null) {
-                            BufferedImage scaled = PUtils.convolvedown(img.img, new Coord(UI.scale(32), UI.scale(32)), CharWnd.iconfilter);
-                            add(new GobIcon(scaled), new Coord(UI.scale(2), (sz.y - UI.scale(32)) / 2));
-                        }
-                    } catch (Exception e) {
-                        // Fallback if icon loading fails
+                    BufferedImage icon = loadTreeIcon(item.resName);
+                    if (icon != null) {
+                        add(new GobIcon(icon), new Coord(UI.scale(2), (sz.y - UI.scale(32)) / 2));
                     }
                     add(new Label(item.displayName), new Coord(UI.scale(36), (sz.y - UI.scale(15)) / 2));
                 }
@@ -950,19 +960,20 @@ public class TreeGardenBlueprintWidget extends Window
                 Coord cell = entry.getKey();
                 String treeResName = entry.getValue();
                 
+                // Skip if cell is outside visible area
+                if (cell.x < startX || cell.x >= endX || cell.y < startY || cell.y >= endY) {
+                    continue;
+                }
+                
                 int px = cell.x * cellSize;
                 int py = cell.y * cellSize;
                 
-                try {
-                    Resource res = Resource.remote().loadwait(treeResName);
-                    Resource.Image img = res.layer(Resource.imgc);
-                    if (img != null) {
-                        BufferedImage icon = PUtils.convolvedown(img.img, new Coord(UI.scale(32), UI.scale(32)), CharWnd.iconfilter);
-                        int iconW = icon.getWidth();
-                        int iconH = icon.getHeight();
-                        g.image(icon, new Coord(px + (cellSize - iconW) / 2, py + (cellSize - iconH) / 2));
-                    }
-                } catch (Exception e) {
+                BufferedImage icon = loadTreeIcon(treeResName);
+                if (icon != null) {
+                    int iconW = icon.getWidth();
+                    int iconH = icon.getHeight();
+                    g.image(icon, new Coord(px + (cellSize - iconW) / 2, py + (cellSize - iconH) / 2));
+                } else {
                     g.chcolor(new Color(34, 139, 34, 100));
                     g.frect(new Coord(px + 1, py + 1), new Coord(cellSize - 2, cellSize - 2));
                 }

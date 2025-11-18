@@ -194,7 +194,7 @@ public class BlueprintTreePlanter implements Action {
         
         File configFile = new File("tree_garden_blueprints.json");
         if (!configFile.exists()) {
-            NUtils.getUI().msg("No blueprint file found. Please create a blueprint using Tree Garden Blueprint window.");
+            NUtils.getUI().msg("No blueprint file found. Please create a blueprint using Blueprint window.");
             return new BlueprintData(trees, width, height);
         }
         
