@@ -397,9 +397,6 @@ public class Window extends Widget {
 		{
 			Coord cc = xlate(dwdg.c, true);
 			GOut g2 = g.reclip(cc, dwdg.sz);
-			if(deco instanceof DefaultDeco) {
-				((DefaultDeco) deco).drawbg(g,false);
-			}
 			dwdg.draw(g2,strict);
 		}
 	}
@@ -408,17 +405,22 @@ public class Window extends Widget {
 
 	public class DisablerWdg extends Widget{
 
-		@Override
-		public void draw(GOut g, boolean strict) {
-			if(deco!=null && deco instanceof DefaultDeco) {
-				if(!this.cancelb.visible)
-					this.cancelb.show();
-				int id = (int) (NUtils.getTickId() / 5) % 12;
-
-				g.image(NStyle.gear[id], new Coord(deco.contarea().sz().x / 2 - NStyle.gear[0].sz().x / 2, deco.contarea().sz().y / 2 - NStyle.gear[0].sz().y / 2));
-				super.draw(g,strict);
-			}
+	@Override
+	public void draw(GOut g, boolean strict) {
+		if(deco!=null && deco instanceof DefaultDeco) {
+			if(!this.cancelb.visible)
+				this.cancelb.show();
+			
+			// Draw semi-transparent overlay
+			g.chcolor(0, 0, 0, 85);
+			g.frect(Coord.z, deco.contarea().sz());
+			g.chcolor();
+			
+			int id = (int) (NUtils.getTickId() / 5) % 12;
+			g.image(NStyle.gear[id], new Coord(deco.contarea().sz().x / 2 - NStyle.gear[0].sz().x / 2, deco.contarea().sz().y / 2 - NStyle.gear[0].sz().y / 2));
+			super.draw(g,strict);
 		}
+	}
 
 		@Override
 		public void resize(Coord sz) {
