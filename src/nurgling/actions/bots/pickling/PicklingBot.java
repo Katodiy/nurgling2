@@ -24,9 +24,9 @@ public class PicklingBot implements Action {
         VEGETABLE_CONFIGS.put(NConfig.Key.picklingEggs, new VegetableConfig("Eggs", "Egg", "Pickled Egg"));
         VEGETABLE_CONFIGS.put(NConfig.Key.picklingHerring, new VegetableConfig("Herring", "Herring", "Pickled Herring"));
         VEGETABLE_CONFIGS.put(NConfig.Key.picklingOlives, new VegetableConfig("Olives", "Olive", "Pickled Olive"));
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingCucumbers, new VegetableConfig("Cucumbers", "cucumber", "Pickled Cucumber"));
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingRedOnion, new VegetableConfig("Red Onion", "redonion", "Pickled Onion"));
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingYellowOnion, new VegetableConfig("Yellow Onion", "yellowonion", "Pickled Onion"));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingCucumbers, new VegetableConfig("Cucumbers", "Cucumber", "Pickled Cucumber"));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingRedOnion, new VegetableConfig("Red Onion", "Red Onion", "Pickled Onion"));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingYellowOnion, new VegetableConfig("Yellow Onion", "Yellow Onion", "Pickled Onion"));
     }
 
     public static class VegetableConfig {

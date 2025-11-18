@@ -79,7 +79,7 @@ public class GlobalBrinePhase implements Action {
 
             for (WItem jar : inventory.getItems(new NAlias("Pickling Jar"))) {
                 if (jarsCollected >= maxJars) break;
-                if (getBrineLevel(jar) < 1.0) {
+                if (getBrineLevel(jar) < 1.0 && hasVegetables(jar)) {
                     jar.item.wdgmsg("transfer", haven.Coord.z);
                     NUtils.addTask(new ISRemoved(jar.item.wdgid()));
                     jarsCollected++;
@@ -256,5 +256,22 @@ public class GlobalBrinePhase implements Action {
         }
         String contents = NUtils.getContentsOfBarrel(barrel);
         return contents != null && contents.toLowerCase().contains("picklebrine");
+    }
+
+    /**
+     * Check if jar contains any vegetables
+     */
+    private boolean hasVegetables(WItem jar) throws InterruptedException {
+        NUtils.addTask(new NTask() {
+            @Override
+            public boolean check() {
+                return jar.item.contents != null;
+            }
+        });
+
+        if (jar.item.contents == null) return false;
+
+        NInventory jarInventory = (NInventory) jar.item.contents;
+        return !jarInventory.getItems(new NAlias(vegetableConfig.freshAlias)).isEmpty();
     }
 }

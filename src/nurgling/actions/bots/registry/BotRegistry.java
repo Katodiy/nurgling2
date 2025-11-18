@@ -191,10 +191,6 @@ public class BotRegistry {
         bots.add(new BotDescriptor("test10", BotDescriptor.BotType.TOOLS, "Test 10", "Debug test 10.", false, true, TESTGlobalPf.class, "test10", false));
         bots.add(new BotDescriptor("test11", BotDescriptor.BotType.TOOLS, "Test 11", "Debug test 11.", false, true, TESTGlobalPFCheckOrphans.class, "test11", false));
         bots.add(new BotDescriptor("test12", BotDescriptor.BotType.TOOLS, "Test 12", "Debug test 12.", false, true, TestBot.class, "test12", false));
-
-//        bots.add(new BotDescriptor("test39", BotDescriptor.BotType.TOOLS, "Pickling Brine Filler", "Fills pickling jars with brine from nearby barrels. Takes multiple trips as needed.", false, true, GlobalBrinePhase.class, "test39", false));
-//        bots.add(new BotDescriptor("test41", BotDescriptor.BotType.TOOLS, "Global Fresh Filling Phase", "Fills pickling jars with beetroots from vegetable storage area. Uses global phase processing for efficiency.", false, true, GlobalFreshFillingPhase.class, "test41", true));
-//        bots.add(new BotDescriptor("test42", BotDescriptor.BotType.TOOLS, "Global Fresh Filling Phase", "Fills pickling jars with beetroots from vegetable storage area. Uses global phase processing for efficiency.", false, true, GlobalExtractionPhase.class, "test42", false));
     }
 
     public static BotDescriptor byId(String id) {
