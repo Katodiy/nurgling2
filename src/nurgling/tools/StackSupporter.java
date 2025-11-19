@@ -1,7 +1,9 @@
 package nurgling.tools;
 
+import haven.Coord;
 import haven.Window;
 import nurgling.NInventory;
+import nurgling.NUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -206,5 +208,28 @@ public class StackSupporter {
             }
         }
         return false;
+    }
+
+    /**
+     * Universal method to calculate optimal item capacity considering stacking
+     * @param inventory The target inventory
+     * @param itemName Name of the item to be placed
+     * @param itemSize Size coordinate of the item
+     * @param targetCount Maximum desired count
+     * @return Optimal number of items that can fit, considering stacking
+     */
+    public static int getOptimalItemCapacity(NInventory inventory, String itemName, Coord itemSize, int targetCount) throws InterruptedException {
+        // Get base free slots
+        int freeSlots = inventory.getNumberFreeCoord(itemSize);
+
+        // Check if stacking is globally enabled AND item is stackable in this inventory
+        if (((NInventory) NUtils.getGameUI().maininv).bundle.a && isStackable(inventory, itemName)) {
+            int maxStackSize = getMaxStackSize(itemName);
+            int maxCapacity = freeSlots * maxStackSize;
+            return Math.min(targetCount, maxCapacity);
+        }
+
+        // Stacking disabled or item not stackable - use original logic
+        return Math.min(targetCount, freeSlots);
     }
 }
