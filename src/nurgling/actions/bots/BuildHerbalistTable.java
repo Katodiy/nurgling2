@@ -21,7 +21,7 @@ public class BuildHerbalistTable implements Action {
             command.name = "Herbalist Table";
 
             NUtils.getGameUI().msg("Please, select build area");
-            SelectAreaWithPreview buildarea = new SelectAreaWithPreview(Resource.loadsimg("baubles/buildArea"), "Herbalist Table");
+    SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Herbalist Table");
             buildarea.run(NUtils.getGameUI());
 
             NUtils.getGameUI().msg("Please, select area for blocks of wood");

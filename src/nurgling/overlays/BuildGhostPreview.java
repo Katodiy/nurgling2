@@ -114,7 +114,9 @@ public class BuildGhostPreview extends GAttrib {
             // Add ghost effect (blue transparency) before adding to OCache
             ghost.setattr(new GhostAlpha(ghost));
             
-            ghostGobs.add(ghost);
+            synchronized (ghostGobs) {
+                ghostGobs.add(ghost);
+            }
             glob.oc.add(ghost);  // Synchronous add
 
             // Load resource asynchronously
@@ -131,8 +133,11 @@ public class BuildGhostPreview extends GAttrib {
      * Remove all ghost Gobs
      */
     private void removeGhosts() {
-        List<Gob> toRemove = new ArrayList<>(ghostGobs);
-        ghostGobs.clear();
+        List<Gob> toRemove;
+        synchronized (ghostGobs) {
+            toRemove = new ArrayList<>(ghostGobs);
+            ghostGobs.clear();
+        }
         
         // Synchronous remove with exception handling
         for (Gob ghost : toRemove) {
@@ -175,8 +180,11 @@ public class BuildGhostPreview extends GAttrib {
 
     public void dispose() {
         // Use deferred removal on dispose to avoid ConcurrentModificationException
-        List<Gob> toRemove = new ArrayList<>(ghostGobs);
-        ghostGobs.clear();
+        List<Gob> toRemove;
+        synchronized (ghostGobs) {
+            toRemove = new ArrayList<>(ghostGobs);
+            ghostGobs.clear();
+        }
         
         if (!toRemove.isEmpty() && glob != null && glob.loader != null) {
             glob.loader.defer(() -> {

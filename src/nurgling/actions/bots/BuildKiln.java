@@ -22,7 +22,7 @@ public class BuildKiln implements Action {
         command.name = "Kiln";
 
         NUtils.getGameUI().msg("Please, select build area");
-        SelectAreaWithPreview buildarea = new SelectAreaWithPreview(Resource.loadsimg("baubles/buildArea"), "Kiln");
+    SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Kiln");
         buildarea.run(NUtils.getGameUI());
 
         NUtils.getGameUI().msg("Please, select area for clay");

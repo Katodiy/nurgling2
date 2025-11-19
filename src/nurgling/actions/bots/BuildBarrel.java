@@ -21,7 +21,7 @@ public class BuildBarrel implements Action {
             command.name = "Barrel";
 
             NUtils.getGameUI().msg("Please, select build area");
-            SelectAreaWithPreview buildarea = new SelectAreaWithPreview(Resource.loadsimg("baubles/buildArea"), "Barrel");
+        SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Barrel");
             buildarea.run(NUtils.getGameUI());
 
             NUtils.getGameUI().msg("Please, select area for board");
