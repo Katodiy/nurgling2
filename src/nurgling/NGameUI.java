@@ -118,6 +118,21 @@ public class NGameUI extends GameUI
         treeLocationService = new TreeLocationService(this);
     }
 
+    private void initializeInventoryVisibility() {
+        Object setting = NConfig.get(NConfig.Key.openInventoryOnLogin);
+        boolean shouldOpenInventory = setting instanceof Boolean ? (Boolean) setting : false;
+
+        if (shouldOpenInventory) {
+            // Get the inventory window by its caption
+            Window inventoryWindow = getWindow("Inventory");
+            if (inventoryWindow != null) {
+                // Use togglewnd to properly show the inventory window
+                togglewnd(inventoryWindow);
+            }
+        }
+        // If shouldOpenInventory is false, inventory stays hidden (default behavior)
+    }
+
     @Override
     public void dispose() {
         if(localizedResourceTimerService != null)
@@ -361,6 +376,12 @@ public class NGameUI extends GameUI
             if (maininv != null && ((NInventory) maininv).searchwdg == null)
             {
                 ((NInventory) maininv).installMainInv();
+            }
+
+            // Check if this is the inventory being added
+            if (place != null && place.equals("inv")) {
+                // Inventory window was just created, now check the setting
+                initializeInventoryVisibility();
             }
         }
     }

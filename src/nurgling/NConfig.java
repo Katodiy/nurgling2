@@ -117,7 +117,8 @@ public class NConfig
         picklingOlives,
         picklingCucumbers,
         picklingRedOnion,
-        picklingYellowOnion
+        picklingYellowOnion,
+        openInventoryOnLogin
     }
 
 
@@ -296,6 +297,9 @@ public class NConfig
         conf.put(Key.picklingCucumbers, true);
         conf.put(Key.picklingRedOnion, true);
         conf.put(Key.picklingYellowOnion, true);
+
+        // Login settings
+        conf.put(Key.openInventoryOnLogin, false);  // Default to closed (current behavior)
     }
 
 
