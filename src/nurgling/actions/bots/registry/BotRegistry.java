@@ -1,10 +1,12 @@
 package nurgling.actions.bots.registry;
 
-import nurgling.actions.FillWaterskins;
+import nurgling.actions.*;
 import nurgling.actions.bots.farmers.PumpkinFarmer;
 import nurgling.actions.bots.*;
 import nurgling.actions.bots.CarrotFarmerQ;
-import nurgling.actions.bots.silk.ArrangeSilkmothPairs;
+import nurgling.actions.bots.pickling.GlobalBrinePhase;
+import nurgling.actions.bots.pickling.GlobalExtractionPhase;
+import nurgling.actions.bots.pickling.GlobalFreshFillingPhase;
 import nurgling.actions.bots.silk.RefillSilkwormFeedingCupboards;
 import nurgling.actions.bots.silk.SilkProductionBot;
 import nurgling.actions.bots.CollectSwillInArea;
@@ -16,6 +18,7 @@ import nurgling.actions.bots.farmers.WildOnionFarmer;
 import nurgling.actions.bots.farmers.WildTuberFarmer;
 import nurgling.actions.bots.farmers.WildFlowerFarmer;
 import nurgling.actions.test.*;
+import nurgling.actions.bots.pickling.PicklingBot;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -74,6 +77,8 @@ public class BotRegistry {
         // Silk
         bots.add(new BotDescriptor("mulberry_leaf_refiller", BotDescriptor.BotType.PRODUCTIONS, "Refill silkworm cupboards with mulberry leafs", "Refill silkworm cupboards with mulberry leafs.", true, true, RefillSilkwormFeedingCupboards.class, "mulberry_leaf", false));
         bots.add(new BotDescriptor("silk_production", BotDescriptor.BotType.PRODUCTIONS, "Manages silk production starting at eggs all the way to silkworm cocoons.", "Silk cocoons production.", true, true, SilkProductionBot.class, "silkworm_cocoon", false));
+
+        bots.add(new BotDescriptor("pickling", BotDescriptor.BotType.PRODUCTIONS, "Pickling Bot", "Complete automated pickling system. Manages brine levels, fills jars with fresh vegetables, extracts ready pickled items, and maintains continuous production cycle.", true, true, PicklingBot.class, "pickle", true));
 
         // BATTLE
         bots.add(new BotDescriptor("reagro", BotDescriptor.BotType.BATTLE, "Reagro", "Reagros enemies.", true, true, Reagro.class, "reagro", false));
@@ -200,7 +205,6 @@ public class BotRegistry {
         bots.add(new BotDescriptor("test10", BotDescriptor.BotType.TOOLS, "Test 10", "Debug test 10.", false, true, TESTGlobalPf.class, "test10", false));
         bots.add(new BotDescriptor("test11", BotDescriptor.BotType.TOOLS, "Test 11", "Debug test 11.", false, true, TESTGlobalPFCheckOrphans.class, "test11", false));
         bots.add(new BotDescriptor("test12", BotDescriptor.BotType.TOOLS, "Test 12", "Debug test 12.", false, true, TestBot.class, "test12", false));
-
     }
 
     public static BotDescriptor byId(String id) {

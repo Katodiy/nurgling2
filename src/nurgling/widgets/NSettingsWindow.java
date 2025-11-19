@@ -93,6 +93,7 @@ public class NSettingsWindow extends Widget {
         bots.addChild(new SettingsItem("Eating bot", new Eater(), container));
         bots.addChild(new SettingsItem("Farming Settings", new FarmingSettingsPanel(), container));
         bots.addChild(new SettingsItem("Cheese orders", new CheeseOrdersPanel(), container));
+        bots.addChild(new SettingsItem("Pickling Settings", new PicklingSettings(), container));
 
         list.addCategory(general);
         list.addCategory(gameenvironment);
