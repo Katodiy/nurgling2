@@ -407,6 +407,9 @@ public abstract class PView extends Widget {
 	private final Set<Slot<? extends Render2D>> cur = new HashSet<>();
 
 	public void draw(GOut g) {
+	    // Clear batch at the start of frame
+	    nurgling.overlays.NCropMarkerBatch.getInstance().beginFrame();
+	    
 	    List<Slot<? extends Render2D>> copy;
 	    synchronized(cur) {
 		copy = new ArrayList<>(cur);
@@ -414,6 +417,8 @@ public abstract class PView extends Widget {
 	    for(Slot<? extends Render2D> slot : copy) {
 		slot.obj().draw(g, slot.state());
 	    }
+	    // Render batched crop markers at the end for maximum efficiency
+	    nurgling.overlays.NCropMarkerBatch.getInstance().render(g, null);
 	}
 
 	public void add(Slot<? extends Render2D> slot) {

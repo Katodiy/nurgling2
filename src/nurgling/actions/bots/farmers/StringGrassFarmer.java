@@ -26,7 +26,7 @@ public class StringGrassFarmer implements Action {
 
         nContext.getSpecArea(Specialisation.SpecName.crop, "String Grass");
 
-        NArea stringGrassArea = NContext.findOut("String Grass", 1);
+        NArea stringGrassArea = NContext.findOut("Wildfibre", 1);
 
         if(stringGrassArea == null) {
             gui.msg("PUT Area for String Grass not found, fibers will not be collected.");
@@ -63,7 +63,7 @@ public class StringGrassFarmer implements Action {
             }
             
             if (stringGrassArea != null)
-                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), stringGrassArea.getRCArea(), new NAlias("stringgrass", "String Grass")).run(gui);
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), stringGrassArea.getRCArea(), new NAlias("wildfibre", "Wildfibre")).run(gui);
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/stringgrass"), new NAlias("String Grass"), false).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);

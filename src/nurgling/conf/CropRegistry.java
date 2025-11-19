@@ -220,9 +220,9 @@ public class CropRegistry {
 
         // Wild Kale
         HARVESTABLE.put(
-                new NAlias("plants/wildkale"),
+                new NAlias("plants/wildbrassica"),
                 Arrays.asList(
-                        new CropStage(4, new NAlias("Wild Kale Seeds"), StorageBehavior.BARREL)
+                        new CropStage(3, new NAlias("Wild Kale Seeds"), StorageBehavior.BARREL)
                 )
         );
 
@@ -236,7 +236,7 @@ public class CropRegistry {
 
         // Wild Tuber
         HARVESTABLE.put(
-                new NAlias("plants/wildtuber"),
+                new NAlias("plants/tuber"),
                 Arrays.asList(
                         new CropStage(3, new NAlias("Wild Tuber"), StorageBehavior.STOCKPILE)
                 )
@@ -255,7 +255,7 @@ public class CropRegistry {
         HARVESTABLE.put(
                 new NAlias("plants/wildflower"),
                 Arrays.asList(
-                        new CropStage(4, new NAlias("Wild Flower Seeds"), StorageBehavior.BARREL)
+                        new CropStage(3, new NAlias("Wild Flower Seeds"), StorageBehavior.BARREL)
                 )
         );
     }

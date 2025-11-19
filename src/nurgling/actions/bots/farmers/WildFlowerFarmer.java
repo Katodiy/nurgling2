@@ -12,6 +12,7 @@ import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class WildFlowerFarmer implements Action {
 
@@ -27,7 +28,7 @@ public class WildFlowerFarmer implements Action {
 
         nContext.getSpecArea(Specialisation.SpecName.crop, "Wild Flower");
 
-        NArea wildFlowerArea = NContext.findOut("Wild Flower", 1);
+        NArea wildFlowerArea = NContext.findOut("Wildflower", 1);
 
         if(wildFlowerArea == null) {
             gui.msg("PUT Area for Wild Flower not found, flowers will not be collected.");
@@ -64,7 +65,7 @@ public class WildFlowerFarmer implements Action {
             }
             
             if (wildFlowerArea != null)
-                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), wildFlowerArea.getRCArea(), new NAlias("seed-flower", "Wild Flower")).run(gui);
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), wildFlowerArea.getRCArea(), new NAlias(new ArrayList<>(Arrays.asList("flower-wild", "Wildflower")), new ArrayList<>(Arrays.asList("seed")))).run(gui);
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/wildflower"), new NAlias("Wildflower Seeds"), false).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);

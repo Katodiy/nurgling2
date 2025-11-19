@@ -56,7 +56,7 @@ public class WildOnionFarmer implements Action {
             }
             
             if (NContext.findSpec(wildOnionAsSeed) != null)
-                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), NContext.findSpec(wildOnionAsSeed).getRCArea(), new NAlias("items/wildonion", "Wild Onion")).run(gui);
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), NContext.findSpec(wildOnionAsSeed).getRCArea(), new NAlias("items/preonion", "Wild Onion")).run(gui);
 
             new SeedCrop(NContext.findSpec(field), NContext.findSpec(wildOnionAsSeed), new NAlias("plants/wildonion"), new NAlias("Wild Onion"), true).run(gui);
 

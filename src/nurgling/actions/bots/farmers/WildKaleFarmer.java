@@ -26,7 +26,7 @@ public class WildKaleFarmer implements Action {
 
         nContext.getSpecArea(Specialisation.SpecName.crop, "Wild Kale");
 
-        NArea wildKaleArea = NContext.findOut("Wild Kale", 1);
+        NArea wildKaleArea = NContext.findOut("Wildkale Leaf", 1);
 
         if(wildKaleArea == null) {
             gui.msg("PUT Area for Wild Kale not found, leaves will not be collected.");
@@ -43,7 +43,7 @@ public class WildKaleFarmer implements Action {
             NUtils.stackSwitch(true);
 
             if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
-                if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/wildkale")).run(gui).isSuccess) {
+                if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/wildbrassica")).run(gui).isSuccess) {
                     NUtils.stackSwitch(oldStackingValue);
                     gui.msg("Not all wild kale crops are ready for harvest, skipping harvest.");
                     return Results.SUCCESS();
@@ -55,7 +55,7 @@ public class WildKaleFarmer implements Action {
                     NContext.findSpec(seed),
                     NContext.findSpec(trough),
                     NContext.findSpec(swill),
-                    new NAlias("plants/wildkale")
+                    new NAlias("plants/wildbrassica")
             ).run(gui);
             
             if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
@@ -63,8 +63,8 @@ public class WildKaleFarmer implements Action {
             }
             
             if (wildKaleArea != null)
-                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), wildKaleArea.getRCArea(), new NAlias("wildkale", "Wild Kale")).run(gui);
-            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/wildkale"), new NAlias("Wildkale Seeds"), false).run(gui);
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), wildKaleArea.getRCArea(), new NAlias("leaf-brassica", "Wildkale Leaf")).run(gui);
+            new SeedCrop(NContext.findSpec(field), NContext.findSpec(seed), new NAlias("plants/wildbrassica"), new NAlias("Wildkale Seeds"), false).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
 

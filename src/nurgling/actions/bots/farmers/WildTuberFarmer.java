@@ -37,7 +37,7 @@ public class WildTuberFarmer implements Action {
             NUtils.stackSwitch(true);
 
             if ((Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest)) {
-                if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/wildtuber")).run(gui).isSuccess) {
+                if (!new ValidateAllCropsReady(NContext.findSpec(field), new NAlias("plants/tuber")).run(gui).isSuccess) {
                     NUtils.stackSwitch(oldStackingValue);
                     gui.msg("Not all wild tuber crops are ready for harvest, skipping harvest.");
                     return Results.SUCCESS();
@@ -49,7 +49,7 @@ public class WildTuberFarmer implements Action {
                     NContext.findSpec(wildTuberAsSeed),
                     NContext.findSpec(trough),
                     NContext.findSpec(swill),
-                    new NAlias("plants/wildtuber")
+                    new NAlias("plants/tuber")
             ).run(gui);
             
             if ((Boolean) NConfig.get(NConfig.Key.autoEquipTravellersSacks)) {
@@ -57,9 +57,9 @@ public class WildTuberFarmer implements Action {
             }
             
             if (NContext.findSpec(wildTuberAsSeed) != null)
-                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), NContext.findSpec(wildTuberAsSeed).getRCArea(), new NAlias("items/wildtuber", "Wild Tuber")).run(gui);
+                new CollectItemsToPile(NContext.findSpec(field).getRCArea(), NContext.findSpec(wildTuberAsSeed).getRCArea(), new NAlias("items/pretuber", "Wild Tuber")).run(gui);
 
-            new SeedCrop(NContext.findSpec(field), NContext.findSpec(wildTuberAsSeed), new NAlias("plants/wildtuber"), new NAlias("Wild Tuber"), true).run(gui);
+            new SeedCrop(NContext.findSpec(field), NContext.findSpec(wildTuberAsSeed), new NAlias("plants/tuber"), new NAlias("Wild Tuber"), true).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
 
