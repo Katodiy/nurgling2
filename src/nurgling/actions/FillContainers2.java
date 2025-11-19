@@ -50,8 +50,21 @@ public class FillContainers2 implements Action
     private int calculateTargetSize() throws InterruptedException {
         int target_size = 0;
         for (Container tcont : conts) {
-            Container.Space space = tcont.getattr(Container.Space.class);
-            if (space != null) {
+            Container.Tetris tetris = tcont.getattr(Container.Tetris.class);
+            if(tetris!=null) {
+                if (!(Boolean) tetris.getRes().get(Container.Tetris.DONE)) {
+                    ArrayList<Coord> coords = (ArrayList<Coord>) tetris.getRes().get(Container.Tetris.TARGET_COORD);
+                    if (coords.size() != 1) {
+                        NUtils.getGameUI().error("BAD LOGIC. TOO BIG COORDS ARRAY FOR TETRIS");
+                        throw new InterruptedException();
+                    }
+                    Coord target_coord = coords.get(0);
+                    target_size += tetris.calcNumberFreeCoord(Container.Tetris.SRC, target_coord);
+                }
+            }
+            else
+            {
+                Container.Space space = tcont.getattr(Container.Space.class);
                 Integer freeSpace = (Integer) space.getRes().get(Container.Space.FREESPACE);
                 if (freeSpace != null) {
                     target_size += freeSpace;
