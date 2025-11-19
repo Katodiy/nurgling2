@@ -25,7 +25,7 @@ public class BuildSmokeShed implements Action {
         command.name = "Smoke Shed";
 
         NUtils.getGameUI().msg("Please, select build area");
-        SelectAreaWithPreview buildarea = new SelectAreaWithPreview(Resource.loadsimg("baubles/buildArea"), "Smoke Shed");
+        SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Smoke Shed");
         buildarea.run(NUtils.getGameUI());
 
         NUtils.getGameUI().msg("Please, select area for board");
@@ -57,9 +57,10 @@ public class BuildSmokeShed implements Action {
             // Always clean up ghost preview when bot finishes or is interrupted
             Gob player = NUtils.player();
             if (player != null) {
-                Gob.Overlay ghostOverlay = player.findol(BuildGhostPreview.class);
-                if (ghostOverlay != null) {
-                    ghostOverlay.remove();
+                BuildGhostPreview ghostPreview = player.getattr(BuildGhostPreview.class);
+                if (ghostPreview != null) {
+                    ghostPreview.dispose();
+                    player.delattr(BuildGhostPreview.class);
                 }
 
                 // Remove custom bauble overlay

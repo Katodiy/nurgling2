@@ -81,6 +81,8 @@ public class NMapView extends MapView
     public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
     public AtomicBoolean isGobSelectionMode = new AtomicBoolean(false);
     public NArea.Space areaSpace = null;
+    public Pair<Coord, Coord> currentSelectionCoords = null;  // Current selection coords during dragging
+    public boolean rotationRequested = false;  // Flag to request rotation during area selection
     public Gob selectedGob = null;
     public static boolean isRecordingRoutePoint = false;
 
@@ -845,6 +847,12 @@ public class NMapView extends MapView
 
         }
 
+        // Handle R key for rotation during area selection
+        if(ev.code == 82 && isAreaSelectionMode.get()) {  // R key
+            rotationRequested = true;
+            return true;
+        }
+        
         if(kb_displaypbox.key().match(ev) ){
             boolean val = (Boolean) NConfig.get(NConfig.Key.player_box);
             NConfig.set(NConfig.Key.player_box, !val);
@@ -908,6 +916,18 @@ public class NMapView extends MapView
         public NSelector(Coord max) {
             super(max);
         }
+        
+        @Override
+        public void mmousemove(Coord mc) {
+            super.mmousemove(mc);
+            // Update current selection coords for live ghost preview
+            if (sc != null) {
+                Coord tc = getec(mc);
+                Coord c1 = new Coord(Math.min(tc.x, sc.x), Math.min(tc.y, sc.y));
+                Coord c2 = new Coord(Math.max(tc.x, sc.x), Math.max(tc.y, sc.y));
+                currentSelectionCoords = new Pair<>(c1, c2.add(1, 1));
+            }
+        }
 
         public boolean mmouseup(Coord mc, int button)
         {
@@ -919,6 +939,7 @@ public class NMapView extends MapView
                     xl.mv = false;
                     tt = null;
                     areaSpace = new NArea.Space(sc,ec);
+                    currentSelectionCoords = null;
                     ol.destroy();
                     mgrab.remove();
                     sc = null;

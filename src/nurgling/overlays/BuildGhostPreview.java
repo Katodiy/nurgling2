@@ -2,6 +2,7 @@ package nurgling.overlays;
 
 import haven.*;
 import haven.render.*;
+import nurgling.GhostAlpha;
 import nurgling.NHitBox;
 import nurgling.NUtils;
 import nurgling.pf.NHitBoxD;
@@ -10,27 +11,37 @@ import java.awt.Color;
 import java.util.*;
 
 /**
- * Generic ghost preview overlay showing where buildings will be placed
- * Simpler than TrellisGhostPreview - just shows all valid positions in the area
+ * Ghost preview overlay showing where buildings will be placed using real Gobs with models
+ * Similar to BlueprintPlob but for buildings
  */
-public class BuildGhostPreview extends Sprite {
-    private static final Pipe.Op ghostColor = Pipe.Op.compose(
-            new BaseColor(new Color(0, 255, 0, 255)),  // Bright green
-            new States.Facecull(States.Facecull.Mode.NONE),
-            new States.LineWidth(3)
-    );
-
+public class BuildGhostPreview extends GAttrib {
     private Pair<Coord2d, Coord2d> area;
     private NHitBox buildingHitBox;
-    private Model ghostModel;
-    private List<Location> ghostLocations = new ArrayList<>();
-    private List<RenderTree.Slot> slots = new ArrayList<>();
+    private Indir<Resource> buildingResource;
+    private List<Gob> ghostGobs = new ArrayList<>();
+    private Glob glob;
+    private double rotationAngle = 0.0;  // Rotation angle in radians
 
-    public BuildGhostPreview(Owner owner, Pair<Coord2d, Coord2d> area, NHitBox hitBox) {
-        super(owner, null);
+    public BuildGhostPreview(Gob owner, Pair<Coord2d, Coord2d> area, NHitBox hitBox, Indir<Resource> resource) {
+        super(owner);
         this.area = area;
         this.buildingHitBox = hitBox;
-        if (area != null && hitBox != null) {
+        this.buildingResource = resource;
+        this.glob = owner.glob;
+        this.rotationAngle = 0.0;
+        if (area != null && hitBox != null && resource != null) {
+            calculateGhostPositions();
+        }
+    }
+    
+    public BuildGhostPreview(Gob owner, Pair<Coord2d, Coord2d> area, NHitBox hitBox, Indir<Resource> resource, int rotationCount) {
+        super(owner);
+        this.area = area;
+        this.buildingHitBox = hitBox;
+        this.buildingResource = resource;
+        this.glob = owner.glob;
+        this.rotationAngle = (rotationCount * Math.PI / 2.0);  // Convert rotation count to radians
+        if (area != null && hitBox != null && resource != null) {
             calculateGhostPositions();
         }
     }
@@ -39,14 +50,12 @@ public class BuildGhostPreview extends Sprite {
      * Calculate all valid building positions using the same logic as Finder.getFreePlace()
      */
     private void calculateGhostPositions() {
-        ghostLocations.clear();
+        // Clean up existing ghosts
+        removeGhosts();
 
-        if (buildingHitBox == null || area == null) {
+        if (buildingHitBox == null || area == null || buildingResource == null) {
             return;
         }
-
-        // Create the box model once (centered at origin)
-        ghostModel = createGhostBoxModel(buildingHitBox);
 
         // Find all obstacles in the area (same as Finder.getFreePlace)
         ArrayList<NHitBoxD> obstacles = findObstacles();
@@ -83,15 +92,9 @@ public class BuildGhostPreview extends Sprite {
                 }
 
                 if (passed) {
-                    // This position is valid - add it to preview and track it
-                    float centerX = (float)(testBox.rc.x);
-                    float centerY = (float)(testBox.rc.y);
-
-                    // Get terrain height at this position
-                    float terrainZ = getTerrainHeight();
-
-                    Location loc = Location.xlate(new Coord3f(centerX, -centerY, terrainZ));
-                    ghostLocations.add(loc);
+                    // This position is valid - create a ghost Gob
+                    Coord2d worldPos = new Coord2d(testBox.rc.x, testBox.rc.y);
+                    createGhostGob(worldPos);
 
                     // Add this building to placed list so we don't overlap it
                     placedBuildings.add(new NHitBoxD(buildingHitBox.begin, buildingHitBox.end, testPos, 0));
@@ -101,66 +104,44 @@ public class BuildGhostPreview extends Sprite {
     }
 
     /**
-     * Create a simple wireframe box model for a ghost building
-     * Box is centered at origin and will be positioned via Location transforms
+     * Create a ghost Gob at the specified position with building model
      */
-    private Model createGhostBoxModel(NHitBox hitBox) {
-        // Calculate half-dimensions to center the box at origin
-        float halfWidth = (float)((hitBox.end.x - hitBox.begin.x) / 2.0);
-        float halfDepth = (float)((hitBox.end.y - hitBox.begin.y) / 2.0);
-        float h = 7f; // Height of ghost box
+    private void createGhostGob(Coord2d worldPos) {
+        try {
+            Gob ghost = new Gob(glob, worldPos);
+            ghost.a = rotationAngle;  // Set rotation angle
+            
+            // Add ghost effect (blue transparency) before adding to OCache
+            ghost.setattr(new GhostAlpha(ghost));
+            
+            ghostGobs.add(ghost);
+            glob.oc.add(ghost);  // Synchronous add
 
-        // Create vertices for the box centered at origin (8 corners)
-        java.nio.FloatBuffer posb = Utils.wfbuf(8 * 3);
-
-        // Bottom vertices (0-3) - centered at origin in XY plane
-        posb.put(-halfWidth).put(-halfDepth).put(0f);
-        posb.put(halfWidth).put(-halfDepth).put(0f);
-        posb.put(halfWidth).put(halfDepth).put(0f);
-        posb.put(-halfWidth).put(halfDepth).put(0f);
-
-        // Top vertices (4-7)
-        posb.put(-halfWidth).put(-halfDepth).put(h);
-        posb.put(halfWidth).put(-halfDepth).put(h);
-        posb.put(halfWidth).put(halfDepth).put(h);
-        posb.put(-halfWidth).put(halfDepth).put(h);
-
-        VertexBuf.VertexData posa = new VertexBuf.VertexData(Utils.bufcp(posb));
-        VertexBuf vbuf = new VertexBuf(posa);
-
-        // Create wireframe using LINES mode - just the edges
-        java.nio.ShortBuffer idx = Utils.wsbuf(24);
-        short[] indices = {
-            0,1, 1,2, 2,3, 3,0,  // Bottom edges
-            4,5, 5,6, 6,7, 7,4,  // Top edges
-            0,4, 1,5, 2,6, 3,7   // Vertical edges
-        };
-        for (short i : indices) {
-            idx.put(i);
+            // Load resource asynchronously
+            glob.loader.defer(() -> {
+                ghost.setattr(new ResDrawable(ghost, buildingResource, Message.nil));
+                return null;
+            });
+        } catch (Exception e) {
+            // Silently ignore if can't create
         }
-
-        return new Model(Model.Mode.LINES, vbuf.data(),
-            new Model.Indices(24, NumberFormat.UINT16, DataBuffer.Usage.STATIC,
-                DataBuffer.Filler.of(idx.array())));
     }
 
     /**
-     * Get terrain height at a position
+     * Remove all ghost Gobs
      */
-    private float getTerrainHeight() {
-        try {
-            Gob player = NUtils.player();
-            if (player != null) {
-                Coord3f playerPos = player.getc();
-                if (playerPos != null) {
-                    // Use player's Z coordinate as base reference
-                    return playerPos.z - 1;
-                }
+    private void removeGhosts() {
+        List<Gob> toRemove = new ArrayList<>(ghostGobs);
+        ghostGobs.clear();
+        
+        // Synchronous remove with exception handling
+        for (Gob ghost : toRemove) {
+            try {
+                glob.oc.remove(ghost);
+            } catch (Exception e) {
+                // Ignore concurrent modification - will be handled by dispose if needed
             }
-        } catch (NullPointerException e) {
-            // Fallback to 0 if player or position unavailable
         }
-        return 0f;
     }
 
     /**
@@ -192,35 +173,57 @@ public class BuildGhostPreview extends Sprite {
         return obstacles;
     }
 
-    @Override
-    public void added(RenderTree.Slot slot) {
-        slots.add(slot);
-
-        // Set initial state similar to NBoxOverlay
-        slot.ostate(Pipe.Op.compose(
-            Rendered.postpfx,
-            new States.Facecull(States.Facecull.Mode.NONE),
-            p -> p.put(Homo3D.loc, null)
-        ));
-
-        // Add all ghost boxes to this slot (reuse single model, different locations)
-        if (ghostModel != null) {
-            for (Location loc : ghostLocations) {
-                slot.add(ghostModel, Pipe.Op.compose(
-                    ghostColor,
-                    loc
-                ));
-            }
+    public void dispose() {
+        // Use deferred removal on dispose to avoid ConcurrentModificationException
+        List<Gob> toRemove = new ArrayList<>(ghostGobs);
+        ghostGobs.clear();
+        
+        if (!toRemove.isEmpty() && glob != null && glob.loader != null) {
+            glob.loader.defer(() -> {
+                for (Gob ghost : toRemove) {
+                    try {
+                        glob.oc.remove(ghost);
+                    } catch (Exception e) {
+                        // Silently ignore
+                    }
+                }
+                return null;
+            });
         }
     }
 
-    @Override
-    public void removed(RenderTree.Slot slot) {
-        slots.remove(slot);
+    /**
+     * Check if the preview needs to be updated
+     */
+    public boolean needsUpdate(Pair<Coord2d, Coord2d> newArea) {
+        if (newArea != null && !newArea.equals(this.area)) {
+            return true;
+        }
+        return false;
     }
 
-    @Override
-    public boolean tick(double dt) {
-        return false; // Don't auto-remove
+    /**
+     * Update preview when area changes
+     */
+    public void update(Pair<Coord2d, Coord2d> newArea) {
+        if (newArea != null && !newArea.equals(this.area)) {
+            this.area = newArea;
+            if (area != null && buildingHitBox != null && buildingResource != null) {
+                calculateGhostPositions();
+            }
+        }
+    }
+    
+    /**
+     * Update rotation angle and recalculate positions with new hitbox
+     */
+    public void updateRotation(int rotationCount, NHitBox newHitBox) {
+        this.rotationAngle = (rotationCount * Math.PI / 2.0);
+        this.buildingHitBox = newHitBox;
+        
+        // Recalculate ghost positions with new hitbox and rotation
+        if (area != null && buildingHitBox != null && buildingResource != null) {
+            calculateGhostPositions();
+        }
     }
 }

@@ -40,11 +40,11 @@ public class BuildCrate implements Action {
             // Always clean up ghost preview when bot finishes or is interrupted
             Gob player = NUtils.player();
             if (player != null) {
-                Gob.Overlay ghostOverlay = player.findol(BuildGhostPreview.class);
-                if (ghostOverlay != null) {
-                    ghostOverlay.remove();
+                BuildGhostPreview ghostPreview = player.getattr(BuildGhostPreview.class);
+                if (ghostPreview != null) {
+                    ghostPreview.dispose();
+                    player.delattr(BuildGhostPreview.class);
                 }
-
                 // Remove custom bauble overlay
                 Gob.Overlay baubleOverlay = player.findol(NCustomBauble.class);
                 if (baubleOverlay != null) {

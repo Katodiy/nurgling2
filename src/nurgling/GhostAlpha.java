@@ -5,7 +5,7 @@ import haven.render.*;
 
 public class GhostAlpha extends GAttrib implements Gob.SetupMod {
     private static final Pipe.Op ghostState = Pipe.Op.compose(
-        new BaseColor(new java.awt.Color(100, 150, 255, 128)),  // Blue tint with 50% alpha
+        new BaseColor(new java.awt.Color(150, 200, 255, 200)),  // Light blue with high alpha for transparency
         new States.Facecull(States.Facecull.Mode.NONE)
     );
     
