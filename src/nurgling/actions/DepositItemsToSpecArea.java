@@ -2,6 +2,7 @@ package nurgling.actions;
 
 import haven.Gob;
 import nurgling.NGameUI;
+import nurgling.NInventory;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tools.Container;
@@ -95,9 +96,9 @@ public class DepositItemsToSpecArea implements Action {
                         if (stillNeeded <= 0) break;
                         
                         if(this.originSpec != null) {
-                            new TakeItems2(context, key, stillNeeded, originSpec).run(gui);
+                            new TakeItems2(context, key, stillNeeded, originSpec, NInventory.QualityType.High).run(gui);
                         } else {
-                            new TakeItems2(context, key, stillNeeded).run(gui);
+                            new TakeItems2(context, key, stillNeeded, NInventory.QualityType.High).run(gui);
                         }
                     }
 
