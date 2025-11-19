@@ -19,6 +19,7 @@ public class QoL extends Panel {
     private CheckBox tracking;
     private CheckBox crime;
     private CheckBox swimming;
+    private CheckBox openInventoryOnLogin;
     private CheckBox disableMenugridKeys;
     private CheckBox questNotified;
     private CheckBox lpassistent;
@@ -104,6 +105,7 @@ public class QoL extends Panel {
         leftPrev = tracking = leftColumn.add(new CheckBox("Enable tracking when login"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = crime = leftColumn.add(new CheckBox("Enable criminal acting when login"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = swimming = leftColumn.add(new CheckBox("Enable swimming when login"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = openInventoryOnLogin = leftColumn.add(new CheckBox("Open player inventory when login"), leftPrev.pos("bl").adds(0, 5));
 
         leftPrev = leftColumn.add(new Label("Preferred movement speed on login:"), leftPrev.pos("bl").adds(0, 10));
         leftPrev = preferredSpeedDropbox = leftColumn.add(new Dropbox<String>(UI.scale(150), 4, UI.scale(16)) {
@@ -225,6 +227,7 @@ public class QoL extends Panel {
         tracking.a = getBool(NConfig.Key.tracking);
         crime.a = getBool(NConfig.Key.crime);
         swimming.a = getBool(NConfig.Key.swimming);
+        openInventoryOnLogin.a = getBool(NConfig.Key.openInventoryOnLogin);
         disableMenugridKeys.a = getBool(NConfig.Key.disableMenugridKeys);
         questNotified.a = getBool(NConfig.Key.questNotified);
         lpassistent.a = getBool(NConfig.Key.lpassistent);
@@ -299,6 +302,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.tracking, tracking.a);
         NConfig.set(NConfig.Key.crime, crime.a);
         NConfig.set(NConfig.Key.swimming, swimming.a);
+        NConfig.set(NConfig.Key.openInventoryOnLogin, openInventoryOnLogin.a);
         NConfig.set(NConfig.Key.disableMenugridKeys, disableMenugridKeys.a);
         NConfig.set(NConfig.Key.questNotified, questNotified.a);
         
