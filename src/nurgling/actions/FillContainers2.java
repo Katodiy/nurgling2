@@ -8,6 +8,7 @@ import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.NAlias;
+import nurgling.tools.StackSupporter;
 
 import java.util.ArrayList;
 
@@ -34,7 +35,8 @@ public class FillContainers2 implements Action
             while(!isReady(cont)) {
                 if (gui.getInventory().getItems(transferedItems).isEmpty()) {
                     int target_size = calculateTargetSize();
-                    new TakeItems2(context,transferedItems,Math.min(target_size,NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord))).run(gui);
+                    int optimalCapacity = StackSupporter.getOptimalItemCapacity(NUtils.getGameUI().getInventory(), transferedItems, targetCoord, target_size);
+                    new TakeItems2(context, transferedItems, optimalCapacity).run(gui);
                     if (gui.getInventory().getItems(transferedItems).isEmpty())
                         return Results.ERROR("NO ITEMS");
                 }
