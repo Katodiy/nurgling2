@@ -85,10 +85,14 @@ public class GoatsAction implements Action {
             if(GoatsHerd.getCurrent()!=null) {
                 new MemorizeAnimalsAction(new NAlias("goat"),"goats",Goat.class).run(gui);
 
-                new MilkAnimalsAction(new NAlias("goat")).run(gui);
-                gui.msg("Milking cycle done!");
+                if (!GoatsHerd.getCurrent().skipMilking) {
+                    new MilkAnimalsAction(new NAlias("goat")).run(gui);
+                    gui.msg("Milking cycle done!");
+                }
 
-                new ShearWool(Specialisation.SpecName.goats, new NAlias("goat")).run(gui);
+                if (!GoatsHerd.getCurrent().skipShearing) {
+                    new ShearWool(Specialisation.SpecName.goats, new NAlias("goat")).run(gui);
+                }
 
                 new KillAnimalsAction<Goat>(new NAlias("goat"), "goats", comparator, Goat.class, wpred, wlpred, GoatsHerd.getCurrent().adultGoats).run(gui);
                 gui.msg("Female goats cycle done!");

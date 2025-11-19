@@ -27,6 +27,8 @@ public class Goats extends Window {
     CheckBox dk;
     CheckBox ignorebd;
     CheckBox ignoreqp;
+    CheckBox skipMilkingBox;
+    CheckBox skipShearingBox;
 
     public Goats() {
         super(new Coord(100,100), "Goats Herds");
@@ -57,6 +59,8 @@ public class Goats extends Window {
                     dk.set(gh.disable_killing);
                     ignorebd.set(gh.ignoreBD);
                     ignoreqp.set(gh.disable_q_percentage);
+                    skipMilkingBox.set(gh.skipMilking);
+                    skipShearingBox.set(gh.skipShearing);
                 }
             }
             @Override
@@ -84,6 +88,8 @@ public class Goats extends Window {
                     gh.ignoreBD = ignorebd.a;
                     gh.ignoreChildren = ic.a;
                     gh.disable_q_percentage = ignoreqp.a;
+                    gh.skipMilking = skipMilkingBox.a;
+                    gh.skipShearing = skipShearingBox.a;
 
                 }
                 GoatsHerd.set(gh);
@@ -112,6 +118,8 @@ public class Goats extends Window {
                 dk.set(gh.disable_killing);
                 ignorebd.set(gh.ignoreBD);
                 ignoreqp.set(gh.disable_q_percentage);
+                skipMilkingBox.set(gh.skipMilking);
+                skipShearingBox.set(gh.skipShearing);
                 GoatsHerd.setCurrent(name.text());
             }
 
@@ -153,11 +161,27 @@ public class Goats extends Window {
             }
         }, prev.pos("bl").add(0, UI.scale(5))));
 
+        skipMilkingBox = (CheckBox)(prev = add (new CheckBox("Skip milking") {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+            }
+        }, prev.pos("bl").add(0, UI.scale(5))));
+
+        skipShearingBox = (CheckBox)(prev = add (new CheckBox("Skip shearing") {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+            }
+        }, prev.pos("bl").add(0, UI.scale(5))));
+
         if(GoatsHerd.getCurrent()!=null) {
             ignorebd.set(GoatsHerd.getCurrent().ignoreBD);
             dk.set(GoatsHerd.getCurrent().disable_killing);
             ignoreqp.set(GoatsHerd.getCurrent().disable_q_percentage);
             ic.set(GoatsHerd.getCurrent().ignoreChildren);
+            skipMilkingBox.set(GoatsHerd.getCurrent().skipMilking);
+            skipShearingBox.set(GoatsHerd.getCurrent().skipShearing);
         }
 
         prev = totalAdult = add(new NSettinsSetI("Total adult:"), prev.pos("bl").add(0, 5));
