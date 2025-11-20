@@ -34,7 +34,7 @@ public class BuildCrate implements Action {
             command.ingredients.add(new Build.Ingredient(new Coord(4,1),brancharea.getRCArea(),new NAlias("Board"),4));
 
 
-            new Build(command, buildarea.getRCArea()).run(gui);
+        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount()).run(gui);
             return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted

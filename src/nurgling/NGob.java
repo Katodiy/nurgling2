@@ -710,6 +710,11 @@ public class NGob
 
     public Materials mats(Mapping mapping)
     {
+        // Skip material replacement for ghost gobs to prevent lag
+        if (parent.getattr(GhostAlpha.class) != null) {
+            return null;
+        }
+        
         Material mat = null;
         Materials originalMaterials = null;
         if (mapping instanceof Materials)

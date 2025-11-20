@@ -51,7 +51,7 @@ public class BuildSmokeShed implements Action {
         brickarea.run(NUtils.getGameUI());
         command.ingredients.add(new Build.Ingredient(new Coord(1,1), brickarea.getRCArea(),new NAlias("Brick"),10));
 
-        new Build(command, buildarea.getRCArea()).run(gui);
+        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount()).run(gui);
         return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted

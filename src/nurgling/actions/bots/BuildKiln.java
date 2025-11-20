@@ -31,7 +31,7 @@ public class BuildKiln implements Action {
         command.ingredients.add(new Build.Ingredient(new Coord(1,1),clayarea.getRCArea(),new NAlias("Clay"),35));
 
 
-        new Build(command, buildarea.getRCArea()).run(gui);
+        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount()).run(gui);
         return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted

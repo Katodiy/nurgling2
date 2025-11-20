@@ -21,7 +21,7 @@ public class BuildCupboard implements Action {
         command.name = "Cupboard";
 
         NUtils.getGameUI().msg("Please, select build area");
-        SelectAreaWithPreview buildarea = new SelectAreaWithPreview(Resource.loadsimg("baubles/buildArea"), "Cupboard");
+        SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Cupboard");
         buildarea.run(NUtils.getGameUI());
 
         NUtils.getGameUI().msg("Please, select area for board");
@@ -29,7 +29,7 @@ public class BuildCupboard implements Action {
         brancharea.run(NUtils.getGameUI());
         command.ingredients.add(new Build.Ingredient(new Coord(4,1),brancharea.getRCArea(),new NAlias("Board"),8));
 
-        new Build(command, buildarea.getRCArea()).run(gui);
+        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount()).run(gui);
         return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted
