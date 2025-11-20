@@ -16,11 +16,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import java.awt.*;
-import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
-import java.awt.image.ComponentColorModel;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
 import java.util.*;
 import java.util.List;
 
@@ -45,10 +41,20 @@ public class NInventory extends Inventory
     boolean compactNameAscending = true;
     boolean compactQuantityAscending = false;
     String compactLastSortType = "quantity"; // Track which was clicked last
-    BufferedImage numbers = null;
     short[][] oldinv = null;
     public Gob parentGob = null;
     long lastUpdate = 0;
+    
+    // Pre-cached slot number textures for performance
+    private static final int MAX_SLOT_NUMBERS = 200;
+    private static final TexI[] cachedSlotNumbers = new TexI[MAX_SLOT_NUMBERS + 1];
+    
+    static {
+        // Pre-render all slot numbers once at startup
+        for (int i = 1; i <= MAX_SLOT_NUMBERS; i++) {
+            cachedSlotNumbers[i] = new TexI(NStyle.slotnums.render(String.valueOf(i)).img);
+        }
+    }
 
     public NInventory(Coord sz)
     {
@@ -73,48 +79,34 @@ public class NInventory extends Inventory
     @Override
     public void draw(GOut g) {
         super.draw(g);
-        if(numbers!=null) {
-            g.image(numbers,Coord.z);
+        if((Boolean)NConfig.get(NConfig.Key.showInventoryNums) && oldinv != null) {
+            drawSlotNumbers(g);
+        }
+    }
+    
+    // Optimized direct rendering without creating intermediate BufferedImage
+    private void drawSlotNumbers(GOut g) {
+        int counter = 1;
+        Coord coord = new Coord(0, 0);
+        for (coord.y = 0; coord.y < isz.y; coord.y++) {
+            for (coord.x = 0; coord.x < isz.x; coord.x++) {
+                if (oldinv[coord.y][coord.x] == 0 && counter <= MAX_SLOT_NUMBERS) {
+                    TexI numTex = cachedSlotNumbers[counter];
+                    Coord pos = coord.mul(sqsz).add(sqsz.div(2));
+                    Coord sz = numTex.sz();
+                    pos = pos.add((int)((double)sz.x * -0.5), (int)((double)sz.y * -0.5));
+                    g.image(numTex, pos);
+                }
+                if (oldinv[coord.y][coord.x] != 2)
+                    counter++;
+            }
         }
     }
 
 
-    void generateNumberMatrix(short[][] inventory)
-    {
+    // Simplified version - just updates inventory state, rendering happens in draw()
+    void updateInventoryState(short[][] inventory) {
         oldinv = inventory.clone();
-        TexI[][] numberMatrix = new TexI[isz.y][isz.x];
-        int counter = 1;
-        for (int i = 0; i < isz.y; i++) {
-            for (int j = 0; j < isz.x; j++) {
-                if (inventory[i][j] == 0)
-                {
-                    numberMatrix[i][j] = new TexI(NStyle.slotnums.render(String.valueOf(counter)).img);
-                }
-                else
-                {
-                    numberMatrix[i][j] = null;
-                }
-                if(inventory[i][j] != 2)
-                    counter++;
-            }
-        }
-        WritableRaster buf = Raster.createInterleavedRaster(java.awt.image.DataBuffer.TYPE_BYTE, isz.x*sqsz.y, isz.y*sqsz.x, 4, null);
-        BufferedImage tgt = new BufferedImage(new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_sRGB), new int[] {8, 8, 8, 8}, true, false, ComponentColorModel.TRANSLUCENT, java.awt.image.DataBuffer.TYPE_BYTE), buf, false, null);
-        Graphics2D g = tgt.createGraphics();
-        Coord coord = new Coord(0,0);
-        for (coord.y = 0; coord.y < isz.y; coord.y++) {
-            for (coord.x = 0; coord.x < isz.x; coord.x++) {
-                if(numberMatrix[coord.y][coord.x]!=null) {
-                    Coord pos = coord.mul(sqsz).add(sqsz.div(2));
-                    TexI img = numberMatrix[coord.y][coord.x];
-                    Coord sz = img.sz();
-                    pos = pos.add((int)((double)sz.x * -0.5), (int)((double)sz.y * -0.5));
-                    g.drawImage(img.back, pos.x,pos.y,null);
-                }
-            }
-        }
-        g.dispose();
-        numbers = tgt;
     }
 
     @Override
@@ -448,17 +440,15 @@ public class NInventory extends Inventory
                                 }
                             }
                         }
-                        if(!isDiffrent && numbers == null)
-                            isDiffrent = true;
                     }
                 } else {
                     isDiffrent = true;
                 }
             if (isDiffrent)
-                generateNumberMatrix(newInv);
+                updateInventoryState(newInv);
         }
         else
-            numbers = null;
+            oldinv = null;
         if(toggles !=null)
             toggles.visible = parent.visible && showPopup;
         if(rightTogglesExpanded != null) {
