@@ -14,10 +14,17 @@ import java.awt.image.BufferedImage;
 public class SelectAreaWithLiveGhosts extends SelectArea {
     private String buildingName;
     private int rotationCount = 0;
+    private NHitBox customHitBox = null;
 
     public SelectAreaWithLiveGhosts(BufferedImage image, String buildingName) {
         super(image);
         this.buildingName = buildingName;
+    }
+    
+    public SelectAreaWithLiveGhosts(BufferedImage image, String buildingName, NHitBox customHitBox) {
+        super(image);
+        this.buildingName = buildingName;
+        this.customHitBox = customHitBox;
     }
     
     public int getRotationCount() {
@@ -86,6 +93,11 @@ public class SelectAreaWithLiveGhosts extends SelectArea {
 
         // Get hitbox, resource, and sprite data from plob
         NHitBox hitBox = plob.ngob.hitBox;
+        // Use custom hitbox if plob doesn't have one (e.g., for moundbed)
+        if (hitBox == null && customHitBox != null) {
+            hitBox = customHitBox;
+        }
+        
         Indir<Resource> resource = null;
         Message sdt = Message.nil;
 
