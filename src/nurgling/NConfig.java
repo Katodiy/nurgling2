@@ -37,6 +37,7 @@ public class NConfig
         resizeprop,
         showCropStage,
         nightVision,
+        nightVisionBrightness,
         showBB,
         nextflatsurface,
         flatsurface,
@@ -152,6 +153,7 @@ public class NConfig
         conf.put(Key.numbelts, 3);
         conf.put(Key.showCropStage, false);
         conf.put(Key.nightVision, false);
+        conf.put(Key.nightVisionBrightness, 0.65);
         conf.put(Key.showBB, false);
         conf.put(Key.bbDisplayMode, "FILLED");
         conf.put(Key.nextflatsurface, false);

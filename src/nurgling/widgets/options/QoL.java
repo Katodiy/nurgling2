@@ -11,6 +11,8 @@ public class QoL extends Panel {
     private CheckBox showCropStage;
     private CheckBox simpleCrops;
     private CheckBox nightVision;
+    private HSlider nightVisionBrightnessSlider;
+    private Label nightVisionBrightnessLabel;
     private CheckBox autoDrink;
     private CheckBox autoSaveTableware;
     private CheckBox showBB;
@@ -94,7 +96,18 @@ public class QoL extends Panel {
         leftPrev = showCropStage = leftColumn.add(new CheckBox("Show crop stage"), leftPrev.pos("bl").adds(0, 10));
         leftPrev = simpleCrops = leftColumn.add(new CheckBox("Simple crops"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = nightVision = leftColumn.add(new CheckBox("Night vision"), leftPrev.pos("bl").adds(0, 5));
-        leftPrev = showBB = leftColumn.add(new CheckBox("Bounding Boxes"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = leftColumn.add(new Label("Night vision brightness:"), leftPrev.pos("bl").adds(10, 3));
+        {
+            nightVisionBrightnessLabel = new Label("65%");
+            nightVisionBrightnessSlider = new HSlider(UI.scale(150), 0, 100, 65) {
+                public void changed() {
+                    nightVisionBrightnessLabel.settext(String.format("%d%%", this.val));
+                }
+            };
+            leftColumn.addhlp(leftPrev.pos("bl").adds(0, 2), UI.scale(5), nightVisionBrightnessSlider, nightVisionBrightnessLabel);
+            leftPrev = nightVisionBrightnessSlider;
+        }
+        leftPrev = showBB = leftColumn.add(new CheckBox("Bounding Boxes"), leftPrev.pos("bl").adds(-10, 5));
         leftPrev = showCSprite = leftColumn.add(new CheckBox("Show decorative objects (need reboot)"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = hideNature = leftColumn.add(new CheckBox("Hide nature objects"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = uniformBiomeColors = leftColumn.add(new CheckBox("Uniform biome colors on minimap"), leftPrev.pos("bl").adds(0, 5));
@@ -220,6 +233,16 @@ public class QoL extends Panel {
         showCropStage.a = getBool(NConfig.Key.showCropStage);
         simpleCrops.a = getBool(NConfig.Key.simplecrops);
         nightVision.a = getBool(NConfig.Key.nightVision);
+        
+        // Load night vision brightness
+        Object brightnessPref = NConfig.get(NConfig.Key.nightVisionBrightness);
+        int brightnessValue = 65; // Default
+        if (brightnessPref instanceof Number) {
+            brightnessValue = (int)(((Number) brightnessPref).doubleValue() * 100);
+        }
+        nightVisionBrightnessSlider.val = brightnessValue;
+        nightVisionBrightnessLabel.settext(String.format("%d%%", brightnessValue));
+        
         autoDrink.a = getBool(NConfig.Key.autoDrink);
         autoSaveTableware.a = getBool(NConfig.Key.autoSaveTableware);
         showBB.a = getBool(NConfig.Key.showBB);
@@ -297,6 +320,13 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.showCropStage, showCropStage.a);
         NConfig.set(NConfig.Key.simplecrops, simpleCrops.a);
         NConfig.set(NConfig.Key.nightVision, nightVision.a);
+        NConfig.set(NConfig.Key.nightVisionBrightness, nightVisionBrightnessSlider.val / 100.0);
+        
+        // Update brightness immediately
+        if(NUtils.getGameUI() != null && NUtils.getGameUI().ui != null && NUtils.getGameUI().ui.sess != null && NUtils.getGameUI().ui.sess.glob != null) {
+            NUtils.getGameUI().ui.sess.glob.brighten();
+        }
+        
         NConfig.set(NConfig.Key.autoDrink, autoDrink.a);
         NConfig.set(NConfig.Key.autoSaveTableware, autoSaveTableware.a);
         NConfig.set(NConfig.Key.showBB, showBB.a);
