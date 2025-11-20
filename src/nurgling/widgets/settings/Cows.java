@@ -22,6 +22,7 @@ public class Cows extends Window {
     CheckBox dk;
     CheckBox ignorebd;
     CheckBox ignoreqp;
+    CheckBox skipMilkingBox;
 
     public Cows() {
         super(new Coord(100,100), "Cows Herds");
@@ -48,6 +49,7 @@ public class Cows extends Window {
                     dk.set(gh.disable_killing);
                     ignorebd.set(gh.ignoreBD);
                     ignoreqp.set(gh.disable_q_percentage);
+                    skipMilkingBox.set(gh.skipMilking);
                 }
             }
             @Override
@@ -71,6 +73,7 @@ public class Cows extends Window {
                     gh.ignoreBD = ignorebd.a;
                     gh.ignoreChildren = ic.a;
                     gh.disable_q_percentage = ignoreqp.a;
+                    gh.skipMilking = skipMilkingBox.a;
                 }
                 CowsHerd.set(gh);
             }
@@ -94,6 +97,7 @@ public class Cows extends Window {
                 dk.set(gh.disable_killing);
                 ignorebd.set(gh.ignoreBD);
                 ignoreqp.set(gh.disable_q_percentage);
+                skipMilkingBox.set(gh.skipMilking);
                 CowsHerd.setCurrent(name.text());
             }
 
@@ -135,11 +139,19 @@ public class Cows extends Window {
             }
         }, prev.pos("bl").add(0, UI.scale(5))));
 
+        skipMilkingBox = (CheckBox)(prev = add (new CheckBox("Skip milking") {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+            }
+        }, prev.pos("bl").add(0, UI.scale(5))));
+
         if(CowsHerd.getCurrent()!=null) {
             ignoreqp.set(CowsHerd.getCurrent().disable_q_percentage);
             ignorebd.set(CowsHerd.getCurrent().ignoreBD);
             dk.set(CowsHerd.getCurrent().disable_killing);
             ic.set(CowsHerd.getCurrent().ignoreChildren);
+            skipMilkingBox.set(CowsHerd.getCurrent().skipMilking);
         }
 
         prev = totalAdult = add(new NSettinsSetI("Total adult:"), prev.pos("bl").add(0, 5));

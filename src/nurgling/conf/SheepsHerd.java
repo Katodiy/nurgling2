@@ -14,6 +14,8 @@ public class SheepsHerd implements JConf {
     public boolean ignoreBD = false;
     public boolean disable_killing = false;
     public boolean disable_q_percentage = false;
+    public boolean skipMilking = false;
+    public boolean skipShearing = false;
     public int adultSheeps = 4;
     public int breedingGap = 10;
     public double milkq = 1.5;
@@ -70,6 +72,10 @@ public class SheepsHerd implements JConf {
             disable_killing = (Boolean) values.get("dk");
         if (values.get("qp") != null)
             disable_q_percentage = (Boolean) values.get("qp");
+        if (values.get("skipMilking") != null)
+            skipMilking = (Boolean) values.get("skipMilking");
+        if (values.get("skipShearing") != null)
+            skipShearing = (Boolean) values.get("skipShearing");
         if (values.get("coverbreed") != null)
             coverbreed = ((Number) values.get("coverbreed")).doubleValue();
         if (values.get("woolquan1") != null)
@@ -160,6 +166,8 @@ public class SheepsHerd implements JConf {
         jSheepsHerd.put("bd", ignoreBD);
         jSheepsHerd.put("dk", disable_killing);
         jSheepsHerd.put("qp", disable_q_percentage);
+        jSheepsHerd.put("skipMilking", skipMilking);
+        jSheepsHerd.put("skipShearing", skipShearing);
         jSheepsHerd.put("woolquan1", woolquan1);
         jSheepsHerd.put("woolquan2", woolquan2);
         jSheepsHerd.put("woolquanth", woolquanth);
