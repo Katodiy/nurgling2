@@ -239,6 +239,29 @@ public class SAttrWnd extends Widget {
 	    Widget inf = add(new StudyInfo(new Coord(attrw - child.sz.x - wbox.bisz().x - UI.scale(5), child.sz.y), child), child.pos("ur").add(wbox.bisz().x + UI.scale(5), 0));
 	    Frame.around(this, Collections.singletonList(inf));
 	    pack();
+	    
+	    if(ui.gui instanceof nurgling.NGameUI) {
+		nurgling.NGameUI ngui = (nurgling.NGameUI)ui.gui;
+		if(ngui.studyReportWidget == null) {
+		    nurgling.widgets.NStudyReport report = new nurgling.widgets.NStudyReport(child);
+		    Coord widgetSize = report.sz.add(nurgling.widgets.NDraggableWidget.delta);
+		    ngui.studyReportWidget = ngui.add(new nurgling.widgets.NDraggableWidget(report, "StudyReport", widgetSize));
+		    
+		    nurgling.conf.NDragProp prop = nurgling.conf.NDragProp.get("StudyReport");
+		    if(prop.c == Coord.z) {
+			Coord defaultPos = new Coord(UI.scale(200), UI.scale(200));
+			ngui.studyReportWidget.c = defaultPos;
+			ngui.studyReportWidget.target_c = defaultPos;
+		    }
+		    
+		    ngui.studyReportWidget.show();
+		} else {
+		    if(ngui.studyReportWidget.content instanceof nurgling.widgets.NStudyReport) {
+			((nurgling.widgets.NStudyReport)ngui.studyReportWidget.content).study = child;
+			ngui.studyReportWidget.show();
+		    }
+		}
+	    }
 	} else {
 	    super.addchild(child, args);
 	}

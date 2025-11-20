@@ -60,6 +60,7 @@ public class NGameUI extends GameUI
     public TreeSearchWindow treeSearchWindow = null;
     public final Map<String, TreeLocationDetailsWindow> openTreeDetailWindows = new HashMap<>();
     public StudyDeskPlannerWidget studyDeskPlanner = null;
+    public NDraggableWidget studyReportWidget = null;
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
