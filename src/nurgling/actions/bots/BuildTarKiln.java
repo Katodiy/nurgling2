@@ -22,7 +22,7 @@ public class BuildTarKiln implements Action {
         command.name = "Tar Kiln";
 
         NUtils.getGameUI().msg("Please, select build area");
-        SelectAreaWithPreview buildarea = new SelectAreaWithPreview(Resource.loadsimg("baubles/buildArea"), "Tar Kiln");
+        SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Tar Kiln");
         buildarea.run(NUtils.getGameUI());
 
         NUtils.getGameUI().msg("Please, select area for stone");
