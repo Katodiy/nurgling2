@@ -94,23 +94,14 @@ public class SelectAreaWithLiveGhosts extends SelectArea {
         if (rd != null && rd.res != null)
         {
             resource = rd.res;
-            // Save the sprite data from plob
             if (rd.sdt != null) {
                 sdt = rd.sdt.clone();
-                System.out.println("[SelectAreaWithLiveGhosts] Got resource from ResDrawable: " + rd.res + " with sdt length: " + rd.sdt.rbuf.length);
-            } else {
-                System.out.println("[SelectAreaWithLiveGhosts] Got resource from ResDrawable: " + rd.res + " (null sdt)");
             }
         }
         // Fallback to name-based loading
         else if (plob.ngob.name != null)
         {
             resource = Resource.remote().load(plob.ngob.name);
-            System.out.println("[SelectAreaWithLiveGhosts] Got resource from name: " + plob.ngob.name);
-        }
-        else
-        {
-            System.out.println("[SelectAreaWithLiveGhosts] WARNING: Could not get resource! plob.ngob.name is null and ResDrawable not found");
         }
 
         // Properly cancel placement cursor BEFORE starting selection

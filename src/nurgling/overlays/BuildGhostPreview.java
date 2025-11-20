@@ -107,28 +107,22 @@ public class BuildGhostPreview extends GAttrib {
     private void createGhostGob(Coord2d worldPos) {
         try {
             if (buildingResource == null) {
-                System.out.println("[BuildGhostPreview] ERROR: buildingResource is null, cannot create ghost!");
                 return;
             }
             
             Gob ghost = new Gob(glob, worldPos);
-            ghost.a = rotationAngle;  // Set rotation angle
+            ghost.a = rotationAngle;
             
-            // Add all attributes BEFORE adding to OCache
             ghost.setattr(new GhostAlpha(ghost));
-            System.out.println("[BuildGhostPreview] Creating ResDrawable with resource: " + buildingResource + " and sdt length: " + (spriteData != null ? spriteData.rbuf.length : 0));
             ghost.setattr(new ResDrawable(ghost, buildingResource, spriteData));
-            System.out.println("[BuildGhostPreview] Successfully created ghost at " + worldPos);
             
             synchronized (ghostGobs) {
                 ghostGobs.add(ghost);
             }
             
-            // Add to OCache AFTER all attributes are set
             glob.oc.add(ghost);
         } catch (Exception e) {
-            System.out.println("[BuildGhostPreview] Exception creating ghost: " + e.getMessage());
-            e.printStackTrace();
+            // Silently ignore if can't create
         }
     }
 
