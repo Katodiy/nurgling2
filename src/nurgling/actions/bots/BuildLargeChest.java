@@ -21,7 +21,7 @@ public class BuildLargeChest implements Action {
         command.name = "Large Chest";
 
         NUtils.getGameUI().msg("Please, select build area");
-        SelectAreaWithPreview buildarea = new SelectAreaWithPreview(Resource.loadsimg("baubles/buildArea"), "Large Chest");
+    SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Large Chest");
         buildarea.run(NUtils.getGameUI());
 
         // Boards (5)
