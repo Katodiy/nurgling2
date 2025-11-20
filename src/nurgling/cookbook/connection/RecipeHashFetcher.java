@@ -95,9 +95,6 @@ public class RecipeHashFetcher implements Runnable {
             }
 
             recipes = new ArrayList<>(recipeMap.values());
-            long favoriteCount = recipes.stream().filter(Recipe::isFavorite).count();
-            System.out.println("Successfully fetched " + recipes.size() +
-                    " recipes with FEPS and ingredients (" + favoriteCount + " favorites)");
         } catch (SQLException e) {
             System.err.println("Error fetching recipes:");
             e.printStackTrace();
