@@ -111,19 +111,16 @@ public class BuildGhostPreview extends GAttrib {
             Gob ghost = new Gob(glob, worldPos);
             ghost.a = rotationAngle;  // Set rotation angle
             
-            // Add ghost effect (blue transparency) before adding to OCache
+            // Add all attributes BEFORE adding to OCache
             ghost.setattr(new GhostAlpha(ghost));
+            ghost.setattr(new ResDrawable(ghost, buildingResource, Message.nil));
             
             synchronized (ghostGobs) {
                 ghostGobs.add(ghost);
             }
-            glob.oc.add(ghost);  // Synchronous add
-
-            // Load resource asynchronously
-            glob.loader.defer(() -> {
-                ghost.setattr(new ResDrawable(ghost, buildingResource, Message.nil));
-                return null;
-            });
+            
+            // Add to OCache AFTER all attributes are set
+            glob.oc.add(ghost);
         } catch (Exception e) {
             // Silently ignore if can't create
         }
