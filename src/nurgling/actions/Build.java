@@ -16,7 +16,7 @@ import static haven.OCache.posres;
 public class Build implements Action{
     Command cmd;
     Pair<Coord2d, Coord2d> area;
-    boolean needRotate = false;
+    int rotationCount = 0;  // Rotation count: 0, 1, 2, 3 for 0°, 90°, 180°, 270°
 
     public static class Command
     {
@@ -53,9 +53,13 @@ public class Build implements Action{
     }
 
     public Build(Command cmd, Pair<Coord2d, Coord2d> area) {
+        this(cmd, area, 0);
+    }
+    
+    public Build(Command cmd, Pair<Coord2d, Coord2d> area, int rotationCount) {
         this.cmd = cmd;
         this.area = area;
-        needRotate = (Math.abs(area.b.x-area.a.x)<Math.abs(area.b.y-area.a.y));
+        this.rotationCount = rotationCount;
     }
 
     @Override
@@ -113,21 +117,28 @@ public class Build implements Action{
             }
             NUtils.addTask(new WaitPlob());
             MapView.Plob plob = NUtils.getGameUI().map.placing.get();
-            plob.a = needRotate ? Math.PI / 2 : 0;
+            double rotationAngle = (rotationCount * Math.PI / 2.0);
+            plob.a = rotationAngle;
 
             // Use game's hitbox if available, otherwise fall back to custom hitbox
             nurgling.NHitBox hitBox = plob.ngob.hitBox;
             if (hitBox == null && cmd.customHitBox != null) {
                 hitBox = cmd.customHitBox;
             }
+            
+            // Apply rotation to hitbox based on rotationCount
+            nurgling.NHitBox rotatedHitBox = hitBox;
+            for (int i = 0; i < rotationCount; i++) {
+                rotatedHitBox = rotatedHitBox.rotate();
+            }
 
-            pos = Finder.getFreePlace(area, needRotate ? hitBox.rotate() : hitBox);
+            pos = Finder.getFreePlace(area, rotatedHitBox);
 
-            PathFinder pf = new PathFinder(NGob.getDummy(pos, plob.a, hitBox), true);
+            PathFinder pf = new PathFinder(NGob.getDummy(pos, rotationAngle, rotatedHitBox), true);
             pf.isHardMode = true;
             pf.run(gui);
 
-            gui.map.wdgmsg("place", pos.floor(posres), (int) Math.round((needRotate ? Math.PI / 2 : 0) * 32768 / Math.PI), 1, 0);
+            gui.map.wdgmsg("place", pos.floor(posres), (int) Math.round(rotationAngle * 32768 / Math.PI), 1, 0);
             NUtils.addTask(new WaitConstructionObject(pos));
 
             String windowName = cmd.windowName != null ? cmd.windowName : cmd.name;
@@ -184,7 +195,7 @@ public class Build implements Action{
                 NUtils.addTask(new WaitItems(NUtils.getGameUI().getInventory(),ingredient.name,ingredient.left));
             }
 
-            pos = Finder.getFreePlace(area, needRotate ? hitBox.rotate() : hitBox);
+            pos = Finder.getFreePlace(area, rotatedHitBox);
         }
         while (pos!=null);
         return Results.SUCCESS();

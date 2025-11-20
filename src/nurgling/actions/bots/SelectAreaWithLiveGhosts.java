@@ -13,10 +13,15 @@ import java.awt.image.BufferedImage;
 
 public class SelectAreaWithLiveGhosts extends SelectArea {
     private String buildingName;
+    private int rotationCount = 0;
 
     public SelectAreaWithLiveGhosts(BufferedImage image, String buildingName) {
         super(image);
         this.buildingName = buildingName;
+    }
+    
+    public int getRotationCount() {
+        return rotationCount;
     }
 
     @Override
@@ -129,6 +134,7 @@ public class SelectAreaWithLiveGhosts extends SelectArea {
         if (sa.getResult() != null)
         {
             result = sa.getResult();
+            rotationCount = sa.getRotationCount();
         } else
         {
             return Results.FAIL();
