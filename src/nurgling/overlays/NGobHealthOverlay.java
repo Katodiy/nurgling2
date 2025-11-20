@@ -1,6 +1,7 @@
 package nurgling.overlays;
 
 import haven.*;
+import nurgling.NConfig;
 
 import java.awt.*;
 import java.awt.image.*;
@@ -47,6 +48,11 @@ public class NGobHealthOverlay extends NObjectTexLabel
     static TexI lvl25t = null;
     static TexI lvl50t = null;
     static TexI lvl75t = null;
+    
+    // Text-only versions (without shield icons)
+    static TexI lvl25text = null;
+    static TexI lvl50text = null;
+    static TexI lvl75text = null;
 
     public static final Font bsans  = new Font("Sans", Font.BOLD, 10);
     private static final Text.Furnace active_title = new PUtils.BlurFurn(new Text.Foundry(bsans, 15, Color.WHITE).aa(true), 2, 1, new Color(36, 25, 25));
@@ -61,6 +67,40 @@ public class NGobHealthOverlay extends NObjectTexLabel
         g.dispose();
         return new TexI(ret);
     }
+    
+    static TexI initTextOnly(float lvl)
+    {
+        String value = String.format("%.0f",lvl*100)+"%";
+        BufferedImage retlabel = active_title.render(value).img;
+        return new TexI(retlabel);
+    }
+    
+    static TexI getLvl25Text() {
+        if(lvl25text == null) {
+            synchronized (lvl25) {
+                lvl25text = initTextOnly(0.25f);
+            }
+        }
+        return lvl25text;
+    }
+    
+    static TexI getLvl50Text() {
+        if(lvl50text == null) {
+            synchronized (lvl50) {
+                lvl50text = initTextOnly(0.50f);
+            }
+        }
+        return lvl50text;
+    }
+    
+    static TexI getLvl75Text() {
+        if(lvl75text == null) {
+            synchronized (lvl75) {
+                lvl75text = initTextOnly(0.75f);
+            }
+        }
+        return lvl75text;
+    }
 
     Gob gob;
     public NGobHealthOverlay(Owner owner)
@@ -73,28 +113,51 @@ public class NGobHealthOverlay extends NObjectTexLabel
     public boolean tick(double dt)
     {
         GobHealth gh = gob.getattr(GobHealth.class);
+        boolean showShields = (Boolean) NConfig.get(NConfig.Key.showDamageShields);
+        
         if(gh.hp<1)
         {
-            if(gh.hp<=0.25f)
-            {
-                img = lvl25;
-                label = lvl25t();
-            }
-            else if(gh.hp<=0.5f)
-            {
-                img = lvl50;
-                label = lvl50t();
-            }
-            else
-            {
-                img = lvl75;
-                label = lvl75t();
+            if(showShields) {
+                // Original behavior: show shield icon when far, shield+text when close
+                forced = false;
+                if(gh.hp<=0.25f)
+                {
+                    img = lvl25;
+                    label = lvl25t();
+                }
+                else if(gh.hp<=0.5f)
+                {
+                    img = lvl50;
+                    label = lvl50t();
+                }
+                else
+                {
+                    img = lvl75;
+                    label = lvl75t();
+                }
+            } else {
+                // New behavior: show only text, always (forced)
+                forced = true;
+                img = null;
+                if(gh.hp<=0.25f)
+                {
+                    label = getLvl25Text();
+                }
+                else if(gh.hp<=0.5f)
+                {
+                    label = getLvl50Text();
+                }
+                else
+                {
+                    label = getLvl75Text();
+                }
             }
         }
         else
         {
             img = null;
             label = null;
+            forced = false;
         }
         return super.tick(dt);
     }

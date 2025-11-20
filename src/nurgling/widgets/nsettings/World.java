@@ -16,6 +16,7 @@ public class World extends Panel {
         boolean showBB;
         boolean showBeehiveRadius;
         boolean showTroughRadius;
+        boolean showDamageShields;
         boolean persistentBarrelLabels;
         Color boxFillColor = new Color(227, 28, 1, 195);
         Color boxEdgeColor = new Color(224, 193, 79, 255);
@@ -29,6 +30,7 @@ public class World extends Panel {
     private CheckBox boundingBoxes;
     private CheckBox beehiveRadius;
     private CheckBox troughRadius;
+    private CheckBox damageShields;
     private CheckBox persistentBarrels;
     private NColorWidget fillColorWidget;
     private NColorWidget edgeColorWidget;
@@ -88,33 +90,41 @@ public class World extends Panel {
                 a = val;
             }
         }, UI.scale(100, 240));
-
+        
+        // Damage shields setting
+        damageShields = add(new CheckBox("Show damage shields on broken objects") {
+            public void set(boolean val) {
+                tempSettings.showDamageShields = val;
+                a = val;
+            }
+        }, UI.scale(100, 280));
+        
         // Persistent barrel labels setting
         persistentBarrels = add(new CheckBox("Keep barrel labels visible during camera scroll") {
             public void set(boolean val) {
                 tempSettings.persistentBarrelLabels = val;
                 a = val;
             }
-        }, UI.scale(100, 280));
+        }, UI.scale(100, 320));
 
 
         // Bounding box colors
-        add(new Label("Bounding Box Colors:"), UI.scale(10, 320));
+        add(new Label("Bounding Box Colors:"), UI.scale(10, 360));
         
-        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 350));
+        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 390));
         fillColorWidget.color = tempSettings.boxFillColor;
         
-        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 400));
+        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 440));
         edgeColorWidget.color = tempSettings.boxEdgeColor;
 
         // Line width setting
-        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 450));
+        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 490));
         lineWidthSlider = add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
             public void changed() {
                 tempSettings.boxLineWidth = val;
                 lineWidthLabel.settext("Line width: " + val);
             }
-        }, UI.scale(50, 470));
+        }, UI.scale(50, 510));
 
     }
 
@@ -132,6 +142,7 @@ public class World extends Panel {
         tempSettings.showBB = (Boolean) NConfig.get(NConfig.Key.showBB);
         tempSettings.showBeehiveRadius = (Boolean) NConfig.get(NConfig.Key.showBeehiveRadius);
         tempSettings.showTroughRadius = (Boolean) NConfig.get(NConfig.Key.showTroughRadius);
+        tempSettings.showDamageShields = (Boolean) NConfig.get(NConfig.Key.showDamageShields);
         tempSettings.persistentBarrelLabels = (Boolean) NConfig.get(NConfig.Key.persistentBarrelLabels);
 
         // Load colors if they exist in config
@@ -150,6 +161,7 @@ public class World extends Panel {
         boundingBoxes.a = tempSettings.showBB;
         beehiveRadius.a = tempSettings.showBeehiveRadius;
         troughRadius.a = tempSettings.showTroughRadius;
+        damageShields.a = tempSettings.showDamageShields;
         persistentBarrels.a = tempSettings.persistentBarrelLabels;
         fillColorWidget.color = tempSettings.boxFillColor;
         edgeColorWidget.color = tempSettings.boxEdgeColor;
@@ -168,6 +180,7 @@ public class World extends Panel {
         // Save object radii settings (overlays will auto-update)
         NConfig.set(NConfig.Key.showBeehiveRadius, tempSettings.showBeehiveRadius);
         NConfig.set(NConfig.Key.showTroughRadius, tempSettings.showTroughRadius);
+        NConfig.set(NConfig.Key.showDamageShields, tempSettings.showDamageShields);
         
         NConfig.set(NConfig.Key.persistentBarrelLabels, tempSettings.persistentBarrelLabels);
         

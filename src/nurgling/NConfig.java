@@ -123,7 +123,8 @@ public class NConfig
         openInventoryOnLogin,
         bbDisplayMode,
         showBeehiveRadius,
-        showTroughRadius
+        showTroughRadius,
+        showDamageShields
     }
 
     public enum BBDisplayMode
@@ -321,6 +322,9 @@ public class NConfig
         // Object radius overlays - simple boolean flags
         conf.put(Key.showBeehiveRadius, false);
         conf.put(Key.showTroughRadius, false);
+        
+        // Damage shields display
+        conf.put(Key.showDamageShields, true);
     }
 
 
