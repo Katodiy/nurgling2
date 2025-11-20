@@ -93,6 +93,7 @@ public class NUtils
                 }
         }
     }
+    
 
     public static boolean isNatureObject(String name)
     {

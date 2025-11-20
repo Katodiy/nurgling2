@@ -37,6 +37,7 @@ public class NMapView extends MapView
     public static final KeyBinding kb_displayfov = KeyBinding.get("pfovbox",  KeyMatch.nil);
     public static final KeyBinding kb_displaygrid = KeyBinding.get("gridbox",  KeyMatch.nil);
     public static final KeyBinding kb_togglebb = KeyBinding.get("togglebb",  KeyMatch.forcode(KeyEvent.VK_N, KeyMatch.C));
+    public static final KeyBinding kb_cyclebbmode = KeyBinding.get("cyclebbmode",  KeyMatch.forcode(KeyEvent.VK_N, KeyMatch.C | KeyMatch.S));
     public static final KeyBinding kb_togglenature = KeyBinding.get("togglenature",  KeyMatch.forcode(KeyEvent.VK_H, KeyMatch.C));
     public static final int MINING_OVERLAY = - 1;
     public NGlobalCoord lastGC = null;
@@ -878,6 +879,64 @@ public class NMapView extends MapView
                 if (panel.settingsWindow != null && panel.settingsWindow.qol != null) {
                     panel.settingsWindow.qol.syncShowBB();
                 }
+            }
+        }
+        if(kb_cyclebbmode.key().match(ev)) {
+            String currentMode = (String) NConfig.get(NConfig.Key.bbDisplayMode);
+            if (currentMode == null) currentMode = "FILLED";
+            
+            String newMode;
+            switch (currentMode) {
+                case "FILLED":
+                    newMode = "FILLED_ALWAYS";
+                    break;
+                case "FILLED_ALWAYS":
+                    newMode = "OUTLINE";
+                    break;
+                case "OUTLINE":
+                    newMode = "OUTLINE_ALWAYS";
+                    break;
+                case "OUTLINE_ALWAYS":
+                    newMode = "OFF";
+                    break;
+                default:
+                    newMode = "FILLED";
+                    break;
+            }
+            
+            NConfig.set(NConfig.Key.bbDisplayMode, newMode);
+            
+            // Display user-friendly message
+            String displayMsg;
+            switch (newMode) {
+                case "FILLED":
+                    displayMsg = "Filled (depth-aware)";
+                    break;
+                case "FILLED_ALWAYS":
+                    displayMsg = "Filled (always visible)";
+                    break;
+                case "OUTLINE":
+                    displayMsg = "Outline (depth-aware)";
+                    break;
+                case "OUTLINE_ALWAYS":
+                    displayMsg = "Outline (always visible)";
+                    break;
+                case "OFF":
+                    displayMsg = "Off";
+                    break;
+                default:
+                    displayMsg = newMode;
+                    break;
+            }
+            NUtils.getGameUI().msg("Bounding Box Mode: " + displayMsg);
+            
+            // If BB is disabled and user switches to a visible mode, enable it
+            if (!newMode.equals("OFF") && !(Boolean) NConfig.get(NConfig.Key.showBB)) {
+                NConfig.set(NConfig.Key.showBB, true);
+            }
+            // If user switches to OFF mode, disable BB
+            else if (newMode.equals("OFF")) {
+                NConfig.set(NConfig.Key.showBB, false);
             }
         }
         if(kb_togglenature.key().match(ev)) {

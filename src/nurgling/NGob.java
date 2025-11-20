@@ -22,6 +22,7 @@ import nurgling.widgets.NMiniMap;
 import nurgling.widgets.NProspecting;
 import nurgling.widgets.NQuestInfo;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -535,6 +536,20 @@ public class NGob
                             gob.addcustomol(new NAreaRange(gob, rad));
                         }
                 ));
+            }
+            
+            // Add radius overlays for beehives and troughs
+            // Overlays react to config changes automatically
+            if (name != null)
+            {
+                if (name.contains("beehive"))
+                {
+                    parent.addcustomol(new nurgling.overlays.NBeehiveRadius(parent));
+                }
+                else if (name.contains("trough"))
+                {
+                    parent.addcustomol(new nurgling.overlays.NTroughRadius(parent));
+                }
             }
         }
     }

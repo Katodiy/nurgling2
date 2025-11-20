@@ -118,7 +118,19 @@ public class NConfig
         picklingCucumbers,
         picklingRedOnion,
         picklingYellowOnion,
-        openInventoryOnLogin
+        openInventoryOnLogin,
+        bbDisplayMode,
+        showBeehiveRadius,
+        showTroughRadius
+    }
+
+    public enum BBDisplayMode
+    {
+        FILLED,           // Fill and outline both with depth test (both hidden behind objects)
+        FILLED_ALWAYS,    // Fill with depth test (hidden), outline without depth test (always visible)
+        OUTLINE,          // Outline only with depth test (hidden behind objects)
+        OUTLINE_ALWAYS,   // Outline only without depth test (always visible)
+        OFF               // Disabled
     }
 
 
@@ -140,6 +152,7 @@ public class NConfig
         conf.put(Key.showCropStage, false);
         conf.put(Key.nightVision, false);
         conf.put(Key.showBB, false);
+        conf.put(Key.bbDisplayMode, "FILLED");
         conf.put(Key.nextflatsurface, false);
         conf.put(Key.flatsurface, false);
         conf.put(Key.nextshowCSprite, false);
@@ -300,6 +313,10 @@ public class NConfig
 
         // Login settings
         conf.put(Key.openInventoryOnLogin, false);  // Default to closed (current behavior)
+        
+        // Object radius overlays - simple boolean flags
+        conf.put(Key.showBeehiveRadius, false);
+        conf.put(Key.showTroughRadius, false);
     }
 
 
@@ -394,6 +411,7 @@ public class NConfig
 
     public static NConfig current;
 
+    @SuppressWarnings("unchecked")
     private ArrayList<Object> readArray(ArrayList<HashMap<String, Object>> objs)
     {
         if (objs.size() > 0)
@@ -497,6 +515,7 @@ public class NConfig
         return new ArrayList<>();
     }
 
+    @SuppressWarnings("unchecked")
     public void read() {
         current = this;
         StringBuilder contentBuilder = new StringBuilder();
@@ -559,6 +578,7 @@ public class NConfig
         conf.put(Key.flatsurface,conf.get(Key.nextflatsurface));
     }
 
+    @SuppressWarnings("unchecked")
     private ArrayList<Object> prepareArray(ArrayList<Object> objs)
     {
         if (objs.size() > 0)
@@ -587,6 +607,7 @@ public class NConfig
         return objs;
     }
 
+    @SuppressWarnings("unchecked")
     public void write()
     {
         Map<String, Object> prep = new HashMap<>();

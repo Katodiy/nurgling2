@@ -14,6 +14,8 @@ public class World extends Panel {
         boolean decorativeObjects;
         boolean hideNature;
         boolean showBB;
+        boolean showBeehiveRadius;
+        boolean showTroughRadius;
         boolean persistentBarrelLabels;
         Color boxFillColor = new Color(227, 28, 1, 195);
         Color boxEdgeColor = new Color(224, 193, 79, 255);
@@ -25,6 +27,8 @@ public class World extends Panel {
     private CheckBox decorativeObjects;
     private CheckBox natura;
     private CheckBox boundingBoxes;
+    private CheckBox beehiveRadius;
+    private CheckBox troughRadius;
     private CheckBox persistentBarrels;
     private NColorWidget fillColorWidget;
     private NColorWidget edgeColorWidget;
@@ -68,6 +72,22 @@ public class World extends Panel {
                 a = val;
             }
         }, UI.scale(100, 160));
+        
+        // Beehive radius setting
+        beehiveRadius = add(new CheckBox("Show beehive radius") {
+            public void set(boolean val) {
+                tempSettings.showBeehiveRadius = val;
+                a = val;
+            }
+        }, UI.scale(100, 200));
+        
+        // Trough radius setting
+        troughRadius = add(new CheckBox("Show trough radius") {
+            public void set(boolean val) {
+                tempSettings.showTroughRadius = val;
+                a = val;
+            }
+        }, UI.scale(100, 240));
 
         // Persistent barrel labels setting
         persistentBarrels = add(new CheckBox("Keep barrel labels visible during camera scroll") {
@@ -75,26 +95,26 @@ public class World extends Panel {
                 tempSettings.persistentBarrelLabels = val;
                 a = val;
             }
-        }, UI.scale(100, 200));
+        }, UI.scale(100, 280));
 
 
         // Bounding box colors
-        add(new Label("Bounding Box Colors:"), UI.scale(10, 240));
+        add(new Label("Bounding Box Colors:"), UI.scale(10, 320));
         
-        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 270));
+        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 350));
         fillColorWidget.color = tempSettings.boxFillColor;
         
-        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 320));
+        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 400));
         edgeColorWidget.color = tempSettings.boxEdgeColor;
 
         // Line width setting
-        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 370));
+        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 450));
         lineWidthSlider = add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
             public void changed() {
                 tempSettings.boxLineWidth = val;
                 lineWidthLabel.settext("Line width: " + val);
             }
-        }, UI.scale(50, 390));
+        }, UI.scale(50, 470));
 
     }
 
@@ -110,6 +130,8 @@ public class World extends Panel {
         tempSettings.decorativeObjects = (Boolean) NConfig.get(NConfig.Key.nextshowCSprite);
         tempSettings.hideNature = (Boolean) NConfig.get(NConfig.Key.hideNature);
         tempSettings.showBB = (Boolean) NConfig.get(NConfig.Key.showBB);
+        tempSettings.showBeehiveRadius = (Boolean) NConfig.get(NConfig.Key.showBeehiveRadius);
+        tempSettings.showTroughRadius = (Boolean) NConfig.get(NConfig.Key.showTroughRadius);
         tempSettings.persistentBarrelLabels = (Boolean) NConfig.get(NConfig.Key.persistentBarrelLabels);
 
         // Load colors if they exist in config
@@ -126,6 +148,8 @@ public class World extends Panel {
         decorativeObjects.a = tempSettings.decorativeObjects;
         natura.a = !tempSettings.hideNature;
         boundingBoxes.a = tempSettings.showBB;
+        beehiveRadius.a = tempSettings.showBeehiveRadius;
+        troughRadius.a = tempSettings.showTroughRadius;
         persistentBarrels.a = tempSettings.persistentBarrelLabels;
         fillColorWidget.color = tempSettings.boxFillColor;
         edgeColorWidget.color = tempSettings.boxEdgeColor;
@@ -140,6 +164,11 @@ public class World extends Panel {
         NConfig.set(NConfig.Key.nextshowCSprite, tempSettings.decorativeObjects);
 
         NConfig.set(NConfig.Key.showBB, tempSettings.showBB);
+        
+        // Save object radii settings (overlays will auto-update)
+        NConfig.set(NConfig.Key.showBeehiveRadius, tempSettings.showBeehiveRadius);
+        NConfig.set(NConfig.Key.showTroughRadius, tempSettings.showTroughRadius);
+        
         NConfig.set(NConfig.Key.persistentBarrelLabels, tempSettings.persistentBarrelLabels);
         
         // Save hideNature setting
