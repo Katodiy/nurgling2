@@ -23,7 +23,7 @@ public class ContainerWatcher  implements Runnable {
             NUtils.addTask(new NTask() {
                 @Override
                 public boolean check() {
-                    return parentGob.ngob.hash!=null;
+                    return parentGob.ngob.hash!=null && parentGob.ngob.gcoord!=null;
                 }
             });
             PreparedStatement preparedStatement = connection.prepareStatement(sql);

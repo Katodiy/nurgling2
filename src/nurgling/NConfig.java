@@ -83,6 +83,7 @@ public class NConfig
         showInventoryNums,
         hidecredo,
         autoDrink,
+        autoSaveTableware,
         chipperprop,
         animalrad,
         smokeprop,
@@ -182,6 +183,7 @@ public class NConfig
         conf.put(Key.unloadgreen, false);
         conf.put(Key.showInventoryNums, true);
         conf.put(Key.autoDrink, false);
+        conf.put(Key.autoSaveTableware, true);
         conf.put(Key.endpoint, "");
         conf.put(Key.questNotified, false);
         conf.put(Key.lpassistent, false);

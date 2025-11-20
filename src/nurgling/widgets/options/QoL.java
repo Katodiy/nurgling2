@@ -12,6 +12,7 @@ public class QoL extends Panel {
     private CheckBox simpleCrops;
     private CheckBox nightVision;
     private CheckBox autoDrink;
+    private CheckBox autoSaveTableware;
     private CheckBox showBB;
     private CheckBox showCSprite;
     private CheckBox hideNature;
@@ -186,6 +187,7 @@ public class QoL extends Panel {
 
         rightPrev = rightColumn.add(new Label("● Quality of Life"), rightPrev.pos("bl").adds(0, 15));
         rightPrev = autoDrink = rightColumn.add(new CheckBox("Auto-drink"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = autoSaveTableware = rightColumn.add(new CheckBox("Auto-save tableware"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = questNotified = rightColumn.add(new CheckBox("Enable quest notified"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = lpassistent = rightColumn.add(new CheckBox("Enable LP assistant"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = disableMenugridKeys = rightColumn.add(new CheckBox("Disable menugrid keys"), rightPrev.pos("bl").adds(0, 5));
@@ -219,6 +221,7 @@ public class QoL extends Panel {
         simpleCrops.a = getBool(NConfig.Key.simplecrops);
         nightVision.a = getBool(NConfig.Key.nightVision);
         autoDrink.a = getBool(NConfig.Key.autoDrink);
+        autoSaveTableware.a = getBool(NConfig.Key.autoSaveTableware);
         showBB.a = getBool(NConfig.Key.showBB);
         showCSprite.a = getBool(NConfig.Key.nextshowCSprite);
 
@@ -295,6 +298,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.simplecrops, simpleCrops.a);
         NConfig.set(NConfig.Key.nightVision, nightVision.a);
         NConfig.set(NConfig.Key.autoDrink, autoDrink.a);
+        NConfig.set(NConfig.Key.autoSaveTableware, autoSaveTableware.a);
         NConfig.set(NConfig.Key.showBB, showBB.a);
         NConfig.set(NConfig.Key.nextshowCSprite, showCSprite.a);
         NConfig.set(NConfig.Key.hideNature, newHideNature);

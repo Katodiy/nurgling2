@@ -8,6 +8,7 @@ import monitoring.ContainerWatcher;
 import monitoring.ItemWatcher;
 import monitoring.NGlobalSearchItems;
 import nurgling.actions.AutoDrink;
+import nurgling.actions.AutoSaveTableware;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.scenarios.ScenarioManager;
 import nurgling.tasks.*;
@@ -24,6 +25,7 @@ public class NCore extends Widget
     boolean isinspect = false;
     public NMappingClient mappingClient;
     public AutoDrink autoDrink = null;
+    public AutoSaveTableware autoSaveTableware = null;
     public ScenarioManager scenarioManager = new ScenarioManager();
 
     public DBPoolManager poolManager = null;
@@ -193,6 +195,26 @@ public class NCore extends Widget
             if(autoDrink != null && !(Boolean)NConfig.get(NConfig.Key.autoDrink))
             {
                 AutoDrink.stop.set(true);
+            }
+        }
+
+        if(autoSaveTableware == null && (Boolean)NConfig.get(NConfig.Key.autoSaveTableware))
+        {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        (autoSaveTableware = new AutoSaveTableware()).run(NUtils.getGameUI());
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+            }).start();
+        }
+        else
+        {
+            if(autoSaveTableware != null && !(Boolean)NConfig.get(NConfig.Key.autoSaveTableware))
+            {
+                AutoSaveTableware.stop.set(true);
             }
         }
         super.tick(dt);
