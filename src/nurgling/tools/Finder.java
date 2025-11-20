@@ -491,17 +491,22 @@ public class Finder
     }
 
     public static Coord2d getFreePlace(Pair<Coord2d,Coord2d> area, Gob placed) {
-        return getFreePlace(area,placed.ngob.hitBox);
+        return getFreePlace(area,placed.ngob.hitBox, 0);
     }
 
     public static Coord2d getFreePlace(Pair<Coord2d,Coord2d> area, NHitBox hitBox) {
+        return getFreePlace(area, hitBox, 0);
+    }
+    
+    public static Coord2d getFreePlace(Pair<Coord2d,Coord2d> area, NHitBox hitBox, double angle) {
         Coord2d pos = null;
 
 
         ArrayList<NHitBoxD> significantGobs = new ArrayList<> ();
         NHitBoxD chekerOfArea = new NHitBoxD(area.a, area.b);
 
-        NHitBoxD temporalGobBox = new NHitBoxD(hitBox.begin, hitBox.end, Coord2d.of(0),0);
+        // Check area size with rotated hitbox dimensions
+        NHitBoxD temporalGobBox = new NHitBoxD(hitBox.begin, hitBox.end, Coord2d.of(0), angle);
         if(chekerOfArea.c[2].sub(chekerOfArea.c[0]).x < temporalGobBox.getCircumscribedBR().sub(temporalGobBox.getCircumscribedUL()).x ||
                 chekerOfArea.c[2].sub(chekerOfArea.c[0]).y < temporalGobBox.getCircumscribedBR().sub(temporalGobBox.getCircumscribedUL()).y )
             return null;
@@ -509,6 +514,11 @@ public class Finder
         synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
             for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc ) {
                 if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector"))) {
+                    // Skip ghost gobs from preview (they have GhostAlpha)
+                    if (gob.getattr(GhostAlpha.class) != null) {
+                        continue;
+                    }
+                    
                     NHitBox effectiveHitBox = gob.ngob.hitBox;
 
                     // If gob has no hitbox, check if there's a custom hitbox defined for it
@@ -527,13 +537,19 @@ public class Finder
         }
 
         Coord inchMax = area.b.sub(area.a).floor();
-        Coord margin =  hitBox.end.sub(hitBox.begin).floor(2,2);
+        
+        // Create a test box to get actual rotated dimensions for margin calculation
+        NHitBoxD tempBox = new NHitBoxD(hitBox.begin, hitBox.end, Coord2d.of(0), angle);
+        Coord2d rotatedUL = tempBox.getCircumscribedUL();
+        Coord2d rotatedBR = tempBox.getCircumscribedBR();
+        Coord margin = rotatedBR.sub(rotatedUL).floor(2, 2);
+        
         for (int i = margin.x; i <= inchMax.x - margin.x; i++)
         {
             for (int j = margin.y; j <= inchMax.y - margin.y; j++)
             {
                 boolean passed = true;
-                NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, area.a.add(i,j),0);
+                NHitBoxD testGobBox = new NHitBoxD(hitBox.begin, hitBox.end, area.a.add(i,j), angle);
                 for ( NHitBoxD significantHitbox : significantGobs )
                     if(significantHitbox.intersects(testGobBox,false))
                         passed = false;

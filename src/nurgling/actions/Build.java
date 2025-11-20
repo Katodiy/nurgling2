@@ -125,16 +125,10 @@ public class Build implements Action{
             if (hitBox == null && cmd.customHitBox != null) {
                 hitBox = cmd.customHitBox;
             }
-            
-            // Apply rotation to hitbox based on rotationCount
-            nurgling.NHitBox rotatedHitBox = hitBox;
-            for (int i = 0; i < rotationCount; i++) {
-                rotatedHitBox = rotatedHitBox.rotate();
-            }
 
-            pos = Finder.getFreePlace(area, rotatedHitBox);
+            pos = Finder.getFreePlace(area, hitBox, rotationAngle);
 
-            PathFinder pf = new PathFinder(NGob.getDummy(pos, rotationAngle, rotatedHitBox), true);
+            PathFinder pf = new PathFinder(NGob.getDummy(pos, rotationAngle, hitBox), true);
             pf.isHardMode = true;
             pf.run(gui);
 
@@ -195,7 +189,7 @@ public class Build implements Action{
                 NUtils.addTask(new WaitItems(NUtils.getGameUI().getInventory(),ingredient.name,ingredient.left));
             }
 
-            pos = Finder.getFreePlace(area, rotatedHitBox);
+            pos = Finder.getFreePlace(area, hitBox, rotationAngle);
         }
         while (pos!=null);
         return Results.SUCCESS();
