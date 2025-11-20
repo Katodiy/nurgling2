@@ -136,8 +136,8 @@ public class NCropMarkerBatch implements RenderTree.Node {
         if (markers.isEmpty()) return;
         
         Coord sz = texture.sz();
-        float halfW = sz.x * 0.75f;
-        float halfH = sz.y * 0.75f;
+        float halfW = sz.x * 0.5f;
+        float halfH = sz.y * 0.5f;
         
         int batchSize = Math.min(markers.size(), MAX_INSTANCES);
         
@@ -212,8 +212,8 @@ public class NCropMarkerBatch implements RenderTree.Node {
                 float x = (float) marker.screenPos.x;
                 float y = (float) marker.screenPos.y;
                 
-                float halfW = region.width * 0.75f;
-                float halfH = region.height * 0.75f;
+                float halfW = region.width * 0.5f;
+                float halfH = region.height * 0.5f;
                 
                 float l = x - halfW;
                 float r = x + halfW;
