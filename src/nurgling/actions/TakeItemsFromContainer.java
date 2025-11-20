@@ -4,6 +4,7 @@ import haven.Coord;
 import haven.Inventory;
 import haven.WItem;
 import nurgling.*;
+import nurgling.NInventory.QualityType;
 import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
 import nurgling.tools.NAlias;
@@ -11,6 +12,8 @@ import nurgling.tools.NParser;
 import nurgling.tools.StackSupporter;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 
 public class TakeItemsFromContainer implements Action
@@ -19,12 +22,14 @@ public class TakeItemsFromContainer implements Action
     Container cont;
     HashSet<String> names;
     NAlias pattern;
+    QualityType qualityType;
     public int minSize = Integer.MAX_VALUE;
     public TakeItemsFromContainer(Container cont, HashSet<String> names, NAlias pattern)
     {
         this.cont = cont;
         this.names = names;
         this.pattern = pattern;
+        this.qualityType = null;
     }
 
     double targetq = -1;
@@ -34,9 +39,44 @@ public class TakeItemsFromContainer implements Action
         this.names = names;
         this.pattern = pattern;
         this.targetq = q;
+        this.qualityType = null;
     }
+
+    public TakeItemsFromContainer(Container cont, HashSet<String> names, NAlias pattern, QualityType qualityType)
+    {
+        this.cont = cont;
+        this.names = names;
+        this.pattern = pattern;
+        this.qualityType = qualityType;
+    }
+
     int target_size = 0;
     boolean took = false;
+
+    // Quality comparators for sorting items (following GetItems pattern but with null safety)
+    private Comparator<WItem> high = new Comparator<WItem>() {
+        @Override
+        public int compare(WItem lhs, WItem rhs) {
+            Float qualityL = ((NGItem) lhs.item).quality;
+            Float qualityR = ((NGItem) rhs.item).quality;
+            if (qualityL == null && qualityR == null) return 0;
+            if (qualityL == null) return 1;
+            if (qualityR == null) return -1;
+            return Double.compare(qualityR, qualityL);
+        }
+    };
+
+    private Comparator<WItem> low = new Comparator<WItem>() {
+        @Override
+        public int compare(WItem lhs, WItem rhs) {
+            Float qualityL = ((NGItem) lhs.item).quality;
+            Float qualityR = ((NGItem) rhs.item).quality;
+            if (qualityL == null && qualityR == null) return 0;
+            if (qualityL == null) return 1;
+            if (qualityR == null) return -1;
+            return Double.compare(qualityL, qualityR);
+        }
+    };
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NInventory inv = gui.getInventory(cont.cap);
@@ -95,6 +135,16 @@ public class TakeItemsFromContainer implements Action
             }
         }
         items.removeAll(forRemove);
+
+        // Apply quality sorting if priority is specified
+        if (qualityType != null) {
+            if (qualityType == QualityType.High) {
+                Collections.sort(items, high);
+            } else if (qualityType == QualityType.Low) {
+                Collections.sort(items, low);
+            }
+        }
+
         return items;
     }
 
