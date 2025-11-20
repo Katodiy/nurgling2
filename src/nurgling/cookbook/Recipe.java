@@ -8,8 +8,9 @@ public class Recipe {
     private final String resourceName;
     private final double hunger;
     private final int energy;
-    private final Map<String, Double> ingredients; // Ингредиент -> процент
-    private final Map<String, Fep> feps;         // Название FEPS -> значение
+    private final Map<String, Double> ingredients; // Ingredient -> percent
+    private final Map<String, Fep> feps;         // FEP name -> value
+    private boolean isFavorite;
 
     public Recipe(String hash, String name, String resourceName,
                   double hunger, int energy,
@@ -62,6 +63,14 @@ public class Recipe {
 
     public Map<String, Fep> getFeps() {
         return feps;
+    }
+
+    public boolean isFavorite() {
+        return isFavorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        isFavorite = favorite;
     }
 
     @Override

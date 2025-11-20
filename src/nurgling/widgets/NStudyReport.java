@@ -6,6 +6,7 @@ import haven.resutil.Curiosity;
 import nurgling.*;
 
 import java.awt.*;
+import java.util.function.Predicate;
 
 public class NStudyReport extends Widget {
     public Widget study;
@@ -18,6 +19,112 @@ public class NStudyReport extends Widget {
     private Widget fixedContainer;
     private ICheckBox btnLock;
     public boolean locked = false;
+    
+    // Mirror widget that displays study without being its parent
+    private class StudyMirror extends Widget implements DTarget {
+        public StudyMirror(Coord sz) {
+            super(sz);
+        }
+        
+        @Override
+        public void draw(GOut g) {
+            if(study != null && study.visible) {
+                try {
+                    study.draw(g);
+                } catch(Exception e) {
+                    // Ignore drawing errors
+                }
+            }
+        }
+        
+        @Override
+        public boolean mousedown(MouseDownEvent ev) {
+            if(locked)
+                return true;
+            if(study != null && ev.c.isect(Coord.z, sz)) {
+                MouseDownEvent forwarded = new MouseDownEvent(ev.c, ev.b);
+                try {
+                    return forwarded.dispatch(study);
+                } catch(Exception e) {
+                    // Ignore errors
+                }
+            }
+            return super.mousedown(ev);
+        }
+        
+        @Override
+        public boolean mouseup(MouseUpEvent ev) {
+            if(locked)
+                return super.mouseup(ev);
+            if(study != null && ev.c.isect(Coord.z, sz)) {
+                MouseUpEvent forwarded = new MouseUpEvent(ev.c, ev.b);
+                try {
+                    return forwarded.dispatch(study);
+                } catch(Exception e) {
+                    // Ignore errors
+                }
+            }
+            return super.mouseup(ev);
+        }
+        
+        @Override
+        public void mousemove(MouseMoveEvent ev) {
+            if(!locked && study != null) {
+                MouseMoveEvent forwarded = new MouseMoveEvent(ev.c);
+                try {
+                    forwarded.dispatch(study);
+                } catch(Exception e) {
+                    // Ignore errors
+                }
+            }
+            super.mousemove(ev);
+        }
+        
+        @Override
+        public Object tooltip(Coord c, Widget prev) {
+            if(!locked && study != null && c.isect(Coord.z, sz)) {
+                for(Widget wdg = study.lchild; wdg != null; wdg = wdg.prev) {
+                    if(!wdg.visible)
+                        continue;
+                    Coord cc = c.sub(wdg.c);
+                    if(cc.isect(Coord.z, wdg.sz)) {
+                        Object tooltip = wdg.tooltip(cc, prev);
+                        if(tooltip != null)
+                            return tooltip;
+                    }
+                }
+            }
+            return super.tooltip(c, prev);
+        }
+        
+        @Override
+        public boolean drop(Coord cc, Coord ul) {
+            if(locked)
+                return false;
+            if(study instanceof DTarget) {
+                try {
+                    return ((DTarget)study).drop(cc, ul);
+                } catch(Exception e) {
+                    // Ignore errors
+                }
+            }
+            return false;
+        }
+        
+        @Override
+        public boolean iteminteract(Coord cc, Coord ul) {
+            if(locked)
+                return false;
+            if(study instanceof DTarget) {
+                try {
+                    return ((DTarget)study).iteminteract(cc, ul);
+                } catch(Exception e) {
+                    // Ignore errors
+                }
+            }
+            return false;
+        }
+    }
     
     public NStudyReport(Widget study) {
         this.study = study;
@@ -32,9 +139,10 @@ public class NStudyReport extends Widget {
             }
         };
         
-        fixedContainer.add(study, new Coord(PADDING, PADDING));
+        // Add mirror widget that will display study
+        fixedContainer.add(new StudyMirror(studySz), new Coord(PADDING, PADDING));
         
-        int infoY = studySz.y+ 3 * PADDING/2;
+        int infoY = studySz.y + PADDING + UI.scale(5);
         int labelX = PADDING;
         int valueX = containerSz.x - PADDING;
         int lineHeight = UI.scale(18);
@@ -108,15 +216,5 @@ public class NStudyReport extends Widget {
         super.draw(g);
     }
     
-    @Override
-    public boolean mousedown(MouseDownEvent ev) {
-        if(locked && study != null) {
-            Coord studyPos = study.parentpos(this);
-            if(ev.c.isect(studyPos, study.sz)) {
-                return true;
-            }
-        }
-        return super.mousedown(ev);
-    }
 }
 

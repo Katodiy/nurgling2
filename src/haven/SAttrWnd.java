@@ -240,6 +240,7 @@ public class SAttrWnd extends Widget {
 	    Frame.around(this, Collections.singletonList(inf));
 	    pack();
 	    
+	    // Create separate floating Study Report widget
 	    if(ui.gui instanceof nurgling.NGameUI) {
 		nurgling.NGameUI ngui = (nurgling.NGameUI)ui.gui;
 		if(ngui.studyReportWidget == null) {
