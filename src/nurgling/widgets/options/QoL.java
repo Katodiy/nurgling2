@@ -40,6 +40,7 @@ public class QoL extends Panel {
     private CheckBox showVillageClaims;
     private CheckBox showRealmOverlays;
     private CheckBox showFullPathLines;
+    private CheckBox disableDrugEffects;
 
     private Dropbox<String> preferredSpeedDropbox;
     private Dropbox<String> preferredHorseSpeedDropbox;
@@ -205,6 +206,7 @@ public class QoL extends Panel {
         rightPrev = lpassistent = rightColumn.add(new CheckBox("Enable LP assistant"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = disableMenugridKeys = rightColumn.add(new CheckBox("Disable menugrid keys"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = verboseCal = rightColumn.add(new CheckBox("Verbose calendar"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = disableDrugEffects = rightColumn.add(new CheckBox("Disable drug/alcohol visual effects"), rightPrev.pos("bl").adds(0, 5));
 
         rightPrev = rightColumn.add(new Label("● Debug & Development"), rightPrev.pos("bl").adds(0, 15));
         rightPrev = debug = rightColumn.add(new CheckBox("DEBUG"), rightPrev.pos("bl").adds(0, 5));
@@ -271,6 +273,7 @@ public class QoL extends Panel {
         showPersonalClaims.a = getBool(NConfig.Key.minimapClaimol);
         showVillageClaims.a = getBool(NConfig.Key.minimapVilol);
         showRealmOverlays.a = getBool(NConfig.Key.minimapRealmol);
+        disableDrugEffects.a = getBool(NConfig.Key.disableDrugEffects);
 
         // Load preferred movement speed
         Object speedPref = NConfig.get(NConfig.Key.preferredMovementSpeed);
@@ -412,6 +415,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.waypointRetryOnStuck, waypointRetryOnStuck.a);
         NConfig.set(NConfig.Key.verboseCal, verboseCal.a);
         NConfig.set(NConfig.Key.showFullPathLines, showFullPathLines.a);
+        NConfig.set(NConfig.Key.disableDrugEffects, disableDrugEffects.a);
 
         // Save minimap overlay settings (separate from 3D ground overlays)
         NConfig.set(NConfig.Key.minimapClaimol, showPersonalClaims.a);

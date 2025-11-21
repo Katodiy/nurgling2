@@ -126,7 +126,9 @@ public class NConfig
         showTroughRadius,
         showDamageShields,
         disableTileSmoothing,
-        disableTileTransitions
+        disableTileTransitions,
+        disableCloudShadows,
+        disableDrugEffects
     }
 
     public enum BBDisplayMode
@@ -331,6 +333,8 @@ public class NConfig
         // Terrain tile rendering settings
         conf.put(Key.disableTileSmoothing, false);
         conf.put(Key.disableTileTransitions, false);
+        conf.put(Key.disableCloudShadows, false);
+        conf.put(Key.disableDrugEffects, true);  // Default to disabled for better performance
     }
 
 

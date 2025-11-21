@@ -20,6 +20,7 @@ public class World extends Panel {
         boolean persistentBarrelLabels;
         boolean disableTileSmoothing;
         boolean disableTileTransitions;
+        boolean disableCloudShadows;
         Color boxFillColor = new Color(227, 28, 1, 195);
         Color boxEdgeColor = new Color(224, 193, 79, 255);
         int boxLineWidth = 4;
@@ -36,6 +37,7 @@ public class World extends Panel {
     private CheckBox persistentBarrels;
     private CheckBox disableTileSmoothing;
     private CheckBox disableTileTransitions;
+    private CheckBox disableCloudShadows;
     private NColorWidget fillColorWidget;
     private NColorWidget edgeColorWidget;
     private HSlider lineWidthSlider;
@@ -69,23 +71,31 @@ public class World extends Panel {
             }
         }, UI.scale(100, 100));
 
+        // Cloud shadows setting
+        disableCloudShadows = add(new CheckBox("Disable cloud shadows on ground") {
+            public void set(boolean val) {
+                tempSettings.disableCloudShadows = val;
+                a = val;
+            }
+        }, UI.scale(100, 130));
+
         // Decorative objects setting
         decorativeObjects = add(new CheckBox("Show decorative objects (requires restart)") {
             public void set(boolean val) {
                 tempSettings.decorativeObjects = val;
                 a = val;
             }
-        }, UI.scale(100, 130));
+        }, UI.scale(100, 160));
 
         // Nature objects setting
-        add(new Label("Objects:"), UI.scale(10, 170));
+        add(new Label("Objects:"), UI.scale(10, 200));
         natura = add(new CheckBox("Hide nature objects") {
             public void set(boolean val) {
                 tempSettings.hideNature = !val;
                 a = val;
 
             }
-        }, UI.scale(100, 170));
+        }, UI.scale(100, 200));
 
         // Bounding boxes setting
         boundingBoxes = add(new CheckBox("Show object boundaries") {
@@ -93,7 +103,7 @@ public class World extends Panel {
                 tempSettings.showBB = val;
                 a = val;
             }
-        }, UI.scale(100, 210));
+        }, UI.scale(100, 240));
         
         // Beehive radius setting
         beehiveRadius = add(new CheckBox("Show beehive radius") {
@@ -101,7 +111,7 @@ public class World extends Panel {
                 tempSettings.showBeehiveRadius = val;
                 a = val;
             }
-        }, UI.scale(100, 250));
+        }, UI.scale(100, 280));
         
         // Trough radius setting
         troughRadius = add(new CheckBox("Show trough radius") {
@@ -109,7 +119,7 @@ public class World extends Panel {
                 tempSettings.showTroughRadius = val;
                 a = val;
             }
-        }, UI.scale(100, 290));
+        }, UI.scale(100, 320));
         
         // Damage shields setting
         damageShields = add(new CheckBox("Show damage shields on broken objects") {
@@ -117,7 +127,7 @@ public class World extends Panel {
                 tempSettings.showDamageShields = val;
                 a = val;
             }
-        }, UI.scale(100, 330));
+        }, UI.scale(100, 360));
         
         // Persistent barrel labels setting
         persistentBarrels = add(new CheckBox("Keep barrel labels visible during camera scroll") {
@@ -125,26 +135,26 @@ public class World extends Panel {
                 tempSettings.persistentBarrelLabels = val;
                 a = val;
             }
-        }, UI.scale(100, 370));
+        }, UI.scale(100, 400));
 
 
         // Bounding box colors
-        add(new Label("Bounding Box Colors:"), UI.scale(10, 410));
+        add(new Label("Bounding Box Colors:"), UI.scale(10, 440));
         
-        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 440));
+        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 470));
         fillColorWidget.color = tempSettings.boxFillColor;
         
-        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 490));
+        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 520));
         edgeColorWidget.color = tempSettings.boxEdgeColor;
 
         // Line width setting
-        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 540));
+        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 570));
         lineWidthSlider = add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
             public void changed() {
                 tempSettings.boxLineWidth = val;
                 lineWidthLabel.settext("Line width: " + val);
             }
-        }, UI.scale(50, 560));
+        }, UI.scale(50, 590));
 
     }
 
@@ -166,6 +176,7 @@ public class World extends Panel {
         tempSettings.persistentBarrelLabels = (Boolean) NConfig.get(NConfig.Key.persistentBarrelLabels);
         tempSettings.disableTileSmoothing = (Boolean) NConfig.get(NConfig.Key.disableTileSmoothing);
         tempSettings.disableTileTransitions = (Boolean) NConfig.get(NConfig.Key.disableTileTransitions);
+        tempSettings.disableCloudShadows = (Boolean) NConfig.get(NConfig.Key.disableCloudShadows);
 
         // Load colors if they exist in config
         tempSettings.boxFillColor = NConfig.getColor(NConfig.Key.boxFillColor, new Color(227, 28, 1, 195));
@@ -187,6 +198,7 @@ public class World extends Panel {
         persistentBarrels.a = tempSettings.persistentBarrelLabels;
         disableTileSmoothing.a = tempSettings.disableTileSmoothing;
         disableTileTransitions.a = tempSettings.disableTileTransitions;
+        disableCloudShadows.a = tempSettings.disableCloudShadows;
         fillColorWidget.color = tempSettings.boxFillColor;
         edgeColorWidget.color = tempSettings.boxEdgeColor;
         lineWidthSlider.val = tempSettings.boxLineWidth;
@@ -213,6 +225,7 @@ public class World extends Panel {
         boolean oldTileTransitions = (Boolean) NConfig.get(NConfig.Key.disableTileTransitions);
         NConfig.set(NConfig.Key.disableTileSmoothing, tempSettings.disableTileSmoothing);
         NConfig.set(NConfig.Key.disableTileTransitions, tempSettings.disableTileTransitions);
+        NConfig.set(NConfig.Key.disableCloudShadows, tempSettings.disableCloudShadows);
         
         // Invalidate map if tile settings changed
         if (oldTileSmoothing != tempSettings.disableTileSmoothing || oldTileTransitions != tempSettings.disableTileTransitions) {
