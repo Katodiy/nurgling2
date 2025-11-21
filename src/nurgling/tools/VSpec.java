@@ -2515,6 +2515,7 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/batrock\",\"name\":\"Bat Rock\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/magnetite\",\"name\":\"Magnetite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Bloodstone\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/halite\",\"name\":\"Rock Salt\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/breccia\",\"name\":\"Breccia\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/cassiterite\",\"name\":\"Cassiterite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/catgold\",\"name\":\"Cat Gold\"}"));
