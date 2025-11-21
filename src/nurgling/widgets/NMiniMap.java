@@ -452,10 +452,23 @@ public class NMiniMap extends MiniMap {
     // Track current data level to detect when it changes
     private int currentDataLevel = 0;
     
-    // Store previous level's display for smooth transitions
-    private DisplayGrid[] previousDisplay = null;
-    private Area previousDgext = null;
-    private int previousDataLevel = -1;
+    // Multi-level cache: keep current, previous, and next levels loaded
+    // This eliminates black screens and loading freezes
+    private class LevelCache {
+        DisplayGrid[] display;
+        Area dgext;
+        int dataLevel;
+        
+        LevelCache(DisplayGrid[] display, Area dgext, int dataLevel) {
+            this.display = display;
+            this.dgext = dgext;
+            this.dataLevel = dataLevel;
+        }
+    }
+    
+    private LevelCache currentLevelCache = null;
+    private LevelCache previousLevelCache = null;
+    private LevelCache nextLevelCache = null;
 
     // Override redisplay to support smooth zoom with fractional scaling
     protected void redisplay(Location loc) {
@@ -483,28 +496,56 @@ public class NMiniMap extends MiniMap {
         
         Area next = Area.sized(centerGrid.sub(gridsNeeded.div(2)), gridsNeeded);
         
-        // Force update if data level changed (grid coordinates are different)
+        // Detect data level changes
         boolean dataLevelChanged = (dataLevel != currentDataLevel);
+        
         if(dataLevelChanged) {
-            // Save previous level for smooth transition
-            if(display != null && dgext != null) {
-                previousDisplay = display;
-                previousDgext = dgext;
-                previousDataLevel = currentDataLevel;
+            // Shift cache: current becomes previous, next becomes current (if available)
+            if(dataLevel > currentDataLevel) {
+                // Zooming out: use preloaded next level if available
+                previousLevelCache = currentLevelCache;
+                if(nextLevelCache != null && nextLevelCache.dataLevel == dataLevel) {
+                    currentLevelCache = nextLevelCache;
+                    nextLevelCache = null;
+                } else {
+                    currentLevelCache = null;
+                }
+            } else {
+                // Zooming in: use preloaded previous level if available
+                nextLevelCache = currentLevelCache;
+                if(previousLevelCache != null && previousLevelCache.dataLevel == dataLevel) {
+                    currentLevelCache = previousLevelCache;
+                    previousLevelCache = null;
+                } else {
+                    currentLevelCache = null;
+                }
             }
             currentDataLevel = dataLevel;
         }
         
-        if((display == null) || (loc.seg != dseg) || (zoomlevel != dlvl) || !next.equals(dgext) || needUpdate || dataLevelChanged) {
+        // Update current level display
+        boolean needsUpdate = (currentLevelCache == null) || 
+                             (loc.seg != dseg) || 
+                             (zoomlevel != dlvl) || 
+                             !next.equals(dgext) || 
+                             needUpdate || 
+                             dataLevelChanged;
+                             
+        if(needsUpdate) {
             DisplayGrid[] nd = new DisplayGrid[next.rsz()];
-            // Don't reuse old grids if data level changed (coordinates don't match)
-            if((display != null) && (loc.seg == dseg) && (zoomlevel == dlvl) && !needUpdate && !dataLevelChanged) {
-                for(Coord c : dgext) {
+            
+            // Try to reuse grids from cache
+            if(currentLevelCache != null && !dataLevelChanged && currentLevelCache.dgext != null) {
+                for(Coord c : currentLevelCache.dgext) {
                     if(next.contains(c))
-                        nd[next.ri(c)] = display[dgext.ri(c)];
+                        nd[next.ri(c)] = currentLevelCache.display[currentLevelCache.dgext.ri(c)];
                 }
             }
+            
             needUpdate = false;
+            currentLevelCache = new LevelCache(nd, next, dataLevel);
+            
+            // Update base class members
             display = nd;
             dseg = loc.seg;
             dlvl = zoomlevel;
@@ -512,12 +553,64 @@ public class NMiniMap extends MiniMap {
             dtext = Area.sized(next.ul.mul(gridTileSize), next.sz().mul(gridTileSize));
         }
         dloc = loc;
+        
+        // Load grids for current level
         if(file.lock.readLock().tryLock()) {
             try {
-                for(Coord c : dgext) {
-                    if(display[dgext.ri(c)] == null) {
-                        display[dgext.ri(c)] = new DisplayGrid(dloc.seg, c, dataLevel, dloc.seg.grid(dataLevel, c.mul(1 << dataLevel)));
+                // Load current level grids
+                if(currentLevelCache != null && currentLevelCache.display != null) {
+                    for(Coord c : dgext) {
+                        if(currentLevelCache.display[dgext.ri(c)] == null) {
+                            currentLevelCache.display[dgext.ri(c)] = new DisplayGrid(dloc.seg, c, dataLevel, dloc.seg.grid(dataLevel, c.mul(1 << dataLevel)));
+                        }
                     }
+                    display = currentLevelCache.display;
+                }
+                
+                // Preload next level (more zoomed out) in background
+                int nextLevel = dataLevel + 1;
+                if(nextLevel <= 5 && (nextLevelCache == null || nextLevelCache.dataLevel != nextLevel)) {
+                    int nextGridTileSize = cmaps.x * (1 << nextLevel);
+                    Coord nextCenterGrid = loc.tc.div(nextGridTileSize);
+                    int nextTilesOnScreenX = (int)Math.ceil(UI.unscale(sz.x) / (currentScale / (1 << nextLevel))) + nextGridTileSize * 2;
+                    int nextTilesOnScreenY = (int)Math.ceil(UI.unscale(sz.y) / (currentScale / (1 << nextLevel))) + nextGridTileSize * 2;
+                    Coord nextGridsNeeded = new Coord(
+                        (int)Math.ceil((float)nextTilesOnScreenX / nextGridTileSize) + 2,
+                        (int)Math.ceil((float)nextTilesOnScreenY / nextGridTileSize) + 2
+                    );
+                    Area nextArea = Area.sized(nextCenterGrid.sub(nextGridsNeeded.div(2)), nextGridsNeeded);
+                    
+                    DisplayGrid[] nextDisplay = new DisplayGrid[nextArea.rsz()];
+                    // Load a few grids to start preloading
+                    int loaded = 0;
+                    for(Coord c : nextArea) {
+                        if(loaded++ > 4) break; // Don't load too many at once to avoid lag
+                        nextDisplay[nextArea.ri(c)] = new DisplayGrid(dloc.seg, c, nextLevel, dloc.seg.grid(nextLevel, c.mul(1 << nextLevel)));
+                    }
+                    nextLevelCache = new LevelCache(nextDisplay, nextArea, nextLevel);
+                }
+                
+                // Preload previous level (more zoomed in) in background
+                int prevLevel = dataLevel - 1;
+                if(prevLevel >= 0 && (previousLevelCache == null || previousLevelCache.dataLevel != prevLevel)) {
+                    int prevGridTileSize = cmaps.x * (1 << prevLevel);
+                    Coord prevCenterGrid = loc.tc.div(prevGridTileSize);
+                    int prevTilesOnScreenX = (int)Math.ceil(UI.unscale(sz.x) / (currentScale / (1 << prevLevel))) + prevGridTileSize * 2;
+                    int prevTilesOnScreenY = (int)Math.ceil(UI.unscale(sz.y) / (currentScale / (1 << prevLevel))) + prevGridTileSize * 2;
+                    Coord prevGridsNeeded = new Coord(
+                        (int)Math.ceil((float)prevTilesOnScreenX / prevGridTileSize) + 2,
+                        (int)Math.ceil((float)prevTilesOnScreenY / prevGridTileSize) + 2
+                    );
+                    Area prevArea = Area.sized(prevCenterGrid.sub(prevGridsNeeded.div(2)), prevGridsNeeded);
+                    
+                    DisplayGrid[] prevDisplay = new DisplayGrid[prevArea.rsz()];
+                    // Load a few grids to start preloading
+                    int loaded = 0;
+                    for(Coord c : prevArea) {
+                        if(loaded++ > 4) break; // Don't load too many at once
+                        prevDisplay[prevArea.ri(c)] = new DisplayGrid(dloc.seg, c, prevLevel, dloc.seg.grid(prevLevel, c.mul(1 << prevLevel)));
+                    }
+                    previousLevelCache = new LevelCache(prevDisplay, prevArea, prevLevel);
                 }
             } finally {
                 file.lock.readLock().unlock();
@@ -639,36 +732,42 @@ public class NMiniMap extends MiniMap {
         int dataLevel = getDataLevel();
         float scaleFactor = getScaleFactor();
         
-        // Draw previous level if transitioning (to avoid black screen)
-        if(previousDisplay != null && previousDgext != null && previousDataLevel >= 0) {
-            // Check if current level is still loading
-            boolean currentLevelLoaded = false;
-            if(display != null && dgext != null) {
-                for(Coord c : dgext) {
-                    if(display[dgext.ri(c)] != null) {
-                        currentLevelLoaded = true;
-                        break;
+        // Draw cached previous level if transitioning (to avoid black screen)
+        boolean shouldDrawPrevious = false;
+        if(previousLevelCache != null && previousLevelCache.display != null && previousLevelCache.dgext != null) {
+            // Check if current level is fully loaded with textures
+            int loadedGrids = 0;
+            int totalGrids = 0;
+            
+            if(currentLevelCache != null && currentLevelCache.display != null && currentLevelCache.dgext != null) {
+                for(Coord c : currentLevelCache.dgext) {
+                    totalGrids++;
+                    DisplayGrid disp = currentLevelCache.display[currentLevelCache.dgext.ri(c)];
+                    if(disp != null) {
+                        // Just check if grid object exists, don't force texture load
+                        loadedGrids++;
                     }
                 }
             }
             
-            // Draw previous level with adjusted scale
-            if(!currentLevelLoaded) {
-                int prevGridTileSize = cmaps.x * (1 << previousDataLevel);
-                for(Coord c : previousDgext) {
-                    DisplayGrid disp = previousDisplay[previousDgext.ri(c)];
+            // Draw previous level if current level is less than 80% loaded
+            // More conservative threshold to keep old level visible longer
+            shouldDrawPrevious = (totalGrids == 0 || loadedGrids < totalGrids * 0.8f);
+            
+            if(shouldDrawPrevious) {
+                // Draw previous level with adjusted scale
+                float prevScaleFactor = currentScale * (1 << previousLevelCache.dataLevel);
+                
+                for(Coord c : previousLevelCache.dgext) {
+                    DisplayGrid disp = previousLevelCache.display[previousLevelCache.dgext.ri(c)];
                     if(disp == null) continue;
                     
                     // Calculate position for previous level grid
-                    Coord ul = UI.scale(c.mul(cmaps)).mul(scaleFactor).sub(dloc.tc.div(scalef())).add(hsz);
+                    Coord ul = UI.scale(c.mul(cmaps)).mul(prevScaleFactor).sub(dloc.tc.div(scalef())).add(hsz);
                     drawgrid(g, ul, disp);
                 }
-            } else {
-                // Current level loaded, clear previous
-                previousDisplay = null;
-                previousDgext = null;
-                previousDataLevel = -1;
             }
+            // Note: We keep previousLevelCache around for quick access when zooming back
         }
         
         // Draw current level
