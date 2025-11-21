@@ -37,7 +37,7 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
     
     public NSpeedometerOverlay(Owner owner) {
         super(owner, null);
-        pos = new Coord3f(0, 0, 18); // Position well above the gob (above head level)
+        pos = new Coord3f(0, 0, -5); // Position well above the gob (above head level)
     }
     
     @Override
