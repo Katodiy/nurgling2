@@ -316,6 +316,11 @@ public class NAreasWidget extends Window
             if (spec.subtype != null && spec.subtype.toLowerCase().contains(query)) {
                 return true;
             }
+            // Search by pretty name
+            Specialisation.SpecialisationItem specItem = findSpecialisation(spec.name);
+            if (specItem != null && specItem.prettyName.toLowerCase().contains(query)) {
+                return true;
+            }
         }
         
         for (int i = 0; i < area.jin.length(); i++) {
