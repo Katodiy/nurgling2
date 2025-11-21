@@ -56,8 +56,18 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
         // Check configuration setting
         configEnabled = (Boolean) NConfig.get(NConfig.Key.showSpeedometer);
 
-        // Check if gob is moving and is a player or kritter
+        // Check if this is a mounted player (don't show speedometer on mounted players)
+        boolean isMountedPlayer = false;
+        String pose = gob.pose();
+        if (pose != null && pose.contains("gfx/borka/")) {
+            // This is a player, check if they're mounted
+            Following following = gob.getattr(Following.class);
+            isMountedPlayer = (following != null);
+        }
+
+        // Check if gob is moving and is a player or kritter (but not a mounted player)
         shouldShow = configEnabled &&
+                    !isMountedPlayer &&
                     (gob.getattr(Moving.class) != null) &&
                     (gob.getv() > 0.1) &&
                     isPlayerOrKritter(gob);
