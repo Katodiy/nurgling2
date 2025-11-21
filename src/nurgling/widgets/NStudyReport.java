@@ -211,7 +211,7 @@ public class NStudyReport extends Widget {
     
     @Override
     public void draw(GOut g) {
-        NDraggableWidget.drawBg(g, sz);
+        NDraggableWidget.drawBg(g, sz, ui);
         haven.Window.wbox.draw(g, Coord.z, sz);
         super.draw(g);
     }

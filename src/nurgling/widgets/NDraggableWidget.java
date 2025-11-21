@@ -141,7 +141,7 @@ public class NDraggableWidget extends Widget
     {
         if (ui.core.mode == NCore.Mode.DRAG)
         {
-            drawBg(g,sz);
+            drawBg(g, sz, ui);
             box.draw(g, Coord.z, sz);
 
         }
@@ -151,31 +151,60 @@ public class NDraggableWidget extends Widget
         }
     }
 
-    public static void drawBg(GOut g, Coord sz) {
-        int x_pos = ctl.sz().x;
-        int y_pos = ctl.sz().y;
-        for (int x = ctl.sz().x / 2; x + bg.sz().x < sz.x - ctl.sz().x / 2; x += bg.sz().x)
-        {
-            for (int y = ctl.sz().y / 2; y + bg.sz().y < sz.y - ctl.sz().y / 2; y += bg.sz().y)
+    public static void drawBg(GOut g, Coord sz, UI ui) {
+        Coord bgUl = new Coord(ctl.sz().x / 2, ctl.sz().y / 2);
+        Coord bgSz = new Coord(sz.x - ctl.sz().x, sz.y - ctl.sz().y);
+        
+        if (ui instanceof nurgling.NUI) {
+            nurgling.NUI nui = (nurgling.NUI)ui;
+            float opacity = nui.getUIOpacity();
+            int alpha = (int)(255 * opacity);
+            
+            if (nui.getUseSolidBackground()) {
+                // Use custom background color
+                java.awt.Color bgColor = nui.getWindowBackgroundColor();
+                g.chcolor(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue(), alpha);
+                g.frect(bgUl, bgSz);
+                g.chcolor();
+            } else {
+                // Use Window.bg texture with opacity
+                g.chcolor(255, 255, 255, alpha);
+                Coord bgc = new Coord();
+                Coord ca_ul = bgUl;
+                Coord ca_br = bgUl.add(bgSz);
+                for(bgc.y = ca_ul.y; bgc.y < ca_br.y; bgc.y += Window.bg.sz().y) {
+                    for(bgc.x = ca_ul.x; bgc.x < ca_br.x; bgc.x += Window.bg.sz().x)
+                        g.image(Window.bg, bgc, ca_ul, ca_br);
+                }
+                g.chcolor();
+            }
+        } else {
+            // Fallback
+            int x_pos = ctl.sz().x;
+            int y_pos = ctl.sz().y;
+            for (int x = ctl.sz().x / 2; x + bg.sz().x < sz.x - ctl.sz().x / 2; x += bg.sz().x)
             {
-                g.image(bg, new Coord(x, y));
-                y_pos = Math.max(y_pos, y + bg.sz().y);
+                for (int y = ctl.sz().y / 2; y + bg.sz().y < sz.y - ctl.sz().y / 2; y += bg.sz().y)
+                {
+                    g.image(bg, new Coord(x, y));
+                    y_pos = Math.max(y_pos, y + bg.sz().y);
+                    x_pos = Math.max(x_pos, x + bg.sz().x);
+                }
+            }
+            for (int x = ctl.sz().x / 2; x + bg.sz().x < sz.x - ctl.sz().x / 2; x += bg.sz().x)
+            {
+                g.image(bg, new Coord(x, y_pos), new Coord(bg.sz().x, sz.y - y_pos - ctl.sz().y / 2));
                 x_pos = Math.max(x_pos, x + bg.sz().x);
             }
-        }
-        for (int x = ctl.sz().x / 2; x + bg.sz().x < sz.x - ctl.sz().x / 2; x += bg.sz().x)
-        {
-            g.image(bg, new Coord(x, y_pos), new Coord(bg.sz().x, sz.y - y_pos - ctl.sz().y / 2));
-            x_pos = Math.max(x_pos, x + bg.sz().x);
-        }
-        for (int y = ctl.sz().y / 2; y + bg.sz().y < sz.y - ctl.sz().y / 2; y += bg.sz().y)
-        {
-            g.image(bg, new Coord(x_pos, y), new Coord(sz.x - x_pos - ctl.sz().x / 2, bg.sz().y));
-            y_pos = Math.max(y_pos, y + bg.sz().y);
-        }
-        if (x_pos < sz.x - ctl.sz().x / 2 && y_pos < sz.y - ctl.sz().y / 2)
-        {
-            g.image(bg, new Coord(x_pos, y_pos), new Coord(sz.x - x_pos - ctl.sz().x / 2, sz.y - y_pos - ctl.sz().y / 2));
+            for (int y = ctl.sz().y / 2; y + bg.sz().y < sz.y - ctl.sz().y / 2; y += bg.sz().y)
+            {
+                g.image(bg, new Coord(x_pos, y), new Coord(sz.x - x_pos - ctl.sz().x / 2, bg.sz().y));
+                y_pos = Math.max(y_pos, y + bg.sz().y);
+            }
+            if (x_pos < sz.x - ctl.sz().x / 2 && y_pos < sz.y - ctl.sz().y / 2)
+            {
+                g.image(bg, new Coord(x_pos, y_pos), new Coord(sz.x - x_pos - ctl.sz().x / 2, sz.y - y_pos - ctl.sz().y / 2));
+            }
         }
     }
 

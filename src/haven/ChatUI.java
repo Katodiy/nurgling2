@@ -1597,7 +1597,27 @@ public class ChatUI extends Widget
 
 
 	public void draw(GOut g) {
-	g.rimage(Window.bg, marg, sz.sub(marg.x * 2, marg.y));
+	// Draw background with color settings
+	if (ui instanceof nurgling.NUI) {
+	    nurgling.NUI nui = (nurgling.NUI)ui;
+	    float opacity = nui.getUIOpacity();
+	    int alpha = (int)(255 * opacity);
+	    
+	    if (nui.getUseSolidBackground()) {
+		// Use custom background color
+		java.awt.Color bgColor = nui.getWindowBackgroundColor();
+		g.chcolor(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue(), alpha);
+		g.frect(marg, sz.sub(marg.x * 2, marg.y));
+		g.chcolor();
+	    } else {
+		// Use Window.bg texture with opacity
+		g.chcolor(255, 255, 255, alpha);
+		g.rimage(Window.bg, marg, sz.sub(marg.x * 2, marg.y));
+		g.chcolor();
+	    }
+	} else {
+	    g.rimage(Window.bg, marg, sz.sub(marg.x * 2, marg.y));
+	}
 	super.draw(g);
 	g.image(bulc, new Coord(-bulc.sz().x/2+dmarg.x, -bulc.sz().y/2+dmarg.y));
 	g.image(burc, new Coord(sz.x - burc.sz().x/2 - dmarg.x, -bulc.sz().y/2+dmarg.y));
