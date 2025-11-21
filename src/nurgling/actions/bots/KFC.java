@@ -207,8 +207,6 @@ public class KFC implements Action {
         chicks.add("Chick");
         new TransferTargetItemsFromContainers(context,containers,chicks, new NAlias(new ArrayList<>(), new ArrayList<>(List.of("Egg", "Feather", "Meat", "Bone")))).run(gui);
 
-
-
         // Выясняем пороговое качество для яиц
         new PathFinder(Finder.findGob(coopInfos.get(0).container.gobid)).run(gui);
         if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(coopInfos.get(0).container.gobid)).run(gui).IsSuccess())) {
@@ -352,7 +350,10 @@ public class KFC implements Action {
                 }
             });
 
-            new FreeInventory(context).run(gui);
+            // Only drop off if insufficient space for another chicken + buffer (6 cells)
+            if (shouldDropOffItems(gui)) {
+                new FreeInventory(context).run(gui);
+            }
         }
         new FreeInventory(context).run(gui);
         return Results.SUCCESS();
@@ -454,11 +455,27 @@ public class KFC implements Action {
                 }
             });
 
-            new FreeInventory(context).run(gui);
+            // Only drop off if insufficient space for another chicken + buffer (8 cells)
+            if (shouldDropOffItems(gui)) {
+                new FreeInventory(context).run(gui);
+            }
         }
         new FreeInventory(context).run(gui);
         return Results.SUCCESS();
     }
 
-
+    /**
+     * Checks if inventory drop-off is needed based on available space.
+     * Only drops off if insufficient space for another chicken + buffer.
+     *
+     * @param gui Game UI interface
+     * @return true if drop-off needed, false if can continue batching
+     */
+    private boolean shouldDropOffItems(NGameUI gui) throws InterruptedException {
+            // Check available space for 1x1 items (Meat + Bone from chickens)
+            // Need space for: 1 more chicken (2 cells) + 4 buffer cells = 6 total cells
+            int availableSpaceForChicken = gui.getInventory().getNumberFreeCoord(new Coord(2, 2));
+            // Chicken is 2x2 (8 cells) plus 4 extra space for products.
+            return availableSpaceForChicken <= 2;
+    }
 }
