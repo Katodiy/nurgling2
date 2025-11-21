@@ -473,9 +473,9 @@ public class KFC implements Action {
      */
     private boolean shouldDropOffItems(NGameUI gui) throws InterruptedException {
             // Check available space for 1x1 items (Meat + Bone from chickens)
-            // Need space for: 1 more chicken (2 cells) + 4 buffer cells = 6 total cells
+            // Need space for: 1 more chicken (2 cells) + 4 buffer cells = 8 total cells
             int availableSpaceForChicken = gui.getInventory().getNumberFreeCoord(new Coord(2, 2));
-            // Chicken is 2x2 (8 cells) plus 4 extra space for products.
+            // Chicken is 2x2 (4 cells) plus 4 extra space for products.
             return availableSpaceForChicken <= 2;
     }
 }
