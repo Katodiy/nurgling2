@@ -42,6 +42,7 @@ public class QoL extends Panel {
     private CheckBox showFullPathLines;
     private CheckBox disableDrugEffects;
     private CheckBox simpleInspect;
+    private CheckBox showSpeedometer;
 
     private Dropbox<String> preferredSpeedDropbox;
     private Dropbox<String> preferredHorseSpeedDropbox;
@@ -115,6 +116,7 @@ public class QoL extends Panel {
         leftPrev = uniformBiomeColors = leftColumn.add(new CheckBox("Uniform biome colors on minimap"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = showTerrainName = leftColumn.add(new CheckBox("Show terrain name on minimap hover"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = simpleInspect = leftColumn.add(new CheckBox("Simplified object inspection (Shift)"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = showSpeedometer = leftColumn.add(new CheckBox("Show speedometer"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortCupboards = leftColumn.add(new CheckBox("Short cupboards"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortWalls = leftColumn.add(new CheckBox("Short mine walls"), leftPrev.pos("bl").adds(0, 5));
 
@@ -253,6 +255,7 @@ public class QoL extends Panel {
         showCSprite.a = getBool(NConfig.Key.nextshowCSprite);
 
         hideNature.a = !getBool(NConfig.Key.hideNature);
+        showSpeedometer.a = getBool(NConfig.Key.showSpeedometer);
         miningOL.a = getBool(NConfig.Key.miningol);
         tracking.a = getBool(NConfig.Key.tracking);
         crime.a = getBool(NConfig.Key.crime);
@@ -345,7 +348,8 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.openInventoryOnLogin, openInventoryOnLogin.a);
         NConfig.set(NConfig.Key.disableMenugridKeys, disableMenugridKeys.a);
         NConfig.set(NConfig.Key.questNotified, questNotified.a);
-        
+        NConfig.set(NConfig.Key.showSpeedometer, showSpeedometer.a);
+
         // Handle LP assistant setting change - remove overlays if disabled
         boolean oldLpassistent = getBool(NConfig.Key.lpassistent);
         NConfig.set(NConfig.Key.lpassistent, lpassistent.a);
