@@ -16,11 +16,14 @@ public class StackSupporter {
     static {
         // Custom stack sizes for items that differ from their category defaults
         customStackSizes.put("Earthworm", 5);
+        customStackSizes.put("Itsy Bitsy Spider", 4);
+        customStackSizes.put("Cave Moth", 4);
+        customStackSizes.put("Bog Turtle Shell", 1);
+        customStackSizes.put("Wolf's Claw", 4);
+        customStackSizes.put("Clove of Garlic", 5);
         HashSet<String> size3 = new HashSet<>();
-        size3.add("Spices");
         size3.add("Tuber");
         size3.add("Onion");
-        size3.add("String");
         size3.add("Salad Greens");
         size3.add("Malted Grains");
         size3.add("Millable Seed");
@@ -29,10 +32,8 @@ public class StackSupporter {
         size3.add("Gellant");
         size3.add("Stuffing");
         size3.add("Dried Fruit");
-        size3.add("Edible Mushroom");
         size3.add("Nuts");
         size3.add("Decent-sized Conifer Cone");
-        size3.add("Berry");
         size3.add("Fruit");
         size3.add("Fruit or Berry");
         size3.add("Flour");
@@ -45,20 +46,16 @@ public class StackSupporter {
         size3.add("Tree Bough");
         size3.add("Thatching Material");
         size3.add("Vegetable Oil");
-        size3.add("Flower");
         size3.add("Solid Fat");
         size3.add("Cured Tea");
         size3.add("Snail");
         size3.add("Clean Animal Carcass");
         size3.add("Edible Seashell");
-
         size3.add("Candle");
         size3.add("Pearl");
-
         size3.add("Finer Plant Fibre");
         size3.add("Wicker");
         size3.add("Cloth");
-
         size3.add("Pigment");
         size3.add("Fine Clay");
         size3.add("Any Brick");
@@ -89,10 +86,16 @@ public class StackSupporter {
         size4.add("Coal");
         size4.add("Wool");
         size4.add("Leaf");
+        size4.add("Flower");
+        size4.add("String");
+        size4.add("Berry");
+        size4.add("Edible Mushroom");
+        size4.add("Spices");
 
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
+
         size5.add("Entrails");
         size5.add("Feather");
         size5.add("Fine Feather");
