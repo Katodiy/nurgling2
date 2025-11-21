@@ -362,6 +362,17 @@ public class NMiniMap extends MiniMap {
             return;
 
         NGameUI gui = NUtils.getGameUI();
+        
+        // Smooth zoom interpolation
+        if(Math.abs(currentScale - targetScale) > 0.001f) {
+            // Interpolate towards target scale
+            currentScale += (targetScale - currentScale) * ZOOM_SPEED;
+            
+            // Snap to target if very close
+            if(Math.abs(currentScale - targetScale) < 0.001f) {
+                currentScale = targetScale;
+            }
+        }
 
         if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
             if ((sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id))) {
@@ -385,6 +396,10 @@ public class NMiniMap extends MiniMap {
     // Linear scale factor - this is the actual zoom level
     // scale = 4.0 means 4x zoom in, scale = 0.25 means 4x zoom out
     private float currentScale = 1.0f;
+    private float targetScale = 1.0f;
+    
+    // Smooth zoom speed (how fast to interpolate to target)
+    private static final float ZOOM_SPEED = 0.15f; // 15% per frame at 60fps = very smooth
     
     // Public accessor for currentScale (needed by MinimapClaimRenderer)
     public float getCurrentScale() {
@@ -436,6 +451,11 @@ public class NMiniMap extends MiniMap {
 
     // Track current data level to detect when it changes
     private int currentDataLevel = 0;
+    
+    // Store previous level's display for smooth transitions
+    private DisplayGrid[] previousDisplay = null;
+    private Area previousDgext = null;
+    private int previousDataLevel = -1;
 
     // Override redisplay to support smooth zoom with fractional scaling
     protected void redisplay(Location loc) {
@@ -466,6 +486,12 @@ public class NMiniMap extends MiniMap {
         // Force update if data level changed (grid coordinates are different)
         boolean dataLevelChanged = (dataLevel != currentDataLevel);
         if(dataLevelChanged) {
+            // Save previous level for smooth transition
+            if(display != null && dgext != null) {
+                previousDisplay = display;
+                previousDgext = dgext;
+                previousDataLevel = currentDataLevel;
+            }
             currentDataLevel = dataLevel;
         }
         
@@ -558,21 +584,21 @@ public class NMiniMap extends MiniMap {
     public boolean mousewheel(MouseWheelEvent ev) {
         if(ev.a > 0) {
             // Zoom out - multiply by 0.95 (5% decrease per step)
-            currentScale *= 0.95f;
+            targetScale *= 0.95f;
             // Limit minimum scale
-            if(currentScale < 0.03125f) // 1/32 zoom out
-                currentScale = 0.03125f;
+            if(targetScale < 0.03125f) // 1/32 zoom out
+                targetScale = 0.03125f;
         } else {
             // Zoom in - multiply by 1.0526 (inverse of 0.95, ~5.3% increase)
-            currentScale *= 1.0526f;
+            targetScale *= 1.0526f;
             // Limit maximum scale to 4x
-            if(currentScale > 4.0f)
-                currentScale = 4.0f;
+            if(targetScale > 4.0f)
+                targetScale = 4.0f;
         }
         
         // Update zoomlevel for compatibility with base class
-        zoomlevel = (int)(Math.log(1.0f / currentScale) / Math.log(2) * 10);
-        if(currentScale > 1.0f) zoomlevel = 0;
+        zoomlevel = (int)(Math.log(1.0f / targetScale) / Math.log(2) * 10);
+        if(targetScale > 1.0f) zoomlevel = 0;
         
         return(true);
     }
@@ -613,16 +639,49 @@ public class NMiniMap extends MiniMap {
         int dataLevel = getDataLevel();
         float scaleFactor = getScaleFactor();
         
-        for(Coord c : dgext) {
-            // Calculate position similar to base MiniMap but with scaling
-            // c is grid coordinate at current data level
-            // We need to convert it to screen space
-            Coord ul = UI.scale(c.mul(cmaps)).mul(scaleFactor).sub(dloc.tc.div(scalef())).add(hsz);
+        // Draw previous level if transitioning (to avoid black screen)
+        if(previousDisplay != null && previousDgext != null && previousDataLevel >= 0) {
+            // Check if current level is still loading
+            boolean currentLevelLoaded = false;
+            if(display != null && dgext != null) {
+                for(Coord c : dgext) {
+                    if(display[dgext.ri(c)] != null) {
+                        currentLevelLoaded = true;
+                        break;
+                    }
+                }
+            }
             
-            DisplayGrid disp = display[dgext.ri(c)];
-            if(disp == null)
-                continue;
-            drawgrid(g, ul, disp);
+            // Draw previous level with adjusted scale
+            if(!currentLevelLoaded) {
+                int prevGridTileSize = cmaps.x * (1 << previousDataLevel);
+                for(Coord c : previousDgext) {
+                    DisplayGrid disp = previousDisplay[previousDgext.ri(c)];
+                    if(disp == null) continue;
+                    
+                    // Calculate position for previous level grid
+                    Coord ul = UI.scale(c.mul(cmaps)).mul(scaleFactor).sub(dloc.tc.div(scalef())).add(hsz);
+                    drawgrid(g, ul, disp);
+                }
+            } else {
+                // Current level loaded, clear previous
+                previousDisplay = null;
+                previousDgext = null;
+                previousDataLevel = -1;
+            }
+        }
+        
+        // Draw current level
+        if(display != null && dgext != null) {
+            for(Coord c : dgext) {
+                DisplayGrid disp = display[dgext.ri(c)];
+                if(disp == null)
+                    continue;
+                    
+                // Calculate position similar to base MiniMap but with scaling
+                Coord ul = UI.scale(c.mul(cmaps)).mul(scaleFactor).sub(dloc.tc.div(scalef())).add(hsz);
+                drawgrid(g, ul, disp);
+            }
         }
     }
 
