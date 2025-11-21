@@ -41,6 +41,7 @@ public class QoL extends Panel {
     private CheckBox showRealmOverlays;
     private CheckBox showFullPathLines;
     private CheckBox disableDrugEffects;
+    private CheckBox simpleInspect;
 
     private Dropbox<String> preferredSpeedDropbox;
     private Dropbox<String> preferredHorseSpeedDropbox;
@@ -113,6 +114,7 @@ public class QoL extends Panel {
         leftPrev = hideNature = leftColumn.add(new CheckBox("Hide nature objects"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = uniformBiomeColors = leftColumn.add(new CheckBox("Uniform biome colors on minimap"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = showTerrainName = leftColumn.add(new CheckBox("Show terrain name on minimap hover"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = simpleInspect = leftColumn.add(new CheckBox("Simplified object inspection (Shift)"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortCupboards = leftColumn.add(new CheckBox("Short cupboards"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortWalls = leftColumn.add(new CheckBox("Short mine walls"), leftPrev.pos("bl").adds(0, 5));
 
@@ -267,6 +269,7 @@ public class QoL extends Panel {
         shortWalls.a = getBool(NConfig.Key.shortWalls);
         uniformBiomeColors.a = getBool(NConfig.Key.uniformBiomeColors);
         showTerrainName.a = getBool(NConfig.Key.showTerrainName);
+        simpleInspect.a = getBool(NConfig.Key.simpleInspect);
         waypointRetryOnStuck.a = getBool(NConfig.Key.waypointRetryOnStuck);
         verboseCal.a = getBool(NConfig.Key.verboseCal);
         showFullPathLines.a = getBool(NConfig.Key.showFullPathLines);
@@ -412,6 +415,7 @@ public class QoL extends Panel {
         }
 
         NConfig.set(NConfig.Key.showTerrainName, showTerrainName.a);
+        NConfig.set(NConfig.Key.simpleInspect, simpleInspect.a);
         NConfig.set(NConfig.Key.waypointRetryOnStuck, waypointRetryOnStuck.a);
         NConfig.set(NConfig.Key.verboseCal, verboseCal.a);
         NConfig.set(NConfig.Key.showFullPathLines, showFullPathLines.a);

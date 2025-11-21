@@ -128,7 +128,8 @@ public class NConfig
         disableTileSmoothing,
         disableTileTransitions,
         disableCloudShadows,
-        disableDrugEffects
+        disableDrugEffects,
+        simpleInspect
     }
 
     public enum BBDisplayMode
@@ -195,6 +196,7 @@ public class NConfig
         conf.put(Key.questNotified, false);
         conf.put(Key.lpassistent, false);
         conf.put(Key.simplecrops, true);
+        conf.put(Key.simpleInspect, false);
         conf.put(Key.ndbenable, false);
         conf.put(Key.harvestautorefill, false);
         conf.put(Key.cleanupQContainers, false);

@@ -299,43 +299,53 @@ public class NMapView extends MapView
         }
         lastTooltipUpdate = currentTime;
 
-        if (NUtils.getGameUI()!=null && !ttip.isEmpty() && NUtils.getGameUI().ui.core.isInspectMode()) {
+        // Check if any inspect mode is active
+        boolean debugMode = NUtils.getGameUI() != null && NUtils.getGameUI().ui.core.debug && NUtils.getGameUI().ui.core.isinspect;
+        boolean simpleInspect = NUtils.getGameUI() != null && NUtils.getGameUI().ui.core.isinspect && (Boolean) NConfig.get(NConfig.Key.simpleInspect);
+        boolean isInspecting = debugMode || simpleInspect;
+        
+        if (NUtils.getGameUI()!=null && !ttip.isEmpty() && isInspecting) {
 
             Collection<BufferedImage> imgs = new LinkedList<>();
 
-            for (String key : ttip.keySet()) {
-                String text = String.format("$col[128,128,255]{%s}:", key);
-                BufferedImage img = cachedImages.get(text);
-                if (img == null) {
-                    img = RichText.render(text, 0).img;
-                    cachedImages.put(text, img);
+            // For simple inspect, only show gob and tile
+            if (simpleInspect && !debugMode) {
+                if (ttip.get("gob") != null) {
+                    BufferedImage gob = RichText.render(String.format("$col[128,128,255]{%s}:", "Gob"), 0).img;
+                    imgs.add(gob);
+                    imgs.add(RichText.render(ttip.get("gob"), 0).img);
                 }
+                if (ttip.get("tile") != null) {
+                    BufferedImage tile = RichText.render(String.format("$col[128,128,255]{%s}:", "Tile"), 0).img;
+                    imgs.add(tile);
+                    imgs.add(RichText.render(ttip.get("tile"), 0).img);
+                }
+            } else {
+                // Debug mode - show all info
+                for (String key : ttip.keySet()) {
+                    String text = String.format("$col[128,128,255]{%s}:", key);
+                    BufferedImage img = cachedImages.get(text);
+                    if (img == null) {
+                        img = RichText.render(text, 0).img;
+                        cachedImages.put(text, img);
+                    }
 
-                imgs.add(img);
-                imgs.add(RichText.render(ttip.get(key), 0).img);
-            }
-            if (ttip.get("gob") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[128,128,255]{%s}:", "Gob"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("gob"), 0).img);
-            }
-                BufferedImage mc = RichText.render(String.format("$col[128,128,255]{%s}:", "MouseCoord"), 0).img;
-                imgs.add(mc);
-                imgs.add(RichText.render(getLCoord().toString(), 0).img);
-            if (ttip.get("rc") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[128,128,128]{%s}:", "Coord"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("rc"), 0).img);
-            }
-            if (ttip.get("id") != null) {
-                BufferedImage gob = RichText.render(String.format("$col[255,128,255]{%s}:", "id"), 0).img;
-                imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("id"), 0).img);
-            }
-            if (ttip.get("tile") != null) {
-                BufferedImage tile = RichText.render(String.format("$col[128,128,255]{%s}:", "Tile"), 0).img;
-                imgs.add(tile);
-                imgs.add(RichText.render(ttip.get("tile"), 0).img);
+                    imgs.add(img);
+                    imgs.add(RichText.render(ttip.get(key), 0).img);
+                }
+                    BufferedImage mc = RichText.render(String.format("$col[128,128,255]{%s}:", "MouseCoord"), 0).img;
+                    imgs.add(mc);
+                    imgs.add(RichText.render(getLCoord().toString(), 0).img);
+                if (ttip.get("rc") != null) {
+                    BufferedImage gob = RichText.render(String.format("$col[128,128,128]{%s}:", "Coord"), 0).img;
+                    imgs.add(gob);
+                    imgs.add(RichText.render(ttip.get("rc"), 0).img);
+                }
+                if (ttip.get("id") != null) {
+                    BufferedImage gob = RichText.render(String.format("$col[255,128,255]{%s}:", "id"), 0).img;
+                    imgs.add(gob);
+                    imgs.add(RichText.render(ttip.get("id"), 0).img);
+                }
             }
             if (ttip.get("tags") != null) {
                 BufferedImage gob = RichText.render(String.format("$col[255,128,128]{%s}:", "Tags"), 0).img;
@@ -416,6 +426,41 @@ public class NMapView extends MapView
     }
     public static void defcam(String name) {
         Utils.setpref("defcam", name);
+    }
+
+    void inspectSimple(Coord c) {
+        new Hittest(c) {
+            @Override
+            protected void hit(Coord pc, Coord2d mc, ClickData inf) {
+                ttip.clear();
+                tlays.clear();
+                // Show resource name if gob exists
+                if (inf != null) {
+                    Gob gob = Gob.from(inf.ci);
+                    if (gob != null) {
+                        ttip.put("gob", gob.ngob.name);
+                    }
+                }
+                
+                // Show tile resource
+                MCache mCache = ui.sess.glob.map;
+                try {
+                    int tile = mCache.gettile(mc.div(tilesz).floor());
+                    Resource res = mCache.tilesetr(tile);
+                    if (res != null) {
+                        ttip.put("tile", res.name);
+                    }
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            protected void nohit(Coord pc) {
+                ttip.clear();
+            }
+        }.run();
     }
 
     void inspect(Coord c) {
@@ -820,7 +865,6 @@ public class NMapView extends MapView
     public boolean keydown(KeyDownEvent ev) {
         if(ev.code == 16) {
             shiftPressed = true;
-            inspect(lastCoord);
         }
         if(kb_quickaction.key().match(ev) || kb_quickignaction.key().match(ev) || kb_mousequickaction.key().match(ev)) {
             Thread t;
