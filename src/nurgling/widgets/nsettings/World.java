@@ -18,6 +18,8 @@ public class World extends Panel {
         boolean showTroughRadius;
         boolean showDamageShields;
         boolean persistentBarrelLabels;
+        boolean disableTileSmoothing;
+        boolean disableTileTransitions;
         Color boxFillColor = new Color(227, 28, 1, 195);
         Color boxEdgeColor = new Color(224, 193, 79, 255);
         int boxLineWidth = 4;
@@ -32,6 +34,8 @@ public class World extends Panel {
     private CheckBox troughRadius;
     private CheckBox damageShields;
     private CheckBox persistentBarrels;
+    private CheckBox disableTileSmoothing;
+    private CheckBox disableTileTransitions;
     private NColorWidget fillColorWidget;
     private NColorWidget edgeColorWidget;
     private HSlider lineWidthSlider;
@@ -49,23 +53,39 @@ public class World extends Panel {
             }
         }, UI.scale(100, 40));
 
+        // Tile smoothing setting
+        disableTileSmoothing = add(new CheckBox("Disable tile smoothing") {
+            public void set(boolean val) {
+                tempSettings.disableTileSmoothing = val;
+                a = val;
+            }
+        }, UI.scale(100, 70));
+
+        // Tile transitions setting
+        disableTileTransitions = add(new CheckBox("Disable tile transitions") {
+            public void set(boolean val) {
+                tempSettings.disableTileTransitions = val;
+                a = val;
+            }
+        }, UI.scale(100, 100));
+
         // Decorative objects setting
         decorativeObjects = add(new CheckBox("Show decorative objects (requires restart)") {
             public void set(boolean val) {
                 tempSettings.decorativeObjects = val;
                 a = val;
             }
-        }, UI.scale(100, 80));
+        }, UI.scale(100, 130));
 
         // Nature objects setting
-        add(new Label("Objects:"), UI.scale(10, 120));
+        add(new Label("Objects:"), UI.scale(10, 170));
         natura = add(new CheckBox("Hide nature objects") {
             public void set(boolean val) {
                 tempSettings.hideNature = !val;
                 a = val;
 
             }
-        }, UI.scale(100, 120));
+        }, UI.scale(100, 170));
 
         // Bounding boxes setting
         boundingBoxes = add(new CheckBox("Show object boundaries") {
@@ -73,7 +93,7 @@ public class World extends Panel {
                 tempSettings.showBB = val;
                 a = val;
             }
-        }, UI.scale(100, 160));
+        }, UI.scale(100, 210));
         
         // Beehive radius setting
         beehiveRadius = add(new CheckBox("Show beehive radius") {
@@ -81,7 +101,7 @@ public class World extends Panel {
                 tempSettings.showBeehiveRadius = val;
                 a = val;
             }
-        }, UI.scale(100, 200));
+        }, UI.scale(100, 250));
         
         // Trough radius setting
         troughRadius = add(new CheckBox("Show trough radius") {
@@ -89,7 +109,7 @@ public class World extends Panel {
                 tempSettings.showTroughRadius = val;
                 a = val;
             }
-        }, UI.scale(100, 240));
+        }, UI.scale(100, 290));
         
         // Damage shields setting
         damageShields = add(new CheckBox("Show damage shields on broken objects") {
@@ -97,7 +117,7 @@ public class World extends Panel {
                 tempSettings.showDamageShields = val;
                 a = val;
             }
-        }, UI.scale(100, 280));
+        }, UI.scale(100, 330));
         
         // Persistent barrel labels setting
         persistentBarrels = add(new CheckBox("Keep barrel labels visible during camera scroll") {
@@ -105,26 +125,26 @@ public class World extends Panel {
                 tempSettings.persistentBarrelLabels = val;
                 a = val;
             }
-        }, UI.scale(100, 320));
+        }, UI.scale(100, 370));
 
 
         // Bounding box colors
-        add(new Label("Bounding Box Colors:"), UI.scale(10, 360));
+        add(new Label("Bounding Box Colors:"), UI.scale(10, 410));
         
-        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 390));
+        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 440));
         fillColorWidget.color = tempSettings.boxFillColor;
         
-        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 440));
+        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 490));
         edgeColorWidget.color = tempSettings.boxEdgeColor;
 
         // Line width setting
-        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 490));
+        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 540));
         lineWidthSlider = add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
             public void changed() {
                 tempSettings.boxLineWidth = val;
                 lineWidthLabel.settext("Line width: " + val);
             }
-        }, UI.scale(50, 510));
+        }, UI.scale(50, 560));
 
     }
 
@@ -144,6 +164,8 @@ public class World extends Panel {
         tempSettings.showTroughRadius = (Boolean) NConfig.get(NConfig.Key.showTroughRadius);
         tempSettings.showDamageShields = (Boolean) NConfig.get(NConfig.Key.showDamageShields);
         tempSettings.persistentBarrelLabels = (Boolean) NConfig.get(NConfig.Key.persistentBarrelLabels);
+        tempSettings.disableTileSmoothing = (Boolean) NConfig.get(NConfig.Key.disableTileSmoothing);
+        tempSettings.disableTileTransitions = (Boolean) NConfig.get(NConfig.Key.disableTileTransitions);
 
         // Load colors if they exist in config
         tempSettings.boxFillColor = NConfig.getColor(NConfig.Key.boxFillColor, new Color(227, 28, 1, 195));
@@ -163,6 +185,8 @@ public class World extends Panel {
         troughRadius.a = tempSettings.showTroughRadius;
         damageShields.a = tempSettings.showDamageShields;
         persistentBarrels.a = tempSettings.persistentBarrelLabels;
+        disableTileSmoothing.a = tempSettings.disableTileSmoothing;
+        disableTileTransitions.a = tempSettings.disableTileTransitions;
         fillColorWidget.color = tempSettings.boxFillColor;
         edgeColorWidget.color = tempSettings.boxEdgeColor;
         lineWidthSlider.val = tempSettings.boxLineWidth;
@@ -183,6 +207,24 @@ public class World extends Panel {
         NConfig.set(NConfig.Key.showDamageShields, tempSettings.showDamageShields);
         
         NConfig.set(NConfig.Key.persistentBarrelLabels, tempSettings.persistentBarrelLabels);
+        
+        // Save tile rendering settings
+        boolean oldTileSmoothing = (Boolean) NConfig.get(NConfig.Key.disableTileSmoothing);
+        boolean oldTileTransitions = (Boolean) NConfig.get(NConfig.Key.disableTileTransitions);
+        NConfig.set(NConfig.Key.disableTileSmoothing, tempSettings.disableTileSmoothing);
+        NConfig.set(NConfig.Key.disableTileTransitions, tempSettings.disableTileTransitions);
+        
+        // Invalidate map if tile settings changed
+        if (oldTileSmoothing != tempSettings.disableTileSmoothing || oldTileTransitions != tempSettings.disableTileTransitions) {
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null && NUtils.getGameUI().map.glob != null) {
+                MCache map = NUtils.getGameUI().map.glob.map;
+                synchronized(map.grids) {
+                    for(Coord gc : map.grids.keySet()) {
+                        map.invalidate(gc);
+                    }
+                }
+            }
+        }
         
         // Save hideNature setting
         NConfig.set(NConfig.Key.hideNature, tempSettings.hideNature);

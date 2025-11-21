@@ -124,7 +124,9 @@ public class NConfig
         bbDisplayMode,
         showBeehiveRadius,
         showTroughRadius,
-        showDamageShields
+        showDamageShields,
+        disableTileSmoothing,
+        disableTileTransitions
     }
 
     public enum BBDisplayMode
@@ -325,6 +327,10 @@ public class NConfig
         
         // Damage shields display
         conf.put(Key.showDamageShields, true);
+        
+        // Terrain tile rendering settings
+        conf.put(Key.disableTileSmoothing, false);
+        conf.put(Key.disableTileTransitions, false);
     }
 
 
