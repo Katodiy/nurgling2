@@ -482,10 +482,10 @@ public class OptWnd extends Window {
 			}
 		});
 
-		prev = add(new Label("Number of panels hotkey (need reboot):"), prev.pos("bl").adds(0, UI.scale(5)));
+		prev = add(new Label("Num. of panels HK (need reboot):"), prev.pos("bl").adds(0, UI.scale(5)));
 		prev = add(new NumToolBox(145), prev.pos("bl").adds(0, UI.scale(5)));
 		prev = add(new Label("Camera:"), prev.pos("bl").adds(0, UI.scale(5)));
-		Dropbox cam = add(new Dropbox<String>(UI.scale(100), 5, UI.scale(16)) {
+		Dropbox cam = add(new Dropbox<String>(UI.scale(92), 5, UI.scale(16)) {
 			@Override
 			protected String listitem(int i) {
 				return new LinkedList<>(NMapView.camlist()).get(i);
@@ -530,7 +530,7 @@ public class OptWnd extends Window {
 				NConfig.set(NConfig.Key.invert_ver,val);
 			}
 		}, prev.pos("bl").adds(0, UI.scale(5)));
-		prev = add(new Label("Interface scale (requires restart)"), prev.pos("bl").adds(0, 5));
+	prev = add(new Label("Interface scale (need restart)"), prev.pos("bl").adds(0, 5));
 	    {
 		Label dpy = new Label("");
 		final double gran = 0.05;
@@ -607,7 +607,7 @@ public class OptWnd extends Window {
 		prev = add(new Label("UI Opacity:"), prev.pos("bl").adds(0, UI.scale(10)).x(0));
 		{
 		    Label opacityLabel = new Label("100%");
-		    HSlider opacitySlider = new HSlider(UI.scale(200), 0, 100, 100) {
+		    HSlider opacitySlider = new HSlider(UI.scale(160), 0, 100, 100) {
 			protected void added() {
 			    updateOpacityLabel();
 			    loadOpacity();
@@ -667,28 +667,26 @@ public class OptWnd extends Window {
 		    }
 		}, prev.pos("bl").adds(0, UI.scale(5)).x(0));
 
-		// Background Color Button
-		prev = add(new Label("Background Color:"), useSolidBackgroundBox.pos("bl").adds(0, UI.scale(5)).x(0));
-		Button colorButton = add(new Button(UI.scale(100), "Select Color") {
+		// Background Color Widget
+		nurgling.widgets.NColorWidget backgroundColorWidget = add(new nurgling.widgets.NColorWidget("Background") {
 		    @Override
-		    public void click() {
-			// Open color chooser in separate thread
-			new Thread(() -> {
-			    java.awt.Color currentColor = NConfig.getColor(NConfig.Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));
-			    java.awt.Color newColor = javax.swing.JColorChooser.showDialog(null, "Select Background Color", currentColor);
-			    if (newColor != null) {
-				NConfig.setColor(NConfig.Key.windowBackgroundColor, newColor);
-				NConfig.needUpdate();
-
-				// Apply immediately to NUI
-				if (ui instanceof nurgling.NUI) {
-				    ((nurgling.NUI) ui).setWindowBackgroundColor(newColor);
-				}
+		    public void tick(double dt) {
+			super.tick(dt);
+			// Check if color changed and apply it
+			java.awt.Color currentConfigColor = NConfig.getColor(NConfig.Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));
+			if (!color.equals(currentConfigColor)) {
+			    NConfig.setColor(NConfig.Key.windowBackgroundColor, color);
+			    NConfig.needUpdate();
+			    
+			    // Apply immediately to NUI
+			    if (ui instanceof nurgling.NUI) {
+				((nurgling.NUI) ui).setWindowBackgroundColor(color);
 			    }
-			}).start();
+			}
 		    }
-		}, prev.pos("bl").adds(0, UI.scale(5)).x(0));
-		prev = colorButton;
+		}, useSolidBackgroundBox.pos("bl").adds(0, UI.scale(5)).x(0));
+		backgroundColorWidget.color = NConfig.getColor(NConfig.Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));
+		prev = backgroundColorWidget;
 	    }
 	    add(new PButton(UI.scale(200), "Back", 27, back), prev.pos("bl").adds(0, 30).x(0));
 	    pack();
