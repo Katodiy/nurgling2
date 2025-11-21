@@ -524,7 +524,7 @@ public class MiniMap extends Widget
 		return Coord2d.of(c2st(c)).mul(tilesz);
 	}
 
-    private void redisplay(Location loc) {
+    protected void redisplay(Location loc) {
 	Coord hsz = sz.div(2);
 	Coord zmaps = cmaps.mul(1 << zoomlevel);
 	Area next = Area.sized(loc.tc.sub(hsz.mul(UI.unscale((float)(1 << zoomlevel)))).div(zmaps),

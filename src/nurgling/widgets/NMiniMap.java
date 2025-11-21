@@ -16,7 +16,6 @@ import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
 
 public class NMiniMap extends MiniMap {
-    public int scale = 1;
     public static final Coord _sgridsz = new Coord(100, 100);
     public static final Coord VIEW_SZ = UI.scale(_sgridsz.mul(9).div(tilesz.floor()));
     public static final Color VIEW_FOG_COLOR = new Color(255, 255, 0 , 120);
@@ -48,8 +47,10 @@ public class NMiniMap extends MiniMap {
     public boolean checktemp(TempMark cm, Coord2d pl) {
         if(dloc!=null) {
             Coord rc = p2c(pl.floor(sgridsz).sub(4, 4).mul(sgridsz).add(22, 22));
-            int zmult = 1 << zoomlevel;
-            Coord viewsz = VIEW_SZ.div(zmult).mul(scale).sub(22, 22);
+            int dataLevel = getDataLevel();
+            float scaleFactor = getScaleFactor();
+            float zmult = (float)(1 << dataLevel) / scaleFactor;
+            Coord viewsz = VIEW_SZ.div(zmult).sub(22, 22);
             Coord gc = p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
             if (gc.isect(rc, viewsz)) {
                 return true;
@@ -91,8 +92,10 @@ public class NMiniMap extends MiniMap {
         MinimapClaimRenderer.renderClaims(this, g);
 
         boolean playerSegment = (sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id));
-        if(zoomlevel <= 2 && (Boolean) NConfig.get(NConfig.Key.showGrid)) {drawgrid(g);}
-        if(playerSegment && zoomlevel <= 1 && (Boolean)NConfig.get(NConfig.Key.showView)) {drawview(g);}
+        // Show grid when zoomed in enough (scale >= 0.25, i.e. not too far out)
+        if(currentScale >= 0.25f && (Boolean) NConfig.get(NConfig.Key.showGrid)) {drawgrid(g);}
+        // Show view box when zoomed in (scale >= 0.5)
+        if(playerSegment && currentScale >= 0.5f && (Boolean)NConfig.get(NConfig.Key.showView)) {drawview(g);}
 
         if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
             g.chcolor(VIEW_FOG_COLOR);
@@ -104,7 +107,9 @@ public class NMiniMap extends MiniMap {
             g.chcolor();
         }
         drawmarkers(g);
-        if(dlvl == 0)
+        // Show icons on all zoom levels with high detail (data level 0 or 1)
+        int dataLevel = getDataLevel();
+        if(dataLevel <= 1)
             drawicons(g);
         drawparty(g);
 
@@ -294,12 +299,14 @@ public class NMiniMap extends MiniMap {
     void drawview(GOut g) {
         if(ui.gui.map==null)
             return;
-        int zmult = 1 << zoomlevel;
+        int dataLevel = getDataLevel();
+        float scaleFactor = getScaleFactor();
+        float zmult = (float)(1 << dataLevel) / scaleFactor;
         Coord2d sgridsz = new Coord2d(_sgridsz);
         Gob player = ui.gui.map.player();
         if(player != null) {
             Coord rc = p2c(player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz));
-            Coord viewsz = VIEW_SZ.div(zmult).mul(scale);
+            Coord viewsz = VIEW_SZ.div(zmult);
             g.chcolor(VIEW_BG_COLOR);
             g.frect(rc, viewsz);
             g.chcolor(VIEW_BORDER_COLOR);
@@ -309,31 +316,42 @@ public class NMiniMap extends MiniMap {
     }
 
     void drawgrid(GOut g) {
-        int zmult = 1 << zoomlevel;
-        Coord offset = sz.div(2).sub(dloc.tc.div(scalef()));
-        Coord zmaps = cmaps.div( (float)zmult).mul(scale);
-
+        if(dgext == null || dloc == null) return;
+        
+        int dataLevel = getDataLevel();
+        float scaleFactor = getScaleFactor();
+        Coord hsz = sz.div(2);
+        
         double width = UI.scale(1f);
         Color col = g.getcolor();
         g.chcolor(Color.RED);
-        for (int x = dgext.ul.x * zmult; x < dgext.br.x * zmult; x++) {
-            Coord a = UI.scale(zmaps.mul(x, dgext.ul.y * zmult)).add(offset);
-            Coord b = UI.scale(zmaps.mul(x, dgext.br.y * zmult)).add(offset);
-            if(a.x >= 0 && a.x <= sz.x) {
-                a.y = Utils.clip(a.y, 0, sz.y);
-                b.y = Utils.clip(b.y, 0, sz.y);
-                g.line(a, b, width);
+        
+        // Draw grid lines at grid boundaries
+        // Each grid is cmaps tiles at its data level
+        int gridSizeInTiles = cmaps.x * (1 << dataLevel);
+        
+        for (int x = dgext.ul.x; x <= dgext.br.x; x++) {
+            // Grid coordinate to tile coordinate
+            Coord tilePosX = new Coord(x * gridSizeInTiles, 0);
+            // Tile coordinate to screen coordinate
+            Coord screenPos = UI.scale(tilePosX).mul(currentScale).sub(dloc.tc.div(scalef())).add(hsz);
+            
+            if(screenPos.x >= 0 && screenPos.x <= sz.x) {
+                g.line(new Coord(screenPos.x, 0), new Coord(screenPos.x, sz.y), width);
             }
         }
-        for (int y = dgext.ul.y * zmult; y < dgext.br.y * zmult; y++) {
-            Coord a = UI.scale(zmaps.mul(dgext.ul.x * zmult, y)).add(offset);
-            Coord b = UI.scale(zmaps.mul(dgext.br.x * zmult, y)).add(offset);
-            if(a.y >= 0 && a.y <= sz.y) {
-                a.x = Utils.clip(a.x, 0, sz.x);
-                b.x = Utils.clip(b.x, 0, sz.x);
-                g.line(a, b, width);
+        
+        for (int y = dgext.ul.y; y <= dgext.br.y; y++) {
+            // Grid coordinate to tile coordinate
+            Coord tilePosY = new Coord(0, y * gridSizeInTiles);
+            // Tile coordinate to screen coordinate
+            Coord screenPos = UI.scale(tilePosY).mul(currentScale).sub(dloc.tc.div(scalef())).add(hsz);
+            
+            if(screenPos.y >= 0 && screenPos.y <= sz.y) {
+                g.line(new Coord(0, screenPos.y), new Coord(sz.x, screenPos.y), width);
             }
         }
+        
         g.chcolor(col);
     }
 
@@ -364,13 +382,134 @@ public class NMiniMap extends MiniMap {
         }
     }
 
+    // Linear scale factor - this is the actual zoom level
+    // scale = 4.0 means 4x zoom in, scale = 0.25 means 4x zoom out
+    private float currentScale = 1.0f;
+    
+    // Public accessor for currentScale (needed by MinimapClaimRenderer)
+    public float getCurrentScale() {
+        return currentScale;
+    }
+    
+    // Helper method to calculate which data level to use based on current scale
+    private int getDataLevel() {
+        // Choose data level based on scale:
+        // scale >= 1.0: use level 0 (finest detail)
+        // scale >= 0.5: use level 0 (still detailed enough)
+        // scale >= 0.25: use level 1 (2x coarser)
+        // scale >= 0.125: use level 2 (4x coarser)
+        // scale >= 0.0625: use level 3 (8x coarser)
+        // etc.
+        
+        if(currentScale >= 0.5f) {
+            return 0; // Use finest detail
+        } else if(currentScale >= 0.25f) {
+            return 1;
+        } else if(currentScale >= 0.125f) {
+            return 2;
+        } else if(currentScale >= 0.0625f) {
+            return 3;
+        } else if(currentScale >= 0.03125f) {
+            return 4;
+        } else {
+            return 5;
+        }
+    }
+    
+    // Public accessor for getDataLevel (needed by MinimapClaimRenderer)
+    public int getDataLevelPublic() {
+        return getDataLevel();
+    }
+    
+    private float getScaleFactor() {
+        // Calculate how much to scale the current data level
+        int dataLevel = getDataLevel();
+        
+        // The scale factor is how much to scale the tiles at this data level
+        // to achieve the desired currentScale
+        // Each data level represents 2^level zoom out from level 0
+        // So to get currentScale, we need: scaleFactor * (1 / 2^level) = currentScale
+        // Therefore: scaleFactor = currentScale * 2^level
+        
+        return currentScale * (1 << dataLevel);
+    }
+
+    // Track current data level to detect when it changes
+    private int currentDataLevel = 0;
+
+    // Override redisplay to support smooth zoom with fractional scaling
+    protected void redisplay(Location loc) {
+        Coord hsz = sz.div(2);
+        
+        int dataLevel = getDataLevel();
+        float scaleFactor = getScaleFactor();
+        
+        // Calculate grid size for this data level (in tiles)
+        int gridTileSize = cmaps.x * (1 << dataLevel);
+        
+        // Calculate effective screen size of one tile
+        float tileScreenSize = UI.scale(1) * scaleFactor / (1 << dataLevel);
+        
+        // Calculate how many tiles fit on screen
+        int tilesOnScreenX = (int)Math.ceil(UI.unscale(sz.x) / (scaleFactor / (1 << dataLevel))) + gridTileSize * 2;
+        int tilesOnScreenY = (int)Math.ceil(UI.unscale(sz.y) / (scaleFactor / (1 << dataLevel))) + gridTileSize * 2;
+        
+        // Calculate grid coordinates
+        Coord centerGrid = loc.tc.div(gridTileSize);
+        Coord gridsNeeded = new Coord(
+            (int)Math.ceil((float)tilesOnScreenX / gridTileSize) + 2,
+            (int)Math.ceil((float)tilesOnScreenY / gridTileSize) + 2
+        );
+        
+        Area next = Area.sized(centerGrid.sub(gridsNeeded.div(2)), gridsNeeded);
+        
+        // Force update if data level changed (grid coordinates are different)
+        boolean dataLevelChanged = (dataLevel != currentDataLevel);
+        if(dataLevelChanged) {
+            currentDataLevel = dataLevel;
+        }
+        
+        if((display == null) || (loc.seg != dseg) || (zoomlevel != dlvl) || !next.equals(dgext) || needUpdate || dataLevelChanged) {
+            DisplayGrid[] nd = new DisplayGrid[next.rsz()];
+            // Don't reuse old grids if data level changed (coordinates don't match)
+            if((display != null) && (loc.seg == dseg) && (zoomlevel == dlvl) && !needUpdate && !dataLevelChanged) {
+                for(Coord c : dgext) {
+                    if(next.contains(c))
+                        nd[next.ri(c)] = display[dgext.ri(c)];
+                }
+            }
+            needUpdate = false;
+            display = nd;
+            dseg = loc.seg;
+            dlvl = zoomlevel;
+            dgext = next;
+            dtext = Area.sized(next.ul.mul(gridTileSize), next.sz().mul(gridTileSize));
+        }
+        dloc = loc;
+        if(file.lock.readLock().tryLock()) {
+            try {
+                for(Coord c : dgext) {
+                    if(display[dgext.ri(c)] == null) {
+                        display[dgext.ri(c)] = new DisplayGrid(dloc.seg, c, dataLevel, dloc.seg.grid(dataLevel, c.mul(1 << dataLevel)));
+                    }
+                }
+            } finally {
+                file.lock.readLock().unlock();
+            }
+        }
+        for(DisplayIcon icon : icons)
+            icon.dispupdate();
+    }
+
     private void drawtempmarks(GOut g) {
         if((Boolean)NConfig.get(NConfig.Key.tempmark)) {
             Gob player = NUtils.player();
             if (player != null) {
-                double zmult = 1 << zoomlevel;
+                int dataLevel = getDataLevel();
+                float scaleFactor = getScaleFactor();
+                double zmult = (double)((1 << dataLevel) / scaleFactor);
                 Coord rc = p2c(player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz));
-                Coord viewsz = VIEW_SZ.div(zmult).mul(scale);
+                Coord viewsz = VIEW_SZ.div(zmult);
 
                 synchronized (((NMapView)ui.gui.map).tempMarkList)
                 {
@@ -418,41 +557,68 @@ public class NMiniMap extends MiniMap {
     @Override
     public boolean mousewheel(MouseWheelEvent ev) {
         if(ev.a > 0) {
-            if(scale > 1) {
-                scale--;
-            } else
-            if(allowzoomout())
-                zoomlevel = Math.min(zoomlevel + 1, dlvl + 1);
+            // Zoom out - multiply by 0.95 (5% decrease per step)
+            currentScale *= 0.95f;
+            // Limit minimum scale
+            if(currentScale < 0.03125f) // 1/32 zoom out
+                currentScale = 0.03125f;
         } else {
-            if(zoomlevel == 0 && scale < 4) {
-                scale++;
-            }
-            zoomlevel = Math.max(zoomlevel - 1, 0);
+            // Zoom in - multiply by 1.0526 (inverse of 0.95, ~5.3% increase)
+            currentScale *= 1.0526f;
+            // Limit maximum scale to 4x
+            if(currentScale > 4.0f)
+                currentScale = 4.0f;
         }
+        
+        // Update zoomlevel for compatibility with base class
+        zoomlevel = (int)(Math.log(1.0f / currentScale) / Math.log(2) * 10);
+        if(currentScale > 1.0f) zoomlevel = 0;
+        
         return(true);
     }
 
     protected boolean allowzoomout() {
-        if(zoomlevel >= 5)
-            return(false);
-        return(super.allowzoomout());
+        // Allow zoom out as long as scale is above minimum
+        return currentScale > 0.03125f;
     }
 
     @Override
     public float scalef() {
-        return(UI.unscale((float)(1 << dlvl))/scale);
+        int dataLevel = getDataLevel();
+        float scaleFactor = getScaleFactor();
+        return(UI.unscale((float)(1 << dataLevel) / scaleFactor));
     }
 
     @Override
     public Coord st2c(Coord tc) {
-        return(UI.scale(tc.add(sessloc.tc).sub(dloc.tc).div(1 << dlvl)).mul(scale).add(sz.div(2)));
+        int dataLevel = getDataLevel();
+        float scaleFactor = getScaleFactor();
+        
+        Coord base = tc.add(sessloc.tc).sub(dloc.tc).div(1 << dataLevel);
+        return(UI.scale(base).mul(scaleFactor).add(sz.div(2)));
+    }
+
+    @Override
+    public Coord c2st(Coord c) {
+        int dataLevel = getDataLevel();
+        float scaleFactor = getScaleFactor();
+        
+        Coord unscaled = UI.unscale(c.sub(sz.div(2)).div(scaleFactor));
+        return unscaled.mul(1 << dataLevel).add(dloc.tc).sub(sessloc.tc);
     }
 
     @Override
     public void drawmap(GOut g) {
         Coord hsz = sz.div(2);
+        int dataLevel = getDataLevel();
+        float scaleFactor = getScaleFactor();
+        
         for(Coord c : dgext) {
-            Coord ul = UI.scale(c.mul(cmaps).mul(scale)).sub(dloc.tc.div(scalef())).add(hsz);
+            // Calculate position similar to base MiniMap but with scaling
+            // c is grid coordinate at current data level
+            // We need to convert it to screen space
+            Coord ul = UI.scale(c.mul(cmaps)).mul(scaleFactor).sub(dloc.tc.div(scalef())).add(hsz);
+            
             DisplayGrid disp = display[dgext.ri(c)];
             if(disp == null)
                 continue;
@@ -463,8 +629,11 @@ public class NMiniMap extends MiniMap {
     public void drawgrid(GOut g, Coord ul, DisplayGrid disp) {
         try {
             Tex img = disp.img();
-            if(img != null)
-                g.image(img, ul, UI.scale(img.sz()).mul(scale));
+            if(img != null) {
+                float scaleFactor = getScaleFactor();
+                Coord imgsz = UI.scale(img.sz()).mul(scaleFactor);
+                g.image(img, ul, imgsz);
+            }
         } catch(Loading l) {
         }
     }

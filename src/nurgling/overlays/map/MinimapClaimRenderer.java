@@ -177,15 +177,41 @@ public class MinimapClaimRenderer {
                     }
 
                     // Convert grid-local coordinates to segment tile coordinates
-                    // disp.sc is the grid coordinate (e.g., grid 5,3)
-                    // Each grid is cmaps tiles (e.g., 100x100)
-                    Coord tileUL = disp.sc.mul(MCache.cmaps).add(x, y);
-                    Coord tileBR = disp.sc.mul(MCache.cmaps).add(x + rectWidth, y + rectHeight);
-
-                    // Convert to screen coordinates using the same formula as MiniMap.drawmap()
-                    // Formula: UI.scale(tile).sub(dloc.tc.div(scalef())).add(hsz)
-                    Coord screenUL = UI.scale(tileUL).sub(map.dloc.tc.div(map.scalef())).add(hsz);
-                    Coord screenBR = UI.scale(tileBR).sub(map.dloc.tc.div(map.scalef())).add(hsz);
+                    // disp.sc is the grid coordinate at the current data level
+                    // Each grid represents cmaps * (2^dataLevel) tiles
+                    
+                    // For NMiniMap, we need to use the same coordinate transformation as drawmap()
+                    if (!(map instanceof NMiniMap)) {
+                        // Fallback for base MiniMap (shouldn't happen)
+                        Coord tileUL = disp.sc.mul(MCache.cmaps).add(x, y);
+                        Coord tileBR = disp.sc.mul(MCache.cmaps).add(x + rectWidth, y + rectHeight);
+                        Coord screenUL = UI.scale(tileUL).sub(map.dloc.tc.div(map.scalef())).add(hsz);
+                        Coord screenBR = UI.scale(tileBR).sub(map.dloc.tc.div(map.scalef())).add(hsz);
+                        g.chcolor(fillColor);
+                        g.frect2(screenUL, screenBR);
+                        continue;
+                    }
+                    
+                    NMiniMap nmap = (NMiniMap) map;
+                    
+                    // Get current scale for coordinate transformation
+                    float currentScale = nmap.getCurrentScale();
+                    
+                    // Calculate tile coordinates in the segment
+                    // Grid tiles are at data level, so need to account for that
+                    int dataLevel = nmap.getDataLevelPublic();
+                    int gridTileSize = MCache.cmaps.x * (1 << dataLevel);
+                    
+                    // Tile coordinates in segment (at base level)
+                    Coord tileUL = new Coord(disp.sc.x * gridTileSize + x * (1 << dataLevel),
+                                             disp.sc.y * gridTileSize + y * (1 << dataLevel));
+                    Coord tileBR = new Coord(disp.sc.x * gridTileSize + (x + rectWidth) * (1 << dataLevel),
+                                             disp.sc.y * gridTileSize + (y + rectHeight) * (1 << dataLevel));
+                    
+                    // Convert to screen coordinates using current scale
+                    // Same formula as NMiniMap.drawmap(): UI.scale(tile).mul(currentScale).sub(dloc.tc.div(scalef())).add(hsz)
+                    Coord screenUL = UI.scale(tileUL).mul(currentScale).sub(map.dloc.tc.div(map.scalef())).add(hsz);
+                    Coord screenBR = UI.scale(tileBR).mul(currentScale).sub(map.dloc.tc.div(map.scalef())).add(hsz);
 
                     // Draw filled rectangle
                     g.chcolor(fillColor);
