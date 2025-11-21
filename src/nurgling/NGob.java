@@ -15,6 +15,7 @@ import haven.res.ui.obj.buddy.Buddy;
 import monitoring.NGlobalSearchItems;
 import nurgling.gattrr.NCustomScale;
 import nurgling.overlays.*;
+import nurgling.overlays.NSpeedometerOverlay;
 import nurgling.pf.*;
 import nurgling.tools.*;
 import nurgling.widgets.NAlarmWdg;
@@ -241,6 +242,12 @@ public class NGob
         else if(a instanceof Moving || prev instanceof Moving)
         {
             updateMovingInfo(a, prev);
+            
+            // Add speedometer overlay if not present (it handles its own visibility)
+            if ((Boolean) NConfig.get(NConfig.Key.showSpeedometer) && parent.findol(NSpeedometerOverlay.class) == null)
+            {
+                parent.addcustomol(new NSpeedometerOverlay(parent));
+            }
             return;
         }
 
