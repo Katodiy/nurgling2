@@ -42,120 +42,134 @@ public class World extends Panel {
     private NColorWidget edgeColorWidget;
     private HSlider lineWidthSlider;
     private Label lineWidthLabel;
+    
+    private Scrollport scrollport;
+    private Widget content;
 
     public World() {
-        super("World Settings");
+        super("");
+        int margin = UI.scale(10);
 
-        // Flat surface setting
-        add(new Label("Terrain:"), UI.scale(10, 40));
-        flatSurface = add(new CheckBox("Flat surface (requires restart)") {
+        // Create scrollport to contain all settings
+        int scrollWidth = UI.scale(560);
+        int scrollHeight = UI.scale(550);
+        scrollport = add(new Scrollport(new Coord(scrollWidth, scrollHeight)), new Coord(margin, margin));
+
+        // Create main content container
+        content = new Widget(new Coord(scrollWidth - UI.scale(20), UI.scale(50))) {
+            @Override
+            public void pack() {
+                resize(contentsz());
+            }
+        };
+        scrollport.cont.add(content, Coord.z);
+
+        int contentMargin = UI.scale(5);
+        
+        // Terrain section
+        Widget prev = content.add(new Label("● Terrain"), new Coord(contentMargin, contentMargin));
+        prev = flatSurface = content.add(new CheckBox("Flat surface (requires restart)") {
             public void set(boolean val) {
                 tempSettings.flatSurface = val;
                 a = val;
             }
-        }, UI.scale(100, 40));
+        }, prev.pos("bl").adds(0, 5));
 
-        // Tile smoothing setting
-        disableTileSmoothing = add(new CheckBox("Disable tile smoothing") {
+        prev = disableTileSmoothing = content.add(new CheckBox("Disable tile smoothing") {
             public void set(boolean val) {
                 tempSettings.disableTileSmoothing = val;
                 a = val;
             }
-        }, UI.scale(100, 70));
+        }, prev.pos("bl").adds(0, 5));
 
-        // Tile transitions setting
-        disableTileTransitions = add(new CheckBox("Disable tile transitions") {
+        prev = disableTileTransitions = content.add(new CheckBox("Disable tile transitions") {
             public void set(boolean val) {
                 tempSettings.disableTileTransitions = val;
                 a = val;
             }
-        }, UI.scale(100, 100));
+        }, prev.pos("bl").adds(0, 5));
 
-        // Cloud shadows setting
-        disableCloudShadows = add(new CheckBox("Disable cloud shadows on ground") {
+        prev = disableCloudShadows = content.add(new CheckBox("Disable cloud shadows on ground") {
             public void set(boolean val) {
                 tempSettings.disableCloudShadows = val;
                 a = val;
             }
-        }, UI.scale(100, 130));
+        }, prev.pos("bl").adds(0, 5));
 
-        // Decorative objects setting
-        decorativeObjects = add(new CheckBox("Show decorative objects (requires restart)") {
+        prev = decorativeObjects = content.add(new CheckBox("Show decorative objects (requires restart)") {
             public void set(boolean val) {
                 tempSettings.decorativeObjects = val;
                 a = val;
             }
-        }, UI.scale(100, 160));
+        }, prev.pos("bl").adds(0, 5));
 
-        // Nature objects setting
-        add(new Label("Objects:"), UI.scale(10, 200));
-        natura = add(new CheckBox("Hide nature objects") {
+        // Objects section
+        prev = content.add(new Label("● Objects"), prev.pos("bl").adds(0, 15));
+        prev = natura = content.add(new CheckBox("Hide nature objects") {
             public void set(boolean val) {
                 tempSettings.hideNature = !val;
                 a = val;
-
             }
-        }, UI.scale(100, 200));
+        }, prev.pos("bl").adds(0, 5));
 
-        // Bounding boxes setting
-        boundingBoxes = add(new CheckBox("Show object boundaries") {
+        prev = boundingBoxes = content.add(new CheckBox("Show object boundaries") {
             public void set(boolean val) {
                 tempSettings.showBB = val;
                 a = val;
             }
-        }, UI.scale(100, 240));
+        }, prev.pos("bl").adds(0, 5));
         
-        // Beehive radius setting
-        beehiveRadius = add(new CheckBox("Show beehive radius") {
+        prev = beehiveRadius = content.add(new CheckBox("Show beehive radius") {
             public void set(boolean val) {
                 tempSettings.showBeehiveRadius = val;
                 a = val;
             }
-        }, UI.scale(100, 280));
+        }, prev.pos("bl").adds(0, 5));
         
-        // Trough radius setting
-        troughRadius = add(new CheckBox("Show trough radius") {
+        prev = troughRadius = content.add(new CheckBox("Show trough radius") {
             public void set(boolean val) {
                 tempSettings.showTroughRadius = val;
                 a = val;
             }
-        }, UI.scale(100, 320));
+        }, prev.pos("bl").adds(0, 5));
         
-        // Damage shields setting
-        damageShields = add(new CheckBox("Show damage shields on broken objects") {
+        prev = damageShields = content.add(new CheckBox("Show damage shields on broken objects") {
             public void set(boolean val) {
                 tempSettings.showDamageShields = val;
                 a = val;
             }
-        }, UI.scale(100, 360));
+        }, prev.pos("bl").adds(0, 5));
         
-        // Persistent barrel labels setting
-        persistentBarrels = add(new CheckBox("Keep barrel labels visible during camera scroll") {
+        prev = persistentBarrels = content.add(new CheckBox("Keep barrel labels visible during camera scroll") {
             public void set(boolean val) {
                 tempSettings.persistentBarrelLabels = val;
                 a = val;
             }
-        }, UI.scale(100, 400));
+        }, prev.pos("bl").adds(0, 5));
 
-
-        // Bounding box colors
-        add(new Label("Bounding Box Colors:"), UI.scale(10, 440));
+        // Bounding box colors section
+        prev = content.add(new Label("● Bounding Box Colors"), prev.pos("bl").adds(0, 15));
         
-        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 470));
+        prev = fillColorWidget = content.add(new NColorWidget("Fill"), prev.pos("bl").adds(0, 5));
         fillColorWidget.color = tempSettings.boxFillColor;
         
-        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 520));
+        prev = edgeColorWidget = content.add(new NColorWidget("Edge"), prev.pos("bl").adds(0, 5));
         edgeColorWidget.color = tempSettings.boxEdgeColor;
 
         // Line width setting
-        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 570));
-        lineWidthSlider = add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
+        prev = lineWidthLabel = content.add(new Label("Line width: 4"), prev.pos("bl").adds(0, 5));
+        prev = lineWidthSlider = content.add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
             public void changed() {
                 tempSettings.boxLineWidth = val;
                 lineWidthLabel.settext("Line width: " + val);
             }
-        }, UI.scale(50, 590));
-
+        }, prev.pos("bl").adds(0, 5));
+        
+        // Pack content and update scrollbar
+        content.pack();
+        scrollport.cont.update();
+        
+        pack();
     }
 
     public void setNatureStatus(Boolean a) {
