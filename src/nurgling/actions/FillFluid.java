@@ -71,6 +71,7 @@ public class FillFluid implements Action
         if(!NUtils.isOverlay(barrel,content))
         {
             if(!new RefillInCistern(area,content).run(gui).IsSuccess())
+                new PlaceObject(barrel,pos,0).run(gui);
                 return Results.FAIL();
         }
 
