@@ -21,6 +21,8 @@ public abstract class Dropbox<T> extends ListWidget<T> {
             super(Dropbox.this.sz.x, Math.min(listh, Dropbox.this.listitems()), Dropbox.this.itemh);
             sel = Dropbox.this.sel;
             Dropbox.this.ui.root.add(this, Dropbox.this.rootpos().add(0, Dropbox.this.sz.y));
+            z(1000);
+            raise();
             grab = ui.grabmouse(this);
             display();
         }

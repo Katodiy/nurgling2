@@ -4,6 +4,7 @@ import haven.*;
 
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public abstract class NEntryListSet extends Widget {
 
@@ -16,17 +17,20 @@ public abstract class NEntryListSet extends Widget {
         return name.text().toString();
     }
 
-    public NEntryListSet(Set<String> names) {
+    private final Supplier<Set<String>> namesSupplier;
+
+    public NEntryListSet(Supplier<Set<String>> namesSupplier) {
+        this.namesSupplier = namesSupplier;
         prev = add(new Label("Settings:"));
         db = add(new Dropbox<String>(UI.scale(100), UI.scale(5), UI.scale(16)) {
             @Override
             protected String listitem(int i) {
-                return (new ArrayList<String>(names)).get(i);
+                return (new ArrayList<String>(namesSupplier.get())).get(i);
             }
 
             @Override
             protected int listitems() {
-                return names.size();
+                return namesSupplier.get().size();
             }
 
             @Override

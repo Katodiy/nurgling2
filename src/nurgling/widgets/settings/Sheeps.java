@@ -32,7 +32,7 @@ public class Sheeps extends Window {
 
     public Sheeps() {
         super(new Coord(100,100), "Sheeps Herds");
-        prev = els = add(new NEntryListSet(SheepsHerd.getKeySet()) {
+        prev = els = add(new NEntryListSet(SheepsHerd::getKeySet) {
             @Override
             public void nsave() {
                 String name = this.get();
