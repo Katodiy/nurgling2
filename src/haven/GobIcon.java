@@ -643,19 +643,11 @@ public class GobIcon extends GAttrib {
 	}
 
 	public void save() {
-	    System.out.println("Debug GobIcon.Settings.save(): ResCache.global = " + ResCache.global);
-	    if(ResCache.global == null) {
-		System.out.println("Debug GobIcon.Settings.save(): ResCache.global is NULL, not saving!");
+	    if(ResCache.global == null)
 		return;
-	    }
-	    System.out.println("Debug GobIcon.Settings.save(): Saving to filename: " + filename);
-	    System.out.println("Debug GobIcon.Settings.save(): Number of settings: " + settings.size());
 	    try(StreamMessage fp = new StreamMessage(ResCache.global.store(filename))) {
 		save(fp);
-		System.out.println("Debug GobIcon.Settings.save(): Save completed successfully");
 	    } catch(Exception e) {
-		System.out.println("Debug GobIcon.Settings.save(): Save failed with exception: " + e.getMessage());
-		e.printStackTrace();
 		new Warning(e, "failed to store icon-conf").issue();
 	    }
 	}

@@ -301,6 +301,28 @@ public class NGob
             parent.addcustomol(new NTreeScaleOl(parent));
         }
     }
+    
+    /**
+     * Checks if temporary ring should be added (for objects without GobIcon)
+     */
+    private void checkTempRing()
+    {
+        if (name == null || NUtils.getGameUI() == null) return;
+        
+        // Skip if object has GobIcon (those use NGobIconRing instead)
+        if (parent.getattr(GobIcon.class) != null) return;
+        
+        // Check if temp ring is enabled for this resource
+        Boolean tempRingEnabled = NUtils.getGameUI().tempRingResources.get(name);
+        if (tempRingEnabled != null && tempRingEnabled)
+        {
+            // Add temp ring if not already present
+            if (parent.findol(nurgling.overlays.NGobTempRing.class) == null)
+            {
+                parent.addcustomol(nurgling.overlays.NGobTempRing.createAutoSize(parent));
+            }
+        }
+    }
 
     /**
      * Processes Drawable attributes in a separate method for better organization.
@@ -339,6 +361,9 @@ public class NGob
                     if (parent.getattr(NCustomScale.class) == null)
                         parent.setattr(new NCustomScale(parent));
                 }
+                
+                // Check for temporary rings (session-only, for objects without GobIcon)
+                checkTempRing();
             }
 
             if (drawable.getres().getLayers() != null)

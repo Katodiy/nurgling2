@@ -1408,15 +1408,20 @@ public class NMapView extends MapView
     }
 
     /**
-     * Toggles ring display setting for a clicked gob's icon
-     * Updates all gobs with the same icon
+     * Toggles ring display for a clicked gob
+     * - If gob has GobIcon: saves to settings and updates all matching gobs
+     * - If gob has no GobIcon: temporary ring (session-only)
      */
     private void toggleRingForGob(Gob clickedGob) {
         if (clickedGob == null) return;
         
         // Get the gob's icon attribute
         GobIcon icon = clickedGob.getattr(GobIcon.class);
-        if (icon == null) return;
+        if (icon == null) {
+            // No GobIcon - use temporary ring
+            toggleTempRingForGob(clickedGob);
+            return;
+        }
         
         // Get the settings configuration
         NGameUI gui = NUtils.getGameUI();
@@ -1477,6 +1482,60 @@ public class NMapView extends MapView
         // Show feedback message
         String iconName = icon.icon().name();
         gui.msg("Ring " + (setting.ring ? "enabled" : "disabled") + " for " + iconName);
+    }
+    
+    /**
+     * Toggles temporary ring for objects without GobIcon
+     * These rings are session-only and not saved to config
+     * Applies to ALL objects with the same resource name
+     */
+    private void toggleTempRingForGob(Gob clickedGob) {
+        if (clickedGob == null) return;
+        
+        NGameUI gui = NUtils.getGameUI();
+        if (gui == null) return;
+        
+        // Get resource name
+        String resName = clickedGob.ngob != null ? clickedGob.ngob.name : null;
+        if (resName == null) {
+            gui.msg("Cannot add ring - object has no resource name");
+            return;
+        }
+        
+        // Toggle state in temp config
+        boolean currentState = gui.tempRingResources.getOrDefault(resName, false);
+        boolean newState = !currentState;
+        gui.tempRingResources.put(resName, newState);
+        
+        // Update all gobs with this resource name
+        try {
+            synchronized(ui.sess.glob.oc) {
+                for(Gob gob : ui.sess.glob.oc) {
+                    if (gob.ngob == null || gob.ngob.name == null) continue;
+                    
+                    if (gob.ngob.name.equals(resName)) {
+                        // Remove existing temp ring
+                        Gob.Overlay existingRing = gob.findol(nurgling.overlays.NGobTempRing.class);
+                        if (existingRing != null) {
+                            existingRing.remove();
+                        }
+                        
+                        // Add new ring if enabled
+                        if (newState) {
+                            nurgling.overlays.NGobTempRing ring = nurgling.overlays.NGobTempRing.createAutoSize(gob);
+                            if (ring != null) {
+                                gob.addcustomol(ring);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore errors during ring update
+        }
+        
+        // Show feedback message
+        gui.msg("Temporary ring " + (newState ? "enabled" : "disabled") + " for " + resName);
     }
 
 }

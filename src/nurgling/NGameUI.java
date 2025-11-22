@@ -66,6 +66,10 @@ public class NGameUI extends GameUI
     public IconRingConfig iconRingConfig;
     private boolean ringSettingsApplied = false;
     
+    // Temporary rings (session-only, for objects without GobIcon)
+    // Maps resource name to ring enabled state
+    public final Map<String, Boolean> tempRingResources = Collections.synchronizedMap(new HashMap<>());
+    
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
