@@ -41,7 +41,7 @@ public class SmokingSettings extends Window implements Checkable {
                 new Thread(() -> {
                     try {
                         NUtils.getGameUI().msg("Please select log for fuel");
-                        nurgling.actions.bots.SelectGob selgob = new nurgling.actions.bots.SelectGob(Resource.loadsimg("baubles/selectItem"));
+                        nurgling.actions.bots.SelectGob selgob = new nurgling.actions.bots.SelectGob(Resource.loadsimg("baubles/selectlog"));
                         selgob.run(NUtils.getGameUI());
                         Gob result = selgob.getResult();
                         if(result != null && result.ngob != null && result.ngob.name != null) {

@@ -162,7 +162,7 @@ public class Specialisation extends Window
         // pickling
         specialisation.add(new SpecialisationItem(SpecName.picklingJars.toString(),"Pickling Jars",Resource.loadsimg("nurgling/categories/picklingjar")));
         // Logs for smoking
-        specialisation.add(new SpecialisationItem(SpecName.smokedlog.toString(),"Logs for smoking",Resource.loadsimg("nurgling/categories/picklingjar")));
+        specialisation.add(new SpecialisationItem(SpecName.smokedlog.toString(),"Logs for smoking",Resource.loadsimg("nurgling/categories/smokelog")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
