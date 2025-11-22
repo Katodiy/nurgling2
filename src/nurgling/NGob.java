@@ -272,6 +272,15 @@ public class NGob
                                 }
                             }
                         }
+                        
+                        // Add ring overlay if enabled in settings
+                        if (nurgling.overlays.NGobIconRing.shouldShowRing(gob))
+                        {
+                            if (gob.findol(nurgling.overlays.NGobIconRing.class) == null)
+                            {
+                                gob.addcustomol(nurgling.overlays.NGobIconRing.createAutoSize(gob));
+                            }
+                        }
                     }
             ));
         }
