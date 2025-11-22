@@ -766,6 +766,23 @@ public class NMapView extends MapView
             getGob(ev.c);
             return false;
         }
+        
+        // Ctrl+MMB to toggle ring setting for clicked object
+        if (ev.b == 2 && ui.modctrl) { // Middle mouse button + Ctrl
+            new Click(ev.c, ev.b) {
+                @Override
+                protected void hit(Coord pc, Coord2d mc, ClickData inf) {
+                    if (inf != null && inf.ci instanceof Gob.GobClick) {
+                        Gob clickedGob = ((Gob.GobClick) inf.ci).gob;
+                        if (clickedGob != null) {
+                            toggleRingForGob(clickedGob);
+                        }
+                    }
+                }
+            }.run();
+            return true;
+        }
+        
         return super.mousedown(ev);
     }
 
@@ -1388,6 +1405,78 @@ public class NMapView extends MapView
             }
             markerLineOverlay.setTarget(targetPos);
         }
+    }
+
+    /**
+     * Toggles ring display setting for a clicked gob's icon
+     * Updates all gobs with the same icon
+     */
+    private void toggleRingForGob(Gob clickedGob) {
+        if (clickedGob == null) return;
+        
+        // Get the gob's icon attribute
+        GobIcon icon = clickedGob.getattr(GobIcon.class);
+        if (icon == null) return;
+        
+        // Get the settings configuration
+        NGameUI gui = NUtils.getGameUI();
+        if (gui == null || gui.iconconf == null || gui.iconRingConfig == null) return;
+        
+        // Get icon instance and create setting ID
+        GobIcon.Icon iconInstance = icon.icon();
+        GobIcon.Setting.ID settingId = new GobIcon.Setting.ID(iconInstance.res.name, iconInstance.id());
+        
+        // Get setting using the proper get() method that handles creation
+        GobIcon.Setting setting = gui.iconconf.get(iconInstance);
+        if (setting == null) return;
+        
+        // Toggle the ring value
+        setting.ring = !setting.ring;
+        
+        // Save to local config
+        String iconResName = iconInstance.res.name;
+        gui.iconRingConfig.setRing(iconResName, setting.ring);
+        
+        // Update all gobs with this icon setting (add or remove rings)
+        try {
+            synchronized(ui.sess.glob.oc) {
+                for(Gob gob : ui.sess.glob.oc) {
+                    GobIcon gobIcon = gob.getattr(GobIcon.class);
+                    if(gobIcon != null) {
+                        try {
+                            // Create ID for this gob's icon to compare
+                            GobIcon.Icon gobIconInstance = gobIcon.icon();
+                            GobIcon.Setting.ID gobSettingId = new GobIcon.Setting.ID(gobIconInstance.res.name, gobIconInstance.id());
+                            
+                            // Compare by ID instead of object reference
+                            if(gobSettingId.equals(settingId)) {
+                                // Remove existing ring
+                                Gob.Overlay existingRing = gob.findol(NGobIconRing.class);
+                                if(existingRing != null) {
+                                    existingRing.remove();
+                                }
+                                
+                                // Add new ring if enabled
+                                if(setting.ring) {
+                                    NGobIconRing ring = NGobIconRing.createAutoSize(gob);
+                                    if(ring != null) {
+                                        gob.addcustomol(ring);
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            // Skip this gob if there's an error
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore errors during ring update
+        }
+        
+        // Show feedback message
+        String iconName = icon.icon().name();
+        gui.msg("Ring " + (setting.ring ? "enabled" : "disabled") + " for " + iconName);
     }
 
 }

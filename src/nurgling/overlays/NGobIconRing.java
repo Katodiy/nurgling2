@@ -101,20 +101,47 @@ public class NGobIconRing extends Sprite implements RenderTree.Node
      * Helper method to check if a gob should have a ring based on icon settings
      */
     public static boolean shouldShowRing(Gob gob) {
-        if (NUtils.getGameUI() == null)
+        if (NUtils.getGameUI() == null) {
             return false;
+        }
 
         GobIcon icon = gob.getattr(GobIcon.class);
-        if (icon == null || icon.icon() == null)
+        if (icon == null || icon.icon() == null) {
             return false;
+        }
 
         try {
-            GobIcon.Settings settings = NUtils.getGameUI().iconconf;
-            if (settings == null)
+            nurgling.NGameUI gui = NUtils.getGameUI();
+            GobIcon.Settings settings = gui.iconconf;
+            if (settings == null) {
                 return false;
+            }
 
             GobIcon.Setting setting = settings.get(icon.icon());
-            return setting != null && setting.ring;
+            if (setting == null) {
+                return false;
+            }
+            
+            // Check setting.ring first
+            if (setting.ring) {
+                return true;
+            }
+            
+            // If setting.ring is false, check local config as fallback
+            // This handles the case where settings haven't been applied yet
+            if (gui.iconRingConfig != null) {
+                String iconResName = icon.icon().res.name;
+                boolean localRing = gui.iconRingConfig.getRing(iconResName);
+                
+                // Apply local setting to iconconf for next time
+                if (localRing && !setting.ring) {
+                    setting.ring = true;
+                }
+                
+                return localRing;
+            }
+            
+            return false;
         } catch (Exception e) {
             return false;
         }

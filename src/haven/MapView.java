@@ -2033,10 +2033,10 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	protected void nohit(Coord pc) {}
     }
 
-    private class Click extends Hittest {
+    protected class Click extends Hittest {
 	int clickb;
 	
-	private Click(Coord c, int b) {
+	protected Click(Coord c, int b) {
 	    super(c);
 	    clickb = b;
 	}

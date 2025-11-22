@@ -61,9 +61,17 @@ public class NGameUI extends GameUI
     public final Map<String, TreeLocationDetailsWindow> openTreeDetailWindows = new HashMap<>();
     public StudyDeskPlannerWidget studyDeskPlanner = null;
     public NDraggableWidget studyReportWidget = null;
+    
+    // Local storage for ring settings
+    public IconRingConfig iconRingConfig;
+    private boolean ringSettingsApplied = false;
+    
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
+        
+        // Initialize local ring config
+        iconRingConfig = new IconRingConfig(genus);
 
         // Replace Cal with NCal to keep calendar customizations in nurgling package
         Widget oldCalendarWidget = null;
@@ -117,6 +125,34 @@ public class NGameUI extends GameUI
         waypointMovementService = new WaypointMovementService(this);
         fishLocationService = new FishLocationService(this);
         treeLocationService = new TreeLocationService(this);
+    }
+    
+    @Override
+    protected void attached() {
+        super.attached();
+        // Apply local ring settings to iconconf after it's loaded (only once)
+        if (!ringSettingsApplied) {
+            applyLocalRingSettings();
+            ringSettingsApplied = true;
+        }
+    }
+    
+    private void applyLocalRingSettings() {
+        if (iconRingConfig == null || iconconf == null) {
+            return;
+        }
+        
+        for (Map.Entry<String, Boolean> entry : iconRingConfig.getAllSettings().entrySet()) {
+            String iconResName = entry.getKey();
+            boolean ringEnabled = entry.getValue();
+            
+            // Find matching settings in iconconf
+            for (GobIcon.Setting setting : iconconf.settings.values()) {
+                if (setting.res != null && setting.res.name.equals(iconResName)) {
+                    setting.ring = ringEnabled;
+                }
+            }
+        }
     }
 
     private void initializeInventoryVisibility() {
