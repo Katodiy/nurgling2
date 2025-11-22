@@ -31,7 +31,7 @@ public class UnGardentPotAction implements Action {
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
 
-            NArea kilns = NContext.findSpec(Specialisation.SpecName.kiln.toString());
+            NArea kilns = NContext.findSpecGlobal(Specialisation.SpecName.kiln.toString());
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob sm : Finder.findGobs(kilns, new NAlias("gfx/terobjs/kiln"))) {
@@ -51,9 +51,9 @@ public class UnGardentPotAction implements Action {
                 containers.add(cand);
             }
 
-            ArrayList<Long> lighted = new ArrayList<>();
+            ArrayList<String> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gobid);
+                lighted.add(cont.gobHash);
             }
 
             NContext icontext = new NContext(gui);
@@ -77,9 +77,9 @@ public class UnGardentPotAction implements Action {
                 }
                 new FuelToContainers(forFuel).run(gui);
 
-                ArrayList<Long> flighted = new ArrayList<>();
+                ArrayList<String> flighted = new ArrayList<>();
                 for (Container cont : forFuel) {
-                    flighted.add(cont.gobid);
+                    flighted.add(cont.gobHash);
                 }
                 if (!new LightGob(flighted, 1).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");

@@ -27,6 +27,7 @@
 package haven;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.*;
 import java.nio.ByteBuffer;
 import java.awt.image.BufferedImage;
@@ -85,7 +86,7 @@ public class RUtils {
 
     public abstract static class StateNode<R extends RenderTree.Node> implements Node {
 	public final R r;
-	private final Collection<Slot> slots = new ArrayList<>(1);
+	private final Collection<Slot> slots = new CopyOnWriteArrayList<>();
 	private Op cstate;
 	private boolean inited = false;
 

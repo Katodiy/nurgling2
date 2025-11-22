@@ -40,10 +40,10 @@ public class BackerAction implements Action {
             containers.add(cand);
         }
 
-        ArrayList<Long> lighted = new ArrayList<>();
+        ArrayList<String> lighted = new ArrayList<>();
         for (Container cont : containers)
         {
-            lighted.add(cont.gobid);
+            lighted.add(cont.gobHash);
         }
 
             Results res = null;
@@ -82,10 +82,10 @@ public class BackerAction implements Action {
             }
             new FuelToContainers(forFuel).run(gui);
 
-            ArrayList<Long> flighted = new ArrayList<>();
+            ArrayList<String> flighted = new ArrayList<>();
             for (Container cont : forFuel)
             {
-                flighted.add(cont.gobid);
+                flighted.add(cont.gobHash);
             }
             new LightGob(flighted, 4).run(gui);
         }
@@ -131,7 +131,7 @@ public class BackerAction implements Action {
             for(NContext.ObjectStorage storage : storages) {
                 if(storage instanceof Container && toTake > 0) {
                     Container cont = (Container) storage;
-                    new PathFinder(Finder.findGob(cont.gobid)).run(gui);
+                    new PathFinder(Finder.findGob(cont.gobHash)).run(gui);
                     new OpenTargetContainer(cont).run(gui);
                     
                     int beforeCount = gui.getInventory().getItems(doughs).size();
@@ -157,7 +157,7 @@ public class BackerAction implements Action {
                         // Transfer to ovens immediately after taking
                         for(Container oven : containers) {
                             if(!isReady(oven) && gui.getInventory().getItems(doughs).size() > 0) {
-                                new PathFinder(Finder.findGob(oven.gobid)).run(gui);
+                                new PathFinder(Finder.findGob(oven.gobHash)).run(gui);
                                 TransferToContainer ttc = new TransferToContainer(oven, doughs);
                                 ttc.run(gui);
                                 new CloseTargetContainer(oven).run(gui);

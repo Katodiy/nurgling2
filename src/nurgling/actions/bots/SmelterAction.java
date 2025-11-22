@@ -27,6 +27,7 @@ public class SmelterAction implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
 
         NArea.Specialisation ofuelc = new NArea.Specialisation(Specialisation.SpecName.fuel.toString(), "coal");
+
         NArea.Specialisation ofuelb = new NArea.Specialisation(Specialisation.SpecName.fuel.toString(), "branch");
         NArea.Specialisation rsmelter = new NArea.Specialisation(Specialisation.SpecName.smelter.toString());
         NArea.Specialisation rore = new NArea.Specialisation(Specialisation.SpecName.ore.toString());
@@ -42,7 +43,7 @@ public class SmelterAction implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
-            NArea smelters = NContext.findSpec(Specialisation.SpecName.smelter.toString());
+            NArea smelters = NContext.findSpecGlobal(Specialisation.SpecName.smelter.toString());
             Finder.findGobs(smelters, new NAlias("gfx/terobjs/smelter"));
 
             ArrayList<Container> containers = new ArrayList<>();
@@ -77,9 +78,9 @@ public class SmelterAction implements Action {
                 containers.add(cand);
             }
 
-            ArrayList<Long> lighted = new ArrayList<>();
+            ArrayList<String> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gobid);
+                lighted.add(cont.gobHash);
 
             }
             if(containers.isEmpty())
@@ -104,9 +105,9 @@ public class SmelterAction implements Action {
                     if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
                         return Results.ERROR("NO FUEL");
 
-                    ArrayList<Long> flighted = new ArrayList<>();
+                    ArrayList<String> flighted = new ArrayList<>();
                     for (Container cont : forFuel) {
-                        flighted.add(cont.gobid);
+                        flighted.add(cont.gobHash);
                     }
 
                     if (!new LightGob(flighted, 2).run(gui).IsSuccess())

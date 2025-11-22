@@ -53,7 +53,7 @@ public class LyeBoiler implements Action {
 
             ArrayList<Gob> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(Finder.findGob(cont.gobid));
+                lighted.add(Finder.findGob(cont.gobHash));
             }
 
             Results res = null;
@@ -73,7 +73,7 @@ public class LyeBoiler implements Action {
                     ArrayList<Container> forFuel = new ArrayList<>();
                     for (Container container : containers) {
                         Container.Space space = container.getattr(Container.Space.class);
-                        if (!space.isEmpty() && (Finder.findGob(container.gobid).ngob.getModelAttribute() & 1) != 1)
+                        if (!space.isEmpty() && (Finder.findGob(container.gobHash).ngob.getModelAttribute() & 1) != 1)
                             forFuel.add(container);
                     }
 
@@ -81,10 +81,10 @@ public class LyeBoiler implements Action {
                     if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
                         return Results.ERROR("NO FUEL");
 
-                    ArrayList<Long> flighted = new ArrayList<>();
+                    ArrayList<String> flighted = new ArrayList<>();
                     for (Container cont : containers) {
-                        if (((Finder.findGob(cont.gobid).ngob.getModelAttribute() & 1) == 1) && (Finder.findGob(cont.gobid).ngob.getModelAttribute() & 2) != 2)
-                            flighted.add(cont.gobid);
+                        if (((Finder.findGob(cont.gobHash).ngob.getModelAttribute() & 1) == 1) && (Finder.findGob(cont.gobHash).ngob.getModelAttribute() & 2) != 2)
+                            flighted.add(cont.gobHash);
                     }
                     new LightGob(flighted, 2).run(gui);
                 }

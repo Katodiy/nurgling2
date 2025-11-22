@@ -57,16 +57,16 @@ public class PrepareWorkStation implements Action
             if(name.contains("crucible"))
             {
                 if(fillCrucible(ws,gui))
-                    new LightGob(new ArrayList<>(Arrays.asList(ws.id)),4).run(gui);
+                    new LightGob(new ArrayList<>(Arrays.asList(ws.ngob.hash)),4).run(gui);
             }
             else if(name.startsWith("gfx/terobjs/pow"))
             {
                 ArrayList<Gob> pows = new ArrayList<>(Arrays.asList(ws));
                 if(!new FillFuelPowOrCauldron(context, pows, 1).run(gui).IsSuccess())
                     return Results.FAIL();
-                ArrayList<Long> flighted = new ArrayList<>();
+                ArrayList<String> flighted = new ArrayList<>();
                 for (Gob cont : pows) {
-                    flighted.add(cont.id);
+                    flighted.add(cont.ngob.hash);
                 }
                 if (!new LightGob(flighted, 4).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");
@@ -76,9 +76,9 @@ public class PrepareWorkStation implements Action
                 ArrayList<Gob> pows = new ArrayList<>(Arrays.asList(ws));
                 if(!new FillFuelPowOrCauldron(context, pows, 1).run(gui).IsSuccess())
                     return Results.FAIL();
-                ArrayList<Long> flighted = new ArrayList<>();
+                ArrayList<String> flighted = new ArrayList<>();
                 for (Gob cont : pows) {
-                    flighted.add(cont.id);
+                    flighted.add(cont.ngob.hash);
                 }
                 if (!new LightGob(flighted, 2).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");

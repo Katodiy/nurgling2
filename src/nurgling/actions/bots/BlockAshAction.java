@@ -68,9 +68,9 @@ public class BlockAshAction implements Action {
                 containers.add(cand);
             }
 
-            ArrayList<Long> flighted = new ArrayList<>();
+            ArrayList<String> flighted = new ArrayList<>();
             for (Container cont : containers) {
-                flighted.add(cont.gobid);
+                flighted.add(cont.gobHash);
             }
 
             Results res = null;
@@ -89,7 +89,7 @@ public class BlockAshAction implements Action {
 
                 flighted.clear();
                 for (Container cont : forFuel) {
-                    flighted.add(cont.gobid);
+                    flighted.add(cont.gobHash);
                 }
                 if (!new LightGob(flighted, 1).run(gui).IsSuccess())
                     return Results.ERROR("I can't start a fire");
