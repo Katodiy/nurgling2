@@ -358,7 +358,8 @@ public class TransferToContainer implements Action
                     // Для стака размером 2 используем ISRemovedLoftar
                     if (originalStackSize <= 2)
                     {
-                        NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
+                        if(sourceStack.parent!=null)
+                            NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
                     } else
                     {
                         NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
