@@ -396,7 +396,7 @@ public class Finder
             {
                 if (!(gob instanceof OCache.Virtual || gob.attr.isEmpty() || gob.getClass().getName().contains("GlobEffector")))
                 {
-                    if (gob.id!= NUtils.playerID() && gob.rc.dist(pos)<0.5)
+                    if (gob.id!= NUtils.playerID() && gob.rc.dist(pos)<0.5 && !(gob instanceof MapView.Plob) && gob.id>0)
                     {
                         return gob;
                     }

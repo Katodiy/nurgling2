@@ -458,7 +458,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
     }
 
     public void ctick(double dt) {
-	for(GAttrib a : attr.values())
+	for(GAttrib a : new ArrayList<>(attr.values()))
 		a.ctick(dt);
 	List<Overlay> toRemove = new ArrayList<>();
 	for(Overlay ol : ols) {
