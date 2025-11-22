@@ -68,14 +68,14 @@ public class FreeContainers implements Action
     private void navigateToTargetContainer(NGameUI gui, Container container) throws InterruptedException {
         PathFinder pf;
 
-        Gob gob = Finder.findGob(container.gobid);
+        Gob gob = Finder.findGob(container.gobHash);
         if(gob!= null && PathFinder.isAvailable(gob)) {
             pf = new PathFinder(gob);
             pf.isHardMode = true;
             pf.run(gui);
         } else {
             new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
-            if((gob = Finder.findGob(container.gobid))!=null ) {
+            if((gob = Finder.findGob(container.gobHash))!=null ) {
                 pf = new PathFinder(gob);
                 pf.isHardMode = true;
                 pf.run(gui);

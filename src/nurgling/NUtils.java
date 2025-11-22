@@ -215,7 +215,13 @@ public class NUtils
 
     public static void dropToInv() throws InterruptedException {
         if(NUtils.getGameUI().vhand!=null) {
-            getGameUI().getInventory().dropOn(getGameUI().getInventory().findFreeCoord(NUtils.getGameUI().vhand));
+            dropToInv(getGameUI().getInventory());
+        }
+    }
+
+    public static void dropToInv(NInventory targetInv) throws InterruptedException {
+        if(NUtils.getGameUI().vhand!=null) {
+            targetInv.findFreeCoord(NUtils.getGameUI().vhand);
         }
     }
 

@@ -17,10 +17,12 @@ import java.util.Map;
 
 public class Container implements NContext.ObjectStorage {
     public long gobid;
+    public String gobHash;
     public String cap;
 
     public Container(Gob gob, String cap) {
         this.gobid = gob.id;
+        this.gobHash = gob.ngob.hash;
         this.cap = cap;
     }
 
@@ -181,6 +183,7 @@ public class Container implements NContext.ObjectStorage {
         public static final String NOCREDO = "nocredo";
         public static final String ABSMAXLVL = "absmaxlvl";
         public static final String FUELMOD = "flmod";
+        public static final String FUELAREA = "fuelarea";
 
         public FuelLvl(){
             res.put(FUELMOD, (int) 1);
@@ -221,6 +224,14 @@ public class Container implements NContext.ObjectStorage {
         }
 
         public void setFuelmod(int fuelmod) { res.put(FUELMOD, fuelmod);}
+        
+        public void setFuelArea(nurgling.areas.NArea area) {
+            res.put(FUELAREA, area);
+        }
+        
+        public nurgling.areas.NArea getFuelArea() {
+            return (nurgling.areas.NArea) res.get(FUELAREA);
+        }
 
         public int neededFuel() {
             if (!res.containsKey(NOCREDO) || (boolean) res.get(NOCREDO))

@@ -157,7 +157,7 @@ public class TakeItems2 implements Action
 
     public Results takeFromContainer(AtomicInteger left, NGameUI gui, Container cont) throws InterruptedException
     {
-        Gob contgob = Finder.findGob(cont.gobid);
+        Gob contgob = Finder.findGob(cont.gobHash);
         if(contgob == null)
             return Results.FAIL();
         new PathFinder(contgob).run(gui);

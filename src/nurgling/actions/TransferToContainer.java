@@ -281,21 +281,28 @@ public class TransferToContainer implements Action
         // Проверяем валидность предмета перед транспортировкой
         if (!NGItem.validateItem(item))
         {
+            System.out.println("[Transfer] Предмет не валиден, пропускаем");
             return 0;
         }
 
         String itemName = ((NGItem) item.item).name();
+        System.out.println("[Transfer] Начало переноса предмета: '" + itemName + "', макс. размер переноса: " + transfer_size);
 
         if (!StackSupporter.isStackable(targetInv, itemName))
         {
+            System.out.println("[Transfer] Предмет не стакуемый: " + itemName);
             if(targetInv.getFreeSpace() == 0)
+            {
+                System.out.println("[Transfer] Нет свободного места в целевом инвентаре, перенос отменен");
                 return 0;
+            }
             if (item.parent instanceof ItemStack)
             {
                 ItemStack sourceStack = (ItemStack) item.parent;
                 int originalStackSize = sourceStack.wmap.size();
+                System.out.println("[Transfer] Перенос 1 предмета из стака (размер: " + originalStackSize + ") в новый слот");
                 item.parent.wdgmsg("invxf", targetInv.wdgid(), 1);
-                int id = item.parent.wdgid();
+                int id = ((GItem.ContentsWindow) sourceStack.parent).cont.wdgid();
                 if (originalStackSize <= 2)
                 {
                     NUtils.addTask(new ISRemoved(id));
@@ -303,21 +310,27 @@ public class TransferToContainer implements Action
                 {
                     NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
                 }
+                System.out.println("[Transfer] Перенесено: 1 предмет (не стакуемый из стака)");
                 return 1; // Переносим 1 предмет из стака
             } else
             {
+                System.out.println("[Transfer] Перенос одиночного предмета в новый слот");
                 item.item.wdgmsg("transfer", Coord.z);
                 int id = item.item.wdgid();
                 NUtils.addTask(new ISRemoved(id));
+                System.out.println("[Transfer] Перенесено: 1 предмет (одиночный не стакуемый)");
                 return 1; // Переносим 1 одиночный предмет
             }
         } else
         {
             // Обрабатываем стакуемые предметы с приоритетом на заполнение не полных стаков
+            System.out.println("[Transfer] Предмет стакуемый: " + itemName);
             // Проверяем, является ли предмет изначально частью ItemStack
             if (item.parent instanceof ItemStack)
             {
                 ItemStack sourceStack = (ItemStack) item.parent;
+                int sourceStackSize = sourceStack.wmap.size();
+                System.out.println("[Transfer] Исходный предмет в стаке (размер: " + sourceStackSize + ")");
 
                 // Приоритет целей: одиночные предметы, затем заполняемые стаки, затем новые слоты
                 WItem targetSingleItem = targetInv.findNotStack(itemName);
@@ -325,6 +338,7 @@ public class TransferToContainer implements Action
 
                 if (targetSingleItem != null)
                 {
+                    System.out.println("[Transfer] Найден одиночный предмет в целевом инвентаре, объединяем");
                     // Сохраняем исходный размер стека ДО взятия предмета
                     int originalStackSize = sourceStack.wmap.size();
 
@@ -335,15 +349,18 @@ public class TransferToContainer implements Action
                     // Для стака размером 2 используем ISRemovedLoftar
                     if (originalStackSize <= 2)
                     {
-                        NUtils.addTask(new ISRemovedLoftar(sourceStack.wdgid(), sourceStack, originalStackSize));
+                        NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
                     } else
                     {
                         NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
                     }
+                    System.out.println("[Transfer] Перенесено: 1 предмет из стака к одиночному предмету");
                     return 1; // Переносим 1 предмет из стака к одиночному предмету
                 } else if (targetNotFullStack != null)
                 {
                     // Если нет одиночных предметов, заполняем неполные стаки
+                    int targetStackSize = targetNotFullStack.wmap.size();
+                    System.out.println("[Transfer] Найден неполный стак в целевом инвентаре (размер: " + targetStackSize + "), заполняем");
                     // Сохраняем исходный размер стека ДО взятия предмета
                     int originalStackSize = sourceStack.wmap.size();
 
@@ -354,41 +371,77 @@ public class TransferToContainer implements Action
                     // Для стака размером 2 используем ISRemovedLoftar
                     if (originalStackSize <= 2)
                     {
-                        NUtils.addTask(new ISRemovedLoftar(sourceStack.wdgid(), sourceStack, originalStackSize));
+                        NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
                     } else
                     {
                         NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
                     }
+                    System.out.println("[Transfer] Перенесено: 1 предмет из стака к неполному стаку");
                     return 1; // Переносим 1 предмет из стака к стаку
-                } else
+                }
+                else
                 {
                     int oldstacksize = sourceStack.wmap.size();
-                    // Если НЕТ неполных стаков в целевом инвентаре и есть свободное место - переносим полный стак целиком
+                    // Если НЕТ неполных стаков в целевом инвентаре и есть свободное место
                     if (targetInv.getFreeSpace() > 0)
                     {
-                        ((GItem.ContentsWindow) sourceStack.parent).cont.wdgmsg("transfer", Coord.z);
-                        NUtils.addTask(new ISRemoved(sourceStack.wdgid()));
-                        return oldstacksize;
+                        // Проверяем, не превышает ли размер стака лимит переноса
+                        if (oldstacksize > transfer_size)
+                        {
+                            System.out.println("[Transfer] Размер стака (" + oldstacksize + ") превышает лимит (" + transfer_size + "), переносим 1 предмет");
+                            // Сохраняем исходный размер стека ДО взятия предмета
+                            int originalStackSize = sourceStack.wmap.size();
+
+                            NUtils.takeItemToHand(item);
+                            NUtils.dropToInv(targetInv);
+                            NUtils.addTask(new WaitFreeHand());
+
+                            // Для стака размером 2 используем ISRemovedLoftar
+                            if (originalStackSize <= 2)
+                            {
+                                NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
+                            } else
+                            {
+                                NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
+                            }
+                            System.out.println("[Transfer] Перенесено: 1 предмет из стака (превышен лимит)");
+                            return 1;
+                        }
+                        else
+                        {
+                            System.out.println("[Transfer] Нет целей для заполнения, переносим весь стак (" + oldstacksize + " предметов) в новый слот");
+                            ((GItem.ContentsWindow) sourceStack.parent).cont.wdgmsg("transfer", Coord.z);
+                            NUtils.addTask(new ISRemoved( ((GItem.ContentsWindow) sourceStack.parent).cont.wdgid()));
+                            System.out.println("[Transfer] Перенесено: " + oldstacksize + " предметов (целый стак)");
+                            return oldstacksize;
+                        }
                     }
+                    System.out.println("[Transfer] Нет свободного места в целевом инвентаре, перенос отменен");
                     return 0;
                 }
             } else
             {
                 // Обрабатываем отдельные предметы: приоритет заполнения не полных стаков в целевом инвентаре
+                System.out.println("[Transfer] Исходный предмет одиночный (не в стаке)");
                 ItemStack targetNotFullStack = targetInv.findNotFullStack(itemName);
                 WItem targetSingleItem = null;
 
                 if (targetNotFullStack != null)
                 {
+                    int targetStackSize = targetNotFullStack.wmap.size();
+                    System.out.println("[Transfer] Найден неполный стак в целевом инвентаре (размер: " + targetStackSize + "), заполняем");
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(((NGItem) ((GItem.ContentsWindow) targetNotFullStack.parent).cont).wi);
                     NUtils.addTask(new WaitFreeHand());
+                    System.out.println("[Transfer] Перенесено: 1 предмет (одиночный к неполному стаку)");
                     return 1;
                 } else if ((targetSingleItem = targetInv.findNotStack(itemName)) != null)
                 {
+                    System.out.println("[Transfer] Найден одиночный предмет в целевом инвентаре, объединяем");
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(targetSingleItem);
                     NUtils.addTask(new WaitFreeHand());
+                    System.out.println("[Transfer] Перенесено: 1 предмет (одиночный к одиночному)");
                     return 1;
                 }
                 else
@@ -396,13 +449,18 @@ public class TransferToContainer implements Action
                     // When no stacks or single items to merge with, transfer to free space if available
                     if (targetInv.getFreeSpace() > 0)
                     {
+                        System.out.println("[Transfer] Нет целей для объединения, переносим в новый слот");
                         item.item.wdgmsg("transfer", Coord.z);
                         int id = item.item.wdgid();
                         NUtils.addTask(new ISRemoved(id));
+                        System.out.println("[Transfer] Перенесено: 1 предмет (одиночный в новый слот)");
                         return 1;
                     }
                     else
+                    {
+                        System.out.println("[Transfer] Нет свободного места в целевом инвентаре, перенос отменен");
                         return 0;
+                    }
                 }
             }
         }

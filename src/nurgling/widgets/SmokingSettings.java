@@ -30,7 +30,30 @@ public class SmokingSettings extends Window implements Checkable {
         super(UI.scale(500, 200), "Smoking Settings");
         prev = add(new Label("Smoking properties for:"));
         prev = add(sc = new SmockedContainer(), prev.pos("bl").add(UI.scale(0,5)));
-        add(textEntry = new TextEntry(200,""),prev.pos("ur").add(UI.scale(10,sc.sz.y/2-mext.sz().y/2)));
+
+        add(textEntry = new TextEntry(200,""),prev.pos("ur").add(UI.scale(5,mext.sz().y/2-UI.scale(10))));
+
+
+        Widget selectButton = add(new Button(100,"Log") {
+            @Override
+            public void click() {
+                super.click();
+                new Thread(() -> {
+                    try {
+                        NUtils.getGameUI().msg("Please select log for fuel");
+                        nurgling.actions.bots.SelectGob selgob = new nurgling.actions.bots.SelectGob(Resource.loadsimg("baubles/selectItem"));
+                        selgob.run(NUtils.getGameUI());
+                        Gob result = selgob.getResult();
+                        if(result != null && result.ngob != null && result.ngob.name != null) {
+                            textEntry.settext(result.ngob.name);
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }, "LogSelector").start();
+            }
+        }, textEntry.pos("ur").add(UI.scale(5,-7)));
+
         add(new Button(100,"Add"){
             @Override
             public void click() {
@@ -50,7 +73,7 @@ public class SmokingSettings extends Window implements Checkable {
                     }
                 }
             }
-        },textEntry.pos("ur").add(UI.scale(5,-7)));
+        },selectButton.pos("ur").add(UI.scale(5,0)));
         prev = add(rl = new RecipesList(UI.scale(480, 150)), prev.pos("bl").add(UI.scale(0,5)));
         prev = add(new Button(UI.scale(150), "Start"){
             @Override

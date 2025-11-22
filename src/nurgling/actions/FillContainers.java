@@ -1,12 +1,16 @@
 package nurgling.actions;
 
 import haven.Coord;
+import haven.Gob;
 import nurgling.NGameUI;
+import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
+import nurgling.routes.RoutePoint;
 import nurgling.tools.Container;
-import nurgling.tools.Context;
+import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
@@ -15,11 +19,12 @@ public class FillContainers implements Action
 {
     ArrayList<Container> conts;
     String transferedItems;
-    Context context;
+    NContext context;
     ArrayList<Container> currentContainers = new ArrayList<>();
     Coord targetCoord = new Coord(1,1);
+    RoutePoint closestRoutePoint = null;
 
-    public FillContainers(ArrayList<Container> conts, String transferedItems, Context context) {
+    public FillContainers(ArrayList<Container> conts, String transferedItems, NContext context) {
         this.conts = conts;
         this.context = context;
         this.transferedItems = transferedItems;
@@ -27,18 +32,19 @@ public class FillContainers implements Action
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NArea area = NContext.findIn(transferedItems);
-        if (area == null)
-            return Results.ERROR("NO area for: " + transferedItems);
-        context.addInput(transferedItems, Context.GetInput(transferedItems, area));
+        context.addInItem(transferedItems, null);
+        
+        this.closestRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui);
+        
         for (Container cont : conts) {
             while(!isReady(cont)) {
                 if (gui.getInventory().getItems(transferedItems).isEmpty()) {
                     int target_size = calculateTargetSize();
-                    new TakeItems(context,transferedItems,Math.min(target_size,NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord))).run(gui);
-                    if (gui.getInventory().getItems(transferedItems).isEmpty())
+                    if(!new TakeItems2(context, transferedItems, target_size ).run(gui).IsSuccess())
                         return Results.ERROR("NO ITEMS");
                 }
+                navigateToTargetContainer(gui, cont);
+                new OpenTargetContainer(cont).run(gui);
                 TransferToContainer ttc = new TransferToContainer(cont, new NAlias(transferedItems));
                 ttc.run(gui);
                 new CloseTargetContainer(cont).run(gui);
@@ -83,5 +89,23 @@ public class FillContainers implements Action
             Container.Space space = container.getattr(Container.Space.class);
             return (Integer)space.getRes().get(Container.Space.FREESPACE) != null && (Integer)space.getRes().get(Container.Space.FREESPACE)==0;
         }
-    };
+    }
+
+    private void navigateToTargetContainer(NGameUI gui, Container container) throws InterruptedException {
+        PathFinder pf;
+
+        Gob gob = Finder.findGob(container.gobHash);
+        if(gob!= null && PathFinder.isAvailable(gob)) {
+            pf = new PathFinder(gob);
+            pf.isHardMode = true;
+            pf.run(gui);
+        } else {
+            new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
+            if((gob = Finder.findGob(container.gobHash))!=null ) {
+                pf = new PathFinder(gob);
+                pf.isHardMode = true;
+                pf.run(gui);
+            }
+        }
+    }
 }
