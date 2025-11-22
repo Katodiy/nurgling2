@@ -176,6 +176,7 @@ public class BuildGhostPreview extends GAttrib {
     }
 
     public void dispose() {
+        System.out.println("[BuildGhostPreview] dispose() called, removing " + ghostGobs.size() + " ghosts");
         // Use deferred removal on dispose to avoid ConcurrentModificationException
         List<Gob> toRemove;
         synchronized (ghostGobs) {
@@ -229,6 +230,41 @@ public class BuildGhostPreview extends GAttrib {
         // Recalculate ghost positions with new hitbox and rotation
         if (area != null && buildingHitBox != null && buildingResource != null) {
             calculateGhostPositions();
+        }
+    }
+    
+    public ArrayList<Coord2d> getGhostPositions() {
+        ArrayList<Coord2d> positions = new ArrayList<>();
+        synchronized (ghostGobs) {
+            for (Gob ghost : ghostGobs) {
+                positions.add(ghost.rc);
+            }
+        }
+        System.out.println("[BuildGhostPreview] getGhostPositions() returning " + positions.size() + " positions");
+        return positions;
+    }
+    
+    public void removeGhost(Coord2d pos) {
+        synchronized (ghostGobs) {
+            System.out.println("[BuildGhostPreview] removeGhost called for position: " + pos + ", total ghosts: " + ghostGobs.size());
+            Gob toRemove = null;
+            for (Gob ghost : ghostGobs) {
+                if (ghost.rc.dist(pos) < 1.0) {
+                    toRemove = ghost;
+                    break;
+                }
+            }
+            if (toRemove != null) {
+                ghostGobs.remove(toRemove);
+                System.out.println("[BuildGhostPreview] Removed ghost at " + toRemove.rc + ", remaining: " + ghostGobs.size());
+                try {
+                    glob.oc.remove(toRemove);
+                } catch (Exception e) {
+                    System.out.println("[BuildGhostPreview] Error removing ghost from glob.oc: " + e.getMessage());
+                }
+            } else {
+                System.out.println("[BuildGhostPreview] No ghost found at position " + pos);
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package nurgling.actions.bots;
 
 import haven.Coord;
+import haven.Coord2d;
 import haven.Gob;
 import haven.Resource;
 import nurgling.NGameUI;
@@ -12,6 +13,8 @@ import nurgling.actions.Results;
 import nurgling.overlays.BuildGhostPreview;
 import nurgling.overlays.NCustomBauble;
 import nurgling.tools.NAlias;
+
+import java.util.ArrayList;
 
 public class BuildDryingFrame implements Action {
     @Override
@@ -39,7 +42,19 @@ public class BuildDryingFrame implements Action {
         stringarea.run(NUtils.getGameUI());
         command.ingredients.add(new Build.Ingredient(new Coord(1,1),stringarea.getRCArea(),new NAlias("Flax Fibres", "Hemp Fibres", "Spindly Taproot", "Cattail Fibres", "Stinging Nettle", "Hide Strap", "Straw Twine", "Bark Cordage"),2));
 
-        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount()).run(gui);
+        // Get ghost positions from BuildGhostPreview if available
+        ArrayList<Coord2d> ghostPositions = null;
+        BuildGhostPreview ghostPreview = null;
+        Gob player = NUtils.player();
+        if (player != null) {
+            ghostPreview = player.getattr(BuildGhostPreview.class);
+            if (ghostPreview != null) {
+                ghostPositions = new ArrayList<>(ghostPreview.getGhostPositions());
+                NUtils.getGameUI().msg("Found " + ghostPositions.size() + " ghost positions");
+            }
+        }
+        
+        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
         return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted

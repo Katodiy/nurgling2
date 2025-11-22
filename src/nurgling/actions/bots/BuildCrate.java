@@ -1,6 +1,7 @@
 package nurgling.actions.bots;
 
 import haven.Coord;
+import haven.Coord2d;
 import haven.Gob;
 import haven.Resource;
 import nurgling.NGameUI;
@@ -33,8 +34,18 @@ public class BuildCrate implements Action {
             brancharea.run(NUtils.getGameUI());
             command.ingredients.add(new Build.Ingredient(new Coord(4,1),brancharea.getRCArea(),new NAlias("Board"),4));
 
+            // Get ghost positions from BuildGhostPreview if available
+            ArrayList<Coord2d> ghostPositions = null;
+            BuildGhostPreview ghostPreview = null;
+            Gob player = NUtils.player();
+            if (player != null) {
+            ghostPreview = player.getattr(BuildGhostPreview.class);
+                if (ghostPreview != null) {
+                    ghostPositions = new ArrayList<>(ghostPreview.getGhostPositions());
+                }
+            }
 
-        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount()).run(gui);
+        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
             return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted

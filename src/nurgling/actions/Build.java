@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.*;
+import nurgling.GhostAlpha;
 import nurgling.NGameUI;
 import nurgling.NGob;
 import nurgling.NUtils;
@@ -17,6 +18,8 @@ public class Build implements Action{
     Command cmd;
     Pair<Coord2d, Coord2d> area;
     int rotationCount = 0;  // Rotation count: 0, 1, 2, 3 for 0°, 90°, 180°, 270°
+    ArrayList<Coord2d> ghostPositions = null;  // Optional ghost positions from preview
+    BuildGhostPreview ghostPreview = null;  // Optional reference to ghost preview for removal
 
     public static class Command
     {
@@ -61,6 +64,14 @@ public class Build implements Action{
         this.area = area;
         this.rotationCount = rotationCount;
     }
+    
+    public Build(Command cmd, Pair<Coord2d, Coord2d> area, int rotationCount, ArrayList<Coord2d> ghostPositions, BuildGhostPreview ghostPreview) {
+        this.cmd = cmd;
+        this.area = area;
+        this.rotationCount = rotationCount;
+        this.ghostPositions = ghostPositions;
+        this.ghostPreview = ghostPreview;
+    }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -76,7 +87,9 @@ public class Build implements Action{
             }
         }
 
+        int ghostIndex = 0;
         Coord2d pos = Coord2d.z;
+        System.out.println("[Build] Starting build loop. Ghost positions: " + (ghostPositions != null ? ghostPositions.size() : 0));
         do
         {
             boolean isExist = false;
@@ -126,7 +139,65 @@ public class Build implements Action{
                 hitBox = cmd.customHitBox;
             }
 
-            pos = Finder.getFreePlace(area, hitBox, rotationAngle);
+            // Use ghost positions if available, otherwise find free place
+            if (ghostPositions != null && !ghostPositions.isEmpty() && ghostIndex < ghostPositions.size()) {
+                pos = ghostPositions.get(ghostIndex);
+                System.out.println("[Build] Using ghost position " + ghostIndex + "/" + ghostPositions.size() + ": " + pos);
+            } else {
+                pos = Finder.getFreePlace(area, hitBox, rotationAngle);
+                System.out.println("[Build] Found free place: " + pos);
+            }
+            
+            if (pos == null) {
+                System.out.println("[Build] No more positions available, exiting loop");
+                break;
+            }
+            
+            // Check if there's already an object at this position (skip ghost gobs)
+            Gob existingGob = Finder.findGob(pos);
+            if (existingGob != null && existingGob.getattr(GhostAlpha.class) == null) {
+                System.out.println("[Build] Found existing object at position: " + existingGob.ngob.name);
+                if (NParser.checkName(existingGob.ngob.name, "gfx/terobjs/consobj")) {
+                    // Found unfinished construction, finish it
+                    Results result = finishConstruction(gui, pos, existingGob);
+                    if (!result.IsSuccess()) {
+                        return result;
+                    }
+                    
+                    // Remove ghost after successful construction
+                    if (ghostPreview != null) {
+                        ghostPreview.removeGhost(pos);
+                    }
+                    
+                    ghostIndex++;
+                    
+                    // Move player away and continue to next position
+                    Coord2d finalPos = pos;
+                    final Gob[] targetGob = {null};
+                    NUtils.addTask(new NTask() {
+                        @Override
+                        public boolean check() {
+                            return (targetGob[0] = Finder.findGob(finalPos)) != null;
+                        }
+                    });
+                    if (targetGob[0] != null) {
+                        Coord2d shift = targetGob[0].rc.sub(NUtils.player().rc).norm().mul(4);
+                        new GoTo(NUtils.player().rc.sub(shift)).run(gui);
+                    }
+                    for (Ingredient ingredient : curings) {
+                        NUtils.addTask(new WaitItems(NUtils.getGameUI().getInventory(), ingredient.name, ingredient.left));
+                    }
+                    
+                    continue;
+                } else {
+                    // Object is not consobj, skip this position
+                    if (ghostPreview != null) {
+                        ghostPreview.removeGhost(pos);
+                    }
+                    ghostIndex++;
+                    continue;
+                }
+            }
 
             PathFinder pf = new PathFinder(NGob.getDummy(pos, rotationAngle, hitBox), true);
             pf.isHardMode = true;
@@ -172,6 +243,17 @@ public class Build implements Action{
                     return Results.ERROR("Low energy");
                 }
             }while ((gob = Finder.findGob(pos))!=null && NParser.checkName(gob.ngob.name, "gfx/terobjs/consobj"));
+            
+            System.out.println("[Build] Construction finished at position: " + pos);
+            
+            // Remove ghost after successful construction
+            if (ghostPreview != null) {
+                ghostPreview.removeGhost(pos);
+            }
+            
+            ghostIndex++;
+            System.out.println("[Build] Incremented ghostIndex to: " + ghostIndex);
+            
             Coord2d finalPos = pos;
             final Gob[] targetGob = {null};
             NUtils.addTask(new NTask() {
@@ -184,14 +266,35 @@ public class Build implements Action{
                 Coord2d shift = targetGob[0].rc.sub(NUtils.player().rc).norm().mul(4);
                 new GoTo(NUtils.player().rc.sub(shift)).run(gui);
             }
-            for(Ingredient ingredient: curings)
-            {
-                NUtils.addTask(new WaitItems(NUtils.getGameUI().getInventory(),ingredient.name,ingredient.left));
+            
+            // Don't wait for items to return to inventory if using ghosts
+            // because we'll start a new iteration with fresh curings
+            if (ghostPositions == null || ghostPositions.isEmpty()) {
+                for(Ingredient ingredient: curings)
+                {
+                    NUtils.addTask(new WaitItems(NUtils.getGameUI().getInventory(),ingredient.name,ingredient.left));
+                }
             }
 
-            pos = Finder.getFreePlace(area, hitBox, rotationAngle);
+            // Get next position
+            if (ghostPositions != null && !ghostPositions.isEmpty()) {
+                // When using ghosts, check if we've processed all ghosts
+                if (ghostIndex >= ghostPositions.size()) {
+                    System.out.println("[Build] All ghosts processed, exiting loop");
+                    pos = null;
+                } else {
+                    // Set pos to next ghost position for loop condition check
+                    pos = ghostPositions.get(ghostIndex);
+                    System.out.println("[Build] Next iteration will use ghost at index: " + ghostIndex);
+                }
+            } else {
+                // When not using ghosts, find next free place
+                pos = Finder.getFreePlace(area, hitBox, rotationAngle);
+                System.out.println("[Build] Next iteration will search for free place");
+            }
         }
         while (pos!=null);
+        System.out.println("[Build] Build loop completed successfully");
         return Results.SUCCESS();
     }
 
@@ -268,5 +371,124 @@ public class Build implements Action{
             }
         }
         return needRefill;
+    }
+    
+    private static class ConstructionProgress {
+        public int current;
+        public int required;
+        
+        public ConstructionProgress(int current, int required) {
+            this.current = current;
+            this.required = required;
+        }
+    }
+    
+    private ArrayList<ConstructionProgress> parseConstructionProgress(Window window) {
+        ArrayList<ConstructionProgress> progress = new ArrayList<>();
+        
+        try {
+            for (Widget wdg = window.lchild; wdg != null; wdg = wdg.prev) {
+                if (wdg instanceof Label) {
+                    Label label = (Label) wdg;
+                    String text = label.texts;
+                    
+                    if (text != null && text.contains("/")) {
+                        String[] parts = text.split("/");
+                        if (parts.length == 2) {
+                            try {
+                                int current = Integer.parseInt(parts[0].trim());
+                                int required = Integer.parseInt(parts[1].trim());
+                                progress.add(new ConstructionProgress(current, required));
+                            } catch (NumberFormatException e) {
+                                // Skip non-numeric labels
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Return empty list if parsing fails
+        }
+        
+        return progress;
+    }
+    
+    private Results finishConstruction(NGameUI gui, Coord2d pos, Gob consobj) throws InterruptedException {
+        new PathFinder(consobj).run(gui);
+        NUtils.rclickGob(consobj);
+        
+        String windowName = cmd.windowName != null ? cmd.windowName : cmd.name;
+        NUtils.addTask(new WaitWindow(windowName));
+        
+        Window window = NUtils.getGameUI().getWindow(windowName);
+        if (window == null) {
+            return Results.ERROR("Cannot open construction window");
+        }
+        
+        ArrayList<ConstructionProgress> progressList = parseConstructionProgress(window);
+        if (progressList.isEmpty() || progressList.size() != cmd.ingredients.size()) {
+            return Results.ERROR("Cannot parse construction progress");
+        }
+        
+        ArrayList<Ingredient> remainingIngredients = new ArrayList<>();
+        for (int i = 0; i < cmd.ingredients.size(); i++) {
+            Ingredient original = cmd.ingredients.get(i);
+            ConstructionProgress prog = progressList.get(i);
+            
+            int remaining = prog.required - prog.current;
+            if (remaining > 0) {
+                Ingredient copy = new Ingredient(original.coord, original.area, original.name, remaining, original.specialWay);
+                copy.containers = original.containers;
+                remainingIngredients.add(copy);
+            }
+        }
+        
+        if (!remainingIngredients.isEmpty()) {
+            if (!refillIng(gui, remainingIngredients)) {
+                return Results.ERROR("Cannot refill ingredients for construction");
+            }
+            
+            new PathFinder(consobj).run(gui);
+            NUtils.rclickGob(consobj);
+            NUtils.addTask(new WaitWindow(windowName));
+        }
+        
+        Gob gob = consobj;
+        do {
+            if (needRefill(remainingIngredients)) {
+                if (!refillIng(gui, remainingIngredients)) {
+                    return Results.ERROR("NO ITEMS");
+                }
+                gob = Finder.findGob(pos);
+                if (gob == null) {
+                    return Results.ERROR("Something went wrong, no gob");
+                }
+                new PathFinder(gob).run(gui);
+                NUtils.rclickGob(gob);
+                NUtils.addTask(new WaitWindow(windowName));
+            }
+            
+            NUtils.startBuild(NUtils.getGameUI().getWindow(windowName));
+            
+            NUtils.addTask(new NTask() {
+                int count = 0;
+                @Override
+                public boolean check() {
+                    return NUtils.getGameUI().prog != null || count++ > 100;
+                }
+            });
+            
+            WaitBuildState wbs = new WaitBuildState();
+            NUtils.addTask(wbs);
+            if (wbs.getState() == WaitBuildState.State.TIMEFORDRINK) {
+                if (!(new Drink(0.9, false).run(gui)).IsSuccess()) {
+                    return Results.ERROR("Drink is not found");
+                }
+            } else if (wbs.getState() == WaitBuildState.State.DANGER) {
+                return Results.ERROR("Low energy");
+            }
+        } while ((gob = Finder.findGob(pos)) != null && NParser.checkName(gob.ngob.name, "gfx/terobjs/consobj"));
+        
+        return Results.SUCCESS();
     }
 }
