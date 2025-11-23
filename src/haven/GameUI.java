@@ -625,7 +625,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	} else if(place == "fight") {
 	   add(new NDraggableWidget( fv = (Fightview)child,"Fightview",UI.scale(230,380)));
 	} else if(place == "fsess") {
-	    add(child);
+	    NFightsess fsess = (NFightsess)child;
+	    add(fsess);
+	    add(new NDraggableWidget(fsess.buffsAndInfo, "FightBuffsInfo", fsess.buffsAndInfo.sz.add(NDraggableWidget.delta)));
+	    add(new NDraggableWidget(fsess.actionsWidget, "FightActions", fsess.actionsWidget.sz.add(NDraggableWidget.delta)));
 	} else if(place == "inv") {
 	    invwnd = new Hidewnd(Coord.z, "Inventory") {
 		    public void cresize(Widget ch) {

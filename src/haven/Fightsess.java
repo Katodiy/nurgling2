@@ -50,7 +50,7 @@ public class Fightsess extends Widget {
     public int use = -1, useb = -1;
     public Coord pcc;
     public int pho;
-    private Fightview fv;
+    public Fightview fv;
 
     public static class Action {
 	public final Indir<Resource> res;
@@ -65,7 +65,7 @@ public class Fightsess extends Widget {
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
 	    int nact = Utils.iv(args[0]);
-	    return(new Fightsess(nact));
+	    return(new NFightsess(nact));
 	}
     }
 
@@ -85,7 +85,7 @@ public class Fightsess extends Widget {
 	pcc = sz.div(2);
     }
 
-    private void updatepos() {
+    protected void updatepos() {
 	MapView map;
 	Gob pl;
 	if(((map = getparent(GameUI.class).map) == null) || ((pl = map.player()) == null))
@@ -164,20 +164,20 @@ public class Fightsess extends Widget {
 	super.destroy();
     }
 
-    private static final Text.Furnace ipf = new PUtils.BlurFurn(new Text.Foundry(Text.serif, 18, new Color(128, 128, 255)).aa(true), 1, 1, new Color(48, 48, 96));
-    private final Indir<Text> ip =  Utils.transform(() -> fv.current.ip , v -> ipf.render("IP: " + v));
-    private final Indir<Text> oip = Utils.transform(() -> fv.current.oip, v -> ipf.render("IP: " + v));
+    protected static final Text.Furnace ipf = new PUtils.BlurFurn(new Text.Foundry(Text.serif, 18, new Color(128, 128, 255)).aa(true), 1, 1, new Color(48, 48, 96));
+    protected final Indir<Text> ip =  Utils.transform(() -> fv.current.ip , v -> ipf.render("IP: " + v));
+    protected final Indir<Text> oip = Utils.transform(() -> fv.current.oip, v -> ipf.render("IP: " + v));
 
-    private static Coord actc(int i) {
+    protected static Coord actc(int i) {
 	int rl = 5;
 	return(new Coord((actpitch * (i % rl)) - (((rl - 1) * actpitch) / 2), UI.scale(125) + ((i / rl) * actpitch)));
     }
 
-    private static final Coord cmc = UI.scale(new Coord(0, 67));
-    private static final Coord usec1 = UI.scale(new Coord(-65, 67));
-    private static final Coord usec2 = UI.scale(new Coord(65, 67));
-    private Indir<Resource> lastact1 = null, lastact2 = null;
-    private Text lastacttip1 = null, lastacttip2 = null;
+    protected static final Coord cmc = UI.scale(new Coord(0, 67));
+    protected static final Coord usec1 = UI.scale(new Coord(-65, 67));
+    protected static final Coord usec2 = UI.scale(new Coord(65, 67));
+    protected Indir<Resource> lastact1 = null, lastact2 = null;
+    protected Text lastacttip1 = null, lastacttip2 = null;
     private Effect curtgtfx;
     public void draw(GOut g) {
 	updatepos();
@@ -307,8 +307,8 @@ public class Fightsess extends Widget {
 	}
     }
 
-    private Widget prevtt = null;
-    private Text acttip = null;
+    protected Widget prevtt = null;
+    protected Text acttip = null;
     public static final String[] keytips = {"1", "2", "3", "4", "5", "Shift+1", "Shift+2", "Shift+3", "Shift+4", "Shift+5"};
     public Object tooltip(Coord c, Widget prev) {
 	for(Buff buff : fv.buffs.children(Buff.class)) {
