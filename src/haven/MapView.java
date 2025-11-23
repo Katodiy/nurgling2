@@ -2065,6 +2065,26 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		}
 		else
 			clickedGob = null;
+		
+		// Send gob ID to chat on meta-click
+		if(ui.modmeta && clickb == 1 && clickedGob != null) {
+			try {
+				GameUI gui = nurgling.NUtils.getGameUI();
+				if(gui != null && gui.chat != null ) {
+					ChatUI.Channel chat = gui.chat.sel;
+					if(chat instanceof ChatUI.EntryChannel) {
+						// Don't send in realm channels
+						if(!chat.getClass().getName().contains("Realm")) {
+							((ChatUI.EntryChannel)chat).send(String.format("@%d", clickedGob.gob.id));
+							return;
+						}
+					}
+				}
+			} catch(Exception e) {
+				// Ignore errors
+			}
+		}
+		
 		if(clickb==3 && clickedGob!=null)
 		{
 			NUtils.getUI().core.setLastAction(clickedGob.gob);

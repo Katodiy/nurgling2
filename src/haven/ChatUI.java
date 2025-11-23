@@ -27,6 +27,7 @@
 package haven;
 
 import nurgling.*;
+import nurgling.tools.Finder;
 import nurgling.widgets.*;
 
 import java.util.*;
@@ -138,18 +139,18 @@ public class ChatUI extends Widget
 		public Message get(int i) {return(rmsgs.get(i).msg);}
 	    };
 
-		public boolean process(String msg) {
+	public boolean process(String msg) {
 			Pattern highlight = Pattern.compile("^@(-?\\d+)$");
 			Matcher matcher = highlight.matcher(msg);
 			if (matcher.matches()) {
-//				try {
-//					Gob gob = NUtils.getGob(Long.parseLong(matcher.group(1)));
-//					if (gob != null) {
-//						gob.addTag(NGob.Tags.highlighted);
-//						return false;
-//					}
-//				} catch (Exception ignored) {
-//				}
+				try {
+					Gob gob = Finder.findGob(Long.parseLong(matcher.group(1)));
+					if (gob != null) {
+						gob.addcustomol(new nurgling.overlays.NChatHighlightOverlay(gob));
+						return false;
+					}
+				} catch (Exception ignored) {
+				}
 			}
 			return true;
 		}
@@ -863,8 +864,8 @@ public class ChatUI extends Widget
 
 	public void uimsg(String msg, Object... args) {
 	    if((msg == "msg") || (msg == "log")) {
-		if (process(msg)) {
 		String line = (String)args[0];
+		if (process(line)) {
 		Color col = null;
 		if(args.length > 1) col = (Color)args[1];
 		if(col == null) col = Color.WHITE;
@@ -980,11 +981,13 @@ public class ChatUI extends Widget
 	    if(msg == "msg") {
 		Number from = (Number)args[0];
 		String line = (String)args[1];
+		if(process(line)) {
 		if(from == null) {
 		    append(new MyMessage(line), -1);
 		} else {
 		    Message cmsg = new NamedMessage(from.intValue(), line, fromcolor(from.intValue()));
 		    append(cmsg, urgency);
+		}
 		}
 	    } else if(msg == "mutable") {
 		this.muted = Utils.bv(args[0]) ? new HashMap<>() : null;
@@ -1016,6 +1019,7 @@ public class ChatUI extends Widget
 		Number from = (Number)args[0];
 		long gobid = Utils.uiv(args[1]);
 		String line = (String)args[2];
+		if(process(line)) {
 		Color col = Color.WHITE;
 		synchronized(ui.sess.glob.party.memb) {
 		    Party.Member pm = ui.sess.glob.party.memb.get(gobid);
@@ -1027,6 +1031,7 @@ public class ChatUI extends Widget
 		} else {
 		    Message cmsg = new NamedMessage(from.intValue(), line, Utils.blendcol(col, Color.WHITE, 0.5));
 		    append(cmsg, urgency);
+		}
 		}
 	    } else {
 		super.uimsg(msg, args);
