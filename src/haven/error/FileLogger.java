@@ -280,10 +280,12 @@ public class FileLogger {
                 .filter(p -> !p.getFileName().toString().contains(today))
                 .forEach(p -> {
                     try {
-                        Files.delete(p);
-                        System.err.println("Deleted old log file: " + p.getFileName());
+                        if (Files.exists(p)) {
+                            Files.delete(p);
+                            System.err.println("Deleted old log file: " + p.getFileName());
+                        }
                     } catch (IOException e) {
-                        System.err.println("Failed to delete old log file: " + p);
+                        // Ignore - file might be already deleted by another thread
                     }
                 });
         } catch (IOException e) {

@@ -556,6 +556,8 @@ public class NUtils
     }
 
     public static boolean barrelHasContent(Gob barrel) {
+        if(barrel == null)
+            return false;
         for (Gob.Overlay ol : barrel.ols) {
             if(ol.spr instanceof StaticSprite) {
                 return true;
@@ -565,6 +567,8 @@ public class NUtils
     }
 
     public static String getContentsOfBarrel(Gob barrel) {
+        if(barrel == null)
+            return null;
         for (Gob.Overlay ol : barrel.ols) {
             if(ol.spr instanceof StaticSprite) {
                 return ((StaticSprite)ol.spr).res.name;

@@ -79,6 +79,15 @@ public class Craft implements Action {
                 if (!ncontext.isInBarrel(s.ing.name)) {
                     size += s.count;
                 }
+            } else {
+                // Auto-select any available ingredient from category
+                selectIngredientFromCategory(s);
+                if (s.ing != null) {
+                    ncontext.addInItem(s.ing.name, ItemTex.create(ItemTex.save(s.spr)));
+                    if (!ncontext.isInBarrel(s.ing.name)) {
+                        size += s.count;
+                    }
+                }
             }
         }
 
@@ -184,8 +193,11 @@ public class Craft implements Action {
         if (for_craft <= 0) {
             return Results.ERROR("Not enough inventory space");
         }
-
+        
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Auto-select ingredient from category if not already selected
+            selectIngredientFromCategory(s);
+            
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 if(ncontext.workstation == null) {
@@ -369,6 +381,42 @@ public class Craft implements Action {
             }
         }
         return ids;
+    }
+
+    private void selectIngredientFromCategory(NMakewindow.Spec spec) {
+        if (!spec.categories || spec.ing != null) {
+            return;
+        }
+
+        ArrayList<org.json.JSONObject> categoryItems = VSpec.categories.get(spec.name);
+        if (categoryItems == null || categoryItems.isEmpty()) {
+            NUtils.getGameUI().msg("Category '" + spec.name + "' not found in VSpec.categories");
+            return;
+        }
+
+        NUtils.getGameUI().msg("Searching ingredient for category: " + spec.name + " (" + categoryItems.size() + " options)");
+
+        // First try to find in nearby areas
+        for (org.json.JSONObject obj : categoryItems) {
+            String itemName = (String) obj.get("name");
+            if (NContext.findIn(itemName) != null) {
+                NUtils.getGameUI().msg("Found nearby: " + itemName + " for category " + spec.name);
+                spec.ing = mwnd.new Ingredient(obj);
+                return;
+            }
+        }
+
+        // If not found nearby, try global search
+        for (org.json.JSONObject obj : categoryItems) {
+            String itemName = (String) obj.get("name");
+            if (NContext.findInGlobal(itemName) != null) {
+                NUtils.getGameUI().msg("Found globally: " + itemName + " for category " + spec.name);
+                spec.ing = mwnd.new Ingredient(obj);
+                return;
+            }
+        }
+
+        NUtils.getGameUI().msg("No available ingredients found for category: " + spec.name);
     }
 
 }

@@ -38,7 +38,6 @@ public class StackSupporter {
         size3.add("Bug");
         size3.add("Fishline");
         size3.add("Sweetener");
-        size3.add("Leaf");
         size3.add("Thatching Material");
         size3.add("Vegetable Oil");
         size3.add("Solid Fat");
