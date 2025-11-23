@@ -84,7 +84,6 @@ public class TransferToContainer implements Action
                             {
                                 WItem cand = coorditems.get(0);
                                 transfer(cand, gui.getInventory(container.cap), target_size);
-                                NUtils.addTask(new ISRemoved(cand.item.wdgid()));
                                 if (th == -1)
                                     witems = gui.getInventory().getItems(items);
                                 else
@@ -338,7 +337,8 @@ public class TransferToContainer implements Action
                     // Для стака размером 2 используем ISRemovedLoftar
                     if (originalStackSize <= 2)
                     {
-                        NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
+                        if(((GItem.ContentsWindow) sourceStack.parent!=null))
+                            NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
                     } else
                     {
                         NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
@@ -385,7 +385,8 @@ public class TransferToContainer implements Action
                             // Для стака размером 2 используем ISRemovedLoftar
                             if (originalStackSize <= 2)
                             {
-                                NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
+                                if(((GItem.ContentsWindow) sourceStack.parent!=null))
+                                    NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
                             } else
                             {
                                 NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));

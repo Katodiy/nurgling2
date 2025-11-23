@@ -4,9 +4,6 @@ import nurgling.actions.*;
 import nurgling.actions.bots.farmers.PumpkinFarmer;
 import nurgling.actions.bots.*;
 import nurgling.actions.bots.CarrotFarmerQ;
-import nurgling.actions.bots.pickling.GlobalBrinePhase;
-import nurgling.actions.bots.pickling.GlobalExtractionPhase;
-import nurgling.actions.bots.pickling.GlobalFreshFillingPhase;
 import nurgling.actions.bots.silk.RefillSilkwormFeedingCupboards;
 import nurgling.actions.bots.silk.SilkProductionBot;
 import nurgling.actions.bots.CollectSwillInArea;
@@ -56,7 +53,7 @@ public class BotRegistry {
 
         // PRODUCTIONS
         bots.add(new BotDescriptor("smelter", BotDescriptor.BotType.PRODUCTIONS, "Smelter", "Smelts ore.", true, true, SmelterAction.class, "smelter", true));
-        bots.add(new BotDescriptor("backer", BotDescriptor.BotType.PRODUCTIONS, "Baker", "Bakes stuff.", true, true, BackerAction.class, "backer", true));
+        bots.add(new BotDescriptor("backer", BotDescriptor.BotType.PRODUCTIONS, "Baker", "Bakes stuff.", true, true, BakerAction.class, "backer", true));
         bots.add(new BotDescriptor("ugardenpot", BotDescriptor.BotType.PRODUCTIONS, "Ungarden Pot", "Ungardens pots.", true, true, UnGardentPotAction.class, "ugardenpot", true));
         bots.add(new BotDescriptor("butcher", BotDescriptor.BotType.PRODUCTIONS, "Butcher", "Butchers animals.", true, true, Butcher.class, "butcher", false));
         bots.add(new BotDescriptor("hides", BotDescriptor.BotType.PRODUCTIONS, "Handle hides.", "Handles hides.", true, true, DFrameHidesAction.class, "hides", true));

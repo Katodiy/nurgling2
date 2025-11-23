@@ -42,6 +42,27 @@ public class NParser
     }
 
     /**
+     * Check if name matches the given alias.
+     *
+     * @param name the name to check.
+     * @param regEx the alias to match against.
+     * @return true if name matches the alias, false otherwise.
+     */
+    public static boolean eqDefName(
+            final String name,
+            final NAlias regEx
+    ) {
+        if (regEx == null || name == null) return false;
+        String lowerName = name.toLowerCase();
+
+        if (regEx.getDefault().toLowerCase().equals(lowerName)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Check if alias name matches the given regex alias.
      *
      * @param name the alias name to check.

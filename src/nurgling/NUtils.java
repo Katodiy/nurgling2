@@ -221,7 +221,9 @@ public class NUtils
 
     public static void dropToInv(NInventory targetInv) throws InterruptedException {
         if(NUtils.getGameUI().vhand!=null) {
-            targetInv.findFreeCoord(NUtils.getGameUI().vhand);
+            Coord dc = targetInv.findFreeCoord(NUtils.getGameUI().vhand);
+            if(dc!=null)
+                targetInv.dropOn(dc);
         }
     }
 

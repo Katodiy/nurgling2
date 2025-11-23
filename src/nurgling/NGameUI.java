@@ -522,6 +522,14 @@ public class NGameUI extends GameUI
                                         String name = ((ItemInfo.Name) inf).str.text;
                                         if (NParser.checkName(name.toLowerCase(), content))
                                             return Double.parseDouble(name.substring(0, name.indexOf(' ')));
+                                        // Handle seed name format difference: "Flax Seeds" vs "1234 seeds of Flax"
+                                        if (name.toLowerCase().contains(" seeds of ")) {
+                                            int ofIndex = name.toLowerCase().indexOf(" seeds of ");
+                                            String seedType = name.substring(ofIndex + 10).trim(); // Extract "Flax" from "1234 seeds of Flax"
+                                            String inventoryFormat = seedType + " seeds"; // Convert to "Flax seeds"
+                                            if (NParser.checkName(inventoryFormat.toLowerCase(), content))
+                                                return Double.parseDouble(name.substring(0, name.indexOf(' ')));
+                                        }
                                     } else if (inf instanceof ItemInfo.AdHoc) {
                                         if (NParser.checkName(((ItemInfo.AdHoc) inf).str.text, "Empty")) {
                                             return 0;
@@ -553,6 +561,14 @@ public class NGameUI extends GameUI
                                             String name = ((ItemInfo.Name) inf).str.text;
                                             if (NParser.checkName(name.toLowerCase(), content))
                                                 return Double.parseDouble(name.substring(0, name.indexOf(' ')));
+                                            // Handle seed name format difference: "Flax Seeds" vs "1234 seeds of Flax"
+                                            if (name.toLowerCase().contains(" seeds of ")) {
+                                                int ofIndex = name.toLowerCase().indexOf(" seeds of ");
+                                                String seedType = name.substring(ofIndex + 10).trim(); // Extract "Flax" from "1234 seeds of Flax"
+                                                String inventoryFormat = seedType + " seeds"; // Convert to "Flax seeds"
+                                                if (NParser.checkName(inventoryFormat.toLowerCase(), content))
+                                                    return Double.parseDouble(name.substring(0, name.indexOf(' ')));
+                                            }
                                         }
                                     }
                                 } catch (NoSuchFieldException | IllegalAccessException e) {

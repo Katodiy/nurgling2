@@ -96,7 +96,7 @@ public class NContext {
         workstation_map.put("paginae/bld/anvil",new NContext.Workstation("gfx/terobjs/anvil", null));
     }
 
-    static HashMap<String, Specialisation.SpecName> workstation_spec_map;
+    public static HashMap<String, Specialisation.SpecName> workstation_spec_map;
     static {
         workstation_spec_map = new HashMap<>();
         workstation_spec_map.put("gfx/terobjs/meatgrinder", Specialisation.SpecName.meatgrinder);
@@ -188,24 +188,24 @@ public class NContext {
     }
 
     public NArea getSpecArea(NContext.Workstation workstation) throws InterruptedException {
-        if(!areas.containsKey(workstation.station)) {
+        if(!areas.containsKey(workstation_spec_map.get(workstation.station).toString())) {
             NArea area = findSpec(workstation_spec_map.get(workstation.station).toString());
             if (area == null) {
                 area = findSpecGlobal(workstation_spec_map.get(workstation.station).toString());
             }
             if (area != null) {
-                areas.put(String.valueOf(workstation.station), area);
+                areas.put(String.valueOf(workstation_spec_map.get(workstation.station).toString()), area);
                 List<RoutePoint> pointList = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area));
                 if(pointList!=null && !pointList.isEmpty())
-                    rps.put(String.valueOf(workstation.station),pointList.get(pointList.size()-1));
+                    rps.put(workstation_spec_map.get(workstation.station).toString(),pointList.get(pointList.size()-1));
             }
             else
             {
                 return null;
             }
         }
-        navigateToAreaIfNeeded(workstation.station);
-        return areas.get(workstation.station);
+        navigateToAreaIfNeeded(workstation_spec_map.get(workstation.station).toString());
+        return areas.get(workstation_spec_map.get(workstation.station).toString());
     }
 
     public static class BarrelStorage

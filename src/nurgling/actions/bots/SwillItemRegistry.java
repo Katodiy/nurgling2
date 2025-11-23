@@ -39,9 +39,9 @@ public class SwillItemRegistry {
 
     // Seeds (0.02L) - separate category for optional collection
     public static final Set<String> SEED_SWILL = Set.of(
-        "Barley Seed", "Carrot Seed", "Cucumber Seed", "Hemp Seed",
-        "Millet Seed", "Pipeweed Seed", "Poppy Seed", "Turnip Seed",
-        "Wheat Seed", "Flax Seed", "Pea Seed", "Pumpkin Seed"
+        "Barley Seeds", "Carrot Seeds", "Cucumber Seeds", "Hemp Seeds",
+        "Millet Seeds", "Pipeweed Seeds", "Poppy Seeds", "Turnip Seeds",
+        "Wheat Seeds", "Flax Seeds", "Pea Seeds", "Pumpkin Seeds"
     );
 
     // Combined set of all swill items for convenience

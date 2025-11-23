@@ -2,6 +2,7 @@ package nurgling.actions;
 
 import haven.*;
 import static haven.OCache.posres;
+import static nurgling.areas.NContext.workstation_spec_map;
 
 import haven.render.sl.BinOp;
 import nurgling.*;
@@ -27,6 +28,7 @@ public class UseWorkStation implements Action
                 return Results.FAIL();
             cnt.workstation.selected = ws.id;
         }
+        cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
         Gob ws = Finder.findGob(cnt.workstation.selected);
         if(ws == null)
             return Results.ERROR("NO WORKSTATION");

@@ -73,26 +73,8 @@ public class PrepareWorkStation implements Action
             }
             else if(name.startsWith("gfx/terobjs/cauldron"))
             {
-                ArrayList<Gob> pows = new ArrayList<>(Arrays.asList(ws));
-                if(!new FillFuelPowOrCauldron(context, pows, 1).run(gui).IsSuccess())
-                    return Results.FAIL();
-                ArrayList<String> flighted = new ArrayList<>();
-                for (Gob cont : pows) {
-                    flighted.add(cont.ngob.hash);
-                }
-                if (!new LightGob(flighted, 2).run(gui).IsSuccess())
-                    return Results.ERROR("I can't start a fire");
-                if((Finder.findGob(context.workstation.selected).ngob.getModelAttribute()&4)==0)
-                {
-                    new FillFluid(Finder.findGob(context.workstation.selected), NContext.findSpec(Specialisation.SpecName.water.toString())!=null ? NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea():null,new NAlias("water"),4).run(gui);
-                }
-                NUtils.addTask(new NTask() {
-                    @Override
-                    public boolean check() {
-                        return (Finder.findGob(context.workstation.selected).ngob.getModelAttribute()&8)==8;
-                    }
-                });
-
+                if(!new PrepareCauldron(ws, context).run(gui).IsSuccess())
+                    return Results.ERROR("Failed to prepare cauldron");
             }
         }
         return Results.SUCCESS();

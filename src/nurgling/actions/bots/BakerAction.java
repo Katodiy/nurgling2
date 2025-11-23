@@ -15,7 +15,7 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
-public class BackerAction implements Action {
+public class BakerAction implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException
