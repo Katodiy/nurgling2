@@ -55,9 +55,22 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
         
         // Check configuration setting
         configEnabled = (Boolean) NConfig.get(NConfig.Key.showSpeedometer);
-        
-        // Check if gob is moving
-        shouldShow = configEnabled && (gob.getattr(Moving.class) != null) && (gob.getv() > 0.1);
+
+        // Check if this is a mounted player (don't show speedometer on mounted players)
+        boolean isMountedPlayer = false;
+        String pose = gob.pose();
+        if (pose != null && pose.contains("gfx/borka/")) {
+            // This is a player, check if they're mounted
+            Following following = gob.getattr(Following.class);
+            isMountedPlayer = (following != null);
+        }
+
+        // Check if gob is moving and is a player or kritter (but not a mounted player)
+        shouldShow = configEnabled &&
+                    !isMountedPlayer &&
+                    (gob.getattr(Moving.class) != null) &&
+                    (gob.getv() > 0.1) &&
+                    isPlayerOrKritter(gob);
         
         // Update speed label periodically only if we should show
         if (shouldShow) {
@@ -187,5 +200,29 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
             
         // Draw combined speedometer icon and text (centered)
         g.aimage(speedLabel, sc, 0.5, 0.5);
+    }
+
+    /**
+     * Checks if the gob is a player or kritter (creature) that should display speedometer.
+     * Only players and creatures should show speedometer, not vehicles or other objects.
+     */
+    private boolean isPlayerOrKritter(Gob gob) {
+        try {
+            // Check if it's any player using pose pattern (proven method from NKinRing)
+            String pose = gob.pose();
+            if (pose != null && pose.contains("gfx/borka/")) {
+                return true; // This is a player
+            }
+
+            // Check if it's a creature (kritter) using resource name pattern
+            if (gob.ngob != null && gob.ngob.name != null) {
+                return gob.ngob.name.contains("kritter");
+            }
+
+            return false;
+        } catch (Exception e) {
+            // If any error occurs, default to not showing speedometer
+            return false;
+        }
     }
 }
