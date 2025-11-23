@@ -23,22 +23,30 @@ public class RefillInCistern implements Action
     ArrayList<Container> conts;
     Pair<Coord2d,Coord2d> area;
     NAlias content;
+    Gob barrel; // Store the specific barrel reference
 
-    public RefillInCistern( Pair<Coord2d,Coord2d> area, NAlias content) {
+    public RefillInCistern(Gob barrel, Pair<Coord2d,Coord2d> area, NAlias content) {
+        this.barrel = barrel;
         this.area = area;
         this.content = content;
     }
-
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         Gob player = NUtils.player();
         if(player == null || !NParser.checkName(player.pose(), "gfx/borka/banzai"))
         {
-
             return Results.ERROR("Barrel not found.");
         }
-        Gob barrel = Finder.findGob(new NAlias("barrel"));
+
+        // Use passed barrel OR search for one (backward compatibility)
+        Gob barrel;
+        if (this.barrel != null) {
+            barrel = this.barrel; // Use the specific barrel passed from FillFluid
+        } else {
+            barrel = Finder.findGob(new NAlias("barrel")); // Old behavior
+        }
+
         Following fl ;
         if(barrel == null || (fl = barrel.getattr(Following.class))==null || fl.tgt!=player.id)
             return Results.ERROR("Barrel not found.");
@@ -71,8 +79,7 @@ public class RefillInCistern implements Action
             NUtils.addTask(new IsOverlay(barrel, content));
             if(!NUtils.isOverlay(barrel, content))
             {
-                NUtils.getGameUI().error("NO FLUID");
-                throw new InterruptedException();
+                return Results.ERROR("NO FLUID");
             }
         }
         return Results.SUCCESS();

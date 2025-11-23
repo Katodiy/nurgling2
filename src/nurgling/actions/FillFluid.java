@@ -70,9 +70,10 @@ public class FillFluid implements Action
         new LiftObject(barrel).run(gui);
         if(!NUtils.isOverlay(barrel,content))
         {
-            if(!new RefillInCistern(area,content).run(gui).IsSuccess())
+            if(!new RefillInCistern(barrel, area, content).run(gui).IsSuccess()) {
                 new PlaceObject(barrel,pos,0).run(gui);
                 return Results.FAIL();
+            }
         }
 
         if(!forced) {
@@ -90,8 +91,11 @@ public class FillFluid implements Action
                             }
                         });
                         if (!NUtils.isOverlay(barrel, content)) {
-                            if (!new RefillInCistern(area, content).run(gui).IsSuccess())
+                            if (!new RefillInCistern(barrel, area, content).run(gui).IsSuccess()) {
+                                new PlaceObject(barrel, pos, 0).run(gui);
                                 return Results.FAIL();
+                            }
+
                         }
                     }
                 }
@@ -110,8 +114,10 @@ public class FillFluid implements Action
                         }
                     });
                     if (!NUtils.isOverlay(barrel, content)) {
-                        if (!new RefillInCistern(area, content).run(gui).IsSuccess())
+                        if (!new RefillInCistern(barrel, area, content).run(gui).IsSuccess()) {
+                            new PlaceObject(barrel, pos, 0).run(gui);
                             return Results.FAIL();
+                        }
                     }
                 }
             }
