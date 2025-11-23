@@ -27,6 +27,10 @@ public class Validator implements Action{
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
+        if(NUtils.getEnergy()<0.22)
+        {
+            return Results.ERROR("WARNING: LOW ENERGY");
+        }
         NArea test;
         for(NArea.Specialisation s: req)
         {
