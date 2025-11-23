@@ -1786,7 +1786,7 @@ public class VSpec {
         ArrayList<JSONObject> egg = new ArrayList<>();
         egg.add(new JSONObject("{\"static\":\"gfx/invobjs/egg-chicken-boiled\",\"name\":\"Boiled Egg\"}"));
         egg.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledegg\",\"name\":\"Pickled Egg\"}"));
-        categories.put("Egg", egg);
+        categories.put("Cooked Egg", egg);
 
         ArrayList<JSONObject> herring = new ArrayList<>();
         herring.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-herring\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Herring\"}"));
