@@ -707,11 +707,11 @@ public class NMakewindow extends Widget {
                 {
                     try
                     {
-                        new Craft(inputs,outputs,"").run(NUtils.getGameUI());
+                        new Craft(NMakewindow.this, 9999).run(NUtils.getGameUI());
                     }
                     catch (InterruptedException e)
                     {
-                        NUtils.getGameUI().tickmsg(AutoChooser.class.getName() + "stopped");
+                        NUtils.getGameUI().tickmsg(Craft.class.getName() + "stopped");
                     }
                 }
             }, "Auto craft(BOT)")).start();
