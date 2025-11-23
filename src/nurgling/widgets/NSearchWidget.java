@@ -55,6 +55,9 @@ public class NSearchWidget extends Widget {
                 return res;
             }
         };
+        // Allow focus but disable automatic focus grabbing
+        searchF.setcanfocus(true);
+        searchF.autofocus = false;
 
         help = new IButton(searchbi[0], searchbi[1], searchbi[2]) {
             @Override

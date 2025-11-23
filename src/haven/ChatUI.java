@@ -140,11 +140,13 @@ public class ChatUI extends Widget
 	    };
 
 	public boolean process(String msg) {
+			// Check for @ID pattern (gob highlight)
 			Pattern highlight = Pattern.compile("^@(-?\\d+)$");
 			Matcher matcher = highlight.matcher(msg);
 			if (matcher.matches()) {
 				try {
-					Gob gob = Finder.findGob(Long.parseLong(matcher.group(1)));
+					long gobId = Long.parseLong(matcher.group(1));
+					Gob gob = nurgling.tools.Finder.findGob(gobId);
 					if (gob != null) {
 						gob.addcustomol(new nurgling.overlays.NChatHighlightOverlay(gob));
 						return false;
@@ -152,9 +154,86 @@ public class ChatUI extends Widget
 				} catch (Exception ignored) {
 				}
 			}
+			
+			// Check for @Area pattern (area highlight)
+			Pattern areaPattern = Pattern.compile("^@Area\\((.+)\\)$");
+			Matcher areaMatcher = areaPattern.matcher(msg);
+			if (areaMatcher.matches()) {
+				try {
+					String areaData = areaMatcher.group(1);
+					nurgling.areas.NArea.Space space = parseAreaFromChat(areaData);
+					if (space != null && nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getGameUI().map != null) {
+						// Create area overlay using MCache.Overlay (will auto-destroy after 12 seconds)
+						final nurgling.overlays.NChatAreaOverlay overlay = new nurgling.overlays.NChatAreaOverlay(
+							nurgling.NUtils.getGameUI().map.glob.map, space);
+						
+						// Schedule removal after duration
+						new Thread(() -> {
+							try {
+								Thread.sleep(12000);
+								overlay.destroy();
+							} catch(InterruptedException e) {
+								// Ignore
+							}
+						}).start();
+						
+						return false;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
 			return true;
 		}
-
+		
+	private nurgling.areas.NArea.Space parseAreaFromChat(String areaData) {
+			try {
+				// Format: grid:x,y;grid:x,y (two corner points)
+				String[] corners = areaData.split(";");
+				if(corners.length != 2)
+					return null;
+				
+				// Parse first corner (upper-left)
+				String[] ulParts = corners[0].split(":");
+				if(ulParts.length != 2) return null;
+				long ulGridId = Long.parseLong(ulParts[0].trim());
+				String[] ulCoords = ulParts[1].split(",");
+				if(ulCoords.length != 2) return null;
+				int ulX = Integer.parseInt(ulCoords[0].trim());
+				int ulY = Integer.parseInt(ulCoords[1].trim());
+				
+				// Parse second corner (bottom-right)
+				String[] brParts = corners[1].split(":");
+				if(brParts.length != 2) return null;
+				long brGridId = Long.parseLong(brParts[0].trim());
+				String[] brCoords = brParts[1].split(",");
+				if(brCoords.length != 2) return null;
+				int brX = Integer.parseInt(brCoords[0].trim());
+				int brY = Integer.parseInt(brCoords[1].trim());
+				
+				// Convert to world coordinates and create Space
+				if(nurgling.NUtils.getGameUI() == null || nurgling.NUtils.getGameUI().map == null)
+					return null;
+					
+				MCache.Grid ulGrid = nurgling.NUtils.getGameUI().map.glob.map.findGrid(ulGridId);
+				MCache.Grid brGrid = nurgling.NUtils.getGameUI().map.glob.map.findGrid(brGridId);
+				if(ulGrid == null || brGrid == null)
+					return null;
+				
+				// Calculate world tile coordinates
+				Coord ulWorldTile = ulGrid.gc.mul(MCache.cmaps).add(ulX, ulY);
+				Coord brWorldTile = brGrid.gc.mul(MCache.cmaps).add(brX, brY);
+				
+				// Create Space from these two world tile coordinates
+				nurgling.areas.NArea.Space space = new nurgling.areas.NArea.Space(ulWorldTile, brWorldTile);
+				
+				return space.space.isEmpty() ? null : space;
+			} catch(Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
 	public static abstract class Message {
 	    public final double time = Utils.ntime();
 

@@ -742,6 +742,15 @@ public class NMapView extends MapView
     @Override
     public boolean mousedown(MouseDownEvent ev)
     {
+        // Alt+Ctrl+LMB activates area selection
+        if(ev.b == 1 && ui.modmeta && ui.modctrl) {
+            if(!isAreaSelectionMode.get()) {
+                isAreaSelectionMode.set(true);
+            }
+            // Don't consume the event, let it pass through to start selection
+            // return true;
+        }
+        
         // Check for route point drag start
         if(ev.b == 1 && !isDraggingRoutePoint) { // Left mouse button
             RouteLabel clickedLabel = getRouteLabeAt(ev.c);
@@ -1048,7 +1057,7 @@ public class NMapView extends MapView
                 currentSelectionCoords = new Pair<>(c1, c2.add(1, 1));
             }
         }
-
+        
         public boolean mmouseup(Coord mc, int button)
         {
             synchronized (NMapView.this)
@@ -1059,6 +1068,10 @@ public class NMapView extends MapView
                     xl.mv = false;
                     tt = null;
                     areaSpace = new NArea.Space(sc,ec);
+                    
+                    // Send area to chat if it was activated via Alt+Ctrl+LMB
+                    sendAreaToChat(areaSpace);
+                    
                     currentSelectionCoords = null;
                     ol.destroy();
                     mgrab.remove();
@@ -1069,6 +1082,83 @@ public class NMapView extends MapView
                 }
                 return (true);
             }
+        }
+    }
+    
+    /**
+     * Send selected area to chat in @Area format
+     * Format: @Area(grid:x,y;grid:x,y) - two corner points (upper-left and bottom-right)
+     */
+    private void sendAreaToChat(NArea.Space space) {
+        if(space == null || space.space.isEmpty())
+            return;
+            
+        try {
+            // Find the overall bounding box across all grids
+            Coord minWorldTile = null;
+            Coord maxWorldTile = null;
+            
+            for(Map.Entry<Long, NArea.VArea> entry : space.space.entrySet()) {
+                long gridId = entry.getKey();
+                Area area = entry.getValue().area;
+                
+                // Get grid to calculate world tile coordinates
+                MCache.Grid grid = NUtils.getGameUI().map.glob.map.findGrid(gridId);
+                if(grid == null) continue;
+                
+                // Convert local grid tile coords to world tile coords
+                // grid.gc is grid coordinate, area.ul/br are tile coords within the grid
+                Coord worldULTile = grid.gc.mul(MCache.cmaps).add(area.ul);
+                Coord worldBRTile = grid.gc.mul(MCache.cmaps).add(area.br);
+                
+                if(minWorldTile == null) {
+                    minWorldTile = worldULTile;
+                    maxWorldTile = worldBRTile;
+                } else {
+                    minWorldTile = new Coord(
+                        Math.min(minWorldTile.x, worldULTile.x),
+                        Math.min(minWorldTile.y, worldULTile.y)
+                    );
+                    maxWorldTile = new Coord(
+                        Math.max(maxWorldTile.x, worldBRTile.x),
+                        Math.max(maxWorldTile.y, worldBRTile.y)
+                    );
+                }
+            }
+            
+            if(minWorldTile == null || maxWorldTile == null)
+                return;
+                
+            // Convert world tile coords back to grid:local format for both corners
+            Coord minGrid = minWorldTile.div(MCache.cmaps);
+            Coord maxGrid = maxWorldTile.div(MCache.cmaps);
+            
+            Coord minLocal = minWorldTile.mod(MCache.cmaps);
+            Coord maxLocal = maxWorldTile.mod(MCache.cmaps);
+            
+            MCache.Grid minGridObj = NUtils.getGameUI().map.glob.map.grids.get(minGrid);
+            MCache.Grid maxGridObj = NUtils.getGameUI().map.glob.map.grids.get(maxGrid);
+            
+            if(minGridObj == null || maxGridObj == null)
+                return;
+            
+            // Format: @Area(grid:x,y;grid:x,y)
+            String areaStr = String.format("@Area(%d:%d,%d;%d:%d,%d)",
+                minGridObj.id, minLocal.x, minLocal.y,
+                maxGridObj.id, maxLocal.x, maxLocal.y);
+            
+            // Send to chat
+            GameUI gui = NUtils.getGameUI();
+            if(gui != null && gui.chat != null) {
+                ChatUI.Channel chat = gui.chat.sel;
+                if(chat instanceof ChatUI.EntryChannel) {
+                    if(!chat.getClass().getName().contains("Realm")) {
+                        ((ChatUI.EntryChannel)chat).send(areaStr);
+                    }
+                }
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
         }
     }
 
