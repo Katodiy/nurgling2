@@ -81,6 +81,7 @@ public class NMapView extends MapView
     TexI oldttip = null;
     public AtomicBoolean isAreaSelectionMode = new AtomicBoolean(false);
     public AtomicBoolean isGobSelectionMode = new AtomicBoolean(false);
+    public AtomicBoolean isChatAreaSharingMode = new AtomicBoolean(false); // For Alt+Ctrl+LMB chat sharing
     public NArea.Space areaSpace = null;
     public Pair<Coord, Coord> currentSelectionCoords = null;  // Current selection coords during dragging
     public boolean rotationRequested = false;  // Flag to request rotation during area selection
@@ -742,10 +743,11 @@ public class NMapView extends MapView
     @Override
     public boolean mousedown(MouseDownEvent ev)
     {
-        // Alt+Ctrl+LMB activates area selection
+        // Alt+Ctrl+LMB activates area selection for chat sharing
         if(ev.b == 1 && ui.modmeta && ui.modctrl) {
             if(!isAreaSelectionMode.get()) {
                 isAreaSelectionMode.set(true);
+                isChatAreaSharingMode.set(true); // Mark this as chat sharing mode
             }
             // Don't consume the event, let it pass through to start selection
             // return true;
@@ -1069,8 +1071,11 @@ public class NMapView extends MapView
                     tt = null;
                     areaSpace = new NArea.Space(sc,ec);
                     
-                    // Send area to chat if it was activated via Alt+Ctrl+LMB
-                    sendAreaToChat(areaSpace);
+                    // Send area to chat ONLY if it was activated via Alt+Ctrl+LMB
+                    if(isChatAreaSharingMode.get()) {
+                        sendAreaToChat(areaSpace);
+                        isChatAreaSharingMode.set(false); // Reset flag after sending
+                    }
                     
                     currentSelectionCoords = null;
                     ol.destroy();
