@@ -51,6 +51,6 @@ public class Roastspit extends ModSprite {
     }
 
 	public String getContent() {
-		return equed != null ? equed.toString() : null;
+		return equed != null ? equed.res.name : null;
 	}
 }
