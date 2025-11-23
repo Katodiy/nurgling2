@@ -1224,7 +1224,7 @@ public class VSpec {
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/redonion\",\"name\":\"Red Onion\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/garlic\",\"name\":\"Garlic\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/small/leek\",\"name\":\"Leek\",\"x\":2,\"y\":1}"));
-        onions.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledonion\",\"name\":\"Pickled Onion\"}"));
+        onions.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledonion\",\"name\":\"Pickled Onions\"}"));
         categories.put("Onion", onions);
 
 
@@ -1783,10 +1783,10 @@ public class VSpec {
         cucumber.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledcucumber\",\"name\":\"Pickled Cucumber\"}"));
         categories.put("Cucumber", cucumber);
 
-//        ArrayList<JSONObject> egg = new ArrayList<>();
-//        egg.add(new JSONObject("{\"static\":\"gfx/invobjs/egg-chicken-boiled\",\"name\":\"Boiled Egg\"}"));
-//        egg.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledegg\",\"name\":\"Pickled Egg\"}"));
-//        categories.put("Egg", egg);
+        ArrayList<JSONObject> egg = new ArrayList<>();
+        egg.add(new JSONObject("{\"static\":\"gfx/invobjs/egg-chicken-boiled\",\"name\":\"Boiled Egg\"}"));
+        egg.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledegg\",\"name\":\"Pickled Egg\"}"));
+        categories.put("Egg", egg);
 
         ArrayList<JSONObject> herring = new ArrayList<>();
         herring.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-herring\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Herring\"}"));

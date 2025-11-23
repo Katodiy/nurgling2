@@ -21,7 +21,7 @@ public class PicklingBot implements Action {
     static {
         VEGETABLE_CONFIGS.put(NConfig.Key.picklingBeetroots, new VegetableConfig("Beetroots", "Beetroot", "Pickled Beetroot", haven.Coord.of(1, 1)));
         VEGETABLE_CONFIGS.put(NConfig.Key.picklingCarrots, new VegetableConfig("Carrots", "Carrot", "Pickled Carrot", haven.Coord.of(1, 1)));
-        VEGETABLE_CONFIGS.put(NConfig.Key.picklingEggs, new VegetableConfig("Eggs", "Egg", "Pickled Egg", haven.Coord.of(1, 1)));
+        VEGETABLE_CONFIGS.put(NConfig.Key.picklingEggs, new VegetableConfig("Eggs", "Boiled Egg", "Pickled Egg", haven.Coord.of(1, 1)));
         VEGETABLE_CONFIGS.put(NConfig.Key.picklingHerring, new VegetableConfig("Herring", "Herring", "Pickled Herring", haven.Coord.of(1, 1)));
         VEGETABLE_CONFIGS.put(NConfig.Key.picklingOlives, new VegetableConfig("Olives", "Olive", "Pickled Olive", haven.Coord.of(1, 1)));
         VEGETABLE_CONFIGS.put(NConfig.Key.picklingCucumbers, new VegetableConfig("Cucumbers", "Cucumber", "Pickled Cucumber", haven.Coord.of(2, 1)));
