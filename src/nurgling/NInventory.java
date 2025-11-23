@@ -289,8 +289,10 @@ public class NInventory extends Inventory
     @Override
     public void resize(Coord sz) {
         super.resize(new Coord(sz));
-        searchwdg.resize(new Coord(sz.x , 0));
-        searchwdg.move(new Coord(0,sz.y + UI.scale(5)));
+        if(searchwdg != null) {
+            searchwdg.resize(new Coord(sz.x , 0));
+            searchwdg.move(new Coord(0,sz.y + UI.scale(5)));
+        }
         moveCheckbox();
         parent.pack();
         movePopup(parent.c);
