@@ -137,6 +137,7 @@ public class NDirArrow extends Sprite implements RenderTree.Node, PView.Render2D
         slot.ostate(Pipe.Op.compose(new Rendered.Order.Default(priority),
                 Rendered.postpfx,
                 new States.Facecull(States.Facecull.Mode.NONE),
+                Clickable.No,
                 Location.goback("gobx")));
         slot.add(smod, smat);
     }

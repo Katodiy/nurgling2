@@ -111,6 +111,7 @@ public class NModelBox extends Sprite implements RenderTree.Node {
                             BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)),
                     new States.Facecull(),
                     new States.LineWidth((Integer) NConfig.get(NConfig.Key.boxLineWidth)),
+                    Clickable.No,
                     new BaseColor(edgeColor));
             } else {
                 // Outline without depth test (always visible)
@@ -122,6 +123,7 @@ public class NModelBox extends Sprite implements RenderTree.Node {
                             BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)),
                     new States.Facecull(),
                     new States.LineWidth((Integer) NConfig.get(NConfig.Key.boxLineWidth)),
+                    Clickable.No,
                     new BaseColor(edgeColor));
             }
             
@@ -130,6 +132,7 @@ public class NModelBox extends Sprite implements RenderTree.Node {
                 new Rendered.Order.Default(6000),
                 FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
                         BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)),
+                Clickable.No,
                 new BaseColor(fillColor));
         }
 

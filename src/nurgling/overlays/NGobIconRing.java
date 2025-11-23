@@ -60,6 +60,7 @@ public class NGobIconRing extends Sprite implements RenderTree.Node
                         BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
                         BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), 
                 texture, 
+                Clickable.No,
                 Rendered.postpfx);
         slot.add(emod, rmat);
     }

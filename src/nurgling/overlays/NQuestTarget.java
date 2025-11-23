@@ -53,7 +53,7 @@ public class NQuestTarget extends Sprite implements RenderTree.Node
     {
         Pipe.Op rmat = Pipe.Op.compose(new Rendered.Order.Default(7000), States.Depthtest.none, States.maskdepth,
             FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
-                BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), сt, Rendered.postpfx);
+                BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), сt, Clickable.No, Rendered.postpfx);
         slot.add(emod,rmat);
     }
 

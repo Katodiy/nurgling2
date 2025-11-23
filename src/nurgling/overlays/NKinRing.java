@@ -64,7 +64,7 @@ public class NKinRing extends Sprite implements RenderTree.Node
             
             Pipe.Op rmat = Pipe.Op.compose(new Rendered.Order.Default(-100), new States.Depthtest(States.Depthtest.Test.LE), States.maskdepth,
                 FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
-                    BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), texture, Rendered.postpfx);
+                    BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), texture, Clickable.No, Rendered.postpfx);
             slot.add(emod, rmat);
             _slot = slot;
         }

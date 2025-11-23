@@ -97,6 +97,7 @@ public class NChatHighlightOverlay extends Sprite implements RenderTree.Node {
                 BlendMode.Factor.INV_SRC_ALPHA
             )),
             ct,
+            Clickable.No,
             Rendered.postpfx
         );
         

@@ -292,7 +292,7 @@ public class NRockTileHighlightOverlay extends NOverlay {
     public void added(RenderTree.Slot slot) {
         this.slot = slot;
         // Only add outline with red color (no fill)
-        slot.add(outl, new BaseColor(255, 0, 0, 255)); // Bright red outline
+        slot.add(outl, Pipe.Op.compose(new BaseColor(255, 0, 0, 255), Clickable.No)); // Bright red outline
     }
 
     /**

@@ -242,6 +242,7 @@ public class TrellisGhostPreview extends Sprite {
         slot.ostate(Pipe.Op.compose(
             Rendered.postpfx,
             new States.Facecull(States.Facecull.Mode.NONE),
+            Clickable.No,
             p -> p.put(Homo3D.loc, null)
         ));
 

@@ -39,7 +39,7 @@ public class NMiningNumber extends Sprite implements RenderTree.Node
 
     public void added(RenderTree.Slot slot)
     {
-        Pipe.Op rmat = Pipe.Op.compose(сt,Rendered.postpfx, States.Depthtest.none);
+        Pipe.Op rmat = Pipe.Op.compose(сt, Clickable.No, Rendered.postpfx, States.Depthtest.none);
         slot.add(emod,rmat);
     }
 

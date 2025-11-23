@@ -152,6 +152,7 @@ public class NBoxOverlay extends Sprite {
     public void added(RenderTree.Slot slot) {
         slot.ostate(Pipe.Op.compose(Rendered.postpfx,
                         new States.Facecull(States.Facecull.Mode.NONE),
+                        Clickable.No,
                         //Location.goback("gobx")
                         p -> p.put(Homo3D.loc, null), pos
                 )

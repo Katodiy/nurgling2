@@ -32,6 +32,8 @@ public class NFightsess extends Fightsess {
             if(parent.fv == null) return;
             GameUI gui = NUtils.getGameUI();
             if(gui == null || gui.map == null) return;
+            // Don't draw if not in combat
+            if(parent.fv.lsrel.isEmpty()) return;
             double now = Utils.rtime();
             Coord guisz = gui.map.sz;
             // Center of widget
@@ -211,6 +213,9 @@ public class NFightsess extends Fightsess {
 
         @Override
         public void draw(GOut g) {
+            // Don't draw if not in combat
+            if(parent.fv == null || parent.fv.lsrel.isEmpty()) return;
+            
             double now = Utils.rtime();
             Coord center = sz.div(2);
 
