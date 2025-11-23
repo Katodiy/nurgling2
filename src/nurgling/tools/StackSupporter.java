@@ -32,10 +32,6 @@ public class StackSupporter {
         size3.add("Gellant");
         size3.add("Stuffing");
         size3.add("Dried Fruit");
-        size3.add("Nuts");
-        size3.add("Decent-sized Conifer Cone");
-        size3.add("Fruit");
-        size3.add("Fruit or Berry");
         size3.add("Flour");
         size3.add("Giant Ant");
         size3.add("Royal Ant");
@@ -43,7 +39,6 @@ public class StackSupporter {
         size3.add("Fishline");
         size3.add("Sweetener");
         size3.add("Leaf");
-        size3.add("Tree Bough");
         size3.add("Thatching Material");
         size3.add("Vegetable Oil");
         size3.add("Solid Fat");
@@ -61,12 +56,10 @@ public class StackSupporter {
         size3.add("Any Brick");
         size3.add("Clay");
         size3.add("Casting Material");
-
         size3.add("Board");
         size3.add("Block of Wood");
         size3.add("Ore");
         size3.add("Stone");
-        size3.add("Seed of Tree or Bush");
         size3.add("Fish Fresh Water");
         size3.add("Fish Ocean");
         size3.add("Fish Cave");
@@ -91,6 +84,12 @@ public class StackSupporter {
         size4.add("Berry");
         size4.add("Edible Mushroom");
         size4.add("Spices");
+        size4.add("Fruit");
+        size4.add("Fruit or Berry");
+        size4.add("Mantle");
+        size4.add("Seed of Tree or Bush");
+        size4.add("Decent-sized Conifer Cone");
+        size4.add("Tree Bough");
 
         catSize.put(size4,4);
 
@@ -112,6 +111,7 @@ public class StackSupporter {
         size5.add("Crab Meat");
         size5.add("Poultry");
         size5.add("Soil");
+        size5.add("Nuts");
 
         catSize.put(size5,5);
 
