@@ -21,6 +21,8 @@ public class PrepareCauldron implements Action {
     private final boolean needFuel;
     private final boolean needFire;
     private final boolean needWater;
+
+    public boolean wasUpdate = false;
     
     public PrepareCauldron(Gob cauldron, NContext context, boolean needFuel, boolean needFire, boolean needWater) {
         this.cauldron = cauldron;
@@ -41,6 +43,7 @@ public class PrepareCauldron implements Action {
         }
         
         if (needFuel && (cauldron.ngob.getModelAttribute() & 1) == 0) {
+            wasUpdate = true;
             ArrayList<Gob> cauldrons = new ArrayList<>(Arrays.asList(cauldron));
             if (!new FillFuelPowOrCauldron(context, cauldrons, 1).run(gui).IsSuccess()) {
                 return Results.ERROR("Failed to fill cauldron with fuel");
@@ -48,6 +51,7 @@ public class PrepareCauldron implements Action {
         }
         
         if (needFire && (cauldron.ngob.getModelAttribute() & 2) == 0) {
+            wasUpdate = true;
             ArrayList<String> flighted = new ArrayList<>();
             flighted.add(cauldron.ngob.hash);
             if (!new LightGob(flighted, 2).run(gui).IsSuccess()) {
@@ -56,6 +60,7 @@ public class PrepareCauldron implements Action {
         }
         
         if (needWater && (cauldron.ngob.getModelAttribute() & 4) == 0) {
+            wasUpdate = true;
             new FillFluid(cauldron, context, workstation_spec_map.get("gfx/terobjs/cauldron"), new NAlias("water"), 4).run(gui);
             
             NUtils.addTask(new NTask() {

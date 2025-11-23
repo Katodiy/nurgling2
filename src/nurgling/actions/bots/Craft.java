@@ -2,7 +2,6 @@ package nurgling.actions.bots;
 
 import haven.*;
 import haven.res.lib.itemtex.ItemTex;
-import haven.res.ui.relcnt.RelCont;
 import haven.res.ui.tt.cn.CustomName;
 import nurgling.*;
 import nurgling.actions.*;
@@ -11,10 +10,8 @@ import nurgling.tasks.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
 
-import javax.print.attribute.standard.MediaSize;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import static haven.OCache.posres;
 
@@ -131,6 +128,15 @@ public class Craft implements Action {
             }
         }
 
+        // Prepare workstation once before craft loop
+        if (ncontext.workstation != null) {
+            if (!new PrepareWorkStation(ncontext, ncontext.workstation.station).run(gui).IsSuccess()) {
+                return Results.ERROR("Failed to prepare workstation");
+            }
+            if (ncontext.workstation.targetPoint != null) {
+                new PathFinder(ncontext.workstation.targetPoint.getCurrentCoord()).run(gui);
+            }
+        }
 
         Results craftResult = null;
         while (left.get() > 0) {
@@ -177,15 +183,6 @@ public class Craft implements Action {
 
         if (for_craft <= 0) {
             return Results.ERROR("Not enough inventory space");
-        }
-
-        if (ncontext.workstation != null) {
-            if (!new PrepareWorkStation(ncontext, ncontext.workstation.station).run(gui).IsSuccess()) {
-                return Results.ERROR("Failed to prepare workstation");
-            }
-            if (ncontext.workstation.targetPoint != null) {
-                new PathFinder(ncontext.workstation.targetPoint.getCurrentCoord()).run(gui);
-            }
         }
 
         for (NMakewindow.Spec s : mwnd.inputs) {
@@ -284,73 +281,26 @@ public class Craft implements Action {
             
         }
 
-        mwnd.wdgmsg("make", 1);
-        int finalResfc = resfc;
-        String finalTargetName = targetName;
-        NUtils.addTask(new NTask() {
-            @Override
-            public boolean check() {
-
-                return (((gui.prog != null) && (gui.prog.prog > 0) && ((ncontext.workstation == null) || (ncontext.workstation.selected == -1) || NUtils.isWorkStationReady(ncontext.workstation.station, Finder.findGob(ncontext.workstation.selected)))));
-            }
-        });
+        craftProc(ncontext, gui, resfc, targetName);
 
         boolean isCauldron = ncontext.workstation != null &&
-                            ncontext.workstation.station != null &&
-                            ncontext.workstation.station.contains("gfx/terobjs/cauldron");
+                ncontext.workstation.station != null &&
+                ncontext.workstation.station.contains("gfx/terobjs/cauldron");
 
-        if (isCauldron) {
-            NUtils.addTask(new NTask() {
-                @Override
-                public boolean check() {
-                    try {
-                        if (ncontext.workstation != null && ncontext.workstation.selected != -1) {
-                            Gob cauldron = Finder.findGob(ncontext.workstation.selected);
-                            if (cauldron != null && gui.prog != null && gui.prog.visible) {
-                                if (!NUtils.isWorkStationReady(ncontext.workstation.station, cauldron)) {
-                                    gui.map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 3, 0);
-                                    gui.map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 1, 0);
+        if (isCauldron)
+        {
 
-                                    NUtils.addTask(new NTask() {
-                                        @Override
-                                        public boolean check() {
-                                            return gui.prog == null || !gui.prog.visible;
-                                        }
-                                    });
-
-                                    new PrepareCauldron(cauldron, ncontext).run(gui);
-
-                                    mwnd.wdgmsg("make", 1);
-
-                                    NUtils.addTask(new NTask() {
-                                        @Override
-                                        public boolean check() {
-                                            return (gui.prog != null) && (gui.prog.prog > 0);
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                        GetItems gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(finalTargetName));
-                        gi.check();
-                        return gui.prog == null || !gui.prog.visible || gi.getResult().size() >= finalResfc;
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+            Gob cauldron = Finder.findGob(ncontext.workstation.selected);
+            PrepareCauldron pc = new PrepareCauldron(cauldron, ncontext);
+            pc.run(gui);
+            if(pc.wasUpdate)
+            {
+                if (!new UseWorkStation(ncontext).run(gui).IsSuccess()) {
+                    return Results.ERROR("Failed to use workstation");
                 }
-            });
-        } else {
-            NUtils.addTask(new NTask() {
-                @Override
-                public boolean check() {
-                    GetItems gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(finalTargetName));
-                    gi.check();
-                    return gui.prog == null || !gui.prog.visible || gi.getResult().size() >= finalResfc;
-                }
-            });
+                craftProc(ncontext, gui, resfc, targetName);
+            }
         }
-        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),3, 0);
-        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),1, 0);
         for (NMakewindow.Spec s : mwnd.outputs) {
             if (s.ing != null) {
                 NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(s.ing.name), resfc));
@@ -376,6 +326,33 @@ public class Craft implements Action {
         }
         left.set(left.get() - for_craft);
         return Results.SUCCESS();
+    }
+
+    private void craftProc(NContext ncontext, NGameUI gui, int resfc, String targetName) throws InterruptedException
+    {
+        mwnd.wdgmsg("make", 1);
+        int finalResfc = resfc;
+        String finalTargetName = targetName;
+        NUtils.addTask(new NTask() {
+            @Override
+            public boolean check() {
+
+                return (((gui.prog != null) && (gui.prog.prog > 0) && ((ncontext.workstation == null) || (ncontext.workstation.selected == -1) || NUtils.isWorkStationReady(ncontext.workstation.station, Finder.findGob(ncontext.workstation.selected)))));
+            }
+        });
+
+
+
+        NUtils.addTask(new NTask() {
+            @Override
+            public boolean check() {
+                GetItems gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(finalTargetName));
+                gi.check();
+                return gui.prog == null || !gui.prog.visible || gi.getResult().size() >= finalResfc;
+            }
+        });
+        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),3, 0);
+        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),1, 0);
     }
 
     ArrayList<Long> GetBarrelsIds(NContext ncontext) throws InterruptedException
