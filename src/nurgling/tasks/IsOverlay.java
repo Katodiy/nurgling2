@@ -18,7 +18,7 @@ public class IsOverlay extends NTask
     {
         this.gob = gob;
         this.name = name;
-        this.maxCounter = 500;
+        this.maxCounter = 200;
     }
 
     @Override
@@ -33,7 +33,7 @@ public class IsOverlay extends NTask
                 }
             }
         }
-        return false;
+        return count++ >= maxCounter;
     }
 
     public boolean getResult(){
