@@ -691,6 +691,7 @@ public class NMapView extends MapView
 
 
     boolean botsInit = false;
+    private static final long BOT_DELAY_MS = 15 * 1000;
 
     @Override
     public void tick(double dt)
@@ -732,6 +733,7 @@ public class NMapView extends MapView
                 Thread t;
                 t = new Thread(() -> {
                     try {
+                        Thread.sleep(BOT_DELAY_MS);
                         NConfig.botmod = null;
                         NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
                         ScenarioRunner runner = new ScenarioRunner(scenario);
