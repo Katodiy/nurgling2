@@ -91,8 +91,19 @@ public class TerrainSearchWindow extends Window {
     }
     
     private void clearSearch() {
+        // Clear all enabled presets
+        for(TerrainCategory cat : TerrainCategory.ALL_CATEGORIES) {
+            for(TerrainPreset preset : cat.presets) {
+                preset.enabled = false;
+            }
+        }
+        // Clear search field
         terrainSearchField.settext("");
         applyTerrainSearch();
+        // Refresh preset list if visible
+        if(selectedCategory != null) {
+            presetList.updatePresets(selectedCategory);
+        }
     }
 
     @Override
