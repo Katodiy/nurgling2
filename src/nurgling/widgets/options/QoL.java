@@ -436,10 +436,16 @@ public class QoL extends Panel {
         if(oldUniformColors != uniformBiomeColors.a) {
             // Force minimap update when uniform biome colors setting changes
             if(NUtils.getGameUI() != null && NUtils.getGameUI().mmapw != null && NUtils.getGameUI().mmapw.miniMap != null) {
+                if(NUtils.getGameUI().mmapw.miniMap instanceof nurgling.widgets.NMiniMap) {
+                    ((nurgling.widgets.NMiniMap)NUtils.getGameUI().mmapw.miniMap).invalidateDisplayCache();
+                }
                 NUtils.getGameUI().mmapw.miniMap.needUpdate = true;
             }
             // Also update main map if it exists
             if(NUtils.getGameUI() != null && NUtils.getGameUI().mapfile != null && NUtils.getGameUI().mapfile.view != null) {
+                if(NUtils.getGameUI().mapfile.view instanceof nurgling.widgets.NMiniMap) {
+                    ((nurgling.widgets.NMiniMap)NUtils.getGameUI().mapfile.view).invalidateDisplayCache();
+                }
                 NUtils.getGameUI().mapfile.view.needUpdate = true;
             }
         }

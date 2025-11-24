@@ -52,12 +52,23 @@ public interface MapSource {
 	    img = ir.img;
 	    texes[t] = img;
 	}
-	if(NUtils.getGameUI()!=null && img!=null && !NUtils.getGameUI().mapfile.searchPattern.isEmpty())
+	if(NUtils.getGameUI()!=null && img!=null && NUtils.getGameUI().mapfile != null && NUtils.getGameUI().mapfile.searchPattern != null && !NUtils.getGameUI().mapfile.searchPattern.isEmpty())
 	{
 		NMapWnd mpwnd = NUtils.getGameUI().mapfile;
 		Tileset set = m.tileset(t);
-		if(set.getres().name.contains(mpwnd.searchPattern))
-			return mpwnd.searchRes.img;
+		if(set != null && set.getres() != null && set.getres().name != null) {
+			String tileName = set.getres().name.toLowerCase();
+			String searchPattern = mpwnd.searchPattern;
+			
+			// Support multiple patterns separated by |
+			String[] patterns = searchPattern.split("\\|");
+			for(String pattern : patterns) {
+				String trimmedPattern = pattern.trim().toLowerCase();
+				if(!trimmedPattern.isEmpty() && tileName.contains(trimmedPattern)) {
+					return mpwnd.searchRes.img;
+				}
+			}
+		}
 	}
 	return(img);
     }

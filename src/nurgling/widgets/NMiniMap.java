@@ -406,8 +406,35 @@ public class NMiniMap extends MiniMap {
         return currentScale;
     }
     
+    // Invalidates all display caches to force complete map regeneration
+    // Call this when settings change that affect map rendering (search, uniform colors, etc.)
+    public void invalidateDisplayCache() {
+        currentLevelCache = null;
+        previousLevelCache = null;
+        nextLevelCache = null;
+        display = null;
+        dgext = null;
+    }
+    
+    // Returns true if terrain search is active in the main map window
+    private boolean isTerrainSearchActive() {
+        try {
+            nurgling.NGameUI gui = nurgling.NUtils.getGameUI();
+            if (gui != null && gui.mapfile != null) {
+                String pattern = gui.mapfile.searchPattern;
+                return pattern != null && !pattern.trim().isEmpty();
+            }
+        } catch (Exception ignored) { }
+        return false;
+    }
+
     // Helper method to calculate which data level to use based on current scale
     private int getDataLevel() {
+        // When terrain search is active, force finest detail to ensure MapSource.drawmap()
+        // is used so tile highlighting (selectedtex) is applied.
+        if (cachedSearchActive) {
+            return 0;
+        }
         // Choose data level based on scale:
         // scale >= 1.0: use level 0 (finest detail)
         // scale >= 0.5: use level 0 (still detailed enough)
@@ -415,7 +442,6 @@ public class NMiniMap extends MiniMap {
         // scale >= 0.125: use level 2 (4x coarser)
         // scale >= 0.0625: use level 3 (8x coarser)
         // etc.
-        
         if(currentScale >= 0.5f) {
             return 0; // Use finest detail
         } else if(currentScale >= 0.25f) {
@@ -452,6 +478,12 @@ public class NMiniMap extends MiniMap {
     // Track current data level to detect when it changes
     private int currentDataLevel = 0;
     
+    // Track last known search pattern to detect changes
+    private String lastSearchPattern = "";
+    
+    // Cached state of whether terrain search is currently active
+    private boolean cachedSearchActive = false;
+    
     // Multi-level cache: keep current, previous, and next levels loaded
     // This eliminates black screens and loading freezes
     private class LevelCache {
@@ -476,6 +508,22 @@ public class NMiniMap extends MiniMap {
         
         int dataLevel = getDataLevel();
         float scaleFactor = getScaleFactor();
+        
+        // Check if search pattern changed and force rebuild if needed
+        String currentSearchPattern = "";
+        try {
+            nurgling.NGameUI gui = nurgling.NUtils.getGameUI();
+            if (gui != null && gui.mapfile != null && gui.mapfile.searchPattern != null) {
+                currentSearchPattern = gui.mapfile.searchPattern;
+            }
+        } catch (Exception ignored) { }
+        
+        boolean searchPatternChanged = !currentSearchPattern.equals(lastSearchPattern);
+        if (searchPatternChanged) {
+            lastSearchPattern = currentSearchPattern;
+            cachedSearchActive = !currentSearchPattern.trim().isEmpty();
+            invalidateDisplayCache();
+        }
         
         // Calculate grid size for this data level (in tiles)
         int gridTileSize = cmaps.x * (1 << dataLevel);
@@ -528,8 +576,9 @@ public class NMiniMap extends MiniMap {
                              (loc.seg != dseg) || 
                              (zoomlevel != dlvl) || 
                              !next.equals(dgext) || 
-                             needUpdate || 
-                             dataLevelChanged;
+                             super.needUpdate || 
+                             dataLevelChanged || 
+                             searchPatternChanged;
                              
         if(needsUpdate) {
             DisplayGrid[] nd = new DisplayGrid[next.rsz()];
@@ -542,7 +591,7 @@ public class NMiniMap extends MiniMap {
                 }
             }
             
-            needUpdate = false;
+            super.needUpdate = false;
             currentLevelCache = new LevelCache(nd, next, dataLevel);
             
             // Update base class members
@@ -800,12 +849,12 @@ public class NMiniMap extends MiniMap {
     public void drawmarkers(GOut g) {
         Coord hsz = sz.div(2);
 
-        // Get search pattern from NMapWnd if we're inside one
-        String searchPattern = null;
+        // Get marker search pattern from NMapWnd if we're inside one
+        String markerSearchPattern = null;
         Widget parentWidget = this.parent;
         while(parentWidget != null) {
             if(parentWidget instanceof NMapWnd) {
-                searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                markerSearchPattern = ((NMapWnd) parentWidget).markerSearchPattern;
                 break;
             }
             parentWidget = parentWidget.parent;
@@ -820,14 +869,14 @@ public class NMiniMap extends MiniMap {
                 if(filter(mark))
                     continue;
 
-                // Then check search pattern filter
-                if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                // Then check marker search pattern filter
+                if(markerSearchPattern != null && !markerSearchPattern.trim().isEmpty()) {
                     String markerName = mark.m.nm;
                     if(markerName == null) {
                         continue; // Hide markers with no name when searching
                     }
                     // Show only markers that contain the search pattern (case-insensitive)
-                    if(!markerName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                    if(!markerName.toLowerCase().contains(markerSearchPattern.toLowerCase())) {
                         continue; // Hide markers that don't match
                     }
                 }
@@ -850,12 +899,12 @@ public class NMiniMap extends MiniMap {
                 boolean markersHidden = (mapwnd != null && Utils.eq(mapwnd.markcfg, MapWnd.MarkerConfig.hideall));
 
                 if(!markersHidden) {
-                    // Get search pattern (if any) for filtering
-                    String searchPattern = null;
+                    // Get marker search pattern (if any) for filtering
+                    String markerSearchPattern = null;
                     Widget parentWidget = this.parent;
                     while(parentWidget != null) {
                         if(parentWidget instanceof NMapWnd) {
-                            searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                            markerSearchPattern = ((NMapWnd) parentWidget).markerSearchPattern;
                             break;
                         }
                         parentWidget = parentWidget.parent;
@@ -865,10 +914,10 @@ public class NMiniMap extends MiniMap {
                     int threshold = UI.scale(10); // Screen pixels
 
                     for(nurgling.TreeLocation loc : treeLocations) {
-                        // Apply search pattern filter (same as drawing)
-                        if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                        // Apply marker search pattern filter
+                        if(markerSearchPattern != null && !markerSearchPattern.trim().isEmpty()) {
                             String treeName = loc.getTreeName();
-                            if(treeName == null || !treeName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                            if(treeName == null || !treeName.toLowerCase().contains(markerSearchPattern.toLowerCase())) {
                                 continue; // Skip trees that don't match search
                             }
                         }
@@ -889,12 +938,12 @@ public class NMiniMap extends MiniMap {
                 boolean markersHidden = (mapwnd != null && Utils.eq(mapwnd.markcfg, MapWnd.MarkerConfig.hideall));
 
                 if(!markersHidden) {
-                    // Get search pattern from NMapWnd if we're inside one
-                    String searchPattern = null;
+                    // Get marker search pattern from NMapWnd if we're inside one
+                    String markerSearchPattern = null;
                     Widget parentWidget = this.parent;
                     while(parentWidget != null) {
                         if(parentWidget instanceof NMapWnd) {
-                            searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                            markerSearchPattern = ((NMapWnd) parentWidget).markerSearchPattern;
                             break;
                         }
                         parentWidget = parentWidget.parent;
@@ -904,14 +953,14 @@ public class NMiniMap extends MiniMap {
                     int threshold = UI.scale(10); // Screen pixels
 
                     for(nurgling.FishLocation loc : locations) {
-                        // Apply search pattern filter (same as drawing)
-                        if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                        // Apply marker search pattern filter
+                        if(markerSearchPattern != null && !markerSearchPattern.trim().isEmpty()) {
                             String fishName = loc.getFishName();
                             if(fishName == null) {
                                 continue; // Skip fish with no name when searching
                             }
-                            // Show only fish that contain the search pattern (case-insensitive)
-                            if(!fishName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                            // Show only fish that contain the marker search pattern (case-insensitive)
+                            if(!fishName.toLowerCase().contains(markerSearchPattern.toLowerCase())) {
                                 continue; // Skip fish that don't match
                             }
                         }
@@ -1099,12 +1148,12 @@ public class NMiniMap extends MiniMap {
             return; // Don't draw fish locations when markers are hidden
         }
 
-        // Get search pattern from NMapWnd if we're inside one
-        String searchPattern = null;
+        // Get marker search pattern from NMapWnd if we're inside one
+        String markerSearchPattern = null;
         Widget parentWidget = this.parent;
         while(parentWidget != null) {
             if(parentWidget instanceof NMapWnd) {
-                searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                markerSearchPattern = ((NMapWnd) parentWidget).markerSearchPattern;
                 break;
             }
             parentWidget = parentWidget.parent;
@@ -1116,14 +1165,14 @@ public class NMiniMap extends MiniMap {
         Coord hsz = sz.div(2);
 
         for(nurgling.FishLocation fishLoc : fishLocations) {
-            // Apply search pattern filter to fish names
-            if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+            // Apply marker search pattern filter to fish names
+            if(markerSearchPattern != null && !markerSearchPattern.trim().isEmpty()) {
                 String fishName = fishLoc.getFishName();
                 if(fishName == null) {
                     continue; // Hide fish with no name when searching
                 }
-                // Show only fish that contain the search pattern (case-insensitive)
-                if(!fishName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                // Show only fish that contain the marker search pattern (case-insensitive)
+                if(!fishName.toLowerCase().contains(markerSearchPattern.toLowerCase())) {
                     continue; // Hide fish that don't match
                 }
             }
@@ -1178,12 +1227,12 @@ public class NMiniMap extends MiniMap {
             return; // Don't draw tree locations when markers are hidden
         }
 
-        // Get search pattern from NMapWnd if we're inside one
-        String searchPattern = null;
+        // Get marker search pattern from NMapWnd if we're inside one
+        String markerSearchPattern = null;
         Widget parentWidget = this.parent;
         while(parentWidget != null) {
             if(parentWidget instanceof NMapWnd) {
-                searchPattern = ((NMapWnd) parentWidget).searchPattern;
+                markerSearchPattern = ((NMapWnd) parentWidget).markerSearchPattern;
                 break;
             }
             parentWidget = parentWidget.parent;
@@ -1195,14 +1244,14 @@ public class NMiniMap extends MiniMap {
         Coord hsz = sz.div(2);
 
         for(nurgling.TreeLocation treeLoc : treeLocations) {
-            // Apply search pattern filter to tree names
-            if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+            // Apply marker search pattern filter to tree names
+            if(markerSearchPattern != null && !markerSearchPattern.trim().isEmpty()) {
                 String treeName = treeLoc.getTreeName();
                 if(treeName == null) {
                     continue; // Hide trees with no name when searching
                 }
-                // Show only trees that contain the search pattern (case-insensitive)
-                if(!treeName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                // Show only trees that contain the marker search pattern (case-insensitive)
+                if(!treeName.toLowerCase().contains(markerSearchPattern.toLowerCase())) {
                     continue; // Hide trees that don't match
                 }
             }
@@ -1266,21 +1315,21 @@ public class NMiniMap extends MiniMap {
 
     @Override
     public boolean filter(DisplayMarker mark) {
-        // Check if we're inside an NMapWnd and if it has an active search pattern
+        // Check if we're inside an NMapWnd and if it has an active marker search pattern
         Widget parent = this.parent;
         while(parent != null) {
             if(parent instanceof NMapWnd) {
                 NMapWnd mapWnd = (NMapWnd) parent;
-                String searchPattern = mapWnd.searchPattern;
+                String markerSearchPattern = mapWnd.markerSearchPattern;
 
-                // If search pattern is active, filter by marker name
-                if(searchPattern != null && !searchPattern.trim().isEmpty()) {
+                // If marker search pattern is active, filter by marker name
+                if(markerSearchPattern != null && !markerSearchPattern.trim().isEmpty()) {
                     String markerName = mark.m.nm;
                     if(markerName == null) {
                         return true; // Hide markers with no name when searching
                     }
                     // Show only markers that contain the search pattern (case-insensitive)
-                    if(!markerName.toLowerCase().contains(searchPattern.toLowerCase())) {
+                    if(!markerName.toLowerCase().contains(markerSearchPattern.toLowerCase())) {
                         return true; // Hide markers that don't match
                     }
                 }

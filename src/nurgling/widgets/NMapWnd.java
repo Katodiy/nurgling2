@@ -9,28 +9,60 @@ import java.util.Map;
 import static haven.MCache.tilesz;
 
 public class NMapWnd extends MapWnd {
-    public String searchPattern = "";
+    public String searchPattern = "";  // For terrain/tile search
+    public String markerSearchPattern = "";  // For marker/icon search
     public Resource.Image searchRes = null;
-    public boolean needUpdate = false;
-    TextEntry te;
     Button fishMenuBtn;
     Button treeMenuBtn;
+    Button tileHighlightBtn;
     CheckBox treeIconsCheckbox;
     CheckBox fishIconsCheckbox;
+    TextEntry markerSearchField;
     private static final int btnw = UI.scale(95);
 
     public NMapWnd(MapFile file, MapView mv, Coord sz, String title) {
         super(file, mv, sz, title);
         searchRes = Resource.local().loadwait("alttex/selectedtex").layer(Resource.imgc);
-        add(te = new TextEntry(200,""){
+        
+        // Add button to open terrain search window (top-left)
+        add(tileHighlightBtn = new Button(UI.scale(120), "Tile Highlight") {
             @Override
-            public void done(ReadLine buf) {
-                super.done(buf);
-                searchPattern = text();
-                view.needUpdate = true;
-                NUtils.getGameUI().mmap.needUpdate = true;
+            public void click() {
+                NGameUI gui = (NGameUI) NUtils.getGameUI();
+                if(gui != null) {
+                    if(gui.terrainSearchWindow != null) {
+                        if(gui.terrainSearchWindow.visible()) {
+                            gui.terrainSearchWindow.hide();
+                        } else {
+                            gui.terrainSearchWindow.show();
+                            gui.terrainSearchWindow.raise();
+                        }
+                    } else {
+                        gui.terrainSearchWindow = new TerrainSearchWindow();
+                        gui.add(gui.terrainSearchWindow, new Coord(100, 100));
+                        gui.terrainSearchWindow.show();
+                    }
+                }
             }
-        }, view.pos("br").sub(UI.scale(200,20)));
+        }, view.c.add(UI.scale(5), UI.scale(5)));
+        
+        // Add marker search field at bottom-right (no label, no button)
+        add(markerSearchField = new TextEntry(UI.scale(200), "") {
+            @Override
+            public void changed() {
+                super.changed();
+                applyMarkerSearch();
+            }
+            
+            @Override
+            public boolean keydown(KeyDownEvent ev) {
+                if(ev.code == java.awt.event.KeyEvent.VK_ENTER) {
+                    applyMarkerSearch();
+                    return true;
+                }
+                return super.keydown(ev);
+            }
+        }, view.pos("br").sub(UI.scale(205), UI.scale(5)));
 
         // Add checkbox for tree icons (to the left of Tree Search button)
         add(treeIconsCheckbox = new CheckBox("") {
@@ -155,12 +187,19 @@ public class NMapWnd extends MapWnd {
         }
         return null;
     }
+    
+    private void applyMarkerSearch() {
+        String pattern = markerSearchField.text().trim();
+        markerSearchPattern = pattern;
+    }
 
     @Override
     public void resize(Coord sz) {
         super.resize(sz);
-        if(te!=null)
-            te.c = view.pos("br").sub(UI.scale(200,20));
+
+        // Position Tile Highlight button at top-left
+        if(tileHighlightBtn != null)
+            tileHighlightBtn.c = view.c.add(UI.scale(5), UI.scale(5));
 
         // Position tree icons checkbox (left of Tree Search button)
         if(treeIconsCheckbox != null)
@@ -177,6 +216,10 @@ public class NMapWnd extends MapWnd {
         // Position Fish button at top-right of map view
         if(fishMenuBtn != null)
             fishMenuBtn.c = view.c.add(view.sz.x - UI.scale(95), UI.scale(5));
+            
+        // Position marker search field at bottom-right
+        if(markerSearchField != null)
+            markerSearchField.c = view.c.add(view.sz.x - UI.scale(205), view.sz.y - UI.scale(25));
     }
     
     @Override
