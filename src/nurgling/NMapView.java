@@ -311,19 +311,24 @@ public class NMapView extends MapView
 
             // For simple inspect, only show gob and tile
             if (simpleInspect && !debugMode) {
-                if (ttip.get("gob") != null) {
+                String gobValue = ttip.get("gob");
+                if (gobValue != null && !gobValue.isEmpty()) {
                     BufferedImage gob = RichText.render(String.format("$col[128,128,255]{%s}:", "Gob"), 0).img;
                     imgs.add(gob);
-                    imgs.add(RichText.render(ttip.get("gob"), 0).img);
+                    imgs.add(RichText.render(gobValue, 0).img);
                 }
-                if (ttip.get("tile") != null) {
+                String tileValue = ttip.get("tile");
+                if (tileValue != null && !tileValue.isEmpty()) {
                     BufferedImage tile = RichText.render(String.format("$col[128,128,255]{%s}:", "Tile"), 0).img;
                     imgs.add(tile);
-                    imgs.add(RichText.render(ttip.get("tile"), 0).img);
+                    imgs.add(RichText.render(tileValue, 0).img);
                 }
             } else {
                 // Debug mode - show all info
                 for (String key : ttip.keySet()) {
+                    String value = ttip.get(key);
+                    if (value == null) continue;
+                    
                     String text = String.format("$col[128,128,255]{%s}:", key);
                     BufferedImage img = cachedImages.get(text);
                     if (img == null) {
@@ -332,84 +337,99 @@ public class NMapView extends MapView
                     }
 
                     imgs.add(img);
-                    imgs.add(RichText.render(ttip.get(key), 0).img);
+                    imgs.add(RichText.render(value, 0).img);
                 }
                     BufferedImage mc = RichText.render(String.format("$col[128,128,255]{%s}:", "MouseCoord"), 0).img;
                     imgs.add(mc);
                     imgs.add(RichText.render(getLCoord().toString(), 0).img);
-                if (ttip.get("rc") != null) {
+                String rcValue = ttip.get("rc");
+                if (rcValue != null && !rcValue.isEmpty()) {
                     BufferedImage gob = RichText.render(String.format("$col[128,128,128]{%s}:", "Coord"), 0).img;
                     imgs.add(gob);
-                    imgs.add(RichText.render(ttip.get("rc"), 0).img);
+                    imgs.add(RichText.render(rcValue, 0).img);
                 }
-                if (ttip.get("id") != null) {
+                String idValue = ttip.get("id");
+                if (idValue != null && !idValue.isEmpty()) {
                     BufferedImage gob = RichText.render(String.format("$col[255,128,255]{%s}:", "id"), 0).img;
                     imgs.add(gob);
-                    imgs.add(RichText.render(ttip.get("id"), 0).img);
+                    imgs.add(RichText.render(idValue, 0).img);
                 }
             }
-            if (ttip.get("tags") != null) {
+            String tagsValue = ttip.get("tags");
+            if (tagsValue != null && !tagsValue.isEmpty()) {
                 BufferedImage gob = RichText.render(String.format("$col[255,128,128]{%s}:", "Tags"), 0).img;
                 imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("tags"), 0).img);
+                imgs.add(RichText.render(tagsValue, 0).img);
             }
-            if (ttip.get("status") != null) {
+            String statusValue = ttip.get("status");
+            if (statusValue != null && !statusValue.isEmpty()) {
                 BufferedImage gob = RichText.render(String.format("$col[255,128,128]{%s}:", "Status"), 0).img;
                 imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("status"), 0).img);
+                imgs.add(RichText.render(statusValue, 0).img);
             }
-            if (ttip.get("HitBox") != null) {
+            String hitBoxValue = ttip.get("HitBox");
+            if (hitBoxValue != null && !hitBoxValue.isEmpty()) {
                 BufferedImage gob = RichText.render(String.format("$col[255,128,255]{%s}:", "HitBox"), 0).img;
                 imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("HitBox"), 0).img);
+                imgs.add(RichText.render(hitBoxValue, 0).img);
             }
-            if (ttip.get("dist") != null) {
+            String distValue = ttip.get("dist");
+            if (distValue != null && !distValue.isEmpty()) {
                 BufferedImage gob = RichText.render(String.format("$col[255,128,105]{%s}:", "dist"), 0).img;
                 imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("dist"), 0).img);
+                imgs.add(RichText.render(distValue, 0).img);
             }
-            if (ttip.get("isDynamic") != null) {
+            String isDynamicValue = ttip.get("isDynamic");
+            if (isDynamicValue != null && !isDynamicValue.isEmpty()) {
                 BufferedImage gob = RichText.render(String.format("$col[255,83,83]{%s}:", "isDynamic"), 0).img;
                 imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("isDynamic"), 0).img);
+                imgs.add(RichText.render(isDynamicValue, 0).img);
             }
-            if (ttip.get("marker") != null) {
+            String markerValue = ttip.get("marker");
+            if (markerValue != null && !markerValue.isEmpty()) {
                 BufferedImage gob = RichText.render(String.format("$col[255,83,83]{%s}:", "Marker"), 0).img;
                 imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("marker"), 0).img);
+                imgs.add(RichText.render(markerValue, 0).img);
             }
-            if (ttip.get("cont") != null) {
+            String contValue = ttip.get("cont");
+            if (contValue != null && !contValue.isEmpty()) {
                 BufferedImage gob = RichText.render(String.format("$col[83,255,83]{%s}:", "Container"), 0).img;
                 imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("cont"), 0).img);
+                imgs.add(RichText.render(contValue, 0).img);
             }
-            if (ttip.get("ols") != null) {
+            String olsValue = ttip.get("ols");
+            if (olsValue != null && !olsValue.isEmpty()) {
                 BufferedImage gob = RichText.render(String.format("$col[83,255,155]{%s}:", "Overlays"), 0).img;
                 imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("ols"), 0).img);
+                imgs.add(RichText.render(olsValue, 0).img);
             }
-            if (ttip.get("pose") != null) {
+            String poseValue = ttip.get("pose");
+            if (poseValue != null && !poseValue.isEmpty()) {
                 BufferedImage gob = RichText.render(String.format("$col[255,145,200]{%s}:", "Pose"), 0).img;
                 imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("pose"), 0).img);
+                imgs.add(RichText.render(poseValue, 0).img);
             }
-            if (ttip.get("attr") != null) {
+            String attrValue = ttip.get("attr");
+            if (attrValue != null && !attrValue.isEmpty()) {
                 BufferedImage gob = RichText.render(String.format("$col[155,255,83]{%s}:", "Attr"), 0).img;
                 imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("attr"), 0).img);
+                imgs.add(RichText.render(attrValue, 0).img);
             }
             if (!tlays.isEmpty() && false) {
                 BufferedImage gob = RichText.render(String.format("$col[155,32,176]{%s}:", "Layers"), 0).img;
                 imgs.add(gob);
                 for(String s: tlays)
                 {
-                    imgs.add(RichText.render(s, 0).img);
+                    if (s != null && !s.isEmpty()) {
+                        imgs.add(RichText.render(s, 0).img);
+                    }
                 }
             }
-            if (ttip.get("poses") != null) {
+            String posesValue = ttip.get("poses");
+            if (posesValue != null && !posesValue.isEmpty()) {
                 BufferedImage gob = RichText.render(String.format("$col[255,128,128]{%s}:", "Poses"), 0).img;
                 imgs.add(gob);
-                imgs.add(RichText.render(ttip.get("poses"), 0).img);
+                imgs.add(RichText.render(posesValue, 0).img);
             }
             return (oldttip = new TexI((ItemInfo.catimgs(0, imgs.toArray(new BufferedImage[0])))));
         }
@@ -438,7 +458,7 @@ public class NMapView extends MapView
                 // Show resource name if gob exists
                 if (inf != null) {
                     Gob gob = Gob.from(inf.ci);
-                    if (gob != null) {
+                    if (gob != null && gob.ngob.name != null) {
                         ttip.put("gob", gob.ngob.name);
                     }
                 }
@@ -448,7 +468,7 @@ public class NMapView extends MapView
                 try {
                     int tile = mCache.gettile(mc.div(tilesz).floor());
                     Resource res = mCache.tilesetr(tile);
-                    if (res != null) {
+                    if (res != null && res.name != null) {
                         ttip.put("tile", res.name);
                     }
                 }
@@ -474,7 +494,9 @@ public class NMapView extends MapView
                     Gob gob = Gob.from(inf.ci);
                     Gob player = NUtils.player();
                     if (gob != null) {
-                        ttip.put("gob", gob.ngob.name);
+                        if (gob.ngob.name != null) {
+                            ttip.put("gob", gob.ngob.name);
+                        }
                         if(gob.ngob.hitBox!=null) {
                             ttip.put("HitBox", gob.ngob.hitBox.toString());
                             ttip.put("isDynamic", String.valueOf(gob.ngob.isDynamic));
@@ -507,7 +529,10 @@ public class NMapView extends MapView
                                         Drawable drawable = ((Drawable) attr);
                                         if(drawable instanceof Composite)
                                         {
-                                            ttip.put("pose", ((Composite) drawable).current_pose);
+                                            String currentPose = ((Composite) drawable).current_pose;
+                                            if (currentPose != null) {
+                                                ttip.put("pose", currentPose);
+                                            }
                                         }
                                         if (((Drawable) attr).getres().getLayers() != null) {
                                             isPrinted = true;
@@ -554,7 +579,7 @@ public class NMapView extends MapView
                 try {
                     int tile = mCache.gettile(mc.div(tilesz).floor());
                     Resource res = mCache.tilesetr(tile);
-                    if (res != null) {
+                    if (res != null && res.name != null) {
                         ttip.put("tile", res.name);
                     }
                 }

@@ -396,7 +396,8 @@ public class TransferToContainer implements Action
                         else
                         {
                             ((GItem.ContentsWindow) sourceStack.parent).cont.wdgmsg("transfer", Coord.z);
-                            NUtils.addTask(new ISRemoved( ((GItem.ContentsWindow) sourceStack.parent).cont.wdgid()));
+                            if(((GItem.ContentsWindow) sourceStack.parent!=null))
+                                NUtils.addTask(new ISRemoved( ((GItem.ContentsWindow) sourceStack.parent).cont.wdgid()));
                             return oldstacksize;
                         }
                     }
