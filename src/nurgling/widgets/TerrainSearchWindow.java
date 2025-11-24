@@ -65,14 +65,6 @@ public class TerrainSearchWindow extends Window {
             }
         }, margin, y);
         
-        // Clear All button
-        add(new Button(UI.scale(90), "Clear All") {
-            @Override
-            public void click() {
-                clearAllPresets();
-            }
-        }, margin + UI.scale(95), y);
-        
         // Clear search button
         add(new Button(UI.scale(80), "Clear") {
             @Override
@@ -116,16 +108,6 @@ public class TerrainSearchWindow extends Window {
             }
             presetList.applyPresetSearch();
         }
-    }
-    
-    private void clearAllPresets() {
-        for(TerrainCategory cat : TerrainCategory.ALL_CATEGORIES) {
-            for(TerrainPreset preset : cat.presets) {
-                preset.enabled = false;
-            }
-        }
-        terrainSearchField.settext("");
-        applyTerrainSearch();
     }
     
     // Category list widget with cached rendering
@@ -257,8 +239,11 @@ public class TerrainSearchWindow extends Window {
         }
         
         // All available categories
-        public static final List<TerrainCategory> ALL_CATEGORIES = Arrays.asList(
-            new TerrainCategory("Natural",
+        public static final List<TerrainCategory> ALL_CATEGORIES = createCategories();
+        
+        private static List<TerrainCategory> createCategories() {
+            // Define all individual categories first
+            TerrainCategory natural = new TerrainCategory("Natural",
                 new TerrainPreset("Grass", "grass"),
                 new TerrainPreset("Beach", "beach"),
                 new TerrainPreset("Beech Grove", "beechgrove"),
@@ -300,8 +285,9 @@ public class TerrainSearchWindow extends Window {
                 new TerrainPreset("Wald", "wald"),
                 new TerrainPreset("Wild Moor", "wildmoor"),
                 new TerrainPreset("Wild Turf", "wildturf")
-            ),
-            new TerrainCategory("Ore",
+            );
+            
+            TerrainCategory ore = new TerrainCategory("Ore",
                 new TerrainPreset("Cassiterite", "cassiterite"),
                 new TerrainPreset("Chalcopyrite", "chalcopyrite"),
                 new TerrainPreset("Malachite", "malachite"),
@@ -319,8 +305,9 @@ public class TerrainSearchWindow extends Window {
                 new TerrainPreset("Schrifterz", "schrifterz"),
                 new TerrainPreset("Direvein", "direvein"),
                 new TerrainPreset("Black Coal", "blackcoal")
-            ),
-            new TerrainCategory("Rocks",
+            );
+            
+            TerrainCategory rocks = new TerrainCategory("Rocks",
                 new TerrainPreset("Alabaster", "alabaster"),
                 new TerrainPreset("Apatite", "apatite"),
                 new TerrainPreset("Arkose", "arkose"),
@@ -364,8 +351,9 @@ public class TerrainSearchWindow extends Window {
                 new TerrainPreset("Sodalite", "sodalite"),
                 new TerrainPreset("Sunstone", "sunstone"),
                 new TerrainPreset("Zincspar", "zincspar")
-            ),
-            new TerrainCategory("Paving",
+            );
+            
+            TerrainCategory paving = new TerrainCategory("Paving",
                 new TerrainPreset("Teal Brick", "brick"),
                 new TerrainPreset("Red Brick", "brickred"),
                 new TerrainPreset("Yellow Brick", "brickyellow"),
@@ -391,8 +379,9 @@ public class TerrainSearchWindow extends Window {
                 new TerrainPreset("Wooden", "plank"),
                 new TerrainPreset("Dirt", "dirt"),
                 new TerrainPreset("Plowed Dirt", "ploweddirt")
-            ),
-            new TerrainCategory("Water",
+            );
+            
+            TerrainCategory water = new TerrainCategory("Water",
                 new TerrainPreset("Shallow Water", "shallowwater"),
                 new TerrainPreset("Deep Water", "deepwater"),
                 new TerrainPreset("Shallow Ocean", "shallowocean"),
@@ -400,8 +389,9 @@ public class TerrainSearchWindow extends Window {
                 new TerrainPreset("High Seas", "highseas"),
                 new TerrainPreset("Rock Beach", "rockbeach"),
                 new TerrainPreset("Sand Cliff", "sandcliff")
-            ),
-            new TerrainCategory("Special Stones",
+            );
+            
+            TerrainCategory specialStones = new TerrainCategory("Special Stones",
                 new TerrainPreset("Bat Rock", "batrock"),
                 new TerrainPreset("Cat Gold", "catgold"),
                 new TerrainPreset("Dross", "dross"),
@@ -411,16 +401,40 @@ public class TerrainSearchWindow extends Window {
                 new TerrainPreset("Rock Crystal", "rockcrystal"),
                 new TerrainPreset("Conchite", "conchite"),
                 new TerrainPreset("Slag", "slag")
-            ),
-            new TerrainCategory("Mountain & Cave",
+            );
+            
+            TerrainCategory mountain = new TerrainCategory("Mountain & Cave",
                 new TerrainPreset("Mountain", "mountain"),
                 new TerrainPreset("Mountain Snow", "mountainsnow"),
                 new TerrainPreset("Cave", "cave"),
                 new TerrainPreset("Wild Cavern", "wildcavern"),
                 new TerrainPreset("Lava", "lava"),
                 new TerrainPreset("Ashland", "ashland")
-            )
-        );
+            );
+            
+            // Collect all presets from all categories for "All" category
+            List<TerrainPreset> allPresets = new ArrayList<>();
+            allPresets.addAll(natural.presets);
+            allPresets.addAll(ore.presets);
+            allPresets.addAll(rocks.presets);
+            allPresets.addAll(paving.presets);
+            allPresets.addAll(water.presets);
+            allPresets.addAll(specialStones.presets);
+            allPresets.addAll(mountain.presets);
+            
+            TerrainCategory all = new TerrainCategory("All", allPresets.toArray(new TerrainPreset[0]));
+            
+            return Arrays.asList(
+                all,
+                natural,
+                ore,
+                rocks,
+                paving,
+                water,
+                specialStones,
+                mountain
+            );
+        }
     }
     
     // Terrain preset definition
