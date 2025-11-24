@@ -17,6 +17,8 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
+import static nurgling.tools.Finder.findLiftedbyPlayer;
+
 public class RefillInCistern implements Action
 {
 
@@ -24,7 +26,7 @@ public class RefillInCistern implements Action
     Pair<Coord2d,Coord2d> area;
     NAlias content;
 
-    public RefillInCistern( Pair<Coord2d,Coord2d> area, NAlias content) {
+    public RefillInCistern(Pair<Coord2d,Coord2d> area, NAlias content) {
         this.area = area;
         this.content = content;
     }
@@ -35,10 +37,12 @@ public class RefillInCistern implements Action
         Gob player = NUtils.player();
         if(player == null || !NParser.checkName(player.pose(), "gfx/borka/banzai"))
         {
-
             return Results.ERROR("Barrel not found.");
         }
-        Gob barrel = Finder.findGob(new NAlias("barrel"));
+
+        // Find the barrel that's currently lifted by the player
+        Gob barrel = findLiftedbyPlayer();
+
         Following fl ;
         if(barrel == null || (fl = barrel.getattr(Following.class))==null || fl.tgt!=player.id)
             return Results.ERROR("Barrel not found.");
@@ -71,8 +75,7 @@ public class RefillInCistern implements Action
             NUtils.addTask(new IsOverlay(barrel, content));
             if(!NUtils.isOverlay(barrel, content))
             {
-                NUtils.getGameUI().error("NO FLUID");
-                throw new InterruptedException();
+                return Results.ERROR("NO FLUID");
             }
         }
         return Results.SUCCESS();
