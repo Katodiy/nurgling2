@@ -17,16 +17,16 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
+import static nurgling.tools.Finder.findLiftedbyPlayer;
+
 public class RefillInCistern implements Action
 {
 
     ArrayList<Container> conts;
     Pair<Coord2d,Coord2d> area;
     NAlias content;
-    Gob barrel; // Store the specific barrel reference
 
-    public RefillInCistern(Gob barrel, Pair<Coord2d,Coord2d> area, NAlias content) {
-        this.barrel = barrel;
+    public RefillInCistern(Pair<Coord2d,Coord2d> area, NAlias content) {
         this.area = area;
         this.content = content;
     }
@@ -40,13 +40,8 @@ public class RefillInCistern implements Action
             return Results.ERROR("Barrel not found.");
         }
 
-        // Use passed barrel OR search for one (backward compatibility)
-        Gob barrel;
-        if (this.barrel != null) {
-            barrel = this.barrel; // Use the specific barrel passed from FillFluid
-        } else {
-            barrel = Finder.findGob(new NAlias("barrel")); // Old behavior
-        }
+        // Find the barrel that's currently lifted by the player
+        Gob barrel = findLiftedbyPlayer();
 
         Following fl ;
         if(barrel == null || (fl = barrel.getattr(Following.class))==null || fl.tgt!=player.id)

@@ -109,7 +109,7 @@ public class FillFluid implements Action
         new LiftObject(barrel).run(gui);
         if (!NUtils.isOverlay(barrel, content))
         {
-            if (!new RefillInCistern(barrel, area, content).run(gui).IsSuccess())
+            if (!new RefillInCistern(area, content).run(gui).IsSuccess())
             {
                 new PlaceObject(barrel, barrelOriginalPos, 0).run(gui);
                 return Results.FAIL();
@@ -137,7 +137,7 @@ public class FillFluid implements Action
                     });
                     if (!NUtils.isOverlay(barrel, content))
                     {
-                        if (!new RefillInCistern(barrel, area, content).run(gui).IsSuccess())
+                        if (!new RefillInCistern(area, content).run(gui).IsSuccess())
                         {
                             new PlaceObject(barrel, barrelOriginalPos, 0).run(gui);
                             return Results.FAIL();
@@ -168,7 +168,7 @@ public class FillFluid implements Action
                 if (!NUtils.isOverlay(barrel, content))
                 {
                     context.navigateToAreaIfNeeded(Specialisation.SpecName.water.toString());
-                    if (!new RefillInCistern(barrel, area, content).run(gui).IsSuccess())
+                    if (!new RefillInCistern(area, content).run(gui).IsSuccess())
                     {
                         Gob placed = findLiftedbyPlayer();
                         if ( placed != null )
