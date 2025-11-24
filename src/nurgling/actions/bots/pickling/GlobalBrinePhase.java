@@ -137,8 +137,11 @@ public class GlobalBrinePhase implements Action {
     }
 
     private boolean fillSingleJar(NGameUI gui, Gob barrel, double originalBrineLevel) throws InterruptedException {
+        System.out.println("[PICKLING] Starting fillSingleJar - Original brine level: " + originalBrineLevel);
+
         // Check barrel has brine before attempting fill (FillWaterskins pattern)
         if (!hasPicklingBrine(barrel)) {
+            System.out.println("[PICKLING] Barrel has no pickling brine, aborting");
             return false; // Barrel empty, graceful failure
         }
 
@@ -151,49 +154,101 @@ public class GlobalBrinePhase implements Action {
             }
         });
 
+        System.out.println("[PICKLING] Clicking barrel to interact with jar...");
         NUtils.activateItem(barrel);
 
-        // Custom wait for brine level change with barrel depletion detection
-        boolean[] barrelDepleted = {false};
+        // Adaptive approach: Wait to see what happens after first click
+        String[] interactionResult = {""};
+        boolean[] needSecondClick = {false};
+
         NUtils.addTask(new NTask() {
             int attempts = 0;
             @Override
             public boolean check() {
                 attempts++;
-                if (attempts > 100) return true; // Safety timeout
+                if (attempts > 100) {
+                    System.out.println("[PICKLING] First interaction timeout after 100 attempts");
+                    return true;
+                }
 
                 WItem jarInHand = gui.vhand;
                 if (jarInHand == null) return false;
 
-                double currentBrineLevel = getBrineLevel(jarInHand);
+                double currentLevel = getBrineLevel(jarInHand);
+                System.out.println("[PICKLING] First click attempt " + attempts + " - Level: " + currentLevel + " (was " + originalBrineLevel + ")");
 
-                // If brine increased, success
-                if (currentBrineLevel > originalBrineLevel) {
+                // Check if jar was filled (level increased)
+                if (currentLevel > originalBrineLevel) {
+                    interactionResult[0] = "FILLED";
+                    System.out.println("[PICKLING] ✅ Jar was filled on first click! " + originalBrineLevel + "L → " + currentLevel + "L (barrel was full)");
                     return true;
                 }
 
-                // If jar is now empty and barrel is also empty, barrel depleted
-                if (currentBrineLevel == 0.0 && originalBrineLevel > 0.0) {
-                    if (!hasPicklingBrine(barrel)) {
-                        barrelDepleted[0] = true;
-                        return true; // Stop trying, barrel is empty
-                    }
-                    NUtils.activateItem(barrel);
-                    return false; // Continue waiting
+                // Check if jar was emptied (level decreased to 0)
+                if (currentLevel == 0.0 && originalBrineLevel > 0.0) {
+                    interactionResult[0] = "EMPTIED";
+                    needSecondClick[0] = true;
+                    System.out.println("[PICKLING] ✅ Jar was emptied on first click! " + originalBrineLevel + "L → 0.0L (barrel had room)");
+                    return true;
+                }
+
+                // For empty jars, wait for fill
+                if (originalBrineLevel == 0.0 && currentLevel >= 1.0) {
+                    interactionResult[0] = "FILLED";
+                    System.out.println("[PICKLING] ✅ Empty jar was filled! 0.0L → " + currentLevel + "L");
+                    return true;
                 }
 
                 return false;
             }
         });
 
-        // Put jar back to inventory
-        WItem jarInHand = gui.vhand;
-        if (jarInHand != null) {
-            jarInHand.item.wdgmsg("transfer", haven.Coord.z);
-            NUtils.addTask(new ISRemoved(jarInHand.item.wdgid()));
+        // If jar was emptied, we need a second click to fill it
+        if (needSecondClick[0]) {
+            System.out.println("[PICKLING] Second click needed - filling emptied jar...");
+            NUtils.activateItem(barrel);
+
+            NUtils.addTask(new NTask() {
+                int attempts = 0;
+                @Override
+                public boolean check() {
+                    attempts++;
+                    if (attempts > 100) {
+                        System.out.println("[PICKLING] Second interaction timeout after 100 attempts");
+                        return true;
+                    }
+
+                    WItem jarInHand = gui.vhand;
+                    if (jarInHand == null) return false;
+
+                    double currentLevel = getBrineLevel(jarInHand);
+                    System.out.println("[PICKLING] Second click attempt " + attempts + " - Level: " + currentLevel);
+
+                    // Wait for jar to be filled to 1.0L
+                    if (currentLevel >= 1.0) {
+                        System.out.println("[PICKLING] ✅ Jar filled on second click! 0.0L → " + currentLevel + "L");
+                        return true;
+                    }
+
+                    return false;
+                }
+            });
         }
 
-        return !barrelDepleted[0]; // Return false if barrel depleted during filling
+        // Put jar back to inventory and determine success
+        WItem jarInHand = gui.vhand;
+        if (jarInHand != null) {
+            double finalLevel = getBrineLevel(jarInHand);
+            System.out.println("[PICKLING] Final result: " + originalBrineLevel + "L → " + finalLevel + "L (" + interactionResult[0] + (needSecondClick[0] ? " + REFILLED)" : ")"));
+
+            jarInHand.item.wdgmsg("transfer", haven.Coord.z);
+            NUtils.addTask(new ISRemoved(jarInHand.item.wdgid()));
+
+            boolean success = finalLevel >= 1.0;
+            System.out.println("[PICKLING] fillSingleJar result: " + (success ? "SUCCESS" : "FAILED") + " - final level " + finalLevel + "L");
+            return success;
+        }
+        return false;
     }
 
     private void returnJarsToContainers(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {
