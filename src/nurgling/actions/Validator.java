@@ -36,7 +36,7 @@ public class Validator implements Action{
         {
             if(s.subtype!=null)
             {
-                if((NContext.findSpecGlobal(s.name,s.subtype))==null)
+                if((NContext.findSpec(s.name,s.subtype))==null && (NContext.findSpecGlobal(s.name,s.subtype))==null)
                 {
                     return Results.ERROR("Area " + Specialisation.findSpecialisation(s.name).prettyName + " ( " + s.subtype + " ) required, but not found!");
                 }
@@ -44,7 +44,7 @@ public class Validator implements Action{
             else
             {
 
-                if((NContext.findSpecGlobal(s.name))==null)
+                if((NContext.findSpec(s.name))==null && (NContext.findSpecGlobal(s.name))==null)
                 {
                     return Results.ERROR("Area " + Specialisation.findSpecialisation(s.name).prettyName + " required, but not found!");
                 }
@@ -54,13 +54,13 @@ public class Validator implements Action{
         for(NArea.Specialisation s: opt)
         {
             if(s.subtype!=null) {
-                if ((NContext.findSpecGlobal(s.name,s.subtype))==null) {
+                if ((NContext.findSpec(s.name,s.subtype))==null && (NContext.findSpecGlobal(s.name,s.subtype))==null) {
                     NUtils.getGameUI().msg("Optional area " + Specialisation.findSpecialisation(s.name).prettyName + " ( " + s.subtype + " ) not found.");
                 }
             }
             else
             {
-                if((NContext.findSpecGlobal(s.name))==null)
+                if((NContext.findSpec(s.name))==null && (NContext.findSpecGlobal(s.name))==null)
                 {
                     NUtils.getGameUI().msg("Optional area " + Specialisation.findSpecialisation(s.name).prettyName +" not found.");
                 }

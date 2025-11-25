@@ -37,8 +37,9 @@ public class TakeFromBarrel implements Action{
             return Results.ERROR("NO SEEDS");
         }
         if(count==-1) {
+            int oldSize = NUtils.getGameUI().getInventory().getItems(items).size();
             NUtils.takeAllGob(barrel);
-            NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), items, 1));
+            NUtils.getUI().core.addTask(new WaitMoreItems(NUtils.getGameUI().getInventory(), items, oldSize+1));
         }
         else
         {
