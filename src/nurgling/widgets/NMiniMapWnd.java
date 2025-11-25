@@ -27,6 +27,7 @@ public class NMiniMapWnd extends Widget{
     public ACheckBox nightvision;
     public ACheckBox fog;
     public ACheckBox natura;
+    public ACheckBox minesup;
     ACheckBox map_box;
     Widget toggle_panel;
     public StatusWdg swdg;
@@ -63,20 +64,29 @@ public class NMiniMapWnd extends Widget{
         }
 
         toggle_panel = new Widget();
-        ACheckBox first = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/claim", GameUI.kb_claim, "Display personal claims"), 0, 0).changed(a -> switchStatus("cplot", a));
+        java.util.List<Widget> buttons = new java.util.ArrayList<>();
+        
+        ACheckBox first = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/claim", GameUI.kb_claim, "Display personal claims");
+        first.changed(a -> switchStatus("cplot", a));
         first.a = (Boolean) NConfig.get(NConfig.Key.claimol);
         switchStatus("cplot", first.a);
+        buttons.add(first);
 
-        ACheckBox vilol = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vil", GameUI.kb_vil, "Display village claims"), (first.sz.x+UI.scale(3)), 0).changed(a -> switchStatus("vlg", a));
+        ACheckBox vilol = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vil", GameUI.kb_vil, "Display village claims");
+        vilol.changed(a -> switchStatus("vlg", a));
         vilol.a = (Boolean) NConfig.get(NConfig.Key.vilol);
         switchStatus("vlg", vilol.a);
+        buttons.add(vilol);
 
-        int shift = 2;
-        ACheckBox realmol = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/rlm", GameUI.kb_rlm, "Display realms"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("realm", a));
+        ACheckBox realmol = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/rlm", GameUI.kb_rlm, "Display realms");
+        realmol.changed(a -> switchStatus("realm", a));
         realmol.a = (Boolean) NConfig.get(NConfig.Key.realmol);
         switchStatus("realm", realmol.a);
+        buttons.add(realmol);
 
-        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/ico", GameUI.kb_ico, "Icon settings"), (first.sz.x+UI.scale(3))*shift++, 0).state(() -> NMiniMapWnd.this.ui.gui.wndstate(NMiniMapWnd.this.ui.gui.iconwnd)).click(() -> {
+        ACheckBox ico = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/ico", GameUI.kb_ico, "Icon settings");
+        ico.state(() -> NMiniMapWnd.this.ui.gui.wndstate(NMiniMapWnd.this.ui.gui.iconwnd));
+        ico.click(() -> {
             if(NUtils.getGameUI() == null || NUtils.getGameUI().iconconf == null)
                 return;
             if(NUtils.getGameUI().iconwnd == null) {
@@ -87,56 +97,70 @@ public class NMiniMapWnd extends Widget{
                 NUtils.getGameUI().iconwnd = null;
             }
         });
+        buttons.add(ico);
 
-        ACheckBox eye = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vis", kb_eye, "Display vision area"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("eye", a));
+        ACheckBox eye = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vis", kb_eye, "Display vision area");
+        eye.changed(a -> switchStatus("eye", a));
         eye.a = (Boolean)NConfig.get(NConfig.Key.showView);
+        buttons.add(eye);
 
-        ACheckBox grid = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/grid", kb_grid, "Display grid"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("grid", a));
+        ACheckBox grid = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/grid", kb_grid, "Display grid");
+        grid.changed(a -> switchStatus("grid", a));
         grid.a = (Boolean) NConfig.get(NConfig.Key.showGrid);
+        buttons.add(grid);
 
-        ACheckBox minesup = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/minesup", kb_minesup, "Display mining overlay"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("miningol", a));
+        minesup = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/minesup", kb_minesup, "Display mining overlay");
+        minesup.changed(a -> switchStatus("miningol", a));
         minesup.a = (Boolean) NConfig.get(NConfig.Key.miningol);
+        buttons.add(minesup);
 
-        geoloc = toggle_panel.add(new IButton(Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/d"), Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/u"), Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/h"), new Runnable() {
+        geoloc = new IButton(Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/d"), Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/u"), Resource.loadsimg("nurgling/hud/buttons/toggle_panel/geoloc/h"), new Runnable() {
             @Override
             public void run() {
                 NUtils.getUI().core.mappingClient.OpenMap();
             }
-        }), (first.sz.x+UI.scale(3))*shift++, 0);
+        });
+        buttons.add(geoloc);
 
-        natura = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/natura", kb_nature, "Show/hides natural objects"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("natura", !a));
+        natura = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/natura", kb_nature, "Show/hides natural objects");
+        natura.changed(a -> switchStatus("natura", !a));
         natura.a = !(Boolean) NConfig.get(NConfig.Key.hideNature);
+        buttons.add(natura);
 
-        nightvision = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/daynight", kb_night, "Night vision"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("night", a));
+        nightvision = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/daynight", kb_night, "Night vision");
+        nightvision.changed(a -> switchStatus("night", a));
         nightvision.a = (Boolean) NConfig.get(NConfig.Key.nightVision);
+        buttons.add(nightvision);
 
-        fog = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/fog", kb_fog, "Explored area"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> NConfig.set(NConfig.Key.exploredAreaEnable, a));
+        fog = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/fog", kb_fog, "Explored area");
+        fog.changed(a -> NConfig.set(NConfig.Key.exploredAreaEnable, a));
         fog.a = (Boolean) NConfig.get(NConfig.Key.exploredAreaEnable);
+        buttons.add(fog);
 
-//        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
-//        path.a = NConfiguration.getInstance().isPaths;
-
-        // Resource Timers button using night vision icon - placed last in toggle panel
-        toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/timer", kb_resourcetimers, "Resource Timers"), (first.sz.x+UI.scale(3))*shift++, 0).state(() -> {
+        ACheckBox timer = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/timer", kb_resourcetimers, "Resource Timers");
+        timer.state(() -> {
             NGameUI gui = NUtils.getGameUI();
             return gui != null && gui.localizedResourceTimersWindow != null && gui.localizedResourceTimersWindow.visible();
-        }).click(() -> {
+        });
+        timer.click(() -> {
             NGameUI gui = NUtils.getGameUI();
             if (gui != null) {
                 gui.toggleResourceTimerWindow();
             }
         });
+        buttons.add(timer);
 
+        // Layout buttons with wrapping
+        layoutButtons(buttons);
+
+        toggle_panel.pack();
+        add(toggle_panel);
+        
         map_box = add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/map", GameUI.kb_map, "Map"), miniMap.sz.x-(first.sz.x), 0).state(() -> NMiniMapWnd.this.ui.gui.wndstate(NMiniMapWnd.this.ui.gui.mapfile)).click(() -> {
             NUtils.getGameUI().togglewnd(NUtils.getGameUI().mapfile);
             if(NUtils.getGameUI().mapfile != null)
                 Utils.setprefb("wndvis-map", NUtils.getGameUI().mapfile.visible());
         });
-//        ACheckBox naturalobj = toggle_panel.add(new NMenuCheckBox("lbtn-naturalobj", kb_hidenature, "Hide/show natural objects"), (first.sz.x+UI.scale(3))*8, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("hidenature", a));
-//        naturalobj.a = NConfiguration.getInstance().hideNature;
-
-        toggle_panel.pack();
-        add(toggle_panel);
         swdg = add(new StatusWdg(UI.scale(32,32)), UI.scale(4,4));
         pack();
     }
@@ -168,6 +192,15 @@ public class NMiniMapWnd extends Widget{
             }
             case "miningol": {
                 NConfig.set(NConfig.Key.miningol,a);
+                
+                // Sync with QoL panel
+                if (NUtils.getGameUI() != null && NUtils.getGameUI().opts != null && NUtils.getGameUI().opts.nqolwnd instanceof OptWnd.NSettingsPanel) {
+                    OptWnd.NSettingsPanel panel = (OptWnd.NSettingsPanel) NUtils.getGameUI().opts.nqolwnd;
+                    if (panel.settingsWindow != null && panel.settingsWindow.qol != null) {
+                        panel.settingsWindow.qol.syncMiningOverlay();
+                    }
+                }
+                
                 break;
             }
             case "natura": {
@@ -301,11 +334,61 @@ public class NMiniMapWnd extends Widget{
 
     }
 
+    private void layoutButtons(java.util.List<Widget> buttons) {
+        if(buttons.isEmpty()) return;
+        
+        int btnSpacing = UI.scale(3);
+        int maxWidth = miniMap.sz.x;
+        int currentX = 0;
+        int currentY = 0;
+        int rowHeight = 0;
+        
+        for(Widget btn : buttons) {
+            // Get button size
+            int btnWidth = btn.sz.x;
+            int btnHeight = btn.sz.y;
+            
+            // Check if button fits in current row
+            if(currentX > 0 && currentX + btnWidth > maxWidth) {
+                // Move to next row
+                currentX = 0;
+                currentY += rowHeight + btnSpacing;
+                rowHeight = 0;
+            }
+            
+            // Add button to toggle_panel
+            toggle_panel.add(btn, currentX, currentY);
+            
+            // Update position and row height
+            currentX += btnWidth + btnSpacing;
+            rowHeight = Math.max(rowHeight, btnHeight);
+        }
+    }
+    
     @Override
     public void resize(Coord sz) {
         super.resize(sz);
         miniMap.resize(sz.x - UI.scale(15), sz.y );
+        
+        // Re-layout buttons when resizing
+        if(toggle_panel != null) {
+            // Collect all buttons
+            java.util.List<Widget> buttons = new java.util.ArrayList<>();
+            for(Widget w : toggle_panel.children()) {
+                buttons.add(w);
+            }
+            
+            // Remove all buttons from panel
+            for(Widget w : buttons) {
+                w.unlink();
+            }
+            
+            // Re-layout
+            layoutButtons(buttons);
+            toggle_panel.pack();
+        }
+        
         map_box.move(new Coord(miniMap.sz.x-(map_box.sz.x), 0));
-        toggle_panel.move(new Coord(0, miniMap.sz.y-(map_box.sz.y)));
+        toggle_panel.move(new Coord(0, miniMap.sz.y-(toggle_panel.sz.y)));
     }
 }

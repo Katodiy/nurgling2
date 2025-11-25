@@ -318,6 +318,10 @@ public class QoL extends Panel {
         hideNature.a = !getBool(NConfig.Key.hideNature);
     }
 
+    public void syncMiningOverlay() {
+        miningOL.a = getBool(NConfig.Key.miningol);
+    }
+
     @Override
     public void save() {
         boolean oldHideNature = false;
@@ -341,7 +345,16 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.showBB, showBB.a);
         NConfig.set(NConfig.Key.nextshowCSprite, showCSprite.a);
         NConfig.set(NConfig.Key.hideNature, newHideNature);
+        
+        // Save mining overlay and sync with minimap button
+        boolean oldMiningOL = getBool(NConfig.Key.miningol);
         NConfig.set(NConfig.Key.miningol, miningOL.a);
+        if(oldMiningOL != miningOL.a) {
+            // Sync with minimap button
+            if(NUtils.getGameUI() != null && NUtils.getGameUI().mmapw != null && NUtils.getGameUI().mmapw.minesup != null) {
+                NUtils.getGameUI().mmapw.minesup.a = miningOL.a;
+            }
+        }
         NConfig.set(NConfig.Key.tracking, tracking.a);
         NConfig.set(NConfig.Key.crime, crime.a);
         NConfig.set(NConfig.Key.swimming, swimming.a);
