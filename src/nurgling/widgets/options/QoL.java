@@ -403,8 +403,15 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.debug, debug.a);
         NConfig.set(NConfig.Key.printpfmap, printpfmap.a);
         NConfig.set(NConfig.Key.tempmark, tempmark.a);
+        
+        // Save cupboard settings and rebuild cupboards if changed
+        boolean oldShortCupboards = getBool(NConfig.Key.shortCupboards);
+        boolean oldDecalsOnTop = getBool(NConfig.Key.decalsOnTop);
         NConfig.set(NConfig.Key.shortCupboards, shortCupboards.a);
         NConfig.set(NConfig.Key.decalsOnTop, decalsOnTop.a);
+        if(oldShortCupboards != shortCupboards.a || oldDecalsOnTop != decalsOnTop.a) {
+            rebuildCupboards();
+        }
 
         // Save shortWalls and trigger map re-render if changed
         boolean oldShortWalls = getBool(NConfig.Key.shortWalls);
@@ -495,5 +502,36 @@ public class QoL extends Panel {
     }
     private int parseIntOrDefault(String s, int def) {
         try { return Integer.parseInt(s.trim()); } catch(Exception e) { return def; }
+    }
+    
+    /**
+     * Rebuilds all cupboard gobs to apply changed settings (shortCupboards, decalsOnTop).
+     * Recreates the ResDrawable to apply new rendering settings.
+     */
+    private void rebuildCupboards() {
+        if(NUtils.getGameUI() == null || NUtils.getGameUI().ui == null || NUtils.getGameUI().ui.sess == null) {
+            return;
+        }
+        OCache oc = NUtils.getGameUI().ui.sess.glob.oc;
+        synchronized(oc) {
+            for(Gob gob : oc) {
+                if(gob != null && gob.ngob != null && gob.ngob.name != null 
+                    && gob.ngob.name.contains("cupboard")) {
+                    // Update config cache to reflect new settings
+                    gob.ngob.updateConfigCache(true);
+                    
+                    // Recreate drawable to apply new settings using defer for thread safety
+                    Drawable dr = gob.getattr(Drawable.class);
+                    if(dr instanceof ResDrawable) {
+                        ResDrawable rd = (ResDrawable) dr;
+                        Indir<Resource> res = rd.res;
+                        MessageBuf sdt = rd.sdt;
+                        gob.defer(() -> {
+                            gob.setattr(new ResDrawable(gob, res, sdt, false));
+                        });
+                    }
+                }
+            }
+        }
     }
 }
