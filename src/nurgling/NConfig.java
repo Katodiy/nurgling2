@@ -91,7 +91,7 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, cleanupQContainers, autoEquipTravellersSacks, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
+        temsmarktime, exploredAreaEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
         shortCupboards,
         shortWalls,
         fillCompostWithSwill,
@@ -211,7 +211,7 @@ public class NConfig
         conf.put(Key.serverNode, "");
         conf.put(Key.serverPass, "");
         conf.put(Key.serverUser, "");
-        conf.put(Key.fogEnable, false);
+        conf.put(Key.exploredAreaEnable, false);
         conf.put(Key.player_box, false);
         conf.put(Key.player_fov, false);
         conf.put(Key.gridbox, false);
@@ -345,12 +345,12 @@ public class NConfig
     HashMap<Key, Object> conf = new HashMap<>();
     private boolean isUpd = false;
     private boolean isAreasUpd = false;
-    private boolean isFogUpd = false;
+    private boolean isExploredUpd = false;
     private boolean isRoutesUpd = false;
     private boolean isScenariosUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
     public String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
-    public String path_fog = ((HashDirCache) ResCache.global).base + "\\..\\" + "fog.nurgling.json";
+    public String path_explored = ((HashDirCache) ResCache.global).base + "\\..\\" + "explored.nurgling.json";
     public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
     public String path_scenarios = ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
     public String path_cheese_orders = ((HashDirCache) ResCache.global).base + "\\..\\" + "cheese_orders.nurgling.json";
@@ -373,7 +373,7 @@ public class NConfig
         return isScenariosUpd;
     }
 
-    public boolean isFogUpdated() { return isFogUpd; }
+    public boolean isExploredUpdated() { return isExploredUpd; }
 
     public static Object get(Key key)
     {
@@ -423,11 +423,11 @@ public class NConfig
         }
     }
 
-    public static void needFogUpdate()
+    public static void needExploredUpdate()
     {
         if (current != null)
         {
-            current.isFogUpd = true;
+            current.isExploredUpd = true;
         }
     }
 
@@ -707,16 +707,16 @@ public class NConfig
         }
     }
 
-    public void writeFogOfWar(String customPath)
+    public void writeExploredArea(String customPath)
     {
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
             try
             {
-                FileWriter f = new FileWriter(customPath==null?path_fog:customPath,StandardCharsets.UTF_8);
-                ((NCornerMiniMap)NUtils.getGameUI().mmap).fogArea.toJson().write(f);
+                FileWriter f = new FileWriter(customPath==null?path_explored:customPath,StandardCharsets.UTF_8);
+                ((NCornerMiniMap)NUtils.getGameUI().mmap).exploredArea.toJson().write(f);
                 f.close();
-                current.isFogUpd = false;
+                current.isExploredUpd = false;
             }
             catch (IOException e)
             {

@@ -110,8 +110,8 @@ public class NMiniMapWnd extends Widget{
         nightvision = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/daynight", kb_night, "Night vision"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> switchStatus("night", a));
         nightvision.a = (Boolean) NConfig.get(NConfig.Key.nightVision);
 
-        fog = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/fog", kb_fog, "Fog of war"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> NConfig.set(NConfig.Key.fogEnable, a));
-        fog.a = (Boolean) NConfig.get(NConfig.Key.fogEnable);
+        fog = toggle_panel.add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/fog", kb_fog, "Explored area"), (first.sz.x+UI.scale(3))*shift++, 0).changed(a -> NConfig.set(NConfig.Key.exploredAreaEnable, a));
+        fog.a = (Boolean) NConfig.get(NConfig.Key.exploredAreaEnable);
 
 //        ACheckBox path = toggle_panel.add(new NMenuCheckBox("lbtn-path", kb_path, "Display objects paths"), (first.sz.x+UI.scale(3))*6, 0).changed(a -> NUtils.getGameUI().mmapw.miniMap.toggleol("path", a));
 //        path.a = NConfiguration.getInstance().isPaths;

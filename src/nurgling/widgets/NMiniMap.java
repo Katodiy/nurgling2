@@ -7,7 +7,8 @@ import nurgling.NUtils;
 import nurgling.LocalizedResourceTimer;
 import nurgling.NGameUI;
 import nurgling.overlays.map.MinimapClaimRenderer;
-import nurgling.tools.FogArea;
+import nurgling.overlays.map.MinimapExploredAreaRenderer;
+import nurgling.tools.ExploredArea;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -18,10 +19,10 @@ import static haven.MCache.tilesz;
 public class NMiniMap extends MiniMap {
     public static final Coord _sgridsz = new Coord(100, 100);
     public static final Coord VIEW_SZ = UI.scale(_sgridsz.mul(9).div(tilesz.floor()));
-    public static final Color VIEW_FOG_COLOR = new Color(255, 255, 0 , 120);
+    public static final Color VIEW_EXPLORED_COLOR = new Color(255, 255, 0, 144); // Yellow semi-transparent for explored area (120 + 20% of 120 = 144)
     public static final Color VIEW_BG_COLOR = new Color(255, 255, 255, 60);
     public static final Color VIEW_BORDER_COLOR = new Color(0, 0, 0, 128);
-    public final FogArea fogArea = new FogArea(this);
+    public final ExploredArea exploredArea = new ExploredArea(this);
 
     private String currentTerrainName = null;
 
@@ -91,6 +92,9 @@ public class NMiniMap extends MiniMap {
         // Draw tile highlight overlay
         drawTileHighlightOverlay(g);
 
+        // Render explored area overlay (yellow semi-transparent)
+        MinimapExploredAreaRenderer.renderExploredArea(this, g);
+        
         // Render claim overlays (personal, village, realm)
         MinimapClaimRenderer.renderClaims(this, g);
 
@@ -99,16 +103,6 @@ public class NMiniMap extends MiniMap {
         if(currentScale >= 0.25f && (Boolean) NConfig.get(NConfig.Key.showGrid)) {drawgrid(g);}
         // Show view box when zoomed in (scale >= 0.5)
         if(playerSegment && currentScale >= 0.5f && (Boolean)NConfig.get(NConfig.Key.showView)) {drawview(g);}
-
-        if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
-            g.chcolor(VIEW_FOG_COLOR);
-            for (FogArea.Rectangle rect : fogArea.getCoveredAreas()) {
-                if (rect!=null && curloc.seg.id == rect.seg_id && rect.ul != null && rect.br != null) {
-                    g.frect2( p2c(rect.ul.sub(sessloc.tc).mul(tilesz)), p2c(rect.br.sub(sessloc.tc).mul(tilesz)));
-                }
-            }
-            g.chcolor();
-        }
         drawmarkers(g);
         // Show icons on all zoom levels with high detail (data level 0 or 1)
         int dataLevel = getDataLevel();
@@ -300,20 +294,28 @@ public class NMiniMap extends MiniMap {
     }
 
     void drawview(GOut g) {
-        if(ui.gui.map==null)
+        if(ui.gui.map==null || sessloc == null || dloc == null)
             return;
-        int dataLevel = getDataLevel();
-        float scaleFactor = getScaleFactor();
-        float zmult = (float)(1 << dataLevel) / scaleFactor;
-        Coord2d sgridsz = new Coord2d(_sgridsz);
         Gob player = ui.gui.map.player();
         if(player != null) {
-            Coord rc = p2c(player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz));
-            Coord viewsz = VIEW_SZ.div(zmult);
+            // Use same calculation as explored area
+            Coord ul = player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz).floor(tilesz).add(sessloc.tc);
+            Coord unscaledViewSize = _sgridsz.mul(9).div(tilesz.floor());
+            Coord br = ul.add(unscaledViewSize);
+            
+            // Expand BR by 1,1 to match explored area
+            Coord expandedBR = br.add(1, 1);
+            
+            // Convert to screen coordinates
+            Coord hsz = sz.div(2);
+            Coord screenUL = ul.sub(dloc.tc).div(scalef()).add(hsz);
+            Coord screenBR = expandedBR.sub(dloc.tc).div(scalef()).add(hsz);
+            Coord screenSize = screenBR.sub(screenUL);
+            
             g.chcolor(VIEW_BG_COLOR);
-            g.frect(rc, viewsz);
+            g.frect(screenUL, screenSize);
             g.chcolor(VIEW_BORDER_COLOR);
-            g.rect(rc, viewsz);
+            g.rect(screenUL, screenSize);
             g.chcolor();
         }
     }
@@ -377,15 +379,19 @@ public class NMiniMap extends MiniMap {
             }
         }
 
-        if((Boolean) NConfig.get(NConfig.Key.fogEnable)) {
+        if((Boolean) NConfig.get(NConfig.Key.exploredAreaEnable)) {
             if ((sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id))) {
-                fogArea.tick(dt);
+                exploredArea.tick(dt);
                 Gob player = ui.gui.map.player();
                 if (player != null && dloc != null) {
                     Coord ul = player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz).floor(tilesz).add(sessloc.tc);
                     Coord unscaledViewSize = _sgridsz.mul(9).div(tilesz.floor());
                     Coord br = ul.add(unscaledViewSize);
-                    fogArea.addWithoutOverlaps(ul, br, curloc.seg.id);
+                    
+                    // Expand BR by 1,1 to cover rounding gaps
+                    Coord expandedBR = br.add(1, 1);
+                    
+                    exploredArea.updateExploredTiles(ul, expandedBR, curloc.seg.id);
                 }
             }
         }

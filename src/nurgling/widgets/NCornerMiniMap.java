@@ -4,7 +4,7 @@ import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
 import nurgling.tools.Finder;
-import nurgling.tools.FogArea;
+import nurgling.tools.ExploredArea;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

@@ -226,9 +226,9 @@ public class NCore extends Widget
         {
             config.writeAreas(null);
         }
-        if (config.isFogUpdated())
+        if (config.isExploredUpdated())
         {
-            config.writeFogOfWar(null);
+            config.writeExploredArea(null);
         }
         if (config.isRoutesUpdated())
         {
