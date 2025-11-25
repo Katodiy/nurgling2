@@ -820,9 +820,16 @@ public class NMiniMap extends MiniMap {
                     DisplayGrid disp = previousLevelCache.display[previousLevelCache.dgext.ri(c)];
                     if(disp == null) continue;
                     
-                    // Calculate position for previous level grid
-                    Coord ul = UI.scale(c.mul(cmaps)).mul(prevScaleFactor).sub(dloc.tc.div(scalef())).add(hsz);
-                    drawgrid(g, ul, disp);
+                    // Calculate position with exact tile boundaries to avoid gaps
+                    Coord2d ulDouble = new Coord2d(UI.scale(c.mul(cmaps))).mul(prevScaleFactor).sub(new Coord2d(dloc.tc.div(scalef()))).add(new Coord2d(hsz));
+                    Coord2d brDouble = new Coord2d(UI.scale(c.add(1, 1).mul(cmaps))).mul(prevScaleFactor).sub(new Coord2d(dloc.tc.div(scalef()))).add(new Coord2d(hsz));
+                    
+                    // Floor upper-left, ceil bottom-right to ensure tiles overlap slightly rather than gap
+                    Coord ul = new Coord((int)Math.floor(ulDouble.x), (int)Math.floor(ulDouble.y));
+                    Coord br = new Coord((int)Math.ceil(brDouble.x), (int)Math.ceil(brDouble.y));
+                    Coord size = br.sub(ul);
+                    
+                    drawgrid(g, ul, disp, size);
                 }
             }
             // Note: We keep previousLevelCache around for quick access when zooming back
@@ -835,19 +842,41 @@ public class NMiniMap extends MiniMap {
                 if(disp == null)
                     continue;
                     
-                // Calculate position similar to base MiniMap but with scaling
-                Coord ul = UI.scale(c.mul(cmaps)).mul(scaleFactor).sub(dloc.tc.div(scalef())).add(hsz);
-                drawgrid(g, ul, disp);
+                // Calculate position with exact tile boundaries to avoid gaps
+                // Calculate the exact position of this grid corner and the next grid corner
+                Coord2d ulDouble = new Coord2d(UI.scale(c.mul(cmaps))).mul(scaleFactor).sub(new Coord2d(dloc.tc.div(scalef()))).add(new Coord2d(hsz));
+                Coord2d brDouble = new Coord2d(UI.scale(c.add(1, 1).mul(cmaps))).mul(scaleFactor).sub(new Coord2d(dloc.tc.div(scalef()))).add(new Coord2d(hsz));
+                
+                // Floor upper-left, ceil bottom-right to ensure tiles overlap slightly rather than gap
+                Coord ul = new Coord((int)Math.floor(ulDouble.x), (int)Math.floor(ulDouble.y));
+                Coord br = new Coord((int)Math.ceil(brDouble.x), (int)Math.ceil(brDouble.y));
+                Coord size = br.sub(ul);
+                
+                drawgrid(g, ul, disp, size);
             }
         }
     }
 
+    public void drawgrid(GOut g, Coord ul, DisplayGrid disp, Coord size) {
+        try {
+            Tex img = disp.img();
+            if(img != null) {
+                // Use the explicitly calculated size to avoid gaps
+                g.image(img, ul, size);
+            }
+        } catch(Loading l) {
+        }
+    }
+    
+    // Compatibility method for old code paths
     public void drawgrid(GOut g, Coord ul, DisplayGrid disp) {
         try {
             Tex img = disp.img();
             if(img != null) {
                 float scaleFactor = getScaleFactor();
-                Coord imgsz = UI.scale(img.sz()).mul(scaleFactor);
+                // Use double precision and round to avoid gaps between tiles
+                Coord2d imgsizDouble = new Coord2d(UI.scale(img.sz())).mul(scaleFactor);
+                Coord imgsz = new Coord((int)Math.round(imgsizDouble.x), (int)Math.round(imgsizDouble.y));
                 g.image(img, ul, imgsz);
             }
         } catch(Loading l) {
@@ -1503,8 +1532,12 @@ public class NMiniMap extends MiniMap {
                 try {
                     Tex overlayImg = getTileHighlightOverlay(disp);
                     if(overlayImg != null) {
-                        Coord ul = UI.scale(c.mul(cmaps)).mul(scaleFactor).sub(dloc.tc.div(scalef())).add(hsz);
-                        Coord imgsz = UI.scale(overlayImg.sz()).mul(scaleFactor);
+                        // Use floor/ceil to prevent gaps between tiles during fractional scaling
+                        Coord2d ulDouble = new Coord2d(UI.scale(c.mul(cmaps))).mul(scaleFactor).sub(new Coord2d(dloc.tc.div(scalef()))).add(new Coord2d(hsz));
+                        Coord2d brDouble = new Coord2d(UI.scale(c.add(1, 1).mul(cmaps))).mul(scaleFactor).sub(new Coord2d(dloc.tc.div(scalef()))).add(new Coord2d(hsz));
+                        Coord ul = new Coord((int)Math.floor(ulDouble.x), (int)Math.floor(ulDouble.y));
+                        Coord br = new Coord((int)Math.ceil(brDouble.x), (int)Math.ceil(brDouble.y));
+                        Coord imgsz = br.sub(ul);
                         
                         g.chcolor(255, 255, 255, alpha);
                         g.image(overlayImg, ul, imgsz);

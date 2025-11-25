@@ -210,8 +210,11 @@ public class MinimapClaimRenderer {
                     
                     // Convert to screen coordinates using current scale
                     // Same formula as NMiniMap.drawmap(): UI.scale(tile).mul(currentScale).sub(dloc.tc.div(scalef())).add(hsz)
-                    Coord screenUL = UI.scale(tileUL).mul(currentScale).sub(map.dloc.tc.div(map.scalef())).add(hsz);
-                    Coord screenBR = UI.scale(tileBR).mul(currentScale).sub(map.dloc.tc.div(map.scalef())).add(hsz);
+                    // Use floor/ceil to prevent gaps between tiles during fractional scaling
+                    Coord2d screenULDouble = new Coord2d(UI.scale(tileUL)).mul(currentScale).sub(new Coord2d(map.dloc.tc.div(map.scalef()))).add(new Coord2d(hsz));
+                    Coord2d screenBRDouble = new Coord2d(UI.scale(tileBR)).mul(currentScale).sub(new Coord2d(map.dloc.tc.div(map.scalef()))).add(new Coord2d(hsz));
+                    Coord screenUL = new Coord((int)Math.floor(screenULDouble.x), (int)Math.floor(screenULDouble.y));
+                    Coord screenBR = new Coord((int)Math.ceil(screenBRDouble.x), (int)Math.ceil(screenBRDouble.y));
 
                     // Draw filled rectangle
                     g.chcolor(fillColor);
