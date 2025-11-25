@@ -1532,11 +1532,11 @@ public class NMiniMap extends MiniMap {
                 try {
                     Tex overlayImg = getTileHighlightOverlay(disp);
                     if(overlayImg != null) {
-                        // Use floor/ceil to prevent gaps between tiles during fractional scaling
+                        // Use round for consistent alignment without gaps or overlaps
                         Coord2d ulDouble = new Coord2d(UI.scale(c.mul(cmaps))).mul(scaleFactor).sub(new Coord2d(dloc.tc.div(scalef()))).add(new Coord2d(hsz));
                         Coord2d brDouble = new Coord2d(UI.scale(c.add(1, 1).mul(cmaps))).mul(scaleFactor).sub(new Coord2d(dloc.tc.div(scalef()))).add(new Coord2d(hsz));
-                        Coord ul = new Coord((int)Math.floor(ulDouble.x), (int)Math.floor(ulDouble.y));
-                        Coord br = new Coord((int)Math.ceil(brDouble.x), (int)Math.ceil(brDouble.y));
+                        Coord ul = new Coord((int)Math.round(ulDouble.x), (int)Math.round(ulDouble.y));
+                        Coord br = new Coord((int)Math.round(brDouble.x), (int)Math.round(brDouble.y));
                         Coord imgsz = br.sub(ul);
                         
                         g.chcolor(255, 255, 255, alpha);
