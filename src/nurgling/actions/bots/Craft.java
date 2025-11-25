@@ -68,6 +68,10 @@ public class Craft implements Action {
         NContext ncontext = new NContext(gui);
         int size = 0;
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
 
             if (!s.categories) {
                 ncontext.addInItem(s.name, ItemTex.create(ItemTex.save(s.spr)));
@@ -82,7 +86,7 @@ public class Craft implements Action {
             } else {
                 // Auto-select any available ingredient from category
                 selectIngredientFromCategory(s);
-                if (s.ing != null) {
+                if (s.ing != null && !s.ing.isIgnored) {
                     ncontext.addInItem(s.ing.name, ItemTex.create(ItemTex.save(s.spr)));
                     if (!ncontext.isInBarrel(s.ing.name)) {
                         size += s.count;
@@ -121,6 +125,11 @@ public class Craft implements Action {
         AtomicInteger left = new AtomicInteger(count);
 
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
+            
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 if (ncontext.workstation == null) {
@@ -156,6 +165,11 @@ public class Craft implements Action {
         }
 
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
+            
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 new ReturnBarrelFromWorkArea(ncontext, item).run(gui);
@@ -196,7 +210,14 @@ public class Craft implements Action {
         
         for (NMakewindow.Spec s : mwnd.inputs) {
             // Auto-select ingredient from category if not already selected
-            selectIngredientFromCategory(s);
+            if (s.categories && s.ing == null) {
+                selectIngredientFromCategory(s);
+            }
+            
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
             
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
@@ -246,6 +267,11 @@ public class Craft implements Action {
         ArrayList<Window> windows = NUtils.getGameUI().getWindows("Barrel");
         boolean hasEnoughResources = true;
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
+            
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 double val = gui.findBarrelContent(windows, new NAlias(item));
@@ -260,6 +286,11 @@ public class Craft implements Action {
         
         if (!hasEnoughResources) {
             for (NMakewindow.Spec s : mwnd.inputs) {
+                // Skip ignored optional ingredients
+                if (s.ing != null && s.ing.isIgnored) {
+                    continue;
+                }
+                
                 String item = s.ing == null ? s.name : s.ing.name;
                 if (ncontext.isInBarrel(item)) {
                     new ReturnBarrelFromWorkArea(ncontext, item).run(gui);
@@ -372,6 +403,11 @@ public class Craft implements Action {
         ArrayList<Long> ids = new ArrayList<>();
         for (NMakewindow.Spec s : mwnd.inputs)
         {
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
+            
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item))
             {

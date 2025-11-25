@@ -28,6 +28,7 @@ public class NMakewindow extends Widget {
     public static final TexI aready = new TexI(Resource.loadsimg("nurgling/hud/autocraft/ready"));
     public static final TexI anotfound = new TexI(Resource.loadsimg("nurgling/hud/autocraft/notfound"));
     public static final TexI categories = new TexI(Resource.loadsimg("nurgling/hud/autocraft/spec"));
+    public static final TexI ignoreOverlay = new TexI(Resource.loadsimg("nurgling/hud/autocraft/ignore"));
     public static final Text tooll = fnd.render(("Tools:"));
     public static final Coord boff = UI.scale(new Coord(7, 9));
     public String rcpnm;
@@ -94,8 +95,20 @@ public class NMakewindow extends Widget {
         public boolean opt() {
             if(opt == 0) {
                 try {
-                    opt = (ItemInfo.find(Optional.class, info()) != null) ? 1 : 2;
+                    List<ItemInfo> infoList = info();
+                    boolean found = false;
+                    for (ItemInfo inf : infoList) {
+                        String className = inf.getClass().getName();
+                        if (className.endsWith("$Optional")) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    opt = found ? 1 : 2;
                 } catch(Loading l) {
+                    return(false);
+                } catch(Exception e) {
+                    e.printStackTrace();
                     return(false);
                 }
             }
@@ -236,8 +249,9 @@ public class NMakewindow extends Widget {
                 sc = sc.add(10, 0);
             if (s.categories) {
                 if (c.isect(sc, Inventory.sqsz)) {
-                    if (cat == null) {
-                        NUtils.getGameUI().add(cat = new Categories(VSpec.categories.get(s.name), s), sc.add(this.parent.c).add(this.c).add(Inventory.sqsz.x / 2, Inventory.sqsz.y * 2).add(UI.scale(2, 2)));
+                    boolean isOpt = s.opt();
+                if (cat == null) {
+                        NUtils.getGameUI().add(cat = new Categories(VSpec.categories.get(s.name), s, isOpt), sc.add(this.parent.c).add(this.c).add(Inventory.sqsz.x / 2, Inventory.sqsz.y * 2).add(UI.scale(2, 2)));
                         pack();
                         NUtils.getGameUI().craftwnd.lower();
                         cat.raise();
@@ -362,7 +376,11 @@ public class NMakewindow extends Widget {
                             sg.image(categories, Coord.z);
                         else
                         {
-                            if(s.ing.logistic)
+                            if(s.ing.isIgnored)
+                            {
+                                sg.image(ignoreOverlay, Coord.z);
+                            }
+                            else if(s.ing.logistic)
                             {
                                 sg.image(aready, Coord.z);
                             }
@@ -463,7 +481,11 @@ public class NMakewindow extends Widget {
                             sg.image(categories, Coord.z);
                         else
                         {
-                            if(s.ing.logistic)
+                            if(s.ing.isIgnored)
+                            {
+                                sg.image(ignoreOverlay, Coord.z);
+                            }
+                            else if(s.ing.logistic)
                             {
                                 sg.image(aready, Coord.z);
                             }
@@ -751,6 +773,7 @@ public class NMakewindow extends Widget {
         public BufferedImage img;
         public String name;
         boolean logistic;
+        public boolean isIgnored = false;
 
         public Ingredient(JSONObject obj)
         {
@@ -758,15 +781,33 @@ public class NMakewindow extends Widget {
             name = (String) obj.get("name");
         }
 
+        public Ingredient(BufferedImage img, String name, boolean isIgnored)
+        {
+            this.img = img;
+            this.name = name;
+            this.isIgnored = isIgnored;
+        }
+
         void tick(double dt)
         {
-            logistic = (NContext.findIn(name) != null);
+            if (!isIgnored) {
+                logistic = (NContext.findIn(name) != null);
+            }
         }
     }
 
     final static Coord catoff = UI.scale(8,8);
     final static Coord catend = UI.scale(15,15);
     static final int width = 9;
+    
+    private static Coord calculateSize(int totalSize) {
+        return new Coord(
+            Math.max((Inventory.sqsz.x+UI.scale(1))*((totalSize/width>=1)?width:0),
+                    (Inventory.sqsz.x+UI.scale(1))*(totalSize%width))- UI.scale(2),
+            (Inventory.sqsz.x+UI.scale(1))*(totalSize/width+(totalSize%width!=0?1:0))
+        ).add(UI.scale(20,18));
+    }
+    
     public class Categories extends Widget
     {
 
@@ -776,11 +817,25 @@ public class NMakewindow extends Widget {
 
 
         Spec s;
-        public Categories(ArrayList<JSONObject> objs, Spec s)
+        boolean isOptional;
+        
+        public Categories(ArrayList<JSONObject> objs, Spec s, boolean isOptional)
         {
-            super(new Coord(Math.max((Inventory.sqsz.x+UI.scale(1))*((objs.size()/width>=1)?width:0),(Inventory.sqsz.x+UI.scale(1))*(objs.size()%width))- UI.scale(2),(Inventory.sqsz.x+UI.scale(1))*(objs.size()/width+(objs.size()%width!=0?1:0))).add(UI.scale(20,18)));
+            super(calculateSize(objs.size() + (isOptional ? 1 : 0)));
             this.s = s;
+            this.isOptional = isOptional;
             add(fr = new Frame(sz.sub(catend),true));
+            
+            // Add "ignore" option first if this is optional
+            if (isOptional) {
+                try {
+                    BufferedImage ignoreImg = Resource.loadsimg("nurgling/hud/autocraft/ignore");
+                    data.add(new Ingredient(ignoreImg, "Ignore ingredient", true));
+                } catch (Exception e) {
+                    System.out.println("Failed to load ignore resource: " + e.getMessage());
+                }
+            }
+            
             for(JSONObject obj: objs)
             {
                 data.add(new Ingredient(obj));
@@ -801,7 +856,11 @@ public class NMakewindow extends Widget {
             {
                 GOut sg = g.reclip(pos, invsq.sz());
                 sg.image(new TexI(ing.img), Coord.z,UI.scale(32,32));
-                if(ing.logistic)
+                if(ing.isIgnored)
+                {
+                    sg.image(ignoreOverlay, Coord.z,UI.scale(32,32));
+                }
+                else if(ing.logistic)
                 {
                     sg.image(aready, Coord.z,UI.scale(32,32));
                 }
