@@ -87,6 +87,9 @@ public class NMiniMap extends MiniMap {
         if(NUtils.getGameUI()==null)
             return;
         drawmap(g);
+        
+        // Draw tile highlight overlay
+        drawTileHighlightOverlay(g);
 
         // Render claim overlays (personal, village, realm)
         MinimapClaimRenderer.renderClaims(this, g);
@@ -1471,5 +1474,81 @@ public class NMiniMap extends MiniMap {
 
     public Area getDgext() {
         return dgext;
+    }
+
+    /**
+     * Draw tile highlight overlay on top of map tiles
+     */
+    private void drawTileHighlightOverlay(GOut g) {
+        // Draw tile highlight overlay if any tiles are highlighted
+        if(!TileHighlight.getHighlighted().isEmpty() && display != null && dgext != null && dloc != null) {
+            Coord hsz = sz.div(2);
+            int dataLevel = getDataLevel();
+            float scaleFactor = getScaleFactor();
+            
+            // Calculate dynamic alpha for pulsating effect
+            int alpha = (int)(100 + 155 * Math.sin(Math.PI * ((System.currentTimeMillis() % 1000) / 1000.0)));
+            
+            for(Coord c : dgext) {
+                DisplayGrid disp = display[dgext.ri(c)];
+                if(disp == null)
+                    continue;
+                
+                try {
+                    Tex overlayImg = getTileHighlightOverlay(disp);
+                    if(overlayImg != null) {
+                        Coord ul = UI.scale(c.mul(cmaps)).mul(scaleFactor).sub(dloc.tc.div(scalef())).add(hsz);
+                        Coord imgsz = UI.scale(overlayImg.sz()).mul(scaleFactor);
+                        
+                        g.chcolor(255, 255, 255, alpha);
+                        g.image(overlayImg, ul, imgsz);
+                        g.chcolor();
+                    }
+                } catch(Exception e) {
+                    // Ignore overlay rendering errors
+                }
+            }
+        }
+    }
+
+    /**
+     * Cache for tile highlight overlays with version tracking
+     */
+    private static class TileHighlightCache {
+        Tex img;
+        long seq;
+        MapFile.DataGrid grid;
+    }
+    
+    private final java.util.Map<DisplayGrid, TileHighlightCache> tileHighlightCache = new java.util.HashMap<>();
+
+    /**
+     * Get tile highlight overlay for a display grid with caching
+     */
+    private Tex getTileHighlightOverlay(DisplayGrid disp) {
+        TileHighlightCache cache = tileHighlightCache.get(disp);
+        MapFile.DataGrid grid = (MapFile.DataGrid) disp.gref.get();
+        
+        // Check if cache is valid
+        if(cache != null && cache.grid == grid && cache.seq == TileHighlight.seq) {
+            return cache.img;
+        }
+        
+        // Generate new overlay
+        try {
+            java.awt.image.BufferedImage overlayBuf = TileHighlight.olrender(grid);
+            Tex overlayTex = new TexI(overlayBuf);
+            
+            // Update cache
+            cache = new TileHighlightCache();
+            cache.img = overlayTex;
+            cache.seq = TileHighlight.seq;
+            cache.grid = grid;
+            tileHighlightCache.put(disp, cache);
+            
+            return overlayTex;
+        } catch(Exception e) {
+            return null;
+        }
     }
 }
