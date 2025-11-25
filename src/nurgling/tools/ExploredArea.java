@@ -125,60 +125,18 @@ public class ExploredArea {
     }
     
     /**
-     * Get explored mask for a specific grid.
+     * Get explored mask for a specific grid at base level (dataLevel 0).
      * Used by MinimapExploredAreaRenderer for rendering.
      * Very fast - just returns the stored mask.
+     * 
+     * @param gridCoord Grid coordinate at base level
+     * @param segmentId Segment ID
+     * @param dataLevel Must be 0 (aggregation is done by renderer)
+     * @return boolean[] mask or null if no data
      */
     public boolean[] getExploredMaskForGrid(Coord gridCoord, long segmentId, int dataLevel) {
-        // At different data levels, we need to aggregate base-level grids
-        if (dataLevel == 0) {
-            // Direct lookup for finest level
-            GridKey key = new GridKey(segmentId, gridCoord);
-            return gridMasks.get(key);
-        } else {
-            // For coarser levels, aggregate multiple base grids
-            // Each grid at level N represents 2^N x 2^N base grids
-            int gridScale = (1 << dataLevel);
-            Coord baseGridStart = gridCoord.mul(gridScale);
-            
-            boolean[] aggregatedMask = new boolean[MASK_SIZE];
-            
-            // Sample from base grids
-            for (int gy = 0; gy < GRID_SIZE; gy++) {
-                for (int gx = 0; gx < GRID_SIZE; gx++) {
-                    // Map this coarse grid tile to base grid coordinates
-                    int baseTileX = baseGridStart.x * GRID_SIZE + gx * gridScale;
-                    int baseTileY = baseGridStart.y * GRID_SIZE + gy * gridScale;
-                    
-                    Coord baseGridCoord = new Coord(baseTileX / GRID_SIZE, baseTileY / GRID_SIZE);
-                    GridKey baseKey = new GridKey(segmentId, baseGridCoord);
-                    boolean[] baseMask = gridMasks.get(baseKey);
-                    
-                    if (baseMask != null) {
-                        // Check if any tile in the scaled region is explored
-                        int localX = baseTileX % GRID_SIZE;
-                        int localY = baseTileY % GRID_SIZE;
-                        boolean explored = false;
-                        
-                        // Sample a few tiles in the region
-                        for (int sy = 0; sy < gridScale && localY + sy < GRID_SIZE && !explored; sy++) {
-                            for (int sx = 0; sx < gridScale && localX + sx < GRID_SIZE && !explored; sx++) {
-                                int idx = (localX + sx) + (localY + sy) * GRID_SIZE;
-                                if (baseMask[idx]) {
-                                    explored = true;
-                                }
-                            }
-                        }
-                        
-                        if (explored) {
-                            aggregatedMask[gx + gy * GRID_SIZE] = true;
-                        }
-                    }
-                }
-            }
-            
-            return aggregatedMask;
-        }
+        GridKey key = new GridKey(segmentId, gridCoord);
+        return gridMasks.get(key);
     }
     
     /**
