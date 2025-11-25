@@ -17,7 +17,6 @@ import nurgling.areas.NContext;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class GlobalFreshFillingPhase implements Action {
 
