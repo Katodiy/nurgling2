@@ -74,7 +74,8 @@ public class GlobalFreshFillingPhase implements Action {
 
             ArrayList<WItem> jars = inventory.getItems(new NAlias("Pickling Jar"));
             for (WItem jar : jars) {
-                if (getBrineLevel(jar) > 1.5) continue;
+                if (getBrineLevel(jar) > 1.5 && !vegetableConfig.subSpec.contains("Cucumbers")) continue;
+                if (getBrineLevel(jar) > 1.68 && vegetableConfig.subSpec.contains("Cucumbers")) continue;
                 if (fillSingleJar(gui, jar)) {
                     anyJarsFilled = true;
                 }
@@ -128,7 +129,7 @@ public class GlobalFreshFillingPhase implements Action {
             NInventory inventory = gui.getInventory(container.cap);
             if (inventory != null) {
                 for (WItem jar : inventory.getItems(new NAlias("Pickling Jar"))) {
-                    if (getBrineLevel(jar) <= 1.5) {
+                    if (getBrineLevel(jar) <= 1.5 || (getBrineLevel(jar) <= 1.67 && vegetableConfig.subSpec.contains("Cucumbers"))) {
                         NUtils.addTask(new NTask() {
                             @Override
                             public boolean check() {

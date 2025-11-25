@@ -153,47 +153,87 @@ public class GlobalBrinePhase implements Action {
 
         NUtils.activateItem(barrel);
 
-        // Custom wait for brine level change with barrel depletion detection
-        boolean[] barrelDepleted = {false};
+        // Adaptive approach: Wait to see what happens after first click
+        String[] interactionResult = {""};
+        boolean[] needSecondClick = {false};
+
         NUtils.addTask(new NTask() {
             int attempts = 0;
             @Override
             public boolean check() {
                 attempts++;
-                if (attempts > 100) return true; // Safety timeout
+                if (attempts > 100) {
+                    return true;
+                }
 
                 WItem jarInHand = gui.vhand;
                 if (jarInHand == null) return false;
 
-                double currentBrineLevel = getBrineLevel(jarInHand);
+                double currentLevel = getBrineLevel(jarInHand);
 
-                // If brine increased, success
-                if (currentBrineLevel > originalBrineLevel) {
+                // Check if jar was filled (level increased)
+                if (currentLevel > originalBrineLevel) {
+                    interactionResult[0] = "FILLED";
                     return true;
                 }
 
-                // If jar is now empty and barrel is also empty, barrel depleted
-                if (currentBrineLevel == 0.0 && originalBrineLevel > 0.0) {
-                    if (!hasPicklingBrine(barrel)) {
-                        barrelDepleted[0] = true;
-                        return true; // Stop trying, barrel is empty
-                    }
-                    NUtils.activateItem(barrel);
-                    return false; // Continue waiting
+                // Check if jar was emptied (level decreased to 0)
+                if (currentLevel == 0.0 && originalBrineLevel > 0.0) {
+                    interactionResult[0] = "EMPTIED";
+                    needSecondClick[0] = true;
+                    return true;
+                }
+
+                // For empty jars, wait for fill
+                if (originalBrineLevel == 0.0 && currentLevel >= 1.0) {
+                    interactionResult[0] = "FILLED";
+                    return true;
                 }
 
                 return false;
             }
         });
 
-        // Put jar back to inventory
-        WItem jarInHand = gui.vhand;
-        if (jarInHand != null) {
-            jarInHand.item.wdgmsg("transfer", haven.Coord.z);
-            NUtils.addTask(new ISRemoved(jarInHand.item.wdgid()));
+        // If jar was emptied, we need a second click to fill it
+        if (needSecondClick[0]) {
+            NUtils.activateItem(barrel);
+
+            NUtils.addTask(new NTask() {
+                int attempts = 0;
+                @Override
+                public boolean check() {
+                    attempts++;
+                    if (attempts > 100) {
+                        return true;
+                    }
+
+                    WItem jarInHand = gui.vhand;
+                    if (jarInHand == null) return false;
+
+                    double currentLevel = getBrineLevel(jarInHand);
+
+                    // Wait for jar to be filled to 1.0L
+                    if (currentLevel >= 1.0) {
+                        return true;
+                    }
+
+                    return false;
+                }
+            });
         }
 
-        return !barrelDepleted[0]; // Return false if barrel depleted during filling
+        // Put jar back to inventory and determine success
+        WItem jarInHand = gui.vhand;
+        if (jarInHand != null) {
+            double finalLevel = getBrineLevel(jarInHand);
+
+            jarInHand.item.wdgmsg("transfer", haven.Coord.z);
+            NUtils.addTask(new ISRemoved(jarInHand.item.wdgid()));
+
+            boolean success = finalLevel >= 1.0;
+            return success;
+        }
+        return false;
     }
 
     private void returnJarsToContainers(NGameUI gui, nurgling.areas.NArea jarArea) throws InterruptedException {

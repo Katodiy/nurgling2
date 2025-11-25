@@ -87,30 +87,57 @@ public class PicklingBot implements Action {
 
         boolean processed = false;
 
-        // Phase 1: Fill pickling jars with fresh inputs
-        Results fillResult = new GlobalFreshFillingPhase(vegetableConfig).run(gui);
-        if (fillResult.isSuccess) {
-            processed = true;
-        }
+        // Special handling for cucumbers: Extract → Fresh Fill → Brine
+        if (isCucumber(vegetableConfig)) {
+            // Phase 1: Extract all ready cucumbers first
+            Results extractResult = new GlobalExtractionPhase(vegetableConfig).run(gui);
+            if (extractResult.isSuccess) {
+                processed = true;
+            }
 
-        // Phase 2: Re-fill brine
-        Results brineResult = new GlobalBrinePhase(vegetableConfig).run(gui);
-        if (brineResult.isSuccess) {
-            processed = true;
-        }
+            // Phase 2: Fill pickling jars with fresh cucumbers
+            Results fillResult = new GlobalFreshFillingPhase(vegetableConfig).run(gui);
+            if (fillResult.isSuccess) {
+                processed = true;
+            }
 
-        // Phase 3: Extract all ready items
-        Results extractResult = new GlobalExtractionPhase(vegetableConfig).run(gui);
-        if (extractResult.isSuccess) {
-            processed = true;
-        }
+            // Phase 3: Re-fill brine
+            Results brineResult = new GlobalBrinePhase(vegetableConfig).run(gui);
+            if (brineResult.isSuccess) {
+                processed = true;
+            }
+        } else {
+            // Standard workflow for all other vegetables: Fresh Fill → Brine → Extract → Fresh Fill Again
 
-        // Phase 4: Fill pickling jars with fresh inputs again (to maximize utilization)
-        Results refillResult = new GlobalFreshFillingPhase(vegetableConfig).run(gui);
-        if (refillResult.isSuccess) {
-            processed = true;
+            // Phase 1: Fill pickling jars with fresh inputs
+            Results fillResult = new GlobalFreshFillingPhase(vegetableConfig).run(gui);
+            if (fillResult.isSuccess) {
+                processed = true;
+            }
+
+            // Phase 2: Re-fill brine
+            Results brineResult = new GlobalBrinePhase(vegetableConfig).run(gui);
+            if (brineResult.isSuccess) {
+                processed = true;
+            }
+
+            // Phase 3: Extract all ready items
+            Results extractResult = new GlobalExtractionPhase(vegetableConfig).run(gui);
+            if (extractResult.isSuccess) {
+                processed = true;
+            }
+
+            // Phase 4: Fill pickling jars with fresh inputs again (to maximize utilization)
+            Results refillResult = new GlobalFreshFillingPhase(vegetableConfig).run(gui);
+            if (refillResult.isSuccess) {
+                processed = true;
+            }
         }
 
         return processed;
+    }
+
+    private boolean isCucumber(VegetableConfig vegetableConfig) {
+        return "Cucumbers".equals(vegetableConfig.subSpec) || "Cucumber".equals(vegetableConfig.freshAlias);
     }
 }
