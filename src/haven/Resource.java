@@ -1968,11 +1968,9 @@ public class Resource implements Serializable {
     }
 
     public <I, L extends IDLayer<I>> L layer(Class<L> cl, I id) {
-	// Skip certain layers when decals on top is enabled
-	if(nurgling.tools.CustomizeResLayer.needReturnNull(this, cl, id)) {
-	    return null;
-	}
 	used = true;
+	if(nurgling.tools.CustomizeResLayer.needReturnNull(this, cl, id))
+	    return null;
 	for(Layer l : layers) {
 	    if(cl.isInstance(l)) {
 		L ll = cl.cast(l);

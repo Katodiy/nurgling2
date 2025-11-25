@@ -506,7 +506,7 @@ public class QoL extends Panel {
     
     /**
      * Rebuilds all cupboard gobs to apply changed settings (shortCupboards, decalsOnTop).
-     * Recreates the ResDrawable to apply new rendering settings.
+     * Updates NCustomScale attribute and recreates decal overlays.
      */
     private void rebuildCupboards() {
         if(NUtils.getGameUI() == null || NUtils.getGameUI().ui == null || NUtils.getGameUI().ui.sess == null) {
@@ -520,15 +520,33 @@ public class QoL extends Panel {
                     // Update config cache to reflect new settings
                     gob.ngob.updateConfigCache(true);
                     
-                    // Recreate drawable to apply new settings using defer for thread safety
-                    Drawable dr = gob.getattr(Drawable.class);
-                    if(dr instanceof ResDrawable) {
-                        ResDrawable rd = (ResDrawable) dr;
-                        Indir<Resource> res = rd.res;
-                        MessageBuf sdt = rd.sdt;
-                        gob.defer(() -> {
-                            gob.setattr(new ResDrawable(gob, res, sdt, false));
-                        });
+                    // Update NCustomScale for short cupboards
+                    if(shortCupboards.a) {
+                        if(gob.getattr(nurgling.gattrr.NCustomScale.class) == null) {
+                            gob.setattr(new nurgling.gattrr.NCustomScale(gob));
+                        }
+                    } else {
+                        gob.delattr(nurgling.gattrr.NCustomScale.class);
+                    }
+                    
+                    // Recreate parchment-decal overlays so bone offset is re-evaluated
+                    java.util.List<Gob.Overlay> decalsToRecreate = new java.util.ArrayList<>();
+                    for(Gob.Overlay ol : gob.ols) {
+                        if(ol.spr != null && ol.spr.res != null 
+                            && ol.spr.res.name.contains("parchment-decal")
+                            && ol.sm instanceof OCache.OlSprite) {
+                            decalsToRecreate.add(ol);
+                        }
+                    }
+                    
+                    for(Gob.Overlay ol : decalsToRecreate) {
+                        OCache.OlSprite os = (OCache.OlSprite) ol.sm;
+                        int olid = ol.id;
+                        // Remove old overlay
+                        ol.remove(false);
+                        // Create new overlay with same data - bone offset will be re-evaluated
+                        Gob.Overlay newOl = new Gob.Overlay(gob, olid, new OCache.OlSprite(os.res, os.sdt));
+                        gob.addol(newOl, false);
                     }
                 }
             }
