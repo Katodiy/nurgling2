@@ -90,6 +90,10 @@ public class NInventory extends Inventory
         Coord coord = new Coord(0, 0);
         for (coord.y = 0; coord.y < isz.y; coord.y++) {
             for (coord.x = 0; coord.x < isz.x; coord.x++) {
+                // Check bounds to prevent ArrayIndexOutOfBoundsException
+                if (coord.y >= oldinv.length || coord.x >= oldinv[coord.y].length) {
+                    break;
+                }
                 if (oldinv[coord.y][coord.x] == 0 && counter <= MAX_SLOT_NUMBERS) {
                     TexI numTex = cachedSlotNumbers[counter];
                     Coord pos = coord.mul(sqsz).add(sqsz.div(2));

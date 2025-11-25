@@ -130,7 +130,10 @@ public class NConfig
         disableCloudShadows,
         disableDrugEffects,
         simpleInspect,
-        showSpeedometer
+        showSpeedometer,
+        parasiteBotEnabled,
+        leechAction,
+        tickAction
     }
 
     public enum BBDisplayMode
@@ -339,6 +342,11 @@ public class NConfig
         conf.put(Key.disableTileTransitions, false);
         conf.put(Key.disableCloudShadows, false);
         conf.put(Key.disableDrugEffects, true);  // Default to disabled for better performance
+
+        // Parasite bot settings
+        conf.put(Key.parasiteBotEnabled, false);
+        conf.put(Key.leechAction, "ground");  // "ground" or "inventory"
+        conf.put(Key.tickAction, "ground");   // "ground" or "inventory"
     }
 
 

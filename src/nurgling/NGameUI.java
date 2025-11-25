@@ -477,16 +477,21 @@ public class NGameUI extends GameUI
 
     public List<IMeter.Meter> getmeters (String name ) {
         synchronized (meters) {
-            for (Widget meter : new ArrayList<>(meters)) {
-                if (meter instanceof IMeter) {
-                    IMeter im = (IMeter) meter;
-                    Resource res = im.bg.get();
-                    if (res != null) {
-                        if (res.basename().equals(name)) {
-                            return im.meters;
+            try {
+                for (Widget meter : new ArrayList<>(meters)) {
+                    if (meter instanceof IMeter) {
+                        IMeter im = (IMeter) meter;
+                        Resource res = im.bg.get();
+                        if (res != null) {
+                            if (res.basename().equals(name)) {
+                                return im.meters;
+                            }
                         }
                     }
                 }
+            } catch (IndexOutOfBoundsException | ConcurrentModificationException e) {
+                // Handle concurrent modification or index errors gracefully
+                return null;
             }
         }
         return null;
