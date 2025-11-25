@@ -31,6 +31,7 @@ public class QoL extends Panel {
     private CheckBox tempmark;
     private CheckBox shortCupboards;
     private CheckBox shortWalls;
+    private CheckBox decalsOnTop;
     private CheckBox printpfmap;
     private CheckBox uniformBiomeColors;
     private CheckBox showTerrainName;
@@ -119,6 +120,7 @@ public class QoL extends Panel {
         leftPrev = showSpeedometer = leftColumn.add(new CheckBox("Show speedometer"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortCupboards = leftColumn.add(new CheckBox("Short cupboards"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortWalls = leftColumn.add(new CheckBox("Short mine walls"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = decalsOnTop = leftColumn.add(new CheckBox("Cupboard decals on top"), leftPrev.pos("bl").adds(0, 5));
 
         leftPrev = leftColumn.add(new Label("● Login Settings"), leftPrev.pos("bl").adds(0, 15));
         leftPrev = tracking = leftColumn.add(new CheckBox("Enable tracking when login"), leftPrev.pos("bl").adds(0, 5));
@@ -270,6 +272,7 @@ public class QoL extends Panel {
         tempmark.a = getBool(NConfig.Key.tempmark);
         shortCupboards.a = getBool(NConfig.Key.shortCupboards);
         shortWalls.a = getBool(NConfig.Key.shortWalls);
+        decalsOnTop.a = getBool(NConfig.Key.decalsOnTop);
         uniformBiomeColors.a = getBool(NConfig.Key.uniformBiomeColors);
         showTerrainName.a = getBool(NConfig.Key.showTerrainName);
         simpleInspect.a = getBool(NConfig.Key.simpleInspect);
@@ -401,6 +404,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.printpfmap, printpfmap.a);
         NConfig.set(NConfig.Key.tempmark, tempmark.a);
         NConfig.set(NConfig.Key.shortCupboards, shortCupboards.a);
+        NConfig.set(NConfig.Key.decalsOnTop, decalsOnTop.a);
 
         // Save shortWalls and trigger map re-render if changed
         boolean oldShortWalls = getBool(NConfig.Key.shortWalls);
