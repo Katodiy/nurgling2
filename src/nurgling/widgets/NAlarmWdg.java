@@ -53,7 +53,8 @@ public class NAlarmWdg extends Widget
                     }
                     String pose = gob.pose();
                     if (pose != null) {
-                        if (NParser.checkName(pose, new NAlias("dead")))
+                        // Remove dead characters and mannequins from alarm list
+                        if (NParser.checkName(pose, new NAlias("dead", "manneq", "skel")))
                             forRemove.add(id);
                     }
                 }
@@ -71,7 +72,8 @@ public class NAlarmWdg extends Widget
                     Gob gob = Finder.findGob(id);
                     if(gob!=null) {
                         String pose = gob.pose();
-                        if (pose == null || !NParser.checkName(pose, new NAlias("dead"))) {
+                        // Skip mannequins, skeletons, and dead characters
+                        if (pose == null || !NParser.checkName(pose, new NAlias("dead", "manneq", "skel"))) {
                             Buddy buddy = gob.getattr(Buddy.class);
                             
                             // Determine actual group - use cached if buddy is temporarily null

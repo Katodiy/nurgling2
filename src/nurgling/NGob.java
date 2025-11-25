@@ -470,7 +470,19 @@ public class NGob
 
                     if (NParser.checkName(name, BORKA_ALIAS))
                     {
-                        NAlarmWdg.addBorka(parent.id);
+                        // Add delayed check to ensure this is not a mannequin and not the player
+                        delayedOverlayTasks.add(new DelayedOverlayTask(
+                                gob -> gob.pose() != null,
+                                gob ->
+                                {
+                                    String posename = gob.pose();
+                                    // Only add if not mannequin, not skeleton, and not the player
+                                    if (!(posename.contains("manneq") || posename.contains("skel")) && NUtils.playerID() != gob.id)
+                                    {
+                                        NAlarmWdg.addBorka(gob.id);
+                                    }
+                                }
+                        ));
                     }
 
                     if (NParser.checkName(name, PLANTS_ALIAS) && cachedShowCropStage && !cropMarkerAdded)
