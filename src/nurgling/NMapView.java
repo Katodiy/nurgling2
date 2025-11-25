@@ -125,6 +125,7 @@ public class NMapView extends MapView
                             {
                                 if(ai.area!=null && ai.area.gid == gobid) {
                                     NUtils.getGameUI().areas.al.sel = ai;
+                                    NUtils.getGameUI().areas.al.display(ai);
                                     NUtils.getGameUI().areas.select(area.id);
                                     break;
                                 }

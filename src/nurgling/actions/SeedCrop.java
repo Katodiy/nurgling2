@@ -236,6 +236,16 @@ public class SeedCrop implements Action {
     }
 
     private void fetchSeedsFromBarrel(NGameUI gui, ArrayList<Gob> barrels) throws InterruptedException {
+        // Drop off remaining seeds before fetching new ones
+        if (!gui.getInventory().getItems(iseed).isEmpty()) {
+            for (Gob barrel : barrels) {
+                TransferToBarrel tb;
+                (tb = new TransferToBarrel(barrel, iseed)).run(gui);
+                if (!tb.isFull())
+                    break;
+            }
+        }
+
         for (Gob barrel : barrels) {
             if (gui.getInventory().getItems(iseed).size() < 2 && NUtils.barrelHasContent(barrel)) {
                 new TakeFromBarrel(barrel, iseed).run(gui);

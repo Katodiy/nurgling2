@@ -213,6 +213,17 @@ public class PlantTrellis implements Action {
     private void fetchSeedsFromBarrels(NGameUI gui) throws InterruptedException {
         ArrayList<Gob> barrels = Finder.findGobs(seedPutArea, new NAlias("barrel"));
 
+        // Drop off remaining seeds before fetching new ones
+        if (!gui.getInventory().getItems(seedAlias).isEmpty()) {
+            for (Gob barrel : barrels) {
+                TransferToBarrel tb = new TransferToBarrel(barrel, seedAlias);
+                tb.run(gui);
+                if (!tb.isFull()) {
+                    break;
+                }
+            }
+        }
+
         // Try to fetch seeds from each barrel until inventory has seeds
         for (Gob barrel : barrels) {
             // Stop if we have seeds in inventory
