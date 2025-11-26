@@ -68,6 +68,10 @@ public class Craft implements Action {
         NContext ncontext = new NContext(gui);
         int size = 0;
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip optional ingredients that aren't selected OR category ingredients where no ingredient was found
+            if ((s.opt() && s.ing == null) || (s.categories && s.ing == null)) {
+                continue;
+            }
 
             if (!s.categories) {
                 ncontext.addInItem(s.name, ItemTex.create(ItemTex.save(s.spr)));
@@ -87,6 +91,9 @@ public class Craft implements Action {
                     if (!ncontext.isInBarrel(s.ing.name)) {
                         size += s.count;
                     }
+                } else if (s.opt()) {
+                    // Optional category ingredient not found - skip silently
+                    continue;
                 }
             }
         }
@@ -121,6 +128,11 @@ public class Craft implements Action {
         AtomicInteger left = new AtomicInteger(count);
 
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip optional ingredients that aren't selected OR category ingredients where no ingredient was found
+            if ((s.opt() && s.ing == null) || (s.categories && s.ing == null)) {
+                continue;
+            }
+
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 if (ncontext.workstation == null) {
@@ -156,6 +168,11 @@ public class Craft implements Action {
         }
 
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip optional ingredients that aren't selected OR category ingredients where no ingredient was found
+            if ((s.opt() && s.ing == null) || (s.categories && s.ing == null)) {
+                continue;
+            }
+
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 new ReturnBarrelFromWorkArea(ncontext, item).run(gui);
@@ -179,7 +196,7 @@ public class Craft implements Action {
                 return Results.ERROR("Energy too low and failed to restore resources");
             }
         }
-        
+
         int freeSpace = NUtils.getGameUI().getInventory().getFreeSpace();
 
         int for_craft;
@@ -188,16 +205,21 @@ public class Craft implements Action {
         } else {
             for_craft = Math.min(left.get(), freeSpace / size);
         }
-        
+
 
         if (for_craft <= 0) {
             return Results.ERROR("Not enough inventory space");
         }
-        
+
         for (NMakewindow.Spec s : mwnd.inputs) {
             // Auto-select ingredient from category if not already selected
             selectIngredientFromCategory(s);
-            
+
+            // Skip optional ingredients that aren't selected OR category ingredients where no ingredient was found
+            if ((s.opt() && s.ing == null) || (s.categories && s.ing == null)) {
+                continue;
+            }
+
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 if(ncontext.workstation == null) {
@@ -209,6 +231,11 @@ public class Craft implements Action {
                 }
             } else {
                 if (!new TakeItems2(ncontext, s.ing == null ? s.name : s.ing.name, s.count * for_craft).run(gui).IsSuccess()) {
+                    if (s.opt()) {
+                        // For optional ingredients, just log a warning and continue
+                        NUtils.getGameUI().msg("Optional ingredient not found: " + item + " (continuing without it)");
+                        continue;
+                    }
                     return Results.ERROR("Failed to take items: " + item);
                 }
             }
@@ -246,12 +273,22 @@ public class Craft implements Action {
         ArrayList<Window> windows = NUtils.getGameUI().getWindows("Barrel");
         boolean hasEnoughResources = true;
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip optional ingredients that aren't selected OR category ingredients where no ingredient was found
+            if ((s.opt() && s.ing == null) || (s.categories && s.ing == null)) {
+                continue;
+            }
+
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 double val = gui.findBarrelContent(windows, new NAlias(item));
                 double valInMilligrams = val * 100;
                 if(valInMilligrams < s.count)
                 {
+                    if (s.opt()) {
+                        // For optional ingredients in barrels, log warning and continue
+                        NUtils.getGameUI().msg("Optional ingredient insufficient in barrel: " + item + " (continuing without it)");
+                        continue;
+                    }
                     hasEnoughResources = false;
                     break;
                 }
@@ -260,6 +297,11 @@ public class Craft implements Action {
         
         if (!hasEnoughResources) {
             for (NMakewindow.Spec s : mwnd.inputs) {
+                // Skip optional ingredients that aren't selected
+                if (s.opt() && s.ing == null && !s.categories) {
+                    continue;
+                }
+
                 String item = s.ing == null ? s.name : s.ing.name;
                 if (ncontext.isInBarrel(item)) {
                     new ReturnBarrelFromWorkArea(ncontext, item).run(gui);
@@ -372,6 +414,11 @@ public class Craft implements Action {
         ArrayList<Long> ids = new ArrayList<>();
         for (NMakewindow.Spec s : mwnd.inputs)
         {
+            // Skip optional ingredients that aren't selected OR category ingredients where no ingredient was found
+            if ((s.opt() && s.ing == null) || (s.categories && s.ing == null)) {
+                continue;
+            }
+
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item))
             {
