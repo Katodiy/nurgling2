@@ -68,6 +68,7 @@ public class NMiniMap extends MiniMap {
         public Coord2d rc;
         public Coord gc;
         public TexI icon;
+        public Color buddyColor;
 
         public MiniMap.Location loc;
 
@@ -80,6 +81,19 @@ public class NMiniMap extends MiniMap {
             this.gc = gc;
             this.icon = new TexI(icon);
             this.loc = loc;
+            this.buddyColor = null;
+        }
+        
+        public TempMark(String name, MiniMap.Location loc, long id, Coord2d rc, Coord gc, BufferedImage icon, Color buddyColor) {
+            start = System.currentTimeMillis();
+            lastupdate = start;
+            this.name = name;
+            this.id = id;
+            this.rc = rc;
+            this.gc = gc;
+            this.icon = new TexI(icon);
+            this.loc = loc;
+            this.buddyColor = buddyColor;
         }
     }
 
@@ -698,7 +712,12 @@ public class NMiniMap extends MiniMap {
 
                                 int dsz = Math.max(cm.icon.sz().y, cm.icon.sz().x);
                                 if (!gc.isect(rc, viewsz)) {
+                                    // Apply buddy color if available
+                                    if(cm.buddyColor != null) {
+                                        g.chcolor(cm.buddyColor.getRed(), cm.buddyColor.getGreen(), cm.buddyColor.getBlue(), 255);
+                                    }
                                     g.aimage(cm.icon, gc, 0.5, 0.5, UI.scale(18 * cm.icon.sz().x / dsz, 18 * cm.icon.sz().y / dsz));
+                                    g.chcolor();
                                 }
                             }
                         }

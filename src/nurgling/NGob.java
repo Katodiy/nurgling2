@@ -12,6 +12,7 @@ import haven.res.lib.tree.TreeScale;
 import haven.res.lib.vmat.Mapping;
 import haven.res.lib.vmat.Materials;
 import haven.res.ui.obj.buddy.Buddy;
+import haven.BuddyWnd;
 import monitoring.NGlobalSearchItems;
 import nurgling.gattrr.NCustomScale;
 import nurgling.overlays.*;
@@ -263,12 +264,18 @@ public class NGob
                         BufferedImage iconres = setTex((GobIcon) a);
                         if (iconres != null && NUtils.getGameUI().mmap.sessloc != null)
                         {
+                            // Get buddy color if available
+                            Color buddyColor = null;
+                            haven.res.ui.obj.buddy.Buddy buddy = gob.getattr(haven.res.ui.obj.buddy.Buddy.class);
+                            if(buddy != null && buddy.buddy() != null && buddy.buddy().group >= 0 && buddy.buddy().group < BuddyWnd.gc.length) {
+                                buddyColor = BuddyWnd.gc[buddy.buddy().group];
+                            }
 
                             synchronized (((NMapView) NUtils.getGameUI().map).tempMarkList)
                             {
                                 if (((NMapView) NUtils.getGameUI().map).tempMarkList.stream().noneMatch(m -> m.id == parent.id))
                                 {
-                                    ((NMapView) NUtils.getGameUI().map).tempMarkList.add(new NMiniMap.TempMark(name, NUtils.getGameUI().mmap.sessloc, parent.id, parent.rc, parent.rc.floor(tilesz).add(NUtils.getGameUI().mmap.sessloc.tc), iconres));
+                                    ((NMapView) NUtils.getGameUI().map).tempMarkList.add(new NMiniMap.TempMark(name, NUtils.getGameUI().mmap.sessloc, parent.id, parent.rc, parent.rc.floor(tilesz).add(NUtils.getGameUI().mmap.sessloc.tc), iconres, buddyColor));
                                 }
                             }
                         }

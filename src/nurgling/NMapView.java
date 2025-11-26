@@ -8,6 +8,7 @@ import static haven.MCache.tilesz;
 
 import haven.Composite;
 import haven.res.ui.gobcp.Gobcopy;
+import haven.BuddyWnd;
 import nurgling.actions.QuickActionBot;
 import nurgling.actions.bots.ScenarioRunner;
 import nurgling.areas.*;
@@ -1371,6 +1372,14 @@ public class NMapView extends MapView
                         cm.lastupdate = cm.start;
                         cm.rc = g.rc;
                         cm.gc = g.rc.floor(tilesz).add(ui.gui.mmap.sessloc.tc);
+                        
+                        // Update buddy color if it has changed
+                        haven.res.ui.obj.buddy.Buddy buddy = g.getattr(haven.res.ui.obj.buddy.Buddy.class);
+                        if(buddy != null && buddy.buddy() != null && buddy.buddy().group >= 0 && buddy.buddy().group < BuddyWnd.gc.length) {
+                            cm.buddyColor = BuddyWnd.gc[buddy.buddy().group];
+                        } else {
+                            cm.buddyColor = null;
+                        }
                     }
                 }
             }
