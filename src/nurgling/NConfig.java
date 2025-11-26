@@ -291,6 +291,7 @@ public class NConfig
         dragprop.add(new NDragProp(new Coord(156, -4), false, true, "Calendar"));
         dragprop.add(new NDragProp(new Coord(428, -4), false, true, "bufflist"));
         dragprop.add(new NDragProp(new Coord(60, 244), false, true, "party"));
+        dragprop.add(new NDragProp(new Coord(300, 550), false, true, "BeltProxy"));
         conf.put(Key.dragprop, dragprop);
 
         ArrayList<NAreaRad> arearadprop = new ArrayList<>();
@@ -344,7 +345,7 @@ public class NConfig
         conf.put(Key.disableTileTransitions, false);
         conf.put(Key.disableCloudShadows, false);
         conf.put(Key.disableDrugEffects, true);  // Default to disabled for better performance
-
+        
         // Parasite bot settings
         conf.put(Key.parasiteBotEnabled, false);
         conf.put(Key.leechAction, "ground");  // "ground" or "inventory"

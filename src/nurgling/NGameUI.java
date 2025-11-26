@@ -44,6 +44,7 @@ public class NGameUI extends GameUI
     public RouteSpecialization routespec;
     public BotsInterruptWidget biw;
     public NEquipProxy nep;
+    public NBeltProxy nbp;
     private SwimmingStatusBuff swimmingBuff = null;
     private TrackingStatusBuff trackingBuff = null;
     private CrimeStatusBuff crimeBuff = null;
@@ -102,6 +103,7 @@ public class NGameUI extends GameUI
         itemsForSearch = new NSearchItem();
         add(new NDraggableWidget(alarmWdg = new NAlarmWdg(),"alarm",NStyle.alarm[0].sz().add(NDraggableWidget.delta)));
         add(new NDraggableWidget(nep = new NEquipProxy(NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT, NEquipory.Slots.BELT), "EquipProxy",  UI.scale(138, 55)));
+        add(new NDraggableWidget(nbp = new NBeltProxy(), "BeltProxy", UI.scale(825, 55)));
         for(int i = 0; i<(Integer)NConfig.get(NConfig.Key.numbelts); i++)
         {
             String name = "belt" + String.valueOf(i);
