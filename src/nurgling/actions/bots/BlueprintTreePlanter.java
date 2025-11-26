@@ -95,7 +95,6 @@ public class BlueprintTreePlanter implements Action {
                     
                     if (state == nurgling.widgets.bots.BlueprintTreePlanter.State.CLEAR_BLUEPRINT) {
                         clearBlueprint();
-                        NUtils.getUI().msg("Blueprint cleared.");
                         continue;
                     }
                     
@@ -138,7 +137,6 @@ public class BlueprintTreePlanter implements Action {
             
             blueprintPlob = new BlueprintPlob(gui.map, blueprintData.trees, blueprintData.width, blueprintData.height);
             
-            NUtils.getUI().msg("Move blueprint and LEFT CLICK to place (" + blueprintData.trees.size() + " trees, " + blueprintData.width + "x" + blueprintData.height + " area)");
             
             WaitBlueprintPlacement waitPlacement = new WaitBlueprintPlacement(blueprintPlob);
             NUtils.getUI().core.addTask(waitPlacement);
@@ -177,7 +175,6 @@ public class BlueprintTreePlanter implements Action {
                 NBlueprintPlanterProp.set(prop);
             }
             
-            NUtils.getUI().msg("Blueprint placed: " + plantPositions.size() + " trees. Click 'Start Planting' to begin.");
             return Results.SUCCESS();
             
         } catch (InterruptedException e) {
@@ -296,7 +293,6 @@ public class BlueprintTreePlanter implements Action {
                 plantPositions.add(new PlantPosition(treeWorldPos, treeType));
             }
             
-            NUtils.getUI().msg("Blueprint placed from saved position.");
             return Results.SUCCESS();
             
         } catch (Exception e) {
