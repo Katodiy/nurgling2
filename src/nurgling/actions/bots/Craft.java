@@ -79,7 +79,7 @@ public class Craft implements Action {
                     size += s.count;
                 }
             } else if (s.ing != null) {
-                ncontext.addInItem(s.ing.name, ItemTex.create(ItemTex.save(s.spr)));
+                ncontext.addInItem(s.ing.name, s.ing.img);
                 if (!ncontext.isInBarrel(s.ing.name)) {
                     size += s.count;
                 }
@@ -87,7 +87,7 @@ public class Craft implements Action {
                 // Auto-select any available ingredient from category
                 selectIngredientFromCategory(s);
                 if (s.ing != null && !s.ing.isIgnored) {
-                    ncontext.addInItem(s.ing.name, ItemTex.create(ItemTex.save(s.spr)));
+                    ncontext.addInItem(s.ing.name, s.ing.img);
                     if (!ncontext.isInBarrel(s.ing.name)) {
                         size += s.count;
                     }
@@ -105,7 +105,7 @@ public class Craft implements Action {
                 } else if (s.ing != null) {
                     if(!ncontext.isInBarrel(s.ing.name))
                         size += s.count;
-                    ncontext.addOutItem(s.ing.name, ItemTex.create(ItemTex.save(s.spr)), 1);
+                    ncontext.addOutItem(s.ing.name, s.ing.img, 1);
                 }
             }
         }
