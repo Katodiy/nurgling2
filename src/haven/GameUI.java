@@ -297,6 +297,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	opts.hide();
 	zerg = add(new NZergwnd(), Utils.getprefc("wndc-zerg", UI.scale(new Coord(187, 50))));
 	zerg.hide();
+    }
+    
+    private void initHeavyWidgets() {
+	// Heavy custom widgets - created in attached() to avoid multiple initialization
 	add(areas = new NAreasWidget(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
 	areas.hide();
 	add(cookBook = new NCookBook(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
@@ -312,6 +316,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     protected void attached() {
 	iconconf = loadiconconf();
 	super.attached();
+	initHeavyWidgets();
     }
 
     public static final KeyBinding kb_srch = KeyBinding.get("scm-srch", KeyMatch.forchar('Z', KeyMatch.C));

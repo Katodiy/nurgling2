@@ -101,6 +101,10 @@ public class NGameUI extends GameUI
         }
 
         itemsForSearch = new NSearchItem();
+        add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
+    }
+    
+    private void initHeavyWidgets() {
         add(new NDraggableWidget(alarmWdg = new NAlarmWdg(),"alarm",NStyle.alarm[0].sz().add(NDraggableWidget.delta)));
         add(new NDraggableWidget(nep = new NEquipProxy(NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT, NEquipory.Slots.BELT), "EquipProxy",  UI.scale(138, 55)));
         add(new NDraggableWidget(nbp = new NBeltProxy(), "BeltProxy", UI.scale(825, 55)));
@@ -111,7 +115,7 @@ public class NGameUI extends GameUI
             belt.setFlipped(true);
         }
 
-        add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
+
         add(new NDraggableWidget(questinfo = new NQuestInfo(), "quests", questinfo.sz.add(NDraggableWidget.delta)));
         add(new NDraggableWidget(recentActionsPanel = new NRecentActionsPanel(), "recentactions", recentActionsPanel.sz.add(NDraggableWidget.delta)));
         add(guiinfo = new NGUIInfo(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
@@ -119,24 +123,28 @@ public class NGameUI extends GameUI
             guiinfo.hide();
         add(nean = new NEditAreaName());
         nean.hide();
+        add(biw = new BotsInterruptWidget());
+        waypointMovementService = new WaypointMovementService(this);
+        fishLocationService = new FishLocationService(this);
+        treeLocationService = new TreeLocationService(this);
+        // These widgets depend on areas which is created in GameUI constructor
         add(nefn = new NEditFolderName(areas));
         nefn.hide();
         add(spec = new Specialisation());
         spec.hide();
         add(routespec = new RouteSpecialization());
         routespec.hide();
-        add(biw = new BotsInterruptWidget());
+        
+        // Heavy service widgets
         add(localizedResourceTimerDialog = new LocalizedResourceTimerDialog(), new Coord(200, 200));
         localizedResourceTimerService = new LocalizedResourceTimerService(this);
         add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
-        waypointMovementService = new WaypointMovementService(this);
-        fishLocationService = new FishLocationService(this);
-        treeLocationService = new TreeLocationService(this);
     }
     
     @Override
     protected void attached() {
         super.attached();
+        initHeavyWidgets();
         // Apply local ring settings to iconconf after it's loaded (only once)
         if (!ringSettingsApplied) {
             applyLocalRingSettings();
@@ -468,13 +476,20 @@ public class NGameUI extends GameUI
     public void resize(Coord sz)
     {
         super.resize(sz);
-        guiinfo.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
-        areas.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
-        cookBook.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
-        nean.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
-        spec.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
-        biw.move(new Coord(sz.x / 2 - biw.sz.x / 2, sz.y / 2 - biw.sz.y / 2));
-        blueprintWidget.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
+        if(guiinfo != null)
+            guiinfo.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
+        if(areas != null)
+            areas.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
+        if(cookBook != null)
+            cookBook.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
+        if(nean != null)
+            nean.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
+        if(spec != null)
+            spec.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
+        if(biw != null)
+            biw.move(new Coord(sz.x / 2 - biw.sz.x / 2, sz.y / 2 - biw.sz.y / 2));
+        if(blueprintWidget != null)
+            blueprintWidget.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
     }
 
     public List<IMeter.Meter> getmeters (String name ) {
