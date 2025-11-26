@@ -75,10 +75,12 @@ public class NGameUI extends GameUI
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
-        
-        // Initialize local ring config
-        iconRingConfig = new IconRingConfig(genus);
 
+        add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
+    }
+    
+    private void initHeavyWidgets() {
+        itemsForSearch = new NSearchItem();
         // Replace Cal with NCal to keep calendar customizations in nurgling package
         Widget oldCalendarWidget = null;
         for(Widget wdg : children()) {
@@ -99,12 +101,8 @@ public class NGameUI extends GameUI
             calendar = new NCal();
             add(new NDraggableWidget(calendar, "Calendar", UI.scale(400,90)), calPos);
         }
-
-        itemsForSearch = new NSearchItem();
-        add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
-    }
-    
-    private void initHeavyWidgets() {
+        // Initialize local ring config
+        iconRingConfig = new IconRingConfig(genus);
         add(new NDraggableWidget(alarmWdg = new NAlarmWdg(),"alarm",NStyle.alarm[0].sz().add(NDraggableWidget.delta)));
         add(new NDraggableWidget(nep = new NEquipProxy(NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT, NEquipory.Slots.BELT), "EquipProxy",  UI.scale(138, 55)));
         add(new NDraggableWidget(nbp = new NBeltProxy(), "BeltProxy", UI.scale(825, 55)));
