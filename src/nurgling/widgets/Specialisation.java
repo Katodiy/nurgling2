@@ -86,7 +86,9 @@ public class Specialisation extends Window
         silkwormFeeding,
         unbox,
         picklingJars,
-        smokedlog;
+        smokedlog,
+        waterForTrees,
+        soilForTrees;
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -163,6 +165,10 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.picklingJars.toString(),"Pickling Jars",Resource.loadsimg("nurgling/categories/picklingjar")));
         // Logs for smoking
         specialisation.add(new SpecialisationItem(SpecName.smokedlog.toString(),"Logs for smoking",Resource.loadsimg("nurgling/categories/smokelog")));
+        
+        // Tree planting resources
+        specialisation.add(new SpecialisationItem(SpecName.waterForTrees.toString(),"Water for Trees",Resource.loadsimg("nurgling/categories/twater")));
+        specialisation.add(new SpecialisationItem(SpecName.soilForTrees.toString(),"Soil for Trees",Resource.loadsimg("nurgling/categories/tsoil")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override

@@ -354,29 +354,75 @@ public class BlueprintTreePlanter implements Action {
             
             NUtils.getUI().msg("Found " + herbalistTables.size() + " herbalist tables");
             
-            // Prepare seedlings on tables
-            int seedlingsPrepared = 0;
-            for (PlantPosition pos : unplantedPositions) {
-                // Check if there's space on any table
-                Container availableTable = findTableWithSpace(gui, herbalistTables);
-                if (availableTable == null) {
-                    NUtils.getUI().msg("No more space on herbalist tables. Prepared " + seedlingsPrepared + " seedlings.");
-                    break;
+            // Phase 1: Collect and plant ready pots
+            NUtils.getUI().msg("Collecting and planting ready seedlings...");
+            
+            int treesPlanted = 0;
+            List<PlantPosition> remainingPositions = new ArrayList<>(unplantedPositions);
+            
+            // Try to collect and plant pots for each position
+            for (PlantPosition pos : new ArrayList<>(remainingPositions)) {
+                // Check if pot for this tree type is ready on any table
+                boolean potCollected = false;
+                for (Container table : herbalistTables) {
+                    Results collectResult = collectReadyPotFromTable(gui, pos.treeType, table);
+                    if (collectResult.IsSuccess()) {
+                        potCollected = true;
+                        break;
+                    }
                 }
                 
-                Results seedlingResult = prepareSeedling(gui, context, pos.treeType, availableTable);
-                if (seedlingResult.IsSuccess()) {
-                    seedlingsPrepared++;
-                    if (seedlingsPrepared % 5 == 0) {
-                        NUtils.getUI().msg("Prepared " + seedlingsPrepared + "/" + unplantedPositions.size() + " seedlings...");
+                if (potCollected) {
+                    // Plant the tree (pot is now in inventory)
+                    Results plantResult = plantTreeFromPot(gui, pos.worldPos, pos.treeType);
+                    if (plantResult.IsSuccess()) {
+                        treesPlanted++;
+                        remainingPositions.remove(pos);
+                        
+                        // Drop empty pot after planting
+                        new FreeInventory2(context).run(gui);
+                        
+                        if (treesPlanted % 5 == 0) {
+                            NUtils.getUI().msg("Planted " + treesPlanted + " trees...");
+                        }
                     }
-                } else {
-                    NUtils.getUI().msg("Failed to prepare seedling: ");
-                    break;
                 }
             }
             
-            NUtils.getUI().msg("Seedling preparation completed! Prepared " + seedlingsPrepared + " seedlings.");
+            if (treesPlanted > 0) {
+                NUtils.getUI().msg("Planted " + treesPlanted + " trees from ready pots.");
+            }
+            
+            // Phase 2: Prepare seedlings for remaining positions
+            if (!remainingPositions.isEmpty()) {
+                NUtils.getUI().msg("Preparing seedlings for remaining " + remainingPositions.size() + " trees...");
+                
+                int seedlingsPrepared = 0;
+                for (PlantPosition pos : remainingPositions) {
+                    // Check if there's space on any table
+                    Container availableTable = findTableWithSpace(gui, herbalistTables);
+                    if (availableTable == null) {
+                        NUtils.getUI().msg("No more space on herbalist tables. Prepared " + seedlingsPrepared + " seedlings.");
+                        break;
+                    }
+                    
+                    Results seedlingResult = prepareSeedling(gui, context, pos.treeType, availableTable);
+                    if (seedlingResult.IsSuccess()) {
+                        seedlingsPrepared++;
+                        if (seedlingsPrepared % 5 == 0) {
+                            NUtils.getUI().msg("Prepared " + seedlingsPrepared + "/" + remainingPositions.size() + " seedlings...");
+                        }
+                    } else {
+                        NUtils.getUI().msg("Failed to prepare seedling");
+                        break;
+                    }
+                }
+                
+                NUtils.getUI().msg("Seedling preparation completed! Prepared " + seedlingsPrepared + " seedlings.");
+                NUtils.getUI().msg("These seedlings will mature over time. Re-run the bot later to plant them.");
+            }
+            
+            NUtils.getUI().msg("Job completed! Planted " + treesPlanted + " trees total.");
             return Results.SUCCESS();
             
         } catch (InterruptedException e) {
@@ -417,29 +463,450 @@ public class BlueprintTreePlanter implements Action {
         
         NUtils.getUI().msg("Getting seed: " + seedName + " for tree: " + treePath);
         
-        // Check if seed already exists in inventory
-        ArrayList<WItem> existingSeeds = gui.getInventory().getItems(new NAlias(seedName));
+        // Check if high quality seed already exists in inventory (exact match)
+        ArrayList<WItem> existingSeeds = gui.getInventory().getItems(new NAlias(seedName), NInventory.QualityType.High);
         if (!existingSeeds.isEmpty()) {
-            NUtils.getUI().msg("Seed already in inventory: " + seedName);
-            return Results.SUCCESS();
+            // Verify exact name match (not substring)
+            for (WItem item : existingSeeds) {
+                if (item.item instanceof NGItem) {
+                    String itemName = ((NGItem) item.item).name();
+                    if (itemName.equals(seedName)) {
+                        NUtils.getUI().msg("High quality seed already in inventory: " + seedName);
+                        return Results.SUCCESS();
+                    }
+                }
+            }
         }
         
         // Add seed to context so TakeItems2 knows where to look for it
         context.addInItem(seedName, null);
         
-        // Take 1 seed from logistics
-        Results takeResult = new TakeItems2(context, seedName, 1).run(gui);
+        // Take 1 high quality seed from logistics
+        Results takeResult = new TakeItems2(context, seedName, 1, NInventory.QualityType.High).run(gui);
         if (!takeResult.IsSuccess()) {
             return Results.ERROR("Failed to get seed: " + seedName);
         }
         
-        // Check that we actually have the seed
-        ArrayList<WItem> seeds = gui.getInventory().getItems(new NAlias(seedName));
-        if (seeds.isEmpty()) {
-            return Results.ERROR("Seed not found in inventory after taking: " + seedName);
+        // Check that we actually have the seed with exact name match
+        ArrayList<WItem> seeds = gui.getInventory().getItems(new NAlias(seedName), NInventory.QualityType.High);
+        boolean foundExactMatch = false;
+        for (WItem item : seeds) {
+            if (item.item instanceof NGItem) {
+                String itemName = ((NGItem) item.item).name();
+                if (itemName.equals(seedName)) {
+                    foundExactMatch = true;
+                    break;
+                }
+            }
         }
         
-        NUtils.getUI().msg("Successfully got seed: " + seedName);
+        if (!foundExactMatch) {
+            return Results.ERROR("Exact seed not found in inventory after taking: " + seedName);
+        }
+        
+        NUtils.getUI().msg("Successfully got high quality seed: " + seedName);
+        return Results.SUCCESS();
+    }
+    
+    private Results getGardenPot(NGameUI gui, NContext context) throws InterruptedException {
+        String potName = "Treeplanter's Pot";
+        
+        NUtils.getUI().msg("Getting garden pot...");
+        
+        // Check if high quality pot already exists in inventory
+        ArrayList<WItem> existingPots = gui.getInventory().getItems(new NAlias(potName), NInventory.QualityType.High);
+        if (!existingPots.isEmpty()) {
+            NUtils.getUI().msg("High quality treeplanter's pot already in inventory");
+            return Results.SUCCESS();
+        }
+        
+        // Add pot to context so TakeItems2 knows where to look for it
+        context.addInItem(potName, null);
+        
+        // Take 1 high quality pot from logistics
+        Results takeResult = new TakeItems2(context, potName, 1, NInventory.QualityType.High).run(gui);
+        if (!takeResult.IsSuccess()) {
+            return Results.ERROR("Failed to get treeplanter's pot");
+        }
+        
+        // Check that we actually have the pot
+        ArrayList<WItem> pots = gui.getInventory().getItems(new NAlias(potName), NInventory.QualityType.High);
+        if (pots.isEmpty()) {
+            return Results.ERROR("High quality treeplanter's pot not found in inventory after taking");
+        }
+        
+        NUtils.getUI().msg("Successfully got high quality treeplanter's pot");
+        return Results.SUCCESS();
+    }
+    
+    private Results getSoilFromZone(NGameUI gui, NContext context, int amount) throws InterruptedException {
+        // Check soil area
+        NArea soilArea = context.getSpecArea(Specialisation.SpecName.soilForTrees);
+        if (soilArea == null) {
+            return Results.ERROR("No soil zone found. Please configure 'Soil for Trees' specialization.");
+        }
+        
+        // Find soil piles in the area
+        ArrayList<Gob> soilPiles = Finder.findGobs(soilArea, new NAlias("gfx/terobjs/stockpile-soil"));
+        if (soilPiles.isEmpty()) {
+            return Results.ERROR("No soil piles found in soil zone.");
+        }
+        
+        // Navigate to the nearest pile
+        Gob nearestPile = soilPiles.get(0);
+        new PathFinder(nearestPile).run(gui);
+        
+        // Open stockpile and take soil
+        new OpenTargetContainer("Stockpile", nearestPile).run(gui);
+        
+        TakeItemsFromPile takeFromPile = new TakeItemsFromPile(nearestPile, gui.getStockpile(), amount);
+        takeFromPile.run(gui);
+        
+        new CloseTargetWindow(gui.getWindow("Stockpile")).run(gui);
+        
+        // Verify we got the soil
+        ArrayList<WItem> soil = gui.getInventory().getItems(new NAlias("Soil", "Mulch"));
+        if (soil.isEmpty()) {
+            return Results.ERROR("Failed to get soil from pile");
+        }
+        
+        NUtils.getUI().msg("Successfully got " + amount + " soil");
+        return Results.SUCCESS();
+    }
+    
+    private Results getWaterFromBarrel(NGameUI gui, NContext context) throws InterruptedException {
+        // Check water area
+        NArea waterArea = context.getSpecArea(Specialisation.SpecName.waterForTrees);
+        if (waterArea == null) {
+            return Results.ERROR("No water zone found. Please configure 'Water for Trees' specialization.");
+        }
+        
+        // Find barrels in the area
+        ArrayList<Gob> barrels = Finder.findGobs(waterArea, new NAlias("barrel"));
+        if (barrels.isEmpty()) {
+            return Results.ERROR("No barrels found in water zone.");
+        }
+        
+        // Find barrel with water
+        Gob waterBarrel = null;
+        for (Gob barrel : barrels) {
+            if (NUtils.barrelHasContent(barrel) && NParser.checkName(NUtils.getContentsOfBarrel(barrel), "water")) {
+                waterBarrel = barrel;
+                break;
+            }
+        }
+        
+        if (waterBarrel == null) {
+            return Results.ERROR("No barrels with water found in water zone.");
+        }
+        
+        // Navigate to barrel
+        new PathFinder(waterBarrel).run(gui);
+        
+        NUtils.getUI().msg("Found barrel with water");
+        return Results.SUCCESS();
+    }
+    
+    private Results fillPotWithSoilAndWater(NGameUI gui, NContext context, Gob waterBarrel) throws InterruptedException {
+        // Get the high quality pot
+        ArrayList<WItem> pots = gui.getInventory().getItems(new NAlias("Treeplanter's Pot"), NInventory.QualityType.High);
+        if (pots.isEmpty()) {
+            return Results.ERROR("High quality garden pot not in inventory");
+        }
+        WItem pot = pots.get(0);
+        
+        // Get soil
+        NAlias soil = new NAlias("Soil", "Mulch");
+        ArrayList<WItem> soilItems = gui.getInventory().getItems(soil);
+        if (soilItems.size() < 4) {
+            return Results.ERROR("Not enough soil (need 4, have " + soilItems.size() + ")");
+        }
+        
+        // Fill pot with 4 soil
+        NUtils.getUI().msg("Filling pot with soil...");
+        for (int i = 0; i < 4; i++) {
+            WItem item = gui.getInventory().getItem(soil);
+            if(item!=null)
+            {
+                NUtils.takeItemToHand(item);
+                pot.item.wdgmsg("itemact", 0);
+                NUtils.getUI().core.addTask(new HandIsFree(gui.getInventory()));
+            }
+            else
+            {
+                return Results.ERROR("No soil (need 4, have " + soilItems.size() + ")");
+            }
+        }
+        
+        // Fill pot with water from barrel
+        NUtils.getUI().msg("Filling pot with water from barrel...");
+        NUtils.takeItemToHand(pot);
+        NUtils.activateItem(waterBarrel);
+        // Wait for pot to be filled with 1 liter of water
+        NUtils.getUI().core.addTask(new WaitPotFilled(NUtils.getGameUI().vhand, 1.0));
+        // Put pot back to inventory
+        NUtils.dropToInv();
+        NUtils.getUI().core.addTask(new HandIsFree(gui.getInventory()));
+        
+        // Verify pot has water by checking text
+        ArrayList<WItem> filledPots = gui.getInventory().getItems(new NAlias("Treeplanter's Pot"), NInventory.QualityType.High);
+        if (filledPots.isEmpty()) {
+            return Results.ERROR("High quality pot disappeared after filling");
+        }
+        
+        NUtils.getUI().msg("Pot filled with soil and water");
+        
+        NUtils.getUI().msg("Successfully filled pot with soil and water");
+        return Results.SUCCESS();
+    }
+    
+    private Results putSeedInPot(NGameUI gui, NContext context, String treeType) throws InterruptedException {
+        // Convert tree type from minimap path to regular path
+        String treePath = treeType.replace("/mm/", "/");
+        
+        // Get seed name for this tree
+        String seedName = VSpec.getSeedForTree(treePath);
+        if (seedName == null) {
+            return Results.ERROR("No seed found for tree: " + treePath);
+        }
+        
+        // Get the high quality seed with exact name match
+        ArrayList<WItem> seeds = gui.getInventory().getItems(new NAlias(seedName), NInventory.QualityType.High);
+        WItem seed = null;
+        for (WItem item : seeds) {
+            if (item.item instanceof NGItem) {
+                String itemName = ((NGItem) item.item).name();
+                if (itemName.equals(seedName)) {
+                    seed = item;
+                    break;
+                }
+            }
+        }
+        
+        if (seed == null) {
+            return Results.ERROR("Exact seed not found in inventory: " + seedName);
+        }
+        
+        // Get the high quality pot
+        ArrayList<WItem> pots = gui.getInventory().getItems(new NAlias("Treeplanter's Pot"), NInventory.QualityType.High);
+        if (pots.isEmpty()) {
+            return Results.ERROR("High quality pot not found in inventory");
+        }
+        
+        WItem pot = pots.get(0);
+        
+        NUtils.getUI().msg("Putting seed in pot...");
+        
+        // Take seed in hand and click on pot (same as soil)
+        NUtils.takeItemToHand(seed);
+        pot.item.wdgmsg("itemact", 0);
+        NUtils.getUI().core.addTask(new HandIsFree(gui.getInventory()));
+        
+        NUtils.getUI().msg("Seed placed in pot");
+        return Results.SUCCESS();
+    }
+    
+    /**
+     * Converts tree resource path to short display name.
+     * E.g., "gfx/terobjs/mm/trees/pine" -> "Pine"
+     */
+    private String getShortTreeName(String treePath) {
+        Map<String, String> treeNames = new HashMap<>();
+        treeNames.put("gfx/terobjs/mm/trees/acacia", "Acacia");
+        treeNames.put("gfx/terobjs/mm/trees/alder", "Alder");
+        treeNames.put("gfx/terobjs/mm/trees/almondtree", "Almond Tree");
+        treeNames.put("gfx/terobjs/mm/trees/appletree", "Apple Tree");
+        treeNames.put("gfx/terobjs/mm/trees/appletreegreen", "Green Apple Tree");
+        treeNames.put("gfx/terobjs/mm/trees/ash", "Ash");
+        treeNames.put("gfx/terobjs/mm/trees/aspen", "Aspen");
+        treeNames.put("gfx/terobjs/mm/trees/baywillow", "Bay Willow");
+        treeNames.put("gfx/terobjs/mm/trees/beech", "Beech");
+        treeNames.put("gfx/terobjs/mm/trees/birch", "Birch");
+        treeNames.put("gfx/terobjs/mm/trees/birdcherrytree", "Bird Cherry Tree");
+        treeNames.put("gfx/terobjs/mm/trees/blackpine", "Black Pine");
+        treeNames.put("gfx/terobjs/mm/trees/blackpoplar", "Black Poplar");
+        treeNames.put("gfx/terobjs/mm/trees/buckthorn", "Buckthorn");
+        treeNames.put("gfx/terobjs/mm/trees/carobtree", "Carob Tree");
+        treeNames.put("gfx/terobjs/mm/trees/cedar", "Cedar");
+        treeNames.put("gfx/terobjs/mm/trees/charredtree", "Charred Tree");
+        treeNames.put("gfx/terobjs/mm/trees/chastetree", "Chaste Tree");
+        treeNames.put("gfx/terobjs/mm/trees/checkertree", "Checker Tree");
+        treeNames.put("gfx/terobjs/mm/trees/cherry", "Cherry Tree");
+        treeNames.put("gfx/terobjs/mm/trees/chestnuttree", "Chestnut Tree");
+        treeNames.put("gfx/terobjs/mm/trees/conkertree", "Conker Tree");
+        treeNames.put("gfx/terobjs/mm/trees/corkoak", "Corkoak");
+        treeNames.put("gfx/terobjs/mm/trees/crabappletree", "Crabapple Tree");
+        treeNames.put("gfx/terobjs/mm/trees/cypress", "Cypress");
+        treeNames.put("gfx/terobjs/mm/trees/dogwood", "Dogwood");
+        treeNames.put("gfx/terobjs/mm/trees/dwarfpine", "Dwarf Pine");
+        treeNames.put("gfx/terobjs/mm/trees/elm", "Elm");
+        treeNames.put("gfx/terobjs/mm/trees/figtree", "Fig Tree");
+        treeNames.put("gfx/terobjs/mm/trees/fir", "Fir");
+        treeNames.put("gfx/terobjs/mm/trees/gloomcap", "Gloomcap");
+        treeNames.put("gfx/terobjs/mm/trees/gnomeshat", "Gnome's Hat");
+        treeNames.put("gfx/terobjs/mm/trees/goldenchain", "Goldenchain");
+        treeNames.put("gfx/terobjs/mm/trees/grayalder", "Gray Alder");
+        treeNames.put("gfx/terobjs/mm/trees/hazel", "Hazel");
+        treeNames.put("gfx/terobjs/mm/trees/hornbeam", "Hornbeam");
+        treeNames.put("gfx/terobjs/mm/trees/juniper", "Juniper");
+        treeNames.put("gfx/terobjs/mm/trees/kingsoak", "King's Oak");
+        treeNames.put("gfx/terobjs/mm/trees/larch", "Larch");
+        treeNames.put("gfx/terobjs/mm/trees/laurel", "Laurel");
+        treeNames.put("gfx/terobjs/mm/trees/lemontree", "Lemon Tree");
+        treeNames.put("gfx/terobjs/mm/trees/linden", "Linden");
+        treeNames.put("gfx/terobjs/mm/trees/lotetree", "Lote Tree");
+        treeNames.put("gfx/terobjs/mm/trees/maple", "Maple");
+        treeNames.put("gfx/terobjs/mm/trees/mayflower", "Mayflower");
+        treeNames.put("gfx/terobjs/mm/trees/medlartree", "Medlar Tree");
+        treeNames.put("gfx/terobjs/mm/trees/moundtree", "Mound Tree");
+        treeNames.put("gfx/terobjs/mm/trees/mulberry", "Mulberry Tree");
+        treeNames.put("gfx/terobjs/mm/trees/oak", "Oak");
+        treeNames.put("gfx/terobjs/mm/trees/olivetree", "Olive Tree");
+        treeNames.put("gfx/terobjs/mm/trees/orangetree", "Orange Tree");
+        treeNames.put("gfx/terobjs/mm/trees/osier", "Osier");
+        treeNames.put("gfx/terobjs/mm/trees/peartree", "Pear Tree");
+        treeNames.put("gfx/terobjs/mm/trees/persimmontree", "Persimmon Tree");
+        treeNames.put("gfx/terobjs/mm/trees/pine", "Pine");
+        treeNames.put("gfx/terobjs/mm/trees/planetree", "Plane Tree");
+        treeNames.put("gfx/terobjs/mm/trees/plumtree", "Plum Tree");
+        treeNames.put("gfx/terobjs/mm/trees/poplar", "Poplar");
+        treeNames.put("gfx/terobjs/mm/trees/quincetree", "Quince Tree");
+        treeNames.put("gfx/terobjs/mm/trees/rowan", "Rowan");
+        treeNames.put("gfx/terobjs/mm/trees/sallow", "Sallow");
+        treeNames.put("gfx/terobjs/mm/trees/silverfir", "Silverfir");
+        treeNames.put("gfx/terobjs/mm/trees/sorbtree", "Sorb Tree");
+        treeNames.put("gfx/terobjs/mm/trees/spruce", "Spruce");
+        treeNames.put("gfx/terobjs/mm/trees/stonepine", "Stone Pine");
+        treeNames.put("gfx/terobjs/mm/trees/strawberrytree", "Strawberry Tree");
+        treeNames.put("gfx/terobjs/mm/trees/sweetgum", "Sweetgum");
+        treeNames.put("gfx/terobjs/mm/trees/sycamore", "Sycamore");
+        treeNames.put("gfx/terobjs/mm/trees/tamarisk", "Tamarisk");
+        treeNames.put("gfx/terobjs/mm/trees/terebinth", "Terebinth");
+        treeNames.put("gfx/terobjs/mm/trees/towercap", "Towercap");
+        treeNames.put("gfx/terobjs/mm/trees/treeheath", "Tree Heath");
+        treeNames.put("gfx/terobjs/mm/trees/trombonechantrelle", "Trombone Chantrelle");
+        treeNames.put("gfx/terobjs/mm/trees/walnuttree", "Walnut Tree");
+        treeNames.put("gfx/terobjs/mm/trees/wartybirch", "Warty Birch");
+        treeNames.put("gfx/terobjs/mm/trees/whitebeam", "Whitebeam");
+        treeNames.put("gfx/terobjs/mm/trees/willow", "Willow");
+        treeNames.put("gfx/terobjs/mm/trees/wychelm", "Wych Elm");
+        treeNames.put("gfx/terobjs/mm/trees/yew", "Yew");
+        treeNames.put("gfx/terobjs/mm/trees/zelkova", "Zelkova");
+        
+        String shortName = treeNames.get(treePath);
+        if (shortName != null) {
+            return shortName;
+        }
+        
+        // Fallback: extract last part from path and capitalize
+        String[] parts = treePath.split("/");
+        if (parts.length > 0) {
+            String last = parts[parts.length - 1];
+            return Character.toUpperCase(last.charAt(0)) + last.substring(1);
+        }
+        
+        return treePath;
+    }
+    
+    /**
+     * Checks if pot is ready (no meter overlay and has tree name in rawinfo)
+     */
+    private boolean isPotReady(WItem pot) {
+        if (!(pot.item instanceof NGItem)) {
+            return false;
+        }
+        
+        NGItem ngPot = (NGItem) pot.item;
+        
+        // Check if pot has meter (still growing)
+        if (ngPot.meter > 0) {
+            return false;
+        }
+        
+        // Check if pot has tree name in rawinfo
+        String treeName = getTreeNameFromPot(pot);
+        return treeName != null;
+    }
+    
+    /**
+     * Extracts tree name from pot's rawinfo
+     */
+    private String getTreeNameFromPot(WItem pot) {
+        if (!(pot.item instanceof NGItem)) {
+            return null;
+        }
+        
+        NGItem ngPot = (NGItem) pot.item;
+        
+        // Access rawinfo via reflection or directly
+        try {
+            java.lang.reflect.Field rawinfoField = GItem.class.getDeclaredField("rawinfo");
+            rawinfoField.setAccessible(true);
+            ItemInfo.Raw rawinfo = (ItemInfo.Raw) rawinfoField.get(ngPot);
+            
+            if (rawinfo == null || rawinfo.data == null) {
+                return null;
+            }
+            
+            // Parse rawinfo.data structure: data[1] is Object[], data[1][1] is tree name
+            for (Object o : rawinfo.data) {
+                if (o instanceof Object[]) {
+                    Object[] arr = (Object[]) o;
+                    if (arr.length >= 2 && arr[1] instanceof String) {
+                        String treeName = (String) arr[1];
+                        // Check if this is a sprouted tree
+                        if (treeName.startsWith("Sprouted")) {
+                            // Remove "Sprouted " prefix and return just the tree name
+                            return treeName.substring("Sprouted ".length());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            NUtils.getUI().msg("Error accessing pot rawinfo: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    private Results placePotOnTable(NGameUI gui, Container targetTable) throws InterruptedException {
+        // Get the high quality pot
+        ArrayList<WItem> pots = gui.getInventory().getItems(new NAlias("Treeplanter's Pot"), NInventory.QualityType.High);
+        if (pots.isEmpty()) {
+            return Results.ERROR("High quality pot not found in inventory");
+        }
+        
+        NUtils.getUI().msg("Placing pot on herbalist table...");
+        
+        // Navigate to the table
+        Gob tableGob = Finder.findGob(targetTable.gobid);
+        if (tableGob == null) {
+            return Results.ERROR("Herbalist table not found");
+        }
+        
+        new PathFinder(tableGob).run(gui);
+        
+        // Open the table
+        new OpenTargetContainer(targetTable).run(gui);
+        
+        // Transfer pot to table
+        WItem pot = pots.get(0);
+        NUtils.takeItemToHand(pot);
+        
+        // Drop pot into table inventory
+        NInventory tableInv = gui.getInventory(targetTable.cap);
+        if (tableInv == null) {
+            new CloseTargetContainer(targetTable).run(gui);
+            return Results.ERROR("Could not access table inventory");
+        }
+        
+        NUtils.dropToInv(tableInv);
+        NUtils.getUI().core.addTask(new HandIsFree(gui.getInventory()));
+        
+        // Close the table
+        new CloseTargetContainer(targetTable).run(gui);
+        
+        NUtils.getUI().msg("Pot placed on herbalist table");
         return Results.SUCCESS();
     }
     
@@ -450,56 +917,150 @@ public class BlueprintTreePlanter implements Action {
             return seedResult;
         }
         
-        // TODO: Implement full seedling preparation:
         // 2. Get pot from gardenpot zone
-        // 3. Get 4 soil from soil zone  
-        // 4. Get water from barrel
-        // 5. Fill pot with soil
-        // 6. Fill pot with water
+        Results potResult = getGardenPot(gui, context);
+        if (!potResult.IsSuccess()) {
+            return potResult;
+        }
+        
+        // 3. Get 4 soil from soil zone
+        Results soilResult = getSoilFromZone(gui, context, 4);
+        if (!soilResult.IsSuccess()) {
+            return soilResult;
+        }
+        
+        // 4. Find barrel with water
+        NArea waterArea = context.getSpecArea(Specialisation.SpecName.waterForTrees);
+        if (waterArea == null) {
+            return Results.ERROR("No water zone found. Please configure 'Water for Trees' specialization.");
+        }
+        
+        ArrayList<Gob> barrels = Finder.findGobs(waterArea, new NAlias("barrel"));
+        Gob waterBarrel = null;
+        for (Gob barrel : barrels) {
+            if (NUtils.barrelHasContent(barrel) && NParser.checkName(NUtils.getContentsOfBarrel(barrel), "water")) {
+                waterBarrel = barrel;
+                break;
+            }
+        }
+        
+        if (waterBarrel == null) {
+            return Results.ERROR("No barrels with water found in water zone.");
+        }
+        
+        // 5-6. Fill pot with soil and water
+        Results fillResult = fillPotWithSoilAndWater(gui, context, waterBarrel);
+        if (!fillResult.IsSuccess()) {
+            return fillResult;
+        }
+        
         // 7. Put seed in pot
+        Results seedInPotResult = putSeedInPot(gui, context, treeType);
+        if (!seedInPotResult.IsSuccess()) {
+            return seedInPotResult;
+        }
+        
         // 8. Place pot on herbalist table
+        Results tablePlaceResult = placePotOnTable(gui, targetTable);
+        if (!tablePlaceResult.IsSuccess()) {
+            return tablePlaceResult;
+        }
         
         return Results.SUCCESS();
     }
 
-    private Map<Coord, ArrayList<PlantPosition>> groupPositionsByTile(List<PlantPosition> positions) {
-        Map<Coord, ArrayList<PlantPosition>> tileGroups = new HashMap<>();
-        
-        for (PlantPosition pos : positions) {
-            Coord tile = new Coord(
-                (int)(pos.worldPos.x / MCache.tilesz.x),
-                (int)(pos.worldPos.y / MCache.tilesz.y)
-            );
-            
-            tileGroups.computeIfAbsent(tile, k -> new ArrayList<>()).add(pos);
+    /**
+     * Collects a ready pot of specified tree type from herbalist table
+     */
+    private Results collectReadyPotFromTable(NGameUI gui, String treeType, Container table) throws InterruptedException {
+        // Navigate to table
+        Gob tableGob = Finder.findGob(table.gobid);
+        if (tableGob == null) {
+            return Results.ERROR("Herbalist table not found");
         }
         
-        return tileGroups;
-    }
-
-    private Results plantTreeAtPosition(NGameUI gui, Coord2d position) throws InterruptedException {
-        try {
-            ArrayList<WItem> seeds = gui.getInventory().getItems(TREE_SEEDS);
-            if (seeds.isEmpty()) {
-                return Results.ERROR("No more seeds available");
-            }
-            
-            WItem seed = seeds.get(0);
-            NUtils.takeItemToHand(seed);
-            
-            NUtils.activateItem(position);
-            
-            NFlowerMenu fm = NUtils.findFlowerMenu();
-            if (fm != null && fm.nopts.length > 0) {
-                if (fm.chooseOpt("Plant tree")) {
-                    NUtils.addTask(new NFlowerMenuIsClosed());
-                } else {
-                    return Results.ERROR("No 'Plant tree' option found");
+        new PathFinder(tableGob).run(gui);
+        new OpenTargetContainer(table).run(gui);
+        
+        NInventory tableInv = gui.getInventory(table.cap);
+        if (tableInv == null) {
+            new CloseTargetContainer(table).run(gui);
+            return Results.ERROR("Could not access table inventory");
+        }
+        
+        // Find ready pots with specified tree type
+        ArrayList<WItem> pots = tableInv.getItems(new NAlias("Treeplanter's Pot"));
+        WItem readyPot = null;
+        
+        // Convert blueprint tree path to short name for comparison
+        String shortTreeName = getShortTreeName(treeType);
+        
+        for (WItem pot : pots) {
+            if (isPotReady(pot)) {
+                String potTreeName = getTreeNameFromPot(pot);
+                if (potTreeName != null && potTreeName.equals(shortTreeName)) {
+                    readyPot = pot;
+                    break;
                 }
-            } else {
-                return Results.ERROR("No flower menu appeared");
+            }
+        }
+        
+        if (readyPot == null) {
+            new CloseTargetContainer(table).run(gui);
+            return Results.ERROR("No ready pot for tree type: " + treeType);
+        }
+        
+        // Take pot to inventory
+        NUtils.takeItemToHand(readyPot);
+        NUtils.dropToInv(gui.getInventory());
+        NUtils.getUI().core.addTask(new HandIsFree(gui.getInventory()));
+        
+        new CloseTargetContainer(table).run(gui);
+        
+        NUtils.getUI().msg("Collected ready pot for: " + treeType);
+        return Results.SUCCESS();
+    }
+    
+    /**
+     * Plants a tree from pot at specified position
+     */
+    private Results plantTreeFromPot(NGameUI gui, Coord2d position, String treeType) throws InterruptedException {
+        try {
+            // Check if we have the pot in inventory
+            ArrayList<WItem> pots = gui.getInventory().getItems(new NAlias("Treeplanter's Pot"));
+            WItem pot = null;
+            
+            // Convert blueprint tree path to short name for comparison
+            String shortTreeName = getShortTreeName(treeType);
+            
+            for (WItem p : pots) {
+                String potTreeName = getTreeNameFromPot(p);
+                if (potTreeName != null && potTreeName.equals(shortTreeName)) {
+                    pot = p;
+                    break;
+                }
             }
             
+            if (pot == null) {
+                return Results.ERROR("No pot for tree type: " + treeType);
+            }
+            
+            // Right-click on pot to open context menu and select "Plant tree"
+            new SelectFlowerAction("Plant tree", pot).run(gui);
+            
+            // Wait for plob to appear
+            NUtils.addTask(new WaitPlob());
+            
+            // Get the plob and place it at the ghost position
+            MapView.Plob plob = gui.map.placing.get();
+            if (plob == null) {
+                return Results.ERROR("Failed to get plob for tree planting");
+            }
+            
+            // Place the tree at the exact ghost position
+            gui.map.wdgmsg("place", position.floor(OCache.posres), 0, 1, 0);
+            
+            // Wait for planting to complete
             NUtils.addTask(new WaitPose(NUtils.player(), "gfx/borka/shoveldig"));
             NUtils.addTask(new WaitPose(NUtils.player(), "gfx/borka/idle"));
             
@@ -511,4 +1072,5 @@ public class BlueprintTreePlanter implements Action {
             return Results.ERROR("Failed to plant tree: " + e.getMessage());
         }
     }
+    
 }
