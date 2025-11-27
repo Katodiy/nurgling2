@@ -26,10 +26,6 @@ public class BotsInterruptWidget extends Widget {
     private static long lastStackTraceWrite = 0;
     private static final long STACK_TRACE_WRITE_INTERVAL = 2000; // 2 seconds
 
-    static {
-        // Initialize stack trace file path if running under autorunner
-        initializeStackTraceFile();
-    }
 
     public class Gear extends Widget
     {
@@ -75,7 +71,7 @@ public class BotsInterruptWidget extends Widget {
         }
     }
 
-    private static void initializeStackTraceFile() {
+    private void initializeStackTraceFile() {
         // Check if running under autorunner and stackTraceFile is configured
         if (NConfig.isBotMod() && NConfig.botmod != null && NConfig.botmod.stackTraceFile != null) {
             autorunnerStackTraceFile = NConfig.botmod.stackTraceFile;
@@ -85,6 +81,7 @@ public class BotsInterruptWidget extends Widget {
 
     public BotsInterruptWidget() {
         sz = NStyle.gear[0].sz().mul(4.5);
+        initializeStackTraceFile();
     }
 
     public void addObserve(Thread t)
