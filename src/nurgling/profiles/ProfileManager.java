@@ -20,6 +20,9 @@ public class ProfileManager {
     private final Path baseConfigPath;
     private final Path profilePath;
 
+    // World 16 genus identifier - the legacy world that should inherit existing configurations
+    private static final String WORLD_16_GENUS = "c646473983afec091";
+
     // Configuration files that should be world-specific
     private static final List<String> PROFILE_CONFIG_FILES = Arrays.asList(
         "areas.nurgling.json",
@@ -29,8 +32,7 @@ public class ProfileManager {
         "fog.nurgling.json",
         "resource_timers.nurgling.json",
         "tree_locations.nurgling.json",
-        "cheese_orders.nurgling.json",
-        "scenarios.nurgling.json"
+        "cheese_orders.nurgling.json"
     );
 
     public ProfileManager(String genus) {
@@ -94,8 +96,14 @@ public class ProfileManager {
                 Files.createDirectories(profilePath);
                 System.out.println("Created profile directory for world: " + genus);
 
-                // Migrate existing configurations
-                migrateExistingConfigs();
+                // Only migrate existing configurations for World 16 (legacy world)
+                // For all other worlds, start with fresh profiles
+                if (WORLD_16_GENUS.equals(genus)) {
+                    System.out.println("Migrating existing configurations for legacy world: " + genus);
+                    migrateExistingConfigs();
+                } else {
+                    System.out.println("Starting with fresh profile for new world: " + genus);
+                }
             }
         } catch (IOException e) {
             System.err.println("Failed to create profile directory for " + genus + ": " + e.getMessage());
@@ -104,10 +112,12 @@ public class ProfileManager {
     }
 
     /**
-     * Migrates existing configuration files from the base directory to this profile
+     * Migrates existing configuration files from the base directory to this profile.
+     * This is only called for World 16 (the legacy world) to preserve existing user
+     * configurations. New worlds start with fresh profiles.
      */
     private void migrateExistingConfigs() {
-        System.out.println("Migrating existing configurations to profile: " + genus);
+        System.out.println("Migrating existing configurations to legacy profile: " + genus);
 
         for (String filename : PROFILE_CONFIG_FILES) {
             migrateConfigFile(filename);
@@ -116,7 +126,7 @@ public class ProfileManager {
         // Migrate .dat files (except searchcmd.dat)
         migrateDatFiles();
 
-        System.out.println("Migration completed for profile: " + genus);
+        System.out.println("Legacy migration completed for profile: " + genus);
     }
 
     /**

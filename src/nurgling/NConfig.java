@@ -856,7 +856,7 @@ public class NConfig
             main.put("areas",jareas);
             try
             {
-                FileWriter f = new FileWriter(customPath==null?path_areas:customPath,StandardCharsets.UTF_8);
+                FileWriter f = new FileWriter(customPath==null?getAreasPath():customPath,StandardCharsets.UTF_8);
                 main.write(f);
                 f.close();
                 current.isAreasUpd = false;
@@ -874,7 +874,7 @@ public class NConfig
         {
             try
             {
-                FileWriter f = new FileWriter(customPath==null?path_explored:customPath,StandardCharsets.UTF_8);
+                FileWriter f = new FileWriter(customPath==null?getExploredPath():customPath,StandardCharsets.UTF_8);
                 ((NCornerMiniMap)NUtils.getGameUI().mmap).exploredArea.toJson().write(f);
                 f.close();
                 current.isExploredUpd = false;
@@ -932,7 +932,7 @@ public class NConfig
 
             try
             {
-                FileWriter f = new FileWriter(customPath==null?path_routes:customPath,StandardCharsets.UTF_8);
+                FileWriter f = new FileWriter(customPath==null?getRoutesPath():customPath,StandardCharsets.UTF_8);
                 main.write(f);
                 f.close();
                 current.isRoutesUpd = false;

@@ -82,14 +82,16 @@ public class MCache implements MapSource {
             // Try to get the current genus from NGameUI if available
             String genus = getCurrentGenus();
             if (genus != null && !genus.isEmpty()) {
+                // Always use the profile-specific path, whether it exists or not
+                // This ensures new worlds don't inherit global areas
                 return ConfigFactory.getConfig(genus).getAreasPath();
             }
         } catch (Exception e) {
-            // If there's any issue getting the genus, fall back to global config
+            // If there's any issue getting the genus, fall back to global config for compatibility
             System.err.println("Failed to get profile-specific areas path: " + e.getMessage());
         }
 
-        // Fallback to global configuration
+        // Fallback to global configuration only when genus is not available
         return NConfig.getGlobalInstance().getAreasPath();
     }
 

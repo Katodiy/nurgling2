@@ -125,6 +125,6 @@ public class CheeseOrdersManager implements ProfileAwareService {
     }
     
     public String getOrdersFilePath() {
-        return NConfig.current.path_cheese_orders;
+        return configPath;
     }
 }
