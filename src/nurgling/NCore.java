@@ -130,6 +130,7 @@ public class NCore extends Widget
         public String pass;
         public String character;
         public Integer scenarioId;
+        public String stackTraceFile; // Path to stack trace file for autorunner debugging
 
         public BotmodSettings(String user, String password, String character, Integer scenarioId) {
             this.user = user;

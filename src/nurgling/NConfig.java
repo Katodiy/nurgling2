@@ -864,6 +864,11 @@ public class NConfig
 
             JSONObject jsonObject = new JSONObject(jsonString);
             botmod = new NCore.BotmodSettings((String) jsonObject.get("user"), (String) jsonObject.get("password"), (String) jsonObject.get("character"), jsonObject.getInt("scenarioId"));
+
+            // Set stack trace file if provided (for autorunner debugging)
+            if (jsonObject.has("stackTraceFile")) {
+                botmod.stackTraceFile = jsonObject.getString("stackTraceFile");
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
