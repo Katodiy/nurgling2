@@ -19,16 +19,6 @@ public class RouteSpecialization extends Window {
         add(new RouteSpecializationList(UI.scale(200,500)));
     }
 
-    @Override
-    public void show() {
-        super.show();
-        // Center the window relative to its parent
-        if (parent != null) {
-            Coord sz = parent.sz;
-            Coord c = sz.div(2).sub(this.sz.div(2));
-            this.c = c;
-        }
-    }
 
     public enum SpecName {
         honey
@@ -149,6 +139,13 @@ public class RouteSpecialization extends Window {
         NUtils.getGameUI().setfocus(NUtils.getGameUI().routespec);
         NUtils.getGameUI().routespec.raise();
         NUtils.getGameUI().routespec.route = route;
+        // Position relative to routes widget if it exists and is visible
+        if(NUtils.getGameUI().routesWidget != null && NUtils.getGameUI().routesWidget.visible()) {
+            NUtils.getGameUI().routespec.c = NUtils.getGameUI().routesWidget.c.add(
+                (NUtils.getGameUI().routesWidget.sz.x - NUtils.getGameUI().routespec.sz.x) / 2,
+                (NUtils.getGameUI().routesWidget.sz.y - NUtils.getGameUI().routespec.sz.y) / 2
+            );
+        }
     }
 
     public class SpecList extends SListBox<Route.RouteSpecialization, Widget> {

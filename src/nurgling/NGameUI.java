@@ -119,18 +119,23 @@ public class NGameUI extends GameUI
         add(guiinfo = new NGUIInfo(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
         if(!(Boolean) NConfig.get(NConfig.Key.show_drag_menu))
             guiinfo.hide();
-        add(nean = new NEditAreaName());
+        // Position NEditAreaName relative to areas widget center
+        add(nean = new NEditAreaName(), new Coord(sz.x/2 - nean.sz.x/2, sz.y/2 - nean.sz.y/2));
         nean.hide();
-        add(biw = new BotsInterruptWidget());
+        // Position BotsInterruptWidget (observer with gears) in center of screen
+        add(biw = new BotsInterruptWidget(), new Coord(sz.x/2 - biw.sz.x/2, sz.y/2 - biw.sz.y/2));
         waypointMovementService = new WaypointMovementService(this);
         fishLocationService = new FishLocationService(this);
         treeLocationService = new TreeLocationService(this);
         // These widgets depend on areas which is created in GameUI constructor
-        add(nefn = new NEditFolderName(areas));
+        // Position NEditFolderName relative to areas widget
+        add(nefn = new NEditFolderName(areas), new Coord(sz.x/2 - nefn.sz.x/2, sz.y/2 - nefn.sz.y/2));
         nefn.hide();
-        add(spec = new Specialisation());
+        // Position Specialisation relative to areas widget center
+        add(spec = new Specialisation(), new Coord(sz.x/2 - spec.sz.x/2, sz.y/2 - spec.sz.y/2));
         spec.hide();
-        add(routespec = new RouteSpecialization());
+        // Position RouteSpecialization relative to routes widget center
+        add(routespec = new RouteSpecialization(), new Coord(sz.x/2 - routespec.sz.x/2, sz.y/2 - routespec.sz.y/2));
         routespec.hide();
         
         // Heavy service widgets

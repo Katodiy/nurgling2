@@ -132,12 +132,6 @@ public class RoutesWidget extends Window {
     @Override
     public void show() {
         super.show();
-        // Center the window on screen
-        if (parent != null) {
-            Coord sz = parent.sz;
-            Coord c = sz.div(2).sub(this.sz.div(2));
-            this.c = c;
-        }
         showRoutes();
     }
 

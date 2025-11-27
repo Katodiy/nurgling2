@@ -55,7 +55,13 @@ public class NEditAreaName extends Window
         NUtils.getGameUI().nean.area = area;
         NUtils.getGameUI().nean.item = item;
         NUtils.getGameUI().nean.te.settext(area.name);
-
+        // Position relative to areas widget if it exists and is visible
+        if(NUtils.getGameUI().areas != null && NUtils.getGameUI().areas.visible()) {
+            NUtils.getGameUI().nean.c = NUtils.getGameUI().areas.c.add(
+                (NUtils.getGameUI().areas.sz.x - NUtils.getGameUI().nean.sz.x) / 2,
+                (NUtils.getGameUI().areas.sz.y - NUtils.getGameUI().nean.sz.y) / 2
+            );
+        }
     }
 
     public NArea area;

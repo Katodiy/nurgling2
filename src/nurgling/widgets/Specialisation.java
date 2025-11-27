@@ -300,5 +300,12 @@ public class Specialisation extends Window
         NUtils.getGameUI().setfocus(NUtils.getGameUI().spec);
         NUtils.getGameUI().spec.raise();
         NUtils.getGameUI().spec.area = area;
+        // Position relative to areas widget if it exists and is visible
+        if(NUtils.getGameUI().areas != null && NUtils.getGameUI().areas.visible()) {
+            NUtils.getGameUI().spec.c = NUtils.getGameUI().areas.c.add(
+                (NUtils.getGameUI().areas.sz.x - NUtils.getGameUI().spec.sz.x) / 2,
+                (NUtils.getGameUI().areas.sz.y - NUtils.getGameUI().spec.sz.y) / 2
+            );
+        }
     }
 }
