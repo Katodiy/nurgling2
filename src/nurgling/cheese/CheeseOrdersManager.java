@@ -44,18 +44,6 @@ public class CheeseOrdersManager implements ProfileAwareService {
     }
 
     @Override
-    public void migrateFromGlobal() {
-        // Migration is handled automatically by ProfileManager when profile is created
-        // Just reload data from the new profile location
-        load();
-    }
-
-    @Override
-    public String getConfigFileName() {
-        return "cheese_orders.nurgling.json";
-    }
-
-    @Override
     public String getGenus() {
         return genus;
     }
@@ -68,11 +56,6 @@ public class CheeseOrdersManager implements ProfileAwareService {
     @Override
     public void save() {
         writeOrders();
-    }
-
-    @Override
-    public String getConfigPath() {
-        return configPath;
     }
 
     public void loadOrders() {
