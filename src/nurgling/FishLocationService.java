@@ -1,6 +1,8 @@
 package nurgling;
 
 import haven.*;
+import nurgling.profiles.ConfigFactory;
+import nurgling.profiles.ProfileAwareService;
 import nurgling.tools.VSpec;
 import nurgling.widgets.NEquipory;
 import org.json.JSONArray;
@@ -20,17 +22,75 @@ import java.util.stream.Stream;
 /**
  * Service for managing saved fish locations
  * Follows the same pattern as LocalizedResourceTimerService
+ * Supports world-specific profiles via ProfileAwareService
  */
-public class FishLocationService {
+public class FishLocationService implements ProfileAwareService {
     private final Map<String, FishLocation> fishLocations = new ConcurrentHashMap<>();
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private final String dataFile;
+    private String dataFile;
     private final NGameUI gui;
+    private String genus;
 
     public FishLocationService(NGameUI gui) {
         this.gui = gui;
         this.dataFile = ((HashDirCache) ResCache.global).base + "\\..\\" + "fish_locations.nurgling.json";
         loadFishLocations();
+    }
+
+    /**
+     * Constructor for profile-aware initialization
+     */
+    public FishLocationService(NGameUI gui, String genus) {
+        this.gui = gui;
+        this.genus = genus;
+        initializeForProfile(genus);
+    }
+
+    // ProfileAwareService implementation
+
+    @Override
+    public void initializeForProfile(String genus) {
+        this.genus = genus;
+        NConfig config = ConfigFactory.getConfig(genus);
+        this.dataFile = config.getFishLocationsPath();
+        load();
+    }
+
+    @Override
+    public void migrateFromGlobal() {
+        // Migration is handled automatically by ProfileManager when profile is created
+        // Just reload data from the new profile location
+        load();
+    }
+
+    @Override
+    public String getConfigFileName() {
+        return "fish_locations.nurgling.json";
+    }
+
+    @Override
+    public String getGenus() {
+        return genus;
+    }
+
+    @Override
+    public void load() {
+        loadFishLocations();
+    }
+
+    @Override
+    public void save() {
+        lock.writeLock().lock();
+        try {
+            saveFishLocations();
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public String getConfigPath() {
+        return dataFile;
     }
 
     /**

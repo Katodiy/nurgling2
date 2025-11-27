@@ -38,6 +38,7 @@ import haven.render.*;
 import nurgling.*;
 import nurgling.areas.*;
 import nurgling.overlays.map.*;
+import nurgling.profiles.ConfigFactory;
 import nurgling.tasks.GridsFilled;
 import nurgling.tasks.NTask;
 import org.json.*;
@@ -73,13 +74,50 @@ public class MCache implements MapSource {
     public int olseq = 0, chseq = 0;
     Map<Integer, Defrag> fragbufs = new TreeMap<Integer, Defrag>();
 
+    /**
+     * Get the appropriate areas path based on current profile context
+     */
+    private String getAreasPath() {
+        try {
+            // Try to get the current genus from NGameUI if available
+            String genus = getCurrentGenus();
+            if (genus != null && !genus.isEmpty()) {
+                return ConfigFactory.getConfig(genus).getAreasPath();
+            }
+        } catch (Exception e) {
+            // If there's any issue getting the genus, fall back to global config
+            System.err.println("Failed to get profile-specific areas path: " + e.getMessage());
+        }
+
+        // Fallback to global configuration
+        return NConfig.getGlobalInstance().getAreasPath();
+    }
+
+    /**
+     * Get the current genus from the game context if available
+     */
+    private String getCurrentGenus() {
+        try {
+            // Use NUtils to get the current game UI
+            NGameUI ngui = nurgling.NUtils.getGameUI();
+            if (ngui != null) {
+                return ngui.getGenus();
+            }
+        } catch (Exception e) {
+            // Ignore exceptions and fall back to null
+        }
+        return null;
+    }
 
 	void init()
 	{
-		if(new File(NConfig.current.path_areas).exists())
+		// Get the appropriate areas path based on current profile
+		String areasPath = getAreasPath();
+
+		if(new File(areasPath).exists())
 		{
 			StringBuilder contentBuilder = new StringBuilder();
-			try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_areas), StandardCharsets.UTF_8))
+			try (Stream<String> stream = Files.lines(Paths.get(areasPath), StandardCharsets.UTF_8))
 			{
 				stream.forEach(s -> contentBuilder.append(s).append("\n"));
 			}

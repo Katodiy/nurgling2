@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
+import nurgling.profiles.ProfileManager;
 import nurgling.routes.Route;
 import nurgling.scenarios.Scenario;
 import nurgling.widgets.NCornerMiniMap;
@@ -151,6 +152,15 @@ public class NConfig
 
 
     public NConfig() {
+        this(null);
+    }
+
+    public NConfig(String genus) {
+        this.genus = genus;
+        if (genus != null && !genus.isEmpty()) {
+            this.profileManager = new ProfileManager(genus);
+            this.profileManager.ensureProfileExists();
+        }
         conf = new HashMap<>();
 
         conf.put(Key.vilol, false);
@@ -451,6 +461,138 @@ public class NConfig
     }
 
     public static NConfig current;
+
+    // Profile management - World-specific configurations
+    private static final Map<String, NConfig> profileInstances = new HashMap<>();
+    private ProfileManager profileManager;
+    private String genus;
+
+    /**
+     * Gets a profile-specific NConfig instance for the given genus
+     */
+    public static NConfig getProfileInstance(String genus) {
+        if (genus == null || genus.isEmpty()) {
+            return getGlobalInstance();
+        }
+
+        synchronized (profileInstances) {
+            return profileInstances.computeIfAbsent(genus, g -> new NConfig(g));
+        }
+    }
+
+    /**
+     * Gets the global (non-profiled) NConfig instance
+     */
+    public static NConfig getGlobalInstance() {
+        if (current == null) {
+            current = new NConfig();
+        }
+        return current;
+    }
+
+    /**
+     * Gets the current genus for this config instance
+     */
+    public String getGenus() {
+        return genus;
+    }
+
+    /**
+     * Checks if this is a profiled (genus-specific) configuration
+     */
+    public boolean isProfiled() {
+        return genus != null && !genus.isEmpty();
+    }
+
+    /**
+     * Gets the dynamic path for areas configuration file
+     */
+    public String getAreasPath() {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString("areas.nurgling.json");
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
+    }
+
+    /**
+     * Gets the dynamic path for routes configuration file
+     */
+    public String getRoutesPath() {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString("routes.nurgling.json");
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
+    }
+
+    /**
+     * Gets the dynamic path for scenarios configuration file
+     */
+    public String getScenariosPath() {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString("scenarios.nurgling.json");
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
+    }
+
+    /**
+     * Gets the dynamic path for explored configuration file
+     */
+    public String getExploredPath() {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString("explored.nurgling.json");
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "explored.nurgling.json";
+    }
+
+    /**
+     * Gets the dynamic path for cheese orders configuration file
+     */
+    public String getCheeseOrdersPath() {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString("cheese_orders.nurgling.json");
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "cheese_orders.nurgling.json";
+    }
+
+    /**
+     * Gets the dynamic path for fish locations configuration file
+     */
+    public String getFishLocationsPath() {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString("fish_locations.nurgling.json");
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "fish_locations.nurgling.json";
+    }
+
+    /**
+     * Gets the dynamic path for tree locations configuration file
+     */
+    public String getTreeLocationsPath() {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString("tree_locations.nurgling.json");
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "tree_locations.nurgling.json";
+    }
+
+    /**
+     * Gets the dynamic path for resource timers configuration file
+     */
+    public String getResourceTimersPath() {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString("resource_timers.nurgling.json");
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "resource_timers.nurgling.json";
+    }
+
+    /**
+     * Gets the dynamic path for fog configuration file
+     */
+    public String getFogPath() {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString("fog.nurgling.json");
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "fog.nurgling.json";
+    }
 
     @SuppressWarnings("unchecked")
     private ArrayList<Object> readArray(ArrayList<HashMap<String, Object>> objs)
