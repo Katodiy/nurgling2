@@ -428,7 +428,7 @@ public class TransferToContainer implements Action
 
                     ItemStack newStack = getStackTask.getResult();
                     if (newStack != null) {
-                        NUtils.addTask(new StackSizeChanged(newStack, 2));
+                        NUtils.addTask(new StackSizeChanged(newStack, 1));
                     }
                     return 1;
                 }
