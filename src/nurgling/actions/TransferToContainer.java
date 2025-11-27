@@ -425,11 +425,6 @@ public class TransferToContainer implements Action
 
                     GetNotFullStack getStackTask = new GetNotFullStack(targetInv, new NAlias(itemName));
                     NUtils.addTask(getStackTask);
-
-                    ItemStack newStack = getStackTask.getResult();
-                    if (newStack != null) {
-                        NUtils.addTask(new StackSizeChanged(newStack, 1));
-                    }
                     return 1;
                 }
                 else
