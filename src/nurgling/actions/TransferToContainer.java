@@ -415,12 +415,21 @@ public class TransferToContainer implements Action
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(((NGItem) ((GItem.ContentsWindow) targetNotFullStack.parent).cont).wi);
                     NUtils.addTask(new WaitFreeHand());
+                    NUtils.addTask(new StackSizeChanged(targetNotFullStack, targetStackSize));
                     return 1;
                 } else if ((targetSingleItem = targetInv.findNotStack(itemName)) != null)
                 {
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(targetSingleItem);
                     NUtils.addTask(new WaitFreeHand());
+
+                    GetNotFullStack getStackTask = new GetNotFullStack(targetInv, new NAlias(itemName));
+                    NUtils.addTask(getStackTask);
+
+                    ItemStack newStack = getStackTask.getResult();
+                    if (newStack != null) {
+                        NUtils.addTask(new StackSizeChanged(newStack, 2));
+                    }
                     return 1;
                 }
                 else
