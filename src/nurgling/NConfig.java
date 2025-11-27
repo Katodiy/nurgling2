@@ -507,73 +507,62 @@ public class NConfig
     }
 
     /**
+     * Helper method for profile-aware path resolution
+     */
+    private String getProfileAwarePath(String filename) {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString(filename);
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + filename;
+    }
+
+    /**
      * Gets the dynamic path for areas configuration file
      */
     public String getAreasPath() {
-        if (profileManager != null) {
-            return profileManager.getConfigPathString("areas.nurgling.json");
-        }
-        return ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
+        return getProfileAwarePath("areas.nurgling.json");
     }
 
     /**
      * Gets the dynamic path for routes configuration file
      */
     public String getRoutesPath() {
-        if (profileManager != null) {
-            return profileManager.getConfigPathString("routes.nurgling.json");
-        }
-        return ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
+        return getProfileAwarePath("routes.nurgling.json");
     }
 
     /**
      * Gets the dynamic path for explored configuration file
      */
     public String getExploredPath() {
-        if (profileManager != null) {
-            return profileManager.getConfigPathString("explored.nurgling.json");
-        }
-        return ((HashDirCache) ResCache.global).base + "\\..\\" + "explored.nurgling.json";
+        return getProfileAwarePath("explored.nurgling.json");
     }
 
     /**
      * Gets the dynamic path for cheese orders configuration file
      */
     public String getCheeseOrdersPath() {
-        if (profileManager != null) {
-            return profileManager.getConfigPathString("cheese_orders.nurgling.json");
-        }
-        return ((HashDirCache) ResCache.global).base + "\\..\\" + "cheese_orders.nurgling.json";
+        return getProfileAwarePath("cheese_orders.nurgling.json");
     }
 
     /**
      * Gets the dynamic path for fish locations configuration file
      */
     public String getFishLocationsPath() {
-        if (profileManager != null) {
-            return profileManager.getConfigPathString("fish_locations.nurgling.json");
-        }
-        return ((HashDirCache) ResCache.global).base + "\\..\\" + "fish_locations.nurgling.json";
+        return getProfileAwarePath("fish_locations.nurgling.json");
     }
 
     /**
      * Gets the dynamic path for tree locations configuration file
      */
     public String getTreeLocationsPath() {
-        if (profileManager != null) {
-            return profileManager.getConfigPathString("tree_locations.nurgling.json");
-        }
-        return ((HashDirCache) ResCache.global).base + "\\..\\" + "tree_locations.nurgling.json";
+        return getProfileAwarePath("tree_locations.nurgling.json");
     }
 
     /**
      * Gets the dynamic path for resource timers configuration file
      */
     public String getResourceTimersPath() {
-        if (profileManager != null) {
-            return profileManager.getConfigPathString("resource_timers.nurgling.json");
-        }
-        return ((HashDirCache) ResCache.global).base + "\\..\\" + "resource_timers.nurgling.json";
+        return getProfileAwarePath("resource_timers.nurgling.json");
     }
 
     @SuppressWarnings("unchecked")

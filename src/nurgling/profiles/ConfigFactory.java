@@ -28,7 +28,6 @@ public class ConfigFactory {
             // Getting the profile instance will automatically trigger initialization
             // through the ProfileManager in the NConfig constructor
             NConfig.getProfileInstance(genus);
-            System.out.println("Initialized profile for world: " + genus);
         }
     }
 }

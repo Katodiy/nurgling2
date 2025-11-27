@@ -86,11 +86,6 @@ public class NGameUI extends GameUI
         // Initialize world-specific profile
         nurgling.profiles.ConfigFactory.initializeProfile(genus);
 
-        // Update NCore to use profile-aware config instead of global config
-        if (ui != null && ui.core != null) {
-            ui.core.updateConfigForProfile(genus);
-        }
-
         // Initialize local ring config
         iconRingConfig = new IconRingConfig(genus);
 

@@ -92,10 +92,7 @@ public class ProfileManager {
                 // Only migrate existing configurations for World 16 (legacy world)
                 // For all other worlds, start with fresh profiles
                 if (WORLD_16_GENUS.equals(genus)) {
-                    System.out.println("Migrating existing configurations for legacy world: " + genus);
                     migrateExistingConfigs();
-                } else {
-                    System.out.println("Starting with fresh profile for new world: " + genus);
                 }
             }
         } catch (IOException e) {
@@ -110,8 +107,6 @@ public class ProfileManager {
      * configurations. New worlds start with fresh profiles.
      */
     private void migrateExistingConfigs() {
-        System.out.println("Migrating existing configurations to legacy profile: " + genus);
-
         for (String filename : PROFILE_CONFIG_FILES) {
             migrateConfigFile(filename);
         }
@@ -132,7 +127,6 @@ public class ProfileManager {
 
             if (Files.exists(sourcePath) && !Files.exists(targetPath)) {
                 Files.copy(sourcePath, targetPath, StandardCopyOption.COPY_ATTRIBUTES);
-                System.out.println("  Migrated: " + filename);
             }
         } catch (IOException e) {
             System.err.println("Failed to migrate " + filename + ": " + e.getMessage());
@@ -165,7 +159,6 @@ public class ProfileManager {
 
             if (!Files.exists(targetPath)) {
                 Files.copy(datFile, targetPath, StandardCopyOption.COPY_ATTRIBUTES);
-                System.out.println("  Migrated: " + filename);
             }
         } catch (IOException e) {
             System.err.println("Failed to migrate " + datFile.getFileName() + ": " + e.getMessage());
