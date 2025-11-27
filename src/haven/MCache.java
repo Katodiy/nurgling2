@@ -81,6 +81,7 @@ public class MCache implements MapSource {
         try {
             // Try to get the current genus from NGameUI if available
             String genus = getCurrentGenus();
+
             if (genus != null && !genus.isEmpty()) {
                 // Always use the profile-specific path, whether it exists or not
                 // This ensures new worlds don't inherit global areas
@@ -88,7 +89,6 @@ public class MCache implements MapSource {
             }
         } catch (Exception e) {
             // If there's any issue getting the genus, fall back to global config for compatibility
-            System.err.println("Failed to get profile-specific areas path: " + e.getMessage());
         }
 
         // Fallback to global configuration only when genus is not available
@@ -111,8 +111,16 @@ public class MCache implements MapSource {
         return null;
     }
 
+	private boolean areasLoaded = false;
+
 	void init()
 	{
+		// Delay areas loading until genus is available
+	}
+
+	public void loadAreasIfNeeded() {
+		if (areasLoaded) return;
+
 		// Get the appropriate areas path based on current profile
 		String areasPath = getAreasPath();
 
@@ -138,6 +146,7 @@ public class MCache implements MapSource {
 				}
 			}
 		}
+		areasLoaded = true;
 	}
 
     public static class LoadingMap extends Loading {

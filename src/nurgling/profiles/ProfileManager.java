@@ -21,7 +21,7 @@ public class ProfileManager {
     private final Path profilePath;
 
     // World 16 genus identifier - the legacy world that should inherit existing configurations
-    private static final String WORLD_16_GENUS = "c646473983afec091";
+    private static final String WORLD_16_GENUS = "c646473983afec09";
 
     // Configuration files that should be world-specific
     private static final List<String> PROFILE_CONFIG_FILES = Arrays.asList(

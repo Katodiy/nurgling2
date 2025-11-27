@@ -74,6 +74,15 @@ public class NMapView extends MapView
         basic.add(glob.oc.paths);
     }
 
+    /**
+     * Initialize profile-aware components with genus
+     */
+    public void initializeWithGenus(String genus) {
+        if (routeGraphManager == null) {
+            routeGraphManager = new RouteGraphManager(genus);
+        }
+    }
+
     final HashMap<String, String> ttip = new HashMap<>();
     final ArrayList<String> tlays = new ArrayList<>();
     final HashMap<String, BufferedImage> cachedImages = new HashMap<>();
@@ -92,8 +101,19 @@ public class NMapView extends MapView
     public HashMap<Long, Gob> dummys = new HashMap<>();
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
 
-    public RouteGraphManager routeGraphManager = new RouteGraphManager();
-    
+    public RouteGraphManager routeGraphManager;
+
+    /**
+     * Get RouteGraphManager, initializing with fallback if needed
+     */
+    public RouteGraphManager getRouteGraphManager() {
+        if (routeGraphManager == null) {
+            System.out.println("DEBUG: NMapView.getRouteGraphManager() - RouteGraphManager not initialized, using fallback");
+            routeGraphManager = new RouteGraphManager(); // fallback to global
+        }
+        return routeGraphManager;
+    }
+
     public Coord3f gobPathLastClick;
     private int gobPathStoppedFrames = 0;
 

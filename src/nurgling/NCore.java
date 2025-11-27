@@ -165,6 +165,16 @@ public class NCore extends Widget
 
     }
 
+    /**
+     * Updates the config instance to use profile-aware configuration
+     * This should be called when the genus becomes available
+     */
+    public void updateConfigForProfile(String genus) {
+        if (genus != null && !genus.isEmpty()) {
+            config = nurgling.profiles.ConfigFactory.getConfig(genus);
+        }
+    }
+
     @Override
     public void tick(double dt)
     {

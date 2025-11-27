@@ -431,17 +431,35 @@ public class NConfig
 
     public static void needAreasUpdate()
     {
+        // Update both global and profile-specific config to ensure compatibility
         if (current != null)
         {
             current.isAreasUpd = true;
+        }
+        // Also update the profile-aware config that NCore is using
+        try {
+            if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
+                nurgling.NUtils.getUI().core.config.isAreasUpd = true;
+            }
+        } catch (Exception e) {
+            // Fallback to global config if profile config not available
         }
     }
 
     public static void needRoutesUpdate()
     {
+        // Update both global and profile-specific config to ensure compatibility
         if (current != null)
         {
             current.isRoutesUpd = true;
+        }
+        // Also update the profile-aware config that NCore is using
+        try {
+            if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
+                nurgling.NUtils.getUI().core.config.isRoutesUpd = true;
+            }
+        } catch (Exception e) {
+            // Fallback to global config if profile config not available
         }
     }
 

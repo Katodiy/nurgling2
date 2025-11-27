@@ -86,6 +86,11 @@ public class NGameUI extends GameUI
         // Initialize world-specific profile
         nurgling.profiles.ConfigFactory.initializeProfile(genus);
 
+        // Update NCore to use profile-aware config instead of global config
+        if (ui != null && ui.core != null) {
+            ui.core.updateConfigForProfile(genus);
+        }
+
         // Initialize local ring config
         iconRingConfig = new IconRingConfig(genus);
 
@@ -153,10 +158,28 @@ public class NGameUI extends GameUI
         add(localizedResourceTimerDialog = new LocalizedResourceTimerDialog(), new Coord(200, 200));
         localizedResourceTimerService = new LocalizedResourceTimerService(this, genus);
         add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
+
+        // Profile-aware components are now initialized in attached() before super.attached()
     }
     
     @Override
     protected void attached() {
+        // Initialize profile-aware components BEFORE calling super.attached()
+        // This ensures RouteGraphManager is available when RoutesWidget is created
+        if (map instanceof NMapView) {
+            ((NMapView) map).initializeWithGenus(genus);
+        }
+
+        // Update NCore to use profile-aware config (now that UI and core are available)
+        if (ui != null && ui.core != null) {
+            ui.core.updateConfigForProfile(genus);
+        }
+
+        // Load areas now that genus is available
+        if (map != null && map.glob != null && map.glob.map != null) {
+            map.glob.map.loadAreasIfNeeded();
+        }
+
         super.attached();
         initHeavyWidgets();
         // Apply local ring settings to iconconf after it's loaded (only once)
