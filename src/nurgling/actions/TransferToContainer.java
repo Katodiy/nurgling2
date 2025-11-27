@@ -422,7 +422,6 @@ public class TransferToContainer implements Action
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(targetSingleItem);
                     NUtils.addTask(new WaitFreeHand());
-
                     NUtils.addTask(new GetNotFullStack(targetInv, new NAlias(itemName)));
                     return 1;
                 }
