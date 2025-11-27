@@ -3,10 +3,13 @@ package nurgling.actions.bots;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
+import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.conf.NBlueprintPlanterProp;
 import nurgling.overlays.TreeGhostPreview;
 import nurgling.tasks.*;
 import nurgling.tools.*;
+import nurgling.widgets.Specialisation;
 import org.json.*;
 
 import java.io.*;
@@ -16,6 +19,7 @@ import java.util.*;
 public class BlueprintTreePlanter implements Action {
 
     private static final NAlias TREE_SEEDS = VSpec.getAllPlantableSeeds();
+    private static final NAlias TREE_OBJECTS = new NAlias("tree");
     private BlueprintPlob blueprintPlob = null;
     private List<PlantPosition> plantPositions = new ArrayList<>();
     private NBlueprintPlanterProp prop = null;
@@ -147,6 +151,7 @@ public class BlueprintTreePlanter implements Action {
             }
             
             Coord2d blueprintOrigin = blueprintPlob.getPosition();
+            Coord tilePos = blueprintOrigin.floor(MCache.tilesz);
             
             plantPositions.clear();
             
@@ -154,7 +159,8 @@ public class BlueprintTreePlanter implements Action {
                 Coord gridPos = entry.getKey();
                 String treeType = entry.getValue();
                 
-                Coord2d worldPos = blueprintOrigin.add(
+                // Calculate world position from tile corner, not center
+                Coord2d worldPos = tilePos.mul(MCache.tilesz).add(
                     gridPos.x * MCache.tilesz.x + MCache.tilesz.x / 2.0,
                     gridPos.y * MCache.tilesz.y + MCache.tilesz.y / 2.0
                 );
@@ -163,9 +169,9 @@ public class BlueprintTreePlanter implements Action {
             }
             
             // Save placed position (grid ID + tile coords)
-            Coord tilePos = blueprintOrigin.floor(MCache.tilesz);
-            Coord gridCoord = tilePos.div(MCache.cmaps);
-            Coord tileInGrid = tilePos.mod(MCache.cmaps);
+            Coord tilePos1 = blueprintOrigin.floor(MCache.tilesz);
+            Coord gridCoord = tilePos1.div(MCache.cmaps);
+            Coord tileInGrid = tilePos1.mod(MCache.cmaps);
             MCache.Grid grid = gui.map.glob.map.grids.get(gridCoord);
             
             if (grid != null) {
@@ -280,12 +286,14 @@ public class BlueprintTreePlanter implements Action {
             blueprintPlob.place();
             
             // Generate plant positions
+            Coord tilePos = worldPos.floor(MCache.tilesz);
             plantPositions.clear();
             for (Map.Entry<Coord, String> entry : blueprintData.trees.entrySet()) {
                 Coord gridPos = entry.getKey();
                 String treeType = entry.getValue();
                 
-                Coord2d treeWorldPos = worldPos.add(
+                // Calculate world position from tile corner, not center
+                Coord2d treeWorldPos = tilePos.mul(MCache.tilesz).add(
                     gridPos.x * MCache.tilesz.x + MCache.tilesz.x / 2.0,
                     gridPos.y * MCache.tilesz.y + MCache.tilesz.y / 2.0
                 );
@@ -306,43 +314,69 @@ public class BlueprintTreePlanter implements Action {
                 return Results.ERROR("No planting positions");
             }
             
-            ArrayList<WItem> seeds = gui.getInventory().getItems(TREE_SEEDS);
-            if (seeds.isEmpty()) {
-                return Results.ERROR("No tree seeds found in inventory");
+            NUtils.getUI().msg("Checking planted trees and preparing seedlings...");
+            
+            // Filter out positions where trees already exist
+            List<PlantPosition> unplantedPositions = new ArrayList<>();
+            for (PlantPosition pos : plantPositions) {
+                Gob existingTree = Finder.findGob(pos.worldPos);
+                if (existingTree == null || !NParser.isIt(existingTree, TREE_OBJECTS)) {
+                    unplantedPositions.add(pos);
+                }
             }
             
-            NUtils.getUI().msg("Starting to plant " + plantPositions.size() + " trees from blueprint...");
+            NUtils.getUI().msg("Found " + unplantedPositions.size() + " trees to plant (" + 
+                (plantPositions.size() - unplantedPositions.size()) + " already planted)");
             
-            int totalPlanted = 0;
-            Map<Coord, ArrayList<PlantPosition>> tileGroups = groupPositionsByTile(plantPositions);
+            if (unplantedPositions.isEmpty()) {
+                return Results.SUCCESS();
+            }
             
-            for (Map.Entry<Coord, ArrayList<PlantPosition>> entry : tileGroups.entrySet()) {
-                ArrayList<PlantPosition> positionsOnTile = entry.getValue();
-                
-                seeds = gui.getInventory().getItems(TREE_SEEDS);
-                if (seeds.isEmpty()) {
-                    NUtils.getUI().msg("No more seeds. Planted " + totalPlanted + " trees.");
-                    return Results.SUCCESS();
+            // Initialize context and find herbalist tables
+            NContext context = new NContext(gui);
+            NArea htableArea = context.getSpecArea(Specialisation.SpecName.htable,"Trees");
+            
+            if (htableArea == null) {
+                return Results.ERROR("No herbalist table area found. Please configure htable specialization.");
+            }
+            
+            ArrayList<Gob> htableGobs = Finder.findGobs(htableArea, new NAlias("gfx/terobjs/htable"));
+            if (htableGobs.isEmpty()) {
+                return Results.ERROR("No herbalist tables found in area.");
+            }
+            
+            ArrayList<Container> herbalistTables = new ArrayList<>();
+            for (Gob htable : htableGobs) {
+                Container container = new Container(htable, "Herbalist Table");
+                container.initattr(Container.Space.class);
+                herbalistTables.add(container);
+            }
+            
+            NUtils.getUI().msg("Found " + herbalistTables.size() + " herbalist tables");
+            
+            // Prepare seedlings on tables
+            int seedlingsPrepared = 0;
+            for (PlantPosition pos : unplantedPositions) {
+                // Check if there's space on any table
+                Container availableTable = findTableWithSpace(gui, herbalistTables);
+                if (availableTable == null) {
+                    NUtils.getUI().msg("No more space on herbalist tables. Prepared " + seedlingsPrepared + " seedlings.");
+                    break;
                 }
                 
-                if (!positionsOnTile.isEmpty()) {
-                    new PathFinder(positionsOnTile.get(0).worldPos).run(gui);
-                    
-                    for (PlantPosition position : positionsOnTile) {
-                        Results plantResult = plantTreeAtPosition(gui, position.worldPos);
-                        if (plantResult.IsSuccess()) {
-                            totalPlanted++;
-                            if (totalPlanted % 5 == 0) {
-                                NUtils.getUI().msg("Planted " + totalPlanted + "/" + plantPositions.size() + " trees...");
-                            }
-                        } else {
-                            break;
-                        }
+                Results seedlingResult = prepareSeedling(gui, context, pos.treeType, availableTable);
+                if (seedlingResult.IsSuccess()) {
+                    seedlingsPrepared++;
+                    if (seedlingsPrepared % 5 == 0) {
+                        NUtils.getUI().msg("Prepared " + seedlingsPrepared + "/" + unplantedPositions.size() + " seedlings...");
                     }
+                } else {
+                    NUtils.getUI().msg("Failed to prepare seedling: ");
+                    break;
                 }
             }
             
-            NUtils.getUI().msg("Blueprint planting completed! Planted " + totalPlanted + " trees.");
+            NUtils.getUI().msg("Seedling preparation completed! Prepared " + seedlingsPrepared + " seedlings.");
             return Results.SUCCESS();
             
         } catch (InterruptedException e) {
@@ -350,6 +384,82 @@ public class BlueprintTreePlanter implements Action {
         } catch (Exception e) {
             return Results.ERROR("Planting failed: " + e.getMessage());
         }
+    }
+    
+    private Container findTableWithSpace(NGameUI gui, ArrayList<Container> tables) throws InterruptedException {
+        for (Container table : tables) {
+            Gob tableGob = Finder.findGob(table.gobid);
+            if (tableGob == null) continue;
+            
+            new PathFinder(tableGob).run(gui);
+            new OpenTargetContainer(table).run(gui);
+            
+            int freeSpace = gui.getInventory(table.cap).getFreeSpace();
+            
+            new CloseTargetContainer(table).run(gui);
+            
+            if (freeSpace > 0) {
+                return table;
+            }
+        }
+        return null;
+    }
+    
+    private Results getSeedFromLogistics(NGameUI gui, NContext context, String treeType) throws InterruptedException {
+        // Convert tree type from minimap path to regular path
+        String treePath = treeType.replace("/mm/", "/");
+        
+        // Get seed name for this tree
+        String seedName = VSpec.getSeedForTree(treePath);
+        if (seedName == null) {
+            return Results.ERROR("No seed found for tree: " + treePath);
+        }
+        
+        NUtils.getUI().msg("Getting seed: " + seedName + " for tree: " + treePath);
+        
+        // Check if seed already exists in inventory
+        ArrayList<WItem> existingSeeds = gui.getInventory().getItems(new NAlias(seedName));
+        if (!existingSeeds.isEmpty()) {
+            NUtils.getUI().msg("Seed already in inventory: " + seedName);
+            return Results.SUCCESS();
+        }
+        
+        // Add seed to context so TakeItems2 knows where to look for it
+        context.addInItem(seedName, null);
+        
+        // Take 1 seed from logistics
+        Results takeResult = new TakeItems2(context, seedName, 1).run(gui);
+        if (!takeResult.IsSuccess()) {
+            return Results.ERROR("Failed to get seed: " + seedName);
+        }
+        
+        // Check that we actually have the seed
+        ArrayList<WItem> seeds = gui.getInventory().getItems(new NAlias(seedName));
+        if (seeds.isEmpty()) {
+            return Results.ERROR("Seed not found in inventory after taking: " + seedName);
+        }
+        
+        NUtils.getUI().msg("Successfully got seed: " + seedName);
+        return Results.SUCCESS();
+    }
+    
+    private Results prepareSeedling(NGameUI gui, NContext context, String treeType, Container targetTable) throws InterruptedException {
+        // 1. Get seed from logistics
+        Results seedResult = getSeedFromLogistics(gui, context, treeType);
+        if (!seedResult.IsSuccess()) {
+            return seedResult;
+        }
+        
+        // TODO: Implement full seedling preparation:
+        // 2. Get pot from gardenpot zone
+        // 3. Get 4 soil from soil zone  
+        // 4. Get water from barrel
+        // 5. Fill pot with soil
+        // 6. Fill pot with water
+        // 7. Put seed in pot
+        // 8. Place pot on herbalist table
+        
+        return Results.SUCCESS();
     }
 
     private Map<Coord, ArrayList<PlantPosition>> groupPositionsByTile(List<PlantPosition> positions) {

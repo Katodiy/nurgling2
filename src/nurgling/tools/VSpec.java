@@ -2945,4 +2945,19 @@ public class VSpec {
 
         return new NAlias(allSeeds);
     }
+
+    /**
+     * Gets the seed name for a given tree resource path.
+     * 
+     * @param treePath The resource path of the tree (e.g., "gfx/terobjs/trees/appletree")
+     * @return The seed name if found, null otherwise
+     */
+    public static String getSeedForTree(String treePath) {
+        ArrayList<String> products = object.get(treePath);
+        if (products != null && !products.isEmpty()) {
+            // Return the last item in the list (typically the seed)
+            return products.get(products.size() - 1);
+        }
+        return null;
+    }
 }
