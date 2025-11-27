@@ -73,13 +73,6 @@ public class ProfileManager {
     }
 
     /**
-     * Gets the profile directory path
-     */
-    public Path getProfilePath() {
-        return profilePath;
-    }
-
-    /**
      * Gets the genus identifier for this profile
      */
     public String getGenus() {
@@ -180,39 +173,10 @@ public class ProfileManager {
     }
 
     /**
-     * Checks if a configuration file exists in this profile
-     */
-    public boolean hasConfig(String filename) {
-        return Files.exists(getConfigPath(filename));
-    }
-
-    /**
      * Checks if the profile directory exists
      */
     public boolean exists() {
         return Files.exists(profilePath);
-    }
-
-    /**
-     * Creates a backup of a configuration file before modification
-     */
-    public void backupConfig(String filename) {
-        try {
-            Path configPath = getConfigPath(filename);
-            if (Files.exists(configPath)) {
-                Path backupPath = configPath.resolveSibling(filename + ".backup");
-                Files.copy(configPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to backup " + filename + ": " + e.getMessage());
-        }
-    }
-
-    /**
-     * Gets the fallback (global) path for a configuration file
-     */
-    public String getFallbackPath(String filename) {
-        return baseConfigPath.resolve(filename).toString();
     }
 
     @Override

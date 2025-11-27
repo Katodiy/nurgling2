@@ -57,18 +57,6 @@ public class TreeLocationService implements ProfileAwareService {
     }
 
     @Override
-    public void migrateFromGlobal() {
-        // Migration is handled automatically by ProfileManager when profile is created
-        // Just reload data from the new profile location
-        load();
-    }
-
-    @Override
-    public String getConfigFileName() {
-        return "tree_locations.nurgling.json";
-    }
-
-    @Override
     public String getGenus() {
         return genus;
     }
@@ -86,11 +74,6 @@ public class TreeLocationService implements ProfileAwareService {
         } finally {
             lock.writeLock().unlock();
         }
-    }
-
-    @Override
-    public String getConfigPath() {
-        return dataFile;
     }
 
     /**

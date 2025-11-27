@@ -31,42 +31,4 @@ public class ConfigFactory {
             System.out.println("Initialized profile for world: " + genus);
         }
     }
-
-    /**
-     * Gets the global (non-profiled) configuration instance.
-     */
-    public static NConfig getGlobalConfig() {
-        return NConfig.getGlobalInstance();
-    }
-
-    /**
-     * Gets a profile-specific configuration instance.
-     */
-    public static NConfig getProfileConfig(String genus) {
-        if (genus == null || genus.isEmpty()) {
-            throw new IllegalArgumentException("Genus cannot be null or empty for profile config");
-        }
-        return NConfig.getProfileInstance(genus);
-    }
-
-    /**
-     * Checks if a profile exists for the given genus.
-     */
-    public static boolean profileExists(String genus) {
-        if (genus == null || genus.isEmpty()) {
-            return false;
-        }
-        ProfileManager manager = new ProfileManager(genus);
-        return manager.exists();
-    }
-
-    /**
-     * Creates a new profile manager for the given genus (useful for utilities).
-     */
-    public static ProfileManager createProfileManager(String genus) {
-        if (genus == null || genus.isEmpty()) {
-            throw new IllegalArgumentException("Genus cannot be null or empty");
-        }
-        return new ProfileManager(genus);
-    }
 }

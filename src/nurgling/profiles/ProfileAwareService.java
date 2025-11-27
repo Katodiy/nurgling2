@@ -17,20 +17,6 @@ public interface ProfileAwareService {
     void initializeForProfile(String genus);
 
     /**
-     * Migrates existing global configuration to the profile.
-     * This should only be called during first-time profile creation.
-     */
-    void migrateFromGlobal();
-
-    /**
-     * Gets the configuration file name that this service manages.
-     * Used for automatic migration and path resolution.
-     *
-     * @return The configuration file name (e.g., "fish_locations.nurgling.json")
-     */
-    String getConfigFileName();
-
-    /**
      * Gets the current genus (world identifier) for this service instance.
      * May return null if this is a global (non-profiled) instance.
      *
@@ -57,12 +43,4 @@ public interface ProfileAwareService {
      * Saves the current configuration to the appropriate location.
      */
     void save();
-
-    /**
-     * Gets the full path to the configuration file for this service.
-     * Should return profile-specific path if profiled, global path otherwise.
-     *
-     * @return Full path to the configuration file
-     */
-    String getConfigPath();
 }

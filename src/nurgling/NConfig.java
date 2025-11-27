@@ -378,11 +378,9 @@ public class NConfig
     private boolean isRoutesUpd = false;
     private boolean isScenariosUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
-    public String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
     public String path_explored = ((HashDirCache) ResCache.global).base + "\\..\\" + "explored.nurgling.json";
     public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
     public String path_scenarios = ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
-    public String path_cheese_orders = ((HashDirCache) ResCache.global).base + "\\..\\" + "cheese_orders.nurgling.json";
 
     public boolean isUpdated()
     {
@@ -463,13 +461,6 @@ public class NConfig
         }
     }
 
-    public static void needScenariosUpdate() {
-        if (current != null)
-        {
-            current.isScenariosUpd = true;
-        }
-    }
-
     public static void needExploredUpdate()
     {
         if (current != null)
@@ -516,13 +507,6 @@ public class NConfig
     }
 
     /**
-     * Checks if this is a profiled (genus-specific) configuration
-     */
-    public boolean isProfiled() {
-        return genus != null && !genus.isEmpty();
-    }
-
-    /**
      * Gets the dynamic path for areas configuration file
      */
     public String getAreasPath() {
@@ -540,16 +524,6 @@ public class NConfig
             return profileManager.getConfigPathString("routes.nurgling.json");
         }
         return ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
-    }
-
-    /**
-     * Gets the dynamic path for scenarios configuration file
-     */
-    public String getScenariosPath() {
-        if (profileManager != null) {
-            return profileManager.getConfigPathString("scenarios.nurgling.json");
-        }
-        return ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
     }
 
     /**
@@ -600,16 +574,6 @@ public class NConfig
             return profileManager.getConfigPathString("resource_timers.nurgling.json");
         }
         return ((HashDirCache) ResCache.global).base + "\\..\\" + "resource_timers.nurgling.json";
-    }
-
-    /**
-     * Gets the dynamic path for fog configuration file
-     */
-    public String getFogPath() {
-        if (profileManager != null) {
-            return profileManager.getConfigPathString("fog.nurgling.json");
-        }
-        return ((HashDirCache) ResCache.global).base + "\\..\\" + "fog.nurgling.json";
     }
 
     @SuppressWarnings("unchecked")

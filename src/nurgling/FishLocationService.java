@@ -57,18 +57,6 @@ public class FishLocationService implements ProfileAwareService {
     }
 
     @Override
-    public void migrateFromGlobal() {
-        // Migration is handled automatically by ProfileManager when profile is created
-        // Just reload data from the new profile location
-        load();
-    }
-
-    @Override
-    public String getConfigFileName() {
-        return "fish_locations.nurgling.json";
-    }
-
-    @Override
     public String getGenus() {
         return genus;
     }
@@ -86,11 +74,6 @@ public class FishLocationService implements ProfileAwareService {
         } finally {
             lock.writeLock().unlock();
         }
-    }
-
-    @Override
-    public String getConfigPath() {
-        return dataFile;
     }
 
     /**
@@ -221,30 +204,6 @@ public class FishLocationService implements ProfileAwareService {
                 saveFishLocations();
             }
             return removed;
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
-    /**
-     * Remove all fish locations at a specific coordinate (for cleanup)
-     */
-    public void removeFishLocationsAt(long segmentId, Coord tileCoords, int radius) {
-        lock.writeLock().lock();
-        try {
-            boolean changed = false;
-            Iterator<Map.Entry<String, FishLocation>> iter = fishLocations.entrySet().iterator();
-            while (iter.hasNext()) {
-                Map.Entry<String, FishLocation> entry = iter.next();
-                FishLocation loc = entry.getValue();
-                if (loc.getSegmentId() == segmentId && loc.getTileCoords().dist(tileCoords) <= radius) {
-                    iter.remove();
-                    changed = true;
-                }
-            }
-            if (changed) {
-                saveFishLocations();
-            }
         } finally {
             lock.writeLock().unlock();
         }
