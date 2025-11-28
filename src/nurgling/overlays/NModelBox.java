@@ -154,17 +154,21 @@ public class NModelBox extends Sprite implements RenderTree.Node {
         }
 
         public void added(RenderTree.Slot slot) {
-            String mode = (String) NConfig.get(NConfig.Key.bbDisplayMode);
-            if (mode == null) mode = "FILLED";
-            
-            // Update materials for current mode
-            updateMaterials(mode);
-            
-            if (mode.equals("FILLED") || mode.equals("FILLED_ALWAYS")) {
-                slot.add(emod, emat);
-                slot.add(lmod, lmat);
-            } else if (mode.equals("OUTLINE") || mode.equals("OUTLINE_ALWAYS")) {
-                slot.add(lmod, lmat);
+            try {
+                String mode = (String) NConfig.get(NConfig.Key.bbDisplayMode);
+                if (mode == null) mode = "FILLED";
+                
+                // Update materials for current mode
+                updateMaterials(mode);
+                
+                if (mode.equals("FILLED") || mode.equals("FILLED_ALWAYS")) {
+                    slot.add(emod, emat);
+                    slot.add(lmod, lmat);
+                } else if (mode.equals("OUTLINE") || mode.equals("OUTLINE_ALWAYS")) {
+                    slot.add(lmod, lmat);
+                }
+            } catch (haven.Defer.NotDoneException e) {
+                // Texture not ready yet, will retry on next tick
             }
         }
     }
@@ -216,6 +220,8 @@ public class NModelBox extends Sprite implements RenderTree.Node {
                     slot.add(n);
                 } catch (RenderTree.SlotRemoved e) {
                     // Ignore removed slots
+                } catch (haven.Defer.NotDoneException e) {
+                    // Texture not ready yet, will retry on next tick
                 }
             }
         }
@@ -249,6 +255,8 @@ public class NModelBox extends Sprite implements RenderTree.Node {
                 }
             } catch (RenderTree.SlotRemoved e) {
                 // Ignore removed slots
+            } catch (haven.Defer.NotDoneException e) {
+                // Texture not ready yet, will retry on next tick
             }
         }
     }
@@ -264,7 +272,9 @@ public class NModelBox extends Sprite implements RenderTree.Node {
         // Check if display mode changed
         if (currentDisplayMode != null && !currentDisplayMode.equals(mode)) {
             currentDisplayMode = mode;
-            refreshDisplay();
+            if (isVisible) {
+                refreshDisplay();
+            }
         } else if (currentDisplayMode == null) {
             currentDisplayMode = mode;
         }

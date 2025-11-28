@@ -1044,7 +1044,7 @@ public class NMapView extends MapView
                     newMode = "OUTLINE_ALWAYS";
                     break;
                 case "OUTLINE_ALWAYS":
-                    newMode = "OFF";
+                    newMode = "FILLED";
                     break;
                 default:
                     newMode = "FILLED";
@@ -1068,23 +1068,11 @@ public class NMapView extends MapView
                 case "OUTLINE_ALWAYS":
                     displayMsg = "Outline (always visible)";
                     break;
-                case "OFF":
-                    displayMsg = "Off";
-                    break;
                 default:
                     displayMsg = newMode;
                     break;
             }
             NUtils.getGameUI().msg("Bounding Box Mode: " + displayMsg);
-            
-            // If BB is disabled and user switches to a visible mode, enable it
-            if (!newMode.equals("OFF") && !(Boolean) NConfig.get(NConfig.Key.showBB)) {
-                NConfig.set(NConfig.Key.showBB, true);
-            }
-            // If user switches to OFF mode, disable BB
-            else if (newMode.equals("OFF")) {
-                NConfig.set(NConfig.Key.showBB, false);
-            }
         }
         if(kb_togglenature.key().match(ev)) {
             boolean val = (Boolean) NConfig.get(NConfig.Key.hideNature);
