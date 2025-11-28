@@ -1,5 +1,6 @@
 package nurgling.conf;
 
+import nurgling.NConfig;
 import nurgling.tools.NAlias;
 
 import java.util.*;
@@ -258,5 +259,44 @@ public class CropRegistry {
                         new CropStage(3, new NAlias("Wild Flower Seeds"), StorageBehavior.BARREL)
                 )
         );
+    }
+
+    /**
+     * Gets harvestable stages for a crop based on the harvest timing setting.
+     * Only applies timing logic for quality grid farmers.
+     *
+     * @param crop The crop alias to get stages for
+     * @param isQualityGrid Whether this is being called from a quality farmer
+     * @return List of harvestable stages based on timing setting (if quality) or all stages (if regular)
+     */
+    public static List<CropStage> getHarvestableStages(NAlias crop, boolean isQualityGrid) {
+        List<CropStage> allStages = HARVESTABLE.getOrDefault(crop, Collections.emptyList());
+        if (allStages.isEmpty() || !isQualityGrid) {
+            // For regular farmers or empty stages, return all stages (original behavior)
+            return allStages;
+        }
+
+        // Only apply timing logic for quality grid farmers
+        String harvestTiming = (String) NConfig.get(NConfig.Key.harvestTiming);
+        if (harvestTiming == null) {
+            harvestTiming = "Latest";
+        }
+
+        if ("Earliest".equals(harvestTiming)) {
+            // Return all stages (harvest as soon as anything is available)
+            return new ArrayList<>(allStages);
+        } else {
+            // "Latest" - only harvest at the highest stage
+            // Find the maximum stage number
+            int maxStage = allStages.stream()
+                    .mapToInt(stage -> stage.stage)
+                    .max()
+                    .orElse(0);
+
+            // Return only stages at the maximum stage level
+            return allStages.stream()
+                    .filter(stage -> stage.stage == maxStage)
+                    .collect(ArrayList::new, (list, stage) -> list.add(stage), ArrayList::addAll);
+        }
     }
 }
