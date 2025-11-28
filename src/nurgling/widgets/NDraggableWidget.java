@@ -263,7 +263,32 @@ public class NDraggableWidget extends Widget
             if (dm != null)
             {
                 Coord prepc = this.c.add(ev.c.add(doff.inv()));
-                this.c = prepc.div(UI.scale(8)).mul(UI.scale(8)).sub(UI.scale(4),UI.scale(4));
+                Coord newc = prepc.div(UI.scale(8)).mul(UI.scale(8)).sub(UI.scale(4),UI.scale(4));
+                
+                // Snap to screen edges
+                if(NUtils.getGameUI() != null && NUtils.getGameUI().sz != Coord.z) {
+                    int snapThreshold = UI.scale(20); // Distance at which snapping activates
+                    Coord screenSz = NUtils.getGameUI().sz;
+                    
+                    // Snap to left edge
+                    if(newc.x < snapThreshold) {
+                        newc.x = 0;
+                    }
+                    // Snap to top edge
+                    if(newc.y < snapThreshold) {
+                        newc.y = 0;
+                    }
+                    // Snap to right edge
+                    if(newc.x + sz.x > screenSz.x - snapThreshold) {
+                        newc.x = screenSz.x - sz.x;
+                    }
+                    // Snap to bottom edge
+                    if(newc.y + sz.y > screenSz.y - snapThreshold) {
+                        newc.y = screenSz.y - sz.y;
+                    }
+                }
+                
+                this.c = newc;
             }
             else
             {
