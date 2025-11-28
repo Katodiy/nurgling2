@@ -95,6 +95,7 @@ public class NMapView extends MapView
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
     
     public Coord3f gobPathLastClick;
+    private int gobPathStoppedFrames = 0;
 
     // Track if overlays have been initialized to avoid repeated initialization checks
     private boolean overlaysInitialized = false;
@@ -177,14 +178,28 @@ public class NMapView extends MapView
             try {
                 Gob player = player();
                 if (player != null && gobPathLastClick != null) {
-                    Coord playerc = screenxf(player.getc()).round2();
-                    Coord clickc = screenxf(gobPathLastClick).round2();
-                    if (playerc != null && clickc != null) {
-                        g.chcolor(java.awt.Color.BLACK);
-                        g.line(playerc, clickc, 4);
-                        g.chcolor(java.awt.Color.WHITE);
-                        g.line(playerc, clickc, 2);
-                        g.chcolor();
+                    // Check if player is still moving
+                    Moving m = player.getattr(Moving.class);
+                    if (m != null && (m instanceof LinMove || m instanceof Following)) {
+                        // Player is moving - draw line and reset counter
+                        gobPathStoppedFrames = 0;
+                        Coord playerc = screenxf(player.getc()).round2();
+                        Coord clickc = screenxf(gobPathLastClick).round2();
+                        if (playerc != null && clickc != null) {
+                            g.chcolor(java.awt.Color.BLACK);
+                            g.line(playerc, clickc, 4);
+                            g.chcolor(java.awt.Color.WHITE);
+                            g.line(playerc, clickc, 2);
+                            g.chcolor();
+                        }
+                    } else {
+                        // Player not moving - count frames (delay for direction changes)
+                        gobPathStoppedFrames++;
+                        if (gobPathStoppedFrames > 10) {
+                            // Player stopped for more than 10 frames - clear path line
+                            gobPathLastClick = null;
+                            gobPathStoppedFrames = 0;
+                        }
                     }
                 }
             } catch (Exception ignored) {
