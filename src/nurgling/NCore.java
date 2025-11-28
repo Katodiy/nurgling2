@@ -335,7 +335,7 @@ public class NCore extends Widget
         // Заменяем константы на методы, генерирующие SQL в зависимости от СУБД
         private String getInsertRecipeSQL() {
             if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
+                return "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?) ON CONFLICT(recipe_hash) DO NOTHING";
             } else { // SQLite
                 return "INSERT OR IGNORE INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
             }
@@ -343,7 +343,7 @@ public class NCore extends Widget
 
         private String getInsertIngredientSQL() {
             if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
+                return "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?) ON CONFLICT(recipe_hash, name) DO NOTHING";
             } else { // SQLite
                 return "INSERT OR IGNORE INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
             }
@@ -351,7 +351,7 @@ public class NCore extends Widget
 
         private String getInsertFepsSQL() {
             if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
+                return "INSERT INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?) ON CONFLICT(recipe_hash, name) DO NOTHING";
             } else { // SQLite
                 return "INSERT OR IGNORE INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
             }
