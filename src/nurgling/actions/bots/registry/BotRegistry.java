@@ -194,7 +194,7 @@ public class BotRegistry {
 
         // TOOLS (for debug)
         bots.add(new BotDescriptor("test1", BotDescriptor.BotType.TOOLS, "Test 1", "Debug test 1.", false, true, TESTMapv4.class, "test1", false));
-        bots.add(new BotDescriptor("test2", BotDescriptor.BotType.TOOLS, "Test 2", "Debug test 2.", false, true, TESTFillCauldron.class, "test2", false));
+        bots.add(new BotDescriptor("test2", BotDescriptor.BotType.TOOLS, "Show Active Tasks", "Shows all active tasks in NCore.", false, true, TESTShowActiveTasks.class, "test2", false));
         bots.add(new BotDescriptor("test4", BotDescriptor.BotType.TOOLS, "Test 4", "Debug test 4.", false, true, TESTbranchinvtransferpacks.class, "test4", false));
         bots.add(new BotDescriptor("test5", BotDescriptor.BotType.TOOLS, "Test 5", "Debug test 5.", false, true, TESTfreeStockpilesAndTransfer.class, "test5", false));
         bots.add(new BotDescriptor("test7", BotDescriptor.BotType.TOOLS, "Test 7", "Debug test 7.", false, true, TESTselectfloweraction.class, "test7", false));
