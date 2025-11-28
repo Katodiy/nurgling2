@@ -134,7 +134,8 @@ public class NConfig
         showSpeedometer,
         parasiteBotEnabled,
         leechAction,
-        tickAction
+        tickAction,
+        harvestTiming
     }
 
     public enum BBDisplayMode
@@ -350,6 +351,9 @@ public class NConfig
         conf.put(Key.parasiteBotEnabled, false);
         conf.put(Key.leechAction, "ground");  // "ground" or "inventory"
         conf.put(Key.tickAction, "ground");   // "ground" or "inventory"
+
+        // Harvest timing setting for quality farmers
+        conf.put(Key.harvestTiming, "Latest");  // "Earliest" or "Latest"
     }
 
 

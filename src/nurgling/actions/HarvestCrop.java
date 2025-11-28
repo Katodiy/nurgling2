@@ -11,7 +11,12 @@ import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HarvestCrop implements Action {
@@ -63,7 +68,7 @@ public class HarvestCrop implements Action {
             return Results.ERROR("No barrel for seed");
         }
 
-        for (CropRegistry.CropStage stage : CropRegistry.HARVESTABLE.getOrDefault(crop, Collections.emptyList())) {
+        for (CropRegistry.CropStage stage : CropRegistry.getHarvestableStages(crop, isQualityGrid)) {
             if (stage.storageBehavior == CropRegistry.StorageBehavior.BARREL) {
                 // For each barrel, transfer all items of this type
                 for (Gob barrel : barrels) {
@@ -167,7 +172,7 @@ public class HarvestCrop implements Action {
         }
         Gob plant;
         plant = null;
-        for (CropRegistry.CropStage cropStage : CropRegistry.HARVESTABLE.getOrDefault(crop, Collections.emptyList())) {
+        for (CropRegistry.CropStage cropStage : CropRegistry.getHarvestableStages(crop, isQualityGrid)) {
             plant = Finder.findGob(plantGobEndpoint.div(MCache.tilesz).floor(), crop, cropStage.stage);
             if(plant != null) {
                 break;
@@ -204,7 +209,7 @@ public class HarvestCrop implements Action {
         }
 
         ArrayList<Gob> plants;
-        List<CropRegistry.CropStage> cropStages = CropRegistry.HARVESTABLE.getOrDefault(crop, Collections.emptyList());
+        List<CropRegistry.CropStage> cropStages = CropRegistry.getHarvestableStages(crop, isQualityGrid);
         for (CropRegistry.CropStage cropStage : cropStages) {
             ArrayList<Gob> plantsToHarvest;
             while (!(plantsToHarvest = Finder.findGobs(area, crop, cropStage.stage)).isEmpty()) {
@@ -256,7 +261,7 @@ public class HarvestCrop implements Action {
             boolean barrelOnlyIfInventoryFull
     ) throws InterruptedException {
         Map<NAlias, CropRegistry.StorageBehavior> resultStorage = new HashMap<>();
-        for (CropRegistry.CropStage stage : CropRegistry.HARVESTABLE.getOrDefault(crop, Collections.emptyList())) {
+        for (CropRegistry.CropStage stage : CropRegistry.getHarvestableStages(crop, isQualityGrid)) {
             resultStorage.put(stage.result, stage.storageBehavior);
         }
 
@@ -332,7 +337,7 @@ public class HarvestCrop implements Action {
     }
 
     private boolean hasAnyCropStage(NArea field, NAlias crop) throws InterruptedException {
-        List<CropRegistry.CropStage> cropStages = CropRegistry.HARVESTABLE.getOrDefault(crop, Collections.emptyList());
+        List<CropRegistry.CropStage> cropStages = CropRegistry.getHarvestableStages(crop, isQualityGrid);
 
         if (cropStages.isEmpty())
             return false;
@@ -350,7 +355,7 @@ public class HarvestCrop implements Action {
             return false;
         }
 
-        for (CropRegistry.CropStage stage : CropRegistry.HARVESTABLE.getOrDefault(crop, Collections.emptyList())) {
+        for (CropRegistry.CropStage stage : CropRegistry.getHarvestableStages(crop, isQualityGrid)) {
             if (stage.storageBehavior == CropRegistry.StorageBehavior.BARREL) {
                 return true;
             }

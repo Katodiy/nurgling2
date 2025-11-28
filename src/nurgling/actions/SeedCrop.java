@@ -338,7 +338,7 @@ public class SeedCrop implements Action {
 
         if (canSeedCells < toSeed.size()) {
             gui.error("Not enough seeds in container for quality seeding!");
-            throw new InterruptedException();
+            return;
         }
 
         int fetchCount = Math.min(seeds.size(), gui.getInventory().getFreeSpace());

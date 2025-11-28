@@ -2,6 +2,8 @@ package nurgling.widgets.nsettings;
 
 import haven.*;
 import nurgling.NConfig;
+import java.util.List;
+import java.util.ArrayList;
 
 public class FarmingSettingsPanel extends Panel {
     private TextEntry xEntry, yEntry;
@@ -11,6 +13,7 @@ public class FarmingSettingsPanel extends Panel {
     private CheckBox ignoreStrawInFarmers;
     private CheckBox autoEquipTravellersSacksCheck;
     private CheckBox validateAllCropsBeforeHarvestCheck;
+    private Dropbox<String> harvestTimingDropbox;
 
     public FarmingSettingsPanel() {
         super("Farming Settings");
@@ -78,6 +81,35 @@ public class FarmingSettingsPanel extends Panel {
         add(validateAllCropsBeforeHarvestCheck, new Coord(margin, y));
         y += UI.scale(28);
 
+        add(new Label("Quality Farmer Harvest Timing:"), new Coord(margin, y));
+        y += UI.scale(24);
+
+        List<String> harvestOptions = new ArrayList<>();
+        harvestOptions.add("Earliest");
+        harvestOptions.add("Latest");
+        harvestTimingDropbox = new Dropbox<String>(UI.scale(120), harvestOptions.size(), UI.scale(16)) {
+            @Override
+            protected String listitem(int i) {
+                return harvestOptions.get(i);
+            }
+
+            @Override
+            protected int listitems() {
+                return harvestOptions.size();
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, new Coord(2, 1));
+            }
+        };
+        add(harvestTimingDropbox, new Coord(margin, y));
+        y += UI.scale(28);
+
+        add(new Label("Earliest: harvest at minimum stage+ | Latest: harvest only at highest stage"),
+            new Coord(margin, y));
+        y += UI.scale(28);
+
         add(new Label("Seeding Pattern X (columns):"), new Coord(margin, y));
         y += UI.scale(24);
 
@@ -122,6 +154,10 @@ public class FarmingSettingsPanel extends Panel {
         Boolean validateAllCrops = (Boolean) NConfig.get(NConfig.Key.validateAllCropsBeforeHarvest);
         validateAllCropsBeforeHarvestCheck.a = validateAllCrops != null && validateAllCrops;
 
+        String harvestTiming = (String) NConfig.get(NConfig.Key.harvestTiming);
+        if (harvestTiming == null) harvestTiming = "Latest";
+        harvestTimingDropbox.sel = harvestTiming;
+
         String pat = (String) NConfig.get(NConfig.Key.qualityGrindSeedingPatter);
         if (pat == null || !pat.matches("\\d+x\\d+")) pat = "3x3";
         String[] parts = pat.split("x");
@@ -137,6 +173,7 @@ public class FarmingSettingsPanel extends Panel {
         NConfig.set(NConfig.Key.fillCompostWithSwill, fillCompostWithSwill.a);
         NConfig.set(NConfig.Key.autoEquipTravellersSacks, autoEquipTravellersSacksCheck.a);
         NConfig.set(NConfig.Key.validateAllCropsBeforeHarvest, validateAllCropsBeforeHarvestCheck.a);
+        NConfig.set(NConfig.Key.harvestTiming, harvestTimingDropbox.sel);
         String xVal = xEntry.text();
         String yVal = yEntry.text();
         if (!xVal.matches("\\d+")) xVal = "3";
