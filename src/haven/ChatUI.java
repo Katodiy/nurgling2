@@ -1592,6 +1592,24 @@ public class ChatUI extends Widget
 	}
     }
 
+    /**
+     * Find location chat (non-Realm SimpleChat or MultiChat)
+     */
+    public Channel findLocationChat() {
+        if(chansel == null) return null;
+        synchronized(chansel.chls) {
+            for(Selector.DarkChannel ch : chansel.chls) {
+                Channel chan = ch.chan;
+                if(chan instanceof EntryChannel && 
+                   !chan.getClass().getName().contains("Realm") &&
+                   (chan instanceof SimpleChat || chan instanceof MultiChat)) {
+                    return chan;
+                }
+            }
+        }
+        return null;
+    }
+    
     public void select(Channel chan, boolean focus) {
 	Channel prev = sel;
 	sel = chan;

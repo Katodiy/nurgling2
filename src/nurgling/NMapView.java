@@ -1142,8 +1142,10 @@ public class NMapView extends MapView
                 
                 // Convert local grid tile coords to world tile coords
                 // grid.gc is grid coordinate, area.ul/br are tile coords within the grid
+                // Note: area.br already has +1 added by Space constructor, so we subtract it
+                // because Space constructor will add it again when parsing from chat
                 Coord worldULTile = grid.gc.mul(MCache.cmaps).add(area.ul);
-                Coord worldBRTile = grid.gc.mul(MCache.cmaps).add(area.br);
+                Coord worldBRTile = grid.gc.mul(MCache.cmaps).add(area.br.sub(1, 1));
                 
                 if(minWorldTile == null) {
                     minWorldTile = worldULTile;
@@ -1186,7 +1188,13 @@ public class NMapView extends MapView
             if(gui != null && gui.chat != null) {
                 ChatUI.Channel chat = gui.chat.sel;
                 if(chat instanceof ChatUI.EntryChannel) {
-                    if(!chat.getClass().getName().contains("Realm")) {
+                    // If realm chat is open, send to location chat instead
+                    if(chat.getClass().getName().contains("Realm")) {
+                        ChatUI.Channel locationChat = gui.chat.findLocationChat();
+                        if(locationChat instanceof ChatUI.EntryChannel) {
+                            ((ChatUI.EntryChannel)locationChat).send(areaStr);
+                        }
+                    } else {
                         ((ChatUI.EntryChannel)chat).send(areaStr);
                     }
                 }

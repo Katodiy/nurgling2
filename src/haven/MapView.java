@@ -2073,8 +2073,14 @@ public class MapView extends PView implements DTarget, Console.Directory {
 				if(gui != null && gui.chat != null ) {
 					ChatUI.Channel chat = gui.chat.sel;
 					if(chat instanceof ChatUI.EntryChannel) {
-						// Don't send in realm channels
-						if(!chat.getClass().getName().contains("Realm")) {
+						// If realm chat is open, send to location chat instead
+						if(chat.getClass().getName().contains("Realm")) {
+							ChatUI.Channel locationChat = gui.chat.findLocationChat();
+							if(locationChat instanceof ChatUI.EntryChannel) {
+								((ChatUI.EntryChannel)locationChat).send(String.format("@%d", clickedGob.gob.id));
+								return;
+							}
+						} else {
 							((ChatUI.EntryChannel)chat).send(String.format("@%d", clickedGob.gob.id));
 							return;
 						}
