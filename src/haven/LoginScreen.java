@@ -36,7 +36,7 @@ public class LoginScreen extends Widget {
     public static final Text.Foundry
 	textf = new Text.Foundry(Text.sans, 16).aa(true),
 	textfs = new Text.Foundry(Text.sans, 14).aa(true);
-    public static final Tex bg = Resource.loadtex("nurgling/hud/loginscr");
+    public static final Tex bg = Resource.loadtex("nurgling/hud/loginscr2");
     public static final Tex loadingbg = Resource.loadtex("nurgling/hud/loginscr2");
     public static final Position bgc = new Position(UI.scale(420, 300));
     public final Widget login;
@@ -139,14 +139,14 @@ public class LoginScreen extends Widget {
 	private Credbox() {
 	    super(UI.scale(200, 150));
 	    setfocustab(true);
-	    Widget prev = add(new Label("User name", textf), 0, 0);
+	    Widget prev = add(new LabelWithBg("User name", textf), 0, 0);
 	    add(user = new UserEntry(this.sz.x), prev.pos("bl").adds(0, 1));
 	    setfocus(user);
 
 	    add(pwbox = new Widget(Coord.z), user.pos("bl").adds(0, 10));
-	    pwbox.add(prev = new Label("Password", textf), Coord.z);
+	    pwbox.add(prev = new LabelWithBg("Password", textf), Coord.z);
 	    pwbox.add(pass = new TextEntry(this.sz.x, ""), prev.pos("bl").adds(0, 1)).pw = true;
-	    pwbox.add(savetoken = new CheckBox("Remember me", true), pass.pos("bl").adds(0, 10));
+	    pwbox.add(savetoken = new CheckBoxWithBg("Remember me", true), pass.pos("bl").adds(0, 10));
 	    savetoken.setgkey(kb_savtoken);
 	    savetoken.settip("Saving your login does not save your password, but rather " +
 			     "a randomly generated token that will be used to log in. " +
@@ -156,7 +156,7 @@ public class LoginScreen extends Widget {
 	    pwbox.hide();
 
 	    add(tkbox = new Widget(new Coord(this.sz.x, 0)), user.pos("bl").adds(0, 10));
-	    tkbox.add(prev = new Label("Login saved", textfs), UI.scale(0, 25));
+	    tkbox.add(prev = new LabelWithBg("Login saved", textfs), UI.scale(0, 25));
 	    tkbox.adda(fbtn = new Button(UI.scale(100), "Forget me"), prev.pos("mid").x(this.sz.x), 1.0, 0.5).action(this::forget);
 	    fbtn.setgkey(kb_deltoken);
 	    tkbox.pack();
@@ -170,6 +170,7 @@ public class LoginScreen extends Widget {
 		pos("cmid").y(Math.max(pwbox.pos("bl").y, tkbox.pos("bl").y)).adds(0, 20), 0.5, 0.0);
 	    pack();
 	}
+
 
 	private void init() {
 	    if(inited)
@@ -283,6 +284,48 @@ public class LoginScreen extends Widget {
 	public void tick(double dt) {
 	    super.tick(dt);
 	    // Auto-login disabled
+	}
+    }
+
+    public static class LabelWithBg extends Label {
+	private final int hpad, vpad;
+
+	public LabelWithBg(String text, Text.Foundry f, int hpad, int vpad) {
+	    super(text, f);
+	    this.hpad = hpad;
+	    this.vpad = vpad;
+	}
+
+	public LabelWithBg(String text, Text.Foundry f) {
+	    this(text, f, UI.scale(3), UI.scale(2));
+	}
+
+	public void draw(GOut g) {
+	    g.chcolor(0, 0, 0, 128);
+	    g.frect(new Coord(-hpad, -vpad), sz.add(hpad * 2, vpad * 2));
+	    g.chcolor();
+	    super.draw(g);
+	}
+    }
+
+    public static class CheckBoxWithBg extends CheckBox {
+	private final int hpad, vpad;
+
+	public CheckBoxWithBg(String lbl, boolean lg, int hpad, int vpad) {
+	    super(lbl, lg);
+	    this.hpad = hpad;
+	    this.vpad = vpad;
+	}
+
+	public CheckBoxWithBg(String lbl, boolean lg) {
+	    this(lbl, lg, UI.scale(3), UI.scale(1));
+	}
+
+	public void draw(GOut g) {
+	    g.chcolor(0, 0, 0, 128);
+	    g.frect(UI.scale(new Coord(-hpad + 25, -vpad+sz.y/2)), UI.scale(sz.add(hpad * 2, vpad/2 -sz.y/2)));
+	    g.chcolor();
+	    super.draw(g);
 	}
     }
 
