@@ -44,6 +44,7 @@ public class QoL extends Panel {
     private CheckBox disableDrugEffects;
     private CheckBox simpleInspect;
     private CheckBox showSpeedometer;
+    private CheckBox showPathLine;
 
     private Dropbox<String> preferredSpeedDropbox;
     private Dropbox<String> preferredHorseSpeedDropbox;
@@ -118,6 +119,7 @@ public class QoL extends Panel {
         leftPrev = showTerrainName = leftColumn.add(new CheckBox("Show terrain name on minimap hover"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = simpleInspect = leftColumn.add(new CheckBox("Simplified object inspection (Shift)"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = showSpeedometer = leftColumn.add(new CheckBox("Show speedometer"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = showPathLine = leftColumn.add(new CheckBox("Show path line to destination"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortCupboards = leftColumn.add(new CheckBox("Short cupboards"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortWalls = leftColumn.add(new CheckBox("Short mine walls"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = decalsOnTop = leftColumn.add(new CheckBox("Cupboard decals on top"), leftPrev.pos("bl").adds(0, 5));
@@ -258,6 +260,7 @@ public class QoL extends Panel {
 
         hideNature.a = !getBool(NConfig.Key.hideNature);
         showSpeedometer.a = getBool(NConfig.Key.showSpeedometer);
+        showPathLine.a = getBool(NConfig.Key.showPathLine);
         miningOL.a = getBool(NConfig.Key.miningol);
         tracking.a = getBool(NConfig.Key.tracking);
         crime.a = getBool(NConfig.Key.crime);
@@ -365,6 +368,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.disableMenugridKeys, disableMenugridKeys.a);
         NConfig.set(NConfig.Key.questNotified, questNotified.a);
         NConfig.set(NConfig.Key.showSpeedometer, showSpeedometer.a);
+        NConfig.set(NConfig.Key.showPathLine, showPathLine.a);
 
         // Handle LP assistant setting change - remove overlays if disabled
         boolean oldLpassistent = getBool(NConfig.Key.lpassistent);

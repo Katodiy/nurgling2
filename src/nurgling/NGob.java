@@ -244,6 +244,25 @@ public class NGob
         {
             updateMovingInfo(a, prev);
             
+            // Clear path line when player stops moving (Moving removed and no new Moving added)
+            if(a == null && prev instanceof Moving) {
+                if(NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+                    Gob player = NUtils.getGameUI().map.player();
+                    if(player != null && parent.id == player.id && NUtils.getGameUI().map instanceof NMapView) {
+                        // Small delay to avoid clearing during direction changes
+                        new Thread(() -> {
+                            try {
+                                Thread.sleep(100);
+                                // Check again if player is still not moving
+                                if(player.getattr(Moving.class) == null) {
+                                    ((NMapView)NUtils.getGameUI().map).gobPathLastClick = null;
+                                }
+                            } catch (Exception ignored) {}
+                        }).start();
+                    }
+                }
+            }
+            
             // Add speedometer overlay if not present (it handles its own visibility)
             if ((Boolean) NConfig.get(NConfig.Key.showSpeedometer) && parent.findol(NSpeedometerOverlay.class) == null)
             {

@@ -132,6 +132,7 @@ public class NConfig
         disableDrugEffects,
         simpleInspect,
         showSpeedometer,
+        showPathLine,
         parasiteBotEnabled,
         leechAction,
         tickAction
@@ -244,6 +245,7 @@ public class NConfig
         conf.put(Key.highlightRockTiles, true);
         conf.put(Key.showFullPathLines, false);
         conf.put(Key.showSpeedometer, false);
+        conf.put(Key.showPathLine, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

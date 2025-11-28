@@ -93,6 +93,8 @@ public class NMapView extends MapView
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
 
     public RouteGraphManager routeGraphManager = new RouteGraphManager();
+    
+    public Coord3f gobPathLastClick;
 
     // Track if overlays have been initialized to avoid repeated initialization checks
     private boolean overlaysInitialized = false;
@@ -167,6 +169,25 @@ public class NMapView extends MapView
         synchronized (dummys) {
             for (Gob dummy : dummys.values()) {
                 dummy.gtick(g.out);
+            }
+        }
+        
+        // Draw path line from player to last click point
+        if((Boolean)NConfig.get(NConfig.Key.showPathLine)) {
+            try {
+                Gob player = player();
+                if (player != null && gobPathLastClick != null) {
+                    Coord playerc = screenxf(player.getc()).round2();
+                    Coord clickc = screenxf(gobPathLastClick).round2();
+                    if (playerc != null && clickc != null) {
+                        g.chcolor(java.awt.Color.BLACK);
+                        g.line(playerc, clickc, 4);
+                        g.chcolor(java.awt.Color.WHITE);
+                        g.line(playerc, clickc, 2);
+                        g.chcolor();
+                    }
+                }
+            } catch (Exception ignored) {
             }
         }
     }

@@ -2095,6 +2095,32 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		{
 			NUtils.getUI().core.setLastAction(clickedGob.gob);
 		}
+		
+		// Set path line target on left click (not with shift)
+		try {
+			if(clickb == 1) {
+				if(!ui.modshift) {
+					if(MapView.this instanceof nurgling.NMapView) {
+						((nurgling.NMapView)MapView.this).gobPathLastClick = new Coord3f((float)mc.x, (float)mc.y, glob.map.getzp(mc).z);
+					}
+				} else {
+					if(MapView.this instanceof nurgling.NMapView) {
+						((nurgling.NMapView)MapView.this).gobPathLastClick = null;
+					}
+				}
+			} else if(clickb == 3) {
+				if(inf != null) {
+					if(MapView.this instanceof nurgling.NMapView) {
+						((nurgling.NMapView)MapView.this).gobPathLastClick = new Coord3f((float)mc.x, (float)mc.y, glob.map.getzp(mc).z);
+					}
+				} else {
+					if(MapView.this instanceof nurgling.NMapView) {
+						((nurgling.NMapView)MapView.this).gobPathLastClick = null;
+					}
+				}
+			}
+		} catch(Exception ignored) {}
+		
 	    wdgmsg("click", args);
 	}
     }
