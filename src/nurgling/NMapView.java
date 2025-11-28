@@ -772,6 +772,11 @@ public class NMapView extends MapView
     @Override
     public boolean mousedown(MouseDownEvent ev)
     {
+        // Block all clicks in DRAG mode to prevent character movement during UI adjustment
+        if(ui.core.mode == NCore.Mode.DRAG) {
+            return true;
+        }
+        
         // Alt+Ctrl+LMB activates area selection for chat sharing
         if(ev.b == 1 && ui.modmeta && ui.modctrl) {
             if(!isAreaSelectionMode.get()) {
@@ -867,6 +872,11 @@ public class NMapView extends MapView
     
     @Override
     public boolean mouseup(MouseUpEvent ev) {
+        // Block all clicks in DRAG mode to prevent character movement during UI adjustment
+        if(ui.core.mode == NCore.Mode.DRAG) {
+            return true;
+        }
+        
         if(isDraggingRoutePoint) {
             if(ev.b == 1) {
                 // Left mouse button - finalize drag

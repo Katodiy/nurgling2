@@ -170,7 +170,7 @@ public class SAttrWnd extends Widget {
 			texp += ci.exp;
 			tw += ci.mw;
 			tenc += ci.enc;
-			tlph += ci.lph;
+			tlph += nurgling.iteminfo.NCuriosity.lph(ci.lph);
 		    }
 		} catch(Loading l) {
 		}

@@ -900,13 +900,38 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 		{
 			if(ui.core.mode== NCore.Mode.DRAG && ui.core.enablegrid)
 			{
-				for (int x = 0; x + cells.sz().x < sz.x +cells.sz().x; x += cells.sz().x)
+				// Calculate center of screen
+				int centerX = sz.x / 2;
+				int centerY = sz.y / 2;
+				
+				// Calculate offset so that center of screen becomes coordinate origin
+				// For center textures, this will be their corner
+				int cellSizeX = cells.sz().x;
+				int cellSizeY = cells.sz().y;
+				
+				// Calculate starting position so grid aligns with center
+				int startX = centerX % cellSizeX;
+				int startY = centerY % cellSizeY;
+				
+				// Draw grid with adjusted positioning
+				for (int x = -cellSizeX + startX; x < sz.x; x += cellSizeX)
 				{
-					for (int y = 0; y + cells.sz().y < sz.y + cells.sz().y; y += cells.sz().y)
+					for (int y = -cellSizeY + startY; y < sz.y; y += cellSizeY)
 					{
-						g.image(cells, new Coord(x, y));
+						if(x >= 0 && y >= 0)
+						{
+							g.image(cells, new Coord(x, y));
+						}
 					}
 				}
+				
+				// Draw center crosshair lines (red)
+				g.chcolor(255, 0, 0, 255);
+				// Vertical center line
+				g.line(new Coord(centerX, 0), new Coord(centerX, sz.y), 2.0);
+				// Horizontal center line
+				g.line(new Coord(0, centerY), new Coord(sz.x, centerY), 2.0);
+				g.chcolor();
 			}
 			mapViewReady = false;
 		}

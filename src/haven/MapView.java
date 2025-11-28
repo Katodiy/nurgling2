@@ -2111,6 +2111,11 @@ public class MapView extends PView implements DTarget, Console.Directory {
     private UI.Grab camdrag = null;
 
     public boolean mousedown(MouseDownEvent ev) {
+	// Block all clicks in DRAG mode to prevent character movement during UI adjustment
+	if(ui.core.mode == nurgling.NCore.Mode.DRAG) {
+	    return true;
+	}
+	
 	parent.setfocus(this);
 	Loader.Future<Plob> placing_l = this.placing;
 	if(ev.b == 2) {
@@ -2143,6 +2148,11 @@ public class MapView extends PView implements DTarget, Console.Directory {
     }
     
     public boolean mouseup(MouseUpEvent ev) {
+	// Block all clicks in DRAG mode to prevent character movement during UI adjustment
+	if(ui.core.mode == nurgling.NCore.Mode.DRAG) {
+	    return true;
+	}
+	
 	if(ev.b == 2) {
 	    if(camdrag != null) {
 		camera.release();
