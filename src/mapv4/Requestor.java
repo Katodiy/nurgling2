@@ -20,16 +20,21 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Requestor implements Action {
-    public final LinkedList<MapperTask> list = new LinkedList<MapperTask>();
+    private static final int MAX_QUEUE_SIZE = 1000;
+    private static final int PREPGRID_RETRY_LIMIT = 3;
+    
+    public final BlockingQueue<MapperTask> list = new ArrayBlockingQueue<>(MAX_QUEUE_SIZE);
+    private final Map<String, Integer> prepGridRetries = new HashMap<>();
     NMappingClient parent;
+    
     public Requestor(NMappingClient parent) {
         this.parent = parent;
     }
@@ -60,26 +65,7 @@ public class Requestor implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         while (!parent.done.get()) {
-            NUtils.addTask(new NTask() {
-                @Override
-                public boolean check() {
-                    synchronized (list) {
-                        return !list.isEmpty() || parent.done.get();
-                    }
-
-                }
-
-                @Override
-                public String toString() {
-                    return "Requester1: !list.isEmpty() || parent.done.get()" + String.valueOf(!list.isEmpty()) +String.valueOf(parent.done.get()) ;
-                }
-            });
-            if(parent.done.get())
-                return Results.SUCCESS();
-            MapperTask task;
-            synchronized ( list ) {
-                task = list.poll();
-            }
+            MapperTask task = list.poll(1, TimeUnit.SECONDS);
             if (task != null) {
                 switch (task.type) {
                     case "reqGrid": {
@@ -87,50 +73,55 @@ public class Requestor implements Action {
                         if (gridMap == null) {
                             continue;
                         }
-                        else
-                        {
-                            JSONObject data = new JSONObject();
-                            data.put("grids", gridMap);
-                            JSONObject msg = new JSONObject();
-                            msg.put("data", data);
-                            msg.put("reqMethod", "POST");
-                            msg.put("url", (String)NConfig.get(NConfig.Key.endpoint) + "/gridUpdate");
-                            msg.put("header", "GRIDREQ");
-                            synchronized (parent.connector.msgs)
-                            {
-                                parent.connector.msgs.add(msg);
-                            }
+                        JSONObject data = new JSONObject();
+                        data.put("grids", gridMap);
+                        JSONObject msg = new JSONObject();
+                        msg.put("data", data);
+                        msg.put("reqMethod", "POST");
+                        msg.put("url", (String)NConfig.get(NConfig.Key.endpoint) + "/gridUpdate");
+                        msg.put("header", "GRIDREQ");
+                        if (!parent.connector.msgs.offer(msg)) {
+                            // Queue is full, drop oldest non-critical message
                         }
                         break;
                     }
                     case "prepGrid": {
+                        String gridID = (String)task.args[0];
                         MCache.Grid g = (MCache.Grid)task.args[1];
                         if(g != null && NUtils.getGameUI().map.glob != null) {
                             try {
-                            BufferedImage image = MinimapImageGenerator.drawmap(NUtils.getGameUI().map.glob.map, g);
-                            if(image == null) {
-                                synchronized ( list ) {
-                                    list.add(task);
+                                BufferedImage image = MinimapImageGenerator.drawmap(NUtils.getGameUI().map.glob.map, g);
+                                if(image == null) {
+                                    int retries = prepGridRetries.getOrDefault(gridID, 0);
+                                    if (retries < PREPGRID_RETRY_LIMIT) {
+                                        prepGridRetries.put(gridID, retries + 1);
+                                        list.offer(task);
+                                    } else {
+                                        prepGridRetries.remove(gridID);
+                                    }
+                                    continue;
                                 }
-                                continue;
-                            }
-                            JSONObject extraData = new JSONObject();
-                            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                            ImageIO.write(image, "png", outputStream);
-                            ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+                                prepGridRetries.remove(gridID);
+                                
+                                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                                ImageIO.write(image, "png", outputStream);
+                                ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+                                
                                 JSONObject data = new JSONObject();
                                 data.put("inputStream", inputStream);
-                                data.put("gridID", (String)task.args[0]);
+                                data.put("gridID", gridID);
                                 JSONObject msg = new JSONObject();
                                 msg.put("data", data);
                                 msg.put("reqMethod", "MULTI");
                                 msg.put("url", (String)NConfig.get(NConfig.Key.endpoint) + "/gridUpload");
                                 msg.put("header", "GRIDUPLOAD");
-                                synchronized (parent.connector.msgs)
-                                {
-                                    parent.connector.msgs.add(msg);
+                                
+                                if (!parent.connector.msgs.offer(msg)) {
+                                    // Queue is full, image generation wasted but avoids blocking
                                 }
                             } catch (IOException e) {
+                                // Failed to generate image, don't retry
+                                prepGridRetries.remove(gridID);
                             }
                         }
                         break;
@@ -204,9 +195,8 @@ public class Requestor implements Action {
                             msg.put("reqMethod", "POST");
                             msg.put("url", (String)NConfig.get(NConfig.Key.endpoint) + "/positionUpdate");
                             msg.put("header", "TRACKING");
-                            synchronized (parent.connector.msgs)
-                            {
-                                parent.connector.msgs.add(msg);
+                            if (!parent.connector.msgs.offer(msg)) {
+                                // Queue full, tracking update dropped
                             }
                         }
                         break;
@@ -214,6 +204,7 @@ public class Requestor implements Action {
                     case "processMap":
                     {
                         MapFile mapfile = (MapFile)task.args[0];
+                        @SuppressWarnings("unchecked")
                         Predicate<MapFile.Marker> uploadCheck = (Predicate<MapFile.Marker>)task.args[1];
                         if(mapfile.lock.readLock().tryLock()) {
                             List<MarkerData> markers = mapfile.markers.stream().filter(uploadCheck).map(m -> {
@@ -275,9 +266,8 @@ public class Requestor implements Action {
                             msg.put("reqMethod", "POST");
                             msg.put("url", (String)NConfig.get(NConfig.Key.endpoint) + "/markerUpdate");
                             msg.put("header", "MARKERS");
-                            synchronized (parent.connector.msgs)
-                            {
-                                parent.connector.msgs.add(msg);
+                            if (!parent.connector.msgs.offer(msg)) {
+                                // Queue full, markers update dropped
                             }
                         }
                         break;
@@ -289,35 +279,25 @@ public class Requestor implements Action {
     }
 
     public void senGridRequest(Coord lastGC) {
-        synchronized ( list ) {
-            list.add(new MapperTask("reqGrid", new Object[]{lastGC}));
-        }
+        list.offer(new MapperTask("reqGrid", new Object[]{lastGC}));
     }
 
-
     public void prepGrid(String string, MCache.Grid g) {
-        synchronized ( list ) {
-            list.add(new MapperTask("prepGrid", new Object[]{string, g}));
-        }
+        list.offer(new MapperTask("prepGrid", new Object[]{string, g}));
     }
 
     public void track() {
-        synchronized ( list ) {
-            for(MapperTask task : list )
-            {
-                if(task.type.equals("track"))
-                {
-                    return;
-                }
+        // Check if track task already exists to avoid duplicates
+        for(MapperTask task : list) {
+            if(task.type.equals("track")) {
+                return;
             }
-            list.add(new MapperTask("track", null));
         }
+        list.offer(new MapperTask("track", null));
     }
 
     public void processMap(MapFile mapfile, Predicate<MapFile.Marker> uploadCheck) {
-        synchronized ( list ) {
-            list.add(new MapperTask("processMap", new Object[]{mapfile, uploadCheck}));
-        }
+        list.offer(new MapperTask("processMap", new Object[]{mapfile, uploadCheck}));
     }
 
     private class MarkerData {

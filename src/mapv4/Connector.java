@@ -12,16 +12,28 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.SocketTimeoutException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class Connector implements Action {
+    private static final int MAX_QUEUE_SIZE = 1000;
+    private static final int CONNECT_TIMEOUT_MS = 10000;
+    private static final int READ_TIMEOUT_MS = 30000;
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+    private static final int INITIAL_RETRY_DELAY_MS = 1000;
+    
     NMappingClient parent;
-    public final LinkedList<JSONObject> msgs = new LinkedList<>();
+    public final BlockingQueue<JSONObject> msgs = new ArrayBlockingQueue<>(MAX_QUEUE_SIZE);
+    private long lastErrorTime = 0;
+    private int consecutiveErrors = 0;
+    
     public Connector(NMappingClient parent) {
         this.parent = parent;
     }
@@ -29,95 +41,133 @@ public class Connector implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         while (!parent.done.get()) {
-            NUtils.addTask(new NTask() {
-                @Override
-                public boolean check() {
-                    synchronized (msgs) {
-                        return !msgs.isEmpty() || parent.done.get();
-                    }
-                }
-            });
-            if(parent.done.get())
-                return Results.SUCCESS();
-            JSONObject msg;
-            synchronized ( msgs ) {
-                msg = msgs.poll();
+            JSONObject msg = msgs.poll(1, TimeUnit.SECONDS);
+            if(msg != null) {
+                sendMsgWithRetry(msg);
             }
-            sendMsg(msg);
         }
         return Results.SUCCESS();
     }
 
 
 
-    private void sendMsg(JSONObject msg) {
-        try {
-            int respCode = -1;
-            if(((String)msg.get("reqMethod")).equals("MULTI"))
-            {
-                JSONObject extraData = new JSONObject();
-                MultipartUtility multipart = new MultipartUtility((String) msg.get("url"), "utf-8");
-                multipart.addFormField("id", (String) ((JSONObject)msg.get("data")).get("gridID"));
-                multipart.addFilePart("file", (InputStream) ((JSONObject)msg.get("data")).get("inputStream"), "minimap.png");
-                extraData.put("season", NUtils.getGameUI().map.glob.ast.is);
-                multipart.addFormField("extraData", extraData.toString());
-                MultipartUtility.Response response = multipart.finish();
-                respCode = response.statusCode;
+    private void sendMsgWithRetry(JSONObject msg) {
+        for (int attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
+            try {
+                boolean success = sendMsg(msg);
+                if (success) {
+                    consecutiveErrors = 0;
+                    NUtils.setAutoMapperState(true);
+                    return;
+                }
+            } catch (Exception e) {
+                handleError(e, attempt);
             }
-            else {
-                final HttpURLConnection connection =
-                        (HttpURLConnection) new URL((String) msg.get("url")).openConnection();
-                String reqMethod = (String) msg.get("reqMethod");
-                if (reqMethod.equals("POST")) {
-                    connection.setRequestMethod(reqMethod);
-                    connection.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
-                    connection.setDoOutput(true);
-                    DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+            
+            if (attempt < MAX_RETRY_ATTEMPTS - 1) {
+                try {
+                    long delay = INITIAL_RETRY_DELAY_MS * (1L << attempt);
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+        }
+        
+        NUtils.setAutoMapperState(false);
+    }
+    
+    private boolean sendMsg(JSONObject msg) throws IOException {
+        int respCode = -1;
+        if(((String)msg.get("reqMethod")).equals("MULTI"))
+        {
+            JSONObject extraData = new JSONObject();
+            MultipartUtility multipart = new MultipartUtility((String) msg.get("url"), "utf-8");
+            multipart.addFormField("id", (String) ((JSONObject)msg.get("data")).get("gridID"));
+            multipart.addFilePart("file", (InputStream) ((JSONObject)msg.get("data")).get("inputStream"), "minimap.png");
+            extraData.put("season", NUtils.getGameUI().map.glob.ast.is);
+            multipart.addFormField("extraData", extraData.toString());
+            MultipartUtility.Response response = multipart.finish();
+            respCode = response.statusCode;
+        }
+        else {
+            String urlString = (String) msg.get("url");
+            final HttpURLConnection connection =
+                    (HttpURLConnection) URI.create(urlString).toURL().openConnection();
+            connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+            connection.setReadTimeout(READ_TIMEOUT_MS);
+            
+            String reqMethod = (String) msg.get("reqMethod");
+            if (reqMethod.equals("POST")) {
+                connection.setRequestMethod(reqMethod);
+                connection.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
+                connection.setDoOutput(true);
+                try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
                     final String json = msg.get("data").toString();
                     out.write(json.getBytes(StandardCharsets.UTF_8));
-                } else {
-                    connection.setRequestMethod("GET");
                 }
-                respCode = connection.getResponseCode();
-                if (respCode == 200) {
-                    if (((String) msg.get("header")).equals("GRIDREQ")) {
-                        DataInputStream dio = new DataInputStream(connection.getInputStream());
-                        int nRead;
-                        byte[] data = new byte[1024];
+            } else {
+                connection.setRequestMethod("GET");
+            }
+            
+            respCode = connection.getResponseCode();
+            if (respCode == 200) {
+                if (((String) msg.get("header")).equals("GRIDREQ")) {
+                    try (DataInputStream dio = new DataInputStream(connection.getInputStream())) {
                         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                        byte[] data = new byte[1024];
+                        int nRead;
                         while ((nRead = dio.read(data, 0, data.length)) != -1) {
                             buffer.write(data, 0, nRead);
                         }
-                        buffer.flush();
                         String response = buffer.toString(StandardCharsets.UTF_8.name());
                         JSONObject jo = new JSONObject(response);
                         JSONArray reqs = jo.optJSONArray("gridRequests");
-                        synchronized (parent.cache) {
-                            parent.cache.put(Long.valueOf(((String[][]) ((JSONObject) msg.get("data")).get("grids"))[1][1]), new NMappingClient.MapRef(jo.getLong("map"), new Coord(jo.getJSONObject("coords").getInt("x"), jo.getJSONObject("coords").getInt("y"))));
-                        }
+                        Long gridId = Long.valueOf(((String[][]) ((JSONObject) msg.get("data")).get("grids"))[1][1]);
+                        NMappingClient.MapRef mapRef = new NMappingClient.MapRef(
+                            jo.getLong("map"), 
+                            new Coord(jo.getJSONObject("coords").getInt("x"), jo.getJSONObject("coords").getInt("y")));
+                        parent.cache.put(gridId, new NMappingClient.CacheEntry(mapRef));
                         for (int i = 0; reqs != null && i < reqs.length(); i++) {
                             MCache.Grid g = NUtils.getGameUI().map.glob.map.findGrid(Long.valueOf(reqs.getString(i)));
                             if (g != null) {
                                 parent.requestor.prepGrid(reqs.getString(i), g);
                             }
                         }
-                    } else if (((String) msg.get("header")).equals("LOCATE")) {
-                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                            String resp = reader.lines().collect(Collectors.joining());
-                            String[] parts = resp.split(";");
-                            if (parts.length == 3) {
-                                /// TODO
-                            }
+                    }
+                } else if (((String) msg.get("header")).equals("LOCATE")) {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                        String resp = reader.lines().collect(Collectors.joining());
+                        String[] parts = resp.split(";");
+                        if (parts.length == 3) {
+                            // TODO: implement location handling
                         }
-
                     }
                 }
             }
-            if (respCode == 200) {
-                NUtils.setAutoMapperState(true);
+            connection.disconnect();
+        }
+        return respCode == 200;
+    }
+    
+    private void handleError(Exception e, int attempt) {
+        consecutiveErrors++;
+        long currentTime = System.currentTimeMillis();
+        
+        if (currentTime - lastErrorTime > 60000) {
+            consecutiveErrors = 1;
+        }
+        lastErrorTime = currentTime;
+        
+        if (consecutiveErrors <= 3) {
+            String errorMsg = "Map Server error (attempt " + (attempt + 1) + "/" + MAX_RETRY_ATTEMPTS + ")";
+            if (e instanceof SocketTimeoutException) {
+                errorMsg += ": timeout";
+            } else if (e instanceof IOException) {
+                errorMsg += ": connection failed";
             }
-        } catch (IOException e) {
-            NUtils.getGameUI().error("Map Server is not responding");
+            NUtils.getGameUI().error(errorMsg);
         }
     }
 }

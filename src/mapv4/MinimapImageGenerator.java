@@ -43,21 +43,10 @@ public class MinimapImageGenerator {
                     BufferedImage tex = tileimg(grid.gettile(c), texes, map);
                     int rgb = 0;
                     if (tex != null) {
-                        // Check if uniform biome colors is enabled
-                        boolean uniformColors = false;
-                        if(NConfig.get(NConfig.Key.uniformBiomeColors) instanceof Boolean) {
-                            uniformColors = (Boolean) NConfig.get(NConfig.Key.uniformBiomeColors);
-                        }
-                        if(uniformColors) {
-                            // Always use color from pixel (0,0) for uniform biome colors
-                            int color = tex.getRGB(0, 0);
-                            // Force full opacity
-                            rgb = (color & 0x00FFFFFF) | 0xFF000000;
-                        } else {
-                            // Use normal texture coordinates
-                            rgb = tex.getRGB(Utils.floormod(c.x, tex.getWidth()),
-                                             Utils.floormod(c.y, tex.getHeight()));
-                        }
+                        // Always use original texture coordinates for server uploads
+                        // uniformBiomeColors setting is ignored here
+                        rgb = tex.getRGB(Utils.floormod(c.x, tex.getWidth()),
+                                         Utils.floormod(c.y, tex.getHeight()));
                     }
                     buf.setRGB(c.x, c.y, rgb);
                 }
