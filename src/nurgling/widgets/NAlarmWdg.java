@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import haven.res.ui.obj.buddy.Buddy;
 import nurgling.NAlarmManager;
+import nurgling.NConfig;
 import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.LocalizedResourceTimer;
@@ -32,6 +33,7 @@ public class NAlarmWdg extends Widget
     // Track frame counter for characters without buddy to delay alarm
     private final HashMap<Long, Integer> unknownPlayerFrameCounter = new HashMap<>();
     private static final int ALARM_DELAY_FRAMES = 20;
+    
     public NAlarmWdg() {
         super();
         sz = NStyle.alarm[0].sz();
@@ -214,6 +216,38 @@ public class NAlarmWdg extends Widget
         synchronized (alarms) {
             NAlarmManager.play("alarm/alarm");
             alarms.add(id);
+            // Trigger auto actions immediately when alarm is added
+            checkAutoActions();
+        }
+    }
+    
+    /**
+     * Check if auto hearth or auto logout should be triggered
+     */
+    private void checkAutoActions() {
+        // Check player pose to avoid re-triggering while already logging out or teleporting
+        Gob player = NUtils.player();
+        if (player == null) {
+            return;
+        }
+        
+        String pose = player.pose();
+        if (pose != null && (pose.equals("pointhome") || pose.equals("logout"))) {
+            // Player is already teleporting or logging out - don't trigger again
+            return;
+        }
+        
+        boolean autoLogout = (Boolean) NConfig.get(NConfig.Key.autoLogoutOnUnknown);
+        boolean autoHearth = (Boolean) NConfig.get(NConfig.Key.autoHearthOnUnknown);
+        
+        if (autoLogout) {
+            // Logout takes priority over hearth
+            NUtils.getGameUI().msg("Enemy spotted! Logging out!", Color.WHITE);
+            NUtils.getGameUI().act("lo");
+        } else if (autoHearth) {
+            // Try to use hearth secret
+            NUtils.getGameUI().msg("Enemy spotted! Using hearth secret!", Color.WHITE);
+            NUtils.getGameUI().act("travel", "hearth");
         }
     }
     

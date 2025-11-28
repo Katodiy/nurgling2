@@ -135,7 +135,9 @@ public class NConfig
         showPathLine,
         parasiteBotEnabled,
         leechAction,
-        tickAction
+        tickAction,
+        autoHearthOnUnknown,
+        autoLogoutOnUnknown
     }
 
     public enum BBDisplayMode
@@ -352,6 +354,10 @@ public class NConfig
         conf.put(Key.parasiteBotEnabled, false);
         conf.put(Key.leechAction, "ground");  // "ground" or "inventory"
         conf.put(Key.tickAction, "ground");   // "ground" or "inventory"
+        
+        // Safety settings - auto hearth/logout on unknown players
+        conf.put(Key.autoHearthOnUnknown, false);
+        conf.put(Key.autoLogoutOnUnknown, false);
     }
 
 

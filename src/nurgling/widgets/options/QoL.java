@@ -26,7 +26,6 @@ public class QoL extends Panel {
     private CheckBox disableMenugridKeys;
     private CheckBox questNotified;
     private CheckBox lpassistent;
-    private CheckBox useGlobalPf;
     private CheckBox debug;
     private CheckBox tempmark;
     private CheckBox shortCupboards;
@@ -35,16 +34,12 @@ public class QoL extends Panel {
     private CheckBox printpfmap;
     private CheckBox uniformBiomeColors;
     private CheckBox showTerrainName;
-    private CheckBox waypointRetryOnStuck;
     private CheckBox verboseCal;
     private CheckBox showPersonalClaims;
     private CheckBox showVillageClaims;
     private CheckBox showRealmOverlays;
-    private CheckBox showFullPathLines;
     private CheckBox disableDrugEffects;
     private CheckBox simpleInspect;
-    private CheckBox showSpeedometer;
-    private CheckBox showPathLine;
 
     private Dropbox<String> preferredSpeedDropbox;
     private Dropbox<String> preferredHorseSpeedDropbox;
@@ -118,8 +113,6 @@ public class QoL extends Panel {
         leftPrev = uniformBiomeColors = leftColumn.add(new CheckBox("Uniform biome colors on minimap"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = showTerrainName = leftColumn.add(new CheckBox("Show terrain name on minimap hover"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = simpleInspect = leftColumn.add(new CheckBox("Simplified object inspection (Shift)"), leftPrev.pos("bl").adds(0, 5));
-        leftPrev = showSpeedometer = leftColumn.add(new CheckBox("Show speedometer"), leftPrev.pos("bl").adds(0, 5));
-        leftPrev = showPathLine = leftColumn.add(new CheckBox("Show path line to destination"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortCupboards = leftColumn.add(new CheckBox("Short cupboards"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortWalls = leftColumn.add(new CheckBox("Short mine walls"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = decalsOnTop = leftColumn.add(new CheckBox("Cupboard decals on top"), leftPrev.pos("bl").adds(0, 5));
@@ -202,12 +195,7 @@ public class QoL extends Panel {
 
         // RIGHT COLUMN - Advanced Settings
         Widget rightPrev = null;
-        rightPrev = rightColumn.add(new Label("● Pathfinding & Navigation"), new Coord(5, 5));
-        rightPrev = useGlobalPf = rightColumn.add(new CheckBox("Use global PF"), rightPrev.pos("bl").adds(0, 5));
-        rightPrev = waypointRetryOnStuck = rightColumn.add(new CheckBox("Retry waypoint movement when stuck"), rightPrev.pos("bl").adds(0, 5));
-        rightPrev = showFullPathLines = rightColumn.add(new CheckBox("Show full path lines to destinations"), rightPrev.pos("bl").adds(0, 5));
-
-        rightPrev = rightColumn.add(new Label("● Quality of Life"), rightPrev.pos("bl").adds(0, 15));
+        rightPrev = rightColumn.add(new Label("● Quality of Life"), new Coord(5, 5));
         rightPrev = autoDrink = rightColumn.add(new CheckBox("Auto-drink"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = autoSaveTableware = rightColumn.add(new CheckBox("Auto-save tableware"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = questNotified = rightColumn.add(new CheckBox("Enable quest notified"), rightPrev.pos("bl").adds(0, 5));
@@ -259,8 +247,6 @@ public class QoL extends Panel {
         showCSprite.a = getBool(NConfig.Key.nextshowCSprite);
 
         hideNature.a = !getBool(NConfig.Key.hideNature);
-        showSpeedometer.a = getBool(NConfig.Key.showSpeedometer);
-        showPathLine.a = getBool(NConfig.Key.showPathLine);
         miningOL.a = getBool(NConfig.Key.miningol);
         tracking.a = getBool(NConfig.Key.tracking);
         crime.a = getBool(NConfig.Key.crime);
@@ -269,7 +255,6 @@ public class QoL extends Panel {
         disableMenugridKeys.a = getBool(NConfig.Key.disableMenugridKeys);
         questNotified.a = getBool(NConfig.Key.questNotified);
         lpassistent.a = getBool(NConfig.Key.lpassistent);
-        useGlobalPf.a = getBool(NConfig.Key.useGlobalPf);
         debug.a = getBool(NConfig.Key.debug);
         printpfmap.a = getBool(NConfig.Key.printpfmap);
         tempmark.a = getBool(NConfig.Key.tempmark);
@@ -279,9 +264,7 @@ public class QoL extends Panel {
         uniformBiomeColors.a = getBool(NConfig.Key.uniformBiomeColors);
         showTerrainName.a = getBool(NConfig.Key.showTerrainName);
         simpleInspect.a = getBool(NConfig.Key.simpleInspect);
-        waypointRetryOnStuck.a = getBool(NConfig.Key.waypointRetryOnStuck);
         verboseCal.a = getBool(NConfig.Key.verboseCal);
-        showFullPathLines.a = getBool(NConfig.Key.showFullPathLines);
         showPersonalClaims.a = getBool(NConfig.Key.minimapClaimol);
         showVillageClaims.a = getBool(NConfig.Key.minimapVilol);
         showRealmOverlays.a = getBool(NConfig.Key.minimapRealmol);
@@ -367,8 +350,6 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.openInventoryOnLogin, openInventoryOnLogin.a);
         NConfig.set(NConfig.Key.disableMenugridKeys, disableMenugridKeys.a);
         NConfig.set(NConfig.Key.questNotified, questNotified.a);
-        NConfig.set(NConfig.Key.showSpeedometer, showSpeedometer.a);
-        NConfig.set(NConfig.Key.showPathLine, showPathLine.a);
 
         // Handle LP assistant setting change - remove overlays if disabled
         boolean oldLpassistent = getBool(NConfig.Key.lpassistent);
@@ -403,7 +384,6 @@ public class QoL extends Panel {
             }
         }
         
-        NConfig.set(NConfig.Key.useGlobalPf, useGlobalPf.a);
         NConfig.set(NConfig.Key.debug, debug.a);
         NConfig.set(NConfig.Key.printpfmap, printpfmap.a);
         NConfig.set(NConfig.Key.tempmark, tempmark.a);
@@ -448,9 +428,7 @@ public class QoL extends Panel {
 
         NConfig.set(NConfig.Key.showTerrainName, showTerrainName.a);
         NConfig.set(NConfig.Key.simpleInspect, simpleInspect.a);
-        NConfig.set(NConfig.Key.waypointRetryOnStuck, waypointRetryOnStuck.a);
         NConfig.set(NConfig.Key.verboseCal, verboseCal.a);
-        NConfig.set(NConfig.Key.showFullPathLines, showFullPathLines.a);
         NConfig.set(NConfig.Key.disableDrugEffects, disableDrugEffects.a);
 
         // Save minimap overlay settings (separate from 3D ground overlays)
