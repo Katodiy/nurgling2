@@ -252,6 +252,7 @@ public class RoutesWidget extends Window {
                 route.addRandomWaypoint();
                 waypointList.update(route.waypoints);
                 hearthfireWaypointList.updateHearthfireWaypoints();
+                NConfig.needRoutesUpdate(); // Data changed: waypoint added
             }
         }, new Coord(x, 0)).settip("Record Position");
 
@@ -265,6 +266,7 @@ public class RoutesWidget extends Window {
                     try {
                         new AddHearthFire().run(NUtils.getGameUI());
                         hearthfireWaypointList.updateHearthfireWaypoints();
+                        NConfig.needRoutesUpdate(); // Data changed: hearth fire added
                     } catch (InterruptedException e) {
                         NUtils.getGameUI().error("Failed to add hearth fire");
                     }
@@ -498,6 +500,7 @@ public class RoutesWidget extends Window {
                                         routeList.sel.route.deleteWaypoint(rp);
                                         waypointList.update(routeList.sel.route.waypoints);
                                         hearthfireWaypointList.updateHearthfireWaypoints();
+                                        NConfig.needRoutesUpdate(); // Data changed: waypoint deleted
                                         specList.update(routeList.sel.route);
                                         ((NMapView) NUtils.getGameUI().map).initRouteDummys(routeList.sel.route.id);
                                     }
@@ -639,8 +642,8 @@ public class RoutesWidget extends Window {
             if(NUtils.getGameUI() != null) {
                 ((NMapView) NUtils.getGameUI().map).routeGraphManager.updateGraph();
             }
-
-            NConfig.needRoutesUpdate();
+            // Note: Do not call needRoutesUpdate() here - this is just a refresh/reload.
+            // Call it explicitly only where data actually changes (add/delete operations).
         }
 
         @Override
@@ -695,6 +698,7 @@ public class RoutesWidget extends Window {
                                         if (hearthfireRoute != null) {
                                             hearthfireRoute.deleteWaypoint(rp);
                                             hearthfireWaypointList.updateHearthfireWaypoints();
+                                            NConfig.needRoutesUpdate(); // Data changed: hearth fire deleted
                                             ((NMapView) NUtils.getGameUI().map).initRouteDummys(hearthfireRoute.id);
                                         }
                                     }

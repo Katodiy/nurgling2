@@ -133,7 +133,10 @@ public class NMiniMapWnd extends Widget{
         buttons.add(nightvision);
 
         fog = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/fog", kb_fog, "Explored area");
-        fog.changed(a -> NConfig.set(NConfig.Key.exploredAreaEnable, a));
+        fog.changed(a -> {
+            NConfig.set(NConfig.Key.exploredAreaEnable, a);
+            NConfig.needUpdate();
+        });
         fog.a = (Boolean) NConfig.get(NConfig.Key.exploredAreaEnable);
         buttons.add(fog);
 

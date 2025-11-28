@@ -170,6 +170,14 @@ public class NGameUI extends GameUI
             ui.core.updateConfigForProfile(genus);
         }
 
+        // Reload explored area with profile-specific data
+        if (mmap != null && mmap instanceof NCornerMiniMap) {
+            NCornerMiniMap nmmap = (NCornerMiniMap) mmap;
+            if (nmmap.exploredArea != null) {
+                nmmap.exploredArea.reloadFromFile();
+            }
+        }
+
         // Load areas now that genus is available
         if (map != null && map.glob != null && map.glob.map != null) {
             map.glob.map.loadAreasIfNeeded();

@@ -229,6 +229,14 @@ public class NCore extends Widget
             }
         }
         super.tick(dt);
+        
+        // Save global config (UI settings, credentials, etc.)
+        if (NConfig.current != null && NConfig.current.isUpdated())
+        {
+            NConfig.current.write();
+        }
+        
+        // Save profile-specific config and data
         if (config.isUpdated())
         {
             config.write();

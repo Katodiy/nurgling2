@@ -269,10 +269,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     private final Coord menugridc;
     public GameUI(String chrid, long plid, String genus, NUI nui) {
 	this.chrid = chrid;
-	if(nui.sessInfo!=null)
-		nui.sessInfo.characterInfo = add(new NCharacterInfo(chrid, nui));
 	this.plid = plid;
 	this.genus = genus;
+	if(nui.sessInfo!=null)
+	    nui.sessInfo.characterInfo = add(new NCharacterInfo(chrid, nui, genus));
 	setcanfocus(true);
 	setfocusctl(true);
 

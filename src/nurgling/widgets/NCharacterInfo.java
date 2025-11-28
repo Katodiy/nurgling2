@@ -73,11 +73,29 @@ public class NCharacterInfo extends Widget {
     }
 
     public NCharacterInfo(String chrid, NUI nui) {
+        this(chrid, nui, null);
+    }
+    
+    public NCharacterInfo(String chrid, NUI nui, String genus) {
         this.chrid = chrid;
         // Sanitize username - remove directory separators and "steam" prefix
         String username = nui.sessInfo == null ? "" : nui.sessInfo.username;
         username = username.replace("\\", "_").replace("/", "_").replace("steam", "");
-        path = ((HashDirCache) ResCache.global).base + "\\..\\" + username + "_" + chrid.trim() + ".dat";
+        String filename = username + "_" + chrid.trim() + ".dat";
+        
+        // Use profile-aware path if genus is available
+        if (genus != null && !genus.isEmpty()) {
+            nurgling.NConfig profileConfig = nurgling.profiles.ConfigFactory.getConfig(genus);
+            if (profileConfig != null && profileConfig.getGenus() != null) {
+                path = profileConfig.getProfileAwarePath(filename);
+            } else {
+                // Fallback to global path
+                path = ((HashDirCache) ResCache.global).base + "\\..\\" + filename;
+            }
+        } else {
+            // Fallback to global path
+            path = ((HashDirCache) ResCache.global).base + "\\..\\" + filename;
+        }
         read();
     }
 

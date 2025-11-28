@@ -59,6 +59,20 @@ public class ExploredArea {
     // Main storage: grid-based masks
     private final ConcurrentHashMap<GridKey, boolean[]> gridMasks = new ConcurrentHashMap<>();
     
+    /**
+     * Get the appropriate NConfig instance (profile-specific if available)
+     */
+    private NConfig getConfig() {
+        try {
+            if (nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
+                return nurgling.NUtils.getUI().core.config;
+            }
+        } catch (Exception e) {
+            // Fallback to global config
+        }
+        return NConfig.current;
+    }
+    
     // Track last update position to avoid redundant updates
     private Coord lastTileUL, lastTileBR;
     private long lastSegmentId = -1;
@@ -161,10 +175,21 @@ public class ExploredArea {
     }
     
     /**
+     * Reload explored area data from file.
+     * Call this after profile initialization to load profile-specific data.
+     */
+    public void reloadFromFile() {
+        gridMasks.clear();
+        loadFromFile();
+    }
+    
+    /**
      * Load explored area from JSON file.
      */
     private void loadFromFile() {
-        File file = new File(NConfig.current.path_explored);
+        // Use profile-specific config from NCore if available, otherwise fallback to global
+        NConfig config = getConfig();
+        File file = new File(config.getExploredPath());
         if (!file.exists()) {
             return;
         }

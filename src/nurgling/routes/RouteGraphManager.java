@@ -29,7 +29,7 @@ public class RouteGraphManager implements ProfileAwareService {
         this.configPath = NConfig.getGlobalInstance().getRoutesPath();
         loadRoutes();
         updateGraph();
-        NConfig.needRoutesUpdate();
+        // Don't call needRoutesUpdate() here - loading doesn't require saving
     }
 
     /**

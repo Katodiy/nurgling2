@@ -378,9 +378,6 @@ public class NConfig
     private boolean isRoutesUpd = false;
     private boolean isScenariosUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
-    public String path_explored = ((HashDirCache) ResCache.global).base + "\\..\\" + "explored.nurgling.json";
-    public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
-    public String path_scenarios = ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
 
     public boolean isUpdated()
     {
@@ -429,43 +426,49 @@ public class NConfig
 
     public static void needAreasUpdate()
     {
-        // Update both global and profile-specific config to ensure compatibility
-        if (current != null)
-        {
-            current.isAreasUpd = true;
-        }
-        // Also update the profile-aware config that NCore is using
+        // Only update profile-specific config (areas are per-world)
         try {
             if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
                 nurgling.NUtils.getUI().core.config.isAreasUpd = true;
             }
         } catch (Exception e) {
             // Fallback to global config if profile config not available
+            if (current != null)
+            {
+                current.isAreasUpd = true;
+            }
         }
     }
 
     public static void needRoutesUpdate()
     {
-        // Update both global and profile-specific config to ensure compatibility
-        if (current != null)
-        {
-            current.isRoutesUpd = true;
-        }
-        // Also update the profile-aware config that NCore is using
+        // Only update profile-specific config (routes are per-world)
         try {
             if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
                 nurgling.NUtils.getUI().core.config.isRoutesUpd = true;
             }
         } catch (Exception e) {
             // Fallback to global config if profile config not available
+            if (current != null)
+            {
+                current.isRoutesUpd = true;
+            }
         }
     }
 
     public static void needExploredUpdate()
     {
-        if (current != null)
-        {
-            current.isExploredUpd = true;
+        // Only update profile-specific config (explored area is per-world)
+        try {
+            if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
+                nurgling.NUtils.getUI().core.config.isExploredUpd = true;
+            }
+        } catch (Exception e) {
+            // Fallback to global config if profile config not available
+            if (current != null)
+            {
+                current.isExploredUpd = true;
+            }
         }
     }
 
@@ -508,8 +511,9 @@ public class NConfig
 
     /**
      * Helper method for profile-aware path resolution
+     * Public to allow other components (like NCharacterInfo) to use profile paths
      */
-    private String getProfileAwarePath(String filename) {
+    public String getProfileAwarePath(String filename) {
         if (profileManager != null) {
             return profileManager.getConfigPathString(filename);
         }
@@ -563,6 +567,14 @@ public class NConfig
      */
     public String getResourceTimersPath() {
         return getProfileAwarePath("resource_timers.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for scenarios configuration file
+     * Note: scenarios are always stored globally, not per-profile
+     */
+    public String getScenariosPath() {
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
     }
 
     @SuppressWarnings("unchecked")
@@ -906,7 +918,7 @@ public class NConfig
                 FileWriter f = new FileWriter(customPath==null?getRoutesPath():customPath,StandardCharsets.UTF_8);
                 main.write(f);
                 f.close();
-                current.isRoutesUpd = false;
+                this.isRoutesUpd = false;
             }
             catch (IOException e)
             {
@@ -956,7 +968,7 @@ public class NConfig
             main.put("scenarios", jscenarios);
 
             try {
-                FileWriter f = new FileWriter(customPath == null ? path_scenarios : customPath, StandardCharsets.UTF_8);
+                FileWriter f = new FileWriter(customPath == null ? getScenariosPath() : customPath, StandardCharsets.UTF_8);
                 main.write(f);
                 f.close();
                 current.isScenariosUpd = false;
