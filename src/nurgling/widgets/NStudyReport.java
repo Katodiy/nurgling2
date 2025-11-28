@@ -13,9 +13,10 @@ public class NStudyReport extends Widget {
     public int totalExp = 0;
     public int totalAttention = 0;
     public int totalExpCost = 0;
+    public int totalLph = 0;
     
     private static final int PADDING = UI.scale(20);
-    private static final int INFO_HEIGHT = UI.scale(60);
+    private static final int INFO_HEIGHT = UI.scale(80);
     private Widget fixedContainer;
     private ICheckBox btnLock;
     public boolean locked = false;
@@ -171,6 +172,14 @@ public class NStudyReport extends Widget {
             new Color(192, 192, 255, 255)),
             new Coord(valueX, infoY), 1.0, 0.0);
         
+        infoY += lineHeight;
+        plbl = fixedContainer.add(new Label("LP/H:"), new Coord(labelX, infoY));
+        pval = fixedContainer.adda(new CharWnd.RLabel<Integer>(
+            () -> totalLph,
+            Utils::thformat,
+            new Color(192, 255, 192, 255)),
+            new Coord(valueX, infoY), 1.0, 0.0);
+        
         add(fixedContainer, Coord.z);
         resize(containerSz);
         
@@ -187,15 +196,17 @@ public class NStudyReport extends Widget {
         totalExp = 0;
         totalAttention = 0;
         totalExpCost = 0;
+        totalLph = 0;
         
         if(study != null) {
             for(GItem item : study.children(GItem.class)) {
                 try {
-                    Curiosity ci = ItemInfo.find(Curiosity.class, item.info());
+                    nurgling.iteminfo.NCuriosity ci = ItemInfo.find(nurgling.iteminfo.NCuriosity.class, item.info());
                     if(ci != null) {
                         totalExp += ci.exp;
                         totalAttention += ci.mw;
                         totalExpCost += ci.enc;
+                        totalLph += nurgling.iteminfo.NCuriosity.lph(ci.lph);
                     }
                 } catch(Loading l) {
                 }

@@ -139,7 +139,7 @@ public class SAttrWnd extends Widget {
 
     public static class StudyInfo extends Widget {
 	public final Widget study;
-	public int texp, tw, tenc;
+	public int texp, tw, tenc, tlph;
 
 	private StudyInfo(Coord sz, Widget study) {
 	    super(sz);
@@ -156,22 +156,26 @@ public class SAttrWnd extends Widget {
 	    pval = adda(new RLabel<Integer>(() -> texp, Utils::thformat, new Color(192, 192, 255, 255)),
 			pos("cbr").subs(2, 2), 1.0, 1.0);
 	    plbl = adda(new Label("Learning points:"), pval.pos("ul").subs(0, 2).xs(2), 0.0, 1.0);
+	    pval = adda(new RLabel<Integer>(() -> tlph, Utils::thformat, new Color(192, 255, 192, 255)),
+			pval.pos("bl").subs(0, 2), 1.0, 1.0);
+	    plbl = adda(new Label("LP/H:"), pval.pos("ul").subs(0, 2).xs(2), 0.0, 1.0);
 	}
 
 	private void upd() {
-	    int texp = 0, tw = 0, tenc = 0;
+	    int texp = 0, tw = 0, tenc = 0, tlph = 0;
 	    for(GItem item : study.children(GItem.class)) {
 		try {
-		    Curiosity ci = ItemInfo.find(Curiosity.class, item.info());
+		    nurgling.iteminfo.NCuriosity ci = ItemInfo.find(nurgling.iteminfo.NCuriosity.class, item.info());
 		    if(ci != null) {
 			texp += ci.exp;
 			tw += ci.mw;
 			tenc += ci.enc;
+			tlph += ci.lph;
 		    }
 		} catch(Loading l) {
 		}
 	    }
-	    this.texp = texp; this.tw = tw; this.tenc = tenc;
+	    this.texp = texp; this.tw = tw; this.tenc = tenc; this.tlph = tlph;
 	}
 
 	public void tick(double dt) {
