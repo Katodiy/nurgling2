@@ -54,7 +54,10 @@ public class BlueprintWidget extends Window
         }
     }
     
-    private static final List<TreeDef> AVAILABLE_TREES = Arrays.asList(
+    private static final List<TreeDef> AVAILABLE_TREES;
+    
+    static {
+        List<TreeDef> allPlants = Arrays.asList(
         new TreeDef("gfx/terobjs/mm/trees/acacia", "Acacia"),
         new TreeDef("gfx/terobjs/mm/trees/alder", "Alder"),
         new TreeDef("gfx/terobjs/mm/trees/almondtree", "Almond Tree"),
@@ -134,8 +137,44 @@ public class BlueprintWidget extends Window
         new TreeDef("gfx/terobjs/mm/trees/willow", "Willow"),
         new TreeDef("gfx/terobjs/mm/trees/wychelm", "Wych Elm"),
         new TreeDef("gfx/terobjs/mm/trees/yew", "Yew"),
-        new TreeDef("gfx/terobjs/mm/trees/zelkova", "Zelkova")
-    );
+        new TreeDef("gfx/terobjs/mm/trees/zelkova", "Zelkova"),
+        
+        // Bushes
+        new TreeDef("gfx/terobjs/mm/bushes/arrowwood", "Arrowwood"),
+        new TreeDef("gfx/terobjs/mm/bushes/bsnightshade", "Bittersweet Nightshade"),
+        new TreeDef("gfx/terobjs/mm/bushes/blackberrybush", "Blackberry Bush"),
+        new TreeDef("gfx/terobjs/mm/bushes/blackcurrant", "Blackcurrant Bush"),
+        new TreeDef("gfx/terobjs/mm/bushes/blackthorn", "Blackthorn Bush"),
+        new TreeDef("gfx/terobjs/mm/bushes/bogmyrtle", "Bog-Myrtle"),
+        new TreeDef("gfx/terobjs/mm/bushes/boxwood", "Boxwood"),
+        new TreeDef("gfx/terobjs/mm/bushes/caprifole", "Caprifole"),
+        new TreeDef("gfx/terobjs/mm/bushes/cavefern", "Cave Fern"),
+        new TreeDef("gfx/terobjs/mm/bushes/crampbark", "Crampbark"),
+        new TreeDef("gfx/terobjs/mm/bushes/dogrose", "Dog Rose"),
+        new TreeDef("gfx/terobjs/mm/bushes/elderberrybush", "Elderberry Bush"),
+        new TreeDef("gfx/terobjs/mm/bushes/woodbine", "Fly Woodbine"),
+        new TreeDef("gfx/terobjs/mm/bushes/ghostpipe", "Ghostpipe"),
+        new TreeDef("gfx/terobjs/mm/bushes/gooseberrybush", "Gooseberry Bush"),
+        new TreeDef("gfx/terobjs/mm/bushes/gorse", "Gorse"),
+        new TreeDef("gfx/terobjs/mm/bushes/hawthorn", "Hawthorn"),
+        new TreeDef("gfx/terobjs/mm/bushes/hoarwithy", "Hoarwithy"),
+        new TreeDef("gfx/terobjs/mm/bushes/holly", "Holly"),
+        new TreeDef("gfx/terobjs/mm/bushes/mastic", "Mastic"),
+        new TreeDef("gfx/terobjs/mm/bushes/poppycaps", "Poppycaps"),
+        new TreeDef("gfx/terobjs/mm/bushes/raspberrybush", "Raspberry Bush"),
+        new TreeDef("gfx/terobjs/mm/bushes/redcurrant", "Redcurrant Bush"),
+        new TreeDef("gfx/terobjs/mm/bushes/sandthorn", "Sandthorn"),
+        new TreeDef("gfx/terobjs/mm/bushes/spindlebush", "Spindle Bush"),
+        new TreeDef("gfx/terobjs/mm/bushes/teabush", "Tea Bush"),
+        new TreeDef("gfx/terobjs/mm/bushes/tibast", "Tibast"),
+        new TreeDef("gfx/terobjs/mm/bushes/tundrarose", "Tundra Rose"),
+        new TreeDef("gfx/terobjs/mm/bushes/witherstand", "Witherstand")
+        );
+        
+        // Sort by display name alphabetically
+        allPlants.sort((a, b) -> a.displayName.compareToIgnoreCase(b.displayName));
+        AVAILABLE_TREES = Collections.unmodifiableList(allPlants);
+    }
 
     public BlueprintWidget() {
         super(UI.scale(new Coord(800, 600)), "Blueprint Manager");
@@ -229,7 +268,7 @@ public class BlueprintWidget extends Window
         
         int contentY = UI.scale(45);
         
-        prev = add(new Label("Available Trees:", NStyle.areastitle), 
+        prev = add(new Label("Available Plants:", NStyle.areastitle), 
                    new Coord(UI.scale(10), contentY));
         
         treeListPanel = new TreeListPanel(UI.scale(new Coord(180, 500)));

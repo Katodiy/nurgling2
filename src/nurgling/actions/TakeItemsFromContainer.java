@@ -24,6 +24,7 @@ public class TakeItemsFromContainer implements Action
     NAlias pattern;
     QualityType qualityType;
     public int minSize = Integer.MAX_VALUE;
+    public boolean exactMatch = false;
     public TakeItemsFromContainer(Container cont, HashSet<String> names, NAlias pattern)
     {
         this.cont = cont;
@@ -121,6 +122,15 @@ public class TakeItemsFromContainer implements Action
         HashSet<WItem> forRemove = new HashSet<>();
 
         for(WItem item1: items) {
+            // Check for exact name match if exactMatch flag is set
+            if (exactMatch && item1.item instanceof NGItem) {
+                String itemName = ((NGItem) item1.item).name();
+                if (itemName != null && !itemName.equalsIgnoreCase(name)) {
+                    forRemove.add(item1);
+                    continue;
+                }
+            }
+            
             if (pattern != null) {
                 if (!NParser.checkName(((NGItem) item1.item).name(), pattern)) {
                     forRemove.add(item1);

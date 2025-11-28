@@ -200,8 +200,8 @@ public class VSpec {
 
         // Maple Tree
         ArrayList<String> mapleOp = new ArrayList<>();
-        mapleOp.add("Maple Samara"); // Семена
         mapleOp.add("Maple Leaf"); // Листья
+        mapleOp.add("Maple Samara"); // Семена (должно быть последним)
         object.put("gfx/terobjs/trees/maple", mapleOp);
 
         // Mayflower Tree
@@ -221,8 +221,8 @@ public class VSpec {
 
         // Mulberry Tree
         ArrayList<String> mulberryOp = new ArrayList<>();
-        mulberryOp.add("Mulberry"); // Семена
         mulberryOp.add("Mulberry Leaf"); // Листья
+        mulberryOp.add("Mulberry"); // Семена (должно быть последним)
         object.put("gfx/terobjs/trees/mulberry", mulberryOp);
 
         // Oak Tree

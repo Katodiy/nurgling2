@@ -27,6 +27,7 @@ public class TakeItems2 implements Action
     int count;
     Specialisation.SpecName specName;
     QualityType qualityType;
+    public boolean exactMatch = false;
 
 
     public TakeItems2(NContext context, String item, int count)
@@ -164,6 +165,7 @@ public class TakeItems2 implements Action
         new OpenTargetContainer(cont).run(gui);
         TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont,new HashSet<>(Arrays.asList(item)), null, qualityType);
         tifc.minSize = left.get();
+        tifc.exactMatch = this.exactMatch;
         tifc.run(gui);
         new CloseTargetContainer(cont).run(gui);
         return Results.SUCCESS();

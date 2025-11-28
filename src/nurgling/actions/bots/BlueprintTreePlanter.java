@@ -364,9 +364,21 @@ public class BlueprintTreePlanter implements Action {
             for (PlantPosition pos : new ArrayList<>(remainingPositions)) {
                 // Check if pot for this tree type is ready on any table
                 boolean potCollected = false;
-                for (Container table : herbalistTables) {
+                for (Container table : herbalistTables)
+                {
+                    Container.Space spaceAttr = table.getattr(Container.Space.class);
+                    if (spaceAttr != null && spaceAttr.isReady())
+                    {
+                        // If table is completely empty, skip detailed check
+                        if (spaceAttr.isEmpty())
+                        {
+                            continue;
+                        }
+                    }
+
                     Results collectResult = collectReadyPotFromTable(gui, pos.treeType, table);
-                    if (collectResult.IsSuccess()) {
+                    if (collectResult.IsSuccess())
+                    {
                         potCollected = true;
                         break;
                     }
@@ -436,6 +448,13 @@ public class BlueprintTreePlanter implements Action {
         for (Container table : tables) {
             Gob tableGob = Finder.findGob(table.gobid);
             if (tableGob == null) continue;
+            Container.Space spaceAttr = table.getattr(Container.Space.class);
+            if (spaceAttr != null && spaceAttr.isReady()) {
+                // If table is completely empty, skip detailed check
+                if (spaceAttr.isEmpty()) {
+                    return table;
+                }
+            }
             
             new PathFinder(tableGob).run(gui);
             new OpenTargetContainer(table).run(gui);
@@ -463,14 +482,17 @@ public class BlueprintTreePlanter implements Action {
         
         NUtils.getUI().msg("Getting seed: " + seedName + " for tree: " + treePath);
         
+        // Create NAlias with exact match using lowercase comparison
+        NAlias exactSeedAlias = new NAlias(seedName);
+        
         // Check if high quality seed already exists in inventory (exact match)
-        ArrayList<WItem> existingSeeds = gui.getInventory().getItems(new NAlias(seedName), NInventory.QualityType.High);
+        ArrayList<WItem> existingSeeds = gui.getInventory().getItems(exactSeedAlias, NInventory.QualityType.High);
         if (!existingSeeds.isEmpty()) {
             // Verify exact name match (not substring)
             for (WItem item : existingSeeds) {
                 if (item.item instanceof NGItem) {
                     String itemName = ((NGItem) item.item).name();
-                    if (itemName.equals(seedName)) {
+                    if (itemName.equalsIgnoreCase(seedName)) {
                         NUtils.getUI().msg("High quality seed already in inventory: " + seedName);
                         return Results.SUCCESS();
                     }
@@ -481,19 +503,21 @@ public class BlueprintTreePlanter implements Action {
         // Add seed to context so TakeItems2 knows where to look for it
         context.addInItem(seedName, null);
         
-        // Take 1 high quality seed from logistics
-        Results takeResult = new TakeItems2(context, seedName, 1, NInventory.QualityType.High).run(gui);
+        // Take 1 high quality seed from logistics with exact name match
+        TakeItems2 takeSeed = new TakeItems2(context, seedName, 1, NInventory.QualityType.High);
+        takeSeed.exactMatch = true;
+        Results takeResult = takeSeed.run(gui);
         if (!takeResult.IsSuccess()) {
             return Results.ERROR("Failed to get seed: " + seedName);
         }
         
         // Check that we actually have the seed with exact name match
-        ArrayList<WItem> seeds = gui.getInventory().getItems(new NAlias(seedName), NInventory.QualityType.High);
+        ArrayList<WItem> seeds = gui.getInventory().getItems(exactSeedAlias, NInventory.QualityType.High);
         boolean foundExactMatch = false;
         for (WItem item : seeds) {
             if (item.item instanceof NGItem) {
                 String itemName = ((NGItem) item.item).name();
-                if (itemName.equals(seedName)) {
+                if (itemName.equalsIgnoreCase(seedName)) {
                     foundExactMatch = true;
                     break;
                 }
