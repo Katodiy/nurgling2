@@ -138,7 +138,8 @@ public class NConfig
         leechAction,
         tickAction,
         autoHearthOnUnknown,
-        autoLogoutOnUnknown
+        autoLogoutOnUnknown,
+        alwaysObfuscate
     }
 
     public enum BBDisplayMode
@@ -368,6 +369,9 @@ public class NConfig
         // Safety settings - auto hearth/logout on unknown players
         conf.put(Key.autoHearthOnUnknown, false);
         conf.put(Key.autoLogoutOnUnknown, false);
+        
+        // Auth obfuscation - bypass firewall blocks
+        conf.put(Key.alwaysObfuscate, false);
     }
 
 

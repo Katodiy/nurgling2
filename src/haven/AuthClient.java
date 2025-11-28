@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.NConfig;
+
 import java.io.*;
 import java.net.*;
 import java.nio.*;
@@ -113,14 +115,19 @@ public class AuthClient implements Closeable {
     }
 
     public AuthClient(String host, int port) throws IOException {
+	boolean useObf = NConfig.get(NConfig.Key.alwaysObfuscate) != null && (Boolean)NConfig.get(NConfig.Key.alwaysObfuscate);
 	try {
-	    connect(host, port, false);
+	    connect(host, port, useObf);
 	} catch(IOException e) {
-	    try {
-		connect(host, port, true);
-	    } catch(Throwable t) {
-		t.addSuppressed(e);
-		throw(t);
+	    if(!useObf) {
+		try {
+		    connect(host, port, true);
+		} catch(Throwable t) {
+		    t.addSuppressed(e);
+		    throw(t);
+		}
+	    } else {
+		throw(e);
 	    }
 	}
 	skin = Channels.newInputStream(ssk);

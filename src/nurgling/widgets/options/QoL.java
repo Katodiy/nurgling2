@@ -40,6 +40,7 @@ public class QoL extends Panel {
     private CheckBox showRealmOverlays;
     private CheckBox disableDrugEffects;
     private CheckBox simpleInspect;
+    private CheckBox alwaysObfuscate;
 
     private Dropbox<String> preferredSpeedDropbox;
     private Dropbox<String> preferredHorseSpeedDropbox;
@@ -116,6 +117,9 @@ public class QoL extends Panel {
         leftPrev = shortCupboards = leftColumn.add(new CheckBox("Short cupboards"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortWalls = leftColumn.add(new CheckBox("Short mine walls"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = decalsOnTop = leftColumn.add(new CheckBox("Cupboard decals on top"), leftPrev.pos("bl").adds(0, 5));
+
+        leftPrev = leftColumn.add(new Label("● Network"), leftPrev.pos("bl").adds(0, 15));
+        leftPrev = alwaysObfuscate = leftColumn.add(new CheckBox("Always use obfuscation (bypass RF firewall)"), leftPrev.pos("bl").adds(0, 5));
 
         leftPrev = leftColumn.add(new Label("● Login Settings"), leftPrev.pos("bl").adds(0, 15));
         leftPrev = tracking = leftColumn.add(new CheckBox("Enable tracking when login"), leftPrev.pos("bl").adds(0, 5));
@@ -269,6 +273,7 @@ public class QoL extends Panel {
         showVillageClaims.a = getBool(NConfig.Key.minimapVilol);
         showRealmOverlays.a = getBool(NConfig.Key.minimapRealmol);
         disableDrugEffects.a = getBool(NConfig.Key.disableDrugEffects);
+        alwaysObfuscate.a = getBool(NConfig.Key.alwaysObfuscate);
 
         // Load preferred movement speed
         Object speedPref = NConfig.get(NConfig.Key.preferredMovementSpeed);
@@ -430,6 +435,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.simpleInspect, simpleInspect.a);
         NConfig.set(NConfig.Key.verboseCal, verboseCal.a);
         NConfig.set(NConfig.Key.disableDrugEffects, disableDrugEffects.a);
+        NConfig.set(NConfig.Key.alwaysObfuscate, alwaysObfuscate.a);
 
         // Save minimap overlay settings (separate from 3D ground overlays)
         NConfig.set(NConfig.Key.minimapClaimol, showPersonalClaims.a);
