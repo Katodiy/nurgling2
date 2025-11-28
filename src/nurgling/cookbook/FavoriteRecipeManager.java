@@ -22,6 +22,13 @@ public class FavoriteRecipeManager {
             stmt.close();
             // Table exists, nothing to do
         } catch (SQLException e) {
+            // Rollback the failed transaction
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackEx) {
+                // Ignore rollback errors
+            }
+            
             // Table doesn't exist, create it
             String createTableQuery = "CREATE TABLE favorite_recipes (" +
                                      "recipe_hash VARCHAR(64) PRIMARY KEY REFERENCES recipes (recipe_hash) ON DELETE CASCADE" +
@@ -29,6 +36,7 @@ public class FavoriteRecipeManager {
             Statement stmt = connection.createStatement();
             stmt.executeUpdate(createTableQuery);
             stmt.close();
+            connection.commit();
             System.out.println("Created favorite_recipes table");
         }
     }
