@@ -47,14 +47,14 @@ public class RefillInCistern implements Action
         if(barrel == null || (fl = barrel.getattr(Following.class))==null || fl.tgt!=player.id)
             return Results.ERROR("Barrel not found.");
 
-        Gob cistern = Finder.findGob(area, new NAlias("cistern"));
-        if(cistern == null)
+        Gob waterSource = Finder.findGob(area, new NAlias("cistern", "well"));
+        if(waterSource == null)
         {
-            return Results.ERROR("Cistern not found.");
+            return Results.ERROR("Water source (cistern or well) not found.");
         }
         boolean isOverlay = NUtils.isOverlay(barrel, content);
-        new PathFinder(cistern).run(gui);
-        NUtils.activateGob(cistern);
+        new PathFinder(waterSource).run(gui);
+        NUtils.activateGob(waterSource);
         if(isOverlay) {
             WaitSound ws = new WaitSound("sfx/fx/water");
             NUtils.addTask(ws);
@@ -65,7 +65,7 @@ public class RefillInCistern implements Action
             }
             if(!NUtils.isOverlay(barrel, content))
             {
-                NUtils.activateGob(cistern);
+                NUtils.activateGob(waterSource);
                 NUtils.addTask(new IsOverlay(barrel, content));
                 return Results.ERROR("NO MORE FLUID");
             }
