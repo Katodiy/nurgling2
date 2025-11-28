@@ -40,6 +40,18 @@ public class NLoginScreen extends LoginScreen
         add(new LoginList(new Coord(UI.scale(200), UI.scale(bg.sz().y - marg * 2))), new Coord(marg, marg));
         optbtn.move(new Coord(UI.scale(bg.sz().x-UI.scale(130)), UI.scale(30)));
 
+        IButton discordBtn = new IButton("nurgling/hud/buttons/discord/", "u", "d", "h") {
+            @Override
+            public void click() {
+                try {
+                    WebBrowser.sshow(new URL("https://discord.com/invite/3YF5yaKKPn"));
+                } catch (Exception e) {
+                    System.err.println("[NLoginScreen] Failed to open Discord link: " + e.getMessage());
+                }
+            }
+        };
+        adda(discordBtn, bg.sz().x - UI.scale(50), bg.sz().y - UI.scale(50), 1.0, 1.0);
+
         adda(new StatusLabel(HttpStatus.mond.get(), 0.5), bg.sz().x/2, bg.sz().y, 0.5, 1);
         ArrayList<NLoginData> logpass = (ArrayList<NLoginData>) NConfig.get(NConfig.Key.credentials);
         if (logpass != null)
