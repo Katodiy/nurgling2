@@ -56,7 +56,7 @@ public class LoginScreen extends Widget {
 	this.hostname = hostname;
 	setfocustab(true);
 	bgimg = add(new Img(bg), Coord.z);
-	optbtn = adda(new Button(UI.scale(100), "Options"), pos("cbl").add(10, -10), 0, 1);
+	optbtn = add(new Button(UI.scale(100), "Options"), UI.scale(10), sz.y - UI.scale(10) - UI.scale(30));
 	optbtn.setgkey(GameUI.kb_opt);
 //	if(HttpStatus.mond.get() != null)
 //	    adda(new StatusLabel(HttpStatus.mond.get(), 1.0), sz.x - UI.scale(10), UI.scale(10), 1.0, 0.0);
@@ -323,7 +323,7 @@ public class LoginScreen extends Widget {
 
 	public void draw(GOut g) {
 	    g.chcolor(0, 0, 0, 128);
-	    g.frect(UI.scale(new Coord(-hpad + 25, -vpad+sz.y/2)), UI.scale(sz.add(hpad * 2, vpad/2 -sz.y/2)));
+	    g.frect(UI.scale(new Coord(-hpad + 25, -vpad)).add(0,sz.y/2), sz.add(UI.scale(hpad * 2, vpad/2)).sub(0,sz.y/2));
 	    g.chcolor();
 	    super.draw(g);
 	}

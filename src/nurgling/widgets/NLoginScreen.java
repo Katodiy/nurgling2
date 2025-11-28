@@ -38,7 +38,7 @@ public class NLoginScreen extends LoginScreen
     {
         super(hostname);
         add(new LoginList(new Coord(UI.scale(200), UI.scale(bg.sz().y - marg * 2))), new Coord(marg, marg));
-        optbtn.move(new Coord(UI.scale(bg.sz().x-UI.scale(130)), UI.scale(30)));
+        optbtn.move(new Coord(bg.sz().x - UI.scale(130), UI.scale(30)));
 
         IButton discordBtn = new IButton("nurgling/hud/buttons/discord/", "u", "d", "h") {
             @Override
