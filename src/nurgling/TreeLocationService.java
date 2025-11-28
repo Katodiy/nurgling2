@@ -1,6 +1,8 @@
 package nurgling;
 
 import haven.*;
+import nurgling.profiles.ConfigFactory;
+import nurgling.profiles.ProfileAwareService;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import org.json.JSONArray;
@@ -20,17 +22,58 @@ import java.util.stream.Stream;
 /**
  * Service for managing saved tree locations
  * Simplified version of FishLocationService - no equipment, percentage, moon phase
+ * Supports world-specific profiles via ProfileAwareService
  */
-public class TreeLocationService {
+public class TreeLocationService implements ProfileAwareService {
     private final Map<String, TreeLocation> treeLocations = new ConcurrentHashMap<>();
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private final String dataFile;
+    private String dataFile;
     private final NGameUI gui;
+    private String genus;
 
     public TreeLocationService(NGameUI gui) {
         this.gui = gui;
         this.dataFile = ((HashDirCache) ResCache.global).base + "\\..\\" + "tree_locations.nurgling.json";
         loadTreeLocations();
+    }
+
+    /**
+     * Constructor for profile-aware initialization
+     */
+    public TreeLocationService(NGameUI gui, String genus) {
+        this.gui = gui;
+        this.genus = genus;
+        initializeForProfile(genus);
+    }
+
+    // ProfileAwareService implementation
+
+    @Override
+    public void initializeForProfile(String genus) {
+        this.genus = genus;
+        NConfig config = ConfigFactory.getConfig(genus);
+        this.dataFile = config.getTreeLocationsPath();
+        load();
+    }
+
+    @Override
+    public String getGenus() {
+        return genus;
+    }
+
+    @Override
+    public void load() {
+        loadTreeLocations();
+    }
+
+    @Override
+    public void save() {
+        lock.writeLock().lock();
+        try {
+            saveTreeLocations();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**

@@ -1,6 +1,8 @@
 package nurgling.cheese;
 
 import nurgling.NConfig;
+import nurgling.profiles.ConfigFactory;
+import nurgling.profiles.ProfileAwareService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -13,19 +15,55 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class CheeseOrdersManager {
+public class CheeseOrdersManager implements ProfileAwareService {
     private final Map<Integer, CheeseOrder> orders = new HashMap<>();
+    private String genus;
+    private String configPath;
 
     public CheeseOrdersManager() {
+        this.configPath = NConfig.getGlobalInstance().getCheeseOrdersPath();
         loadOrders();
+    }
+
+    /**
+     * Constructor for profile-aware initialization
+     */
+    public CheeseOrdersManager(String genus) {
+        this.genus = genus;
+        initializeForProfile(genus);
+    }
+
+    // ProfileAwareService implementation
+
+    @Override
+    public void initializeForProfile(String genus) {
+        this.genus = genus;
+        NConfig config = ConfigFactory.getConfig(genus);
+        this.configPath = config.getCheeseOrdersPath();
+        load();
+    }
+
+    @Override
+    public String getGenus() {
+        return genus;
+    }
+
+    @Override
+    public void load() {
+        loadOrders();
+    }
+
+    @Override
+    public void save() {
+        writeOrders();
     }
 
     public void loadOrders() {
         orders.clear();
-        File file = new File(NConfig.current.path_cheese_orders);
+        File file = new File(configPath);
         if (file.exists()) {
             StringBuilder contentBuilder = new StringBuilder();
-            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_cheese_orders), StandardCharsets.UTF_8)) {
+            try (Stream<String> stream = Files.lines(Paths.get(configPath), StandardCharsets.UTF_8)) {
                 stream.forEach(s -> contentBuilder.append(s).append("\n"));
             } catch (IOException ignore) {}
 
@@ -49,7 +87,7 @@ public class CheeseOrdersManager {
         main.put("orders", jorders);
 
         try {
-            FileWriter f = new FileWriter(NConfig.current.path_cheese_orders, StandardCharsets.UTF_8);
+            FileWriter f = new FileWriter(configPath, StandardCharsets.UTF_8);
             main.write(f);
             f.close();
         } catch (IOException e) {
@@ -70,6 +108,6 @@ public class CheeseOrdersManager {
     }
     
     public String getOrdersFilePath() {
-        return NConfig.current.path_cheese_orders;
+        return configPath;
     }
 }

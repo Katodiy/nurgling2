@@ -21,7 +21,11 @@ public class NCornerMiniMap extends NMiniMap implements Console.Directory {
 
     public NCornerMiniMap(Coord sz, MapFile file) {
         super(sz, file);
-        follow(new MapLocator(NUtils.getGameUI().map));
+        // Defer following until GameUI is available to prevent crash during initialization
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+            follow(new MapLocator(NUtils.getGameUI().map));
+        }
+        // Note: follow() will be called later when the map becomes available
     }
 
     public NCornerMiniMap(MapFile file) {

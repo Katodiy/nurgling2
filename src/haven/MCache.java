@@ -38,6 +38,7 @@ import haven.render.*;
 import nurgling.*;
 import nurgling.areas.*;
 import nurgling.overlays.map.*;
+import nurgling.profiles.ConfigFactory;
 import nurgling.tasks.GridsFilled;
 import nurgling.tasks.NTask;
 import org.json.*;
@@ -73,13 +74,60 @@ public class MCache implements MapSource {
     public int olseq = 0, chseq = 0;
     Map<Integer, Defrag> fragbufs = new TreeMap<Integer, Defrag>();
 
+    /**
+     * Get the appropriate areas path based on current profile context
+     */
+    private String getAreasPath() {
+        try {
+            // Try to get the current genus from NGameUI if available
+            String genus = getCurrentGenus();
+
+            if (genus != null && !genus.isEmpty()) {
+                // Always use the profile-specific path, whether it exists or not
+                // This ensures new worlds don't inherit global areas
+                return ConfigFactory.getConfig(genus).getAreasPath();
+            }
+        } catch (Exception e) {
+            // If there's any issue getting the genus, fall back to global config for compatibility
+        }
+
+        // Fallback to global configuration only when genus is not available
+        return NConfig.getGlobalInstance().getAreasPath();
+    }
+
+    /**
+     * Get the current genus from the game context if available
+     */
+    private String getCurrentGenus() {
+        try {
+            // Use NUtils to get the current game UI
+            NGameUI ngui = nurgling.NUtils.getGameUI();
+            if (ngui != null) {
+                return ngui.getGenus();
+            }
+        } catch (Exception e) {
+            // Ignore exceptions and fall back to null
+        }
+        return null;
+    }
+
+	private boolean areasLoaded = false;
 
 	void init()
 	{
-		if(new File(NConfig.current.path_areas).exists())
+		// Delay areas loading until genus is available
+	}
+
+	public void loadAreasIfNeeded() {
+		if (areasLoaded) return;
+
+		// Get the appropriate areas path based on current profile
+		String areasPath = getAreasPath();
+
+		if(new File(areasPath).exists())
 		{
 			StringBuilder contentBuilder = new StringBuilder();
-			try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_areas), StandardCharsets.UTF_8))
+			try (Stream<String> stream = Files.lines(Paths.get(areasPath), StandardCharsets.UTF_8))
 			{
 				stream.forEach(s -> contentBuilder.append(s).append("\n"));
 			}
@@ -98,6 +146,7 @@ public class MCache implements MapSource {
 				}
 			}
 		}
+		areasLoaded = true;
 	}
 
     public static class LoadingMap extends Loading {

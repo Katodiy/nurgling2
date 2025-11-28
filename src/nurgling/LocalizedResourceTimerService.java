@@ -2,6 +2,8 @@ package nurgling;
 
 import haven.*;
 import haven.Locked;
+import nurgling.profiles.ConfigFactory;
+import nurgling.profiles.ProfileAwareService;
 import nurgling.widgets.LocalizedResourceTimerDialog;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,19 +22,60 @@ import java.util.stream.Stream;
 /**
  * Centralized service for all resource timer operations
  * Handles persistence, UI coordination, and map navigation
+ * Supports world-specific profiles via ProfileAwareService
  */
-public class LocalizedResourceTimerService {
+public class LocalizedResourceTimerService implements ProfileAwareService {
     private final Map<String, LocalizedResourceTimer> timers = new ConcurrentHashMap<>();
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private final String dataFile;
+    private String dataFile;
     private final NGameUI gui;
-    
+    private String genus;
+
     public LocalizedResourceTimerService(NGameUI gui) {
         this.gui = gui;
         this.dataFile = ((haven.HashDirCache) haven.ResCache.global).base + "\\..\\" + "resource_timers.nurgling.json";
         loadTimers();
     }
-    
+
+    /**
+     * Constructor for profile-aware initialization
+     */
+    public LocalizedResourceTimerService(NGameUI gui, String genus) {
+        this.gui = gui;
+        this.genus = genus;
+        initializeForProfile(genus);
+    }
+
+    // ProfileAwareService implementation
+
+    @Override
+    public void initializeForProfile(String genus) {
+        this.genus = genus;
+        NConfig config = ConfigFactory.getConfig(genus);
+        this.dataFile = config.getResourceTimersPath();
+        load();
+    }
+
+    @Override
+    public String getGenus() {
+        return genus;
+    }
+
+    @Override
+    public void load() {
+        loadTimers();
+    }
+
+    @Override
+    public void save() {
+        lock.writeLock().lock();
+        try {
+            saveTimers();
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     /**
      * Handle resource marker click for timer functionality
      */

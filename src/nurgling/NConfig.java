@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
+import nurgling.profiles.ProfileManager;
 import nurgling.routes.Route;
 import nurgling.scenarios.Scenario;
 import nurgling.widgets.NCornerMiniMap;
@@ -151,6 +152,15 @@ public class NConfig
 
 
     public NConfig() {
+        this(null);
+    }
+
+    public NConfig(String genus) {
+        this.genus = genus;
+        if (genus != null && !genus.isEmpty()) {
+            this.profileManager = new ProfileManager(genus);
+            this.profileManager.ensureProfileExists();
+        }
         conf = new HashMap<>();
 
         conf.put(Key.vilol, false);
@@ -368,11 +378,9 @@ public class NConfig
     private boolean isRoutesUpd = false;
     private boolean isScenariosUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
-    public String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
     public String path_explored = ((HashDirCache) ResCache.global).base + "\\..\\" + "explored.nurgling.json";
     public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
     public String path_scenarios = ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
-    public String path_cheese_orders = ((HashDirCache) ResCache.global).base + "\\..\\" + "cheese_orders.nurgling.json";
 
     public boolean isUpdated()
     {
@@ -421,24 +429,35 @@ public class NConfig
 
     public static void needAreasUpdate()
     {
+        // Update both global and profile-specific config to ensure compatibility
         if (current != null)
         {
             current.isAreasUpd = true;
+        }
+        // Also update the profile-aware config that NCore is using
+        try {
+            if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
+                nurgling.NUtils.getUI().core.config.isAreasUpd = true;
+            }
+        } catch (Exception e) {
+            // Fallback to global config if profile config not available
         }
     }
 
     public static void needRoutesUpdate()
     {
+        // Update both global and profile-specific config to ensure compatibility
         if (current != null)
         {
             current.isRoutesUpd = true;
         }
-    }
-
-    public static void needScenariosUpdate() {
-        if (current != null)
-        {
-            current.isScenariosUpd = true;
+        // Also update the profile-aware config that NCore is using
+        try {
+            if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
+                nurgling.NUtils.getUI().core.config.isRoutesUpd = true;
+            }
+        } catch (Exception e) {
+            // Fallback to global config if profile config not available
         }
     }
 
@@ -451,6 +470,100 @@ public class NConfig
     }
 
     public static NConfig current;
+
+    // Profile management - World-specific configurations
+    private static final Map<String, NConfig> profileInstances = new HashMap<>();
+    private ProfileManager profileManager;
+    private String genus;
+
+    /**
+     * Gets a profile-specific NConfig instance for the given genus
+     */
+    public static NConfig getProfileInstance(String genus) {
+        if (genus == null || genus.isEmpty()) {
+            return getGlobalInstance();
+        }
+
+        synchronized (profileInstances) {
+            return profileInstances.computeIfAbsent(genus, g -> new NConfig(g));
+        }
+    }
+
+    /**
+     * Gets the global (non-profiled) NConfig instance
+     */
+    public static NConfig getGlobalInstance() {
+        if (current == null) {
+            current = new NConfig();
+        }
+        return current;
+    }
+
+    /**
+     * Gets the current genus for this config instance
+     */
+    public String getGenus() {
+        return genus;
+    }
+
+    /**
+     * Helper method for profile-aware path resolution
+     */
+    private String getProfileAwarePath(String filename) {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString(filename);
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + filename;
+    }
+
+    /**
+     * Gets the dynamic path for areas configuration file
+     */
+    public String getAreasPath() {
+        return getProfileAwarePath("areas.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for routes configuration file
+     */
+    public String getRoutesPath() {
+        return getProfileAwarePath("routes.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for explored configuration file
+     */
+    public String getExploredPath() {
+        return getProfileAwarePath("explored.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for cheese orders configuration file
+     */
+    public String getCheeseOrdersPath() {
+        return getProfileAwarePath("cheese_orders.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for fish locations configuration file
+     */
+    public String getFishLocationsPath() {
+        return getProfileAwarePath("fish_locations.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for tree locations configuration file
+     */
+    public String getTreeLocationsPath() {
+        return getProfileAwarePath("tree_locations.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for resource timers configuration file
+     */
+    public String getResourceTimersPath() {
+        return getProfileAwarePath("resource_timers.nurgling.json");
+    }
 
     @SuppressWarnings("unchecked")
     private ArrayList<Object> readArray(ArrayList<HashMap<String, Object>> objs)
@@ -714,7 +827,7 @@ public class NConfig
             main.put("areas",jareas);
             try
             {
-                FileWriter f = new FileWriter(customPath==null?path_areas:customPath,StandardCharsets.UTF_8);
+                FileWriter f = new FileWriter(customPath==null?getAreasPath():customPath,StandardCharsets.UTF_8);
                 main.write(f);
                 f.close();
                 current.isAreasUpd = false;
@@ -732,7 +845,7 @@ public class NConfig
         {
             try
             {
-                FileWriter f = new FileWriter(customPath==null?path_explored:customPath,StandardCharsets.UTF_8);
+                FileWriter f = new FileWriter(customPath==null?getExploredPath():customPath,StandardCharsets.UTF_8);
                 ((NCornerMiniMap)NUtils.getGameUI().mmap).exploredArea.toJson().write(f);
                 f.close();
                 current.isExploredUpd = false;
@@ -790,7 +903,7 @@ public class NConfig
 
             try
             {
-                FileWriter f = new FileWriter(customPath==null?path_routes:customPath,StandardCharsets.UTF_8);
+                FileWriter f = new FileWriter(customPath==null?getRoutesPath():customPath,StandardCharsets.UTF_8);
                 main.write(f);
                 f.close();
                 current.isRoutesUpd = false;

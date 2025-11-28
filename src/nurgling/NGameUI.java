@@ -71,10 +71,23 @@ public class NGameUI extends GameUI
     // Temporary rings (session-only, for objects without GobIcon)
     // Maps resource name to ring enabled state
     public final Map<String, Boolean> tempRingResources = Collections.synchronizedMap(new HashMap<>());
+
+    /**
+     * Gets the genus (world identifier) for this game instance
+     */
+    public String getGenus() {
+        return genus;
+    }
     
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
+
+        // Initialize world-specific profile
+        nurgling.profiles.ConfigFactory.initializeProfile(genus);
+
+        // Initialize local ring config
+        iconRingConfig = new IconRingConfig(genus);
 
         add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
     }
@@ -101,8 +114,6 @@ public class NGameUI extends GameUI
             calendar = new NCal();
             add(new NDraggableWidget(calendar, "Calendar", UI.scale(400,90)), calPos);
         }
-        // Initialize local ring config
-        iconRingConfig = new IconRingConfig(genus);
         add(new NDraggableWidget(alarmWdg = new NAlarmWdg(),"alarm",NStyle.alarm[0].sz().add(NDraggableWidget.delta)));
         add(new NDraggableWidget(nep = new NEquipProxy(NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT, NEquipory.Slots.BELT), "EquipProxy",  UI.scale(138, 55)));
         add(new NDraggableWidget(nbp = new NBeltProxy(), "BeltProxy", UI.scale(825, 55)));
@@ -125,8 +136,8 @@ public class NGameUI extends GameUI
         // Position BotsInterruptWidget (observer with gears) in center of screen
         add(biw = new BotsInterruptWidget(), new Coord(sz.x/2 - biw.sz.x/2, sz.y/2 - biw.sz.y/2));
         waypointMovementService = new WaypointMovementService(this);
-        fishLocationService = new FishLocationService(this);
-        treeLocationService = new TreeLocationService(this);
+        fishLocationService = new FishLocationService(this, genus);
+        treeLocationService = new TreeLocationService(this, genus);
         // These widgets depend on areas which is created in GameUI constructor
         // Position NEditFolderName relative to areas widget
         add(nefn = new NEditFolderName(areas), new Coord(sz.x/2 - nefn.sz.x/2, sz.y/2 - nefn.sz.y/2));
@@ -140,12 +151,30 @@ public class NGameUI extends GameUI
         
         // Heavy service widgets
         add(localizedResourceTimerDialog = new LocalizedResourceTimerDialog(), new Coord(200, 200));
-        localizedResourceTimerService = new LocalizedResourceTimerService(this);
+        localizedResourceTimerService = new LocalizedResourceTimerService(this, genus);
         add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
+
+        // Profile-aware components are now initialized in attached() before super.attached()
     }
     
     @Override
     protected void attached() {
+        // Initialize profile-aware components BEFORE calling super.attached()
+        // This ensures RouteGraphManager is available when RoutesWidget is created
+        if (map instanceof NMapView) {
+            ((NMapView) map).initializeWithGenus(genus);
+        }
+
+        // Update NCore to use profile-aware config (now that UI and core are available)
+        if (ui != null && ui.core != null) {
+            ui.core.updateConfigForProfile(genus);
+        }
+
+        // Load areas now that genus is available
+        if (map != null && map.glob != null && map.glob.map != null) {
+            map.glob.map.loadAreasIfNeeded();
+        }
+
         super.attached();
         initHeavyWidgets();
         // Apply local ring settings to iconconf after it's loaded (only once)

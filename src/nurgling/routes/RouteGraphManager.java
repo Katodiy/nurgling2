@@ -3,6 +3,8 @@ package nurgling.routes;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.profiles.ConfigFactory;
+import nurgling.profiles.ProfileAwareService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -14,17 +16,57 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class RouteGraphManager {
+public class RouteGraphManager implements ProfileAwareService {
     private final RouteGraph graph;
     private final Map<Integer, Route> routes = new HashMap<>();
     private boolean needsUpdate = false;
     private Map<Integer, RoutePoint> routePointMap = new HashMap<>();
+    private String genus;
+    private String configPath;
 
     public RouteGraphManager() {
         graph = new RouteGraph();
+        this.configPath = NConfig.getGlobalInstance().getRoutesPath();
         loadRoutes();
         updateGraph();
         NConfig.needRoutesUpdate();
+    }
+
+    /**
+     * Constructor for profile-aware initialization
+     */
+    public RouteGraphManager(String genus) {
+        this.genus = genus;
+        graph = new RouteGraph();
+        initializeForProfile(genus);
+    }
+
+    // ProfileAwareService implementation
+
+    @Override
+    public void initializeForProfile(String genus) {
+        this.genus = genus;
+        NConfig config = ConfigFactory.getConfig(genus);
+        this.configPath = config.getRoutesPath();
+        load();
+        updateGraph();
+        // Don't call NConfig.needRoutesUpdate() here as it's for the global config
+    }
+
+    @Override
+    public String getGenus() {
+        return genus;
+    }
+
+    @Override
+    public void load() {
+        loadRoutes();
+    }
+
+    @Override
+    public void save() {
+        // RouteGraphManager doesn't seem to have a save method
+        // This could be implemented if needed
     }
 
     public void updateRoute(Route route) {
@@ -54,9 +96,9 @@ public class RouteGraphManager {
     }
 
     public void loadRoutes() {
-        if (new File(NConfig.current.path_routes).exists()) {
+        if (new File(configPath).exists()) {
             StringBuilder contentBuilder = new StringBuilder();
-            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_routes), StandardCharsets.UTF_8)) {
+            try (Stream<String> stream = Files.lines(Paths.get(configPath), StandardCharsets.UTF_8)) {
                 stream.forEach(s -> contentBuilder.append(s).append("\n"));
             } catch (IOException ignore) {
             }
