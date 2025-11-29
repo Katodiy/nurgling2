@@ -690,9 +690,9 @@ public class OptWnd extends Window {
 		
 		// Button Style Controls
 		prev = add(new Label("Button Style:"), prev.pos("bl").adds(0, UI.scale(10)).x(0));
-		Dropbox<String> buttonStyleDropbox = add(new Dropbox<String>(UI.scale(160), 2, UI.scale(16)) {
-		    private final String[] styles = {"Classic", "Alternative"};
-		    private final String[] styleKeys = {"tbtn", "tbtn2"};
+		Dropbox<String> buttonStyleDropbox = add(new Dropbox<String>(UI.scale(160), 4, UI.scale(16)) {
+		    private final String[] styles = {"Classic", "Alternative", "Alternative 2", "Alternative 3"};
+		    private final String[] styleKeys = {"tbtn", "tbtn2", "tbtn3", "tbtn4"};
 		    
 		    @Override
 		    protected String listitem(int i) {
