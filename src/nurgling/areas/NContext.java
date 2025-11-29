@@ -404,6 +404,11 @@ public class NContext {
                         }
 
                     }
+                    case BARREL: {
+                        for (Gob gob : Finder.findGobs(area, new NAlias("barrel"))) {
+                            inputs.add(new Barrel(gob));
+                        }
+                    }
                     }
                 }
             }
