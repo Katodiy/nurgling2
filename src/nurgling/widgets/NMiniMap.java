@@ -131,9 +131,77 @@ public class NMiniMap extends MiniMap {
         drawFishLocations(g);
         drawTreeLocations(g);
         drawQueuedWaypoints(g);  // Draw waypoint visualization
+        drawForagerRecordingPath(g);  // Draw forager path being recorded
         drawMarkerLine(g);       // Draw line to selected marker
     }
 
+    // Draw forager path being recorded or loaded
+    protected void drawForagerRecordingPath(GOut g) {
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || sessloc == null || dloc == null) return;
+        
+        // Find the Forager window
+        nurgling.widgets.bots.Forager foragerWnd = null;
+        for(Widget wdg = gui.lchild; wdg != null; wdg = wdg.prev) {
+            if(wdg instanceof nurgling.widgets.bots.Forager) {
+                foragerWnd = (nurgling.widgets.bots.Forager) wdg;
+                break;
+            }
+        }
+        
+        if(foragerWnd == null) {
+            return;
+        }
+        
+        // Get current path (either recording or loaded)
+        nurgling.routes.ForagerPath recordingPath = foragerWnd.getCurrentLoadedPath();
+        if(recordingPath == null || recordingPath.waypoints.isEmpty()) {
+            return;
+        }
+        
+        Coord hsz = sz.div(2);
+        
+        // Draw lines connecting waypoints
+        g.chcolor(0, 255, 0, 200); // Green color for recording path
+        Coord prevC = null;
+        
+        for(Coord2d waypoint : recordingPath.waypoints) {
+            // Convert world coordinates (pixels) -> tile coordinates -> screen coordinates
+            // waypoint is clickLoc.tc.mul(tilesz), so divide by tilesz to get tile coords
+            Coord tc = waypoint.div(tilesz).floor();
+            // Convert tile coordinates to screen coordinates (same as in drawMarkerLine)
+            Coord waypointC = tc.sub(dloc.tc).div(scalef()).add(hsz);
+            
+            if(prevC != null && waypointC != null) {
+                g.line(prevC, waypointC, 2);
+            }
+            prevC = waypointC;
+        }
+        
+        // Draw markers at each waypoint
+        int num = 1;
+        for(Coord2d waypoint : recordingPath.waypoints) {
+            // Convert world coordinates (pixels) -> tile coordinates -> screen coordinates
+            Coord tc = waypoint.div(tilesz).floor();
+            Coord c = tc.sub(dloc.tc).div(scalef()).add(hsz);
+            
+            if(c != null) {
+                // Draw yellow circle
+                g.chcolor(255, 255, 0, 220); // Yellow marker
+                int radius = UI.scale(6); // Larger radius
+                g.fellipse(c, new Coord(radius, radius));
+                
+                // Draw black number
+                g.chcolor(0, 0, 0, 255); // Black text
+                Text numText = Text.render(String.valueOf(num));
+                g.aimage(numText.tex(), c, 0.5, 0.5);
+                numText.dispose();
+            }
+            num++;
+        }
+        g.chcolor();
+    }
+    
     // Draw queued waypoints visualization
     protected void drawQueuedWaypoints(GOut g) {
         NGameUI gui = NUtils.getGameUI();
@@ -1401,6 +1469,26 @@ public class NMiniMap extends MiniMap {
 
     @Override
     public boolean mousedown(MouseDownEvent ev) {
+        // Handle left-click for forager path recording - prevent player movement
+        if(ev.b == 1 && !ui.modmeta && !ui.modshift && !ui.modctrl && dloc != null && sessloc != null) {
+            NGameUI gui = NUtils.getGameUI();
+            if(gui != null) {
+                // Find the Forager window
+                nurgling.widgets.bots.Forager foragerWnd = null;
+                for(Widget wdg = gui.lchild; wdg != null; wdg = wdg.prev) {
+                    if(wdg instanceof nurgling.widgets.bots.Forager) {
+                        foragerWnd = (nurgling.widgets.bots.Forager) wdg;
+                        break;
+                    }
+                }
+                
+                // If recording, consume the event to prevent player movement
+                if(foragerWnd != null && foragerWnd.isRecording()) {
+                    return true; // Consume mousedown to prevent movement
+                }
+            }
+        }
+        
         // Check for right-click on fish location
         if(ev.b == 3 && dloc != null) { // Button 3 is right-clicked
             Coord tc = ev.c.sub(sz.div(2)).mul(scalef()).add(dloc.tc);
@@ -1415,6 +1503,32 @@ public class NMiniMap extends MiniMap {
 
     @Override
     public boolean mouseup(MouseUpEvent ev) {
+        // Handle left-click for forager path recording (without modifiers)
+        if(ev.b == 1 && !ui.modmeta && !ui.modshift && !ui.modctrl && dloc != null && sessloc != null) {
+            NGameUI gui = NUtils.getGameUI();
+            if(gui != null) {
+                // Find the Forager window
+                nurgling.widgets.bots.Forager foragerWnd = null;
+                for(Widget wdg = gui.lchild; wdg != null; wdg = wdg.prev) {
+                    if(wdg instanceof nurgling.widgets.bots.Forager) {
+                        foragerWnd = (nurgling.widgets.bots.Forager) wdg;
+                        break;
+                    }
+                }
+                
+                if(foragerWnd != null && foragerWnd.isRecording()) {
+                    // Convert screen coordinates to world coordinates
+                    Coord hsz = sz.div(2);
+                    Coord tc = ev.c.sub(hsz).mul(scalef()).add(dloc.tc);
+                    Coord2d worldPos = tc.mul(tilesz);
+                    
+                    // Add waypoint to the recording path
+                    foragerWnd.addWaypointToRecording(worldPos);
+                    return true; // Consume the event
+                }
+            }
+        }
+        
         // Handle right-click release on ANY marker - draw line to it
         if(ev.b == 3 && dloc != null && sessloc != null && display != null && dgext != null) {
             Coord hsz = sz.div(2);

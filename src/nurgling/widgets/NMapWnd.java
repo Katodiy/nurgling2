@@ -248,6 +248,13 @@ public class NMapWnd extends MapWnd {
             if(viewCoord.x >= 0 && viewCoord.x < view.sz.x &&
                viewCoord.y >= 0 && viewCoord.y < view.sz.y) {
 
+                // Left-click for forager path recording (without modifier)
+                if(ev.b == 1 && !ui.modmeta && !ui.modshift && !ui.modctrl) {
+                    if(handleForagerRecordingClick(viewCoord)) {
+                        return true; // Consume the event
+                    }
+                }
+                
                 // alt+left-click for waypoint queueing
                 if(ev.b == 1 && ui.modmeta) {
                     if(handleWaypointClick(viewCoord)) {
@@ -270,6 +277,40 @@ public class NMapWnd extends MapWnd {
         return super.mouseup(ev);
     }
 
+    private boolean handleForagerRecordingClick(Coord c) {
+        // Check if Forager window is open and in recording mode
+        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        if(gui == null) return false;
+        
+        // Find the Forager window
+        nurgling.widgets.bots.Forager foragerWnd = null;
+        for(Widget wdg = gui.lchild; wdg != null; wdg = wdg.prev) {
+            if(wdg instanceof nurgling.widgets.bots.Forager) {
+                foragerWnd = (nurgling.widgets.bots.Forager) wdg;
+                break;
+            }
+        }
+        
+        if(foragerWnd == null || !foragerWnd.isRecording()) {
+            return false; // Not recording, don't consume the event
+        }
+        
+        // Get the world coordinates at the clicked position
+        MiniMap.Location clickLoc = view.xlate(c);
+        if(clickLoc == null || view.sessloc == null) return false;
+        
+        // Only handle if in same segment
+        if(clickLoc.seg.id != view.sessloc.seg.id) return false;
+        
+        // Convert to world coordinates (Coord2d)
+        Coord2d worldPos = clickLoc.tc.mul(tilesz);
+        
+        // Add waypoint to the recording path
+        foragerWnd.addWaypointToRecording(worldPos);
+        
+        return true; // Consume the event
+    }
+    
     private boolean handleWaypointClick(Coord c) {
         // Try to get the location at clicked coordinates
         MiniMap.Location clickLoc = view.xlate(c);

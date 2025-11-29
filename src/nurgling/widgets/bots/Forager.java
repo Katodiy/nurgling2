@@ -23,6 +23,11 @@ public class Forager extends Window implements Checkable {
     private Button startButton = null;
     private IButton newPresetButton = null;
     private IButton newPathButton = null;
+    private ICheckBox recordPathButton = null;
+    
+    // Recording state
+    private boolean isRecording = false;
+    private ForagerPath currentRecordingPath = null;
     
     private List<String> availablePresets = new ArrayList<>();
     private List<String> availablePaths = new ArrayList<>();
@@ -30,7 +35,7 @@ public class Forager extends Window implements Checkable {
     private Widget prev;
     
     public Forager() {
-        super(new Coord(320, 300), "Forager Bot");
+        super(new Coord(380, 300), "Forager Bot");
         NForagerProp startprop = NForagerProp.get(NUtils.getUI().sessInfo);
         
         prev = add(new Label("Forager Bot Settings:"));
@@ -55,7 +60,14 @@ public class Forager extends Window implements Checkable {
 
             @Override
             protected void drawitem(GOut g, String item, int i) {
-                g.text(item, Coord.z);
+                // Clip text to dropbox width to prevent overflow
+                Text t = Text.render(item);
+                Coord sz = t.sz();
+                if(sz.x > UI.scale(280)) {
+                    g.image(t.tex(), Coord.z, new Coord(UI.scale(280), sz.y));
+                } else {
+                    g.image(t.tex(), Coord.z);
+                }
             }
             
             @Override
@@ -99,7 +111,14 @@ public class Forager extends Window implements Checkable {
 
             @Override
             protected void drawitem(GOut g, String item, int i) {
-                g.text(item, Coord.z);
+                // Clip text to dropbox width to prevent overflow
+                Text t = Text.render(item);
+                Coord sz = t.sz();
+                if(sz.x > UI.scale(280)) {
+                    g.image(t.tex(), Coord.z, new Coord(UI.scale(280), sz.y));
+                } else {
+                    g.image(t.tex(), Coord.z);
+                }
             }
             
             @Override
@@ -122,6 +141,29 @@ public class Forager extends Window implements Checkable {
         newPathButton.settip("Create new path");
         
         prev = pathRow;
+        
+        // Record path button on separate row
+        Widget recordRow = add(new Widget(new Coord(UI.scale(270), UI.scale(20))), prev.pos("bl").add(UI.scale(0, 5)));
+        recordRow.add(new Label("Record:"), new Coord(0, UI.scale(2)));
+        recordRow.add(recordPathButton = new ICheckBox(
+            "nurgling/hud/buttons/record_4states/",
+            "u",
+            "d",
+            "h",
+            "dh") {
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+                if (val) {
+                    startRecording();
+                } else {
+                    stopRecording();
+                }
+            }
+        }, new Coord(UI.scale(60), 0));
+        recordPathButton.settip("Record path by clicking on minimap");
+        
+        prev = recordRow;
         
         // Sections info
         prev = sectionsLabel = add(new Label("No path loaded"), prev.pos("bl").add(UI.scale(0, 10)));
@@ -420,6 +462,46 @@ public class Forager extends Window implements Checkable {
             return;
         }
         
+        // Print preset settings to console
+        System.out.println("=== Forager Bot Settings ===");
+        System.out.println("Preset: " + prop.currentPreset);
+        System.out.println("Path file: " + preset.pathFile);
+        
+        if (preset.foragerPath != null) {
+            ForagerPath path = preset.foragerPath;
+            System.out.println("\nPath: " + path.name);
+            System.out.println("Waypoints: " + path.waypoints.size());
+            System.out.println("Sections: " + path.getSectionCount());
+            
+            // Print waypoints
+            System.out.println("\nWaypoints:");
+            for (int i = 0; i < path.waypoints.size(); i++) {
+                haven.Coord2d wp = path.waypoints.get(i);
+                System.out.println("  [" + (i + 1) + "] (" + String.format("%.2f", wp.x) + ", " + String.format("%.2f", wp.y) + ")");
+            }
+            
+            // Print sections
+            System.out.println("\nSections:");
+            for (int i = 0; i < path.sections.size(); i++) {
+                nurgling.routes.ForagerSection section = path.sections.get(i);
+                System.out.println("  [" + (i + 1) + "] Length: " + String.format("%.2f", section.getLength()) + 
+                    " | Actions: " + section.actions.size());
+            }
+        }
+        
+        // Print actions
+        System.out.println("\nActions (" + preset.actions.size() + "):");
+        for (int i = 0; i < preset.actions.size(); i++) {
+            ForagerAction action = preset.actions.get(i);
+            System.out.println("  [" + (i + 1) + "] Pattern: '" + action.targetObjectPattern + "'");
+            System.out.println("      Type: " + action.actionType);
+            if (action.actionName != null && !action.actionName.isEmpty()) {
+                System.out.println("      Action Name: " + action.actionName);
+            }
+        }
+        
+        System.out.println("\n=== Starting Forager Bot ===");
+        
         NForagerProp.set(prop);
         isReady = true;
     }
@@ -469,5 +551,90 @@ public class Forager extends Window implements Checkable {
                 actionsList.change(null);
             }
         }
+    }
+    
+    private void startRecording() {
+        // Check if there's a current path selected
+        if (pathDropbox.sel != null && !pathDropbox.sel.equals("No paths available")) {
+            // Load existing path for editing
+            String defaultDir = ((HashDirCache) ResCache.global).base + "\\..\\forager_paths";
+            String pathFile = defaultDir + "\\" + pathDropbox.sel + ".json";
+            try {
+                currentRecordingPath = ForagerPath.load(pathFile);
+                isRecording = true;
+                NUtils.getGameUI().msg("Recording path: " + currentRecordingPath.name + " (click on minimap to add waypoints)");
+            } catch (Exception e) {
+                NUtils.getGameUI().error("Failed to load path for recording: " + e.getMessage());
+                recordPathButton.a = false;
+                return;
+            }
+        } else {
+            NUtils.getGameUI().error("Please create or select a path first");
+            recordPathButton.a = false;
+            return;
+        }
+    }
+    
+    private void stopRecording() {
+        if (currentRecordingPath != null && isRecording) {
+            // Generate sections from waypoints
+            currentRecordingPath.generateSections();
+            
+            // Save the path
+            try {
+                String defaultDir = ((HashDirCache) ResCache.global).base + "\\..\\forager_paths";
+                currentRecordingPath.save(defaultDir);
+                
+                // Update the preset with the saved path
+                prop = NForagerProp.get(NUtils.getUI().sessInfo);
+                NForagerProp.PresetData preset = prop.presets.get(prop.currentPreset);
+                if (preset != null) {
+                    String pathFile = defaultDir + "\\" + currentRecordingPath.name + ".json";
+                    preset.pathFile = pathFile;
+                    preset.foragerPath = currentRecordingPath;
+                    NForagerProp.set(prop);
+                    updateSectionsInfo();
+                }
+                
+                NUtils.getGameUI().msg("Path recording stopped and saved: " + currentRecordingPath.name + 
+                    " (" + currentRecordingPath.waypoints.size() + " waypoints, " + 
+                    currentRecordingPath.sections.size() + " sections)");
+            } catch (Exception e) {
+                NUtils.getGameUI().error("Failed to save path: " + e.getMessage());
+            }
+        }
+        isRecording = false;
+        currentRecordingPath = null;
+    }
+    
+    public boolean isRecording() {
+        return isRecording;
+    }
+    
+    public void addWaypointToRecording(Coord2d point) {
+        if (isRecording && currentRecordingPath != null) {
+            currentRecordingPath.addWaypoint(point);
+            NUtils.getGameUI().msg("Waypoint added (" + currentRecordingPath.waypoints.size() + ")");
+        }
+    }
+    
+    public ForagerPath getCurrentRecordingPath() {
+        return currentRecordingPath;
+    }
+    
+    public ForagerPath getCurrentLoadedPath() {
+        if (isRecording && currentRecordingPath != null) {
+            return currentRecordingPath;
+        }
+        
+        // Get path from current preset
+        prop = NForagerProp.get(NUtils.getUI().sessInfo);
+        if (prop != null && prop.currentPreset != null && !prop.currentPreset.isEmpty()) {
+            NForagerProp.PresetData preset = prop.presets.get(prop.currentPreset);
+            if (preset != null) {
+                return preset.foragerPath;
+            }
+        }
+        return null;
     }
 }

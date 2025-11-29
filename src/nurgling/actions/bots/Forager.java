@@ -43,6 +43,13 @@ public class Forager implements Action {
             return Results.ERROR("Path has no sections");
         }
         
+        // TODO: Bot execution will be implemented tomorrow
+        // For now, just return success after window closes
+        gui.msg("Forager bot: Settings loaded. Execution will be implemented tomorrow.");
+        
+        return Results.SUCCESS();
+        
+        /* COMMENTED OUT - TO BE IMPLEMENTED
         Coord2d startPoint = path.waypoints.get(0);
         
         // Check and unload inventory before starting
@@ -88,6 +95,7 @@ public class Forager implements Action {
         new TravelToHearthFire().run(gui);
         
         return Results.SUCCESS();
+        */
     }
     
     private void processSection(NGameUI gui, ForagerSection section) throws InterruptedException {
