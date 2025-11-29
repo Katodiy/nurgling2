@@ -633,6 +633,9 @@ public class NConfig
                             case "NChopperProp":
                                 res.add(new NChopperProp(obj));
                                 break;
+                            case "NBoughBeeProp":
+                                res.add(new NBoughBeeProp(obj));
+                                break;
                             case "NBlueprintPlanterProp":
                                 res.add(new NBlueprintPlanterProp(obj));
                                 break;
