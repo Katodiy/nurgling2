@@ -15,8 +15,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class WildGourdFarmer implements Action {
-    private static final NAlias PLANT_ALIAS = new NAlias("plants/wildgourd");
-    private static final NAlias SEED_ALIAS = new NAlias("Wild Gourd", "pre-gourd");
+    private static final NAlias PLANT_ALIAS = new NAlias("plants/gourd");
+    private static final NAlias SEED_ALIAS = new NAlias("Wild Gourd", "pre-gourd", "pregourd");
     private static final NAlias WILDGOURD_ALIAS = new NAlias("Wild Gourd");
 
     @Override
@@ -28,38 +28,25 @@ public class WildGourdFarmer implements Action {
             "Wild Gourd"
         );
 
-        NArea.Specialisation seedSpec = new NArea.Specialisation(
-            Specialisation.SpecName.seed.toString(),
-            "Wild Gourd"
-        );
-
-        NArea wildGourdPutArea = NContext.findOut(WILDGOURD_ALIAS, 1);
+        NArea wildGourdPutArea = NContext.findOut("Wild Gourd", 1);
 
         if (wildGourdPutArea == null) {
-            gui.error("PUT Area for 'Wild Gourd' required, but not found!");
+            return Results.ERROR("PUT Area for Wild Gourd required, but not found!");
         }
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
         req.add(crop);
-        req.add(seedSpec);
 
         if (new Validator(req, new ArrayList<>()).run(gui).IsSuccess()) {
             NUtils.stackSwitch(true);
 
             NArea cropArea = NContext.findSpec(crop);
-            NArea seedArea = NContext.findSpec(seedSpec);
 
             List<HarvestResultConfig> results = Arrays.asList(
                 new HarvestResultConfig(
                     SEED_ALIAS,
-                    seedArea,
-                    1,
-                    CropRegistry.StorageBehavior.BARREL
-                ),
-                new HarvestResultConfig(
-                    WILDGOURD_ALIAS,
                     wildGourdPutArea,
-                    2,
+                    1,
                     CropRegistry.StorageBehavior.STOCKPILE
                 )
             );
@@ -67,7 +54,7 @@ public class WildGourdFarmer implements Action {
             new HarvestTrellis(cropArea, PLANT_ALIAS, results).run(gui);
 
             NUtils.stackSwitch(false);
-            new PlantTrellis(cropArea, PLANT_ALIAS, SEED_ALIAS, seedArea).run(gui);
+            new PlantTrellis(cropArea, PLANT_ALIAS, SEED_ALIAS, wildGourdPutArea).run(gui);
 
             NUtils.stackSwitch(oldStackingValue);
             return Results.SUCCESS();
