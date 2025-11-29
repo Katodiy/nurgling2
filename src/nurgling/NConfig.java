@@ -139,7 +139,8 @@ public class NConfig
         tickAction,
         autoHearthOnUnknown,
         autoLogoutOnUnknown,
-        alwaysObfuscate
+        alwaysObfuscate,
+        boughbeeprop
     }
 
     public enum BBDisplayMode

@@ -43,7 +43,7 @@
 	  <prefixlines prefix="@{url}/" />
 	</filterchain>
       </loadresource>
-      <get dest="@{path}/" usetimestamp="true">
+      <get dest="@{path}/" usetimestamp="true" maxtime="60" retries="3" verbose="true">
 	<resourcelist>
 	  <propertyresource name="@{name}-files" />
 	</resourcelist>
