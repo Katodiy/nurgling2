@@ -141,7 +141,8 @@ public class NConfig
         autoLogoutOnUnknown,
         alwaysObfuscate,
         boughbeeprop,
-        foragerprop
+        foragerprop,
+        buttonStyle
     }
 
     public enum BBDisplayMode
@@ -336,6 +337,7 @@ public class NConfig
         conf.put(Key.uiOpacity, 1.0f);  // Default to fully opaque
         conf.put(Key.useSolidBackground, false);  // Default to texture mode
         conf.put(Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));  // Default dark gray
+        conf.put(Key.buttonStyle, "tbtn");  // Default button style
 
         // Pickling settings
         conf.put(Key.picklingBeetroots, true);
