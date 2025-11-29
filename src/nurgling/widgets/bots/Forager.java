@@ -30,7 +30,7 @@ public class Forager extends Window implements Checkable {
     private Widget prev;
     
     public Forager() {
-        super(new Coord(400, 300), "Forager Bot");
+        super(new Coord(320, 300), "Forager Bot");
         NForagerProp startprop = NForagerProp.get(NUtils.getUI().sessInfo);
         
         prev = add(new Label("Forager Bot Settings:"));
@@ -40,9 +40,9 @@ public class Forager extends Window implements Checkable {
         
         loadAvailablePresets();
         
-        Widget presetRow = add(new Widget(new Coord(UI.scale(350), UI.scale(20))), prev.pos("bl").add(UI.scale(0, 5)));
+        Widget presetRow = add(new Widget(new Coord(UI.scale(270), UI.scale(20))), prev.pos("bl").add(UI.scale(0, 5)));
         
-        presetDropbox = presetRow.add(new Dropbox<String>(UI.scale(250), availablePresets.size(), UI.scale(16)) {
+        presetDropbox = presetRow.add(new Dropbox<String>(UI.scale(230), availablePresets.size(), UI.scale(16)) {
             @Override
             protected String listitem(int i) {
                 return availablePresets.get(i);
@@ -74,7 +74,7 @@ public class Forager extends Window implements Checkable {
                 super.click();
                 createNewPreset();
             }
-        }, new Coord(UI.scale(265), 0));
+        }, new Coord(UI.scale(245), 0));
         newPresetButton.settip("Create new preset");
         
         prev = presetRow;
@@ -84,9 +84,9 @@ public class Forager extends Window implements Checkable {
         
         loadAvailablePaths();
         
-        Widget pathRow = add(new Widget(new Coord(UI.scale(350), UI.scale(20))), prev.pos("bl").add(UI.scale(0, 5)));
+        Widget pathRow = add(new Widget(new Coord(UI.scale(270), UI.scale(20))), prev.pos("bl").add(UI.scale(0, 5)));
         
-        pathDropbox = pathRow.add(new Dropbox<String>(UI.scale(250), availablePaths.size(), UI.scale(16)) {
+        pathDropbox = pathRow.add(new Dropbox<String>(UI.scale(230), availablePaths.size(), UI.scale(16)) {
             @Override
             protected String listitem(int i) {
                 return availablePaths.get(i);
@@ -118,7 +118,7 @@ public class Forager extends Window implements Checkable {
                 super.click();
                 createNewPath();
             }
-        }, new Coord(UI.scale(265), 0));
+        }, new Coord(UI.scale(245), 0));
         newPathButton.settip("Create new path");
         
         prev = pathRow;
@@ -129,9 +129,9 @@ public class Forager extends Window implements Checkable {
         // Actions list
         prev = add(new Label("Actions:"), prev.pos("bl").add(UI.scale(0, 10)));
         
-        Widget actionsRow = add(new Widget(new Coord(UI.scale(350), UI.scale(120))), prev.pos("bl").add(UI.scale(0, 5)));
+        Widget actionsRow = add(new Widget(new Coord(UI.scale(270), UI.scale(120))), prev.pos("bl").add(UI.scale(0, 5)));
         
-        actionsRow.add(actionsList = new Listbox<ForagerAction>(UI.scale(250), 6, UI.scale(20)) {
+        actionsRow.add(actionsList = new Listbox<ForagerAction>(UI.scale(230), 6, UI.scale(20)) {
             @Override
             protected ForagerAction listitem(int i) {
                 if (prop != null) {
@@ -163,7 +163,7 @@ public class Forager extends Window implements Checkable {
             }
         }, new Coord(0, 0));
         
-        Widget actionsButtonsCol = actionsRow.add(new Widget(new Coord(UI.scale(30), UI.scale(120))), new Coord(UI.scale(265), 0));
+        Widget actionsButtonsCol = actionsRow.add(new Widget(new Coord(UI.scale(30), UI.scale(120))), new Coord(UI.scale(245), 0));
         
         actionsButtonsCol.add(addActionButton = new IButton(
             Resource.loadsimg("nurgling/hud/buttons/add/u"),
@@ -178,9 +178,9 @@ public class Forager extends Window implements Checkable {
         addActionButton.settip("Add action");
         
         actionsButtonsCol.add(removeActionButton = new IButton(
-            Resource.loadsimg("nurgling/hud/buttons/minus/u"),
-            Resource.loadsimg("nurgling/hud/buttons/minus/d"),
-            Resource.loadsimg("nurgling/hud/buttons/minus/h")) {
+            Resource.loadsimg("nurgling/hud/buttons/remove/u"),
+            Resource.loadsimg("nurgling/hud/buttons/remove/d"),
+            Resource.loadsimg("nurgling/hud/buttons/remove/h")) {
             @Override
             public void click() {
                 super.click();
