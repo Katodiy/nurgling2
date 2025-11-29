@@ -3,8 +3,10 @@ package nurgling.widgets.bots;
 import haven.*;
 import nurgling.NUtils;
 import nurgling.conf.NForagerProp;
+import nurgling.routes.ForagerAction;
 import nurgling.routes.ForagerPath;
 
+import nurgling.widgets.ActionConfigWindow;
 import nurgling.widgets.TextInputWindow;
 import java.io.File;
 import java.util.ArrayList;
@@ -15,6 +17,9 @@ public class Forager extends Window implements Checkable {
     private Dropbox<String> presetDropbox = null;
     private Dropbox<String> pathDropbox = null;
     private Label sectionsLabel = null;
+    private Listbox<ForagerAction> actionsList = null;
+    private IButton addActionButton = null;
+    private IButton removeActionButton = null;
     private Button startButton = null;
     private IButton newPresetButton = null;
     private IButton newPathButton = null;
@@ -121,6 +126,71 @@ public class Forager extends Window implements Checkable {
         // Sections info
         prev = sectionsLabel = add(new Label("No path loaded"), prev.pos("bl").add(UI.scale(0, 10)));
         
+        // Actions list
+        prev = add(new Label("Actions:"), prev.pos("bl").add(UI.scale(0, 10)));
+        
+        Widget actionsRow = add(new Widget(new Coord(UI.scale(350), UI.scale(120))), prev.pos("bl").add(UI.scale(0, 5)));
+        
+        actionsRow.add(actionsList = new Listbox<ForagerAction>(UI.scale(250), 6, UI.scale(20)) {
+            @Override
+            protected ForagerAction listitem(int i) {
+                if (prop != null) {
+                    NForagerProp.PresetData preset = prop.presets.get(prop.currentPreset);
+                    if (preset != null && i < preset.actions.size()) {
+                        return preset.actions.get(i);
+                    }
+                }
+                return null;
+            }
+            
+            @Override
+            protected int listitems() {
+                if (prop != null) {
+                    NForagerProp.PresetData preset = prop.presets.get(prop.currentPreset);
+                    if (preset != null) {
+                        return preset.actions.size();
+                    }
+                }
+                return 0;
+            }
+            
+            @Override
+            protected void drawitem(GOut g, ForagerAction item, int i) {
+                if (item != null) {
+                    String text = item.targetObjectPattern + " - " + item.actionType.name();
+                    g.text(text, Coord.z);
+                }
+            }
+        }, new Coord(0, 0));
+        
+        Widget actionsButtonsCol = actionsRow.add(new Widget(new Coord(UI.scale(30), UI.scale(120))), new Coord(UI.scale(265), 0));
+        
+        actionsButtonsCol.add(addActionButton = new IButton(
+            Resource.loadsimg("nurgling/hud/buttons/add/u"),
+            Resource.loadsimg("nurgling/hud/buttons/add/d"),
+            Resource.loadsimg("nurgling/hud/buttons/add/h")) {
+            @Override
+            public void click() {
+                super.click();
+                addAction();
+            }
+        }, new Coord(0, 0));
+        addActionButton.settip("Add action");
+        
+        actionsButtonsCol.add(removeActionButton = new IButton(
+            Resource.loadsimg("nurgling/hud/buttons/minus/u"),
+            Resource.loadsimg("nurgling/hud/buttons/minus/d"),
+            Resource.loadsimg("nurgling/hud/buttons/minus/h")) {
+            @Override
+            public void click() {
+                super.click();
+                removeAction();
+            }
+        }, new Coord(0, UI.scale(30)));
+        removeActionButton.settip("Remove action");
+        
+        prev = actionsRow;
+        
         // Start button
         prev = startButton = add(new Button(UI.scale(150), "Start") {
             @Override
@@ -219,6 +289,11 @@ public class Forager extends Window implements Checkable {
             if (!availablePaths.isEmpty()) {
                 pathDropbox.change(availablePaths.get(0));
             }
+        }
+        
+        // Refresh actions list
+        if (actionsList != null) {
+            actionsList.change(null);
         }
         
         NForagerProp.set(prop);
@@ -366,4 +441,33 @@ public class Forager extends Window implements Checkable {
     }
     
     public NForagerProp prop = null;
+    
+    private void addAction() {
+        ActionConfigWindow configWindow = new ActionConfigWindow(action -> {
+            if (action != null) {
+                prop = NForagerProp.get(NUtils.getUI().sessInfo);
+                NForagerProp.PresetData preset = prop.presets.get(prop.currentPreset);
+                if (preset != null) {
+                    preset.actions.add(action);
+                    NForagerProp.set(prop);
+                    actionsList.change(null);
+                }
+            }
+        });
+        NUtils.getGameUI().add(configWindow, UI.scale(200, 200));
+        configWindow.show();
+    }
+    
+    private void removeAction() {
+        ForagerAction selected = actionsList.sel;
+        if (selected != null) {
+            prop = NForagerProp.get(NUtils.getUI().sessInfo);
+            NForagerProp.PresetData preset = prop.presets.get(prop.currentPreset);
+            if (preset != null) {
+                preset.actions.remove(selected);
+                NForagerProp.set(prop);
+                actionsList.change(null);
+            }
+        }
+    }
 }

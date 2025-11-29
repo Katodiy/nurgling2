@@ -2,7 +2,9 @@ package nurgling.conf;
 
 import nurgling.NConfig;
 import nurgling.NUI;
+import nurgling.routes.ForagerAction;
 import nurgling.routes.ForagerPath;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ public class NForagerProp implements JConf {
     public static class PresetData {
         public String pathFile = "";
         public transient ForagerPath foragerPath = null;
+        public ArrayList<ForagerAction> actions = new ArrayList<>();
         
         public PresetData() {}
         
@@ -49,6 +52,15 @@ public class NForagerProp implements JConf {
                 PresetData pd = new PresetData();
                 if (entry.getValue().get("pathFile") != null)
                     pd.pathFile = (String) entry.getValue().get("pathFile");
+                
+                if (entry.getValue().get("actions") != null) {
+                    ArrayList<HashMap<String, Object>> actionsData = 
+                        (ArrayList<HashMap<String, Object>>) entry.getValue().get("actions");
+                    for (HashMap<String, Object> actionMap : actionsData) {
+                        pd.actions.add(new ForagerAction(actionMap));
+                    }
+                }
+                
                 presets.put(entry.getKey(), pd);
             }
         }
@@ -93,6 +105,13 @@ public class NForagerProp implements JConf {
         for (Map.Entry<String, PresetData> entry : presets.entrySet()) {
             JSONObject presetJson = new JSONObject();
             presetJson.put("pathFile", entry.getValue().pathFile);
+            
+            JSONArray actionsJson = new JSONArray();
+            for (ForagerAction action : entry.getValue().actions) {
+                actionsJson.put(action.toJson());
+            }
+            presetJson.put("actions", actionsJson);
+            
             presetsJson.put(entry.getKey(), presetJson);
         }
         jforager.put("presets", presetsJson);

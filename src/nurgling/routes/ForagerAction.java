@@ -32,6 +32,14 @@ public class ForagerAction {
         }
     }
     
+    public ForagerAction(java.util.HashMap<String, Object> map) {
+        this.targetObjectPattern = (String) map.get("targetObjectPattern");
+        this.actionType = ActionType.valueOf((String) map.get("actionType"));
+        if (map.containsKey("actionName")) {
+            this.actionName = (String) map.get("actionName");
+        }
+    }
+    
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
         json.put("targetObjectPattern", targetObjectPattern);
