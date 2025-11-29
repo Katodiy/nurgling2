@@ -22,7 +22,9 @@ public class GetCurs extends NTask
     @Override
     public boolean check()
     {
-        cursname = NUtils.getUI().root.cursorRes;
+        if(!NUtils.getUI().root.cursor.isReady())
+            return false;
+        cursname = NUtils.getUI().root.cursor.get().name;
         return NParser.checkName(cursname, name);
     }
 

@@ -140,7 +140,8 @@ public class NConfig
         autoHearthOnUnknown,
         autoLogoutOnUnknown,
         alwaysObfuscate,
-        boughbeeprop
+        boughbeeprop,
+        foragerprop
     }
 
     public enum BBDisplayMode
@@ -635,6 +636,9 @@ public class NConfig
                                 break;
                             case "NBoughBeeProp":
                                 res.add(new NBoughBeeProp(obj));
+                                break;
+                            case "NForagerProp":
+                                res.add(new NForagerProp(obj));
                                 break;
                             case "NBlueprintPlanterProp":
                                 res.add(new NBlueprintPlanterProp(obj));
