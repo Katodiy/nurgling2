@@ -23,7 +23,7 @@ public class NMappingClient {
     private Boolean autoMapper = null;
     public final Map<Long, CacheEntry> cache = new ConcurrentHashMap<>();
     public Thread reqTread = null;
-    Thread conTread = null;
+    public Thread conTread = null;
     long lastTracking = -1;
     private long lastCacheCleanup = System.currentTimeMillis();
     

@@ -192,8 +192,9 @@ public class DBMigrationManager {
                                          "percentage FLOAT NOT NULL, " +
                                          "UNIQUE (recipe_hash, name))");
                         
-                        stmt.executeUpdate("INSERT INTO ingredients_new (id, recipe_hash, name, percentage) " +
-                                         "SELECT id, recipe_hash, name, percentage FROM ingredients");
+                        stmt.executeUpdate("INSERT INTO ingredients_new (recipe_hash, name, percentage) " +
+                                         "SELECT recipe_hash, name, MIN(percentage) FROM ingredients " +
+                                         "GROUP BY recipe_hash, name");
                         
                         stmt.executeUpdate("DROP TABLE ingredients");
                         stmt.executeUpdate("ALTER TABLE ingredients_new RENAME TO ingredients");
@@ -210,8 +211,9 @@ public class DBMigrationManager {
                                          "weight FLOAT NOT NULL, " +
                                          "UNIQUE (recipe_hash, name))");
                         
-                        stmt.executeUpdate("INSERT INTO feps_new (id, recipe_hash, name, value, weight) " +
-                                         "SELECT id, recipe_hash, name, value, weight FROM feps");
+                        stmt.executeUpdate("INSERT INTO feps_new (recipe_hash, name, value, weight) " +
+                                         "SELECT recipe_hash, name, MAX(value), MAX(weight) FROM feps " +
+                                         "GROUP BY recipe_hash, name");
                         
                         stmt.executeUpdate("DROP TABLE feps");
                         stmt.executeUpdate("ALTER TABLE feps_new RENAME TO feps");

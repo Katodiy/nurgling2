@@ -32,8 +32,8 @@ public class TESTMapv4 extends Test
     public void body(NGameUI gui) throws InterruptedException
     {
         NMappingClient mc = NUtils.getUI().core.mappingClient;
-        NUtils.getGameUI().msg("REQUESTER state: " + String.valueOf(mc.reqTread.isAlive()));
-        NUtils.getGameUI().msg("Connector state: " + String.valueOf(mc.reqTread.isAlive()));
+        NUtils.getGameUI().msg("REQUESTER state: " + String.valueOf(mc.reqTread != null && mc.reqTread.isAlive()));
+        NUtils.getGameUI().msg("Connector state: " + String.valueOf(mc.conTread != null && mc.conTread.isAlive()));
         synchronized (mc.requestor.list) {
             NUtils.getGameUI().msg("req queue size: " + String.valueOf(mc.requestor.list.size()));
             for(Requestor.MapperTask mt : mc.requestor.list )
