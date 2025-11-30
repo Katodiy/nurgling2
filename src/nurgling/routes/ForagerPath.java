@@ -44,11 +44,11 @@ public class ForagerPath {
         
         MCache mcache = nurgling.NUtils.getGameUI().map.glob.map;
         int sectionIndex = 0;
-        Coord2d currentStart = waypoints.get(0).toCoord2d(mcache);
+        Coord2d currentStart = waypoints.get(0).toWorldCoord(mcache);
         if(currentStart == null) return;
         
         for (int i = 1; i < waypoints.size(); i++) {
-            Coord2d nextPoint = waypoints.get(i).toCoord2d(mcache);
+            Coord2d nextPoint = waypoints.get(i).toWorldCoord(mcache);
             if(nextPoint == null) continue;
             double distance = currentStart.dist(nextPoint);
             

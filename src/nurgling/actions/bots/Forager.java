@@ -63,7 +63,7 @@ public class Forager implements Action {
         
         // Get first waypoint to navigate to start
         MCache mcache = gui.map.glob.map;
-        Coord2d startPos = path.waypoints.get(0).toCoord2d(mcache);
+        Coord2d startPos = path.waypoints.get(0).toWorldCoord(mcache);
         if(startPos == null) {
             return Results.ERROR("Cannot get start position - grid not loaded");
         }

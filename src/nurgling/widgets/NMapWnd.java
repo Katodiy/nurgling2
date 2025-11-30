@@ -305,8 +305,12 @@ public class NMapWnd extends MapWnd {
         // Convert to world coordinates (Coord2d)
         Coord2d worldPos = clickLoc.tc.mul(tilesz);
         
+        // Create ForagerWaypoint from world coordinates
+        MCache mcache = gui.map.glob.map;
+        nurgling.routes.ForagerWaypoint waypoint = new nurgling.routes.ForagerWaypoint(worldPos, mcache);
+        
         // Add waypoint to the recording path
-        foragerWnd.addWaypointToRecording(worldPos);
+        foragerWnd.addWaypointToRecording(waypoint);
         
         return true; // Consume the event
     }
