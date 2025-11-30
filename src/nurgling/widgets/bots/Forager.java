@@ -544,10 +544,6 @@ public class Forager extends Window implements Checkable {
                     loadAvailablePaths();
                     pathDropbox.change(pathName.trim());
                     
-                    NUtils.getGameUI().msg("Path created. Now click on minimap to add waypoints.");
-                    
-                    // TODO: Enable path creation mode on minimap
-                    
                     updateSectionsInfo();
                 } catch (Exception e) {
                     NUtils.getGameUI().error("Failed to create path: " + e.getMessage());
@@ -623,59 +619,6 @@ public class Forager extends Window implements Checkable {
         preset.freeInventory = freeInventoryCheckbox.a;
         preset.ignoreBats = ignoreBatsCheckbox.a;
         
-        // Print preset settings to console and chat
-        System.out.println("=== Forager Bot Settings ===");
-        System.out.println("Preset: " + prop.currentPreset);
-        System.out.println("Path file: " + preset.pathFile);
-        
-        NUtils.getGameUI().msg("Forager Settings: Preset '" + prop.currentPreset + "'");
-        
-        if (preset.foragerPath != null) {
-            ForagerPath path = preset.foragerPath;
-            System.out.println("\nPath: " + path.name);
-            System.out.println("Waypoints: " + path.waypoints.size());
-            System.out.println("Sections: " + path.getSectionCount());
-            
-            // Print waypoints (segment-based)
-            System.out.println("\nWaypoints:");
-            for (int i = 0; i < path.waypoints.size(); i++) {
-                nurgling.routes.ForagerWaypoint wp = path.waypoints.get(i);
-                System.out.println("  [" + (i + 1) + "] Seg=" + wp.seg + ", TC=(" + wp.tc.x + "," + wp.tc.y + ")");
-            }
-            
-            // Print sections with world coordinates
-            System.out.println("\nSections:");
-            NUtils.getGameUI().msg("Path: " + path.name + " - " + path.sections.size() + " sections:");
-            
-            for (int i = 0; i < path.sections.size(); i++) {
-                nurgling.routes.ForagerSection section = path.sections.get(i);
-                
-                System.out.println("  [" + (i + 1) + "] Length: " + String.format("%.2f", section.getLength()) + 
-                    " | Actions: " + section.actions.size());
-                System.out.println("      Start: (" + String.format("%.2f", section.startPoint.x) + ", " + 
-                    String.format("%.2f", section.startPoint.y) + ") | End: (" + 
-                    String.format("%.2f", section.endPoint.x) + ", " + 
-                    String.format("%.2f", section.endPoint.y) + ")");
-                
-                // Output to chat with world coordinates
-                NUtils.getGameUI().msg(String.format("  Section %d: (%.0f, %.0f) -> (%.0f, %.0f)", 
-                    i + 1, section.startPoint.x, section.startPoint.y, section.endPoint.x, section.endPoint.y));
-            }
-        }
-        
-        // Print actions
-        System.out.println("\nActions (" + preset.actions.size() + "):");
-        for (int i = 0; i < preset.actions.size(); i++) {
-            ForagerAction action = preset.actions.get(i);
-            System.out.println("  [" + (i + 1) + "] Pattern: '" + action.targetObjectPattern + "'");
-            System.out.println("      Type: " + action.actionType);
-            if (action.actionName != null && !action.actionName.isEmpty()) {
-                System.out.println("      Action Name: " + action.actionName);
-            }
-        }
-        
-        System.out.println("\n=== Starting Forager Bot ===");
-        
         NForagerProp.set(prop);
         isReady = true;
     }
@@ -736,7 +679,6 @@ public class Forager extends Window implements Checkable {
             try {
                 currentRecordingPath = ForagerPath.load(pathFile);
                 isRecording = true;
-                NUtils.getGameUI().msg("Recording path: " + currentRecordingPath.name + " (click on minimap to add waypoints)");
             } catch (Exception e) {
                 NUtils.getGameUI().error("Failed to load path for recording: " + e.getMessage());
                 recordPathButton.a = false;
@@ -769,10 +711,6 @@ public class Forager extends Window implements Checkable {
                     NForagerProp.set(prop);
                     updateSectionsInfo();
                 }
-                
-                NUtils.getGameUI().msg("Path recording stopped and saved: " + currentRecordingPath.name + 
-                    " (" + currentRecordingPath.waypoints.size() + " waypoints, " + 
-                    currentRecordingPath.sections.size() + " sections)");
             } catch (Exception e) {
                 NUtils.getGameUI().error("Failed to save path: " + e.getMessage());
             }
@@ -788,7 +726,6 @@ public class Forager extends Window implements Checkable {
     public void addWaypointToRecording(nurgling.routes.ForagerWaypoint wp) {
         if (isRecording && currentRecordingPath != null) {
             currentRecordingPath.addWaypoint(wp);
-            NUtils.getGameUI().msg("Waypoint added (" + currentRecordingPath.waypoints.size() + "): Seg=" + wp.seg + ", TC=(" + wp.tc.x + "," + wp.tc.y + ")");
         }
     }
     

@@ -5,6 +5,7 @@ import nurgling.*;
 import nurgling.actions.*;
 import nurgling.areas.NContext;
 import nurgling.conf.NAreaRad;
+import nurgling.conf.NDiscordNotification;
 import nurgling.conf.NForagerProp;
 import nurgling.routes.*;
 import nurgling.tools.Finder;
@@ -49,7 +50,6 @@ public class Forager implements Action {
             return Results.ERROR("Path has no sections");
         }
         
-        gui.msg("Forager bot starting: " + path.name + " with " + path.getSectionCount() + " sections");
         
         // Get dangerous animal patterns from NConfig
         @SuppressWarnings("unchecked")
@@ -71,12 +71,10 @@ public class Forager implements Action {
             return Results.ERROR("Cannot get start position - waypoint not in current segment");
         }
         
-        gui.msg("Moving to start position...");
         new PathFinder(startPos).run(gui);
         
         // Check and unload inventory before starting
         if (preset.freeInventory && isInventoryFull(gui)) {
-            gui.msg("Inventory full, unloading before starting...");
             unloadInventory(gui);
             // Return to start
             new PathFinder(startPos).run(gui);
@@ -88,12 +86,10 @@ public class Forager implements Action {
             ForagerSection section = path.getSection(i);
             if (section == null) continue;
 
-            gui.msg(String.format("Processing section %d/%d", i + 1, path.getSectionCount()));
             
             // Check for dangerous players
             if (!NAlarmWdg.borkas.isEmpty()) {
                 if (!preset.onPlayerAction.equals("nothing")) {
-                    gui.msg("Unknown player detected!");
                     performSafetyAction(gui, preset.onPlayerAction);
                     return Results.SUCCESS();
                 }
@@ -108,7 +104,6 @@ public class Forager implements Action {
                 
                 Gob animal = Finder.findGob(NUtils.player().rc, new NAlias(animalPattern), null, 200.0);
                 if (animal != null) {
-                    gui.msg("Dangerous animal detected: " + animalPattern);
                     performSafetyAction(gui, preset.onAnimalAction);
                     return Results.SUCCESS();
                 }
@@ -135,12 +130,10 @@ public class Forager implements Action {
             // Check inventory after each section
             if (isInventoryFull(gui)) {
                 if (preset.freeInventory) {
-                    gui.msg("Inventory full, unloading and returning...");
                     Coord2d currentPos = NUtils.player().rc;
                     unloadInventory(gui);
                     new PathFinder(currentPos).run(gui);
                 } else {
-                    gui.msg("Inventory full, teleporting to hearth and finishing...");
                     new TravelToHearthFire().run(gui);
                     new FreeInventory2(new NContext(gui)).run(gui);
                     return Results.SUCCESS();
@@ -149,7 +142,6 @@ public class Forager implements Action {
         }
         
         // After completing all sections, perform finish action
-        gui.msg("Path complete!");
         performSafetyAction(gui, preset.afterFinishAction);
         
         return Results.SUCCESS();
@@ -163,7 +155,6 @@ public class Forager implements Action {
         for (ForagerAction action : actions) {
             // Check for safety before each action
             if (!NAlarmWdg.borkas.isEmpty() && !preset.onPlayerAction.equals("nothing")) {
-                gui.msg("Unknown player detected!");
                 performSafetyAction(gui, preset.onPlayerAction);
                 return;
             }
@@ -176,7 +167,6 @@ public class Forager implements Action {
                 
                 Gob animal = Finder.findGob(NUtils.player().rc, new NAlias(animalPattern), null, 200.0);
                 if (animal != null) {
-                    gui.msg("Dangerous animal detected: " + animalPattern);
                     performSafetyAction(gui, preset.onAnimalAction);
                     return;
                 }
@@ -187,25 +177,21 @@ public class Forager implements Action {
     }
     
     private void processAction(NGameUI gui, ForagerAction action, Coord2d center, double radius, NForagerProp.PresetData preset) throws InterruptedException {
-        gui.msg(String.format("Looking for '%s' objects in radius %.0f...", action.targetObjectPattern, radius));
         ArrayList<Gob> gobs = Finder.findGobs(center, new NAlias(action.targetObjectPattern), null, radius);
         
         // Filter out already processed gobs
         gobs.removeIf(gob -> processedGobs.contains(gob.id));
         
         if (gobs.isEmpty()) {
-            gui.msg("No new objects found (all already processed)");
             return;
         }
         
-        gui.msg(String.format("Found %d new objects, action type: %s", gobs.size(), action.actionType));
         
         switch (action.actionType) {
             case PICK:
                 for (Gob gob : gobs) {
                     if (isInventoryFull(gui)) {
                         if (preset.freeInventory) {
-                            gui.msg("Inventory full, unloading and returning...");
                             Coord2d currentPos = NUtils.player().rc;
                             unloadInventory(gui);
                             new PathFinder(currentPos).run(gui);
@@ -239,12 +225,14 @@ public class Forager implements Action {
             case CHAT_NOTIFY:
                 if (!gobs.isEmpty()) {
                     String message = String.format("Found %d %s objects!", gobs.size(), action.targetObjectPattern);
-                    gui.msg(message);
                     
                     // Send notification based on target
                     if (action.notifyTarget == ForagerAction.NotifyTarget.DISCORD) {
-                        // TODO: Implement Discord notification via webhook or bot
-                        gui.msg("[DISCORD NOTIFICATION] " + message);
+                        // Send Discord notification using general client settings
+                        NDiscordNotification discordSettings = NDiscordNotification.get("general");
+                        if (discordSettings != null && discordSettings.webhookUrl != null && !discordSettings.webhookUrl.isEmpty()) {
+                            gui.msgToDiscord(discordSettings, message);
+                        }
                     } else if (action.notifyTarget == ForagerAction.NotifyTarget.CHAT) {
                         // Send message to chat channel
                         if (action.chatChannelName != null && !action.chatChannelName.isEmpty()) {
@@ -252,13 +240,7 @@ public class Forager implements Action {
                             ChatUI.Channel targetChannel = findChatChannelByName(gui, action.chatChannelName);
                             if (targetChannel != null && targetChannel instanceof ChatUI.EntryChannel) {
                                 ((ChatUI.EntryChannel) targetChannel).send(message);
-                                gui.msg("Notification sent to " + action.chatChannelName);
-                            } else {
-                                gui.msg("Chat channel '" + action.chatChannelName + "' not found, using system log");
-                                gui.msg(message);
                             }
-                        } else {
-                            gui.msg(message);
                         }
                     }
                     
@@ -268,9 +250,7 @@ public class Forager implements Action {
                     }
                     
                     // Pause for 5 minutes (18000 frames at 60fps)
-                    gui.msg("Pausing for 5 minutes...");
                     NUtils.getUI().core.addTask(new nurgling.tasks.WaitTicks(18000));
-                    gui.msg("Pause complete, stopping bot.");
                     
                     // Signal to stop the bot after pause
                     throw new InterruptedException("CHAT_NOTIFY action triggered - stopping bot");
@@ -294,9 +274,7 @@ public class Forager implements Action {
     }
     
     private void unloadInventory(NGameUI gui) throws InterruptedException {
-        gui.msg("Inventory full! Please unload manually and press Enter to continue...");
         new FreeInventory2(new NContext(gui)).run(gui);
-        gui.msg("Inventory cleared, continuing...");
     }
     
     private void performSafetyAction(NGameUI gui, String action) throws InterruptedException {

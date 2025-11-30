@@ -81,6 +81,7 @@ public class NSettingsWindow extends Widget {
         general.addChild(new SettingsItem("Auto Mapper", new AutoMapper(), container));
         general.addChild(new SettingsItem("Auto Selection", as = new AutoSelection(), container));
         general.addChild(new SettingsItem("Quick Actions", qa = new QuickActions(), container));
+        general.addChild(new SettingsItem("Discord Notifications", new DiscordSettings(), container));
 
         SettingsCategory gameenvironment = new SettingsCategory("Game environment", new Panel("Game environment"), container);
         gameenvironment.addChild(new SettingsItem("World",world = new World(), container));

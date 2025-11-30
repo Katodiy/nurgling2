@@ -61,6 +61,7 @@ public class NConfig
         sheepsprop,
         pigsprop,
         discordNotification,
+        discordWebhookUrl,
         showGrid,
         showView,
         disableWinAnim,
@@ -192,6 +193,7 @@ public class NConfig
         conf.put(Key.invert_hor, false);
         conf.put(Key.invert_ver, false);
         conf.put(Key.show_drag_menu, true);
+        conf.put(Key.discordWebhookUrl, "");
         conf.put(Key.showGrid, false);
         conf.put(Key.showView, false);
         conf.put(Key.disableWinAnim, true);
