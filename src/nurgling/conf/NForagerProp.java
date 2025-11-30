@@ -24,6 +24,11 @@ public class NForagerProp implements JConf {
         public transient ForagerPath foragerPath = null;
         public ArrayList<ForagerAction> actions = new ArrayList<>();
         
+        public String onPlayerAction = "nothing";
+        public String onAnimalAction = "logout";
+        public String afterFinishAction = "nothing";
+        public boolean freeInventory = false;
+        
         public PresetData() {}
         
         public PresetData(String pathFile) {
@@ -60,6 +65,15 @@ public class NForagerProp implements JConf {
                         pd.actions.add(new ForagerAction(actionMap));
                     }
                 }
+                
+                if (entry.getValue().get("onPlayerAction") != null)
+                    pd.onPlayerAction = (String) entry.getValue().get("onPlayerAction");
+                if (entry.getValue().get("onAnimalAction") != null)
+                    pd.onAnimalAction = (String) entry.getValue().get("onAnimalAction");
+                if (entry.getValue().get("afterFinishAction") != null)
+                    pd.afterFinishAction = (String) entry.getValue().get("afterFinishAction");
+                if (entry.getValue().get("freeInventory") != null)
+                    pd.freeInventory = (Boolean) entry.getValue().get("freeInventory");
                 
                 presets.put(entry.getKey(), pd);
             }
@@ -111,6 +125,11 @@ public class NForagerProp implements JConf {
                 actionsJson.put(action.toJson());
             }
             presetJson.put("actions", actionsJson);
+            
+            presetJson.put("onPlayerAction", entry.getValue().onPlayerAction);
+            presetJson.put("onAnimalAction", entry.getValue().onAnimalAction);
+            presetJson.put("afterFinishAction", entry.getValue().afterFinishAction);
+            presetJson.put("freeInventory", entry.getValue().freeInventory);
             
             presetsJson.put(entry.getKey(), presetJson);
         }

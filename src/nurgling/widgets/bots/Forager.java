@@ -25,12 +25,23 @@ public class Forager extends Window implements Checkable {
     private IButton newPathButton = null;
     private ICheckBox recordPathButton = null;
     
+    Dropbox<String> onPlayerAction = null;
+    Dropbox<String> onAnimalAction = null;
+    Dropbox<String> afterFinishAction = null;
+    CheckBox freeInventoryCheckbox = null;
+    
+    private static final String[] PLAYER_ACTIONS = {"nothing", "logout", "travel hearth"};
+    private static final String[] ANIMAL_ACTIONS = {"logout", "travel hearth"};
+    private static final String[] AFTER_FINISH_ACTIONS = {"nothing", "logout", "travel hearth"};
+    
     // Recording state
     private boolean isRecording = false;
     private ForagerPath currentRecordingPath = null;
     
     private List<String> availablePresets = new ArrayList<>();
     private List<String> availablePaths = new ArrayList<>();
+    
+    private String lastPresetName = null;
     
     private Widget prev;
     
@@ -233,6 +244,81 @@ public class Forager extends Window implements Checkable {
         
         prev = actionsRow;
         
+        // Player detection reaction
+        prev = add(new Label("On unknown player:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(onPlayerAction = new Dropbox<String>(UI.scale(150), PLAYER_ACTIONS.length, UI.scale(16)) {
+            @Override
+            protected String listitem(int i) {
+                return PLAYER_ACTIONS[i];
+            }
+
+            @Override
+            protected int listitems() {
+                return PLAYER_ACTIONS.length;
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, Coord.z);
+            }
+            
+            @Override
+            public void change(String item) {
+                super.change(item);
+            }
+        }, prev.pos("bl").add(UI.scale(0, 5)));
+        
+        // Animal detection reaction
+        prev = add(new Label("On dangerous animal:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(onAnimalAction = new Dropbox<String>(UI.scale(150), ANIMAL_ACTIONS.length, UI.scale(16)) {
+            @Override
+            protected String listitem(int i) {
+                return ANIMAL_ACTIONS[i];
+            }
+
+            @Override
+            protected int listitems() {
+                return ANIMAL_ACTIONS.length;
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, Coord.z);
+            }
+            
+            @Override
+            public void change(String item) {
+                super.change(item);
+            }
+        }, prev.pos("bl").add(UI.scale(0, 5)));
+
+        // After finish action
+        prev = add(new Label("After finish:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(afterFinishAction = new Dropbox<String>(UI.scale(150), AFTER_FINISH_ACTIONS.length, UI.scale(16)) {
+            @Override
+            protected String listitem(int i) {
+                return AFTER_FINISH_ACTIONS[i];
+            }
+
+            @Override
+            protected int listitems() {
+                return AFTER_FINISH_ACTIONS.length;
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, Coord.z);
+            }
+            
+            @Override
+            public void change(String item) {
+                super.change(item);
+            }
+        }, prev.pos("bl").add(UI.scale(0, 5)));
+        
+        // Free inventory checkbox
+        prev = add(freeInventoryCheckbox = new CheckBox("Free inventory"), prev.pos("bl").add(UI.scale(0, 10)));
+        
         // Start button
         prev = startButton = add(new Button(UI.scale(150), "Start") {
             @Override
@@ -248,31 +334,62 @@ public class Forager extends Window implements Checkable {
         
         // Select current preset if exists
         if (!startprop.currentPreset.isEmpty() && availablePresets.contains(startprop.currentPreset)) {
+            lastPresetName = startprop.currentPreset;
             presetDropbox.change(startprop.currentPreset);
             
             // Load path for current preset if exists
             NForagerProp.PresetData preset = startprop.presets.get(startprop.currentPreset);
-            if (preset != null && !preset.pathFile.isEmpty()) {
-                try {
-                    preset.foragerPath = ForagerPath.load(preset.pathFile);
-                    
-                    // Extract just the filename without extension
-                    String fileName = preset.pathFile.substring(preset.pathFile.lastIndexOf("\\") + 1);
-                    fileName = fileName.replace(".json", "");
-                    
-                    // Select in dropbox if exists
-                    if (availablePaths.contains(fileName)) {
-                        pathDropbox.change(fileName);
+            if (preset != null) {
+                updateSafetyDropboxes(preset);
+                
+                if (!preset.pathFile.isEmpty()) {
+                    try {
+                        preset.foragerPath = ForagerPath.load(preset.pathFile);
+                        
+                        // Extract just the filename without extension
+                        String fileName = preset.pathFile.substring(preset.pathFile.lastIndexOf("\\") + 1);
+                        fileName = fileName.replace(".json", "");
+                        
+                        // Select in dropbox if exists
+                        if (availablePaths.contains(fileName)) {
+                            pathDropbox.change(fileName);
+                        }
+                        
+                        updateSectionsInfo();
+                    } catch (Exception e) {
+                        // Path file not found or corrupted
                     }
-                    
-                    updateSectionsInfo();
-                } catch (Exception e) {
-                    // Path file not found or corrupted
                 }
             }
         } else if (!availablePresets.isEmpty()) {
+            lastPresetName = availablePresets.get(0);
             presetDropbox.change(availablePresets.get(0));
         }
+    }
+    
+    private void updateSafetyDropboxes(NForagerProp.PresetData preset) {
+        for (int i = 0; i < PLAYER_ACTIONS.length; i++) {
+            if (PLAYER_ACTIONS[i].equals(preset.onPlayerAction)) {
+                onPlayerAction.change(PLAYER_ACTIONS[i]);
+                break;
+            }
+        }
+        
+        for (int i = 0; i < ANIMAL_ACTIONS.length; i++) {
+            if (ANIMAL_ACTIONS[i].equals(preset.onAnimalAction)) {
+                onAnimalAction.change(ANIMAL_ACTIONS[i]);
+                break;
+            }
+        }
+        
+        for (int i = 0; i < AFTER_FINISH_ACTIONS.length; i++) {
+            if (AFTER_FINISH_ACTIONS[i].equals(preset.afterFinishAction)) {
+                afterFinishAction.change(AFTER_FINISH_ACTIONS[i]);
+                break;
+            }
+        }
+        
+        freeInventoryCheckbox.a = preset.freeInventory;
     }
     
     private void loadAvailablePresets() {
@@ -311,25 +428,45 @@ public class Forager extends Window implements Checkable {
         if (prop == null) {
             prop = NForagerProp.get(NUtils.getUI().sessInfo);
         }
+        
+        // Save current safety settings to the old preset before switching
+        if (lastPresetName != null && !lastPresetName.equals(presetName)) {
+            NForagerProp.PresetData oldPreset = prop.presets.get(lastPresetName);
+            if (oldPreset != null) {
+                if (onPlayerAction.sel != null)
+                    oldPreset.onPlayerAction = onPlayerAction.sel;
+                if (onAnimalAction.sel != null)
+                    oldPreset.onAnimalAction = onAnimalAction.sel;
+                if (afterFinishAction.sel != null)
+                    oldPreset.afterFinishAction = afterFinishAction.sel;
+                oldPreset.freeInventory = freeInventoryCheckbox.a;
+            }
+        }
+        
         prop.currentPreset = presetName;
+        lastPresetName = presetName;
         
         // Load path for this preset
         NForagerProp.PresetData preset = prop.presets.get(presetName);
-        if (preset != null && !preset.pathFile.isEmpty()) {
-            loadPath(preset.pathFile);
+        if (preset != null) {
+            updateSafetyDropboxes(preset);
             
-            // Update path dropbox to show the path for this preset
-            String fileName = preset.pathFile.substring(preset.pathFile.lastIndexOf("\\") + 1);
-            fileName = fileName.replace(".json", "");
-            if (availablePaths.contains(fileName)) {
-                pathDropbox.change(fileName);
-            }
-        } else {
-            sectionsLabel.settext("No path loaded");
-            startButton.disable(true);
-            // Reset path dropbox
-            if (!availablePaths.isEmpty()) {
-                pathDropbox.change(availablePaths.get(0));
+            if (!preset.pathFile.isEmpty()) {
+                loadPath(preset.pathFile);
+                
+                // Update path dropbox to show the path for this preset
+                String fileName = preset.pathFile.substring(preset.pathFile.lastIndexOf("\\") + 1);
+                fileName = fileName.replace(".json", "");
+                if (availablePaths.contains(fileName)) {
+                    pathDropbox.change(fileName);
+                }
+            } else {
+                sectionsLabel.settext("No path loaded");
+                startButton.disable(true);
+                // Reset path dropbox
+                if (!availablePaths.isEmpty()) {
+                    pathDropbox.change(availablePaths.get(0));
+                }
             }
         }
         
@@ -461,6 +598,23 @@ public class Forager extends Window implements Checkable {
             NUtils.getGameUI().error("No valid path loaded");
             return;
         }
+        
+        if (onPlayerAction.sel != null)
+            preset.onPlayerAction = onPlayerAction.sel;
+        else
+            preset.onPlayerAction = "nothing";
+            
+        if (onAnimalAction.sel != null)
+            preset.onAnimalAction = onAnimalAction.sel;
+        else
+            preset.onAnimalAction = "logout";
+            
+        if (afterFinishAction.sel != null)
+            preset.afterFinishAction = afterFinishAction.sel;
+        else
+            preset.afterFinishAction = "nothing";
+            
+        preset.freeInventory = freeInventoryCheckbox.a;
         
         // Print preset settings to console and chat
         System.out.println("=== Forager Bot Settings ===");
