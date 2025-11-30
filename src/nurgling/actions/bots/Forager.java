@@ -3,6 +3,7 @@ package nurgling.actions.bots;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
+import nurgling.areas.NContext;
 import nurgling.conf.NForagerProp;
 import nurgling.routes.*;
 import nurgling.tools.Finder;
@@ -43,65 +44,62 @@ public class Forager implements Action {
             return Results.ERROR("Path has no sections");
         }
         
-        // TODO: Bot execution will be implemented tomorrow
-        // For now, just return success after window closes
-        gui.msg("Forager bot: Settings loaded. Execution will be implemented tomorrow.");
+        gui.msg("Forager bot starting: " + path.name + " with " + path.getSectionCount() + " sections");
         
-        return Results.SUCCESS();
+        // Get first waypoint to navigate to start
+        MCache mcache = gui.map.glob.map;
+        Coord2d startPos = path.waypoints.get(0).toCoord2d(mcache);
+        if(startPos == null) {
+            return Results.ERROR("Cannot get start position - grid not loaded");
+        }
         
-        /* COMMENTED OUT - TO BE IMPLEMENTED
-        Coord2d startPoint = path.waypoints.get(0);
+        gui.msg("Moving to start position...");
+        new PathFinder(startPos).run(gui);
         
         // Check and unload inventory before starting
         if (isInventoryFull(gui)) {
             gui.msg("Inventory full, unloading before starting...");
-            new PathFinder(startPoint).run(gui);
             unloadInventory(gui);
+            // Return to start
+            new PathFinder(startPos).run(gui);
         }
         
         // Main loop through sections
         for (int i = 0; i < path.getSectionCount(); i++) {
             ForagerSection section = path.getSection(i);
-            
-            if (section == null) {
-                continue;
-            }
+            if (section == null) continue;
             
             gui.msg(String.format("Processing section %d/%d", i + 1, path.getSectionCount()));
             
-            // Navigate to section start
-            new PathFinder(section.startPoint).run(gui);
+            // Navigate to section center
+            Coord2d sectionCenter = section.getCenterPoint();
+            new PathFinder(sectionCenter).run(gui);
             
             // Process actions for this section
-            processSection(gui, section);
+            processSection(gui, section, preset.actions);
             
-            // Check inventory
+            // Check inventory after each section
             if (isInventoryFull(gui)) {
                 gui.msg("Inventory full, returning to unload...");
-                
-                // Return to start point
-                new PathFinder(startPoint).run(gui);
-                
-                // Unload inventory
+                new PathFinder(startPos).run(gui);
                 unloadInventory(gui);
-                
-                // Return to current section
-                new PathFinder(section.endPoint).run(gui);
+                // Return to section
+                new PathFinder(sectionCenter).run(gui);
             }
         }
         
-        // After completing all sections, travel hearth
+        // After completing all sections, travel to hearth
         gui.msg("Path complete, traveling to hearth...");
         new TravelToHearthFire().run(gui);
         
         return Results.SUCCESS();
-        */
     }
     
-    private void processSection(NGameUI gui, ForagerSection section) throws InterruptedException {
+    private void processSection(NGameUI gui, ForagerSection section, java.util.List<ForagerAction> actions) throws InterruptedException {
         double radius = 50.0;
         
-        for (ForagerAction action : section.actions) {
+        // Use actions from preset, not from section
+        for (ForagerAction action : actions) {
             processAction(gui, action, section.getCenterPoint(), radius);
         }
     }
@@ -119,28 +117,22 @@ public class Forager implements Action {
                     if (isInventoryFull(gui)) {
                         break;
                     }
-                    
-                    try {
-                        new PathFinder(gob).run(gui);
-                        new SelectFlowerAction("Pick", gob).run(gui);
-                        NUtils.getUI().core.addTask(new nurgling.tasks.WaitGobRemoval(gob.id));
-                    } catch (Exception e) {
-                        // Object might have disappeared, continue
-                    }
+
+                    new PathFinder(gob).run(gui);
+                    new SelectFlowerAction("Pick", gob).run(gui);
+                    NUtils.getUI().core.addTask(new nurgling.tasks.WaitGobRemoval(gob.id));
+
+
                 }
                 break;
                 
             case FLOWER_ACTION:
                 for (Gob gob : gobs) {
-                    try {
                         new PathFinder(gob).run(gui);
                         new SelectFlowerAction(action.actionName, gob).run(gui);
                         
                         // Wait for pose change
                         NUtils.getUI().core.addTask(new nurgling.tasks.WaitPose(NUtils.player(), "gfx/borka/idle"));
-                    } catch (Exception e) {
-                        // Action might have failed, continue
-                    }
                 }
                 break;
                 
@@ -152,30 +144,23 @@ public class Forager implements Action {
         }
     }
     
-    private boolean isInventoryFull(NGameUI gui) {
-        try {
-            if (gui.vhand != null) {
-                return true;
-            }
-            
-            if (gui.getInventory() != null) {
-                return gui.getInventory().getFreeSpace() <= 4;
-            }
-        } catch (Exception e) {
-            // Error checking inventory, assume not full
+    private boolean isInventoryFull(NGameUI gui) throws InterruptedException
+    {
+
+        if (gui.vhand != null) {
+            return true;
         }
+
+        if (gui.getInventory() != null) {
+            return gui.getInventory().getFreeSpace() <= 4;
+        }
+
         return false;
     }
     
     private void unloadInventory(NGameUI gui) throws InterruptedException {
-        // Use existing unload system
-        gui.msg("Unloading inventory...");
-        
-        // This will use the logistics system to unload items
-        // Similar to how other bots do it
-        
-        // TODO: Implement proper unload using FreeContainers or similar
-        // For now, just wait a bit to simulate unloading
-        Thread.sleep(1000);
+        gui.msg("Inventory full! Please unload manually and press Enter to continue...");
+        new FreeInventory2(new NContext(gui)).run(gui);
+        gui.msg("Inventory cleared, continuing...");
     }
 }

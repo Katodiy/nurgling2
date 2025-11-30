@@ -159,11 +159,6 @@ public class NMiniMap extends MiniMap {
             return;
         }
         
-        // Debug: print path info once per second
-        if(System.currentTimeMillis() % 1000 < 50) {
-            System.out.println("[Forager] Drawing path with " + recordingPath.waypoints.size() + " waypoints");
-        }
-        
         Coord hsz = sz.div(2);
         
         // Draw lines connecting waypoints
@@ -177,28 +172,17 @@ public class NMiniMap extends MiniMap {
             Coord tc = waypoint.getTileCoord(mcache);
             if(tc == null) {
                 // Grid not loaded or waypoint on different session
-                System.out.println("[Forager] Waypoint TC is null! Grid: " + waypoint.gridId);
                 continue;
             }
             
             // Convert tile coordinates to screen coordinates using st2c
             Coord waypointC = st2c(tc);
             
-            // Debug: print draw position
-            if(System.currentTimeMillis() % 1000 < 50) {
-                System.out.println("[Forager] Drawing waypoint at TC: " + tc + " -> screen: " + waypointC);
-            }
-            
             if(prevC != null && waypointC != null) {
                 g.line(prevC, waypointC, 2);
             }
             prevC = waypointC;
             drawnCount++;
-        }
-        
-        // Debug output
-        if(System.currentTimeMillis() % 1000 < 50 && drawnCount > 0) {
-            System.out.println("[Forager] Drew " + drawnCount + " waypoints on minimap");
         }
         
         // Draw markers at each waypoint
@@ -1542,32 +1526,17 @@ public class NMiniMap extends MiniMap {
                 
                 if(foragerWnd != null && foragerWnd.isRecording()) {
                     try {
-                        System.out.println("\n===== FORAGER CLICK =====");
-                        System.out.println("[Click] Screen position: " + ev.c);
-                        System.out.println("[Click] Minimap size: " + sz + ", center: " + sz.div(2));
-                        System.out.println("[Click] dloc.tc: " + dloc.tc + ", scalef: " + scalef());
-                        
                         // Use the proper c2p method to convert screen to world coordinates
                         Coord2d worldPos = c2p(ev.c);
-                        System.out.println("[Click] World pos: " + worldPos);
                         
                         if(worldPos != null) {
                             // Convert world coordinates to grid-based waypoint
                             MCache mcache = gui.map.glob.map;
                             nurgling.routes.ForagerWaypoint wp = new nurgling.routes.ForagerWaypoint(worldPos, mcache);
-                            Coord tc = wp.getTileCoord(mcache);
-                            System.out.println("[Click] Waypoint TC: " + tc + ", Grid: " + wp.gridId + ", Local: " + wp.localCoord);
-                            
-                            // Calculate where this will be drawn using st2c
-                            Coord drawPos = st2c(tc);
-                            System.out.println("[Click] WILL DRAW AT SCREEN: " + drawPos);
-                            System.out.println("[Click] Click was at: " + ev.c + " (difference: " + drawPos.sub(ev.c) + ")");
-                            System.out.println("========================\n");
-                            
                             foragerWnd.addWaypointToRecording(wp);
                         }
                     } catch(Loading e) {
-                        System.out.println("[Forager] Loading exception: " + e.getMessage());
+                        // Grid not loaded, ignore
                     }
                     return true; // Consume the event
                 }
