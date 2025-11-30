@@ -14,7 +14,7 @@ public class DiscordSettings extends Panel {
     public DiscordSettings() {
         super("Discord Notifications");
         
-        int y = UI.scale(10);
+        int y = UI.scale(40);
         
         add(new Label("Configure Discord webhook for bot notifications"), UI.scale(10), y);
         y += UI.scale(30);

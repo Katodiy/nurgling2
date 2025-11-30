@@ -264,7 +264,7 @@
     <copy todir="steam/" file="build/hafen.jar" />
   </target>
 
-  <property name="version.num" value="2.051"/>
+  <property name="version.num" value="2.100"/>
   <target name="version" depends="pre-release">
     <buildnumber file="build.num"/>
     <exec executable="java" failifexecutionfails="false">
