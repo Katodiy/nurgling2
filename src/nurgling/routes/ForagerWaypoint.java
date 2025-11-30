@@ -5,77 +5,52 @@ import org.json.JSONObject;
 
 public class ForagerWaypoint {
     
-    public long gridId;
-    public Coord localCoord;
+    // Segment-based coordinates (same as MapFile.Marker)
+    public long seg;  // Segment ID
+    public Coord tc;  // Tile coordinates within segment
     
-    public ForagerWaypoint(long gridId, Coord localCoord) {
-        this.gridId = gridId;
-        this.localCoord = localCoord;
+    public ForagerWaypoint(long seg, Coord tc) {
+        this.seg = seg;
+        this.tc = tc;
     }
     
-    public ForagerWaypoint(Coord2d worldPos, MCache mcache) {
-        // Convert world coordinates to tile coordinates
-        Coord tilec = worldPos.div(MCache.tilesz).floor();
-        
-        // Get the grid that contains this tile
-        Coord gridCoord = tilec.div(MCache.cmaps);
-        MCache.Grid grid = mcache.getgrid(gridCoord);
-        
-        if (grid != null) {
-            this.gridId = grid.id;
-            // Local coord is tile coordinates relative to grid's upper-left corner
-            this.localCoord = tilec.sub(grid.ul);
-        } else {
-            this.gridId = 0;
-            this.localCoord = Coord.z;
-        }
+    // Create from MiniMap.Location (when clicking on minimap)
+    public ForagerWaypoint(MiniMap.Location loc) {
+        this.seg = loc.seg.id;
+        this.tc = loc.tc;
     }
-    
-
     
     public ForagerWaypoint(JSONObject json) {
-        this.gridId = json.getLong("gridId");
-        JSONObject coordJson = json.getJSONObject("localCoord");
-        this.localCoord = new Coord(coordJson.getInt("x"), coordJson.getInt("y"));
+        this.seg = json.getLong("seg");
+        JSONObject coordJson = json.getJSONObject("tc");
+        this.tc = new Coord(coordJson.getInt("x"), coordJson.getInt("y"));
     }
     
+    // Get tile coordinates for minimap display (always works, just returns tc)
     public Coord getTileCoord(MCache mcache) {
-        // Find grid by ID
-        MCache.Grid grid = mcache.findGrid(gridId);
-        
-        if (grid != null) {
-            return grid.ul.add(localCoord);
-        }
-        
-        return null;
+        return tc;
     }
     
+    // Get world coordinates for pathfinding (works only if grid is loaded)
     public Coord2d toWorldCoord(MCache mcache) {
-        // Find grid by ID
-        MCache.Grid grid = mcache.findGrid(gridId);
-        
-        if (grid != null) {
-            Coord tilec = grid.ul.add(localCoord);
-            return tilec.mul(MCache.tilesz).add(MCache.tilehsz);
-        }
-        
-        return null;
+        // Convert tile coords to world coords
+        return tc.mul(MCache.tilesz).add(MCache.tilehsz);
     }
     
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
-        json.put("gridId", gridId);
+        json.put("seg", seg);
         
         JSONObject coordJson = new JSONObject();
-        coordJson.put("x", localCoord.x);
-        coordJson.put("y", localCoord.y);
-        json.put("localCoord", coordJson);
+        coordJson.put("x", tc.x);
+        coordJson.put("y", tc.y);
+        json.put("tc", coordJson);
         
         return json;
     }
     
     @Override
     public String toString() {
-        return String.format("Waypoint[Grid=%d, Local=(%d,%d)]", gridId, localCoord.x, localCoord.y);
+        return String.format("Waypoint[Seg=%d, TC=(%d,%d)]", seg, tc.x, tc.y);
     }
 }

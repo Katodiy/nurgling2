@@ -164,36 +164,36 @@ public class NMiniMap extends MiniMap {
         // Draw lines connecting waypoints
         g.chcolor(0, 255, 0, 200); // Green color for recording path
         Coord prevC = null;
-        int drawnCount = 0;
         
-        MCache mcache = gui.map.glob.map;
         for(nurgling.routes.ForagerWaypoint waypoint : recordingPath.waypoints) {
-            // Get tile coordinates from grid-based waypoint
-            Coord tc = waypoint.getTileCoord(mcache);
-            if(tc == null) {
-                // Grid not loaded or waypoint on different session
+            // Only draw waypoints in current segment
+            if(waypoint.seg != sessloc.seg.id) {
                 continue;
             }
             
-            // Convert tile coordinates to screen coordinates using st2c
-            Coord waypointC = st2c(tc);
+            // Convert tile coordinates to screen coordinates
+            Coord waypointC = waypoint.tc.sub(dloc.tc).div(scalef()).add(hsz);
             
-            if(prevC != null && waypointC != null) {
-                g.line(prevC, waypointC, 2);
+            // Only draw if within bounds
+            if(waypointC.x >= 0 && waypointC.x < sz.x && waypointC.y >= 0 && waypointC.y < sz.y) {
+                if(prevC != null && prevC.x >= 0 && prevC.x < sz.x && prevC.y >= 0 && prevC.y < sz.y) {
+                    g.line(prevC, waypointC, 2);
+                }
             }
             prevC = waypointC;
-            drawnCount++;
         }
         
         // Draw markers at each waypoint
         int num = 1;
         for(nurgling.routes.ForagerWaypoint waypoint : recordingPath.waypoints) {
-            // Get tile coordinates from grid-based waypoint
-            Coord tc = waypoint.getTileCoord(mcache);
-            if(tc == null) continue;
-            Coord c = st2c(tc);
+            // Only draw waypoints in current segment
+            if(waypoint.seg != sessloc.seg.id) continue;
             
-            if(c != null) {
+            // Convert tile coordinates to screen coordinates
+            Coord c = waypoint.tc.sub(dloc.tc).div(scalef()).add(hsz);
+            
+            // Only draw if within bounds
+            if(c.x >= 0 && c.x < sz.x && c.y >= 0 && c.y < sz.y) {
                 // Draw yellow circle
                 g.chcolor(255, 255, 0, 220); // Yellow marker
                 int radius = UI.scale(6); // Larger radius
@@ -1526,13 +1526,12 @@ public class NMiniMap extends MiniMap {
                 
                 if(foragerWnd != null && foragerWnd.isRecording()) {
                     try {
-                        // Use the proper c2p method to convert screen to world coordinates
-                        Coord2d worldPos = c2p(ev.c);
+                        // Get the MiniMap.Location at clicked position
+                        MiniMap.Location clickLoc = xlate(ev.c);
                         
-                        if(worldPos != null) {
-                            // Convert world coordinates to grid-based waypoint
-                            MCache mcache = gui.map.glob.map;
-                            nurgling.routes.ForagerWaypoint wp = new nurgling.routes.ForagerWaypoint(worldPos, mcache);
+                        if(clickLoc != null && sessloc != null && clickLoc.seg.id == sessloc.seg.id) {
+                            // Create ForagerWaypoint from MiniMap.Location
+                            nurgling.routes.ForagerWaypoint wp = new nurgling.routes.ForagerWaypoint(clickLoc);
                             foragerWnd.addWaypointToRecording(wp);
                         }
                     } catch(Loading e) {

@@ -636,14 +636,11 @@ public class Forager extends Window implements Checkable {
             System.out.println("Waypoints: " + path.waypoints.size());
             System.out.println("Sections: " + path.getSectionCount());
             
-            // Print waypoints (grid-based)
+            // Print waypoints (segment-based)
             System.out.println("\nWaypoints:");
-            haven.MCache mcache = NUtils.getGameUI().map.glob.map;
             for (int i = 0; i < path.waypoints.size(); i++) {
                 nurgling.routes.ForagerWaypoint wp = path.waypoints.get(i);
-                haven.Coord tc = wp.getTileCoord(mcache);
-                String tcStr = tc != null ? "TC=(" + tc.x + "," + tc.y + ")" : "TC=null";
-                System.out.println("  [" + (i + 1) + "] Grid=" + wp.gridId + ", Local=(" + wp.localCoord.x + "," + wp.localCoord.y + ") " + tcStr);
+                System.out.println("  [" + (i + 1) + "] Seg=" + wp.seg + ", TC=(" + wp.tc.x + "," + wp.tc.y + ")");
             }
             
             // Print sections with world coordinates
@@ -791,7 +788,7 @@ public class Forager extends Window implements Checkable {
     public void addWaypointToRecording(nurgling.routes.ForagerWaypoint wp) {
         if (isRecording && currentRecordingPath != null) {
             currentRecordingPath.addWaypoint(wp);
-            NUtils.getGameUI().msg("Waypoint added (" + currentRecordingPath.waypoints.size() + "): Grid=" + wp.gridId + ", Local=(" + wp.localCoord.x + "," + wp.localCoord.y + ")");
+            NUtils.getGameUI().msg("Waypoint added (" + currentRecordingPath.waypoints.size() + "): Seg=" + wp.seg + ", TC=(" + wp.tc.x + "," + wp.tc.y + ")");
         }
     }
     

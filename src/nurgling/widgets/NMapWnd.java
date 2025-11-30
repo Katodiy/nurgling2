@@ -295,19 +295,15 @@ public class NMapWnd extends MapWnd {
             return false; // Not recording, don't consume the event
         }
         
-        // Get the world coordinates at the clicked position
+        // Get the location at the clicked position
         MiniMap.Location clickLoc = view.xlate(c);
         if(clickLoc == null || view.sessloc == null) return false;
         
         // Only handle if in same segment
         if(clickLoc.seg.id != view.sessloc.seg.id) return false;
         
-        // Convert to world coordinates (Coord2d)
-        Coord2d worldPos = clickLoc.tc.mul(tilesz);
-        
-        // Create ForagerWaypoint from world coordinates
-        MCache mcache = gui.map.glob.map;
-        nurgling.routes.ForagerWaypoint waypoint = new nurgling.routes.ForagerWaypoint(worldPos, mcache);
+        // Create ForagerWaypoint from MiniMap.Location
+        nurgling.routes.ForagerWaypoint waypoint = new nurgling.routes.ForagerWaypoint(clickLoc);
         
         // Add waypoint to the recording path
         foragerWnd.addWaypointToRecording(waypoint);
