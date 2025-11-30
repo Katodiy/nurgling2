@@ -31,10 +31,14 @@ public class ForagerWaypoint {
         return tc;
     }
     
-    // Get world coordinates for pathfinding (works only if grid is loaded)
-    public Coord2d toWorldCoord(MCache mcache) {
-        // Convert tile coords to world coords
-        return tc.mul(MCache.tilesz).add(MCache.tilehsz);
+    // Get world coordinates for pathfinding (needs sessloc for proper conversion)
+    public Coord2d toWorldCoord(MiniMap.Location sessloc) {
+        if(sessloc == null || sessloc.seg.id != this.seg) {
+            return null; // Can't convert if not in same segment
+        }
+        // Convert segment tile coords to world coords relative to sessloc
+        // Same formula as in MiniMap.mvclick: loc.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2))
+        return tc.sub(sessloc.tc).mul(MCache.tilesz).add(MCache.tilehsz);
     }
     
     public JSONObject toJson() {

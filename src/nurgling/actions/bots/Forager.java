@@ -62,10 +62,13 @@ public class Forager implements Action {
         }
         
         // Get first waypoint to navigate to start
-        MCache mcache = gui.map.glob.map;
-        Coord2d startPos = path.waypoints.get(0).toWorldCoord(mcache);
+        MiniMap.Location sessloc = gui.mmap.sessloc;
+        if(sessloc == null) {
+            return Results.ERROR("Cannot get sessloc");
+        }
+        Coord2d startPos = path.waypoints.get(0).toWorldCoord(sessloc);
         if(startPos == null) {
-            return Results.ERROR("Cannot get start position - grid not loaded");
+            return Results.ERROR("Cannot get start position - waypoint not in current segment");
         }
         
         gui.msg("Moving to start position...");
