@@ -1,6 +1,6 @@
 package nurgling.routes;
 
-import haven.Coord2d;
+import haven.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -16,7 +16,7 @@ public class ForagerPath {
     private static final double SECTION_LENGTH = 50.0;
     
     public String name;
-    public List<Coord2d> waypoints;
+    public List<ForagerWaypoint> waypoints;
     public List<ForagerSection> sections;
     
     public ForagerPath(String name) {
@@ -25,8 +25,8 @@ public class ForagerPath {
         this.sections = new ArrayList<>();
     }
     
-    public void addWaypoint(Coord2d point) {
-        waypoints.add(point);
+    public void addWaypoint(ForagerWaypoint wp) {
+        waypoints.add(wp);
     }
     
     public void removeLastWaypoint() {
@@ -42,11 +42,14 @@ public class ForagerPath {
             return;
         }
         
+        MCache mcache = nurgling.NUtils.getGameUI().map.glob.map;
         int sectionIndex = 0;
-        Coord2d currentStart = waypoints.get(0);
+        Coord2d currentStart = waypoints.get(0).toCoord2d(mcache);
+        if(currentStart == null) return;
         
         for (int i = 1; i < waypoints.size(); i++) {
-            Coord2d nextPoint = waypoints.get(i);
+            Coord2d nextPoint = waypoints.get(i).toCoord2d(mcache);
+            if(nextPoint == null) continue;
             double distance = currentStart.dist(nextPoint);
             
             if (distance <= SECTION_LENGTH) {
@@ -109,47 +112,33 @@ public class ForagerPath {
         this.waypoints = new ArrayList<>();
         this.sections = new ArrayList<>();
         
-        // Load waypoints
+        // Load waypoints (grid-based)
         if (json.has("waypoints")) {
             JSONArray waypointsArray = json.getJSONArray("waypoints");
             for (int i = 0; i < waypointsArray.length(); i++) {
-                JSONObject pointJson = waypointsArray.getJSONObject(i);
-                waypoints.add(new Coord2d(pointJson.getDouble("x"), pointJson.getDouble("y")));
+                JSONObject wpJson = waypointsArray.getJSONObject(i);
+                waypoints.add(new ForagerWaypoint(wpJson));
             }
         }
         
-        // Load sections
-        if (json.has("sections")) {
-            JSONArray sectionsArray = json.getJSONArray("sections");
-            for (int i = 0; i < sectionsArray.length(); i++) {
-                sections.add(new ForagerSection(sectionsArray.getJSONObject(i)));
-            }
-        } else {
-            // If no sections saved, generate them from waypoints
-            generateSections();
-        }
+        // Always generate sections from waypoints (don't load from JSON)
+        // Sections use world coordinates which are session-specific
+        generateSections();
     }
     
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
         json.put("name", name);
         
-        // Save waypoints
+        // Save only waypoints (grid-based, persistent between sessions)
         JSONArray waypointsArray = new JSONArray();
-        for (Coord2d point : waypoints) {
-            JSONObject pointJson = new JSONObject();
-            pointJson.put("x", point.x);
-            pointJson.put("y", point.y);
-            waypointsArray.put(pointJson);
+        for (ForagerWaypoint wp : waypoints) {
+            waypointsArray.put(wp.toJson());
         }
         json.put("waypoints", waypointsArray);
         
-        // Save sections
-        JSONArray sectionsArray = new JSONArray();
-        for (ForagerSection section : sections) {
-            sectionsArray.put(section.toJson());
-        }
-        json.put("sections", sectionsArray);
+        // Don't save sections - they will be regenerated from waypoints
+        // because they use world coordinates which are session-specific
         
         return json;
     }

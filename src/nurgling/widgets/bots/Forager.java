@@ -462,10 +462,12 @@ public class Forager extends Window implements Checkable {
             return;
         }
         
-        // Print preset settings to console
+        // Print preset settings to console and chat
         System.out.println("=== Forager Bot Settings ===");
         System.out.println("Preset: " + prop.currentPreset);
         System.out.println("Path file: " + preset.pathFile);
+        
+        NUtils.getGameUI().msg("Forager Settings: Preset '" + prop.currentPreset + "'");
         
         if (preset.foragerPath != null) {
             ForagerPath path = preset.foragerPath;
@@ -473,19 +475,33 @@ public class Forager extends Window implements Checkable {
             System.out.println("Waypoints: " + path.waypoints.size());
             System.out.println("Sections: " + path.getSectionCount());
             
-            // Print waypoints
+            // Print waypoints (grid-based)
             System.out.println("\nWaypoints:");
+            haven.MCache mcache = NUtils.getGameUI().map.glob.map;
             for (int i = 0; i < path.waypoints.size(); i++) {
-                haven.Coord2d wp = path.waypoints.get(i);
-                System.out.println("  [" + (i + 1) + "] (" + String.format("%.2f", wp.x) + ", " + String.format("%.2f", wp.y) + ")");
+                nurgling.routes.ForagerWaypoint wp = path.waypoints.get(i);
+                haven.Coord tc = wp.getTileCoord(mcache);
+                String tcStr = tc != null ? "TC=(" + tc.x + "," + tc.y + ")" : "TC=null";
+                System.out.println("  [" + (i + 1) + "] Grid=" + wp.gridId + ", Local=(" + wp.localCoord.x + "," + wp.localCoord.y + ") " + tcStr);
             }
             
-            // Print sections
+            // Print sections with world coordinates
             System.out.println("\nSections:");
+            NUtils.getGameUI().msg("Path: " + path.name + " - " + path.sections.size() + " sections:");
+            
             for (int i = 0; i < path.sections.size(); i++) {
                 nurgling.routes.ForagerSection section = path.sections.get(i);
+                
                 System.out.println("  [" + (i + 1) + "] Length: " + String.format("%.2f", section.getLength()) + 
                     " | Actions: " + section.actions.size());
+                System.out.println("      Start: (" + String.format("%.2f", section.startPoint.x) + ", " + 
+                    String.format("%.2f", section.startPoint.y) + ") | End: (" + 
+                    String.format("%.2f", section.endPoint.x) + ", " + 
+                    String.format("%.2f", section.endPoint.y) + ")");
+                
+                // Output to chat with world coordinates
+                NUtils.getGameUI().msg(String.format("  Section %d: (%.0f, %.0f) -> (%.0f, %.0f)", 
+                    i + 1, section.startPoint.x, section.startPoint.y, section.endPoint.x, section.endPoint.y));
             }
         }
         
@@ -611,10 +627,10 @@ public class Forager extends Window implements Checkable {
         return isRecording;
     }
     
-    public void addWaypointToRecording(Coord2d point) {
+    public void addWaypointToRecording(nurgling.routes.ForagerWaypoint wp) {
         if (isRecording && currentRecordingPath != null) {
-            currentRecordingPath.addWaypoint(point);
-            NUtils.getGameUI().msg("Waypoint added (" + currentRecordingPath.waypoints.size() + ")");
+            currentRecordingPath.addWaypoint(wp);
+            NUtils.getGameUI().msg("Waypoint added (" + currentRecordingPath.waypoints.size() + "): Grid=" + wp.gridId + ", Local=(" + wp.localCoord.x + "," + wp.localCoord.y + ")");
         }
     }
     
