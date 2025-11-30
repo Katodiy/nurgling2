@@ -29,6 +29,7 @@ public class Forager extends Window implements Checkable {
     Dropbox<String> onAnimalAction = null;
     Dropbox<String> afterFinishAction = null;
     CheckBox freeInventoryCheckbox = null;
+    CheckBox ignoreBatsCheckbox = null;
     
     private static final String[] PLAYER_ACTIONS = {"nothing", "logout", "travel hearth"};
     private static final String[] ANIMAL_ACTIONS = {"logout", "travel hearth"};
@@ -319,6 +320,9 @@ public class Forager extends Window implements Checkable {
         // Free inventory checkbox
         prev = add(freeInventoryCheckbox = new CheckBox("Free inventory"), prev.pos("bl").add(UI.scale(0, 10)));
         
+        // Ignore bats checkbox
+        prev = add(ignoreBatsCheckbox = new CheckBox("Ignore bats"), prev.pos("bl").add(UI.scale(0, 5)));
+        
         // Start button
         prev = startButton = add(new Button(UI.scale(150), "Start") {
             @Override
@@ -390,6 +394,7 @@ public class Forager extends Window implements Checkable {
         }
         
         freeInventoryCheckbox.a = preset.freeInventory;
+        ignoreBatsCheckbox.a = preset.ignoreBats;
     }
     
     private void loadAvailablePresets() {
@@ -440,6 +445,7 @@ public class Forager extends Window implements Checkable {
                 if (afterFinishAction.sel != null)
                     oldPreset.afterFinishAction = afterFinishAction.sel;
                 oldPreset.freeInventory = freeInventoryCheckbox.a;
+                oldPreset.ignoreBats = ignoreBatsCheckbox.a;
             }
         }
         
@@ -615,6 +621,7 @@ public class Forager extends Window implements Checkable {
             preset.afterFinishAction = "nothing";
             
         preset.freeInventory = freeInventoryCheckbox.a;
+        preset.ignoreBats = ignoreBatsCheckbox.a;
         
         // Print preset settings to console and chat
         System.out.println("=== Forager Bot Settings ===");

@@ -98,6 +98,11 @@ public class Forager implements Action {
             
             // Check for dangerous animals in radius 200
             for (String animalPattern : dangerousAnimals) {
+                // Skip bats if ignoreBats is enabled
+                if (preset.ignoreBats && animalPattern.contains("bat")) {
+                    continue;
+                }
+                
                 Gob animal = Finder.findGob(NUtils.player().rc, new NAlias(animalPattern), null, 200.0);
                 if (animal != null) {
                     gui.msg("Dangerous animal detected: " + animalPattern);
@@ -161,6 +166,11 @@ public class Forager implements Action {
             }
             
             for (String animalPattern : dangerousAnimals) {
+                // Skip bats if ignoreBats is enabled
+                if (preset.ignoreBats && animalPattern.contains("bat")) {
+                    continue;
+                }
+                
                 Gob animal = Finder.findGob(NUtils.player().rc, new NAlias(animalPattern), null, 200.0);
                 if (animal != null) {
                     gui.msg("Dangerous animal detected: " + animalPattern);

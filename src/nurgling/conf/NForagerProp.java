@@ -28,6 +28,7 @@ public class NForagerProp implements JConf {
         public String onAnimalAction = "logout";
         public String afterFinishAction = "nothing";
         public boolean freeInventory = false;
+        public boolean ignoreBats = true;
         
         public PresetData() {}
         
@@ -74,6 +75,8 @@ public class NForagerProp implements JConf {
                     pd.afterFinishAction = (String) entry.getValue().get("afterFinishAction");
                 if (entry.getValue().get("freeInventory") != null)
                     pd.freeInventory = (Boolean) entry.getValue().get("freeInventory");
+                if (entry.getValue().get("ignoreBats") != null)
+                    pd.ignoreBats = (Boolean) entry.getValue().get("ignoreBats");
                 
                 presets.put(entry.getKey(), pd);
             }
@@ -130,6 +133,7 @@ public class NForagerProp implements JConf {
             presetJson.put("onAnimalAction", entry.getValue().onAnimalAction);
             presetJson.put("afterFinishAction", entry.getValue().afterFinishAction);
             presetJson.put("freeInventory", entry.getValue().freeInventory);
+            presetJson.put("ignoreBats", entry.getValue().ignoreBats);
             
             presetsJson.put(entry.getKey(), presetJson);
         }
