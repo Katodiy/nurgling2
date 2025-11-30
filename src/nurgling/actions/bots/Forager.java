@@ -238,11 +238,42 @@ public class Forager implements Action {
                 
             case CHAT_NOTIFY:
                 if (!gobs.isEmpty()) {
-                    gui.msg(String.format("Found %d %s objects!", gobs.size(), action.targetObjectPattern));
+                    String message = String.format("Found %d %s objects!", gobs.size(), action.targetObjectPattern);
+                    gui.msg(message);
+                    
+                    // Send notification based on target
+                    if (action.notifyTarget == ForagerAction.NotifyTarget.DISCORD) {
+                        // TODO: Implement Discord notification via webhook or bot
+                        gui.msg("[DISCORD NOTIFICATION] " + message);
+                    } else if (action.notifyTarget == ForagerAction.NotifyTarget.CHAT) {
+                        // Send message to chat channel
+                        if (action.chatChannelName != null && !action.chatChannelName.isEmpty()) {
+                            // Find chat channel by name and send message
+                            ChatUI.Channel targetChannel = findChatChannelByName(gui, action.chatChannelName);
+                            if (targetChannel != null && targetChannel instanceof ChatUI.EntryChannel) {
+                                ((ChatUI.EntryChannel) targetChannel).send(message);
+                                gui.msg("Notification sent to " + action.chatChannelName);
+                            } else {
+                                gui.msg("Chat channel '" + action.chatChannelName + "' not found, using system log");
+                                gui.msg(message);
+                            }
+                        } else {
+                            gui.msg(message);
+                        }
+                    }
+                    
                     // Mark all notified objects as processed
                     for (Gob gob : gobs) {
                         processedGobs.add(gob.id);
                     }
+                    
+                    // Pause for 5 minutes (18000 frames at 60fps)
+                    gui.msg("Pausing for 5 minutes...");
+                    NUtils.getUI().core.addTask(new nurgling.tasks.WaitTicks(18000));
+                    gui.msg("Pause complete, stopping bot.");
+                    
+                    // Signal to stop the bot after pause
+                    throw new InterruptedException("CHAT_NOTIFY action triggered - stopping bot");
                 }
                 break;
         }
@@ -290,6 +321,20 @@ public class Forager implements Action {
                     if (gob.id != NUtils.playerID() && gob.rc.dist(pos) <= radius && !(gob instanceof MapView.Plob) && gob.id > 0) {
                         return gob;
                     }
+                }
+            }
+        }
+        return null;
+    }
+    
+    private ChatUI.Channel findChatChannelByName(NGameUI gui, String channelName) {
+        if (gui.chat == null) return null;
+        
+        for (Widget w = gui.chat.child; w != null; w = w.next) {
+            if (w instanceof ChatUI.Channel) {
+                ChatUI.Channel chan = (ChatUI.Channel) w;
+                if (chan.name().equalsIgnoreCase(channelName)) {
+                    return chan;
                 }
             }
         }
