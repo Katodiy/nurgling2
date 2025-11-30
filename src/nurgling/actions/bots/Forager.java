@@ -65,26 +65,37 @@ public class Forager implements Action {
         }
         
         // Main loop through sections
-        for (int i = 0; i < path.getSectionCount(); i++) {
+        for (int i = 0; i < path.getSectionCount(); i++)
+        {
             ForagerSection section = path.getSection(i);
             if (section == null) continue;
-            
+
             gui.msg(String.format("Processing section %d/%d", i + 1, path.getSectionCount()));
-            
-            // Navigate to section center
-            Coord2d sectionCenter = section.getCenterPoint();
-            new PathFinder(sectionCenter).run(gui);
-            
+
+            // Check if there are any target objects at the section endpoint
+            Coord2d sectionEnd = section.endPoint;
+            Gob targetGob = Finder.findGob(sectionEnd);
+
+            if (targetGob != null)
+            {
+                // Go to the object if found
+                new PathFinder(targetGob).run(gui);
+
+            } else
+            {
+                // Go to the endpoint if no objects found
+                new PathFinder(sectionEnd).run(gui);
+            }
+
             // Process actions for this section
             processSection(gui, section, preset.actions);
-            
+
             // Check inventory after each section
             if (isInventoryFull(gui)) {
-                gui.msg("Inventory full, returning to unload...");
-                new PathFinder(startPos).run(gui);
-                unloadInventory(gui);
-                // Return to section
-                new PathFinder(sectionCenter).run(gui);
+                gui.msg("Inventory full, teleporting to hearth and finishing...");
+                new TravelToHearthFire().run(gui);
+                new FreeInventory2(new NContext(gui)).run(gui);
+                return Results.SUCCESS();
             }
         }
         
