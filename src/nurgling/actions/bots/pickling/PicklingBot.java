@@ -132,6 +132,12 @@ public class PicklingBot implements Action {
             if (refillResult.isSuccess) {
                 processed = true;
             }
+
+            // Phase 5: Re-fill brine
+            Results brineSecondResult = new GlobalBrinePhase(vegetableConfig).run(gui);
+            if (brineSecondResult.isSuccess) {
+                processed = true;
+            }
         }
 
         return processed;
