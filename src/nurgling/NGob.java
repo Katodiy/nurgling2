@@ -803,7 +803,7 @@ public class NGob
         {
             int maskValue = customMask ? mask() : (int) getModelAttribute();
             MaterialFactory.Status status = MaterialFactory.getStatus(name, maskValue);
-
+            
             if (status == MaterialFactory.Status.NOTDEFINED) {
                 return null;
             }
@@ -822,6 +822,7 @@ public class NGob
     }
 
     HashMap<MaterialFactory.Status, Materials> altMats = new HashMap<>();
+    private Integer cachedMask = null; // Cache mask value for dframe/barrel to avoid race condition
 
 
     public void addol(Gob.Overlay ol)
@@ -831,19 +832,28 @@ public class NGob
             {
                 if (ol.spr instanceof StaticSprite)
                 {
+                    // Calculate and cache the mask value immediately
+                    cachedMask = calculateMask();
+                    
                     altMats.clear();
-                    MaterialFactory.clearCache(name);
-                    
                     customMask = true;
-                    
                     parent.delattr(Materials.class);
                     
+                    // Try sync recreation first, defer if textures not ready
                     Drawable dr = parent.getattr(Drawable.class);
                     if (dr instanceof ResDrawable) {
+                        ResDrawable rd = (ResDrawable) dr;
                         parent.delattr(Drawable.class);
-                        parent.glob.loader.defer(() -> {
-                            parent.setattr(new ResDrawable(parent, ((ResDrawable) dr).res, ((ResDrawable) dr).sdt, false));
-                        }, null);
+                        
+                        try {
+                            // Try sync recreation
+                            parent.setattr(new ResDrawable(parent, rd.res, rd.sdt, false));
+                        } catch (Exception e) {
+                            // Texture not ready, defer it
+                            parent.glob.loader.defer(() -> {
+                                parent.setattr(new ResDrawable(parent, rd.res, rd.sdt, false));
+                            }, null);
+                        }
                     }
                 }
             }
@@ -868,25 +878,45 @@ public class NGob
             {
                 if (ol.spr instanceof StaticSprite)
                 {
+                    // Check if there are other StaticSprite overlays remaining
+                    boolean hasOtherStaticSprites = false;
+                    for (Gob.Overlay other : parent.ols) {
+                        if (other != ol && other.spr instanceof StaticSprite) {
+                            hasOtherStaticSprites = true;
+                            break;
+                        }
+                    }
+                    
+                    // Update cache based on remaining overlays
+                    if (!hasOtherStaticSprites) {
+                        cachedMask = 0; // Set to FREE
+                    }
+                    
                     altMats.clear();
-                    MaterialFactory.clearCache(name);
-                    
                     customMask = true;
-                    
                     parent.delattr(Materials.class);
                     
+                    // Try sync recreation first, defer if textures not ready
                     Drawable dr = parent.getattr(Drawable.class);
                     if (dr instanceof ResDrawable) {
+                        ResDrawable rd = (ResDrawable) dr;
                         parent.delattr(Drawable.class);
-                        parent.glob.loader.defer(() -> {
-                            parent.setattr(new ResDrawable(parent, ((ResDrawable) dr).res, ((ResDrawable) dr).sdt, false));
-                        }, null);
+                        
+                        try {
+                            // Try sync recreation
+                            parent.setattr(new ResDrawable(parent, rd.res, rd.sdt, false));
+                        } catch (Exception e) {
+                            // Texture not ready, defer it
+                            parent.glob.loader.defer(() -> {
+                                parent.setattr(new ResDrawable(parent, rd.res, rd.sdt, false));
+                            }, null);
+                        }
                     }
                 }
             }
     }
 
-    public int mask()
+    private int calculateMask()
     {
         if (name.equals("gfx/terobjs/dframe"))
         {
@@ -894,12 +924,69 @@ public class NGob
             {
                 if (ol.spr instanceof StaticSprite)
                 {
-                    if (!NParser.isIt(ol, new NAlias("-blood", "-fishraw", "-windweed")) || NParser.isIt(ol, new NAlias("-windweed-dry")))
-                    {
-                        return 2;
-                    } else
+                    // Check if item is blood/fishraw/windweed (but not dry windweed)
+                    if (NParser.isIt(ol, new NAlias("-blood", "-fishraw", "-windweed")) && !NParser.isIt(ol, new NAlias("-windweed-dry")))
                     {
                         return 1;
+                    } else
+                    {
+                        return 2;
+                    }
+                }
+            }
+            return 0;
+        } else if (name.equals("gfx/terobjs/barrel"))
+        {
+            for (Gob.Overlay ol : parent.ols)
+            {
+                if (ol.spr instanceof StaticSprite)
+                {
+                    return 4;
+                }
+            }
+            return 0;
+        } else if (name.equals("gfx/terobjs/cheeserack"))
+        {
+            int counter = 0;
+            for (Gob.Overlay ol : parent.ols)
+            {
+                if (ol.spr instanceof Equed)
+                {
+                    counter++;
+                }
+            }
+            if (counter == 3)
+                return 2;
+            else if (counter != 0)
+                return 1;
+            return 0;
+        }
+        return -1;
+    }
+
+    public int mask()
+    {
+        if (name.equals("gfx/terobjs/dframe") || name.equals("gfx/terobjs/barrel"))
+        {
+            // Use cached mask if available to avoid race condition
+            if (cachedMask != null) {
+                return cachedMask;
+            }
+        }
+        
+        if (name.equals("gfx/terobjs/dframe"))
+        {
+            for (Gob.Overlay ol : parent.ols)
+            {
+                if (ol.spr instanceof StaticSprite)
+                {
+                    // Check if item is blood/fishraw/windweed (but not dry windweed)
+                    if (NParser.isIt(ol, new NAlias("-blood", "-fishraw", "-windweed")) && !NParser.isIt(ol, new NAlias("-windweed-dry")))
+                    {
+                        return 1;
+                    } else
+                    {
+                        return 2;
                     }
                 }
             }
