@@ -17,6 +17,7 @@ public class GetCurs extends NTask
     public GetCurs(String name)
     {
         this.name = name;
+        this.maxCounter = 300;
     }
 
     @Override
@@ -24,7 +25,10 @@ public class GetCurs extends NTask
     {
         if(NUtils.getUI().root.cursor==null || !NUtils.getUI().root.cursor.isReady())
             return false;
-        cursname = NUtils.getUI().root.cursor.get().name;
+        Resource res = NUtils.getUI().root.cursor.get();
+        if(res == null)
+            return false;
+        cursname = res.name;
         return NParser.checkName(cursname, name);
     }
 

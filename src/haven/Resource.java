@@ -595,6 +595,11 @@ public class Resource implements Serializable {
 		}
 	    }
 
+	    @Override
+	    public boolean isReady() {
+		return done && res != null;
+	    }
+
 	    public String toString() {
 		return(String.format("<q:%s(v%d)>", name, ver));
 	    }
