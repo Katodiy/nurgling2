@@ -794,6 +794,13 @@ public class NMapView extends MapView
                         Thread.sleep(BOT_DELAY_MS);
                         NConfig.botmod = null;
                         NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
+
+                        // Switch to System chat for autorunner
+                        ChatUI.Channel systemChat = NUtils.getGameUI().chat.findSystemChat();
+                        if (systemChat != null) {
+                            NUtils.getGameUI().chat.select(systemChat, false);
+                        }
+
                         ScenarioRunner runner = new ScenarioRunner(scenario);
                         runner.run(NUtils.getGameUI());
 
