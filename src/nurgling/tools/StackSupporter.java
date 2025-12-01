@@ -24,6 +24,9 @@ public class StackSupporter {
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
         size3.add("Onion");
+        size3.add("Beetroot");
+        size3.add("Carrot");
+        size3.add("Cucumber");
         size3.add("Salad Greens");
         size3.add("Malted Grains");
         size3.add("Millable Seed");
