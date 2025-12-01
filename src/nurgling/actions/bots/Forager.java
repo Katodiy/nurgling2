@@ -14,36 +14,75 @@ import nurgling.widgets.NAlarmWdg;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 
 public class Forager implements Action {
-    
+
     private HashSet<Long> processedGobs = new HashSet<>();
-    
+    private String presetName = null;
+
+    public Forager() {
+        // Default constructor - will show UI
+    }
+
+    public Forager(Map<String, Object> settings) {
+        // Constructor for scenario usage - uses preset from settings
+        if (settings != null && settings.containsKey("presetName")) {
+            this.presetName = (String) settings.get("presetName");
+        }
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        nurgling.widgets.bots.Forager w = null;
         NForagerProp prop = null;
-        try {
-            NUtils.getUI().core.addTask(new nurgling.tasks.WaitCheckable(
-                NUtils.getGameUI().add((w = new nurgling.widgets.bots.Forager()), UI.scale(200, 200))
-            ));
-            prop = w.prop;
-        } catch (InterruptedException e) {
-            throw e;
-        } finally {
-            if (w != null)
-                w.destroy();
+        NForagerProp.PresetData preset = null;
+
+        if (presetName != null) {
+            // Scenario mode: load preset directly without UI
+            prop = NForagerProp.get(NUtils.getUI().sessInfo);
+            if (prop == null) {
+                return Results.ERROR("Cannot load forager properties");
+            }
+
+            preset = prop.presets.get(presetName);
+            if (preset == null) {
+                return Results.ERROR("Preset not found: " + presetName);
+            }
+
+            // Load path if not already loaded
+            if (preset.foragerPath == null && !preset.pathFile.isEmpty()) {
+                try {
+                    preset.foragerPath = ForagerPath.load(preset.pathFile);
+                } catch (Exception e) {
+                    return Results.ERROR("Failed to load path: " + e.getMessage());
+                }
+            }
+        } else {
+            // Interactive mode: show UI
+            nurgling.widgets.bots.Forager w = null;
+            try {
+                NUtils.getUI().core.addTask(new nurgling.tasks.WaitCheckable(
+                    NUtils.getGameUI().add((w = new nurgling.widgets.bots.Forager()), UI.scale(200, 200))
+                ));
+                prop = w.prop;
+            } catch (InterruptedException e) {
+                throw e;
+            } finally {
+                if (w != null)
+                    w.destroy();
+            }
+
+            if (prop == null) {
+                return Results.ERROR("No configuration");
+            }
+
+            preset = prop.presets.get(prop.currentPreset);
         }
-        
-        if (prop == null) {
-            return Results.ERROR("No configuration");
-        }
-        
-        NForagerProp.PresetData preset = prop.presets.get(prop.currentPreset);
+
         if (preset == null || preset.foragerPath == null) {
             return Results.ERROR("No path configured");
         }
-        
+
         ForagerPath path = preset.foragerPath;
         
         if (path.getSectionCount() == 0) {
