@@ -36,6 +36,7 @@ public class ScenarioBotSelectionDialog extends Window {
                 case FARMING_QUALITY: title = "Farmers Quality"; break;
                 case LIVESTOCK: title = "Livestock"; break;
                 case UTILS:    title = "Utils";     break;
+                case RESOURCES:    title = "Resources";     break;
                 default:       title = "Other";
             }
 
