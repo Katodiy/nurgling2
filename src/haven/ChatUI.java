@@ -1594,6 +1594,21 @@ public class ChatUI extends Widget
         return null;
     }
 
+    /**
+     * Find System chat channel by name
+     */
+    public Channel findSystemChat() {
+        if(chansel == null) return null;
+        synchronized(chansel.chls) {
+            for(Selector.DarkChannel ch : chansel.chls) {
+                if(ch.chan.name().equals("System")) {
+                    return ch.chan;
+                }
+            }
+        }
+        return null;
+    }
+
     public void select(Channel chan, boolean focus) {
 	Channel prev = sel;
 	sel = chan;
