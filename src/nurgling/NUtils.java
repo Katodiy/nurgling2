@@ -155,13 +155,15 @@ public class NUtils
     {
         IMeter.Meter stam = getGameUI().getmeter ( "stam", 0 );
         if(stam == null)
-            return 0;
+            return -1;
         return stam.a;
     }
 
     public static double getEnergy()
     {
         IMeter.Meter stam = getGameUI().getmeter ( "nrj", 0 );
+        if(stam == null)
+            return -1;
         return stam.a;
     }
 

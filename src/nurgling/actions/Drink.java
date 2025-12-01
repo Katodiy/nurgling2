@@ -20,7 +20,8 @@ public class Drink implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        if(NUtils.getStamina()<lvl)
+        double stamina = NUtils.getStamina();
+        if(stamina >= 0 && stamina < lvl)
         {
             Gob player = NUtils.player();
             if(withStop && player!=null) {
@@ -36,7 +37,7 @@ public class Drink implements Action
             {
                 if(pag.button()!=null && pag.button().name().equals("Drink"))
                 {
-                    while (NUtils.getStamina()<lvl)
+                    while ((stamina = NUtils.getStamina()) >= 0 && stamina < lvl)
                     {
                         pag.button().use(new MenuGrid.Interaction(1, 0));
                         DrinkToLvl dtlvl = new DrinkToLvl(lvl);

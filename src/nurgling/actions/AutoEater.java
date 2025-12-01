@@ -26,6 +26,8 @@ public class AutoEater implements Action {
             return Results.ERROR("no food left");
         while (!witems.isEmpty()) {
             double cEnrj = NUtils.getEnergy();
+            if(cEnrj < 0)
+                break;
             NFoodInfo fi = ((NGItem) witems.get(0).item).getInfo(NFoodInfo.class);
             if (cEnrj + fi.energy()/100 < 0.81) {
                 new SelectFlowerAction("Eat", witems.get(0)).run(gui);
