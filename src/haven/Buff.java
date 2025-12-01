@@ -41,18 +41,10 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
     public static final Coord ametersz = UI.scale(new Coord(32, 3));
     public static final int textw = UI.scale(200);
     public Indir<Resource> res;
-    public double cmeter = -1;
-    public double cmrem = -1;
-    public double gettime;
     protected int a = 255;
     protected boolean dest = false;
     private ItemInfo.Raw rawinfo = null;
     public List<ItemInfo> info = Collections.emptyList();
-    /* Deprecated */
-    String tt = null;
-    public int ameter = -1;
-    int nmeter = -1;
-    Tex ntext = null;
 
 	public int ameter() {
 		if(info == null)
@@ -106,12 +98,6 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
 	return(info);
     }
 
-    private Tex nmeter() {
-	if(ntext == null)
-	    ntext = new TexI(Utils.outline2(nfnd.render(Integer.toString(nmeter), Color.WHITE).img, Color.BLACK));
-	return(ntext);
-    }
-
     public interface AMeterInfo {
 	public double ameter();
     }
@@ -136,7 +122,7 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
 
     public void draw(GOut g) {
 	g.chcolor(255, 255, 255, a);
-	Double ameter = (this.ameter >= 0) ? Double.valueOf(this.ameter / 100.0) : ameteri.get();
+	Double ameter = ameteri.get();
 	if(ameter != null) {
 	    g.image(cframe, Coord.z);
 	    g.chcolor(0, 0, 0, a);
@@ -149,21 +135,10 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
 	try {
 	    Tex img = res.get().flayer(Resource.imgc).tex();
 	    g.image(img, imgoff);
-	    Tex nmeter = (this.nmeter >= 0) ? nmeter() : nmeteri.get();
+	    Tex nmeter = nmeteri.get();
 	    if(nmeter != null)
 		g.aimage(nmeter, imgoff.add(img.sz()).sub(1, 1), 1, 1, nmeter.sz());
-	    Double cmeter;
-	    if(this.cmeter >= 0) {
-		double m = this.cmeter;
-		if(cmrem >= 0) {
-		    double ot = cmrem;
-		    double pt = Utils.rtime() - gettime;
-		    m *= (ot - pt) / ot;
-		}
-		cmeter = m;
-	    } else {
-		cmeter = cmeteri.get();
-	    }
+	    Double cmeter = cmeteri.get();
 	    if(cmeter != null) {
 		double m = Utils.clip(cmeter, 0.0, 1.0);
 		g.chcolor(255, 255, 255, a / 2);
@@ -177,11 +152,7 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
     private BufferedImage shorttip() {
 	if(rawinfo != null)
 	    return(ItemInfo.shorttip(info()));
-	if(tt != null)
-	    return(Text.render(tt).img);
 	String ret = res.get().flayer(Resource.tooltip).t;
-	if(ameter >= 0)
-	    ret = ret + " (" + ameter + "%)";
 	return(Text.render(ret).img);
     }
 

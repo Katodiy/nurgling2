@@ -133,12 +133,6 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 	    public T make(Owner owner);
 	}
 
-	@Deprecated
-	public interface ID<T extends Tip> extends TipID<T> {
-	    public T make();
-	    public default T make(Owner owner) {return(make());}
-	}
-
 	@SuppressWarnings("unchecked")
 	public <T extends Tip> T intern(TipID<T> id) {
 	    T ret = (T)itab.get(id);
@@ -147,10 +141,6 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 		add(ret);
 	    }
 	    return(ret);
-	}
-
-	public <T extends Tip> T intern(ID<T> id) {
-	    return(intern((TipID<T>)id));
 	}
 
 	public void add(Tip tip) {

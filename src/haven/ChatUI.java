@@ -133,12 +133,6 @@ public class ChatUI extends Widget
 	private final IButton cb;
 	private double dy;
 
-	/* Deprecated? */
-	public final List<Message> msgs = new AbstractList<Message>() {
-		public int size() {return(rmsgs.size());}
-		public Message get(int i) {return(rmsgs.get(i).msg);}
-	    };
-
 	public boolean process(String msg) {
 			// Check for @ID pattern (gob highlight)
 			Pattern highlight = Pattern.compile("^@(-?\\d+)$");
@@ -154,7 +148,7 @@ public class ChatUI extends Widget
 				} catch (Exception ignored) {
 				}
 			}
-			
+
 			// Check for @Area pattern (area highlight)
 			Pattern areaPattern = Pattern.compile("^@Area\\((.+)\\)$");
 			Matcher areaMatcher = areaPattern.matcher(msg);
@@ -166,7 +160,7 @@ public class ChatUI extends Widget
 						// Create area overlay using MCache.Overlay (will auto-destroy after 12 seconds)
 						final nurgling.overlays.NChatAreaOverlay overlay = new nurgling.overlays.NChatAreaOverlay(
 							nurgling.NUtils.getGameUI().map.glob.map, space);
-						
+
 						// Schedule removal after duration
 						new Thread(() -> {
 							try {
@@ -176,24 +170,24 @@ public class ChatUI extends Widget
 								// Ignore
 							}
 						}).start();
-						
+
 						return false;
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-			
+
 			return true;
 		}
-		
+
 	private nurgling.areas.NArea.Space parseAreaFromChat(String areaData) {
 			try {
 				// Format: grid:x,y;grid:x,y (two corner points)
 				String[] corners = areaData.split(";");
 				if(corners.length != 2)
 					return null;
-				
+
 				// Parse first corner (upper-left)
 				String[] ulParts = corners[0].split(":");
 				if(ulParts.length != 2) return null;
@@ -202,7 +196,7 @@ public class ChatUI extends Widget
 				if(ulCoords.length != 2) return null;
 				int ulX = Integer.parseInt(ulCoords[0].trim());
 				int ulY = Integer.parseInt(ulCoords[1].trim());
-				
+
 				// Parse second corner (bottom-right)
 				String[] brParts = corners[1].split(":");
 				if(brParts.length != 2) return null;
@@ -211,23 +205,23 @@ public class ChatUI extends Widget
 				if(brCoords.length != 2) return null;
 				int brX = Integer.parseInt(brCoords[0].trim());
 				int brY = Integer.parseInt(brCoords[1].trim());
-				
+
 				// Convert to world coordinates and create Space
 				if(nurgling.NUtils.getGameUI() == null || nurgling.NUtils.getGameUI().map == null)
 					return null;
-					
+
 				MCache.Grid ulGrid = nurgling.NUtils.getGameUI().map.glob.map.findGrid(ulGridId);
 				MCache.Grid brGrid = nurgling.NUtils.getGameUI().map.glob.map.findGrid(brGridId);
 				if(ulGrid == null || brGrid == null)
 					return null;
-				
+
 				// Calculate world tile coordinates
 				Coord ulWorldTile = ulGrid.gc.mul(MCache.cmaps).add(ulX, ulY);
 				Coord brWorldTile = brGrid.gc.mul(MCache.cmaps).add(brX, brY);
-				
+
 				// Create Space from these two world tile coordinates
 				nurgling.areas.NArea.Space space = new nurgling.areas.NArea.Space(ulWorldTile, brWorldTile);
-				
+
 				return space.space.isEmpty() ? null : space;
 			} catch(Exception e) {
 				e.printStackTrace();
@@ -362,9 +356,6 @@ public class ChatUI extends Widget
 		this.text = text;
 		this.col = col;
 	    }
-
-	    @Deprecated
-	    public SimpleMessage(String text, Color col, int w) {this(text, col);}
 
 	    public Indir<Text> render(int w) {
 		text = NUtils.timestamp(text);
@@ -545,10 +536,6 @@ public class ChatUI extends Widget
 	    if(cb != null) {
 		cb.c = new Coord(sz.x + marg.x - cb.sz.x -cb.sz.x/2, -marg.y + cb.sz.x/2);
 	    }
-	}
-
-	@Deprecated
-	public void notify(Message msg, int urgency) {
 	}
 
 	public static class CharPos {
@@ -1031,9 +1018,6 @@ public class ChatUI extends Widget
 	    public MyMessage(String text) {
 		super(text, new Color(192, 192, 255));
 	    }
-
-	    @Deprecated
-	    public MyMessage(String text, int w) {this(text);}
 	}
 
 	public MultiChat(boolean closable, String name, int urgency) {
@@ -1600,7 +1584,7 @@ public class ChatUI extends Widget
         synchronized(chansel.chls) {
             for(Selector.DarkChannel ch : chansel.chls) {
                 Channel chan = ch.chan;
-                if(chan instanceof EntryChannel && 
+                if(chan instanceof EntryChannel &&
                    !chan.getClass().getName().contains("Realm") &&
                    (chan instanceof SimpleChat || chan instanceof MultiChat)) {
                     return chan;
@@ -1609,7 +1593,7 @@ public class ChatUI extends Widget
         }
         return null;
     }
-    
+
     public void select(Channel chan, boolean focus) {
 	Channel prev = sel;
 	sel = chan;
@@ -1704,7 +1688,7 @@ public class ChatUI extends Widget
 	    nurgling.NUI nui = (nurgling.NUI)ui;
 	    float opacity = nui.getUIOpacity();
 	    int alpha = (int)(255 * opacity);
-	    
+
 	    if (nui.getUseSolidBackground()) {
 		// Use custom background color
 		java.awt.Color bgColor = nui.getWindowBackgroundColor();
