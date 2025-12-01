@@ -623,6 +623,9 @@ public class Window extends Widget {
     }
 
     public boolean keydown(KeyDownEvent ev) {
+	if(ev.code == java.awt.event.KeyEvent.VK_TAB) {
+	    return false;
+	}
 	if(ev.propagate(this))
 	    return(true);
 	if(key_esc.match(ev)) {
