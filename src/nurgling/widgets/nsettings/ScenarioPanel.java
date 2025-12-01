@@ -157,8 +157,8 @@ public class ScenarioPanel extends Panel {
                                 }
                             }
 
-                            // For now, only mark ✪ for goto_area, since that's the only setting-driven bot
-                            boolean hasSettings = desc != null && "goto_area".equals(desc.id);
+                            // Mark ✪ for bots that have settings
+                            boolean hasSettings = desc != null && ("goto_area".equals(desc.id) || "forager".equals(desc.id));
                             String marker = hasSettings ? " ✪" : "";
                             Label label = new Label(botId + marker);
 
