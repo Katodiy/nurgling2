@@ -114,9 +114,12 @@ public class NMapView extends MapView
         return routeGraphManager;
     }
 
-    public Coord3f gobPathLastClick;
-    private int gobPathStoppedFrames = 0;
 
+    // Destination point for path line (set by click)
+    public Coord3f clickDestination = null;
+    // Counter for frames when player stopped moving (for delayed line clearing)
+    private int pathLineStoppedFrames = 0;
+    
     // Track if overlays have been initialized to avoid repeated initialization checks
     private boolean overlaysInitialized = false;
 
@@ -193,36 +196,47 @@ public class NMapView extends MapView
             }
         }
         
-        // Draw path line from player to last click point
+        // Draw path line from player to click destination
         if((Boolean)NConfig.get(NConfig.Key.showPathLine)) {
             try {
                 Gob player = player();
-                if (player != null && gobPathLastClick != null) {
-                    // Check if player is still moving
+                if (player != null && clickDestination != null) {
+                    // Check if player is actually moving (not just has Moving attribute)
                     Moving m = player.getattr(Moving.class);
+                    boolean isMoving = false;
                     if (m != null && (m instanceof LinMove || m instanceof Following)) {
-                        // Player is moving - draw line and reset counter
-                        gobPathStoppedFrames = 0;
+                        // Check actual movement speed
+                        double speed = m.getv();
+                        isMoving = speed > 0.01; // Consider moving if speed > threshold
+                    }
+                    
+                    if (isMoving) {
+                        // Player is moving - draw line to click destination and reset counter
+                        pathLineStoppedFrames = 0;
                         Coord playerc = screenxf(player.getc()).round2();
-                        Coord clickc = screenxf(gobPathLastClick).round2();
-                        if (playerc != null && clickc != null) {
+                        Coord destc = screenxf(clickDestination).round2();
+                        if (playerc != null && destc != null) {
+                            // Draw black outline
                             g.chcolor(java.awt.Color.BLACK);
-                            g.line(playerc, clickc, 4);
-                            g.chcolor(java.awt.Color.WHITE);
-                            g.line(playerc, clickc, 2);
+                            g.line(playerc, destc, 6);
+                            // Draw bright yellow core
+                            g.chcolor(java.awt.Color.YELLOW);
+                            g.line(playerc, destc, 4);
+                            // Reset color
                             g.chcolor();
                         }
                     } else {
                         // Player not moving - count frames (delay for direction changes)
-                        gobPathStoppedFrames++;
-                        if (gobPathStoppedFrames > 10) {
-                            // Player stopped for more than 10 frames - clear path line
-                            gobPathLastClick = null;
-                            gobPathStoppedFrames = 0;
+                        pathLineStoppedFrames++;
+                        if (pathLineStoppedFrames > 10) {
+                            // Player stopped for more than 10 frames - clear destination
+                            clickDestination = null;
+                            pathLineStoppedFrames = 0;
                         }
                     }
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                // Silently ignore errors
             }
         }
     }

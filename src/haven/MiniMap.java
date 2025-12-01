@@ -917,13 +917,23 @@ public class MiniMap extends Widget
     public void mvclick(MapView mv, Coord mc, Location loc, Gob gob, int button) {
 	if(mc == null) mc = ui.mc;
 	if((sessloc != null) && (sessloc.seg.id == loc.seg.id)) {
+	    // Calculate world coordinates for click destination
+	    Coord2d worldPos = loc.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2));
+	    
+	    // Save click destination for path line
+	    try {
+		if(button == 1 && mv instanceof nurgling.NMapView) {
+		    ((nurgling.NMapView)mv).clickDestination = new Coord3f((float)worldPos.x, (float)worldPos.y, mv.glob.map.getzp(worldPos).z);
+		}
+	    } catch(Exception ignored) {}
+	    
 	    if(gob == null)
 		mv.wdgmsg("click", mc,
-			  loc.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),
+			  worldPos.floor(posres),
 			  button, ui.modflags());
 	    else
 		mv.wdgmsg("click", mc,
-			  loc.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),
+			  worldPos.floor(posres),
 			  button, ui.modflags(), 0,
 			  (int)gob.id,
 			  gob.rc.floor(posres),
