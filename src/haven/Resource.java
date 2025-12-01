@@ -2041,6 +2041,12 @@ public class Resource implements Serializable {
 	    public String toString() {
 		return(String.format("<indir:%s(v%d)>", name, ver));
 	    }
+
+		@Override
+		public boolean isReady()
+		{
+			return name!=null && !name.isEmpty();
+		}
 	}
 	indir = new Ret(name, ver);
 	return(indir);
