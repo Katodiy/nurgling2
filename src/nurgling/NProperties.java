@@ -22,7 +22,11 @@ public class NProperties
         {
             String name = gob.ngob.name;
             int cropstgmaxval = 0;
-            for (FastMesh.MeshRes layer : gob.getres().layers(FastMesh.MeshRes.class)) {
+            Drawable drawable = gob.getattr(Drawable.class);
+            if (drawable == null || drawable.getres() == null) {
+                return new NProperties.Crop(-1, 0);
+            }
+            for (FastMesh.MeshRes layer : drawable.getres().layers(FastMesh.MeshRes.class)) {
                 int stg = layer.id / 10;
                 if (stg > cropstgmaxval) {
                     cropstgmaxval = stg;

@@ -104,15 +104,6 @@ public class AutoSelection extends Panel {
                     add(item);
                     item.resize(sz);
                 }
-
-                public boolean mousedown(Coord c, int button) {
-                    boolean psel = sel == item;
-                    super.mousedown(c, button);
-                    if (!psel) {
-                        String value = item.text.text();
-                    }
-                    return (true);
-                }
             };
         }
 

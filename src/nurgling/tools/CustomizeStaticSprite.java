@@ -22,9 +22,12 @@ public class CustomizeStaticSprite {
         try {
             Boolean decalsOnTop = (Boolean) NConfig.get(NConfig.Key.decalsOnTop);
             if (decalsOnTop != null && decalsOnTop
-                && sprite.res.name.equals(CustomizeResLayer.PARCHMENT_DECAL)
-                && sprite.owner.getres().name.equals(CustomizeResLayer.CUPBOARD)) {
-                slot.cstate(Location.xlate(new Coord3f(-5, -5, 17.5f)));
+                && sprite.res.name.equals(CustomizeResLayer.PARCHMENT_DECAL)) {
+                // Try to get parent resource from owner context
+                Resource ownerRes = sprite.owner.context(Resource.class);
+                if (ownerRes != null && ownerRes.name.equals(CustomizeResLayer.CUPBOARD)) {
+                    slot.cstate(Location.xlate(new Coord3f(-5, -5, 17.5f)));
+                }
             }
         } catch (Exception ignored) {}
     }

@@ -13,9 +13,9 @@ public class TestUtils
         synchronized ( NUtils.getGameUI().ui.sess.glob.oc ) {
             for ( Gob gob : NUtils.getGameUI().ui.sess.glob.oc )
             {
-                if (gob.getres() != null && gob.getres().name != null)
+                if (gob.ngob != null && gob.ngob.name != null)
                 {
-                    if (NParser.checkName(gob.getres().name, name))
+                    if (NParser.checkName(gob.ngob.name, name))
                     {
                         /// Сравнивается расстояние между игроком и объектом
                         double dist = NUtils.getGameUI().map.player().rc.dist(gob.rc);

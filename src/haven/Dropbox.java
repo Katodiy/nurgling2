@@ -31,14 +31,6 @@ public abstract class Dropbox<T> extends ListWidget<T> {
         protected int listitems() {return(Dropbox.this.listitems());}
         protected void drawitem(GOut g, T item, int idx) {Dropbox.this.drawitem(g, item, idx);}
 
-        public boolean mousedown(Coord c, int btn) {
-            if(!c.isect(Coord.z, sz)) {
-                reqdestroy();
-                return(true);
-            }
-            return(super.mousedown(c, btn));
-        }
-
         public void destroy() {
             grab.remove();
             super.destroy();

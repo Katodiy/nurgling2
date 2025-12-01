@@ -3,6 +3,7 @@ package nurgling.widgets.bots;
 import haven.*;
 import haven.Frame;
 import haven.Label;
+import haven.Widget.MouseDownEvent;
 import haven.res.lib.itemtex.ItemTex;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
@@ -93,8 +94,8 @@ public class UsingTools extends Widget {
     }
 
     @Override
-    public boolean mousedown(Coord c, int button) {
-        if(c.isect(new Coord(0,(l.visible?l.sz.y:0)+UI.scale(5)),new Coord(sz)))
+    public boolean mousedown(MouseDownEvent ev) {
+        if(ev.c.isect(new Coord(0,(l.visible?l.sz.y:0)+UI.scale(5)),new Coord(sz)))
         {
             avTools = NUtils.getUI().root.add(new AvTools(tools));
             Coord pos = new Coord(0,(l.visible?l.sz.y:0)+UI.scale(5));
@@ -108,7 +109,7 @@ public class UsingTools extends Widget {
         }
         else
         {
-            return super.mousedown(c, button);
+            return super.mousedown(ev);
         }
     }
 
@@ -189,10 +190,10 @@ public class UsingTools extends Widget {
         }
 
         @Override
-        public boolean mousedown(Coord c, int button)
+        public boolean mousedown(MouseDownEvent ev)
         {
             Coord pos = new Coord(avtoff);
-            if(!c.isect(pos, sz.sub(avtend)))
+            if(!ev.c.isect(pos, sz.sub(avtend)))
             {
                 destroy();
                 avTools = null;
@@ -203,7 +204,7 @@ public class UsingTools extends Widget {
                 Coord shift = new Coord(0,0);
                 for(Tool ing: data)
                 {
-                    if(c.isect(pos, invsq.sz()))
+                    if(ev.c.isect(pos, invsq.sz()))
                     {
                         s = ing;
                         update();

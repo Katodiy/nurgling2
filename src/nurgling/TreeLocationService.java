@@ -84,12 +84,12 @@ public class TreeLocationService implements ProfileAwareService {
             if (gui.map == null) return;
 
             // Get tree/bush resource
-            Resource res = treeGob.getres();
-            if (res == null || (!res.name.startsWith("gfx/terobjs/trees/") && !res.name.startsWith("gfx/terobjs/bushes/"))) {
+            String res = treeGob.ngob.name;
+            if (res == null || (!res.startsWith("gfx/terobjs/trees/") && !res.startsWith("gfx/terobjs/bushes/"))) {
                 return;
             }
 
-            String treeResource = res.name;
+            String treeResource = res;
             String treeName = getTreeName(treeResource);
 
             // Get current grid and segment info (same as FishLocationService)

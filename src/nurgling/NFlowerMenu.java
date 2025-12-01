@@ -58,12 +58,11 @@ public class NFlowerMenu extends FlowerMenu
             NCore.LastActions lastActions = ui.core.getLastActions();
             if(lastActions != null && lastActions.gob != null) {
                 Gob gob = lastActions.gob;
-                Resource res = gob.getres();
-                if(res != null) {
+                if(gob.ngob != null && gob.ngob.name != null) {
                     String saveOption = null;
-                    if(res.name.startsWith("gfx/terobjs/trees/") && !res.name.contains("log") && !res.name.contains("trunk")) {
+                                   if(gob.ngob.name.startsWith("gfx/terobjs/trees/") && !gob.ngob.name.contains("log") && !gob.ngob.name.contains("trunk")) {
                         saveOption = "Save Tree Location";
-                    } else if(res.name.startsWith("gfx/terobjs/bushes/")) {
+                    } else if(gob.ngob.name.startsWith("gfx/terobjs/bushes/")) {
                         saveOption = "Save Bush Location";
                     }
 
