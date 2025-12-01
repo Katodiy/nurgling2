@@ -234,6 +234,14 @@ public class CropRegistry {
                 )
         );
 
+        HARVESTABLE.put(
+                new NAlias("plants/gourd"),
+                Arrays.asList(
+                        new CropStage(3, new NAlias("Wild Gourd"), StorageBehavior.STOCKPILE,true)
+                )
+        );
+
+
         // Wild Tuber
         HARVESTABLE.put(
                 new NAlias("plants/tuber"),
