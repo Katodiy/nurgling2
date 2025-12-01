@@ -695,14 +695,21 @@ public class Widget {
 	    show(Utils.bv(args[0]));
 	} else if(msg == "curs") {
 	    if(args.length == 0)
-		cursor = null;
+		{
+			cursor = null;
+			cursorRes = "gfx/hud/curs/arw";
+		}
 	    else if(args[0] instanceof String)
         {
             cursorRes = (String) args[0];
             cursor = Resource.remote().load((String) args[0], Utils.iv(args[1]));
         }
 	    else
-		cursor = ui.sess.getresv(args[0]);
+		{
+			cursor = ui.sess.getresv(args[0]);
+			if(cursor instanceof Resource.Named)
+				cursorRes = ((Resource.Named)cursor).name;
+		}
 	} else if(msg == "tip") {
 	    int a = 0;
 	    Object tt = args[a++];
