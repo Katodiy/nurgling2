@@ -700,6 +700,8 @@ public class NGob
                         Coord coord = (parent.rc.sub(g.ul.mul(Coord2d.of(11, 11)))).floor(posres);
                         hashInput.append(name).append(g.id).append(coord.toString());
                         hash = NUtils.calculateSHA256(hashInput.toString());
+                        grid_id = g.id;
+                        gcoord = coord;
                         parent.setattr(new NGlobalSearch(parent));
                     }
                 }
