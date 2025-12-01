@@ -643,8 +643,16 @@ public class NMiniMap extends MiniMap {
         
         Area next = Area.sized(centerGrid.sub(gridsNeeded.div(2)), gridsNeeded);
         
-        // Detect data level changes
+        // Detect data level changes and segment changes
         boolean dataLevelChanged = (dataLevel != currentDataLevel);
+        boolean segmentChanged = (loc.seg != dseg);
+        
+        // If segment changed (teleport), clear all caches
+        if(segmentChanged) {
+            currentLevelCache = null;
+            previousLevelCache = null;
+            nextLevelCache = null;
+        }
         
         if(dataLevelChanged) {
             // Shift cache: current becomes previous, next becomes current (if available)
@@ -682,8 +690,8 @@ public class NMiniMap extends MiniMap {
         if(needsUpdate) {
             DisplayGrid[] nd = new DisplayGrid[next.rsz()];
             
-            // Try to reuse grids from cache
-            if(currentLevelCache != null && !dataLevelChanged && currentLevelCache.dgext != null) {
+            // Try to reuse grids from cache only if segment hasn't changed
+            if(currentLevelCache != null && !dataLevelChanged && !segmentChanged && currentLevelCache.dgext != null) {
                 for(Coord c : currentLevelCache.dgext) {
                     if(next.contains(c))
                         nd[next.ri(c)] = currentLevelCache.display[currentLevelCache.dgext.ri(c)];
