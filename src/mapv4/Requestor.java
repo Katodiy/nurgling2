@@ -272,6 +272,35 @@ public class Requestor implements Action {
                         }
                         break;
                     }
+                    case "uploadMarker":
+                    {
+                        Gob gob = (Gob)task.args[0];
+                        MapFile.SMarker marker = (MapFile.SMarker)task.args[1];
+                        try {
+                            MCache.Grid grid = NUtils.getGameUI().map.glob.map.getgrid(NUtils.toGC(gob.rc));
+                            Coord offset = NUtils.gridOffset2(gob.rc);
+
+                            JSONObject obj = new JSONObject();
+                            obj.put("name", marker.nm);
+                            obj.put("gridID", String.valueOf(grid.id));
+                            obj.put("x", offset.x);
+                            obj.put("y", offset.y);
+                            obj.put("type", "shared");
+                            obj.put("id", marker.oid);
+                            obj.put("image", marker.res.name);
+
+                            JSONObject msg = new JSONObject();
+                            msg.put("data", new JSONArray(List.of(obj)));
+                            msg.put("reqMethod", "POST");
+                            msg.put("url", (String)NConfig.get(NConfig.Key.endpoint) + "/markerUpdate");
+                            msg.put("header", "SMARKER");
+                            if (!parent.connector.msgs.offer(msg)) {
+                                // Queue full, marker update dropped
+                            }
+                        } catch (Exception ignored) {
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -298,6 +327,10 @@ public class Requestor implements Action {
 
     public void processMap(MapFile mapfile, Predicate<MapFile.Marker> uploadCheck) {
         list.offer(new MapperTask("processMap", new Object[]{mapfile, uploadCheck}));
+    }
+
+    public void uploadSMarker(Gob gob, MapFile.SMarker marker) {
+        list.offer(new MapperTask("uploadMarker", new Object[]{gob, marker}));
     }
 
     private class MarkerData {

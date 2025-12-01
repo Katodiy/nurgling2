@@ -2,6 +2,7 @@ package mapv4;
 
 import haven.Coord;
 import haven.Gob;
+import haven.MapFile;
 import haven.WebBrowser;
 import nurgling.NConfig;
 import nurgling.NUtils;
@@ -184,6 +185,12 @@ public class NMappingClient {
         else
         {
             NUtils.getGameUI().error("Can't open Map");
+        }
+    }
+
+    public void uploadSMarker(Gob gob, MapFile.SMarker marker) {
+        if (requestor != null) {
+            requestor.uploadSMarker(gob, marker);
         }
     }
 }

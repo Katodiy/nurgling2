@@ -498,6 +498,12 @@ public class NUtils
         return new Coord2d(c.x - gridUnit.x, c.y - gridUnit.y);
     }
 
+    /** a coordinate (0-100,0-100) within a 100x100 map grid **/
+    public static Coord gridOffset2(Coord2d c) {
+        Coord gridUnit = toGridUnit(c);
+        return new Coord((int) ((c.x - gridUnit.x)/11d), (int) ((c.y - gridUnit.y)/11d));
+    }
+
     public static void startBuild(Window window) {
         for (Widget sp = window.lchild; sp != null; sp = sp.prev) {
             if (sp instanceof Button) {
