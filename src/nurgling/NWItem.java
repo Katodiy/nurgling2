@@ -122,6 +122,9 @@ public class NWItem extends WItem
     @Override
     public boolean mousedown(MouseDownEvent ev)
     {
+        // Alt+Shift+Click: transfer all same items sorted by quality
+        // Right-click (button 3): ascending order (lowest quality first)
+        // Left-click (button 1): descending order (highest quality first)
         if(ui.modshift)
         {
             if (ui.modmeta)
@@ -133,14 +136,20 @@ public class NWItem extends WItem
                 }
             }
         }
+        // Alt+Ctrl+Click: drop all same items sorted by quality
+        // Right-click (button 3): ascending order (lowest quality first)
+        // Left-click (button 1): descending order (highest quality first)
+        else if(ui.modctrl)
+        {
+            if (ui.modmeta)
+            {
+                if (parent instanceof NInventory)
+                {
+                    wdgmsg("drop-same", item, ev.b == 3);
+                    return true;
+                }
+            }
+        }
         return super.mousedown(ev);
-//        if(res)
-//        {
-//            JSONObject res_obj = ItemTex.save(item.spr);
-//            res_obj.put("name",((NGItem)item).name);
-//            System.out.println(res_obj);
-//
-//        }
-//        return res;
     }
 }

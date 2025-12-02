@@ -1399,6 +1399,9 @@ public class NInventory extends Inventory
         if (msg.equals("transfer-same")) {
             process(getSame((NGItem) args[0], (Boolean) args[1]), "transfer");
         }
+        else if (msg.equals("drop-same")) {
+            process(getSame((NGItem) args[0], (Boolean) args[1]), "drop");
+        }
         else
         {
             super.wdgmsg(sender, msg, args);
@@ -1416,7 +1419,8 @@ public class NInventory extends Inventory
         List<NGItem> items = new ArrayList<>();
         if (item != null && item.name() != null)
         {
-
+            // Only collect direct children of inventory, don't expand stacks
+            // (expanding stacks would break them apart during transfer)
             for (Widget wdg = lchild; wdg != null; wdg = wdg.prev)
             {
                 if (wdg.visible && wdg instanceof NWItem)
@@ -1429,7 +1433,6 @@ public class NInventory extends Inventory
                     }
                     else
                     {
-
                         if (NParser.checkName(item.name(), ((NGItem) wItem.item).name()))
                         {
                             items.add((NGItem) wItem.item);
@@ -1445,17 +1448,21 @@ public class NInventory extends Inventory
     public static final Comparator<NGItem> ITEM_COMPARATOR_ASC = new Comparator<NGItem>() {
         @Override
         public int compare(NGItem o1, NGItem o2) {
-
-            if(o1.quality!=null && o2.quality!=null)
-                return Double.compare(o1.quality, o2.quality);
-            else
-                return 1;
+            // Handle null quality - items with null quality go to the end
+            if (o1.quality == null && o2.quality == null) return 0;
+            if (o1.quality == null) return 1;  // null goes to the end
+            if (o2.quality == null) return -1; // null goes to the end
+            return Double.compare(o1.quality, o2.quality);
         }
     };
     public static final Comparator<NGItem> ITEM_COMPARATOR_DESC = new Comparator<NGItem>() {
         @Override
         public int compare(NGItem o1, NGItem o2) {
-            return ITEM_COMPARATOR_ASC.compare(o2, o1);
+            // Handle null quality - items with null quality go to the end
+            if (o1.quality == null && o2.quality == null) return 0;
+            if (o1.quality == null) return 1;  // null goes to the end
+            if (o2.quality == null) return -1; // null goes to the end
+            return Double.compare(o2.quality, o1.quality);
         }
     };
 

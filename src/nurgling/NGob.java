@@ -318,8 +318,12 @@ public class NGob
                     mark.objectExists = false; // Object is already gone
                     mark.disappearedAt = System.currentTimeMillis();
                     // Check if player is currently near the mark
-                    mark.wasInsideVisibleArea = ((NMiniMap) NUtils.getGameUI().mmap).checktemp(mark, NUtils.player().rc);
-                    ((NMapView) NUtils.getGameUI().map).tempMarkList.add(mark);
+                    Gob player = NUtils.player();
+                    if(player!=null)
+                    {
+                        mark.wasInsideVisibleArea = ((NMiniMap) NUtils.getGameUI().mmap).checktemp(mark, player.rc);
+                        ((NMapView) NUtils.getGameUI().map).tempMarkList.add(mark);
+                    }
                 }
             }
         } catch (Exception e) {
