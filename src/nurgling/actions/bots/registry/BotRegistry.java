@@ -44,7 +44,7 @@ public class BotRegistry {
                 true,
                 false,
                 TravelToHearthFire.class,
-                "test49",
+                "tohome",
                 false
         ));
 
@@ -89,6 +89,9 @@ public class BotRegistry {
         bots.add(new BotDescriptor("silk_production", BotDescriptor.BotType.PRODUCTIONS, "Manages silk production starting at eggs all the way to silkworm cocoons.", "Silk cocoons production.", true, true, SilkProductionBot.class, "silkworm_cocoon", false));
 
         bots.add(new BotDescriptor("pickling", BotDescriptor.BotType.PRODUCTIONS, "Pickling Bot", "Complete automated pickling system. Manages brine levels, fills jars with fresh vegetables, extracts ready pickled items, and maintains continuous production cycle.", true, true, PicklingBot.class, "pickle", true));
+
+        // Garden pot filling
+        bots.add(new BotDescriptor("gardenpot_filler", BotDescriptor.BotType.PRODUCTIONS, "Garden Pot Filler", "Fills garden pots with soil and water for planting.", true, true, GardenPotFiller.class, "gardenpot", false));
 
         // BATTLE
         bots.add(new BotDescriptor("reagro", BotDescriptor.BotType.BATTLE, "Reagro", "Reagros enemies.", true, true, Reagro.class, "reagro", false));
@@ -181,7 +184,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("flag", BotDescriptor.BotType.UTILS, "Survey Supporter", "Survey Supporter.", false, true, SurveySupport.class, "flag", false));
         bots.add(new BotDescriptor("dream_catcher", BotDescriptor.BotType.UTILS, "Collect dreams", "Collect dreams from all dream catchers in a dream catcher area.", true, true, CollectDreams.class, "dream_catcher", false));
         bots.add(new BotDescriptor("bugs", BotDescriptor.BotType.UTILS, "Catch bugs", "Catch bugs around player.", false, true, CatchBugsAround.class, "bugs", false));
-        bots.add(new BotDescriptor("freeinv", BotDescriptor.BotType.UTILS, "Free inventory", "Free inventory with Area system.", false, true, FreeInvBot.class, "freeinv", false));
+        bots.add(new BotDescriptor("freeinv", BotDescriptor.BotType.UTILS, "Free inventory", "Free inventory with Area system.", true, true, FreeInvBot.class, "freeinv", false));
         bots.add(new BotDescriptor("travellerssack", BotDescriptor.BotType.UTILS, "Equip travellers sacks", "Equip travellers sacks.", false, true, EquipTravellersSacksFromBelt.class, "travellerssack", false));
         bots.add(new BotDescriptor("studytable", BotDescriptor.BotType.UTILS, "Fill study desk", "Fill study desk", true, true, StudyDeskFiller.class, "studytable", false));
         bots.add(new BotDescriptor("swill_collector", BotDescriptor.BotType.UTILS, "Swill Collector", "Collects swill items from area and feeds to troughs/cisterns.", false, true, CollectSwillInArea.class, "swillcollector", false));
