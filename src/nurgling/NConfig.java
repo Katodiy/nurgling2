@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
+import nurgling.conf.QuickActionPreset;
 import nurgling.profiles.ProfileManager;
 import nurgling.routes.Route;
 import nurgling.scenarios.Scenario;
@@ -76,6 +77,8 @@ public class NConfig
         q_range,
         q_visitor,
         q_door,
+        q_presets,
+        q_current_preset,
         petals,
         singlePetal,
         asenable,
@@ -208,6 +211,7 @@ public class NConfig
         conf.put(Key.q_visitor, false);
         conf.put(Key.q_door, true);
         conf.put(Key.q_range, 2);
+        conf.put(Key.q_current_preset, "Default");
         conf.put(Key.singlePetal, false);
         conf.put(Key.asenable, true);
         conf.put(Key.autoMapper, false);
@@ -282,6 +286,11 @@ public class NConfig
         res3.put("enabled", true);
         qpattern.add(res3);
         conf.put(Key.q_pattern, qpattern);
+
+        // Quick Action Presets
+        ArrayList<QuickActionPreset> qpresets = new ArrayList<>();
+        qpresets.add(QuickActionPreset.createDefault());
+        conf.put(Key.q_presets, qpresets);
 
         ArrayList<HashMap<String, Object>> petal = new ArrayList<>();
         HashMap<String, Object> pres1 = new HashMap<>();
@@ -676,6 +685,9 @@ public class NConfig
                                 break;
                             case "NCarrierProp":
                                 res.add(new NCarrierProp(obj));
+                                break;
+                            case "QuickActionPreset":
+                                res.add(new QuickActionPreset(obj));
                                 break;
 
                             default:

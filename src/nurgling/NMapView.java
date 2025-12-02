@@ -12,6 +12,8 @@ import haven.BuddyWnd;
 import nurgling.actions.QuickActionBot;
 import nurgling.actions.bots.ScenarioRunner;
 import nurgling.areas.*;
+import nurgling.conf.QuickActionPreset;
+import nurgling.widgets.options.QuickActions;
 import nurgling.overlays.*;
 import nurgling.overlays.map.*;
 import nurgling.routes.Route;
@@ -1010,6 +1012,15 @@ public class NMapView extends MapView
         if(ev.code == 16) {
             shiftPressed = true;
         }
+        
+        // Check preset keybindings first
+        QuickActionPreset matchedPreset = findMatchingPreset(ev);
+        if (matchedPreset != null) {
+            runQuickActionForPreset(matchedPreset, false, false);
+            return true;
+        }
+        
+        // Fallback to legacy keybindings
         if(kb_quickaction.key().match(ev) || kb_quickignaction.key().match(ev) || kb_mousequickaction.key().match(ev)) {
             Thread t;
             (t = new Thread(new Runnable()
@@ -1144,6 +1155,51 @@ public class NMapView extends MapView
         }
 
         return super.keydown(ev);
+    }
+
+    /**
+     * Find a preset that matches the given key event
+     */
+    @SuppressWarnings("unchecked")
+    private QuickActionPreset findMatchingPreset(KeyDownEvent ev) {
+        try {
+            Object presetsObj = NConfig.get(NConfig.Key.q_presets);
+            if (presetsObj instanceof ArrayList) {
+                ArrayList<?> presetsList = (ArrayList<?>) presetsObj;
+                for (Object obj : presetsList) {
+                    QuickActionPreset preset = null;
+                    if (obj instanceof QuickActionPreset) {
+                        preset = (QuickActionPreset) obj;
+                    } else if (obj instanceof HashMap) {
+                        preset = new QuickActionPreset((HashMap<String, Object>) obj);
+                    }
+                    
+                    if (preset != null && preset.keybind != null && !preset.keybind.isEmpty()) {
+                        KeyMatch km = KeyMatch.restore(preset.keybind);
+                        if (km != null && km.match(ev)) {
+                            return preset;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore errors in preset matching
+        }
+        return null;
+    }
+
+    /**
+     * Run quick action with patterns from the specified preset
+     */
+    private void runQuickActionForPreset(QuickActionPreset preset, boolean ignorePattern, boolean useMouse) {
+        Thread t = new Thread(() -> {
+            try {
+                new QuickActionBot(ignorePattern, useMouse, preset).run(NUtils.getGameUI());
+            } catch (InterruptedException e) {
+                NUtils.getGameUI().msg("quick action error: STOPPED");
+            }
+        }, "quick action - " + preset.name);
+        t.start();
     }
 
     public class NSelector extends Selector
