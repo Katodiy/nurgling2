@@ -785,7 +785,7 @@ public class NContext {
             for(Integer id : nids) {
                 if (id > 0) {
                     NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
-                    if (cand.isVisible() && cand.containOut(name.getDefault(), th)) {
+                    if (cand.isVisible() && cand.containOut(name.getDefault(), th) && cand.getRCArea()!=null) {
                         areas.add(new TestedArea(cand, cand.getOutput(name.getDefault()).th));
                     }
                 }
@@ -811,6 +811,8 @@ public class NContext {
         if(targets.size()>1) {
             for (NArea test: targets) {
                 Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                if(testrc == null)
+                    continue;
                 double testdist;
                 if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
                     res = test;
@@ -857,6 +859,8 @@ public class NContext {
         if(targets.size()>1) {
             for (NArea test: targets) {
                 Pair<Coord2d, Coord2d> testrc = test.getRCArea();
+                if(testrc == null)
+                    continue;
                 double testdist;
                 if ((testdist = (testrc.a.dist(NUtils.player().rc) + testrc.b.dist(NUtils.player().rc))) < dist) {
                     res = test;
