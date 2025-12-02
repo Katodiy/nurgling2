@@ -14,19 +14,18 @@ import java.util.ArrayList;
 public class GardenPotFiller implements Action {
 
     private static final NAlias GARDEN_POT = new NAlias("gfx/terobjs/gardenpot");
-    private static final NAlias SOIL = new NAlias("Soil", "Mulch");
+    private static final NAlias MULCH = new NAlias("Mulch");
     private static final NAlias WATER = new NAlias("Water");
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NContext context = new NContext(gui);
 
-        // Register soil/mulch as input items so TakeItems2 can find them
-        context.addInItem("Soil", null);
+        // Register mulch as input item so TakeItems2 can find it
         context.addInItem("Mulch", null);
 
-        // Phase 1: Fill soil
-        fillSoilPhase(gui, context);
+        // Phase 1: Fill mulch
+        fillMulchPhase(gui, context);
 
         // Phase 2: Fill water
         Results waterResult = fillWaterPhase(gui, context);
@@ -38,7 +37,7 @@ public class GardenPotFiller implements Action {
         return Results.SUCCESS();
     }
 
-    private Results fillSoilPhase(NGameUI gui, NContext context) throws InterruptedException {
+    private Results fillMulchPhase(NGameUI gui, NContext context) throws InterruptedException {
         // Navigate to pots area
         NArea potArea = context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
         if (potArea == null) {
@@ -52,29 +51,29 @@ public class GardenPotFiller implements Action {
             return Results.FAIL();
         }
 
-        gui.msg("Found " + allPots.size() + " garden pots to fill with soil");
+        gui.msg("Found " + allPots.size() + " garden pots to fill with mulch");
 
-        // Get soil from Take area
-        int soilInInventory = gui.getInventory().getItems(SOIL).size();
-        if (soilInInventory == 0) {
-            Results getSoilResult = getSoilFromArea(gui, context);
-            if (!getSoilResult.IsSuccess()) {
-                return getSoilResult;
+        // Get mulch from Take area
+        int mulchInInventory = gui.getInventory().getItems(MULCH).size();
+        if (mulchInInventory == 0) {
+            Results getMulchResult = getMulchFromArea(gui, context);
+            if (!getMulchResult.IsSuccess()) {
+                return getMulchResult;
             }
         }
 
-        // Navigate back to pots area after getting soil
+        // Navigate back to pots area after getting mulch
         context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
 
-        // Fill each pot with soil until it stops accepting
+        // Fill each pot with mulch until it stops accepting
         for (Gob pot : allPots) {
-            fillPotWithSoil(gui, pot);
+            fillPotWithMulch(gui, pot);
 
-            // Check if we need more soil
-            if (gui.getInventory().getItems(SOIL).isEmpty()) {
-                Results getSoilResult = getSoilFromArea(gui, context);
-                if (!getSoilResult.IsSuccess()) {
-                    gui.msg("Out of soil");
+            // Check if we need more mulch
+            if (gui.getInventory().getItems(MULCH).isEmpty()) {
+                Results getMulchResult = getMulchFromArea(gui, context);
+                if (!getMulchResult.IsSuccess()) {
+                    gui.msg("Out of mulch");
                     return Results.SUCCESS(); // Not an error, we filled what we could
                 }
                 // Navigate back to pots area
@@ -85,52 +84,48 @@ public class GardenPotFiller implements Action {
         return Results.SUCCESS();
     }
 
-    private Results fillPotWithSoil(NGameUI gui, Gob pot) throws InterruptedException {
+    private Results fillPotWithMulch(NGameUI gui, Gob pot) throws InterruptedException {
         PathFinder pf = new PathFinder(pot);
         pf.isHardMode = true;
         pf.run(gui);
 
         while (true) {
-            // Check if we have soil
-            ArrayList<WItem> soilItems = gui.getInventory().getItems(SOIL);
-            if (soilItems.isEmpty()) {
-                return Results.SUCCESS(); // Need to get more soil
+            // Check if we have mulch
+            ArrayList<WItem> mulchItems = gui.getInventory().getItems(MULCH);
+            if (mulchItems.isEmpty()) {
+                return Results.SUCCESS(); // Need to get more mulch
             }
 
-            // Take soil to hand
-            NUtils.takeItemToHand(soilItems.get(0));
+            // Take mulch to hand
+            NUtils.takeItemToHand(mulchItems.get(0));
 
-            // Apply soil to pot using dropsame
+            // Apply mulch to pot using dropsame
             NUtils.dropsame(pot);
 
             // Wait for hand to be free (max 100 frames)
             NUtils.getUI().core.addTask(new WaitHandFreeWithTimeout());
 
-            // Check if soil was consumed or pot is full
+            // Check if mulch was consumed or pot is full
             if (gui.vhand != null) {
-                // Soil still in hand = pot is full
+                // Mulch still in hand = pot is full
                 NUtils.dropToInv();
                 NUtils.getUI().core.addTask(new HandIsFree(gui.getInventory()));
                 return Results.SUCCESS(); // This pot is done
             }
-            // Soil was consumed, continue adding more
+            // Mulch was consumed, continue adding more
         }
     }
 
-    private Results getSoilFromArea(NGameUI gui, NContext context) throws InterruptedException {
+    private Results getMulchFromArea(NGameUI gui, NContext context) throws InterruptedException {
         int freeSpace = gui.getInventory().getFreeSpace();
         if (freeSpace == 0) {
             return Results.ERROR("Inventory is full");
         }
 
-        // Try to take Soil first, then Mulch
-        new TakeItems2(context, "Soil", freeSpace).run(gui);
-        if (gui.getInventory().getItems(SOIL).isEmpty()) {
-            new TakeItems2(context, "Mulch", freeSpace).run(gui);
-        }
+        new TakeItems2(context, "Mulch", freeSpace).run(gui);
 
-        if (gui.getInventory().getItems(SOIL).isEmpty()) {
-            return Results.ERROR("No soil/mulch available in Take areas");
+        if (gui.getInventory().getItems(MULCH).isEmpty()) {
+            return Results.ERROR("No mulch available in Take areas");
         }
 
         return Results.SUCCESS();
