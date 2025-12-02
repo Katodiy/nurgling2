@@ -45,36 +45,113 @@ public class NMiniMap extends MiniMap {
         super(file);
     }
 
+    /**
+     * Check if a TempMark is inside the player's visible area (81 tile zone).
+     * Uses the same calculation as explored area and drawtempmarks for consistency.
+     * 
+     * @param cm the TempMark to check
+     * @param pl player position (unused, kept for compatibility)
+     * @return true if the mark is inside the visible area (should be removed), false otherwise
+     */
     public boolean checktemp(TempMark cm, Coord2d pl) {
-        if(dloc!=null) {
-            Coord rc = p2c(pl.floor(sgridsz).sub(4, 4).mul(sgridsz).add(22, 22));
-            int dataLevel = getDataLevel();
-            float scaleFactor = getScaleFactor();
-            float zmult = (float)(1 << dataLevel) / scaleFactor;
-            Coord viewsz = VIEW_SZ.div(zmult).sub(22, 22);
-            Coord gc = p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
-            if (gc.isect(rc, viewsz)) {
-                return true;
-            }
+        return isInVisibleArea(cm.gc);
+    }
+    
+    /**
+     * Check if a tile coordinate (in global grid coords with session offset) is inside 
+     * the player's 81-tile visible area.
+     * 
+     * @param gc the global grid coordinate to check (tile coords + sessloc.tc)
+     * @return true if inside visible area, false otherwise
+     */
+    public boolean isInVisibleArea(Coord gc) {
+        if(sessloc == null || dloc == null) {
+            return false;
         }
-        return false;
+        
+        Gob player = NUtils.player();
+        if(player == null) {
+            return false;
+        }
+        
+        // Calculate visible area boundaries (same as explored area and drawtempmarks)
+        // This is the 81-tile visibility zone around the player
+        Coord ul = player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz).floor(tilesz).add(sessloc.tc);
+        Coord unscaledViewSize = _sgridsz.mul(9).div(tilesz.floor());
+        Coord br = ul.add(unscaledViewSize).add(1, 1);
+        
+        // Check if the coordinate is inside the visible area
+        return gc.x >= ul.x && gc.x < br.x &&
+               gc.y >= ul.y && gc.y < br.y;
+    }
+    
+    /**
+     * Check if a tile coordinate is inside the inner zone (~71 tiles).
+     * Objects that disappear inside this zone were likely collected/killed,
+     * not just leaving the server's visible area.
+     * 
+     * @param gc the global grid coordinate to check (tile coords + sessloc.tc)
+     * @return true if inside inner zone, false otherwise
+     */
+    public boolean isInInnerZone(Coord gc) {
+        if(sessloc == null || dloc == null) {
+            return false;
+        }
+        
+        Gob player = NUtils.player();
+        if(player == null) {
+            return false;
+        }
+        
+        // Calculate inner zone boundaries (~71 tiles instead of 81)
+        // This is 5 tiles smaller on each side than the full visible area
+        // 81 - 10 = 71 tiles
+        Coord ul = player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz).floor(tilesz).add(sessloc.tc);
+        Coord unscaledViewSize = _sgridsz.mul(9).div(tilesz.floor());
+        Coord br = ul.add(unscaledViewSize).add(1, 1);
+        
+        // Shrink the area by 5 tiles on each side
+        Coord innerUl = ul.add(5, 5);
+        Coord innerBr = br.sub(5, 5);
+        
+        // Check if the coordinate is inside the inner zone
+        return gc.x >= innerUl.x && gc.x < innerBr.x &&
+               gc.y >= innerUl.y && gc.y < innerBr.y;
+    }
+    
+    /**
+     * Check if a world coordinate (rc) is inside the player's 81-tile visible area.
+     * 
+     * @param rc the world coordinate to check
+     * @return true if inside visible area, false otherwise
+     */
+    public boolean isWorldCoordInVisibleArea(Coord2d rc) {
+        if(sessloc == null) {
+            return false;
+        }
+        Coord gc = rc.floor(tilesz).add(sessloc.tc);
+        return isInVisibleArea(gc);
     }
 
     public static class TempMark {
         public String name;
-        public long start;
+        public long start;          // Time when the mark was "fixed" (object left visible area or disappeared)
         public long lastupdate;
+        public long disappearedAt;  // Time when object disappeared from game (0 if still visible)
         public final long id;
         public Coord2d rc;
         public Coord gc;
         public TexI icon;
         public Color buddyColor;
+        public boolean wasInsideVisibleArea;  // Track if object was inside visible area on last check
+        public boolean objectExists;          // Track if object exists in game
 
         public MiniMap.Location loc;
 
         public TempMark(String name, MiniMap.Location loc, long id, Coord2d rc, Coord gc, BufferedImage icon) {
             start = System.currentTimeMillis();
             lastupdate = start;
+            disappearedAt = 0;
             this.name = name;
             this.id = id;
             this.rc = rc;
@@ -82,11 +159,14 @@ public class NMiniMap extends MiniMap {
             this.icon = new TexI(icon);
             this.loc = loc;
             this.buddyColor = null;
+            this.wasInsideVisibleArea = true;  // Assume object starts inside visible area
+            this.objectExists = true;          // Object exists when mark is created
         }
         
         public TempMark(String name, MiniMap.Location loc, long id, Coord2d rc, Coord gc, BufferedImage icon, Color buddyColor) {
             start = System.currentTimeMillis();
             lastupdate = start;
+            disappearedAt = 0;
             this.name = name;
             this.id = id;
             this.rc = rc;
@@ -94,6 +174,8 @@ public class NMiniMap extends MiniMap {
             this.icon = new TexI(icon);
             this.loc = loc;
             this.buddyColor = buddyColor;
+            this.wasInsideVisibleArea = true;  // Assume object starts inside visible area
+            this.objectExists = true;          // Object exists when mark is created
         }
     }
 
@@ -779,30 +861,39 @@ public class NMiniMap extends MiniMap {
     private void drawtempmarks(GOut g) {
         if((Boolean)NConfig.get(NConfig.Key.tempmark)) {
             Gob player = NUtils.player();
-            if (player != null) {
-                int dataLevel = getDataLevel();
-                float scaleFactor = getScaleFactor();
-                double zmult = (double)((1 << dataLevel) / scaleFactor);
-                Coord rc = p2c(player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz));
-                Coord viewsz = VIEW_SZ.div(zmult);
+            if (player != null && sessloc != null && dloc != null) {
+                // Calculate visible area boundaries (same as explored area calculation)
+                Coord ul = player.rc.floor(sgridsz).sub(4, 4).mul(sgridsz).floor(tilesz).add(sessloc.tc);
+                Coord unscaledViewSize = _sgridsz.mul(9).div(tilesz.floor());
+                Coord br = ul.add(unscaledViewSize).add(1, 1);
 
                 synchronized (((NMapView)ui.gui.map).tempMarkList)
                 {
                 for (TempMark cm : ((NMapView)ui.gui.map).tempMarkList) {
                     if (cm.loc!=null && ui.gui.mmap.curloc.seg.id == cm.loc.seg.id) {
-                        if (cm.icon != null) {
-                            if (!cm.gc.equals(Coord.z)) {
+                        if (cm.icon != null && !cm.gc.equals(Coord.z)) {
+                            // Check if mark is outside the 81-tile visible area
+                            boolean isOutsideVisibleArea = 
+                                cm.gc.x < ul.x || cm.gc.x >= br.x ||
+                                cm.gc.y < ul.y || cm.gc.y >= br.y;
+                            
+                            // Draw icon if:
+                            // 1. Mark is outside visible area, OR
+                            // 2. Object no longer exists in game (disappeared)
+                            // This ensures we show the mark for objects that left the zone
+                            Gob gob = nurgling.tools.Finder.findGob(cm.id);
+                            boolean objectDisappeared = (gob == null);
+                            
+                            if (isOutsideVisibleArea || objectDisappeared) {
                                 Coord gc = p2c(cm.gc.sub(sessloc.tc).mul(tilesz));
-
                                 int dsz = Math.max(cm.icon.sz().y, cm.icon.sz().x);
-                                if (!gc.isect(rc, viewsz)) {
-                                    // Apply buddy color if available
-                                    if(cm.buddyColor != null) {
-                                        g.chcolor(cm.buddyColor.getRed(), cm.buddyColor.getGreen(), cm.buddyColor.getBlue(), 255);
-                                    }
-                                    g.aimage(cm.icon, gc, 0.5, 0.5, UI.scale(18 * cm.icon.sz().x / dsz, 18 * cm.icon.sz().y / dsz));
-                                    g.chcolor();
+                                
+                                // Apply buddy color if available
+                                if(cm.buddyColor != null) {
+                                    g.chcolor(cm.buddyColor.getRed(), cm.buddyColor.getGreen(), cm.buddyColor.getBlue(), 255);
                                 }
+                                g.aimage(cm.icon, gc, 0.5, 0.5, UI.scale(18 * cm.icon.sz().x / dsz, 18 * cm.icon.sz().y / dsz));
+                                g.chcolor();
                             }
                         }
                     }

@@ -1428,35 +1428,108 @@ public class NMapView extends MapView
     void checkTempMarks() {
         if ((Boolean) NConfig.get(NConfig.Key.tempmark)) {
             final Coord2d cmap = new Coord2d(cmaps);
-            if (NUtils.player() != null) {
+            if (NUtils.player() != null && ui.gui.mmap != null && ui.gui.mmap.sessloc != null) {
                 Coord2d pl = NUtils.player().rc;
                 final List<NMiniMap.TempMark> marks = new ArrayList<>(tempMarkList);
                 long currenttime = System.currentTimeMillis();
                 for (NMiniMap.TempMark cm : marks) {
                     Gob g = Finder.findGob(cm.id);
+                    
+                    // Check if mark position is inside player's visible area
+                    boolean markIsInPlayerVisibleArea = ((NMiniMap) ui.gui.mmap).checktemp(cm, pl);
+                    
                     if (g == null) {
-
-                        if (currenttime - cm.start > (Integer) NConfig.get(NConfig.Key.temsmarktime) * 1000 * 60) {
+                        // Object is no longer in game (disappeared/left server's view)
+                        
+                        // If this is the FIRST tick where object is gone
+                        if (cm.objectExists) {
+                            cm.objectExists = false;
+                            cm.disappearedAt = currenttime;
+                            cm.lastupdate = currenttime;
+                            
+                            // Check if object is CURRENTLY in inner zone relative to player
+                            // (not the saved value, because player might have moved!)
+                            boolean currentlyInInnerZone = ((NMiniMap) ui.gui.mmap).isInInnerZone(cm.gc);
+                            
+                            // If object is inside inner zone (~71 tiles) - it was collected/killed
+                            // If object is outside inner zone - it left the area (player moved away or object moved)
+                            if (currentlyInInnerZone) {
+                                tempMarkList.remove(cm);
+                                continue;
+                            }
+                            
+                            // Object is outside inner zone - keep the mark
+                            // Record if player is currently near the mark (to detect when they leave and return)
+                            cm.wasInsideVisibleArea = markIsInPlayerVisibleArea;
+                            continue;
+                        }
+                        
+                        // Calculate age since disappearance
+                        long ageSinceDisappeared = currenttime - cm.disappearedAt;
+                        
+                        // Remove if mark is too old (exceeded temsmarktime minutes since disappearance)
+                        int temsmarktime = (Integer) NConfig.get(NConfig.Key.temsmarktime);
+                        if (ageSinceDisappeared > temsmarktime * 1000L * 60L) {
                             tempMarkList.remove(cm);
-                        } else {
-                            if(currenttime - cm.lastupdate > 1000) {
-                                cm.lastupdate = currenttime;
-                                if (!cm.rc.isect(pl.sub(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)), pl.add(cmap.mul((Integer) NConfig.get(NConfig.Key.temsmarkdist)).mul(tilesz)))) {
+                            continue;
+                        }
+                        
+                        // Throttle distance/visibility checks to once per second
+                        if (currenttime - cm.lastupdate > 1000) {
+                            cm.lastupdate = currenttime;
+                            
+                            // Remove if mark is too far from player (exceeded temsmarkdist)
+                            // temsmarkdist is in "mega grids" - each unit = 100 tiles
+                            // So temsmarkdist=4 means 400 tiles square around player
+                            int temsmarkdist = (Integer) NConfig.get(NConfig.Key.temsmarkdist);
+                            int maxDistTiles = temsmarkdist * 100; // Convert to tiles
+                            
+                            // Get player position in global tile coords (same system as cm.gc)
+                            Coord playerGC = pl.floor(tilesz).add(ui.gui.mmap.sessloc.tc);
+                            
+                            // Calculate square around player
+                            Coord playerUL = playerGC.sub(maxDistTiles, maxDistTiles);
+                            Coord playerBR = playerGC.add(maxDistTiles, maxDistTiles);
+                            
+                            // Check if mark is outside this square
+                            if (cm.gc.x < playerUL.x || cm.gc.x > playerBR.x ||
+                                cm.gc.y < playerUL.y || cm.gc.y > playerBR.y) {
+                                tempMarkList.remove(cm);
+                                continue;
+                            }
+                            
+                            // Track player position relative to mark to detect "return"
+                            if (markIsInPlayerVisibleArea) {
+                                // Player is near the mark
+                                if (!cm.wasInsideVisibleArea) {
+                                    // Player RETURNED to mark location (was away, now near)
+                                    // Remove mark - player can see object is not there
                                     tempMarkList.remove(cm);
-                                } else {
-                                    if (((NMiniMap) ui.gui.mmap).checktemp(cm, pl)) {
-                                        tempMarkList.remove(cm);
-                                    }
+                                    continue;
                                 }
+                                // Player was already near - keep tracking
+                            } else {
+                                // Player moved away from mark location
+                                cm.wasInsideVisibleArea = false;
                             }
                         }
                     } else {
-                        cm.start = currenttime;
-                        cm.lastupdate = cm.start;
+                        // Object exists in game - mark it as existing and update coordinates
+                        cm.objectExists = true;
+                        cm.disappearedAt = 0;
                         cm.rc = g.rc;
                         cm.gc = g.rc.floor(tilesz).add(ui.gui.mmap.sessloc.tc);
                         
-                        // Update buddy color if it has changed
+                        // Always update timestamp while object exists and is being tracked
+                        cm.start = currenttime;
+                        cm.lastupdate = cm.start;
+                        
+                        // Check if object is in inner zone (~71 tiles)
+                        // wasInsideVisibleArea = true means "in inner zone" while object exists
+                        boolean inInnerZone = ((NMiniMap) ui.gui.mmap).isInInnerZone(cm.gc);
+                        cm.wasInsideVisibleArea = inInnerZone;
+                        
+                        // Update buddy color
                         haven.res.ui.obj.buddy.Buddy buddy = g.getattr(haven.res.ui.obj.buddy.Buddy.class);
                         if(buddy != null && buddy.buddy() != null && buddy.buddy().group >= 0 && buddy.buddy().group < BuddyWnd.gc.length) {
                             cm.buddyColor = BuddyWnd.gc[buddy.buddy().group];
