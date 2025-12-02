@@ -3,6 +3,7 @@ package nurgling.actions;
 import haven.MenuGrid;
 import nurgling.NGameUI;
 import nurgling.NUtils;
+import nurgling.tasks.WaitForMapLoadNoCoord;
 import nurgling.tasks.WaitPlayerNotNull;
 import nurgling.tasks.WaitPlayerPose;
 
@@ -24,6 +25,7 @@ public class TravelToHearthFire implements Action {
         NUtils.getUI().core.addTask(new WaitPlayerPose("gfx/borka/body"));
 
         NUtils.getUI().core.addTask(new WaitPlayerNotNull());
+        NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
 
         return Results.SUCCESS();
     }
