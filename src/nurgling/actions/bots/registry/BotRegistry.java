@@ -91,7 +91,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("pickling", BotDescriptor.BotType.PRODUCTIONS, "Pickling Bot", "Complete automated pickling system. Manages brine levels, fills jars with fresh vegetables, extracts ready pickled items, and maintains continuous production cycle.", true, true, PicklingBot.class, "pickle", true));
 
         // Garden pot filling
-        bots.add(new BotDescriptor("gardenpot_filler", BotDescriptor.BotType.PRODUCTIONS, "Garden Pot Filler", "Fills garden pots with soil and water for planting.", true, true, GardenPotFiller.class, "ugardenpot", false));
+        bots.add(new BotDescriptor("gardenpot_filler", BotDescriptor.BotType.PRODUCTIONS, "Garden Pot Filler", "Fills garden pots with soil and water for planting.", true, true, GardenPotFiller.class, "gardenpot", false));
 
         // BATTLE
         bots.add(new BotDescriptor("reagro", BotDescriptor.BotType.BATTLE, "Reagro", "Reagros enemies.", true, true, Reagro.class, "reagro", false));
