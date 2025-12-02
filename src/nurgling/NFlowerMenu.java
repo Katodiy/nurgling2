@@ -83,7 +83,7 @@ public class NFlowerMenu extends FlowerMenu
     @Override
     public void tick(double dt) {
         super.tick(dt);
-        if(!shiftMode && (Boolean) NConfig.get(NConfig.Key.asenable) && !NContext.waitBot.get()) {
+        if(!ui.modshift && (Boolean) NConfig.get(NConfig.Key.asenable) && !NContext.waitBot.get()) {
             if ((Boolean) NConfig.get(NConfig.Key.singlePetal) && nopts.length == 1 && (NUtils.getUI().core.getLastActions()==null || NUtils.getUI().core.getLastActions().item == null)) {
                 nchoose(nopts[0]);
             } else {
@@ -136,7 +136,7 @@ public class NFlowerMenu extends FlowerMenu
                 }
             }
         }
-        if(!NUtils.getUI().core.isBotmod() && (Boolean)NConfig.get(NConfig.Key.autoFlower))
+        if(!ui.modshift && !NUtils.getUI().core.isBotmod() && (Boolean)NConfig.get(NConfig.Key.autoFlower))
         {
             if (option != null && NUtils.getUI().core.getLastActions()!=null)
             {
