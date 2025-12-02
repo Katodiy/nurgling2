@@ -219,7 +219,7 @@ public class NBotsMenu extends Widget
         public boolean disStacks;
         NButton(String path, Action action) {
             this.path = path;
-            Resource res = Resource.remote().load(dir_path + path + "/u").get();
+            Resource res = Resource.remote().loadwait(dir_path + path + "/u");
             btn = new IButton(Resource.loadsimg(dir_path + path + "/u"), Resource.loadsimg(dir_path + path + "/d"), Resource.loadsimg(dir_path + path + "/h")) {
                 TexI rtip;
 
