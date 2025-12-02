@@ -17,6 +17,12 @@ public class GardenPotFiller implements Action {
     private static final NAlias MULCH = new NAlias("Mulch");
     private static final NAlias WATER = new NAlias("Water");
 
+    // Marker states
+    private static final long MARKER_EMPTY = 0;      // Needs both mulch and water
+    private static final long MARKER_WATER_ONLY = 1; // Needs mulch
+    private static final long MARKER_MULCH_ONLY = 2; // Needs water
+    private static final long MARKER_COMPLETE = 3;   // Done
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NContext context = new NContext(gui);
@@ -37,6 +43,30 @@ public class GardenPotFiller implements Action {
         return Results.SUCCESS();
     }
 
+    // Get pots that need mulch (marker 0 or 1)
+    private ArrayList<Gob> getPotsNeedingMulch(ArrayList<Gob> allPots) {
+        ArrayList<Gob> result = new ArrayList<>();
+        for (Gob pot : allPots) {
+            long marker = pot.ngob.getModelAttribute();
+            if (marker == MARKER_EMPTY || marker == MARKER_WATER_ONLY) {
+                result.add(pot);
+            }
+        }
+        return result;
+    }
+
+    // Get pots that need water (marker 0 or 2)
+    private ArrayList<Gob> getPotsNeedingWater(ArrayList<Gob> allPots) {
+        ArrayList<Gob> result = new ArrayList<>();
+        for (Gob pot : allPots) {
+            long marker = pot.ngob.getModelAttribute();
+            if (marker == MARKER_EMPTY || marker == MARKER_MULCH_ONLY) {
+                result.add(pot);
+            }
+        }
+        return result;
+    }
+
     private Results fillMulchPhase(NGameUI gui, NContext context) throws InterruptedException {
         // Navigate to pots area
         NArea potArea = context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
@@ -44,14 +74,16 @@ public class GardenPotFiller implements Action {
             return Results.ERROR("No Planting Garden Pots area found. Please configure the specialization.");
         }
 
-        // Get ALL pots - we try to fill each one, not filter by marker
+        // Get all pots and filter to those needing mulch (marker 0 or 1)
         ArrayList<Gob> allPots = Finder.findGobs(potArea, GARDEN_POT);
-        if (allPots.isEmpty()) {
-            gui.msg("No garden pots found in area");
-            return Results.FAIL();
+        ArrayList<Gob> potsNeedingMulch = getPotsNeedingMulch(allPots);
+
+        if (potsNeedingMulch.isEmpty()) {
+            gui.msg("No garden pots need mulch");
+            return Results.SUCCESS();
         }
 
-        gui.msg("Found " + allPots.size() + " garden pots to fill with mulch");
+        gui.msg("Found " + potsNeedingMulch.size() + " garden pots needing mulch");
 
         // Get mulch from Take area
         int mulchInInventory = gui.getInventory().getItems(MULCH).size();
@@ -65,8 +97,8 @@ public class GardenPotFiller implements Action {
         // Navigate back to pots area after getting mulch
         context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
 
-        // Fill each pot with mulch until it stops accepting
-        for (Gob pot : allPots) {
+        // Fill each pot with mulch until marker changes
+        for (Gob pot : potsNeedingMulch) {
             fillPotWithMulch(gui, pot);
 
             // Check if we need more mulch
@@ -96,23 +128,19 @@ public class GardenPotFiller implements Action {
                 return Results.SUCCESS(); // Need to get more mulch
             }
 
+            long markerBefore = pot.ngob.getModelAttribute();
+
             // Take mulch to hand
             NUtils.takeItemToHand(mulchItems.get(0));
 
             // Apply mulch to pot using dropsame
             NUtils.dropsame(pot);
 
-            // Wait for hand to be free (max 100 frames)
-            NUtils.getUI().core.addTask(new WaitHandFreeWithTimeout());
+            // Wait for marker change, hand free, or timeout
+            WaitMulchApplied waitTask = new WaitMulchApplied(pot, markerBefore);
+            NUtils.getUI().core.addTask(waitTask);
 
-            // Check if mulch was consumed or pot is full
-            if (gui.vhand != null) {
-                // Mulch still in hand = pot is full
-                NUtils.dropToInv();
-                NUtils.getUI().core.addTask(new HandIsFree(gui.getInventory()));
-                return Results.SUCCESS(); // This pot is done
-            }
-            // Mulch was consumed, continue adding more
+            return Results.SUCCESS();
         }
     }
 
@@ -138,31 +166,46 @@ public class GardenPotFiller implements Action {
             return Results.ERROR("No Planting Garden Pots area found");
         }
 
-        // Get ALL pots
+        // Get all pots and filter to those needing water (marker 0 or 2)
         ArrayList<Gob> allPots = Finder.findGobs(potArea, GARDEN_POT);
-        if (allPots.isEmpty()) {
-            gui.msg("No garden pots found");
+        ArrayList<Gob> potsNeedingWater = getPotsNeedingWater(allPots);
+
+        if (potsNeedingWater.isEmpty()) {
+            gui.msg("No garden pots need water");
             return Results.SUCCESS();
         }
 
-        gui.msg("Filling " + allPots.size() + " garden pots with water");
+        gui.msg("Found " + potsNeedingWater.size() + " garden pots needing water");
 
         // Use FillFluid with the new garden pot constructor (no mask)
-        FillFluid fillFluid = new FillFluid(allPots, context, Specialisation.SpecName.plantingGardenPots, WATER);
+        FillFluid fillFluid = new FillFluid(potsNeedingWater, context, Specialisation.SpecName.plantingGardenPots, WATER);
         return fillFluid.run(gui);
     }
 
-    // Task to wait for hand to be free with 100 frame timeout
-    private static class WaitHandFreeWithTimeout extends NTask {
+    // Task to wait for marker change, hand free, or timeout
+    private static class WaitMulchApplied extends NTask {
+        private final Gob pot;
+        private final long originalMarker;
         private int counter = 0;
+        boolean markerChanged = false;
+
+        WaitMulchApplied(Gob pot, long originalMarker) {
+            this.pot = pot;
+            this.originalMarker = originalMarker;
+        }
 
         @Override
         public boolean check() {
             counter++;
-            if (counter >= 100) {
+
+            // Check if marker changed
+            long currentMarker = pot.ngob.getModelAttribute();
+            if (currentMarker != originalMarker) {
+                markerChanged = true;
                 return true;
             }
-            return NUtils.getGameUI().vhand == null;
+
+            return false;
         }
     }
 }

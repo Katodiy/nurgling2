@@ -266,7 +266,6 @@ public class FillFluid implements Action
                 long markerBefore = gob.ngob.getModelAttribute();
                 NUtils.activateGob(gob);
 
-                // Wait for marker to change (max 100 frames)
                 WaitMarkerChangeWithTimeout waitTask = new WaitMarkerChangeWithTimeout(gob, markerBefore);
                 NUtils.addTask(waitTask);
 
@@ -310,7 +309,6 @@ public class FillFluid implements Action
     private static class WaitMarkerChangeWithTimeout extends NTask {
         private final Gob gob;
         private final long originalMarker;
-        private int counter = 0;
 
         public WaitMarkerChangeWithTimeout(Gob gob, long originalMarker) {
             this.gob = gob;
@@ -319,10 +317,7 @@ public class FillFluid implements Action
 
         @Override
         public boolean check() {
-            counter++;
-            if (counter >= 100) {
-                return true;
-            }
+
             return gob.ngob.getModelAttribute() != originalMarker;
         }
     }
