@@ -154,6 +154,8 @@ public class Craft implements Action {
             if (ncontext.workstation.targetPoint != null) {
                 new PathFinder(ncontext.workstation.targetPoint.getCurrentCoord()).run(gui);
             }
+            // Refresh mwnd reference after PrepareWorkStation (may have changed due to LightFire)
+            refreshMakeWidget(gui);
         }
 
         Results craftResult = null;
@@ -336,6 +338,8 @@ public class Craft implements Action {
             Gob cauldron = Finder.findGob(ncontext.workstation.selected);
             PrepareCauldron pc = new PrepareCauldron(cauldron, ncontext);
             pc.run(gui);
+            // Refresh mwnd reference after PrepareCauldron (may have changed due to LightFire)
+            refreshMakeWidget(gui);
             if(pc.wasUpdate)
             {
                 if (!new UseWorkStation(ncontext).run(gui).IsSuccess()) {
@@ -453,6 +457,16 @@ public class Craft implements Action {
         }
 
         NUtils.getGameUI().msg("No available ingredients found for category: " + spec.name);
+    }
+
+    /**
+     * Refresh the mwnd reference from the current craft window.
+     * This is needed after operations that may change the craft widget (like LightFire).
+     */
+    private void refreshMakeWidget(NGameUI gui) {
+        if (gui.craftwnd != null && gui.craftwnd.makeWidget != null) {
+            mwnd = gui.craftwnd.makeWidget;
+        }
     }
 
 }

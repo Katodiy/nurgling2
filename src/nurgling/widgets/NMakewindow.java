@@ -42,7 +42,7 @@ public class NMakewindow extends Widget {
     private static Tex softTex = null;
     private static Tex softTexLabel = null;
     public CheckBox noTransfer = null;
-    boolean autoMode = false;
+    public boolean autoMode = false;
 
     private static final OwnerContext.ClassResolver<NMakewindow> ctxr = new OwnerContext.ClassResolver<NMakewindow>()
             .add(Glob.class, wdg -> wdg.ui.sess.glob)
