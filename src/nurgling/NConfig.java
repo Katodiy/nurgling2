@@ -143,6 +143,7 @@ public class NConfig
         tickAction,
         autoHearthOnUnknown,
         autoLogoutOnUnknown,
+        alarmDelayFrames,
         alwaysObfuscate,
         boughbeeprop,
         foragerprop,
@@ -384,6 +385,7 @@ public class NConfig
         // Safety settings - auto hearth/logout on unknown players
         conf.put(Key.autoHearthOnUnknown, false);
         conf.put(Key.autoLogoutOnUnknown, false);
+        conf.put(Key.alarmDelayFrames, 20);  // Delay before unknown player triggers alarm
         
         // Auth obfuscation - bypass firewall blocks
         conf.put(Key.alwaysObfuscate, false);

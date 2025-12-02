@@ -20,9 +20,10 @@ public class Navigation extends Panel {
 
     private final NavigationSettings tempSettings = new NavigationSettings();
     
-    // Safety checkboxes
+    // Safety checkboxes    
     private CheckBox autoHearthOnUnknown;
     private CheckBox autoLogoutOnUnknown;
+    private TextEntry alarmDelayFramesEntry;
     
     // Navigation checkboxes
     private CheckBox useGlobalPf;
@@ -71,9 +72,12 @@ public class Navigation extends Panel {
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
+        
+        Widget alarmDelayLabel = content.add(new Label("Alarm delay frames (before unknown player triggers alarm):"), prev.pos("bl").adds(0, 10));
+        alarmDelayFramesEntry = content.add(new TextEntry(UI.scale(60), ""), alarmDelayLabel.pos("ur").adds(5, 0));
 
         // Pathfinding section
-        prev = content.add(new Label("● Pathfinding & Navigation"), prev.pos("bl").adds(0, 15));
+        prev = content.add(new Label("● Pathfinding & Navigation"), alarmDelayLabel.pos("bl").adds(0, 15));
         
         prev = useGlobalPf = content.add(new CheckBox("Use global pathfinding") {
             public void set(boolean val) {
@@ -136,6 +140,7 @@ public class Navigation extends Panel {
         // Update UI components
         autoHearthOnUnknown.a = tempSettings.autoHearthOnUnknown;
         autoLogoutOnUnknown.a = tempSettings.autoLogoutOnUnknown;
+        alarmDelayFramesEntry.settext(String.valueOf(((Number) NConfig.get(NConfig.Key.alarmDelayFrames)).intValue()));
         useGlobalPf.a = tempSettings.useGlobalPf;
         waypointRetryOnStuck.a = tempSettings.waypointRetryOnStuck;
         showFullPathLines.a = tempSettings.showFullPathLines;
@@ -148,6 +153,12 @@ public class Navigation extends Panel {
         // Save safety settings
         NConfig.set(NConfig.Key.autoHearthOnUnknown, tempSettings.autoHearthOnUnknown);
         NConfig.set(NConfig.Key.autoLogoutOnUnknown, tempSettings.autoLogoutOnUnknown);
+        try {
+            int val = Integer.parseInt(alarmDelayFramesEntry.text());
+            if (val >= 0 && val <= 1000) {
+                NConfig.set(NConfig.Key.alarmDelayFrames, val);
+            }
+        } catch (NumberFormatException ignored) {}
         
         // Save navigation settings
         NConfig.set(NConfig.Key.useGlobalPf, tempSettings.useGlobalPf);

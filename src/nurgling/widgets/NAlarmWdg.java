@@ -32,7 +32,6 @@ public class NAlarmWdg extends Widget
     private final HashMap<Long, Integer> lastKnownGroup = new HashMap<>();
     // Track frame counter for characters without buddy to delay alarm
     private final HashMap<Long, Integer> unknownPlayerFrameCounter = new HashMap<>();
-    private static final int ALARM_DELAY_FRAMES = 20;
     
     public NAlarmWdg() {
         super();
@@ -97,7 +96,8 @@ public class NAlarmWdg extends Widget
                                 frameCount++;
                                 unknownPlayerFrameCounter.put(id, frameCount);
                                 
-                                if (frameCount < ALARM_DELAY_FRAMES) {
+                                int alarmDelayFrames = ((Number) NConfig.get(NConfig.Key.alarmDelayFrames)).intValue();
+                                if (frameCount < alarmDelayFrames) {
                                     shouldDelayAlarm = true;
                                 }
                                 // After delay frames elapsed, treat as unknown (group 0 - white)
