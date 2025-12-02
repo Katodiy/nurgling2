@@ -104,7 +104,7 @@ public class GardenPotFiller implements Action {
             // Keep filling same pot until it has mulch
             while (true) {
                 // Re-find pot to get fresh data
-                Gob currentPot = Finder.findaGob(potId);
+                Gob currentPot = Finder.findGob(potId);
                 if (currentPot == null) {
                     break; // Pot no longer exists
                 }
