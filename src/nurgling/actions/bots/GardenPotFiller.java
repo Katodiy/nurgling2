@@ -121,27 +121,25 @@ public class GardenPotFiller implements Action {
         pf.isHardMode = true;
         pf.run(gui);
 
-        while (true) {
-            // Check if we have mulch
-            ArrayList<WItem> mulchItems = gui.getInventory().getItems(SOIL);
-            if (mulchItems.isEmpty()) {
-                return Results.SUCCESS(); // Need to get more mulch
-            }
-
-            long markerBefore = pot.ngob.getModelAttribute();
-
-            // Take mulch to hand
-            NUtils.takeItemToHand(mulchItems.get(0));
-
-            // Apply mulch to pot using dropsame
-            NUtils.dropsame(pot);
-
-            // Wait for marker change, hand free, or timeout
-            WaitMulchApplied waitTask = new WaitMulchApplied(pot, markerBefore);
-            NUtils.getUI().core.addTask(waitTask);
-
-            return Results.SUCCESS();
+        // Check if we have mulch
+        ArrayList<WItem> mulchItems = gui.getInventory().getItems(SOIL);
+        if (mulchItems.isEmpty()) {
+            return Results.SUCCESS(); // Need to get more mulch
         }
+
+        long markerBefore = pot.ngob.getModelAttribute();
+
+        // Take mulch to hand
+        NUtils.takeItemToHand(mulchItems.get(0));
+
+        // Apply mulch to pot using dropsame
+        NUtils.dropsame(pot);
+
+        // Wait for marker change
+        WaitMulchApplied waitTask = new WaitMulchApplied(pot, markerBefore);
+        NUtils.getUI().core.addTask(waitTask);
+
+        return Results.SUCCESS();
     }
 
     private Results getMulchFromArea(NGameUI gui, NContext context) throws InterruptedException {
