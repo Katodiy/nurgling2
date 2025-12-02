@@ -14,7 +14,7 @@ import java.util.ArrayList;
 public class GardenPotFiller implements Action {
 
     private static final NAlias GARDEN_POT = new NAlias("gfx/terobjs/gardenpot");
-    private static final NAlias MULCH = new NAlias("Mulch");
+    private static final NAlias SOIL = new NAlias("Soil", "Mulch");
     private static final NAlias WATER = new NAlias("Water");
 
     // Marker states
@@ -86,7 +86,7 @@ public class GardenPotFiller implements Action {
         gui.msg("Found " + potsNeedingMulch.size() + " garden pots needing mulch");
 
         // Get mulch from Take area
-        int mulchInInventory = gui.getInventory().getItems(MULCH).size();
+        int mulchInInventory = gui.getInventory().getItems(SOIL).size();
         if (mulchInInventory == 0) {
             Results getMulchResult = getMulchFromArea(gui, context);
             if (!getMulchResult.IsSuccess()) {
@@ -102,7 +102,7 @@ public class GardenPotFiller implements Action {
             fillPotWithMulch(gui, pot);
 
             // Check if we need more mulch
-            if (gui.getInventory().getItems(MULCH).isEmpty()) {
+            if (gui.getInventory().getItems(SOIL).isEmpty()) {
                 Results getMulchResult = getMulchFromArea(gui, context);
                 if (!getMulchResult.IsSuccess()) {
                     gui.msg("Out of mulch");
@@ -123,7 +123,7 @@ public class GardenPotFiller implements Action {
 
         while (true) {
             // Check if we have mulch
-            ArrayList<WItem> mulchItems = gui.getInventory().getItems(MULCH);
+            ArrayList<WItem> mulchItems = gui.getInventory().getItems(SOIL);
             if (mulchItems.isEmpty()) {
                 return Results.SUCCESS(); // Need to get more mulch
             }
@@ -152,7 +152,7 @@ public class GardenPotFiller implements Action {
 
         new TakeItems2(context, "Mulch", freeSpace).run(gui);
 
-        if (gui.getInventory().getItems(MULCH).isEmpty()) {
+        if (gui.getInventory().getItems(SOIL).isEmpty()) {
             return Results.ERROR("No mulch available in Take areas");
         }
 
