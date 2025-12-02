@@ -2098,7 +2098,7 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		
 		// Save click destination for path line (left click or right click on object)
 		try {
-			if((clickb == 1 && !ui.modshift) || (clickb == 3 && inf != null)) {
+			if(clickb == 1 || (clickb == 3 && inf != null)) {
 				if(MapView.this instanceof nurgling.NMapView) {
 					((nurgling.NMapView)MapView.this).clickDestination = new Coord3f((float)mc.x, (float)mc.y, glob.map.getzp(mc).z);
 				}
