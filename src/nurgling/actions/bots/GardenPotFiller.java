@@ -21,31 +21,21 @@ public class GardenPotFiller implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         NContext context = new NContext(gui);
 
-        // Register soil as an input item so TakeItems2 can find it
+        // Register soil/mulch as input items so TakeItems2 can find them
         context.addInItem("Soil", null);
+        context.addInItem("Mulch", null);
 
-        while (true) {
-            // Phase 1: Fill soil
-            Results soilResult = fillSoilPhase(gui, context);
-            // Continue to water phase regardless of soil result
+        // Phase 1: Fill soil
+        fillSoilPhase(gui, context);
 
-            // Phase 2: Fill water using FillFluid
-            Results waterResult = fillWaterPhase(gui, context);
-            if (!waterResult.IsSuccess()) {
-                return waterResult;
-            }
-
-            // Check if we should continue (are there pots that might still need filling?)
-            NArea potArea = context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
-            if (potArea == null) {
-                return Results.ERROR("No Planting Garden Pots area found");
-            }
-
-            // We can't know for sure if pots are "fully" filled, so we do one pass
-            // User should run bot again if needed
-            gui.msg("Garden pot filling pass complete!");
-            return Results.SUCCESS();
+        // Phase 2: Fill water
+        Results waterResult = fillWaterPhase(gui, context);
+        if (!waterResult.IsSuccess()) {
+            return waterResult;
         }
+
+        gui.msg("Garden pot filling complete!");
+        return Results.SUCCESS();
     }
 
     private Results fillSoilPhase(NGameUI gui, NContext context) throws InterruptedException {
@@ -133,15 +123,10 @@ public class GardenPotFiller implements Action {
             return Results.ERROR("Inventory is full");
         }
 
-        // Take soil from logistics Take area
-        TakeItems2 takeSoil = new TakeItems2(context, "Soil", freeSpace);
-        Results takeResult = takeSoil.run(gui);
-
-        if (!takeResult.IsSuccess()) {
-            // Try Mulch if Soil not found
-            context.addInItem("Mulch", null);
-            takeSoil = new TakeItems2(context, "Mulch", freeSpace);
-            takeSoil.run(gui);
+        // Try to take Soil first, then Mulch
+        new TakeItems2(context, "Soil", freeSpace).run(gui);
+        if (gui.getInventory().getItems(SOIL).isEmpty()) {
+            new TakeItems2(context, "Mulch", freeSpace).run(gui);
         }
 
         if (gui.getInventory().getItems(SOIL).isEmpty()) {

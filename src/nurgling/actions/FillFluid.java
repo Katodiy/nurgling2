@@ -252,27 +252,28 @@ public class FillFluid implements Action
         }
 
         // Navigate to target area
-        context.navigateToAreaIfNeeded(targetAreaName.toString());
+        context.getSpecArea(targetAreaName);
 
         // Fill each gob until it stops accepting water
         for (Gob gob : gobsToFill) {
+            // Navigate to pot once
+            PathFinder pf = new PathFinder(gob);
+            pf.isHardMode = true;
+            pf.run(gui);
+
             boolean gobFull = false;
             while (!gobFull) {
-                PathFinder pf = new PathFinder(gob);
-                pf.isHardMode = true;
-                pf.run(gui);
-
                 long markerBefore = gob.ngob.getModelAttribute();
                 NUtils.activateGob(gob);
 
-                // Wait up to 200 frames for marker to change
+                // Wait for marker to change (max 100 frames)
                 WaitMarkerChangeWithTimeout waitTask = new WaitMarkerChangeWithTimeout(gob, markerBefore);
                 NUtils.addTask(waitTask);
 
                 // Check if barrel is empty
                 if (!NUtils.isOverlay(barrel, content)) {
                     // Barrel empty - refill
-                    context.navigateToAreaIfNeeded(Specialisation.SpecName.water.toString());
+                    context.getSpecArea(Specialisation.SpecName.water);
                     if (!new RefillInCistern(area, content).run(gui).IsSuccess()) {
                         // No more water available
                         Gob placed = findLiftedbyPlayer();
@@ -282,7 +283,7 @@ public class FillFluid implements Action
                         }
                         return Results.SUCCESS(); // Filled what we could
                     }
-                    context.navigateToAreaIfNeeded(targetAreaName.toString());
+                    context.getSpecArea(targetAreaName);
                     continue; // Retry this gob
                 }
 
@@ -294,19 +295,18 @@ public class FillFluid implements Action
             }
         }
 
-        // Put barrel back
-        context.navigateToAreaIfNeeded(Specialisation.SpecName.water.toString());
+        // Put barrel back in water area
+        context.getSpecArea(Specialisation.SpecName.water);
         Gob placed = findLiftedbyPlayer();
         if (placed != null) {
             Coord2d pos = Finder.getFreePlace(area, placed);
             new PlaceObject(placed, pos, 0).run(gui);
         }
 
-        context.navigateToAreaIfNeeded(targetAreaName.toString());
         return Results.SUCCESS();
     }
 
-    // Task that waits for marker to change with 200 frame timeout
+    // Task that waits for marker to change (max 100 frames)
     private static class WaitMarkerChangeWithTimeout extends NTask {
         private final Gob gob;
         private final long originalMarker;
