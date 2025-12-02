@@ -49,9 +49,27 @@ public class FillFluid implements Action
         this.targetAreaName = targetAreaName;
     }
 
+    // Constructor for garden pots - no mask, fills until pot stops accepting water
+    public FillFluid(ArrayList<Gob> gobs, NContext context, Specialisation.SpecName targetAreaName, NAlias content)
+    {
+        this.conts = null;
+        this.content = content;
+        this.context = context;
+        this.mask = -1; // Sentinel value: no mask mode
+        this.targetAreaName = targetAreaName;
+        this.gobsToFill = gobs;
+    }
+
+    private ArrayList<Gob> gobsToFill = null;
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
+        // Handle garden pots mode (no mask, fill until pot stops accepting)
+        if (gobsToFill != null) {
+            return runGardenPotMode(gui);
+        }
+
         // Проверка, нужно ли вообще наполнять контейнеры
         boolean needToFill = false;
         if (target == null)
@@ -201,5 +219,111 @@ public class FillFluid implements Action
             new PlaceObject(barrel, barrelOriginalPos, 0).run(gui);
         }
         return Results.SUCCESS();
+    }
+
+    // Garden pot mode: fill each gob until it stops accepting water (timeout-based detection)
+    private Results runGardenPotMode(NGameUI gui) throws InterruptedException {
+        if (gobsToFill == null || gobsToFill.isEmpty()) {
+            return Results.SUCCESS();
+        }
+
+        // Get water area and lift barrel
+        NArea waterArea = context.getSpecArea(Specialisation.SpecName.water);
+        if (waterArea == null) {
+            return Results.ERROR("Water area not found");
+        }
+        area = waterArea.getRCArea();
+
+        Gob barrel = Finder.findGob(area, new NAlias("barrel"));
+        if (barrel == null) {
+            return Results.ERROR("Barrel not found in water area");
+        }
+
+        new LiftObject(barrel).run(gui);
+        if (!NUtils.isOverlay(barrel, content)) {
+            if (!new RefillInCistern(area, content).run(gui).IsSuccess()) {
+                Gob placed = findLiftedbyPlayer();
+                if (placed != null) {
+                    Coord2d pos = Finder.getFreePlace(area, placed);
+                    new PlaceObject(placed, pos, 0).run(gui);
+                }
+                return Results.FAIL();
+            }
+        }
+
+        // Navigate to target area
+        context.navigateToAreaIfNeeded(targetAreaName.toString());
+
+        // Fill each gob until it stops accepting water
+        for (Gob gob : gobsToFill) {
+            boolean gobFull = false;
+            while (!gobFull) {
+                PathFinder pf = new PathFinder(gob);
+                pf.isHardMode = true;
+                pf.run(gui);
+
+                long markerBefore = gob.ngob.getModelAttribute();
+                NUtils.activateGob(gob);
+
+                // Wait up to 200 frames for marker to change
+                WaitMarkerChangeWithTimeout waitTask = new WaitMarkerChangeWithTimeout(gob, markerBefore);
+                NUtils.addTask(waitTask);
+
+                // Check if barrel is empty
+                if (!NUtils.isOverlay(barrel, content)) {
+                    // Barrel empty - refill
+                    context.navigateToAreaIfNeeded(Specialisation.SpecName.water.toString());
+                    if (!new RefillInCistern(area, content).run(gui).IsSuccess()) {
+                        // No more water available
+                        Gob placed = findLiftedbyPlayer();
+                        if (placed != null) {
+                            Coord2d pos = Finder.getFreePlace(area, placed);
+                            new PlaceObject(placed, pos, 0).run(gui);
+                        }
+                        return Results.SUCCESS(); // Filled what we could
+                    }
+                    context.navigateToAreaIfNeeded(targetAreaName.toString());
+                    continue; // Retry this gob
+                }
+
+                // Check if marker changed - if still the same, pot is full
+                if (gob.ngob.getModelAttribute() == markerBefore) {
+                    gobFull = true;
+                }
+                // If marker changed, continue filling (gob accepted water)
+            }
+        }
+
+        // Put barrel back
+        context.navigateToAreaIfNeeded(Specialisation.SpecName.water.toString());
+        Gob placed = findLiftedbyPlayer();
+        if (placed != null) {
+            Coord2d pos = Finder.getFreePlace(area, placed);
+            new PlaceObject(placed, pos, 0).run(gui);
+        }
+
+        context.navigateToAreaIfNeeded(targetAreaName.toString());
+        return Results.SUCCESS();
+    }
+
+    // Task that waits for marker to change with 200 frame timeout
+    private static class WaitMarkerChangeWithTimeout extends NTask {
+        private final Gob gob;
+        private final long originalMarker;
+        private int counter = 0;
+
+        public WaitMarkerChangeWithTimeout(Gob gob, long originalMarker) {
+            this.gob = gob;
+            this.originalMarker = originalMarker;
+        }
+
+        @Override
+        public boolean check() {
+            counter++;
+            if (counter >= 100) {
+                return true;
+            }
+            return gob.ngob.getModelAttribute() != originalMarker;
+        }
     }
 }
