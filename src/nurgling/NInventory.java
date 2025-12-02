@@ -1445,24 +1445,44 @@ public class NInventory extends Inventory
         return items;
     }
 
+    /**
+     * Gets the effective quality of an item, considering stack quality for stacked items
+     */
+    private static double getEffectiveQuality(NGItem item) {
+        // First try to get stack quality (for stacked items)
+        Stack stackInfo = item.getInfo(Stack.class);
+        if (stackInfo != null && stackInfo.quality > 0) {
+            return stackInfo.quality;
+        }
+        // Fall back to individual item quality
+        if (item.quality != null && item.quality > 0) {
+            return item.quality;
+        }
+        return -1; // No quality available
+    }
+    
     public static final Comparator<NGItem> ITEM_COMPARATOR_ASC = new Comparator<NGItem>() {
         @Override
         public int compare(NGItem o1, NGItem o2) {
-            // Handle null quality - items with null quality go to the end
-            if (o1.quality == null && o2.quality == null) return 0;
-            if (o1.quality == null) return 1;  // null goes to the end
-            if (o2.quality == null) return -1; // null goes to the end
-            return Double.compare(o1.quality, o2.quality);
+            double q1 = getEffectiveQuality(o1);
+            double q2 = getEffectiveQuality(o2);
+            // Items with no quality (-1) go to the end
+            if (q1 < 0 && q2 < 0) return 0;
+            if (q1 < 0) return 1;  // no quality goes to the end
+            if (q2 < 0) return -1; // no quality goes to the end
+            return Double.compare(q1, q2);
         }
     };
     public static final Comparator<NGItem> ITEM_COMPARATOR_DESC = new Comparator<NGItem>() {
         @Override
         public int compare(NGItem o1, NGItem o2) {
-            // Handle null quality - items with null quality go to the end
-            if (o1.quality == null && o2.quality == null) return 0;
-            if (o1.quality == null) return 1;  // null goes to the end
-            if (o2.quality == null) return -1; // null goes to the end
-            return Double.compare(o2.quality, o1.quality);
+            double q1 = getEffectiveQuality(o1);
+            double q2 = getEffectiveQuality(o2);
+            // Items with no quality (-1) go to the end
+            if (q1 < 0 && q2 < 0) return 0;
+            if (q1 < 0) return 1;  // no quality goes to the end
+            if (q2 < 0) return -1; // no quality goes to the end
+            return Double.compare(q2, q1);
         }
     };
 
