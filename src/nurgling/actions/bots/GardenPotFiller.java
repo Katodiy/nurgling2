@@ -97,19 +97,35 @@ public class GardenPotFiller implements Action {
         // Navigate back to pots area after getting mulch
         context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
 
-        // Fill each pot with mulch until marker changes
+        // Fill each pot with mulch until marker shows full (2 or 3)
         for (Gob pot : potsNeedingMulch) {
-            fillPotWithMulch(gui, pot);
+            long potId = pot.id;
 
-            // Check if we need more mulch
-            if (gui.getInventory().getItems(SOIL).isEmpty()) {
-                Results getMulchResult = getMulchFromArea(gui, context);
-                if (!getMulchResult.IsSuccess()) {
-                    gui.msg("Out of mulch");
-                    return Results.SUCCESS(); // Not an error, we filled what we could
+            // Keep filling same pot until it has mulch
+            while (true) {
+                // Re-find pot to get fresh data
+                Gob currentPot = Finder.findaGob(potId);
+                if (currentPot == null) {
+                    break; // Pot no longer exists
                 }
-                // Navigate back to pots area
-                context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+
+                long marker = currentPot.ngob.getModelAttribute();
+                if (marker == MARKER_MULCH_ONLY || marker == MARKER_COMPLETE) {
+                    break; // Pot is full, move to next
+                }
+
+                fillPotWithMulch(gui, currentPot);
+
+                // Check if we need more mulch
+                if (gui.getInventory().getItems(SOIL).isEmpty()) {
+                    Results getMulchResult = getMulchFromArea(gui, context);
+                    if (!getMulchResult.IsSuccess()) {
+                        gui.msg("Out of mulch");
+                        return Results.SUCCESS(); // Not an error, we filled what we could
+                    }
+                    // Navigate back to pots area
+                    context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+                }
             }
         }
 
