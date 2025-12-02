@@ -264,6 +264,12 @@ public class FillFluid implements Action
             boolean gobFull = false;
             while (!gobFull) {
                 long markerBefore = gob.ngob.getModelAttribute();
+
+                // Check if pot already has water (marker 1 or 3)
+                if (markerBefore == 1 || markerBefore == 3) {
+                    break; // Pot already has water, move to next
+                }
+
                 NUtils.activateGob(gob);
 
                 WaitMarkerChangeWithTimeout waitTask = new WaitMarkerChangeWithTimeout(gob, markerBefore);
@@ -309,6 +315,7 @@ public class FillFluid implements Action
     private static class WaitMarkerChangeWithTimeout extends NTask {
         private final Gob gob;
         private final long originalMarker;
+        private int counter = 0;
 
         public WaitMarkerChangeWithTimeout(Gob gob, long originalMarker) {
             this.gob = gob;
@@ -317,7 +324,11 @@ public class FillFluid implements Action
 
         @Override
         public boolean check() {
-
+            counter++;
+            // Timeout after 100 frames
+            if (counter >= 100) {
+                return true;
+            }
             return gob.ngob.getModelAttribute() != originalMarker;
         }
     }
