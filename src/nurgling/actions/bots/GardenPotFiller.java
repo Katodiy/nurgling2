@@ -97,19 +97,35 @@ public class GardenPotFiller implements Action {
         // Navigate back to pots area after getting mulch
         context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
 
-        // Fill each pot with mulch until marker changes
+        // Fill each pot with mulch until marker shows full (2 or 3)
         for (Gob pot : potsNeedingMulch) {
-            fillPotWithMulch(gui, pot);
+            long potId = pot.id;
 
-            // Check if we need more mulch
-            if (gui.getInventory().getItems(SOIL).isEmpty()) {
-                Results getMulchResult = getMulchFromArea(gui, context);
-                if (!getMulchResult.IsSuccess()) {
-                    gui.msg("Out of mulch");
-                    return Results.SUCCESS(); // Not an error, we filled what we could
+            // Keep filling same pot until it has mulch
+            while (true) {
+                // Re-find pot to get fresh data
+                Gob currentPot = Finder.findGob(potId);
+                if (currentPot == null) {
+                    break; // Pot no longer exists
                 }
-                // Navigate back to pots area
-                context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+
+                long marker = currentPot.ngob.getModelAttribute();
+                if (marker == MARKER_MULCH_ONLY || marker == MARKER_COMPLETE) {
+                    break; // Pot is full, move to next
+                }
+
+                fillPotWithMulch(gui, currentPot);
+
+                // Check if we need more mulch
+                if (gui.getInventory().getItems(SOIL).isEmpty()) {
+                    Results getMulchResult = getMulchFromArea(gui, context);
+                    if (!getMulchResult.IsSuccess()) {
+                        gui.msg("Out of mulch");
+                        return Results.SUCCESS(); // Not an error, we filled what we could
+                    }
+                    // Navigate back to pots area
+                    context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+                }
             }
         }
 
@@ -127,17 +143,14 @@ public class GardenPotFiller implements Action {
             return Results.SUCCESS(); // Need to get more mulch
         }
 
-        long markerBefore = pot.ngob.getModelAttribute();
-
         // Take mulch to hand
         NUtils.takeItemToHand(mulchItems.get(0));
 
         // Apply mulch to pot using dropsame
         NUtils.dropsame(pot);
 
-        // Wait for marker change
-        WaitMulchApplied waitTask = new WaitMulchApplied(pot, markerBefore);
-        NUtils.getUI().core.addTask(waitTask);
+        // Wait until pot has mulch
+        NUtils.getUI().core.addTask(new WaitMulchApplied(pot));
 
         return Results.SUCCESS();
     }
@@ -180,30 +193,25 @@ public class GardenPotFiller implements Action {
         return fillFluid.run(gui);
     }
 
-    // Task to wait for marker change, hand free, or timeout
+    // Task to wait until pot has mulch (marker 2 or 3), with timeout
     private static class WaitMulchApplied extends NTask {
         private final Gob pot;
-        private final long originalMarker;
         private int counter = 0;
-        boolean markerChanged = false;
 
-        WaitMulchApplied(Gob pot, long originalMarker) {
+        WaitMulchApplied(Gob pot) {
             this.pot = pot;
-            this.originalMarker = originalMarker;
         }
 
         @Override
         public boolean check() {
             counter++;
-
-            // Check if marker changed
-            long currentMarker = pot.ngob.getModelAttribute();
-            if (currentMarker != originalMarker) {
-                markerChanged = true;
+            // Timeout after 100 frames
+            if (counter >= 100) {
                 return true;
             }
-
-            return false;
+            long marker = pot.ngob.getModelAttribute();
+            // Pot has mulch when marker is 2 (mulch only) or 3 (complete)
+            return marker == MARKER_MULCH_ONLY || marker == MARKER_COMPLETE;
         }
     }
 }
