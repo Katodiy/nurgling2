@@ -36,6 +36,17 @@ public class BotRegistry {
                 "attacknearcurs",
                 false
         ));
+        bots.add(new BotDescriptor(
+                "hearthfire",
+                BotDescriptor.BotType.UTILS,
+                "Travel to Hearthfire",
+                "Travel to Hearthfire",
+                true,
+                false,
+                TravelToHearthFire.class,
+                "test49",
+                false
+        ));
 
         // RESOURCES
         bots.add(new BotDescriptor("choper", BotDescriptor.BotType.RESOURCES, "Chopper", "Chops trees.", false, true, Chopper.class, "choper", false));
