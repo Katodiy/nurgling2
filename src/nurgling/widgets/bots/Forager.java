@@ -22,7 +22,9 @@ public class Forager extends Window implements Checkable {
     private IButton removeActionButton = null;
     private Button startButton = null;
     private IButton newPresetButton = null;
+    private IButton deletePresetButton = null;
     private IButton newPathButton = null;
+    private IButton deletePathButton = null;
     private ICheckBox recordPathButton = null;
     
     Dropbox<String> onPlayerAction = null;
@@ -57,7 +59,7 @@ public class Forager extends Window implements Checkable {
         
         loadAvailablePresets();
         
-        Widget presetRow = add(new Widget(new Coord(UI.scale(270), UI.scale(20))), prev.pos("bl").add(UI.scale(0, 5)));
+        Widget presetRow = add(new Widget(new Coord(UI.scale(300), UI.scale(20))), prev.pos("bl").add(UI.scale(0, 5)));
         
         presetDropbox = presetRow.add(new Dropbox<String>(UI.scale(230), availablePresets.size(), UI.scale(16)) {
             @Override
@@ -101,6 +103,18 @@ public class Forager extends Window implements Checkable {
         }, new Coord(UI.scale(245), 0));
         newPresetButton.settip("Create new preset");
         
+        presetRow.add(deletePresetButton = new IButton(
+            Resource.loadsimg("nurgling/hud/buttons/remove/u"),
+            Resource.loadsimg("nurgling/hud/buttons/remove/d"),
+            Resource.loadsimg("nurgling/hud/buttons/remove/h")) {
+            @Override
+            public void click() {
+                super.click();
+                deleteCurrentPreset();
+            }
+        }, new Coord(UI.scale(270), 0));
+        deletePresetButton.settip("Delete current preset");
+        
         prev = presetRow;
         
         // Path selection
@@ -108,7 +122,7 @@ public class Forager extends Window implements Checkable {
         
         loadAvailablePaths();
         
-        Widget pathRow = add(new Widget(new Coord(UI.scale(270), UI.scale(20))), prev.pos("bl").add(UI.scale(0, 5)));
+        Widget pathRow = add(new Widget(new Coord(UI.scale(300), UI.scale(20))), prev.pos("bl").add(UI.scale(0, 5)));
         
         pathDropbox = pathRow.add(new Dropbox<String>(UI.scale(230), availablePaths.size(), UI.scale(16)) {
             @Override
@@ -151,6 +165,18 @@ public class Forager extends Window implements Checkable {
             }
         }, new Coord(UI.scale(245), 0));
         newPathButton.settip("Create new path");
+        
+        pathRow.add(deletePathButton = new IButton(
+            Resource.loadsimg("nurgling/hud/buttons/remove/u"),
+            Resource.loadsimg("nurgling/hud/buttons/remove/d"),
+            Resource.loadsimg("nurgling/hud/buttons/remove/h")) {
+            @Override
+            public void click() {
+                super.click();
+                deleteCurrentPath();
+            }
+        }, new Coord(UI.scale(270), 0));
+        deletePathButton.settip("Delete current path");
         
         prev = pathRow;
         
@@ -747,5 +773,121 @@ public class Forager extends Window implements Checkable {
             }
         }
         return null;
+    }
+    
+    private void deleteCurrentPreset() {
+        if (presetDropbox.sel == null || presetDropbox.sel.isEmpty()) {
+            return;
+        }
+        
+        String presetToDelete = presetDropbox.sel;
+        
+        // Don't allow deleting if it's the last preset
+        if (availablePresets.size() <= 1) {
+            NUtils.getGameUI().error("Cannot delete the last preset");
+            return;
+        }
+        
+        // Find index of current preset
+        int currentIndex = availablePresets.indexOf(presetToDelete);
+        
+        // Remove from prop
+        prop = NForagerProp.get(NUtils.getUI().sessInfo);
+        prop.presets.remove(presetToDelete);
+        
+        // Remove from local list
+        availablePresets.remove(presetToDelete);
+        
+        // Select previous preset (or first if we deleted the first one)
+        int newIndex = Math.max(0, currentIndex - 1);
+        String newPreset = availablePresets.get(newIndex);
+        prop.currentPreset = newPreset;
+        lastPresetName = newPreset;
+        
+        NForagerProp.set(prop);
+        
+        // Update UI
+        presetDropbox.change(newPreset);
+        
+        // Refresh actions list
+        if (actionsList != null) {
+            actionsList.change(null);
+        }
+        
+        // Update path info for new preset
+        NForagerProp.PresetData preset = prop.presets.get(newPreset);
+        if (preset != null) {
+            updateSafetyDropboxes(preset);
+            
+            if (!preset.pathFile.isEmpty()) {
+                try {
+                    preset.foragerPath = ForagerPath.load(preset.pathFile);
+                    
+                    String fileName = preset.pathFile.substring(preset.pathFile.lastIndexOf("\\") + 1);
+                    fileName = fileName.replace(".json", "");
+                    
+                    if (availablePaths.contains(fileName)) {
+                        pathDropbox.change(fileName);
+                    }
+                    
+                    updateSectionsInfo();
+                } catch (Exception e) {
+                    sectionsLabel.settext("No path loaded");
+                    startButton.disable(true);
+                }
+            } else {
+                sectionsLabel.settext("No path loaded");
+                startButton.disable(true);
+            }
+        }
+    }
+    
+    private void deleteCurrentPath() {
+        if (pathDropbox.sel == null || pathDropbox.sel.equals("No paths available")) {
+            return;
+        }
+        
+        String pathToDelete = pathDropbox.sel;
+        String defaultDir = ((HashDirCache) ResCache.global).base + "\\..\\forager_paths";
+        String pathFile = defaultDir + "\\" + pathToDelete + ".json";
+        
+        // Delete the file
+        File file = new File(pathFile);
+        if (file.exists()) {
+            if (!file.delete()) {
+                NUtils.getGameUI().error("Failed to delete path file");
+                return;
+            }
+        }
+        
+        // Clear path from current preset
+        prop = NForagerProp.get(NUtils.getUI().sessInfo);
+        NForagerProp.PresetData preset = prop.presets.get(prop.currentPreset);
+        if (preset != null) {
+            // Only clear if this preset was using the deleted path
+            if (preset.pathFile.contains(pathToDelete)) {
+                preset.pathFile = "";
+                preset.foragerPath = null;
+            }
+        }
+        NForagerProp.set(prop);
+        
+        // Find index of current path
+        int currentIndex = availablePaths.indexOf(pathToDelete);
+        
+        // Remove from local list
+        availablePaths.remove(pathToDelete);
+        
+        // Update UI - select previous path or show "No paths available"
+        if (availablePaths.isEmpty()) {
+            availablePaths.add("No paths available");
+            pathDropbox.change("No paths available");
+        } else {
+            int newIndex = Math.max(0, currentIndex - 1);
+            pathDropbox.change(availablePaths.get(newIndex));
+        }
+        
+        // Update sections info (this will clear the path display on minimap)
+        updateSectionsInfo();
     }
 }
