@@ -70,7 +70,7 @@ public class FillFluid implements Action
             return runGardenPotMode(gui);
         }
 
-        // Проверка, нужно ли вообще наполнять контейнеры
+        // РџСЂРѕРІРµСЂРєР°, РЅСѓР¶РЅРѕ Р»Рё РІРѕРѕР±С‰Рµ РЅР°РїРѕР»РЅСЏС‚СЊ РєРѕРЅС‚РµР№РЅРµСЂС‹
         boolean needToFill = false;
         if (target == null)
         {
@@ -91,7 +91,7 @@ public class FillFluid implements Action
                 needToFill = true;
             }
         }
-        // Если наполнять не нужно, возвращаем успех без взаимодействия с бочкой
+        // Р•СЃР»Рё РЅР°РїРѕР»РЅСЏС‚СЊ РЅРµ РЅСѓР¶РЅРѕ, РІРѕР·РІСЂР°С‰Р°РµРј СѓСЃРїРµС… Р±РµР· РІР·Р°РёРјРѕРґРµР№СЃС‚РІРёСЏ СЃ Р±РѕС‡РєРѕР№
         if (!needToFill)
         {
             return Results.SUCCESS();
