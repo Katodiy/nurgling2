@@ -44,7 +44,7 @@ public class BotRegistry {
                 true,
                 false,
                 TravelToHearthFire.class,
-                "test49",
+                "tohome",
                 false
         ));
 
