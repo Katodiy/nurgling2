@@ -1348,6 +1348,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public static final KeyBinding kb_hide = KeyBinding.get("ui-toggle", KeyMatch.nil);
     public static final KeyBinding kb_logout = KeyBinding.get("logout", KeyMatch.nil);
     public static final KeyBinding kb_switchchr = KeyBinding.get("logout-cs", KeyMatch.nil);
+    public static final KeyBinding kb_instantLogout = KeyBinding.get("instantLogoutKB", KeyMatch.forchar('L', KeyMatch.C));
     public boolean globtype(GlobKeyEvent ev) {
 	if(ev.c == ':') {
 	    entercmd();
@@ -1363,6 +1364,9 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	    return(true);
 	} else if(kb_switchchr.key().match(ev)) {
 	    act("lo", "cs");
+	    return(true);
+	} else if(kb_instantLogout.key().match(ev)) {
+	    ui.sess.close();
 	    return(true);
 	} else if((ev.c == 27) && (map != null) && !map.hasfocus) {
 	    setfocus(map);
