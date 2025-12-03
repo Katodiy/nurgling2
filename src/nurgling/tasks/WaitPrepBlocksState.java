@@ -6,6 +6,7 @@ import nurgling.NUtils;
 import nurgling.conf.NChopperProp;
 import nurgling.conf.NPrepBlocksProp;
 import nurgling.tools.Finder;
+import nurgling.tools.NWoundChecker;
 
 public class WaitPrepBlocksState extends NTask
 {
@@ -26,7 +27,8 @@ public class WaitPrepBlocksState extends NTask
         LOGNOTFOUND,
         TIMEFORDRINK,
         DANGER,
-        NOFREESPACE
+        NOFREESPACE,
+        WOUND_DANGER
     }
 
     State state = State.WORKING;
@@ -42,6 +44,10 @@ public class WaitPrepBlocksState extends NTask
         } else if (space <= 1 && space >=0) {
             if(NUtils.getGameUI().getInventory().calcFreeSpace()<=2 || space==0)
                 state = State.NOFREESPACE;
+        }
+        // Check for Scrapes & Cuts wound if enabled
+        if (prop.checkWounds && NWoundChecker.hasScrapesAndCutsAboveThreshold(prop.woundDamageThreshold)) {
+            state = State.WOUND_DANGER;
         }
         return state != State.WORKING;
     }

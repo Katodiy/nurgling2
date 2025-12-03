@@ -4,6 +4,7 @@ import haven.Gob;
 import nurgling.NUtils;
 import nurgling.conf.NChopperProp;
 import nurgling.tools.Finder;
+import nurgling.tools.NWoundChecker;
 
 public class WaitChopperState extends NTask
 {
@@ -24,7 +25,8 @@ public class WaitChopperState extends NTask
         TREENOTFOUND,
         TIMEFORDRINK,
         TIMEFOREAT,
-        DANGER
+        DANGER,
+        WOUND_DANGER
     }
 
     State state = State.WORKING;
@@ -41,6 +43,10 @@ public class WaitChopperState extends NTask
             }
             if (NUtils.getStamina() <= 0.45) {
                 state = State.TIMEFORDRINK;
+            }
+            // Check for Scrapes & Cuts wound if enabled
+            if (prop.checkWounds && NWoundChecker.hasScrapesAndCutsAboveThreshold(prop.woundDamageThreshold)) {
+                state = State.WOUND_DANGER;
             }
         }
 
