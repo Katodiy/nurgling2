@@ -10,6 +10,7 @@ public class AutoMapper extends Panel {
     private CheckBox enableAutoMapper;
     private TextEntry te;
     private CheckBox uploadGreen;
+    private CheckBox sendOverlays;
 
     public AutoMapper() {
         super();
@@ -34,6 +35,8 @@ public class AutoMapper extends Panel {
 
         prev = uploadGreen = add(new CheckBox("Upload custom green marks"), prev.pos("bl").adds(0, 5));
 
+        prev = sendOverlays = add(new CheckBox("Send claim/realm overlays"), prev.pos("bl").adds(0, 5));
+
         load();
         pack();
     }
@@ -44,6 +47,7 @@ public class AutoMapper extends Panel {
         te.settext(asString(NConfig.get(NConfig.Key.endpoint)));
         navTrack.a = getBool(NConfig.Key.automaptrack);
         uploadGreen.a = getBool(NConfig.Key.unloadgreen);
+        sendOverlays.a = getBool(NConfig.Key.sendOverlays);
     }
 
     @Override
@@ -54,6 +58,12 @@ public class AutoMapper extends Panel {
         NConfig.set(NConfig.Key.endpoint, te.text());
         NConfig.set(NConfig.Key.automaptrack, navTrack.a);
         NConfig.set(NConfig.Key.unloadgreen, uploadGreen.a);
+        NConfig.set(NConfig.Key.sendOverlays, sendOverlays.a);
+        // Reset overlay support flag when user enables the setting (allows retry)
+        if (sendOverlays.a && NUtils.getUI() != null && NUtils.getUI().core != null
+                && NUtils.getUI().core.mappingClient != null) {
+            NUtils.getUI().core.mappingClient.resetOverlaySupport();
+        }
         NConfig.needUpdate();
     }
 

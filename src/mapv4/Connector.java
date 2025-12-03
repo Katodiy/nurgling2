@@ -2,6 +2,7 @@ package mapv4;
 
 import haven.Coord;
 import haven.MCache;
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.Action;
@@ -169,7 +170,7 @@ public class Connector implements Action {
                         }
 
                         // Trigger overlay upload for all loaded grids (3x3 around player)
-                        if (parent.isOverlaySupported()) {
+                        if ((Boolean) NConfig.get(NConfig.Key.sendOverlays) && parent.isOverlaySupported()) {
                             String[][] allGridIds = (String[][]) ((JSONObject) msg.get("data")).get("grids");
                             for (int row = 0; row < 3; row++) {
                                 for (int col = 0; col < 3; col++) {

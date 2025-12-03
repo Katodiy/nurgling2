@@ -194,6 +194,11 @@ public class NMappingClient {
         overlaySupported = false;
     }
 
+    public void resetOverlaySupport() {
+        overlaySupported = true;
+        overlayHashes.clear();
+    }
+
 
     public void OpenMap() {
         MapRef mapRef = GetMapRef();
