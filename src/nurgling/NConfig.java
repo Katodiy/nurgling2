@@ -563,6 +563,13 @@ public class NConfig
     }
 
     /**
+     * Gets the dynamic path for session explored configuration file
+     */
+    public String getSessionExploredPath() {
+        return getProfileAwarePath("session_explored.nurgling.json");
+    }
+
+    /**
      * Gets the dynamic path for cheese orders configuration file
      */
     public String getCheeseOrdersPath() {

@@ -6,6 +6,7 @@ import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.tools.ExploredArea;
 
 import java.net.MalformedURLException;
 
@@ -22,6 +23,58 @@ public class NMiniMapWnd extends Widget{
             super(base, "/u", "/d", "/h", "/dh");
             setgkey(gkey);
             settip(tooltip);
+        }
+    }
+    
+    /**
+     * Special checkbox for explored area toggle that supports right-click menu
+     * for session layer management.
+     */
+    public class ExploredAreaCheckBox extends NMenuCheckBox {
+        private ExploredAreaMenu menu = null;
+        
+        public ExploredAreaCheckBox(String base, KeyBinding gkey, String tooltip) {
+            super(base, gkey, tooltip);
+        }
+        
+        @Override
+        public boolean mousedown(MouseDownEvent ev) {
+            if (ev.b == 3 && checkhit(ev.c)) {
+                // Right-click - show session menu
+                showSessionMenu();
+                return true;
+            }
+            return super.mousedown(ev);
+        }
+        
+        private void showSessionMenu() {
+            ExploredArea exploredArea = null;
+            if (miniMap instanceof NCornerMiniMap) {
+                exploredArea = ((NCornerMiniMap) miniMap).exploredArea;
+            } else if (miniMap instanceof Map) {
+                exploredArea = ((Map) miniMap).exploredArea;
+            }
+            
+            if (exploredArea == null) return;
+            
+            // Close existing menu if any
+            if (menu != null) {
+                ui.destroy(menu);
+                menu = null;
+            }
+            
+            // Create new menu (always fresh to reflect current session state)
+            final ExploredArea ea = exploredArea;
+            menu = new ExploredAreaMenu(ea) {
+                @Override
+                public void destroy() {
+                    menu = null;
+                    super.destroy();
+                }
+            };
+            
+            // Add menu at mouse cursor position
+            ui.root.add(menu, ui.mc);
         }
     }
     public ACheckBox nightvision;
@@ -132,7 +185,7 @@ public class NMiniMapWnd extends Widget{
         nightvision.a = (Boolean) NConfig.get(NConfig.Key.nightVision);
         buttons.add(nightvision);
 
-        fog = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/fog", kb_fog, "Explored area");
+        fog = new ExploredAreaCheckBox("nurgling/hud/buttons/toggle_panel/fog", kb_fog, "Explored area (RMB for session)");
         fog.changed(a -> {
             NConfig.set(NConfig.Key.exploredAreaEnable, a);
             NConfig.needUpdate();

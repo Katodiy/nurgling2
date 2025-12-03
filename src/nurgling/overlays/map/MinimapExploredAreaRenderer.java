@@ -13,12 +13,15 @@ import java.awt.image.WritableRaster;
  * Renders explored area overlay on the minimap.
  * Uses ExploredArea rectangle data to generate overlay masks for each DisplayGrid.
  * Similar to MinimapClaimRenderer but for explored (visited) areas.
+ * 
+ * Supports rendering both main explored area and session layer.
  */
 public class MinimapExploredAreaRenderer {
     
     /**
      * Main rendering method called from MiniMap's drawparts()
      * Renders explored area overlay on top of map tiles.
+     * Also renders session layer if active.
      *
      * @param map The minimap instance
      * @param g   Graphics context
@@ -71,11 +74,7 @@ public class MinimapExploredAreaRenderer {
                 return; // Only show explored area in current segment
             }
 
-            int totalGrids = 0;
-            int gridsWithData = 0;
-            
             // At dataLevel N, each display grid represents (2^N) x (2^N) base grids
-            // Instead of aggregating, render each base grid individually (like claims do)
             int gridScale = (1 << dataLevel);
             
             // Iterate through all display grids
@@ -85,8 +84,6 @@ public class MinimapExploredAreaRenderer {
                     continue;
                 }
                 
-                totalGrids++;
-                
                 // Calculate which base grids this display grid covers
                 Coord baseGridStart = disp.sc.mul(gridScale);
                 Coord baseGridEnd = baseGridStart.add(gridScale, gridScale);
@@ -95,63 +92,76 @@ public class MinimapExploredAreaRenderer {
                 for (int bgy = baseGridStart.y; bgy < baseGridEnd.y; bgy++) {
                     for (int bgx = baseGridStart.x; bgx < baseGridEnd.x; bgx++) {
                         Coord baseGridCoord = new Coord(bgx, bgy);
+                        
+                        // Render main explored area
                         boolean[] baseMask = exploredArea.getExploredMaskForGrid(baseGridCoord, map.sessloc.seg.id, 0);
-                        
-                        if (baseMask == null) {
-                            continue;
+                        if (baseMask != null && hasAnyTrue(baseMask)) {
+                            renderGridOverlay(g, map, nmap, baseGridCoord, baseMask, 
+                                NMiniMap.VIEW_EXPLORED_COLOR, hsz, scaleFactor, dataLevel, false);
                         }
                         
-                        // Check if any tiles are explored
-                        boolean hasExplored = false;
-                        for (boolean b : baseMask) {
-                            if (b) {
-                                hasExplored = true;
-                                break;
-                            }
-                        }
-                        
-                        if (!hasExplored) {
-                            continue;
-                        }
-                        
-                        gridsWithData++;
-                        
-                        try {
-                            // Get overlay texture for this base grid
-                            Tex overlayImg = getExploredOverlay(baseGridCoord, map.sessloc.seg.id, baseMask, dataLevel);
-                            
-                            if (overlayImg != null) {
-                                // Calculate screen position for this base grid
-                                // Base grids are ALWAYS at level 0, so gridTileSize = 100
-                                int gridTileSize = MCache.cmaps.x; // Always 100 for base level
-                                
-                                // This base grid's tile coordinate in the segment
-                                Coord baseTileUL = new Coord(bgx * gridTileSize, bgy * gridTileSize);
-                                
-                                // Convert to screen coordinates
-                                // Use round for consistent alignment without gaps or overlaps
-                                Coord baseTileBR = new Coord((bgx + 1) * gridTileSize, (bgy + 1) * gridTileSize);
-                                Coord2d screenULDouble = new Coord2d(UI.scale(baseTileUL)).mul(scaleFactor).sub(new Coord2d(map.dloc.tc.div(map.scalef()))).add(new Coord2d(hsz));
-                                Coord2d screenBRDouble = new Coord2d(UI.scale(baseTileBR)).mul(scaleFactor).sub(new Coord2d(map.dloc.tc.div(map.scalef()))).add(new Coord2d(hsz));
-                                Coord screenUL = new Coord((int)Math.round(screenULDouble.x), (int)Math.round(screenULDouble.y));
-                                Coord screenBR = new Coord((int)Math.round(screenBRDouble.x), (int)Math.round(screenBRDouble.y));
-                                
-                                // Image size calculated from exact boundaries
-                                Coord imgsz = screenBR.sub(screenUL);
-                                
-                                // Draw overlay
-                                g.chcolor(NMiniMap.VIEW_EXPLORED_COLOR);
-                                g.image(overlayImg, screenUL, imgsz);
-                                g.chcolor();
-                            }
-                        } catch (Exception e) {
-                            // Ignore rendering errors
+                        // Render session layer on top if active
+                        boolean[] sessionMask = exploredArea.getSessionMaskForGrid(baseGridCoord, map.sessloc.seg.id);
+                        if (sessionMask != null && hasAnyTrue(sessionMask)) {
+                            renderGridOverlay(g, map, nmap, baseGridCoord, sessionMask,
+                                NMiniMap.VIEW_SESSION_COLOR, hsz, scaleFactor, dataLevel, true);
                         }
                     }
                 }
             }
         } catch (Exception e) {
             // Silently handle errors
+        }
+    }
+    
+    /**
+     * Check if mask has any true values
+     */
+    private static boolean hasAnyTrue(boolean[] mask) {
+        for (boolean b : mask) {
+            if (b) return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Render a single grid's overlay
+     */
+    private static void renderGridOverlay(GOut g, MiniMap map, NMiniMap nmap, 
+            Coord baseGridCoord, boolean[] mask, Color color,
+            Coord hsz, float scaleFactor, int dataLevel, boolean isSession) {
+        try {
+            // Get overlay texture for this base grid
+            Tex overlayImg = isSession 
+                ? getSessionOverlay(baseGridCoord, map.sessloc.seg.id, mask, dataLevel)
+                : getExploredOverlay(baseGridCoord, map.sessloc.seg.id, mask, dataLevel);
+            
+            if (overlayImg != null) {
+                // Calculate screen position for this base grid
+                int gridTileSize = MCache.cmaps.x; // Always 100 for base level
+                int bgx = baseGridCoord.x;
+                int bgy = baseGridCoord.y;
+                
+                // This base grid's tile coordinate in the segment
+                Coord baseTileUL = new Coord(bgx * gridTileSize, bgy * gridTileSize);
+                
+                // Convert to screen coordinates
+                Coord baseTileBR = new Coord((bgx + 1) * gridTileSize, (bgy + 1) * gridTileSize);
+                Coord2d screenULDouble = new Coord2d(UI.scale(baseTileUL)).mul(scaleFactor).sub(new Coord2d(map.dloc.tc.div(map.scalef()))).add(new Coord2d(hsz));
+                Coord2d screenBRDouble = new Coord2d(UI.scale(baseTileBR)).mul(scaleFactor).sub(new Coord2d(map.dloc.tc.div(map.scalef()))).add(new Coord2d(hsz));
+                Coord screenUL = new Coord((int)Math.round(screenULDouble.x), (int)Math.round(screenULDouble.y));
+                Coord screenBR = new Coord((int)Math.round(screenBRDouble.x), (int)Math.round(screenBRDouble.y));
+                
+                // Image size calculated from exact boundaries
+                Coord imgsz = screenBR.sub(screenUL);
+                
+                // Draw overlay
+                g.chcolor(color);
+                g.image(overlayImg, screenUL, imgsz);
+                g.chcolor();
+            }
+        } catch (Exception e) {
+            // Ignore rendering errors
         }
     }
 
@@ -188,6 +198,7 @@ public class MinimapExploredAreaRenderer {
     }
     
     private static final java.util.Map<CacheKey, ExploredOverlayCache> overlayCache = new java.util.HashMap<>();
+    private static final java.util.Map<CacheKey, ExploredOverlayCache> sessionOverlayCache = new java.util.HashMap<>();
 
     /**
      * Get explored area overlay for a base grid with caching
@@ -203,7 +214,7 @@ public class MinimapExploredAreaRenderer {
         
         // Generate new overlay
         try {
-            BufferedImage overlayBuf = renderOverlayImage(mask);
+            BufferedImage overlayBuf = renderOverlayImage(mask, NMiniMap.VIEW_EXPLORED_COLOR);
             Tex overlayTex = new TexI(overlayBuf);
             
             // Update cache
@@ -218,14 +229,46 @@ public class MinimapExploredAreaRenderer {
             return null;
         }
     }
+    
+    /**
+     * Get session overlay for a base grid with caching
+     */
+    private static Tex getSessionOverlay(Coord baseGridCoord, long segmentId, boolean[] mask, int dataLevel) {
+        CacheKey key = new CacheKey(baseGridCoord, segmentId);
+        ExploredOverlayCache cache = sessionOverlayCache.get(key);
+        
+        // Check if cache is valid
+        if (cache != null && cache.seq == ExploredArea.sessionSeq && cache.dataLevel == dataLevel) {
+            return cache.img;
+        }
+        
+        // Generate new overlay
+        try {
+            BufferedImage overlayBuf = renderOverlayImage(mask, NMiniMap.VIEW_SESSION_COLOR);
+            Tex overlayTex = new TexI(overlayBuf);
+            
+            // Update cache
+            cache = new ExploredOverlayCache();
+            cache.img = overlayTex;
+            cache.seq = ExploredArea.sessionSeq;
+            cache.dataLevel = dataLevel;
+            sessionOverlayCache.put(key, cache);
+            
+            return overlayTex;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
     /**
      * Render overlay image from boolean mask
      * Creates a semi-transparent texture with explored tiles colored
+     * 
+     * @param mask boolean array indicating explored tiles
+     * @param col the color to use for the overlay
      */
-    private static BufferedImage renderOverlayImage(boolean[] mask) {
+    private static BufferedImage renderOverlayImage(boolean[] mask, Color col) {
         WritableRaster buf = PUtils.imgraster(MCache.cmaps);
-        Color col = NMiniMap.VIEW_EXPLORED_COLOR;
         
         int width = MCache.cmaps.x;
         int height = MCache.cmaps.y;

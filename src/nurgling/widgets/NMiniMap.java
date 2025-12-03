@@ -20,6 +20,7 @@ public class NMiniMap extends MiniMap {
     public static final Coord _sgridsz = new Coord(100, 100);
     public static final Coord VIEW_SZ = UI.scale(_sgridsz.mul(9).div(tilesz.floor()));
     public static final Color VIEW_EXPLORED_COLOR = new Color(255, 255, 0, 144); // Yellow semi-transparent for explored area (120 + 20% of 120 = 144)
+    public static final Color VIEW_SESSION_COLOR = new Color(0, 255, 0, 160); // Green semi-transparent for session explored area
     public static final Color VIEW_BG_COLOR = new Color(255, 255, 255, 60);
     public static final Color VIEW_BORDER_COLOR = new Color(0, 0, 0, 128);
     public final ExploredArea exploredArea = new ExploredArea(this);
