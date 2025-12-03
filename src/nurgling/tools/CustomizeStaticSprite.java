@@ -23,10 +23,17 @@ public class CustomizeStaticSprite {
             Boolean decalsOnTop = (Boolean) NConfig.get(NConfig.Key.decalsOnTop);
             if (decalsOnTop != null && decalsOnTop
                 && sprite.res.name.equals(CustomizeResLayer.PARCHMENT_DECAL)) {
-                // Try to get parent resource from owner context
-                Resource ownerRes = sprite.owner.context(Resource.class);
-                if (ownerRes != null && ownerRes.name.equals(CustomizeResLayer.CUPBOARD)) {
-                    slot.cstate(Location.xlate(new Coord3f(-5, -5, 17.5f)));
+                // Get the parent Gob from the overlay owner
+                Gob gob = sprite.owner.context(Gob.class);
+                if (gob != null) {
+                    // Get the Gob's resource through its Drawable attribute
+                    Drawable drawable = gob.getattr(Drawable.class);
+                    if (drawable instanceof ResDrawable) {
+                        Resource gobRes = ((ResDrawable) drawable).rres;
+                        if (gobRes != null && gobRes.name.equals(CustomizeResLayer.CUPBOARD)) {
+                            slot.cstate(Location.xlate(new Coord3f(-5, -5, 17.5f)));
+                        }
+                    }
                 }
             }
         } catch (Exception ignored) {}
