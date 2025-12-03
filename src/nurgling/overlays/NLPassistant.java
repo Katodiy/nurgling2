@@ -40,10 +40,10 @@ public class NLPassistant extends Sprite implements RenderTree.Node
         if(gob.ngob.hitBox!=null)
             len = Math.max(gob.ngob.hitBox.end.dist(gob.ngob.hitBox.begin),len);
         float[] data = {
-                (float) len, (float) len, 5f, 1, 1,
-                -(float) len, (float) len, 5f, 1, 0,
-                -(float) len, -(float) len, 5f, 0, 0,
-                (float) len, -(float) len, 5f, 0, 1,
+                (float) len, (float) len, 2f, 1, 1,
+                -(float) len, (float) len, 2f, 1, 0,
+                -(float) len, -(float) len, 2f, 0, 0,
+                (float) len, -(float) len, 2f, 0, 1,
         };
         VertexArray va = new VertexArray(pfmt,
                 new VertexArray.Buffer((4) * pfmt.inputs[0].stride, DataBuffer.Usage.STATIC,
