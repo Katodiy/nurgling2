@@ -18,6 +18,8 @@ public class DropOn extends NTask
             name.keys.add("Traveller's Sack");
             name.buildCaches(); // Rebuild caches after modifying keys
         }
+
+        infinite = false;
     }
 
     public DropOn(NInventory inventory, Coord coord, String name)
@@ -33,6 +35,14 @@ public class DropOn extends NTask
     @Override
     public boolean check()
     {
+        if(!infinite)
+        {
+            if(counter++ >=maxCounter)
+            {
+                criticalExit = true;
+                return true;
+            }
+        }
         return !inventory.isSlotFree(coord) && inventory.isItemInSlot(coord, name);
     }
 }
