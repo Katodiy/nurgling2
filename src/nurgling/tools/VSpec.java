@@ -2849,6 +2849,11 @@ public class VSpec {
         }
         res.exceptions.add("Filet");
         res.exceptions.add("Roe");
+        res.exceptions.add("Soil");
+        res.exceptions.add("Gem");
+        res.exceptions.add("Jewel");
+        res.exceptions.add("Cave Moth");
+        res.buildCaches(); // Rebuild caches after modifying keys and exceptions
         return res;
     }
 

@@ -13,8 +13,10 @@ public class DropOn extends NTask
         this.name = name;
         if(name.keys.contains("Traveller's Sack")) {
             name.keys.add("Traveler's Sack");
+            name.buildCaches(); // Rebuild caches after modifying keys
         } else if (name.keys.contains("Traveler's Sack")) {
             name.keys.add("Traveller's Sack");
+            name.buildCaches(); // Rebuild caches after modifying keys
         }
     }
 

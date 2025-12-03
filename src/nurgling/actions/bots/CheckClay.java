@@ -29,6 +29,7 @@ public class CheckClay implements Action {
         {
             shovel_tools.keys.add(shovel.name);
         }
+        shovel_tools.buildCaches(); // Rebuild caches after modifying keys
 
         new Equip(shovel_tools).run(gui);
         ArrayList<WItem> oldItems = ((NInventory) NUtils.getGameUI().maininv).getItems();

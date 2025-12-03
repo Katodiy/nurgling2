@@ -58,6 +58,7 @@ public class Chopper implements Action {
         {
             pattern.keys.add("gfx/terobjs/bushes");
         }
+        pattern.buildCaches(); // Rebuild caches after modifying keys/exceptions
         ArrayList<Gob> trees;
         while (!(trees = context.getGobs(treeArea,pattern)).isEmpty()) {
             trees.sort(NUtils.y_min_comp);
