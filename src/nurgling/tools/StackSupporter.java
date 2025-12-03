@@ -30,7 +30,6 @@ public class StackSupporter {
         size3.add("Salad Greens");
         size3.add("Malted Grains");
         size3.add("Millable Seed");
-        size3.add("Crop Seeds");
         size3.add("Egg");
         size3.add("Gellant");
         size3.add("Stuffing");
