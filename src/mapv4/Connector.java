@@ -135,6 +135,22 @@ public class Connector implements Action {
                                 parent.requestor.prepGrid(reqs.getString(i), g);
                             }
                         }
+
+                        // Trigger overlay upload for all loaded grids (3x3 around player)
+                        String[][] allGridIds = (String[][]) ((JSONObject) msg.get("data")).get("grids");
+                        for (int row = 0; row < 3; row++) {
+                            for (int col = 0; col < 3; col++) {
+                                try {
+                                    Long gid = Long.valueOf(allGridIds[row][col]);
+                                    MCache.Grid g = NUtils.getGameUI().map.glob.map.findGrid(gid);
+                                    if (g != null && g.ols != null && g.ols.length > 0) {
+                                        parent.requestor.sendOverlayUpdate(gid, g);
+                                    }
+                                } catch (NumberFormatException ignored) {
+                                    // Invalid grid ID, skip
+                                }
+                            }
+                        }
                     }
                 } else if (((String) msg.get("header")).equals("LOCATE")) {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {

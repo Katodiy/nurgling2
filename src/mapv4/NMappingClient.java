@@ -23,6 +23,7 @@ public class NMappingClient {
     public AtomicBoolean done = new AtomicBoolean(false);
     private Boolean autoMapper = null;
     public final Map<Long, CacheEntry> cache = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> overlayHashes = new ConcurrentHashMap<>();
     public Thread reqTread = null;
     public Thread conTread = null;
     long lastTracking = -1;
@@ -159,15 +160,29 @@ public class NMappingClient {
         if(cache.size() <= MAX_CACHE_SIZE) {
             return;
         }
-        
+
         // Remove oldest entries
         List<Map.Entry<Long, CacheEntry>> entries = new ArrayList<>(cache.entrySet());
         entries.sort(Comparator.comparingLong(e -> e.getValue().lastAccess));
-        
+
         int toRemove = cache.size() - (MAX_CACHE_SIZE * 3 / 4);
         for(int i = 0; i < toRemove && i < entries.size(); i++) {
             cache.remove(entries.get(i).getKey());
         }
+
+        // Also cleanup overlay hashes if too large
+        if (overlayHashes.size() > MAX_CACHE_SIZE) {
+            overlayHashes.clear();
+        }
+    }
+
+    public boolean hasOverlayChanged(long gridId, int newHash) {
+        Integer oldHash = overlayHashes.get(gridId);
+        if (oldHash == null || !oldHash.equals(newHash)) {
+            overlayHashes.put(gridId, newHash);
+            return true;
+        }
+        return false;
     }
 
 
