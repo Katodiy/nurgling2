@@ -766,6 +766,7 @@ public class MiniMap extends Widget
 		if(!file.lock.writeLock().tryLock())
 		    continue;
 		SMarker mid = null;
+		boolean isNew = false;
 		try {
 		    MapFile.GridInfo info = file.gridinfo.get(obg.id);
 		    if(info == null)
@@ -777,6 +778,7 @@ public class MiniMap extends Widget
 			    Resource.Tooltip tt = micon.res.flayer(Resource.tooltip);
 			    mid = new SMarker(info.seg, sc, tt.t, 0, new Resource.Saved(Resource.remote(), micon.res.name, micon.res.ver));
 			    file.add(mid);
+			    isNew = true;
 			} else {
 			    mid = null;
 			}
@@ -789,6 +791,11 @@ public class MiniMap extends Widget
 		if(mid != null) {
 		    synchronized(icon.gob) {
 			icon.gob.setattr(new MarkerID(icon.gob, mid));
+		    }
+		    // Upload only new markers to web map
+		    if(isNew && ui.core != null && ui.core.mappingClient != null && 
+		       (Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.autoMapper)) {
+			ui.core.mappingClient.uploadSMarker(icon.gob, mid);
 		    }
 		}
 		icon.markchecked = true;

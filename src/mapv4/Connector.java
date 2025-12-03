@@ -99,12 +99,15 @@ public class Connector implements Action {
             connection.setReadTimeout(READ_TIMEOUT_MS);
             
             String reqMethod = (String) msg.get("reqMethod");
+            String header = (String) msg.get("header");
+            
             if (reqMethod.equals("POST")) {
                 connection.setRequestMethod(reqMethod);
                 connection.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
                 connection.setDoOutput(true);
+                final String json = msg.get("data").toString();
+                
                 try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
-                    final String json = msg.get("data").toString();
                     out.write(json.getBytes(StandardCharsets.UTF_8));
                 }
             } else {
@@ -113,7 +116,7 @@ public class Connector implements Action {
             
             respCode = connection.getResponseCode();
             if (respCode == 200) {
-                if (((String) msg.get("header")).equals("GRIDREQ")) {
+                if (header.equals("GRIDREQ")) {
                     try (DataInputStream dio = new DataInputStream(connection.getInputStream())) {
                         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
                         byte[] data = new byte[1024];
@@ -136,7 +139,7 @@ public class Connector implements Action {
                             }
                         }
                     }
-                } else if (((String) msg.get("header")).equals("LOCATE")) {
+                } else if (header.equals("LOCATE")) {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
                         String resp = reader.lines().collect(Collectors.joining());
                         String[] parts = resp.split(";");
