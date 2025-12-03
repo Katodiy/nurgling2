@@ -24,6 +24,7 @@ public class NMappingClient {
     private Boolean autoMapper = null;
     public final Map<Long, CacheEntry> cache = new ConcurrentHashMap<>();
     private final Map<Long, Integer> overlayHashes = new ConcurrentHashMap<>();
+    private volatile boolean overlaySupported = true;
     public Thread reqTread = null;
     public Thread conTread = null;
     long lastTracking = -1;
@@ -183,6 +184,14 @@ public class NMappingClient {
             return true;
         }
         return false;
+    }
+
+    public boolean isOverlaySupported() {
+        return overlaySupported;
+    }
+
+    public void setOverlayUnsupported() {
+        overlaySupported = false;
     }
 
 
