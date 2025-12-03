@@ -28,6 +28,7 @@ public class QoL extends Panel {
     private CheckBox lpassistent;
     private CheckBox debug;
     private CheckBox tempmark;
+    private CheckBox tempmarkIgnoreDist;
     private CheckBox shortCupboards;
     private CheckBox shortWalls;
     private CheckBox decalsOnTop;
@@ -214,6 +215,7 @@ public class QoL extends Panel {
 
         rightPrev = rightColumn.add(new Label("● Temporary Marks"), rightPrev.pos("bl").adds(0, 15));
         rightPrev = tempmark = rightColumn.add(new CheckBox("Save temporary marks"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = tempmarkIgnoreDist = rightColumn.add(new CheckBox("Ignore distance (for caves/houses)"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = rightColumn.add(new Label("Max distance (grids):"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = temsmarkdistEntry = rightColumn.add(new TextEntry.NumberValue(50, ""), rightPrev.pos("bl").adds(0, 5));
         rightPrev = rightColumn.add(new Label("Storage duration (minutes):"), rightPrev.pos("bl").adds(0, 5));
@@ -262,6 +264,7 @@ public class QoL extends Panel {
         debug.a = getBool(NConfig.Key.debug);
         printpfmap.a = getBool(NConfig.Key.printpfmap);
         tempmark.a = getBool(NConfig.Key.tempmark);
+        tempmarkIgnoreDist.a = getBool(NConfig.Key.tempmarkIgnoreDist);
         shortCupboards.a = getBool(NConfig.Key.shortCupboards);
         shortWalls.a = getBool(NConfig.Key.shortWalls);
         decalsOnTop.a = getBool(NConfig.Key.decalsOnTop);
@@ -392,6 +395,7 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.debug, debug.a);
         NConfig.set(NConfig.Key.printpfmap, printpfmap.a);
         NConfig.set(NConfig.Key.tempmark, tempmark.a);
+        NConfig.set(NConfig.Key.tempmarkIgnoreDist, tempmarkIgnoreDist.a);
         
         // Save cupboard settings and rebuild cupboards if changed
         boolean oldShortCupboards = getBool(NConfig.Key.shortCupboards);

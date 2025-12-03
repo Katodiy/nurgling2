@@ -1534,24 +1534,30 @@ public class NMapView extends MapView
                         if (currenttime - cm.lastupdate > 1000) {
                             cm.lastupdate = currenttime;
                             
+                            // Check if distance checking is disabled (for caves/houses)
+                            boolean ignoreDist = (Boolean) NConfig.get(NConfig.Key.tempmarkIgnoreDist);
+                            
                             // Remove if mark is too far from player (exceeded temsmarkdist)
-                            // temsmarkdist is in "mega grids" - each unit = 100 tiles
-                            // So temsmarkdist=4 means 400 tiles square around player
-                            int temsmarkdist = (Integer) NConfig.get(NConfig.Key.temsmarkdist);
-                            int maxDistTiles = temsmarkdist * 100; // Convert to tiles
-                            
-                            // Get player position in global tile coords (same system as cm.gc)
-                            Coord playerGC = pl.floor(tilesz).add(ui.gui.mmap.sessloc.tc);
-                            
-                            // Calculate square around player
-                            Coord playerUL = playerGC.sub(maxDistTiles, maxDistTiles);
-                            Coord playerBR = playerGC.add(maxDistTiles, maxDistTiles);
-                            
-                            // Check if mark is outside this square
-                            if (cm.gc.x < playerUL.x || cm.gc.x > playerBR.x ||
-                                cm.gc.y < playerUL.y || cm.gc.y > playerBR.y) {
-                                tempMarkList.remove(cm);
-                                continue;
+                            // Skip this check if ignoreDist is enabled
+                            if (!ignoreDist) {
+                                // temsmarkdist is in "mega grids" - each unit = 100 tiles
+                                // So temsmarkdist=4 means 400 tiles square around player
+                                int temsmarkdist = (Integer) NConfig.get(NConfig.Key.temsmarkdist);
+                                int maxDistTiles = temsmarkdist * 100; // Convert to tiles
+                                
+                                // Get player position in global tile coords (same system as cm.gc)
+                                Coord playerGC = pl.floor(tilesz).add(ui.gui.mmap.sessloc.tc);
+                                
+                                // Calculate square around player
+                                Coord playerUL = playerGC.sub(maxDistTiles, maxDistTiles);
+                                Coord playerBR = playerGC.add(maxDistTiles, maxDistTiles);
+                                
+                                // Check if mark is outside this square
+                                if (cm.gc.x < playerUL.x || cm.gc.x > playerBR.x ||
+                                    cm.gc.y < playerUL.y || cm.gc.y > playerBR.y) {
+                                    tempMarkList.remove(cm);
+                                    continue;
+                                }
                             }
                             
                             // Track player position relative to mark to detect "return"
