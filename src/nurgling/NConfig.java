@@ -86,6 +86,7 @@ public class NConfig
         endpoint,
         automaptrack,
         unloadgreen,
+        sendOverlays,
         showInventoryNums,
         hidecredo,
         autoDrink,
@@ -221,6 +222,7 @@ public class NConfig
         conf.put(Key.autoMapper, false);
         conf.put(Key.automaptrack, false);
         conf.put(Key.unloadgreen, false);
+        conf.put(Key.sendOverlays, false);
         conf.put(Key.showInventoryNums, true);
         conf.put(Key.autoDrink, false);
         conf.put(Key.autoSaveTableware, true);

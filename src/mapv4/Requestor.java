@@ -301,6 +301,47 @@ public class Requestor implements Action {
                         }
                         break;
                     }
+                    case "overlayUpload":
+                    {
+                        long gridId = (Long) task.args[0];
+                        MCache.Grid grid = (MCache.Grid) task.args[1];
+
+                        if (grid == null) {
+                            continue;
+                        }
+
+                        List<OverlayData> overlays = OverlayExtractor.extractOverlays(grid, gridId);
+                        if (overlays.isEmpty()) {
+                            continue;
+                        }
+
+                        // Check if changed since last send
+                        int hash = OverlayExtractor.computeHash(overlays);
+                        if (!parent.hasOverlayChanged(gridId, hash)) {
+                            continue;
+                        }
+
+                        // Build JSON payload
+                        JSONObject data = new JSONObject();
+                        data.put("gridId", String.valueOf(gridId));
+                        JSONArray overlayArray = new JSONArray();
+                        for (OverlayData ol : overlays) {
+                            overlayArray.put(ol.toJSON());
+                        }
+                        data.put("overlays", overlayArray);
+
+                        // Queue for sending
+                        JSONObject msg = new JSONObject();
+                        msg.put("data", data);
+                        msg.put("reqMethod", "POST");
+                        msg.put("url", (String) NConfig.get(NConfig.Key.endpoint) + "/overlayUpload");
+                        msg.put("header", "OVERLAY");
+
+                        if (!parent.connector.msgs.offer(msg)) {
+                            // Queue full, overlay update dropped
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -331,6 +372,19 @@ public class Requestor implements Action {
 
     public void uploadSMarker(Gob gob, MapFile.SMarker marker) {
         list.offer(new MapperTask("uploadMarker", new Object[]{gob, marker}));
+    }
+
+    public void sendOverlayUpdate(long gridId, MCache.Grid grid) {
+        // Avoid duplicate tasks for the same grid
+        for (MapperTask task : list) {
+            if (task.type.equals("overlayUpload") &&
+                task.args != null &&
+                task.args.length > 0 &&
+                Long.valueOf(gridId).equals(task.args[0])) {
+                return;
+            }
+        }
+        list.offer(new MapperTask("overlayUpload", new Object[]{gridId, grid}));
     }
 
     private class MarkerData {
