@@ -68,6 +68,8 @@ public class GardenPotHarvester implements Action {
 
         if (totalHarvested > 0) {
             gui.msg("Harvested " + totalHarvested + " plants");
+            // Drop off harvested items
+            new FreeInventory2(externalContext).run(gui);
         } else {
             gui.msg("No pots ready for harvest");
         }
