@@ -134,6 +134,7 @@ public class NConfig
         disableTileSmoothing,
         disableTileTransitions,
         disableCloudShadows,
+        darkenDeepOcean,
         disableDrugEffects,
         simpleInspect,
         showSpeedometer,
@@ -378,6 +379,7 @@ public class NConfig
         conf.put(Key.disableTileSmoothing, false);
         conf.put(Key.disableTileTransitions, false);
         conf.put(Key.disableCloudShadows, false);
+        conf.put(Key.darkenDeepOcean, false);
         conf.put(Key.disableDrugEffects, true);  // Default to disabled for better performance
         
         // Parasite bot settings

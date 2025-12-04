@@ -21,6 +21,7 @@ public class World extends Panel {
         boolean disableTileSmoothing;
         boolean disableTileTransitions;
         boolean disableCloudShadows;
+        boolean darkenDeepOcean;
         Color boxFillColor = new Color(227, 28, 1, 195);
         Color boxEdgeColor = new Color(224, 193, 79, 255);
         int boxLineWidth = 4;
@@ -38,6 +39,7 @@ public class World extends Panel {
     private CheckBox disableTileSmoothing;
     private CheckBox disableTileTransitions;
     private CheckBox disableCloudShadows;
+    private CheckBox darkenDeepOcean;
     private NColorWidget fillColorWidget;
     private NColorWidget edgeColorWidget;
     private HSlider lineWidthSlider;
@@ -92,6 +94,13 @@ public class World extends Panel {
         prev = disableCloudShadows = content.add(new CheckBox("Disable cloud shadows on ground") {
             public void set(boolean val) {
                 tempSettings.disableCloudShadows = val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+
+        prev = darkenDeepOcean = content.add(new CheckBox("Darken deep ocean tiles") {
+            public void set(boolean val) {
+                tempSettings.darkenDeepOcean = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
@@ -191,6 +200,7 @@ public class World extends Panel {
         tempSettings.disableTileSmoothing = (Boolean) NConfig.get(NConfig.Key.disableTileSmoothing);
         tempSettings.disableTileTransitions = (Boolean) NConfig.get(NConfig.Key.disableTileTransitions);
         tempSettings.disableCloudShadows = (Boolean) NConfig.get(NConfig.Key.disableCloudShadows);
+        tempSettings.darkenDeepOcean = (Boolean) NConfig.get(NConfig.Key.darkenDeepOcean);
 
         // Load colors if they exist in config
         tempSettings.boxFillColor = NConfig.getColor(NConfig.Key.boxFillColor, new Color(227, 28, 1, 195));
@@ -213,6 +223,7 @@ public class World extends Panel {
         disableTileSmoothing.a = tempSettings.disableTileSmoothing;
         disableTileTransitions.a = tempSettings.disableTileTransitions;
         disableCloudShadows.a = tempSettings.disableCloudShadows;
+        darkenDeepOcean.a = tempSettings.darkenDeepOcean;
         fillColorWidget.color = tempSettings.boxFillColor;
         edgeColorWidget.color = tempSettings.boxEdgeColor;
         lineWidthSlider.val = tempSettings.boxLineWidth;
@@ -237,12 +248,14 @@ public class World extends Panel {
         // Save tile rendering settings
         boolean oldTileSmoothing = (Boolean) NConfig.get(NConfig.Key.disableTileSmoothing);
         boolean oldTileTransitions = (Boolean) NConfig.get(NConfig.Key.disableTileTransitions);
+        boolean oldDarkenDeepOcean = (Boolean) NConfig.get(NConfig.Key.darkenDeepOcean);
         NConfig.set(NConfig.Key.disableTileSmoothing, tempSettings.disableTileSmoothing);
         NConfig.set(NConfig.Key.disableTileTransitions, tempSettings.disableTileTransitions);
         NConfig.set(NConfig.Key.disableCloudShadows, tempSettings.disableCloudShadows);
+        NConfig.set(NConfig.Key.darkenDeepOcean, tempSettings.darkenDeepOcean);
         
         // Invalidate map if tile settings changed
-        if (oldTileSmoothing != tempSettings.disableTileSmoothing || oldTileTransitions != tempSettings.disableTileTransitions) {
+        if (oldTileSmoothing != tempSettings.disableTileSmoothing || oldTileTransitions != tempSettings.disableTileTransitions || oldDarkenDeepOcean != tempSettings.darkenDeepOcean) {
             if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null && NUtils.getGameUI().map.glob != null) {
                 MCache map = NUtils.getGameUI().map.glob.map;
                 synchronized(map.grids) {
