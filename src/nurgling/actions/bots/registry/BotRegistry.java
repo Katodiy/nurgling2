@@ -93,8 +93,8 @@ public class BotRegistry {
         // Garden pot filling
         bots.add(new BotDescriptor("gardenpot_filler", BotDescriptor.BotType.PRODUCTIONS, "Garden Pot Filler", "Fills garden pots with soil and water for planting.", true, true, GardenPotFiller.class, "gardenpot", false));
 
-        // Garden pot planting and harvesting
-        bots.add(new BotDescriptor("gardenpot_planter", BotDescriptor.BotType.FARMING, "Garden Pot Planter", "Plants and harvests from garden pots. Supports Blueberries, Lingonberries, Strawberries.", true, true, GardenPotPlanter.class, "gardenpot", false));
+        // Garden pot farming (harvest, fill, plant cycle)
+        bots.add(new BotDescriptor("gardenpot_farmer", BotDescriptor.BotType.FARMING, "Garden Pot Farmer", "Complete garden pot farming cycle: harvests ready plants, fills with soil/water, and plants new items.", true, true, GardenPotFarmer.class, "gardenpot", false));
 
         // BATTLE
         bots.add(new BotDescriptor("reagro", BotDescriptor.BotType.BATTLE, "Reagro", "Reagros enemies.", true, true, Reagro.class, "reagro", false));
