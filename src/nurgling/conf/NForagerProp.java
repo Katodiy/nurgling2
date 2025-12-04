@@ -27,7 +27,7 @@ public class NForagerProp implements JConf {
         public String onPlayerAction = "nothing";
         public String onAnimalAction = "logout";
         public String afterFinishAction = "nothing";
-        public boolean freeInventory = false;
+        public String onFullInventoryAction = "nothing";
         public boolean ignoreBats = true;
         
         public PresetData() {}
@@ -73,8 +73,8 @@ public class NForagerProp implements JConf {
                     pd.onAnimalAction = (String) entry.getValue().get("onAnimalAction");
                 if (entry.getValue().get("afterFinishAction") != null)
                     pd.afterFinishAction = (String) entry.getValue().get("afterFinishAction");
-                if (entry.getValue().get("freeInventory") != null)
-                    pd.freeInventory = (Boolean) entry.getValue().get("freeInventory");
+                if (entry.getValue().get("onFullInventoryAction") != null)
+                    pd.onFullInventoryAction = (String) entry.getValue().get("onFullInventoryAction");
                 if (entry.getValue().get("ignoreBats") != null)
                     pd.ignoreBats = (Boolean) entry.getValue().get("ignoreBats");
                 
@@ -132,7 +132,7 @@ public class NForagerProp implements JConf {
             presetJson.put("onPlayerAction", entry.getValue().onPlayerAction);
             presetJson.put("onAnimalAction", entry.getValue().onAnimalAction);
             presetJson.put("afterFinishAction", entry.getValue().afterFinishAction);
-            presetJson.put("freeInventory", entry.getValue().freeInventory);
+            presetJson.put("onFullInventoryAction", entry.getValue().onFullInventoryAction);
             presetJson.put("ignoreBats", entry.getValue().ignoreBats);
             
             presetsJson.put(entry.getKey(), presetJson);

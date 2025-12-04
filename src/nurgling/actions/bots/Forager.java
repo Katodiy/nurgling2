@@ -3,7 +3,6 @@ package nurgling.actions.bots;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
-import nurgling.areas.NContext;
 import nurgling.conf.NAreaRad;
 import nurgling.conf.NDiscordNotification;
 import nurgling.conf.NForagerProp;
@@ -112,11 +111,10 @@ public class Forager implements Action {
         
         new PathFinder(startPos).run(gui);
         
-        // Check and unload inventory before starting
-        if (preset.freeInventory && isInventoryFull(gui)) {
-            unloadInventory(gui);
-            // Return to start
-            new PathFinder(startPos).run(gui);
+        // Check inventory before starting
+        if (isInventoryFull(gui) && !preset.onFullInventoryAction.equals("nothing")) {
+            performSafetyAction(gui, preset.onFullInventoryAction);
+            return Results.SUCCESS();
         }
         
         // Main loop through sections
@@ -168,13 +166,8 @@ public class Forager implements Action {
 
             // Check inventory after each section
             if (isInventoryFull(gui)) {
-                if (preset.freeInventory) {
-                    Coord2d currentPos = NUtils.player().rc;
-                    unloadInventory(gui);
-                    new PathFinder(currentPos).run(gui);
-                } else {
-                    new TravelToHearthFire().run(gui);
-                    new FreeInventory2(new NContext(gui)).run(gui);
+                if (!preset.onFullInventoryAction.equals("nothing")) {
+                    performSafetyAction(gui, preset.onFullInventoryAction);
                     return Results.SUCCESS();
                 }
             }
@@ -230,13 +223,11 @@ public class Forager implements Action {
             case PICK:
                 for (Gob gob : gobs) {
                     if (isInventoryFull(gui)) {
-                        if (preset.freeInventory) {
-                            Coord2d currentPos = NUtils.player().rc;
-                            unloadInventory(gui);
-                            new PathFinder(currentPos).run(gui);
-                        } else {
-                            break;
+                        if (!preset.onFullInventoryAction.equals("nothing")) {
+                            performSafetyAction(gui, preset.onFullInventoryAction);
+                            return;
                         }
+                        break;
                     }
 
                     new PathFinder(gob).run(gui);
@@ -312,9 +303,6 @@ public class Forager implements Action {
         return false;
     }
     
-    private void unloadInventory(NGameUI gui) throws InterruptedException {
-        new FreeInventory2(new NContext(gui)).run(gui);
-    }
     
     private void performSafetyAction(NGameUI gui, String action) throws InterruptedException {
         switch (action) {

@@ -30,12 +30,13 @@ public class Forager extends Window implements Checkable {
     Dropbox<String> onPlayerAction = null;
     Dropbox<String> onAnimalAction = null;
     Dropbox<String> afterFinishAction = null;
-    CheckBox freeInventoryCheckbox = null;
+    Dropbox<String> onFullInventoryAction = null;
     CheckBox ignoreBatsCheckbox = null;
     
     private static final String[] PLAYER_ACTIONS = {"nothing", "logout", "travel hearth"};
     private static final String[] ANIMAL_ACTIONS = {"logout", "travel hearth"};
     private static final String[] AFTER_FINISH_ACTIONS = {"nothing", "logout", "travel hearth"};
+    private static final String[] FULL_INVENTORY_ACTIONS = {"nothing", "logout", "travel hearth"};
     
     // Recording state
     private boolean isRecording = false;
@@ -342,9 +343,30 @@ public class Forager extends Window implements Checkable {
                 super.change(item);
             }
         }, prev.pos("bl").add(UI.scale(0, 5)));
-        
-        // Free inventory checkbox
-        prev = add(freeInventoryCheckbox = new CheckBox("Free inventory"), prev.pos("bl").add(UI.scale(0, 10)));
+
+        // On full inventory action
+        prev = add(new Label("On full inventory:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(onFullInventoryAction = new Dropbox<String>(UI.scale(150), FULL_INVENTORY_ACTIONS.length, UI.scale(16)) {
+            @Override
+            protected String listitem(int i) {
+                return FULL_INVENTORY_ACTIONS[i];
+            }
+
+            @Override
+            protected int listitems() {
+                return FULL_INVENTORY_ACTIONS.length;
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int i) {
+                g.text(item, Coord.z);
+            }
+            
+            @Override
+            public void change(String item) {
+                super.change(item);
+            }
+        }, prev.pos("bl").add(UI.scale(0, 5)));
         
         // Ignore bats checkbox
         prev = add(ignoreBatsCheckbox = new CheckBox("Ignore bats"), prev.pos("bl").add(UI.scale(0, 5)));
@@ -419,7 +441,13 @@ public class Forager extends Window implements Checkable {
             }
         }
         
-        freeInventoryCheckbox.a = preset.freeInventory;
+        for (int i = 0; i < FULL_INVENTORY_ACTIONS.length; i++) {
+            if (FULL_INVENTORY_ACTIONS[i].equals(preset.onFullInventoryAction)) {
+                onFullInventoryAction.change(FULL_INVENTORY_ACTIONS[i]);
+                break;
+            }
+        }
+        
         ignoreBatsCheckbox.a = preset.ignoreBats;
     }
     
@@ -470,7 +498,8 @@ public class Forager extends Window implements Checkable {
                     oldPreset.onAnimalAction = onAnimalAction.sel;
                 if (afterFinishAction.sel != null)
                     oldPreset.afterFinishAction = afterFinishAction.sel;
-                oldPreset.freeInventory = freeInventoryCheckbox.a;
+                if (onFullInventoryAction.sel != null)
+                    oldPreset.onFullInventoryAction = onFullInventoryAction.sel;
                 oldPreset.ignoreBats = ignoreBatsCheckbox.a;
             }
         }
@@ -642,7 +671,11 @@ public class Forager extends Window implements Checkable {
         else
             preset.afterFinishAction = "nothing";
             
-        preset.freeInventory = freeInventoryCheckbox.a;
+        if (onFullInventoryAction.sel != null)
+            preset.onFullInventoryAction = onFullInventoryAction.sel;
+        else
+            preset.onFullInventoryAction = "nothing";
+            
         preset.ignoreBats = ignoreBatsCheckbox.a;
         
         NForagerProp.set(prop);
