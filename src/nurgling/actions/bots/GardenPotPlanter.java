@@ -67,8 +67,12 @@ public class GardenPotPlanter implements Action {
     private Results processArea(NGameUI gui, NContext context, NArea area, String plantType)
             throws InterruptedException {
 
-        // Step 1: Harvest ready plants (STUB - to be implemented when we have planted pots)
-        // Results harvestResult = harvestReadyPlants(gui, context, area, plantType);
+        // Step 1: Harvest ready plants (pots with 2 Equed overlays)
+        Results harvestResult = harvestReadyPlants(gui, context, area);
+        if (!harvestResult.IsSuccess()) {
+            gui.msg("Warning: Harvest phase had issues");
+            // Continue anyway
+        }
 
         // Step 2: Fill pots with soil and water using existing GardenPotFiller
         Results fillResult = new GardenPotFiller(area, context).run(gui);
@@ -86,6 +90,79 @@ public class GardenPotPlanter implements Action {
         } else {
             gui.msg("No plant type specified for area, skipping planting");
         }
+
+        return Results.SUCCESS();
+    }
+
+    /**
+     * Harvest plants from pots that are ready (2 Equed overlays).
+     */
+    private Results harvestReadyPlants(NGameUI gui, NContext context, NArea area)
+            throws InterruptedException {
+
+        int totalHarvested = 0;
+
+        // Outer loop: keep harvesting until all ready pots are done
+        while (true) {
+            // Navigate to pots area
+            context.getAreaById(area.id);
+
+            // Find pots ready for harvest (re-check each iteration)
+            ArrayList<Gob> allPots = Finder.findGobs(area, GardenPotUtils.GARDEN_POT);
+            ArrayList<Gob> readyPots = GardenPotUtils.filterPotsReadyToHarvest(allPots);
+
+            if (readyPots.isEmpty()) {
+                if (totalHarvested == 0) {
+                    gui.msg("No pots ready for harvest in area " + area.name);
+                }
+                break;
+            }
+
+            gui.msg("Found " + readyPots.size() + " pots ready for harvest");
+
+            // Harvest from each ready pot
+            for (Gob pot : readyPots) {
+                // Check inventory space - need at least 2 free slots
+                if (gui.getInventory().getFreeSpace() < 2) {
+                    gui.msg("Inventory nearly full, dropping off items...");
+                    new FreeInventory2(context).run(gui);
+                    // Return to pot area
+                    context.getAreaById(area.id);
+                }
+
+                // Re-check pot state (it might have changed)
+                Gob currentPot = Finder.findGob(pot.id);
+                if (currentPot == null || !GardenPotUtils.isReadyToHarvest(currentPot)) {
+                    continue;
+                }
+
+                Results result = harvestPot(gui, currentPot);
+                if (result.IsSuccess()) {
+                    totalHarvested++;
+                }
+            }
+        }
+
+        if (totalHarvested > 0) {
+            gui.msg("Harvested " + totalHarvested + " plants");
+        }
+        return Results.SUCCESS();
+    }
+
+    /**
+     * Harvest a single pot using the "Pick" flower menu action.
+     */
+    private Results harvestPot(NGameUI gui, Gob pot) throws InterruptedException {
+        // Navigate to pot
+        PathFinder pf = new PathFinder(pot);
+        pf.isHardMode = true;
+        pf.run(gui);
+
+        // Use Pick action from flower menu
+        new SelectFlowerAction("Pick", pot).run(gui);
+
+        // Wait for overlays to be removed (plant harvested)
+        NUtils.getUI().core.addTask(new WaitOverlayRemoval(pot));
 
         return Results.SUCCESS();
     }
@@ -220,6 +297,26 @@ public class GardenPotPlanter implements Action {
             Gob currentPot = Finder.findGob(pot.id);
             if (currentPot == null) return true;
             return GardenPotUtils.hasPlant(currentPot);
+        }
+    }
+
+    // Task to wait until overlays are removed from pot (harvest complete)
+    private static class WaitOverlayRemoval extends NTask {
+        private final Gob pot;
+        private int counter = 0;
+
+        WaitOverlayRemoval(Gob pot) {
+            this.pot = pot;
+        }
+
+        @Override
+        public boolean check() {
+            counter++;
+            if (counter >= 100) return true;  // Timeout
+            Gob currentPot = Finder.findGob(pot.id);
+            if (currentPot == null) return true;
+            // Harvest complete when no more Equed overlays (or just 0-1 if replanting)
+            return GardenPotUtils.countEquedOverlays(currentPot) < 2;
         }
     }
 }

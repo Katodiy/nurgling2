@@ -39,15 +39,31 @@ public class GardenPotUtils {
     }
 
     /**
-     * Check if a pot has a plant (has Equed overlay).
+     * Count the number of Equed overlays on a pot.
+     * 0 = empty/no plant, 1 = planted (growing), 2 = ready to harvest
      */
-    public static boolean hasPlant(Gob pot) {
+    public static int countEquedOverlays(Gob pot) {
+        int count = 0;
         for (Gob.Overlay ol : pot.ols) {
             if (ol.spr instanceof Equed) {
-                return true;
+                count++;
             }
         }
-        return false;
+        return count;
+    }
+
+    /**
+     * Check if a pot has a plant (has at least one Equed overlay).
+     */
+    public static boolean hasPlant(Gob pot) {
+        return countEquedOverlays(pot) >= 1;
+    }
+
+    /**
+     * Check if a pot is ready to harvest (has 2 Equed overlays).
+     */
+    public static boolean isReadyToHarvest(Gob pot) {
+        return countEquedOverlays(pot) >= 2;
     }
 
     /**
@@ -90,6 +106,19 @@ public class GardenPotUtils {
         ArrayList<Gob> result = new ArrayList<>();
         for (Gob pot : allPots) {
             if (isReadyForPlanting(pot)) {
+                result.add(pot);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Filter pots that are ready to harvest from a list.
+     */
+    public static ArrayList<Gob> filterPotsReadyToHarvest(ArrayList<Gob> allPots) {
+        ArrayList<Gob> result = new ArrayList<>();
+        for (Gob pot : allPots) {
+            if (isReadyToHarvest(pot)) {
                 result.add(pot);
             }
         }
