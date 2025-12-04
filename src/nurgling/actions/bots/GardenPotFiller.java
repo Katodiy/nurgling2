@@ -72,7 +72,7 @@ public class GardenPotFiller implements Action {
         // Get mulch from Take area
         int mulchInInventory = gui.getInventory().getItems(GardenPotUtils.SOIL).size();
         if (mulchInInventory == 0) {
-            Results getMulchResult = getMulchFromArea(gui, context);
+            Results getMulchResult = getMulchFromArea(gui, context, potsNeedingMulch.size());
             if (!getMulchResult.IsSuccess()) {
                 return getMulchResult;
             }
@@ -86,7 +86,8 @@ public class GardenPotFiller implements Action {
         }
 
         // Fill each pot with mulch until marker shows full (2 or 3)
-        for (Gob pot : potsNeedingMulch) {
+        for (int i = 0; i < potsNeedingMulch.size(); i++) {
+            Gob pot = potsNeedingMulch.get(i);
             long potId = pot.id;
 
             // Keep filling same pot until it has mulch
@@ -106,7 +107,8 @@ public class GardenPotFiller implements Action {
 
                 // Check if we need more mulch
                 if (gui.getInventory().getItems(GardenPotUtils.SOIL).isEmpty()) {
-                    Results getMulchResult = getMulchFromArea(gui, context);
+                    int potsRemaining = potsNeedingMulch.size() - i;
+                    Results getMulchResult = getMulchFromArea(gui, context, potsRemaining);
                     if (!getMulchResult.IsSuccess()) {
                         gui.msg("Out of mulch");
                         return Results.SUCCESS(); // Not an error, we filled what we could
@@ -147,13 +149,17 @@ public class GardenPotFiller implements Action {
         return Results.SUCCESS();
     }
 
-    private Results getMulchFromArea(NGameUI gui, NContext context) throws InterruptedException {
+    private Results getMulchFromArea(NGameUI gui, NContext context, int potsRemaining) throws InterruptedException {
         int freeSpace = gui.getInventory().getFreeSpace();
         if (freeSpace == 0) {
             return Results.ERROR("Inventory is full");
         }
 
-        new TakeItems2(context, "Mulch", freeSpace).run(gui);
+        // Each pot needs 12 mulch
+        int mulchNeeded = potsRemaining * 12;
+        int amountToTake = Math.min(mulchNeeded, freeSpace);
+
+        new TakeItems2(context, "Mulch", amountToTake).run(gui);
 
         if (gui.getInventory().getItems(GardenPotUtils.SOIL).isEmpty()) {
             return Results.ERROR("No mulch available in Take areas");

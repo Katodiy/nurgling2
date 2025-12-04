@@ -52,9 +52,11 @@ public class GardenPotPlanter implements Action {
                 break;
             }
 
-            // Check if we have items to plant
+            // Check if we have items to plant (in inventory or hand)
             ArrayList<WItem> existingItems = gui.getInventory().getItems(plantItem);
-            if (existingItems.isEmpty()) {
+            boolean itemInHand = isItemInHand(gui, plantItem);
+
+            if (existingItems.isEmpty() && !itemInHand) {
                 // Fetch more items from seed area
                 int itemsNeeded = readyPots.size();
                 int freeSpace = gui.getInventory().getFreeSpace();
@@ -105,9 +107,11 @@ public class GardenPotPlanter implements Action {
      * Plant a single item in a pot.
      */
     private Results plantInPot(NGameUI gui, Gob pot, NAlias plantItem) throws InterruptedException {
-        // Check if we have items
+        // Check if we have items (in inventory or already in hand)
         ArrayList<WItem> items = gui.getInventory().getItems(plantItem);
-        if (items.isEmpty()) {
+        boolean itemInHand = isItemInHand(gui, plantItem);
+
+        if (items.isEmpty() && !itemInHand) {
             return Results.FAIL();  // No items left
         }
 
@@ -116,11 +120,12 @@ public class GardenPotPlanter implements Action {
         pf.isHardMode = true;
         pf.run(gui);
 
-        // Take item to hand
-        NUtils.takeItemToHand(items.get(0));
-
-        // Wait for item to be in hand
-        NUtils.getUI().core.addTask(new WaitHand());
+        // Take item to hand only if not already there
+        if (!itemInHand) {
+            NUtils.takeItemToHand(items.get(0));
+            // Wait for item to be in hand
+            NUtils.getUI().core.addTask(new WaitHand());
+        }
 
         // Apply item to pot (right-click with item in hand)
         NUtils.dropsame(pot);
@@ -129,6 +134,17 @@ public class GardenPotPlanter implements Action {
         NUtils.getUI().core.addTask(new WaitPlantAppear(pot));
 
         return Results.SUCCESS();
+    }
+
+    /**
+     * Check if the specified item type is currently in hand.
+     */
+    private boolean isItemInHand(NGameUI gui, NAlias itemAlias) {
+        if (gui.vhand == null || gui.vhand.item == null) {
+            return false;
+        }
+        String handItemName = ((NGItem) gui.vhand.item).name();
+        return handItemName != null && NParser.checkName(handItemName, itemAlias);
     }
 
     // Task to wait until hand has an item
