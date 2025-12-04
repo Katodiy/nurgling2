@@ -56,9 +56,10 @@ public class FreeKIlnGP implements Action
                         return Finder.findLiftedbyPlayer()!=null;
                     }
                 });
+                new CloseTargetContainer(container).run(gui);
                 new FindPlaceAndAction(null, NContext.findSpec(new NArea.Specialisation(Specialisation.SpecName.gardenpot.toString()))).run(gui);
             }
-            new CloseTargetContainer(container).run(gui);
+
         }
         return Results.SUCCESS();
     }
