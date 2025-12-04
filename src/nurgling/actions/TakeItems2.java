@@ -72,7 +72,7 @@ public class TakeItems2 implements Action
         this.count = count;
         this.specName = specName;
         this.specSubtype = specSubtype;
-        this.qualityType = null;
+        this.qualityType = QualityType.High;
     }
 
     @Override

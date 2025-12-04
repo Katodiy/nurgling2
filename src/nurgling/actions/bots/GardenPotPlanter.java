@@ -109,78 +109,67 @@ public class GardenPotPlanter implements Action {
 
         // Get the item alias for this plant type
         NAlias plantItem = new NAlias(plantType);
-        if (plantItem == null) {
-            gui.msg("Unknown plant type: " + plantType);
-            return Results.SUCCESS();
-        }
 
-        // Navigate to pots area
-        context.getAreaById(area.id);
+        int totalPlantsPlaced = 0;
 
-        // Find pots ready for planting
-        ArrayList<Gob> allPots = Finder.findGobs(area, GardenPotUtils.GARDEN_POT);
-        ArrayList<Gob> readyPots = GardenPotUtils.filterPotsReadyForPlanting(allPots);
-
-        if (readyPots.isEmpty()) {
-            gui.msg("No pots ready for planting in area " + area.name);
-            return Results.SUCCESS();
-        }
-
-        gui.msg("Found " + readyPots.size() + " pots ready for planting");
-
-        // Check if we have any items to plant
-        ArrayList<WItem> existingItems = gui.getInventory().getItems(plantItem);
-        if (existingItems.isEmpty()) {
-            // Try to get items from seed area
-            NArea seedArea = NContext.findSpec(
-                Specialisation.SpecName.gardenPotSeeds.toString(),
-                plantType
-            );
-            if (seedArea == null) {
-                seedArea = NContext.findSpecGlobal(
-                    Specialisation.SpecName.gardenPotSeeds.toString(),
-                    plantType
-                );
-            }
-
-            if (seedArea == null) {
-                gui.msg("No Garden Pot Seeds area found for " + plantType);
-                return Results.ERROR("No Garden Pot Seeds area with subtype " + plantType);
-            }
-
-            // Take items to inventory
-            int itemsNeeded = readyPots.size();
-            int freeSpace = gui.getInventory().getFreeSpace();
-            int itemsToTake = Math.min(itemsNeeded, freeSpace);
-
-            if (itemsToTake > 0) {
-                new TakeItems2(context, plantItem.getDefault(), itemsToTake,
-                    Specialisation.SpecName.gardenPotSeeds, plantType).run(gui);
-            }
-
-            // Navigate back to pot area
+        // Outer loop: keep fetching and planting until all pots are done or no more items
+        while (true) {
+            // Navigate to pots area
             context.getAreaById(area.id);
-        }
 
-        // Plant in each ready pot
-        int plantsPlaced = 0;
-        for (Gob pot : readyPots) {
-            // Re-check pot state (it might have changed)
-            Gob currentPot = Finder.findGob(pot.id);
-            if (currentPot == null || !GardenPotUtils.isReadyForPlanting(currentPot)) {
-                continue;
-            }
+            // Find pots ready for planting (re-check each iteration)
+            ArrayList<Gob> allPots = Finder.findGobs(area, GardenPotUtils.GARDEN_POT);
+            ArrayList<Gob> readyPots = GardenPotUtils.filterPotsReadyForPlanting(allPots);
 
-            Results result = plantInPot(gui, currentPot, plantItem);
-            if (!result.IsSuccess()) {
-                // Out of items, need more
-                gui.msg("Out of " + plantType + " to plant");
+            if (readyPots.isEmpty()) {
+                if (totalPlantsPlaced == 0) {
+                    gui.msg("No pots ready for planting in area " + area.name);
+                }
                 break;
             }
-            plantsPlaced++;
+
+            // Check if we have items to plant
+            ArrayList<WItem> existingItems = gui.getInventory().getItems(plantItem);
+            if (existingItems.isEmpty()) {
+                // Fetch more items from seed area
+                int itemsNeeded = readyPots.size();
+                int freeSpace = gui.getInventory().getFreeSpace();
+                int itemsToTake = Math.min(itemsNeeded, freeSpace);
+
+                if (itemsToTake > 0) {
+                    new TakeItems2(context, plantItem.getDefault(), itemsToTake,
+                        Specialisation.SpecName.gardenPotSeeds, plantType).run(gui);
+                }
+
+                // Check if we got any items
+                existingItems = gui.getInventory().getItems(plantItem);
+                if (existingItems.isEmpty()) {
+                    gui.msg("No more " + plantType + " available in seed areas");
+                    break;
+                }
+
+                // Navigate back to pot area
+                context.getAreaById(area.id);
+            }
+
+            // Plant in ready pots until we run out of items
+            for (Gob pot : readyPots) {
+                // Re-check pot state (it might have changed)
+                Gob currentPot = Finder.findGob(pot.id);
+                if (currentPot == null || !GardenPotUtils.isReadyForPlanting(currentPot)) {
+                    continue;
+                }
+
+                Results result = plantInPot(gui, currentPot, plantItem);
+                if (!result.IsSuccess()) {
+                    // Out of items, break inner loop to fetch more
+                    break;
+                }
+                totalPlantsPlaced++;
+            }
         }
 
-        gui.msg("Planted " + plantsPlaced + " " + plantType);
+        gui.msg("Planted " + totalPlantsPlaced + " " + plantType);
         return Results.SUCCESS();
     }
 
