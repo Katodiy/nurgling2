@@ -105,7 +105,16 @@ public class GardenPotFiller implements Action {
 
                 fillPotWithMulch(gui, currentPot);
 
-                // Check if we need more mulch
+                // Re-check if pot is now full BEFORE checking inventory
+                currentPot = Finder.findGob(potId);
+                if (currentPot != null) {
+                    long newMarker = currentPot.ngob.getModelAttribute();
+                    if (newMarker == GardenPotUtils.MARKER_MULCH_ONLY || newMarker == GardenPotUtils.MARKER_COMPLETE) {
+                        break; // Pot is full now, no need to fetch more mulch
+                    }
+                }
+
+                // Check if we need more mulch (only if pot still needs it)
                 if (gui.getInventory().getItems(GardenPotUtils.SOIL).isEmpty()) {
                     int potsRemaining = potsNeedingMulch.size() - i;
                     Results getMulchResult = getMulchFromArea(gui, context, potsRemaining);
