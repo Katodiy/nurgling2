@@ -10,24 +10,13 @@ import nurgling.tools.*;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Bot that handles planting and harvesting in garden pots.
  * Works with areas that have "Planting Garden Pots" specialization
- * and subspecializations for specific plants (e.g., "Blueberries").
+ * and subspecializations for specific plants (e.g., "Blueberry").
  */
 public class GardenPotPlanter implements Action {
-
-    // Plant type mappings - subspecialization name to item alias
-    private static final Map<String, NAlias> PLANT_ITEMS = new HashMap<>();
-    static {
-        PLANT_ITEMS.put("Blueberries", new NAlias("Blueberry"));
-        PLANT_ITEMS.put("Lingonberries", new NAlias("Lingonberry"));
-        PLANT_ITEMS.put("Strawberries", new NAlias("Strawberry"));
-        // Add more plant types here as needed
-    }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
