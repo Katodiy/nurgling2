@@ -3,6 +3,8 @@ package haven;
 import java.util.*;
 import java.awt.image.BufferedImage;
 import haven.MenuGrid.Pagina;
+import haven.UI.Grab;
+import haven.MenuGrid.Interaction;
 import haven.MenuGrid.PagButton;
 
 public class MenuSearch extends Window {
@@ -13,6 +15,9 @@ public class MenuSearch extends Window {
     private List<Result> cur = Collections.emptyList();
     private List<Result> filtered = Collections.emptyList();
     private boolean recons = false;
+    private Coord drag_start = null;
+    private boolean drag_mode = false;
+    private Grab grab = null;
 
     public class Result {
 	public final PagButton btn;
@@ -42,19 +47,61 @@ public class MenuSearch extends Window {
 			    }, Coord.z);
 		    }
 
-		    private double lastcl = 0;
 		    @Override public boolean mousedown(MouseDownEvent ev) {
-			boolean psel = sel == item;
 			super.mousedown(ev);
-			double now = Utils.rtime();
-			if(psel) {
-			    if(now - lastcl < 0.5)
-				menu.use(item.btn, new MenuGrid.Interaction(1, ui.modflags()), false);
+			
+			if(ev.b == 1){
+			    drag_start = ui.mc;
+			    drag_mode = false;
+			    grab = ui.grabmouse(this);
 			}
-			lastcl = now;
+
 			return(true);
 		    }
+
+		    @Override public void mousemove(MouseMoveEvent ev) {
+			if(!drag_mode && drag_start != null && drag_start.dist(ui.mc) > 40) {
+			    drag_mode = true;
+			}
+			super.mousemove(ev);
+		    }
+
+		    @Override public boolean mouseup(MouseUpEvent ev) {
+			if((ev.b == 1) && (grab != null)) {
+			    if(drag_mode) {
+				DropTarget.dropthing(ui.root, ui.mc, rls.sel.btn.pag);
+			    } else {
+				menu.use(rls.sel.btn, new Interaction(), false);
+			    }
+			    
+			    drag_start = null;
+			    drag_mode = false;
+			    
+			    grab.remove();
+			    grab = null;
+
+			    // Defocus the search box after selecting something
+			    if(ui.gui != null && ui.gui.portrait != null)
+				setfocus(ui.gui.portrait);
+			}
+			return super.mouseup(ev);
+		    }
+
 		});
+	}
+
+	@Override
+	public Object tooltip(Coord c, Widget prev) {
+	    try {
+		int slot = slotat(c);
+		final Result item = items().get(slot);
+		if (item != null) {
+		    return new TexI(item.btn.rendertt(true));
+		} else {
+		    return super.tooltip(c, prev);
+		}
+	    } catch (Exception ignored){}
+	    return null;
 	}
     }
 
@@ -79,12 +126,7 @@ public class MenuSearch extends Window {
     }
 
     private void refilter() {
-	List<Result> found = new ArrayList<>();
-	String needle = sbox.text().toLowerCase();
-	for(Result res : this.cur) {
-	    if(res.btn.name().toLowerCase().indexOf(needle) >= 0)
-		found.add(res);
-	}
+	List<Result> found = Fuzzy.fuzzyFilterAndSort(sbox.text().toLowerCase(), this.cur);
 	this.filtered = found;
 	int idx = filtered.indexOf(rls.sel);
 	if(idx < 0) {
@@ -146,8 +188,9 @@ public class MenuSearch extends Window {
     }
 
     public void tick(double dt) {
-	if(menu.cur != root)
-	    setroot(menu.cur);
+	// Search checks for EVERYTHING, not just the current sub-menu in the menu-grid
+	// if(menu.cur != root)
+	//     setroot(menu.cur);
 	if(recons)
 	    updlist();
 	super.tick(dt);
@@ -172,6 +215,19 @@ public class MenuSearch extends Window {
 	    return(true);
 	} else {
 	    return(super.keydown(ev));
+	}
+    }
+
+    public void draw(GOut g) {
+	super.draw(g);
+	// Drawing the drag icon
+	if(drag_mode && rls.sel != null) {
+	    GSprite ds = rls.sel.btn.spr();
+	    ui.drawafter(new UI.AfterDraw() {
+		public void draw(GOut g) {
+		    ds.draw(g.reclip(ui.mc.sub(ds.sz().div(2)), ds.sz()));
+		}
+	    });
 	}
     }
 }
