@@ -145,6 +145,8 @@ public class Container implements NContext.ObjectStorage {
                 return 0;
             int count = 0;
             short[][] oldData = (short[][]) res.get(key);
+            if (oldData == null)
+                return 0;
 
             short[][] tempGrid = new short[oldData.length][oldData[0].length];
             for (int i = 0; i < tempGrid.length; i++)
