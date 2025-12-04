@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.tools.DirectionalVector;
 
 /**
  * Small window that appears when tracking/dowsing vectors are added.
@@ -53,6 +54,7 @@ public class TrackingVectorWindow extends Window {
             NGameUI gui = NUtils.getGameUI();
             if (gui != null && gui.map instanceof NMapView) {
                 ((NMapView) gui.map).directionalVectors.clear();
+                DirectionalVector.resetColorCycle();
             }
         } catch (Exception e) {
             // Ignore errors

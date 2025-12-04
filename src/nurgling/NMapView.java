@@ -126,7 +126,8 @@ public class NMapView extends MapView
     private boolean overlaysInitialized = false;
 
     // Directional vectors for triangulation (fixed position, not following player)
-    public java.util.List<nurgling.tools.DirectionalVector> directionalVectors = new java.util.ArrayList<>();
+    // Using CopyOnWriteArrayList for thread safety - render thread iterates while game thread modifies
+    public java.util.List<nurgling.tools.DirectionalVector> directionalVectors = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     // Marker line system (lines to selected marker icon - follows player)
     public MiniMap.DisplayMarker selectedMarker = null;

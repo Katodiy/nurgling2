@@ -141,16 +141,19 @@ public class NProspecting extends Window {
             );
             Coord edge2TileCoords = edge2World.div(MCache.tilesz).floor().add(sessloc.tc);
 
-            // Add the vectors
+            // Get color for this pair (same color for both edges)
+            java.awt.Color pairColor = DirectionalVector.getNextColor();
+
+            // Add the vectors with the same color
             mapView.directionalVectors.add(new DirectionalVector(
-                playerTileCoords, edge1TileCoords, "Dowse Edge 1", -1
+                playerTileCoords, edge1TileCoords, "Dowse Edge 1", -1, pairColor
             ));
             mapView.directionalVectors.add(new DirectionalVector(
-                playerTileCoords, edge2TileCoords, "Dowse Edge 2", -1
+                playerTileCoords, edge2TileCoords, "Dowse Edge 2", -1, pairColor
             ));
 
-            // Show the tracking vector window
-            TrackingVectorWindow.showWindow();
+            // Defer window creation to UI thread to avoid deadlock
+            gui.ui.loader.defer(() -> TrackingVectorWindow.showWindow(), null);
 
         } catch (Exception e) {
             // Silently ignore errors
