@@ -30,6 +30,8 @@ public abstract class Listbox<T> extends ListWidget<T> {
         int n = listitems();
         for(int i = 0; (i * itemh) < sz.y; i++) {
             int idx = i + sb.val;
+            if(idx < 0)
+                continue;
             if(idx >= n)
                 break;
             T item = listitem(idx);
@@ -66,7 +68,7 @@ public abstract class Listbox<T> extends ListWidget<T> {
 
     public T itemat(Coord c) {
         int idx = idxat(c);
-        if(idx >= listitems())
+        if(idx < 0 || idx >= listitems())
             return(null);
         return(listitem(idx));
     }
@@ -75,7 +77,7 @@ public abstract class Listbox<T> extends ListWidget<T> {
         if(super.mousedown(ev))
             return(true);
         int idx = idxat(ev.c);
-        T item = (idx >= listitems()) ? null : listitem(idx);
+        T item = (idx < 0 || idx >= listitems()) ? null : listitem(idx);
         if((item == null) && (ev.b == 1))
             change(null);
         else if(item != null)
