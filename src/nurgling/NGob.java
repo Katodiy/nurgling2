@@ -1005,8 +1005,34 @@ public class NGob
                 if (res.name.equals("gfx/fx/dowse"))
                 {
                     NProspecting.overlay(parent, ol);
+                    // Also add vectors directly (overlay only adds if QUALITIES not empty)
+                    tryAddTrackingVectors(parent, ol);
+                }
+                // Also handle tracking overlays - check for any overlay with a1/a2 fields
+                else if (res.name.contains("track"))
+                {
+                    // Try to extract a1/a2 and add vectors even without quality
+                    tryAddTrackingVectors(parent, ol);
                 }
             }
+        }
+    }
+
+    /**
+     * Attempts to add tracking vectors for any overlay that has a1/a2 angle fields.
+     * Used for tracking effects that don't go through the NProspecting system.
+     */
+    private void tryAddTrackingVectors(Gob gob, Gob.Overlay ol) {
+        try {
+            double a1 = NProspecting.getFieldValueDouble(ol.spr, "a1");
+            double a2 = NProspecting.getFieldValueDouble(ol.spr, "a2");
+
+            // Only add if we got valid angles
+            if (a1 != 0 || a2 != 0) {
+                NProspecting.addConeVectors(gob, a1, a2);
+            }
+        } catch (Exception e) {
+            // Silently ignore - overlay doesn't have the expected fields
         }
     }
 
