@@ -1427,6 +1427,13 @@ public class VSpec {
         fruits.add(new JSONObject("{\"static\":\"gfx/invobjs/sorbapple-yester\",\"name\":\"Yesteryear's Sorb Apple Seed\"}"));
         categories.put("Fruit", fruits);
 
+        ArrayList<JSONObject> forageble = new ArrayList<>();
+        forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/blueberry\",\"name\":\"Blueberries\"}"));
+        forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lingon\",\"name\":\"Lingonberries\"}"));
+        forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/rustroot\",\"name\":\"Rustroot\"}"));
+        forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/stingingnettle\",\"name\":\"Stinging Nettle\"}"));
+        categories.put("Forageable", forageble);
+
         ArrayList<JSONObject> fruitOrBerry = new ArrayList<>();
         fruitOrBerry.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackberrybush\",\"name\":\"Blackberry Seed\"}"));
         fruitOrBerry.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackcurrant\",\"name\":\"Blackcurrant Seed\"}"));

@@ -21,6 +21,7 @@ public class StackSupporter {
         customStackSizes.put("Bog Turtle Shell", 1);
         customStackSizes.put("Wolf's Claw", 4);
         customStackSizes.put("Clove of Garlic", 5);
+        customStackSizes.put("Stinging Nettle", 4);
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
         size3.add("Onion");
@@ -91,6 +92,7 @@ public class StackSupporter {
         size4.add("Seed of Tree or Bush");
         size4.add("Decent-sized Conifer Cone");
         size4.add("Tree Bough");
+        size4.add("Forageable");
 
         catSize.put(size4,4);
 
