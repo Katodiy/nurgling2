@@ -1,14 +1,11 @@
 package nurgling.widgets;
 
 import haven.*;
-import nurgling.NConfig;
-import nurgling.NMapView;
-import nurgling.NUtils;
-import nurgling.LocalizedResourceTimer;
-import nurgling.NGameUI;
+import nurgling.*;
 import nurgling.overlays.map.MinimapClaimRenderer;
 import nurgling.overlays.map.MinimapExploredAreaRenderer;
 import nurgling.tools.ExploredArea;
+import nurgling.tools.NParser;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -16,7 +13,8 @@ import java.awt.image.BufferedImage;
 import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
 
-public class NMiniMap extends MiniMap {
+public class
+NMiniMap extends MiniMap {
     public static final Coord _sgridsz = new Coord(100, 100);
     public static final Coord VIEW_SZ = UI.scale(_sgridsz.mul(9).div(tilesz.floor()));
     public static final Color VIEW_EXPLORED_COLOR = new Color(255, 255, 0, 144); // Yellow semi-transparent for explored area (120 + 20% of 120 = 144)
@@ -1114,7 +1112,24 @@ public class NMiniMap extends MiniMap {
                     }
                 }
 
-                mark.draw(g, mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz));
+                Coord markPos = mark.m.tc.sub(dloc.tc).div(scalef()).add(hsz);
+                mark.draw(g, markPos);
+                
+                // Draw name for quest giver markers (bush/bumling)
+                if(mark.m instanceof MapFile.SMarker) {
+                    MapFile.SMarker sm = (MapFile.SMarker)mark.m;
+                    if((Boolean)NConfig.get(NConfig.Key.showQuestGiverNames) && NParser.checkName(sm.res.name, "small/bush", "small/bumling", "gianttoad") && mark.m.nm != null && !mark.m.nm.isEmpty()) {
+                        Text nameText = NStyle.meter.render(mark.m.nm);
+                        Coord textPos = markPos.add(0, UI.scale(10));
+                        g.aimage(nameText.tex(), textPos, 0.5, 0);
+                    }
+
+                    if((Boolean)NConfig.get(NConfig.Key.showThingwallNames) && NParser.checkName(sm.res.name, "thingwall") && mark.m.nm != null && !mark.m.nm.isEmpty()) {
+                        Text nameText = NStyle.gmeter.render(mark.m.nm);
+                        Coord textPos = markPos.add(0, UI.scale(10));
+                        g.aimage(nameText.tex(), textPos, 0.5, 0);
+                    }
+                }
             }
         }
     }

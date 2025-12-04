@@ -43,7 +43,7 @@ public class SmelterAction implements Action {
 
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
-            NArea smelters = NContext.findSpecGlobal(Specialisation.SpecName.smelter.toString());
+            NArea smelters = NContext.findSpec(Specialisation.SpecName.smelter.toString());
             Finder.findGobs(smelters, new NAlias("gfx/terobjs/smelter"));
 
             ArrayList<Container> containers = new ArrayList<>();

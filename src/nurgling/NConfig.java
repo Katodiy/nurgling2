@@ -147,7 +147,9 @@ public class NConfig
         alwaysObfuscate,
         boughbeeprop,
         foragerprop,
-        buttonStyle
+        buttonStyle,
+        showQuestGiverNames,
+        showThingwallNames
     }
 
     public enum BBDisplayMode
@@ -390,6 +392,10 @@ public class NConfig
         
         // Auth obfuscation - bypass firewall blocks
         conf.put(Key.alwaysObfuscate, false);
+        
+        // Map marker name display settings
+        conf.put(Key.showQuestGiverNames, true);
+        conf.put(Key.showThingwallNames, true);
     }
 
 
