@@ -1,6 +1,7 @@
 package nurgling.actions.bots;
 
 import haven.Gob;
+import haven.res.gfx.fx.eq.Equed;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
@@ -38,10 +39,22 @@ public class GardenPotUtils {
     }
 
     /**
-     * Check if a pot is ready for planting (has both soil and water).
+     * Check if a pot has a plant (has Equed overlay).
+     */
+    public static boolean hasPlant(Gob pot) {
+        for (Gob.Overlay ol : pot.ols) {
+            if (ol.spr instanceof Equed) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if a pot is ready for planting (has both soil and water, no plant yet).
      */
     public static boolean isReadyForPlanting(Gob pot) {
-        return pot.ngob.getModelAttribute() == MARKER_COMPLETE;
+        return pot.ngob.getModelAttribute() == MARKER_COMPLETE && !hasPlant(pot);
     }
 
     /**

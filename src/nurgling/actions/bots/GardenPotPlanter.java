@@ -208,8 +208,8 @@ public class GardenPotPlanter implements Action {
         // Apply item to pot (right-click with item in hand)
         NUtils.dropsame(pot);
 
-        // Wait for item to be consumed (hand becomes empty)
-        NUtils.getUI().core.addTask(new WaitHandEmpty());
+        // Wait for plant to appear (Equed overlay on pot)
+        NUtils.getUI().core.addTask(new WaitPlantAppear(pot));
 
         return Results.SUCCESS();
     }
@@ -226,15 +226,22 @@ public class GardenPotPlanter implements Action {
         }
     }
 
-    // Task to wait until hand is empty
-    private static class WaitHandEmpty extends NTask {
+    // Task to wait until plant appears on pot (Equed overlay)
+    private static class WaitPlantAppear extends NTask {
+        private final Gob pot;
         private int counter = 0;
+
+        WaitPlantAppear(Gob pot) {
+            this.pot = pot;
+        }
 
         @Override
         public boolean check() {
             counter++;
             if (counter >= 100) return true;  // Timeout
-            return NUtils.getGameUI().vhand == null;
+            Gob currentPot = Finder.findGob(pot.id);
+            if (currentPot == null) return true;
+            return GardenPotUtils.hasPlant(currentPot);
         }
     }
 }
