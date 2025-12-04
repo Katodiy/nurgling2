@@ -25,5 +25,8 @@ public class SpecialisationData {
         data.put("cistern", cistern);
         ArrayList<String> picklingJars = new ArrayList<>(Arrays.asList("Beetroots", "Carrots", "Eggs", "Herring", "Olives", "Cucumbers", "Red Onion", "Yellow Onion"));
         data.put("picklingJars", picklingJars);
+        ArrayList<String> gardenPotPlants = new ArrayList<>(Arrays.asList("Blueberries", "Lingonberries", "Strawberries"));
+        data.put("plantingGardenPots", gardenPotPlants);
+        data.put("gardenPotSeeds", gardenPotPlants);
     }
 }

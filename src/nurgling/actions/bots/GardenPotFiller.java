@@ -13,16 +13,6 @@ import java.util.ArrayList;
 
 public class GardenPotFiller implements Action {
 
-    private static final NAlias GARDEN_POT = new NAlias("gfx/terobjs/gardenpot");
-    private static final NAlias SOIL = new NAlias("Soil", "Mulch");
-    private static final NAlias WATER = new NAlias("Water");
-
-    // Marker states
-    private static final long MARKER_EMPTY = 0;      // Needs both mulch and water
-    private static final long MARKER_WATER_ONLY = 1; // Needs mulch
-    private static final long MARKER_MULCH_ONLY = 2; // Needs water
-    private static final long MARKER_COMPLETE = 3;   // Done
-
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NContext context = new NContext(gui);
@@ -43,30 +33,6 @@ public class GardenPotFiller implements Action {
         return Results.SUCCESS();
     }
 
-    // Get pots that need mulch (marker 0 or 1)
-    private ArrayList<Gob> getPotsNeedingMulch(ArrayList<Gob> allPots) {
-        ArrayList<Gob> result = new ArrayList<>();
-        for (Gob pot : allPots) {
-            long marker = pot.ngob.getModelAttribute();
-            if (marker == MARKER_EMPTY || marker == MARKER_WATER_ONLY) {
-                result.add(pot);
-            }
-        }
-        return result;
-    }
-
-    // Get pots that need water (marker 0 or 2)
-    private ArrayList<Gob> getPotsNeedingWater(ArrayList<Gob> allPots) {
-        ArrayList<Gob> result = new ArrayList<>();
-        for (Gob pot : allPots) {
-            long marker = pot.ngob.getModelAttribute();
-            if (marker == MARKER_EMPTY || marker == MARKER_MULCH_ONLY) {
-                result.add(pot);
-            }
-        }
-        return result;
-    }
-
     private Results fillMulchPhase(NGameUI gui, NContext context) throws InterruptedException {
         // Navigate to pots area
         NArea potArea = context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
@@ -75,8 +41,8 @@ public class GardenPotFiller implements Action {
         }
 
         // Get all pots and filter to those needing mulch (marker 0 or 1)
-        ArrayList<Gob> allPots = Finder.findGobs(potArea, GARDEN_POT);
-        ArrayList<Gob> potsNeedingMulch = getPotsNeedingMulch(allPots);
+        ArrayList<Gob> allPots = Finder.findGobs(potArea, GardenPotUtils.GARDEN_POT);
+        ArrayList<Gob> potsNeedingMulch = GardenPotUtils.filterPotsNeedingMulch(allPots);
 
         if (potsNeedingMulch.isEmpty()) {
             gui.msg("No garden pots need mulch");
@@ -86,7 +52,7 @@ public class GardenPotFiller implements Action {
         gui.msg("Found " + potsNeedingMulch.size() + " garden pots needing mulch");
 
         // Get mulch from Take area
-        int mulchInInventory = gui.getInventory().getItems(SOIL).size();
+        int mulchInInventory = gui.getInventory().getItems(GardenPotUtils.SOIL).size();
         if (mulchInInventory == 0) {
             Results getMulchResult = getMulchFromArea(gui, context);
             if (!getMulchResult.IsSuccess()) {
@@ -110,14 +76,14 @@ public class GardenPotFiller implements Action {
                 }
 
                 long marker = currentPot.ngob.getModelAttribute();
-                if (marker == MARKER_MULCH_ONLY || marker == MARKER_COMPLETE) {
+                if (marker == GardenPotUtils.MARKER_MULCH_ONLY || marker == GardenPotUtils.MARKER_COMPLETE) {
                     break; // Pot is full, move to next
                 }
 
                 fillPotWithMulch(gui, currentPot);
 
                 // Check if we need more mulch
-                if (gui.getInventory().getItems(SOIL).isEmpty()) {
+                if (gui.getInventory().getItems(GardenPotUtils.SOIL).isEmpty()) {
                     Results getMulchResult = getMulchFromArea(gui, context);
                     if (!getMulchResult.IsSuccess()) {
                         gui.msg("Out of mulch");
@@ -138,7 +104,7 @@ public class GardenPotFiller implements Action {
         pf.run(gui);
 
         // Check if we have mulch
-        ArrayList<WItem> mulchItems = gui.getInventory().getItems(SOIL);
+        ArrayList<WItem> mulchItems = gui.getInventory().getItems(GardenPotUtils.SOIL);
         if (mulchItems.isEmpty()) {
             return Results.SUCCESS(); // Need to get more mulch
         }
@@ -163,7 +129,7 @@ public class GardenPotFiller implements Action {
 
         new TakeItems2(context, "Mulch", freeSpace).run(gui);
 
-        if (gui.getInventory().getItems(SOIL).isEmpty()) {
+        if (gui.getInventory().getItems(GardenPotUtils.SOIL).isEmpty()) {
             return Results.ERROR("No mulch available in Take areas");
         }
 
@@ -178,8 +144,8 @@ public class GardenPotFiller implements Action {
         }
 
         // Get all pots and filter to those needing water (marker 0 or 2)
-        ArrayList<Gob> allPots = Finder.findGobs(potArea, GARDEN_POT);
-        ArrayList<Gob> potsNeedingWater = getPotsNeedingWater(allPots);
+        ArrayList<Gob> allPots = Finder.findGobs(potArea, GardenPotUtils.GARDEN_POT);
+        ArrayList<Gob> potsNeedingWater = GardenPotUtils.filterPotsNeedingWater(allPots);
 
         if (potsNeedingWater.isEmpty()) {
             gui.msg("No garden pots need water");
@@ -189,7 +155,7 @@ public class GardenPotFiller implements Action {
         gui.msg("Found " + potsNeedingWater.size() + " garden pots needing water");
 
         // Use FillFluid with the new garden pot constructor (no mask)
-        FillFluid fillFluid = new FillFluid(potsNeedingWater, context, Specialisation.SpecName.plantingGardenPots, WATER);
+        FillFluid fillFluid = new FillFluid(potsNeedingWater, context, Specialisation.SpecName.plantingGardenPots, GardenPotUtils.WATER);
         return fillFluid.run(gui);
     }
 
@@ -211,7 +177,7 @@ public class GardenPotFiller implements Action {
             }
             long marker = pot.ngob.getModelAttribute();
             // Pot has mulch when marker is 2 (mulch only) or 3 (complete)
-            return marker == MARKER_MULCH_ONLY || marker == MARKER_COMPLETE;
+            return marker == GardenPotUtils.MARKER_MULCH_ONLY || marker == GardenPotUtils.MARKER_COMPLETE;
         }
     }
 }
