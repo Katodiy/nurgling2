@@ -11,6 +11,7 @@ import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
+import nurgling.NInventory.QualityType;
 
 import java.util.ArrayList;
 import java.util.TreeMap;
@@ -85,7 +86,7 @@ public class SilkProductionBot implements Action {
         gui.msg("Filling herbalist tables with eggs.");
         if (totalEggsNeeded > 0) {
             context.addInItem(eggs, null);
-            new FillContainers2(htableContainers, eggs, context).run(gui);
+            new FillContainers2(htableContainers, eggs, context, QualityType.High).run(gui);
         }
 
         NContext freshContext = new NContext(gui);
