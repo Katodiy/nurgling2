@@ -13,9 +13,22 @@ import java.util.ArrayList;
 
 public class GardenPotFiller implements Action {
 
+    private final NArea targetArea;
+    private final NContext externalContext;
+
+    public GardenPotFiller() {
+        this.targetArea = null;
+        this.externalContext = null;
+    }
+
+    public GardenPotFiller(NArea area, NContext context) {
+        this.targetArea = area;
+        this.externalContext = context;
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NContext context = new NContext(gui);
+        NContext context = externalContext != null ? externalContext : new NContext(gui);
 
         // Register mulch as input item so TakeItems2 can find it
         context.addInItem("Mulch", null);
@@ -35,7 +48,12 @@ public class GardenPotFiller implements Action {
 
     private Results fillMulchPhase(NGameUI gui, NContext context) throws InterruptedException {
         // Navigate to pots area
-        NArea potArea = context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+        NArea potArea;
+        if (targetArea != null) {
+            potArea = context.getAreaById(targetArea.id);
+        } else {
+            potArea = context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+        }
         if (potArea == null) {
             return Results.ERROR("No Planting Garden Pots area found. Please configure the specialization.");
         }
@@ -61,7 +79,11 @@ public class GardenPotFiller implements Action {
         }
 
         // Navigate back to pots area after getting mulch
-        context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+        if (targetArea != null) {
+            context.getAreaById(targetArea.id);
+        } else {
+            context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+        }
 
         // Fill each pot with mulch until marker shows full (2 or 3)
         for (Gob pot : potsNeedingMulch) {
@@ -90,7 +112,11 @@ public class GardenPotFiller implements Action {
                         return Results.SUCCESS(); // Not an error, we filled what we could
                     }
                     // Navigate back to pots area
-                    context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+                    if (targetArea != null) {
+                        context.getAreaById(targetArea.id);
+                    } else {
+                        context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+                    }
                 }
             }
         }
@@ -138,7 +164,12 @@ public class GardenPotFiller implements Action {
 
     private Results fillWaterPhase(NGameUI gui, NContext context) throws InterruptedException {
         // Navigate to pots area to get the list of pots
-        NArea potArea = context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+        NArea potArea;
+        if (targetArea != null) {
+            potArea = context.getAreaById(targetArea.id);
+        } else {
+            potArea = context.getSpecArea(Specialisation.SpecName.plantingGardenPots);
+        }
         if (potArea == null) {
             return Results.ERROR("No Planting Garden Pots area found");
         }

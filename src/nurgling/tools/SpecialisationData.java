@@ -26,7 +26,7 @@ public class SpecialisationData {
         ArrayList<String> picklingJars = new ArrayList<>(Arrays.asList("Beetroots", "Carrots", "Eggs", "Herring", "Olives", "Cucumbers", "Red Onion", "Yellow Onion"));
         data.put("picklingJars", picklingJars);
         ArrayList<String> gardenPotPlants = new ArrayList<>(Arrays.asList(
-            "Bloodstern", "Blueberry", "Cavebulb", "Chantrelles", "Chiming Bluebell",
+            "Bloodstern", "Blueberries", "Cavebulb", "Chantrelles", "Chiming Bluebell",
             "Chives", "Clover", "Dandelion", "Dill", "Heartsease", "Kvann",
             "Lady's Mantle", "Liberty Caps", "Lupine", "Parasol Mushroom", "Sage",
             "Stalagoom", "Stinging Nettle", "Strawberry", "Tansy", "Thyme",

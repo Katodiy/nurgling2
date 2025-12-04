@@ -71,7 +71,7 @@ public class GardenPotPlanter implements Action {
         // Results harvestResult = harvestReadyPlants(gui, context, area, plantType);
 
         // Step 2: Fill pots with soil and water using existing GardenPotFiller
-        Results fillResult = new GardenPotFiller().run(gui);
+        Results fillResult = new GardenPotFiller(area, context).run(gui);
         if (!fillResult.IsSuccess()) {
             gui.msg("Warning: Fill phase had issues");
             // Continue anyway, some pots may be ready
