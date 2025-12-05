@@ -16,8 +16,6 @@ public class StackSupporter {
     static {
         // Custom stack sizes for items that differ from their category defaults
         customStackSizes.put("Earthworm", 5);
-        customStackSizes.put("Itsy Bitsy Spider", 4);
-        customStackSizes.put("Cave Moth", 4);
         customStackSizes.put("Bog Turtle Shell", 1);
         customStackSizes.put("Wolf's Claw", 4);
         customStackSizes.put("Clove of Garlic", 5);
@@ -38,7 +36,6 @@ public class StackSupporter {
         size3.add("Flour");
         size3.add("Giant Ant");
         size3.add("Royal Ant");
-        size3.add("Bug");
         size3.add("Fishline");
         size3.add("Sweetener");
         size3.add("Thatching Material");
@@ -93,6 +90,7 @@ public class StackSupporter {
         size4.add("Decent-sized Conifer Cone");
         size4.add("Tree Bough");
         size4.add("Forageable");
+        size4.add("Bug");
 
         catSize.put(size4,4);
 
