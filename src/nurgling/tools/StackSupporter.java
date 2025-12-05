@@ -179,17 +179,21 @@ public class StackSupporter {
             return 1;
         }
         ArrayList<String> categories = VSpec.getCategory(name);
+        int maxSize = 1;
         for(String cat: categories)
         {
             for(HashSet<String> set: catSize.keySet())
             {
                 if(set.contains(cat))
                 {
-                    return catSize.get(set);
+                    int size = catSize.get(set);
+                    if (size > maxSize) {
+                        maxSize = size;
+                    }
                 }
             }
         }
-        return 1;
+        return maxSize;
     }
 
     public static boolean isSameExist(NAlias items, NInventory inv) throws InterruptedException {
