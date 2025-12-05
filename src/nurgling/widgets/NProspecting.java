@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import haven.render.*;
 import haven.res.ui.tt.q.quality.Quality;
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -104,6 +105,12 @@ public class NProspecting extends Window {
      */
     public static void addConeVectors(Gob gob, double a1, double a2) {
         try {
+            // Check if tracking vectors feature is enabled
+            Object trackingVectorsSetting = NConfig.get(NConfig.Key.trackingVectors);
+            if (!(trackingVectorsSetting instanceof Boolean) || !(Boolean) trackingVectorsSetting) {
+                return;
+            }
+
             NGameUI gui = NUtils.getGameUI();
             if (gui == null || gui.map == null || !(gui.map instanceof NMapView)) {
                 return;

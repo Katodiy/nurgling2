@@ -151,7 +151,8 @@ public class NConfig
         foragerprop,
         buttonStyle,
         showQuestGiverNames,
-        showThingwallNames
+        showThingwallNames,
+        trackingVectors
     }
 
     public enum BBDisplayMode
