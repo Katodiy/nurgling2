@@ -325,10 +325,44 @@ public class NContext {
         return areas.get(name.toString());
     }
 
+    /**
+     * Get an area by its ID and navigate to it using global pathfinding.
+     * Similar to getSpecArea but takes an area ID instead of spec name.
+     */
+    public NArea getAreaById(int areaId) throws InterruptedException {
+        String key = "area_" + areaId;
+        if (!areas.containsKey(key)) {
+            NArea area = NUtils.getGameUI().map.glob.map.areas.get(areaId);
+            if (area != null) {
+                areas.put(key, area);
+                List<RoutePoint> pointList = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(
+                    ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()),
+                    ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)
+                );
+                if (pointList != null && !pointList.isEmpty()) {
+                    rps.put(key, pointList.get(pointList.size() - 1));
+                }
+            } else {
+                return null;
+            }
+        }
+        navigateToAreaIfNeeded(key);
+        return areas.get(key);
+    }
+
     public ArrayList<ObjectStorage> getSpecStorages(Specialisation.SpecName name) throws InterruptedException {
+        return getSpecStorages(name, null);
+    }
+
+    public ArrayList<ObjectStorage> getSpecStorages(Specialisation.SpecName name, String subtype) throws InterruptedException {
 
         ArrayList<ObjectStorage> inputs = new ArrayList<>();
-        NArea area = getSpecArea(name);
+        NArea area;
+        if (subtype != null && !subtype.isEmpty()) {
+            area = getSpecArea(name, subtype);
+        } else {
+            area = getSpecArea(name);
+        }
 
         if(area == null) {
             return null;
@@ -1083,6 +1117,55 @@ public class NContext {
             }
         }
         return res;
+    }
+
+    /**
+     * Find all areas with a specific specialization and optional subtype.
+     * Uses global search with route graph distance, similar to findSpecGlobal.
+     * Returns list of areas sorted by route distance from player.
+     */
+    public static ArrayList<NArea> findAllSpec(String name, String subtype) {
+        // Map to store areas with their route distances
+        Map<NArea, Integer> areaDistances = new HashMap<>();
+
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            for (Integer id : nids) {
+                if (id > 0) {
+                    NArea area = NUtils.getGameUI().map.glob.map.areas.get(id);
+                    if (area != null) {
+                        for (NArea.Specialisation s : area.spec) {
+                            boolean nameMatch = s.name.equals(name);
+                            boolean subtypeMatch = (subtype == null || subtype.isEmpty()) ||
+                                (s.subtype != null && s.subtype.equalsIgnoreCase(subtype));
+                            if (nameMatch && subtypeMatch) {
+                                // Check if area is reachable via route graph
+                                List<RoutePoint> routePoints = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(
+                                    ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()),
+                                    ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)
+                                );
+                                if (routePoints != null) {
+                                    areaDistances.put(area, routePoints.size());
+                                }
+                                break; // Don't check other specs for same area
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sort by route distance
+        ArrayList<NArea> results = new ArrayList<>(areaDistances.keySet());
+        results.sort((a, b) -> Integer.compare(areaDistances.get(a), areaDistances.get(b)));
+        return results;
+    }
+
+    /**
+     * Find all areas with a specific specialization (any subtype).
+     */
+    public static ArrayList<NArea> findAllSpec(String name) {
+        return findAllSpec(name, null);
     }
 
     /**

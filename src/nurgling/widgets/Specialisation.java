@@ -89,7 +89,8 @@ public class Specialisation extends Window
         smokedlog,
         waterForTrees,
         soilForTrees,
-        plantingGardenPots;
+        plantingGardenPots,
+        gardenPotSeeds;
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -173,6 +174,7 @@ public class Specialisation extends Window
 
         // Garden pot filling
         specialisation.add(new SpecialisationItem(SpecName.plantingGardenPots.toString(),"Planting Garden Pots",Resource.loadsimg("nurgling/categories/gardenpotplanted")));
+        specialisation.add(new SpecialisationItem(SpecName.gardenPotSeeds.toString(),"Garden Pot Seeds",Resource.loadsimg("nurgling/categories/gardenpot")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override

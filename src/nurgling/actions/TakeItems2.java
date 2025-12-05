@@ -26,6 +26,7 @@ public class TakeItems2 implements Action
     String item;
     int count;
     Specialisation.SpecName specName;
+    String specSubtype;
     QualityType qualityType;
     public boolean exactMatch = false;
 
@@ -64,6 +65,16 @@ public class TakeItems2 implements Action
         this.qualityType = qualityType;
     }
 
+    public TakeItems2(NContext context, String item, int count, Specialisation.SpecName specName, String specSubtype)
+    {
+        this.cnt = context;
+        this.item = item;
+        this.count = count;
+        this.specName = specName;
+        this.specSubtype = specSubtype;
+        this.qualityType = QualityType.High;
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
@@ -72,7 +83,7 @@ public class TakeItems2 implements Action
         if(specName == null) {
             inputs = cnt.getInStorages(item);
         } else {
-            inputs = cnt.getSpecStorages(this.specName);
+            inputs = cnt.getSpecStorages(this.specName, this.specSubtype);
         }
 
         if(inputs == null || inputs.isEmpty())
