@@ -2880,33 +2880,34 @@ public class VSpec {
 
     public static void checkLpExplorer(Gob clickedGob, String name) {
         if(clickedGob!=null) {
-            if (NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null) {
-                return;
-            }
-            if (clickedGob.ngob.name != null && object.containsKey(clickedGob.ngob.name)) {
-                if (object.get(clickedGob.ngob.name).contains(name)) {
-                    boolean objectExists = NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name);
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().getCharInfo() != null) {
+                if (clickedGob.ngob.name != null && object.containsKey(clickedGob.ngob.name)) {
+                    if (object.get(clickedGob.ngob.name).contains(name)) {
+                        boolean objectExists = NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name);
 
-                    if (!objectExists) {
-                        NUtils.getGameUI().getCharInfo().LpExplorerAdd(clickedGob.ngob.name,name);
-                        NUtils.getGameUI().getCharInfo().newLpExplorer = true;
+                        if (!objectExists) {
+                            NUtils.getGameUI().getCharInfo().LpExplorerAdd(clickedGob.ngob.name,name);
+                            NUtils.getGameUI().getCharInfo().newLpExplorer = true;
 
-                    } else {
-                        int currentSize = NUtils.getGameUI().getCharInfo().LpExplorerGetSize(clickedGob.ngob.name);
-                        int totalSize = object.get(clickedGob.ngob.name).size();
-                        boolean productExists = NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name, name);
-                        
+                        } else {
+                            int currentSize = NUtils.getGameUI().getCharInfo().LpExplorerGetSize(clickedGob.ngob.name);
+                            int totalSize = object.get(clickedGob.ngob.name).size();
+                            boolean productExists = NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name, name);
+                            
 
-                        if (currentSize != totalSize) {
-                            if (object.get(clickedGob.ngob.name).contains(name) && !productExists) {
-                                NUtils.getGameUI().getCharInfo().LpExplorerAdd(clickedGob.ngob.name,name);
-                                NUtils.getGameUI().getCharInfo().newLpExplorer = true;
+                            if (currentSize != totalSize) {
+                                if (object.get(clickedGob.ngob.name).contains(name) && !productExists) {
+                                    NUtils.getGameUI().getCharInfo().LpExplorerAdd(clickedGob.ngob.name,name);
+                                    NUtils.getGameUI().getCharInfo().newLpExplorer = true;
+                                }
                             }
                         }
                     }
                 }
             }
-            NUtils.getGameUI().map.clickedGob = null;
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+                NUtils.getGameUI().map.clickedGob = null;
+            }
         }
     }
 
