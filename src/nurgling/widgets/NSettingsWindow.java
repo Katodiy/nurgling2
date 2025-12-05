@@ -76,8 +76,7 @@ public class NSettingsWindow extends Widget {
         SettingsCategory general = new SettingsCategory("General", new Panel("General"), container);
         general.addChild(new SettingsItem("Fonts", new Fonts(), container));
         general.addChild(new SettingsItem("Navigation", navigation = new Navigation(), container));
-        // TODO: MapSettings class doesn't exist - commented out
-        // general.addChild(new SettingsItem("Map Settings", new MapSettings(), container));
+        general.addChild(new SettingsItem("Map Settings", new MapSettings(), container));
         general.addChild(new SettingsItem("Quality of life", qol = new QoL(), container));
         general.addChild(new SettingsItem("Database", new DatabaseSettings(), container));
         general.addChild(new SettingsItem("Auto Mapper", new AutoMapper(), container));

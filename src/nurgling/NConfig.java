@@ -401,6 +401,9 @@ public class NConfig
         // Map marker name display settings
         conf.put(Key.showQuestGiverNames, true);
         conf.put(Key.showThingwallNames, true);
+        
+        // Map tracking vectors
+        conf.put(Key.trackingVectors, false);
     }
 
 
