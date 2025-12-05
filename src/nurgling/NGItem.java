@@ -172,10 +172,13 @@ public class NGItem extends GItem
         {
             if (msg.equals("take") || (msg.equals("iact")))
             {
-                NUtils.getGameUI().getCharInfo().setCandidate(name());
-                if (msg.equals("iact"))
+                if (NUtils.getGameUI() != null && NUtils.getGameUI().getCharInfo() != null)
                 {
-                    NUtils.getGameUI().getCharInfo().setFlowerCandidate(this);
+                    NUtils.getGameUI().getCharInfo().setCandidate(name());
+                    if (msg.equals("iact"))
+                    {
+                        NUtils.getGameUI().getCharInfo().setFlowerCandidate(this);
+                    }
                 }
             }
         }
