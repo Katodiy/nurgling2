@@ -10,7 +10,7 @@ import java.awt.Color;
 import java.util.*;
 
 /* >tt: Fac */
-@haven.FromResource(name = "ui/tt/slots", version = 31)
+@haven.FromResource(name = "ui/tt/slots", version = 32)
 public class Fac implements ItemInfo.InfoFactory {
     public ItemInfo build(ItemInfo.Owner owner, ItemInfo.Raw rawi, Object... args) {
 	Resource.Resolver rr = owner.context(Resource.Resolver.class);
@@ -21,7 +21,9 @@ public class Fac implements ItemInfo.InfoFactory {
 	while(args[a] != null)
 	    attrs.add(rr.getres((Integer)args[a++]).get());
 	a++;
-	int left = (Integer)args[a++];
+	int uses = (Integer)args[a++];
+	int used = (Integer)args[a++];
+	int left = uses - used;
 	ISlots ret = new ISlots(owner, left, pmin, pmax, attrs.toArray(new Resource[0]));
 	while(a < args.length) {
 	    Indir<Resource> res = rr.getres((Integer)args[a++]);
