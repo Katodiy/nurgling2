@@ -169,27 +169,31 @@ public class StackSupporter {
     public static int getMaxStackSize(String name)
     {
         // Check custom stack sizes first
-        if(customStackSizes.containsKey(name))
-        {
+        if (customStackSizes.containsKey(name)) {
             return customStackSizes.get(name);
         }
-        
-        if(catExceptions.contains(name))
-        {
+    
+        // Check exceptions
+        if (catExceptions.contains(name)) {
             return 1;
         }
+    
+        int maxSize = 1; // default
+    
         ArrayList<String> categories = VSpec.getCategory(name);
-        for(String cat: categories)
-        {
-            for(HashSet<String> set: catSize.keySet())
-            {
-                if(set.contains(cat))
-                {
-                    return catSize.get(set);
+    
+        for (String cat : categories) {
+            for (HashSet<String> set : catSize.keySet()) {
+                if (set.contains(cat)) {
+                    int size = catSize.get(set);
+                    if (size > maxSize) {
+                        maxSize = size;
+                    }
                 }
             }
         }
-        return 1;
+    
+        return maxSize;
     }
 
     public static boolean isSameExist(NAlias items, NInventory inv) throws InterruptedException {
