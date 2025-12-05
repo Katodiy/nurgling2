@@ -366,15 +366,14 @@ public class SortContainerByQuality implements Action {
 
     /**
      * Transfer all items from player inventory back to container.
-     * Only transfers top-level items (not items inside stacks).
+     * Re-fetches items each iteration to avoid stale references.
      */
     private Results transferAllToContainer(NGameUI gui, NInventory playerInv, NInventory containerInv,
                                            String itemType) throws InterruptedException {
 
-        // Get top-level WItems only (direct children of inventory, not inside stacks)
-        ArrayList<WItem> topLevelItems = getTopLevelItems(playerInv, itemType);
-
-        for (WItem item : topLevelItems) {
+        // Keep transferring until no more items of this type remain
+        WItem item;
+        while ((item = getFirstTopLevelItem(playerInv, itemType)) != null) {
             // Check if container has space
             if (containerInv.getFreeSpace() <= 0) {
                 return Results.ERROR("Container is full");
@@ -390,30 +389,26 @@ public class SortContainerByQuality implements Action {
     }
 
     /**
-     * Get only top-level WItems from inventory (not items inside stacks).
-     * This ensures we transfer whole stacks, not individual items from within stacks.
+     * Get the first top-level WItem from inventory matching the item type.
+     * Returns null if no matching items found.
      */
-    private ArrayList<WItem> getTopLevelItems(NInventory inv, String itemType) {
-        ArrayList<WItem> result = new ArrayList<>();
+    private WItem getFirstTopLevelItem(NInventory inv, String itemType) {
         NAlias alias = new NAlias(itemType);
 
         // Iterate direct children of inventory
         for (Widget w = inv.child; w != null; w = w.next) {
             if (w instanceof WItem) {
                 WItem witem = (WItem) w;
-                // Check if parent is the inventory itself (not an ItemStack)
-                if (witem.parent == inv) {
-                    if (NGItem.validateItem(witem)) {
-                        NGItem ngitem = (NGItem) witem.item;
-                        String name = ngitem.name();
-                        if (name != null && alias.matches(name)) {
-                            result.add(witem);
-                        }
+                if (NGItem.validateItem(witem)) {
+                    NGItem ngitem = (NGItem) witem.item;
+                    String name = ngitem.name();
+                    if (name != null && alias.matches(name)) {
+                        return witem;
                     }
                 }
             }
         }
 
-        return result;
+        return null;
     }
 }
