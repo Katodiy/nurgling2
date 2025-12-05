@@ -450,9 +450,9 @@ NMiniMap extends MiniMap {
 
                     // Clip the vector line to map bounds
                     Coord2d[] clipped = clipLineToRect(new Coord2d(originScreenPos), new Coord2d(farScreenPos), new Coord2d(sz));
-                    if(clipped != null) {
+                    if(clipped != null && vector.color != null) {
                         // Draw the ray from origin toward far point
-                        g.chcolor(100, 150, 255, 200); // Blue color for directional vectors
+                        g.chcolor(vector.color.getRed(), vector.color.getGreen(), vector.color.getBlue(), vector.color.getAlpha());
                         g.line(clipped[0].floor(), clipped[1].floor(), 2);
                         g.chcolor();
                     }
