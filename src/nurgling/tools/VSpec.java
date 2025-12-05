@@ -2880,6 +2880,9 @@ public class VSpec {
 
     public static void checkLpExplorer(Gob clickedGob, String name) {
         if(clickedGob!=null) {
+            if (NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null) {
+                return;
+            }
             if (clickedGob.ngob.name != null && object.containsKey(clickedGob.ngob.name)) {
                 if (object.get(clickedGob.ngob.name).contains(name)) {
                     boolean objectExists = NUtils.getGameUI().getCharInfo().IsLpExplorerContains(clickedGob.ngob.name);

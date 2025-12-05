@@ -897,11 +897,14 @@ public class NGob
             {
                 if (name != null && name.startsWith("gfx/terobjs"))
                 {
-                    if (VSpec.object.containsKey(name))
-                        if (VSpec.object.get(name).size() != NUtils.getGameUI().getCharInfo().LpExplorerGetSize(name))
-                        {
-                            parent.addcustomol(new NLPassistant(parent));
-                        }
+                    if (NUtils.getGameUI() != null && NUtils.getGameUI().getCharInfo() != null)
+                    {
+                        if (VSpec.object.containsKey(name))
+                            if (VSpec.object.get(name).size() != NUtils.getGameUI().getCharInfo().LpExplorerGetSize(name))
+                            {
+                                parent.addcustomol(new NLPassistant(parent));
+                            }
+                    }
                 }
             }
         }
