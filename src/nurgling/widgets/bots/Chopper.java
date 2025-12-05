@@ -12,6 +12,7 @@ public class Chopper extends Window implements Checkable {
     CheckBox ngrowth = null;
     CheckBox stumps = null;
     CheckBox bushes = null;
+    CheckBox checkWounds = null;
 
     UsingTools usingTools = null;
     UsingTools usingSovels = null;
@@ -83,6 +84,18 @@ public class Chopper extends Window implements Checkable {
 
         }, prev.pos("bl").add(UI.scale(0,5)));
 
+        prev = add(checkWounds = new CheckBox("Stop on Scrapes & Cuts (dmg >= 4)")
+        {
+            {
+                a = startprop.checkWounds;
+            }
+            @Override
+            public void set(boolean a) {
+                super.set(a);
+            }
+
+        }, prev.pos("bl").add(UI.scale(0,5)));
+
         prev = add(usingTools = new UsingTools(UsingTools.Tools.axes), prev.pos("bl").add(UI.scale(0,5)));
         if(startprop.tool!=null)
         {
@@ -122,6 +135,7 @@ public class Chopper extends Window implements Checkable {
                 prop.stumps = stumps.a;
                 prop.ngrowth = ngrowth.a;
                 prop.bushes = bushes.a;
+                prop.checkWounds = checkWounds.a;
                 if(usingTools.s!=null)
                     prop.tool = usingTools.s.name;
                 if(prop.stumps && usingSovels.s!=null)

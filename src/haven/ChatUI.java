@@ -27,7 +27,7 @@
 package haven;
 
 import nurgling.*;
-import nurgling.actions.AutoDrink;
+import nurgling.tools.Finder;
 import nurgling.widgets.*;
 import space.dynomake.libretranslate.Language;
 import space.dynomake.libretranslate.Translator;
@@ -135,28 +135,101 @@ public class ChatUI extends Widget
 	private final IButton cb;
 	private double dy;
 
-	/* Deprecated? */
-	public final List<Message> msgs = new AbstractList<Message>() {
-		public int size() {return(rmsgs.size());}
-		public Message get(int i) {return(rmsgs.get(i).msg);}
-	    };
-
-		public boolean process(String msg) {
+	public boolean process(String msg) {
+			// Check for @ID pattern (gob highlight)
 			Pattern highlight = Pattern.compile("^@(-?\\d+)$");
 			Matcher matcher = highlight.matcher(msg);
 			if (matcher.matches()) {
-//				try {
-//					Gob gob = NUtils.getGob(Long.parseLong(matcher.group(1)));
-//					if (gob != null) {
-//						gob.addTag(NGob.Tags.highlighted);
-//						return false;
-//					}
-//				} catch (Exception ignored) {
-//				}
+				try {
+					long gobId = Long.parseLong(matcher.group(1));
+					Gob gob = nurgling.tools.Finder.findGob(gobId);
+					if (gob != null) {
+						gob.addcustomol(new nurgling.overlays.NChatHighlightOverlay(gob));
+						return false;
+					}
+				} catch (Exception ignored) {
+				}
 			}
+
+			// Check for @Area pattern (area highlight)
+			Pattern areaPattern = Pattern.compile("^@Area\\((.+)\\)$");
+			Matcher areaMatcher = areaPattern.matcher(msg);
+			if (areaMatcher.matches()) {
+				try {
+					String areaData = areaMatcher.group(1);
+					nurgling.areas.NArea.Space space = parseAreaFromChat(areaData);
+					if (space != null && nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getGameUI().map != null) {
+						// Create area overlay using MCache.Overlay (will auto-destroy after 12 seconds)
+						final nurgling.overlays.NChatAreaOverlay overlay = new nurgling.overlays.NChatAreaOverlay(
+							nurgling.NUtils.getGameUI().map.glob.map, space);
+
+						// Schedule removal after duration
+						new Thread(() -> {
+							try {
+								Thread.sleep(12000);
+								overlay.destroy();
+							} catch(InterruptedException e) {
+								// Ignore
+							}
+						}).start();
+
+						return false;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+
 			return true;
 		}
 
+	private nurgling.areas.NArea.Space parseAreaFromChat(String areaData) {
+			try {
+				// Format: grid:x,y;grid:x,y (two corner points)
+				String[] corners = areaData.split(";");
+				if(corners.length != 2)
+					return null;
+
+				// Parse first corner (upper-left)
+				String[] ulParts = corners[0].split(":");
+				if(ulParts.length != 2) return null;
+				long ulGridId = Long.parseLong(ulParts[0].trim());
+				String[] ulCoords = ulParts[1].split(",");
+				if(ulCoords.length != 2) return null;
+				int ulX = Integer.parseInt(ulCoords[0].trim());
+				int ulY = Integer.parseInt(ulCoords[1].trim());
+
+				// Parse second corner (bottom-right)
+				String[] brParts = corners[1].split(":");
+				if(brParts.length != 2) return null;
+				long brGridId = Long.parseLong(brParts[0].trim());
+				String[] brCoords = brParts[1].split(",");
+				if(brCoords.length != 2) return null;
+				int brX = Integer.parseInt(brCoords[0].trim());
+				int brY = Integer.parseInt(brCoords[1].trim());
+
+				// Convert to world coordinates and create Space
+				if(nurgling.NUtils.getGameUI() == null || nurgling.NUtils.getGameUI().map == null)
+					return null;
+
+				MCache.Grid ulGrid = nurgling.NUtils.getGameUI().map.glob.map.findGrid(ulGridId);
+				MCache.Grid brGrid = nurgling.NUtils.getGameUI().map.glob.map.findGrid(brGridId);
+				if(ulGrid == null || brGrid == null)
+					return null;
+
+				// Calculate world tile coordinates
+				Coord ulWorldTile = ulGrid.gc.mul(MCache.cmaps).add(ulX, ulY);
+				Coord brWorldTile = brGrid.gc.mul(MCache.cmaps).add(brX, brY);
+
+				// Create Space from these two world tile coordinates
+				nurgling.areas.NArea.Space space = new nurgling.areas.NArea.Space(ulWorldTile, brWorldTile);
+
+				return space.space.isEmpty() ? null : space;
+			} catch(Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
 	public static abstract class Message {
 	    public final double time = Utils.ntime();
 
@@ -285,9 +358,6 @@ public class ChatUI extends Widget
 		this.text = text;
 		this.col = col;
 	    }
-
-	    @Deprecated
-	    public SimpleMessage(String text, Color col, int w) {this(text, col);}
 
 	    public Indir<Text> render(int w) {
 		text = NUtils.timestamp(text);
@@ -468,10 +538,6 @@ public class ChatUI extends Widget
 	    if(cb != null) {
 		cb.c = new Coord(sz.x + marg.x - cb.sz.x -cb.sz.x/2, -marg.y + cb.sz.x/2);
 	    }
-	}
-
-	@Deprecated
-	public void notify(Message msg, int urgency) {
 	}
 
 	public static class CharPos {
@@ -884,8 +950,8 @@ public class ChatUI extends Widget
 
 	public void uimsg(String msg, Object... args) {
 	    if((msg == "msg") || (msg == "log")) {
-		if (process(msg)) {
 		String line = (String)args[0];
+		if (process(line)) {
 		Color col = null;
 		if(args.length > 1) col = (Color)args[1];
 		if(col == null) col = Color.WHITE;
@@ -972,9 +1038,6 @@ public class ChatUI extends Widget
 	    public MyMessage(String text) {
 		super(text, new Color(192, 192, 255));
 	    }
-
-	    @Deprecated
-	    public MyMessage(String text, int w) {this(text);}
 	}
 
 	public MultiChat(boolean closable, String name, int urgency) {
@@ -1001,11 +1064,13 @@ public class ChatUI extends Widget
 	    if(msg == "msg") {
 		Number from = (Number)args[0];
 		String line = (String)args[1];
+		if(process(line)) {
 		if(from == null) {
 		    append(new MyMessage(line), -1);
 		} else {
 		    Message cmsg = new NamedMessage(from.intValue(), line, fromcolor(from.intValue()));
 		    append(cmsg, urgency);
+		}
 		}
 	    } else if(msg == "mutable") {
 		this.muted = Utils.bv(args[0]) ? new HashMap<>() : null;
@@ -1037,6 +1102,7 @@ public class ChatUI extends Widget
 		Number from = (Number)args[0];
 		long gobid = Utils.uiv(args[1]);
 		String line = (String)args[2];
+		if(process(line)) {
 		Color col = Color.WHITE;
 		synchronized(ui.sess.glob.party.memb) {
 		    Party.Member pm = ui.sess.glob.party.memb.get(gobid);
@@ -1048,6 +1114,7 @@ public class ChatUI extends Widget
 		} else {
 		    Message cmsg = new NamedMessage(from.intValue(), line, Utils.blendcol(col, Color.WHITE, 0.5));
 		    append(cmsg, urgency);
+		}
 		}
 	    } else {
 		super.uimsg(msg, args);
@@ -1529,6 +1596,39 @@ public class ChatUI extends Widget
 	}
     }
 
+    /**
+     * Find location chat (non-Realm SimpleChat or MultiChat)
+     */
+    public Channel findLocationChat() {
+        if(chansel == null) return null;
+        synchronized(chansel.chls) {
+            for(Selector.DarkChannel ch : chansel.chls) {
+                Channel chan = ch.chan;
+                if(chan instanceof EntryChannel &&
+                   !chan.getClass().getName().contains("Realm") &&
+                   (chan instanceof SimpleChat || chan instanceof MultiChat)) {
+                    return chan;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Find System chat channel by name
+     */
+    public Channel findSystemChat() {
+        if(chansel == null) return null;
+        synchronized(chansel.chls) {
+            for(Selector.DarkChannel ch : chansel.chls) {
+                if(ch.chan.name().equals("System")) {
+                    return ch.chan;
+                }
+            }
+        }
+        return null;
+    }
+
     public void select(Channel chan, boolean focus) {
 	Channel prev = sel;
 	sel = chan;
@@ -1618,7 +1718,27 @@ public class ChatUI extends Widget
 
 
 	public void draw(GOut g) {
-	g.rimage(Window.bg, marg, sz.sub(marg.x * 2, marg.y));
+	// Draw background with color settings
+	if (ui instanceof nurgling.NUI) {
+	    nurgling.NUI nui = (nurgling.NUI)ui;
+	    float opacity = nui.getUIOpacity();
+	    int alpha = (int)(255 * opacity);
+
+	    if (nui.getUseSolidBackground()) {
+		// Use custom background color
+		java.awt.Color bgColor = nui.getWindowBackgroundColor();
+		g.chcolor(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue(), alpha);
+		g.frect(marg, sz.sub(marg.x * 2, marg.y));
+		g.chcolor();
+	    } else {
+		// Use Window.bg texture with opacity
+		g.chcolor(255, 255, 255, alpha);
+		g.rimage(Window.bg, marg, sz.sub(marg.x * 2, marg.y));
+		g.chcolor();
+	    }
+	} else {
+	    g.rimage(Window.bg, marg, sz.sub(marg.x * 2, marg.y));
+	}
 	super.draw(g);
 	g.image(bulc, new Coord(-bulc.sz().x/2+dmarg.x, -bulc.sz().y/2+dmarg.y));
 	g.image(burc, new Coord(sz.x - burc.sz().x/2 - dmarg.x, -bulc.sz().y/2+dmarg.y));

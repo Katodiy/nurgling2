@@ -42,6 +42,7 @@ import static haven.Coord.upcw;
 public class WaterTile extends Tiler {
     public final int depth;
     public final Tiler.MCons bottom;
+    private final boolean isDeep;
 
     public static class FlowData {
 	public static final float[] nxpcw, nypcw;
@@ -542,10 +543,12 @@ public class WaterTile extends Tiler {
     public static class BottomFog extends State.StandAlone {
 	public static final double maxdepth = 8; /* XXX: These should be parameterized. */
 	public static final Color fogcolor = new Color(0, 16, 48);
+	public static final Color deepfogcolor = new Color(0, 8, 32);
 	/* XXXRENDER
 	public static final Expression mfogcolor = mul(col3(fogcolor), pick(fref(idx(ProgramContext.gl_LightSource.ref(), MapView.amblight.ref()), "diffuse"), "rgb"));
 	*/
 	public static final Expression mfogcolor = col3(fogcolor);
+	public final Expression cfogcolor;
 	public static Function rgbmix = new Function.Def(Type.VEC4) {{
 	    Expression a = param(PDir.IN, Type.VEC4).ref();
 	    Expression b = param(PDir.IN, Type.VEC3).ref();
@@ -559,18 +562,26 @@ public class WaterTile extends Tiler {
 		}
 	    };
 
-	private final ShaderMacro shader = prog -> {
-	    FragColor.fragcol(prog.fctx).mod(in -> rgbmix.call(in, mfogcolor, min(div(fragd.ref(), l(maxdepth)), l(1.0))), 1000);
-	};
+	private final ShaderMacro shader;
 
 	private BottomFog() {
+	    this(mfogcolor);
+	}
+
+	private BottomFog(Expression fogcolor) {
 	    super(Slot.Type.DRAW);
+	    this.cfogcolor = fogcolor;
+	    shader = prog -> {
+		FragColor.fragcol(prog.fctx).mod(in -> rgbmix.call(in, fogcolor, min(div(fragd.ref(), l(maxdepth)), l(1.0))), 1000);
+	    };
 	}
 
 	public ShaderMacro shader() {return(shader);}
     }
     public static final BottomFog waterfog = new BottomFog();
+    public static final BottomFog deepfog = new BottomFog(col3(BottomFog.deepfogcolor));
     private static final Pipe.Op botmat = Pipe.Op.compose(waterfog, new States.DepthBias(4, 4));
+    private static final Pipe.Op deepmat = Pipe.Op.compose(deepfog, new States.DepthBias(4, 4));
 
     public static class ObFog extends State implements InstanceBatch.AttribState {
 	public static final Slot<ObFog> slot = new Slot<>(State.Slot.Type.DRAW, ObFog.class)
@@ -634,14 +645,15 @@ public class WaterTile extends Tiler {
 		    bottom = (Tiler.MCons)b;
 		}
 	    }
-	    return(new WaterTile(id, bottom, depth));
+	    return(new WaterTile(id, set.getres().name, bottom, depth));
 	}
     }
 
-    public WaterTile(int id, Tiler.MCons bottom, int depth) {
+    public WaterTile(int id, String name, Tiler.MCons bottom, int depth) {
 	super(id);
 	this.bottom = bottom;
 	this.depth = depth;
+	this.isDeep = name.equals("gfx/tiles/odeeper");
     }
 
     public void lay(MapMesh m, Random rnd, Coord lc, Coord gc) {
@@ -684,7 +696,7 @@ public class WaterTile extends Tiler {
 
 	Bottom b = m.data(Bottom.id);
 	MPart bd = MPart.splitquad(lc, gc, b.fortilea(lc), ms.split[ms.bs.o(lc)]);
-	bd.mat = botmat;
+	bd.mat = botmat();
 	bottom.faces(m, bd);
     }
 
@@ -696,13 +708,24 @@ public class WaterTile extends Tiler {
 		MapMesh.MapSurface ms = m.data(MapMesh.gnd);
 		Bottom b = m.data(Bottom.id);
 		MPart d = MPart.splitquad(lc, gc, b.fortilea(lc), ms.split[ms.bs.o(lc)]);
-		d.mat = botmat;
+		d.mat = botmat();
 		((CTrans)bottom).tcons(z, bmask, cmask).faces(m, d);
 	    }
 	} else {
 	    if(bottom instanceof Tiler)
 		((Tiler)bottom).trans(m, rnd, gt, lc, gc, z, bmask, cmask);
 	}
+    }
+
+    private Pipe.Op botmat() {
+	boolean darkenDeep = false;
+	try {
+	    Object val = nurgling.NConfig.get(nurgling.NConfig.Key.darkenDeepOcean);
+	    if (val instanceof Boolean) {
+		darkenDeep = (Boolean) val;
+	    }
+	} catch (Exception ignored) {}
+	return darkenDeep && isDeep ? deepmat : botmat;
     }
 
     public static class BottomSurface extends MapZSurface {

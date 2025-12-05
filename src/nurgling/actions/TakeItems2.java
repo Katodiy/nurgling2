@@ -6,6 +6,7 @@ import haven.Widget;
 import haven.Window;
 import haven.res.ui.barterbox.Shopbox;
 import nurgling.NGameUI;
+import nurgling.NInventory.QualityType;
 import nurgling.NUtils;
 import nurgling.areas.NContext;
 import nurgling.tasks.WaitItems;
@@ -25,6 +26,9 @@ public class TakeItems2 implements Action
     String item;
     int count;
     Specialisation.SpecName specName;
+    String specSubtype;
+    QualityType qualityType;
+    public boolean exactMatch = false;
 
 
     public TakeItems2(NContext context, String item, int count)
@@ -32,6 +36,7 @@ public class TakeItems2 implements Action
         this.cnt = context;
         this.item = item;
         this.count = count;
+        this.qualityType = null;
     }
 
     public TakeItems2(NContext context, String item, int count, Specialisation.SpecName specName)
@@ -40,6 +45,34 @@ public class TakeItems2 implements Action
         this.item = item;
         this.count = count;
         this.specName = specName;
+        this.qualityType = null;
+    }
+
+    public TakeItems2(NContext context, String item, int count, QualityType qualityType)
+    {
+        this.cnt = context;
+        this.item = item;
+        this.count = count;
+        this.qualityType = qualityType;
+    }
+
+    public TakeItems2(NContext context, String item, int count, Specialisation.SpecName specName, QualityType qualityType)
+    {
+        this.cnt = context;
+        this.item = item;
+        this.count = count;
+        this.specName = specName;
+        this.qualityType = qualityType;
+    }
+
+    public TakeItems2(NContext context, String item, int count, Specialisation.SpecName specName, String specSubtype)
+    {
+        this.cnt = context;
+        this.item = item;
+        this.count = count;
+        this.specName = specName;
+        this.specSubtype = specSubtype;
+        this.qualityType = QualityType.High;
     }
 
     @Override
@@ -50,7 +83,7 @@ public class TakeItems2 implements Action
         if(specName == null) {
             inputs = cnt.getInStorages(item);
         } else {
-            inputs = cnt.getSpecStorages(this.specName);
+            inputs = cnt.getSpecStorages(this.specName, this.specSubtype);
         }
 
         if(inputs == null || inputs.isEmpty())
@@ -136,13 +169,14 @@ public class TakeItems2 implements Action
 
     public Results takeFromContainer(AtomicInteger left, NGameUI gui, Container cont) throws InterruptedException
     {
-        Gob contgob = Finder.findGob(cont.gobid);
+        Gob contgob = Finder.findGob(cont.gobHash);
         if(contgob == null)
             return Results.FAIL();
         new PathFinder(contgob).run(gui);
         new OpenTargetContainer(cont).run(gui);
-        TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont,new HashSet<>(Arrays.asList(item)), null);
+        TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont,new HashSet<>(Arrays.asList(item)), null, qualityType);
         tifc.minSize = left.get();
+        tifc.exactMatch = this.exactMatch;
         tifc.run(gui);
         new CloseTargetContainer(cont).run(gui);
         return Results.SUCCESS();

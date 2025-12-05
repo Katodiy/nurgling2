@@ -5,10 +5,13 @@ import haven.Gob;
 import haven.WItem;
 import nurgling.NConfig;
 import nurgling.NGameUI;
+import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.conf.NPrepBlocksProp;
+import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -24,6 +27,7 @@ public class FuelByLogs implements Action
     ArrayList<Container> conts;
     String name;
     Coord targetCoord = new Coord(1, 2);
+    RoutePoint logsRoutePoint = null;
 
     public FuelByLogs(ArrayList<Container> conts, String name) {
         this.conts = conts;
@@ -35,10 +39,25 @@ public class FuelByLogs implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         int needed_size = 0;
+        NArea fuel = null;
+        
         for (Container cont : conts) {
             Container.FuelLvl fuelLvl = cont.getattr(Container.FuelLvl.class);
             needed_size += fuelLvl.neededFuel();
+            
+            // Get fuel area from container
+            if(fuel == null) {
+                fuel = fuelLvl.getFuelArea();
+            }
         }
+        
+        if(fuel == null) {
+            return Results.ERROR("No fuel area set in containers.");
+        }
+        
+        // Find route point for logs area
+        this.logsRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(fuel);
+        
         for (Container cont : conts) {
             Container.FuelLvl fuelLvl = cont.getattr(Container.FuelLvl.class);
             while (fuelLvl.neededFuel() != 0) {
@@ -47,9 +66,11 @@ public class FuelByLogs implements Action
 
                     int target_size = needed_size;
                     while (target_size != 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord) != 0 && NUtils.getGameUI().getInventory().getItems(new NAlias("block", "Block")).size()<needed_size) {
-                        NArea fuel = NContext.findSpec(Specialisation.SpecName.fuel.toString(), ftype);
-                        if(fuel == null)
-                            return Results.ERROR("No specialisation \"FUEL\" set.");
+                        // Navigate to logs area using global pathfinding
+                        if(this.logsRoutePoint != null) {
+                            new RoutePointNavigator(this.logsRoutePoint).run(gui);
+                        }
+                        
                         ArrayList<Gob> logs = Finder.findGobs(fuel, new NAlias(name));
                         if (logs.isEmpty()) {
                             if (gui.getInventory().getItems(ftype).isEmpty())
@@ -87,7 +108,7 @@ public class FuelByLogs implements Action
                     }
                     needed_size -= NUtils.getGameUI().getInventory().getItems(new NAlias("block", "Block")).size();
                 }
-                new PathFinder(Finder.findGob(cont.gobid)).run(gui);
+                new PathFinder(Finder.findGob(cont.gobHash)).run(gui);
                 new OpenTargetContainer(cont).run(gui);
                 fuelLvl = cont.getattr(Container.FuelLvl.class);
                 ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(new NAlias("block", "Block"));
@@ -95,7 +116,7 @@ public class FuelByLogs implements Action
                 int aftersize = gui.getInventory().getItems().size() - fueled;
                 for (int i = 0; i < fueled; i++) {
                     NUtils.takeItemToHand(items.get(i));
-                    NUtils.activateItem(Finder.findGob(cont.gobid));
+                    NUtils.activateItem(Finder.findGob(cont.gobHash));
                     NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
                 }
                 NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), aftersize));

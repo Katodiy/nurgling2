@@ -44,6 +44,7 @@ public class NGameUI extends GameUI
     public RouteSpecialization routespec;
     public BotsInterruptWidget biw;
     public NEquipProxy nep;
+    public NBeltProxy nbp;
     private SwimmingStatusBuff swimmingBuff = null;
     private TrackingStatusBuff trackingBuff = null;
     private CrimeStatusBuff crimeBuff = null;
@@ -59,11 +60,40 @@ public class NGameUI extends GameUI
     public TreeLocationService treeLocationService;
     public TreeSearchWindow treeSearchWindow = null;
     public final Map<String, TreeLocationDetailsWindow> openTreeDetailWindows = new HashMap<>();
+    public TerrainSearchWindow terrainSearchWindow = null;
     public StudyDeskPlannerWidget studyDeskPlanner = null;
+    public NDraggableWidget studyReportWidget = null;
+    
+    // Local storage for ring settings
+    public IconRingConfig iconRingConfig;
+    private boolean ringSettingsApplied = false;
+    
+    // Temporary rings (session-only, for objects without GobIcon)
+    // Maps resource name to ring enabled state
+    public final Map<String, Boolean> tempRingResources = Collections.synchronizedMap(new HashMap<>());
+
+    /**
+     * Gets the genus (world identifier) for this game instance
+     */
+    public String getGenus() {
+        return genus;
+    }
+    
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
 
+        // Initialize world-specific profile
+        nurgling.profiles.ConfigFactory.initializeProfile(genus);
+
+        // Initialize local ring config
+        iconRingConfig = new IconRingConfig(genus);
+
+        add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
+    }
+    
+    private void initHeavyWidgets() {
+        itemsForSearch = new NSearchItem();
         // Replace Cal with NCal to keep calendar customizations in nurgling package
         Widget oldCalendarWidget = null;
         for(Widget wdg : children()) {
@@ -84,10 +114,9 @@ public class NGameUI extends GameUI
             calendar = new NCal();
             add(new NDraggableWidget(calendar, "Calendar", UI.scale(400,90)), calPos);
         }
-
-        itemsForSearch = new NSearchItem();
         add(new NDraggableWidget(alarmWdg = new NAlarmWdg(),"alarm",NStyle.alarm[0].sz().add(NDraggableWidget.delta)));
         add(new NDraggableWidget(nep = new NEquipProxy(NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT, NEquipory.Slots.BELT), "EquipProxy",  UI.scale(138, 55)));
+        add(new NDraggableWidget(nbp = new NBeltProxy(), "BeltProxy", UI.scale(825, 55)));
         for(int i = 0; i<(Integer)NConfig.get(NConfig.Key.numbelts); i++)
         {
             String name = "belt" + String.valueOf(i);
@@ -95,27 +124,105 @@ public class NGameUI extends GameUI
             belt.setFlipped(true);
         }
 
-        add(new NDraggableWidget(botsMenu = new NBotsMenu(), "botsmenu", botsMenu.sz.add(NDraggableWidget.delta)));
+
         add(new NDraggableWidget(questinfo = new NQuestInfo(), "quests", questinfo.sz.add(NDraggableWidget.delta)));
         add(new NDraggableWidget(recentActionsPanel = new NRecentActionsPanel(), "recentactions", recentActionsPanel.sz.add(NDraggableWidget.delta)));
         add(guiinfo = new NGUIInfo(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
         if(!(Boolean) NConfig.get(NConfig.Key.show_drag_menu))
             guiinfo.hide();
-        add(nean = new NEditAreaName());
+        // Position NEditAreaName relative to areas widget center
+        add(nean = new NEditAreaName(), new Coord(sz.x/2 - nean.sz.x/2, sz.y/2 - nean.sz.y/2));
         nean.hide();
-        add(nefn = new NEditFolderName(areas));
-        nefn.hide();
-        add(spec = new Specialisation());
-        spec.hide();
-        add(routespec = new RouteSpecialization());
-        routespec.hide();
-        add(biw = new BotsInterruptWidget());
-        add(localizedResourceTimerDialog = new LocalizedResourceTimerDialog(), new Coord(200, 200));
-        localizedResourceTimerService = new LocalizedResourceTimerService(this);
-        add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
+        // Position BotsInterruptWidget (observer with gears) in center of screen
+        add(biw = new BotsInterruptWidget(), new Coord(sz.x/2 - biw.sz.x/2, sz.y/2 - biw.sz.y/2));
         waypointMovementService = new WaypointMovementService(this);
-        fishLocationService = new FishLocationService(this);
-        treeLocationService = new TreeLocationService(this);
+        fishLocationService = new FishLocationService(this, genus);
+        treeLocationService = new TreeLocationService(this, genus);
+        // These widgets depend on areas which is created in GameUI constructor
+        // Position NEditFolderName relative to areas widget
+        add(nefn = new NEditFolderName(areas), new Coord(sz.x/2 - nefn.sz.x/2, sz.y/2 - nefn.sz.y/2));
+        nefn.hide();
+        // Position Specialisation relative to areas widget center
+        add(spec = new Specialisation(), new Coord(sz.x/2 - spec.sz.x/2, sz.y/2 - spec.sz.y/2));
+        spec.hide();
+        // Position RouteSpecialization relative to routes widget center
+        add(routespec = new RouteSpecialization(), new Coord(sz.x/2 - routespec.sz.x/2, sz.y/2 - routespec.sz.y/2));
+        routespec.hide();
+        
+        // Heavy service widgets
+        add(localizedResourceTimerDialog = new LocalizedResourceTimerDialog(), new Coord(200, 200));
+        localizedResourceTimerService = new LocalizedResourceTimerService(this, genus);
+        add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
+
+        // Profile-aware components are now initialized in attached() before super.attached()
+    }
+    
+    @Override
+    protected void attached() {
+        // Initialize profile-aware components BEFORE calling super.attached()
+        // This ensures RouteGraphManager is available when RoutesWidget is created
+        if (map instanceof NMapView) {
+            ((NMapView) map).initializeWithGenus(genus);
+        }
+
+        // Update NCore to use profile-aware config (now that UI and core are available)
+        if (ui != null && ui.core != null) {
+            ui.core.updateConfigForProfile(genus);
+        }
+
+        // Reload explored area with profile-specific data
+        if (mmap != null && mmap instanceof NCornerMiniMap) {
+            NCornerMiniMap nmmap = (NCornerMiniMap) mmap;
+            if (nmmap.exploredArea != null) {
+                nmmap.exploredArea.reloadFromFile();
+            }
+        }
+
+        // Load areas now that genus is available
+        if (map != null && map.glob != null && map.glob.map != null) {
+            map.glob.map.loadAreasIfNeeded();
+        }
+
+        super.attached();
+        initHeavyWidgets();
+        // Apply local ring settings to iconconf after it's loaded (only once)
+        if (!ringSettingsApplied) {
+            applyLocalRingSettings();
+            ringSettingsApplied = true;
+        }
+    }
+    
+    private void applyLocalRingSettings() {
+        if (iconRingConfig == null || iconconf == null) {
+            return;
+        }
+        
+        for (Map.Entry<String, Boolean> entry : iconRingConfig.getAllSettings().entrySet()) {
+            String iconResName = entry.getKey();
+            boolean ringEnabled = entry.getValue();
+            
+            // Find matching settings in iconconf
+            for (GobIcon.Setting setting : iconconf.settings.values()) {
+                if (setting.res != null && setting.res.name.equals(iconResName)) {
+                    setting.ring = ringEnabled;
+                }
+            }
+        }
+    }
+
+    private void initializeInventoryVisibility() {
+        Object setting = NConfig.get(NConfig.Key.openInventoryOnLogin);
+        boolean shouldOpenInventory = setting instanceof Boolean ? (Boolean) setting : false;
+
+        if (shouldOpenInventory) {
+            // Get the inventory window by its caption
+            Window inventoryWindow = getWindow("Inventory");
+            if (inventoryWindow != null) {
+                // Use togglewnd to properly show the inventory window
+                togglewnd(inventoryWindow);
+            }
+        }
+        // If shouldOpenInventory is false, inventory stays hidden (default behavior)
     }
 
     @Override
@@ -374,6 +481,12 @@ public class NGameUI extends GameUI
             {
                 ((NInventory) maininv).installMainInv();
             }
+
+            // Check if this is the inventory being added
+            if (place != null && place.equals("inv")) {
+                // Inventory window was just created, now check the setting
+                initializeInventoryVisibility();
+            }
         }
     }
 
@@ -415,26 +528,39 @@ public class NGameUI extends GameUI
     public void resize(Coord sz)
     {
         super.resize(sz);
-        guiinfo.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
-        areas.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
-        cookBook.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
-        nean.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
-        spec.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
-        biw.move(new Coord(sz.x / 2 - biw.sz.x / 2, sz.y / 2 - biw.sz.y / 2));
+        if(guiinfo != null)
+            guiinfo.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
+        if(areas != null)
+            areas.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
+        if(cookBook != null)
+            cookBook.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
+        if(nean != null)
+            nean.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
+        if(spec != null)
+            spec.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
+        if(biw != null)
+            biw.move(new Coord(sz.x / 2 - biw.sz.x / 2, sz.y / 2 - biw.sz.y / 2));
+        if(blueprintWidget != null)
+            blueprintWidget.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
     }
 
     public List<IMeter.Meter> getmeters (String name ) {
         synchronized (meters) {
-            for (Widget meter : new ArrayList<>(meters)) {
-                if (meter instanceof IMeter) {
-                    IMeter im = (IMeter) meter;
-                    Resource res = im.bg.get();
-                    if (res != null) {
-                        if (res.basename().equals(name)) {
-                            return im.meters;
+            try {
+                for (Widget meter : new ArrayList<>(meters)) {
+                    if (meter instanceof IMeter) {
+                        IMeter im = (IMeter) meter;
+                        Resource res = im.bg.get();
+                        if (res != null) {
+                            if (res.basename().equals(name)) {
+                                return im.meters;
+                            }
                         }
                     }
                 }
+            } catch (IndexOutOfBoundsException | ConcurrentModificationException e) {
+                // Handle concurrent modification or index errors gracefully
+                return null;
             }
         }
         return null;
@@ -471,6 +597,14 @@ public class NGameUI extends GameUI
                                         String name = ((ItemInfo.Name) inf).str.text;
                                         if (NParser.checkName(name.toLowerCase(), content))
                                             return Double.parseDouble(name.substring(0, name.indexOf(' ')));
+                                        // Handle seed name format difference: "Flax Seeds" vs "1234 seeds of Flax"
+                                        if (name.toLowerCase().contains(" seeds of ")) {
+                                            int ofIndex = name.toLowerCase().indexOf(" seeds of ");
+                                            String seedType = name.substring(ofIndex + 10).trim(); // Extract "Flax" from "1234 seeds of Flax"
+                                            String inventoryFormat = seedType + " seeds"; // Convert to "Flax seeds"
+                                            if (NParser.checkName(inventoryFormat.toLowerCase(), content))
+                                                return Double.parseDouble(name.substring(0, name.indexOf(' ')));
+                                        }
                                     } else if (inf instanceof ItemInfo.AdHoc) {
                                         if (NParser.checkName(((ItemInfo.AdHoc) inf).str.text, "Empty")) {
                                             return 0;
@@ -502,6 +636,14 @@ public class NGameUI extends GameUI
                                             String name = ((ItemInfo.Name) inf).str.text;
                                             if (NParser.checkName(name.toLowerCase(), content))
                                                 return Double.parseDouble(name.substring(0, name.indexOf(' ')));
+                                            // Handle seed name format difference: "Flax Seeds" vs "1234 seeds of Flax"
+                                            if (name.toLowerCase().contains(" seeds of ")) {
+                                                int ofIndex = name.toLowerCase().indexOf(" seeds of ");
+                                                String seedType = name.substring(ofIndex + 10).trim(); // Extract "Flax" from "1234 seeds of Flax"
+                                                String inventoryFormat = seedType + " seeds"; // Convert to "Flax seeds"
+                                                if (NParser.checkName(inventoryFormat.toLowerCase(), content))
+                                                    return Double.parseDouble(name.substring(0, name.indexOf(' ')));
+                                            }
                                         }
                                     }
                                 } catch (NoSuchFieldException | IllegalAccessException e) {

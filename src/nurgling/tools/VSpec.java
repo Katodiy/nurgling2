@@ -200,8 +200,8 @@ public class VSpec {
 
         // Maple Tree
         ArrayList<String> mapleOp = new ArrayList<>();
-        mapleOp.add("Maple Samara"); // Семена
         mapleOp.add("Maple Leaf"); // Листья
+        mapleOp.add("Maple Samara"); // Семена (должно быть последним)
         object.put("gfx/terobjs/trees/maple", mapleOp);
 
         // Mayflower Tree
@@ -211,7 +211,7 @@ public class VSpec {
 
         // Medlar Tree
         ArrayList<String> medlarOp = new ArrayList<>();
-        medlarOp.add("Medlar Seed"); // Семена
+        medlarOp.add("Medlar"); // Семена
         object.put("gfx/terobjs/trees/medlartree", medlarOp);
 
         // Mound Tree
@@ -221,8 +221,8 @@ public class VSpec {
 
         // Mulberry Tree
         ArrayList<String> mulberryOp = new ArrayList<>();
-        mulberryOp.add("Mulberry"); // Семена
         mulberryOp.add("Mulberry Leaf"); // Листья
+        mulberryOp.add("Mulberry"); // Семена (должно быть последним)
         object.put("gfx/terobjs/trees/mulberry", mulberryOp);
 
         // Oak Tree
@@ -1224,7 +1224,7 @@ public class VSpec {
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/redonion\",\"name\":\"Red Onion\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/garlic\",\"name\":\"Garlic\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/small/leek\",\"name\":\"Leek\",\"x\":2,\"y\":1}"));
-        onions.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledonion\",\"name\":\"Pickled Onion\"}"));
+        onions.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledonion\",\"name\":\"Pickled Onions\"}"));
         categories.put("Onion", onions);
 
 
@@ -1267,17 +1267,17 @@ public class VSpec {
         categories.put("Millable Seed", millableSeed);
 
         ArrayList<JSONObject> seeds = new ArrayList<>();
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-carrot\",\"name\":\"Carrot Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-cucumber\",\"name\":\"Cucumber Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-flax\",\"name\":\"Flax Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-grape\",\"name\":\"Grape Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-hemp\",\"name\":\"Hemp Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-leek\",\"name\":\"Leek Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-lettuce\",\"name\":\"Lettuce Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-pipeweed\",\"name\":\"Pipeweed Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-poppy\",\"name\":\"Poppy Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-pumpkin\",\"name\":\"Pumpkin Seed\"}"));
-        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-turnip\",\"name\":\"Turnip Seed\"}"));
+        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-carrot\",\"name\":\"Carrot Seeds\"}"));
+        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-cucumber\",\"name\":\"Cucumber Seeds\"}"));
+        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-flax\",\"name\":\"Flax Seeds\"}"));
+        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-grape\",\"name\":\"Grape Seeds\"}"));
+        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-hemp\",\"name\":\"Hemp Seeds\"}"));
+        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-leek\",\"name\":\"Leek Seeds\"}"));
+        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-lettuce\",\"name\":\"Lettuce Seeds\"}"));
+        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-pipeweed\",\"name\":\"Pipeweed Seeds\"}"));
+        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-poppy\",\"name\":\"Poppy Seeds\"}"));
+        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-pumpkin\",\"name\":\"Pumpkin Seeds\"}"));
+        seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-turnip\",\"name\":\"Turnip Seeds\"}"));
         seeds.addAll(maltedGrains);
         seeds.addAll(millableSeed);
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-wheatgerm\",\"name\":\"Sprouted Wheat\"}"));
@@ -1370,13 +1370,13 @@ public class VSpec {
         ArrayList<JSONObject> berries = new ArrayList<>();
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackberrybush\",\"name\":\"Blackberry Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackcurrant\",\"name\":\"Blackcurrant Seed\"}"));
-        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/blueberry\",\"name\":\"Blueberry\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/blueberry\",\"name\":\"Blueberries\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/candleberry\",\"name\":\"Candleberry\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/cherry\",\"name\":\"Cherry\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-dogrose\",\"name\":\"Dog Rose Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-elderberrybush\",\"name\":\"Elderberry Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-gooseberrybush\",\"name\":\"Gooseberry Seed\"}"));
-        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lingon\",\"name\":\"Lingonberry\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lingon\",\"name\":\"Lingonberries\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/mulberry\",\"name\":\"Mulberry\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-raspberrybush\",\"name\":\"Raspberry Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-redcurrant\",\"name\":\"Redcurrant Seed\"}"));
@@ -1426,6 +1426,13 @@ public class VSpec {
         fruits.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-sandthorn-yester\",\"name\":\"Yesteryear's Seaberry Seed\"}"));
         fruits.add(new JSONObject("{\"static\":\"gfx/invobjs/sorbapple-yester\",\"name\":\"Yesteryear's Sorb Apple Seed\"}"));
         categories.put("Fruit", fruits);
+
+        ArrayList<JSONObject> forageble = new ArrayList<>();
+        forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/blueberry\",\"name\":\"Blueberries\"}"));
+        forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lingon\",\"name\":\"Lingonberries\"}"));
+        forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/rustroot\",\"name\":\"Rustroot\"}"));
+        forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/stingingnettle\",\"name\":\"Stinging Nettle\"}"));
+        categories.put("Forageable", forageble);
 
         ArrayList<JSONObject> fruitOrBerry = new ArrayList<>();
         fruitOrBerry.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackberrybush\",\"name\":\"Blackberry Seed\"}"));
@@ -1553,6 +1560,7 @@ public class VSpec {
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-ringofbrodgar\",\"name\":\"Unbaked Ring of Brodgar\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-shepherdspie\",\"name\":\"Unbaked Shepherd's Pie\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-strawberrycake\",\"name\":\"Unbaked Strawberry Cake\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-onionbread\",\"name\":\"Unbaked Onion Bread\"}"));
         categories.put("Dough", doughs);
 
         ArrayList<JSONObject> giantAntItems = new ArrayList<>();
@@ -1783,10 +1791,10 @@ public class VSpec {
         cucumber.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledcucumber\",\"name\":\"Pickled Cucumber\"}"));
         categories.put("Cucumber", cucumber);
 
-//        ArrayList<JSONObject> egg = new ArrayList<>();
-//        egg.add(new JSONObject("{\"static\":\"gfx/invobjs/egg-chicken-boiled\",\"name\":\"Boiled Egg\"}"));
-//        egg.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledegg\",\"name\":\"Pickled Egg\"}"));
-//        categories.put("Egg", egg);
+        ArrayList<JSONObject> egg = new ArrayList<>();
+        egg.add(new JSONObject("{\"static\":\"gfx/invobjs/egg-chicken-boiled\",\"name\":\"Boiled Egg\"}"));
+        egg.add(new JSONObject("{\"static\":\"gfx/invobjs/pickledegg\",\"name\":\"Pickled Egg\"}"));
+        categories.put("Cooked Egg", egg);
 
         ArrayList<JSONObject> herring = new ArrayList<>();
         herring.add(new JSONObject("{\"layer\":[\"gfx/invobjs/meat-herring\",\"gfx/invobjs/meat-filet\"],\"name\":\"Filet of Herring\"}"));
@@ -2515,6 +2523,7 @@ public class VSpec {
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/batrock\",\"name\":\"Bat Rock\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/magnetite\",\"name\":\"Magnetite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/hematite\",\"name\":\"Bloodstone\"}"));
+        stones.add(new JSONObject("{\"static\":\"gfx/invobjs/halite\",\"name\":\"Rock Salt\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/breccia\",\"name\":\"Breccia\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/cassiterite\",\"name\":\"Cassiterite\"}"));
         stones.add(new JSONObject("{\"static\":\"gfx/invobjs/catgold\",\"name\":\"Cat Gold\"}"));
@@ -2619,7 +2628,18 @@ public class VSpec {
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/plum-yester\",\"name\":\"Yesteryear's Plum\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/quince-yester\",\"name\":\"Yesteryear's Quince\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/apple-yester\",\"name\":\"Yesteryear's Red Apple\"}"));
+        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/crabapple\",\"name\":\"Crabapple\"}"));
+        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/crabapple-yester\",\"name\":\"Yesteryear's Crabapple\"}"));
+        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/cork\",\"name\":\"Cork\"}"));
+        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/applecore\",\"name\":\"Red Apple Core\"}"));
+        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-maple\",\"name\":\"Maple Samara\"}"));
+        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-willow\",\"name\":\"Willow Catkin\"}"));
         categories.put("Seed of Tree or Bush", seedsAndBerries);
+
+        ArrayList<JSONObject> mantle = new ArrayList<>();
+        mantle.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/ladysmantle\",\"name\":\"Lady's Mantle\"}"));
+        mantle.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/ladysmantledew\",\"name\":\"Dewy Lady's Mantle\"}"));
+        categories.put("Mantle", mantle);
 
         ArrayList<JSONObject> freshWaterFish = new ArrayList<>();
         freshWaterFish.add(new JSONObject("{\"static\":\"gfx/invobjs/fish-asp\",\"name\":\"Asp\"}"));
@@ -2836,6 +2856,11 @@ public class VSpec {
         }
         res.exceptions.add("Filet");
         res.exceptions.add("Roe");
+        res.exceptions.add("Soil");
+        res.exceptions.add("Gem");
+        res.exceptions.add("Jewel");
+        res.exceptions.add("Cave Moth");
+        res.buildCaches(); // Rebuild caches after modifying keys and exceptions
         return res;
     }
 
@@ -2932,5 +2957,20 @@ public class VSpec {
         }
 
         return new NAlias(allSeeds);
+    }
+
+    /**
+     * Gets the seed name for a given tree resource path.
+     * 
+     * @param treePath The resource path of the tree (e.g., "gfx/terobjs/trees/appletree")
+     * @return The seed name if found, null otherwise
+     */
+    public static String getSeedForTree(String treePath) {
+        ArrayList<String> products = object.get(treePath);
+        if (products != null && !products.isEmpty()) {
+            // Return the last item in the list (typically the seed)
+            return products.get(products.size() - 1);
+        }
+        return null;
     }
 }

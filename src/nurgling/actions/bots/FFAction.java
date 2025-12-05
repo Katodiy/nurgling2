@@ -8,7 +8,6 @@ import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tasks.WaitForBurnout;
 import nurgling.tools.Container;
-import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
@@ -52,9 +51,9 @@ public class FFAction implements Action {
             }
 
 
-            ArrayList<Long> lighted = new ArrayList<>();
+            ArrayList<String> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(cont.gobid);
+                lighted.add(cont.gobHash);
 
             }
             if(containers.isEmpty())
@@ -72,7 +71,7 @@ public class FFAction implements Action {
                     new DropTargets(containers, new NAlias("Dross")).run(gui);
                     new Forging(containers, context).run(gui);
                     new FreeInventory2(context).run(gui);
-                    res = new FillContainers(containers, "Bar of Cast Iron", new Context()).run(gui);
+                    res = new FillContainers(containers, "Bar of Cast Iron", context).run(gui);
                     ArrayList<Container> forFuel = new ArrayList<>();
 
                     for (Container container : containers) {
@@ -84,9 +83,9 @@ public class FFAction implements Action {
                     if (!new FuelToContainers(forFuel).run(gui).IsSuccess())
                         return Results.ERROR("NO FUEL");
 
-                    ArrayList<Long> flighted = new ArrayList<>();
+                    ArrayList<String> flighted = new ArrayList<>();
                     for (Container cont : forFuel) {
-                        flighted.add(cont.gobid);
+                        flighted.add(cont.gobHash);
                     }
 
                     if (!new LightGob(flighted, 8).run(gui).IsSuccess())

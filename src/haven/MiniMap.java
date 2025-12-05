@@ -524,7 +524,7 @@ public class MiniMap extends Widget
 		return Coord2d.of(c2st(c)).mul(tilesz);
 	}
 
-    private void redisplay(Location loc) {
+    protected void redisplay(Location loc) {
 	Coord hsz = sz.div(2);
 	Coord zmaps = cmaps.mul(1 << zoomlevel);
 	Area next = Area.sized(loc.tc.sub(hsz.mul(UI.unscale((float)(1 << zoomlevel)))).div(zmaps),
@@ -766,6 +766,7 @@ public class MiniMap extends Widget
 		if(!file.lock.writeLock().tryLock())
 		    continue;
 		SMarker mid = null;
+		boolean isNew = false;
 		try {
 		    MapFile.GridInfo info = file.gridinfo.get(obg.id);
 		    if(info == null)
@@ -777,6 +778,7 @@ public class MiniMap extends Widget
 			    Resource.Tooltip tt = micon.res.flayer(Resource.tooltip);
 			    mid = new SMarker(info.seg, sc, tt.t, 0, new Resource.Saved(Resource.remote(), micon.res.name, micon.res.ver));
 			    file.add(mid);
+			    isNew = true;
 			} else {
 			    mid = null;
 			}
@@ -789,6 +791,11 @@ public class MiniMap extends Widget
 		if(mid != null) {
 		    synchronized(icon.gob) {
 			icon.gob.setattr(new MarkerID(icon.gob, mid));
+		    }
+		    // Upload only new markers to web map
+		    if(isNew && ui.core != null && ui.core.mappingClient != null && 
+		       (Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.autoMapper)) {
+			ui.core.mappingClient.uploadSMarker(icon.gob, mid);
 		    }
 		}
 		icon.markchecked = true;
@@ -917,13 +924,23 @@ public class MiniMap extends Widget
     public void mvclick(MapView mv, Coord mc, Location loc, Gob gob, int button) {
 	if(mc == null) mc = ui.mc;
 	if((sessloc != null) && (sessloc.seg.id == loc.seg.id)) {
+	    // Calculate world coordinates for click destination
+	    Coord2d worldPos = loc.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2));
+	    
+	    // Save click destination for path line
+	    try {
+		if(button == 1 && mv instanceof nurgling.NMapView) {
+		    ((nurgling.NMapView)mv).clickDestination = new Coord3f((float)worldPos.x, (float)worldPos.y, mv.glob.map.getzp(worldPos).z);
+		}
+	    } catch(Exception ignored) {}
+	    
 	    if(gob == null)
 		mv.wdgmsg("click", mc,
-			  loc.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),
+			  worldPos.floor(posres),
 			  button, ui.modflags());
 	    else
 		mv.wdgmsg("click", mc,
-			  loc.tc.sub(sessloc.tc).mul(tilesz).add(tilesz.div(2)).floor(posres),
+			  worldPos.floor(posres),
 			  button, ui.modflags(), 0,
 			  (int)gob.id,
 			  gob.rc.floor(posres),

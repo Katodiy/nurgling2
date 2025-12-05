@@ -14,7 +14,14 @@ public class World extends Panel {
         boolean decorativeObjects;
         boolean hideNature;
         boolean showBB;
+        boolean showBeehiveRadius;
+        boolean showTroughRadius;
+        boolean showDamageShields;
         boolean persistentBarrelLabels;
+        boolean disableTileSmoothing;
+        boolean disableTileTransitions;
+        boolean disableCloudShadows;
+        boolean darkenDeepOcean;
         Color boxFillColor = new Color(227, 28, 1, 195);
         Color boxEdgeColor = new Color(224, 193, 79, 255);
         int boxLineWidth = 4;
@@ -25,77 +32,153 @@ public class World extends Panel {
     private CheckBox decorativeObjects;
     private CheckBox natura;
     private CheckBox boundingBoxes;
+    private CheckBox beehiveRadius;
+    private CheckBox troughRadius;
+    private CheckBox damageShields;
     private CheckBox persistentBarrels;
+    private CheckBox disableTileSmoothing;
+    private CheckBox disableTileTransitions;
+    private CheckBox disableCloudShadows;
+    private CheckBox darkenDeepOcean;
     private NColorWidget fillColorWidget;
     private NColorWidget edgeColorWidget;
     private HSlider lineWidthSlider;
     private Label lineWidthLabel;
+    
+    private Scrollport scrollport;
+    private Widget content;
 
     public World() {
-        super("World Settings");
+        super("");
+        int margin = UI.scale(10);
 
-        // Flat surface setting
-        add(new Label("Terrain:"), UI.scale(10, 40));
-        flatSurface = add(new CheckBox("Flat surface (requires restart)") {
+        // Create scrollport to contain all settings
+        int scrollWidth = UI.scale(560);
+        int scrollHeight = UI.scale(550);
+        scrollport = add(new Scrollport(new Coord(scrollWidth, scrollHeight)), new Coord(margin, margin));
+
+        // Create main content container
+        content = new Widget(new Coord(scrollWidth - UI.scale(20), UI.scale(50))) {
+            @Override
+            public void pack() {
+                resize(contentsz());
+            }
+        };
+        scrollport.cont.add(content, Coord.z);
+
+        int contentMargin = UI.scale(5);
+        
+        // Terrain section
+        Widget prev = content.add(new Label("● Terrain"), new Coord(contentMargin, contentMargin));
+        prev = flatSurface = content.add(new CheckBox("Flat surface (requires restart)") {
             public void set(boolean val) {
                 tempSettings.flatSurface = val;
                 a = val;
             }
-        }, UI.scale(100, 40));
+        }, prev.pos("bl").adds(0, 5));
 
-        // Decorative objects setting
-        decorativeObjects = add(new CheckBox("Show decorative objects (requires restart)") {
+        prev = disableTileSmoothing = content.add(new CheckBox("Disable tile smoothing") {
+            public void set(boolean val) {
+                tempSettings.disableTileSmoothing = val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+
+        prev = disableTileTransitions = content.add(new CheckBox("Disable tile transitions") {
+            public void set(boolean val) {
+                tempSettings.disableTileTransitions = val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+
+        prev = disableCloudShadows = content.add(new CheckBox("Disable cloud shadows on ground") {
+            public void set(boolean val) {
+                tempSettings.disableCloudShadows = val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+
+        prev = darkenDeepOcean = content.add(new CheckBox("Darken deep ocean tiles") {
+            public void set(boolean val) {
+                tempSettings.darkenDeepOcean = val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+
+        prev = decorativeObjects = content.add(new CheckBox("Show decorative objects (requires restart)") {
             public void set(boolean val) {
                 tempSettings.decorativeObjects = val;
                 a = val;
             }
-        }, UI.scale(100, 80));
+        }, prev.pos("bl").adds(0, 5));
 
-        // Nature objects setting
-        add(new Label("Objects:"), UI.scale(10, 120));
-        natura = add(new CheckBox("Hide nature objects") {
+        // Objects section
+        prev = content.add(new Label("● Objects"), prev.pos("bl").adds(0, 15));
+        prev = natura = content.add(new CheckBox("Hide nature objects") {
             public void set(boolean val) {
                 tempSettings.hideNature = !val;
                 a = val;
-
             }
-        }, UI.scale(100, 120));
+        }, prev.pos("bl").adds(0, 5));
 
-        // Bounding boxes setting
-        boundingBoxes = add(new CheckBox("Show object boundaries") {
+        prev = boundingBoxes = content.add(new CheckBox("Show object boundaries") {
             public void set(boolean val) {
                 tempSettings.showBB = val;
                 a = val;
             }
-        }, UI.scale(100, 160));
-
-        // Persistent barrel labels setting
-        persistentBarrels = add(new CheckBox("Keep barrel labels visible during camera scroll") {
+        }, prev.pos("bl").adds(0, 5));
+        
+        prev = beehiveRadius = content.add(new CheckBox("Show beehive radius") {
+            public void set(boolean val) {
+                tempSettings.showBeehiveRadius = val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+        
+        prev = troughRadius = content.add(new CheckBox("Show trough radius") {
+            public void set(boolean val) {
+                tempSettings.showTroughRadius = val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+        
+        prev = damageShields = content.add(new CheckBox("Show damage shields on broken objects") {
+            public void set(boolean val) {
+                tempSettings.showDamageShields = val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+        
+        prev = persistentBarrels = content.add(new CheckBox("Keep barrel labels visible during camera scroll") {
             public void set(boolean val) {
                 tempSettings.persistentBarrelLabels = val;
                 a = val;
             }
-        }, UI.scale(100, 200));
+        }, prev.pos("bl").adds(0, 5));
 
-
-        // Bounding box colors
-        add(new Label("Bounding Box Colors:"), UI.scale(10, 240));
+        // Bounding box colors section
+        prev = content.add(new Label("● Bounding Box Colors"), prev.pos("bl").adds(0, 15));
         
-        fillColorWidget = add(new NColorWidget("Fill"), UI.scale(50, 270));
+        prev = fillColorWidget = content.add(new NColorWidget("Fill"), prev.pos("bl").adds(0, 5));
         fillColorWidget.color = tempSettings.boxFillColor;
         
-        edgeColorWidget = add(new NColorWidget("Edge"), UI.scale(50, 320));
+        prev = edgeColorWidget = content.add(new NColorWidget("Edge"), prev.pos("bl").adds(0, 5));
         edgeColorWidget.color = tempSettings.boxEdgeColor;
 
         // Line width setting
-        lineWidthLabel = add(new Label("Line width: 4"), UI.scale(50, 370));
-        lineWidthSlider = add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
+        prev = lineWidthLabel = content.add(new Label("Line width: 4"), prev.pos("bl").adds(0, 5));
+        prev = lineWidthSlider = content.add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
             public void changed() {
                 tempSettings.boxLineWidth = val;
                 lineWidthLabel.settext("Line width: " + val);
             }
-        }, UI.scale(50, 390));
-
+        }, prev.pos("bl").adds(0, 5));
+        
+        // Pack content and update scrollbar
+        content.pack();
+        scrollport.cont.update();
+        
+        pack();
     }
 
     public void setNatureStatus(Boolean a) {
@@ -110,7 +193,14 @@ public class World extends Panel {
         tempSettings.decorativeObjects = (Boolean) NConfig.get(NConfig.Key.nextshowCSprite);
         tempSettings.hideNature = (Boolean) NConfig.get(NConfig.Key.hideNature);
         tempSettings.showBB = (Boolean) NConfig.get(NConfig.Key.showBB);
+        tempSettings.showBeehiveRadius = (Boolean) NConfig.get(NConfig.Key.showBeehiveRadius);
+        tempSettings.showTroughRadius = (Boolean) NConfig.get(NConfig.Key.showTroughRadius);
+        tempSettings.showDamageShields = (Boolean) NConfig.get(NConfig.Key.showDamageShields);
         tempSettings.persistentBarrelLabels = (Boolean) NConfig.get(NConfig.Key.persistentBarrelLabels);
+        tempSettings.disableTileSmoothing = (Boolean) NConfig.get(NConfig.Key.disableTileSmoothing);
+        tempSettings.disableTileTransitions = (Boolean) NConfig.get(NConfig.Key.disableTileTransitions);
+        tempSettings.disableCloudShadows = (Boolean) NConfig.get(NConfig.Key.disableCloudShadows);
+        tempSettings.darkenDeepOcean = (Boolean) NConfig.get(NConfig.Key.darkenDeepOcean);
 
         // Load colors if they exist in config
         tempSettings.boxFillColor = NConfig.getColor(NConfig.Key.boxFillColor, new Color(227, 28, 1, 195));
@@ -126,7 +216,14 @@ public class World extends Panel {
         decorativeObjects.a = tempSettings.decorativeObjects;
         natura.a = !tempSettings.hideNature;
         boundingBoxes.a = tempSettings.showBB;
+        beehiveRadius.a = tempSettings.showBeehiveRadius;
+        troughRadius.a = tempSettings.showTroughRadius;
+        damageShields.a = tempSettings.showDamageShields;
         persistentBarrels.a = tempSettings.persistentBarrelLabels;
+        disableTileSmoothing.a = tempSettings.disableTileSmoothing;
+        disableTileTransitions.a = tempSettings.disableTileTransitions;
+        disableCloudShadows.a = tempSettings.disableCloudShadows;
+        darkenDeepOcean.a = tempSettings.darkenDeepOcean;
         fillColorWidget.color = tempSettings.boxFillColor;
         edgeColorWidget.color = tempSettings.boxEdgeColor;
         lineWidthSlider.val = tempSettings.boxLineWidth;
@@ -140,7 +237,34 @@ public class World extends Panel {
         NConfig.set(NConfig.Key.nextshowCSprite, tempSettings.decorativeObjects);
 
         NConfig.set(NConfig.Key.showBB, tempSettings.showBB);
+        
+        // Save object radii settings (overlays will auto-update)
+        NConfig.set(NConfig.Key.showBeehiveRadius, tempSettings.showBeehiveRadius);
+        NConfig.set(NConfig.Key.showTroughRadius, tempSettings.showTroughRadius);
+        NConfig.set(NConfig.Key.showDamageShields, tempSettings.showDamageShields);
+        
         NConfig.set(NConfig.Key.persistentBarrelLabels, tempSettings.persistentBarrelLabels);
+        
+        // Save tile rendering settings
+        boolean oldTileSmoothing = (Boolean) NConfig.get(NConfig.Key.disableTileSmoothing);
+        boolean oldTileTransitions = (Boolean) NConfig.get(NConfig.Key.disableTileTransitions);
+        boolean oldDarkenDeepOcean = (Boolean) NConfig.get(NConfig.Key.darkenDeepOcean);
+        NConfig.set(NConfig.Key.disableTileSmoothing, tempSettings.disableTileSmoothing);
+        NConfig.set(NConfig.Key.disableTileTransitions, tempSettings.disableTileTransitions);
+        NConfig.set(NConfig.Key.disableCloudShadows, tempSettings.disableCloudShadows);
+        NConfig.set(NConfig.Key.darkenDeepOcean, tempSettings.darkenDeepOcean);
+        
+        // Invalidate map if tile settings changed
+        if (oldTileSmoothing != tempSettings.disableTileSmoothing || oldTileTransitions != tempSettings.disableTileTransitions || oldDarkenDeepOcean != tempSettings.darkenDeepOcean) {
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null && NUtils.getGameUI().map.glob != null) {
+                MCache map = NUtils.getGameUI().map.glob.map;
+                synchronized(map.grids) {
+                    for(Coord gc : map.grids.keySet()) {
+                        map.invalidate(gc);
+                    }
+                }
+            }
+        }
         
         // Save hideNature setting
         NConfig.set(NConfig.Key.hideNature, tempSettings.hideNature);

@@ -8,6 +8,7 @@ import monitoring.ContainerWatcher;
 import monitoring.ItemWatcher;
 import monitoring.NGlobalSearchItems;
 import nurgling.actions.AutoDrink;
+import nurgling.actions.AutoSaveTableware;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.scenarios.ScenarioManager;
 import nurgling.tasks.*;
@@ -25,6 +26,7 @@ public class NCore extends Widget
     boolean isinspect = false;
     public NMappingClient mappingClient;
     public AutoDrink autoDrink = null;
+    public AutoSaveTableware autoSaveTableware = null;
     public ScenarioManager scenarioManager = new ScenarioManager();
 
     public DBPoolManager poolManager = null;
@@ -129,6 +131,7 @@ public class NCore extends Widget
         public String pass;
         public String character;
         public Integer scenarioId;
+        public String stackTraceFile; // Path to stack trace file for autorunner debugging
 
         public BotmodSettings(String user, String password, String character, Integer scenarioId) {
             this.user = user;
@@ -161,6 +164,16 @@ public class NCore extends Widget
         mode = (Boolean) NConfig.get(NConfig.Key.show_drag_menu) ? Mode.DRAG : Mode.IDLE;
         mappingClient = new NMappingClient();
 
+    }
+
+    /**
+     * Updates the config instance to use profile-aware configuration
+     * This should be called when the genus becomes available
+     */
+    public void updateConfigForProfile(String genus) {
+        if (genus != null && !genus.isEmpty()) {
+            config = nurgling.profiles.ConfigFactory.getConfig(genus);
+        }
     }
 
     @Override
@@ -196,7 +209,35 @@ public class NCore extends Widget
                 AutoDrink.stop.set(true);
             }
         }
+
+        if(autoSaveTableware == null && (Boolean)NConfig.get(NConfig.Key.autoSaveTableware))
+        {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        (autoSaveTableware = new AutoSaveTableware()).run(NUtils.getGameUI());
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+            }).start();
+        }
+        else
+        {
+            if(autoSaveTableware != null && !(Boolean)NConfig.get(NConfig.Key.autoSaveTableware))
+            {
+                AutoSaveTableware.stop.set(true);
+            }
+        }
         super.tick(dt);
+        
+        // Save global config (UI settings, credentials, etc.)
+        if (NConfig.current != null && NConfig.current.isUpdated())
+        {
+            NConfig.current.write();
+        }
+        
+        // Save profile-specific config and data
         if (config.isUpdated())
         {
             config.write();
@@ -205,9 +246,9 @@ public class NCore extends Widget
         {
             config.writeAreas(null);
         }
-        if (config.isFogUpdated())
+        if (config.isExploredUpdated())
         {
-            config.writeFogOfWar(null);
+            config.writeExploredArea(null);
         }
         if (config.isRoutesUpdated())
         {
@@ -313,7 +354,7 @@ public class NCore extends Widget
         // Заменяем константы на методы, генерирующие SQL в зависимости от СУБД
         private String getInsertRecipeSQL() {
             if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
+                return "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?) ON CONFLICT(recipe_hash) DO NOTHING";
             } else { // SQLite
                 return "INSERT OR IGNORE INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
             }
@@ -321,7 +362,7 @@ public class NCore extends Widget
 
         private String getInsertIngredientSQL() {
             if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
+                return "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?) ON CONFLICT(recipe_hash, name) DO NOTHING";
             } else { // SQLite
                 return "INSERT OR IGNORE INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
             }
@@ -329,7 +370,7 @@ public class NCore extends Widget
 
         private String getInsertFepsSQL() {
             if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
+                return "INSERT INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?) ON CONFLICT(recipe_hash, name) DO NOTHING";
             } else { // SQLite
                 return "INSERT OR IGNORE INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
             }

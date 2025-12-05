@@ -11,10 +11,10 @@ import java.util.ArrayList;
  */
 public class WaitForBurnout extends NTask
 {
-    ArrayList<Long> gobs;
+    ArrayList<String> gobs;
     int flame_flag;
 
-    public WaitForBurnout(ArrayList<Long> gobs, int flag)
+    public WaitForBurnout(ArrayList<String> gobs, int flag)
     {
         this.gobs = gobs;
         this.flame_flag = flag;
@@ -23,8 +23,8 @@ public class WaitForBurnout extends NTask
     @Override
     public boolean check()
     {
-        for (Long gobid : gobs) {
-            Gob gob = Finder.findGob(gobid);
+        for (String hash : gobs) {
+            Gob gob = Finder.findGob(hash);
             if(gob!=null && (gob.ngob.getModelAttribute() & flame_flag) != 0)
             {
                 return false;

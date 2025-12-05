@@ -41,6 +41,16 @@ public class DBPoolManager {
                     connection = DriverManager.getConnection(currentUrl);
                 }
                 connection.setAutoCommit(false);
+                
+                // Run migrations after establishing connection
+                try {
+                    DBMigrationManager migrationManager = new DBMigrationManager(connection);
+                    migrationManager.runMigrations();
+                } catch (SQLException migrationEx) {
+                    System.err.println("Failed to run database migrations: " + migrationEx.getMessage());
+                    migrationEx.printStackTrace();
+                    // Don't close connection, migrations might have partially succeeded
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();

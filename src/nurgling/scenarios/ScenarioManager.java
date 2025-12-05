@@ -25,10 +25,10 @@ public class ScenarioManager {
 
     public void loadScenarios() {
         scenarios.clear();
-        File file = new File(NConfig.current.path_scenarios);
+        File file = new File(NConfig.current.getScenariosPath());
         if (file.exists()) {
             StringBuilder contentBuilder = new StringBuilder();
-            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_scenarios), StandardCharsets.UTF_8)) {
+            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.getScenariosPath()), StandardCharsets.UTF_8)) {
                 stream.forEach(s -> contentBuilder.append(s).append("\n"));
             } catch (IOException ignore) {}
 
@@ -53,7 +53,7 @@ public class ScenarioManager {
         main.put("scenarios", jscenarios);
 
         try {
-            FileWriter f = new FileWriter(customPath == null ? NConfig.current.path_scenarios : customPath, StandardCharsets.UTF_8);
+            FileWriter f = new FileWriter(customPath == null ? NConfig.current.getScenariosPath() : customPath, StandardCharsets.UTF_8);
             main.write(f);
             f.close();
             needsUpdate = false;

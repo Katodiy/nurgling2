@@ -67,6 +67,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	public SearchWidget searchWidget;
     public NCookBook cookBook;
 	public EncyclopediaWindow encyclopediaWindow;
+	public BlueprintWidget blueprintWidget;
     public final Collection<Polity> polities = new ArrayList<Polity>();
     public HelpWnd help;
     public OptWnd opts;
@@ -268,10 +269,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     private final Coord menugridc;
     public GameUI(String chrid, long plid, String genus, NUI nui) {
 	this.chrid = chrid;
-	if(nui.sessInfo!=null)
-		nui.sessInfo.characterInfo = add(new NCharacterInfo(chrid, nui));
 	this.plid = plid;
 	this.genus = genus;
+	if(nui.sessInfo!=null)
+	    nui.sessInfo.characterInfo = add(new NCharacterInfo(chrid, nui, genus));
 	setcanfocus(true);
 	setfocusctl(true);
 
@@ -296,6 +297,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	opts.hide();
 	zerg = add(new NZergwnd(), Utils.getprefc("wndc-zerg", UI.scale(new Coord(187, 50))));
 	zerg.hide();
+    }
+    
+    private void initHeavyWidgets() {
+	// Heavy custom widgets - created in attached() to avoid multiple initialization
 	add(areas = new NAreasWidget(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
 	areas.hide();
 	add(cookBook = new NCookBook(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
@@ -304,11 +309,14 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	routesWidget.hide();
 	add(encyclopediaWindow = new EncyclopediaWindow(),new Coord(sz.x/2 - 400,sz.y/2 - 300 ));
 	encyclopediaWindow.hide();
+	add(blueprintWidget = new BlueprintWidget(), new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
+	blueprintWidget.hide();
     }
 
     protected void attached() {
 	iconconf = loadiconconf();
 	super.attached();
+	initHeavyWidgets();
     }
 
     public static final KeyBinding kb_srch = KeyBinding.get("scm-srch", KeyMatch.forchar('Z', KeyMatch.C));
@@ -622,7 +630,10 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	} else if(place == "fight") {
 	   add(new NDraggableWidget( fv = (Fightview)child,"Fightview",UI.scale(230,380)));
 	} else if(place == "fsess") {
-	    add(child);
+	    NFightsess fsess = (NFightsess)child;
+	    add(fsess);
+	    add(new NDraggableWidget(fsess.buffsAndInfo, "FightBuffsInfo", fsess.buffsAndInfo.sz.add(NDraggableWidget.delta)));
+	    add(new NDraggableWidget(fsess.actionsWidget, "FightActions", fsess.actionsWidget.sz.add(NDraggableWidget.delta)));
 	} else if(place == "inv") {
 	    invwnd = new Hidewnd(Coord.z, "Inventory") {
 		    public void cresize(Widget ch) {
@@ -889,13 +900,38 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 		{
 			if(ui.core.mode== NCore.Mode.DRAG && ui.core.enablegrid)
 			{
-				for (int x = 0; x + cells.sz().x < sz.x +cells.sz().x; x += cells.sz().x)
+				// Calculate center of screen
+				int centerX = sz.x / 2;
+				int centerY = sz.y / 2;
+				
+				// Calculate offset so that center of screen becomes coordinate origin
+				// For center textures, this will be their corner
+				int cellSizeX = cells.sz().x;
+				int cellSizeY = cells.sz().y;
+				
+				// Calculate starting position so grid aligns with center
+				int startX = centerX % cellSizeX;
+				int startY = centerY % cellSizeY;
+				
+				// Draw grid with adjusted positioning
+				for (int x = -cellSizeX + startX; x < sz.x; x += cellSizeX)
 				{
-					for (int y = 0; y + cells.sz().y < sz.y + cells.sz().y; y += cells.sz().y)
+					for (int y = -cellSizeY + startY; y < sz.y; y += cellSizeY)
 					{
-						g.image(cells, new Coord(x, y));
+						if(x >= 0 && y >= 0)
+						{
+							g.image(cells, new Coord(x, y));
+						}
 					}
 				}
+				
+				// Draw center crosshair lines (red)
+				g.chcolor(255, 0, 0, 255);
+				// Vertical center line
+				g.line(new Coord(centerX, 0), new Coord(centerX, sz.y), 2.0);
+				// Horizontal center line
+				g.line(new Coord(0, centerY), new Coord(sz.x, centerY), 2.0);
+				g.chcolor();
 			}
 			mapViewReady = false;
 		}
@@ -1237,6 +1273,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public static final KeyBinding kb_cookbook = KeyBinding.get("areas", KeyMatch.forchar('L', KeyMatch.C));
 	public static final KeyBinding kb_routes = KeyBinding.get("routes", KeyMatch.forchar('R', KeyMatch.C));
 	public static final KeyBinding kb_searchWidget = KeyBinding.get("searchWidget", KeyMatch.forchar('F', KeyMatch.C));
+	public static final KeyBinding kb_blueprints = KeyBinding.get("treegarden", KeyMatch.forchar('P', KeyMatch.C));
 	public static final KeyBinding kb_opt = KeyBinding.get("opt", KeyMatch.forchar('O', KeyMatch.C));
     public class MainMenu extends Widget {
 	public MainMenu() {
@@ -1248,11 +1285,12 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	    prev = add(new MenuCheckBox("rbtn/bud/", kb_bud, "Kith & Kin"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(zerg)).click(() -> togglewnd(zerg));
 	    prev = add(new MenuCheckBox("rbtn/opt/", kb_opt, "Options"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(opts)).click(() -> togglewnd(opts));
 
-		// Bottom row - 4 buttons: Areas, Routes, Cook Book, Encyclopedia
+		// Bottom row - 5 buttons: Areas, Routes, Cook Book, Tree Garden, Encyclopedia
 		int secondRowY = firstButton.sz.y + UI.scale(5);
 		prev = add(new MenuCheckBox("rbtn/areas/", kb_areas, "Areas Settings"), 0, secondRowY).state(() -> wndstate(areas)).click(() -> togglewnd(areas));
 		prev = add(new MenuCheckBox("rbtn/routes/", kb_routes, "Routes Settings"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(routesWidget)).click(() -> togglewnd(routesWidget));
 		prev = add(new MenuCheckBox("rbtn/cookbook/", kb_cookbook, "Cook Book"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(cookBook)).click(() -> togglewnd(cookBook));
+		prev = add(new MenuCheckBox("rbtn/blueprints/", kb_blueprints, "Blueprint Manager"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(blueprintWidget)).click(() -> togglewnd(blueprintWidget));
         add(new MenuCheckBox("rbtn/encyclopedia/", null, "Encyclopedia"), prev.pos("ur").add(UI.scale(10),0)).state(() -> wndstate(encyclopediaWindow)).click(() -> togglewnd(encyclopediaWindow));
 		pack();
 	}
@@ -1310,6 +1348,7 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public static final KeyBinding kb_hide = KeyBinding.get("ui-toggle", KeyMatch.nil);
     public static final KeyBinding kb_logout = KeyBinding.get("logout", KeyMatch.nil);
     public static final KeyBinding kb_switchchr = KeyBinding.get("logout-cs", KeyMatch.nil);
+    public static final KeyBinding kb_instantLogout = KeyBinding.get("instantLogoutKB", KeyMatch.forchar('L', KeyMatch.C));
     public boolean globtype(GlobKeyEvent ev) {
 	if(ev.c == ':') {
 	    entercmd();
@@ -1325,6 +1364,9 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	    return(true);
 	} else if(kb_switchchr.key().match(ev)) {
 	    act("lo", "cs");
+	    return(true);
+	} else if(kb_instantLogout.key().match(ev)) {
+	    ui.sess.close();
 	    return(true);
 	} else if((ev.c == 27) && (map != null) && !map.hasfocus) {
 	    setfocus(map);

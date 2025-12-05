@@ -9,6 +9,7 @@ import nurgling.*;
 import nurgling.actions.bots.*;
 import nurgling.areas.*;
 import nurgling.overlays.map.*;
+import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import org.json.*;
 
@@ -32,6 +33,7 @@ public class NAreasWidget extends Window
     public AreaList al;
     public boolean createMode = false;
     public String currentPath = "";
+    public String searchQuery = "";
     final static Tex folderIcon = new TexI(Resource.loadsimg("nurgling/hud/folder/d"));
     final static Tex openfolderIcon = new TexI(Resource.loadsimg("nurgling/hud/folder/u"));
     NCatSelection catSelection;
@@ -129,7 +131,19 @@ public class NAreasWidget extends Window
         },importbt.pos("ur").adds(UI.scale(5,0)));
         exportbt.settip("Export");
 
-        prev = add(al = new AreaList(UI.scale(new Coord(400,170))), prev.pos("bl").adds(0, 10));
+        TextEntry searchField;
+        prev = add(searchField = new TextEntry(UI.scale(580), "") {
+            @Override
+            public boolean keydown(KeyDownEvent ev) {
+                boolean result = super.keydown(ev);
+                searchQuery = text().toLowerCase();
+                updateFilteredList();
+                return result;
+            }
+        }, createNewFolder.pos("bl").adds(0, 10));
+        searchField.settip("Search areas by name, category, or items");
+
+        prev = add(al = new AreaList(UI.scale(new Coord(400,170))), searchField.pos("bl").adds(0, 25));
         Widget lab = add(new Label("Specialisation",NStyle.areastitle), prev.pos("bl").add(UI.scale(0,5)));
 
         add(csl = new CurrentSpecialisationList(UI.scale(164,190)),lab.pos("bl").add(UI.scale(0,5)));
@@ -259,6 +273,73 @@ public class NAreasWidget extends Window
 
     }
 
+    private void updateFilteredList() {
+        if (searchQuery.isEmpty()) {
+            showPath(currentPath);
+            return;
+        }
+
+        synchronized (items) {
+            items.clear();
+            ArrayList<AreaItem> filteredAreas = new ArrayList<>();
+            
+            for (NArea area : ((NMapView) NUtils.getGameUI().map).glob.map.areas.values()) {
+                if (matchesSearch(area)) {
+                    filteredAreas.add(new AreaItem(area.name, area));
+                }
+            }
+            
+            items.addAll(filteredAreas);
+        }
+        
+        if (!items.isEmpty()) {
+            al.sel = items.get(0);
+            if (al.sel.area != null) {
+                select(al.sel.area.id);
+            }
+        } else {
+            select();
+        }
+    }
+
+    private boolean matchesSearch(NArea area) {
+        String query = searchQuery.toLowerCase();
+        
+        if (area.name.toLowerCase().contains(query)) {
+            return true;
+        }
+        
+        for (NArea.Specialisation spec : area.spec) {
+            if (spec.name.toLowerCase().contains(query)) {
+                return true;
+            }
+            if (spec.subtype != null && spec.subtype.toLowerCase().contains(query)) {
+                return true;
+            }
+            // Search by pretty name
+            Specialisation.SpecialisationItem specItem = findSpecialisation(spec.name);
+            if (specItem != null && specItem.prettyName.toLowerCase().contains(query)) {
+                return true;
+            }
+        }
+        
+        for (int i = 0; i < area.jin.length(); i++) {
+            String itemName = (String) ((JSONObject) area.jin.get(i)).get("name");
+            if (itemName.toLowerCase().contains(query)) {
+                return true;
+            }
+        }
+        
+        for (int i = 0; i < area.jout.length(); i++) {
+            String itemName = (String) ((JSONObject) area.jout.get(i)).get("name");
+            if (itemName.toLowerCase().contains(query)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
     public class AreaItem extends Widget{
         Label text;
         IButton remove;
@@ -300,6 +381,7 @@ public class NAreasWidget extends Window
             remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).t);
             opt = new ArrayList<String>(){
                 {
+                    add("Navigate To");
                     add("Select area space");
                     add("Set color");
                     add("Edit name");
@@ -402,7 +484,24 @@ public class NAreasWidget extends Window
                     {
                         if(option!=null)
                         {
-                            if (option.name.equals("Select area space"))
+                            if (option.name.equals("Navigate To"))
+                            {
+                                Thread t = new Thread(() -> {
+                                    try {
+                                        RoutePoint targetPoint = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area);
+                                        if(targetPoint == null) {
+                                            NUtils.getGameUI().error("No route point found for area: " + area.name);
+                                            return;
+                                        }
+                                        new RoutePointNavigator(targetPoint, area.id).run(NUtils.getGameUI());
+                                    } catch (InterruptedException e) {
+                                        NUtils.getGameUI().error("Navigation to area interrupted: " + e.getMessage());
+                                    }
+                                }, "AreaNavigator");
+                                t.start();
+                                NUtils.getGameUI().biw.addObserve(t);
+                            }
+                            else if (option.name.equals("Select area space"))
                             {
                                 ((NMapView)NUtils.getGameUI().map).changeArea(AreaItem.this.text.text());
                             }

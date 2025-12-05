@@ -93,6 +93,7 @@ public class NUtils
                 }
         }
     }
+    
 
     public static boolean isNatureObject(String name)
     {
@@ -153,12 +154,16 @@ public class NUtils
     public static double getStamina()
     {
         IMeter.Meter stam = getGameUI().getmeter ( "stam", 0 );
+        if(stam == null)
+            return -1;
         return stam.a;
     }
 
     public static double getEnergy()
     {
         IMeter.Meter stam = getGameUI().getmeter ( "nrj", 0 );
+        if(stam == null)
+            return -1;
         return stam.a;
     }
 
@@ -228,7 +233,15 @@ public class NUtils
 
     public static void dropToInv() throws InterruptedException {
         if(NUtils.getGameUI().vhand!=null) {
-            getGameUI().getInventory().dropOn(getGameUI().getInventory().findFreeCoord(NUtils.getGameUI().vhand));
+            dropToInv(getGameUI().getInventory());
+        }
+    }
+
+    public static void dropToInv(NInventory targetInv) throws InterruptedException {
+        if(NUtils.getGameUI().vhand!=null) {
+            Coord dc = targetInv.findFreeCoord(NUtils.getGameUI().vhand);
+            if(dc!=null)
+                targetInv.dropOn(dc);
         }
     }
 
@@ -508,6 +521,12 @@ public class NUtils
         return new Coord2d(c.x - gridUnit.x, c.y - gridUnit.y);
     }
 
+    /** a coordinate (0-100,0-100) within a 100x100 map grid **/
+    public static Coord gridOffset2(Coord2d c) {
+        Coord gridUnit = toGridUnit(c);
+        return new Coord((int) ((c.x - gridUnit.x)/11d), (int) ((c.y - gridUnit.y)/11d));
+    }
+
     public static void startBuild(Window window) {
         for (Widget sp = window.lchild; sp != null; sp = sp.prev) {
             if (sp instanceof Button) {
@@ -565,6 +584,8 @@ public class NUtils
     }
 
     public static boolean barrelHasContent(Gob barrel) {
+        if(barrel == null)
+            return false;
         for (Gob.Overlay ol : barrel.ols) {
             if(ol.spr instanceof StaticSprite) {
                 return true;
@@ -574,6 +595,8 @@ public class NUtils
     }
 
     public static String getContentsOfBarrel(Gob barrel) {
+        if(barrel == null)
+            return null;
         for (Gob.Overlay ol : barrel.ols) {
             if(ol.spr instanceof StaticSprite) {
                 return ((StaticSprite)ol.spr).res.name;

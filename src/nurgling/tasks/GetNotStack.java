@@ -1,9 +1,7 @@
 package nurgling.tasks;
 
-import haven.GItem;
 import haven.WItem;
 import haven.Widget;
-import haven.res.ui.stackinv.ItemStack;
 import nurgling.NGItem;
 import nurgling.NInventory;
 import nurgling.tools.NAlias;
@@ -21,7 +19,7 @@ public class GetNotStack extends NTask
     {
         this.name = name;
         this.inventory = inventory;
-        maxSize = StackSupporter.getMaxStackSize(name.getDefault());
+        maxSize = StackSupporter.getFullStackSize(name.getDefault());
     }
 
 

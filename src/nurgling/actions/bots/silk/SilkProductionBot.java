@@ -11,6 +11,7 @@ import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
+import nurgling.NInventory.QualityType;
 
 import java.util.ArrayList;
 import java.util.TreeMap;
@@ -81,20 +82,11 @@ public class SilkProductionBot implements Action {
             htableContainers = createContainersFromArea(htablesArea);
         }
 
-        // Step 6: Move eggs from storage to now-empty herbalist tables (only fetch what's needed)
+        // Step 6: Move eggs from storage to now-empty herbalist tables
         gui.msg("Filling herbalist tables with eggs.");
         if (totalEggsNeeded > 0) {
             context.addInItem(eggs, null);
-            // Take only what we need (or what fits in inventory, whichever is smaller)
-            int eggsToFetch = Math.min(totalEggsNeeded, gui.getInventory().getFreeSpace());
-            new TakeItems2(context, eggs, eggsToFetch).run(gui);
-
-            int eggsCollected = gui.getInventory().getItems(new NAlias(eggs)).size();
-
-            if (eggsCollected > 0) {
-                // Move eggs to herbalist tables using existing transfer logic
-                new FillContainers2(htableContainers, eggs, context).run(gui);
-            }
+            new FillContainers2(htableContainers, eggs, context, QualityType.High).run(gui);
         }
 
         NContext freshContext = new NContext(gui);
@@ -158,6 +150,13 @@ public class SilkProductionBot implements Action {
         for (Gob gob : gobs) {
             Container cand = new Container(gob, contcaps.get(gob.ngob.name));
             cand.initattr(Container.Space.class);
+
+            // Set known space values for herbalist tables (4x4 = 16 slots)
+            // Assuming they start empty for egg filling - could be refined later
+            Container.Space space = cand.getattr(Container.Space.class);
+            space.getRes().put(Container.Space.MAXSPACE, 16);
+            space.getRes().put(Container.Space.FREESPACE, 16);
+
             containers.add(cand);
         }
         return containers;

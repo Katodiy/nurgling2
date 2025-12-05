@@ -359,7 +359,9 @@ public class MapMesh implements RenderTree.Node, Disposable {
 		else {
 			mc.tiler(mc.gettile(gc)).lay(m, rnd, c, gc);
 		}
-		dotrans(m, rnd, c, gc);
+		if (!(Boolean)NConfig.get(NConfig.Key.disableTileTransitions)) {
+			dotrans(m, rnd, c, gc);
+		}
 		rnd.setSeed(ns);
 	    }
 	}

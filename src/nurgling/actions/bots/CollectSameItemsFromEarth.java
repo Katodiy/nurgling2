@@ -47,6 +47,7 @@ public class CollectSameItemsFromEarth implements Action {
             {
                 itemName = new NAlias(((NGItem)wItem.item).name());
                 itemName.keys.add(target.ngob.name);
+                itemName.buildCaches(); // Rebuild caches after modifying keys
                 break;
             }
         }

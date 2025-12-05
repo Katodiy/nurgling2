@@ -16,11 +16,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import java.awt.*;
-import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
-import java.awt.image.ComponentColorModel;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
 import java.util.*;
 import java.util.List;
 
@@ -45,10 +41,20 @@ public class NInventory extends Inventory
     boolean compactNameAscending = true;
     boolean compactQuantityAscending = false;
     String compactLastSortType = "quantity"; // Track which was clicked last
-    BufferedImage numbers = null;
     short[][] oldinv = null;
     public Gob parentGob = null;
     long lastUpdate = 0;
+    
+    // Pre-cached slot number textures for performance
+    private static final int MAX_SLOT_NUMBERS = 200;
+    private static final TexI[] cachedSlotNumbers = new TexI[MAX_SLOT_NUMBERS + 1];
+    
+    static {
+        // Pre-render all slot numbers once at startup
+        for (int i = 1; i <= MAX_SLOT_NUMBERS; i++) {
+            cachedSlotNumbers[i] = new TexI(NStyle.slotnums.render(String.valueOf(i)).img);
+        }
+    }
 
     public NInventory(Coord sz)
     {
@@ -73,48 +79,38 @@ public class NInventory extends Inventory
     @Override
     public void draw(GOut g) {
         super.draw(g);
-        if(numbers!=null) {
-            g.image(numbers,Coord.z);
+        if((Boolean)NConfig.get(NConfig.Key.showInventoryNums) && oldinv != null) {
+            drawSlotNumbers(g);
+        }
+    }
+    
+    // Optimized direct rendering without creating intermediate BufferedImage
+    private void drawSlotNumbers(GOut g) {
+        int counter = 1;
+        Coord coord = new Coord(0, 0);
+        for (coord.y = 0; coord.y < isz.y; coord.y++) {
+            for (coord.x = 0; coord.x < isz.x; coord.x++) {
+                // Check bounds to prevent ArrayIndexOutOfBoundsException
+                if (coord.y >= oldinv.length || coord.x >= oldinv[coord.y].length) {
+                    break;
+                }
+                if (oldinv[coord.y][coord.x] == 0 && counter <= MAX_SLOT_NUMBERS) {
+                    TexI numTex = cachedSlotNumbers[counter];
+                    Coord pos = coord.mul(sqsz).add(sqsz.div(2));
+                    Coord sz = numTex.sz();
+                    pos = pos.add((int)((double)sz.x * -0.5), (int)((double)sz.y * -0.5));
+                    g.image(numTex, pos);
+                }
+                if (oldinv[coord.y][coord.x] != 2)
+                    counter++;
+            }
         }
     }
 
 
-    void generateNumberMatrix(short[][] inventory)
-    {
+    // Simplified version - just updates inventory state, rendering happens in draw()
+    void updateInventoryState(short[][] inventory) {
         oldinv = inventory.clone();
-        TexI[][] numberMatrix = new TexI[isz.y][isz.x];
-        int counter = 1;
-        for (int i = 0; i < isz.y; i++) {
-            for (int j = 0; j < isz.x; j++) {
-                if (inventory[i][j] == 0)
-                {
-                    numberMatrix[i][j] = new TexI(NStyle.slotnums.render(String.valueOf(counter)).img);
-                }
-                else
-                {
-                    numberMatrix[i][j] = null;
-                }
-                if(inventory[i][j] != 2)
-                    counter++;
-            }
-        }
-        WritableRaster buf = Raster.createInterleavedRaster(java.awt.image.DataBuffer.TYPE_BYTE, isz.x*sqsz.y, isz.y*sqsz.x, 4, null);
-        BufferedImage tgt = new BufferedImage(new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_sRGB), new int[] {8, 8, 8, 8}, true, false, ComponentColorModel.TRANSLUCENT, java.awt.image.DataBuffer.TYPE_BYTE), buf, false, null);
-        Graphics2D g = tgt.createGraphics();
-        Coord coord = new Coord(0,0);
-        for (coord.y = 0; coord.y < isz.y; coord.y++) {
-            for (coord.x = 0; coord.x < isz.x; coord.x++) {
-                if(numberMatrix[coord.y][coord.x]!=null) {
-                    Coord pos = coord.mul(sqsz).add(sqsz.div(2));
-                    TexI img = numberMatrix[coord.y][coord.x];
-                    Coord sz = img.sz();
-                    pos = pos.add((int)((double)sz.x * -0.5), (int)((double)sz.y * -0.5));
-                    g.drawImage(img.back, pos.x,pos.y,null);
-                }
-            }
-        }
-        g.dispose();
-        numbers = tgt;
     }
 
     @Override
@@ -297,8 +293,10 @@ public class NInventory extends Inventory
     @Override
     public void resize(Coord sz) {
         super.resize(new Coord(sz));
-        searchwdg.resize(new Coord(sz.x , 0));
-        searchwdg.move(new Coord(0,sz.y + UI.scale(5)));
+        if(searchwdg != null) {
+            searchwdg.resize(new Coord(sz.x , 0));
+            searchwdg.move(new Coord(0,sz.y + UI.scale(5)));
+        }
         moveCheckbox();
         parent.pack();
         movePopup(parent.c);
@@ -448,17 +446,15 @@ public class NInventory extends Inventory
                                 }
                             }
                         }
-                        if(!isDiffrent && numbers == null)
-                            isDiffrent = true;
                     }
                 } else {
                     isDiffrent = true;
                 }
             if (isDiffrent)
-                generateNumberMatrix(newInv);
+                updateInventoryState(newInv);
         }
         else
-            numbers = null;
+            oldinv = null;
         if(toggles !=null)
             toggles.visible = parent.visible && showPopup;
         if(rightTogglesExpanded != null) {
@@ -1403,6 +1399,9 @@ public class NInventory extends Inventory
         if (msg.equals("transfer-same")) {
             process(getSame((NGItem) args[0], (Boolean) args[1]), "transfer");
         }
+        else if (msg.equals("drop-same")) {
+            process(getSame((NGItem) args[0], (Boolean) args[1]), "drop");
+        }
         else
         {
             super.wdgmsg(sender, msg, args);
@@ -1420,7 +1419,8 @@ public class NInventory extends Inventory
         List<NGItem> items = new ArrayList<>();
         if (item != null && item.name() != null)
         {
-
+            // Only collect direct children of inventory, don't expand stacks
+            // (expanding stacks would break them apart during transfer)
             for (Widget wdg = lchild; wdg != null; wdg = wdg.prev)
             {
                 if (wdg.visible && wdg instanceof NWItem)
@@ -1433,7 +1433,6 @@ public class NInventory extends Inventory
                     }
                     else
                     {
-
                         if (NParser.checkName(item.name(), ((NGItem) wItem.item).name()))
                         {
                             items.add((NGItem) wItem.item);
@@ -1446,20 +1445,44 @@ public class NInventory extends Inventory
         return items;
     }
 
+    /**
+     * Gets the effective quality of an item, considering stack quality for stacked items
+     */
+    private static double getEffectiveQuality(NGItem item) {
+        // First try to get stack quality (for stacked items)
+        Stack stackInfo = item.getInfo(Stack.class);
+        if (stackInfo != null && stackInfo.quality > 0) {
+            return stackInfo.quality;
+        }
+        // Fall back to individual item quality
+        if (item.quality != null && item.quality > 0) {
+            return item.quality;
+        }
+        return -1; // No quality available
+    }
+    
     public static final Comparator<NGItem> ITEM_COMPARATOR_ASC = new Comparator<NGItem>() {
         @Override
         public int compare(NGItem o1, NGItem o2) {
-
-            if(o1.quality!=null && o2.quality!=null)
-                return Double.compare(o1.quality, o2.quality);
-            else
-                return 1;
+            double q1 = getEffectiveQuality(o1);
+            double q2 = getEffectiveQuality(o2);
+            // Items with no quality (-1) go to the end
+            if (q1 < 0 && q2 < 0) return 0;
+            if (q1 < 0) return 1;  // no quality goes to the end
+            if (q2 < 0) return -1; // no quality goes to the end
+            return Double.compare(q1, q2);
         }
     };
     public static final Comparator<NGItem> ITEM_COMPARATOR_DESC = new Comparator<NGItem>() {
         @Override
         public int compare(NGItem o1, NGItem o2) {
-            return ITEM_COMPARATOR_ASC.compare(o2, o1);
+            double q1 = getEffectiveQuality(o1);
+            double q2 = getEffectiveQuality(o2);
+            // Items with no quality (-1) go to the end
+            if (q1 < 0 && q2 < 0) return 0;
+            if (q1 < 0) return 1;  // no quality goes to the end
+            if (q2 < 0) return -1; // no quality goes to the end
+            return Double.compare(q2, q1);
         }
     };
 

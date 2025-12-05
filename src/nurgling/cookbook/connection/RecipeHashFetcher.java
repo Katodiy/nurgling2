@@ -28,19 +28,23 @@ public class RecipeHashFetcher implements Runnable {
                 query = "SELECT " +
                         "r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
                         "f.name as fep_name, f.value as fep_value, f.weight as fep_weight, " +
-                        "i.name as ing_name, i.percentage as ing_percentage " +
+                        "i.name as ing_name, i.percentage as ing_percentage, " +
+                        "CASE WHEN fav.recipe_hash IS NOT NULL THEN TRUE ELSE FALSE END as is_favorite " +
                         "FROM recipes r " +
                         "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash " +
                         "LEFT JOIN ingredients i ON r.recipe_hash = i.recipe_hash " +
+                        "LEFT JOIN favorite_recipes fav ON r.recipe_hash = fav.recipe_hash " +
                         "WHERE " + extractWhereClause(sql);
             } else { // SQLite
                 query = "SELECT " +
                         "r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
                         "f.name as fep_name, f.value as fep_value, f.weight as fep_weight, " +
-                        "i.name as ing_name, i.percentage as ing_percentage " +
+                        "i.name as ing_name, i.percentage as ing_percentage, " +
+                        "CASE WHEN fav.recipe_hash IS NOT NULL THEN 1 ELSE 0 END as is_favorite " +
                         "FROM recipes r " +
                         "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash " +
                         "LEFT JOIN ingredients i ON r.recipe_hash = i.recipe_hash " +
+                        "LEFT JOIN favorite_recipes fav ON r.recipe_hash = fav.recipe_hash " +
                         "WHERE " + extractWhereClause(sql);
             }
 
@@ -54,15 +58,17 @@ public class RecipeHashFetcher implements Runnable {
 
                 Recipe recipe = recipeMap.computeIfAbsent(hash, k -> {
                     try {
-                        return new Recipe(
+                        Recipe r = new Recipe(
                                 hash,
                                 rs.getString("item_name"),
                                 rs.getString("resource_name"),
                                 rs.getDouble("hunger"),
                                 rs.getInt("energy"),
-                                new HashMap<>(), // Ингредиенты
+                                new HashMap<>(), // Ingredients
                                 new HashMap<>()   // FEPS
                         );
+                        r.setFavorite(rs.getBoolean("is_favorite"));
+                        return r;
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
@@ -89,8 +95,6 @@ public class RecipeHashFetcher implements Runnable {
             }
 
             recipes = new ArrayList<>(recipeMap.values());
-            System.out.println("Successfully fetched " + recipes.size() +
-                    " recipes with FEPS and ingredients");
         } catch (SQLException e) {
             System.err.println("Error fetching recipes:");
             e.printStackTrace();

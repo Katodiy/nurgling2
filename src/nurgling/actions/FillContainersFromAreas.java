@@ -64,8 +64,11 @@ public class FillContainersFromAreas implements Action
                         for(NContext.ObjectStorage storage : storages) {
                             if(storage instanceof Container) {
                                 Container container = (Container) storage;
-                                if (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.TargetItems.class).getTargets(transferedItems) > 0) {
-                                    new PathFinder(Finder.findGob(container.gobid)).run(gui);
+                                if (container.getattr(Container.Space.class) == null) {
+                                    container.initattr(Container.Space.class);
+                                }
+                                if (!container.getattr(Container.Space.class).isReady() || (container.getattr(Container.TargetItems.class) != null && container.getattr(Container.TargetItems.class).getTargets(transferedItems) > 0)) {
+                                    new PathFinder(Finder.findGob(container.gobHash)).run(gui);
                                     new OpenTargetContainer(container).run(gui);
                                     TakeAvailableItemsFromContainer tifc = new TakeAvailableItemsFromContainer(container, transferedItems, target_size);
                                     tifc.run(gui);

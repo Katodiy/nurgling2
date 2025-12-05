@@ -211,11 +211,17 @@ public class SeedCrop implements Action {
                 stacks_size = NUtils.getGameUI().getInventory().getItems(iseed).size();
             }
 
+            WItem seedItem = NUtils.getGameUI().getInventory().getItem(iseed);
+            if (seedItem == null) {
+                NUtils.getGameUI().msg("No seeds available for planting");
+                return;
+            }
+
             if(stacks_size >=20){
                 gui.msg("There is stack of les than 20 in inv!");
             }
 
-            NUtils.getGameUI().getInventory().activateItem(iseed);
+            NUtils.getGameUI().getInventory().activateItem(seedItem);
             NUtils.getUI().core.addTask(new GetCurs("harvest"));
 
             if (rev) {
@@ -235,6 +241,16 @@ public class SeedCrop implements Action {
     }
 
     private void fetchSeedsFromBarrel(NGameUI gui, ArrayList<Gob> barrels) throws InterruptedException {
+        // Drop off remaining seeds before fetching new ones
+        if (!gui.getInventory().getItems(iseed).isEmpty()) {
+            for (Gob barrel : barrels) {
+                TransferToBarrel tb;
+                (tb = new TransferToBarrel(barrel, iseed)).run(gui);
+                if (!tb.isFull())
+                    break;
+            }
+        }
+
         for (Gob barrel : barrels) {
             if (gui.getInventory().getItems(iseed).size() < 2 && NUtils.barrelHasContent(barrel)) {
                 new TakeFromBarrel(barrel, iseed).run(gui);
@@ -266,7 +282,7 @@ public class SeedCrop implements Action {
 
                     int numberOfItemsToFetch = gui.getInventory().getFreeSpace();
                     if (((NInventory) NUtils.getGameUI().maininv).bundle.a) {
-                        numberOfItemsToFetch = numberOfItemsToFetch * StackSupporter.getMaxStackSize(iseed.getDefault());
+                        numberOfItemsToFetch = numberOfItemsToFetch * StackSupporter.getFullStackSize(iseed.getDefault());
                     }
 
                     new TakeItemsFromPile(stockpile, gui.getStockpile(), numberOfItemsToFetch).run(gui);

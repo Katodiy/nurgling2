@@ -85,6 +85,7 @@ public class StaticSprite extends Sprite {
     }
 
     public void added(RenderTree.Slot slot) {
+	nurgling.tools.CustomizeStaticSprite.added(this, slot);
 	for(RenderTree.Node p : parts)
 	    slot.add(p);
     }

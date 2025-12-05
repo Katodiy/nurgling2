@@ -8,6 +8,8 @@ import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.NAlias;
+import nurgling.tools.StackSupporter;
+import nurgling.NInventory.QualityType;
 
 import java.util.ArrayList;
 
@@ -17,11 +19,13 @@ public class FillContainers2 implements Action
     String transferedItems;
     NContext context;
     Coord targetCoord = new Coord(1,1);
+    QualityType qualityType = null;
 
-    public FillContainers2(ArrayList<Container> conts, String transferedItems, NContext context) {
+    public FillContainers2(ArrayList<Container> conts, String transferedItems, NContext context, QualityType qualityType) {
         this.conts = conts;
         this.context = context;
         this.transferedItems = transferedItems;
+        this.qualityType = qualityType;
     }
 
     @Override
@@ -34,7 +38,8 @@ public class FillContainers2 implements Action
             while(!isReady(cont)) {
                 if (gui.getInventory().getItems(transferedItems).isEmpty()) {
                     int target_size = calculateTargetSize();
-                    new TakeItems2(context,transferedItems,Math.min(target_size,NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord))).run(gui);
+                    int optimalCapacity = StackSupporter.getOptimalItemCapacity(NUtils.getGameUI().getInventory(), transferedItems, targetCoord, target_size);
+                    new TakeItems2(context, transferedItems, optimalCapacity, qualityType).run(gui);
                     if (gui.getInventory().getItems(transferedItems).isEmpty())
                         return Results.ERROR("NO ITEMS");
                 }

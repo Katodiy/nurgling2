@@ -57,6 +57,15 @@ public class ItemDrag extends NWItem
 		if(ui.dispatchq(parent, new Drop(ev.c.add(this.c), this)).handled)
 			return(true);
 	} else if(ev.b == 3) {
+		// Alt+RightClick: Open container without using the held item
+		// Useful when you have a full inventory and hold a live animal
+		if(ui.modmeta && !ui.modctrl && !ui.modshift) {
+		    GameUI gui = getparent(GameUI.class);
+		    if((gui != null) && (gui.map != null)) {
+			// Dispatch as regular right-click to map (opens container)
+			return(ev.derive(gui.map.rootxlate(ev.c.add(rootpos()))).dispatch(gui.map));
+		    }
+		}
 		if(ui.dispatchq(parent, new Interact(ev.c.add(this.c), this)).handled)
 			return(true);
 	}

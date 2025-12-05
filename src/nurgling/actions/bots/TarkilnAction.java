@@ -64,9 +64,9 @@ public class TarkilnAction implements Action {
 
             if(!new FillFuelTarkilns(tarkilns,insa.getRCArea()).run(gui).IsSuccess())
                 return Results.FAIL();
-            ArrayList<Long> flighted = new ArrayList<>();
+            ArrayList<String> flighted = new ArrayList<>();
             for (Gob cont : tarkilns) {
-                flighted.add(cont.id);
+                flighted.add(cont.ngob.hash);
             }
             new LightGob(flighted,16).run(gui);
         }

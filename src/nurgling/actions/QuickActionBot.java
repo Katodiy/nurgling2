@@ -5,6 +5,7 @@ import nurgling.NConfig;
 import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
+import nurgling.conf.QuickActionPreset;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.tasks.WaitPose;
 import nurgling.tools.Finder;
@@ -13,21 +14,32 @@ import nurgling.tools.NParser;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.regex.Pattern;
 
 import static haven.OCache.posres;
 
 public class QuickActionBot implements Action {
     boolean ignorePatter = false;
     boolean useMouse = false;
+    QuickActionPreset preset = null;
 
     public QuickActionBot(boolean ignorePatter) {
         this.ignorePatter = ignorePatter;
         this.useMouse = false;
+        this.preset = null;
     }
 
     public QuickActionBot(boolean ignorePatter, boolean useMouse) {
         this.ignorePatter = ignorePatter;
         this.useMouse = useMouse;
+        this.preset = null;
+    }
+
+    public QuickActionBot(boolean ignorePatter, boolean useMouse, QuickActionPreset preset) {
+        this.ignorePatter = ignorePatter;
+        this.useMouse = useMouse;
+        this.preset = preset;
     }
 
     @Override
@@ -38,18 +50,21 @@ public class QuickActionBot implements Action {
             ArrayList<Gob> gobs;
             Coord2d centerPoint;
             
+            // Get patterns either from preset or from the current UI settings
+            ArrayList<Pattern> patterns = getPatterns();
+            
             if (useMouse) {
                 // Get mouse position in world coordinates
                 centerPoint = getMouseWorldPosition(gui);
                 if (centerPoint == null) {
                     return Results.FAIL();
                 }
-                gobs = Finder.findGobByPatternsAroundPoint(NUtils.getQAPatterns(), dist, centerPoint);
+                gobs = Finder.findGobByPatternsAroundPoint(patterns, dist, centerPoint);
                 gobs.sort(Comparator.comparingDouble(a -> a.rc.dist(centerPoint)));
             } else {
                 // Use player position (original behavior)
                 centerPoint = NUtils.player().rc;
-                gobs = Finder.findGobByPatterns(NUtils.getQAPatterns(), dist);
+                gobs = Finder.findGobByPatterns(patterns, dist);
                 gobs.sort(NUtils.d_comp);
             }
             
@@ -75,6 +90,36 @@ public class QuickActionBot implements Action {
         }
 
         return Results.SUCCESS();
+    }
+
+    /**
+     * Get patterns from the preset if available, otherwise from current settings
+     */
+    @SuppressWarnings("unchecked")
+    private ArrayList<Pattern> getPatterns() {
+        ArrayList<Pattern> patterns = new ArrayList<>();
+        
+        if (preset != null && preset.patterns != null) {
+            // Use patterns from the specified preset
+            for (HashMap<String, Object> item : preset.patterns) {
+                Boolean enabled = (Boolean) item.getOrDefault("enabled", true);
+                if (enabled) {
+                    String patternStr = (String) item.get("name");
+                    if (patternStr != null) {
+                        try {
+                            patterns.add(Pattern.compile(patternStr));
+                        } catch (Exception e) {
+                            // Invalid pattern, skip it
+                        }
+                    }
+                }
+            }
+        } else {
+            // Fallback to NUtils method for backward compatibility
+            patterns = NUtils.getQAPatterns();
+        }
+        
+        return patterns;
     }
 
     private Coord2d getMouseWorldPosition(NGameUI gui) {

@@ -18,6 +18,7 @@ public class NKinRing extends Sprite implements RenderTree.Node
     final Model emod;
 
     Gob gob;
+    int lastKnownGroup = -1; // Track last known group to detect changes
 
     public NKinRing(Owner owner)
     {
@@ -35,15 +36,35 @@ public class NKinRing extends Sprite implements RenderTree.Node
         this.emod = new Model(Model.Mode.TRIANGLE_FAN, va, null);
     }
 
-    public static final ColorTex сt = new TexI(Resource.loadimg("marks/kintears/white")).st();
+    private static ColorTex getTextureForGroup(int group) {
+        String textureName;
+        switch(group) {
+            case 0: textureName = "white"; break;
+            case 1: textureName = "green"; break;
+            case 2: textureName = "red"; break;
+            case 3: textureName = "blue"; break;
+            case 4: textureName = "turquoise"; break;
+            case 5: textureName = "yellow"; break;
+            case 6: textureName = "violet"; break;
+            case 7: textureName = "pink"; break;
+            default: textureName = "white"; break;
+        }
+        return new TexI(Resource.loadimg("marks/kintears/" + textureName)).st();
+    }
+    
     public void added(RenderTree.Slot slot)
     {
         Buddy buddy = gob.getattr(Buddy.class);
         if((buddy!=null && buddy.b!=null && NKinProp.get(buddy.b.group).ring) || unknown)
         {
-            Pipe.Op rmat = Pipe.Op.compose(new Rendered.Order.Default(7000), States.Depthtest.none, States.maskdepth,
+            // Determine group and get corresponding texture
+            int group = (buddy != null && buddy.b != null) ? buddy.b.group : 0;
+            lastKnownGroup = group;
+            ColorTex texture = getTextureForGroup(group);
+            
+            Pipe.Op rmat = Pipe.Op.compose(new Rendered.Order.Default(-100), new States.Depthtest(States.Depthtest.Test.LE), States.maskdepth,
                 FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
-                    BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), сt, Rendered.postpfx);
+                    BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), texture, Clickable.No, Rendered.postpfx);
             slot.add(emod, rmat);
             _slot = slot;
         }
@@ -60,6 +81,14 @@ public class NKinRing extends Sprite implements RenderTree.Node
             return true;
         }
         Buddy buddy = gob.getattr(Buddy.class);
+        int currentGroup = (buddy != null && buddy.b != null) ? buddy.b.group : 0;
+        
+        // Check if group changed - recreate slot with new color
+        if (_slot != null && currentGroup != lastKnownGroup) {
+            _slot.remove();
+            _slot = null;
+        }
+        
         if(buddy == null)
         {
             unknown = true;

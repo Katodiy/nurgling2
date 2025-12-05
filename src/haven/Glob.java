@@ -397,7 +397,15 @@ public class Glob {
 	public Color blightamb = null, blightdif = null, blightspc = null;
 	public void brighten(){
 		synchronized(this) {
-			double coef = (Boolean)NConfig.get(NConfig.Key.nightVision)?0.65:0.0;
+			double coef = 0.0;
+			if((Boolean)NConfig.get(NConfig.Key.nightVision)) {
+				Object brightness = NConfig.get(NConfig.Key.nightVisionBrightness);
+				if(brightness instanceof Number) {
+					coef = ((Number)brightness).doubleValue();
+				} else {
+					coef = 0.65;
+				}
+			}
 			if(lightamb != null) {
 				blightamb = Utils.blendcol(lightamb, Color.WHITE, coef);
 			}

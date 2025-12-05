@@ -6,11 +6,27 @@ import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.actions.AutoDrink;
 import nurgling.areas.NContext;
+import nurgling.NConfig;
+import nurgling.NCore;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.ArrayList;
 
 public class BotsInterruptWidget extends Widget {
     boolean oldStackState = false;
+
+    // Stack trace writing for autorunner debugging
+    private static String autorunnerStackTraceFile = null;
+    private static long lastStackTraceWrite = 0;
+    private static final long STACK_TRACE_WRITE_INTERVAL = 2000; // 2 seconds
+
+
     public class Gear extends Widget
     {
         final Thread t;
@@ -55,10 +71,17 @@ public class BotsInterruptWidget extends Widget {
         }
     }
 
-
+    private void initializeStackTraceFile() {
+        // Check if running under autorunner and stackTraceFile is configured
+        if (NConfig.isBotMod() && NConfig.botmod != null && NConfig.botmod.stackTraceFile != null) {
+            autorunnerStackTraceFile = NConfig.botmod.stackTraceFile;
+            System.out.println("Autorunner mode detected: Stack trace file = " + autorunnerStackTraceFile);
+        }
+    }
 
     public BotsInterruptWidget() {
         sz = NStyle.gear[0].sz().mul(4.5);
+        initializeStackTraceFile();
     }
 
     public void addObserve(Thread t)
@@ -137,6 +160,13 @@ public class BotsInterruptWidget extends Widget {
     @Override
     public void tick(double dt) {
         super.tick(dt);
+
+        // Only write stack traces if running under autorunner
+        if (autorunnerStackTraceFile != null &&
+            System.currentTimeMillis() - lastStackTraceWrite > STACK_TRACE_WRITE_INTERVAL) {
+            writeCurrentStackTrace();
+            lastStackTraceWrite = System.currentTimeMillis();
+        }
         synchronized (obs)
         {
             for(Gear g: obs)
@@ -161,6 +191,52 @@ public class BotsInterruptWidget extends Widget {
             }
         }
         repack();
+    }
+
+    private void writeCurrentStackTrace() {
+        try {
+            // Create JSON with current stack trace information
+            StringBuilder json = new StringBuilder();
+            json.append("{\n");
+            json.append("  \"timestamp\": \"").append(Instant.now().toString()).append("\",\n");
+
+            // Find current bot action (same logic as gear tooltip)
+            String currentAction = null;
+            String botName = null;
+
+            synchronized (obs) {
+                if (!obs.isEmpty()) {
+                    Gear firstGear = obs.iterator().next();
+                    botName = firstGear.t.getName();
+
+                    for (StackTraceElement el : firstGear.t.getStackTrace()) {
+                        if (el.toString().contains("actions.")) {
+                            currentAction = el.toString();
+                            break;
+                        }
+                    }
+                }
+            }
+
+            json.append("  \"botName\": \"").append(botName != null ? botName : "Unknown").append("\",\n");
+            json.append("  \"currentAction\": \"").append(currentAction != null ? currentAction.replace("\"", "\\\"") : "No action found").append("\",\n");
+            json.append("  \"activeBotsCount\": ").append(obs.size()).append("\n");
+            json.append("}");
+
+            // Write atomically to temp file then rename
+            Path tempFile = Paths.get(autorunnerStackTraceFile + ".tmp");
+            Path finalFile = Paths.get(autorunnerStackTraceFile);
+
+            Files.write(tempFile, json.toString().getBytes(), StandardOpenOption.CREATE);
+            Files.move(tempFile, finalFile, StandardCopyOption.REPLACE_EXISTING);
+
+        } catch (IOException e) {
+            // File I/O operations failed - log but don't crash
+            System.err.println("Failed to write stack trace: " + e.getMessage());
+        } catch (SecurityException e) {
+            // File permission issue - log but don't crash
+            System.err.println("Permission denied writing stack trace: " + e.getMessage());
+        }
     }
 
     final ArrayList<Gear> obs = new ArrayList<>();

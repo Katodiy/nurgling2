@@ -5,7 +5,6 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
-import nurgling.conf.NClayDiggerProp;
 import nurgling.conf.NFishingSettings;
 import nurgling.tasks.*;
 import nurgling.tools.Context;
@@ -38,7 +37,12 @@ public class Fishing implements Action {
         (insa = new SelectArea(Resource.loadsimg("baubles/fishingPlace"))).run(gui);
         Context context = new Context();
         Pair<Coord2d,Coord2d> repArea = null;
-        if(prop.repfromcont) {
+        Pair<Coord2d,Coord2d> baitArea = null;
+        
+        if(prop.useInventoryTools) {
+            // Using tools from inventory - no zone selection needed
+            NUtils.getGameUI().msg("Using tools from inventory/equipment");
+        } else {
             SelectArea repsa;
             NUtils.getGameUI().msg("Please select area with repair instruments");
             (repsa = new SelectArea(Resource.loadsimg("baubles/fishingRep"))).run(gui);
@@ -46,27 +50,35 @@ public class Fishing implements Action {
 
             context.addInput(prop.hook, Context.GetInput(prop.hook, repsa.getRCArea()));
             context.addInput(prop.fishline, Context.GetInput(prop.fishline, repsa.getRCArea()));
+
+            SelectArea baitsa;
+            NUtils.getGameUI().msg("Please select area with baits or lures");
+            (baitsa = new SelectArea(Resource.loadsimg("baubles/fishingBaits"))).run(gui);
+            baitArea = baitsa.getRCArea();
+            context.addInput(prop.bait, Context.GetInput(prop.bait, baitsa.getRCArea()));
         }
 
-        SelectArea baitsa;
-        NUtils.getGameUI().msg("Please select area with baits or lures");
-        (baitsa = new SelectArea(Resource.loadsimg("baubles/fishingBaits"))).run(gui);
-        context.addInput(prop.bait, Context.GetInput(prop.bait, baitsa.getRCArea()));
-
-        SelectArea outsa;
-        NUtils.getGameUI().msg("Please select area for piles");
-        (outsa = new SelectArea(Resource.loadsimg("baubles/rawFish"))).run(gui);
+        Pair<Coord2d,Coord2d> outArea = null;
+        if(!prop.noPiles) {
+            SelectArea outsa;
+            NUtils.getGameUI().msg("Please select area for piles");
+            (outsa = new SelectArea(Resource.loadsimg("baubles/rawFish"))).run(gui);
+            outArea = outsa.getRCArea();
+        }
 
         if(!new Equip(new NAlias(prop.tool)).run(gui).IsSuccess())
         {
             return Results.ERROR("No equip found: " + prop.tool);
         };
 
-
-
         Coord2d currentPos = NUtils.player().rc;
-        if(!new RepairFishingRot(context, prop, repArea, baitsa.getRCArea()).run(gui).IsSuccess())
-            return Results.FAIL();
+        if(prop.useInventoryTools) {
+            if(!new RepairFishingRotFromInventory(prop).run(gui).IsSuccess())
+                return Results.FAIL();
+        } else {
+            if(!new RepairFishingRot(context, prop, repArea, baitArea).run(gui).IsSuccess())
+                return Results.FAIL();
+        }
         new PathFinder(currentPos).run(gui);
         for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae) {
             if (pag.button() != null && pag.button().name().equals("Fish")) {
@@ -78,6 +90,11 @@ public class Fishing implements Action {
         NUtils.lclick(fishPlace);
         NUtils.addTask(new WaitPose(NUtils.player(),"fish"));
         currentPos = NUtils.player().rc;
+        
+        final Pair<Coord2d,Coord2d> finalRepArea = repArea;
+        final Pair<Coord2d,Coord2d> finalBaitArea = baitArea;
+        final Pair<Coord2d,Coord2d> finalOutArea = outArea;
+        
         while (true)
         {
             FishingTask ft;
@@ -123,13 +140,22 @@ public class Fishing implements Action {
                 }
                 case NEEDREP:
                 {
-                    if(!new RepairFishingRot(context, prop, repArea, baitsa.getRCArea()).run(gui).IsSuccess())
-                        return Results.FAIL();
+                    if(prop.useInventoryTools) {
+                        if(!new RepairFishingRotFromInventory(prop).run(gui).IsSuccess())
+                            return Results.FAIL();
+                    } else {
+                        if(!new RepairFishingRot(context, prop, finalRepArea, finalBaitArea).run(gui).IsSuccess())
+                            return Results.FAIL();
+                    }
                     startFishing(gui, currentPos, fishPlace);
                     break;
                 }
                 case NOFREESPACE: {
-                    new TransferToPiles(outsa.getRCArea(), VSpec.getAllFish()).run(gui);
+                    if(prop.noPiles) {
+                        NUtils.getGameUI().msg("Inventory full, stopping fishing");
+                        return Results.SUCCESS();
+                    }
+                    new TransferToPiles(finalOutArea, VSpec.getAllFish()).run(gui);
                     startFishing(gui, currentPos, fishPlace);
                 }
             }

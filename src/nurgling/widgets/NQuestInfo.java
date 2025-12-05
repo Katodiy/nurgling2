@@ -382,7 +382,7 @@ public class NQuestInfo extends Widget
     public void draw(GOut g) {
         Coord margin = UI.scale(this.margin);
         if (glowon != null) {
-            drawBg(g.reclip(new Coord(0,modebtn.sz.y), glowon.sz().add(margin.mul(2))), glowon.sz().add(margin.mul(2)));
+            NDraggableWidget.drawBg(g.reclip(new Coord(0,modebtn.sz.y), glowon.sz().add(margin.mul(2))), glowon.sz().add(margin.mul(2)), ui);
             pbox.draw(g, new Coord(0,modebtn.sz.y), glowon.sz().add(margin.mul(2)));
 
             g.image(glowon, margin.add(new Coord(0,modebtn.sz.y)));

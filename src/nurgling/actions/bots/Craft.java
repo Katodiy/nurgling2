@@ -2,7 +2,6 @@ package nurgling.actions.bots;
 
 import haven.*;
 import haven.res.lib.itemtex.ItemTex;
-import haven.res.ui.relcnt.RelCont;
 import haven.res.ui.tt.cn.CustomName;
 import nurgling.*;
 import nurgling.actions.*;
@@ -11,10 +10,8 @@ import nurgling.tasks.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
 
-import javax.print.attribute.standard.MediaSize;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import static haven.OCache.posres;
 
@@ -71,6 +68,10 @@ public class Craft implements Action {
         NContext ncontext = new NContext(gui);
         int size = 0;
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
 
             if (!s.categories) {
                 ncontext.addInItem(s.name, ItemTex.create(ItemTex.save(s.spr)));
@@ -78,9 +79,18 @@ public class Craft implements Action {
                     size += s.count;
                 }
             } else if (s.ing != null) {
-                ncontext.addInItem(s.ing.name, ItemTex.create(ItemTex.save(s.spr)));
+                ncontext.addInItem(s.ing.name, s.ing.img);
                 if (!ncontext.isInBarrel(s.ing.name)) {
                     size += s.count;
+                }
+            } else {
+                // Auto-select any available ingredient from category
+                selectIngredientFromCategory(s);
+                if (s.ing != null && !s.ing.isIgnored) {
+                    ncontext.addInItem(s.ing.name, s.ing.img);
+                    if (!ncontext.isInBarrel(s.ing.name)) {
+                        size += s.count;
+                    }
                 }
             }
         }
@@ -95,7 +105,7 @@ public class Craft implements Action {
                 } else if (s.ing != null) {
                     if(!ncontext.isInBarrel(s.ing.name))
                         size += s.count;
-                    ncontext.addOutItem(s.ing.name, ItemTex.create(ItemTex.save(s.spr)), 1);
+                    ncontext.addOutItem(s.ing.name, s.ing.img, 1);
                 }
             }
         }
@@ -115,6 +125,11 @@ public class Craft implements Action {
         AtomicInteger left = new AtomicInteger(count);
 
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
+            
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 if (ncontext.workstation == null) {
@@ -131,6 +146,17 @@ public class Craft implements Action {
             }
         }
 
+        // Prepare workstation once before craft loop
+        if (ncontext.workstation != null) {
+            if (!new PrepareWorkStation(ncontext, ncontext.workstation.station).run(gui).IsSuccess()) {
+                return Results.ERROR("Failed to prepare workstation");
+            }
+            if (ncontext.workstation.targetPoint != null) {
+                new PathFinder(ncontext.workstation.targetPoint.getCurrentCoord()).run(gui);
+            }
+            // Refresh mwnd reference after PrepareWorkStation (may have changed due to LightFire)
+            refreshMakeWidget(gui);
+        }
 
         Results craftResult = null;
         while (left.get() > 0) {
@@ -141,6 +167,11 @@ public class Craft implements Action {
         }
 
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
+            
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 new ReturnBarrelFromWorkArea(ncontext, item).run(gui);
@@ -180,6 +211,16 @@ public class Craft implements Action {
         }
 
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Auto-select ingredient from category if not already selected
+            if (s.categories && s.ing == null) {
+                selectIngredientFromCategory(s);
+            }
+            
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
+            
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 if (ncontext.workstation == null) {
@@ -208,12 +249,6 @@ public class Craft implements Action {
         }
 
         if (ncontext.workstation != null) {
-            if (!new PrepareWorkStation(ncontext, ncontext.workstation.station).run(gui).IsSuccess()) {
-                return Results.ERROR("Failed to prepare workstation");
-            }
-            if (ncontext.workstation.targetPoint != null) {
-                new PathFinder(ncontext.workstation.targetPoint.getCurrentCoord()).run(gui);
-            }
             if (!new UseWorkStation(ncontext).run(gui).IsSuccess()) {
                 return Results.ERROR("Failed to use workstation");
             }
@@ -243,6 +278,11 @@ public class Craft implements Action {
         ArrayList<Window> windows = NUtils.getGameUI().getWindows("Barrel");
         boolean hasEnoughResources = true;
         for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
+            
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 double val = gui.findBarrelContent(windows, new NAlias(item));
@@ -257,6 +297,11 @@ public class Craft implements Action {
         
         if (!hasEnoughResources) {
             for (NMakewindow.Spec s : mwnd.inputs) {
+                // Skip ignored optional ingredients
+                if (s.ing != null && s.ing.isIgnored) {
+                    continue;
+                }
+                
                 String item = s.ing == null ? s.name : s.ing.name;
                 if (ncontext.isInBarrel(item)) {
                     new ReturnBarrelFromWorkArea(ncontext, item).run(gui);
@@ -269,7 +314,9 @@ public class Craft implements Action {
         int resfc = for_craft;
         String targetName = null;
         for (NMakewindow.Spec s : mwnd.outputs) {
-            resfc = s.count * for_craft;
+            String itemName = s.ing != null ? s.ing.name : s.name;
+            int outputMultiplier = NContext.getOutputMultiplier(itemName);
+            resfc = s.count * for_craft * outputMultiplier;
             ArrayList<WItem> currentItems;
             if (s.ing != null) {
                 targetName = s.ing.name;
@@ -288,26 +335,28 @@ public class Craft implements Action {
             
         }
 
-        mwnd.wdgmsg("make", 1);
-        int finalResfc = resfc;
-        String finalTargetName = targetName;
-        NUtils.addTask(new NTask() {
-            @Override
-            public boolean check() {
+        craftProc(ncontext, gui, resfc, targetName);
 
-                return (((gui.prog != null) && (gui.prog.prog > 0) && ((ncontext.workstation == null) || (ncontext.workstation.selected == -1) || NUtils.isWorkStationReady(ncontext.workstation.station, Finder.findGob(ncontext.workstation.selected)))));
+        boolean isCauldron = ncontext.workstation != null &&
+                ncontext.workstation.station != null &&
+                ncontext.workstation.station.contains("gfx/terobjs/cauldron");
+
+        if (isCauldron)
+        {
+
+            Gob cauldron = Finder.findGob(ncontext.workstation.selected);
+            PrepareCauldron pc = new PrepareCauldron(cauldron, ncontext);
+            pc.run(gui);
+            // Refresh mwnd reference after PrepareCauldron (may have changed due to LightFire)
+            refreshMakeWidget(gui);
+            if(pc.wasUpdate)
+            {
+                if (!new UseWorkStation(ncontext).run(gui).IsSuccess()) {
+                    return Results.ERROR("Failed to use workstation");
+                }
+                craftProc(ncontext, gui, resfc, targetName);
             }
-        });
-        NUtils.addTask(new NTask() {
-            @Override
-            public boolean check() {
-                GetItems gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(finalTargetName));
-                gi.check();
-                return gui.prog == null || !gui.prog.visible || gi.getResult().size() >= finalResfc;
-            }
-        });
-        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),3, 0);
-        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),1, 0);
+        }
         for (NMakewindow.Spec s : mwnd.outputs) {
             if (s.ing != null) {
                 NUtils.getUI().core.addTask(new WaitItems(NUtils.getGameUI().getInventory(), new NAlias(s.ing.name), resfc));
@@ -335,11 +384,43 @@ public class Craft implements Action {
         return Results.SUCCESS();
     }
 
+    private void craftProc(NContext ncontext, NGameUI gui, int resfc, String targetName) throws InterruptedException
+    {
+        mwnd.wdgmsg("make", 1);
+        int finalResfc = resfc;
+        String finalTargetName = targetName;
+        NUtils.addTask(new NTask() {
+            @Override
+            public boolean check() {
+
+                return (((gui.prog != null) && (gui.prog.prog > 0) && ((ncontext.workstation == null) || (ncontext.workstation.selected == -1) || NUtils.isWorkStationReady(ncontext.workstation.station, Finder.findGob(ncontext.workstation.selected)))));
+            }
+        });
+
+
+
+        NUtils.addTask(new NTask() {
+            @Override
+            public boolean check() {
+                GetItems gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(finalTargetName));
+                gi.check();
+                return gui.prog == null || !gui.prog.visible || gi.getResult().size() >= finalResfc;
+            }
+        });
+        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),3, 0);
+        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),1, 0);
+    }
+
     ArrayList<Long> GetBarrelsIds(NContext ncontext) throws InterruptedException
     {
         ArrayList<Long> ids = new ArrayList<>();
         for (NMakewindow.Spec s : mwnd.inputs)
         {
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
+            
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item))
             {
@@ -350,4 +431,51 @@ public class Craft implements Action {
         }
         return ids;
     }
+
+    private void selectIngredientFromCategory(NMakewindow.Spec spec) {
+        if (!spec.categories || spec.ing != null) {
+            return;
+        }
+
+        ArrayList<org.json.JSONObject> categoryItems = VSpec.categories.get(spec.name);
+        if (categoryItems == null || categoryItems.isEmpty()) {
+            NUtils.getGameUI().msg("Category '" + spec.name + "' not found in VSpec.categories");
+            return;
+        }
+
+        NUtils.getGameUI().msg("Searching ingredient for category: " + spec.name + " (" + categoryItems.size() + " options)");
+
+        // First try to find in nearby areas
+        for (org.json.JSONObject obj : categoryItems) {
+            String itemName = (String) obj.get("name");
+            if (NContext.findIn(itemName) != null) {
+                NUtils.getGameUI().msg("Found nearby: " + itemName + " for category " + spec.name);
+                spec.ing = mwnd.new Ingredient(obj);
+                return;
+            }
+        }
+
+        // If not found nearby, try global search
+        for (org.json.JSONObject obj : categoryItems) {
+            String itemName = (String) obj.get("name");
+            if (NContext.findInGlobal(itemName) != null) {
+                NUtils.getGameUI().msg("Found globally: " + itemName + " for category " + spec.name);
+                spec.ing = mwnd.new Ingredient(obj);
+                return;
+            }
+        }
+
+        NUtils.getGameUI().msg("No available ingredients found for category: " + spec.name);
+    }
+
+    /**
+     * Refresh the mwnd reference from the current craft window.
+     * This is needed after operations that may change the craft widget (like LightFire).
+     */
+    private void refreshMakeWidget(NGameUI gui) {
+        if (gui.craftwnd != null && gui.craftwnd.makeWidget != null) {
+            mwnd = gui.craftwnd.makeWidget;
+        }
+    }
+
 }

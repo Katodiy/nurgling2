@@ -1,0 +1,3 @@
+#TOOLTIP LAYER FOR RES src/nurgling/wnd/search.res//
+#String tooltip
+This bot manages rabbit hutches for quality breeding. You need areas with 'rabbit' specialization for breeding hutches and 'rabbitIncubator' specialization for incubator hutches. You also need areas with 'water' and 'swill' specializations. The bot will redistribute rabbits between hutches for optimal quality breeding, move bunnies to incubators, and cull low-quality rabbits automatically.

@@ -130,7 +130,7 @@ public class NUI extends UI
     {
         if (gui != null && gui.map != null)
         {
-            if (core != null && core.debug && core.isinspect)
+            if (core != null && core.isinspect)
             {
                 NMapView mapView = (NMapView) gui.map;
                 if (modshift)
@@ -151,7 +151,21 @@ public class NUI extends UI
                     
                     // If first inspect or conditions met
                     if (lastInspectCoord == null || shouldInspect) {
-                        mapView.inspect(c);
+                        // Check which inspect mode to use
+                        boolean debugMode = core.debug;
+                        
+                        if (debugMode) {
+                            // Debug mode takes priority - show full info
+                            mapView.inspect(c);
+                        } else {
+                            // Check simpleInspect only if debug is off
+                            boolean simpleInspect = (Boolean) NConfig.get(NConfig.Key.simpleInspect);
+                            if (simpleInspect) {
+                                // Simple inspect mode - show only gob and tile
+                                mapView.inspectSimple(c);
+                            }
+                        }
+                        
                         lastInspectTime = currentTime;
                         lastInspectCoord = c;
                     }

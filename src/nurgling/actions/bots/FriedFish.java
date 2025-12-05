@@ -190,9 +190,9 @@ public class FriedFish implements Action {
 
             if(!new FillFuelPowOrCauldron(context, pows, 1).run(gui).IsSuccess())
                 return Results.FAIL();
-            ArrayList<Long> flighted =new ArrayList<>();
+            ArrayList<String> flighted =new ArrayList<>();
             for (Gob pow : pows) {
-                flighted.add(pow.id);
+                flighted.add(pow.ngob.hash);
             }
             if (!new LightGob(flighted, 4).run(gui).IsSuccess())
                 return Results.ERROR("I can't start a fire");

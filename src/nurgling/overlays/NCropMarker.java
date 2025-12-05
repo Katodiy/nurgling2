@@ -5,7 +5,7 @@ import haven.render.*;
 import nurgling.*;
 /**
  * NCropMarker is responsible for rendering crop markers on the map.
- * It listens for changes in the crop's growth stage and updates the visual representation accordingly.
+ * Uses batched rendering system for performance with thousands of markers.
  */
 public class NCropMarker extends Sprite implements RenderTree.Node, PView.Render2D {
     /** The image displayed for the crop marker */
@@ -27,6 +27,8 @@ public class NCropMarker extends Sprite implements RenderTree.Node, PView.Render
     private static long lastConfigCheck = 0;
     /** Flag to track initialization */
     private static boolean initialized = false;
+    /** Batch rendering manager */
+    private static final NCropMarkerBatch batchRenderer = NCropMarkerBatch.getInstance();
 
     /**
      * Creates a new NCropMarker for a specific Gob.
@@ -55,7 +57,7 @@ public class NCropMarker extends Sprite implements RenderTree.Node, PView.Render
         
         // Check configuration globally every second across all instances
         long currentTime = System.currentTimeMillis();
-        if (currentTime - lastConfigCheck > 1000) { // Check every second max
+        if (currentTime - lastConfigCheck > 1000) {
             showCropStage = (Boolean) NConfig.get(NConfig.Key.showCropStage);
             lastConfigCheck = currentTime;
         }
@@ -117,6 +119,7 @@ public class NCropMarker extends Sprite implements RenderTree.Node, PView.Render
             lastFrameUpdate = currentFrame;
         }
         
-        g.aimage(img, cachedScreenCoord, 0.5, 0.5);
+        // Update batch renderer with current position and texture
+        batchRenderer.updateMarker(gob.id, new Coord2d(cachedScreenCoord.x, cachedScreenCoord.y), img);
     }
 }

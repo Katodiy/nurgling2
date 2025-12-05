@@ -41,8 +41,10 @@ public class Equip implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         if(target_name.keys.contains("Traveller's Sack")) {
             target_name.keys.add("Traveler's Sack");
+            target_name.buildCaches(); // Rebuild caches after modifying keys
         } else if (target_name.keys.contains("Traveler's Sack")) {
             target_name.keys.add("Traveller's Sack");
+            target_name.buildCaches(); // Rebuild caches after modifying keys
         }
         WItem lhand = NUtils.getEquipment().findItem (NEquipory.Slots.HAND_LEFT.idx);
 

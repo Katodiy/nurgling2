@@ -15,6 +15,7 @@ public class NSettingsWindow extends Widget {
     private static TexI dbtn = new TexI(Resource.loadsimg("nurgling/hud/buttons/down/u"));
     private final SettingsList list;
     public World world;
+    public Navigation navigation;
     Widget container;
     public Panel currentPanel = null;
     private Button saveBtn, cancelBtn, backBtn;
@@ -74,11 +75,14 @@ public class NSettingsWindow extends Widget {
     private void fillSettings() {
         SettingsCategory general = new SettingsCategory("General", new Panel("General"), container);
         general.addChild(new SettingsItem("Fonts", new Fonts(), container));
+        general.addChild(new SettingsItem("Navigation", navigation = new Navigation(), container));
+        general.addChild(new SettingsItem("Map Settings", new MapSettings(), container));
         general.addChild(new SettingsItem("Quality of life", qol = new QoL(), container));
         general.addChild(new SettingsItem("Database", new DatabaseSettings(), container));
         general.addChild(new SettingsItem("Auto Mapper", new AutoMapper(), container));
         general.addChild(new SettingsItem("Auto Selection", as = new AutoSelection(), container));
         general.addChild(new SettingsItem("Quick Actions", qa = new QuickActions(), container));
+        general.addChild(new SettingsItem("Discord Notifications", new DiscordSettings(), container));
 
         SettingsCategory gameenvironment = new SettingsCategory("Game environment", new Panel("Game environment"), container);
         gameenvironment.addChild(new SettingsItem("World",world = new World(), container));
@@ -93,6 +97,8 @@ public class NSettingsWindow extends Widget {
         bots.addChild(new SettingsItem("Eating bot", new Eater(), container));
         bots.addChild(new SettingsItem("Farming Settings", new FarmingSettingsPanel(), container));
         bots.addChild(new SettingsItem("Cheese orders", new CheeseOrdersPanel(), container));
+        bots.addChild(new SettingsItem("Pickling Settings", new PicklingSettings(), container));
+        bots.addChild(new SettingsItem("Parasite Bot", new ParasiteSettings(), container));
 
         list.addCategory(general);
         list.addCategory(gameenvironment);

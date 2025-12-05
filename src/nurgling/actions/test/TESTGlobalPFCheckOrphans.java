@@ -40,7 +40,9 @@ public class TESTGlobalPFCheckOrphans implements Action {
      */
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        File f = new File(nurgling.NConfig.current.path_routes);
+        // Use profile-specific config from NCore
+        NConfig config = NUtils.getUI().core.config;
+        File f = new File(config.getRoutesPath());
         Set<Integer> trueDuplicates = new HashSet<>();
         Map<Integer, String> idToConnections = new HashMap<>();
         Map<Integer, String> idToNeighbors = new HashMap<>();
@@ -48,7 +50,7 @@ public class TESTGlobalPFCheckOrphans implements Action {
         if (f.exists()) {
             StringBuilder contentBuilder = new StringBuilder();
             try {
-                List<String> lines = Files.readAllLines(Paths.get(NConfig.current.path_routes), StandardCharsets.UTF_8);
+                List<String> lines = Files.readAllLines(Paths.get(config.getRoutesPath()), StandardCharsets.UTF_8);
                 for (String s : lines) {
                     contentBuilder.append(s).append("\n");
                 }

@@ -22,7 +22,7 @@ public class Deers extends Window {
 
     public Deers() {
         super(new Coord(100,100), "Teimdeer Herds");
-        prev = els = add(new NEntryListSet(TeimDeerHerd.getKeySet()) {
+        prev = els = add(new NEntryListSet(TeimDeerHerd::getKeySet) {
             @Override
             public void nsave() {
                 String name = this.get();

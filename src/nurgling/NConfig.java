@@ -3,6 +3,8 @@ package nurgling;
 import haven.*;
 import nurgling.areas.*;
 import nurgling.conf.*;
+import nurgling.conf.QuickActionPreset;
+import nurgling.profiles.ProfileManager;
 import nurgling.routes.Route;
 import nurgling.scenarios.Scenario;
 import nurgling.widgets.NCornerMiniMap;
@@ -37,6 +39,7 @@ public class NConfig
         resizeprop,
         showCropStage,
         nightVision,
+        nightVisionBrightness,
         showBB,
         nextflatsurface,
         flatsurface,
@@ -51,12 +54,15 @@ public class NConfig
         horseprop,
         goatsprop,
         chopperprop,
+        blueprintplanterprop,
+        autofloweractionprop,
         carrierprop,
         prepblockprop,
         prepboardprop,
         sheepsprop,
         pigsprop,
         discordNotification,
+        discordWebhookUrl,
         showGrid,
         showView,
         disableWinAnim,
@@ -72,6 +78,8 @@ public class NConfig
         q_range,
         q_visitor,
         q_door,
+        q_presets,
+        q_current_preset,
         petals,
         singlePetal,
         asenable,
@@ -79,18 +87,21 @@ public class NConfig
         endpoint,
         automaptrack,
         unloadgreen,
+        sendOverlays,
         showInventoryNums,
         hidecredo,
         autoDrink,
+        autoSaveTableware,
         chipperprop,
         animalrad,
         smokeprop,
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, cleanupQContainers, autoEquipTravellersSacks, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, fogEnable, player_box, player_fov, temsmarkdist, tempmark, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
+        temsmarktime, exploredAreaEnable, player_box, player_fov, temsmarkdist, tempmark, tempmarkIgnoreDist, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
         shortCupboards,
         shortWalls,
+        decalsOnTop,
         fillCompostWithSwill,
         ignoreStrawInFarmers,
         persistentBarrelLabels,
@@ -108,11 +119,63 @@ public class NConfig
         preferredHorseSpeed,
         uiOpacity,
         useSolidBackground,
-        windowBackgroundColor
+        windowBackgroundColor,
+        picklingBeetroots,
+        picklingCarrots,
+        picklingEggs,
+        picklingHerring,
+        picklingOlives,
+        picklingCucumbers,
+        picklingRedOnion,
+        picklingYellowOnion,
+        openInventoryOnLogin,
+        bbDisplayMode,
+        showBeehiveRadius,
+        showTroughRadius,
+        showDamageShields,
+        disableTileSmoothing,
+        disableTileTransitions,
+        disableCloudShadows,
+        darkenDeepOcean,
+        disableDrugEffects,
+        simpleInspect,
+        showSpeedometer,
+        showPathLine,
+        parasiteBotEnabled,
+        leechAction,
+        tickAction,
+        autoHearthOnUnknown,
+        autoLogoutOnUnknown,
+        alarmDelayFrames,
+        alwaysObfuscate,
+        boughbeeprop,
+        foragerprop,
+        buttonStyle,
+        showQuestGiverNames,
+        showThingwallNames,
+        trackingVectors
+    }
+
+    public enum BBDisplayMode
+    {
+        FILLED,           // Fill and outline both with depth test (both hidden behind objects)
+        FILLED_ALWAYS,    // Fill with depth test (hidden), outline without depth test (always visible)
+        OUTLINE,          // Outline only with depth test (hidden behind objects)
+        OUTLINE_ALWAYS,   // Outline only without depth test (always visible)
+        OFF               // Disabled
     }
 
 
     public NConfig() {
+        this(null);
+    }
+
+    public NConfig(String genus) {
+        this.genus = genus;
+        if (genus != null && !genus.isEmpty()) {
+            this.profileManager = new ProfileManager(genus);
+            this.profileManager.ensureProfileExists();
+        }
         conf = new HashMap<>();
 
         conf.put(Key.vilol, false);
@@ -129,7 +192,9 @@ public class NConfig
         conf.put(Key.numbelts, 3);
         conf.put(Key.showCropStage, false);
         conf.put(Key.nightVision, false);
+        conf.put(Key.nightVisionBrightness, 0.65);
         conf.put(Key.showBB, false);
+        conf.put(Key.bbDisplayMode, "FILLED");
         conf.put(Key.nextflatsurface, false);
         conf.put(Key.flatsurface, false);
         conf.put(Key.nextshowCSprite, false);
@@ -138,6 +203,7 @@ public class NConfig
         conf.put(Key.invert_hor, false);
         conf.put(Key.invert_ver, false);
         conf.put(Key.show_drag_menu, true);
+        conf.put(Key.discordWebhookUrl, "");
         conf.put(Key.showGrid, false);
         conf.put(Key.showView, false);
         conf.put(Key.disableWinAnim, true);
@@ -153,17 +219,21 @@ public class NConfig
         conf.put(Key.q_visitor, false);
         conf.put(Key.q_door, true);
         conf.put(Key.q_range, 2);
+        conf.put(Key.q_current_preset, "Default");
         conf.put(Key.singlePetal, false);
         conf.put(Key.asenable, true);
         conf.put(Key.autoMapper, false);
         conf.put(Key.automaptrack, false);
         conf.put(Key.unloadgreen, false);
+        conf.put(Key.sendOverlays, false);
         conf.put(Key.showInventoryNums, true);
         conf.put(Key.autoDrink, false);
+        conf.put(Key.autoSaveTableware, true);
         conf.put(Key.endpoint, "");
         conf.put(Key.questNotified, false);
         conf.put(Key.lpassistent, false);
         conf.put(Key.simplecrops, true);
+        conf.put(Key.simpleInspect, false);
         conf.put(Key.ndbenable, false);
         conf.put(Key.harvestautorefill, false);
         conf.put(Key.cleanupQContainers, false);
@@ -177,11 +247,12 @@ public class NConfig
         conf.put(Key.serverNode, "");
         conf.put(Key.serverPass, "");
         conf.put(Key.serverUser, "");
-        conf.put(Key.fogEnable, false);
+        conf.put(Key.exploredAreaEnable, false);
         conf.put(Key.player_box, false);
         conf.put(Key.player_fov, false);
         conf.put(Key.gridbox, false);
         conf.put(Key.tempmark, false);
+        conf.put(Key.tempmarkIgnoreDist, false);
         conf.put(Key.temsmarkdist, 4);
         conf.put(Key.temsmarktime, 3);
         conf.put(Key.fonts, new FontSettings());
@@ -189,6 +260,7 @@ public class NConfig
         conf.put(Key.ropeAfterTaiming, true);
         conf.put(Key.shortCupboards, false);
         conf.put(Key.shortWalls, false);
+        conf.put(Key.decalsOnTop, false);
         conf.put(Key.fillCompostWithSwill, false);
         conf.put(Key.ignoreStrawInFarmers, false);
         conf.put(Key.printpfmap, false);
@@ -204,6 +276,8 @@ public class NConfig
         conf.put(Key.verboseCal, false);
         conf.put(Key.highlightRockTiles, true);
         conf.put(Key.showFullPathLines, false);
+        conf.put(Key.showSpeedometer, false);
+        conf.put(Key.showPathLine, false);
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -222,6 +296,11 @@ public class NConfig
         res3.put("enabled", true);
         qpattern.add(res3);
         conf.put(Key.q_pattern, qpattern);
+
+        // Quick Action Presets
+        ArrayList<QuickActionPreset> qpresets = new ArrayList<>();
+        qpresets.add(QuickActionPreset.createDefault());
+        conf.put(Key.q_presets, qpresets);
 
         ArrayList<HashMap<String, Object>> petal = new ArrayList<>();
         HashMap<String, Object> pres1 = new HashMap<>();
@@ -251,6 +330,7 @@ public class NConfig
         dragprop.add(new NDragProp(new Coord(156, -4), false, true, "Calendar"));
         dragprop.add(new NDragProp(new Coord(428, -4), false, true, "bufflist"));
         dragprop.add(new NDragProp(new Coord(60, 244), false, true, "party"));
+        dragprop.add(new NDragProp(new Coord(300, 550), false, true, "BeltProxy"));
         conf.put(Key.dragprop, dragprop);
 
         ArrayList<NAreaRad> arearadprop = new ArrayList<>();
@@ -278,24 +358,64 @@ public class NConfig
         conf.put(Key.uiOpacity, 1.0f);  // Default to fully opaque
         conf.put(Key.useSolidBackground, false);  // Default to texture mode
         conf.put(Key.windowBackgroundColor, new java.awt.Color(32, 32, 32));  // Default dark gray
+        conf.put(Key.buttonStyle, "tbtn");  // Default button style
+
+        // Pickling settings
+        conf.put(Key.picklingBeetroots, true);
+        conf.put(Key.picklingCarrots, true);
+        conf.put(Key.picklingEggs, true);
+        conf.put(Key.picklingHerring, true);
+        conf.put(Key.picklingOlives, true);
+        conf.put(Key.picklingCucumbers, true);
+        conf.put(Key.picklingRedOnion, true);
+        conf.put(Key.picklingYellowOnion, true);
+
+        // Login settings
+        conf.put(Key.openInventoryOnLogin, false);  // Default to closed (current behavior)
+
+        // Object radius overlays - simple boolean flags
+        conf.put(Key.showBeehiveRadius, false);
+        conf.put(Key.showTroughRadius, false);
+
+        // Damage shields display
+        conf.put(Key.showDamageShields, true);
+
+        // Terrain tile rendering settings
+        conf.put(Key.disableTileSmoothing, false);
+        conf.put(Key.disableTileTransitions, false);
+        conf.put(Key.disableCloudShadows, false);
+        conf.put(Key.darkenDeepOcean, false);
+        conf.put(Key.disableDrugEffects, true);  // Default to disabled for better performance
+
+        // Parasite bot settings
+        conf.put(Key.parasiteBotEnabled, false);
+        conf.put(Key.leechAction, "ground");  // "ground" or "inventory"
+        conf.put(Key.tickAction, "ground");   // "ground" or "inventory"
+
+        // Safety settings - auto hearth/logout on unknown players
+        conf.put(Key.autoHearthOnUnknown, false);
+        conf.put(Key.autoLogoutOnUnknown, false);
+        conf.put(Key.alarmDelayFrames, 20);  // Delay before unknown player triggers alarm
+
+        // Auth obfuscation - bypass firewall blocks
+        conf.put(Key.alwaysObfuscate, false);
+
+        // Map marker name display settings
+        conf.put(Key.showQuestGiverNames, true);
+        conf.put(Key.showThingwallNames, true);
+
+        // Map tracking vectors
+        conf.put(Key.trackingVectors, false);
     }
 
 
     HashMap<Key, Object> conf = new HashMap<>();
     private boolean isUpd = false;
     private boolean isAreasUpd = false;
-    private boolean isFogUpd = false;
+    private boolean isExploredUpd = false;
     private boolean isRoutesUpd = false;
     private boolean isScenariosUpd = false;
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
-    public String path_areas = ((HashDirCache) ResCache.global).base + "\\..\\" + "areas.nurgling.json";
-    public String path_fog = Paths.get(String.valueOf(((HashDirCache) ResCache.global).base), "..", "fog.nurgling.json")
-            .normalize()
-            .toAbsolutePath()
-            .toString();
-    public String path_routes = ((HashDirCache) ResCache.global).base + "\\..\\" + "routes.nurgling.json";
-    public String path_scenarios = ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
-    public String path_cheese_orders = ((HashDirCache) ResCache.global).base + "\\..\\" + "cheese_orders.nurgling.json";
 
     public boolean isUpdated()
     {
@@ -315,7 +435,7 @@ public class NConfig
         return isScenariosUpd;
     }
 
-    public boolean isFogUpdated() { return isFogUpd; }
+    public boolean isExploredUpdated() { return isExploredUpd; }
 
     public static Object get(Key key)
     {
@@ -344,37 +464,165 @@ public class NConfig
 
     public static void needAreasUpdate()
     {
-        if (current != null)
-        {
-            current.isAreasUpd = true;
+        // Only update profile-specific config (areas are per-world)
+        try {
+            if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
+                nurgling.NUtils.getUI().core.config.isAreasUpd = true;
+            }
+        } catch (Exception e) {
+            // Fallback to global config if profile config not available
+            if (current != null)
+            {
+                current.isAreasUpd = true;
+            }
         }
     }
 
     public static void needRoutesUpdate()
     {
-        if (current != null)
-        {
-            current.isRoutesUpd = true;
+        // Only update profile-specific config (routes are per-world)
+        try {
+            if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
+                nurgling.NUtils.getUI().core.config.isRoutesUpd = true;
+            }
+        } catch (Exception e) {
+            // Fallback to global config if profile config not available
+            if (current != null)
+            {
+                current.isRoutesUpd = true;
+            }
         }
     }
 
-    public static void needScenariosUpdate() {
-        if (current != null)
-        {
-            current.isScenariosUpd = true;
-        }
-    }
-
-    public static void needFogUpdate()
+    public static void needExploredUpdate()
     {
-        if (current != null)
-        {
-            current.isFogUpd = true;
+        // Only update profile-specific config (explored area is per-world)
+        try {
+            if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
+                nurgling.NUtils.getUI().core.config.isExploredUpd = true;
+            }
+        } catch (Exception e) {
+            // Fallback to global config if profile config not available
+            if (current != null)
+            {
+                current.isExploredUpd = true;
+            }
         }
     }
 
     public static NConfig current;
 
+    // Profile management - World-specific configurations
+    private static final Map<String, NConfig> profileInstances = new HashMap<>();
+    private ProfileManager profileManager;
+    private String genus;
+
+    /**
+     * Gets a profile-specific NConfig instance for the given genus
+     */
+    public static NConfig getProfileInstance(String genus) {
+        if (genus == null || genus.isEmpty()) {
+            return getGlobalInstance();
+        }
+
+        synchronized (profileInstances) {
+            return profileInstances.computeIfAbsent(genus, g -> new NConfig(g));
+        }
+    }
+
+    /**
+     * Gets the global (non-profiled) NConfig instance
+     */
+    public static NConfig getGlobalInstance() {
+        if (current == null) {
+            current = new NConfig();
+        }
+        return current;
+    }
+
+    /**
+     * Gets the current genus for this config instance
+     */
+    public String getGenus() {
+        return genus;
+    }
+
+    /**
+     * Helper method for profile-aware path resolution
+     * Public to allow other components (like NCharacterInfo) to use profile paths
+     */
+    public String getProfileAwarePath(String filename) {
+        if (profileManager != null) {
+            return profileManager.getConfigPathString(filename);
+        }
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + filename;
+    }
+
+    /**
+     * Gets the dynamic path for areas configuration file
+     */
+    public String getAreasPath() {
+        return getProfileAwarePath("areas.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for routes configuration file
+     */
+    public String getRoutesPath() {
+        return getProfileAwarePath("routes.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for explored configuration file
+     */
+    public String getExploredPath() {
+        return getProfileAwarePath("explored.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for session explored configuration file
+     */
+    public String getSessionExploredPath() {
+        return getProfileAwarePath("session_explored.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for cheese orders configuration file
+     */
+    public String getCheeseOrdersPath() {
+        return getProfileAwarePath("cheese_orders.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for fish locations configuration file
+     */
+    public String getFishLocationsPath() {
+        return getProfileAwarePath("fish_locations.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for tree locations configuration file
+     */
+    public String getTreeLocationsPath() {
+        return getProfileAwarePath("tree_locations.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for resource timers configuration file
+     */
+    public String getResourceTimersPath() {
+        return getProfileAwarePath("resource_timers.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for scenarios configuration file
+     * Note: scenarios are always stored globally, not per-profile
+     */
+    public String getScenariosPath() {
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
+    }
+
+    @SuppressWarnings("unchecked")
     private ArrayList<Object> readArray(ArrayList<HashMap<String, Object>> objs)
     {
         if (objs.size() > 0)
@@ -425,6 +673,18 @@ public class NConfig
                             case "NChopperProp":
                                 res.add(new NChopperProp(obj));
                                 break;
+                            case "NBoughBeeProp":
+                                res.add(new NBoughBeeProp(obj));
+                                break;
+                            case "NForagerProp":
+                                res.add(new NForagerProp(obj));
+                                break;
+                            case "NBlueprintPlanterProp":
+                                res.add(new NBlueprintPlanterProp(obj));
+                                break;
+                            case "NAutoFlowerActionProp":
+                                res.add(new NAutoFlowerActionProp(obj));
+                                break;
                             case "NChipperProp":
                                 res.add(new NChipperProp(obj));
                                 break;
@@ -452,6 +712,9 @@ public class NConfig
                             case "NCarrierProp":
                                 res.add(new NCarrierProp(obj));
                                 break;
+                            case "QuickActionPreset":
+                                res.add(new QuickActionPreset(obj));
+                                break;
 
                             default:
                                 res.add(obj);
@@ -472,6 +735,7 @@ public class NConfig
         return new ArrayList<>();
     }
 
+    @SuppressWarnings("unchecked")
     public void read() {
         current = this;
         StringBuilder contentBuilder = new StringBuilder();
@@ -530,10 +794,17 @@ public class NConfig
                 {}
             }
         }
+
+        // Migration: Ensure new config keys have default values if not present in loaded config
+        if (!conf.containsKey(Key.showSpeedometer)) {
+            conf.put(Key.showSpeedometer, true);
+        }
+
         conf.put(Key.showCSprite,conf.get(Key.nextshowCSprite));
         conf.put(Key.flatsurface,conf.get(Key.nextflatsurface));
     }
 
+    @SuppressWarnings("unchecked")
     private ArrayList<Object> prepareArray(ArrayList<Object> objs)
     {
         if (objs.size() > 0)
@@ -562,6 +833,7 @@ public class NConfig
         return objs;
     }
 
+    @SuppressWarnings("unchecked")
     public void write()
     {
         Map<String, Object> prep = new HashMap<>();
@@ -621,7 +893,7 @@ public class NConfig
             main.put("areas",jareas);
             try
             {
-                FileWriter f = new FileWriter(customPath==null?path_areas:customPath,StandardCharsets.UTF_8);
+                FileWriter f = new FileWriter(customPath==null?getAreasPath():customPath,StandardCharsets.UTF_8);
                 main.write(f);
                 f.close();
                 current.isAreasUpd = false;
@@ -633,16 +905,16 @@ public class NConfig
         }
     }
 
-    public void writeFogOfWar(String customPath)
+    public void writeExploredArea(String customPath)
     {
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
             try
             {
-                FileWriter f = new FileWriter(customPath==null?path_fog:customPath,StandardCharsets.UTF_8);
-                ((NCornerMiniMap)NUtils.getGameUI().mmap).fogArea.toJson().write(f);
+                FileWriter f = new FileWriter(customPath==null?getExploredPath():customPath,StandardCharsets.UTF_8);
+                ((NCornerMiniMap)NUtils.getGameUI().mmap).exploredArea.toJson().write(f);
                 f.close();
-                current.isFogUpd = false;
+                current.isExploredUpd = false;
             }
             catch (IOException e)
             {
@@ -697,10 +969,10 @@ public class NConfig
 
             try
             {
-                FileWriter f = new FileWriter(customPath==null?path_routes:customPath,StandardCharsets.UTF_8);
+                FileWriter f = new FileWriter(customPath==null?getRoutesPath():customPath,StandardCharsets.UTF_8);
                 main.write(f);
                 f.close();
-                current.isRoutesUpd = false;
+                this.isRoutesUpd = false;
             }
             catch (IOException e)
             {
@@ -750,7 +1022,7 @@ public class NConfig
             main.put("scenarios", jscenarios);
 
             try {
-                FileWriter f = new FileWriter(customPath == null ? path_scenarios : customPath, StandardCharsets.UTF_8);
+                FileWriter f = new FileWriter(customPath == null ? getScenariosPath() : customPath, StandardCharsets.UTF_8);
                 main.write(f);
                 f.close();
                 current.isScenariosUpd = false;
@@ -779,6 +1051,11 @@ public class NConfig
 
             JSONObject jsonObject = new JSONObject(jsonString);
             botmod = new NCore.BotmodSettings((String) jsonObject.get("user"), (String) jsonObject.get("password"), (String) jsonObject.get("character"), jsonObject.getInt("scenarioId"));
+
+            // Set stack trace file if provided (for autorunner debugging)
+            if (jsonObject.has("stackTraceFile")) {
+                botmod.stackTraceFile = jsonObject.getString("stackTraceFile");
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

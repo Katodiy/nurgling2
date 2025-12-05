@@ -6,11 +6,13 @@ import haven.Label;
 import haven.Window;
 import haven.res.lib.itemtex.ItemTex;
 import nurgling.NConfig;
+import nurgling.NFlowerMenu;
 import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.actions.ReadJsonAction;
 import nurgling.actions.bots.AutoChooser;
 import nurgling.actions.bots.Craft;
+import nurgling.cookbook.FavoriteRecipeManager;
 import nurgling.cookbook.Recipe;
 import nurgling.cookbook.connection.RecipeHashFetcher;
 import nurgling.cookbook.connection.RecipeLoader;
@@ -43,6 +45,7 @@ public class NCookBook extends Window {
 
     private TextEntry searchF;
     RecipeHashFetcher rhf = null;
+    private FavoriteRecipeManager favoriteManager = null;
 
     private ICheckBox onetwo; // Добавляем поле для хранения кнопки onetwo
     private ICheckBox[] statButtons; // Массив для хранения кнопок статов
@@ -387,6 +390,11 @@ public class NCookBook extends Window {
     private void sortRecipes(String fepType, boolean desc) {
         sortedRecipes = new ArrayList<>(allRecipes);
         sortedRecipes.sort((r1, r2) -> {
+            // First, sort by favorite status (favorites first)
+            if (r1.isFavorite() != r2.isFavorite()) {
+                return r1.isFavorite() ? -1 : 1;
+            }
+            // Then sort by FEP value
             double val1 = r1.getFeps().containsKey(fepType) ? r1.getFeps().get(fepType).val : 0;
             double val2 = r2.getFeps().containsKey(fepType) ? r2.getFeps().get(fepType).val : 0;
             return desc ? Double.compare(val2, val1) : Double.compare(val1, val2);
@@ -422,6 +430,9 @@ public class NCookBook extends Window {
     public boolean show(boolean show) {
         if (show && (Boolean) NConfig.get(NConfig.Key.ndbenable) && ui.core.poolManager!=null) {
             try {
+                if (favoriteManager == null) {
+                    favoriteManager = new FavoriteRecipeManager(ui.core.poolManager.getConnection());
+                }
                 rhf = new RecipeHashFetcher(ui.core.poolManager.getConnection(),
                         RecipeHashFetcher.genFep(currentSortType, currentSortDesc));
                 ui.core.poolManager.submitTask(rhf);
@@ -443,6 +454,9 @@ public class NCookBook extends Window {
         TexI weightscale;
 
         TexI ing;
+        
+        static final TexI favoriteIcon = new TexI(Resource.loadimg("nurgling/hud/star"));
+        Recipe recipe;
         @Override
         public void resize(Coord sz) {
             super.resize(sz);
@@ -486,6 +500,7 @@ public class NCookBook extends Window {
         private String recName;
 
         public RecieptItem(Recipe recipe) {
+            this.recipe = recipe;
             recName = recipe.getName();
             this.text = add(new Label(recName),UI.scale(45,y_pos));
             icon = new TexI(Resource.remote().loadwait(recipe.getResourceName()).layer(Resource.imgc).img);
@@ -551,6 +566,10 @@ public class NCookBook extends Window {
         @Override
         public void draw(GOut g) {
             g.image(icon,UI.scale(4,12), UI.scale(32,32));
+            // Draw favorite icon in top-left corner
+            if (recipe.isFavorite()) {
+                g.image(favoriteIcon, UI.scale(2, 2), UI.scale(16, 16));
+            }
             g.image(feps,UI.scale(180,5));
             g.image(ing,UI.scale(555,0));
             g.image(weightscale,new Coord(col6+UI.scale(50), UI.scale(12)));
@@ -564,14 +583,90 @@ public class NCookBook extends Window {
             super.draw(g, strict);
         }
 
+        NFlowerMenu menu;
+        
+        @Override
+        public boolean mousedown(MouseDownEvent ev) {
+            if (ev.b == 3) { // Right click
+                showContextMenu();
+                return true;
+            }
+            return super.mousedown(ev);
+        }
+        
+        private void showContextMenu() {
+            if (menu == null) {
+                // Find NCookBook parent
+                NCookBook cookbook = null;
+                Widget par = RecieptItem.this.parent;
+                while (par != null) {
+                    if (par instanceof NCookBook) {
+                        cookbook = (NCookBook) par;
+                        break;
+                    }
+                    par = par.parent;
+                }
+                
+                if (cookbook == null) {
+                    return;
+                }
+                
+                final NCookBook finalCookbook = cookbook;
+                String[] opts = new String[] { 
+                    recipe.isFavorite() ? "Remove from Favorites" : "Add to Favorites" 
+                };
+                
+                menu = new NFlowerMenu(opts) {
+                    public boolean mousedown(MouseDownEvent ev) {
+                        if (super.mousedown(ev))
+                            nchoose(null);
+                        return true;
+                    }
+                    
+                    public void destroy() {
+                        menu = null;
+                        super.destroy();
+                    }
+                    
+                    @Override
+                    public void nchoose(NPetal option) {
+                        if (option != null) {
+                            try {
+                                if (finalCookbook.favoriteManager != null) {
+                                    finalCookbook.favoriteManager.toggleFavorite(recipe.getHash());
+                                    recipe.setFavorite(!recipe.isFavorite());
+                                    // Re-sort to update display
+                                    finalCookbook.sortRecipes(finalCookbook.currentSortType, finalCookbook.currentSortDesc);
+                                }
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        uimsg("cancel");
+                    }
+                };
+                
+                menu.shiftMode = true;
+                par = RecieptItem.this.parent;
+                Coord pos = RecieptItem.this.c.add(UI.scale(60, 60));
+                while (par != null && !(par instanceof GameUI)) {
+                    pos = pos.add(par.c);
+                    par = par.parent;
+                }
+                ui.root.add(menu, pos);
+            }
+        }
+
         @Override
         public boolean mouseup(MouseUpEvent ev) {
-            for(MenuGrid.Pagina pg: NUtils.getGameUI().menu.paginae)
-            {
-                if(Objects.equals(pg.button().name(), recName))
+            if (ev.b == 1) { // Left click
+                for(MenuGrid.Pagina pg: NUtils.getGameUI().menu.paginae)
                 {
-                    pg.button().use(new MenuGrid.Interaction(1, 0));
-                    break;
+                    if(Objects.equals(pg.button().name(), recName))
+                    {
+                        pg.button().use(new MenuGrid.Interaction(1, 0));
+                        break;
+                    }
                 }
             }
             return super.mouseup(ev);
@@ -604,6 +699,10 @@ public class NCookBook extends Window {
 
                 @Override
                 public boolean mousedown(MouseDownEvent ev) {
+                    // Pass right-click to the RecieptItem for context menu
+                    if (ev.b == 3) {
+                        return item.mousedown(ev);
+                    }
                     boolean psel = sel == item;
                     super.mousedown(ev);
                     if(!psel) {

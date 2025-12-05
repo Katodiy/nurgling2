@@ -86,7 +86,13 @@ public class Specialisation extends Window
         studyDesks,
         silkmothBreeding,
         silkwormFeeding,
-        unbox
+        unbox,
+        picklingJars,
+        smokedlog,
+        waterForTrees,
+        soilForTrees,
+        plantingGardenPots,
+        gardenPotSeeds;
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -161,6 +167,19 @@ public class Specialisation extends Window
 
         // unbox zone
         specialisation.add(new SpecialisationItem(SpecName.unbox.toString(),"Unbox Zone",Resource.loadsimg("nurgling/categories/unbox")));
+
+        // pickling
+        specialisation.add(new SpecialisationItem(SpecName.picklingJars.toString(),"Pickling Jars",Resource.loadsimg("nurgling/categories/picklingjar")));
+        // Logs for smoking
+        specialisation.add(new SpecialisationItem(SpecName.smokedlog.toString(),"Logs for smoking",Resource.loadsimg("nurgling/categories/smokelog")));
+        
+        // Tree planting resources
+        specialisation.add(new SpecialisationItem(SpecName.waterForTrees.toString(),"Water for Trees",Resource.loadsimg("nurgling/categories/twater")));
+        specialisation.add(new SpecialisationItem(SpecName.soilForTrees.toString(),"Soil for Trees",Resource.loadsimg("nurgling/categories/tsoil")));
+
+        // Garden pot filling
+        specialisation.add(new SpecialisationItem(SpecName.plantingGardenPots.toString(),"Planting Garden Pots",Resource.loadsimg("nurgling/categories/gardenpotplanted")));
+        specialisation.add(new SpecialisationItem(SpecName.gardenPotSeeds.toString(),"Garden Pot Seeds",Resource.loadsimg("nurgling/categories/gardenpot")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
@@ -292,5 +311,12 @@ public class Specialisation extends Window
         NUtils.getGameUI().setfocus(NUtils.getGameUI().spec);
         NUtils.getGameUI().spec.raise();
         NUtils.getGameUI().spec.area = area;
+        // Position relative to areas widget if it exists and is visible
+        if(NUtils.getGameUI().areas != null && NUtils.getGameUI().areas.visible()) {
+            NUtils.getGameUI().spec.c = NUtils.getGameUI().areas.c.add(
+                (NUtils.getGameUI().areas.sz.x - NUtils.getGameUI().spec.sz.x) / 2,
+                (NUtils.getGameUI().areas.sz.y - NUtils.getGameUI().spec.sz.y) / 2
+            );
+        }
     }
 }

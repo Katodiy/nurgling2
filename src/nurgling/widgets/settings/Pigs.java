@@ -25,7 +25,7 @@ public class Pigs extends Window {
 
     public Pigs() {
         super(new Coord(100,100), "Pigs Herds");
-        prev = els = add(new NEntryListSet(PigsHerd.getKeySet()) {
+        prev = els = add(new NEntryListSet(PigsHerd::getKeySet) {
             @Override
             public void nsave() {
                 String name = this.get();

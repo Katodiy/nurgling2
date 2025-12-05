@@ -139,7 +139,7 @@ public class SAttrWnd extends Widget {
 
     public static class StudyInfo extends Widget {
 	public final Widget study;
-	public int texp, tw, tenc;
+	public int texp, tw, tenc, tlph;
 
 	private StudyInfo(Coord sz, Widget study) {
 	    super(sz);
@@ -156,22 +156,26 @@ public class SAttrWnd extends Widget {
 	    pval = adda(new RLabel<Integer>(() -> texp, Utils::thformat, new Color(192, 192, 255, 255)),
 			pos("cbr").subs(2, 2), 1.0, 1.0);
 	    plbl = adda(new Label("Learning points:"), pval.pos("ul").subs(0, 2).xs(2), 0.0, 1.0);
+	    pval = adda(new RLabel<Integer>(() -> tlph, Utils::thformat, new Color(192, 255, 192, 255)),
+			pval.pos("bl").subs(0, 2), 1.0, 1.0);
+	    plbl = adda(new Label("LP/H:"), pval.pos("ul").subs(0, 2).xs(2), 0.0, 1.0);
 	}
 
 	private void upd() {
-	    int texp = 0, tw = 0, tenc = 0;
+	    int texp = 0, tw = 0, tenc = 0, tlph = 0;
 	    for(GItem item : study.children(GItem.class)) {
 		try {
-		    Curiosity ci = ItemInfo.find(Curiosity.class, item.info());
+		    nurgling.iteminfo.NCuriosity ci = ItemInfo.find(nurgling.iteminfo.NCuriosity.class, item.info());
 		    if(ci != null) {
 			texp += ci.exp;
 			tw += ci.mw;
 			tenc += ci.enc;
+			tlph += nurgling.iteminfo.NCuriosity.lph(ci.lph);
 		    }
 		} catch(Loading l) {
 		}
 	    }
-	    this.texp = texp; this.tw = tw; this.tenc = tenc;
+	    this.texp = texp; this.tw = tw; this.tenc = tenc; this.tlph = tlph;
 	}
 
 	public void tick(double dt) {
@@ -239,6 +243,30 @@ public class SAttrWnd extends Widget {
 	    Widget inf = add(new StudyInfo(new Coord(attrw - child.sz.x - wbox.bisz().x - UI.scale(5), child.sz.y), child), child.pos("ur").add(wbox.bisz().x + UI.scale(5), 0));
 	    Frame.around(this, Collections.singletonList(inf));
 	    pack();
+	    
+	    // Create separate floating Study Report widget
+	    if(ui.gui instanceof nurgling.NGameUI) {
+		nurgling.NGameUI ngui = (nurgling.NGameUI)ui.gui;
+		if(ngui.studyReportWidget == null) {
+		    nurgling.widgets.NStudyReport report = new nurgling.widgets.NStudyReport(child);
+		    Coord widgetSize = report.sz.add(nurgling.widgets.NDraggableWidget.delta);
+		    ngui.studyReportWidget = ngui.add(new nurgling.widgets.NDraggableWidget(report, "StudyReport", widgetSize));
+		    
+		    nurgling.conf.NDragProp prop = nurgling.conf.NDragProp.get("StudyReport");
+		    if(prop.c == Coord.z) {
+			Coord defaultPos = new Coord(UI.scale(200), UI.scale(200));
+			ngui.studyReportWidget.c = defaultPos;
+			ngui.studyReportWidget.target_c = defaultPos;
+		    }
+		    
+		    ngui.studyReportWidget.show();
+		} else {
+		    if(ngui.studyReportWidget.content instanceof nurgling.widgets.NStudyReport) {
+			((nurgling.widgets.NStudyReport)ngui.studyReportWidget.content).study = child;
+			ngui.studyReportWidget.show();
+		    }
+		}
+	    }
 	} else {
 	    super.addchild(child, args);
 	}

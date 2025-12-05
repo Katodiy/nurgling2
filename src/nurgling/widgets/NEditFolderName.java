@@ -70,7 +70,14 @@ public class NEditFolderName extends Window {
         NUtils.getGameUI().nefn.setPath(path);
         NUtils.getGameUI().nefn.setRootPath(rootPath);
         NUtils.getGameUI().nefn.show();
-        NUtils.getGameUI().nefn.c = NUtils.getGameUI().nefn.areasWidget.c.sub(0,NUtils.getGameUI().nefn.sz.y);
+        NUtils.getGameUI().nefn.raise();
+        // Position relative to areas widget if it exists
+        if(NUtils.getGameUI().nefn.areasWidget != null && NUtils.getGameUI().nefn.areasWidget.visible()) {
+            NUtils.getGameUI().nefn.c = NUtils.getGameUI().nefn.areasWidget.c.add(
+                (NUtils.getGameUI().nefn.areasWidget.sz.x - NUtils.getGameUI().nefn.sz.x) / 2,
+                (NUtils.getGameUI().nefn.areasWidget.sz.y - NUtils.getGameUI().nefn.sz.y) / 2
+            );
+        }
     }
 
     public static void createFolder(String rootPath)
@@ -79,6 +86,13 @@ public class NEditFolderName extends Window {
         NUtils.getGameUI().nefn.setRootPath(rootPath);
         NUtils.getGameUI().nefn.setPath("");
         NUtils.getGameUI().nefn.show();
-        NUtils.getGameUI().nefn.c = NUtils.getGameUI().nefn.areasWidget.c.sub(0,NUtils.getGameUI().nefn.sz.y);
+        NUtils.getGameUI().nefn.raise();
+        // Position relative to areas widget if it exists
+        if(NUtils.getGameUI().nefn.areasWidget != null && NUtils.getGameUI().nefn.areasWidget.visible()) {
+            NUtils.getGameUI().nefn.c = NUtils.getGameUI().nefn.areasWidget.c.add(
+                (NUtils.getGameUI().nefn.areasWidget.sz.x - NUtils.getGameUI().nefn.sz.x) / 2,
+                (NUtils.getGameUI().nefn.areasWidget.sz.y - NUtils.getGameUI().nefn.sz.y) / 2
+            );
+        }
     }
 }

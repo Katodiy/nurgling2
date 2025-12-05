@@ -142,6 +142,27 @@ public class NAlias {
         return result;
     }
     
+    public boolean matchesExact(String name) {
+        if (name == null) return false;
+        
+        String lowerName = name.toLowerCase();
+        
+        // Check if any key matches exactly
+        for (String key : lowercaseKeys) {
+            if (lowerName.equals(key)) {
+                // Still need to check exceptions
+                for (String exception : lowercaseExceptions) {
+                    if (lowerName.contains(exception)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
     private boolean matchesInternal(String lowerName) {
         // Check if any key matches
         if (!lowercaseKeys.isEmpty()) {

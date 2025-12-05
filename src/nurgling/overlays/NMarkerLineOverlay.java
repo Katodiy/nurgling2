@@ -61,6 +61,7 @@ public class NMarkerLineOverlay implements RenderTree.Node, Rendered {
         this.state = Pipe.Op.compose(
                 new BaseColor(LINE_COLOR),
                 new States.LineWidth(3.0f),
+                Clickable.No,
                 Pipe.Op.compose(Rendered.last, States.Depthtest.none, States.maskdepth)
         );
     }

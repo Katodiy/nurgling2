@@ -72,7 +72,8 @@ public class FillFuelPowOrCauldron implements Action
 
                     }
                 }
-                context.getSpecArea(context.workstation);
+                if(context.workstation!=null)
+                    context.getSpecArea(context.workstation);
                 new PathFinder(Finder.findGob(gob.id)).run(gui);
                 ArrayList<WItem> fueltitem = NUtils.getGameUI().getInventory().getItems(fuelname);
                 if (fueltitem.size()<2) {

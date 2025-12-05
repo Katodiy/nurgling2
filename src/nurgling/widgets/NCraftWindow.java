@@ -16,7 +16,7 @@ public class NCraftWindow extends GameUI.Hidewnd {
     public static final KeyBinding kb_makeall = KeyBinding.get("make/all", KeyMatch.forcode(java.awt.event.KeyEvent.VK_ENTER, KeyMatch.C));
 
     public final NTabStrip<Pagina> tabStrip;
-    private final Map<String, NTabStrip.Button<Pagina>> tabs = new HashMap<>();
+    public final Map<String, NTabStrip.Button<Pagina>> tabs = new HashMap<>();
     public NMakewindow makeWidget;
 
     public NCraftWindow() {

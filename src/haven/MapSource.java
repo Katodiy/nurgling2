@@ -27,8 +27,6 @@
 package haven;
 
 import nurgling.NConfig;
-import nurgling.NUtils;
-import nurgling.widgets.NMapWnd;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -52,13 +50,8 @@ public interface MapSource {
 	    img = ir.img;
 	    texes[t] = img;
 	}
-	if(NUtils.getGameUI()!=null && img!=null && !NUtils.getGameUI().mapfile.searchPattern.isEmpty())
-	{
-		NMapWnd mpwnd = NUtils.getGameUI().mapfile;
-		Tileset set = m.tileset(t);
-		if(set.getres().name.contains(mpwnd.searchPattern))
-			return mpwnd.searchRes.img;
-	}
+	// NOTE: Tile highlighting now uses overlay mechanism (TileHighlight.olrender)
+	// instead of replacing tile textures
 	return(img);
     }
 

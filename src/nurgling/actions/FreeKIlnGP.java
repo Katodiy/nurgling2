@@ -35,18 +35,18 @@ public class FreeKIlnGP implements Action
         Context context = new Context();
         for(Container container: containers)
         {
-            Container.Space space;
-            if((space = container.getattr(Container.Space.class)).isReady())
+            Container.Space space = container.getattr(Container.Space.class);
+            if(space != null && space.isReady())
             {
                 if(space.getRes().get(Container.Space.FREESPACE) == space.getRes().get(Container.Space.MAXSPACE))
                     continue;
             }
-            new PathFinder(Finder.findGob(container.gobid)).run(gui);
+            new PathFinder(Finder.findGob(container.gobHash)).run(gui);
             new OpenTargetContainer(container).run(gui);
             int total = gui.getInventory(container.cap).getItems(gp).size();
             for (int i = 0; i < total; i++)
             {
-                new PathFinder(Finder.findGob(container.gobid)).run(gui);
+                new PathFinder(Finder.findGob(container.gobHash)).run(gui);
                 new OpenTargetContainer(container).run(gui);
                 gui.getInventory(container.cap).getItem(gp).item.wdgmsg("take", Coord.z);
                 NUtils.getUI().core.addTask(new WaitPose(NUtils.player(), "gfx/borka/banzai"));
@@ -56,9 +56,10 @@ public class FreeKIlnGP implements Action
                         return Finder.findLiftedbyPlayer()!=null;
                     }
                 });
+                new CloseTargetContainer(container).run(gui);
                 new FindPlaceAndAction(null, NContext.findSpec(new NArea.Specialisation(Specialisation.SpecName.gardenpot.toString()))).run(gui);
             }
-            new CloseTargetContainer(container).run(gui);
+
         }
         return Results.SUCCESS();
     }

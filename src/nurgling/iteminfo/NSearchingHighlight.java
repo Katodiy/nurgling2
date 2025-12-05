@@ -27,17 +27,31 @@ public class NSearchingHighlight  extends ItemInfo.Tip implements GItem.OverlayI
         }
 
 
+        private int lastFrameIndex = -1;
+
         @Override
         public Tex overlay() {
-            return frames.get(0);
+            int frameIndex = ((int) NUtils.getTickId()/2) % 45;
+            lastFrameIndex = frameIndex;
+            return frames.get(frameIndex);
         }
 
         @Override
         public void drawoverlay(GOut g, Tex data)
         {
             if(higlighted.isSearched)
-                g.aimage(frames.get(((int) NUtils.getTickId()/2)%45),Coord.z, 0, 0,g.sz());
+                g.aimage(data, Coord.z, 0, 0, g.sz());
         }
 
-
+        @Override
+        public boolean tick(double dt)
+        {
+            // Calculate current frame index
+            int currentFrameIndex = ((int) NUtils.getTickId()/2) % 45;
+            // Only update if frame changed
+            if (currentFrameIndex != lastFrameIndex) {
+                return false; // Need to update overlay
+            }
+            return true; // No update needed
+        }
 }

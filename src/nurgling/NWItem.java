@@ -21,11 +21,16 @@ public class NWItem extends WItem
     public void tick(double dt)
     {
         super.tick(dt);
+        // Update overlays only when their tick() method indicates a change is needed
         GItem.InfoOverlay<Tex>[] ols = (GItem.InfoOverlay<Tex>[]) getItemols().get();
         if(ols != null) {
-            for(GItem.InfoOverlay<Tex> ol : ols)
-                if (!ol.inf.tick(dt))
+            for(GItem.InfoOverlay<Tex> ol : ols) {
+                // tick() returns false when overlay needs to be updated
+                // Only recreate texture when actually needed
+                if (!ol.inf.tick(dt)) {
                     ol.data = ol.inf.overlay();
+                }
+            }
         }
         
         search();
@@ -121,6 +126,9 @@ public class NWItem extends WItem
     @Override
     public boolean mousedown(MouseDownEvent ev)
     {
+        // Alt+Shift+Click: transfer all same items sorted by quality
+        // Right-click (button 3): ascending order (lowest quality first)
+        // Left-click (button 1): descending order (highest quality first)
         if(ui.modshift)
         {
             if (ui.modmeta)
@@ -132,15 +140,21 @@ public class NWItem extends WItem
                 }
             }
         }
+        // Alt+Ctrl+Click: drop all same items sorted by quality
+        // Right-click (button 3): ascending order (lowest quality first)
+        // Left-click (button 1): descending order (highest quality first)
+        else if(ui.modctrl)
+        {
+            if (ui.modmeta)
+            {
+                if (parent instanceof NInventory)
+                {
+                    wdgmsg("drop-same", item, ev.b == 3);
+                    return true;
+                }
+            }
+        }
         return super.mousedown(ev);
-//        if(res)
-//        {
-//            JSONObject res_obj = ItemTex.save(item.spr);
-//            res_obj.put("name",((NGItem)item).name);
-//            System.out.println(res_obj);
-//
-//        }
-//        return res;
     }
     public Optional<Double> getDryingProgress() {
         try {

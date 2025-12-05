@@ -35,14 +35,51 @@ import java.awt.Font;
 import java.awt.image.BufferedImage;
 
 public class Button extends SIWidget {
-	public static final BufferedImage bl = Resource.loadsimg("nurgling/hud/buttons/tbtn/left");
-	public static final BufferedImage br = Resource.loadsimg("nurgling/hud/buttons/tbtn/right");
-	public static final BufferedImage bt = Resource.loadsimg("nurgling/hud/buttons/tbtn/top");
-	public static final BufferedImage bb = Resource.loadsimg("nurgling/hud/buttons/tbtn/bottom");
-	public static final BufferedImage dt = Resource.loadsimg("nurgling/hud/buttons/tbtn/dtex");
-	public static final BufferedImage ut = Resource.loadsimg("nurgling/hud/buttons/tbtn/utex");
-	public static final BufferedImage bm = Resource.loadsimg("nurgling/hud/buttons/tbtn/mid");
-    public static final int hs = bl.getHeight(), hl = bm.getHeight();
+	public static BufferedImage bl;
+	public static BufferedImage br;
+	public static BufferedImage bt;
+	public static BufferedImage bb;
+	public static BufferedImage dt;
+	public static BufferedImage ut;
+	public static BufferedImage bm;
+    public static int hs, hl;
+    
+    static {
+        // Load default style from config or use "tbtn" as fallback
+        String style = "tbtn";
+        try {
+            Object configStyle = NConfig.get(NConfig.Key.buttonStyle);
+            if (configStyle instanceof String) {
+                style = (String) configStyle;
+            }
+        } catch (Exception e) {
+            // Config not initialized yet, use default
+        }
+        loadButtonStyle(style);
+    }
+    
+    public static void loadButtonStyle(String style) {
+        String basePath = "nurgling/hud/buttons/" + style + "/";
+        bl = Resource.loadsimg(basePath + "left");
+        br = Resource.loadsimg(basePath + "right");
+        bt = Resource.loadsimg(basePath + "top");
+        bb = Resource.loadsimg(basePath + "bottom");
+        dt = Resource.loadsimg(basePath + "dtex");
+        ut = Resource.loadsimg(basePath + "utex");
+        bm = Resource.loadsimg(basePath + "mid");
+        hs = bl.getHeight();
+        hl = bm.getHeight();
+    }
+    
+    public static void updateAllButtons(Widget root) {
+        if (root == null) return;
+        if (root instanceof Button) {
+            ((Button) root).redraw();
+        }
+        for (Widget child = root.child; child != null; child = child.next) {
+            updateAllButtons(child);
+        }
+    }
     public static final Resource click = Loading.waitfor(Resource.local().load("sfx/hud/btn"));
     public static final Audio.Clip clbtdown = Loading.waitfor(Resource.local().load("sfx/hud/lbtn")).layer(Resource.audio, "down");
     public static final Audio.Clip clbtup = Loading.waitfor(Resource.local().load("sfx/hud/lbtn")).layer(Resource.audio, "up");

@@ -4,6 +4,8 @@ import haven.*;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,7 +24,7 @@ public class FishingWindowExtension {
 
         // Check if buttons already exist in THIS window by looking for our save buttons
         for (Widget tc = window.lchild; tc != null; tc = tc.prev) {
-            if (tc instanceof Button && "Save".equals(((Button)tc).text.text)) {
+            if (tc instanceof IButton) {
                 // Buttons already added to this window
                 return;
             }
@@ -73,10 +75,14 @@ public class FishingWindowExtension {
         for (Map.Entry<String, FishEntry> entry : fishEntries.entrySet()) {
             FishEntry fishEntry = entry.getValue();
 
-            // Create a small save button for this fish
-            Button saveBtn = new Button(UI.scale(40), "Save") {
+            // Create a small save button for this fish with scaled down image (1.5x smaller)
+            BufferedImage imgU = scaleImage(Resource.loadsimg("nurgling/hud/buttons/save/u"), 1.5);
+            BufferedImage imgD = scaleImage(Resource.loadsimg("nurgling/hud/buttons/save/d"), 1.5);
+            BufferedImage imgH = scaleImage(Resource.loadsimg("nurgling/hud/buttons/save/h"), 1.5);
+            IButton saveBtn = new IButton(imgU, imgD, imgH) {
                 @Override
                 public void click() {
+                    super.click();
                     Gob player = NUtils.player();
                     if (player != null && gui.fishLocationService != null) {
                         gui.fishLocationService.saveFishLocation(
@@ -87,14 +93,29 @@ public class FishingWindowExtension {
                     }
                 }
             };
+            saveBtn.settip("Save fish location");
 
-            // Position the button to the right of the fish name label
-            int buttonX = fishEntry.label.c.x + fishEntry.label.sz.x + UI.scale(5);
+            // Position the button at fixed X position to keep table layout stable
+            int buttonX = UI.scale(185);
             // Center button vertically relative to label
             int buttonY = fishEntry.label.c.y + (fishEntry.label.sz.y - saveBtn.sz.y) / 2;
             Coord buttonPos = new Coord(buttonX, buttonY);
             window.add(saveBtn, buttonPos);
         }
+    }
+
+    /**
+     * Scale down an image by the given factor
+     */
+    private static BufferedImage scaleImage(BufferedImage original, double factor) {
+        int newWidth = (int)(original.getWidth() / factor);
+        int newHeight = (int)(original.getHeight() / factor);
+        BufferedImage scaled = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = scaled.createGraphics();
+        g2d.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.drawImage(original, 0, 0, newWidth, newHeight, null);
+        g2d.dispose();
+        return scaled;
     }
 
     /**

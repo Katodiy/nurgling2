@@ -9,6 +9,7 @@ public class PrepareBlocks extends Window implements Checkable {
     public String tool = null;
 
     UsingTools usingTools = null;
+    CheckBox checkWounds = null;
 
     public PrepareBlocks() {
         super(new Coord(200,200), "Prepare Blocks");
@@ -28,6 +29,17 @@ public class PrepareBlocks extends Window implements Checkable {
 
         }
 
+        prev = add(checkWounds = new CheckBox("Stop on Scrapes & Cuts (dmg >= 4)")
+        {
+            {
+                a = startprop.checkWounds;
+            }
+            @Override
+            public void set(boolean a) {
+                super.set(a);
+            }
+
+        }, prev.pos("bl").add(UI.scale(0,5)));
 
         prev = add(new Button(UI.scale(150), "Start"){
             @Override
@@ -36,6 +48,7 @@ public class PrepareBlocks extends Window implements Checkable {
                 prop = NPrepBlocksProp.get(NUtils.getUI().sessInfo);
                 if(usingTools.s!=null)
                     prop.tool = usingTools.s.name;
+                prop.checkWounds = checkWounds.a;
                 NPrepBlocksProp.set(prop);
                 isReady = true;
             }

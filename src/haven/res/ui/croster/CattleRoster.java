@@ -20,7 +20,7 @@ import nurgling.widgets.settings.*;
 
 @haven.FromResource(name = "ui/croster", version = 76)
 public abstract class CattleRoster <T extends Entry> extends Widget {
-    public static final int WIDTH = UI.scale(900);
+    public static final int WIDTH = UI.scale(980);
     public static final Comparator<Entry> namecmp = (a, b) -> a.name.compareTo(b.name);
     public static final int HEADH = UI.scale(40);
     public final Map<UID, T> entries = new HashMap<>();

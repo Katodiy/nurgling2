@@ -3,7 +3,11 @@ package nurgling.widgets;
 import haven.*;
 import haven.render.*;
 import haven.res.ui.tt.q.quality.Quality;
+import nurgling.NConfig;
+import nurgling.NGameUI;
+import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.tools.DirectionalVector;
 
 import java.lang.reflect.Field;
 import java.nio.Buffer;
@@ -87,6 +91,79 @@ public class NProspecting extends Window {
 
             EFFECTS.add(new Dowse(gob, a1, a2, QUALITIES.remove()));
             attachEffect();
+
+            // Add directional vectors for cone edges
+            addConeVectors(gob, a1, a2);
+        }
+    }
+
+    /**
+     * Adds directional vectors for the edges of a dowsing/tracking cone to the minimap.
+     * @param gob The player gob (origin of the cone)
+     * @param a1 First angle (left edge)
+     * @param a2 Second angle (right edge)
+     */
+    public static void addConeVectors(Gob gob, double a1, double a2) {
+        try {
+            // Check if tracking vectors feature is enabled
+            Object trackingVectorsSetting = NConfig.get(NConfig.Key.trackingVectors);
+            if (!(trackingVectorsSetting instanceof Boolean) || !(Boolean) trackingVectorsSetting) {
+                return;
+            }
+
+            NGameUI gui = NUtils.getGameUI();
+            if (gui == null || gui.map == null || !(gui.map instanceof NMapView)) {
+                return;
+            }
+            if (gui.mmap == null || gui.mmap.sessloc == null) {
+                return;
+            }
+
+            NMapView mapView = (NMapView) gui.map;
+            MiniMap.Location sessloc = gui.mmap.sessloc;
+
+            // Player position in world coordinates
+            Coord2d playerWorld = gob.rc;
+
+            // Convert player world position to tile coordinates
+            Coord playerTileCoords = playerWorld.div(MCache.tilesz).floor().add(sessloc.tc);
+
+            // Calculate far points along each edge of the cone
+            // Use a long distance so the vectors extend far on the map
+            double vectorLength = 5000; // In world units
+
+            // Edge 1: angle a1
+            // Note: The game uses a coordinate system where Y is inverted for rendering
+            // cos(a) gives X direction, sin(a) gives Y direction (but we need to check the sign)
+            Coord2d edge1World = new Coord2d(
+                playerWorld.x + cos(a1) * vectorLength,
+                playerWorld.y - sin(a1) * vectorLength  // Negate sin because of coordinate system
+            );
+            Coord edge1TileCoords = edge1World.div(MCache.tilesz).floor().add(sessloc.tc);
+
+            // Edge 2: angle a2
+            Coord2d edge2World = new Coord2d(
+                playerWorld.x + cos(a2) * vectorLength,
+                playerWorld.y - sin(a2) * vectorLength  // Negate sin because of coordinate system
+            );
+            Coord edge2TileCoords = edge2World.div(MCache.tilesz).floor().add(sessloc.tc);
+
+            // Get color for this pair (same color for both edges)
+            java.awt.Color pairColor = DirectionalVector.getNextColor();
+
+            // Add the vectors with the same color
+            mapView.directionalVectors.add(new DirectionalVector(
+                playerTileCoords, edge1TileCoords, "Dowse Edge 1", -1, pairColor
+            ));
+            mapView.directionalVectors.add(new DirectionalVector(
+                playerTileCoords, edge2TileCoords, "Dowse Edge 2", -1, pairColor
+            ));
+
+            // Defer window creation to UI thread to avoid deadlock
+            gui.ui.loader.defer(() -> TrackingVectorWindow.showWindow(), null);
+
+        } catch (Exception e) {
+            // Silently ignore errors
         }
     }
 

@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.NConfig;
+
 import java.io.*;
 import java.net.*;
 import java.nio.*;
@@ -113,14 +115,19 @@ public class AuthClient implements Closeable {
     }
 
     public AuthClient(String host, int port) throws IOException {
+	boolean useObf = NConfig.get(NConfig.Key.alwaysObfuscate) != null && (Boolean)NConfig.get(NConfig.Key.alwaysObfuscate);
 	try {
-	    connect(host, port, false);
+	    connect(host, port, useObf);
 	} catch(IOException e) {
-	    try {
-		connect(host, port, true);
-	    } catch(Throwable t) {
-		t.addSuppressed(e);
-		throw(t);
+	    if(!useObf) {
+		try {
+		    connect(host, port, true);
+		} catch(Throwable t) {
+		    t.addSuppressed(e);
+		    throw(t);
+		}
+	    } else {
+		throw(e);
 	    }
 	}
 	skin = Channels.newInputStream(ssk);
@@ -406,6 +413,8 @@ public class AuthClient implements Closeable {
 		return(Digest.hash(Digest.SHA256, pw));
 	    } else if(Utils.eq(spec[0], "pbkdf2")) {
 		return(Digest.pbkdf2(Digest.HMAC.of(Digest.SHA256, pw), (byte[])spec[2], 1 << Utils.iv(spec[1]), 32));
+	    } else if(Utils.eq(spec[0], "argon2")) {
+		return(new Argon2(Argon2.Type.ID, Utils.iv(spec[1]), 1 << Utils.iv(spec[2]), Utils.iv(spec[3])).hash(pw, (byte[])spec[4], 32));
 	    } else {
 		throw(new AuthException("Unknown password prehash: " + spec[0]));
 	    }

@@ -34,3 +34,7 @@ CREATE TABLE storageitems (
                               coordinates VARCHAR(255),
                               container VARCHAR(64) NOT NULL
 );
+
+CREATE TABLE favorite_recipes (
+                                  recipe_hash VARCHAR(64) PRIMARY KEY REFERENCES recipes (recipe_hash) ON DELETE CASCADE
+);

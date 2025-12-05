@@ -1,6 +1,7 @@
 package nurgling.actions.bots;
 
 import haven.Coord;
+import haven.Coord2d;
 import haven.Gob;
 import haven.Resource;
 import nurgling.NGameUI;
@@ -13,6 +14,8 @@ import nurgling.overlays.BuildGhostPreview;
 import nurgling.overlays.NCustomBauble;
 import nurgling.tools.NAlias;
 
+import java.util.ArrayList;
+
 public class BuildBarrel implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -21,7 +24,7 @@ public class BuildBarrel implements Action {
             command.name = "Barrel";
 
             NUtils.getGameUI().msg("Please, select build area");
-            SelectAreaWithPreview buildarea = new SelectAreaWithPreview(Resource.loadsimg("baubles/buildArea"), "Barrel");
+        SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Barrel");
             buildarea.run(NUtils.getGameUI());
 
             NUtils.getGameUI().msg("Please, select area for board");
@@ -29,15 +32,27 @@ public class BuildBarrel implements Action {
             brancharea.run(NUtils.getGameUI());
             command.ingredients.add(new Build.Ingredient(new Coord(4,1),brancharea.getRCArea(),new NAlias("Board"),5));
 
-            new Build(command, buildarea.getRCArea()).run(gui);
+            // Get ghost positions from BuildGhostPreview if available
+            ArrayList<Coord2d> ghostPositions = null;
+            BuildGhostPreview ghostPreview = null;
+            Gob player = NUtils.player();
+            if (player != null) {
+            ghostPreview = player.getattr(BuildGhostPreview.class);
+                if (ghostPreview != null) {
+                    ghostPositions = new ArrayList<>(ghostPreview.getGhostPositions());
+                }
+            }
+
+        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
             return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted
             Gob player = NUtils.player();
             if (player != null) {
-                Gob.Overlay ghostOverlay = player.findol(BuildGhostPreview.class);
-                if (ghostOverlay != null) {
-                    ghostOverlay.remove();
+                BuildGhostPreview ghostPreview = player.getattr(BuildGhostPreview.class);
+                if (ghostPreview != null) {
+                    ghostPreview.dispose();
+                    player.delattr(BuildGhostPreview.class);
                 }
 
                 // Remove custom bauble overlay

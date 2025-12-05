@@ -84,7 +84,6 @@ public class TransferToContainer implements Action
                             {
                                 WItem cand = coorditems.get(0);
                                 transfer(cand, gui.getInventory(container.cap), target_size);
-                                NUtils.addTask(new ISRemoved(cand.item.wdgid()));
                                 if (th == -1)
                                     witems = gui.getInventory().getItems(items);
                                 else
@@ -242,7 +241,7 @@ public class TransferToContainer implements Action
             if (item.parent instanceof ItemStack)
             {
                 ItemStack stack = (ItemStack) item.parent;
-                int maxStackSize = StackSupporter.getMaxStackSize(itemName);
+                int maxStackSize = StackSupporter.getFullStackSize(itemName);
                 if (stack.wmap.size() < maxStackSize)
                 {
                     notFullStacks.add(item);
@@ -289,13 +288,15 @@ public class TransferToContainer implements Action
         if (!StackSupporter.isStackable(targetInv, itemName))
         {
             if(targetInv.getFreeSpace() == 0)
+            {
                 return 0;
+            }
             if (item.parent instanceof ItemStack)
             {
                 ItemStack sourceStack = (ItemStack) item.parent;
                 int originalStackSize = sourceStack.wmap.size();
                 item.parent.wdgmsg("invxf", targetInv.wdgid(), 1);
-                int id = item.parent.wdgid();
+                int id = ((GItem.ContentsWindow) sourceStack.parent).cont.wdgid();
                 if (originalStackSize <= 2)
                 {
                     NUtils.addTask(new ISRemoved(id));
@@ -318,6 +319,7 @@ public class TransferToContainer implements Action
             if (item.parent instanceof ItemStack)
             {
                 ItemStack sourceStack = (ItemStack) item.parent;
+                int sourceStackSize = sourceStack.wmap.size();
 
                 // Приоритет целей: одиночные предметы, затем заполняемые стаки, затем новые слоты
                 WItem targetSingleItem = targetInv.findNotStack(itemName);
@@ -335,7 +337,8 @@ public class TransferToContainer implements Action
                     // Для стака размером 2 используем ISRemovedLoftar
                     if (originalStackSize <= 2)
                     {
-                        NUtils.addTask(new ISRemovedLoftar(sourceStack.wdgid(), sourceStack, originalStackSize));
+                        if(((GItem.ContentsWindow) sourceStack.parent!=null))
+                            NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
                     } else
                     {
                         NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
@@ -344,6 +347,7 @@ public class TransferToContainer implements Action
                 } else if (targetNotFullStack != null)
                 {
                     // Если нет одиночных предметов, заполняем неполные стаки
+                    int targetStackSize = targetNotFullStack.wmap.size();
                     // Сохраняем исходный размер стека ДО взятия предмета
                     int originalStackSize = sourceStack.wmap.size();
 
@@ -354,21 +358,48 @@ public class TransferToContainer implements Action
                     // Для стака размером 2 используем ISRemovedLoftar
                     if (originalStackSize <= 2)
                     {
-                        NUtils.addTask(new ISRemovedLoftar(sourceStack.wdgid(), sourceStack, originalStackSize));
+                        if(sourceStack.parent!=null)
+                            NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
                     } else
                     {
                         NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
                     }
                     return 1; // Переносим 1 предмет из стака к стаку
-                } else
+                }
+                else
                 {
                     int oldstacksize = sourceStack.wmap.size();
-                    // Если НЕТ неполных стаков в целевом инвентаре и есть свободное место - переносим полный стак целиком
+                    // Если НЕТ неполных стаков в целевом инвентаре и есть свободное место
                     if (targetInv.getFreeSpace() > 0)
                     {
-                        ((GItem.ContentsWindow) sourceStack.parent).cont.wdgmsg("transfer", Coord.z);
-                        NUtils.addTask(new ISRemoved(sourceStack.wdgid()));
-                        return oldstacksize;
+                        // Проверяем, не превышает ли размер стака лимит переноса
+                        if (oldstacksize > transfer_size)
+                        {
+                            // Сохраняем исходный размер стека ДО взятия предмета
+                            int originalStackSize = sourceStack.wmap.size();
+
+                            NUtils.takeItemToHand(item);
+                            NUtils.dropToInv(targetInv);
+                            NUtils.addTask(new WaitFreeHand());
+
+                            // Для стака размером 2 используем ISRemovedLoftar
+                            if (originalStackSize <= 2)
+                            {
+                                if(((GItem.ContentsWindow) sourceStack.parent!=null))
+                                    NUtils.addTask(new ISRemovedLoftar(((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(), sourceStack, originalStackSize));
+                            } else
+                            {
+                                NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
+                            }
+                            return 1;
+                        }
+                        else
+                        {
+                            ((GItem.ContentsWindow) sourceStack.parent).cont.wdgmsg("transfer", Coord.z);
+                            if(((GItem.ContentsWindow) sourceStack.parent!=null))
+                                NUtils.addTask(new ISRemoved( ((GItem.ContentsWindow) sourceStack.parent).cont.wdgid()));
+                            return oldstacksize;
+                        }
                     }
                     return 0;
                 }
@@ -380,15 +411,18 @@ public class TransferToContainer implements Action
 
                 if (targetNotFullStack != null)
                 {
+                    int targetStackSize = targetNotFullStack.wmap.size();
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(((NGItem) ((GItem.ContentsWindow) targetNotFullStack.parent).cont).wi);
                     NUtils.addTask(new WaitFreeHand());
+                    NUtils.addTask(new StackSizeChanged(targetNotFullStack, targetStackSize));
                     return 1;
                 } else if ((targetSingleItem = targetInv.findNotStack(itemName)) != null)
                 {
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(targetSingleItem);
                     NUtils.addTask(new WaitFreeHand());
+                    NUtils.addTask(new GetNotFullStack(targetInv, new NAlias(itemName)));
                     return 1;
                 }
                 else
@@ -402,7 +436,9 @@ public class TransferToContainer implements Action
                         return 1;
                     }
                     else
+                    {
                         return 0;
+                    }
                 }
             }
         }

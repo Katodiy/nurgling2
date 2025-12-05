@@ -10,6 +10,7 @@ import nurgling.widgets.NCheckBox;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import nurgling.overlays.NCattleMarkRing;
 
 @haven.FromResource(name = "ui/croster", version = 76)
 public class CattleId extends GAttrib implements RenderTree.Node, PView.Render2D {
@@ -72,6 +73,22 @@ public class CattleId extends GAttrib implements RenderTree.Node, PView.Render2D
 		g.image(rnm, nmc);
 		if((entry != null) && entry.mark.a)
 		    g.image(NCheckBox.smark, nmc.sub(NCheckBox.smark.sz().x, 0));
+	    }
+	}
+	updateMarkRing();
+    }
+
+    private void updateMarkRing() {
+	Entry entry = entry();
+	Gob.Overlay markOverlay = gob.findol(NCattleMarkRing.class);
+	
+	if((entry != null) && entry.mark.a) {
+	    if(markOverlay == null) {
+		gob.addcustomol(new NCattleMarkRing(gob));
+	    }
+	} else {
+	    if(markOverlay != null) {
+		markOverlay.remove();
 	    }
 	}
     }

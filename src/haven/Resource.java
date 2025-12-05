@@ -595,6 +595,11 @@ public class Resource implements Serializable {
 		}
 	    }
 
+	    @Override
+	    public boolean isReady() {
+		return done && res != null;
+	    }
+
 	    public String toString() {
 		return(String.format("<q:%s(v%d)>", name, ver));
 	    }
@@ -1969,6 +1974,8 @@ public class Resource implements Serializable {
 
     public <I, L extends IDLayer<I>> L layer(Class<L> cl, I id) {
 	used = true;
+	if(nurgling.tools.CustomizeResLayer.needReturnNull(this, cl, id))
+	    return null;
 	for(Layer l : layers) {
 	    if(cl.isInstance(l)) {
 		L ll = cl.cast(l);
@@ -2034,6 +2041,12 @@ public class Resource implements Serializable {
 	    public String toString() {
 		return(String.format("<indir:%s(v%d)>", name, ver));
 	    }
+
+		@Override
+		public boolean isReady()
+		{
+			return name!=null && !name.isEmpty();
+		}
 	}
 	indir = new Ret(name, ver);
 	return(indir);

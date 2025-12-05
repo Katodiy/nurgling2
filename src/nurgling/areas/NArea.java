@@ -69,7 +69,7 @@ public class NArea
     {
         for (int i = 0; i < jin.length(); i++)
         {
-            if(NParser.checkName((String) ((JSONObject)jin.get(i)).get("name"),name))
+            if(NParser.eqDefName((String) ((JSONObject)jin.get(i)).get("name"),name))
                 return true;
         }
         return false;

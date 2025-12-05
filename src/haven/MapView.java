@@ -2033,10 +2033,10 @@ public class MapView extends PView implements DTarget, Console.Directory {
 	protected void nohit(Coord pc) {}
     }
 
-    private class Click extends Hittest {
+    protected class Click extends Hittest {
 	int clickb;
 	
-	private Click(Coord c, int b) {
+	protected Click(Coord c, int b) {
 	    super(c);
 	    clickb = b;
 	}
@@ -2065,10 +2065,46 @@ public class MapView extends PView implements DTarget, Console.Directory {
 		}
 		else
 			clickedGob = null;
+		
+		// Send gob ID to chat on meta-click
+		if(ui.modmeta && clickb == 1 && clickedGob != null) {
+			try {
+				GameUI gui = nurgling.NUtils.getGameUI();
+				if(gui != null && gui.chat != null ) {
+					ChatUI.Channel chat = gui.chat.sel;
+					if(chat instanceof ChatUI.EntryChannel) {
+						// If realm chat is open, send to location chat instead
+						if(chat.getClass().getName().contains("Realm")) {
+							ChatUI.Channel locationChat = gui.chat.findLocationChat();
+							if(locationChat instanceof ChatUI.EntryChannel) {
+								((ChatUI.EntryChannel)locationChat).send(String.format("@%d", clickedGob.gob.id));
+								return;
+							}
+						} else {
+							((ChatUI.EntryChannel)chat).send(String.format("@%d", clickedGob.gob.id));
+							return;
+						}
+					}
+				}
+			} catch(Exception e) {
+				// Ignore errors
+			}
+		}
+		
 		if(clickb==3 && clickedGob!=null)
 		{
 			NUtils.getUI().core.setLastAction(clickedGob.gob);
 		}
+		
+		// Save click destination for path line (left click or right click on object)
+		try {
+			if(clickb == 1 || (clickb == 3 && inf != null)) {
+				if(MapView.this instanceof nurgling.NMapView) {
+					((nurgling.NMapView)MapView.this).clickDestination = new Coord3f((float)mc.x, (float)mc.y, glob.map.getzp(mc).z);
+				}
+			}
+		} catch(Exception ignored) {}
+		
 	    wdgmsg("click", args);
 	}
     }
@@ -2085,6 +2121,11 @@ public class MapView extends PView implements DTarget, Console.Directory {
     private UI.Grab camdrag = null;
 
     public boolean mousedown(MouseDownEvent ev) {
+	// Block all clicks in DRAG mode to prevent character movement during UI adjustment
+	if(ui.core.mode == nurgling.NCore.Mode.DRAG) {
+	    return true;
+	}
+	
 	parent.setfocus(this);
 	Loader.Future<Plob> placing_l = this.placing;
 	if(ev.b == 2) {
@@ -2117,6 +2158,11 @@ public class MapView extends PView implements DTarget, Console.Directory {
     }
     
     public boolean mouseup(MouseUpEvent ev) {
+	// Block all clicks in DRAG mode to prevent character movement during UI adjustment
+	if(ui.core.mode == nurgling.NCore.Mode.DRAG) {
+	    return true;
+	}
+	
 	if(ev.b == 2) {
 	    if(camdrag != null) {
 		camera.release();

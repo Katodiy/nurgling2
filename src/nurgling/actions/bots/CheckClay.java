@@ -29,11 +29,13 @@ public class CheckClay implements Action {
         {
             shovel_tools.keys.add(shovel.name);
         }
+        shovel_tools.buildCaches(); // Rebuild caches after modifying keys
 
         new Equip(shovel_tools).run(gui);
+        ArrayList<WItem> oldItems = ((NInventory) NUtils.getGameUI().maininv).getItems();
         WaitItemsOrError waitItemsOrError;
         NUtils.dig();
-        NUtils.addTask(waitItemsOrError = new WaitItemsOrError((NInventory) NUtils.getGameUI().maininv,new NAlias("clay", "Clay", "Soil", "Moss", "Ash", "Sand"),1,"no clay left", ((NInventory) NUtils.getGameUI().maininv).getItems()));
+        NUtils.addTask(waitItemsOrError = new WaitItemsOrError((NInventory) NUtils.getGameUI().maininv,new NAlias("clay", "Clay", "Soil", "Moss", "Ash", "Sand"),1,"no clay left", oldItems));
 
         if(!waitItemsOrError.getResult().isEmpty()) {
 

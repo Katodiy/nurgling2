@@ -22,7 +22,7 @@ public class BuildCheeseRack implements Action {
         command.name = "Cheese Rack";
 
         NUtils.getGameUI().msg("Please, select build area");
-        SelectAreaWithPreview buildarea = new SelectAreaWithPreview(Resource.loadsimg("baubles/buildArea"), "Cheese Rack");
+        SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Cheese Rack");
         buildarea.run(NUtils.getGameUI());
 
         NUtils.getGameUI().msg("Please, select area for board");
@@ -36,15 +36,16 @@ public class BuildCheeseRack implements Action {
         command.ingredients.add(new Build.Ingredient(new Coord(1,2),blockarea.getRCArea(),new NAlias("Block"),4));
 
 
-        new Build(command, buildarea.getRCArea()).run(gui);
+        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount()).run(gui);
         return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted
             Gob player = NUtils.player();
             if (player != null) {
-                Gob.Overlay ghostOverlay = player.findol(BuildGhostPreview.class);
-                if (ghostOverlay != null) {
-                    ghostOverlay.remove();
+                BuildGhostPreview ghostPreview = player.getattr(BuildGhostPreview.class);
+                if (ghostPreview != null) {
+                    ghostPreview.dispose();
+                    player.delattr(BuildGhostPreview.class);
                 }
 
                 // Remove custom bauble overlay

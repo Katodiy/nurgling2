@@ -20,7 +20,8 @@ public class RestoreResources implements Action{
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-            if ( NUtils.getStamina() < 0.5 ) {
+            double stamina = NUtils.getStamina();
+            if (stamina >= 0 && stamina < 0.5) {
                 if (!new Drink(0.9, false).run(gui).IsSuccess()) {
                     new FillWaterskins(true).run(gui);
                     if (!new Drink(0.9, false).run(gui).IsSuccess()) {
@@ -28,7 +29,8 @@ public class RestoreResources implements Action{
                     }
                 }
             }
-            if(NUtils.getEnergy()<0.35)
+            double energy = NUtils.getEnergy();
+            if(energy >= 0 && energy < 0.35)
             {
                 Eater eater = new Eater(true);
                 Results eatResult = eater.run(gui);

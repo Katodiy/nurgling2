@@ -774,6 +774,9 @@ public class MapWnd extends Window implements Console.Directory {
 				    view.file.update(prev);
 				}
 			    }
+				if (ui.core != null && ui.core.mappingClient != null && (Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.autoMapper)) {
+					ui.core.mappingClient.uploadSMarker(gob, mark);
+				}
 			} finally {
 			    view.file.lock.writeLock().unlock();
 			}

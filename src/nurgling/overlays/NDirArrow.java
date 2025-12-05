@@ -30,16 +30,20 @@ public class NDirArrow extends Sprite implements RenderTree.Node, PView.Render2D
     Long id;
 
     Tex tex;
-    final  float height = 15.f;
+    float height;
     Coord3f markerPos;
     Tex img;
 
     boolean forDelete = false;
+    public Color arrowColor;
 
     public NDirArrow(Sprite.Owner owner, Color color, float r, Gob target, Tex marker) {
         super(owner, null);
         img = marker;
         id = target.id;
+        this.arrowColor = color;
+        // RED arrows higher than others to avoid z-fighting
+        this.height = color.equals(Color.RED) ? 20.f : 15.f;
         smat = new BaseColor(color);
         Coord2d cc = target.rc;
         dir = cc.sub(((Gob)owner).rc);
@@ -119,8 +123,21 @@ public class NDirArrow extends Sprite implements RenderTree.Node, PView.Render2D
     }
 
     public void added(RenderTree.Slot slot) {
-        slot.ostate(Pipe.Op.compose(Rendered.postpfx,
+        // Priority based on color - higher value renders on top
+        // RED and other alarm colors should be on top of WHITE
+        int priority;
+        if (arrowColor.equals(Color.RED)) {
+            priority = 100; // RED on top
+        } else if (arrowColor.equals(Color.WHITE)) {
+            priority = 10; // WHITE at bottom
+        } else {
+            priority = 50; // Other colors in middle
+        }
+        
+        slot.ostate(Pipe.Op.compose(new Rendered.Order.Default(priority),
+                Rendered.postpfx,
                 new States.Facecull(States.Facecull.Mode.NONE),
+                Clickable.No,
                 Location.goback("gobx")));
         slot.add(smod, smat);
     }

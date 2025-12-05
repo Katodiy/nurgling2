@@ -76,7 +76,6 @@ public class NModelBox extends Sprite implements RenderTree.Node {
         public HidePol(NBoundingBox.Polygon pol) {
             super(null, null);
             this.pol = pol;
-            updateMaterials();
 
             VertexArray va = new VertexArray(pfmt,
                     new VertexArray.Buffer((4) * pfmt.inputs[0].stride, DataBuffer.Usage.STATIC,
@@ -85,18 +84,56 @@ public class NModelBox extends Sprite implements RenderTree.Node {
             Model.Indices indb = new Model.Indices(5, NumberFormat.UINT16, DataBuffer.Usage.STATIC, DataBuffer.Filler.of(iarr));
             this.emod = new Model(Model.Mode.TRIANGLE_FAN, va, null);
             this.lmod = new Model(Model.Mode.LINE_STRIP, va, indb);
+            
+            updateMaterials();
         }
 
         public void updateMaterials() {
+            updateMaterials((String) NConfig.get(NConfig.Key.bbDisplayMode));
+        }
+        
+        public void updateMaterials(String mode) {
+            if (mode == null) mode = "FILLED";
+            
             Color fillColor = NConfig.getColor(NConfig.Key.boxFillColor, new Color(227, 28, 1, 195));
             Color edgeColor = NConfig.getColor(NConfig.Key.boxEdgeColor, new Color(224, 193, 79, 255));
+            
+            // Determine depth test for outline and fill separately
+            boolean outlineDepthTest = !mode.equals("OUTLINE_ALWAYS") && !mode.equals("FILLED_ALWAYS");
+            boolean fillDepthTest = true; // Fill always has depth test
 
-            this.lmat = Pipe.Op.compose(new Rendered.Order.Default(6000), States.Depthtest.none, States.maskdepth,
+            // Outline material
+            if (outlineDepthTest) {
+                // Outline with depth test
+                this.lmat = Pipe.Op.compose(
+                    new Rendered.Order.Default(6000),
                     FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
-                            BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), new States.Facecull(), new States.LineWidth((Integer) NConfig.get(NConfig.Key.boxLineWidth)),
+                            BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)),
+                    new States.Facecull(),
+                    new States.LineWidth((Integer) NConfig.get(NConfig.Key.boxLineWidth)),
+                    Clickable.No,
                     new BaseColor(edgeColor));
-            this.emat = Pipe.Op.compose(new Rendered.Order.Default(6000), FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
-                    BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)), new BaseColor(fillColor));
+            } else {
+                // Outline without depth test (always visible)
+                this.lmat = Pipe.Op.compose(
+                    new Rendered.Order.Default(6000),
+                    States.Depthtest.none,
+                    States.maskdepth,
+                    FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
+                            BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)),
+                    new States.Facecull(),
+                    new States.LineWidth((Integer) NConfig.get(NConfig.Key.boxLineWidth)),
+                    Clickable.No,
+                    new BaseColor(edgeColor));
+            }
+            
+            // Fill material (always with depth test)
+            this.emat = Pipe.Op.compose(
+                new Rendered.Order.Default(6000),
+                FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
+                        BlendMode.Function.ADD, BlendMode.Factor.ONE, BlendMode.Factor.INV_SRC_ALPHA)),
+                Clickable.No,
+                new BaseColor(fillColor));
         }
 
         private FillBuffer fill(VertexArray.Buffer dst, Environment env) {
@@ -117,8 +154,22 @@ public class NModelBox extends Sprite implements RenderTree.Node {
         }
 
         public void added(RenderTree.Slot slot) {
-            slot.add(emod, emat);
-            slot.add(lmod, lmat);
+            try {
+                String mode = (String) NConfig.get(NConfig.Key.bbDisplayMode);
+                if (mode == null) mode = "FILLED";
+                
+                // Update materials for current mode
+                updateMaterials(mode);
+                
+                if (mode.equals("FILLED") || mode.equals("FILLED_ALWAYS")) {
+                    slot.add(emod, emat);
+                    slot.add(lmod, lmat);
+                } else if (mode.equals("OUTLINE") || mode.equals("OUTLINE_ALWAYS")) {
+                    slot.add(lmod, lmat);
+                }
+            } catch (haven.Defer.NotDoneException e) {
+                // Texture not ready yet, will retry on next tick
+            }
         }
     }
 
@@ -169,14 +220,43 @@ public class NModelBox extends Sprite implements RenderTree.Node {
                     slot.add(n);
                 } catch (RenderTree.SlotRemoved e) {
                     // Ignore removed slots
+                } catch (haven.Defer.NotDoneException e) {
+                    // Texture not ready yet, will retry on next tick
                 }
             }
-        } else {
-            // Just update materials without re-adding to slots
-            for (RenderTree.Node node : nodes) {
-                if (node instanceof HidePol) {
-                    ((HidePol) node).updateMaterials();
+        }
+        // If not visible, materials will be initialized when box becomes visible
+    }
+
+    String currentDisplayMode = null;
+
+    private void refreshDisplay() {
+        if (!isVisible || slot == null) return;
+        
+        slot.clear();
+        
+        String mode = (String) NConfig.get(NConfig.Key.bbDisplayMode);
+        if (mode == null) mode = "FILLED";
+        
+        for (RenderTree.Node n : nodes) {
+            try {
+                if (n instanceof HidePol) {
+                    HidePol hidePol = (HidePol) n;
+                    // Update materials for current mode
+                    hidePol.updateMaterials(mode);
+                    
+                    // Add appropriate models based on mode
+                    if (mode.equals("FILLED") || mode.equals("FILLED_ALWAYS")) {
+                        slot.add(hidePol.emod, hidePol.emat);
+                        slot.add(hidePol.lmod, hidePol.lmat);
+                    } else if (mode.equals("OUTLINE") || mode.equals("OUTLINE_ALWAYS")) {
+                        slot.add(hidePol.lmod, hidePol.lmat);
+                    }
                 }
+            } catch (RenderTree.SlotRemoved e) {
+                // Ignore removed slots
+            } catch (haven.Defer.NotDoneException e) {
+                // Texture not ready yet, will retry on next tick
             }
         }
     }
@@ -186,21 +266,25 @@ public class NModelBox extends Sprite implements RenderTree.Node {
         boolean newShowState = ((Boolean) NConfig.get(NConfig.Key.showBB) ||
                 (!(Boolean) NConfig.get(NConfig.Key.hideNature) && NUtils.isNatureObject(gob.ngob.name)));
 
+        String mode = (String) NConfig.get(NConfig.Key.bbDisplayMode);
+        if (mode == null) mode = "FILLED";
+        
+        // Check if display mode changed
+        if (currentDisplayMode != null && !currentDisplayMode.equals(mode)) {
+            currentDisplayMode = mode;
+            if (isVisible) {
+                refreshDisplay();
+            }
+        } else if (currentDisplayMode == null) {
+            currentDisplayMode = mode;
+        }
+
         if (newShowState != isShow) {
             isShow = newShowState;
             if (isShow && slot.parent() != null) {
                 if (!isVisible) {
                     isVisible = true;
-                    for (RenderTree.Node n : nodes) {
-                        try {
-                            if (n instanceof HidePol) {
-                                ((HidePol)n).updateMaterials();
-                            }
-                            slot.add(n);
-                        } catch (RenderTree.SlotRemoved e) {
-                            return true;
-                        }
-                    }
+                    refreshDisplay();
                 }
             } else {
                 isVisible = false;

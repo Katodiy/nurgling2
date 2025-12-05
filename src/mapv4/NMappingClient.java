@@ -2,73 +2,104 @@ package mapv4;
 
 import haven.Coord;
 import haven.Gob;
+import haven.MapFile;
 import haven.WebBrowser;
 import nurgling.NConfig;
 import nurgling.NUtils;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.net.URI;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NMappingClient {
-    final HashSet<String> requestedGrid = new HashSet<>();
+    private static final int MAX_CACHE_SIZE = 10000;
+    private static final long CACHE_CLEANUP_INTERVAL_MS = 300000; // 5 minutes
+    
     Coord lastGC = Coord.z;
 
     public Connector connector;
     public Requestor requestor;
     public AtomicBoolean done = new AtomicBoolean(false);
     private Boolean autoMapper = null;
-    public final Map<Long, MapRef> cache = new HashMap<Long, MapRef>();
+    public final Map<Long, CacheEntry> cache = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> overlayHashes = new ConcurrentHashMap<>();
+    private volatile boolean overlaySupported = true;
     public Thread reqTread = null;
-    Thread conTread = null;
+    public Thread conTread = null;
     long lastTracking = -1;
+    private long lastCacheCleanup = System.currentTimeMillis();
+    
+    static class CacheEntry {
+        final MapRef mapRef;
+        long lastAccess;
+        
+        CacheEntry(MapRef mapRef) {
+            this.mapRef = mapRef;
+            this.lastAccess = System.currentTimeMillis();
+        }
+    }
     public void tick(double dt)
     {
         if(NUtils.getGameUI()!=null && (autoMapper!=(Boolean)NConfig.get(NConfig.Key.autoMapper) || autoMapper && ((reqTread == null || !reqTread.isAlive()) && (conTread == null || !conTread.isAlive()))))
         {
-            autoMapper = (Boolean)NConfig.get(NConfig.Key.autoMapper);
-            if(autoMapper)
-            {
-                done.set(false);
-
-                (reqTread = new Thread(new Runnable()
+            Boolean newState = (Boolean)NConfig.get(NConfig.Key.autoMapper);
+            if(newState != null && !newState.equals(autoMapper)) {
+                autoMapper = newState;
+                if(autoMapper)
                 {
-                    @Override
-                    public void run()
-                    {
-                        try
-                        {
-                            requestor.run(NUtils.getGameUI());
-                        }
-                        catch (InterruptedException e)
-                        {
-                        }
-                    }
-                }, "requestor")).start();
+                    done.set(false);
 
-                (conTread = new Thread(new Runnable()
+                    (reqTread = new Thread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            try
+                            {
+                                requestor.run(NUtils.getGameUI());
+                            }
+                            catch (InterruptedException e)
+                            {
+                                Thread.currentThread().interrupt();
+                            }
+                        }
+                    }, "automapper-requestor")).start();
+
+                    (conTread = new Thread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            try
+                            {
+                                connector.run(NUtils.getGameUI());
+                            }
+                            catch (InterruptedException e)
+                            {
+                                Thread.currentThread().interrupt();
+                            }
+                        }
+                    }, "automapper-connector")).start();
+                }
+                else
                 {
-                    @Override
-                    public void run()
-                    {
-                        try
-                        {
-                            connector.run(NUtils.getGameUI());
-                        }
-                        catch (InterruptedException e)
-                        {
-                        }
+                    done.set(true);
+                    if(reqTread != null) {
+                        reqTread.interrupt();
                     }
-                }, "connector")).start();
+                    if(conTread != null) {
+                        conTread.interrupt();
+                    }
+                }
             }
-            else
-            {
-                done = new AtomicBoolean(true);
-            }
-
+        }
+        
+        // Periodic cache cleanup
+        long currentTimeMs = System.currentTimeMillis();
+        if(currentTimeMs - lastCacheCleanup > CACHE_CLEANUP_INTERVAL_MS) {
+            cleanupCache();
+            lastCacheCleanup = currentTimeMs;
         }
 
         Gob player = NUtils.player();
@@ -80,10 +111,9 @@ public class NMappingClient {
                 requestor.senGridRequest(lastGC);
             }
 
-            long currentTime = System.currentTimeMillis();
-            if(currentTime-lastTracking>2000)
+            if(currentTimeMs-lastTracking>2000)
             {
-                lastTracking = currentTime;
+                lastTracking = currentTimeMs;
                 requestor.track();
             }
         }
@@ -111,26 +141,85 @@ public class NMappingClient {
 
     public MapRef GetMapRef() {
         Gob player = NUtils.player();
+        if(player == null) return null;
+        
         Coord gc = NUtils.toGC(player.rc);
-        synchronized (cache) {
+        try {
             long id = NUtils.getGameUI().map.glob.map.getgrid(gc).id;
-            return cache.get(id);
+            CacheEntry entry = cache.get(id);
+            if(entry != null) {
+                entry.lastAccess = System.currentTimeMillis();
+                return entry.mapRef;
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
         }
+    }
+    
+    private void cleanupCache() {
+        if(cache.size() <= MAX_CACHE_SIZE) {
+            return;
+        }
+
+        // Remove oldest entries
+        List<Map.Entry<Long, CacheEntry>> entries = new ArrayList<>(cache.entrySet());
+        entries.sort(Comparator.comparingLong(e -> e.getValue().lastAccess));
+
+        int toRemove = cache.size() - (MAX_CACHE_SIZE * 3 / 4);
+        for(int i = 0; i < toRemove && i < entries.size(); i++) {
+            cache.remove(entries.get(i).getKey());
+        }
+
+        // Also cleanup overlay hashes if too large
+        if (overlayHashes.size() > MAX_CACHE_SIZE) {
+            overlayHashes.clear();
+        }
+    }
+
+    public boolean hasOverlayChanged(long gridId, int newHash) {
+        Integer oldHash = overlayHashes.get(gridId);
+        if (oldHash == null || !oldHash.equals(newHash)) {
+            overlayHashes.put(gridId, newHash);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isOverlaySupported() {
+        return overlaySupported;
+    }
+
+    public void setOverlayUnsupported() {
+        overlaySupported = false;
+    }
+
+    public void resetOverlaySupport() {
+        overlaySupported = true;
+        overlayHashes.clear();
     }
 
 
     public void OpenMap() {
         MapRef mapRef = GetMapRef();
-        if (GetMapRef() != null) {
+        if (mapRef != null) {
             try {
-                WebBrowser.self.show(new URL(
-                        String.format((String) NConfig.get(NConfig.Key.endpoint) + "/#/grid/%d/%d/%d/6", mapRef.mapID, mapRef.gc.x, mapRef.gc.y)));
-            } catch (MalformedURLException e) {
+                String urlString = String.format((String) NConfig.get(NConfig.Key.endpoint) + "/#/grid/%d/%d/%d/6", 
+                    mapRef.mapID, mapRef.gc.x, mapRef.gc.y);
+                WebBrowser.self.show(URI.create(urlString).toURL());
+            } catch (Exception e) {
+                NUtils.getGameUI().error("Invalid URL: " + e.getMessage());
             }
         }
         else
         {
             NUtils.getGameUI().error("Can't open Map");
+        }
+    }
+
+    public void uploadSMarker(Gob gob, MapFile.SMarker marker) {
+        if (requestor != null) {
+            requestor.uploadSMarker(gob, marker);
         }
     }
 }

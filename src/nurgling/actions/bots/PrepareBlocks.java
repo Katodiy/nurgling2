@@ -77,6 +77,8 @@ public class PrepareBlocks implements Action {
                     }
                     case DANGER:
                         return Results.ERROR("SOMETHING WRONG, STOP WORKING");
+                    case WOUND_DANGER:
+                        return Results.ERROR("Scrapes & Cuts wound damage too high! Stopping for safety.");
 
                 }
             }

@@ -23,6 +23,10 @@ public class NEquipory extends Equipory
     int percExp = -1;
     int hardArmor = -1;
     int softArmor = -1;
+    
+    // Queue for pending parasite checks
+    private final ArrayList<NGItem> pendingParasiteChecks = new ArrayList<>();
+    
     public NEquipory(long gobid)
     {
         super(gobid);
@@ -131,6 +135,14 @@ public class NEquipory extends Equipory
                 v[i] = quickslots[ep] = add ( new NWItem(g), ecoords[ep].add ( 1, 1 ) );
             }
             wmap.put ( g, Arrays.asList ( v.clone () ) );
+            
+            // Add to pending parasite checks if bot is enabled
+            Boolean parasiteBotEnabled = (Boolean) NConfig.get(NConfig.Key.parasiteBotEnabled);
+            if (parasiteBotEnabled != null && parasiteBotEnabled) {
+                synchronized (pendingParasiteChecks) {
+                    pendingParasiteChecks.add(g);
+                }
+            }
         }
         else {
             super.addchild ( child, args );
@@ -160,6 +172,70 @@ public class NEquipory extends Equipory
         super.tick(dt);
         updatePercExpText();
         updateTotalArmor();
+        checkPendingParasites();
+    }
+    
+    private void checkPendingParasites() {
+        if (pendingParasiteChecks.isEmpty()) {
+            return;
+        }
+        
+        ArrayList<NGItem> toRemove = new ArrayList<>();
+        ArrayList<NGItem> toProcess = new ArrayList<>();
+        
+        synchronized (pendingParasiteChecks) {
+            for (NGItem item : pendingParasiteChecks) {
+                if (item.name() != null) {
+                    toProcess.add(item);
+                    toRemove.add(item);
+                }
+            }
+            pendingParasiteChecks.removeAll(toRemove);
+        }
+        
+        for (NGItem item : toProcess) {
+            handleParasiteItem(item);
+        }
+    }
+    
+    private void handleParasiteItem(NGItem item) {
+        String name = item.name();
+        if (name == null) {
+            return;
+        }
+        
+        String action = null;
+        
+        if (name.equals("Leech")) {
+            action = (String) NConfig.get(NConfig.Key.leechAction);
+        } else if (name.equals("Tick")) {
+            action = (String) NConfig.get(NConfig.Key.tickAction);
+        }
+        
+        if (action == null) {
+            return;
+        }
+        
+        // Find the WItem for this NGItem
+        WItem witem = null;
+        for (WItem slot : quickslots) {
+            if (slot != null && slot.item == item) {
+                witem = slot;
+                break;
+            }
+        }
+        
+        if (witem == null) {
+            return;
+        }
+        
+        if ("ground".equals(action)) {
+            // Drop to ground
+            NUtils.drop(witem);
+        } else if ("inventory".equals(action)) {
+            // Transfer to inventory
+            item.wdgmsg("transfer", witem.c, 1);
+        }
     }
 
     @Override

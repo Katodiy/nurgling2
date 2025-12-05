@@ -21,6 +21,8 @@ public class NChopperProp implements JConf
     public boolean ngrowth = false;
     public boolean stumps = false;
     public boolean bushes = false;
+    public boolean checkWounds = false;
+    public int woundDamageThreshold = 4;
 
     public NChopperProp(String username, String chrid) {
         this.username = username;
@@ -45,6 +47,10 @@ public class NChopperProp implements JConf
             stumps = (Boolean) values.get("stumps");
         if (values.get("bushes") != null)
             bushes = (Boolean) values.get("bushes");
+        if (values.get("checkWounds") != null)
+            checkWounds = (Boolean) values.get("checkWounds");
+        if (values.get("woundDamageThreshold") != null)
+            woundDamageThreshold = ((Number) values.get("woundDamageThreshold")).intValue();
     }
 
     public static void set(NChopperProp prop)
@@ -91,6 +97,8 @@ public class NChopperProp implements JConf
         jchopper.put("ngrowth", ngrowth);
         jchopper.put("stumps", stumps);
         jchopper.put("bushes", bushes);
+        jchopper.put("checkWounds", checkWounds);
+        jchopper.put("woundDamageThreshold", woundDamageThreshold);
         return jchopper;
     }
 

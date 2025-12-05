@@ -27,10 +27,12 @@ public class Sheeps extends Window {
     CheckBox dk;
     CheckBox ignorebd;
     CheckBox ignoreqp;
+    CheckBox skipMilkingBox;
+    CheckBox skipShearingBox;
 
     public Sheeps() {
         super(new Coord(100,100), "Sheeps Herds");
-        prev = els = add(new NEntryListSet(SheepsHerd.getKeySet()) {
+        prev = els = add(new NEntryListSet(SheepsHerd::getKeySet) {
             @Override
             public void nsave() {
                 String name = this.get();
@@ -57,6 +59,8 @@ public class Sheeps extends Window {
                     dk.set(gh.disable_killing);
                     ignorebd.set(gh.ignoreBD);
                     ignoreqp.set(gh.disable_q_percentage);
+                    skipMilkingBox.set(gh.skipMilking);
+                    skipShearingBox.set(gh.skipShearing);
                 }
             }
             @Override
@@ -84,6 +88,8 @@ public class Sheeps extends Window {
                     gh.disable_killing = dk.a;
                     gh.ignoreBD = ignorebd.a;
                     gh.disable_q_percentage = ignoreqp.a;
+                    gh.skipMilking = skipMilkingBox.a;
+                    gh.skipShearing = skipShearingBox.a;
 
                 }
                 SheepsHerd.set(gh);
@@ -112,6 +118,8 @@ public class Sheeps extends Window {
                 ignorebd.set(gh.ignoreBD);
                 dk.set(gh.disable_killing);
                 ignoreqp.set(gh.disable_q_percentage);
+                skipMilkingBox.set(gh.skipMilking);
+                skipShearingBox.set(gh.skipShearing);
                 SheepsHerd.setCurrent(name.text());
             }
 
@@ -153,11 +161,27 @@ public class Sheeps extends Window {
             }
         }, prev.pos("bl").add(0, UI.scale(5))));
 
+        skipMilkingBox = (CheckBox)(prev = add (new CheckBox("Skip milking"){
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+            }
+        }, prev.pos("bl").add(0, UI.scale(5))));
+
+        skipShearingBox = (CheckBox)(prev = add (new CheckBox("Skip shearing"){
+            @Override
+            public void changed(boolean val) {
+                super.changed(val);
+            }
+        }, prev.pos("bl").add(0, UI.scale(5))));
+
         if(SheepsHerd.getCurrent()!=null) {
             ignorebd.set(SheepsHerd.getCurrent().ignoreBD);
             ignoreqp.set(SheepsHerd.getCurrent().disable_q_percentage);
             dk.set(SheepsHerd.getCurrent().disable_killing);
             ic.set(SheepsHerd.getCurrent().ignoreChildren);
+            skipMilkingBox.set(SheepsHerd.getCurrent().skipMilking);
+            skipShearingBox.set(SheepsHerd.getCurrent().skipShearing);
         }
 
         prev = totalAdult = add(new NSettinsSetI("Total adult:"), prev.pos("bl").add(0, 5));

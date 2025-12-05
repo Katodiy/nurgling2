@@ -57,13 +57,15 @@ public class SelectAreaWithPreview extends SelectArea {
 
         // Show ghost preview
         Gob player = NUtils.player();
-        if (player != null && area != null) {
+        if (player != null && area != null && plob.ngob.name != null) {
+            Indir<Resource> resource = Resource.remote().load(plob.ngob.name);
             BuildGhostPreview ghostPreview = new BuildGhostPreview(
                 player,
                 area,
-                needRotate ? plob.ngob.hitBox.rotate() : plob.ngob.hitBox
+                needRotate ? plob.ngob.hitBox.rotate() : plob.ngob.hitBox,
+                resource
             );
-            player.addcustomol(ghostPreview);
+            player.setattr(ghostPreview);
         }
 
         // Properly cancel placement cursor - will be reactivated during building

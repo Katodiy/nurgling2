@@ -34,20 +34,9 @@ public class BuildMoundBed implements Action {
             command.customHitBox = moundBedHitBox;
 
             NUtils.getGameUI().msg("Please, select build area");
-            SelectArea buildarea = new SelectArea(Resource.loadsimg("baubles/buildArea"));
+            // Pass custom hitbox to SelectAreaWithLiveGhosts since plob won't have it
+            SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Mound Bed", moundBedHitBox);
             buildarea.run(NUtils.getGameUI());
-
-            // Manually add ghost preview with our custom hitbox
-            Pair<Coord2d, Coord2d> area = buildarea.getRCArea();
-            Gob player = NUtils.player();
-            if (player != null && area != null) {
-                BuildGhostPreview ghostPreview = new BuildGhostPreview(
-                    player,
-                    area,
-                    moundBedHitBox
-                );
-                player.addcustomol(ghostPreview);
-            }
 
             NUtils.getGameUI().msg("Please, select area for mulch");
             SelectArea mulcharea = new SelectArea(Resource.loadsimg("baubles/mulchArea"));
@@ -59,15 +48,16 @@ public class BuildMoundBed implements Action {
             strawarea.run(NUtils.getGameUI());
             command.ingredients.add(new Build.Ingredient(new Coord(1,1), strawarea.getRCArea(), new NAlias("Straw"), 6));
 
-            new Build(command, buildarea.getRCArea()).run(gui);
+            new Build(command, buildarea.getRCArea(), buildarea.getRotationCount()).run(gui);
             return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted
             Gob player = NUtils.player();
             if (player != null) {
-                Gob.Overlay ghostOverlay = player.findol(BuildGhostPreview.class);
-                if (ghostOverlay != null) {
-                    ghostOverlay.remove();
+                BuildGhostPreview ghostPreview = player.getattr(BuildGhostPreview.class);
+                if (ghostPreview != null) {
+                    ghostPreview.dispose();
+                    player.delattr(BuildGhostPreview.class);
                 }
 
                 // Remove custom bauble overlay

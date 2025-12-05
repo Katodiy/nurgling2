@@ -83,7 +83,6 @@ public class Window extends Widget {
     private Pipe.Op gbasic;
     private UI.Grab dm = null;
     private Coord doff;
-    public boolean decohide = false;
     public boolean large = false;
 
     public void disable()
@@ -397,9 +396,6 @@ public class Window extends Widget {
 		{
 			Coord cc = xlate(dwdg.c, true);
 			GOut g2 = g.reclip(cc, dwdg.sz);
-			if(deco instanceof DefaultDeco) {
-				((DefaultDeco) deco).drawbg(g,false);
-			}
 			dwdg.draw(g2,strict);
 		}
 	}
@@ -408,17 +404,22 @@ public class Window extends Widget {
 
 	public class DisablerWdg extends Widget{
 
-		@Override
-		public void draw(GOut g, boolean strict) {
-			if(deco!=null && deco instanceof DefaultDeco) {
-				if(!this.cancelb.visible)
-					this.cancelb.show();
-				int id = (int) (NUtils.getTickId() / 5) % 12;
-
-				g.image(NStyle.gear[id], new Coord(deco.contarea().sz().x / 2 - NStyle.gear[0].sz().x / 2, deco.contarea().sz().y / 2 - NStyle.gear[0].sz().y / 2));
-				super.draw(g,strict);
-			}
+	@Override
+	public void draw(GOut g, boolean strict) {
+		if(deco!=null && deco instanceof DefaultDeco) {
+			if(!this.cancelb.visible)
+				this.cancelb.show();
+			
+			// Draw semi-transparent overlay
+			g.chcolor(0, 0, 0, 85);
+			g.frect(Coord.z, deco.contarea().sz());
+			g.chcolor();
+			
+			int id = (int) (NUtils.getTickId() / 5) % 12;
+			g.image(NStyle.gear[id], new Coord(deco.contarea().sz().x / 2 - NStyle.gear[0].sz().x / 2, deco.contarea().sz().y / 2 - NStyle.gear[0].sz().y / 2));
+			super.draw(g,strict);
 		}
+	}
 
 		@Override
 		public void resize(Coord sz) {
@@ -524,23 +525,12 @@ public class Window extends Widget {
 	resize2(sz);
     }
 
-    @Deprecated
-    public void decohide(boolean h) {
-	chdeco(h ? null : makedeco());
-	this.decohide = h;
-    }
-
-    @Deprecated
-    public boolean decohide() {
-	return(decohide);
-    }
-
     public void uimsg(String msg, Object... args) {
 	if(msg == "cap") {
 	    String cap = (String)args[0];
 	    chcap(cap.equals("") ? null : cap);
 	} else if(msg == "dhide") {
-	    decohide(Utils.bv(args[0]));
+	    chdeco(Utils.bv(args[0]) ? null : makedeco());
 	} else {
 	    super.uimsg(msg, args);
 	}
@@ -633,6 +623,9 @@ public class Window extends Widget {
     }
 
     public boolean keydown(KeyDownEvent ev) {
+	if(ev.code == java.awt.event.KeyEvent.VK_TAB) {
+	    return false;
+	}
 	if(ev.propagate(this))
 	    return(true);
 	if(key_esc.match(ev)) {

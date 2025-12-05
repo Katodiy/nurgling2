@@ -34,9 +34,12 @@ public class AutoDrink implements Action
             NUtils.addTask(new NTask() {
                 @Override
                 public boolean check() {
-                    if(NUtils.getGameUI()==null || NUtils.getGameUI().getmeter ( "stam", 0 )==null)
+                    if(NUtils.getGameUI()==null)
                         return false;
-                    return (!NContext.waitBot.get() && NUtils.getStamina()<0.51) || stop.get();
+                    double stamina = NUtils.getStamina();
+                    if(stamina < 0)
+                        return false;
+                    return (!NContext.waitBot.get() && stamina < 0.51) || stop.get();
                 }
             });
             if(stop.get()) {

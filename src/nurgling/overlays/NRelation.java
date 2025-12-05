@@ -93,6 +93,8 @@ public class NRelation extends Sprite implements RenderTree.Node, PView.Render2D
 	@Override
 	public boolean tick(double dt)
 	{
+		if(NUtils.getGameUI()==null || NUtils.getGameUI().fv == null)
+			return true;
 		int size = NUtils.getGameUI().fv.lsrel.size();
 		buffs.clear();
 		bar_delta = 0;

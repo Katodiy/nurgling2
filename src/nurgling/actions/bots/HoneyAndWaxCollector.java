@@ -101,10 +101,12 @@ public class HoneyAndWaxCollector implements Action {
     }
 
     private void loadRoutes() {
-        if(new File(NConfig.current.path_routes).exists())
+        // Use profile-specific config from NCore
+        NConfig config = NUtils.getUI().core.config;
+        if(new File(config.getRoutesPath()).exists())
         {
             StringBuilder contentBuilder = new StringBuilder();
-            try (Stream<String> stream = Files.lines(Paths.get(NConfig.current.path_routes), StandardCharsets.UTF_8))
+            try (Stream<String> stream = Files.lines(Paths.get(config.getRoutesPath()), StandardCharsets.UTF_8))
             {
                 stream.forEach(s -> contentBuilder.append(s).append("\n"));
             }

@@ -44,14 +44,14 @@ public class SteelAction implements Action {
 
             ArrayList<Gob> lighted = new ArrayList<>();
             for (Container cont : containers) {
-                lighted.add(Finder.findGob(cont.gobid));
+                lighted.add(Finder.findGob(cont.gobHash));
             }
 
             if (containers.isEmpty())
                 return Results.ERROR("NO CRUCIBLES");
 
             for (Container container : containers) {
-                PathFinder pf = new PathFinder(Finder.findGob(container.gobid));
+                PathFinder pf = new PathFinder(Finder.findGob(container.gobHash));
                 pf.isHardMode = true;
                 pf.run(gui);
                 new OpenTargetContainer(container).run(gui);
@@ -62,9 +62,9 @@ public class SteelAction implements Action {
             if (!new FuelToContainers(containers).run(gui).IsSuccess())
                 return Results.ERROR("NO FUEL");
 
-            ArrayList<Long> flighted = new ArrayList<>();
+            ArrayList<String> flighted = new ArrayList<>();
             for (Container cont : containers) {
-                flighted.add(cont.gobid);
+                flighted.add(cont.gobHash);
             }
 
             if (!new LightGob(flighted, 4).run(gui).IsSuccess())

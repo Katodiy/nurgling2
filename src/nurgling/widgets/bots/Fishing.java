@@ -14,7 +14,8 @@ public class Fishing extends Window implements Checkable {
     UsingTools hooks;
     Label baitLab;
     Label targLab;
-    CheckBox repFromCont;
+    CheckBox noPilesCheck;
+    CheckBox useInventoryToolsCheck;
     public NFishingSettings prop;
     private FishingTarget fishwnd = null;
     public Fishing() {
@@ -72,10 +73,16 @@ public class Fishing extends Window implements Checkable {
                 }
             }
         }
-        prev = add(repFromCont = new CheckBox("Repair from container")
+        prev = add(noPilesCheck = new CheckBox("Don't place piles")
         {
             {
-                a = fishSet.repfromcont;
+                a = fishSet.noPiles;
+            }
+        }, prev.pos("bl").add(UI.scale(0,5)));
+        prev = add(useInventoryToolsCheck = new CheckBox("Use tools from inventory")
+        {
+            {
+                a = fishSet.useInventoryTools;
             }
         }, prev.pos("bl").add(UI.scale(0,5)));
         prev = add(new Label("Fish line:"), prev.pos("bl").add(UI.scale(0,5)));
@@ -166,7 +173,8 @@ public class Fishing extends Window implements Checkable {
                 if(baits.s!=null)
                     prop.bait = baits.s.name;
                 prop.targets = fishwnd.settings.targets;
-                prop.repfromcont = repFromCont.a;
+                prop.noPiles = noPilesCheck.a;
+                prop.useInventoryTools = useInventoryToolsCheck.a;
                 NFishingSettings.set(prop);
                 isReady = true;
                 fishwnd.destroy();

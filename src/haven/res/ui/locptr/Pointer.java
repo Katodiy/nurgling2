@@ -111,9 +111,9 @@ public class Pointer extends Widget {
 	this.gobid = gobid;
     }
 
-    public boolean mousedown(Coord c, int button) {
+    public boolean mousedown(MouseDownEvent ev) {
 	// Handle right-click for marker line (nurgling feature)
-	if(button == 3 && (lc != null) && lc.dist(c) < 20) {
+	if(ev.b == 3 && (lc != null) && lc.dist(ev.c) < 20) {
 	    try {
 		Coord2d targetCoords = tc();
 		if(targetCoords != null) {
@@ -126,12 +126,12 @@ public class Pointer extends Widget {
 	}
 
 	if(click && (lc != null)) {
-	    if(lc.dist(c) < 20) {
-		wdgmsg("click", button, ui.modflags());
+	    if(lc.dist(ev.c) < 20) {
+		wdgmsg("click", ev.b, ui.modflags());
 		return(true);
 	    }
 	}
-	return(super.mousedown(c, button));
+	return(super.mousedown(ev));
     }
 
     public void uimsg(String name, Object... args) {

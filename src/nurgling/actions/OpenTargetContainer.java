@@ -50,7 +50,14 @@ public class OpenTargetContainer implements Action
     public OpenTargetContainer(Container container)
     {
         this.name = container.cap;
-        this.gob = Finder.findGob(container.gobid);
+        if(container.gobHash!=null && !container.gobHash.isEmpty())
+        {
+            this.gob = Finder.findGob(container.gobHash);
+        }
+        else
+        {
+            this.gob = Finder.findGob(container.gobid);
+        }
         this.cont = container;
     }
 

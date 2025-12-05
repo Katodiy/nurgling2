@@ -18,7 +18,7 @@ import java.util.Iterator;
 
 public class NSmokProp implements JConf
 {
-    boolean isSelected = false;
+    public boolean isSelected = false;
     public String iconName = null;
     ArrayList<String> layers = null;
     String res = null;

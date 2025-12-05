@@ -292,7 +292,7 @@ public class NGItem extends GItem
         }
         if(((NGItem) item.item).quality == null && ((NGItem) item.item).getInfo(GItem.Amount.class)!=null)
         {
-            return item.item.contents != null && !((ItemStack) item.item.contents).wmap.isEmpty();
+            return (item.item.contents != null && !((ItemStack) item.item.contents).wmap.isEmpty()) || ((NGItem) item.item).name().contains("Pickling Jar");
         }
         return true;
     }

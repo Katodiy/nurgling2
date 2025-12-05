@@ -11,7 +11,10 @@ public class QoL extends Panel {
     private CheckBox showCropStage;
     private CheckBox simpleCrops;
     private CheckBox nightVision;
+    private HSlider nightVisionBrightnessSlider;
+    private Label nightVisionBrightnessLabel;
     private CheckBox autoDrink;
+    private CheckBox autoSaveTableware;
     private CheckBox showBB;
     private CheckBox showCSprite;
     private CheckBox hideNature;
@@ -19,23 +22,26 @@ public class QoL extends Panel {
     private CheckBox tracking;
     private CheckBox crime;
     private CheckBox swimming;
+    private CheckBox openInventoryOnLogin;
     private CheckBox disableMenugridKeys;
     private CheckBox questNotified;
     private CheckBox lpassistent;
-    private CheckBox useGlobalPf;
     private CheckBox debug;
     private CheckBox tempmark;
+    private CheckBox tempmarkIgnoreDist;
     private CheckBox shortCupboards;
     private CheckBox shortWalls;
+    private CheckBox decalsOnTop;
     private CheckBox printpfmap;
     private CheckBox uniformBiomeColors;
     private CheckBox showTerrainName;
-    private CheckBox waypointRetryOnStuck;
     private CheckBox verboseCal;
     private CheckBox showPersonalClaims;
     private CheckBox showVillageClaims;
     private CheckBox showRealmOverlays;
-    private CheckBox showFullPathLines;
+    private CheckBox disableDrugEffects;
+    private CheckBox simpleInspect;
+    private CheckBox alwaysObfuscate;
 
     private Dropbox<String> preferredSpeedDropbox;
     private Dropbox<String> preferredHorseSpeedDropbox;
@@ -92,18 +98,35 @@ public class QoL extends Panel {
         leftPrev = showCropStage = leftColumn.add(new CheckBox("Show crop stage"), leftPrev.pos("bl").adds(0, 10));
         leftPrev = simpleCrops = leftColumn.add(new CheckBox("Simple crops"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = nightVision = leftColumn.add(new CheckBox("Night vision"), leftPrev.pos("bl").adds(0, 5));
-        leftPrev = showBB = leftColumn.add(new CheckBox("Bounding Boxes"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = leftColumn.add(new Label("Night vision brightness:"), leftPrev.pos("bl").adds(10, 3));
+        {
+            nightVisionBrightnessLabel = new Label("65%");
+            nightVisionBrightnessSlider = new HSlider(UI.scale(150), 0, 100, 65) {
+                public void changed() {
+                    nightVisionBrightnessLabel.settext(String.format("%d%%", this.val));
+                }
+            };
+            leftColumn.addhlp(leftPrev.pos("bl").adds(0, 2), UI.scale(5), nightVisionBrightnessSlider, nightVisionBrightnessLabel);
+            leftPrev = nightVisionBrightnessSlider;
+        }
+        leftPrev = showBB = leftColumn.add(new CheckBox("Bounding Boxes"), leftPrev.pos("bl").adds(-10, 5));
         leftPrev = showCSprite = leftColumn.add(new CheckBox("Show decorative objects (need reboot)"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = hideNature = leftColumn.add(new CheckBox("Hide nature objects"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = uniformBiomeColors = leftColumn.add(new CheckBox("Uniform biome colors on minimap"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = showTerrainName = leftColumn.add(new CheckBox("Show terrain name on minimap hover"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = simpleInspect = leftColumn.add(new CheckBox("Simplified object inspection (Shift)"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortCupboards = leftColumn.add(new CheckBox("Short cupboards"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortWalls = leftColumn.add(new CheckBox("Short mine walls"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = decalsOnTop = leftColumn.add(new CheckBox("Cupboard decals on top"), leftPrev.pos("bl").adds(0, 5));
+
+        leftPrev = leftColumn.add(new Label("● Network"), leftPrev.pos("bl").adds(0, 15));
+        leftPrev = alwaysObfuscate = leftColumn.add(new CheckBox("Always use obfuscation (bypass RF firewall)"), leftPrev.pos("bl").adds(0, 5));
 
         leftPrev = leftColumn.add(new Label("● Login Settings"), leftPrev.pos("bl").adds(0, 15));
         leftPrev = tracking = leftColumn.add(new CheckBox("Enable tracking when login"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = crime = leftColumn.add(new CheckBox("Enable criminal acting when login"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = swimming = leftColumn.add(new CheckBox("Enable swimming when login"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = openInventoryOnLogin = leftColumn.add(new CheckBox("Open player inventory when login"), leftPrev.pos("bl").adds(0, 5));
 
         leftPrev = leftColumn.add(new Label("Preferred movement speed on login:"), leftPrev.pos("bl").adds(0, 10));
         leftPrev = preferredSpeedDropbox = leftColumn.add(new Dropbox<String>(UI.scale(150), 4, UI.scale(16)) {
@@ -177,17 +200,14 @@ public class QoL extends Panel {
 
         // RIGHT COLUMN - Advanced Settings
         Widget rightPrev = null;
-        rightPrev = rightColumn.add(new Label("● Pathfinding & Navigation"), new Coord(5, 5));
-        rightPrev = useGlobalPf = rightColumn.add(new CheckBox("Use global PF"), rightPrev.pos("bl").adds(0, 5));
-        rightPrev = waypointRetryOnStuck = rightColumn.add(new CheckBox("Retry waypoint movement when stuck"), rightPrev.pos("bl").adds(0, 5));
-        rightPrev = showFullPathLines = rightColumn.add(new CheckBox("Show full path lines to destinations"), rightPrev.pos("bl").adds(0, 5));
-
-        rightPrev = rightColumn.add(new Label("● Quality of Life"), rightPrev.pos("bl").adds(0, 15));
+        rightPrev = rightColumn.add(new Label("● Quality of Life"), new Coord(5, 5));
         rightPrev = autoDrink = rightColumn.add(new CheckBox("Auto-drink"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = autoSaveTableware = rightColumn.add(new CheckBox("Auto-save tableware"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = questNotified = rightColumn.add(new CheckBox("Enable quest notified"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = lpassistent = rightColumn.add(new CheckBox("Enable LP assistant"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = disableMenugridKeys = rightColumn.add(new CheckBox("Disable menugrid keys"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = verboseCal = rightColumn.add(new CheckBox("Verbose calendar"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = disableDrugEffects = rightColumn.add(new CheckBox("Disable drug/alcohol visual effects"), rightPrev.pos("bl").adds(0, 5));
 
         rightPrev = rightColumn.add(new Label("● Debug & Development"), rightPrev.pos("bl").adds(0, 15));
         rightPrev = debug = rightColumn.add(new CheckBox("DEBUG"), rightPrev.pos("bl").adds(0, 5));
@@ -195,6 +215,7 @@ public class QoL extends Panel {
 
         rightPrev = rightColumn.add(new Label("● Temporary Marks"), rightPrev.pos("bl").adds(0, 15));
         rightPrev = tempmark = rightColumn.add(new CheckBox("Save temporary marks"), rightPrev.pos("bl").adds(0, 5));
+        rightPrev = tempmarkIgnoreDist = rightColumn.add(new CheckBox("Ignore distance (for caves/houses)"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = rightColumn.add(new Label("Max distance (grids):"), rightPrev.pos("bl").adds(0, 5));
         rightPrev = temsmarkdistEntry = rightColumn.add(new TextEntry.NumberValue(50, ""), rightPrev.pos("bl").adds(0, 5));
         rightPrev = rightColumn.add(new Label("Storage duration (minutes):"), rightPrev.pos("bl").adds(0, 5));
@@ -216,7 +237,18 @@ public class QoL extends Panel {
         showCropStage.a = getBool(NConfig.Key.showCropStage);
         simpleCrops.a = getBool(NConfig.Key.simplecrops);
         nightVision.a = getBool(NConfig.Key.nightVision);
+        
+        // Load night vision brightness
+        Object brightnessPref = NConfig.get(NConfig.Key.nightVisionBrightness);
+        int brightnessValue = 65; // Default
+        if (brightnessPref instanceof Number) {
+            brightnessValue = (int)(((Number) brightnessPref).doubleValue() * 100);
+        }
+        nightVisionBrightnessSlider.val = brightnessValue;
+        nightVisionBrightnessLabel.settext(String.format("%d%%", brightnessValue));
+        
         autoDrink.a = getBool(NConfig.Key.autoDrink);
+        autoSaveTableware.a = getBool(NConfig.Key.autoSaveTableware);
         showBB.a = getBool(NConfig.Key.showBB);
         showCSprite.a = getBool(NConfig.Key.nextshowCSprite);
 
@@ -225,23 +257,26 @@ public class QoL extends Panel {
         tracking.a = getBool(NConfig.Key.tracking);
         crime.a = getBool(NConfig.Key.crime);
         swimming.a = getBool(NConfig.Key.swimming);
+        openInventoryOnLogin.a = getBool(NConfig.Key.openInventoryOnLogin);
         disableMenugridKeys.a = getBool(NConfig.Key.disableMenugridKeys);
         questNotified.a = getBool(NConfig.Key.questNotified);
         lpassistent.a = getBool(NConfig.Key.lpassistent);
-        useGlobalPf.a = getBool(NConfig.Key.useGlobalPf);
         debug.a = getBool(NConfig.Key.debug);
         printpfmap.a = getBool(NConfig.Key.printpfmap);
         tempmark.a = getBool(NConfig.Key.tempmark);
+        tempmarkIgnoreDist.a = getBool(NConfig.Key.tempmarkIgnoreDist);
         shortCupboards.a = getBool(NConfig.Key.shortCupboards);
         shortWalls.a = getBool(NConfig.Key.shortWalls);
+        decalsOnTop.a = getBool(NConfig.Key.decalsOnTop);
         uniformBiomeColors.a = getBool(NConfig.Key.uniformBiomeColors);
         showTerrainName.a = getBool(NConfig.Key.showTerrainName);
-        waypointRetryOnStuck.a = getBool(NConfig.Key.waypointRetryOnStuck);
+        simpleInspect.a = getBool(NConfig.Key.simpleInspect);
         verboseCal.a = getBool(NConfig.Key.verboseCal);
-        showFullPathLines.a = getBool(NConfig.Key.showFullPathLines);
         showPersonalClaims.a = getBool(NConfig.Key.minimapClaimol);
         showVillageClaims.a = getBool(NConfig.Key.minimapVilol);
         showRealmOverlays.a = getBool(NConfig.Key.minimapRealmol);
+        disableDrugEffects.a = getBool(NConfig.Key.disableDrugEffects);
+        alwaysObfuscate.a = getBool(NConfig.Key.alwaysObfuscate);
 
         // Load preferred movement speed
         Object speedPref = NConfig.get(NConfig.Key.preferredMovementSpeed);
@@ -280,6 +315,10 @@ public class QoL extends Panel {
         hideNature.a = !getBool(NConfig.Key.hideNature);
     }
 
+    public void syncMiningOverlay() {
+        miningOL.a = getBool(NConfig.Key.miningol);
+    }
+
     @Override
     public void save() {
         boolean oldHideNature = false;
@@ -291,17 +330,35 @@ public class QoL extends Panel {
         NConfig.set(NConfig.Key.showCropStage, showCropStage.a);
         NConfig.set(NConfig.Key.simplecrops, simpleCrops.a);
         NConfig.set(NConfig.Key.nightVision, nightVision.a);
+        NConfig.set(NConfig.Key.nightVisionBrightness, nightVisionBrightnessSlider.val / 100.0);
+        
+        // Update brightness immediately
+        if(NUtils.getGameUI() != null && NUtils.getGameUI().ui != null && NUtils.getGameUI().ui.sess != null && NUtils.getGameUI().ui.sess.glob != null) {
+            NUtils.getGameUI().ui.sess.glob.brighten();
+        }
+        
         NConfig.set(NConfig.Key.autoDrink, autoDrink.a);
+        NConfig.set(NConfig.Key.autoSaveTableware, autoSaveTableware.a);
         NConfig.set(NConfig.Key.showBB, showBB.a);
         NConfig.set(NConfig.Key.nextshowCSprite, showCSprite.a);
         NConfig.set(NConfig.Key.hideNature, newHideNature);
+        
+        // Save mining overlay and sync with minimap button
+        boolean oldMiningOL = getBool(NConfig.Key.miningol);
         NConfig.set(NConfig.Key.miningol, miningOL.a);
+        if(oldMiningOL != miningOL.a) {
+            // Sync with minimap button
+            if(NUtils.getGameUI() != null && NUtils.getGameUI().mmapw != null && NUtils.getGameUI().mmapw.minesup != null) {
+                NUtils.getGameUI().mmapw.minesup.a = miningOL.a;
+            }
+        }
         NConfig.set(NConfig.Key.tracking, tracking.a);
         NConfig.set(NConfig.Key.crime, crime.a);
         NConfig.set(NConfig.Key.swimming, swimming.a);
+        NConfig.set(NConfig.Key.openInventoryOnLogin, openInventoryOnLogin.a);
         NConfig.set(NConfig.Key.disableMenugridKeys, disableMenugridKeys.a);
         NConfig.set(NConfig.Key.questNotified, questNotified.a);
-        
+
         // Handle LP assistant setting change - remove overlays if disabled
         boolean oldLpassistent = getBool(NConfig.Key.lpassistent);
         NConfig.set(NConfig.Key.lpassistent, lpassistent.a);
@@ -335,11 +392,19 @@ public class QoL extends Panel {
             }
         }
         
-        NConfig.set(NConfig.Key.useGlobalPf, useGlobalPf.a);
         NConfig.set(NConfig.Key.debug, debug.a);
         NConfig.set(NConfig.Key.printpfmap, printpfmap.a);
         NConfig.set(NConfig.Key.tempmark, tempmark.a);
+        NConfig.set(NConfig.Key.tempmarkIgnoreDist, tempmarkIgnoreDist.a);
+        
+        // Save cupboard settings and rebuild cupboards if changed
+        boolean oldShortCupboards = getBool(NConfig.Key.shortCupboards);
+        boolean oldDecalsOnTop = getBool(NConfig.Key.decalsOnTop);
         NConfig.set(NConfig.Key.shortCupboards, shortCupboards.a);
+        NConfig.set(NConfig.Key.decalsOnTop, decalsOnTop.a);
+        if(oldShortCupboards != shortCupboards.a || oldDecalsOnTop != decalsOnTop.a) {
+            rebuildCupboards();
+        }
 
         // Save shortWalls and trigger map re-render if changed
         boolean oldShortWalls = getBool(NConfig.Key.shortWalls);
@@ -371,9 +436,10 @@ public class QoL extends Panel {
         }
 
         NConfig.set(NConfig.Key.showTerrainName, showTerrainName.a);
-        NConfig.set(NConfig.Key.waypointRetryOnStuck, waypointRetryOnStuck.a);
+        NConfig.set(NConfig.Key.simpleInspect, simpleInspect.a);
         NConfig.set(NConfig.Key.verboseCal, verboseCal.a);
-        NConfig.set(NConfig.Key.showFullPathLines, showFullPathLines.a);
+        NConfig.set(NConfig.Key.disableDrugEffects, disableDrugEffects.a);
+        NConfig.set(NConfig.Key.alwaysObfuscate, alwaysObfuscate.a);
 
         // Save minimap overlay settings (separate from 3D ground overlays)
         NConfig.set(NConfig.Key.minimapClaimol, showPersonalClaims.a);
@@ -386,10 +452,16 @@ public class QoL extends Panel {
         if(oldUniformColors != uniformBiomeColors.a) {
             // Force minimap update when uniform biome colors setting changes
             if(NUtils.getGameUI() != null && NUtils.getGameUI().mmapw != null && NUtils.getGameUI().mmapw.miniMap != null) {
+                if(NUtils.getGameUI().mmapw.miniMap instanceof nurgling.widgets.NMiniMap) {
+                    ((nurgling.widgets.NMiniMap)NUtils.getGameUI().mmapw.miniMap).invalidateDisplayCache();
+                }
                 NUtils.getGameUI().mmapw.miniMap.needUpdate = true;
             }
             // Also update main map if it exists
             if(NUtils.getGameUI() != null && NUtils.getGameUI().mapfile != null && NUtils.getGameUI().mapfile.view != null) {
+                if(NUtils.getGameUI().mapfile.view instanceof nurgling.widgets.NMiniMap) {
+                    ((nurgling.widgets.NMiniMap)NUtils.getGameUI().mapfile.view).invalidateDisplayCache();
+                }
                 NUtils.getGameUI().mapfile.view.needUpdate = true;
             }
         }
@@ -422,5 +494,54 @@ public class QoL extends Panel {
     }
     private int parseIntOrDefault(String s, int def) {
         try { return Integer.parseInt(s.trim()); } catch(Exception e) { return def; }
+    }
+    
+    /**
+     * Rebuilds all cupboard gobs to apply changed settings (shortCupboards, decalsOnTop).
+     * Updates NCustomScale attribute and recreates decal overlays.
+     */
+    private void rebuildCupboards() {
+        if(NUtils.getGameUI() == null || NUtils.getGameUI().ui == null || NUtils.getGameUI().ui.sess == null) {
+            return;
+        }
+        OCache oc = NUtils.getGameUI().ui.sess.glob.oc;
+        synchronized(oc) {
+            for(Gob gob : oc) {
+                if(gob != null && gob.ngob != null && gob.ngob.name != null 
+                    && gob.ngob.name.contains("cupboard")) {
+                    // Update config cache to reflect new settings
+                    gob.ngob.updateConfigCache(true);
+                    
+                    // Update NCustomScale for short cupboards
+                    if(shortCupboards.a) {
+                        if(gob.getattr(nurgling.gattrr.NCustomScale.class) == null) {
+                            gob.setattr(new nurgling.gattrr.NCustomScale(gob));
+                        }
+                    } else {
+                        gob.delattr(nurgling.gattrr.NCustomScale.class);
+                    }
+                    
+                    // Recreate parchment-decal overlays so bone offset is re-evaluated
+                    java.util.List<Gob.Overlay> decalsToRecreate = new java.util.ArrayList<>();
+                    for(Gob.Overlay ol : gob.ols) {
+                        if(ol.spr != null && ol.spr.res != null 
+                            && ol.spr.res.name.contains("parchment-decal")
+                            && ol.sm instanceof OCache.OlSprite) {
+                            decalsToRecreate.add(ol);
+                        }
+                    }
+                    
+                    for(Gob.Overlay ol : decalsToRecreate) {
+                        OCache.OlSprite os = (OCache.OlSprite) ol.sm;
+                        int olid = ol.id;
+                        // Remove old overlay
+                        ol.remove(false);
+                        // Create new overlay with same data - bone offset will be re-evaluated
+                        Gob.Overlay newOl = new Gob.Overlay(gob, olid, new OCache.OlSprite(os.res, os.sdt));
+                        gob.addol(newOl, false);
+                    }
+                }
+            }
+        }
     }
 }

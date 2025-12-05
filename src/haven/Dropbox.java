@@ -21,6 +21,8 @@ public abstract class Dropbox<T> extends ListWidget<T> {
             super(Dropbox.this.sz.x, Math.min(listh, Dropbox.this.listitems()), Dropbox.this.itemh);
             sel = Dropbox.this.sel;
             Dropbox.this.ui.root.add(this, Dropbox.this.rootpos().add(0, Dropbox.this.sz.y));
+            z(1000);
+            raise();
             grab = ui.grabmouse(this);
             display();
         }
@@ -28,14 +30,6 @@ public abstract class Dropbox<T> extends ListWidget<T> {
         protected T listitem(int i) {return(Dropbox.this.listitem(i));}
         protected int listitems() {return(Dropbox.this.listitems());}
         protected void drawitem(GOut g, T item, int idx) {Dropbox.this.drawitem(g, item, idx);}
-
-        public boolean mousedown(Coord c, int btn) {
-            if(!c.isect(Coord.z, sz)) {
-                reqdestroy();
-                return(true);
-            }
-            return(super.mousedown(c, btn));
-        }
 
         public void destroy() {
             grab.remove();

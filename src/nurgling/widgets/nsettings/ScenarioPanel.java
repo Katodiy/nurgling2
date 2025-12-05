@@ -157,8 +157,8 @@ public class ScenarioPanel extends Panel {
                                 }
                             }
 
-                            // For now, only mark ✪ for goto_area, since that's the only setting-driven bot
-                            boolean hasSettings = desc != null && "goto_area".equals(desc.id);
+                            // Mark ✪ for bots that have settings
+                            boolean hasSettings = desc != null && ("goto_area".equals(desc.id) || "forager".equals(desc.id));
                             String marker = hasSettings ? " ✪" : "";
                             Label label = new Label(botId + marker);
 
@@ -314,6 +314,15 @@ public class ScenarioPanel extends Panel {
     }
 
     private void addScenario() {
+        if (manager == null) {
+            // Try to initialize manager
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+                this.manager = NUtils.getUI().core.scenarioManager;
+            } else {
+                // Can't create scenario without manager
+                return;
+            }
+        }
         editingScenario = new Scenario(getNextScenarioId(), "New Scenario");
         showEditorPanel();
     }
@@ -342,6 +351,9 @@ public class ScenarioPanel extends Panel {
     }
 
     private int getNextScenarioId() {
+        if (manager == null) {
+            return 1;
+        }
         return manager.getScenarios().keySet().stream().max(Integer::compareTo).orElse(0) + 1;
     }
 
