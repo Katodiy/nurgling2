@@ -1370,13 +1370,13 @@ public class VSpec {
         ArrayList<JSONObject> berries = new ArrayList<>();
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackberrybush\",\"name\":\"Blackberry Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackcurrant\",\"name\":\"Blackcurrant Seed\"}"));
-        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/blueberry\",\"name\":\"Blueberry\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/blueberry\",\"name\":\"Blueberries\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/candleberry\",\"name\":\"Candleberry\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/cherry\",\"name\":\"Cherry\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-dogrose\",\"name\":\"Dog Rose Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-elderberrybush\",\"name\":\"Elderberry Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-gooseberrybush\",\"name\":\"Gooseberry Seed\"}"));
-        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lingon\",\"name\":\"Lingonberry\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lingon\",\"name\":\"Lingonberries\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/mulberry\",\"name\":\"Mulberry\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-raspberrybush\",\"name\":\"Raspberry Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-redcurrant\",\"name\":\"Redcurrant Seed\"}"));
@@ -1428,10 +1428,7 @@ public class VSpec {
         categories.put("Fruit", fruits);
 
         ArrayList<JSONObject> forageble = new ArrayList<>();
-        forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/blueberry\",\"name\":\"Blueberries\"}"));
-        forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lingon\",\"name\":\"Lingonberries\"}"));
         forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/rustroot\",\"name\":\"Rustroot\"}"));
-        forageble.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/stingingnettle\",\"name\":\"Stinging Nettle\"}"));
         categories.put("Forageable", forageble);
 
         ArrayList<JSONObject> fruitOrBerry = new ArrayList<>();
