@@ -365,37 +365,55 @@ public class SortContainerByQuality implements Action {
     }
 
     /**
-     * Transfer all items of a type from player inventory back to container
+     * Transfer all items from player inventory back to container.
+     * Only transfers top-level items (not items inside stacks).
      */
     private Results transferAllToContainer(NGameUI gui, NInventory playerInv, NInventory containerInv,
                                            String itemType) throws InterruptedException {
 
-        ArrayList<WItem> items = playerInv.getItems(new NAlias(itemType));
+        // Get top-level WItems only (direct children of inventory, not inside stacks)
+        ArrayList<WItem> topLevelItems = getTopLevelItems(playerInv, itemType);
 
-        for (WItem item : items) {
-            if (!NGItem.validateItem(item)) {
-                continue;
-            }
-
+        for (WItem item : topLevelItems) {
             // Check if container has space
             if (containerInv.getFreeSpace() <= 0) {
                 return Results.ERROR("Container is full");
             }
 
-            // Transfer to container
-            if (item.item.contents != null && item.item.contents instanceof ItemStack) {
-                // Transfer whole stack
-                item.item.wdgmsg("transfer", Coord.z);
-                int id = item.item.wdgid();
-                NUtils.addTask(new ISRemoved(id));
-            } else {
-                // Transfer single item
-                item.item.wdgmsg("transfer", Coord.z);
-                int id = item.item.wdgid();
-                NUtils.addTask(new ISRemoved(id));
-            }
+            // Transfer to container - works for both stacks and single items
+            item.item.wdgmsg("transfer", Coord.z);
+            int id = item.item.wdgid();
+            NUtils.addTask(new ISRemoved(id));
         }
 
         return Results.SUCCESS();
+    }
+
+    /**
+     * Get only top-level WItems from inventory (not items inside stacks).
+     * This ensures we transfer whole stacks, not individual items from within stacks.
+     */
+    private ArrayList<WItem> getTopLevelItems(NInventory inv, String itemType) {
+        ArrayList<WItem> result = new ArrayList<>();
+        NAlias alias = new NAlias(itemType);
+
+        // Iterate direct children of inventory
+        for (Widget w = inv.child; w != null; w = w.next) {
+            if (w instanceof WItem) {
+                WItem witem = (WItem) w;
+                // Check if parent is the inventory itself (not an ItemStack)
+                if (witem.parent == inv) {
+                    if (NGItem.validateItem(witem)) {
+                        NGItem ngitem = (NGItem) witem.item;
+                        String name = ngitem.name();
+                        if (name != null && alias.matches(name)) {
+                            result.add(witem);
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 }
