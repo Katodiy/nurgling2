@@ -164,7 +164,7 @@ public class StackSupporter {
         return false;
     }
 
-    public static int getMaxStackSize(String name)
+    public static int getFullStackSize(String name)
     {
         // Check custom stack sizes first
         if(customStackSizes.containsKey(name))
@@ -228,7 +228,7 @@ public class StackSupporter {
 
         // Check if stacking is globally enabled AND item is stackable in this inventory
         if (((NInventory) NUtils.getGameUI().maininv).bundle.a && isStackable(inventory, itemName)) {
-            int maxStackSize = getMaxStackSize(itemName);
+            int maxStackSize = getFullStackSize(itemName);
             int maxCapacity = freeSlots * maxStackSize;
             return Math.min(targetCount, maxCapacity);
         }

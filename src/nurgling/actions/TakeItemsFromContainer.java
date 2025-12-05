@@ -89,7 +89,7 @@ public class TakeItemsFromContainer implements Action
                 int oldSpace = gui.getInventory().getItems(name).size();
                 ArrayList<WItem> items = getItems(gui, name);
                 int items_size = items.size();
-                target_size = Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getMaxStackSize(name), items.size()));
+                target_size = Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getFullStackSize(name), items.size()));
 
 
                 int temptr = target_size;
@@ -100,7 +100,7 @@ public class TakeItemsFromContainer implements Action
                     items = getItems(gui, name);
                     if(gui.getInventory().getItems(name).size()>=target_size+oldSpace)
                         break;
-                    temptr=Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getMaxStackSize(name), items.size()));
+                    temptr=Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getFullStackSize(name), items.size()));
                     i = -1;
                 }
                 WaitItems wi = new WaitItems(gui.getInventory(), new NAlias(name), oldSpace + target_size);

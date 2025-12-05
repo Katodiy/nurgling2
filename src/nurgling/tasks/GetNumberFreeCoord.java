@@ -1,15 +1,8 @@
 package nurgling.tasks;
 
 import haven.*;
-import haven.res.ui.stackinv.ItemStack;
 import nurgling.*;
-import nurgling.tools.NAlias;
-import nurgling.tools.NParser;
 import nurgling.tools.StackSupporter;
-import nurgling.tools.VSpec;
-
-import java.util.ArrayList;
-import java.util.HashSet;
 
 public class GetNumberFreeCoord extends NTask
 {
@@ -31,7 +24,7 @@ public class GetNumberFreeCoord extends NTask
         this.item = item;
         this.name = ((NGItem) item).name();
         if (StackSupporter.isStackable(inv, name)) {
-            multi = StackSupporter.getMaxStackSize(name);
+            multi = StackSupporter.getFullStackSize(name);
         }
     }
 

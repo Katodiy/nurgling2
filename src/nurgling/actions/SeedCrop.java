@@ -277,7 +277,7 @@ public class SeedCrop implements Action {
 
                     int numberOfItemsToFetch = gui.getInventory().getFreeSpace();
                     if (((NInventory) NUtils.getGameUI().maininv).bundle.a) {
-                        numberOfItemsToFetch = numberOfItemsToFetch * StackSupporter.getMaxStackSize(iseed.getDefault());
+                        numberOfItemsToFetch = numberOfItemsToFetch * StackSupporter.getFullStackSize(iseed.getDefault());
                     }
 
                     new TakeItemsFromPile(stockpile, gui.getStockpile(), numberOfItemsToFetch).run(gui);

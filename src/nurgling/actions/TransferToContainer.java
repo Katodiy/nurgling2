@@ -241,7 +241,7 @@ public class TransferToContainer implements Action
             if (item.parent instanceof ItemStack)
             {
                 ItemStack stack = (ItemStack) item.parent;
-                int maxStackSize = StackSupporter.getMaxStackSize(itemName);
+                int maxStackSize = StackSupporter.getFullStackSize(itemName);
                 if (stack.wmap.size() < maxStackSize)
                 {
                     notFullStacks.add(item);
