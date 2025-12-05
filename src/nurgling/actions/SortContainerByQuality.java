@@ -52,7 +52,10 @@ public class SortContainerByQuality implements Action {
         }
 
         // Step 4: Process each item type
-        for (Map.Entry<String, List<ItemEntry>> entry : itemsByType.entrySet()) {
+        List<Map.Entry<String, List<ItemEntry>>> typeList = new ArrayList<>(itemsByType.entrySet());
+
+        for (int i = 0; i < typeList.size(); i++) {
+            Map.Entry<String, List<ItemEntry>> entry = typeList.get(i);
             String itemType = entry.getKey();
             List<ItemEntry> items = entry.getValue();
 
@@ -60,17 +63,53 @@ public class SortContainerByQuality implements Action {
                 continue; // Nothing to sort for single items
             }
 
+            // Check if we need to clear player inventory before processing this type
+            int requiredSlots = estimateRequiredSlots(items, itemType);
+            int availableSlots = playerInv.getFreeSpace();
+
+            if (availableSlots < requiredSlots) {
+                // Not enough room - transfer all items back to container first
+                Results transferResult = transferAllPlayerItemsToContainer(gui, playerInv, containerInv);
+                if (!transferResult.isSuccess) {
+                    return transferResult;
+                }
+            }
+
             // Sort by quality descending (highest first)
             items.sort((a, b) -> Double.compare(b.quality, a.quality));
 
-            // Process this item type
+            // Process this item type (extract and sort, but don't transfer back yet)
             Results result = processItemType(gui, containerInv, playerInv, itemType, items);
             if (!result.isSuccess) {
                 return result;
             }
         }
 
+        // Transfer any remaining items back to container at the end
+        Results finalTransfer = transferAllPlayerItemsToContainer(gui, playerInv, containerInv);
+        if (!finalTransfer.isSuccess) {
+            return finalTransfer;
+        }
+
         return Results.SUCCESS();
+    }
+
+    /**
+     * Estimate how many inventory slots will be needed for a list of items (considering stacking)
+     */
+    private int estimateRequiredSlots(List<ItemEntry> items, String itemType) {
+        int totalItems = 0;
+        for (ItemEntry entry : items) {
+            totalItems += entry.stackSize;
+        }
+
+        int maxStackSize = StackSupporter.getMaxStackSize(itemType);
+        if (maxStackSize <= 1) {
+            return totalItems;
+        }
+
+        // Calculate slots needed with stacking
+        return (int) Math.ceil((double) totalItems / maxStackSize);
     }
 
     /**
@@ -202,17 +241,15 @@ public class SortContainerByQuality implements Action {
     }
 
     /**
-     * Process a single item type: extract in quality order, stack in player inv, transfer back
+     * Process a single item type: extract in quality order, stack in player inv.
+     * Does NOT transfer back - caller is responsible for that.
      */
     private Results processItemType(NGameUI gui, NInventory containerInv, NInventory playerInv,
                                     String itemType, List<ItemEntry> items) throws InterruptedException {
 
-        int maxStackSize = StackSupporter.getMaxStackSize(itemType);
         boolean isStackable = StackSupporter.isStackable(playerInv, itemType);
 
         // Process items in quality order (already sorted descending)
-        int processedCount = 0;
-
         for (ItemEntry item : items) {
             // Re-fetch the item in case container state changed
             WItem currentItem = findItemInContainer(containerInv, item);
@@ -222,8 +259,8 @@ public class SortContainerByQuality implements Action {
 
             // Check if player inventory has space
             if (playerInv.getFreeSpace() <= 0) {
-                // Transfer sorted items back to container
-                Results transferResult = transferAllToContainer(gui, playerInv, containerInv, itemType);
+                // Transfer all sorted items back to container to make room
+                Results transferResult = transferAllPlayerItemsToContainer(gui, playerInv, containerInv);
                 if (!transferResult.isSuccess) {
                     return transferResult;
                 }
@@ -234,16 +271,6 @@ public class SortContainerByQuality implements Action {
             if (!extractResult.isSuccess) {
                 // If extraction failed, try to continue with next item
                 continue;
-            }
-
-            processedCount++;
-        }
-
-        // Transfer any remaining items of this type back to container
-        if (processedCount > 0) {
-            Results transferResult = transferAllToContainer(gui, playerInv, containerInv, itemType);
-            if (!transferResult.isSuccess) {
-                return transferResult;
             }
         }
 
@@ -365,15 +392,15 @@ public class SortContainerByQuality implements Action {
     }
 
     /**
-     * Transfer all items from player inventory back to container.
+     * Transfer ALL items from player inventory back to container (all types).
      * Re-fetches items each iteration to avoid stale references.
      */
-    private Results transferAllToContainer(NGameUI gui, NInventory playerInv, NInventory containerInv,
-                                           String itemType) throws InterruptedException {
+    private Results transferAllPlayerItemsToContainer(NGameUI gui, NInventory playerInv, NInventory containerInv)
+            throws InterruptedException {
 
-        // Keep transferring until no more items of this type remain
+        // Keep transferring until player inventory is empty
         WItem item;
-        while ((item = getFirstTopLevelItem(playerInv, itemType)) != null) {
+        while ((item = getFirstTopLevelItem(playerInv)) != null) {
             // Check if container has space
             if (containerInv.getFreeSpace() <= 0) {
                 return Results.ERROR("Container is full");
@@ -389,22 +416,16 @@ public class SortContainerByQuality implements Action {
     }
 
     /**
-     * Get the first top-level WItem from inventory matching the item type.
-     * Returns null if no matching items found.
+     * Get the first top-level WItem from inventory (any type).
+     * Returns null if inventory is empty.
      */
-    private WItem getFirstTopLevelItem(NInventory inv, String itemType) {
-        NAlias alias = new NAlias(itemType);
-
+    private WItem getFirstTopLevelItem(NInventory inv) {
         // Iterate direct children of inventory
         for (Widget w = inv.child; w != null; w = w.next) {
             if (w instanceof WItem) {
                 WItem witem = (WItem) w;
                 if (NGItem.validateItem(witem)) {
-                    NGItem ngitem = (NGItem) witem.item;
-                    String name = ngitem.name();
-                    if (name != null && alias.matches(name)) {
-                        return witem;
-                    }
+                    return witem;
                 }
             }
         }
