@@ -101,6 +101,9 @@ public class FillWaterskins implements Action {
         }
         refillItemInEquip(gui,NUtils.getEquipment().findItem(NEquipory.Slots.LFOOT.idx),target);
         refillItemInEquip(gui,NUtils.getEquipment().findItem(NEquipory.Slots.RFOOT.idx),target);
+        // Refill buckets in hands
+        refillBucketInHand(gui,NUtils.getEquipment().findItem(NEquipory.Slots.HAND_LEFT.idx),target);
+        refillBucketInHand(gui,NUtils.getEquipment().findItem(NEquipory.Slots.HAND_RIGHT.idx),target);
         return Results.SUCCESS();
     }
 
@@ -129,23 +132,80 @@ public class FillWaterskins implements Action {
         }
     }
 
+    void refillBucketInHand(NGameUI gui, WItem item, Gob target) throws InterruptedException
+    {
+        if(target == null) return;
+        if(NParser.isIt(target,new NAlias("barrel")))
+        {
+            if(!NUtils.barrelHasContent(target) || !NParser.checkName(NUtils.getContentsOfBarrel(target), "water")) {
+                return;
+            }
+        }
+        if(item!=null && item.item instanceof NGItem && NParser.checkName(((NGItem)item.item).name(), "Bucket")) {
+            NGItem ngItem = ((NGItem) item.item);
+            // Refill if bucket is empty or has water but not full (not "10l")
+            boolean needRefill = ngItem.content().isEmpty();
+            if (!needRefill) {
+                String contentName = ngItem.content().get(0).name();
+                // Has water but not full (full bucket shows "10l of Water")
+                if (contentName.contains("Water") && !contentName.contains("10l")) {
+                    needRefill = true;
+                }
+            }
+            if (needRefill) {
+                NUtils.takeItemToHand(item);
+                NUtils.activateItem(target);
+                NUtils.getUI().core.addTask(new WaitItemContent(NUtils.getGameUI().vhand));
+                NUtils.getEquipment().wdgmsg("drop", -1);
+                NUtils.addTask(new NTask() {
+                    @Override
+                    public boolean check() {
+                        return NUtils.getGameUI().vhand == null;
+                    }
+                });
+            }
+        }
+    }
+
 
     public static boolean checkIfNeed() throws InterruptedException {
+        boolean hasWaterskin = false;
+        boolean hasWaterInWaterskin = false;
+        
         WItem wbelt = NUtils.getEquipment().findItem(NEquipory.Slots.BELT.idx);
         if (wbelt != null) {
             if (wbelt.item.contents instanceof NInventory) {
                 ArrayList<WItem> witems = ((NInventory) wbelt.item.contents).getItems(new NAlias("Waterskin"));
                 if (!witems.isEmpty()) {
+                    hasWaterskin = true;
                     for (WItem item : witems) {
                         NGItem ngItem = ((NGItem) item.item);
                         if (!ngItem.content().isEmpty()) {
-                            if (ngItem.content().get(0).name().contains("Water"))
-                                return false;
+                            if (ngItem.content().get(0).name().contains("Water")) {
+                                hasWaterInWaterskin = true;
+                                break;
+                            }
                         }
                     }
-                    return true;
                 }
             }
+        }
+        
+        // Check buckets in hands
+        boolean hasBucket = false;
+        boolean hasWaterInBucket = false;
+        WItem bucket = NUtils.getEquipment().findBucket("Water");
+        if (bucket != null) {
+            hasBucket = true;
+            NGItem ngItem = ((NGItem) bucket.item);
+            if (!ngItem.content().isEmpty() && ngItem.content().get(0).name().contains("Water")) {
+                hasWaterInBucket = true;
+            }
+        }
+        
+        // Need refill if we have containers but none of them have water
+        if (hasWaterskin || hasBucket) {
+            return !hasWaterInWaterskin && !hasWaterInBucket;
         }
         return false;
     }

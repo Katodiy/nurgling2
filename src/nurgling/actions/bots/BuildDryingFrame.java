@@ -40,7 +40,7 @@ public class BuildDryingFrame implements Action {
         NUtils.getGameUI().msg("Please, select area for strings");
         SelectArea stringarea = new SelectArea(Resource.loadsimg("baubles/stringsIng"));
         stringarea.run(NUtils.getGameUI());
-        command.ingredients.add(new Build.Ingredient(new Coord(1,1),stringarea.getRCArea(),new NAlias("Flax Fibres", "Hemp Fibres", "Spindly Taproot", "Cattail Fibres", "Stinging Nettle", "Hide Strap", "Straw Twine", "Bark Cordage"),2));
+        command.ingredients.add(new Build.Ingredient(new Coord(1,1),stringarea.getRCArea(),new NAlias("Flax Fibres", "Hemp Fibres", "Spindly Taproot","Grass Twine", "Cattail Fibres", "Stinging Nettle", "Hide Strap", "Straw Twine", "Bark Cordage"),2));
 
         // Get ghost positions from BuildGhostPreview if available
         ArrayList<Coord2d> ghostPositions = null;

@@ -74,6 +74,7 @@ public class AutoDrink implements Action
         if (NUtils.getEquipment() == null) {
             return false;
         }
+        // Check waterskins in belt
         WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
         if(wbelt!=null && wbelt.item.contents!=null) {
             ArrayList<WItem> witems = ((NInventory) wbelt.item.contents).getItems(new NAlias("Waterskin"));
@@ -85,6 +86,16 @@ public class AutoDrink implements Action
                             return true;
                         }
                     }
+                }
+            }
+        }
+        // Check bucket in hands
+        WItem bucket = NUtils.getEquipment().findBucket("Water");
+        if (bucket != null) {
+            NGItem ngItem = ((NGItem) bucket.item);
+            if (!ngItem.content().isEmpty()) {
+                if (ngItem.content().get(0).name().contains("Water")) {
+                    return true;
                 }
             }
         }
