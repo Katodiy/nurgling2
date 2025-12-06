@@ -18,8 +18,10 @@ public class AutoFlowerAction extends Window implements Checkable {
     public AutoFlowerAction() {
         super(new Coord(300, 200), "Auto Flower Action");
         NAutoFlowerActionProp startprop = NAutoFlowerActionProp.get(NUtils.getUI().sessInfo);
+        if (startprop == null) startprop = new NAutoFlowerActionProp("", "");
+        final NAutoFlowerActionProp finalStartprop = startprop;
         
-        actionList = new ArrayList<>(startprop.actionHistory);
+        actionList = new ArrayList<>(finalStartprop.actionHistory);
         if (!actionList.contains("")) {
             actionList.add(0, "");
         }
@@ -28,7 +30,7 @@ public class AutoFlowerAction extends Window implements Checkable {
         
         prev = add(new Label("Enter custom:"), prev.pos("bl").add(UI.scale(0, 5)));
         
-        prev = add(customActionInput = new TextEntry(UI.scale(200), startprop.action) {
+        prev = add(customActionInput = new TextEntry(UI.scale(200), finalStartprop.action) {
             @Override
             protected void changed() {
                 super.changed();
@@ -68,15 +70,15 @@ public class AutoFlowerAction extends Window implements Checkable {
             }
         }, prev.pos("bl").add(UI.scale(0, 5)));
         
-        if (!startprop.action.isEmpty() && actionList.contains(startprop.action)) {
-            actionDropbox.change(startprop.action);
+        if (!finalStartprop.action.isEmpty() && actionList.contains(finalStartprop.action)) {
+            actionDropbox.change(finalStartprop.action);
         } else if (!actionList.isEmpty()) {
             actionDropbox.change(actionList.get(0));
         }
         
         prev = add(transfer = new CheckBox("Transfer items") {
             {
-                a = startprop.transfer;
+                a = finalStartprop.transfer;
             }
             @Override
             public void set(boolean a) {
@@ -89,14 +91,16 @@ public class AutoFlowerAction extends Window implements Checkable {
             public void click() {
                 super.click();
                 prop = NAutoFlowerActionProp.get(NUtils.getUI().sessInfo);
-                String selectedAction = customActionInput.text();
-                if (selectedAction == null || selectedAction.trim().isEmpty()) {
-                    selectedAction = actionDropbox.sel;
+                if (prop != null) {
+                    String selectedAction = customActionInput.text();
+                    if (selectedAction == null || selectedAction.trim().isEmpty()) {
+                        selectedAction = actionDropbox.sel;
+                    }
+                    prop.action = selectedAction;
+                    prop.transfer = transfer.a;
+                    prop.addToHistory(selectedAction);
+                    NAutoFlowerActionProp.set(prop);
                 }
-                prop.action = selectedAction;
-                prop.transfer = transfer.a;
-                prop.addToHistory(selectedAction);
-                NAutoFlowerActionProp.set(prop);
                 isReady = true;
             }
         }, prev.pos("bl").add(UI.scale(0, 5)));

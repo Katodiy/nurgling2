@@ -52,6 +52,7 @@ public class Forager extends Window implements Checkable {
     public Forager() {
         super(new Coord(380, 300), "Forager Bot");
         NForagerProp startprop = NForagerProp.get(NUtils.getUI().sessInfo);
+        if (startprop == null) startprop = new NForagerProp("", "");
         
         prev = add(new Label("Forager Bot Settings:"));
         

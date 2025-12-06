@@ -104,16 +104,19 @@ public class NChopperProp implements JConf
 
     public static NChopperProp get(NUI.NSessInfo sessInfo)
     {
+        if (sessInfo == null || NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null)
+            return null;
+        String chrid = NUtils.getGameUI().getCharInfo().chrid;
         ArrayList<NChopperProp> chopProps = ((ArrayList<NChopperProp>) NConfig.get(NConfig.Key.chopperprop));
         if (chopProps == null)
             chopProps = new ArrayList<>();
         for (NChopperProp prop : chopProps)
         {
-            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(sessInfo.characterInfo.chrid))
+            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(chrid))
             {
                 return prop;
             }
         }
-        return new NChopperProp(sessInfo.username, sessInfo.characterInfo.chrid);
+        return new NChopperProp(sessInfo.username, chrid);
     }
 }

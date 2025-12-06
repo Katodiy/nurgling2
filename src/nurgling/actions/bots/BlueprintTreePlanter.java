@@ -53,7 +53,7 @@ public class BlueprintTreePlanter implements Action {
             prop = NBlueprintPlanterProp.get(NUtils.getUI().sessInfo);
             
             // Auto-place last blueprint if it was saved
-            if (prop.gridId != null && prop.tileCoord != null && prop.blueprintName != null) {
+            if (prop != null && prop.gridId != null && prop.tileCoord != null && prop.blueprintName != null) {
                 autoPlaceLastBlueprint(gui);
             }
             

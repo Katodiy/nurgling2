@@ -2,6 +2,7 @@ package nurgling.conf;
 
 import nurgling.NConfig;
 import nurgling.NUI;
+import nurgling.NUtils;
 import nurgling.routes.ForagerAction;
 import nurgling.routes.ForagerPath;
 import org.json.JSONArray;
@@ -143,15 +144,18 @@ public class NForagerProp implements JConf {
     }
     
     public static NForagerProp get(NUI.NSessInfo sessInfo) {
+        if (sessInfo == null || NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null)
+            return null;
+        String chrid = NUtils.getGameUI().getCharInfo().chrid;
         @SuppressWarnings("unchecked")
         ArrayList<NForagerProp> foragerProps = ((ArrayList<NForagerProp>) NConfig.get(NConfig.Key.foragerprop));
         if (foragerProps == null)
             foragerProps = new ArrayList<>();
         for (NForagerProp prop : foragerProps) {
-            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(sessInfo.characterInfo.chrid)) {
+            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(chrid)) {
                 return prop;
             }
         }
-        return new NForagerProp(sessInfo.username, sessInfo.characterInfo.chrid);
+        return new NForagerProp(sessInfo.username, chrid);
     }
 }

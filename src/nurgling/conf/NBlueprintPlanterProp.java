@@ -3,6 +3,7 @@ package nurgling.conf;
 import haven.Coord;
 import nurgling.NConfig;
 import nurgling.NUI;
+import nurgling.NUtils;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -72,14 +73,17 @@ public class NBlueprintPlanterProp implements JConf {
     }
     
     public static NBlueprintPlanterProp get(NUI.NSessInfo sessInfo) {
+        if (sessInfo == null || NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null)
+            return null;
+        String chrid = NUtils.getGameUI().getCharInfo().chrid;
         ArrayList<NBlueprintPlanterProp> props = ((ArrayList<NBlueprintPlanterProp>) NConfig.get(NConfig.Key.blueprintplanterprop));
         if (props == null)
             props = new ArrayList<>();
         for (NBlueprintPlanterProp prop : props) {
-            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(sessInfo.characterInfo.chrid)) {
+            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(chrid)) {
                 return prop;
             }
         }
-        return new NBlueprintPlanterProp(sessInfo.username, sessInfo.characterInfo.chrid);
+        return new NBlueprintPlanterProp(sessInfo.username, chrid);
     }
 }

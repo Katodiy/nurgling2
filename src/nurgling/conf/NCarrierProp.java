@@ -2,6 +2,7 @@ package nurgling.conf;
 
 import nurgling.NConfig;
 import nurgling.NUI;
+import nurgling.NUtils;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -72,16 +73,19 @@ public class NCarrierProp implements JConf
 
     public static NCarrierProp get(NUI.NSessInfo sessInfo)
     {
+        if (sessInfo == null || NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null)
+            return null;
+        String chrid = NUtils.getGameUI().getCharInfo().chrid;
         ArrayList<NCarrierProp> carrierProps = ((ArrayList<NCarrierProp>) NConfig.get(NConfig.Key.carrierprop));
         if (carrierProps == null)
             carrierProps = new ArrayList<>();
         for (NCarrierProp prop : carrierProps)
         {
-            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(sessInfo.characterInfo.chrid))
+            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(chrid))
             {
                 return prop;
             }
         }
-        return new NCarrierProp(sessInfo.username, sessInfo.characterInfo.chrid);
+        return new NCarrierProp(sessInfo.username, chrid);
     }
 }

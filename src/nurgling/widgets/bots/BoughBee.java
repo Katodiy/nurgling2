@@ -20,6 +20,8 @@ public class BoughBee extends Window implements Checkable {
     public BoughBee() {
         super(new Coord(250, 200), "Beehive Smoker");
         NBoughBeeProp startprop = NBoughBeeProp.get(NUtils.getUI().sessInfo);
+        if (startprop == null) startprop = new NBoughBeeProp("", "");
+        final NBoughBeeProp finalStartprop = startprop;
         
         prev = add(new Label("Beehive Smoker Settings:"));
         
@@ -49,7 +51,7 @@ public class BoughBee extends Window implements Checkable {
         
         // Set initial value for player action
         for (int i = 0; i < PLAYER_ACTIONS.length; i++) {
-            if (PLAYER_ACTIONS[i].equals(startprop.onPlayerAction)) {
+            if (PLAYER_ACTIONS[i].equals(finalStartprop.onPlayerAction)) {
                 onPlayerAction.change(PLAYER_ACTIONS[i]);
                 break;
             }
@@ -81,7 +83,7 @@ public class BoughBee extends Window implements Checkable {
         
         // Set initial value for animal action
         for (int i = 0; i < ANIMAL_ACTIONS.length; i++) {
-            if (ANIMAL_ACTIONS[i].equals(startprop.onAnimalAction)) {
+            if (ANIMAL_ACTIONS[i].equals(finalStartprop.onAnimalAction)) {
                 onAnimalAction.change(ANIMAL_ACTIONS[i]);
                 break;
             }
@@ -113,7 +115,7 @@ public class BoughBee extends Window implements Checkable {
         
         // Set initial value for after harvest action
         for (int i = 0; i < AFTER_HARVEST_ACTIONS.length; i++) {
-            if (AFTER_HARVEST_ACTIONS[i].equals(startprop.afterHarvestAction)) {
+            if (AFTER_HARVEST_ACTIONS[i].equals(finalStartprop.afterHarvestAction)) {
                 afterHarvestAction.change(AFTER_HARVEST_ACTIONS[i]);
                 break;
             }
@@ -126,22 +128,24 @@ public class BoughBee extends Window implements Checkable {
                 super.click();
                 prop = NBoughBeeProp.get(NUtils.getUI().sessInfo);
                 
-                if (onPlayerAction.sel != null)
-                    prop.onPlayerAction = onPlayerAction.sel;
-                else
-                    prop.onPlayerAction = "nothing";
-                    
-                if (onAnimalAction.sel != null)
-                    prop.onAnimalAction = onAnimalAction.sel;
-                else
-                    prop.onAnimalAction = "logout";
-                    
-                if (afterHarvestAction.sel != null)
-                    prop.afterHarvestAction = afterHarvestAction.sel;
-                else
-                    prop.afterHarvestAction = "nothing";
-                    
-                NBoughBeeProp.set(prop);
+                if (prop != null) {
+                    if (onPlayerAction.sel != null)
+                        prop.onPlayerAction = onPlayerAction.sel;
+                    else
+                        prop.onPlayerAction = "nothing";
+                        
+                    if (onAnimalAction.sel != null)
+                        prop.onAnimalAction = onAnimalAction.sel;
+                    else
+                        prop.onAnimalAction = "logout";
+                        
+                    if (afterHarvestAction.sel != null)
+                        prop.afterHarvestAction = afterHarvestAction.sel;
+                    else
+                        prop.afterHarvestAction = "nothing";
+                        
+                    NBoughBeeProp.set(prop);
+                }
                 isReady = true;
             }
         }, prev.pos("bl").add(UI.scale(0, 10)));

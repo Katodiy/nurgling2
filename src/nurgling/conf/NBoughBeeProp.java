@@ -2,6 +2,7 @@ package nurgling.conf;
 
 import nurgling.NConfig;
 import nurgling.NUI;
+import nurgling.NUtils;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -67,15 +68,18 @@ public class NBoughBeeProp implements JConf {
     }
 
     public static NBoughBeeProp get(NUI.NSessInfo sessInfo) {
+        if (sessInfo == null || NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null)
+            return null;
+        String chrid = NUtils.getGameUI().getCharInfo().chrid;
         @SuppressWarnings("unchecked")
         ArrayList<NBoughBeeProp> boughBeeProps = ((ArrayList<NBoughBeeProp>) NConfig.get(NConfig.Key.boughbeeprop));
         if (boughBeeProps == null)
             boughBeeProps = new ArrayList<>();
         for (NBoughBeeProp prop : boughBeeProps) {
-            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(sessInfo.characterInfo.chrid)) {
+            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(chrid)) {
                 return prop;
             }
         }
-        return new NBoughBeeProp(sessInfo.username, sessInfo.characterInfo.chrid);
+        return new NBoughBeeProp(sessInfo.username, chrid);
     }
 }

@@ -15,7 +15,7 @@ public class ClayDigger extends Window implements Checkable {
         prev = add(new Label("Digger Settings:"));
 
         prev = add(usingSovels = new UsingTools(UsingTools.Tools.shovels, true), prev.pos("bl").add(UI.scale(0,5)));
-        if(startprop.shovel!=null)
+        if(startprop != null && startprop.shovel!=null)
         {
             for(UsingTools.Tool tl : UsingTools.Tools.shovels)
             {
@@ -31,9 +31,11 @@ public class ClayDigger extends Window implements Checkable {
             public void click() {
                 super.click();
                 prop = NClayDiggerProp.get(NUtils.getUI().sessInfo);
-                if(usingSovels.s!=null)
-                    prop.shovel = usingSovels.s.name;
-                NClayDiggerProp.set(prop);
+                if (prop != null) {
+                    if(usingSovels.s!=null)
+                        prop.shovel = usingSovels.s.name;
+                    NClayDiggerProp.set(prop);
+                }
                 isReady = true;
             }
         }, prev.pos("bl").add(UI.scale(0,5)));

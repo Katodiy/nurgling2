@@ -18,11 +18,13 @@ public class WorldExplorerWnd extends Window implements Checkable {
     public WorldExplorerWnd() {
         super(new Coord(200,200), "WorldExplorer");
         NWorldExplorerProp startprop = NWorldExplorerProp.get(NUtils.getUI().sessInfo);
+        if (startprop == null) startprop = new NWorldExplorerProp("", "");
+        final NWorldExplorerProp finalStartprop = startprop;
         prev = add(new Label("World Explorer Settings:"));
 
         prev = add(clockwise = new CheckBox("Clockwise direction"){
             {
-                a = startprop.clockwise;
+                a = finalStartprop.clockwise;
             }
             @Override
             public void set(boolean a) {
@@ -35,7 +37,7 @@ public class WorldExplorerWnd extends Window implements Checkable {
 
         prev = add(unclockwise = new CheckBox("Counterclockwise direction"){
             {
-                a = !startprop.clockwise;
+                a = !finalStartprop.clockwise;
             }
             @Override
             public void set(boolean a) {
@@ -48,7 +50,7 @@ public class WorldExplorerWnd extends Window implements Checkable {
         prev = add(deep = new CheckBox("Deep and Deeper")
         {
             {
-                a = startprop.deeper;
+                a = finalStartprop.deeper;
             }
             @Override
             public void set(boolean a) {
@@ -61,7 +63,7 @@ public class WorldExplorerWnd extends Window implements Checkable {
         prev = add(shallow = new CheckBox("Deep and Shallow")
         {
             {
-                a = !startprop.deeper;
+                a = !finalStartprop.deeper;
             }
             @Override
             public void set(boolean a) {
@@ -77,9 +79,11 @@ public class WorldExplorerWnd extends Window implements Checkable {
             public void click() {
                 super.click();
                 prop = NWorldExplorerProp.get(NUtils.getUI().sessInfo);
-                prop.deeper = deep.a;
-                prop.clockwise = clockwise.a;
-                NWorldExplorerProp.set(prop);
+                if (prop != null) {
+                    prop.deeper = deep.a;
+                    prop.clockwise = clockwise.a;
+                    NWorldExplorerProp.set(prop);
+                }
                 isReady = true;
             }
         }, prev.pos("bl").add(UI.scale(0,5)));

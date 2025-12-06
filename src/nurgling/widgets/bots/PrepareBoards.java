@@ -17,7 +17,7 @@ public class PrepareBoards extends Window implements Checkable {
         prev = add(new Label("Prepare Boards Settings:"));
 
         prev = add(usingTools = new UsingTools(UsingTools.Tools.saw), prev.pos("bl").add(UI.scale(0,5)));
-        if(startprop.tool!=null)
+        if(startprop != null && startprop.tool!=null)
         {
             for(UsingTools.Tool tl : UsingTools.Tools.saw)
             {
@@ -35,9 +35,11 @@ public class PrepareBoards extends Window implements Checkable {
             public void click() {
                 super.click();
                 prop = NPrepBoardsProp.get(NUtils.getUI().sessInfo);
-                if(usingTools.s!=null)
-                    prop.tool = usingTools.s.name;
-                NPrepBoardsProp.set(prop);
+                if (prop != null) {
+                    if(usingTools.s!=null)
+                        prop.tool = usingTools.s.name;
+                    NPrepBoardsProp.set(prop);
+                }
                 isReady = true;
             }
         }, prev.pos("bl").add(UI.scale(0,5)));

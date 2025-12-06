@@ -17,7 +17,7 @@ public class PrepareBlocks extends Window implements Checkable {
         prev = add(new Label("Prepare blocks Settings:"));
 
         prev = add(usingTools = new UsingTools(UsingTools.Tools.axes), prev.pos("bl").add(UI.scale(0,5)));
-        if(startprop.tool!=null)
+        if(startprop != null && startprop.tool!=null)
         {
             for(UsingTools.Tool tl : UsingTools.Tools.axes)
             {
@@ -29,10 +29,11 @@ public class PrepareBlocks extends Window implements Checkable {
 
         }
 
+        final boolean initialCheckWounds = startprop != null ? startprop.checkWounds : false;
         prev = add(checkWounds = new CheckBox("Stop on Scrapes & Cuts (dmg >= 4)")
         {
             {
-                a = startprop.checkWounds;
+                a = initialCheckWounds;
             }
             @Override
             public void set(boolean a) {
@@ -46,10 +47,12 @@ public class PrepareBlocks extends Window implements Checkable {
             public void click() {
                 super.click();
                 prop = NPrepBlocksProp.get(NUtils.getUI().sessInfo);
-                if(usingTools.s!=null)
-                    prop.tool = usingTools.s.name;
-                prop.checkWounds = checkWounds.a;
-                NPrepBlocksProp.set(prop);
+                if (prop != null) {
+                    if(usingTools.s!=null)
+                        prop.tool = usingTools.s.name;
+                    prop.checkWounds = checkWounds.a;
+                    NPrepBlocksProp.set(prop);
+                }
                 isReady = true;
             }
         }, prev.pos("bl").add(UI.scale(0,5)));

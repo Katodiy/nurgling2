@@ -21,6 +21,8 @@ public class Fishing extends Window implements Checkable {
     public Fishing() {
         super(UI.scale(200,400), "Auto Fishing");
         NFishingSettings fishSet = NFishingSettings.get(NUtils.getUI().sessInfo);
+        if (fishSet == null) fishSet = new NFishingSettings("", "");
+        final NFishingSettings finalFishSet = fishSet;
         prev = add(new Label("Tool:"));
 
         prev = add(usingTools = new UsingTools(UsingTools.Tools.fishrot, false)
@@ -63,11 +65,11 @@ public class Fishing extends Window implements Checkable {
                 }
             }
         }, prev.pos("bl").add(UI.scale(0,5)));
-        if(fishSet.tool!=null)
+        if(finalFishSet.tool!=null)
         {
             for(UsingTools.Tool tl : UsingTools.Tools.fishrot)
             {
-                if (tl.name.equals(fishSet.tool)) {
+                if (tl.name.equals(finalFishSet.tool)) {
                     usingTools.s = tl;
                     break;
                 }
@@ -76,22 +78,22 @@ public class Fishing extends Window implements Checkable {
         prev = add(noPilesCheck = new CheckBox("Don't place piles")
         {
             {
-                a = fishSet.noPiles;
+                a = finalFishSet.noPiles;
             }
         }, prev.pos("bl").add(UI.scale(0,5)));
         prev = add(useInventoryToolsCheck = new CheckBox("Use tools from inventory")
         {
             {
-                a = fishSet.useInventoryTools;
+                a = finalFishSet.useInventoryTools;
             }
         }, prev.pos("bl").add(UI.scale(0,5)));
         prev = add(new Label("Fish line:"), prev.pos("bl").add(UI.scale(0,5)));
         prev = add(fishlines = new UsingTools(UsingTools.initByCategories("Fishline"), false), prev.pos("bl").add(UI.scale(0,5)));
-        if(fishSet.fishline!=null)
+        if(finalFishSet.fishline!=null)
         {
             for(UsingTools.Tool tl : fishlines.tools)
             {
-                if (tl.name.equals(fishSet.fishline)) {
+                if (tl.name.equals(finalFishSet.fishline)) {
                     fishlines.s = tl;
                     break;
                 }
@@ -102,9 +104,9 @@ public class Fishing extends Window implements Checkable {
         if(usingTools.s==null || !usingTools.s.name.equals("Primitive Casting-Rod")) {
             prev = add(baitLab = new Label("Bite:"), prev.pos("bl").add(UI.scale(0,5)));
             prev = add(baits = new UsingTools(UsingTools.initByCategories("Bait"), false), prev.pos("bl").add(UI.scale(0, 5)));
-            if (fishSet.bait != null) {
+            if (finalFishSet.bait != null) {
                 for (UsingTools.Tool tl : baits.tools) {
-                    if (tl.name.equals(fishSet.bait)) {
+                    if (tl.name.equals(finalFishSet.bait)) {
                         baits.s = tl;
                         break;
                     }
@@ -115,9 +117,9 @@ public class Fishing extends Window implements Checkable {
         {
             prev = add(baitLab = new Label("Lure:"), prev.pos("bl").add(UI.scale(0,5)));
             prev = add(baits = new UsingTools(UsingTools.initByCategories("Lures"), false), prev.pos("bl").add(UI.scale(0, 5)));
-            if (fishSet.bait != null) {
+            if (finalFishSet.bait != null) {
                 for (UsingTools.Tool tl : baits.tools) {
-                    if (tl.name.equals(fishSet.bait)) {
+                    if (tl.name.equals(finalFishSet.bait)) {
                         baits.s = tl;
                         break;
                     }
@@ -126,11 +128,11 @@ public class Fishing extends Window implements Checkable {
         }
         prev = add(new Label("Hook:"), prev.pos("bl").add(UI.scale(0,5)));
         prev = add(hooks = new UsingTools(UsingTools.initByCategories("Hooks"), false), prev.pos("bl").add(UI.scale(0,5)));
-        if(fishSet.hook!=null)
+        if(finalFishSet.hook!=null)
         {
             for(UsingTools.Tool tl : hooks.tools)
             {
-                if (tl.name.equals(fishSet.hook)) {
+                if (tl.name.equals(finalFishSet.hook)) {
                     hooks.s = tl;
                     break;
                 }
@@ -139,7 +141,7 @@ public class Fishing extends Window implements Checkable {
 
         prev = add(targLab = new Label("Targets:"), prev.pos("bl").add(UI.scale(0,5)));
         if(fishwnd==null) {
-            fishwnd = NUtils.getGameUI().add(new FishingTarget(fishSet));
+            fishwnd = NUtils.getGameUI().add(new FishingTarget(finalFishSet));
         }
         fishwnd.hide();
         prev = add(fishbtn = new Button(UI.scale(150),"Fish"){
@@ -164,18 +166,20 @@ public class Fishing extends Window implements Checkable {
             public void click() {
                 super.click();
                 prop = NFishingSettings.get(NUtils.getUI().sessInfo);
-                if(usingTools.s!=null)
-                    prop.tool = usingTools.s.name;
-                if(fishlines.s!=null)
-                    prop.fishline = fishlines.s.name;
-                if(hooks.s!=null)
-                    prop.hook = hooks.s.name;
-                if(baits.s!=null)
-                    prop.bait = baits.s.name;
-                prop.targets = fishwnd.settings.targets;
-                prop.noPiles = noPilesCheck.a;
-                prop.useInventoryTools = useInventoryToolsCheck.a;
-                NFishingSettings.set(prop);
+                if (prop != null) {
+                    if(usingTools.s!=null)
+                        prop.tool = usingTools.s.name;
+                    if(fishlines.s!=null)
+                        prop.fishline = fishlines.s.name;
+                    if(hooks.s!=null)
+                        prop.hook = hooks.s.name;
+                    if(baits.s!=null)
+                        prop.bait = baits.s.name;
+                    prop.targets = fishwnd.settings.targets;
+                    prop.noPiles = noPilesCheck.a;
+                    prop.useInventoryTools = useInventoryToolsCheck.a;
+                    NFishingSettings.set(prop);
+                }
                 isReady = true;
                 fishwnd.destroy();
             }
