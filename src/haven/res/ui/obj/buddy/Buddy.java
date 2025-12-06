@@ -3,6 +3,7 @@ package haven.res.ui.obj.buddy;
 
 import haven.*;
 import haven.render.*;
+import nurgling.NGameUI;
 import java.util.*;
 import java.awt.Color;
 import java.awt.Font;
@@ -16,8 +17,8 @@ public class Buddy extends GAttrib implements InfoPart {
     private int bseq = -1;
     private BuddyWnd bw = null;
     public BuddyWnd.Buddy b = null;
-    private int rgrp;
-    private String rnm;
+    public int rgrp;
+    public String rnm;
 
     public Buddy(Gob gob, int id) {
 	super(gob);
@@ -59,6 +60,7 @@ public class Buddy extends GAttrib implements InfoPart {
 	if(b != null) {
 	    Color col = BuddyWnd.gc[rgrp = b.group];
 	    cmp.add(InfoPart.rendertext(rnm = b.name, col), Coord.z);
+	    NGameUI.gobIdToKinName.put(gob.id, rnm);
 	}
 	this.b = b;
     }

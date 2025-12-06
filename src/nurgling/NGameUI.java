@@ -23,6 +23,7 @@ import nurgling.widgets.FishingWindowExtension;
 import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,6 +72,9 @@ public class NGameUI extends GameUI
     // Temporary rings (session-only, for objects without GobIcon)
     // Maps resource name to ring enabled state
     public final Map<String, Boolean> tempRingResources = Collections.synchronizedMap(new HashMap<>());
+    
+    // Maps gob id to kin name for party member names on minimap
+    public static Map<Long, String> gobIdToKinName = new ConcurrentHashMap<>();
 
     /**
      * Gets the genus (world identifier) for this game instance

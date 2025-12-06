@@ -152,6 +152,7 @@ public class NConfig
         buttonStyle,
         showQuestGiverNames,
         showThingwallNames,
+        showPartyMemberNames,
         trackingVectors
     }
 
@@ -404,6 +405,7 @@ public class NConfig
         // Map marker name display settings
         conf.put(Key.showQuestGiverNames, true);
         conf.put(Key.showThingwallNames, true);
+        conf.put(Key.showPartyMemberNames, true);
         
         // Map tracking vectors
         conf.put(Key.trackingVectors, false);

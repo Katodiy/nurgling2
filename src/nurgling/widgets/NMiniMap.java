@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import haven.res.ui.obj.buddy.Buddy;
 import nurgling.*;
 import nurgling.overlays.map.MinimapClaimRenderer;
 import nurgling.overlays.map.MinimapExploredAreaRenderer;
@@ -205,7 +206,6 @@ NMiniMap extends MiniMap {
             drawicons(g);
         drawparty(g);
 
-
         drawtempmarks(g);
         drawterrainname(g);
         drawResourceTimers(g);
@@ -214,6 +214,41 @@ NMiniMap extends MiniMap {
         drawQueuedWaypoints(g);  // Draw waypoint visualization
         drawForagerRecordingPath(g);  // Draw forager path being recorded
         drawMarkerLine(g);       // Draw line to selected marker
+    }
+
+    @Override
+    public void drawparty(GOut g) {
+        for(Party.Member m : ui.sess.glob.party.memb.values()) {
+            try {
+                Coord2d ppc = m.getc();
+                if(ppc == null)
+                    continue;
+                Coord p2cppc = p2c(ppc);
+                g.chcolor(m.col.getRed(), m.col.getGreen(), m.col.getBlue(), 255);
+                g.rotimage(plp, p2cppc, plp.sz().div(2), -m.geta() - (Math.PI / 2));
+                g.chcolor();
+                
+                // Draw party member names on minimap
+                if((Boolean)NConfig.get(NConfig.Key.showPartyMemberNames)) {
+                    String name = null;
+                    if(NGameUI.gobIdToKinName.containsKey(m.gobid)) {
+                        name = NGameUI.gobIdToKinName.get(m.gobid);
+                    } else if(m.getgob() != null) {
+                        Buddy buddyInfo = m.getgob().getattr(Buddy.class);
+                        if(buddyInfo != null) {
+                            name = buddyInfo.rnm;
+                            if(name != null && !NGameUI.gobIdToKinName.containsKey(m.gobid)) {
+                                NGameUI.gobIdToKinName.put(m.gobid, name);
+                            }
+                        }
+                    }
+                    if(name != null && !name.isEmpty()) {
+                        Text nameText = NStyle.meter.render(name);
+                        g.aimage(nameText.tex(), p2cppc.add(0, -UI.scale(15)), 0.5, 0.5);
+                    }
+                }
+            } catch(Loading l) {}
+        }
     }
 
     // Draw forager path being recorded or loaded
