@@ -95,13 +95,13 @@ public class NCheckBox extends ACheckBox {
             g.image(mark, Coord.z.add(0, (sz.y - mark.sz().y) / 2));
         super.draw(g);
     }
-    public boolean mousedown(Coord c, int button) {
-        if(button == 1) {
-            click();
-            return(true);
-        }
-        return(super.mousedown(c, button));
-    }
+//    public boolean mousedown(Coord c, int button) {
+//        if(button == 1) {
+//            click();
+//            return(true);
+//        }
+//        return(super.mousedown(c, button));
+//    }
     public NCheckBox(String lbl, boolean lg, final Consumer<Boolean> onChange) {
         this.lbl = (lbl.length() > 0) ? Text.std.render(lbl, java.awt.Color.WHITE) : null;
         if(lg) {

@@ -221,7 +221,7 @@ public class BotRegistry {
 
         bots.add(new BotDescriptor("nords1", BotDescriptor.BotType.NORDS, "nords 1", "nords test 1.", false, true, TestAction.class, "test1", false));
         bots.add(new BotDescriptor("nords2", BotDescriptor.BotType.NORDS, "nords 2", "nords test 2.", false, true, FillBucket.class, "test2", false));
-        bots.add(new BotDescriptor("nords3", BotDescriptor.BotType.NORDS, "nords 4", "nords test 4.", false, true, FillJarWithVeges.class, "test4", false));
+        //bots.add(new BotDescriptor("nords3", BotDescriptor.BotType.NORDS, "nords 4", "nords test 4.", false, true, FillJarWithVeges.class, "test4", false));
         bots.add(new BotDescriptor("nords4", BotDescriptor.BotType.NORDS, "nords 5", "nords test 5.", false, true, FillJarWithJuice.class, "test5", false));
     }
 

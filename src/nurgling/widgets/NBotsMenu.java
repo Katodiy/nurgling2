@@ -6,7 +6,7 @@ import nurgling.actions.*;
 import nurgling.actions.bots.CatchBugsAround;
 import nurgling.actions.bots.FillBucket;
 import nurgling.actions.bots.FillJarWithJuice;
-import nurgling.actions.bots.FillJarWithVeges;
+//import nurgling.actions.bots.FillJarWithVeges;
 import nurgling.actions.bots.TestAction;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
