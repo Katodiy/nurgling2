@@ -1058,8 +1058,15 @@ public class MCache implements MapSource {
 	public String[][] constructSection(Coord coord) throws InterruptedException {
 		final String[][] gridMap = new String[3][3];
 		NUtils.addTask(new NTask() {
+			private static final int MAX_FRAMES = 100; // ~0.5 sec at 200fps, prevents map upload blocking
+			private int frameCount = 0;
+			
 			@Override
 			public boolean check() {
+				// Timeout to prevent blocking when grids aren't loading
+				if (frameCount++ >= MAX_FRAMES) {
+					return true;
+				}
 				if(NUtils.getGameUI().map.glob!=null && NUtils.getGameUI().map.glob.map.grids.size()==9)
 				{
 					if(NUtils.getGameUI().map.glob.map.grids.get(coord)==null)

@@ -21,8 +21,15 @@ public class ReadJsonAction implements Action {
     @Override
     public Results run(NGameUI gui) {
         try (FileReader fileReader = new FileReader(path)) {
+            if (gui.ui.core.poolManager == null || !gui.ui.core.poolManager.isConnectionReady()) {
+                return Results.ERROR("Database connection not available");
+            }
+            Connection conn = gui.ui.core.poolManager.getConnection();
+            if (conn == null) {
+                return Results.ERROR("Database connection not available");
+            }
             JSONArray foodItems = new JSONArray(new JSONTokener(fileReader));
-            loadDataIntoDatabase(gui.ui.core.poolManager.getConnection(), foodItems);
+            loadDataIntoDatabase(conn, foodItems);
             System.out.println("Data imported successfully");
         } catch (Exception e) {
             e.printStackTrace();

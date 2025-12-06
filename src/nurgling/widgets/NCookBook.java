@@ -84,8 +84,14 @@ public class NCookBook extends Window {
                 if(e.code==10)
                 {
                     try {
-                        rhf = new RecipeHashFetcher(ui.core.poolManager.getConnection(),
-                                searchF.text());
+                        if (ui.core.poolManager == null || !ui.core.poolManager.isConnectionReady()) {
+                            return res; // Database not ready
+                        }
+                        java.sql.Connection conn = ui.core.poolManager.getConnection();
+                        if (conn == null) {
+                            return res;
+                        }
+                        rhf = new RecipeHashFetcher(conn, searchF.text());
                         ui.core.poolManager.submitTask(rhf);
                         disable();
                     }catch (SQLException err)
@@ -428,12 +434,16 @@ public class NCookBook extends Window {
 
     @Override
     public boolean show(boolean show) {
-        if (show && (Boolean) NConfig.get(NConfig.Key.ndbenable) && ui.core.poolManager!=null) {
+        if (show && (Boolean) NConfig.get(NConfig.Key.ndbenable) && ui.core.poolManager!=null && ui.core.poolManager.isConnectionReady()) {
             try {
-                if (favoriteManager == null) {
-                    favoriteManager = new FavoriteRecipeManager(ui.core.poolManager.getConnection());
+                java.sql.Connection conn = ui.core.poolManager.getConnection();
+                if (conn == null) {
+                    return super.show(show);
                 }
-                rhf = new RecipeHashFetcher(ui.core.poolManager.getConnection(),
+                if (favoriteManager == null) {
+                    favoriteManager = new FavoriteRecipeManager(conn);
+                }
+                rhf = new RecipeHashFetcher(conn,
                         RecipeHashFetcher.genFep(currentSortType, currentSortDesc));
                 ui.core.poolManager.submitTask(rhf);
                 disable();

@@ -461,21 +461,31 @@ public class NCore extends Widget
     }
 
     public void writeNGItem(NGItem item) {
+        if (poolManager == null || !poolManager.isConnectionReady()) {
+            return; // Database not ready, skip this write
+        }
         NGItemWriter ngItemWriter = new NGItemWriter(item);
         try {
             ngItemWriter.connection = poolManager.getConnection();
+            if (ngItemWriter.connection == null) {
+                return; // Connection not available
+            }
         } catch (SQLException e) {
             e.printStackTrace();
+            return;
         }
         poolManager.submitTask(ngItemWriter);
     }
 
     public void writeContainerInfo(Gob gob)
     {
-        if(gob!=null) {
+        if(gob!=null && poolManager != null && poolManager.isConnectionReady()) {
             ContainerWatcher cw = new ContainerWatcher(gob);
             try {
                 cw.connection = poolManager.getConnection();
+                if (cw.connection == null) {
+                    return; // Connection not available
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
                 return;
@@ -485,28 +495,38 @@ public class NCore extends Widget
     }
 
     public void writeItemInfoForContainer(ArrayList<ItemWatcher.ItemInfo> iis) {
-
+        if (poolManager == null || !poolManager.isConnectionReady()) {
+            return; // Database not ready
+        }
         ItemWatcher itemWatcher = new ItemWatcher(iis);
         try {
             itemWatcher.connection = poolManager.getConnection();
+            if (itemWatcher.connection == null) {
+                return;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
+            return;
         }
         poolManager.submitTask(itemWatcher);
-
     }
 
     final ArrayList<String> targetGobs = new ArrayList<>();
 
     public void searchContainer(NSearchItem item) {
-
+        if (poolManager == null || !poolManager.isConnectionReady()) {
+            return; // Database not ready
+        }
         NGlobalSearchItems gsi = new NGlobalSearchItems(item);
         try {
             gsi.connection = poolManager.getConnection();
+            if (gsi.connection == null) {
+                return;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
+            return;
         }
         poolManager.submitTask(gsi);
-
     }
 }
