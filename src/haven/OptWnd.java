@@ -817,6 +817,7 @@ public class OptWnd extends Window {
 //		y = addbtn(cont, "Player FOV box", NMapView.kb_displayfov, y);
 //		y = addbtn(cont, "Grid box", NMapView.kb_displaygrid, y);
 		y = addbtn(cont, "Toggle bounding boxes", NMapView.kb_togglebb, y);
+		y = addbtn(cont, "Clear damage overlays", NMapView.kb_cleardmg, y);
 
 		y = cont.adda(new Label("Tool belt"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
 		for(int i = 0 ; i < (Integer)NConfig.get(NConfig.Key.numbelts); i++)
