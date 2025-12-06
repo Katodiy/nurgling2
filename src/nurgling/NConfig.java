@@ -345,6 +345,9 @@ public class NConfig
         arearadprop.add(new NAreaRad("gfx/kritter/walrus/walrus", 100));
         arearadprop.add(new NAreaRad("gfx/kritter/orca/orca", 100));
         arearadprop.add(new NAreaRad("gfx/kritter/wolverine/wolverine", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/eagleowl/eagleowl", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/goldeneagle/goldeneagle", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/goat/goat", 100));
         arearadprop.add(new NAreaRad("gfx/kritter/troll/troll", 200));
         conf.put(Key.animalrad, arearadprop);
 
