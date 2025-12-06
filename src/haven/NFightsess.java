@@ -140,6 +140,8 @@ public class NFightsess extends Fightsess {
         @Override
         public Object tooltip(Coord c, Widget prev) {
             if(parent.fv == null) return null;
+            // Don't show tooltips if not in combat
+            if(parent.fv.lsrel.isEmpty()) return null;
 
             Coord center = sz.div(2);
             Coord buffc = center.sub(0, UI.scale(50));
@@ -267,6 +269,9 @@ public class NFightsess extends Fightsess {
 
         @Override
         public Object tooltip(Coord c, Widget prev) {
+            // Don't show tooltips if not in combat
+            if(parent.fv == null || parent.fv.lsrel.isEmpty()) return null;
+            
             Coord center = sz.div(2);
             final int rl = 5;
             for(int i = 0; i < parent.actions.length; i++) {

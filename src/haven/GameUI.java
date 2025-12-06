@@ -46,6 +46,8 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
     public GobIcon.Settings iconconf;
     public MiniMap mmap;
     public Fightview fv;
+    private NDraggableWidget fightBuffsInfoWdg;
+    private NDraggableWidget fightActionsWdg;
     final protected List<Widget> meters = new LinkedList<Widget>();
 	public Speedget speedget = null;
     private Text lastmsg;
@@ -632,8 +634,17 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Notice.
 	} else if(place == "fsess") {
 	    NFightsess fsess = (NFightsess)child;
 	    add(fsess);
-	    add(new NDraggableWidget(fsess.buffsAndInfo, "FightBuffsInfo", fsess.buffsAndInfo.sz.add(NDraggableWidget.delta)));
-	    add(new NDraggableWidget(fsess.actionsWidget, "FightActions", fsess.actionsWidget.sz.add(NDraggableWidget.delta)));
+	    // Destroy old widgets if they exist to ensure only one instance
+	    if(fightBuffsInfoWdg != null) {
+	        fightBuffsInfoWdg.destroy();
+	        fightBuffsInfoWdg = null;
+	    }
+	    if(fightActionsWdg != null) {
+	        fightActionsWdg.destroy();
+	        fightActionsWdg = null;
+	    }
+	    fightBuffsInfoWdg = add(new NDraggableWidget(fsess.buffsAndInfo, "FightBuffsInfo", fsess.buffsAndInfo.sz.add(NDraggableWidget.delta)));
+	    fightActionsWdg = add(new NDraggableWidget(fsess.actionsWidget, "FightActions", fsess.actionsWidget.sz.add(NDraggableWidget.delta)));
 	} else if(place == "inv") {
 	    invwnd = new Hidewnd(Coord.z, "Inventory") {
 		    public void cresize(Widget ch) {
