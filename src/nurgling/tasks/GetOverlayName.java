@@ -19,9 +19,9 @@ public class GetOverlayName extends NTask
     {
         for(Gob.Overlay ol : gob.ols)
         {
-            if(ol.spr instanceof ModSprite)
+            if(ol.spr != null && ol.spr.res != null)
             {
-                return ol.spr.res!=null && !(name = ol.spr.res.name).isEmpty();
+                return !(name = ol.spr.res.name).isEmpty();
             }
         }
         return true;

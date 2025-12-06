@@ -1,7 +1,6 @@
 package nurgling.tasks;
 
 import haven.Gob;
-import haven.ModSprite;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
@@ -26,8 +25,8 @@ public class IsOverlay extends NTask
     {
 
         for (Gob.Overlay ol : gob.ols) {
-            if(ol.spr instanceof ModSprite) {
-                if(NParser.checkName((ol.spr).res.name,name)){
+            if(ol.spr != null && ol.spr.res != null) {
+                if(NParser.checkName(ol.spr.res.name, name)){
                     found = true;
                     return true;
                 }

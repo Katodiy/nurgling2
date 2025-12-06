@@ -176,7 +176,7 @@ public class NParser
      */
     public static boolean isIt(Gob.Overlay ol, NAlias name)
     {
-        return (ol.spr instanceof ModSprite && ol.spr.res!=null && NParser.checkName(ol.spr.res.name,name));
+        return (ol.spr != null && ol.spr.res != null && NParser.checkName(ol.spr.res.name, name));
     }
 
     /**
