@@ -42,6 +42,7 @@ public class NMapView extends MapView
     public static final KeyBinding kb_togglebb = KeyBinding.get("togglebb",  KeyMatch.forcode(KeyEvent.VK_N, KeyMatch.C));
     public static final KeyBinding kb_cyclebbmode = KeyBinding.get("cyclebbmode",  KeyMatch.forcode(KeyEvent.VK_N, KeyMatch.C | KeyMatch.S));
     public static final KeyBinding kb_togglenature = KeyBinding.get("togglenature",  KeyMatch.forcode(KeyEvent.VK_H, KeyMatch.C));
+    public static final KeyBinding kb_cleardmg = KeyBinding.get("cleardmg", KeyMatch.forcode(KeyEvent.VK_D, KeyMatch.C | KeyMatch.S));
     public static final int MINING_OVERLAY = - 1;
     public NGlobalCoord lastGC = null;
 
@@ -1126,6 +1127,12 @@ public class NMapView extends MapView
                     break;
             }
             NUtils.getGameUI().msg("Bounding Box Mode: " + displayMsg);
+        }
+        if(kb_cleardmg.key().match(ev))
+        {
+            NDMGOverlay.clearAll();
+            NUtils.getGameUI().msg("Damage overlays cleared");
+            return true;
         }
         if(kb_togglenature.key().match(ev)) {
             boolean val = (Boolean) NConfig.get(NConfig.Key.hideNature);
