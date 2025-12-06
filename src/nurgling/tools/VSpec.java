@@ -2628,8 +2628,8 @@ public class VSpec {
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/plum-yester\",\"name\":\"Yesteryear's Plum\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/quince-yester\",\"name\":\"Yesteryear's Quince\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/apple-yester\",\"name\":\"Yesteryear's Red Apple\"}"));
-        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/crabapple\",\"name\":\"Crabapple\"}"));
-        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/crabapple-yester\",\"name\":\"Yesteryear's Crabapple\"}"));
+        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-crabappletree\",\"name\":\"Crabapple\"}"));
+        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-crabappletree-yester\",\"name\":\"Yesteryear's Crabapple\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/cork\",\"name\":\"Cork\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/applecore\",\"name\":\"Red Apple Core\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-maple\",\"name\":\"Maple Samara\"}"));

@@ -16,7 +16,7 @@ public class NStudyReport extends Widget {
     public int totalLph = 0;
     
     private static final int PADDING = UI.scale(20);
-    private static final int INFO_HEIGHT = UI.scale(80);
+    private static final int INFO_HEIGHT = UI.scale(100);
     private Widget fixedContainer;
     private ICheckBox btnLock;
     public boolean locked = false;
@@ -146,7 +146,7 @@ public class NStudyReport extends Widget {
         int infoY = studySz.y + PADDING + UI.scale(5);
         int labelX = PADDING;
         int valueX = containerSz.x - PADDING;
-        int lineHeight = UI.scale(18);
+        int lineHeight = UI.scale(20);
         
         Widget plbl, pval;
         plbl = fixedContainer.add(new Label("Attention:"), new Coord(labelX, infoY));
