@@ -12,6 +12,7 @@ import nurgling.overlays.NDirArrow;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
+import nurgling.actions.test.TESTAuxIterProc;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -213,6 +214,11 @@ public class NAlarmWdg extends Widget
     }
 
     private void addAlarm(Long id) {
+        // Skip standard alarm processing if AuxIterProc bot is running
+        if (!TESTAuxIterProc.stop.get()) {
+            return;
+        }
+        
         synchronized (alarms) {
             NAlarmManager.play("alarm/alarm");
             alarms.add(id);
@@ -225,6 +231,11 @@ public class NAlarmWdg extends Widget
      * Check if auto hearth or auto logout should be triggered
      */
     private void checkAutoActions() {
+        // Skip auto actions if AuxIterProc bot is running
+        if (!TESTAuxIterProc.stop.get()) {
+            return;
+        }
+        
         // Check player pose to avoid re-triggering while already logging out or teleporting
         Gob player = NUtils.player();
         if (player == null) {
