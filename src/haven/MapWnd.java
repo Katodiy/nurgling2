@@ -273,14 +273,15 @@ public class MapWnd extends Window implements Console.Directory {
 	    super(file);
 	}
 
-	public void drawgrid(GOut g, Coord ul, DisplayGrid disp) {
-	    super.drawgrid(g, ul, disp);
+	@Override
+	protected void drawgridOverlays(GOut g, Coord ul, DisplayGrid disp, Coord size) {
 	    for(String tag : overlays) {
 		try {
 		    Tex img = disp.olimg(tag);
 		    if(img != null) {
 			g.chcolor(255, 255, 255, olalpha);
-			g.image(img, ul, UI.scale(img.sz()));
+			// Use the same size as the grid tile for correct scaling
+			g.image(img, ul, size);
 		    }
 		} catch(Loading l) {
 		}

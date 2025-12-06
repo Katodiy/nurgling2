@@ -1059,20 +1059,39 @@ NMiniMap extends MiniMap {
             }
         } catch(Loading l) {
         }
+        // Call overlay hook with size for correct scaling
+        drawgridOverlays(g, ul, disp, size);
+    }
+    
+    /**
+     * Hook method for subclasses to add overlay rendering.
+     * Called after base grid image is drawn.
+     * @param g Graphics context
+     * @param ul Upper-left screen coordinate
+     * @param disp Display grid data
+     * @param size Calculated size for rendering (matches grid scaling)
+     */
+    protected void drawgridOverlays(GOut g, Coord ul, DisplayGrid disp, Coord size) {
+        // Default: no overlays. Subclasses (like MapWnd.View) can override.
     }
     
     // Compatibility method for old code paths
     public void drawgrid(GOut g, Coord ul, DisplayGrid disp) {
+        float scaleFactor = getScaleFactor();
+        Coord imgsz = null;
         try {
             Tex img = disp.img();
             if(img != null) {
-                float scaleFactor = getScaleFactor();
                 // Use double precision and round to avoid gaps between tiles
                 Coord2d imgsizDouble = new Coord2d(UI.scale(img.sz())).mul(scaleFactor);
-                Coord imgsz = new Coord((int)Math.round(imgsizDouble.x), (int)Math.round(imgsizDouble.y));
+                imgsz = new Coord((int)Math.round(imgsizDouble.x), (int)Math.round(imgsizDouble.y));
                 g.image(img, ul, imgsz);
             }
         } catch(Loading l) {
+        }
+        // Call overlay hook with calculated size
+        if(imgsz != null) {
+            drawgridOverlays(g, ul, disp, imgsz);
         }
     }
 
