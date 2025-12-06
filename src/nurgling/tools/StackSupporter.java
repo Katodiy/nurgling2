@@ -20,6 +20,7 @@ public class StackSupporter {
         customStackSizes.put("Wolf's Claw", 4);
         customStackSizes.put("Clove of Garlic", 5);
         customStackSizes.put("Stinging Nettle", 4);
+        customStackSizes.put("Yarrow", 4)
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
         size3.add("Onion");
