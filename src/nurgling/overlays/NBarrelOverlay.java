@@ -34,9 +34,9 @@ public class NBarrelOverlay extends NObjectTexLabel
         
         boolean found = false;
         for (Gob.Overlay ol : gob.ols) {
-            if (ol.spr instanceof StaticSprite) {
+            if (ol.spr instanceof ModSprite) {
                 found = true;
-                String buf = ((StaticSprite)ol.spr).toString();
+                String buf = ((ModSprite)ol.spr).toString();
                 String ntext = buf.substring(buf.indexOf("barrel-")+7,buf.indexOf(">"));
                 if(!ntext.equals(text)) {
                     text = ntext;

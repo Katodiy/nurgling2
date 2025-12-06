@@ -972,7 +972,7 @@ public class NGob
         if (name != null)
             if (name.equals("gfx/terobjs/dframe") || name.equals("gfx/terobjs/barrel"))
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr instanceof ModSprite)
                 {
                     // Calculate and cache the mask value immediately
                     cachedMask = calculateMask();
@@ -1044,19 +1044,19 @@ public class NGob
         if (name != null)
             if (name.equals("gfx/terobjs/dframe") || name.equals("gfx/terobjs/barrel"))
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr instanceof ModSprite)
                 {
-                    // Check if there are other StaticSprite overlays remaining
-                    boolean hasOtherStaticSprites = false;
+                    // Check if there are other ModSprite overlays remaining
+                    boolean hasOtherModSprites = false;
                     for (Gob.Overlay other : parent.ols) {
-                        if (other != ol && other.spr instanceof StaticSprite) {
-                            hasOtherStaticSprites = true;
+                        if (other != ol && other.spr instanceof ModSprite) {
+                            hasOtherModSprites = true;
                             break;
                         }
                     }
                     
                     // Update cache based on remaining overlays
-                    if (!hasOtherStaticSprites) {
+                    if (!hasOtherModSprites) {
                         cachedMask = 0; // Set to FREE
                     }
                     
@@ -1090,7 +1090,7 @@ public class NGob
         {
             for (Gob.Overlay ol : parent.ols)
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr instanceof ModSprite)
                 {
                     // Check if item is blood/fishraw/windweed (but not dry windweed)
                     if (NParser.isIt(ol, new NAlias("-blood", "-fishraw", "-windweed")) && !NParser.isIt(ol, new NAlias("-windweed-dry")))
@@ -1107,7 +1107,7 @@ public class NGob
         {
             for (Gob.Overlay ol : parent.ols)
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr instanceof ModSprite)
                 {
                     return 4;
                 }
@@ -1146,7 +1146,7 @@ public class NGob
         {
             for (Gob.Overlay ol : parent.ols)
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr instanceof ModSprite)
                 {
                     // Check if item is blood/fishraw/windweed (but not dry windweed)
                     if (NParser.isIt(ol, new NAlias("-blood", "-fishraw", "-windweed")) && !NParser.isIt(ol, new NAlias("-windweed-dry")))
@@ -1163,7 +1163,7 @@ public class NGob
         {
             for (Gob.Overlay ol : parent.ols)
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr instanceof ModSprite)
                 {
                     return 4;
                 }

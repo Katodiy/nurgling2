@@ -522,7 +522,7 @@ public class NUtils
             NAlias name
     ) {
         for (Gob.Overlay ol : gob.ols) {
-            if(ol.spr instanceof StaticSprite) {
+            if(ol.spr instanceof ModSprite) {
                 if(NParser.checkName((ol.spr).res.name,name))
                     return true;
             }
@@ -569,7 +569,7 @@ public class NUtils
         if(barrel == null)
             return false;
         for (Gob.Overlay ol : barrel.ols) {
-            if(ol.spr instanceof StaticSprite) {
+            if(ol.spr instanceof ModSprite) {
                 return true;
             }
         }
@@ -580,8 +580,8 @@ public class NUtils
         if(barrel == null)
             return null;
         for (Gob.Overlay ol : barrel.ols) {
-            if(ol.spr instanceof StaticSprite) {
-                return ((StaticSprite)ol.spr).res.name;
+            if(ol.spr instanceof ModSprite) {
+                return ol.spr.res.name;
             }
         }
         return null;
