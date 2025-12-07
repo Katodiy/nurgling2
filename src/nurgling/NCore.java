@@ -382,17 +382,6 @@ public class NCore extends Widget
                 return;
             }
 
-            // Проверяем соединение перед использованием
-            try {
-                if (connection == null || connection.isClosed() || !connection.isValid(2)) {
-                    System.err.println("NGItemWriter: Connection is not valid, skipping write");
-                    return;
-                }
-            } catch (SQLException e) {
-                System.err.println("NGItemWriter: Failed to validate connection: " + e.getMessage());
-                return;
-            }
-
             try {
                 // Создаем prepared statements с правильными SQL-запросами
                 PreparedStatement recipeStatement = connection.prepareStatement(getInsertRecipeSQL());
@@ -446,61 +435,28 @@ public class NCore extends Widget
                 connection.commit();
 
             } catch (SQLException e) {
-                // Проверяем, является ли это ошибкой соединения
-                boolean isConnectionError = isConnectionError(e);
-                
-                // Пробуем откатить транзакцию, только если соединение еще живо
-                if (!isConnectionError) {
-                    try {
-                        if (connection != null && !connection.isClosed()) {
-                            connection.rollback();
-                        }
-                    } catch (SQLException ex) {
-                        // Игнорируем ошибки отката при закрытом соединении
-                        if (!isConnectionError(ex)) {
-                            ex.printStackTrace();
-                        }
+                try {
+                    // В случае ошибки откатываем транзакцию
+                    if (connection != null) {
+                        connection.rollback();
                     }
-                }
-
-                // Для ошибок соединения - просто логируем кратко
-                if (isConnectionError) {
-                    System.err.println("NGItemWriter: Database connection lost, data not saved");
-                    return;
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
                 }
 
                 // Для PostgreSQL проверяем код ошибки нарушения уникальности
                 if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                    String sqlState = e.getSQLState();
-                    if (sqlState == null || !sqlState.equals("23505")) {
+                    if (!e.getSQLState().equals("23505")) {
                         e.printStackTrace();
                     }
                 }
                 // Для SQLite просто игнорируем ошибки уникальности (благодаря INSERT OR IGNORE)
                 else if ((Boolean) NConfig.get(NConfig.Key.sqlite)) {
-                    String msg = e.getMessage();
-                    if (msg == null || !msg.contains("UNIQUE constraint")) {
+                    if (!e.getMessage().contains("UNIQUE constraint")) {
                         e.printStackTrace();
                     }
                 }
             }
-        }
-        
-        private boolean isConnectionError(SQLException e) {
-            String msg = e.getMessage();
-            if (msg != null && (msg.contains("connection has been closed") || 
-                               msg.contains("I/O error") ||
-                               msg.contains("Connection refused") ||
-                               msg.contains("Connection reset"))) {
-                return true;
-            }
-            // PostgreSQL connection error states
-            String sqlState = e.getSQLState();
-            if (sqlState != null && (sqlState.startsWith("08") || // Connection exception
-                                     sqlState.equals("57P01"))) { // Admin shutdown
-                return true;
-            }
-            return false;
         }
     }
 

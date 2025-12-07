@@ -33,7 +33,11 @@ public class ContainerWatcher  implements Runnable {
             // Check if task timed out (critical exit)
             if (waitTask.criticalExit) {
                 System.err.println("ContainerWatcher: Timeout waiting for hash and gcoord for gob " + parentGob.id);
-                safeRollback();
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackException) {
+                    rollbackException.printStackTrace();
+                }
                 return;
             }
             
@@ -45,50 +49,17 @@ public class ContainerWatcher  implements Runnable {
             preparedStatement.executeUpdate();
             connection.commit();
         } catch (SQLException e) {
-            // Проверяем, является ли это ошибкой соединения
-            if (isConnectionError(e)) {
-                System.err.println("ContainerWatcher: Database connection lost, data not saved");
-                return;
-            }
-            
-            // Игнорируем ошибки нарушения уникальности
-            String sqlState = e.getSQLState();
-            if (sqlState == null || !sqlState.equals("23505")) {
+            if (e.getSQLState()!=null && !e.getSQLState().equals("23505")) {  // Код ошибки для нарушения уникальности
                 e.printStackTrace();
             }
-            safeRollback();
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackException) {
+                rollbackException.printStackTrace();
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-    
-    private void safeRollback() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.rollback();
-            }
-        } catch (SQLException rollbackException) {
-            // Игнорируем ошибки отката при закрытом соединении
-            if (!isConnectionError(rollbackException)) {
-                rollbackException.printStackTrace();
-            }
-        }
-    }
-    
-    private boolean isConnectionError(SQLException e) {
-        String msg = e.getMessage();
-        if (msg != null && (msg.contains("connection has been closed") || 
-                           msg.contains("I/O error") ||
-                           msg.contains("Connection refused") ||
-                           msg.contains("Connection reset"))) {
-            return true;
-        }
-        // PostgreSQL connection error states
-        String sqlState = e.getSQLState();
-        if (sqlState != null && (sqlState.startsWith("08") || // Connection exception
-                                 sqlState.equals("57P01"))) { // Admin shutdown
-            return true;
-        }
-        return false;
+
     }
 }
