@@ -91,15 +91,40 @@ public class DBPoolManager {
             asyncUpdateConnection();
             return null; // Return null to indicate connection not ready
         }
+        // Validate that connection is actually usable (with 3 second timeout)
+        try {
+            if (!connection.isValid(3)) {
+                System.err.println("Database connection validation failed, triggering reconnect");
+                asyncUpdateConnection();
+                return null;
+            }
+        } catch (SQLException e) {
+            System.err.println("Database connection validation error: " + e.getMessage());
+            asyncUpdateConnection();
+            return null;
+        }
         return connection;
     }
     
     public boolean isConnectionReady() {
         try {
-            return connection != null && !connection.isClosed();
+            if (connection == null || connection.isClosed()) {
+                return false;
+            }
+            // Also check if connection is actually valid
+            return connection.isValid(1);
         } catch (SQLException e) {
             return false;
         }
+    }
+    
+    /**
+     * Called by tasks when they detect a connection failure.
+     * This will trigger an async reconnection attempt.
+     */
+    public void reportConnectionFailure() {
+        System.err.println("Connection failure reported, triggering reconnect");
+        asyncUpdateConnection();
     }
 
     public Future<?> submitTask(Runnable task) {

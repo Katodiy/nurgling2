@@ -221,7 +221,7 @@ public class Connector implements Action {
             } else if (e instanceof IOException) {
                 errorMsg += ": connection failed";
             }
-            NUtils.getGameUI().error(errorMsg);
+            System.err.println(errorMsg);
         }
     }
 }

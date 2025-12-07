@@ -39,11 +39,27 @@ public class ItemWatcher implements Runnable {
             return;
         }
 
+        // Проверяем соединение перед использованием
+        try {
+            if (connection == null || connection.isClosed() || !connection.isValid(2)) {
+                System.err.println("ItemWatcher: Connection is not valid, skipping write");
+                return;
+            }
+        } catch (SQLException e) {
+            System.err.println("ItemWatcher: Failed to validate connection: " + e.getMessage());
+            return;
+        }
+
         try {
             deleteItems();
             insertItems();
             connection.commit();
         } catch (SQLException e) {
+            // Проверяем, является ли это ошибкой соединения
+            if (isConnectionError(e)) {
+                System.err.println("ItemWatcher: Database connection lost, data not saved");
+                return;
+            }
             rollback();
             e.printStackTrace();
         }
@@ -89,6 +105,23 @@ public class ItemWatcher implements Runnable {
             }
         } catch (SQLException ignore) {
         }
+    }
+    
+    private boolean isConnectionError(SQLException e) {
+        String msg = e.getMessage();
+        if (msg != null && (msg.contains("connection has been closed") || 
+                           msg.contains("I/O error") ||
+                           msg.contains("Connection refused") ||
+                           msg.contains("Connection reset"))) {
+            return true;
+        }
+        // PostgreSQL connection error states
+        String sqlState = e.getSQLState();
+        if (sqlState != null && (sqlState.startsWith("08") || // Connection exception
+                                 sqlState.equals("57P01"))) { // Admin shutdown
+            return true;
+        }
+        return false;
     }
 
     // Метод для генерации хэша предмета

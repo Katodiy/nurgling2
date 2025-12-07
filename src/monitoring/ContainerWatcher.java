@@ -19,6 +19,17 @@ public class ContainerWatcher  implements Runnable {
 
     @Override
     public void run() {
+        // Проверяем соединение перед использованием
+        try {
+            if (connection == null || connection.isClosed() || !connection.isValid(2)) {
+                System.err.println("ContainerWatcher: Connection is not valid, skipping write");
+                return;
+            }
+        } catch (SQLException e) {
+            System.err.println("ContainerWatcher: Failed to validate connection: " + e.getMessage());
+            return;
+        }
+
         try {
             // Wait for hash and gcoord with limited timeout (200 ticks default)
             NTask waitTask = new NTask() {
@@ -32,11 +43,7 @@ public class ContainerWatcher  implements Runnable {
             // Check if task timed out (critical exit)
             if (waitTask.criticalExit) {
                 System.err.println("ContainerWatcher: Timeout waiting for hash and gcoord for gob " + parentGob.id);
-                try {
-                    connection.rollback();
-                } catch (SQLException rollbackException) {
-                    rollbackException.printStackTrace();
-                }
+                safeRollback();
                 return;
             }
             
@@ -48,17 +55,50 @@ public class ContainerWatcher  implements Runnable {
             preparedStatement.executeUpdate();
             connection.commit();
         } catch (SQLException e) {
-            if (e.getSQLState()!=null && !e.getSQLState().equals("23505")) {  // Код ошибки для нарушения уникальности
+            // Проверяем, является ли это ошибкой соединения
+            if (isConnectionError(e)) {
+                System.err.println("ContainerWatcher: Database connection lost, data not saved");
+                return;
+            }
+            
+            // Игнорируем ошибки нарушения уникальности
+            String sqlState = e.getSQLState();
+            if (sqlState == null || !sqlState.equals("23505")) {
                 e.printStackTrace();
             }
-            try {
-                connection.rollback();
-            } catch (SQLException rollbackException) {
-                rollbackException.printStackTrace();
-            }
+            safeRollback();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
+    }
+    
+    private void safeRollback() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.rollback();
+            }
+        } catch (SQLException rollbackException) {
+            // Игнорируем ошибки отката при закрытом соединении
+            if (!isConnectionError(rollbackException)) {
+                rollbackException.printStackTrace();
+            }
+        }
+    }
+    
+    private boolean isConnectionError(SQLException e) {
+        String msg = e.getMessage();
+        if (msg != null && (msg.contains("connection has been closed") || 
+                           msg.contains("I/O error") ||
+                           msg.contains("Connection refused") ||
+                           msg.contains("Connection reset"))) {
+            return true;
+        }
+        // PostgreSQL connection error states
+        String sqlState = e.getSQLState();
+        if (sqlState != null && (sqlState.startsWith("08") || // Connection exception
+                                 sqlState.equals("57P01"))) { // Admin shutdown
+            return true;
+        }
+        return false;
     }
 }
