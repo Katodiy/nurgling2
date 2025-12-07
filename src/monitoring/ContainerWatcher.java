@@ -1,6 +1,7 @@
 package monitoring;
 
 import haven.Gob;
+import nurgling.NConfig;
 import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.tasks.NTask;
@@ -19,17 +20,6 @@ public class ContainerWatcher  implements Runnable {
 
     @Override
     public void run() {
-        // Проверяем соединение перед использованием
-        try {
-            if (connection == null || connection.isClosed() || !connection.isValid(2)) {
-                System.err.println("ContainerWatcher: Connection is not valid, skipping write");
-                return;
-            }
-        } catch (SQLException e) {
-            System.err.println("ContainerWatcher: Failed to validate connection: " + e.getMessage());
-            return;
-        }
-
         try {
             // Wait for hash and gcoord with limited timeout (200 ticks default)
             NTask waitTask = new NTask() {

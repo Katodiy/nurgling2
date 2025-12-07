@@ -49,7 +49,11 @@ public class AutoDrink implements Action
 
             if(checkWater()) {
                 NUtils.getUI().dropLastError();
-                for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae) {
+                NGameUI gameUI = NUtils.getGameUI();
+                if (gameUI == null || gameUI.menu == null) {
+                    continue;
+                }
+                for (MenuGrid.Pagina pag : gameUI.menu.paginae) {
                     if (pag.button() != null && pag.button().name().equals("Drink")) {
 
                         pag.button().use(new MenuGrid.Interaction(1, 0));

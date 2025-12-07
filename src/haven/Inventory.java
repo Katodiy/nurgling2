@@ -67,7 +67,7 @@ public class Inventory extends Widget implements DTarget {
 		NInventory ni = new NInventory((Coord) args[0]);
 		if(ui.core.getLastActions()!=null) {
 			ni.parentGob = ui.core.getLastActions().gob;
-			if((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+			if(false && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
 				ui.core.writeContainerInfo(ni.parentGob);
 			}
 		}
