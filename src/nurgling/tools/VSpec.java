@@ -1393,6 +1393,12 @@ public class VSpec {
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-redcurrant-yester\",\"name\":\"Yesteryear's Redcurrant Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-sandthorn-yester\",\"name\":\"Yesteryear's Seaberry Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/woodstrawberry-yester\",\"name\":\"Yesteryear's Wood Strawberry\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/sandthorn-yester\",\"name\":\"Yesteryear's Seaberries\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-beech\",\"name\":\"Beech Nuts\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-redcurrant-yester\",\"name\":\"Yesteryear's Redcurrant\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-dogrose\",\"name\":\"Dog Rose Hips\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackberry-yester\",\"name\":\"Yesteryear's Blackberry\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackberrybush\",\"name\":\"Blackberry\"}"));
         categories.put("Berry", berries);
 
         ArrayList<JSONObject> fruits = new ArrayList<>();
