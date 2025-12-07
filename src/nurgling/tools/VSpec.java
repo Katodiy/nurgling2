@@ -1689,6 +1689,7 @@ public class VSpec {
         flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/snapdragon\",\"name\":\"Uncommon Snapdragon\"}"));
         flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/wintergreen\",\"name\":\"Wintergreen\"}"));
         flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/yarrow\",\"name\":\"Yarrow\"}"));
+        flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/yansy\",\"name\":\"Tansy\"}"));
         categories.put("Flower", flowers);
 
         ArrayList<JSONObject> fats = new ArrayList<>();
