@@ -1352,6 +1352,7 @@ public class VSpec {
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/walnut\",\"name\":\"Walnut\"}"));
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-oak\",\"name\":\"Oak Seed\"}"));
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-witherstand\",\"name\":\"Witherstand Seed\"}"));
+        nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-beech\",\"name\":\"Beech Nuts\"}"));
         categories.put("Nuts", nuts);
 
         ArrayList<JSONObject> cones = new ArrayList<>();
@@ -1393,6 +1394,11 @@ public class VSpec {
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-redcurrant-yester\",\"name\":\"Yesteryear's Redcurrant Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-sandthorn-yester\",\"name\":\"Yesteryear's Seaberry Seed\"}"));
         berries.add(new JSONObject("{\"static\":\"gfx/invobjs/woodstrawberry-yester\",\"name\":\"Yesteryear's Wood Strawberry\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/sandthorn-yester\",\"name\":\"Yesteryear's Seaberries\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-redcurrant-yester\",\"name\":\"Yesteryear's Redcurrant\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-dogrose\",\"name\":\"Dog Rose Hips\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackberry-yester\",\"name\":\"Yesteryear's Blackberry\"}"));
+        berries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackberrybush\",\"name\":\"Blackberry\"}"));
         categories.put("Berry", berries);
 
         ArrayList<JSONObject> fruits = new ArrayList<>();
@@ -1683,6 +1689,7 @@ public class VSpec {
         flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/snapdragon\",\"name\":\"Uncommon Snapdragon\"}"));
         flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/wintergreen\",\"name\":\"Wintergreen\"}"));
         flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/yarrow\",\"name\":\"Yarrow\"}"));
+        flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/tansy\",\"name\":\"Tansy\"}"));
         categories.put("Flower", flowers);
 
         ArrayList<JSONObject> fats = new ArrayList<>();
