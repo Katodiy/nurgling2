@@ -33,7 +33,7 @@ public class TESTAuxIterProc implements Action {
     private long lastInvocationTs = 0;
     private static final long INVOKE_THRESHOLD_MS = 3000;
     
-    public static final AtomicBoolean stop = new AtomicBoolean(false);
+    public static final AtomicBoolean stop = new AtomicBoolean(true);
     
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
@@ -114,7 +114,7 @@ public class TESTAuxIterProc implements Action {
         
         NAlarmManager.play("alarm/troll");
         
-        dispatchWithThrottle(gui, "!!!!!! " + (metadata != null ? "[" + metadata + "]" : ""));
+        dispatchWithThrottle(gui, "!!!!!!" + (metadata != null ? "[" + metadata + "]" : ""));
         
         gui.msg("PLAYER!" + (metadata != null ? ": " + metadata : "!"), Color.RED);
     }
