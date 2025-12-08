@@ -21,12 +21,12 @@ public class TakeVehicle implements Action {
         if(vehicle==null)
             vehicle = Finder.findGob ( name );
 
-        if(!NUtils.player().pose().contains("carry")) {
+        if(!NUtils.player().pose().contains("borka/carry")) {
             NUtils.addTask(new WaitPose(NUtils.player(), "idle"));
         }
-        if(!NUtils.player().pose().contains("carry")) {
+        if(!NUtils.player().pose().contains("borka/carry")) {
             NUtils.rclickGob(vehicle);
-            NUtils.addTask(new WaitPose(NUtils.player(), "carry"));
+            NUtils.addTask(new WaitPose(NUtils.player(), "borka/carry"));
         }
 
         return Results.SUCCESS();
