@@ -140,7 +140,7 @@ public class StackSupporter {
         catExceptions.add("Clean Squirrel Carcass");
         catExceptions.add("Clean Rabbit Carcass");
     }
-    private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed");
+    private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
     public static boolean isStackable(NInventory inv, String name)
     {
         Window win = inv.getparent(Window.class);
