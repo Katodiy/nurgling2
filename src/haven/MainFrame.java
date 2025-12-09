@@ -27,6 +27,8 @@
 package haven;
 
 import nurgling.NConfig;
+import nurgling.headless.Headless;
+import nurgling.headless.HeadlessMain;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -497,6 +499,12 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
     }
     
     public static void main(final String[] args) {
+	// Check for headless mode FIRST, before any other initialization
+	if (Headless.hasHeadlessFlag(args)) {
+	    HeadlessMain.main(args);
+	    return;
+	}
+
 	config = new NConfig();
 	config.read();
 	

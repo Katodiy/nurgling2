@@ -10,14 +10,14 @@ public class NCharlist extends Charlist {
     private Dropbox<String> worldSelector;
     private String selectedWorld = null; // null means "All"
     private List<Char> filteredChars = new ArrayList<>();
-    
+
     public NCharlist(int height) {
         super(height);
         instance = this;
-        
+
         // Load saved world selection
         selectedWorld = (String) NConfig.get(NConfig.Key.selectedWorld);
-        
+
         // Create world selector combobox
         worldSelector = new Dropbox<String>(UI.scale(150), 10, UI.scale(16)) {
             @Override
@@ -26,17 +26,17 @@ public class NCharlist extends Charlist {
                 if(i == 0) return "All Worlds";
                 return worlds.get(i - 1);
             }
-            
+
             @Override
             protected int listitems() {
                 return getWorlds().size() + 1; // +1 for "All"
             }
-            
+
             @Override
             protected void drawitem(GOut g, String item, int i) {
                 g.text(item, Coord.z);
             }
-            
+
             @Override
             public void change(String item) {
                 super.change(item);
@@ -52,11 +52,11 @@ public class NCharlist extends Charlist {
                 updateBackground();
             }
         };
-        
+
         // Position combobox above the character list (inside the charlist widget)
         // Will be repositioned when the widget is resized
     }
-    
+
     @Override
     protected void added() {
         super.added();
@@ -65,7 +65,7 @@ public class NCharlist extends Charlist {
             parent.add(worldSelector, c.x, c.y - worldSelector.sz.y - UI.scale(10));
         }
     }
-    
+
     private List<String> getWorlds() {
         Set<String> worlds = new LinkedHashSet<>();
         synchronized(chars) {
@@ -77,7 +77,7 @@ public class NCharlist extends Charlist {
         }
         return new ArrayList<>(worlds);
     }
-    
+
     private void updateFilteredList() {
         filteredChars.clear();
         synchronized(chars) {
@@ -94,7 +94,7 @@ public class NCharlist extends Charlist {
             }
         }
     }
-    
+
     private void updateBackground() {
         // Find background Img in parent and update it
         if(parent != null) {
@@ -109,7 +109,7 @@ public class NCharlist extends Charlist {
             }
         }
     }
-    
+
     // Override to return filtered list
     @Override
     protected List<Char> getDisplayChars() {
