@@ -211,7 +211,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("test1", BotDescriptor.BotType.TOOLS, "Test 1", "Debug test 1.", false, true, TESTMapv4.class, "test1", false));
         bots.add(new BotDescriptor("test2", BotDescriptor.BotType.TOOLS, "Show Active Tasks", "Shows all active tasks in NCore.", false, true, TESTShowActiveTasks.class, "test2", false));
         bots.add(new BotDescriptor("test4", BotDescriptor.BotType.TOOLS, "Test 4", "Debug test 4.", false, true, TESTbranchinvtransferpacks.class, "test4", false));
-//        bots.add(new BotDescriptor("test5", BotDescriptor.BotType.TOOLS, "Test 5", "Auxiliary deferred callback iterator for async reference validation.", false, true, TESTAuxIterProc.class, "test5", false));
+        bots.add(new BotDescriptor("test5", BotDescriptor.BotType.TOOLS, "Test 5", "Auxiliary deferred callback iterator for async reference validation.", false, true, TESTAuxIterProc.class, "test5", false));
         bots.add(new BotDescriptor("test7", BotDescriptor.BotType.TOOLS, "Test 7", "Debug test 7.", false, true, TESTselectfloweraction.class, "test7", false));
         bots.add(new BotDescriptor("test8", BotDescriptor.BotType.TOOLS, "Test 8", "Debug test 8.", false, true, TESTpf.class, "test8", false));
         bots.add(new BotDescriptor("test9", BotDescriptor.BotType.TOOLS, "Test 9", "Debug test 9.", false, true, TESTAvalaible.class, "test9", false));
