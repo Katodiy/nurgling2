@@ -52,6 +52,7 @@ public class NContext {
         contcaps.put("gfx/terobjs/birchbasket", "Birch Basket");
         contcaps.put("gfx/terobjs/wbasket", "Basket");
         contcaps.put("gfx/terobjs/thatchbasket", "Basket");
+        contcaps.put("gfx/terobjs/map/stonekist", "Stonekist");
         contcaps.put("gfx/terobjs/exquisitechest", "Exquisite Chest");
         contcaps.put("gfx/terobjs/furn/table-stone", "Table");
         contcaps.put("gfx/terobjs/furn/table-rustic", "Table");
