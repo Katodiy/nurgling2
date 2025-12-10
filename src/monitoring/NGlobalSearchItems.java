@@ -1,8 +1,10 @@
 package monitoring;
 
+import nurgling.DBPoolManager;
 import nurgling.NConfig;
 import nurgling.tools.NSearchItem;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,29 +12,39 @@ import java.util.ArrayList;
 
 public class NGlobalSearchItems implements Runnable {
     private final NSearchItem item;
-    public java.sql.Connection connection;
+    private final DBPoolManager poolManager;
 
     public static final ArrayList<String> containerHashes = new ArrayList<>();
 
-    public NGlobalSearchItems(NSearchItem itemn) {
-        this.item = itemn;
+    public NGlobalSearchItems(NSearchItem item, DBPoolManager poolManager) {
+        this.item = item;
+        this.poolManager = poolManager;
     }
 
     @Override
     public void run() {
-        if (item.name.isEmpty() && item.q.isEmpty())
+        if (item.name.isEmpty() && item.q.isEmpty()) {
             return;
-        try {
-            boolean isSQLite = ((Boolean) NConfig.get(NConfig.Key.sqlite));
+        }
 
-            String nameOp = isSQLite ? "LIKE"  : "ILIKE";
+        Connection conn = null;
+        try {
+            conn = poolManager.getConnection();
+            if (conn == null) {
+                System.err.println("NGlobalSearchItems: Unable to get database connection");
+                return;
+            }
+
+            boolean isSQLite = (Boolean) NConfig.get(NConfig.Key.sqlite);
+
+            String nameOp = isSQLite ? "LIKE" : "ILIKE";
             String collation = isSQLite ? " COLLATE NOCASE" : "";
 
             StringBuilder dynamicSql = new StringBuilder()
-                .append("SELECT DISTINCT c.hash ")
-                .append("FROM containers c ")
-                .append("JOIN storageitems si ON c.hash = si.container ")
-                .append("WHERE si.name ").append(nameOp).append(" ?").append(collation);
+                    .append("SELECT DISTINCT c.hash ")
+                    .append("FROM containers c ")
+                    .append("JOIN storageitems si ON c.hash = si.container ")
+                    .append("WHERE si.name ").append(nameOp).append(" ?").append(collation);
 
             if (!item.q.isEmpty()) {
                 dynamicSql.append(" AND (");
@@ -57,7 +69,7 @@ public class NGlobalSearchItems implements Runnable {
                 dynamicSql.append(")");
             }
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(dynamicSql.toString())) {
+            try (PreparedStatement preparedStatement = conn.prepareStatement(dynamicSql.toString())) {
                 preparedStatement.setString(1, "%" + item.name + "%");
 
                 for (int i = 0; i < item.q.size(); i++) {
@@ -73,15 +85,20 @@ public class NGlobalSearchItems implements Runnable {
                     }
                 }
 
-                connection.commit();
+                conn.commit();
             }
         } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException rollbackException) {
-                rollbackException.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignore) {
+                }
             }
             e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                poolManager.returnConnection(conn);
+            }
         }
     }
 }

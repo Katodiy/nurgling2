@@ -1,6 +1,7 @@
 package nurgling.actions;
 
 import haven.Utils;
+import nurgling.DBPoolManager;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import org.json.JSONArray;
@@ -20,11 +21,13 @@ public class ReadJsonAction implements Action {
 
     @Override
     public Results run(NGameUI gui) {
+        if (gui.ui.core.poolManager == null || !gui.ui.core.poolManager.isConnectionReady()) {
+            return Results.ERROR("Database connection not available");
+        }
+
+        Connection conn = null;
         try (FileReader fileReader = new FileReader(path)) {
-            if (gui.ui.core.poolManager == null || !gui.ui.core.poolManager.isConnectionReady()) {
-                return Results.ERROR("Database connection not available");
-            }
-            Connection conn = gui.ui.core.poolManager.getConnection();
+            conn = gui.ui.core.poolManager.getConnection();
             if (conn == null) {
                 return Results.ERROR("Database connection not available");
             }
@@ -33,7 +36,17 @@ public class ReadJsonAction implements Action {
             System.out.println("Data imported successfully");
         } catch (Exception e) {
             e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignore) {
+                }
+            }
             return Results.ERROR(e.getMessage());
+        } finally {
+            if (conn != null) {
+                gui.ui.core.poolManager.returnConnection(conn);
+            }
         }
         return Results.SUCCESS();
     }
@@ -67,7 +80,6 @@ public class ReadJsonAction implements Action {
                 String recipeHash = generateRecipeHash(foodItem);
                 if (existingHashes.contains(recipeHash)) continue;
 
-                // Добавляем рецепт
                 recipeStmt.setString(1, recipeHash);
                 recipeStmt.setString(2, itemName);
                 recipeStmt.setString(3, resourceName);
@@ -75,7 +87,6 @@ public class ReadJsonAction implements Action {
                 recipeStmt.setInt(5, foodItem.getInt("energy"));
                 recipeStmt.addBatch();
 
-                // Добавляем ингредиенты
                 JSONArray ingredients = foodItem.getJSONArray("ingredients");
                 for (int j = 0; j < ingredients.length(); j++) {
                     JSONObject ingredient = ingredients.getJSONObject(j);
@@ -85,7 +96,6 @@ public class ReadJsonAction implements Action {
                     ingredientStmt.addBatch();
                 }
 
-                // Добавляем FEPS
                 JSONArray feps = foodItem.getJSONArray("feps");
                 double sum = calculateFepsSum(feps);
                 for (int j = 0; j < feps.length(); j++) {

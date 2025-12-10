@@ -2,8 +2,10 @@ package monitoring;
 
 import haven.Coord;
 import haven.Utils;
+import nurgling.DBPoolManager;
 import nurgling.NUtils;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -19,18 +21,18 @@ public class ItemWatcher implements Runnable {
 
         public ItemInfo(String name, double q, Coord c, String container) {
             this.name = name;
-            this.q = Double.parseDouble(Utils.odformat2(q,2));
+            this.q = Double.parseDouble(Utils.odformat2(q, 2));
             this.c = c;
             this.container = container;
         }
     }
 
-    public java.sql.Connection connection;
+    private final DBPoolManager poolManager;
     private final ArrayList<ItemInfo> iis;
 
-    public ItemWatcher(ArrayList<ItemInfo> iis)
-    {
+    public ItemWatcher(ArrayList<ItemInfo> iis, DBPoolManager poolManager) {
         this.iis = iis;
+        this.poolManager = poolManager;
     }
 
     @Override
@@ -39,34 +41,57 @@ public class ItemWatcher implements Runnable {
             return;
         }
 
+        Connection conn = null;
         try {
-            deleteItems();
-            insertItems();
-            connection.commit();
+            conn = poolManager.getConnection();
+            if (conn == null) {
+                System.err.println("ItemWatcher: Unable to get database connection");
+                return;
+            }
+
+            deleteItems(conn);
+            insertItems(conn);
+            conn.commit();
         } catch (SQLException e) {
-            rollback();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignore) {
+                }
+            }
             e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                poolManager.returnConnection(conn);
+            }
         }
     }
 
-    private void deleteItems() throws SQLException {
-        String deleteSql = "DELETE FROM storageitems WHERE container = ? AND item_hash NOT IN (?)";
-        String inClause = iis.stream().map(i -> generateItemHash(i)).collect(Collectors.joining(","));
+    private void deleteItems(Connection conn) throws SQLException {
+        // Build parameterized IN clause: DELETE ... WHERE ... NOT IN (?, ?, ?, ...)
+        String placeholders = iis.stream().map(i -> "?").collect(Collectors.joining(","));
+        String deleteSql = "DELETE FROM storageitems WHERE container = ? AND item_hash NOT IN (" + placeholders + ")";
 
-        try (PreparedStatement deleteStatement = connection.prepareStatement(deleteSql)) {
+        try (PreparedStatement deleteStatement = conn.prepareStatement(deleteSql)) {
             deleteStatement.setString(1, iis.get(0).container);
-            deleteStatement.setString(2, inClause);
+
+            // Set each item hash as a separate parameter
+            int paramIndex = 2;
+            for (ItemInfo item : iis) {
+                deleteStatement.setString(paramIndex++, generateItemHash(item));
+            }
+
             deleteStatement.executeUpdate();
         }
     }
 
-    private void insertItems() throws SQLException {
+    private void insertItems(Connection conn) throws SQLException {
         final String insertSql = "INSERT INTO storageitems (item_hash, name, quality, coordinates, container) " +
                 "VALUES (?, ?, ?, ?, ?) " +
                 "ON CONFLICT (item_hash) DO UPDATE SET " +
                 "name = EXCLUDED.name, quality = EXCLUDED.quality, coordinates = EXCLUDED.coordinates";
 
-        try (PreparedStatement insertStatement = connection.prepareStatement(insertSql)) {
+        try (PreparedStatement insertStatement = conn.prepareStatement(insertSql)) {
             for (ItemInfo item : iis) {
                 String itemHash = generateItemHash(item);
 
@@ -82,19 +107,8 @@ public class ItemWatcher implements Runnable {
         }
     }
 
-    private void rollback() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.rollback();
-            }
-        } catch (SQLException ignore) {
-        }
-    }
-
-    // Метод для генерации хэша предмета
     private String generateItemHash(ItemInfo item) {
-        // Пример: хэш на основе имени, координат и контейнера
         String data = item.name + item.c.toString() + item.q;
-        return NUtils.calculateSHA256(data);  // Используем SHA-256 для генерации хэша
+        return NUtils.calculateSHA256(data);
     }
 }

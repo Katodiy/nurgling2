@@ -17,6 +17,8 @@ import nurgling.cookbook.Recipe;
 import nurgling.cookbook.connection.RecipeHashFetcher;
 import nurgling.cookbook.connection.RecipeLoader;
 
+import nurgling.DBPoolManager;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
@@ -24,7 +26,6 @@ import java.awt.image.BufferedImage;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static haven.CharWnd.ifnd;
 
@@ -83,21 +84,12 @@ public class NCookBook extends Window {
                 boolean res = super.keydown(e);
                 if(e.code==10)
                 {
-                    try {
-                        if (ui.core.poolManager == null || !ui.core.poolManager.isConnectionReady()) {
-                            return res; // Database not ready
-                        }
-                        java.sql.Connection conn = ui.core.poolManager.getConnection();
-                        if (conn == null) {
-                            return res;
-                        }
-                        rhf = new RecipeHashFetcher(conn, searchF.text());
-                        ui.core.poolManager.submitTask(rhf);
-                        disable();
-                    }catch (SQLException err)
-                    {
-                        err.printStackTrace();
+                    if (ui.core.poolManager == null || !ui.core.poolManager.isConnectionReady()) {
+                        return res; // Database not ready
                     }
+                    rhf = new RecipeHashFetcher(ui.core.poolManager, searchF.text());
+                    ui.core.poolManager.submitTask(rhf);
+                    disable();
                 }
                 return res;
             }
@@ -435,23 +427,13 @@ public class NCookBook extends Window {
     @Override
     public boolean show(boolean show) {
         if (show && (Boolean) NConfig.get(NConfig.Key.ndbenable) && ui.core.poolManager!=null && ui.core.poolManager.isConnectionReady()) {
-            try {
-                java.sql.Connection conn = ui.core.poolManager.getConnection();
-                if (conn == null) {
-                    return super.show(show);
-                }
-                if (favoriteManager == null) {
-                    favoriteManager = new FavoriteRecipeManager(conn);
-                }
-                rhf = new RecipeHashFetcher(conn,
-                        RecipeHashFetcher.genFep(currentSortType, currentSortDesc));
-                ui.core.poolManager.submitTask(rhf);
-                disable();
-            }catch (SQLException e)
-            {
-                e.printStackTrace();
+            if (favoriteManager == null) {
+                favoriteManager = new FavoriteRecipeManager(ui.core.poolManager);
             }
-
+            rhf = new RecipeHashFetcher(ui.core.poolManager,
+                    RecipeHashFetcher.genFep(currentSortType, currentSortDesc));
+            ui.core.poolManager.submitTask(rhf);
+            disable();
         }
         return super.show(show);
     }
