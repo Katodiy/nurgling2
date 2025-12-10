@@ -15,6 +15,7 @@ public class NMapWnd extends MapWnd {
     MapToggleButton treeBtn;
     MapToggleButton fishBtn;
     MapToggleButton oresBtn;
+    MapToggleButton vectorClearBtn;
     TextEntry markerSearchField;
     private static final int btnw = UI.scale(95);
 
@@ -57,12 +58,18 @@ public class NMapWnd extends MapWnd {
         fishBtn.a = getFishIconsState(); // Set initial state
         fishBtn.changed(val -> setFishIconsState(val));
         
-        // Tree button (leftmost)
+        // Tree button
         btnPos = btnPos.sub(fishBtn.sz.x + btnSpacing, 0);
         treeBtn = add(new MapToggleButton("tree", "Toggle tree icons (Right-click: Tree Search)", this::openTreeSearch), btnPos);
         treeBtn.a = getTreeIconsState(); // Set initial state
         treeBtn.changed(val -> setTreeIconsState(val));
-        
+
+        // Vector clear button (leftmost)
+        btnPos = btnPos.sub(treeBtn.sz.x + btnSpacing, 0);
+        vectorClearBtn = add(new MapToggleButton("vector", "Clear tracking vectors", null), btnPos);
+        vectorClearBtn.a = false; // Always show as unpressed
+        vectorClearBtn.click(this::clearVectors);
+
         // Add marker search field at bottom-right (no label, no button)
         add(markerSearchField = new TextEntry(UI.scale(200), "") {
             @Override
@@ -166,6 +173,19 @@ public class NMapWnd extends MapWnd {
         }
     }
 
+    private void clearVectors() {
+        NGameUI gui = (NGameUI) NUtils.getGameUI();
+        if(gui != null && gui.map instanceof nurgling.NMapView) {
+            nurgling.NMapView mapView = (nurgling.NMapView) gui.map;
+            if(!mapView.directionalVectors.isEmpty()) {
+                int count = mapView.directionalVectors.size();
+                mapView.clearDirectionalVectors();
+                nurgling.tools.DirectionalVector.resetColorCycle();
+                gui.msg("Cleared " + count + " directional vector" + (count > 1 ? "s" : ""));
+            }
+        }
+    }
+
     public long playerSegmentId() {
         MiniMap.Location sessloc = view.sessloc;
         if(sessloc == null) {return 0;}
@@ -194,15 +214,17 @@ public class NMapWnd extends MapWnd {
         super.resize(sz);
         
         // Position buttons in top-right corner (15px right, 10px down from original position)
-        if(oresBtn != null && fishBtn != null && treeBtn != null) {
+        if(oresBtn != null && fishBtn != null && treeBtn != null && vectorClearBtn != null) {
             int btnSpacing = UI.scale(5);
             Coord btnPos = view.c.add(view.sz.x - UI.scale(35), UI.scale(15));
-            
+
             oresBtn.c = btnPos;
             btnPos = btnPos.sub(oresBtn.sz.x + btnSpacing, 0);
             fishBtn.c = btnPos;
             btnPos = btnPos.sub(fishBtn.sz.x + btnSpacing, 0);
             treeBtn.c = btnPos;
+            btnPos = btnPos.sub(treeBtn.sz.x + btnSpacing, 0);
+            vectorClearBtn.c = btnPos;
         }
         
         // Keep marker search field at bottom-right
@@ -358,16 +380,5 @@ public class NMapWnd extends MapWnd {
     @Override
     public void recenter() {
         super.recenter();
-
-        // Clear all directional vectors when home button is clicked
-        NGameUI gui = (NGameUI) NUtils.getGameUI();
-        if(gui != null && gui.map instanceof nurgling.NMapView) {
-            nurgling.NMapView mapView = (nurgling.NMapView) gui.map;
-            if(!mapView.directionalVectors.isEmpty()) {
-                int count = mapView.directionalVectors.size();
-                mapView.clearDirectionalVectors();
-                gui.msg("Cleared " + count + " directional vector" + (count > 1 ? "s" : ""));
-            }
-        }
     }
 }
