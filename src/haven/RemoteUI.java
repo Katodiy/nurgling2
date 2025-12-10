@@ -145,6 +145,11 @@ public class RemoteUI implements UI.Receiver, UI.Runner {
 
     public void init(UI ui) {
 	ui.sess = sess;
+	// Initialize session info immediately to avoid race condition where GameUI
+	// is created before tick() runs, leaving characterInfo null
+	if (ui instanceof nurgling.NUI) {
+	    ((nurgling.NUI) ui).initSessInfo();
+	}
     }
 
     public String title() {
