@@ -1489,6 +1489,7 @@ public class VSpec {
 
         ArrayList<JSONObject> flours = new ArrayList<>();
         flours.add(new JSONObject("{\"static\":\"gfx/invobjs/flour-barleyflour\",\"name\":\"Barley Flour\"}"));
+        flours.add(new JSONObject("{\"static\":\"gfx/invobjs/flour-cerealflour\",\"name\":\"Corn Grass Flour\"}"));
         flours.add(new JSONObject("{\"static\":\"gfx/invobjs/flour-milletflour\",\"name\":\"Millet Flour\"}"));
         flours.add(new JSONObject("{\"static\":\"gfx/invobjs/flour-wheatflour\",\"name\":\"Wheat Flour\"}"));
         categories.put("Flour", flours);
