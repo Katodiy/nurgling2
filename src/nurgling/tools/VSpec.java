@@ -2836,7 +2836,7 @@ public class VSpec {
         ArrayList<JSONObject> curio = new ArrayList<>();
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/poppycapss\",\"name\":\"Poppycaps\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/batwings\",\"name\":\"Bat Wings\"}"));
-        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/royaltoadstool\",\"name\":\"Royal Toadstool\"}"));c
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/royaltoadstool\",\"name\":\"Royal Toadstool\"}"));
         categories.put("Curiosities", curio);
     }
 
