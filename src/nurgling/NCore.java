@@ -401,7 +401,16 @@ public class NCore extends Widget
                 for (ItemInfo info : item.info) {
                     if (info instanceof Ingredient) {
                         Ingredient ing = ((Ingredient) info);
-                        hashInput.append(ing.name).append(ing.val * 100);
+                        // Use resName if available (for unique identification of meats, fish, etc.)
+                        // Fall back to name if resName is null
+                        if (ing.resName != null) {
+                            hashInput.append(ing.resName);
+                        } else {
+                            hashInput.append(ing.name);
+                        }
+                        if (ing.val != null) {
+                            hashInput.append(ing.val * 100);
+                        }
                     }
                 }
 
@@ -416,9 +425,10 @@ public class NCore extends Widget
 
                 for (ItemInfo info : item.info) {
                     if (info instanceof Ingredient) {
+                        Ingredient ing = (Ingredient) info;
                         ingredientStatement.setString(1, recipeHash);
-                        ingredientStatement.setString(2, ((Ingredient) info).name);
-                        ingredientStatement.setDouble(3, ((Ingredient) info).val * 100);
+                        ingredientStatement.setString(2, ing.name);
+                        ingredientStatement.setDouble(3, ing.val != null ? ing.val * 100 : 0);
                         ingredientStatement.executeUpdate();
                     }
                 }
