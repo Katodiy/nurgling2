@@ -2833,7 +2833,11 @@ public class VSpec {
         cheeses.add(new JSONObject("{\"static\":\"gfx/invobjs/curd-sheep\",\"name\":\"Sheep's Curd\"}"));
         categories.put("Cheese", cheeses);
 
-
+        ArrayList<JSONObject> curio = new ArrayList<>();
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/poppycapss\",\"name\":\"Poppycaps\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/batwings\",\"name\":\"Bat Wings\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/royaltoadstool\",\"name\":\"Royal Toadstool\"}"));c
+        categories.put("Curiosities", curio);
     }
 
     public static NAlias getNamesInCategory(String categoryName) {
