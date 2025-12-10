@@ -127,8 +127,8 @@ public class StudyDeskInventoryExtension {
         // Position the panel to the right of the inventory
         Coord panelPos = new Coord(inventory.sz.x + UI.scale(10), 0);
 
-        // Reserve space for Total LP at the bottom
-        int scrollHeight = inventory.sz.y - UI.scale(25);
+        // Reserve space for Mental Weight and Total LP at the bottom
+        int scrollHeight = inventory.sz.y - UI.scale(40);
         Coord scrollSize = new Coord(UI.scale(160), scrollHeight);
 
         // Create the content panel with scrolling support
@@ -139,11 +139,16 @@ public class StudyDeskInventoryExtension {
         scrollport.cont.add(detailsPanel, Coord.z);
         inventory.parent.add(scrollport, panelPos);
 
-        // Add Total LP label below the scrollport
+        // Add Mental Weight label below the scrollport
+        Label mentalWeightLabel = new Label("Mental Weight: 0");
+        inventory.parent.add(mentalWeightLabel, new Coord(panelPos.x, panelPos.y + scrollHeight + UI.scale(5)));
+
+        // Add Total LP label below mental weight
         Label totalLPLabel = new Label("Total LP: 0");
-        inventory.parent.add(totalLPLabel, new Coord(panelPos.x, panelPos.y + scrollHeight + UI.scale(5)));
+        inventory.parent.add(totalLPLabel, new Coord(panelPos.x, panelPos.y + scrollHeight + UI.scale(18)));
 
         // Store reference for updates
+        detailsPanel.mentalWeightLabel = mentalWeightLabel;
         detailsPanel.totalLPLabel = totalLPLabel;
         detailsPanel.scrollport = scrollport;
     }
@@ -157,6 +162,7 @@ public class StudyDeskInventoryExtension {
         private static final int LINE_HEIGHT = UI.scale(30);
         private Map<String, CurioInfo> cachedInfo = new HashMap<>();
         private int lastItemCount = -1;
+        Label mentalWeightLabel;
         Label totalLPLabel;
         Scrollport scrollport;
 
@@ -189,11 +195,14 @@ public class StudyDeskInventoryExtension {
             List<CurioInfo> sortedCurios = new ArrayList<>(cachedInfo.values());
             sortedCurios.sort(Comparator.comparing(a -> a.name, String.CASE_INSENSITIVE_ORDER));
 
-            // Calculate total LP
+            // Calculate total LP and total mental weight (mental weight is per unique item type)
             int totalLP = 0;
+            int totalMentalWeight = 0;
             for (CurioInfo info : cachedInfo.values()) {
                 totalLP += info.totalLP;
+                totalMentalWeight += info.mentalWeight; // Each unique item type contributes its mental weight once
             }
+            updateMentalWeight(totalMentalWeight);
             updateTotalLP(totalLP);
 
             int y = 0;
@@ -245,6 +254,14 @@ public class StudyDeskInventoryExtension {
             }
         }
 
+        private void updateMentalWeight(int mentalWeight) {
+            if (mentalWeightLabel != null) {
+                String text = String.format("Mental Weight: %d", mentalWeight);
+                mentalWeightLabel.settext(text);
+                mentalWeightLabel.setcolor(new Color(255, 192, 255)); // Light purple color (matches game's mental weight color)
+            }
+        }
+
         private void updateTotalLP(int totalLP) {
             if (totalLPLabel != null) {
                 String totalText = String.format("Total LP: %,d", totalLP);
@@ -293,7 +310,7 @@ public class StudyDeskInventoryExtension {
                     // Add or update curio info
                     CurioInfo info = curioInfo.get(key);
                     if (info == null) {
-                        info = new CurioInfo(displayName, resource, curiosity.time, curiosity.exp);
+                        info = new CurioInfo(displayName, resource, curiosity.time, curiosity.exp, curiosity.mw);
                         curioInfo.put(key, info);
                     } else {
                         info.count++;
@@ -343,15 +360,17 @@ public class StudyDeskInventoryExtension {
             Resource resource;
             int studyTime;
             int learningPoints;
+            int mentalWeight;
             int count = 1;
             int totalTime;
             int totalLP;
 
-            CurioInfo(String name, Resource resource, int studyTime, int learningPoints) {
+            CurioInfo(String name, Resource resource, int studyTime, int learningPoints, int mentalWeight) {
                 this.name = name;
                 this.resource = resource;
                 this.studyTime = studyTime;
                 this.learningPoints = learningPoints;
+                this.mentalWeight = mentalWeight;
                 this.totalTime = studyTime;
                 this.totalLP = learningPoints;
             }
