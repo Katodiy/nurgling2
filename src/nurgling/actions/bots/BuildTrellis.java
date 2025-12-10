@@ -75,7 +75,7 @@ public class BuildTrellis implements Action {
                 NUtils.getGameUI().msg("Please, select area for strings");
                 SelectArea stringarea = new SelectArea(Resource.loadsimg("baubles/stringsIng"));
                 stringarea.run(NUtils.getGameUI());
-                command.ingredients.add(new Build.Ingredient(new Coord(1,1), stringarea.getRCArea(), new NAlias("Flax Fibres", "Hemp Fibres", "Spindly Taproot", "Cattail Fibres", "Stinging Nettle","Grass Twine", "Hide Strap", "Straw Twine", "Bark Cordage"), 1));
+                command.ingredients.add(new Build.Ingredient(new Coord(1,1), stringarea.getRCArea(), new NAlias("Flax Fibres", "Hemp Fibres", "Spindly Taproot", "Cattail Fibres", "Stinging Nettle","Grass Twine", "Hide Strap", "Straw Twine", "Bark Cordage", "Toadflax"), 1));
 
                 for(Build.Ingredient ingredient: command.ingredients) {
                     if (ingredient.area != null) {
