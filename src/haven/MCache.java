@@ -135,14 +135,19 @@ public class MCache implements MapSource {
 			{
 			}
 
-			if (!contentBuilder.toString().isEmpty())
+			String content = contentBuilder.toString().trim();
+			if (!content.isEmpty() && content.startsWith("{"))
 			{
-				JSONObject main = new JSONObject(contentBuilder.toString());
-				JSONArray array = (JSONArray) main.get("areas");
-				for (int i = 0; i < array.length(); i++)
-				{
-					NArea a = new NArea((JSONObject) array.get(i));
-					areas.put(a.id, a);
+				try {
+					JSONObject main = new JSONObject(content);
+					JSONArray array = (JSONArray) main.get("areas");
+					for (int i = 0; i < array.length(); i++)
+					{
+						NArea a = new NArea((JSONObject) array.get(i));
+						areas.put(a.id, a);
+					}
+				} catch (org.json.JSONException e) {
+					// Ignore invalid JSON files
 				}
 			}
 		}

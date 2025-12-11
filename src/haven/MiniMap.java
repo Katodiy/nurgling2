@@ -37,6 +37,7 @@ import haven.MapFile.GridInfo;
 import haven.MapFile.Marker;
 import haven.MapFile.PMarker;
 import haven.MapFile.SMarker;
+import nurgling.NGameUI;
 import nurgling.NGob;
 import nurgling.NUtils;
 import nurgling.overlays.NQuestGiver;
@@ -361,11 +362,12 @@ public class MiniMap extends Widget
 	    this.tip = Text.render(m.nm);
 	    if(marker instanceof PMarker)
 		this.hit = Area.sized(flagcc.inv(), UI.scale(flagbg.sz));
-		MiniMap.Location loc = NUtils.getGameUI().mapfile.view.sessloc;
-		if(NUtils.getGameUI().mapfile.playerSegmentId() == marker.seg && marker instanceof SMarker && NParser.checkName(((SMarker)marker).res.name,"small/bush","small/bumling")) {
-			{
+		NGameUI gui = NUtils.getGameUI();
+		if(gui != null && gui.mapfile != null && gui.mapfile.view != null && gui.mapfile.view.sessloc != null) {
+			MiniMap.Location loc = gui.mapfile.view.sessloc;
+			if(gui.questinfo != null && gui.mapfile.playerSegmentId() == marker.seg && marker instanceof SMarker && NParser.checkName(((SMarker)marker).res.name,"small/bush","small/bumling")) {
 				Coord2d tmp = marker.tc.sub(loc.tc).mul(tilesz).add(tilesz.div(2));
-				NUtils.getGameUI().questinfo.addMarkerCoord(tmp,((SMarker)marker).nm,marker.seg);
+				gui.questinfo.addMarkerCoord(tmp,((SMarker)marker).nm,marker.seg);
 			}
 		}
 	}
