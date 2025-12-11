@@ -918,14 +918,15 @@ public class NConfig
         {
             try
             {
-                FileWriter f = new FileWriter(customPath==null?getExploredPath():customPath,StandardCharsets.UTF_8);
-                ((NCornerMiniMap)NUtils.getGameUI().mmap).exploredArea.toJson().write(f);
-                f.close();
-                current.isExploredUpd = false;
+                String filePath = customPath == null ? getExploredPath() : customPath;
+                // Merge with existing data on disk to prevent data loss when multiple clients run
+                ((NCornerMiniMap)NUtils.getGameUI().mmap).exploredArea.mergeAndSaveToFile(filePath);
+                this.isExploredUpd = false;
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                throw new RuntimeException(e);
+                // Log error but don't crash
+                System.err.println("Error saving explored area: " + e.getMessage());
             }
         }
     }
