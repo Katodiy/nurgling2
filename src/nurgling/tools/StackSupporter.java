@@ -16,11 +16,18 @@ public class StackSupporter {
     static {
         // Custom stack sizes for items that differ from their category defaults
         customStackSizes.put("Earthworm", 5);
-        customStackSizes.put("Bog Turtle Shell", 1);
         customStackSizes.put("Wolf's Claw", 4);
         customStackSizes.put("Clove of Garlic", 5);
         customStackSizes.put("Stinging Nettle", 4);
         customStackSizes.put("Yarrow", 4);
+        customStackSizes.put("Reeds", 4);
+        customStackSizes.put("Gooseneck Barnacle", 4);
+        customStackSizes.put("River Pearl Mussel", 4);
+        customStackSizes.put("Tuft of Squirrel's Finest Hair", 3);
+        customStackSizes.put("Ghostpipe", 3);
+        customStackSizes.put("Forest Lizard", 3);
+        customStackSizes.put("Cavebulb", 4);
+        customStackSizes.put("Frog", 3);
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
         size3.add("Onion");
@@ -60,10 +67,6 @@ public class StackSupporter {
         size3.add("Block of Wood");
         size3.add("Ore");
         size3.add("Stone");
-        size3.add("Fish Fresh Water");
-        size3.add("Fish Ocean");
-        size3.add("Fish Cave");
-        size3.add("Fish");
         size3.add("Lures");
         size3.add("Hooks");
         size3.add("Dried Fish");
@@ -93,7 +96,13 @@ public class StackSupporter {
         size4.add("Forageable");
         size4.add("Bug");
         size4.add("Curiosities");
-
+        size4.add("Miscellaneous");
+        size4.add("Bark");
+        size4.add("Shellfish");
+        size4.add("Fish Fresh Water");
+        size4.add("Fish Ocean");
+        size4.add("Fish Cave");
+        size4.add("Fish");
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
@@ -139,6 +148,11 @@ public class StackSupporter {
         catExceptions.add("Male Silkmoth");
         catExceptions.add("Clean Squirrel Carcass");
         catExceptions.add("Clean Rabbit Carcass");
+        catExceptions.add("Bog Turtle Shell");
+        catExceptions.add("Cleaned Bat");
+        catExceptions.add("Mole's Pawbone");
+        catExceptions.add("Lobster");
+        catExceptions.add("Leech");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
     public static boolean isStackable(NInventory inv, String name)
