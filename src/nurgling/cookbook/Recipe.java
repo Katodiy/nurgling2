@@ -8,13 +8,27 @@ public class Recipe {
     private final String resourceName;
     private final double hunger;
     private final int energy;
-    private final Map<String, Double> ingredients; // Ingredient -> percent
+    private final Map<String, IngredientInfo> ingredients; // Ingredient name -> info (percent + resource)
     private final Map<String, Fep> feps;         // FEP name -> value
     private boolean isFavorite;
 
+    public static class IngredientInfo {
+        public final double percentage;
+        public final String resourceName; // Composite resource name (e.g., "gfx/invobjs/meat-raw+gfx/invobjs/meat-fox")
+
+        public IngredientInfo(double percentage, String resourceName) {
+            this.percentage = percentage;
+            this.resourceName = resourceName;
+        }
+        
+        public IngredientInfo(double percentage) {
+            this(percentage, null);
+        }
+    }
+
     public Recipe(String hash, String name, String resourceName,
                   double hunger, int energy,
-                  Map<String, Double> ingredients,
+                  Map<String, IngredientInfo> ingredients,
                   Map<String, Fep> feps) {
         this.hash = hash;
         this.name = name;
@@ -46,7 +60,7 @@ public class Recipe {
         return energy;
     }
 
-    public Map<String, Double> getIngredients() {
+    public Map<String, IngredientInfo> getIngredients() {
         return ingredients;
     }
 

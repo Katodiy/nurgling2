@@ -29,6 +29,8 @@ import java.util.List;
 
 import static haven.CharWnd.ifnd;
 
+// Utility imports for layered image creation
+
 public class NCookBook extends Window {
 
     public static int x_shift = UI.scale(360);
@@ -491,11 +493,65 @@ public class NCookBook extends Window {
         private static int y_pos = 20;
         private String recName;
 
+        /**
+         * Create recipe icon, handling layered sprites (meat, fish, etc.)
+         * Resource names with '+' separator indicate layered sprites.
+         */
+        private static TexI createRecipeIcon(Recipe recipe) {
+            String resourceName = recipe.getResourceName();
+            try {
+                if (resourceName != null && resourceName.contains("+")) {
+                    // Layered sprite - combine multiple images
+                    String[] layers = resourceName.split("\\+");
+                    BufferedImage combined = null;
+                    Graphics2D g = null;
+                    
+                    for (String layer : layers) {
+                        try {
+                            Resource res = Resource.remote().loadwait(layer.trim());
+                            Resource.Image imgLayer = res.layer(Resource.imgc);
+                            if (imgLayer != null) {
+                                BufferedImage layerImg = imgLayer.scaled();
+                                if (combined == null) {
+                                    // Initialize with first layer size
+                                    combined = new BufferedImage(
+                                        layerImg.getWidth(), 
+                                        layerImg.getHeight(), 
+                                        BufferedImage.TYPE_INT_ARGB
+                                    );
+                                    g = combined.createGraphics();
+                                }
+                                // Draw layer with offset
+                                g.drawImage(layerImg, imgLayer.o.x, imgLayer.o.y, null);
+                            }
+                        } catch (Exception e) {
+                            // Skip failed layer
+                        }
+                    }
+                    
+                    if (g != null) {
+                        g.dispose();
+                    }
+                    
+                    if (combined != null) {
+                        return new TexI(combined);
+                    }
+                }
+                
+                // Standard single-layer sprite
+                return new TexI(Resource.remote().loadwait(resourceName).layer(Resource.imgc).img);
+                
+            } catch (Exception e) {
+                // Fallback: return empty/default icon
+                return new TexI(new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB));
+            }
+        }
+
         public RecieptItem(Recipe recipe) {
             this.recipe = recipe;
             recName = recipe.getName();
             this.text = add(new Label(recName),UI.scale(45,y_pos));
-            icon = new TexI(Resource.remote().loadwait(recipe.getResourceName()).layer(Resource.imgc).img);
+            icon = createRecipeIcon(recipe);
             BufferedImage bi = new BufferedImage(x_shift, UI.scale(60), BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = bi.createGraphics();
             int len = UI.scale(120);
@@ -540,8 +596,9 @@ public class NCookBook extends Window {
             }
             weightscale = new TexI(wi);
             StringBuilder str = new StringBuilder();
-            for(String ing: recipe.getIngredients().keySet()) {
-                str.append(ing).append(": ").append(Utils.odformat2(recipe.getIngredients().get(ing),2)).append("%").append("\040");
+            for(String ingName: recipe.getIngredients().keySet()) {
+                Recipe.IngredientInfo ingInfo = recipe.getIngredients().get(ingName);
+                str.append(ingName).append(": ").append(Utils.odformat2(ingInfo.percentage,2)).append("%").append("\040");
             }
             ing = new TexI(ingfnd.render(str.toString(), UI.scale(250)).img);
 

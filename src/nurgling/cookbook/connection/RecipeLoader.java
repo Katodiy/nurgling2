@@ -39,7 +39,7 @@ public class RecipeLoader implements Runnable {
             String sql;
             if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
                 sql = "SELECT r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
-                        "i.name AS ingredient_name, i.percentage, " +
+                        "i.name AS ingredient_name, i.percentage, i.resource_name AS ing_resource, " +
                         "f.name AS fep_name, f.value AS fep_value, f.weight as fep_weight " +
                         "FROM recipes r " +
                         "LEFT JOIN ingredients i ON r.recipe_hash = i.recipe_hash " +
@@ -47,7 +47,7 @@ public class RecipeLoader implements Runnable {
                         "WHERE r.recipe_hash = ANY(?)";
             } else { // SQLite
                 sql = "SELECT r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
-                        "i.name AS ingredient_name, i.percentage, " +
+                        "i.name AS ingredient_name, i.percentage, i.resource_name AS ing_resource, " +
                         "f.name AS fep_name, f.value AS fep_value, f.weight as fep_weight " +
                         "FROM recipes r " +
                         "LEFT JOIN ingredients i ON r.recipe_hash = i.recipe_hash " +
@@ -87,9 +87,10 @@ public class RecipeLoader implements Runnable {
 
                     String ingredientName = rs.getString("ingredient_name");
                     if (!rs.wasNull() && ingredientName != null) {
+                        String ingResource = rs.getString("ing_resource");
                         recipe.getIngredients().put(
                                 ingredientName,
-                                rs.getDouble("percentage")
+                                new Recipe.IngredientInfo(rs.getDouble("percentage"), ingResource)
                         );
                     }
 

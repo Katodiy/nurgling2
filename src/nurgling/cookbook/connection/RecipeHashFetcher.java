@@ -36,7 +36,7 @@ public class RecipeHashFetcher implements Runnable {
                 query = "SELECT " +
                         "r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
                         "f.name as fep_name, f.value as fep_value, f.weight as fep_weight, " +
-                        "i.name as ing_name, i.percentage as ing_percentage, " +
+                        "i.name as ing_name, i.percentage as ing_percentage, i.resource_name as ing_resource, " +
                         "CASE WHEN fav.recipe_hash IS NOT NULL THEN TRUE ELSE FALSE END as is_favorite " +
                         "FROM recipes r " +
                         "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash " +
@@ -47,7 +47,7 @@ public class RecipeHashFetcher implements Runnable {
                 query = "SELECT " +
                         "r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
                         "f.name as fep_name, f.value as fep_value, f.weight as fep_weight, " +
-                        "i.name as ing_name, i.percentage as ing_percentage, " +
+                        "i.name as ing_name, i.percentage as ing_percentage, i.resource_name as ing_resource, " +
                         "CASE WHEN fav.recipe_hash IS NOT NULL THEN 1 ELSE 0 END as is_favorite " +
                         "FROM recipes r " +
                         "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash " +
@@ -93,9 +93,10 @@ public class RecipeHashFetcher implements Runnable {
 
                 String ingName = rs.getString("ing_name");
                 if (ingName != null && !recipe.getIngredients().containsKey(ingName)) {
+                    String ingResource = rs.getString("ing_resource");
                     recipe.getIngredients().put(
                             ingName,
-                            rs.getDouble("ing_percentage")
+                            new Recipe.IngredientInfo(rs.getDouble("ing_percentage"), ingResource)
                     );
                 }
             }

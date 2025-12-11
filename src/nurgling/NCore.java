@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.res.lib.itemtex.ItemTex;
 import haven.res.ui.tt.ingred.Ingredient;
 import haven.resutil.FoodInfo;
 import mapv4.NMappingClient;
@@ -13,6 +14,8 @@ import nurgling.iteminfo.NFoodInfo;
 import nurgling.scenarios.ScenarioManager;
 import nurgling.tasks.*;
 import nurgling.tools.NSearchItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -361,9 +364,9 @@ public class NCore extends Widget
 
         private String getInsertIngredientSQL() {
             if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?) ON CONFLICT(recipe_hash, name) DO NOTHING";
+                return "INSERT INTO ingredients (recipe_hash, name, percentage, resource_name) VALUES (?, ?, ?, ?) ON CONFLICT(recipe_hash, name) DO NOTHING";
             } else { // SQLite
-                return "INSERT OR IGNORE INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
+                return "INSERT OR IGNORE INTO ingredients (recipe_hash, name, percentage, resource_name) VALUES (?, ?, ?, ?)";
             }
         }
 
@@ -385,7 +388,6 @@ public class NCore extends Widget
             try {
                 conn = poolManager.getConnection();
                 if (conn == null) {
-                    System.err.println("NGItemWriter: Unable to get database connection");
                     return;
                 }
 
@@ -395,8 +397,35 @@ public class NCore extends Widget
 
                 NFoodInfo fi = item.getInfo(NFoodInfo.class);
                 String hunger = Utils.odformat2(2 * fi.glut / (1 + Math.sqrt(item.quality / 10)) * 1000, 2);
+                
+                // Get composite resource name from item sprite FIRST (needed for hash)
+                String resourceName = item.getres().name;
+                try {
+                    GSprite spr = item.spr;
+                    if (spr != null) {
+                        JSONObject saved = ItemTex.save(spr);
+                        if (saved != null) {
+                            if (saved.has("layer")) {
+                                JSONArray layers = saved.getJSONArray("layer");
+                                StringBuilder sb = new StringBuilder();
+                                for (int i = 0; i < layers.length(); i++) {
+                                    if (i > 0) sb.append("+");
+                                    sb.append(layers.getString(i));
+                                }
+                                resourceName = sb.toString();
+                            } else if (saved.has("static")) {
+                                resourceName = saved.getString("static");
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // Fallback to base resource name
+                }
+                
+                // Build hash including composite resource name for unique identification
                 StringBuilder hashInput = new StringBuilder();
                 hashInput.append(item.name).append((int) (100 * fi.energy()));
+                hashInput.append(resourceName); // Include composite resource in hash
 
                 for (ItemInfo info : item.info) {
                     if (info instanceof Ingredient) {
@@ -418,7 +447,7 @@ public class NCore extends Widget
 
                 recipeStatement.setString(1, recipeHash);
                 recipeStatement.setString(2, item.name());
-                recipeStatement.setString(3, item.getres().name);
+                recipeStatement.setString(3, resourceName);
                 recipeStatement.setDouble(4, Double.parseDouble(hunger));
                 recipeStatement.setInt(5, (int) (fi.energy() * 100));
                 recipeStatement.execute();
@@ -429,6 +458,7 @@ public class NCore extends Widget
                         ingredientStatement.setString(1, recipeHash);
                         ingredientStatement.setString(2, ing.name);
                         ingredientStatement.setDouble(3, ing.val != null ? ing.val * 100 : 0);
+                        ingredientStatement.setString(4, ing.resName); // Store composite resource name for layered sprites
                         ingredientStatement.executeUpdate();
                     }
                 }
@@ -449,19 +479,20 @@ public class NCore extends Widget
                     try {
                         conn.rollback();
                     } catch (SQLException ex) {
-                        ex.printStackTrace();
+                        // ignore rollback error
                     }
                 }
 
                 // Ignore unique constraint violations
+                boolean isUniqueViolation = false;
                 if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                    if (e.getSQLState() == null || !e.getSQLState().equals("23505")) {
-                        e.printStackTrace();
-                    }
+                    isUniqueViolation = e.getSQLState() != null && e.getSQLState().equals("23505");
                 } else if ((Boolean) NConfig.get(NConfig.Key.sqlite)) {
-                    if (!e.getMessage().contains("UNIQUE constraint")) {
-                        e.printStackTrace();
-                    }
+                    isUniqueViolation = e.getMessage() != null && e.getMessage().contains("UNIQUE constraint");
+                }
+                
+                if (!isUniqueViolation) {
+                    e.printStackTrace();
                 }
             } finally {
                 if (conn != null) {
@@ -472,7 +503,7 @@ public class NCore extends Widget
     }
 
     public void writeNGItem(NGItem item) {
-        if (poolManager == null || !poolManager.isConnectionReady()) {
+        if (poolManager == null) {
             return;
         }
         NGItemWriter ngItemWriter = new NGItemWriter(item, poolManager);

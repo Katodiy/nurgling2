@@ -153,8 +153,8 @@ public class NGItem extends GItem
         if(name!= null) {
             if((Boolean)NConfig.get(NConfig.Key.ndbenable)) {
                 if (!sent && info != null && getInfo(NFoodInfo.class) != null) {
+                    sent = true; // Set immediately to prevent duplicate submissions
                     ui.core.writeNGItem(this);
-                    sent = true;
                 }
             }
             if (lastQuestUpdate < NQuestInfo.lastUpdate.get()) {
@@ -263,7 +263,7 @@ public class NGItem extends GItem
         {
             for(ItemInfo inf : info)
             {
-                if(inf.getClass() == c)
+                if(c.isInstance(inf))
                     return (C)inf;
             }
         }

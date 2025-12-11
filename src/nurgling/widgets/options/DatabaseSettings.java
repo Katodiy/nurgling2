@@ -136,7 +136,8 @@ public class DatabaseSettings extends Panel {
                                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                                     "recipe_hash VARCHAR(64) REFERENCES recipes (recipe_hash) ON DELETE CASCADE, " +
                                     "name VARCHAR(255) NOT NULL, " +
-                                    "percentage FLOAT NOT NULL)");
+                                    "percentage FLOAT NOT NULL, " +
+                                    "resource_name VARCHAR(512))");
 
                             stmt.executeUpdate("CREATE TABLE feps (" +
                                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
