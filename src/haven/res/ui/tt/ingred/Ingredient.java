@@ -2,6 +2,9 @@
 package haven.res.ui.tt.ingred;
 
 import haven.*;
+import haven.res.lib.itemtex.ItemTex;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import java.util.*;
 import java.awt.image.BufferedImage;
 
@@ -31,20 +34,47 @@ public class Ingredient extends ItemInfo.Tip {
 	int a = 1;
 	String name;
 	String resName = null;
+	
 	if(args[a] instanceof String) {
 	    name = (String)args[a++];
 	} else if(args[1] instanceof Integer) {
 	    Indir<Resource> res = owner.context(Resource.Resolver.class).getres((Integer)args[a++]);
 	    Message sdt = Message.nil;
-	    if((args.length > a) && (args[a] instanceof byte[]))
+	    if((args.length > a) && (args[a] instanceof byte[])) {
 		sdt = new MessageBuf((byte[])args[a++]);
+	    }
 	    ItemSpec spec = new ItemSpec(owner, new ResData(res, sdt), null);
 	    name = spec.name();
-	    // Capture the resource name for unique identification
+	    // Get sprite and extract layers using ItemTex.save() approach
 	    try {
-		resName = res.get().name;
+		GSprite spr = spec.spr();
+		if (spr != null) {
+		    JSONObject saved = ItemTex.save(spr);
+		    if (saved != null) {
+			if (saved.has("layer")) {
+			    // Composite sprite - join layer names with "+"
+			    JSONArray layers = saved.getJSONArray("layer");
+			    StringBuilder sb = new StringBuilder();
+			    for (int i = 0; i < layers.length(); i++) {
+				if (i > 0) sb.append("+");
+				sb.append(layers.getString(i));
+			    }
+			    resName = sb.toString();
+			} else if (saved.has("static")) {
+			    resName = saved.getString("static");
+			}
+		    }
+		}
+		if (resName == null) {
+		    resName = res.get().name;
+		}
 	    } catch (Exception e) {
-		// If we can't get the resource name, leave it null
+		// Fallback to resource name
+		try {
+		    resName = res.get().name;
+		} catch (Exception ex) {
+		    // ignore
+		}
 	    }
 	} else {
 	    throw(new IllegalArgumentException());

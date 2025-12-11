@@ -2842,7 +2842,7 @@ public class VSpec {
         ArrayList<JSONObject> curio = new ArrayList<>();
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/poppycapss\",\"name\":\"Poppycaps\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/batwings\",\"name\":\"Bat Wings\"}"));
-        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/royaltoadstool\",\"name\":\"Royal Toadstool\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/royaltoadstool\",\"name\":\"Royal Toadstool\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/tapeworm\",\"name\":\"Disgusting Tapeworm\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/glowshrooms\",\"name\":\"Glowshroom\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/squirrelhair\",\"name\":\"Tuft of Squirrel's Finest Hair\"}"));

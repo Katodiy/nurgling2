@@ -225,6 +225,34 @@ public class DBMigrationManager {
             }
         });
         
+        migrations.add(new Migration(2, "Add resource_name column to ingredients table for layered sprites") {
+            @Override
+            public void run(Connection conn, boolean isPostgres) throws SQLException {
+                Statement stmt = conn.createStatement();
+                
+                // Check if column already exists
+                boolean columnExists = false;
+                try {
+                    stmt.executeQuery("SELECT resource_name FROM ingredients LIMIT 1").close();
+                    columnExists = true;
+                    System.out.println("resource_name column already exists in ingredients table");
+                } catch (SQLException e) {
+                    try {
+                        conn.rollback();
+                    } catch (SQLException rollbackEx) {
+                        // Ignore
+                    }
+                }
+                
+                if (!columnExists) {
+                    stmt.executeUpdate("ALTER TABLE ingredients ADD COLUMN resource_name VARCHAR(512)");
+                    System.out.println("Added resource_name column to ingredients table");
+                }
+                
+                stmt.close();
+            }
+        });
+        
         return migrations;
     }
 
