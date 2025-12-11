@@ -2,6 +2,7 @@ package nurgling.widgets;
 
 import haven.*;
 import haven.Button;
+import haven.Label;
 import haven.resutil.Curiosity;
 import nurgling.*;
 import nurgling.iteminfo.NCuriosity;
@@ -269,6 +270,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                     Coord itemSize = getItemSize(handItem);
                     String resourceName = getItemResourceName(handItem);
                     Resource itemResource = getItemResource(handItem);
+                    int mentalWeight = getMentalWeight(handItem);
 
                     // Check if item fits
                     if(canPlaceItem(gridPos, itemSize)) {
@@ -276,7 +278,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                         removeOverlappingItems(gridPos, itemSize);
 
                         // Create and place the item
-                        PlannedCuriosity curiosity = new PlannedCuriosity(itemName, itemSize, resourceName, itemResource, studyTime);
+                        PlannedCuriosity curiosity = new PlannedCuriosity(itemName, itemSize, resourceName, itemResource, studyTime, mentalWeight);
                         plannedItems.put(new Coord(gridPos.x, gridPos.y), curiosity);
 
                         return true;
@@ -360,6 +362,18 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         return 0;
     }
 
+    private int getMentalWeight(WItem item) {
+        if(item.item != null) {
+            List<ItemInfo> info = item.item.info();
+            if(info != null) {
+                Curiosity curiosity = ItemInfo.find(Curiosity.class, info);
+                if(curiosity != null) {
+                    return curiosity.mw;
+                }
+            }
+        }
+        return 0;
+    }
 
     private boolean canPlaceItem(Coord pos, Coord size) {
         // Check if item goes outside grid
@@ -423,6 +437,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
             itemData.put("sizeX", item.size.x);
             itemData.put("sizeY", item.size.y);
             itemData.put("studyTime", item.studyTime);
+            itemData.put("mentalWeight", item.mentalWeight);
             if(item.resourceName != null) {
                 itemData.put("resourceName", item.resourceName);
             }
@@ -503,6 +518,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
                         String resourceName = (String) itemData.get("resourceName");
                         int studyTime = itemData.containsKey("studyTime") ? ((Number) itemData.get("studyTime")).intValue() : 0;
+                        int mentalWeight = itemData.containsKey("mentalWeight") ? ((Number) itemData.get("mentalWeight")).intValue() : 0;
 
                         // Load the actual Resource object from the resource name
                         Resource itemResource = null;
@@ -510,7 +526,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                             itemResource = Resource.remote().loadwait(resourceName);
                         }
 
-                        PlannedCuriosity curiosity = new PlannedCuriosity(name, size, resourceName, itemResource, studyTime);
+                        PlannedCuriosity curiosity = new PlannedCuriosity(name, size, resourceName, itemResource, studyTime, mentalWeight);
                         plannedItems.put(new Coord(x, y), curiosity);
                         originalLayout.put(new Coord(x, y), curiosity);
                     }
@@ -537,12 +553,15 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         return new HashMap<>(plannedItems);
     }
 
+    private Label mentalWeightLabel;
+
     private void addTimePanel() {
         // Position the time panel to the right of the grid with a gap
         Coord gridEnd = sqsz.mul(DESK_SIZE);
         Coord panelPos = new Coord(gridEnd.x + UI.scale(10), 0);
 
-        int scrollHeight = gridEnd.y;
+        // Reserve space for mental weight label at the bottom
+        int scrollHeight = gridEnd.y - UI.scale(20);
         Coord scrollSize = new Coord(UI.scale(200), scrollHeight);
 
         // Create the content panel with scrolling support
@@ -553,6 +572,11 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         timeScrollport = new Scrollport(scrollSize);
         timeScrollport.cont.add(timePanel, Coord.z);
         add(timeScrollport, panelPos);
+
+        // Add Mental Weight label below the scrollport
+        mentalWeightLabel = new Label("Mental Weight: 0");
+        mentalWeightLabel.setcolor(new Color(255, 192, 255)); // Light purple color
+        add(mentalWeightLabel, new Coord(panelPos.x, panelPos.y + scrollHeight + UI.scale(5)));
     }
 
     private void addButtons() {
@@ -623,6 +647,13 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
             List<ItemTimeInfo> sortedItems = new ArrayList<>(itemTimes.values());
             sortedItems.sort(Comparator.comparing(a -> a.name, String.CASE_INSENSITIVE_ORDER));
 
+            // Calculate total mental weight (each unique item type contributes its weight once)
+            int totalMentalWeight = 0;
+            for(ItemTimeInfo info : itemTimes.values()) {
+                totalMentalWeight += info.mentalWeight;
+            }
+            updateMentalWeight(totalMentalWeight);
+
             int y = 0;
             for(ItemTimeInfo info : sortedItems) {
                 // Draw icon if available
@@ -642,6 +673,13 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                 g.image(t.tex(), new Coord(UI.scale(20), y + 2));
 
                 y += LINE_HEIGHT;
+            }
+        }
+
+        private void updateMentalWeight(int mentalWeight) {
+            if(parent.mentalWeightLabel != null) {
+                String text = String.format("Mental Weight: %d", mentalWeight);
+                parent.mentalWeightLabel.settext(text);
             }
         }
 
@@ -673,7 +711,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
                     ItemTimeInfo info = itemTimes.get(key);
                     if(info == null) {
-                        info = new ItemTimeInfo(item.name, item.resource, item.studyTime);
+                        info = new ItemTimeInfo(item.name, item.resource, item.studyTime, item.mentalWeight);
                         itemTimes.put(key, info);
                     } else {
                         info.count++;
@@ -719,13 +757,15 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
             String name;
             Resource resource;
             int studyTime;
+            int mentalWeight;
             int count = 1;
             int totalTime;
 
-            ItemTimeInfo(String name, Resource resource, int studyTime) {
+            ItemTimeInfo(String name, Resource resource, int studyTime, int mentalWeight) {
                 this.name = name;
                 this.resource = resource;
                 this.studyTime = studyTime;
+                this.mentalWeight = mentalWeight;
                 this.totalTime = studyTime;
             }
         }
@@ -737,17 +777,23 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         public final String resourceName;
         public final Resource resource;
         public final int studyTime; // Study time in seconds
+        public final int mentalWeight; // Mental weight of the item
 
-        public PlannedCuriosity(String name, Coord size, String resourceName, Resource resource, int studyTime) {
+        public PlannedCuriosity(String name, Coord size, String resourceName, Resource resource, int studyTime, int mentalWeight) {
             this.name = name;
             this.size = size != null ? size : new Coord(1, 1);
             this.resourceName = resourceName;
             this.resource = resource;
             this.studyTime = studyTime;
+            this.mentalWeight = mentalWeight;
+        }
+
+        public PlannedCuriosity(String name, Coord size, String resourceName, Resource resource, int studyTime) {
+            this(name, size, resourceName, resource, studyTime, 0);
         }
 
         public PlannedCuriosity(String name, Coord size, String resourceName) {
-            this(name, size, resourceName, null, 0);
+            this(name, size, resourceName, null, 0, 0);
         }
     }
 }
