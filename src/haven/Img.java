@@ -27,6 +27,7 @@
 package haven;
 
 import java.awt.image.BufferedImage;
+import nurgling.NUI;
 
 public class Img extends Widget {
     protected Tex img;
@@ -86,6 +87,10 @@ public class Img extends Widget {
 	    setimg(res.get().flayer(Resource.imgc).tex());
 	} else if(name == "cl") {
 	    hit = Utils.bv(args[0]);
+	} else if(name == "tip") {
+	    // Handle tip message and check for verification/subscription
+	    super.uimsg(name, args);
+	    checkVerificationStatus();
 	} else {
 	    super.uimsg(name, args);
 	}
@@ -105,5 +110,32 @@ public class Img extends Widget {
 	    return(true);
 	}
 	return(super.mousedown(ev));
+    }
+
+    /**
+     * Check if this Img's tooltip indicates verification or subscription status
+     * and update NUI.sessInfo accordingly.
+     */
+    private void checkVerificationStatus() {
+	if(ui == null || !(ui instanceof NUI)) return;
+	NUI nui = (NUI) ui;
+	
+	// Initialize sessInfo if not yet created but session is available
+	if(nui.sessInfo == null) {
+	    nui.initSessInfo();
+	}
+	if(nui.sessInfo == null) return;
+	
+	if(tooltip instanceof Widget.KeyboundTip) {
+	    String tooltipText = ((Widget.KeyboundTip) tooltip).base;
+	    if(tooltipText != null) {
+		if(!nui.sessInfo.isVerified && tooltipText.contains("Verif")) {
+		    nui.sessInfo.setVerified(true);
+		}
+		if(!nui.sessInfo.isSubscribed && tooltipText.contains("Subsc")) {
+		    nui.sessInfo.setSubscribed(true);
+		}
+	    }
+	}
     }
 }

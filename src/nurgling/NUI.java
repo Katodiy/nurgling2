@@ -21,14 +21,10 @@ public class NUI extends UI
     Widget monitor = null;
     /** List of widget IDs currently tracked */
     HashSet<Integer> statusWdg = new HashSet<>();
-    /** Flag for session info initialization frequency control */
-    private boolean sessInfoChecked = false;
     /** Counter for periodic operations ticks */
     private int periodicCheckTick = 0;
     /** Precomputed Z multiplier for performance */
     private static final double DELTA_Z_DIVISOR = 10.0;
-    /** Periodicity for session verification checks */
-    private static final int SESSION_CHECK_PERIOD = 60;
     /** Global UI opacity (0.0 = transparent, 1.0 = opaque) */
     private float uiOpacity = 1.0f;
     /** Horse mounting state tracking */
@@ -38,6 +34,11 @@ public class NUI extends UI
     private boolean useSolidBackground = false;
     /** Window background color for solid mode */
     private java.awt.Color windowBackgroundColor = new java.awt.Color(32, 32, 32);
+
+    /** Static verification flags - persist across NUI instances */
+    private static boolean staticIsVerified = false;
+    private static boolean staticIsSubscribed = false;
+    private static String staticVerifiedUser = null;
 
     /** Container for session data and verification */
     public class NSessInfo
@@ -58,6 +59,30 @@ public class NUI extends UI
         public NSessInfo(String username)
         {
             this.username = username;
+            // Restore static flags if same user, reset if different user
+            if (username != null && username.equals(staticVerifiedUser)) {
+                this.isVerified = staticIsVerified;
+                this.isSubscribed = staticIsSubscribed;
+            } else if (username != null && staticVerifiedUser != null && !username.equals(staticVerifiedUser)) {
+                // Different user - reset static flags
+                staticIsVerified = false;
+                staticIsSubscribed = false;
+                staticVerifiedUser = null;
+            }
+        }
+
+        /** Update verification status and save to static */
+        public void setVerified(boolean verified) {
+            this.isVerified = verified;
+            staticIsVerified = verified;
+            staticVerifiedUser = this.username;
+        }
+
+        /** Update subscription status and save to static */
+        public void setSubscribed(boolean subscribed) {
+            this.isSubscribed = subscribed;
+            staticIsSubscribed = subscribed;
+            staticVerifiedUser = this.username;
         }
     }
 
@@ -106,12 +131,6 @@ public class NUI extends UI
         if (sessInfo == null && sess != null)
         {
             sessInfo = new NSessInfo(sess.user.name);
-        }
-        
-        // Only check for verification/subscription periodically to reduce CPU load
-        if (gui == null && sessInfo != null && !sessInfoChecked && periodicCheckTick % SESSION_CHECK_PERIOD == 0)
-        {
-            checkSessionVerification();
         }
 
         // Check for horse mount/dismount periodically (every 10 ticks = ~0.5 seconds)
@@ -379,42 +398,6 @@ public class NUI extends UI
         // Reset tooltip cache when Shift state changes to force tooltip refresh
         if (oldModshift != modshift) {
             prevtt = null;
-        }
-    }
-
-    /**
-     * Checks session verification and subscription status by examining widget tooltips.
-     * This method is called periodically to reduce CPU load.
-     */
-    private void checkSessionVerification()
-    {
-        if (sessInfo == null) return;
-        
-        for (Widget wdg : widgets.values())
-        {
-            if (wdg instanceof Img)
-            {
-                Img img = (Img) wdg;
-                if (img.tooltip instanceof Widget.KeyboundTip)
-                {
-                    String tooltipText = ((Widget.KeyboundTip) img.tooltip).base;
-                    if (!sessInfo.isVerified && tooltipText.contains("Verif"))
-                    {
-                        sessInfo.isVerified = true;
-                    }
-                    else if (!sessInfo.isSubscribed && tooltipText.contains("Subsc"))
-                    {
-                        sessInfo.isSubscribed = true;
-                    }
-                    
-                    // If both flags are set, we can stop checking
-                    if (sessInfo.isVerified && sessInfo.isSubscribed)
-                    {
-                        sessInfoChecked = true;
-                        break;
-                    }
-                }
-            }
         }
     }
 
