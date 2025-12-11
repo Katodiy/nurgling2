@@ -2867,6 +2867,11 @@ public class VSpec {
         Shellfish.add(new JSONObject("{\"static\":\"gfx/invobjs/bayshrimp\",\"name\":\"Bay Shrimp\"}"));
         Shellfish.add(new JSONObject("{\"static\":\"gfx/invobjs/lobster\",\"name\":\"Lobster\"}"));
         categories.put("Shellfish", Shellfish);
+
+        ArrayList<JSONObject> intandent = new ArrayList<>();
+        intandent.add(new JSONObject("{\"static\":\"gfx/invobjs/intestines\",\"name\":\"Intestines\"}"));
+        intandent.add(new JSONObject("{\"static\":\"gfx/invobjs/entrails\",\"name\":\"Entrails\"}"));
+        categories.put("Intestines and entrails", intandent);
     }
 
     public static NAlias getNamesInCategory(String categoryName) {
