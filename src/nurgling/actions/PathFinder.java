@@ -21,7 +21,7 @@ public class PathFinder implements Action {
     Coord start_pos = null;
     Coord end_pos = null;
     ArrayList<Coord> end_poses = null;
-    public boolean isHardMode = false;
+    public boolean isHardMode = true;
     public boolean waterMode = false;
     public boolean gatesAlwaysClosed = false;
     Coord2d begin;
