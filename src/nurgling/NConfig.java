@@ -931,8 +931,10 @@ public class NConfig
     }
 
 
+    /**
+     * Merge areas - duplicate strategy (rename conflicts with "Other_" prefix)
+     */
     public void mergeAreas(File file) {
-
         StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
         {
@@ -958,6 +960,113 @@ public class NConfig
                 }
                 a.id = id;
                 ((NMapView) NUtils.getGameUI().map).glob.map.areas.put(a.id, a);
+            }
+        }
+    }
+    
+    /**
+     * Replace areas - full replace strategy (delete all old, add new)
+     */
+    public void replaceAreas(File file) {
+        StringBuilder contentBuilder = new StringBuilder();
+        try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
+        {
+            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+        }
+        catch (IOException ignore)
+        {
+        }
+
+        if (!contentBuilder.toString().isEmpty()) {
+            // Remove all existing areas and their overlays
+            NMapView mapView = (NMapView) NUtils.getGameUI().map;
+            synchronized (mapView.glob.map.areas) {
+                // Remove overlays for all areas
+                for (Integer areaId : new java.util.ArrayList<>(mapView.glob.map.areas.keySet())) {
+                    if (mapView.nols.containsKey(areaId)) {
+                        mapView.nols.get(areaId).remove();
+                        mapView.nols.remove(areaId);
+                    }
+                    NArea area = mapView.glob.map.areas.get(areaId);
+                    if (area != null) {
+                        Gob dummy = mapView.dummys.get(area.gid);
+                        if (dummy != null) {
+                            mapView.glob.oc.remove(dummy);
+                            mapView.dummys.remove(area.gid);
+                        }
+                    }
+                }
+                // Clear all areas
+                mapView.glob.map.areas.clear();
+            }
+            
+            // Add new areas from file
+            JSONObject main = new JSONObject(contentBuilder.toString());
+            JSONArray array = (JSONArray) main.get("areas");
+            for (int i = 0; i < array.length(); i++) {
+                NArea a = new NArea((JSONObject) array.get(i));
+                a.id = i + 1;
+                ((NMapView) NUtils.getGameUI().map).glob.map.areas.put(a.id, a);
+            }
+        }
+    }
+    
+    /**
+     * Overwrite areas - replace areas with same name, add new ones
+     */
+    public void overwriteAreas(File file) {
+        StringBuilder contentBuilder = new StringBuilder();
+        try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
+        {
+            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+        }
+        catch (IOException ignore)
+        {
+        }
+
+        if (!contentBuilder.toString().isEmpty()) {
+            NMapView mapView = (NMapView) NUtils.getGameUI().map;
+            JSONObject main = new JSONObject(contentBuilder.toString());
+            JSONArray array = (JSONArray) main.get("areas");
+            
+            for (int i = 0; i < array.length(); i++) {
+                NArea newArea = new NArea((JSONObject) array.get(i));
+                
+                // Find existing area with same name
+                NArea existingArea = null;
+                for (NArea area : mapView.glob.map.areas.values()) {
+                    if (area.name.equals(newArea.name)) {
+                        existingArea = area;
+                        break;
+                    }
+                }
+                
+                if (existingArea != null) {
+                    // Remove old area's overlays
+                    if (mapView.nols.containsKey(existingArea.id)) {
+                        mapView.nols.get(existingArea.id).remove();
+                        mapView.nols.remove(existingArea.id);
+                    }
+                    Gob dummy = mapView.dummys.get(existingArea.gid);
+                    if (dummy != null) {
+                        mapView.glob.oc.remove(dummy);
+                        mapView.dummys.remove(existingArea.gid);
+                    }
+                    
+                    // Replace with new area using same id
+                    newArea.id = existingArea.id;
+                    mapView.glob.map.areas.put(newArea.id, newArea);
+                } else {
+                    // Add as new area with new id
+                    int maxId = 0;
+                    for (NArea area : mapView.glob.map.areas.values()) {
+                        if (area.id > maxId) {
+                            maxId = area.id;
+                        }
+                    }
+                    newArea.id = maxId + 1;
+                    mapView.glob.map.areas.put(newArea.id, newArea);
+                }
             }
         }
     }

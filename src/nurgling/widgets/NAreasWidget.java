@@ -104,11 +104,9 @@ public class NAreasWidget extends Window
                         return;
                     if(fc.getSelectedFile()!=null)
                     {
-                        NUtils.getUI().core.config.mergeAreas(fc.getSelectedFile());
+                        // Show import strategy dialog
+                        NImportStrategyDialog.showDialog(fc.getSelectedFile());
                     }
-                    NAreasWidget.this.hide();
-                    NAreasWidget.this.show();
-                    NConfig.needAreasUpdate();
                 });
             }
         },showCat.pos("ur").adds(UI.scale(25,0)));

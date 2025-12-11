@@ -41,6 +41,7 @@ public class NGameUI extends GameUI
     public NCraftWindow craftwnd;
     public NEditAreaName nean;
     public NEditFolderName nefn;
+    public NImportStrategyDialog importDialog;
     public Specialisation spec;
     public RouteSpecialization routespec;
     public BotsInterruptWidget biw;
@@ -137,6 +138,9 @@ public class NGameUI extends GameUI
         // Position NEditAreaName relative to areas widget center
         add(nean = new NEditAreaName(), new Coord(sz.x/2 - nean.sz.x/2, sz.y/2 - nean.sz.y/2));
         nean.hide();
+        // Position NImportStrategyDialog relative to areas widget center
+        add(importDialog = new NImportStrategyDialog(), new Coord(sz.x/2 - importDialog.sz.x/2, sz.y/2 - importDialog.sz.y/2));
+        importDialog.hide();
         // Position BotsInterruptWidget (observer with gears) in center of screen
         add(biw = new BotsInterruptWidget(), new Coord(sz.x/2 - biw.sz.x/2, sz.y/2 - biw.sz.y/2));
         waypointMovementService = new WaypointMovementService(this);
