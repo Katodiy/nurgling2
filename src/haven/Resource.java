@@ -38,6 +38,7 @@ import java.nio.file.*;
 import java.security.*;
 import javax.imageio.*;
 import java.awt.image.BufferedImage;
+import nurgling.headless.Headless;
 
 public class Resource implements Serializable {
     public static final Config.Variable<URI> resurl = Config.Variable.propu("haven.resurl", "");
@@ -2060,11 +2061,22 @@ public class Resource implements Serializable {
 	return(loadrimg(name).img);
     }
 
+    // Dummy image for headless mode - 1x1 transparent pixel
+    private static BufferedImage dummyImg = null;
+    private static BufferedImage getDummyImage() {
+	if (dummyImg == null) {
+	    dummyImg = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+	}
+	return dummyImg;
+    }
+
     public static BufferedImage loadsimg(String name) {
+	if (Headless.isHeadless()) return getDummyImage();
 	return(loadrimg(name).scaled());
     }
 
     public static Tex loadtex(String name) {
+	if (Headless.isHeadless()) return new TexI(getDummyImage());
 	return(loadrimg(name).tex());
     }
 
