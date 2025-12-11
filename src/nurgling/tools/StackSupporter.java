@@ -96,7 +96,6 @@ public class StackSupporter {
         size4.add("Forageable");
         size4.add("Bug");
         size4.add("Curiosities");
-<<<<<<< HEAD
         size4.add("Miscellaneous");
         size4.add("Bark");
         size4.add("Shellfish");
@@ -104,9 +103,6 @@ public class StackSupporter {
         size4.add("Fish Ocean");
         size4.add("Fish Cave");
         size4.add("Fish");
-=======
-
->>>>>>> master
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
