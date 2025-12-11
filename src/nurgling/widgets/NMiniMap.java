@@ -207,6 +207,7 @@ NMiniMap extends MiniMap {
         drawparty(g);
 
         drawtempmarks(g);
+        drawLabeledMarks(g);
         drawterrainname(g);
         drawResourceTimers(g);
         drawFishLocations(g);
@@ -939,6 +940,48 @@ NMiniMap extends MiniMap {
         }
     }
 
+    /**
+     * Draw labeled marks on the minimap (from Checker bots like CheckWater, CheckClay).
+     * Shows an icon with a quality label underneath (e.g., "q20").
+     * Data is loaded from LabeledMarkService for persistence between sessions.
+     */
+    private void drawLabeledMarks(GOut g) {
+        if(sessloc == null || dloc == null) return;
+        
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || gui.labeledMarkService == null) return;
+        
+        java.util.List<LabeledMinimapMark> marks = gui.labeledMarkService.getMarksForSegment(dloc.seg.id);
+        
+        Coord hsz = sz.div(2);
+        
+        for(LabeledMinimapMark mark : marks) {
+            // Calculate screen position
+            Coord screenPos = mark.tileCoords.sub(dloc.tc).div(scalef()).add(hsz);
+            
+            // Only draw if on screen
+            if(screenPos.x >= 0 && screenPos.x <= sz.x &&
+               screenPos.y >= 0 && screenPos.y <= sz.y) {
+                
+                // Draw icon if available
+                TexI iconTex = mark.getIconTex();
+                if(iconTex != null) {
+                    int dsz = Math.max(iconTex.sz().y, iconTex.sz().x);
+                    int targetSize = UI.scale(18);
+                    g.aimage(iconTex, screenPos, 0.5, 0.5, 
+                        UI.scale(targetSize * iconTex.sz().x / dsz, targetSize * iconTex.sz().y / dsz));
+                }
+                
+                // Draw label under the icon (like quest giver names)
+                Text labelText = mark.getLabelText();
+                if(labelText != null) {
+                    Coord textPos = screenPos.add(0, UI.scale(10));
+                    g.aimage(labelText.tex(), textPos, 0.5, 0);
+                }
+            }
+        }
+    }
+
     private void drawterrainname(GOut g) {
         if((Boolean)NConfig.get(NConfig.Key.showTerrainName) && currentTerrainName != null && !currentTerrainName.isEmpty()) {
             Text.Foundry fnd = new Text.Foundry(Text.dfont, 10);
@@ -1616,6 +1659,33 @@ NMiniMap extends MiniMap {
         }
         return null;
     }
+    
+    /**
+     * Find a labeled minimap mark at the given screen coordinate.
+     * Used for right-click deletion of water/soil quality marks.
+     */
+    private LabeledMinimapMark labeledMarkAt(Coord screenCoord) {
+        if(dloc == null || sessloc == null) return null;
+        
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || gui.labeledMarkService == null) return null;
+        
+        java.util.List<LabeledMinimapMark> marks = gui.labeledMarkService.getMarksForSegment(dloc.seg.id);
+        
+        Coord hsz = sz.div(2);
+        int threshold = UI.scale(12); // Click radius
+        
+        for(LabeledMinimapMark mark : marks) {
+            // Calculate screen position for this mark
+            Coord markScreenPos = mark.tileCoords.sub(dloc.tc).div(scalef()).add(hsz);
+            
+            // Check if click is within threshold
+            if(screenCoord.dist(markScreenPos) < threshold) {
+                return mark;
+            }
+        }
+        return null;
+    }
 
     @Override
     public boolean filter(DisplayMarker mark) {
@@ -1753,6 +1823,18 @@ NMiniMap extends MiniMap {
             }
         }
 
+        // Handle right-click release on labeled mark (water/soil quality) - delete it
+        if(ev.b == 3 && dloc != null && sessloc != null) {
+            LabeledMinimapMark labeledMark = labeledMarkAt(ev.c);
+            if(labeledMark != null) {
+                NGameUI gui = NUtils.getGameUI();
+                if(gui != null && gui.labeledMarkService != null) {
+                    gui.labeledMarkService.removeMark(labeledMark);
+                }
+                return true;
+            }
+        }
+        
         // Handle right-click release on tree location - open details window
         if(ev.b == 3 && dloc != null && sessloc != null && showTreeIcons) { // Button 3 is right-clicked
             NGameUI gui = NUtils.getGameUI();

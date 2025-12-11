@@ -5,18 +5,15 @@ import nurgling.*;
 import nurgling.actions.Action;
 import nurgling.actions.Equip;
 import nurgling.actions.Results;
-import nurgling.actions.SelectFlowerAction;
 import nurgling.overlays.NCheckResult;
 import nurgling.tasks.GetCurs;
-import nurgling.tasks.WaitItemContent;
-import nurgling.tasks.WaitItems;
 import nurgling.tasks.WaitItemsOrError;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 import nurgling.widgets.bots.UsingTools;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import static haven.OCache.posres;
 
@@ -42,8 +39,16 @@ public class CheckClay implements Action {
             WItem item = waitItemsOrError.getResult().get(0);
 
             if (item != null) {
-                NUtils.getGameUI().msg(((NGItem) item.item).name() + " " + ((NGItem) item.item).quality);
-                NUtils.player().addcustomol(new NCheckResult(NUtils.player(), ((NGItem) item.item).quality, ((NGItem) item.item).name(), ((StaticGSprite) item.lspr).img.img));
+                String itemName = ((NGItem) item.item).name();
+                double quality = ((NGItem) item.item).quality;
+                BufferedImage itemImg = ((StaticGSprite) item.lspr).img.img;
+                
+                NUtils.getGameUI().msg(itemName + " " + quality);
+                NUtils.player().addcustomol(new NCheckResult(NUtils.player(), quality, itemName, itemImg));
+                
+                // Add labeled mark to minimap with quality label (persisted to file)
+                addLabeledMinimapMark(gui, quality, itemName, itemImg);
+                
                 NUtils.drop(item);
             }
             if (!NParser.checkName(NUtils.getCursorName(), "arw")) {
@@ -55,5 +60,30 @@ public class CheckClay implements Action {
 
 
         return Results.SUCCESS();
+    }
+    
+    /**
+     * Add a labeled mark to the minimap showing soil/clay quality.
+     * Uses LabeledMarkService for persistence between sessions.
+     */
+    private void addLabeledMinimapMark(NGameUI gui, double quality, String itemName, BufferedImage itemImg) {
+        try {
+            if(gui.mmap == null || gui.mmap.sessloc == null || gui.labeledMarkService == null) return;
+            
+            Gob player = NUtils.player();
+            if(player == null) return;
+            
+            // Get segment ID and tile coordinates
+            long segmentId = gui.mmap.sessloc.seg.id;
+            Coord tileCoords = player.rc.floor(MCache.tilesz).add(gui.mmap.sessloc.tc);
+            
+            // Create label (e.g., "q20")
+            String label = String.format("q%.0f", quality);
+            
+            // Add mark via service (handles persistence)
+            gui.labeledMarkService.addLabeledMark(label, itemName, segmentId, tileCoords, itemImg);
+        } catch(Exception e) {
+            // Silently ignore errors
+        }
     }
 }

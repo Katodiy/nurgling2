@@ -62,6 +62,7 @@ public class NGameUI extends GameUI
     public TreeLocationService treeLocationService;
     public TreeSearchWindow treeSearchWindow = null;
     public final Map<String, TreeLocationDetailsWindow> openTreeDetailWindows = new HashMap<>();
+    public LabeledMarkService labeledMarkService;
     public TerrainSearchWindow terrainSearchWindow = null;
     public StudyDeskPlannerWidget studyDeskPlanner = null;
     public NDraggableWidget studyReportWidget = null;
@@ -146,6 +147,7 @@ public class NGameUI extends GameUI
         waypointMovementService = new WaypointMovementService(this);
         fishLocationService = new FishLocationService(this, genus);
         treeLocationService = new TreeLocationService(this, genus);
+        labeledMarkService = new LabeledMarkService(this, genus);
         // These widgets depend on areas which is created in GameUI constructor
         // Position NEditFolderName relative to areas widget
         add(nefn = new NEditFolderName(areas), new Coord(sz.x/2 - nefn.sz.x/2, sz.y/2 - nefn.sz.y/2));
@@ -239,6 +241,8 @@ public class NGameUI extends GameUI
             localizedResourceTimerService.dispose();
         if(fishLocationService != null)
             fishLocationService.dispose();
+        if(labeledMarkService != null)
+            labeledMarkService.dispose();
         if(nurgling.NUtils.getUI().core!=null)
             NUtils.getUI().core.dispose();
         super.dispose();
