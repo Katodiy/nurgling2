@@ -5,6 +5,7 @@ import haven.Label;
 import haven.Window;
 import nurgling.*;
 import nurgling.areas.*;
+import nurgling.overlays.NAreaLabel;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -229,6 +230,11 @@ public class Specialisation extends Window
                     }
                     if(!isFound)
                     {
+                        // Auto-rename area if it starts with "New Area" and this is the first specialisation
+                        if(area.name.startsWith("New Area") && area.spec.isEmpty()) {
+                            renameAreaToSpecialisation(area, item.prettyName);
+                        }
+                        
                         area.spec.add(new NArea.Specialisation(value));
                         NConfig.needAreasUpdate();
                         NUtils.getGameUI().areas.loadSpec(area.id);
@@ -312,6 +318,28 @@ public class Specialisation extends Window
                 (NUtils.getGameUI().areas.sz.x - NUtils.getGameUI().spec.sz.x) / 2,
                 (NUtils.getGameUI().areas.sz.y - NUtils.getGameUI().spec.sz.y) / 2
             );
+        }
+    }
+    
+    /**
+     * Renames area to the specialisation name if area name starts with "New Area"
+     */
+    private static void renameAreaToSpecialisation(NArea area, String specName) {
+        ((NMapView) NUtils.getGameUI().map).changeAreaName(area.id, specName);
+        
+        // Update area label on map
+        Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(area.gid);
+        if(dummy != null) {
+            Gob.Overlay ol = dummy.findol(NAreaLabel.class);
+            if(ol != null && ol.spr instanceof NAreaLabel) {
+                NAreaLabel tl = (NAreaLabel) ol.spr;
+                tl.update();
+            }
+        }
+        
+        // Update area list if visible
+        if(NUtils.getGameUI().areas != null) {
+            NUtils.getGameUI().areas.showPath(NUtils.getGameUI().areas.currentPath);
         }
     }
 }

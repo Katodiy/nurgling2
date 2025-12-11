@@ -697,6 +697,18 @@ public class NMapView extends MapView
             newArea.space = result;
             newArea.grids_id.addAll(newArea.space.space.keySet());
             newArea.path = NUtils.getGameUI().areas.currentPath;
+            
+            // Apply random color if setting is enabled
+            Object randomColorSetting = NConfig.get(NConfig.Key.randomAreaColor);
+            if(randomColorSetting instanceof Boolean && (Boolean)randomColorSetting) {
+                java.util.Random rand = new java.util.Random();
+                int r = rand.nextInt(256);
+                int g = rand.nextInt(256);
+                int b = rand.nextInt(256);
+                int a = 80 + rand.nextInt(176); // Alpha from 80 to 255
+                newArea.color = new java.awt.Color(r, g, b, a);
+            }
+            
             glob.map.areas.put(id, newArea);
 //            NUtils.getGameUI().areas.addArea(id, newArea.name, newArea);
 

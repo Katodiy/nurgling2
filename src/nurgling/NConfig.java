@@ -153,7 +153,8 @@ public class NConfig
         showQuestGiverNames,
         showThingwallNames,
         showPartyMemberNames,
-        trackingVectors
+        trackingVectors,
+        randomAreaColor
     }
 
     public enum BBDisplayMode
@@ -409,6 +410,9 @@ public class NConfig
         
         // Map tracking vectors
         conf.put(Key.trackingVectors, false);
+        
+        // Random area color on creation
+        conf.put(Key.randomAreaColor, false);
     }
 
 

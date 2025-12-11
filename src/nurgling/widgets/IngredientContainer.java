@@ -7,6 +7,7 @@ import haven.Window;
 import haven.res.lib.itemtex.*;
 import nurgling.*;
 import nurgling.areas.*;
+import nurgling.overlays.NAreaLabel;
 import org.json.*;
 
 import java.awt.*;
@@ -145,11 +146,12 @@ public class IngredientContainer extends BaseIngredientContainer {
     public void addItem(String name, JSONObject res) {
         if(res != null) {
             JSONArray data;
-            if(NUtils.getArea(id) == null) return;
+            NArea area = NUtils.getArea(id);
+            if(area == null) return;
             if(type.equals("in"))
-                data = NUtils.getArea(id).jin;
+                data = area.jin;
             else
-                data = NUtils.getArea(id).jout;
+                data = area.jout;
 
             boolean find = false;
             for(int i = 0; i < data.length(); i++) {
@@ -163,8 +165,36 @@ public class IngredientContainer extends BaseIngredientContainer {
                 res.put("type", NArea.Ingredient.Type.CONTAINER.toString());
                 addIcon(res);
                 data.put(res);
+                
+                // Auto-rename area if it starts with "New Area" and this is the first item
+                if(area.name.startsWith("New Area") && area.jin.length() + area.jout.length() == 1) {
+                    renameAreaToItem(area, name);
+                }
+                
                 NConfig.needAreasUpdate();
             }
+        }
+    }
+    
+    /**
+     * Renames area to the item name if area name starts with "New Area"
+     */
+    private void renameAreaToItem(NArea area, String itemName) {
+        ((NMapView) NUtils.getGameUI().map).changeAreaName(area.id, itemName);
+        
+        // Update area label on map
+        Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(area.gid);
+        if(dummy != null) {
+            Gob.Overlay ol = dummy.findol(NAreaLabel.class);
+            if(ol != null && ol.spr instanceof NAreaLabel) {
+                NAreaLabel tl = (NAreaLabel) ol.spr;
+                tl.update();
+            }
+        }
+        
+        // Update area list if visible
+        if(NUtils.getGameUI().areas != null) {
+            NUtils.getGameUI().areas.showPath(NUtils.getGameUI().areas.currentPath);
         }
     }
 
