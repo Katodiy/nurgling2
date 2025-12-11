@@ -36,7 +36,7 @@ public class Context {
         contcaps.put("gfx/terobjs/furn/table-stone", "Table");
         contcaps.put("gfx/terobjs/furn/table-rustic", "Table");
         contcaps.put("gfx/terobjs/furn/table-elegant", "Table");
-        contcaps.put("gfx/terobjs/furn/table-cottage", "Table");
+        contcaps.put("gfx/terobjs/furn/cottagetable", "Table");
         contcaps.put("gfx/terobjs/map/jotunclam", "Jotun Clam");
         contcaps.put("gfx/terobjs/htable", "Herbalist Table");
         contcaps.put("gfx/terobjs/thatchbasket", "Basket");

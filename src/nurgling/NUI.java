@@ -83,6 +83,19 @@ public class NUI extends UI
         }
     }
 
+    /**
+     * Initializes session info immediately when session is available.
+     * This must be called before GameUI is created to avoid race conditions
+     * where characterInfo would not be set.
+     */
+    public void initSessInfo()
+    {
+        if (sessInfo == null && sess != null)
+        {
+            sessInfo = new NSessInfo(sess.user.name);
+        }
+    }
+
     @Override
     public void tick()
     {
