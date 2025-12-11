@@ -2843,7 +2843,7 @@ public class VSpec {
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/batwings\",\"name\":\"Bat Wings\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/royaltoadstool\",\"name\":\"Royal Toadstool\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/tapeworm\",\"name\":\"Disgusting Tapeworm\"}"));
-        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/glowshroom\",\"name\":\"Glowshroom\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/glowshrooms\",\"name\":\"Glowshroom\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/squirrelhair\",\"name\":\"Tuft of Squirrel's Finest Hair\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/ghostpipes\",\"name\":\"Ghostpipe\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/cattailhead\",\"name\":\"Cattail Head\"}"));
