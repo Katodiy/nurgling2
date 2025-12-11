@@ -2,7 +2,9 @@ package nurgling.overlays.map;
 
 import haven.*;
 import nurgling.NConfig;
+import nurgling.NUtils;
 import nurgling.tools.ExploredArea;
+import nurgling.widgets.NCornerMiniMap;
 import nurgling.widgets.NMiniMap;
 
 import java.awt.Color;
@@ -61,8 +63,17 @@ public class MinimapExploredAreaRenderer {
             int dataLevel = nmap.getDataLevelPublic();
             float scaleFactor = nmap.getCurrentScale();
 
-            // Get explored area data
-            ExploredArea exploredArea = nmap.exploredArea;
+            // Get explored area data from the main minimap (corner minimap)
+            // This ensures both the corner minimap and the large map window 
+            // use the same explored area data
+            ExploredArea exploredArea = null;
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().mmap instanceof NCornerMiniMap) {
+                exploredArea = ((NCornerMiniMap) NUtils.getGameUI().mmap).exploredArea;
+            }
+            if (exploredArea == null) {
+                // Fallback to the map's own explored area if corner minimap not available
+                exploredArea = nmap.exploredArea;
+            }
             if (exploredArea == null) {
                 return;
             }
