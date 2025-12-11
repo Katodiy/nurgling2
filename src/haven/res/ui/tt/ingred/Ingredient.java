@@ -10,20 +10,27 @@ import java.awt.image.BufferedImage;
 public class Ingredient extends ItemInfo.Tip {
     public final String name;
     public final Double val;
+    public final String resName;  // Resource name for unique identification (e.g., "gfx/invobjs/meat-lynx")
 
-    public Ingredient(Owner owner, String name, Double val) {
+    public Ingredient(Owner owner, String name, Double val, String resName) {
 	super(owner);
 	this.name = name;
 	this.val = val;
+	this.resName = resName;
+    }
+
+    public Ingredient(Owner owner, String name, Double val) {
+	this(owner, name, val, null);
     }
 
     public Ingredient(Owner owner, String name) {
-	this(owner, name, null);
+	this(owner, name, null, null);
     }
 
     public static Ingredient mkinfo(Owner owner, Object... args) {
 	int a = 1;
 	String name;
+	String resName = null;
 	if(args[a] instanceof String) {
 	    name = (String)args[a++];
 	} else if(args[1] instanceof Integer) {
@@ -33,13 +40,19 @@ public class Ingredient extends ItemInfo.Tip {
 		sdt = new MessageBuf((byte[])args[a++]);
 	    ItemSpec spec = new ItemSpec(owner, new ResData(res, sdt), null);
 	    name = spec.name();
+	    // Capture the resource name for unique identification
+	    try {
+		resName = res.get().name;
+	    } catch (Exception e) {
+		// If we can't get the resource name, leave it null
+	    }
 	} else {
 	    throw(new IllegalArgumentException());
 	}
 	Double val = null;
 	if(args.length > a)
 	    val = (args[a] == null)?null:((Number)args[a]).doubleValue();
-	return(new Ingredient(owner, name, val));
+	return(new Ingredient(owner, name, val, resName));
     }
 
     public static class Line extends Tip {

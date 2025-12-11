@@ -1,127 +1,144 @@
 package nurgling;
 
+import nurgling.db.SimpleConnectionPool;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+/**
+ * Database pool manager that provides thread-safe connection pooling.
+ * Each database task should borrow a connection, use it, and return it.
+ */
 public class DBPoolManager {
     private final ExecutorService executorService;
-    private Connection connection = null;
-    private boolean isPostgres;
-    private String currentUrl;
-    private String currentUser;
-    private String currentPass;
-    private volatile boolean isConnecting = false;
-    private volatile long lastConnectionAttempt = 0;
-    private static final long CONNECTION_RETRY_DELAY_MS = 30000; // 30 seconds between retries
+    private SimpleConnectionPool connectionPool;
+    private volatile boolean initialized = false;
 
-    public DBPoolManager(int poolSize) {
-        this.executorService = Executors.newFixedThreadPool(poolSize);
-        this.isPostgres = (Boolean) NConfig.get(NConfig.Key.postgres);
-        // Initialize connection asynchronously to avoid blocking UI thread
-        asyncUpdateConnection();
-    }
-    
-    private void asyncUpdateConnection() {
-        if (isConnecting) {
-            return; // Already attempting to connect
-        }
-        long now = System.currentTimeMillis();
-        if (now - lastConnectionAttempt < CONNECTION_RETRY_DELAY_MS) {
-            return; // Too soon to retry
-        }
-        isConnecting = true;
-        lastConnectionAttempt = now;
-        executorService.submit(() -> {
-            try {
-                updateConnection();
-            } finally {
-                isConnecting = false;
-            }
-        });
+    // Pool sizes: PostgreSQL can handle multiple concurrent connections,
+    // SQLite should use 1 (doesn't support concurrent writes)
+    private static final int POSTGRES_POOL_SIZE = 5;
+    private static final int SQLITE_POOL_SIZE = 1;
+
+    public DBPoolManager(int threadPoolSize) {
+        this.executorService = Executors.newFixedThreadPool(threadPoolSize);
+        initializePool();
     }
 
-    private synchronized void updateConnection() {
+    /**
+     * Initialize the connection pool based on database type.
+     */
+    private synchronized void initializePool() {
+        if (initialized) {
+            return;
+        }
+
+        if (!(Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+            return;
+        }
+
+        boolean isPostgres = (Boolean) NConfig.get(NConfig.Key.postgres);
+        int poolSize = isPostgres ? POSTGRES_POOL_SIZE : SQLITE_POOL_SIZE;
+
+        connectionPool = new SimpleConnectionPool(poolSize);
+        initialized = true;
+
+        // Run migrations on first connection
+        runMigrations();
+    }
+
+    /**
+     * Run database migrations using a borrowed connection.
+     */
+    private void runMigrations() {
+        Connection conn = null;
         try {
-            // Закрываем предыдущее соединение, если оно есть
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-            }
-
-            if ((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
-                if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                    // PostgreSQL соединение with connection timeout (5 seconds) and socket timeout (10 seconds)
-                    currentUrl = "jdbc:postgresql://" + NConfig.get(NConfig.Key.serverNode) + "/nurgling_db?connectTimeout=5&socketTimeout=10";
-                    currentUser = (String) NConfig.get(NConfig.Key.serverUser);
-                    currentPass = (String) NConfig.get(NConfig.Key.serverPass);
-                    connection = DriverManager.getConnection(currentUrl, currentUser, currentPass);
-                } else {
-                    // SQLite соединение
-                    currentUrl = "jdbc:sqlite:" + NConfig.get(NConfig.Key.dbFilePath);
-                    connection = DriverManager.getConnection(currentUrl);
-                }
-                connection.setAutoCommit(false);
-                
-                // Run migrations after establishing connection
-                try {
-                    DBMigrationManager migrationManager = new DBMigrationManager(connection);
-                    migrationManager.runMigrations();
-                } catch (SQLException migrationEx) {
-                    System.err.println("Failed to run database migrations: " + migrationEx.getMessage());
-                    migrationEx.printStackTrace();
-                    // Don't close connection, migrations might have partially succeeded
-                }
+            conn = connectionPool.borrowConnection();
+            if (conn != null) {
+                DBMigrationManager migrationManager = new DBMigrationManager(conn);
+                migrationManager.runMigrations();
+                conn.commit();
             }
         } catch (SQLException e) {
-            System.err.println("Database connection failed: " + e.getMessage());
-            connection = null;
+            System.err.println("Failed to run database migrations: " + e.getMessage());
+            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignore) {
+                }
+            }
+        } finally {
+            if (conn != null) {
+                connectionPool.returnConnection(conn);
+            }
         }
     }
 
-    public void reconnect() {
-        asyncUpdateConnection();
+    /**
+     * Borrow a connection from the pool.
+     * The caller MUST return the connection using returnConnection() when done.
+     *
+     * @return A database connection, or null if unavailable
+     */
+    public Connection getConnection() {
+        if (!initialized || connectionPool == null) {
+            return null;
+        }
+        return connectionPool.borrowConnection();
     }
 
-    public synchronized Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            // Trigger async reconnection instead of blocking
-            asyncUpdateConnection();
-            return null; // Return null to indicate connection not ready
+    /**
+     * Return a connection to the pool.
+     * Always call this in a finally block after using a connection.
+     *
+     * @param conn The connection to return
+     */
+    public void returnConnection(Connection conn) {
+        if (connectionPool != null && conn != null) {
+            connectionPool.returnConnection(conn);
         }
-        return connection;
     }
-    
+
+    /**
+     * Check if the database is ready to accept connections.
+     *
+     * @return true if database is initialized and connections are available
+     */
     public boolean isConnectionReady() {
-        try {
-            return connection != null && !connection.isClosed();
-        } catch (SQLException e) {
-            return false;
-        }
+        return initialized && connectionPool != null && connectionPool.isReady();
     }
 
+    /**
+     * Submit a task for execution.
+     */
     public Future<?> submitTask(Runnable task) {
-        synchronized (executorService) {
-            return executorService.submit(() -> {
-                try {
-                    task.run();
-                } finally {
-                    // Освобождаем ресурсы, если необходимо
-                }
-            });
-        }
+        return executorService.submit(task);
     }
 
+    /**
+     * Reconnect to the database (recreate the pool).
+     */
+    public synchronized void reconnect() {
+        if (connectionPool != null) {
+            connectionPool.shutdown();
+        }
+        initialized = false;
+        connectionPool = null;
+        initializePool();
+    }
+
+    /**
+     * Shutdown the pool manager and release all resources.
+     */
     public synchronized void shutdown() {
         executorService.shutdown();
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if (connectionPool != null) {
+            connectionPool.shutdown();
+            connectionPool = null;
         }
+        initialized = false;
     }
 }
