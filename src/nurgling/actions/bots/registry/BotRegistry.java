@@ -97,6 +97,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("attacknearborka", BotDescriptor.BotType.BATTLE, "Aggro Nearest Borka", "Aggros nearest Borka.", true, true, AggroNearestBorka.class, "attacknearborka", false));
         bots.add(new BotDescriptor("attackall", BotDescriptor.BotType.BATTLE, "Attack All", "Attacks all enemies.", true, true, AttackAll.class, "attackall", false));
         bots.add(new BotDescriptor("taming", BotDescriptor.BotType.BATTLE, "Tame an animal", "Attacks the nearest animal waiting to be tamed, allows it to escape. Ties the animal on a rope if the corresponding setting is set. Fighting on your own", false, true, TaimingAnimal.class, "taming", false));
+        bots.add(new BotDescriptor("combatdist", BotDescriptor.BotType.BATTLE, "Combat Distance Tool", "Opens a window to manage combat distance. Shows current distance to target, allows manual distance input, and auto-calculates optimal kiting distance based on enemy type and vehicle.", false, true, CombatDistanceTool.class, "combatdist", false));
 
         // FARMING
         bots.add(new BotDescriptor("turnip", BotDescriptor.BotType.FARMING, "Turnip Farmer", "Automatically harvests and replants turnips.", true, true, nurgling.actions.bots.farmers.TurnipsFarmer.class, "turnip", false));
