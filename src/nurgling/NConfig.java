@@ -155,7 +155,9 @@ public class NConfig
         showThingwallNames,
         showPartyMemberNames,
         trackingVectors,
-        randomAreaColor
+        randomAreaColor,
+        treeScaleDisableZoomHide,
+        treeScaleMinThreshold
     }
 
     public enum BBDisplayMode
@@ -415,6 +417,10 @@ public class NConfig
         
         // Random area color on creation
         conf.put(Key.randomAreaColor, false);
+        
+        // Tree scale overlay settings
+        conf.put(Key.treeScaleDisableZoomHide, false);  // If true, always show full label (don't hide on zoom out)
+        conf.put(Key.treeScaleMinThreshold, 0);  // Minimum growth % to display tree scale (0 = show all)
     }
 
 
