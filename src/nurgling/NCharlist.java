@@ -48,6 +48,8 @@ public class NCharlist extends Charlist {
                 // Save selection to config
                 NConfig.set(NConfig.Key.selectedWorld, selectedWorld);
                 updateFilteredList();
+                // Update background image
+                updateBackground();
             }
         };
         
@@ -89,6 +91,21 @@ public class NCharlist extends Charlist {
         if(list.sel != null && !filteredChars.contains(list.sel)) {
             if(!filteredChars.isEmpty()) {
                 list.change(filteredChars.get(0));
+            }
+        }
+    }
+    
+    private void updateBackground() {
+        // Find background Img in parent and update it
+        if(parent != null) {
+            for(Widget w = parent.child; w != null; w = w.next) {
+                if(w instanceof Img) {
+                    Img img = (Img) w;
+                    if(img.charselType == Img.CharselType.BACKGROUND) {
+                        img.updateCharselBackground();
+                        break;
+                    }
+                }
             }
         }
     }
