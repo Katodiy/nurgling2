@@ -32,11 +32,6 @@ public class SoilStockpileDropper implements Action {
 
         // Main loop
         while (true) {
-            pile = gui.getStockpile();
-            if (pile == null) {
-                return Results.ERROR("Stockpile closed");
-            }
-
             int count = pile.calcCount();
             if (count <= MIN_KEEP) {
                 continue;
