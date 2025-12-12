@@ -16,15 +16,14 @@ public class NZoneBorderOverlay implements RenderTree.Node, Rendered {
             new VertexArray.Layout.Input(Homo3D.vertex, new VectorFormat(3, NumberFormat.FLOAT32), 0, 0, 12));
 
     private static final float Z_OFFSET = 0.5f;
-    private static final Color BORDER_COLOR = new Color(255, 200, 0, 255);
 
     private final Pipe.Op state;
     public final Collection<RenderTree.Slot> slots = new ArrayList<>(1);
     private Model model;
 
-    public NZoneBorderOverlay(Coord tileUL, Coord tileBR) {
+    public NZoneBorderOverlay(Coord tileUL, Coord tileBR, Color edgeColor) {
         this.state = Pipe.Op.compose(
-                new BaseColor(BORDER_COLOR),
+                new BaseColor(edgeColor),
                 new States.LineWidth(2.0f),
                 Clickable.No,
                 Pipe.Op.compose(Rendered.last, States.Depthtest.none, States.maskdepth)

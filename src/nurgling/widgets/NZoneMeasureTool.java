@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.overlays.NZoneMeasureOverlay;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -24,8 +25,16 @@ public class NZoneMeasureTool extends Window {
     private Button clearAllBtn;
     private Label statusLabel;
 
+    // Color selection
+    private NColorWidget fillColorWidget;
+    private NColorWidget edgeColorWidget;
+
+    // Default colors
+    private static final Color DEFAULT_FILL_COLOR = new Color(255, 200, 0, 64);
+    private static final Color DEFAULT_EDGE_COLOR = new Color(255, 200, 0, 255);
+
     public NZoneMeasureTool(NGameUI gui) {
-        super(UI.scale(200, 130), "Zone Measure Tool", true);
+        super(UI.scale(200, 190), "Zone Measure Tool", true);
         this.gui = gui;
 
         Widget prev;
@@ -54,7 +63,16 @@ public class NZoneMeasureTool extends Window {
             }
         }, prev.pos("bl").adds(0, 5));
 
-        // Row 4: Status label
+        // Color selection section
+        prev = add(new Label("Colors:"), prev.pos("bl").adds(0, 10));
+
+        prev = add(fillColorWidget = new NColorWidget("Fill"), prev.pos("bl").adds(0, 2));
+        fillColorWidget.color = DEFAULT_FILL_COLOR;
+
+        prev = add(edgeColorWidget = new NColorWidget("Edge"), prev.pos("bl").adds(0, 2));
+        edgeColorWidget.color = DEFAULT_EDGE_COLOR;
+
+        // Status label
         prev = add(statusLabel = new Label("Ready"), prev.pos("bl").adds(0, 10));
 
         pack();
@@ -78,9 +96,10 @@ public class NZoneMeasureTool extends Window {
         int width = Math.abs(tileEnd.x - tileStart.x) + 1;
         int height = Math.abs(tileEnd.y - tileStart.y) + 1;
 
-        // Create overlay
+        // Create overlay with selected colors
         NZoneMeasureOverlay overlay = new NZoneMeasureOverlay(
-            gui.map.glob.map, tileStart, tileEnd, width, height
+            gui.map.glob.map, tileStart, tileEnd, width, height,
+            fillColorWidget.color, edgeColorWidget.color
         );
         zones.add(overlay);
 

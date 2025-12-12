@@ -5,6 +5,7 @@ import haven.render.*;
 import nurgling.NMapView;
 import nurgling.NUtils;
 
+import java.awt.Color;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -22,29 +23,19 @@ public class NZoneMeasureOverlay {
     private final int width;
     private final int height;
 
+    // Colors
+    private final Color fillColor;
+    private final Color edgeColor;
+
     // Virtual gob for center label
     private OCache.Virtual labelGob;
 
-    // Material for ground overlay (semi-transparent yellow)
-    private static final MCache.OverlayInfo zoneol = new MCache.OverlayInfo() {
-        final Material mat = new Material(
-            new BaseColor(255, 200, 0, 64),
-            States.maskdepth
-        );
-
-        public Collection<String> tags() {
-            return Arrays.asList("show");
-        }
-
-        public Material mat() {
-            return mat;
-        }
-    };
-
     public NZoneMeasureOverlay(MCache map, Coord tileStart, Coord tileEnd,
-                               int width, int height) {
+                               int width, int height, Color fillColor, Color edgeColor) {
         this.width = width;
         this.height = height;
+        this.fillColor = fillColor;
+        this.edgeColor = edgeColor;
 
         // Normalize coordinates (ensure ul < br)
         this.tileUL = new Coord(
@@ -56,19 +47,36 @@ public class NZoneMeasureOverlay {
             Math.max(tileStart.y, tileEnd.y)
         );
 
-        // Create ground overlay
+        // Create ground overlay with fill color
         Area area = new Area(tileUL, tileBR.add(1, 1));
-        groundOverlay = map.new Overlay(area, zoneol);
+        groundOverlay = map.new Overlay(area, createOverlayInfo(fillColor));
 
-        // Create border overlay
+        // Create border overlay with edge color
         createBorderOverlay();
 
         // Create center label
         createCenterLabel();
     }
 
+    private MCache.OverlayInfo createOverlayInfo(Color color) {
+        return new MCache.OverlayInfo() {
+            final Material mat = new Material(
+                new BaseColor(color),
+                States.maskdepth
+            );
+
+            public Collection<String> tags() {
+                return Arrays.asList("show");
+            }
+
+            public Material mat() {
+                return mat;
+            }
+        };
+    }
+
     private void createBorderOverlay() {
-        borderOverlay = new NZoneBorderOverlay(tileUL, tileBR);
+        borderOverlay = new NZoneBorderOverlay(tileUL, tileBR, edgeColor);
         NMapView mapView = (NMapView) NUtils.getGameUI().map;
         borderSlot = mapView.basic.add(borderOverlay);
     }
