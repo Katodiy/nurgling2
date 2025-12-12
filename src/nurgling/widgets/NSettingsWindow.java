@@ -75,6 +75,7 @@ public class NSettingsWindow extends Widget {
     private void fillSettings() {
         SettingsCategory general = new SettingsCategory("General", new Panel("General"), container);
         general.addChild(new SettingsItem("Fonts", new Fonts(), container));
+        general.addChild(new SettingsItem("Item Overlays", new ItemOverlaySettings(), container));
         general.addChild(new SettingsItem("Navigation", navigation = new Navigation(), container));
         general.addChild(new SettingsItem("Map Settings", new MapSettings(), container));
         general.addChild(new SettingsItem("Quality of life", qol = new QoL(), container));

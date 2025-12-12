@@ -157,7 +157,8 @@ public class NConfig
         trackingVectors,
         randomAreaColor,
         treeScaleDisableZoomHide,
-        treeScaleMinThreshold
+        treeScaleMinThreshold,
+        itemQualityOverlay
     }
 
     public enum BBDisplayMode
@@ -421,6 +422,9 @@ public class NConfig
         // Tree scale overlay settings
         conf.put(Key.treeScaleDisableZoomHide, false);  // If true, always show full label (don't hide on zoom out)
         conf.put(Key.treeScaleMinThreshold, 0);  // Minimum growth % to display tree scale (0 = show all)
+        
+        // Item quality overlay settings
+        conf.put(Key.itemQualityOverlay, new ItemQualityOverlaySettings());
     }
 
 
@@ -788,6 +792,9 @@ public class NConfig
                                     break;
                                 case "FontSettings":
                                     conf.put(Key.fonts, new FontSettings(hobj));
+                                    break;
+                                case "ItemQualityOverlaySettings":
+                                    conf.put(Key.itemQualityOverlay, new ItemQualityOverlaySettings(hobj));
                                     break;
                                 case "Color":
                                     try {
