@@ -79,6 +79,7 @@ public class NCombatDistanceTool extends haven.Window implements Runnable {
             @Override
             public void click() {
                 moveToDistance();
+                defocus();
             }
         }, prev.pos("ur").adds(5, -2));
 
@@ -86,6 +87,7 @@ public class NCombatDistanceTool extends haven.Window implements Runnable {
             @Override
             public void click() {
                 tryToAutoDistance();
+                defocus();
             }
         }, prev.pos("ur").adds(5, 0));
 
@@ -211,6 +213,12 @@ public class NCombatDistanceTool extends haven.Window implements Runnable {
             return enemy.rc.dist(player.rc);
         }
         return -1;
+    }
+
+    private void defocus() {
+        if (gui.portrait != null) {
+            setfocus(gui.portrait);
+        }
     }
 
     public void stopTool() {
