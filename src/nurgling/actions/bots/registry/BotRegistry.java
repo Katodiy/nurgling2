@@ -155,11 +155,13 @@ public class BotRegistry {
         bots.add(new BotDescriptor("hempq", BotDescriptor.BotType.FARMING_QUALITY, "Hemp Farmer Quality", "Automatically harvests and replants hemp in X*Y cell patches.", true, true, HempFarmerQ.class, "hempq", false));
         bots.add(new BotDescriptor("flaxq", BotDescriptor.BotType.FARMING_QUALITY, "Flax Farmer Quality", "Automatically harvests and replants flax in X*Y cell patches.", true, true, FlaxFarmerQ.class, "flaxq", false));
         bots.add(new BotDescriptor("green_kaleq", BotDescriptor.BotType.FARMING_QUALITY, "Green Kale Farmer Quality", "Automatically harvests and replants green kale in X*Y cell patches.", true, true, GreenKaleFarmerQ.class, "green_kaleq", false));
+        bots.add(new BotDescriptor("lettuceq", BotDescriptor.BotType.FARMING_QUALITY, "Lettuce Farmer Quality", "Automatically harvests and replants lettuce in X*Y cell patches.", true, true, LettuceFarmerQ.class, "lettuceq", false));
 
         bots.add(new BotDescriptor("barleyq", BotDescriptor.BotType.FARMING_QUALITY, "Barley Farmer Quality", "Automatically harvests and replants barley in X*Y cell patches.", true, true, BarleyFarmerQ.class, "barleyq", false));
         bots.add(new BotDescriptor("milletq", BotDescriptor.BotType.FARMING_QUALITY, "Millet Farmer Quality", "Automatically harvests and replants millet in X*Y cell patches.", true, true, MilletFarmerQ.class, "milletq", false));
         bots.add(new BotDescriptor("wheatq", BotDescriptor.BotType.FARMING_QUALITY, "Wheat Farmer Quality", "Automatically harvests and replants wheat in X*Y cell patches.", true, true, WheatFarmerQ.class, "wheatq", false));
         bots.add(new BotDescriptor("poppyq", BotDescriptor.BotType.FARMING_QUALITY, "Poppy Farmer Quality", "Automatically harvests and replants poppy in X*Y cell patches.", true, true, PoppyFarmerQ.class, "poppyq", false));
+        bots.add(new BotDescriptor("pipeweedq", BotDescriptor.BotType.FARMING_QUALITY, "Pipeweed Farmer Quality", "Automatically harvests and replants pipeweed in X*Y cell patches.", true, true, PipeweedFarmerQ.class, "pipeweedq", false));
 
         // UTILS
         bots.add(new BotDescriptor("shieldsword", BotDescriptor.BotType.UTILS, "Equip Shield/Sword", "Equips shield and sword.", true, true, EquipShieldSword.class, "shieldsword", false));
