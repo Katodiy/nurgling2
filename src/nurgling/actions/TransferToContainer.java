@@ -307,9 +307,17 @@ public class TransferToContainer implements Action
                 return 1; // Переносим 1 предмет из стака
             } else
             {
-                item.item.wdgmsg("transfer", Coord.z);
                 int id = item.item.wdgid();
-                NUtils.addTask(new ISRemoved(id));
+                item.item.wdgmsg("transfer", Coord.z);
+                NUtils.addTask(new NTask()
+                {
+                    int count = 0;
+                    @Override
+                    public boolean check()
+                    {
+                        return NUtils.getUI().getwidget(id)==null || (targetInv.calcFreeSpace() == 0 && count++>200);
+                    }
+                });
                 return 1; // Переносим 1 одиночный предмет
             }
         } else
