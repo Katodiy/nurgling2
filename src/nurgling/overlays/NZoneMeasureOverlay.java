@@ -2,6 +2,7 @@ package nurgling.overlays;
 
 import haven.*;
 import haven.render.*;
+import nurgling.NMapView;
 import nurgling.NUtils;
 
 import java.util.Arrays;
@@ -10,6 +11,10 @@ import java.util.Collection;
 public class NZoneMeasureOverlay {
     // Ground highlight overlay
     private MCache.Overlay groundOverlay;
+
+    // Border line overlay
+    private NZoneBorderOverlay borderOverlay;
+    private RenderTree.Slot borderSlot;
 
     // Zone bounds (in tile coordinates)
     private final Coord tileUL;
@@ -55,8 +60,17 @@ public class NZoneMeasureOverlay {
         Area area = new Area(tileUL, tileBR.add(1, 1));
         groundOverlay = map.new Overlay(area, zoneol);
 
+        // Create border overlay
+        createBorderOverlay();
+
         // Create center label
         createCenterLabel();
+    }
+
+    private void createBorderOverlay() {
+        borderOverlay = new NZoneBorderOverlay(tileUL, tileBR);
+        NMapView mapView = (NMapView) NUtils.getGameUI().map;
+        borderSlot = mapView.basic.add(borderOverlay);
     }
 
     private void createCenterLabel() {
@@ -88,6 +102,13 @@ public class NZoneMeasureOverlay {
         if (groundOverlay != null) {
             groundOverlay.destroy();
             groundOverlay = null;
+        }
+
+        // Remove border overlay
+        if (borderSlot != null) {
+            borderSlot.remove();
+            borderSlot = null;
+            borderOverlay = null;
         }
 
         // Remove virtual gob
