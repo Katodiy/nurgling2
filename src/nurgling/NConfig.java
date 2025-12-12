@@ -158,7 +158,12 @@ public class NConfig
         randomAreaColor,
         treeScaleDisableZoomHide,
         treeScaleMinThreshold,
-        itemQualityOverlay
+        itemQualityOverlay,
+        stackQualityOverlay,
+        amountOverlay,
+        studyInfoOverlay,
+        progressOverlay,
+        volumeOverlay
     }
 
     public enum BBDisplayMode
@@ -425,6 +430,35 @@ public class NConfig
         
         // Item quality overlay settings
         conf.put(Key.itemQualityOverlay, new ItemQualityOverlaySettings());
+        // Stack quality overlay settings
+        ItemQualityOverlaySettings stackDefaults = new ItemQualityOverlaySettings();
+        stackDefaults.corner = ItemQualityOverlaySettings.Corner.TOP_LEFT;
+        conf.put(Key.stackQualityOverlay, stackDefaults);
+        // Amount overlay settings
+        ItemQualityOverlaySettings amountDefaults = new ItemQualityOverlaySettings();
+        amountDefaults.corner = ItemQualityOverlaySettings.Corner.BOTTOM_RIGHT;
+        amountDefaults.useThresholds = false;
+        conf.put(Key.amountOverlay, amountDefaults);
+        // Study info overlay settings
+        ItemQualityOverlaySettings studyDefaults = new ItemQualityOverlaySettings();
+        studyDefaults.corner = ItemQualityOverlaySettings.Corner.BOTTOM_LEFT;
+        studyDefaults.useThresholds = false;
+        studyDefaults.defaultColor = new java.awt.Color(255, 255, 50);
+        conf.put(Key.studyInfoOverlay, studyDefaults);
+        // Progress/meter overlay settings
+        ItemQualityOverlaySettings progressDefaults = new ItemQualityOverlaySettings();
+        progressDefaults.corner = ItemQualityOverlaySettings.Corner.BOTTOM_LEFT;
+        progressDefaults.useThresholds = false;
+        progressDefaults.defaultColor = new java.awt.Color(234, 164, 101);
+        progressDefaults.showBackground = true;
+        conf.put(Key.progressOverlay, progressDefaults);
+        // Volume overlay settings (CustomName - kg/l)
+        ItemQualityOverlaySettings volumeDefaults = new ItemQualityOverlaySettings();
+        volumeDefaults.corner = ItemQualityOverlaySettings.Corner.TOP_LEFT;
+        volumeDefaults.useThresholds = false;
+        volumeDefaults.defaultColor = new java.awt.Color(65, 255, 115);
+        volumeDefaults.showBackground = true;
+        conf.put(Key.volumeOverlay, volumeDefaults);
     }
 
 
@@ -794,7 +828,7 @@ public class NConfig
                                     conf.put(Key.fonts, new FontSettings(hobj));
                                     break;
                                 case "ItemQualityOverlaySettings":
-                                    conf.put(Key.itemQualityOverlay, new ItemQualityOverlaySettings(hobj));
+                                    conf.put(Key.valueOf(entry.getKey()), new ItemQualityOverlaySettings(hobj));
                                     break;
                                 case "Color":
                                     try {

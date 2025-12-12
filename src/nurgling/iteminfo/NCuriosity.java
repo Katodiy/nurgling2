@@ -4,6 +4,8 @@ import haven.*;
 import haven.resutil.Curiosity;
 import nurgling.NConfig;
 import nurgling.NGItem;
+import nurgling.conf.FontSettings;
+import nurgling.conf.ItemQualityOverlaySettings;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -16,6 +18,17 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     private static final int delta = 60;
     public transient final int lph;
 
+    // Cached settings
+    private static ItemQualityOverlaySettings cachedSettings = null;
+    private static long lastSettingsCheck = 0;
+    private static final long SETTINGS_CHECK_INTERVAL = 200;
+    private static long settingsVersion = 0;
+    private static boolean forceRefresh = false;
+    
+    private Tex cachedOverlay = null;
+    private long lastSettingsVersion = -1;
+    private int lastRemaining = -1;
+
     NGItem.MeterInfo m = null;
     public NCuriosity(Owner owner, int exp, int mw, int enc, int time) {
         super(owner, exp, mw, enc, time);
@@ -24,6 +37,31 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
 
     public NCuriosity(Curiosity inf) {
         this(inf.owner, inf.exp, inf.mw, inf.enc, inf.time);
+    }
+    
+    public static void invalidateCache() {
+        forceRefresh = true;
+        settingsVersion++;
+    }
+    
+    private static ItemQualityOverlaySettings getSettings() {
+        long now = System.currentTimeMillis();
+        if (forceRefresh || cachedSettings == null || now - lastSettingsCheck > SETTINGS_CHECK_INTERVAL) {
+            ItemQualityOverlaySettings newSettings = 
+                (ItemQualityOverlaySettings) NConfig.get(NConfig.Key.studyInfoOverlay);
+            if (newSettings == null) {
+                newSettings = new ItemQualityOverlaySettings();
+                newSettings.corner = ItemQualityOverlaySettings.Corner.BOTTOM_LEFT;
+                newSettings.defaultColor = new Color(255, 255, 50);
+            }
+            if (cachedSettings != newSettings || forceRefresh) {
+                cachedSettings = newSettings;
+                settingsVersion++;
+                forceRefresh = false;
+            }
+            lastSettingsCheck = now;
+        }
+        return cachedSettings;
     }
 
     public BufferedImage tipimg() {
@@ -85,54 +123,182 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
 
     static int[] div = {60, 60, 24};
     static String[] units = {"s", "m", "h", "d"};
+    
     protected static String shorttime(int time) {
-        int[] vals = new int[4];
-        vals[0] = time;
-        for(int i = 0; i < div.length; i++) {
-            vals[i + 1] = vals[i] / div[i];
-            vals[i] = vals[i] % div[i];
-        }
-        StringBuilder buf = new StringBuilder();
-        int count = 0;
-        for(int i = 3; i >= 0; i--) {
-            if(vals[i] > 0) {
-                if(count++ == 2)
-                    break;
-                buf.append(vals[i]);
-                buf.append(units[i]);
-            }
-        }
-        return(buf.toString());
+        return shorttime(time, ItemQualityOverlaySettings.TimeFormat.AUTO);
     }
-    public static final Text.Foundry ntimefnd = new Text.Foundry(Text.sans, 9, new Color(255, 255, 50));
+    
+    protected static String shorttime(int time, ItemQualityOverlaySettings.TimeFormat format) {
+        if (time <= 0) return "0s";
+        
+        switch (format) {
+            case SECONDS:
+                return time + "s";
+            case MINUTES:
+                return (time / 60) + "m";
+            case HOURS:
+                return String.format("%.1fh", time / 3600.0);
+            case DAYS:
+                return String.format("%.1fd", time / 86400.0);
+            case AUTO:
+            default:
+                int[] vals = new int[4];
+                vals[0] = time;
+                for(int i = 0; i < div.length; i++) {
+                    vals[i + 1] = vals[i] / div[i];
+                    vals[i] = vals[i] % div[i];
+                }
+                StringBuilder buf = new StringBuilder();
+                int count = 0;
+                for(int i = 3; i >= 0; i--) {
+                    if(vals[i] > 0) {
+                        if(count++ == 2)
+                            break;
+                        buf.append(vals[i]);
+                        buf.append(units[i]);
+                    }
+                }
+                return buf.length() > 0 ? buf.toString() : "0s";
+        }
+    }
+    
     @Override
     public Tex overlay() {
         if(owner instanceof NGItem) {
-            if (((NGItem) owner).parent != null && (((NGItem) owner).parent).parent != null && (((NGItem) owner).parent).parent instanceof Tabs.Tab) {
-                BufferedImage text = ntimefnd.render(shorttime((int) (remaining() / server_ratio))).img;
-                BufferedImage bi = new BufferedImage(text.getWidth(), text.getHeight(), BufferedImage.TYPE_INT_ARGB);
-                Graphics2D graphics = bi.createGraphics();
-                Color rgb = new Color(0, 0, 0, 115);
-                graphics.setColor(rgb);
-                graphics.fillRect(0, 0, bi.getWidth(), bi.getHeight());
-                graphics.drawImage(text, 0, 0, null);
-                return (new TexI(bi));
+            // Show overlay for items with remaining study time
+            int rawRemaining = remaining();
+            if (rawRemaining > 0) {
+                ItemQualityOverlaySettings settings = getSettings();
+                if (settings.hidden) {
+                    return null;
+                }
+                float ratio = settings.studyTimeRatio > 0 ? settings.studyTimeRatio : server_ratio;
+                int currentRemaining = (int) (rawRemaining / ratio);
+                long currentVersion = settingsVersion;
+                
+                // Check if we can reuse cached overlay
+                if (cachedOverlay != null && lastSettingsVersion == currentVersion && 
+                    Math.abs(lastRemaining - currentRemaining) <= 1) {
+                    return cachedOverlay;
+                }
+                
+                BufferedImage text = renderTimeText(currentRemaining, settings);
+                
+                if (settings.showBackground) {
+                    BufferedImage bi = new BufferedImage(text.getWidth(), text.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D graphics = bi.createGraphics();
+                    graphics.setColor(settings.backgroundColor);
+                    graphics.fillRect(0, 0, bi.getWidth(), bi.getHeight());
+                    graphics.drawImage(text, 0, 0, null);
+                    graphics.dispose();
+                    cachedOverlay = new TexI(bi);
+                } else {
+                    cachedOverlay = new TexI(text);
+                }
+                
+                lastSettingsVersion = currentVersion;
+                lastRemaining = currentRemaining;
+                return cachedOverlay;
             }
         }
         return null;
+    }
+    
+    private BufferedImage renderTimeText(int seconds, ItemQualityOverlaySettings settings) {
+        FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
+        Font font;
+        if (fontSettings != null) {
+            font = fontSettings.getFont(settings.fontFamily);
+            if (font == null) {
+                font = new Font("SansSerif", Font.PLAIN, UI.scale(settings.fontSize));
+            } else {
+                font = font.deriveFont(Font.PLAIN, UI.scale((float) settings.fontSize));
+            }
+        } else {
+            font = new Font("SansSerif", Font.PLAIN, UI.scale(settings.fontSize));
+        }
+        
+        String timeText = shorttime(seconds, settings.timeFormat);
+        Text.Foundry fnd = new Text.Foundry(font, settings.defaultColor).aa(true);
+        BufferedImage textImg = fnd.render(timeText, settings.defaultColor).img;
+        
+        if (settings.showOutline) {
+            return outlineWithWidth(textImg, settings.outlineColor, settings.outlineWidth);
+        } else {
+            return textImg;
+        }
+    }
+    
+    private BufferedImage outlineWithWidth(BufferedImage img, Color outlineColor, int width) {
+        if (width <= 0) return img;
+        
+        int w = img.getWidth();
+        int h = img.getHeight();
+        int padding = width;
+        
+        BufferedImage result = new BufferedImage(w + padding * 2, h + padding * 2, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = result.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        BufferedImage coloredImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D cg = coloredImg.createGraphics();
+        cg.drawImage(img, 0, 0, null);
+        cg.setComposite(AlphaComposite.SrcIn);
+        cg.setColor(outlineColor);
+        cg.fillRect(0, 0, w, h);
+        cg.dispose();
+        
+        for (int dx = -width; dx <= width; dx++) {
+            for (int dy = -width; dy <= width; dy++) {
+                if (dx != 0 || dy != 0) {
+                    g.drawImage(coloredImg, padding + dx, padding + dy, null);
+                }
+            }
+        }
+        
+        g.drawImage(img, padding, padding, null);
+        g.dispose();
+        
+        return result;
     }
 
 
     @Override
     public void drawoverlay(GOut g, Tex data) {
-        if(data!=null) {
-            g.aimage(data, new Coord(data.sz().x,g.sz().y - data.sz().y), 1, 0);
+        if(data != null) {
+            ItemQualityOverlaySettings settings = getSettings();
+            int pad = settings.showOutline ? settings.outlineWidth : 0;
+            Coord pos;
+            
+            switch (settings.corner) {
+                case TOP_LEFT:
+                    pos = new Coord(-pad, -pad);
+                    g.aimage(data, pos, 0, 0);
+                    break;
+                case TOP_RIGHT:
+                    pos = new Coord(g.sz().x + pad, -pad);
+                    g.aimage(data, pos, 1, 0);
+                    break;
+                case BOTTOM_LEFT:
+                    pos = new Coord(-pad, g.sz().y + pad);
+                    g.aimage(data, pos, 0, 1);
+                    break;
+                case BOTTOM_RIGHT:
+                default:
+                    pos = new Coord(g.sz().x + pad, g.sz().y + pad);
+                    g.aimage(data, pos, 1, 1);
+                    break;
+            }
         }
     }
 
     @Override
-    public boolean tick(double dt)
-    {
+    public boolean tick(double dt) {
+        // Check if settings changed
+        if (lastSettingsVersion != settingsVersion) {
+            cachedOverlay = null;
+            return false;
+        }
         // Update overlay when remaining time changes
         return !needUpdate();
     }

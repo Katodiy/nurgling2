@@ -189,24 +189,25 @@ public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
 
     public void drawoverlay(GOut g, Tex ol) {
         ItemQualityOverlaySettings settings = getSettings();
+        int pad = settings.showOutline ? settings.outlineWidth : 0;
         Coord pos;
         
         switch (settings.corner) {
             case TOP_LEFT:
-                pos = new Coord(0, 0);
+                pos = new Coord(-pad, -pad);
                 g.aimage(ol, pos, 0, 0);
                 break;
             case TOP_RIGHT:
-                pos = new Coord(g.sz().x, 0);
+                pos = new Coord(g.sz().x + pad, -pad);
                 g.aimage(ol, pos, 1, 0);
                 break;
             case BOTTOM_LEFT:
-                pos = new Coord(0, g.sz().y);
+                pos = new Coord(-pad, g.sz().y + pad);
                 g.aimage(ol, pos, 0, 1);
                 break;
             case BOTTOM_RIGHT:
             default:
-                pos = new Coord(g.sz().x, g.sz().y);
+                pos = new Coord(g.sz().x + pad, g.sz().y + pad);
                 g.aimage(ol, pos, 1, 1);
                 break;
         }

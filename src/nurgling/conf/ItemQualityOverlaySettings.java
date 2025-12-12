@@ -89,7 +89,31 @@ public class ItemQualityOverlaySettings implements JConf {
     public Color contentColor = new Color(97, 121, 227, 255); // Blue for content quality
     public boolean showBackground = true;
     public Color backgroundColor = new Color(0, 0, 0, 115);   // Semi-transparent black
-    public boolean showDecimal = false;                        // Show one decimal place
+    public boolean showDecimal = false;
+    public boolean showAmountPrefix = false; // For Amount overlay
+    public boolean hidden = false; // Hide overlay completely: show "×5" instead of "5"
+    
+    // Study info settings
+    public float studyTimeRatio = 3.29f; // Server to real time ratio
+    public TimeFormat timeFormat = TimeFormat.AUTO;
+    
+    public enum TimeFormat {
+        AUTO("Auto"),
+        SECONDS("Seconds"),
+        MINUTES("Minutes"),
+        HOURS("Hours"),
+        DAYS("Days");
+        
+        public final String displayName;
+        TimeFormat(String displayName) { this.displayName = displayName; }
+        
+        public static TimeFormat fromString(String s) {
+            for (TimeFormat tf : values()) {
+                if (tf.name().equals(s)) return tf;
+            }
+            return AUTO;
+        }
+    }                        // Show one decimal place
     public boolean showOutline = true;                         // Show text outline
     public Color outlineColor = Color.BLACK;                   // Outline color
     public int outlineWidth = 1;                               // Outline width (1-3)
@@ -108,7 +132,7 @@ public class ItemQualityOverlaySettings implements JConf {
         if (map.containsKey("corner")) {
             this.corner = Corner.fromString((String) map.get("corner"));
         }
-        if (map.containsKey("fontFamily")) {
+        if (map.containsKey("fontFamily") && map.get("fontFamily") != null) {
             this.fontFamily = (String) map.get("fontFamily");
         }
         if (map.containsKey("fontSize")) {
@@ -132,6 +156,18 @@ public class ItemQualityOverlaySettings implements JConf {
         }
         if (map.containsKey("showDecimal")) {
             this.showDecimal = (Boolean) map.get("showDecimal");
+        }
+        if (map.containsKey("showAmountPrefix")) {
+            this.showAmountPrefix = (Boolean) map.get("showAmountPrefix");
+        }
+        if (map.containsKey("hidden")) {
+            this.hidden = (Boolean) map.get("hidden");
+        }
+        if (map.containsKey("studyTimeRatio")) {
+            this.studyTimeRatio = ((Number) map.get("studyTimeRatio")).floatValue();
+        }
+        if (map.containsKey("timeFormat")) {
+            this.timeFormat = TimeFormat.fromString((String) map.get("timeFormat"));
         }
         if (map.containsKey("showOutline")) {
             this.showOutline = (Boolean) map.get("showOutline");
@@ -188,6 +224,10 @@ public class ItemQualityOverlaySettings implements JConf {
         ret.put("showBackground", showBackground);
         ret.put("backgroundColor", colorToMap(backgroundColor));
         ret.put("showDecimal", showDecimal);
+        ret.put("showAmountPrefix", showAmountPrefix);
+        ret.put("hidden", hidden);
+        ret.put("studyTimeRatio", studyTimeRatio);
+        ret.put("timeFormat", timeFormat.name());
         ret.put("showOutline", showOutline);
         ret.put("outlineColor", colorToMap(outlineColor));
         ret.put("outlineWidth", outlineWidth);
@@ -213,6 +253,10 @@ public class ItemQualityOverlaySettings implements JConf {
         copy.showBackground = this.showBackground;
         copy.backgroundColor = this.backgroundColor;
         copy.showDecimal = this.showDecimal;
+        copy.showAmountPrefix = this.showAmountPrefix;
+        copy.hidden = this.hidden;
+        copy.studyTimeRatio = this.studyTimeRatio;
+        copy.timeFormat = this.timeFormat;
         copy.showOutline = this.showOutline;
         copy.outlineColor = this.outlineColor;
         copy.outlineWidth = this.outlineWidth;
