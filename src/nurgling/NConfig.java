@@ -26,6 +26,7 @@ public class NConfig
     {
         vilol, claimol, realmol,
         minimapVilol, minimapClaimol, minimapRealmol,
+        selectedWorld,
         showVarity,
         autoFlower,
         autoSplitter,
@@ -185,6 +186,7 @@ public class NConfig
         conf.put(Key.minimapVilol, false);
         conf.put(Key.minimapClaimol, false);
         conf.put(Key.minimapRealmol, false);
+        conf.put(Key.selectedWorld, null);
         conf.put(Key.showVarity, false);
         conf.put(Key.autoFlower, false);
         conf.put(Key.autoSplitter, false);

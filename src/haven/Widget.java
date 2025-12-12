@@ -66,14 +66,63 @@ public class Widget {
     }
     @RName("ccnt")
     public static class $CCont implements Factory {
+	// Character selection screen size override (before UI.scale)
+	private static final Coord CHARSEL_ORIG_SIZE = new Coord(800, 600);
+	private static final Coord CHARSEL_NEW_SIZE = new Coord(1376, 768);
+	// Offset to shift right-side elements (avatar, new character button) - before UI.scale
+	private static final int CHARSEL_X_OFFSET = 576; // 1376 - 800 = 576
+	// Threshold for right-side elements (before UI.scale)
+	private static final int CHARSEL_RIGHT_THRESHOLD = 300;
+	
 	public Widget create(UI ui, Object[] args) {
-	    Widget ret = new Widget(UI.scale((Coord)args[0])) {
+	    Coord sz = (Coord)args[0];
+	    final boolean isCharsel = sz.equals(CHARSEL_ORIG_SIZE);
+	    // Override character selection screen size (apply UI.scale)
+	    if(isCharsel) {
+		sz = UI.scale(CHARSEL_NEW_SIZE);
+	    } else {
+		sz = UI.scale(sz);
+	    }
+	    final Coord finalSz = sz;
+	    final int scaledXOffset = UI.scale(CHARSEL_X_OFFSET);
+	    final int scaledRightThreshold = UI.scale(CHARSEL_RIGHT_THRESHOLD);
+	    Widget ret = new Widget(sz) {
+		    private int verifySubCount = 0; // Counter for verify/sub icons
+		    
 		    public void presize() {
-			c = parent.sz.div(2).sub(sz.div(2));
+			c = parent.sz.div(2).sub(finalSz.div(2));
 		    }
 
 		    protected void added() {
 			presize();
+		    }
+		    
+		    public void addchild(Widget child, Object... args) {
+			super.addchild(child, args);
+			if(!isCharsel) return;
+			
+			// Check if this is verify or subscription icon
+			if(child instanceof Img) {
+			    Img img = (Img)child;
+			    if(img.charselType == Img.CharselType.VERIFY || img.charselType == Img.CharselType.SUB) {
+				// Position to the right of center
+				int centerX = finalSz.x / 2;
+				int iconX = centerX + UI.scale(20) + (verifySubCount * (img.sz.x + UI.scale(10)));
+				int iconY = finalSz.y / 2 - img.sz.y / 2;
+				child.c = new Coord(iconX, iconY);
+				verifySubCount++;
+				return;
+			    }
+			    // Skip background - it stays at 0,0
+			    if(img.charselType == Img.CharselType.BACKGROUND) {
+				return;
+			    }
+			}
+			
+			// Shift elements on right side of character selection screen
+			if(child.c.x > scaledRightThreshold) {
+			    child.c = child.c.add(scaledXOffset, 0);
+			}
 		    }
 		};
 	    return(ret);
