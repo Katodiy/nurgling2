@@ -81,7 +81,9 @@ public class NCharacterInfo extends Widget {
         // Sanitize username - remove directory separators and "steam" prefix
         String username = nui.sessInfo == null ? "" : nui.sessInfo.username;
         username = username.replace("\\", "_").replace("/", "_").replace("steam", "");
-        String filename = username + "_" + chrid.trim() + ".dat";
+        // Replace * with __ in character name for valid filename
+        String sanitizedChrid = chrid.trim().replace("*", "__");
+        String filename = username + "_" + sanitizedChrid + ".dat";
         
         // Use profile-aware path if genus is available
         if (genus != null && !genus.isEmpty()) {
