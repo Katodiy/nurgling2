@@ -33,7 +33,7 @@ public class BotRegistry {
                 true,
                 false,
                 RoutePointNavigator.class,
-                "attacknearcurs",
+                "goto",
                 false
         ));
         bots.add(new BotDescriptor(
