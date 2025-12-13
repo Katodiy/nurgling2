@@ -46,6 +46,11 @@ public class Charlist extends Widget {
     private boolean dirty;
     private boolean showdisc;
 
+    /** Override this method to filter displayed characters */
+    protected List<Char> getDisplayChars() {
+	return chars;
+    }
+
     @RName("charlist")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
@@ -135,7 +140,7 @@ public class Charlist extends Widget {
 	    super(Coord.of(bsz.x, ((bsz.y + margin) * h) - margin), bsz.y, margin);
 	}
 
-	protected List<Char> items() {return(chars);}
+	protected List<Char> items() {return(getDisplayChars());}
 	protected Charbox makeitem(Char chr, int idx, Coord sz) {return(new Charbox(chr));}
 
 	protected void drawslot(GOut g, Char item, int idx, Area area) {}

@@ -17,6 +17,8 @@ public class FontSettings implements JConf {
 
     public Font getFont(String name)
     {
+        if (name == null)
+            return sans;
         if(name.equals( "Inter"))
             return helvetica;
         else if(name.equals("Roboto"))
@@ -27,7 +29,7 @@ public class FontSettings implements JConf {
             return serif;
         else if(name.equals("Fractur"))
             return fraktur;
-        return null;
+        return sans;
     }
 
     public Text.Foundry getFoundary(Fonts.FontType fontType) {

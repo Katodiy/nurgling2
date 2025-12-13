@@ -501,7 +501,7 @@ public class NAreasWidget extends Window
                             }
                             else if (option.name.equals("Select area space"))
                             {
-                                ((NMapView)NUtils.getGameUI().map).changeArea(AreaItem.this.text.text());
+                                ((NMapView)NUtils.getGameUI().map).changeArea(area.id);
                             }
                             else if (option.name.equals("Set color"))
                             {

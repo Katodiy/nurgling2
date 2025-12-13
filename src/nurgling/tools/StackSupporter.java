@@ -27,6 +27,7 @@ public class StackSupporter {
         customStackSizes.put("Ghostpipe", 3);
         customStackSizes.put("Forest Lizard", 3);
         customStackSizes.put("Cavebulb", 4);
+        customStackSizes.put("Dusk Fern", 4);
         customStackSizes.put("Frog", 3);
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
