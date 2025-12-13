@@ -13,8 +13,8 @@ import java.awt.event.ActionListener;
 
 public class NColorWidget extends Widget
 {
-    NColorButton cb;
-    Label label;
+    public NColorButton cb;
+    public Label label;
 
     public Color color = Color.BLACK;
 

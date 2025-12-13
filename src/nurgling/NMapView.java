@@ -24,6 +24,7 @@ import nurgling.tasks.WaitForMapLoadNoCoord;
 import nurgling.tools.*;
 import nurgling.widgets.NAreasWidget;
 import nurgling.widgets.NMiniMap;
+import nurgling.widgets.NZoneMeasureTool;
 
 import java.awt.event.KeyEvent;
 import java.awt.image.*;
@@ -99,6 +100,11 @@ public class NMapView extends MapView
     public Pair<Coord, Coord> currentSelectionCoords = null;  // Current selection coords during dragging
     public boolean rotationRequested = false;  // Flag to request rotation during area selection
     public Gob selectedGob = null;
+
+    // Zone measure tool state
+    public boolean zoneMeasureMode = false;
+    public boolean zoneClearMode = false;
+    public NZoneMeasureTool zoneMeasureTool = null;
     public static boolean isRecordingRoutePoint = false;
 
     public HashMap<Long, Gob> dummys = new HashMap<>();
@@ -892,6 +898,27 @@ public class NMapView extends MapView
             }
         }
         
+        // Handle zone measure mode
+        if (zoneMeasureMode && ev.b == 1) {
+            if (selection == null) {
+                selection = new ZoneMeasureSelector();
+            }
+        }
+
+        // Handle zone clear mode
+        if (zoneClearMode && ev.b == 1) {
+            new Maptest(ev.c) {
+                public void hit(Coord pc, Coord2d mc) {
+                    Coord tileCoord = mc.div(MCache.tilesz).floor();
+                    if (zoneMeasureTool != null) {
+                        zoneMeasureTool.onZoneClicked(tileCoord);
+                    }
+                    zoneClearMode = false;
+                }
+            }.run();
+            return true;
+        }
+
         if ( isAreaSelectionMode.get() )
         {
             if (selection == null)
@@ -1269,7 +1296,60 @@ public class NMapView extends MapView
             }
         }
     }
-    
+
+    /**
+     * Selector for zone measurement tool
+     * Similar to NSelector but notifies the tool instead of creating areas
+     */
+    public class ZoneMeasureSelector extends Selector {
+        public ZoneMeasureSelector() {
+            super(null);  // No max size limit
+        }
+
+        @Override
+        public void mmousemove(Coord mc) {
+            super.mmousemove(mc);
+            // Live dimension display is handled by parent Selector's tt field
+        }
+
+        @Override
+        public boolean mmouseup(Coord mc, int button) {
+            synchronized (NMapView.this) {
+                if (sc != null) {
+                    Coord ec = mc.div(MCache.tilesz2);
+
+                    // Notify the tool with tile coordinates
+                    if (zoneMeasureTool != null) {
+                        zoneMeasureTool.onAreaSelected(sc, ec);
+                    }
+
+                    // Cleanup
+                    xl.mv = false;
+                    tt = null;
+                    ol.destroy();
+                    mgrab.remove();
+                    sc = null;
+                    destroy();
+                    selection = null;
+                    zoneMeasureMode = false;
+                }
+                return true;
+            }
+        }
+
+        @Override
+        public void destroy() {
+            synchronized (NMapView.this) {
+                // Notify tool of cancellation if we're being destroyed without completing
+                if (sc != null && zoneMeasureTool != null) {
+                    zoneMeasureTool.onSelectionCancelled();
+                }
+                super.destroy();
+                zoneMeasureMode = false;
+            }
+        }
+    }
+
     /**
      * Send selected area to chat in @Area format
      * Format: @Area(grid:x,y;grid:x,y) - two corner points (upper-left and bottom-right)
@@ -1416,23 +1496,32 @@ public class NMapView extends MapView
         {
             if(area.name.equals(name))
             {
-                area.inWork = true;
-                if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
-                {
-                    NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
-                    if (nol != null)
-                        nol.remove();
-                    Gob dummy = dummys.get(area.gid);
-                    if(dummy != null) {
-                        glob.oc.remove(dummy);
-                        dummys.remove(area.gid);
-                    }
-                    NUtils.getGameUI().map.nols.remove(area.id);
-                    routeGraphManager.getGraph().deleteAreaFromRoutePoints(area.id);
-                }
-                NAreaSelector.changeArea(area);
+                changeArea(area.id);
                 break;
             }
+        }
+    }
+
+    public void changeArea(int id)
+    {
+        NArea area = glob.map.areas.get(id);
+        if (area != null)
+        {
+            area.inWork = true;
+            if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+            {
+                NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
+                if (nol != null)
+                    nol.remove();
+                Gob dummy = dummys.get(area.gid);
+                if(dummy != null) {
+                    glob.oc.remove(dummy);
+                    dummys.remove(area.gid);
+                }
+                NUtils.getGameUI().map.nols.remove(area.id);
+                routeGraphManager.getGraph().deleteAreaFromRoutePoints(area.id);
+            }
+            NAreaSelector.changeArea(area);
         }
     }
 

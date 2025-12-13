@@ -97,7 +97,7 @@ public class NAlias {
         
         if (keys != null) {
             for (String key : keys) {
-                if (key != null) {
+                if (key != null && !key.isEmpty()) {
                     lowercaseKeys.add(key.toLowerCase());
                 }
             }

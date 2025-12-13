@@ -58,7 +58,9 @@ public class LightGob implements Action
                 Gob gob = Finder.findGob(gobHash);
                 if (gob != null && (gob.ngob.getModelAttribute() & flame_flag) == 0)
                 {
-                    new PathFinder(gob).run(gui);
+                    PathFinder pf = new PathFinder(gob);
+                    pf.isHardMode = true;
+                    pf.run(gui);
                     NUtils.activateGob(gob);
                     NUtils.getUI().core.addTask(new WaitGobModelAttr(gob, flame_flag));
                 }

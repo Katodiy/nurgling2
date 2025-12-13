@@ -26,6 +26,7 @@ public class NConfig
     {
         vilol, claimol, realmol,
         minimapVilol, minimapClaimol, minimapRealmol,
+        selectedWorld,
         showVarity,
         autoFlower,
         autoSplitter,
@@ -154,7 +155,15 @@ public class NConfig
         showThingwallNames,
         showPartyMemberNames,
         trackingVectors,
-        randomAreaColor
+        randomAreaColor,
+        treeScaleDisableZoomHide,
+        treeScaleMinThreshold,
+        itemQualityOverlay,
+        stackQualityOverlay,
+        amountOverlay,
+        studyInfoOverlay,
+        progressOverlay,
+        volumeOverlay
     }
 
     public enum BBDisplayMode
@@ -185,6 +194,7 @@ public class NConfig
         conf.put(Key.minimapVilol, false);
         conf.put(Key.minimapClaimol, false);
         conf.put(Key.minimapRealmol, false);
+        conf.put(Key.selectedWorld, null);
         conf.put(Key.showVarity, false);
         conf.put(Key.autoFlower, false);
         conf.put(Key.autoSplitter, false);
@@ -413,6 +423,42 @@ public class NConfig
         
         // Random area color on creation
         conf.put(Key.randomAreaColor, false);
+        
+        // Tree scale overlay settings
+        conf.put(Key.treeScaleDisableZoomHide, false);  // If true, always show full label (don't hide on zoom out)
+        conf.put(Key.treeScaleMinThreshold, 0);  // Minimum growth % to display tree scale (0 = show all)
+        
+        // Item quality overlay settings
+        conf.put(Key.itemQualityOverlay, new ItemQualityOverlaySettings());
+        // Stack quality overlay settings
+        ItemQualityOverlaySettings stackDefaults = new ItemQualityOverlaySettings();
+        stackDefaults.corner = ItemQualityOverlaySettings.Corner.TOP_LEFT;
+        conf.put(Key.stackQualityOverlay, stackDefaults);
+        // Amount overlay settings
+        ItemQualityOverlaySettings amountDefaults = new ItemQualityOverlaySettings();
+        amountDefaults.corner = ItemQualityOverlaySettings.Corner.BOTTOM_RIGHT;
+        amountDefaults.useThresholds = false;
+        conf.put(Key.amountOverlay, amountDefaults);
+        // Study info overlay settings
+        ItemQualityOverlaySettings studyDefaults = new ItemQualityOverlaySettings();
+        studyDefaults.corner = ItemQualityOverlaySettings.Corner.BOTTOM_LEFT;
+        studyDefaults.useThresholds = false;
+        studyDefaults.defaultColor = new java.awt.Color(255, 255, 50);
+        conf.put(Key.studyInfoOverlay, studyDefaults);
+        // Progress/meter overlay settings
+        ItemQualityOverlaySettings progressDefaults = new ItemQualityOverlaySettings();
+        progressDefaults.corner = ItemQualityOverlaySettings.Corner.BOTTOM_LEFT;
+        progressDefaults.useThresholds = false;
+        progressDefaults.defaultColor = new java.awt.Color(234, 164, 101);
+        progressDefaults.showBackground = true;
+        conf.put(Key.progressOverlay, progressDefaults);
+        // Volume overlay settings (CustomName - kg/l)
+        ItemQualityOverlaySettings volumeDefaults = new ItemQualityOverlaySettings();
+        volumeDefaults.corner = ItemQualityOverlaySettings.Corner.TOP_LEFT;
+        volumeDefaults.useThresholds = false;
+        volumeDefaults.defaultColor = new java.awt.Color(65, 255, 115);
+        volumeDefaults.showBackground = true;
+        conf.put(Key.volumeOverlay, volumeDefaults);
     }
 
 
@@ -780,6 +826,9 @@ public class NConfig
                                     break;
                                 case "FontSettings":
                                     conf.put(Key.fonts, new FontSettings(hobj));
+                                    break;
+                                case "ItemQualityOverlaySettings":
+                                    conf.put(Key.valueOf(entry.getKey()), new ItemQualityOverlaySettings(hobj));
                                     break;
                                 case "Color":
                                     try {

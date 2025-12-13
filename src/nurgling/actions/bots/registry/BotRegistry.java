@@ -33,7 +33,7 @@ public class BotRegistry {
                 true,
                 false,
                 RoutePointNavigator.class,
-                "attacknearcurs",
+                "goto",
                 false
         ));
         bots.add(new BotDescriptor(
@@ -97,6 +97,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("attacknearborka", BotDescriptor.BotType.BATTLE, "Aggro Nearest Borka", "Aggros nearest Borka.", true, true, AggroNearestBorka.class, "attacknearborka", false));
         bots.add(new BotDescriptor("attackall", BotDescriptor.BotType.BATTLE, "Attack All", "Attacks all enemies.", true, true, AttackAll.class, "attackall", false));
         bots.add(new BotDescriptor("taming", BotDescriptor.BotType.BATTLE, "Tame an animal", "Attacks the nearest animal waiting to be tamed, allows it to escape. Ties the animal on a rope if the corresponding setting is set. Fighting on your own", false, true, TaimingAnimal.class, "taming", false));
+        bots.add(new BotDescriptor("combatdist", BotDescriptor.BotType.BATTLE, "Combat Distance Tool", "Opens a window to manage combat distance. Shows current distance to target, allows manual distance input, and auto-calculates optimal kiting distance based on enemy type and vehicle.", false, true, CombatDistanceTool.class, "combatdist", false));
 
         // FARMING
         bots.add(new BotDescriptor("turnip", BotDescriptor.BotType.FARMING, "Turnip Farmer", "Automatically harvests and replants turnips.", true, true, nurgling.actions.bots.farmers.TurnipsFarmer.class, "turnip", false));
@@ -154,11 +155,13 @@ public class BotRegistry {
         bots.add(new BotDescriptor("hempq", BotDescriptor.BotType.FARMING_QUALITY, "Hemp Farmer Quality", "Automatically harvests and replants hemp in X*Y cell patches.", true, true, HempFarmerQ.class, "hempq", false));
         bots.add(new BotDescriptor("flaxq", BotDescriptor.BotType.FARMING_QUALITY, "Flax Farmer Quality", "Automatically harvests and replants flax in X*Y cell patches.", true, true, FlaxFarmerQ.class, "flaxq", false));
         bots.add(new BotDescriptor("green_kaleq", BotDescriptor.BotType.FARMING_QUALITY, "Green Kale Farmer Quality", "Automatically harvests and replants green kale in X*Y cell patches.", true, true, GreenKaleFarmerQ.class, "green_kaleq", false));
+        bots.add(new BotDescriptor("lettuceq", BotDescriptor.BotType.FARMING_QUALITY, "Lettuce Farmer Quality", "Automatically harvests and replants lettuce in X*Y cell patches.", true, true, LettuceFarmerQ.class, "lettuceq", false));
 
         bots.add(new BotDescriptor("barleyq", BotDescriptor.BotType.FARMING_QUALITY, "Barley Farmer Quality", "Automatically harvests and replants barley in X*Y cell patches.", true, true, BarleyFarmerQ.class, "barleyq", false));
         bots.add(new BotDescriptor("milletq", BotDescriptor.BotType.FARMING_QUALITY, "Millet Farmer Quality", "Automatically harvests and replants millet in X*Y cell patches.", true, true, MilletFarmerQ.class, "milletq", false));
         bots.add(new BotDescriptor("wheatq", BotDescriptor.BotType.FARMING_QUALITY, "Wheat Farmer Quality", "Automatically harvests and replants wheat in X*Y cell patches.", true, true, WheatFarmerQ.class, "wheatq", false));
         bots.add(new BotDescriptor("poppyq", BotDescriptor.BotType.FARMING_QUALITY, "Poppy Farmer Quality", "Automatically harvests and replants poppy in X*Y cell patches.", true, true, PoppyFarmerQ.class, "poppyq", false));
+        bots.add(new BotDescriptor("pipeweedq", BotDescriptor.BotType.FARMING_QUALITY, "Pipeweed Farmer Quality", "Automatically harvests and replants pipeweed in X*Y cell patches.", true, true, PipeweedFarmerQ.class, "pipeweedq", false));
 
         // UTILS
         bots.add(new BotDescriptor("shieldsword", BotDescriptor.BotType.UTILS, "Equip Shield/Sword", "Equips shield and sword.", true, true, EquipShieldSword.class, "shieldsword", false));
@@ -189,6 +192,8 @@ public class BotRegistry {
         bots.add(new BotDescriptor("swill_collector", BotDescriptor.BotType.UTILS, "Swill Collector", "Collects swill items from area and feeds to troughs/cisterns.", false, true, CollectSwillInArea.class, "swillcollector", false));
         bots.add(new BotDescriptor("qzone", BotDescriptor.BotType.UTILS, "Quality in Zone", "Scan the quality of all typical objects in the area.", false, true, InspectQualityBot.class, "qzone", false));
         bots.add(new BotDescriptor("autoflaction", BotDescriptor.BotType.UTILS, "Auto Flower Action", "Perform the specified flower pop-up menu action for all objects in the area.", false, true, AutoFlowerActionBot.class, "autoflaction", false));
+        bots.add(new BotDescriptor("autoflaction", BotDescriptor.BotType.UTILS, "Drop Soil", "Drops soil from stockpile until there is 10 soil left in the stockpile..", false, true, SoilStockpileDropper.class, "dropsoil", false));
+        bots.add(new BotDescriptor("measure_length", BotDescriptor.BotType.UTILS, "Zone Measure Tool", "Measure and mark zones on the ground. Select areas, view dimensions, and manage multiple selections.", false, true, ZoneMeasureTool.class, "measuring_length", false));
 
         // BUILD
         bots.add(new BotDescriptor("dframe", BotDescriptor.BotType.BUILD, "Build Drying Frame", "Builds drying frame.", false, true, BuildDryingFrame.class, "dframe", true));

@@ -31,7 +31,7 @@ public class GardenPotFiller implements Action {
         NContext context = externalContext != null ? externalContext : new NContext(gui);
 
         // Register mulch as input item so TakeItems2 can find it
-        context.addInItem("Mulch", null);
+        context.addInItem("Soil", null);
 
         // Phase 1: Fill mulch
         fillMulchPhase(gui, context);
@@ -168,7 +168,7 @@ public class GardenPotFiller implements Action {
         int mulchNeeded = potsRemaining * 12;
         int amountToTake = Math.min(mulchNeeded, freeSpace);
 
-        new TakeItems2(context, "Mulch", amountToTake).run(gui);
+        new TakeItems2(context, "Soil", amountToTake).run(gui);
 
         if (gui.getInventory().getItems(GardenPotUtils.SOIL).isEmpty()) {
             return Results.ERROR("No mulch available in Take areas");
