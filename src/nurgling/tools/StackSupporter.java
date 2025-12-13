@@ -156,6 +156,7 @@ public class StackSupporter {
         catExceptions.add("Leech");
         catExceptions.add("Clean Adder Carcass");
         catExceptions.add("Clean Chicken");
+        catExceptions.add("Clean Pelican");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
     public static boolean isStackable(NInventory inv, String name)
