@@ -1496,23 +1496,32 @@ public class NMapView extends MapView
         {
             if(area.name.equals(name))
             {
-                area.inWork = true;
-                if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
-                {
-                    NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
-                    if (nol != null)
-                        nol.remove();
-                    Gob dummy = dummys.get(area.gid);
-                    if(dummy != null) {
-                        glob.oc.remove(dummy);
-                        dummys.remove(area.gid);
-                    }
-                    NUtils.getGameUI().map.nols.remove(area.id);
-                    routeGraphManager.getGraph().deleteAreaFromRoutePoints(area.id);
-                }
-                NAreaSelector.changeArea(area);
+                changeArea(area.id);
                 break;
             }
+        }
+    }
+
+    public void changeArea(int id)
+    {
+        NArea area = glob.map.areas.get(id);
+        if (area != null)
+        {
+            area.inWork = true;
+            if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+            {
+                NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
+                if (nol != null)
+                    nol.remove();
+                Gob dummy = dummys.get(area.gid);
+                if(dummy != null) {
+                    glob.oc.remove(dummy);
+                    dummys.remove(area.gid);
+                }
+                NUtils.getGameUI().map.nols.remove(area.id);
+                routeGraphManager.getGraph().deleteAreaFromRoutePoints(area.id);
+            }
+            NAreaSelector.changeArea(area);
         }
     }
 
