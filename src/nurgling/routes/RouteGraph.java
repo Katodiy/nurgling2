@@ -103,6 +103,19 @@ public class RouteGraph {
         return findNearestPoint(playerGridId, playerLocalCoord);
     }
 
+
+    public RoutePoint findNearestPoint(NGameUI gui, Coord2d rc) {
+
+        Coord playerTile = rc.floor(gui.map.glob.map.tilesz);
+        MCache.Grid playerGrid = gui.map.glob.map.getgridt(playerTile);
+
+        long playerGridId = playerGrid.id;
+        Coord playerLocalCoord = playerTile.sub(playerGrid.ul);
+
+        return findNearestPoint(playerGridId, playerLocalCoord);
+    }
+
+
     public RoutePoint findNearestPoint(long gridId, Coord localCoord) {
         RoutePoint nearestPoint = null;
         double currentDistanceToClosestPoint = Double.MAX_VALUE;
