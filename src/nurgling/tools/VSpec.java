@@ -1737,6 +1737,7 @@ public class VSpec {
         cleanCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/woodgrouse-f-cleaned\",\"name\":\"Cleaned Wood Grouse Hen\"}"));
         categories.put("Clean Animal Carcass", cleanCarcasses);
 
+
         ArrayList<JSONObject> baits = new ArrayList<>();
         baits.addAll(giantAntItems);
         baits.addAll(royalAntItems);
@@ -2065,12 +2066,13 @@ public class VSpec {
         categories.put("Fine Feather", fineFeathers);
 
         ArrayList<JSONObject> finerPlantFibres = new ArrayList<>();
-        finerPlantFibres.add(new JSONObject("{\"static\":\"gfx/invobjs/flaxfibre\",\"name\":\"Flax Fibre\"}"));
-        finerPlantFibres.add(new JSONObject("{\"static\":\"gfx/invobjs/hempfibre\",\"name\":\"Hemp Fibre\"}"));
+        finerPlantFibres.add(new JSONObject("{\"static\":\"gfx/invobjs/flaxfibre\",\"name\":\"Flax Fibres\"}"));
+        finerPlantFibres.add(new JSONObject("{\"static\":\"gfx/invobjs/hempfibre\",\"name\":\"Hemp Fibres\"}"));
         categories.put("Finer Plant Fibre", finerPlantFibres);
 
         ArrayList<JSONObject> soil = new ArrayList<>();
         soil.add(new JSONObject("{\"static\":\"gfx/invobjs/soil\",\"name\":\"Soil\"}"));
+        soil.add(new JSONObject("{\"static\":\"gfx/invobjs/earthworm\",\"name\":\"Earthworm\"}"));
         categories.put("Soil", soil);
 
         ArrayList<JSONObject> silkcocoon = new ArrayList<>();
