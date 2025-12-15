@@ -73,7 +73,7 @@ public class TransferToPiles implements Action{
 
                 while(!(gui.getInventory().getItems(items,th)).isEmpty() && out!=null) {
                     PileMaker pm;
-                    if(!(pm = new PileMaker(out, items, pileName)).run(gui).IsSuccess())
+                    if(!(pm = new PileMaker(out, items, pileName, th)).run(gui).IsSuccess())
                         return Results.FAIL();
                     Gob pile = pm.getPile();
                     while (pile.ngob.getModelAttribute() != 31) {

@@ -19,6 +19,7 @@ public class PileMaker implements Action{
     Pair<Coord2d, Coord2d> out;
     NAlias items;
     NAlias pileName;
+    int th = 0;
 
     public Gob getPile() {
         return pile;
@@ -31,11 +32,19 @@ public class PileMaker implements Action{
         this.pileName = pileName;
     }
 
+    public PileMaker(Pair<Coord2d, Coord2d> out, NAlias items, NAlias pileName, int th) {
+        this.out = out;
+        this.items = items;
+        this.pileName = pileName;
+        this.th = th;
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
 
         if (gui.hand.isEmpty()) {
-            if(NUtils.takeItemToHand(NUtils.getGameUI().getInventory().getItem(items))==null)
+            java.util.ArrayList<haven.WItem> witems = NUtils.getGameUI().getInventory().getItems(items, th);
+            if(witems.isEmpty() || NUtils.takeItemToHand(witems.get(0))==null)
                 
                 return Results.FAIL();
         }
