@@ -141,6 +141,8 @@ public class NConfig
         simpleInspect,
         showSpeedometer,
         showPathLine,
+        pathLineWidth,
+        pathLineColor,
         parasiteBotEnabled,
         leechAction,
         tickAction,
@@ -288,6 +290,8 @@ public class NConfig
         conf.put(Key.showFullPathLines, false);
         conf.put(Key.showSpeedometer, false);
         conf.put(Key.showPathLine, false);
+        conf.put(Key.pathLineWidth, 4);
+        conf.put(Key.pathLineColor, new Color(255, 255, 0));  // Yellow
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();

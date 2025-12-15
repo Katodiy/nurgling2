@@ -226,12 +226,16 @@ public class NMapView extends MapView
                         Coord playerc = screenxf(player.getc()).round2();
                         Coord destc = screenxf(clickDestination).round2();
                         if (playerc != null && destc != null) {
+                            // Get line settings from config
+                            Object widthObj = NConfig.get(NConfig.Key.pathLineWidth);
+                            int lineWidth = (widthObj instanceof Number) ? ((Number) widthObj).intValue() : 4;
+                            java.awt.Color lineColor = NConfig.getColor(NConfig.Key.pathLineColor, java.awt.Color.YELLOW);
                             // Draw black outline
                             g.chcolor(java.awt.Color.BLACK);
-                            g.line(playerc, destc, 6);
-                            // Draw bright yellow core
-                            g.chcolor(java.awt.Color.YELLOW);
-                            g.line(playerc, destc, 4);
+                            g.line(playerc, destc, lineWidth + 2);
+                            // Draw colored core
+                            g.chcolor(lineColor);
+                            g.line(playerc, destc, lineWidth);
                             // Reset color
                             g.chcolor();
                         }
