@@ -673,37 +673,45 @@ public class NContext {
     }
 
     public boolean addOutItem(String name, BufferedImage loadsimg, double th) throws InterruptedException {
+        System.out.println("[addOutItem] Called for '" + name + "' with quality=" + th);
         if(!outAreas.containsKey(name))
         {
+            System.out.println("[addOutItem]   First time seeing this item, creating new TreeMap");
             outAreas.put(name,new TreeMap<>());
         }
         else
         {
+            System.out.println("[addOutItem]   Existing thresholds: " + outAreas.get(name).keySet());
             for(Double key :outAreas.get(name).descendingKeySet())
             {
-                if(th>key)
+                System.out.println("[addOutItem]   Checking: " + th + " > " + key + " = " + (th > key));
+                if(th>key) {
+                    System.out.println("[addOutItem]   EARLY RETURN - item quality " + th + " > existing threshold " + key);
                     return true;
+                }
             }
         }
-        NArea area = findOut(name,th);
-        if (area == null) {
-            area = findOutGlobal(name, th, gui);
-        }
+        System.out.println("[addOutItem]   Calling findOutGlobal for '" + name + "' th=" + th);
+        NArea area = findOutGlobal(name, th, gui);
         if(area!=null)
         {
+            System.out.println("[addOutItem]   Found area: id=" + area.id + " with threshold=" + area.getOutput(name).th);
             areas.put(String.valueOf(area.id),area);
             List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
             if(pointList!=null && !pointList.isEmpty())
                 rps.put(String.valueOf(area.id),pointList.get(pointList.size()-1));
             outAreas.get(name).put(Math.abs((double)area.getOutput(name).th), String.valueOf(area.id));
+            System.out.println("[addOutItem]   Added to outAreas: " + outAreas.get(name));
         }
         if (loadsimg!=null && area == null) {
             outAreas.get(name).put(Math.abs(th), createArea("Please select area for:" + name, Resource.loadsimg("baubles/custom"), loadsimg));
         }
         else
         {
-            if(area == null)
+            if(area == null) {
+                System.out.println("[addOutItem]   No area found, returning false");
                 return false;
+            }
         }
         return true;
     }
@@ -968,27 +976,39 @@ public class NContext {
     }
 
     public static NArea findOutGlobal(String name, double th, NGameUI gui) {
+        System.out.println("[findOutGlobal] Looking for '" + name + "' with quality=" + th);
         NArea res = null;
         ArrayList<TestedArea> areas = new ArrayList<>();
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null) {
             Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+            System.out.println("[findOutGlobal]   Checking " + nids.size() + " area IDs");
             for(Integer id : nids) {
                 if (id > 0) {
                     NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
-                    if (cand.containOut(name) && ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(cand)) != null) {
+                    boolean containsOut = cand.containOut(name);
+                    boolean hasRoute = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(cand)) != null;
+                    if (containsOut) {
+                        System.out.println("[findOutGlobal]   Area " + id + ": containsOut=" + containsOut + ", hasRoute=" + hasRoute + ", areaTh=" + (cand.getOutput(name) != null ? cand.getOutput(name).th : "null"));
+                    }
+                    if (containsOut && hasRoute) {
                         areas.add(new TestedArea(cand, cand.getOutput(name).th));
                     }
                 }
             }
         }
 
+        System.out.println("[findOutGlobal]   Found " + areas.size() + " candidate areas");
         areas.sort(ta_comp);
+        for (TestedArea ta : areas) {
+            System.out.println("[findOutGlobal]   Candidate: areaId=" + ta.area.id + " threshold=" + ta.th);
+        }
 
         double tth = 1;
         for (TestedArea area : areas) {
             if(area.th<=th) {
                 res = area.area;
                 tth = area.th;
+                System.out.println("[findOutGlobal]   Selecting area " + area.area.id + " with th=" + area.th + " (th <= " + th + ")");
             }
         }
 

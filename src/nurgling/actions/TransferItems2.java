@@ -110,11 +110,16 @@ public class TransferItems2 implements Action
         // areas from grabbing high quality items)
         TreeMap<Double, ThresholdGroup> thresholdGroups = new TreeMap<>(Collections.reverseOrder());
 
+        System.out.println("[TransferItems2] Processing items: " + resitems);
+
         for(String item : resitems) {
             TreeMap<Double,String> areas = cnt.getOutAreas(item);
+            System.out.println("[TransferItems2] Item '" + item + "' -> areas: " + areas);
             if(areas != null) {
                 for (Double quality : areas.descendingKeySet()) {
-                    if (!NUtils.getGameUI().getInventory().getItems(new NAlias(item), quality).isEmpty()) {
+                    ArrayList<haven.WItem> matchingItems = NUtils.getGameUI().getInventory().getItems(new NAlias(item), quality);
+                    System.out.println("[TransferItems2]   Threshold " + quality + " -> area: " + areas.get(quality) + ", matching items in inv: " + matchingItems.size());
+                    if (!matchingItems.isEmpty()) {
                         String areaId = areas.get(quality);
                         ThresholdGroup group = thresholdGroups.computeIfAbsent(quality, ThresholdGroup::new);
                         group.itemsByArea.computeIfAbsent(areaId, k -> new ArrayList<>())
@@ -124,15 +129,23 @@ public class TransferItems2 implements Action
             }
         }
 
+        System.out.println("[TransferItems2] Threshold groups (should be highest first): " + thresholdGroups.keySet());
+
         // Step 3: Process each threshold group in order (highest first)
         // Within each group, optimize area visit order by distance
         for (ThresholdGroup group : thresholdGroups.values()) {
+            System.out.println("[TransferItems2] === Processing threshold group: " + group.threshold + " ===");
+            System.out.println("[TransferItems2]   Areas in this group: " + group.itemsByArea.keySet());
+
             List<String> optimizedAreaOrder = optimizeAreaVisitOrder(gui, group.itemsByArea);
+            System.out.println("[TransferItems2]   Optimized area order: " + optimizedAreaOrder);
 
             for (String areaId : optimizedAreaOrder) {
                 List<ItemTransfer> itemsForArea = group.itemsByArea.get(areaId);
+                System.out.println("[TransferItems2]   Visiting area: " + areaId + " with " + itemsForArea.size() + " item transfers");
 
                 for (ItemTransfer itemTransfer : itemsForArea) {
+                    System.out.println("[TransferItems2]     Transferring: " + itemTransfer.itemName + " q>=" + itemTransfer.quality + " to area " + itemTransfer.areaId);
                     ArrayList<NContext.ObjectStorage> storages = cnt.getOutStorages(itemTransfer.itemName, itemTransfer.quality);
                     for (NContext.ObjectStorage output : storages) {
                         if (output instanceof NContext.Pile) {
