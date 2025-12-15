@@ -159,6 +159,7 @@ public class NConfig
         randomAreaColor,
         treeScaleDisableZoomHide,
         treeScaleMinThreshold,
+        thinOutlines,
         itemQualityOverlay,
         stackQualityOverlay,
         amountOverlay,
@@ -429,7 +430,10 @@ public class NConfig
         // Tree scale overlay settings
         conf.put(Key.treeScaleDisableZoomHide, false);  // If true, always show full label (don't hide on zoom out)
         conf.put(Key.treeScaleMinThreshold, 0);  // Minimum growth % to display tree scale (0 = show all)
-        
+
+        // Outline rendering settings
+        conf.put(Key.thinOutlines, false);  // If true, use thinner object outlines
+
         // Item quality overlay settings
         conf.put(Key.itemQualityOverlay, new ItemQualityOverlaySettings());
         // Stack quality overlay settings

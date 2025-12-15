@@ -32,6 +32,7 @@ public class QoL extends Panel {
     private CheckBox shortCupboards;
     private CheckBox shortWalls;
     private CheckBox decalsOnTop;
+    private CheckBox thinOutlines;
     private CheckBox printpfmap;
     private CheckBox uniformBiomeColors;
     private CheckBox showTerrainName;
@@ -121,6 +122,7 @@ public class QoL extends Panel {
         leftPrev = shortCupboards = leftColumn.add(new CheckBox("Short cupboards"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortWalls = leftColumn.add(new CheckBox("Short mine walls"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = decalsOnTop = leftColumn.add(new CheckBox("Cupboard decals on top"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = thinOutlines = leftColumn.add(new CheckBox("Thin object outlines (needs relog)"), leftPrev.pos("bl").adds(0, 5));
 
         leftPrev = leftColumn.add(new Label("● Tree Growth Display"), leftPrev.pos("bl").adds(0, 15));
         leftPrev = treeScaleDisableZoomHide = leftColumn.add(new CheckBox("Always show tree growth % (disable zoom hide)"), leftPrev.pos("bl").adds(0, 5));
@@ -277,6 +279,7 @@ public class QoL extends Panel {
         shortCupboards.a = getBool(NConfig.Key.shortCupboards);
         shortWalls.a = getBool(NConfig.Key.shortWalls);
         decalsOnTop.a = getBool(NConfig.Key.decalsOnTop);
+        thinOutlines.a = getBool(NConfig.Key.thinOutlines);
         uniformBiomeColors.a = getBool(NConfig.Key.uniformBiomeColors);
         showTerrainName.a = getBool(NConfig.Key.showTerrainName);
         simpleInspect.a = getBool(NConfig.Key.simpleInspect);
@@ -419,6 +422,8 @@ public class QoL extends Panel {
         if(oldShortCupboards != shortCupboards.a || oldDecalsOnTop != decalsOnTop.a) {
             rebuildCupboards();
         }
+
+        NConfig.set(NConfig.Key.thinOutlines, thinOutlines.a);
 
         // Save shortWalls and trigger map re-render if changed
         boolean oldShortWalls = getBool(NConfig.Key.shortWalls);
