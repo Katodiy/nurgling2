@@ -17,6 +17,9 @@ public class TransferToContainer implements Action
 
     Integer th = -1;
 
+    // When set, use exact name matching instead of NAlias substring matching
+    String exactName = null;
+
     public TransferToContainer(Container container, NAlias items)
     {
         this.container = container;
@@ -30,12 +33,20 @@ public class TransferToContainer implements Action
         this.th = th;
     }
 
+    public TransferToContainer(Container container, String exactName, Integer th)
+    {
+        this.container = container;
+        this.exactName = exactName;
+        this.items = new NAlias(exactName);
+        this.th = th;
+    }
+
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
         ArrayList<WItem> witems;
-        if (!(witems = gui.getInventory().getItems(items)).isEmpty() && container.getattr(Container.Space.class) != null && (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.Space.class).getFreeSpace() != 0))
+        if (!(witems = getMatchingItems(gui)).isEmpty() && container.getattr(Container.Space.class) != null && (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.Space.class).getFreeSpace() != 0))
         {
             Gob gcont = Finder.findGob(container.gobid);
             if (gcont == null)
@@ -43,10 +54,7 @@ public class TransferToContainer implements Action
             PathFinder pf = new PathFinder(gcont);
             pf.isHardMode = true;
             pf.run(gui);
-            if (th == -1)
-                witems = gui.getInventory().getItems(items);
-            else
-                witems = gui.getInventory().getItems(items, th);
+            witems = getMatchingItems(gui);
 
             // Проверяем готовность данных и логируем перед началом
             for (WItem witem : witems)
@@ -84,10 +92,7 @@ public class TransferToContainer implements Action
                             {
                                 WItem cand = coorditems.get(0);
                                 transfer(cand, gui.getInventory(container.cap), target_size);
-                                if (th == -1)
-                                    witems = gui.getInventory().getItems(items);
-                                else
-                                    witems = gui.getInventory().getItems(items, th);
+                                witems = getMatchingItems(gui);
                                 coorditems = new ArrayList<>();
                                 for (WItem witem : witems)
                                 {
@@ -174,10 +179,7 @@ public class TransferToContainer implements Action
                         }
 
                         // Обновляем общий список предметов после каждого переноса
-                        if (th == -1)
-                            witems = gui.getInventory().getItems(items);
-                        else
-                            witems = gui.getInventory().getItems(items, th);
+                        witems = getMatchingItems(gui);
 
                         // Полностью обновляем availableItems вместо фильтрации, так как новые предметы могут появиться
                         availableItems.clear();
@@ -450,5 +452,28 @@ public class TransferToContainer implements Action
                 }
             }
         }
+    }
+
+    /**
+     * Gets items from inventory, using exact name match if exactName is set,
+     * otherwise uses NAlias substring matching.
+     */
+    private ArrayList<WItem> getMatchingItems(NGameUI gui) throws InterruptedException {
+        ArrayList<WItem> allItems;
+        if (th == -1) {
+            allItems = gui.getInventory().getItems(items);
+        } else {
+            allItems = gui.getInventory().getItems(items, th);
+        }
+        if (exactName == null) {
+            return allItems;
+        }
+        ArrayList<WItem> exactMatches = new ArrayList<>();
+        for (WItem witem : allItems) {
+            if (((NGItem) witem.item).name().equals(exactName)) {
+                exactMatches.add(witem);
+            }
+        }
+        return exactMatches;
     }
 }
