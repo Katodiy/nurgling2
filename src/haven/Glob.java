@@ -407,13 +407,13 @@ public class Glob {
 				}
 			}
 			if(lightamb != null) {
-				blightamb = Utils.blendcol(lightamb, Color.WHITE, coef);
+				blightamb = Utils.brightenPreserveSaturation(lightamb, coef);
 			}
 			if(lightdif != null) {
-				blightdif = Utils.blendcol(lightdif, Color.WHITE, coef);
+				blightdif = Utils.brightenPreserveSaturation(lightdif, coef);
 			}
 			if(lightspc != null) {
-				blightspc = Utils.blendcol(lightspc, Color.WHITE, coef);
+				blightspc = Utils.brightenPreserveSaturation(lightspc, coef);
 			}
 		}
 	}
