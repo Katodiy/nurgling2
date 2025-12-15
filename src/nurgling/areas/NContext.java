@@ -681,14 +681,12 @@ public class NContext {
         {
             for(Double key :outAreas.get(name).descendingKeySet())
             {
-                if(th>key)
+                if(th>key) {
                     return true;
+                }
             }
         }
-        NArea area = findOut(name,th);
-        if (area == null) {
-            area = findOutGlobal(name, th, gui);
-        }
+        NArea area = findOutGlobal(name, th, gui);
         if(area!=null)
         {
             areas.put(String.valueOf(area.id),area);

@@ -71,6 +71,18 @@ public class TransferItems2 implements Action
         }
     }
 
+    /**
+     * Helper class to group transfers by quality threshold for proper ordering
+     */
+    private static class ThresholdGroup {
+        double threshold;
+        Map<String, List<ItemTransfer>> itemsByArea = new LinkedHashMap<>();
+
+        ThresholdGroup(double threshold) {
+            this.threshold = threshold;
+        }
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
@@ -93,8 +105,10 @@ public class TransferItems2 implements Action
         resitems.addAll(before);
         resitems.addAll(after);
 
-        // Step 2: Group items by destination area
-        Map<String, List<ItemTransfer>> itemsByArea = new LinkedHashMap<>();
+        // Step 2: Group items by quality threshold first, then by area within each threshold
+        // This ensures higher quality thresholds are processed first (preventing lower threshold
+        // areas from grabbing high quality items)
+        TreeMap<Double, ThresholdGroup> thresholdGroups = new TreeMap<>(Collections.reverseOrder());
 
         for(String item : resitems) {
             TreeMap<Double,String> areas = cnt.getOutAreas(item);
@@ -102,35 +116,37 @@ public class TransferItems2 implements Action
                 for (Double quality : areas.descendingKeySet()) {
                     if (!NUtils.getGameUI().getInventory().getItems(new NAlias(item), quality).isEmpty()) {
                         String areaId = areas.get(quality);
-                        itemsByArea.computeIfAbsent(areaId, k -> new ArrayList<>())
+                        ThresholdGroup group = thresholdGroups.computeIfAbsent(quality, ThresholdGroup::new);
+                        group.itemsByArea.computeIfAbsent(areaId, k -> new ArrayList<>())
                             .add(new ItemTransfer(item, quality, areaId));
                     }
                 }
             }
         }
 
-        // Step 3: Optimize area visit order using RouteGraph
-        List<String> optimizedAreaOrder = optimizeAreaVisitOrder(gui, itemsByArea);
+        // Step 3: Process each threshold group in order (highest first)
+        // Within each group, optimize area visit order by distance
+        for (ThresholdGroup group : thresholdGroups.values()) {
+            List<String> optimizedAreaOrder = optimizeAreaVisitOrder(gui, group.itemsByArea);
 
-        // Step 4: Visit each area in optimized order and transfer all items for that area
-        for (String areaId : optimizedAreaOrder) {
-            List<ItemTransfer> itemsForArea = itemsByArea.get(areaId);
+            for (String areaId : optimizedAreaOrder) {
+                List<ItemTransfer> itemsForArea = group.itemsByArea.get(areaId);
 
-            for (ItemTransfer itemTransfer : itemsForArea) {
-                // Get storages and perform the transfer
-                ArrayList<NContext.ObjectStorage> storages = cnt.getOutStorages(itemTransfer.itemName, itemTransfer.quality);
-                for (NContext.ObjectStorage output : storages) {
-                    if (output instanceof NContext.Pile) {
-                        new TransferToPiles(cnt.getRCArea(areaId), new NAlias(itemTransfer.itemName),
-                            (int)itemTransfer.quality).run(gui);
-                    }
-                    if (output instanceof Container) {
-                        new TransferToContainer((Container) output, new NAlias(itemTransfer.itemName),
-                            (int)itemTransfer.quality).run(gui);
-                    }
-                    if (output instanceof NContext.Barrel) {
-                        new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel),
-                            new NAlias(itemTransfer.itemName)).run(gui);
+                for (ItemTransfer itemTransfer : itemsForArea) {
+                    ArrayList<NContext.ObjectStorage> storages = cnt.getOutStorages(itemTransfer.itemName, itemTransfer.quality);
+                    for (NContext.ObjectStorage output : storages) {
+                        if (output instanceof NContext.Pile) {
+                            new TransferToPiles(cnt.getRCArea(areaId), new NAlias(itemTransfer.itemName),
+                                (int)itemTransfer.quality).run(gui);
+                        }
+                        if (output instanceof Container) {
+                            new TransferToContainer((Container) output, new NAlias(itemTransfer.itemName),
+                                (int)itemTransfer.quality).run(gui);
+                        }
+                        if (output instanceof NContext.Barrel) {
+                            new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel),
+                                new NAlias(itemTransfer.itemName)).run(gui);
+                        }
                     }
                 }
             }
