@@ -15,7 +15,6 @@ public class Navigation extends Panel {
         // Navigation settings
         boolean useGlobalPf;
         boolean waypointRetryOnStuck;
-        boolean showFullPathLines;
         boolean showPathLine;
         int pathLineWidth = 4;
         Color pathLineColor = new Color(255, 255, 0);
@@ -32,7 +31,6 @@ public class Navigation extends Panel {
     // Navigation checkboxes
     private CheckBox useGlobalPf;
     private CheckBox waypointRetryOnStuck;
-    private CheckBox showFullPathLines;
     private CheckBox showPathLine;
     private NColorWidget pathLineColorWidget;
     private HSlider pathLineWidthSlider;
@@ -99,13 +97,6 @@ public class Navigation extends Panel {
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-        
-        prev = showFullPathLines = content.add(new CheckBox("Show full path lines to destinations") {
-            public void set(boolean val) {
-                tempSettings.showFullPathLines = val;
-                a = val;
-            }
-        }, prev.pos("bl").adds(0, 5));
 
         // Visual indicators section
         prev = content.add(new Label("● Visual indicators"), prev.pos("bl").adds(0, 15));
@@ -153,7 +144,6 @@ public class Navigation extends Panel {
         // Load navigation settings
         tempSettings.useGlobalPf = (Boolean) NConfig.get(NConfig.Key.useGlobalPf);
         tempSettings.waypointRetryOnStuck = (Boolean) NConfig.get(NConfig.Key.waypointRetryOnStuck);
-        tempSettings.showFullPathLines = (Boolean) NConfig.get(NConfig.Key.showFullPathLines);
         tempSettings.showPathLine = (Boolean) NConfig.get(NConfig.Key.showPathLine);
         tempSettings.showSpeedometer = (Boolean) NConfig.get(NConfig.Key.showSpeedometer);
 
@@ -168,7 +158,6 @@ public class Navigation extends Panel {
         alarmDelayFramesEntry.settext(String.valueOf(((Number) NConfig.get(NConfig.Key.alarmDelayFrames)).intValue()));
         useGlobalPf.a = tempSettings.useGlobalPf;
         waypointRetryOnStuck.a = tempSettings.waypointRetryOnStuck;
-        showFullPathLines.a = tempSettings.showFullPathLines;
         showPathLine.a = tempSettings.showPathLine;
         pathLineColorWidget.color = tempSettings.pathLineColor;
         pathLineWidthSlider.val = tempSettings.pathLineWidth;
@@ -191,7 +180,6 @@ public class Navigation extends Panel {
         // Save navigation settings
         NConfig.set(NConfig.Key.useGlobalPf, tempSettings.useGlobalPf);
         NConfig.set(NConfig.Key.waypointRetryOnStuck, tempSettings.waypointRetryOnStuck);
-        NConfig.set(NConfig.Key.showFullPathLines, tempSettings.showFullPathLines);
         NConfig.set(NConfig.Key.showPathLine, tempSettings.showPathLine);
         NConfig.set(NConfig.Key.showSpeedometer, tempSettings.showSpeedometer);
 

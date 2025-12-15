@@ -114,7 +114,6 @@ public class NConfig
         waypointRetryOnStuck,
         verboseCal,
         highlightRockTiles,
-        showFullPathLines,
         preferredMovementSpeed,
         preferredHorseSpeed,
         uiOpacity,
@@ -287,7 +286,6 @@ public class NConfig
         conf.put(Key.waypointRetryOnStuck, true);
         conf.put(Key.verboseCal, false);
         conf.put(Key.highlightRockTiles, true);
-        conf.put(Key.showFullPathLines, false);
         conf.put(Key.showSpeedometer, false);
         conf.put(Key.showPathLine, false);
         conf.put(Key.pathLineWidth, 4);
