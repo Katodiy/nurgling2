@@ -38,6 +38,10 @@ public class DrinkMeter extends Widget {
     private float max = 0f;
     private double wait = 0;
 
+    // Text displayed on the meter bar
+    private Tex text = null;
+    private String lastTextValue = null;
+
     // Tooltip caching
     private String cachedTipText = null;
     private Tex cachedTip = null;
@@ -85,7 +89,37 @@ public class DrinkMeter extends Widget {
             scanInventoryForContainers(inv);
         }
 
+        // Update text display
+        updateText();
+
         return true;
+    }
+
+    /**
+     * Updates the text displayed on the meter bar
+     */
+    private void updateText() {
+        String newText;
+        float total = water + tea;
+
+        if (max <= 0) {
+            newText = "";
+        } else {
+            // Format: "1.5 / 15 l" similar to health meter style
+            newText = String.format("%.1f / %.1f l", total, max);
+        }
+
+        // Only recreate texture if text changed
+        if (!newText.equals(lastTextValue)) {
+            lastTextValue = newText;
+            if (text != null) {
+                text.dispose();
+                text = null;
+            }
+            if (!newText.isEmpty()) {
+                text = NStyle.meter.render(newText).tex();
+            }
+        }
     }
 
     /**
@@ -236,6 +270,15 @@ public class DrinkMeter extends Widget {
 
         // Draw frame
         g.image(FRAME, Coord.z);
+
+        // Draw text centered on the meter bar
+        if (text != null) {
+            Coord textPos = new Coord(
+                off.x + isz.x / 2 - text.sz().x / 2,
+                off.y + isz.y / 2 - text.sz().y / 2
+            );
+            g.image(text, textPos);
+        }
     }
 
     @Override
@@ -268,6 +311,10 @@ public class DrinkMeter extends Widget {
         if (cachedTip != null) {
             cachedTip.dispose();
             cachedTip = null;
+        }
+        if (text != null) {
+            text.dispose();
+            text = null;
         }
         super.dispose();
     }
