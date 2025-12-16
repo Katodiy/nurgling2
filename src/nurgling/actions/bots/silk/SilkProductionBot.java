@@ -86,7 +86,8 @@ public class SilkProductionBot implements Action {
         gui.msg("Filling herbalist tables with eggs.");
         if (totalEggsNeeded > 0) {
             context.addInItem(eggs, null);
-            new FillContainers2(htableContainers, eggs, context, QualityType.High).run(gui);
+            new FillContainers2(htableContainers, eggs, context, QualityType.High,
+                    Specialisation.SpecName.htable, "Silkworm Egg").run(gui);
         }
 
         NContext freshContext = new NContext(gui);
