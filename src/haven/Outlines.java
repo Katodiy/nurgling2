@@ -42,31 +42,35 @@ public class Outlines implements RenderTree.Node {
         return Boolean.TRUE.equals(NConfig.get(NConfig.Key.thinOutlines));
     }
     public static double getDepthThreshold() {
-        return isThinOutlines() ? 0.00005 : 0.0002;
+        return isThinOutlines() ? 0.0001 : 0.0002;
     }
     public static double getDepthSmoothLow() {
-        return isThinOutlines() ? 12.0 : 5.0;
+        return isThinOutlines() ? 8.0 : 5.0;
     }
     public static double getDepthSmoothHigh() {
-        return isThinOutlines() ? 15.0 : 6.0;
+        return isThinOutlines() ? 10.0 : 6.0;
     }
     public static double getNormalScale() {
-        return isThinOutlines() ? 0.5 : 1.0;
+        return isThinOutlines() ? 0.75 : 1.0;
     }
     public static double getFinalSmoothLow() {
-        return isThinOutlines() ? 0.7 : 0.4;
+        return isThinOutlines() ? 0.55 : 0.4;
     }
     public static double getFinalSmoothHigh() {
-        return isThinOutlines() ? 0.85 : 0.6;
+        return isThinOutlines() ? 0.7 : 0.6;
     }
     // Sub-pixel sample offsets for spatial AA (rotated grid pattern)
+    // Only apply AA to thin outlines
     public static double[][] getAAOffsets() {
-        return new double[][] {
-            {-0.125, -0.375},
-            { 0.375, -0.125},
-            {-0.375,  0.125},
-            { 0.125,  0.375}
-        };
+        if (isThinOutlines()) {
+            return new double[][] {
+                {-0.125, -0.375},
+                { 0.375, -0.125},
+                {-0.375,  0.125},
+                { 0.125,  0.375}
+            };
+        }
+        return null;
     }
 
     private final static Uniform snrm = new Uniform(SAMPLER2D, p -> ((Draw)p.get(RUtils.adhoc)).nrm, RUtils.adhoc);
