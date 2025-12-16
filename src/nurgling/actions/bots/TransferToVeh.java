@@ -1,6 +1,5 @@
 package nurgling.actions.bots;
 
-import haven.Coord2d;
 import haven.Gob;
 import haven.Resource;
 import haven.UI;
