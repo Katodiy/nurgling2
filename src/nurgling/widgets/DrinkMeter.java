@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  */
 public class DrinkMeter extends Widget {
     // Use stamina meter frame as base (from nurgling resources)
-    private static final Tex FRAME = Resource.loadtex("nurgling/hud/meter/stam");
+    private static final Tex FRAME = Resource.loadtex("nurgling/hud/meter/water");
     private static final Color BG = new Color(40, 51, 46);
     private static final Color TEA = new Color(147, 110, 68);
     private static final Color WATER = new Color(82, 116, 188);
