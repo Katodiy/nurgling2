@@ -18,6 +18,10 @@ public class TransferToBarrel implements Action{
     int th = 9000;
 
     double total = 0;
+
+    // When set, use exact name matching instead of NAlias substring matching
+    String exactName = null;
+
     public TransferToBarrel(Gob barrel, NAlias items) {
         this.barrel = barrel;
         this.items = items;
@@ -26,6 +30,12 @@ public class TransferToBarrel implements Action{
     public TransferToBarrel(Gob barrel, NAlias items, int th) {
         this(barrel, items);
         this.th = th;
+    }
+
+    public TransferToBarrel(Gob barrel, String exactName) {
+        this.barrel = barrel;
+        this.exactName = exactName;
+        this.items = new NAlias(exactName);
     }
 
     @Override
@@ -42,7 +52,7 @@ public class TransferToBarrel implements Action{
         total+=barrelCont;
         if(barrelCont>-1 && barrelCont < th) {
 
-            ArrayList<WItem> witems = gui.getInventory().getItems(items);
+            ArrayList<WItem> witems = getMatchingItems(gui);
             ArrayList<WItem> targetItems = new ArrayList<>();
             double sum = 0;
             for (WItem item : witems) {
@@ -110,5 +120,23 @@ public class TransferToBarrel implements Action{
     public boolean isFull()
     {
         return total>th;
+    }
+
+    /**
+     * Gets items from inventory, using exact name match if exactName is set,
+     * otherwise uses NAlias substring matching.
+     */
+    private ArrayList<WItem> getMatchingItems(NGameUI gui) throws InterruptedException {
+        ArrayList<WItem> allItems = gui.getInventory().getItems(items);
+        if (exactName == null) {
+            return allItems;
+        }
+        ArrayList<WItem> exactMatches = new ArrayList<>();
+        for (WItem witem : allItems) {
+            if (((NGItem) witem.item).name().equals(exactName)) {
+                exactMatches.add(witem);
+            }
+        }
+        return exactMatches;
     }
 }

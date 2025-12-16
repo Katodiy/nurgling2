@@ -1,5 +1,7 @@
 package nurgling.actions;
 
+import haven.WItem;
+import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
@@ -114,7 +116,7 @@ public class TransferItems2 implements Action
             TreeMap<Double,String> areas = cnt.getOutAreas(item);
             if(areas != null) {
                 for (Double quality : areas.descendingKeySet()) {
-                    if (!NUtils.getGameUI().getInventory().getItems(new NAlias(item), quality).isEmpty()) {
+                    if (!getItemsExactMatch(item, quality).isEmpty()) {
                         String areaId = areas.get(quality);
                         ThresholdGroup group = thresholdGroups.computeIfAbsent(quality, ThresholdGroup::new);
                         group.itemsByArea.computeIfAbsent(areaId, k -> new ArrayList<>())
@@ -136,16 +138,16 @@ public class TransferItems2 implements Action
                     ArrayList<NContext.ObjectStorage> storages = cnt.getOutStorages(itemTransfer.itemName, itemTransfer.quality);
                     for (NContext.ObjectStorage output : storages) {
                         if (output instanceof NContext.Pile) {
-                            new TransferToPiles(cnt.getRCArea(areaId), new NAlias(itemTransfer.itemName),
+                            new TransferToPiles(cnt.getRCArea(areaId), itemTransfer.itemName,
                                 (int)itemTransfer.quality).run(gui);
                         }
                         if (output instanceof Container) {
-                            new TransferToContainer((Container) output, new NAlias(itemTransfer.itemName),
+                            new TransferToContainer((Container) output, itemTransfer.itemName,
                                 (int)itemTransfer.quality).run(gui);
                         }
                         if (output instanceof NContext.Barrel) {
                             new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel),
-                                new NAlias(itemTransfer.itemName)).run(gui);
+                                itemTransfer.itemName).run(gui);
                         }
                     }
                 }
@@ -211,6 +213,21 @@ public class TransferItems2 implements Action
             NUtils.getGameUI().error("Route optimization failed, using default order: " + e.getMessage());
             return new ArrayList<>(itemsByArea.keySet());
         }
+    }
+
+    /**
+     * Gets items from inventory with exact name match only.
+     * This prevents substring matching issues where "Straw Hat" would match "Straw" area.
+     */
+    private static ArrayList<WItem> getItemsExactMatch(String exactName, double quality) throws InterruptedException {
+        ArrayList<WItem> allItems = NUtils.getGameUI().getInventory().getItems(new NAlias(exactName), quality);
+        ArrayList<WItem> exactMatches = new ArrayList<>();
+        for (WItem witem : allItems) {
+            if (((NGItem) witem.item).name().equals(exactName)) {
+                exactMatches.add(witem);
+            }
+        }
+        return exactMatches;
     }
 
 }
