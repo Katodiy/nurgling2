@@ -122,7 +122,7 @@ public class QoL extends Panel {
         leftPrev = shortCupboards = leftColumn.add(new CheckBox("Short cupboards"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = shortWalls = leftColumn.add(new CheckBox("Short mine walls"), leftPrev.pos("bl").adds(0, 5));
         leftPrev = decalsOnTop = leftColumn.add(new CheckBox("Cupboard decals on top"), leftPrev.pos("bl").adds(0, 5));
-        leftPrev = thinOutlines = leftColumn.add(new CheckBox("Thin object outlines (needs relog)"), leftPrev.pos("bl").adds(0, 5));
+        leftPrev = thinOutlines = leftColumn.add(new CheckBox("Thin object outlines + smoothing (needs relog)"), leftPrev.pos("bl").adds(0, 5));
 
         leftPrev = leftColumn.add(new Label("● Tree Growth Display"), leftPrev.pos("bl").adds(0, 15));
         leftPrev = treeScaleDisableZoomHide = leftColumn.add(new CheckBox("Always show tree growth % (disable zoom hide)"), leftPrev.pos("bl").adds(0, 5));
