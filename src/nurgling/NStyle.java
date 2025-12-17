@@ -319,6 +319,7 @@ public class NStyle {
         iconMap.put("gfx/terobjs/claim",new Resource.Saved(Resource.remote(),"mm/claim",-1));
         iconMap.put("gfx/terobjs/items/gems/gemstone",new Resource.Saved(Resource.remote(),"mm/gem",-1));
         iconMap.put("gfx/terobjs/vehicle/cart",new Resource.Saved(Resource.remote(),"mm/cart",-1));
+        iconMap.put("gfx/terobjs/vehicle/primsled",new Resource.Saved(Resource.remote(),"mm/primsled",-1));
         iconMap.put("gfx/terobjs/vehicle/plow",new Resource.Saved(Resource.remote(),"mm/plow",-1));
         iconMap.put("gfx/terobjs/map/cavepuddle",new Resource.Saved(Resource.remote(),"mm/clay-cave",-1));
         iconMap.put("gfx/terobjs/minehole",new Resource.Saved(Resource.remote(),"mm/down",-1));
@@ -346,6 +347,7 @@ public class NStyle {
         iconName.put("mm/claim", "Claim");
         iconName.put("mm/gem", "Gem");
         iconName.put("mm/cart", "Cart");
+        iconName.put("mm/primsled", "Primitive Sled");
         iconName.put("mm/plow", "Plow");
         iconName.put("mm/clay-cave", "Cave clay");
     }
