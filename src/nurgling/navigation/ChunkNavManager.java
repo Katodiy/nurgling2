@@ -174,15 +174,12 @@ public class ChunkNavManager {
         if (!enabled || !initialized) return null;
 
         ChunkPath path = planner.planToArea(area);
-        if (path == null || path.isEmpty()) {
+        if (path == null) {
             return null;
         }
 
-        // No intra-chunk validation needed:
-        // - Adjacent grids: you walk across the edge where they touch
-        // - Building connections: you use doors/portals
-        // PathFinder handles actual route within each grid
-
+        // Note: path.isEmpty() is valid when already in the target chunk
+        // The executor handles this case by navigating directly to the area
         return path;
     }
 
@@ -195,10 +192,12 @@ public class ChunkNavManager {
         }
 
         ChunkPath path = planToArea(area);
-        if (path == null || path.isEmpty()) {
+        if (path == null) {
             return nurgling.actions.Results.FAIL();
         }
 
+        // Note: path.isEmpty() is valid when we're already in the target chunk
+        // The executor handles this case by navigating directly to the area
         ChunkNavExecutor executor = new ChunkNavExecutor(path, area, this);
         return executor.run(gui);
     }

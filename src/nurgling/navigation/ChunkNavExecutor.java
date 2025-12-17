@@ -48,12 +48,28 @@ public class ChunkNavExecutor implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        if (gui == null || gui.map == null || path == null || path.isEmpty()) {
+        System.out.println("ChunkNav: Executor.run() called, path=" + (path != null ? path.size() + " waypoints" : "null") + ", targetArea=" + (targetArea != null ? targetArea.name : "null"));
+
+        if (gui == null || gui.map == null || path == null) {
+            System.out.println("ChunkNav: Executor.run() FAIL - gui/map/path null");
             return Results.FAIL();
         }
 
         Gob player = gui.map.player();
         if (player == null) {
+            System.out.println("ChunkNav: Executor.run() FAIL - player null");
+            return Results.FAIL();
+        }
+
+        // If path is empty but we have a target area, we're already in the target chunk
+        // Just navigate directly to the area
+        if (path.isEmpty() && targetArea != null) {
+            System.out.println("ChunkNav: Already in target chunk, navigating directly to area");
+            return navigateToTargetArea(gui);
+        }
+
+        if (path.isEmpty()) {
+            System.out.println("ChunkNav: Executor.run() FAIL - path empty and no targetArea");
             return Results.FAIL();
         }
 
@@ -116,8 +132,54 @@ public class ChunkNavExecutor implements Action {
 
         // We've traversed all waypoints/portals - now navigate to just outside the target area
         if (targetArea != null) {
-            // Wait for area to become visible
-            Pair<Coord2d, Coord2d> areaBounds = null;
+            return navigateToTargetArea(gui);
+        }
+
+        return Results.SUCCESS();
+    }
+
+    /**
+     * Navigate to the target area.
+     * Handles the case where the area might not be visible and needs incremental navigation.
+     */
+    private Results navigateToTargetArea(NGameUI gui) throws InterruptedException {
+        if (targetArea == null) {
+            return Results.FAIL();
+        }
+
+        System.out.println("ChunkNav: Navigating to target area: " + targetArea.name);
+
+        // First try to get area bounds - if not visible, use stored center
+        Pair<Coord2d, Coord2d> areaBounds = targetArea.getRCArea();
+        Coord2d areaCenter = targetArea.getCenter2d();
+
+        if (areaBounds == null && areaCenter == null) {
+            System.out.println("ChunkNav: Area not visible and no stored center");
+            return Results.FAIL();
+        }
+
+        // If area isn't visible, walk incrementally toward its center first
+        if (areaBounds == null && areaCenter != null) {
+            System.out.println("ChunkNav: Area not visible, walking toward center: " + areaCenter);
+            Results walkResult = navigateIncrementally(areaCenter, gui);
+            if (!walkResult.IsSuccess()) {
+                System.out.println("ChunkNav: Could not reach area center");
+                return Results.FAIL();
+            }
+
+            // Now try to get bounds again
+            int waitAttempts = 0;
+            while (areaBounds == null && waitAttempts < 10) {
+                areaBounds = targetArea.getRCArea();
+                if (areaBounds == null) {
+                    waitAttempts++;
+                    Thread.sleep(200);
+                }
+            }
+        }
+
+        // Wait for area to become visible if still not available
+        if (areaBounds == null) {
             int waitAttempts = 0;
             while (areaBounds == null && waitAttempts < 20) {
                 areaBounds = targetArea.getRCArea();
@@ -126,35 +188,39 @@ public class ChunkNavExecutor implements Action {
                     Thread.sleep(250);
                 }
             }
+        }
 
-            if (areaBounds == null) {
-                return Results.FAIL();
-            }
-
-            // Try each edge of the area until we find one we can reach
-            Gob currentPlayer = gui.map.player();
-            if (currentPlayer == null) {
-                return Results.FAIL();
-            }
-            Coord2d playerPos = currentPlayer.rc;
-
-            // Get all four edge points and try them in order of distance from player
-            List<Coord2d> edgePoints = getAllAreaEdgePoints(areaBounds);
-            edgePoints.sort(Comparator.comparingDouble(p -> p.dist(playerPos)));
-
-            for (Coord2d edgePoint : edgePoints) {
-                // Use step-by-step navigation which can walk toward distant targets
-                // This handles cases where the area is in the same grid but not visible
-                Results edgeResult = navigateToCoord(edgePoint, gui);
-                if (edgeResult.IsSuccess()) {
-                    return Results.SUCCESS();
-                }
-            }
-
+        if (areaBounds == null) {
+            System.out.println("ChunkNav: Area still not visible after waiting");
             return Results.FAIL();
         }
 
-        return Results.SUCCESS();
+        // Try each edge of the area until we find one we can reach
+        Gob currentPlayer = gui.map.player();
+        if (currentPlayer == null) {
+            return Results.FAIL();
+        }
+        Coord2d playerPos = currentPlayer.rc;
+
+        // Get all four edge points and try them in order of distance from player
+        List<Coord2d> edgePoints = getAllAreaEdgePoints(areaBounds);
+        edgePoints.sort(Comparator.comparingDouble(p -> p.dist(playerPos)));
+
+        System.out.println("ChunkNav: Trying " + edgePoints.size() + " edge points");
+
+        for (Coord2d edgePoint : edgePoints) {
+            // Use incremental navigation which can walk toward distant targets
+            // This handles cases where the area is in the same grid but not visible
+            System.out.println("ChunkNav: Trying edge point: " + edgePoint);
+            Results edgeResult = navigateIncrementally(edgePoint, gui);
+            if (edgeResult.IsSuccess()) {
+                System.out.println("ChunkNav: Reached area edge");
+                return Results.SUCCESS();
+            }
+        }
+
+        System.out.println("ChunkNav: Could not reach any area edge");
+        return Results.FAIL();
     }
 
     /**

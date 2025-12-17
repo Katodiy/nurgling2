@@ -4,6 +4,8 @@ import haven.*;
 import nurgling.*;
 import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.actions.bots.SelectArea;
+import nurgling.navigation.ChunkNavManager;
+import nurgling.navigation.ChunkPath;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import nurgling.tools.Container;
@@ -605,7 +607,34 @@ public class NContext {
             gui.msg(areaId + " Not found!");
             return;
         }
-        if((!area.isVisible() || area.getCenter2d() == null || area.getCenter2d().dist(NUtils.player().rc)>450) && rps.containsKey(areaId)) {
+
+        // Check if we need to navigate (area not visible or too far)
+        boolean needsNavigation = !area.isVisible() || area.getCenter2d() == null ||
+                                  area.getCenter2d().dist(NUtils.player().rc) > 450;
+
+        if (!needsNavigation) {
+            return;
+        }
+
+        // Try ChunkNav first if it has data for the area
+        ChunkNavManager chunkNav = ChunkNavManager.getInstance();
+        System.out.println("NContext: ChunkNav initialized=" + chunkNav.isInitialized());
+        if (chunkNav.isInitialized()) {
+            ChunkPath path = chunkNav.planToArea(area);
+            System.out.println("NContext: ChunkNav path=" + (path != null ? path.size() + " waypoints" : "null"));
+            if (path != null) {
+                System.out.println("NContext: Using ChunkNav to navigate to " + areaId);
+                nurgling.actions.Results result = chunkNav.navigateToArea(area, gui);
+                System.out.println("NContext: ChunkNav result=" + result.IsSuccess());
+                if (result.IsSuccess()) {
+                    return;
+                }
+                System.out.println("NContext: ChunkNav navigation failed, falling back to routes");
+            }
+        }
+
+        // Fallback to RoutePointNavigator if ChunkNav fails or has no data
+        if (rps.containsKey(areaId)) {
             new RoutePointNavigator(rps.get(areaId), area.id).run(gui);
         }
     }

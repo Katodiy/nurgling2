@@ -121,8 +121,13 @@ public class ChunkNavNavigatorWindow extends Window {
 
                 // First try ChunkNav
                 ChunkPath path = manager.planToArea(selectedArea);
-                if (path != null && !path.isEmpty()) {
-                    updateStatusFromThread("Path found! " + path.waypoints.size() + " waypoints");
+                // Note: path with 0 waypoints is valid when already in target chunk
+                if (path != null) {
+                    if (path.isEmpty()) {
+                        updateStatusFromThread("Already in target chunk, navigating to area...");
+                    } else {
+                        updateStatusFromThread("Path found! " + path.waypoints.size() + " waypoints");
+                    }
 
                     ChunkNavExecutor executor = new ChunkNavExecutor(path, selectedArea, manager);
                     nurgling.actions.Results result = executor.run(gui);
