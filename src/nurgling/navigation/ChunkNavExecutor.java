@@ -155,8 +155,10 @@ public class ChunkNavExecutor implements Action {
             edgePoints.sort(Comparator.comparingDouble(p -> p.dist(playerPos)));
 
             for (Coord2d edgePoint : edgePoints) {
-                PathFinder pf = new PathFinder(edgePoint);
-                Results edgeResult = pf.run(gui);
+                // Use step-by-step navigation which can walk toward distant targets
+                // This handles cases where the area is in the same grid but not visible
+                System.err.println("ChunkNavExecutor: Trying to navigate to area edge at " + edgePoint + " (distance: " + playerPos.dist(edgePoint) + ")");
+                Results edgeResult = navigateToCoord(edgePoint, gui);
                 if (edgeResult.IsSuccess()) {
                     System.err.println("ChunkNavExecutor: Reached target area '" + targetArea.name + "' edge at " + edgePoint);
                     return Results.SUCCESS();
