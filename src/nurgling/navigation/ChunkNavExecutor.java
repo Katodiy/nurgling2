@@ -341,6 +341,72 @@ public class ChunkNavExecutor implements Action {
     }
 
     /**
+     * Navigate incrementally to a target that may not be visible.
+     * Walks step by step, each step getting closer until the target is reachable.
+     * This is essential for reaching portal access points that are far away.
+     */
+    private Results navigateIncrementally(Coord2d target, NGameUI gui) throws InterruptedException {
+        int maxSteps = 50;  // Allow more steps for longer distances
+        double stepDistance = MCache.tilesz.x * 8;  // ~8 tiles per step
+
+        System.out.println("ChunkNav: navigateIncrementally to " + target);
+
+        for (int step = 0; step < maxSteps; step++) {
+            Gob player = gui.map.player();
+            if (player == null) return Results.FAIL();
+
+            double distToTarget = player.rc.dist(target);
+            System.out.println("ChunkNav: Step " + step + ", distance to target: " + distToTarget);
+
+            // Close enough - we're done
+            if (distToTarget < MCache.tilesz.x * 3) {
+                System.out.println("ChunkNav: Reached target area");
+                return Results.SUCCESS();
+            }
+
+            // Try direct path first - might work if target is now visible
+            PathFinder directPf = new PathFinder(target);
+            Results directResult = directPf.run(gui);
+            if (directResult.IsSuccess()) {
+                System.out.println("ChunkNav: Direct path succeeded");
+                return Results.SUCCESS();
+            }
+
+            // Calculate intermediate point toward target
+            Coord2d direction = target.sub(player.rc).norm();
+            double walkDist = Math.min(stepDistance, distToTarget * 0.5);  // Walk halfway or stepDistance
+            Coord2d intermediateTarget = player.rc.add(direction.mul(walkDist));
+
+            System.out.println("ChunkNav: Walking toward intermediate point " + intermediateTarget);
+            PathFinder stepPf = new PathFinder(intermediateTarget);
+            Results stepResult = stepPf.run(gui);
+
+            if (!stepResult.IsSuccess()) {
+                // Try shorter step
+                walkDist = walkDist / 2;
+                if (walkDist < MCache.tilesz.x * 2) {
+                    System.out.println("ChunkNav: Step too short, giving up");
+                    return Results.FAIL();
+                }
+                intermediateTarget = player.rc.add(direction.mul(walkDist));
+                stepPf = new PathFinder(intermediateTarget);
+                stepResult = stepPf.run(gui);
+
+                if (!stepResult.IsSuccess()) {
+                    System.out.println("ChunkNav: Cannot make progress toward target");
+                    return Results.FAIL();
+                }
+            }
+
+            // Small delay for gobs to load after moving
+            Thread.sleep(100);
+        }
+
+        System.out.println("ChunkNav: Max steps reached");
+        return Results.FAIL();
+    }
+
+    /**
      * Traverse a portal (door, stairs, etc.).
      * The portal's localCoord is the player access point (where to stand to use the door).
      * @param portal The portal to traverse
@@ -350,13 +416,24 @@ public class ChunkNavExecutor implements Action {
         System.out.println("ChunkNav: traversePortal(" + portal.gobName + ") in grid " + gridId);
 
         // First navigate to the recorded access point (player position when door was last used)
-        // This is stored in the portal's localCoord
+        // This is CRITICAL when there are multiple portals with the same name (e.g., multiple houses)
+        // The access point brings the correct portal into view range
         Coord2d accessPoint = getPortalAccessPoint(portal, gridId, gui);
         if (accessPoint != null) {
             System.out.println("ChunkNav: Navigating to access point " + accessPoint);
-            PathFinder accessPf = new PathFinder(accessPoint);
-            accessPf.run(gui);
-            // Continue even if we can't reach exact access point - try direct approach
+
+            // Use incremental navigation - PathFinder only works for visible areas
+            // We need to walk step by step towards the target
+            Results navResult = navigateIncrementally(accessPoint, gui);
+
+            if (!navResult.IsSuccess()) {
+                System.out.println("ChunkNav: Could not reach exact access point, continuing anyway");
+            }
+
+            // Wait a moment for gobs to load after arriving at the access point
+            Thread.sleep(200);
+        } else {
+            System.out.println("ChunkNav: No access point available for portal " + portal.gobName);
         }
 
         // Now find the portal gob to click on it
@@ -365,13 +442,28 @@ public class ChunkNavExecutor implements Action {
         // We use the recorded position (localCoord) to find the correct one
         Gob portalGob = findPortalGobByPosition(portal, gridId, gui);
         if (portalGob == null) {
+            System.out.println("ChunkNav: Portal not found by position, trying hash: " + portal.gobHash);
             // Fallback to hash lookup (might work if hash is stable)
             portalGob = Finder.findGob(portal.gobHash);
         }
         if (portalGob == null) {
-            // Final fallback: just find any gob with matching name nearby
-            System.out.println("ChunkNav: Portal not found by position/hash, trying name search: " + portal.gobName);
-            portalGob = Finder.findGob(new NAlias(portal.gobName));
+            // Final fallback: find the closest gob with matching name to player
+            // Only use this if we navigated to the access point first
+            System.out.println("ChunkNav: Portal not found by hash, trying closest by name: " + portal.gobName);
+            Collection<Gob> candidates = Finder.findGobs(new NAlias(portal.gobName));
+            if (candidates != null && !candidates.isEmpty()) {
+                Gob player = NUtils.player();
+                if (player != null) {
+                    double closestDist = Double.MAX_VALUE;
+                    for (Gob gob : candidates) {
+                        double dist = gob.rc.dist(player.rc);
+                        if (dist < closestDist) {
+                            closestDist = dist;
+                            portalGob = gob;
+                        }
+                    }
+                }
+            }
         }
         if (portalGob == null) {
             gui.error("ChunkNav: Portal gob not found: " + portal.gobName + " at position " + portal.localCoord);
@@ -435,21 +527,30 @@ public class ChunkNavExecutor implements Action {
         // Find all gobs with matching name
         Collection<Gob> candidates = Finder.findGobs(new NAlias(portal.gobName));
         if (candidates == null || candidates.isEmpty()) {
+            System.out.println("ChunkNav: No gobs found with name: " + portal.gobName);
             return null;
         }
 
+        System.out.println("ChunkNav: Found " + candidates.size() + " candidates for " + portal.gobName + ", looking near " + expectedPos);
+
         // Find the one closest to expected position
-        // The portal access point is where the player stands, portal gob should be very close (within ~2 tiles)
+        // The portal access point is where the player stands when using the door
+        // Portal gob (building) should be within reasonable range
         Gob closest = null;
         double closestDist = Double.MAX_VALUE;
-        double maxDistance = MCache.tilesz.x * 5; // Portal should be within 5 tiles of access point
+        double maxDistance = MCache.tilesz.x * 15; // Portal should be within 15 tiles of access point
 
         for (Gob gob : candidates) {
             double dist = gob.rc.dist(expectedPos);
+            System.out.println("ChunkNav:   Candidate at " + gob.rc + " dist=" + dist);
             if (dist < closestDist && dist < maxDistance) {
                 closestDist = dist;
                 closest = gob;
             }
+        }
+
+        if (closest != null) {
+            System.out.println("ChunkNav: Best match at " + closest.rc + " dist=" + closestDist);
         }
 
         return closest;
