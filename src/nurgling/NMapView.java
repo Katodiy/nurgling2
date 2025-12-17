@@ -85,6 +85,12 @@ public class NMapView extends MapView
         if (routeGraphManager == null) {
             routeGraphManager = new RouteGraphManager(genus);
         }
+        // Initialize ChunkNav system for this world
+        try {
+            nurgling.navigation.ChunkNavManager.getInstance().initialize(genus);
+        } catch(Exception e) {
+            System.err.println("NMapView: Error initializing ChunkNavManager: " + e.getMessage());
+        }
     }
 
     final HashMap<String, String> ttip = new HashMap<>();

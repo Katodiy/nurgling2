@@ -1,0 +1,361 @@
+package nurgling.navigation;
+
+import haven.Coord;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.*;
+
+import static nurgling.navigation.ChunkNavConfig.*;
+
+/**
+ * Stores navigation data for a single 100x100 tile grid chunk.
+ */
+public class ChunkNavData {
+    // Identity
+    public long gridId;
+    public long lastUpdated;        // System.currentTimeMillis()
+    public float confidence;        // 0.0 - 1.0, decays over time
+
+    // Grid position (for spatial queries)
+    public Coord gridCoord;         // Grid coordinate (grid.ul / 100)
+    public Coord worldTileOrigin;   // Actual world tile origin (grid.ul) - persists across sessions
+
+    // Walkability grid (coarse resolution)
+    // Each cell represents 4x4 tiles (25x25 grid for 100x100 chunk)
+    // Values: 0 = walkable, 1 = partially blocked, 2 = fully blocked
+    public byte[][] walkability = new byte[CELLS_PER_EDGE][CELLS_PER_EDGE];
+
+    // Edge connections to adjacent chunks
+    // Each array has 25 entries (one per coarse cell along edge)
+    public EdgePoint[] northEdge = new EdgePoint[CELLS_PER_EDGE];
+    public EdgePoint[] southEdge = new EdgePoint[CELLS_PER_EDGE];
+    public EdgePoint[] eastEdge = new EdgePoint[CELLS_PER_EDGE];
+    public EdgePoint[] westEdge = new EdgePoint[CELLS_PER_EDGE];
+
+    // Portals (doors, stairs, cellars) within this chunk
+    public List<ChunkPortal> portals = new ArrayList<>();
+
+    // Which areas are reachable from this chunk (cached)
+    public Set<Integer> reachableAreaIds = new HashSet<>();
+
+    // Connected chunks (grid IDs we can reach from edges)
+    public Set<Long> connectedChunks = new HashSet<>();
+
+    public ChunkNavData() {
+        this.confidence = INITIAL_CONFIDENCE;
+        this.lastUpdated = System.currentTimeMillis();
+        initializeEdges();
+    }
+
+    public ChunkNavData(long gridId) {
+        this();
+        this.gridId = gridId;
+    }
+
+    public ChunkNavData(long gridId, Coord gridCoord) {
+        this(gridId);
+        this.gridCoord = gridCoord;
+    }
+
+    public ChunkNavData(long gridId, Coord gridCoord, Coord worldTileOrigin) {
+        this(gridId, gridCoord);
+        this.worldTileOrigin = worldTileOrigin;
+    }
+
+    private void initializeEdges() {
+        for (int i = 0; i < CELLS_PER_EDGE; i++) {
+            northEdge[i] = new EdgePoint(i, false, new Coord(i * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2, 0));
+            southEdge[i] = new EdgePoint(i, false, new Coord(i * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2, CHUNK_SIZE - 1));
+            westEdge[i] = new EdgePoint(i, false, new Coord(0, i * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2));
+            eastEdge[i] = new EdgePoint(i, false, new Coord(CHUNK_SIZE - 1, i * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2));
+        }
+    }
+
+    /**
+     * Get edge array for a given direction.
+     */
+    public EdgePoint[] getEdge(Direction dir) {
+        switch (dir) {
+            case NORTH: return northEdge;
+            case SOUTH: return southEdge;
+            case EAST: return eastEdge;
+            case WEST: return westEdge;
+            default: return null;
+        }
+    }
+
+    /**
+     * Calculate average walkability score for this chunk.
+     * 0.0 = fully walkable, 1.0 = fully blocked
+     */
+    public float averageWalkability() {
+        int total = 0;
+        for (int x = 0; x < CELLS_PER_EDGE; x++) {
+            for (int y = 0; y < CELLS_PER_EDGE; y++) {
+                total += walkability[x][y];
+            }
+        }
+        return total / (float) (CELLS_PER_EDGE * CELLS_PER_EDGE * 2); // Normalize to 0-1
+    }
+
+    /**
+     * Get walkability at a specific coarse cell.
+     */
+    public byte getWalkability(int cx, int cy) {
+        if (cx < 0 || cx >= CELLS_PER_EDGE || cy < 0 || cy >= CELLS_PER_EDGE) {
+            return 2; // Out of bounds = blocked
+        }
+        return walkability[cx][cy];
+    }
+
+    /**
+     * Set walkability at a specific coarse cell.
+     */
+    public void setWalkability(int cx, int cy, byte value) {
+        if (cx >= 0 && cx < CELLS_PER_EDGE && cy >= 0 && cy < CELLS_PER_EDGE) {
+            walkability[cx][cy] = value;
+        }
+    }
+
+    /**
+     * Calculate current confidence based on time decay.
+     */
+    public float getCurrentConfidence() {
+        long now = System.currentTimeMillis();
+        long ageMs = now - lastUpdated;
+        double ageHours = ageMs / (1000.0 * 60 * 60);
+        return (float) (confidence * Math.pow(0.5, ageHours / CONFIDENCE_HALF_LIFE_HOURS));
+    }
+
+    /**
+     * Mark this chunk as recently updated, resetting confidence.
+     */
+    public void markUpdated() {
+        this.lastUpdated = System.currentTimeMillis();
+        this.confidence = INITIAL_CONFIDENCE;
+    }
+
+    /**
+     * Find a portal by its gob hash.
+     */
+    public ChunkPortal findPortal(String gobHash) {
+        if (gobHash == null) return null;
+        for (ChunkPortal portal : portals) {
+            if (gobHash.equals(portal.gobHash)) {
+                return portal;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Find a portal by its gob name.
+     */
+    public ChunkPortal findPortalByName(String gobName) {
+        if (gobName == null) return null;
+        for (ChunkPortal portal : portals) {
+            if (gobName.equals(portal.gobName)) {
+                return portal;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Add or update a portal. Updates existing portal with same hash OR same name.
+     */
+    public void addOrUpdatePortal(ChunkPortal portal) {
+        // First try to find by hash
+        ChunkPortal existing = findPortal(portal.gobHash);
+        // If not found by hash, try by name (to avoid duplicates with different hashes)
+        if (existing == null) {
+            existing = findPortalByName(portal.gobName);
+        }
+        if (existing != null) {
+            portals.remove(existing);
+        }
+        portals.add(portal);
+    }
+
+    /**
+     * Get walkable edge points for connecting to adjacent chunks.
+     */
+    public List<EdgePoint> getWalkableEdgePoints(Direction dir) {
+        List<EdgePoint> result = new ArrayList<>();
+        EdgePoint[] edge = getEdge(dir);
+        if (edge != null) {
+            for (EdgePoint ep : edge) {
+                if (ep.walkable) {
+                    result.add(ep);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Count walkable edge points in a direction.
+     */
+    public int countWalkableEdgePoints(Direction dir) {
+        int count = 0;
+        EdgePoint[] edge = getEdge(dir);
+        if (edge != null) {
+            for (EdgePoint ep : edge) {
+                if (ep.walkable) count++;
+            }
+        }
+        return count;
+    }
+
+    public JSONObject toJson() {
+        JSONObject obj = new JSONObject();
+        obj.put("gridId", gridId);
+        obj.put("lastUpdated", lastUpdated);
+        obj.put("confidence", confidence);
+
+        if (gridCoord != null) {
+            obj.put("gridCoordX", gridCoord.x);
+            obj.put("gridCoordY", gridCoord.y);
+        }
+
+        if (worldTileOrigin != null) {
+            obj.put("worldTileOriginX", worldTileOrigin.x);
+            obj.put("worldTileOriginY", worldTileOrigin.y);
+        }
+
+        // Walkability as flat array
+        JSONArray walkArr = new JSONArray();
+        for (int x = 0; x < CELLS_PER_EDGE; x++) {
+            for (int y = 0; y < CELLS_PER_EDGE; y++) {
+                walkArr.put(walkability[x][y]);
+            }
+        }
+        obj.put("walkability", walkArr);
+
+        // Edges
+        obj.put("northEdge", edgeToJson(northEdge));
+        obj.put("southEdge", edgeToJson(southEdge));
+        obj.put("eastEdge", edgeToJson(eastEdge));
+        obj.put("westEdge", edgeToJson(westEdge));
+
+        // Portals
+        JSONArray portalsArr = new JSONArray();
+        for (ChunkPortal portal : portals) {
+            portalsArr.put(portal.toJson());
+        }
+        obj.put("portals", portalsArr);
+
+        // Reachable areas
+        JSONArray areasArr = new JSONArray();
+        for (Integer areaId : reachableAreaIds) {
+            areasArr.put(areaId);
+        }
+        obj.put("reachableAreaIds", areasArr);
+
+        // Connected chunks
+        JSONArray connectedArr = new JSONArray();
+        for (Long chunkId : connectedChunks) {
+            connectedArr.put(chunkId);
+        }
+        obj.put("connectedChunks", connectedArr);
+
+        return obj;
+    }
+
+    private JSONArray edgeToJson(EdgePoint[] edge) {
+        JSONArray arr = new JSONArray();
+        for (EdgePoint ep : edge) {
+            arr.put(ep.toJson());
+        }
+        return arr;
+    }
+
+    public static ChunkNavData fromJson(JSONObject obj) {
+        ChunkNavData data = new ChunkNavData();
+        data.gridId = obj.getLong("gridId");
+        data.lastUpdated = obj.getLong("lastUpdated");
+        data.confidence = (float) obj.getDouble("confidence");
+
+        if (obj.has("gridCoordX") && obj.has("gridCoordY")) {
+            data.gridCoord = new Coord(obj.getInt("gridCoordX"), obj.getInt("gridCoordY"));
+        }
+
+        if (obj.has("worldTileOriginX") && obj.has("worldTileOriginY")) {
+            data.worldTileOrigin = new Coord(obj.getInt("worldTileOriginX"), obj.getInt("worldTileOriginY"));
+        }
+
+        // Walkability
+        JSONArray walkArr = obj.getJSONArray("walkability");
+        int idx = 0;
+        for (int x = 0; x < CELLS_PER_EDGE; x++) {
+            for (int y = 0; y < CELLS_PER_EDGE; y++) {
+                data.walkability[x][y] = (byte) walkArr.getInt(idx++);
+            }
+        }
+
+        // Edges
+        data.northEdge = edgeFromJson(obj.getJSONArray("northEdge"));
+        data.southEdge = edgeFromJson(obj.getJSONArray("southEdge"));
+        data.eastEdge = edgeFromJson(obj.getJSONArray("eastEdge"));
+        data.westEdge = edgeFromJson(obj.getJSONArray("westEdge"));
+
+        // Portals
+        JSONArray portalsArr = obj.getJSONArray("portals");
+        for (int i = 0; i < portalsArr.length(); i++) {
+            data.portals.add(ChunkPortal.fromJson(portalsArr.getJSONObject(i)));
+        }
+
+        // Reachable areas
+        JSONArray areasArr = obj.getJSONArray("reachableAreaIds");
+        for (int i = 0; i < areasArr.length(); i++) {
+            data.reachableAreaIds.add(areasArr.getInt(i));
+        }
+
+        // Connected chunks
+        JSONArray connectedArr = obj.getJSONArray("connectedChunks");
+        for (int i = 0; i < connectedArr.length(); i++) {
+            data.connectedChunks.add(connectedArr.getLong(i));
+        }
+
+        return data;
+    }
+
+    private static EdgePoint[] edgeFromJson(JSONArray arr) {
+        EdgePoint[] edge = new EdgePoint[CELLS_PER_EDGE];
+        for (int i = 0; i < arr.length() && i < CELLS_PER_EDGE; i++) {
+            edge[i] = EdgePoint.fromJson(arr.getJSONObject(i));
+        }
+        return edge;
+    }
+
+    public enum Direction {
+        NORTH, SOUTH, EAST, WEST;
+
+        public Direction opposite() {
+            switch (this) {
+                case NORTH: return SOUTH;
+                case SOUTH: return NORTH;
+                case EAST: return WEST;
+                case WEST: return EAST;
+                default: return this;
+            }
+        }
+
+        public Coord toOffset() {
+            switch (this) {
+                case NORTH: return new Coord(0, -1);
+                case SOUTH: return new Coord(0, 1);
+                case EAST: return new Coord(1, 0);
+                case WEST: return new Coord(-1, 0);
+                default: return new Coord(0, 0);
+            }
+        }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("ChunkNavData[gridId=%d, confidence=%.2f, portals=%d, connected=%d]",
+                gridId, getCurrentConfidence(), portals.size(), connectedChunks.size());
+    }
+}

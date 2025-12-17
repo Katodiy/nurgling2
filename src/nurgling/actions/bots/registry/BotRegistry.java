@@ -16,6 +16,8 @@ import nurgling.actions.bots.farmers.WildTuberFarmer;
 import nurgling.actions.bots.farmers.WildFlowerFarmer;
 import nurgling.actions.test.*;
 import nurgling.actions.bots.pickling.PicklingBot;
+import nurgling.bots.ChunkNavTestBot;
+import nurgling.bots.ChunkNavNavigatorBot;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -224,6 +226,8 @@ public class BotRegistry {
         bots.add(new BotDescriptor("test10", BotDescriptor.BotType.TOOLS, "Test 10", "Debug test 10.", false, true, TESTGlobalPf.class, "test10", false));
         bots.add(new BotDescriptor("test11", BotDescriptor.BotType.TOOLS, "Test 11", "Debug test 11.", false, true, TESTGlobalPFCheckOrphans.class, "test11", false));
         bots.add(new BotDescriptor("test12", BotDescriptor.BotType.TOOLS, "Test 12", "Debug test 12.", false, true, TestBot.class, "test12", false));
+        bots.add(new BotDescriptor("chunknav_test", BotDescriptor.BotType.TOOLS, "ChunkNav Test", "Tests the chunk-based navigation system.", false, true, ChunkNavTestBot.class, "test13", false));
+        bots.add(new BotDescriptor("chunknav_navigator", BotDescriptor.BotType.TOOLS, "ChunkNav Navigator", "Opens UI to navigate to areas using chunk-based navigation.", false, true, ChunkNavNavigatorBot.class, "test14", false));
     }
 
     public static BotDescriptor byId(String id) {

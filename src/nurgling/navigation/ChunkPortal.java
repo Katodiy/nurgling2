@@ -1,0 +1,133 @@
+package nurgling.navigation;
+
+import haven.Coord;
+import org.json.JSONObject;
+
+/**
+ * Represents a door, staircase, or other transition point within a chunk.
+ */
+public class ChunkPortal {
+    public String gobHash;         // Unique identifier for the gob
+    public String gobName;         // Resource name (gfx/terobjs/...)
+    public PortalType type;        // Type of portal
+    public Coord localCoord;       // Position within chunk (tile coordinates)
+    public long connectsToGridId;  // Grid ID on the other side (if known, -1 otherwise)
+    public long lastTraversed;     // When we last went through (timestamp)
+    public boolean requiresInteraction; // Need to click to open?
+
+    public enum PortalType {
+        DOOR,           // Regular doors (stonemansion-door, etc.)
+        GATE,           // Palisade gates, brick gates
+        STAIRS_UP,      // Upstairs
+        STAIRS_DOWN,    // Downstairs
+        CELLAR,         // Cellar entrance
+        MINE_ENTRANCE;  // Mine ladder
+
+        public static PortalType fromString(String s) {
+            try {
+                return valueOf(s);
+            } catch (IllegalArgumentException e) {
+                return DOOR;
+            }
+        }
+    }
+
+    public ChunkPortal() {
+        this.connectsToGridId = -1;
+        this.lastTraversed = 0;
+        this.requiresInteraction = true;
+    }
+
+    public ChunkPortal(String gobHash, String gobName, PortalType type, Coord localCoord) {
+        this();
+        this.gobHash = gobHash;
+        this.gobName = gobName;
+        this.type = type;
+        this.localCoord = localCoord;
+        this.requiresInteraction = determineRequiresInteraction(type);
+    }
+
+    private boolean determineRequiresInteraction(PortalType type) {
+        switch (type) {
+            case DOOR:
+            case GATE:
+            case STAIRS_UP:
+            case STAIRS_DOWN:
+            case CELLAR:
+            case MINE_ENTRANCE:
+                return true;
+            default:
+                return true;
+        }
+    }
+
+    /**
+     * Classify a gob name into a portal type.
+     * Returns null if the gob is not a portal.
+     */
+    public static PortalType classifyPortal(String gobName) {
+        if (gobName == null) return null;
+
+        String name = gobName.toLowerCase();
+
+        // Stairs (check before door since some stairs have "door" in name)
+        if (name.contains("upstairs") || name.contains("stairs-up")) {
+            return PortalType.STAIRS_UP;
+        }
+        if (name.contains("downstairs") || name.contains("stairs-down")) {
+            return PortalType.STAIRS_DOWN;
+        }
+
+        // Cellar
+        if (name.contains("cellar")) {
+            return PortalType.CELLAR;
+        }
+
+        // Mine
+        if (name.contains("minehole") || name.contains("ladder")) {
+            return PortalType.MINE_ENTRANCE;
+        }
+
+        // Gates (check before door)
+        if (name.contains("gate") && !name.contains("water")) {
+            return PortalType.GATE;
+        }
+
+        // Doors
+        if (name.contains("door")) {
+            return PortalType.DOOR;
+        }
+
+        return null;
+    }
+
+    public JSONObject toJson() {
+        JSONObject obj = new JSONObject();
+        obj.put("gobHash", gobHash);
+        obj.put("gobName", gobName);
+        obj.put("type", type.name());
+        obj.put("localX", localCoord.x);
+        obj.put("localY", localCoord.y);
+        obj.put("connectsToGridId", connectsToGridId);
+        obj.put("lastTraversed", lastTraversed);
+        obj.put("requiresInteraction", requiresInteraction);
+        return obj;
+    }
+
+    public static ChunkPortal fromJson(JSONObject obj) {
+        ChunkPortal portal = new ChunkPortal();
+        portal.gobHash = obj.optString("gobHash", "unknown_" + System.nanoTime());
+        portal.gobName = obj.optString("gobName", "unknown");
+        portal.type = PortalType.fromString(obj.optString("type", "DOOR"));
+        portal.localCoord = new Coord(obj.optInt("localX", 50), obj.optInt("localY", 50));
+        portal.connectsToGridId = obj.optLong("connectsToGridId", -1);
+        portal.lastTraversed = obj.optLong("lastTraversed", 0);
+        portal.requiresInteraction = obj.optBoolean("requiresInteraction", true);
+        return portal;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Portal[%s, type=%s, at=(%d,%d)]", gobName, type, localCoord.x, localCoord.y);
+    }
+}
