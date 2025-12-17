@@ -53,29 +53,20 @@ public class ChunkNavRecorder {
                 chunk = existing;
                 chunk.gridCoord = gridCoord;
                 chunk.worldTileOrigin = grid.ul;
-                int beforeObs = chunk.countObservedCells();
                 mergeWalkability(grid, chunk);
-                int afterObs = chunk.countObservedCells();
-                if (afterObs != beforeObs) {
-                    System.out.println("ChunkNavRecorder: Grid " + grid.id + " MERGE observed " + beforeObs + " -> " + afterObs);
-                }
             } else {
                 // New chunk - create fresh data
                 chunk = new ChunkNavData(grid.id, gridCoord, grid.ul);
                 sampleWalkability(grid, chunk);
-                System.out.println("ChunkNavRecorder: Grid " + grid.id + " NEW SAMPLE");
             }
 
             detectPortals(grid, chunk);
+            detectLayer(grid, chunk);
             updateEdgeWalkability(chunk);
             chunk.markUpdated();
 
             graph.addChunk(chunk);
             graph.updateConnections(chunk);
-
-            // Debug: count observed tiles
-            int obsCount = chunk.countObservedCells();
-            System.out.println("ChunkNavRecorder: Added/updated chunk " + grid.id + " to graph, observed=" + obsCount + ", graph now has " + graph.getChunkCount() + " chunks");
 
         } catch (Exception e) {
             // Grid may have become invalid during recording
@@ -160,12 +151,6 @@ public class ChunkNavRecorder {
             }
         }
 
-        // Only log if something interesting happened
-        if (newlyObserved > 0 || updatedToWalkable > 0 || updatedToBlocked > 0) {
-            System.out.println("ChunkNavRecorder: Grid " + grid.id + " merge - visible=" + visibleCount +
-                ", newlyObserved=" + newlyObserved + ", updatedWalkable=" + updatedToWalkable +
-                ", updatedBlocked=" + updatedToBlocked + ", playerTile=" + playerTile + ", gridUL=" + grid.ul);
-        }
     }
 
     /**
@@ -253,10 +238,6 @@ public class ChunkNavRecorder {
                 }
             }
         }
-
-        System.out.println("ChunkNavRecorder: Grid " + grid.id + " sampling - visible=" + visibleCount +
-            ", terrainBlocked=" + terrainBlockedCount + ", gobBlocked=" + gobBlockedCount +
-            ", walkable=" + walkableCount + ", gobBlockedTilesSize=" + gobBlockedTiles.size());
     }
 
     /**
@@ -281,6 +262,13 @@ public class ChunkNavRecorder {
     /**
      * Get set of all tiles blocked by gobs in this grid.
      * Returns tile keys as (x << 32) | y for efficient lookup.
+     *
+     * Uses lenient blocking - only marks tiles as blocked if they are SUBSTANTIALLY
+     * blocked (all 4 PF cells blocked). This ensures ChunkNav doesn't reject paths
+     * that PathFinder can actually navigate.
+     *
+     * PathFinder works at half-tile resolution and can navigate around obstacles
+     * at tile edges, so we need to be permissive here.
      */
     private Set<Long> getGobBlockedTiles(MCache.Grid grid) {
         Set<Long> blockedTiles = new HashSet<>();
@@ -295,31 +283,45 @@ public class ChunkNavRecorder {
                     if (gob.ngob == null || gob.ngob.hitBox == null) continue;
                     if (gob.getattr(Following.class) != null) continue; // Skip following
 
+                    // Skip player
+                    if (NUtils.player() != null && gob.id == NUtils.player().id) continue;
+
+                    // Skip portals - doors, cellars, stairs should be passable
+                    String gobName = gob.ngob.name;
+                    if (gobName != null && isPassableGob(gobName)) continue;
+
                     // Check if gob is near this grid
                     if (gob.rc.x < gridTL.x - 50 || gob.rc.x >= gridBR.x + 50 ||
                             gob.rc.y < gridTL.y - 50 || gob.rc.y >= gridBR.y + 50) {
                         continue;
                     }
 
-                    // Get hitbox and mark all tiles it covers
+                    // Get hitbox and mark tiles where CENTER is blocked
                     CellsArray ca = gob.ngob.getCA();
                     if (ca != null && ca.cells != null && ca.begin != null) {
-                        // ca.cells is a 2D array where cells[x][y] != 0 means blocked
-                        // ca.begin is the top-left corner of the hitbox in pathfinder grid coords (half-tile resolution)
-                        // We need to convert from pf grid to tile coords
+                        // Track how many PF cells are blocked per tile
+                        // A tile has ~2x2 PF cells (since tilehsz = tilesz/2)
+                        Map<Long, Integer> tilePfCellCount = new HashMap<>();
+
                         for (int i = 0; i < ca.x_len; i++) {
                             for (int j = 0; j < ca.y_len; j++) {
                                 if (ca.cells[i][j] != 0) {
                                     // Convert from pathfinder grid (half-tile) to world coords, then to tile coords
                                     Coord pfCoord = ca.begin.add(i, j);
-                                    // pfGridToWorld: pfCoord * tilehsz (5.5)
                                     Coord2d worldCoord = pfCoord.mul(MCache.tilehsz);
-                                    // World to tile: divide by tilesz (11)
                                     Coord blockedTile = worldCoord.div(MCache.tilesz).floor();
 
                                     long tileKey = ((long) blockedTile.x << 32) | (blockedTile.y & 0xFFFFFFFFL);
-                                    blockedTiles.add(tileKey);
+                                    tilePfCellCount.merge(tileKey, 1, Integer::sum);
                                 }
+                            }
+                        }
+
+                        // Only mark tile as blocked if ALL 4 PF cells are blocked
+                        // This is very lenient - allows passage around any edge
+                        for (Map.Entry<Long, Integer> entry : tilePfCellCount.entrySet()) {
+                            if (entry.getValue() >= 4) {
+                                blockedTiles.add(entry.getKey());
                             }
                         }
                     }
@@ -330,6 +332,39 @@ public class ChunkNavRecorder {
         }
 
         return blockedTiles;
+    }
+
+    /**
+     * Check if a gob should be considered passable (not blocking).
+     * Only includes specific portal gobs that are traversable, NOT buildings themselves.
+     */
+    private boolean isPassableGob(String name) {
+        if (name == null) return false;
+        String lower = name.toLowerCase();
+
+        // Specific door gobs (the actual door objects, not buildings with doors)
+        // These are the "-door" suffix objects like "stonemansion-door"
+        if (lower.endsWith("-door")) return true;
+
+        // Cellar door and stairs - the actual portal objects
+        if (lower.equals("gfx/terobjs/cellardoor") || lower.contains("/cellardoor")) return true;
+        if (lower.equals("gfx/terobjs/cellarstairs") || lower.contains("/cellarstairs")) return true;
+
+        // Ladders
+        if (lower.contains("/ladder")) return true;
+
+        // Gates - only small gate objects, not walls
+        // Check for specific gate patterns
+        if ((lower.contains("gate") && !lower.contains("water") && !lower.contains("flood")) &&
+            (lower.contains("/polegate") || lower.contains("/palisadegate") ||
+             lower.contains("/drystonewallgate") || lower.endsWith("gate"))) {
+            return true;
+        }
+
+        // Mine holes
+        if (lower.contains("/minehole")) return true;
+
+        return false;
     }
 
     /**
@@ -384,6 +419,94 @@ public class ChunkNavRecorder {
     private Coord worldToLocalCoord(Coord2d worldCoord, MCache.Grid grid) {
         Coord tileCoord = worldCoord.floor(MCache.tilesz);
         return tileCoord.sub(grid.ul);
+    }
+
+    /**
+     * Detect the layer (surface/inside/cellar/mine) based on gobs present in the grid.
+     * This is more reliable than tracking portal traversals.
+     *
+     * Detection logic:
+     * - cellarstairs present -> cellar (the stairs lead UP out of cellar)
+     * - any door present (*-door) -> inside (you're inside a building)
+     * - building gob present (stonemansion, etc.) -> surface (we see building from outside)
+     * - default -> surface
+     */
+    private void detectLayer(MCache.Grid grid, ChunkNavData chunk) {
+        try {
+            Glob glob = NUtils.getGameUI().ui.sess.glob;
+            Coord2d gridTL = grid.ul.mul(MCache.tilesz);
+            Coord2d gridBR = grid.ul.add(CHUNK_SIZE, CHUNK_SIZE).mul(MCache.tilesz);
+
+            boolean hasCellarStairs = false;
+            boolean hasDoor = false;  // Any door means we're inside
+            boolean hasBuildingExterior = false;
+
+            synchronized (glob.oc) {
+                for (Gob gob : glob.oc) {
+                    if (gob.ngob == null || gob.ngob.name == null) continue;
+
+                    // Check if gob is in this grid
+                    if (gob.rc.x < gridTL.x || gob.rc.x >= gridBR.x ||
+                            gob.rc.y < gridTL.y || gob.rc.y >= gridBR.y) {
+                        continue;
+                    }
+
+                    String name = gob.ngob.name.toLowerCase();
+
+                    // Cellar stairs (inside cellar, leads up)
+                    if (name.contains("cellarstairs")) {
+                        hasCellarStairs = true;
+                    }
+                    // Any door gob ending with -door means we're inside a building
+                    // This includes stonemansion-door, cellardoor, etc.
+                    else if (name.endsWith("-door") || name.endsWith("door")) {
+                        hasDoor = true;
+                    }
+                    // Building exterior (stonemansion, logcabin, etc. - seen from outside)
+                    else if (isBuildingExterior(name)) {
+                        hasBuildingExterior = true;
+                    }
+                }
+            }
+
+            // Determine layer based on what we found (priority order)
+            String detectedLayer;
+            if (hasCellarStairs) {
+                // Cellar stairs means we're IN the cellar
+                detectedLayer = "cellar";
+            } else if (hasDoor) {
+                // Any door visible means we're inside a building
+                detectedLayer = "inside";
+            } else if (hasBuildingExterior) {
+                // Building exterior visible means we're on surface
+                detectedLayer = "surface";
+            } else {
+                // Default to surface (or keep existing if already set to something else)
+                detectedLayer = chunk.layer.equals("surface") ? "surface" : chunk.layer;
+            }
+
+            chunk.layer = detectedLayer;
+
+        } catch (Exception e) {
+            // Ignore layer detection errors
+        }
+    }
+
+    /**
+     * Check if a gob name is a building exterior (visible from outside).
+     */
+    private boolean isBuildingExterior(String name) {
+        // Building exteriors - the full building gobs seen from outside
+        // These are the main building gobs, NOT the -door variants
+        if (name.contains("-door") || name.endsWith("door")) return false;
+
+        return name.contains("stonemansion") ||
+               name.contains("logcabin") ||
+               name.contains("timberhouse") ||
+               name.contains("stonestead") ||
+               name.contains("greathall") ||
+               name.contains("stonetower") ||
+               name.contains("windmill");
     }
 
     /**

@@ -110,8 +110,6 @@ public class PortalTraversalTracker {
             } else {
                 this.clickedPortalLocalCoord = getGobLocalCoord(portal);
             }
-            System.err.println("PortalTraversalTracker: Explicitly tracking clicked portal: " + portal.ngob.name +
-                " (player access point at " + clickedPortalLocalCoord + ")");
         }
     }
 
@@ -148,6 +146,11 @@ public class PortalTraversalTracker {
         long currentGridId = graph.getPlayerChunkId();
         if (currentGridId == -1) return;
 
+        // Debug: log grid changes to verify we're being called
+        if (lastGridId != -1 && currentGridId != lastGridId) {
+            System.out.println("ChunkNav: doCheck() detected grid change: " + lastGridId + " -> " + currentGridId);
+        }
+
         // Calculate player's current local coord in their CURRENT grid
         Coord currentPlayerLocalCoord = null;
         try {
@@ -183,8 +186,6 @@ public class PortalTraversalTracker {
             // Cache the PLAYER's local coordinate NOW while the grid is still loaded
             // This is the accessible spot in front of the door
             lastNearbyPortalLocalCoord = currentPlayerLocalCoord;
-            System.err.println("PortalTraversalTracker: Tracking portal " + nearbyPortal.ngob.name +
-                " (player access point at " + lastNearbyPortalLocalCoord + ")");
         }
 
         // Capture lastActions gob BEFORE grid change (like routes system does)
@@ -209,24 +210,47 @@ public class PortalTraversalTracker {
      * Called when player's grid ID changes.
      */
     private void onGridChanged(long fromGridId, long toGridId, Gob player) {
-        System.err.println("PortalTraversalTracker: Grid changed from " + fromGridId + " to " + toGridId);
+        System.out.println("ChunkNav: Grid changed from " + fromGridId + " to " + toGridId);
+
+        // Wait a moment for gobs to load after grid change
+        // This is called from tick(), so we can't do async waiting - just retry on next tick if needed
+        // But we can wait a short time for gobs to appear
+        try {
+            Thread.sleep(100);  // Brief wait for gobs to load
+        } catch (InterruptedException e) {
+            return;
+        }
 
         // FIRST: Check if we have an explicitly clicked portal (from executor navigation)
         if (clickedPortal != null && clickedPortal.ngob != null && clickedPortalLocalCoord != null) {
             String portalName = clickedPortal.ngob.name;
             String portalHash = getPortalHash(clickedPortal);
-            System.err.println("PortalTraversalTracker: Using explicitly clicked portal: " + portalName);
+            System.out.println("ChunkNav: Using explicitly clicked portal: " + portalName);
 
             // Record the entrance connection
             recordPortalConnection(portalHash, portalName, fromGridId, toGridId, clickedPortalLocalCoord);
 
             // Find and record exit portal (reverse connection) and detect layer
-            Gob exitPortal = findExitPortalAndUpdateLayer(player, portalName, toGridId);
+            // Retry a few times for gobs to load
+            Gob exitPortal = null;
+            for (int i = 0; i < 5 && exitPortal == null; i++) {
+                exitPortal = findExitPortalAndUpdateLayer(player, portalName, toGridId);
+                if (exitPortal == null) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                }
+            }
             if (exitPortal != null && exitPortal.ngob != null) {
                 String exitHash = getPortalHash(exitPortal);
                 String exitName = exitPortal.ngob.name;
                 Coord exitLocalCoord = getGobLocalCoord(player);
+                System.out.println("ChunkNav: Found exit portal: " + exitName);
                 recordPortalConnection(exitHash, exitName, toGridId, fromGridId, exitLocalCoord);
+            } else {
+                System.out.println("ChunkNav: No exit portal found for explicit traversal");
             }
 
             // Clear tracking
@@ -236,25 +260,37 @@ public class PortalTraversalTracker {
         }
 
         // FALLBACK: For manual traversals, use exit portal to determine entrance
-        // Find the exit portal on the new side
-        Gob exitPortal = findNearbyPortal(player);
+        // Find the exit portal on the new side - retry a few times for gobs to load
+        Gob exitPortal = null;
+        System.out.println("ChunkNav: Looking for nearby exit portal...");
+        for (int i = 0; i < 5 && exitPortal == null; i++) {
+            exitPortal = findNearbyPortal(player);
+            if (exitPortal == null) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
         if (exitPortal == null || exitPortal.ngob == null) {
-            System.err.println("PortalTraversalTracker: No exit portal found, cannot record");
+            System.out.println("ChunkNav: No exit portal found nearby player after retries");
             return;
         }
 
         String exitName = exitPortal.ngob.name;
         String exitHash = getPortalHash(exitPortal);
         String entranceName = GateDetector.getDoorPair(exitName);
+        System.out.println("ChunkNav: Found exit portal: " + exitName + " entrance pair: " + entranceName);
+
         // Use PLAYER's current position - this is where we land after exiting, the accessible spot
         Coord exitLocalCoord = getGobLocalCoord(player);
-
-        System.err.println("PortalTraversalTracker: Found exit portal: " + exitName + ", entrance pair: " + entranceName);
 
         // Update the destination chunk's layer based on the exit portal
         updateChunkLayer(toGridId, exitName);
 
         // Record: exit portal on toGrid connects back to fromGrid (using player's position as access point)
+        System.out.println("ChunkNav: Recording exit portal " + exitName + " connects " + toGridId + " -> " + fromGridId);
         recordPortalConnection(exitHash, exitName, toGridId, fromGridId, exitLocalCoord);
 
         // Record: entrance portal on fromGrid connects to toGrid
@@ -275,7 +311,6 @@ public class PortalTraversalTracker {
                      entranceName.contains(cachedName))) {
                     entranceCoord = cachedLastActionsGobLocalCoord;
                     entranceHash = getPortalHash(cachedLastActionsGob);
-                    System.err.println("PortalTraversalTracker: Using cached lastActions gob for entrance " + entranceName + " at " + entranceCoord);
                 }
             }
 
@@ -288,23 +323,22 @@ public class PortalTraversalTracker {
                 // Use the actual portal position we were tracking
                 entranceCoord = lastNearbyPortalLocalCoord;
                 entranceHash = getPortalHash(lastNearbyPortal);
-                System.err.println("PortalTraversalTracker: Using tracked portal position for entrance " + entranceName + " at " + entranceCoord);
             }
 
             // Strategy 3: Fallback to player position if we don't have the portal position
             if (entranceCoord == null && lastPlayerLocalCoord != null) {
                 entranceCoord = lastPlayerLocalCoord;
                 entranceHash = "entrance_" + fromGridId + "_" + entranceName.hashCode();
-                System.err.println("PortalTraversalTracker: Using player position for entrance " + entranceName + " at " + entranceCoord + " (portal not tracked)");
             }
 
             if (entranceCoord != null && entranceHash != null) {
+                System.out.println("ChunkNav: Recording entrance portal " + entranceName + " connects " + fromGridId + " -> " + toGridId);
                 recordPortalConnection(entranceHash, entranceName, fromGridId, toGridId, entranceCoord);
             } else {
-                System.err.println("PortalTraversalTracker: No position available for entrance recording");
+                System.out.println("ChunkNav: Could not determine entrance portal position for " + entranceName);
             }
         } else {
-            System.err.println("PortalTraversalTracker: No entrance pair known for " + exitName);
+            System.out.println("ChunkNav: No entrance pair mapping for exit portal: " + exitName);
         }
 
         // Clear tracking state after use
@@ -319,14 +353,16 @@ public class PortalTraversalTracker {
      * @param localCoord The local tile coordinate within the chunk (can be null for default center)
      */
     private void recordPortalConnection(String gobHash, String gobName, long fromGridId, long toGridId, Coord localCoord) {
+        System.out.println("ChunkNav: recordPortalConnection(" + gobName + ", " + fromGridId + " -> " + toGridId + ", " + localCoord + ")");
+
         // Update the portal in the source chunk
         ChunkNavData fromChunk = graph.getChunk(fromGridId);
         if (fromChunk == null) {
+            System.out.println("ChunkNav: Chunk " + fromGridId + " not found, creating minimal chunk...");
             // Chunk not recorded yet - try to record it now
-            System.err.println("PortalTraversalTracker: Source chunk " + fromGridId + " not found, attempting to create");
             fromChunk = createMinimalChunk(fromGridId);
             if (fromChunk == null) {
-                System.err.println("PortalTraversalTracker: Could not create chunk " + fromGridId);
+                System.out.println("ChunkNav: Failed to create minimal chunk for " + fromGridId);
                 return;
             }
         }
@@ -341,28 +377,26 @@ public class PortalTraversalTracker {
         }
 
         if (portal == null) {
-            System.err.println("PortalTraversalTracker: Portal not in chunk, creating new entry at " + portalCoord);
             ChunkPortal.PortalType type = ChunkPortal.classifyPortal(gobName);
             if (type == null) type = ChunkPortal.PortalType.DOOR;
 
             portal = new ChunkPortal(gobHash, gobName, type, portalCoord);
             fromChunk.addOrUpdatePortal(portal);
             graph.addChunk(fromChunk); // Re-add to update portal index
+            System.out.println("ChunkNav: Created new portal " + gobName + " in chunk " + fromGridId);
         } else {
             // Update existing portal with new hash and position if provided
             portal.gobHash = gobHash;  // Update hash in case it was a synthetic one
             if (localCoord != null) {
                 portal.localCoord = portalCoord;
             }
-            System.err.println("PortalTraversalTracker: Updated existing portal at " + portal.localCoord);
+            System.out.println("ChunkNav: Updated existing portal " + gobName + " in chunk " + fromGridId);
         }
 
         // Update the connection
         portal.connectsToGridId = toGridId;
         portal.lastTraversed = System.currentTimeMillis();
-
-        System.err.println("PortalTraversalTracker: Recorded connection " + gobName +
-            " from grid " + fromGridId + " -> " + toGridId + " at " + portalCoord);
+        System.out.println("ChunkNav: Portal " + gobName + " now connects to " + toGridId);
 
         // Also notify recorder
         recorder.recordPortalTraversal(gobHash, fromGridId, toGridId);
@@ -433,13 +467,12 @@ public class PortalTraversalTracker {
                         Coord gridCoord = grid.ul.div(100);
                         ChunkNavData chunk = new ChunkNavData(gridId, gridCoord, grid.ul);
                         graph.addChunk(chunk);
-                        System.err.println("PortalTraversalTracker: Created minimal chunk for grid " + gridId);
                         return chunk;
                     }
                 }
             }
         } catch (Exception e) {
-            System.err.println("PortalTraversalTracker: Error creating chunk: " + e.getMessage());
+            // Ignore
         }
         return null;
     }
@@ -490,9 +523,6 @@ public class PortalTraversalTracker {
             // Use PLAYER's position - this is where we land after exiting, the accessible spot
             Coord exitLocalCoord = getGobLocalCoord(player);
             recordPortalConnection(exitHash, exitName, toGridId, fromGridId, exitLocalCoord);
-            System.err.println("PortalTraversalTracker: Found exit portal (" + exitName + "), recorded reverse connection at player pos " + exitLocalCoord);
-        } else {
-            System.err.println("PortalTraversalTracker: No exit portal found, reverse connection not recorded");
         }
     }
 
@@ -615,15 +645,12 @@ public class PortalTraversalTracker {
     private void updateChunkLayer(long gridId, String exitPortalName) {
         String layer = determineLayerFromExitPortal(exitPortalName);
         if (layer == null) {
-            System.err.println("PortalTraversalTracker: No layer change for exit portal " + exitPortalName + " (keeping existing layer)");
             return;
         }
 
         ChunkNavData chunk = graph.getChunk(gridId);
         if (chunk != null && !layer.equals(chunk.layer)) {
-            String oldLayer = chunk.layer;
             chunk.layer = layer;
-            System.err.println("PortalTraversalTracker: Updated chunk " + gridId + " layer: " + oldLayer + " -> " + layer);
         }
     }
 

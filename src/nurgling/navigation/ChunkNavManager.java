@@ -99,23 +99,16 @@ public class ChunkNavManager {
     public void onGridLoaded(MCache.Grid grid) {
         if (grid == null) return;
 
-        if (!enabled) {
-            System.err.println("ChunkNavManager: onGridLoaded skipped - not enabled");
-            return;
-        }
-        if (!initialized) {
-            System.err.println("ChunkNavManager: onGridLoaded skipped - not initialized");
+        if (!enabled || !initialized) {
             return;
         }
 
         try {
-            System.out.println("ChunkNavManager: Recording grid " + grid.id + " at " + grid.ul);
             recorder.recordGrid(grid);
             // Always save (throttled) since we now re-sample walkability each time
             saveThrottled();
         } catch (Exception e) {
-            System.err.println("ChunkNavManager: Error recording grid: " + e.getMessage());
-            e.printStackTrace();
+            // Ignore recording errors
         }
     }
 
@@ -175,7 +168,7 @@ public class ChunkNavManager {
 
     /**
      * Plan a path to an area.
-     * Validates intra-chunk reachability before returning the path.
+     * Returns the chunk-level path. PathFinder handles actual navigation within grids.
      */
     public ChunkPath planToArea(NArea area) {
         if (!enabled || !initialized) return null;
@@ -185,81 +178,12 @@ public class ChunkNavManager {
             return null;
         }
 
-        // Validate the path using intra-chunk pathfinding
-        Coord playerLocalCoord = getPlayerLocalCoord();
-        if (playerLocalCoord != null) {
-            // Get target area's local coordinate and grid ID for full validation
-            Coord targetAreaLocal = null;
-            long targetGridId = -1;
-
-            try {
-                Coord2d areaCenter = area.getCenter2d();
-                if (areaCenter != null) {
-                    Coord areaTile = areaCenter.floor(MCache.tilesz);
-
-                    // Try to find which chunk the area is in
-                    MCache mcache = NUtils.getGameUI().map.glob.map;
-
-                    // First try loaded grid
-                    try {
-                        MCache.Grid areaGrid = mcache.getgridt(areaTile);
-                        if (areaGrid != null) {
-                            targetGridId = areaGrid.id;
-                            targetAreaLocal = areaTile.sub(areaGrid.ul);
-                        }
-                    } catch (Exception e) {
-                        // Grid not loaded
-                    }
-
-                    // Fall back to stored chunk data
-                    if (targetAreaLocal == null) {
-                        for (ChunkNavData chunk : graph.getAllChunks()) {
-                            if (chunk.worldTileOrigin == null) continue;
-                            if (areaTile.x >= chunk.worldTileOrigin.x && areaTile.x < chunk.worldTileOrigin.x + CHUNK_SIZE &&
-                                areaTile.y >= chunk.worldTileOrigin.y && areaTile.y < chunk.worldTileOrigin.y + CHUNK_SIZE) {
-                                targetGridId = chunk.gridId;
-                                targetAreaLocal = areaTile.sub(chunk.worldTileOrigin);
-                                break;
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("ChunkNavManager: Error getting target area coordinates: " + e.getMessage());
-            }
-
-            // Validate full path including target area reachability
-            boolean valid = ChunkNavIntraPathfinder.validateFullPathWithTarget(
-                path, graph, playerLocalCoord, targetAreaLocal, targetGridId);
-
-            if (!valid) {
-                System.err.println("ChunkNavManager: Path to area '" + area.name + "' is blocked according to walkability data");
-                return null;
-            }
-            System.err.println("ChunkNavManager: Path to area '" + area.name + "' validated successfully");
-        }
+        // No intra-chunk validation needed:
+        // - Adjacent grids: you walk across the edge where they touch
+        // - Building connections: you use doors/portals
+        // PathFinder handles actual route within each grid
 
         return path;
-    }
-
-    /**
-     * Get player's local coordinate within their current chunk.
-     */
-    private Coord getPlayerLocalCoord() {
-        try {
-            Gob player = NUtils.player();
-            if (player == null) return null;
-
-            MCache mcache = NUtils.getGameUI().map.glob.map;
-            Coord playerTile = player.rc.floor(MCache.tilesz);
-            MCache.Grid grid = mcache.getgridt(playerTile);
-            if (grid != null) {
-                return playerTile.sub(grid.ul);
-            }
-        } catch (Exception e) {
-            // Ignore
-        }
-        return null;
     }
 
     /**
@@ -416,6 +340,9 @@ public class ChunkNavManager {
                 }
             }
 
+            // Rebuild connections after loading all chunks
+            graph.rebuildAllConnections();
+
             System.out.println("ChunkNavManager: Loaded " + graph.getChunkCount() + " chunks from " + filePath);
 
         } catch (Exception e) {
@@ -526,7 +453,7 @@ public class ChunkNavManager {
             }
 
         } catch (Exception e) {
-            System.err.println("ChunkNavManager: Error updating connections: " + e.getMessage());
+            // Ignore
         }
     }
 }

@@ -57,18 +57,13 @@ public class ChunkNavExecutor implements Action {
             return Results.FAIL();
         }
 
-        System.err.println("ChunkNavExecutor: Starting path execution with " + path.waypoints.size() + " waypoints");
-
         // Execute each waypoint
         for (int i = 0; i < path.waypoints.size(); i++) {
             ChunkPath.ChunkWaypoint waypoint = path.waypoints.get(i);
             ChunkPath.ChunkWaypoint nextWaypoint = (i + 1 < path.waypoints.size()) ? path.waypoints.get(i + 1) : null;
-            System.err.println("ChunkNavExecutor: Processing waypoint " + i + "/" + path.waypoints.size() +
-                " type=" + waypoint.type + " gridId=" + waypoint.gridId + " localCoord=" + waypoint.localCoord);
 
             // Handle portal traversal - traversePortal handles its own navigation to the portal gob
             if (waypoint.portal != null && waypoint.type == ChunkPath.WaypointType.PORTAL_ENTRY) {
-                System.err.println("ChunkNavExecutor: Traversing portal " + waypoint.portal.gobName);
                 // Tick portal tracker before traversal to capture pre-portal state
                 tickPortalTracker();
 
@@ -77,8 +72,6 @@ public class ChunkNavExecutor implements Action {
                     gui.error("ChunkNav: Portal traversal failed");
                     return Results.FAIL();
                 }
-
-                System.err.println("ChunkNavExecutor: Portal traversal complete");
 
                 // Tick portal tracker after traversal to detect grid change
                 tickPortalTracker();
@@ -98,7 +91,6 @@ public class ChunkNavExecutor implements Action {
                     // Waypoint grid not loaded, wait or skip
                     if (waypoint.type == ChunkPath.WaypointType.PORTAL_EXIT) {
                         // Expected after portal, wait for load
-                        System.err.println("ChunkNavExecutor: Skipping PORTAL_EXIT waypoint (grid not loaded yet)");
                         continue;
                     }
                     gui.error("ChunkNav: Waypoint grid not loaded, attempting to continue");
@@ -120,10 +112,7 @@ public class ChunkNavExecutor implements Action {
 
             // Periodically tick the portal tracker during navigation
             tickPortalTracker();
-            System.err.println("ChunkNavExecutor: Waypoint " + i + " complete");
         }
-
-        System.err.println("ChunkNavExecutor: All waypoints processed, navigating to target area edge");
 
         // We've traversed all waypoints/portals - now navigate to just outside the target area
         if (targetArea != null) {
@@ -134,13 +123,11 @@ public class ChunkNavExecutor implements Action {
                 areaBounds = targetArea.getRCArea();
                 if (areaBounds == null) {
                     waitAttempts++;
-                    System.err.println("ChunkNavExecutor: Waiting for area '" + targetArea.name + "' to become visible (attempt " + waitAttempts + ")");
                     Thread.sleep(250);
                 }
             }
 
             if (areaBounds == null) {
-                System.err.println("ChunkNavExecutor: Area '" + targetArea.name + "' not visible after waiting");
                 return Results.FAIL();
             }
 
@@ -158,15 +145,12 @@ public class ChunkNavExecutor implements Action {
             for (Coord2d edgePoint : edgePoints) {
                 // Use step-by-step navigation which can walk toward distant targets
                 // This handles cases where the area is in the same grid but not visible
-                System.err.println("ChunkNavExecutor: Trying to navigate to area edge at " + edgePoint + " (distance: " + playerPos.dist(edgePoint) + ")");
                 Results edgeResult = navigateToCoord(edgePoint, gui);
                 if (edgeResult.IsSuccess()) {
-                    System.err.println("ChunkNavExecutor: Reached target area '" + targetArea.name + "' edge at " + edgePoint);
                     return Results.SUCCESS();
                 }
             }
 
-            System.err.println("ChunkNavExecutor: Failed to navigate to any area edge");
             return Results.FAIL();
         }
 
@@ -237,14 +221,12 @@ public class ChunkNavExecutor implements Action {
 
             MCache.Grid playerGrid = mcache.getgridt(playerTile);
             if (playerGrid == null) {
-                System.err.println("ChunkNavExecutor: Player grid not loaded");
                 return Results.FAIL();
             }
 
             // Get chunk data for intra-chunk pathfinding
             ChunkNavData chunk = graph.getChunk(playerGrid.id);
             if (chunk == null) {
-                System.err.println("ChunkNavExecutor: No chunk data for grid " + playerGrid.id + ", falling back to step-walk");
                 return navigateToCoordStepByStep(target, gui);
             }
 
@@ -258,25 +240,20 @@ public class ChunkNavExecutor implements Action {
 
             if (targetInSameChunk) {
                 // Use intra-chunk pathfinding
-                System.err.println("ChunkNavExecutor: Target in same chunk, using intra-chunk pathfinding");
                 ChunkNavIntraPathfinder.IntraPath intraPath = ChunkNavIntraPathfinder.findPath(playerLocal, targetLocal, chunk);
 
                 if (!intraPath.reachable) {
-                    System.err.println("ChunkNavExecutor: Target unreachable according to walkability grid");
+                    System.err.println("ChunkNav: Target unreachable via walkability grid at (" + targetLocal + ")");
                     return Results.FAIL();
                 }
-
-                System.err.println("ChunkNavExecutor: Found intra-chunk path with " + intraPath.size() + " waypoints");
 
                 // Follow the path through each waypoint
                 return followIntraChunkPath(intraPath, playerGrid, target, gui);
             } else {
                 // Target is in different chunk - walk toward chunk edge
-                System.err.println("ChunkNavExecutor: Target in different chunk, walking toward it");
                 return navigateToCoordStepByStep(target, gui);
             }
         } catch (Exception e) {
-            System.err.println("ChunkNavExecutor: Error in intra-chunk pathfinding: " + e.getMessage());
             return navigateToCoordStepByStep(target, gui);
         }
     }
@@ -296,16 +273,9 @@ public class ChunkNavExecutor implements Action {
             Coord tileCoord = grid.ul.add(localCoord);
             Coord2d worldCoord = tileCoord.mul(MCache.tilesz).add(MCache.tilehsz);
 
-            System.err.println("ChunkNavExecutor: Walking to intra-chunk waypoint " + i + "/" + intraPath.size() + " at " + localCoord);
-
             PathFinder waypointPf = new PathFinder(worldCoord);
-            Results waypointResult = waypointPf.run(gui);
-
-            if (!waypointResult.IsSuccess()) {
-                System.err.println("ChunkNavExecutor: Failed to reach waypoint, path may be blocked");
-                // Don't fail immediately - the walkability data might be outdated
-                // Try to continue or go directly to target
-            }
+            waypointPf.run(gui);
+            // Don't fail on individual waypoints - walkability data might be outdated
 
             // Check if we can now reach the final target directly
             Gob player = gui.map.player();
@@ -377,16 +347,16 @@ public class ChunkNavExecutor implements Action {
      * @param gridId The grid ID where the portal is located (from waypoint)
      */
     private Results traversePortal(ChunkPortal portal, long gridId, NGameUI gui) throws InterruptedException {
+        System.out.println("ChunkNav: traversePortal(" + portal.gobName + ") in grid " + gridId);
+
         // First navigate to the recorded access point (player position when door was last used)
         // This is stored in the portal's localCoord
         Coord2d accessPoint = getPortalAccessPoint(portal, gridId, gui);
         if (accessPoint != null) {
-            System.err.println("ChunkNavExecutor: Navigating to portal access point at " + accessPoint);
+            System.out.println("ChunkNav: Navigating to access point " + accessPoint);
             PathFinder accessPf = new PathFinder(accessPoint);
-            Results accessResult = accessPf.run(gui);
-            if (!accessResult.IsSuccess()) {
-                System.err.println("ChunkNavExecutor: Failed to reach portal access point, trying direct approach");
-            }
+            accessPf.run(gui);
+            // Continue even if we can't reach exact access point - try direct approach
         }
 
         // Now find the portal gob to click on it
@@ -399,9 +369,15 @@ public class ChunkNavExecutor implements Action {
             portalGob = Finder.findGob(portal.gobHash);
         }
         if (portalGob == null) {
+            // Final fallback: just find any gob with matching name nearby
+            System.out.println("ChunkNav: Portal not found by position/hash, trying name search: " + portal.gobName);
+            portalGob = Finder.findGob(new NAlias(portal.gobName));
+        }
+        if (portalGob == null) {
             gui.error("ChunkNav: Portal gob not found: " + portal.gobName + " at position " + portal.localCoord);
             return Results.FAIL();
         }
+        System.out.println("ChunkNav: Found portal gob: " + portalGob.ngob.name + " at " + portalGob.rc);
 
         // Interact with portal
         if (portal.requiresInteraction) {
@@ -417,7 +393,6 @@ public class ChunkNavExecutor implements Action {
             if (isLoadingPortal(portal.type)) {
                 // Wait for the exit portal to appear (like routes do)
                 String exitGobName = GateDetector.getDoorPair(portal.gobName);
-                System.err.println("ChunkNavExecutor: Waiting for exit portal: " + exitGobName);
 
                 // First wait for basic map load
                 NUtils.getUI().core.addTask(new WaitForMapLoad());
@@ -429,8 +404,6 @@ public class ChunkNavExecutor implements Action {
 
                 // Wait for gob loading to stabilize
                 NUtils.getUI().core.addTask(new WaitForGobStability());
-
-                System.err.println("ChunkNavExecutor: Map and exit portal loaded");
             } else {
                 // Just wait for door animation
                 NUtils.getUI().core.addTask(new WaitGobModelAttrChange(portalGob, portalGob.ngob.getModelAttribute()));
@@ -477,10 +450,6 @@ public class ChunkNavExecutor implements Action {
                 closestDist = dist;
                 closest = gob;
             }
-        }
-
-        if (closest != null) {
-            System.err.println("ChunkNavExecutor: Found portal " + portal.gobName + " at distance " + closestDist + " from expected position");
         }
 
         return closest;
@@ -543,7 +512,7 @@ public class ChunkNavExecutor implements Action {
                 return tileCoord.mul(MCache.tilesz).add(MCache.tilehsz);
             }
         } catch (Exception e) {
-            System.err.println("ChunkNavExecutor: Error getting portal access point: " + e.getMessage());
+            // Ignore
         }
 
         return null;
@@ -671,7 +640,6 @@ public class ChunkNavExecutor implements Action {
 
             // Check timeout
             if (System.currentTimeMillis() - startTime > TIMEOUT_MS) {
-                System.err.println("WaitForExitPortal: Timeout waiting for " + exitPortalName);
                 return true;
             }
 
@@ -679,7 +647,6 @@ public class ChunkNavExecutor implements Action {
             try {
                 Gob exitGob = Finder.findGob(new NAlias(exitPortalName));
                 if (exitGob != null) {
-                    System.err.println("WaitForExitPortal: Found exit portal " + exitPortalName);
                     return true;
                 }
             } catch (Exception e) {

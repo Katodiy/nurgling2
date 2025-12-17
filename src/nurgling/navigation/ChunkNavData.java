@@ -205,6 +205,7 @@ public class ChunkNavData {
 
     /**
      * Add or update a portal. Updates existing portal with same hash OR same name.
+     * Preserves connectsToGridId if the existing portal has a valid connection.
      */
     public void addOrUpdatePortal(ChunkPortal portal) {
         // First try to find by hash
@@ -214,6 +215,11 @@ public class ChunkNavData {
             existing = findPortalByName(portal.gobName);
         }
         if (existing != null) {
+            // Preserve existing connection if new portal doesn't have one
+            if (portal.connectsToGridId == -1 && existing.connectsToGridId != -1) {
+                portal.connectsToGridId = existing.connectsToGridId;
+                portal.lastTraversed = existing.lastTraversed;
+            }
             portals.remove(existing);
         }
         portals.add(portal);

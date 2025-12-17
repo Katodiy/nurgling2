@@ -88,7 +88,6 @@ public class ChunkNavGraph {
      */
     public ChunkNavData findChunkAtWorldCoord(Coord2d worldCoord, MCache mcache) {
         if (mcache == null) {
-            System.err.println("findChunkAtWorldCoord: mcache is null");
             return null;
         }
 
@@ -96,16 +95,10 @@ public class ChunkNavGraph {
             Coord tileCoord = worldCoord.floor(MCache.tilesz);
             MCache.Grid grid = mcache.getgridt(tileCoord);
             if (grid != null) {
-                ChunkNavData result = chunks.get(grid.id);
-                if (result == null) {
-                    System.err.println("findChunkAtWorldCoord: Grid " + grid.id + " not in chunks map (size=" + chunks.size() + ")");
-                }
-                return result;
-            } else {
-                System.err.println("findChunkAtWorldCoord: getgridt returned null for tile " + tileCoord);
+                return chunks.get(grid.id);
             }
         } catch (Exception e) {
-            System.err.println("findChunkAtWorldCoord: Exception: " + e.getClass().getName() + ": " + e.getMessage());
+            // Ignore
         }
         return null;
     }
@@ -195,7 +188,7 @@ public class ChunkNavGraph {
         List<ChunkEdge> edges = new ArrayList<>();
         ChunkNavData fromChunk = chunks.get(fromGridId);
         if (fromChunk == null) {
-            System.err.println("ChunkNavGraph.getEdges: chunk " + fromGridId + " not found");
+            System.out.println("ChunkNav: getEdges(" + fromGridId + ") - chunk not found");
             return edges;
         }
 
@@ -227,14 +220,22 @@ public class ChunkNavGraph {
                 edge.portal = portal;
                 edge.cost = calculateEdgeCost(fromChunk, toChunk, portal);
                 edges.add(edge);
+                System.out.println("ChunkNav: getEdges(" + fromGridId + ") - portal edge to " + portal.connectsToGridId + " via " + portal.gobName);
+            } else if (portal.connectsToGridId == -1) {
+                System.out.println("ChunkNav: getEdges(" + fromGridId + ") - portal " + portal.gobName + " has no connectsToGridId");
             }
         }
+
+        System.out.println("ChunkNav: getEdges(" + fromGridId + ") - " + fromChunk.connectedChunks.size() + " adjacent + " +
+            fromChunk.portals.size() + " portals = " + edges.size() + " edges");
 
         return edges;
     }
 
     /**
      * Find the best crossing point between two adjacent chunks.
+     * Uses a lenient approach: if edge tiles are not observed, assume they're passable.
+     * This prevents blocking paths due to incomplete exploration data.
      */
     private EdgeCrossing findBestCrossing(ChunkNavData fromChunk, ChunkNavData toChunk) {
         // Determine which direction toChunk is relative to fromChunk
@@ -245,11 +246,16 @@ public class ChunkNavGraph {
         EdgePoint[] toEdge = toChunk.getEdge(dir.opposite());
 
         // Find best walkable crossing
+        // Use lenient check: unobserved edge tiles are assumed passable
         int bestIndex = -1;
         int centerIndex = CELLS_PER_EDGE / 2;
 
         for (int i = 0; i < CELLS_PER_EDGE; i++) {
-            if (fromEdge[i].walkable && toEdge[i].walkable) {
+            // Check if edge is walkable, with fallback for unobserved tiles
+            boolean fromWalkable = isEdgeWalkable(fromChunk, dir, i);
+            boolean toWalkable = isEdgeWalkable(toChunk, dir.opposite(), i);
+
+            if (fromWalkable && toWalkable) {
                 if (bestIndex < 0 || Math.abs(i - centerIndex) < Math.abs(bestIndex - centerIndex)) {
                     bestIndex = i;
                 }
@@ -263,7 +269,36 @@ public class ChunkNavGraph {
             return crossing;
         }
 
-        return null;
+        // Fallback: if no walkable crossing found, assume center is passable
+        // This prevents isolation of chunks due to incomplete edge data
+        EdgeCrossing fallback = new EdgeCrossing();
+        fallback.crossingPoint = fromEdge[centerIndex].localCoord;
+        fallback.direction = dir;
+        return fallback;
+    }
+
+    /**
+     * Check if an edge tile is walkable, with lenient handling of unobserved tiles.
+     * If the tile was never observed, assume it's walkable.
+     */
+    private boolean isEdgeWalkable(ChunkNavData chunk, Direction dir, int index) {
+        // Get the tile coordinates for this edge position
+        int x, y;
+        switch (dir) {
+            case NORTH: x = index; y = 0; break;
+            case SOUTH: x = index; y = CELLS_PER_EDGE - 1; break;
+            case WEST: x = 0; y = index; break;
+            case EAST: x = CELLS_PER_EDGE - 1; y = index; break;
+            default: return true;
+        }
+
+        // If tile was never observed, assume it's walkable
+        if (!chunk.isObserved(x, y)) {
+            return true;
+        }
+
+        // Otherwise use actual walkability
+        return chunk.getWalkability(x, y) <= 1;
     }
 
     /**
@@ -309,6 +344,7 @@ public class ChunkNavGraph {
     /**
      * Update connections between chunks after recording.
      * Uses worldTileOrigin for reliable neighbor detection across sessions.
+     * Only connects chunks on the same layer (surface, inside, cellar, etc.)
      */
     public void updateConnections(ChunkNavData chunk) {
         if (chunk.worldTileOrigin == null) return;
@@ -317,6 +353,10 @@ public class ChunkNavGraph {
         // Adjacent chunks have worldTileOrigin offset by exactly CHUNK_SIZE (100 tiles)
         for (ChunkNavData other : chunks.values()) {
             if (other.gridId == chunk.gridId || other.worldTileOrigin == null) continue;
+
+            // Only connect chunks on the same layer
+            // Different layers (surface, inside, cellar) can only connect via portals
+            if (!chunk.layer.equals(other.layer)) continue;
 
             int dx = other.worldTileOrigin.x - chunk.worldTileOrigin.x;
             int dy = other.worldTileOrigin.y - chunk.worldTileOrigin.y;
@@ -333,6 +373,22 @@ public class ChunkNavGraph {
                     other.connectedChunks.add(chunk.gridId);
                 }
             }
+        }
+    }
+
+    /**
+     * Rebuild all connections between chunks.
+     * Call this after loading chunks from storage to ensure connectivity is up to date.
+     */
+    public void rebuildAllConnections() {
+        // Clear existing connections
+        for (ChunkNavData chunk : chunks.values()) {
+            chunk.connectedChunks.clear();
+        }
+
+        // Rebuild connections for all chunks
+        for (ChunkNavData chunk : chunks.values()) {
+            updateConnections(chunk);
         }
     }
 

@@ -29,21 +29,46 @@ public class ChunkNavPlanner {
 
         // Get player's current chunk
         long startChunkId = graph.getPlayerChunkId();
-        if (startChunkId == -1) return null;  // -1 is error, grid IDs can be negative
-
-        // Find chunks that can reach the target area
-        Set<Long> targetChunks = graph.getChunksForArea(area.id);
-        if (targetChunks.isEmpty()) {
-            // Try to find chunks near the area's coordinates
-            targetChunks = findChunksNearArea(area);
-        }
-
-        if (targetChunks.isEmpty()) {
-            System.err.println("ChunkNavPlanner: No chunks found for area '" + area.name + "' (id=" + area.id + ")");
+        if (startChunkId == -1) {
+            System.out.println("ChunkNav: Cannot get player's current chunk");
             return null;
         }
 
-        return planPath(startChunkId, targetChunks, area);
+        System.out.println("ChunkNav: Planning path to area '" + area.name + "' from chunk " + startChunkId);
+
+        // Find chunks that can reach the target area
+        Set<Long> targetChunks = graph.getChunksForArea(area.id);
+        System.out.println("ChunkNav: getChunksForArea(" + area.id + ") returned " + targetChunks.size() + " chunks: " + targetChunks);
+
+        if (targetChunks.isEmpty()) {
+            // Try to find chunks near the area's coordinates
+            targetChunks = findChunksNearArea(area);
+            System.out.println("ChunkNav: findChunksNearArea returned " + targetChunks.size() + " chunks: " + targetChunks);
+        }
+
+        if (targetChunks.isEmpty()) {
+            // Debug: show why we couldn't find chunks
+            StringBuilder debug = new StringBuilder();
+            debug.append("ChunkNav: No chunks for area '").append(area.name).append("' (id=").append(area.id).append(")");
+            if (area.space != null && area.space.space != null) {
+                debug.append(" area.gridIds=").append(area.space.space.keySet());
+            }
+            debug.append(" recorded chunks=").append(graph.getChunkCount());
+            System.out.println(debug.toString());
+            return null;
+        }
+
+        ChunkPath path = planPath(startChunkId, targetChunks, area);
+        if (path != null) {
+            System.out.println("ChunkNav: Found path with " + path.waypoints.size() + " waypoints, cost=" + path.totalCost);
+            for (int i = 0; i < path.waypoints.size(); i++) {
+                ChunkPath.ChunkWaypoint wp = path.waypoints.get(i);
+                System.out.println("  [" + i + "] grid=" + wp.gridId + " local=" + wp.localCoord + " type=" + wp.type);
+            }
+        } else {
+            System.out.println("ChunkNav: A* returned no path from " + startChunkId + " to " + targetChunks);
+        }
+        return path;
     }
 
     /**
@@ -51,7 +76,6 @@ public class ChunkNavPlanner {
      */
     public ChunkPath planPath(long startChunkId, Set<Long> targetChunkIds, NArea targetArea) {
         if (targetChunkIds.isEmpty()) {
-            System.err.println("ChunkNavPlanner.planPath: targetChunkIds is empty");
             return null;
         }
 
@@ -76,12 +100,16 @@ public class ChunkNavPlanner {
         allNodes.put(startChunkId, startNode);
 
         int iterations = 0;
+        int edgesExpanded = 0;
         while (!openSet.isEmpty() && iterations < 1000) {
             iterations++;
             AStarNode current = openSet.poll();
 
+            System.out.println("ChunkNav: A* iteration " + iterations + " expanding " + current.gridId + " (g=" + current.g + ", f=" + current.f + ")");
+
             // Check if we reached a target
             if (targetChunkIds.contains(current.gridId)) {
+                System.out.println("ChunkNav: A* reached target " + current.gridId);
                 return reconstructPath(current, targetArea);
             }
 
@@ -89,6 +117,7 @@ public class ChunkNavPlanner {
 
             // Expand neighbors
             List<ChunkNavGraph.ChunkEdge> edges = graph.getEdges(current.gridId);
+            edgesExpanded += edges.size();
             for (ChunkNavGraph.ChunkEdge edge : edges) {
                 if (closedSet.contains(edge.toGridId)) continue;
 
@@ -109,6 +138,8 @@ public class ChunkNavPlanner {
                     neighbor.crossingPoint = edge.crossingPoint;
                     neighbor.portal = edge.portal;
 
+                    System.out.println("ChunkNav: A* adding neighbor " + edge.toGridId + " (g=" + neighbor.g + ", h=" + neighbor.h + ", f=" + neighbor.f + ")");
+
                     // Remove and re-add to update priority
                     openSet.remove(neighbor);
                     openSet.add(neighbor);
@@ -117,6 +148,8 @@ public class ChunkNavPlanner {
         }
 
         // No path found
+        System.err.println("ChunkNav: A* found no path. iterations=" + iterations + " edges=" + edgesExpanded +
+            " start=" + startChunkId + " targets=" + targetChunkIds);
         return null;
     }
 

@@ -50,27 +50,21 @@ public class ChunkNavIntraPathfinder {
         // Check if the target is in a different grid than where we end up
         if (finalGridId != targetGridId) {
             // Target is in different grid - can't validate intra-chunk reachability
-            // The path should have taken us to the target grid if possible
-            System.err.println("ChunkNavIntraPathfinder: Target area is in different grid (" +
-                targetGridId + ") than path ends (" + finalGridId + ")");
             return true; // Can't validate, assume passable
         }
 
         // Validate we can reach the target from final path position
         ChunkNavData finalChunk = graph.getChunk(finalGridId);
         if (finalChunk == null) {
-            System.err.println("ChunkNavIntraPathfinder: No chunk data for final grid " + finalGridId + ", assuming passable");
-            return true;
+            return true; // No chunk data, assume passable
         }
 
         if (finalLocal != null) {
             IntraPath toTargetPath = findPath(finalLocal, targetAreaLocal, finalChunk);
             if (!toTargetPath.reachable) {
-                System.err.println("ChunkNavIntraPathfinder: Cannot reach target area from path end. " +
-                    "From " + finalLocal + " to " + targetAreaLocal + " in chunk " + finalGridId);
+                System.err.println("ChunkNav: Cannot reach target from (" + finalLocal + ") to (" + targetAreaLocal + ")");
                 return false;
             }
-            System.err.println("ChunkNavIntraPathfinder: Target area reachable from path end");
         }
 
         return true;
@@ -111,18 +105,20 @@ public class ChunkNavIntraPathfinder {
             }
 
             // Same grid - validate we can walk from current position to waypoint
-            // EXCEPTION: Skip validation for portal waypoints - we trust that recorded portals are reachable
-            // because the player used them before, and PathFinder will handle actual navigation at runtime
-            if (waypoint.type == ChunkPath.WaypointType.PORTAL_ENTRY) {
-                System.err.println("ChunkNavIntraPathfinder: Skipping validation for portal waypoint in chunk " + currentGridId);
+            // EXCEPTION: Skip validation for portal and walk waypoints
+            // Portal waypoints: we trust that recorded portals are reachable
+            // Walk waypoints (edge crossings): trust chunk-level graph - we may not have walked
+            // across the entire chunk, but if chunks are connected, PathFinder will find a way
+            if (waypoint.type == ChunkPath.WaypointType.PORTAL_ENTRY ||
+                waypoint.type == ChunkPath.WaypointType.WALK) {
                 currentLocal = waypoint.localCoord;
                 continue;
             }
 
+            // Only validate DESTINATION waypoints (final target)
             ChunkNavData chunk = graph.getChunk(currentGridId);
             if (chunk == null) {
                 // No chunk data - can't validate, assume passable
-                System.err.println("ChunkNavIntraPathfinder: No chunk data for grid " + currentGridId + ", assuming passable");
                 currentLocal = waypoint.localCoord;
                 continue;
             }
@@ -131,8 +127,8 @@ public class ChunkNavIntraPathfinder {
             if (currentLocal != null && waypoint.localCoord != null) {
                 IntraPath intraPath = findPath(currentLocal, waypoint.localCoord, chunk);
                 if (!intraPath.reachable) {
-                    System.err.println("ChunkNavIntraPathfinder: Path blocked within chunk " + currentGridId +
-                        " from " + currentLocal + " to " + waypoint.localCoord);
+                    System.err.println("ChunkNav: Path blocked in chunk " + currentGridId +
+                        " from (" + currentLocal + ") to (" + waypoint.localCoord + ")");
                     return false;
                 }
             }
