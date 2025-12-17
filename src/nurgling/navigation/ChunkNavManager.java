@@ -32,7 +32,11 @@ public class ChunkNavManager {
 
     // Throttle saves to avoid excessive disk writes
     private long lastSaveTime = 0;
-    private static final long SAVE_THROTTLE_MS = 10000; // Min 10 seconds between saves
+    private static final long SAVE_THROTTLE_MS = 2000; // Min 2 seconds between saves (for testing)
+
+    // Throttle grid recording to avoid excessive CPU usage
+    private long lastRecordTime = 0;
+    private static final long RECORD_THROTTLE_MS = 2000; // Record visible grids every 2 seconds
 
     // Singleton instance
     private static ChunkNavManager instance;
@@ -42,6 +46,12 @@ public class ChunkNavManager {
         this.recorder = new ChunkNavRecorder(graph);
         this.planner = new ChunkNavPlanner(graph);
         this.portalTracker = new PortalTraversalTracker(graph, recorder);
+
+        // Register shutdown hook to save on exit
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("ChunkNavManager: Shutdown hook triggered, saving...");
+            shutdown();
+        }));
     }
 
     public static ChunkNavManager getInstance() {
@@ -87,24 +97,30 @@ public class ChunkNavManager {
      * Called when a grid becomes visible.
      */
     public void onGridLoaded(MCache.Grid grid) {
-        if (!enabled || !initialized || grid == null) return;
+        if (grid == null) return;
+
+        if (!enabled) {
+            System.err.println("ChunkNavManager: onGridLoaded skipped - not enabled");
+            return;
+        }
+        if (!initialized) {
+            System.err.println("ChunkNavManager: onGridLoaded skipped - not initialized");
+            return;
+        }
 
         try {
-            int chunksBefore = graph.getChunkCount();
+            System.out.println("ChunkNavManager: Recording grid " + grid.id + " at " + grid.ul);
             recorder.recordGrid(grid);
-            int chunksAfter = graph.getChunkCount();
-
-            // Save when new chunks are added
-            if (chunksAfter > chunksBefore) {
-                saveThrottled();
-            }
+            // Always save (throttled) since we now re-sample walkability each time
+            saveThrottled();
         } catch (Exception e) {
             System.err.println("ChunkNavManager: Error recording grid: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     /**
-     * Called periodically to check for portal traversals.
+     * Called periodically to check for portal traversals and record visible grids.
      * Should be called from game loop or a polling task.
      */
     public void tick() {
@@ -114,6 +130,35 @@ public class ChunkNavManager {
             portalTracker.tick();
         } catch (Exception e) {
             // Ignore - player might not exist
+        }
+
+        // Periodically record all visible grids (not just newly loaded ones)
+        long now = System.currentTimeMillis();
+        if (now - lastRecordTime >= RECORD_THROTTLE_MS) {
+            lastRecordTime = now;
+            recordVisibleGrids();
+        }
+    }
+
+    /**
+     * Record all currently visible grids.
+     * This catches grids that were already loaded when player walks through them.
+     */
+    private void recordVisibleGrids() {
+        try {
+            MCache mcache = NUtils.getGameUI().map.glob.map;
+            if (mcache == null) return;
+
+            synchronized (mcache.grids) {
+                for (MCache.Grid grid : mcache.grids.values()) {
+                    if (grid != null && grid.ul != null) {
+                        recorder.recordGrid(grid);
+                    }
+                }
+            }
+            saveThrottled();
+        } catch (Exception e) {
+            // Ignore - game state may not be ready
         }
     }
 
@@ -130,10 +175,91 @@ public class ChunkNavManager {
 
     /**
      * Plan a path to an area.
+     * Validates intra-chunk reachability before returning the path.
      */
     public ChunkPath planToArea(NArea area) {
         if (!enabled || !initialized) return null;
-        return planner.planToArea(area);
+
+        ChunkPath path = planner.planToArea(area);
+        if (path == null || path.isEmpty()) {
+            return null;
+        }
+
+        // Validate the path using intra-chunk pathfinding
+        Coord playerLocalCoord = getPlayerLocalCoord();
+        if (playerLocalCoord != null) {
+            // Get target area's local coordinate and grid ID for full validation
+            Coord targetAreaLocal = null;
+            long targetGridId = -1;
+
+            try {
+                Coord2d areaCenter = area.getCenter2d();
+                if (areaCenter != null) {
+                    Coord areaTile = areaCenter.floor(MCache.tilesz);
+
+                    // Try to find which chunk the area is in
+                    MCache mcache = NUtils.getGameUI().map.glob.map;
+
+                    // First try loaded grid
+                    try {
+                        MCache.Grid areaGrid = mcache.getgridt(areaTile);
+                        if (areaGrid != null) {
+                            targetGridId = areaGrid.id;
+                            targetAreaLocal = areaTile.sub(areaGrid.ul);
+                        }
+                    } catch (Exception e) {
+                        // Grid not loaded
+                    }
+
+                    // Fall back to stored chunk data
+                    if (targetAreaLocal == null) {
+                        for (ChunkNavData chunk : graph.getAllChunks()) {
+                            if (chunk.worldTileOrigin == null) continue;
+                            if (areaTile.x >= chunk.worldTileOrigin.x && areaTile.x < chunk.worldTileOrigin.x + CHUNK_SIZE &&
+                                areaTile.y >= chunk.worldTileOrigin.y && areaTile.y < chunk.worldTileOrigin.y + CHUNK_SIZE) {
+                                targetGridId = chunk.gridId;
+                                targetAreaLocal = areaTile.sub(chunk.worldTileOrigin);
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("ChunkNavManager: Error getting target area coordinates: " + e.getMessage());
+            }
+
+            // Validate full path including target area reachability
+            boolean valid = ChunkNavIntraPathfinder.validateFullPathWithTarget(
+                path, graph, playerLocalCoord, targetAreaLocal, targetGridId);
+
+            if (!valid) {
+                System.err.println("ChunkNavManager: Path to area '" + area.name + "' is blocked according to walkability data");
+                return null;
+            }
+            System.err.println("ChunkNavManager: Path to area '" + area.name + "' validated successfully");
+        }
+
+        return path;
+    }
+
+    /**
+     * Get player's local coordinate within their current chunk.
+     */
+    private Coord getPlayerLocalCoord() {
+        try {
+            Gob player = NUtils.player();
+            if (player == null) return null;
+
+            MCache mcache = NUtils.getGameUI().map.glob.map;
+            Coord playerTile = player.rc.floor(MCache.tilesz);
+            MCache.Grid grid = mcache.getgridt(playerTile);
+            if (grid != null) {
+                return playerTile.sub(grid.ul);
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return null;
     }
 
     /**

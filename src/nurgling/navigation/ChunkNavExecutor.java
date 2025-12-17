@@ -11,6 +11,7 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
@@ -209,7 +210,8 @@ public class ChunkNavExecutor implements Action {
 
     /**
      * Navigate to a world coordinate using PathFinder.
-     * If the target is not visible, walks toward it step by step until it becomes reachable.
+     * First checks if target is reachable using intra-chunk pathfinding on walkability grid.
+     * If path exists, follows it through waypoints instead of walking blindly.
      */
     private Results navigateToCoord(Coord2d target, NGameUI gui) throws InterruptedException {
         // Check if we're already close enough
@@ -218,7 +220,7 @@ public class ChunkNavExecutor implements Action {
             return Results.SUCCESS();
         }
 
-        // Try direct path first
+        // Try direct path first (target might be visible and directly reachable)
         PathFinder pf = new PathFinder(target);
         Results result = pf.run(gui);
 
@@ -226,24 +228,120 @@ public class ChunkNavExecutor implements Action {
             return result;
         }
 
-        // Direct path failed - target probably not visible
-        // Walk toward target in steps to load more terrain
+        // Direct path failed - use intra-chunk pathfinding if we have chunk data
+        // First, determine what chunk we're in and what chunk the target is in
+        try {
+            MCache mcache = gui.map.glob.map;
+            Coord playerTile = player.rc.floor(MCache.tilesz);
+            Coord targetTile = target.floor(MCache.tilesz);
 
+            MCache.Grid playerGrid = mcache.getgridt(playerTile);
+            if (playerGrid == null) {
+                System.err.println("ChunkNavExecutor: Player grid not loaded");
+                return Results.FAIL();
+            }
+
+            // Get chunk data for intra-chunk pathfinding
+            ChunkNavData chunk = graph.getChunk(playerGrid.id);
+            if (chunk == null) {
+                System.err.println("ChunkNavExecutor: No chunk data for grid " + playerGrid.id + ", falling back to step-walk");
+                return navigateToCoordStepByStep(target, gui);
+            }
+
+            // Calculate local coordinates within the chunk
+            Coord playerLocal = playerTile.sub(playerGrid.ul);
+            Coord targetLocal = targetTile.sub(playerGrid.ul);
+
+            // Check if target is in the same chunk
+            boolean targetInSameChunk = targetLocal.x >= 0 && targetLocal.x < CHUNK_SIZE &&
+                                        targetLocal.y >= 0 && targetLocal.y < CHUNK_SIZE;
+
+            if (targetInSameChunk) {
+                // Use intra-chunk pathfinding
+                System.err.println("ChunkNavExecutor: Target in same chunk, using intra-chunk pathfinding");
+                ChunkNavIntraPathfinder.IntraPath intraPath = ChunkNavIntraPathfinder.findPath(playerLocal, targetLocal, chunk);
+
+                if (!intraPath.reachable) {
+                    System.err.println("ChunkNavExecutor: Target unreachable according to walkability grid");
+                    return Results.FAIL();
+                }
+
+                System.err.println("ChunkNavExecutor: Found intra-chunk path with " + intraPath.size() + " waypoints");
+
+                // Follow the path through each waypoint
+                return followIntraChunkPath(intraPath, playerGrid, target, gui);
+            } else {
+                // Target is in different chunk - walk toward chunk edge
+                System.err.println("ChunkNavExecutor: Target in different chunk, walking toward it");
+                return navigateToCoordStepByStep(target, gui);
+            }
+        } catch (Exception e) {
+            System.err.println("ChunkNavExecutor: Error in intra-chunk pathfinding: " + e.getMessage());
+            return navigateToCoordStepByStep(target, gui);
+        }
+    }
+
+    /**
+     * Follow an intra-chunk path by navigating to each waypoint.
+     */
+    private Results followIntraChunkPath(ChunkNavIntraPathfinder.IntraPath intraPath,
+                                         MCache.Grid grid, Coord2d finalTarget,
+                                         NGameUI gui) throws InterruptedException {
+        // Skip first waypoint (current position) and every other waypoint for efficiency
+        // We don't need to visit every cell, just enough to ensure we follow the path
+        int skipInterval = Math.max(1, intraPath.size() / 10); // Visit ~10 waypoints max
+
+        for (int i = skipInterval; i < intraPath.localPath.size(); i += skipInterval) {
+            Coord localCoord = intraPath.localPath.get(i);
+            Coord tileCoord = grid.ul.add(localCoord);
+            Coord2d worldCoord = tileCoord.mul(MCache.tilesz).add(MCache.tilehsz);
+
+            System.err.println("ChunkNavExecutor: Walking to intra-chunk waypoint " + i + "/" + intraPath.size() + " at " + localCoord);
+
+            PathFinder waypointPf = new PathFinder(worldCoord);
+            Results waypointResult = waypointPf.run(gui);
+
+            if (!waypointResult.IsSuccess()) {
+                System.err.println("ChunkNavExecutor: Failed to reach waypoint, path may be blocked");
+                // Don't fail immediately - the walkability data might be outdated
+                // Try to continue or go directly to target
+            }
+
+            // Check if we can now reach the final target directly
+            Gob player = gui.map.player();
+            if (player != null && player.rc.dist(finalTarget) < MCache.tilesz.x * 15) {
+                PathFinder directPf = new PathFinder(finalTarget);
+                Results directResult = directPf.run(gui);
+                if (directResult.IsSuccess()) {
+                    return Results.SUCCESS();
+                }
+            }
+        }
+
+        // Final approach to target
+        PathFinder finalPf = new PathFinder(finalTarget);
+        return finalPf.run(gui);
+    }
+
+    /**
+     * Fallback: Navigate step by step when we don't have chunk data.
+     */
+    private Results navigateToCoordStepByStep(Coord2d target, NGameUI gui) throws InterruptedException {
         int maxSteps = 20;
-        double stepDistance = MCache.tilesz.x * 10; // Walk 10 tiles at a time
+        double stepDistance = MCache.tilesz.x * 10;
 
         for (int step = 0; step < maxSteps; step++) {
-            player = gui.map.player();
+            Gob player = gui.map.player();
             if (player == null) return Results.FAIL();
 
             double distToTarget = player.rc.dist(target);
             if (distToTarget < MCache.tilesz.x * 2) {
-                return Results.SUCCESS(); // Close enough
+                return Results.SUCCESS();
             }
 
-            // Try direct path again (target might now be visible)
-            pf = new PathFinder(target);
-            result = pf.run(gui);
+            // Try direct path
+            PathFinder pf = new PathFinder(target);
+            Results result = pf.run(gui);
             if (result.IsSuccess()) {
                 return Results.SUCCESS();
             }
@@ -253,29 +351,22 @@ public class ChunkNavExecutor implements Action {
             double walkDist = Math.min(stepDistance, distToTarget - MCache.tilesz.x);
             Coord2d intermediateTarget = player.rc.add(direction.mul(walkDist));
 
-
-            // Walk to intermediate point
             PathFinder stepPf = new PathFinder(intermediateTarget);
             result = stepPf.run(gui);
 
             if (!result.IsSuccess()) {
-                // Can't even walk toward target - might be blocked
-                // Try a shorter step
                 stepDistance = stepDistance / 2;
                 if (stepDistance < MCache.tilesz.x * 2) {
-                    return Results.FAIL(); // Can't make progress
+                    return Results.FAIL();
                 }
             } else {
-                // Made progress, restore step distance
                 stepDistance = MCache.tilesz.x * 10;
             }
 
-            // Small delay to let map load
             Thread.sleep(200);
         }
 
-        // Final attempt after walking
-        pf = new PathFinder(target);
+        PathFinder pf = new PathFinder(target);
         return pf.run(gui);
     }
 
@@ -299,13 +390,16 @@ public class ChunkNavExecutor implements Action {
         }
 
         // Now find the portal gob to click on it
-        Gob portalGob = Finder.findGob(portal.gobHash);
+        // IMPORTANT: We must find the SPECIFIC portal that leads to our target grid
+        // There may be multiple portals with the same name (e.g., multiple houses with cellardoor)
+        // We use the recorded position (localCoord) to find the correct one
+        Gob portalGob = findPortalGobByPosition(portal, gridId, gui);
         if (portalGob == null) {
-            // Hash might be synthetic (for auto-detected entrances), try finding by name
-            portalGob = Finder.findGob(new NAlias(portal.gobName));
+            // Fallback to hash lookup (might work if hash is stable)
+            portalGob = Finder.findGob(portal.gobHash);
         }
         if (portalGob == null) {
-            gui.error("ChunkNav: Portal gob not found: " + portal.gobName);
+            gui.error("ChunkNav: Portal gob not found: " + portal.gobName + " at position " + portal.localCoord);
             return Results.FAIL();
         }
 
@@ -344,6 +438,52 @@ public class ChunkNavExecutor implements Action {
         }
 
         return Results.SUCCESS();
+    }
+
+    /**
+     * Find the specific portal gob by its recorded position.
+     * This is crucial when there are multiple portals with the same name (e.g., multiple houses).
+     * @param portal The portal with recorded localCoord (player access point)
+     * @param gridId The grid ID where the portal should be
+     * @param gui The game UI
+     * @return The gob closest to the recorded position with matching name, or null if not found
+     */
+    private Gob findPortalGobByPosition(ChunkPortal portal, long gridId, NGameUI gui) {
+        if (portal.localCoord == null) {
+            return null;
+        }
+
+        // Calculate the expected world position from localCoord
+        Coord2d expectedPos = getPortalAccessPoint(portal, gridId, gui);
+        if (expectedPos == null) {
+            return null;
+        }
+
+        // Find all gobs with matching name
+        Collection<Gob> candidates = Finder.findGobs(new NAlias(portal.gobName));
+        if (candidates == null || candidates.isEmpty()) {
+            return null;
+        }
+
+        // Find the one closest to expected position
+        // The portal access point is where the player stands, portal gob should be very close (within ~2 tiles)
+        Gob closest = null;
+        double closestDist = Double.MAX_VALUE;
+        double maxDistance = MCache.tilesz.x * 5; // Portal should be within 5 tiles of access point
+
+        for (Gob gob : candidates) {
+            double dist = gob.rc.dist(expectedPos);
+            if (dist < closestDist && dist < maxDistance) {
+                closestDist = dist;
+                closest = gob;
+            }
+        }
+
+        if (closest != null) {
+            System.err.println("ChunkNavExecutor: Found portal " + portal.gobName + " at distance " + closestDist + " from expected position");
+        }
+
+        return closest;
     }
 
     /**

@@ -43,6 +43,43 @@ public class PortalTraversalTracker {
     private static final long CHECK_INTERVAL_MS = 100;
     private static final double PORTAL_PROXIMITY_THRESHOLD = 15.0;
 
+    // Layer mappings based on portal exit type
+    // Maps portal exit name patterns to the layer the destination chunk should be assigned
+    // The EXIT portal (what you see after traversing) determines the layer
+    private static final Map<String, String> PORTAL_TO_LAYER = new HashMap<>();
+    static {
+        // When you see cellardoor as exit -> you're in the cellar (you went down via cellardoor)
+        PORTAL_TO_LAYER.put("cellardoor", "cellar");
+
+        // When you see cellarstairs as exit -> you're inside the building (you came up from cellar)
+        PORTAL_TO_LAYER.put("cellarstairs", "inside");
+
+        // When you see a *-door as exit -> you're inside the building (you entered from outside)
+        // These are the "-door" variants you see INSIDE the building after entering
+        PORTAL_TO_LAYER.put("stonemansion-door", "inside");
+        PORTAL_TO_LAYER.put("logcabin-door", "inside");
+        PORTAL_TO_LAYER.put("timberhouse-door", "inside");
+        PORTAL_TO_LAYER.put("stonestead-door", "inside");
+        PORTAL_TO_LAYER.put("greathall-door", "inside");
+        PORTAL_TO_LAYER.put("stonetower-door", "inside");
+        PORTAL_TO_LAYER.put("windmill-door", "inside");
+
+        // When you see the building gob as exit -> you're outside on surface (you exited the building)
+        // These are the building gobs you see OUTSIDE after leaving the building
+        PORTAL_TO_LAYER.put("stonemansion", "surface");
+        PORTAL_TO_LAYER.put("logcabin", "surface");
+        PORTAL_TO_LAYER.put("timberhouse", "surface");
+        PORTAL_TO_LAYER.put("stonestead", "surface");
+        PORTAL_TO_LAYER.put("greathall", "surface");
+        PORTAL_TO_LAYER.put("stonetower", "surface");
+        PORTAL_TO_LAYER.put("windmill", "surface");
+
+        // Mine and underground
+        PORTAL_TO_LAYER.put("minehole", "mine");
+        PORTAL_TO_LAYER.put("ladderdown", "underground");
+        PORTAL_TO_LAYER.put("ladderup", "surface");
+    }
+
     // Portal resource patterns to track
     private static final String[] PORTAL_PATTERNS = {
         "door",
@@ -183,8 +220,14 @@ public class PortalTraversalTracker {
             // Record the entrance connection
             recordPortalConnection(portalHash, portalName, fromGridId, toGridId, clickedPortalLocalCoord);
 
-            // Find and record exit portal (reverse connection)
-            findAndRecordExitPortal(player, portalName, fromGridId, toGridId);
+            // Find and record exit portal (reverse connection) and detect layer
+            Gob exitPortal = findExitPortalAndUpdateLayer(player, portalName, toGridId);
+            if (exitPortal != null && exitPortal.ngob != null) {
+                String exitHash = getPortalHash(exitPortal);
+                String exitName = exitPortal.ngob.name;
+                Coord exitLocalCoord = getGobLocalCoord(player);
+                recordPortalConnection(exitHash, exitName, toGridId, fromGridId, exitLocalCoord);
+            }
 
             // Clear tracking
             clickedPortal = null;
@@ -207,6 +250,9 @@ public class PortalTraversalTracker {
         Coord exitLocalCoord = getGobLocalCoord(player);
 
         System.err.println("PortalTraversalTracker: Found exit portal: " + exitName + ", entrance pair: " + entranceName);
+
+        // Update the destination chunk's layer based on the exit portal
+        updateChunkLayer(toGridId, exitName);
 
         // Record: exit portal on toGrid connects back to fromGrid (using player's position as access point)
         recordPortalConnection(exitHash, exitName, toGridId, fromGridId, exitLocalCoord);
@@ -399,6 +445,29 @@ public class PortalTraversalTracker {
     }
 
     /**
+     * Find exit portal and update the destination chunk's layer.
+     * Returns the exit portal gob if found.
+     */
+    private Gob findExitPortalAndUpdateLayer(Gob player, String entrancePortalName, long toGridId) {
+        String exitPortalName = GateDetector.getDoorPair(entrancePortalName);
+        Gob exitPortal = null;
+
+        if (exitPortalName != null) {
+            exitPortal = findExitPortal(player, exitPortalName);
+        }
+
+        if (exitPortal == null) {
+            exitPortal = findNearbyPortal(player);
+        }
+
+        if (exitPortal != null && exitPortal.ngob != null) {
+            updateChunkLayer(toGridId, exitPortal.ngob.name);
+        }
+
+        return exitPortal;
+    }
+
+    /**
      * Find and record the exit portal after traversing through a known entrance.
      */
     private void findAndRecordExitPortal(Gob player, String entrancePortalName, long fromGridId, long toGridId) {
@@ -511,6 +580,51 @@ public class PortalTraversalTracker {
             }
         }
         return false;
+    }
+
+    /**
+     * Determine the layer for a destination grid based on the exit portal type.
+     * @param exitPortalName The name of the exit portal (the portal you see after traversing)
+     * @return The layer name for the destination grid
+     */
+    private String determineLayerFromExitPortal(String exitPortalName) {
+        if (exitPortalName == null) return null;
+
+        String lowerName = exitPortalName.toLowerCase();
+
+        // Check each mapping
+        for (Map.Entry<String, String> entry : PORTAL_TO_LAYER.entrySet()) {
+            if (lowerName.contains(entry.getKey().toLowerCase())) {
+                return entry.getValue();
+            }
+        }
+
+        // Default: if it ends with "-door" it's likely inside a building
+        if (lowerName.endsWith("-door") || lowerName.contains("-door")) {
+            return "inside";
+        }
+
+        return null; // Unknown - don't change layer
+    }
+
+    /**
+     * Update the layer of a chunk based on the exit portal.
+     * Called when we traverse to a new grid and find an exit portal.
+     * Only updates if a definitive layer can be determined from the exit portal.
+     */
+    private void updateChunkLayer(long gridId, String exitPortalName) {
+        String layer = determineLayerFromExitPortal(exitPortalName);
+        if (layer == null) {
+            System.err.println("PortalTraversalTracker: No layer change for exit portal " + exitPortalName + " (keeping existing layer)");
+            return;
+        }
+
+        ChunkNavData chunk = graph.getChunk(gridId);
+        if (chunk != null && !layer.equals(chunk.layer)) {
+            String oldLayer = chunk.layer;
+            chunk.layer = layer;
+            System.err.println("PortalTraversalTracker: Updated chunk " + gridId + " layer: " + oldLayer + " -> " + layer);
+        }
     }
 
     /**

@@ -813,6 +813,13 @@ public class NMapView extends MapView
         if(markerLineOverlay != null) {
             markerLineOverlay.tick();
         }
+
+        // Tick chunk navigation system for recording
+        try {
+            nurgling.navigation.ChunkNavManager.getInstance().tick();
+        } catch (Exception e) {
+            // Ignore - system may not be ready
+        }
         ArrayList<Long> forRemove = new ArrayList<>();
 //        for(Gob dummy : dummys.values())
 //        {

@@ -21,13 +21,21 @@ public class ChunkNavData {
     public Coord gridCoord;         // Grid coordinate (grid.ul / 100)
     public Coord worldTileOrigin;   // Actual world tile origin (grid.ul) - persists across sessions
 
-    // Walkability grid (coarse resolution)
-    // Each cell represents 4x4 tiles (25x25 grid for 100x100 chunk)
+    // Layer identifier - different physical spaces that may share coordinates
+    // "surface" = outside world (default), "inside" = building interior, "cellar" = underground cellar, etc.
+    public String layer = "surface";
+
+    // Walkability grid (tile-level resolution)
+    // Each cell represents 1 tile (100x100 grid for 100x100 chunk)
     // Values: 0 = walkable, 1 = partially blocked, 2 = fully blocked
     public byte[][] walkability = new byte[CELLS_PER_EDGE][CELLS_PER_EDGE];
 
+    // Observed grid - tracks which tiles have been visually observed
+    // true = tile was within visible range when recorded, false = not yet observed
+    public boolean[][] observed = new boolean[CELLS_PER_EDGE][CELLS_PER_EDGE];
+
     // Edge connections to adjacent chunks
-    // Each array has 25 entries (one per coarse cell along edge)
+    // Each array has 100 entries (one per tile along edge)
     public EdgePoint[] northEdge = new EdgePoint[CELLS_PER_EDGE];
     public EdgePoint[] southEdge = new EdgePoint[CELLS_PER_EDGE];
     public EdgePoint[] eastEdge = new EdgePoint[CELLS_PER_EDGE];
@@ -65,10 +73,11 @@ public class ChunkNavData {
 
     private void initializeEdges() {
         for (int i = 0; i < CELLS_PER_EDGE; i++) {
-            northEdge[i] = new EdgePoint(i, false, new Coord(i * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2, 0));
-            southEdge[i] = new EdgePoint(i, false, new Coord(i * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2, CHUNK_SIZE - 1));
-            westEdge[i] = new EdgePoint(i, false, new Coord(0, i * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2));
-            eastEdge[i] = new EdgePoint(i, false, new Coord(CHUNK_SIZE - 1, i * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2));
+            // With tile-level resolution, edge points are at exact tile positions
+            northEdge[i] = new EdgePoint(i, false, new Coord(i, 0));
+            southEdge[i] = new EdgePoint(i, false, new Coord(i, CHUNK_SIZE - 1));
+            westEdge[i] = new EdgePoint(i, false, new Coord(0, i));
+            eastEdge[i] = new EdgePoint(i, false, new Coord(CHUNK_SIZE - 1, i));
         }
     }
 
@@ -116,6 +125,38 @@ public class ChunkNavData {
         if (cx >= 0 && cx < CELLS_PER_EDGE && cy >= 0 && cy < CELLS_PER_EDGE) {
             walkability[cx][cy] = value;
         }
+    }
+
+    /**
+     * Check if a cell has been observed (within visible range during recording).
+     */
+    public boolean isObserved(int cx, int cy) {
+        if (cx < 0 || cx >= CELLS_PER_EDGE || cy < 0 || cy >= CELLS_PER_EDGE) {
+            return false;
+        }
+        return observed[cx][cy];
+    }
+
+    /**
+     * Mark a cell as observed.
+     */
+    public void setObserved(int cx, int cy, boolean value) {
+        if (cx >= 0 && cx < CELLS_PER_EDGE && cy >= 0 && cy < CELLS_PER_EDGE) {
+            observed[cx][cy] = value;
+        }
+    }
+
+    /**
+     * Count how many cells have been observed in this chunk.
+     */
+    public int countObservedCells() {
+        int count = 0;
+        for (int x = 0; x < CELLS_PER_EDGE; x++) {
+            for (int y = 0; y < CELLS_PER_EDGE; y++) {
+                if (observed[x][y]) count++;
+            }
+        }
+        return count;
     }
 
     /**
@@ -224,6 +265,9 @@ public class ChunkNavData {
             obj.put("worldTileOriginY", worldTileOrigin.y);
         }
 
+        // Layer
+        obj.put("layer", layer);
+
         // Walkability as flat array
         JSONArray walkArr = new JSONArray();
         for (int x = 0; x < CELLS_PER_EDGE; x++) {
@@ -232,6 +276,15 @@ public class ChunkNavData {
             }
         }
         obj.put("walkability", walkArr);
+
+        // Observed as flat array (compact: store as bitmask in ints)
+        JSONArray obsArr = new JSONArray();
+        for (int x = 0; x < CELLS_PER_EDGE; x++) {
+            for (int y = 0; y < CELLS_PER_EDGE; y++) {
+                obsArr.put(observed[x][y] ? 1 : 0);
+            }
+        }
+        obj.put("observed", obsArr);
 
         // Edges
         obj.put("northEdge", edgeToJson(northEdge));
@@ -285,12 +338,37 @@ public class ChunkNavData {
             data.worldTileOrigin = new Coord(obj.getInt("worldTileOriginX"), obj.getInt("worldTileOriginY"));
         }
 
+        // Layer (default to "surface" for backwards compatibility)
+        data.layer = obj.optString("layer", "surface");
+
         // Walkability
         JSONArray walkArr = obj.getJSONArray("walkability");
         int idx = 0;
         for (int x = 0; x < CELLS_PER_EDGE; x++) {
             for (int y = 0; y < CELLS_PER_EDGE; y++) {
                 data.walkability[x][y] = (byte) walkArr.getInt(idx++);
+            }
+        }
+
+        // Observed (optional for backwards compatibility)
+        if (obj.has("observed")) {
+            JSONArray obsArr = obj.getJSONArray("observed");
+            idx = 0;
+            for (int x = 0; x < CELLS_PER_EDGE; x++) {
+                for (int y = 0; y < CELLS_PER_EDGE; y++) {
+                    data.observed[x][y] = obsArr.getInt(idx++) != 0;
+                }
+            }
+        } else {
+            // Old data without observed array - infer from walkability
+            // Cells with walkability < 2 were likely observed (we saw them as walkable)
+            // Cells with walkability = 2 might be blocked or just unobserved
+            // For safety, mark walkable cells as observed, blocked cells as unobserved
+            // This will cause re-recording of blocked areas on next visit
+            for (int x = 0; x < CELLS_PER_EDGE; x++) {
+                for (int y = 0; y < CELLS_PER_EDGE; y++) {
+                    data.observed[x][y] = data.walkability[x][y] < 2;
+                }
             }
         }
 
