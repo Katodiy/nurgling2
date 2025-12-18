@@ -365,8 +365,14 @@ public class UnifiedTilePathfinder {
 
             // Check if same layer - if not, add portal traversal cost estimate
             if (!fromChunk.layer.equals(toChunk.layer)) {
-                // Different layers require portal - add base cost
-                return 100.0;
+                // Different layers require portal - check connection quality
+                int depth = getPortalPathDepth(fromChunk, toChunk, new HashSet<>());
+                if (depth == -1) {
+                    return 999999.0; // Dead end - this building doesn't connect to target
+                }
+                // Add cost based on how many portal hops are needed
+                // Direct connection (depth=1) = 100, going through extra building = 500+ per hop
+                return 100.0 + (depth - 1) * 400.0;
             }
 
             Coord fromWorld = fromChunk.worldTileOrigin.add(from.localCoord);
@@ -382,6 +388,49 @@ public class UnifiedTilePathfinder {
         }
 
         return 1000.0; // Large default for unknown distance
+    }
+
+    /**
+     * Get the minimum number of portal hops needed to reach toChunk from fromChunk.
+     * Returns -1 if unreachable, 1 for direct connection, 2+ for paths through other chunks.
+     * Used to heavily penalize paths that go through unnecessary buildings.
+     */
+    private int getPortalPathDepth(ChunkNavData fromChunk, ChunkNavData toChunk, Set<Long> visited) {
+        if (fromChunk.gridId == toChunk.gridId) {
+            return 0;
+        }
+
+        if (visited.contains(fromChunk.gridId)) {
+            return -1; // Already visited, avoid cycles
+        }
+        visited.add(fromChunk.gridId);
+
+        int minDepth = -1;
+
+        // Check all portals from this chunk
+        for (ChunkPortal portal : fromChunk.portals) {
+            if (portal.connectsToGridId == -1) continue;
+
+            if (portal.connectsToGridId == toChunk.gridId) {
+                return 1; // Direct connection - best case
+            }
+
+            // Recursively check connected chunks (limit depth to avoid long searches)
+            if (visited.size() < 10) {
+                ChunkNavData nextChunk = graph.getChunk(portal.connectsToGridId);
+                if (nextChunk != null) {
+                    int subDepth = getPortalPathDepth(nextChunk, toChunk, new HashSet<>(visited));
+                    if (subDepth != -1) {
+                        int totalDepth = 1 + subDepth;
+                        if (minDepth == -1 || totalDepth < minDepth) {
+                            minDepth = totalDepth;
+                        }
+                    }
+                }
+            }
+        }
+
+        return minDepth;
     }
 
     /**
