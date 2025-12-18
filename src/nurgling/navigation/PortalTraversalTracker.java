@@ -83,6 +83,12 @@ public class PortalTraversalTracker {
         PORTAL_TO_LAYER.put("stonetower", "surface");
         PORTAL_TO_LAYER.put("windmill", "surface");
 
+        // Stairs between floors
+        // When you see downstairs as exit -> you're on upper floor (floor2, floor3, etc.)
+        PORTAL_TO_LAYER.put("downstairs", "floor2");
+        // When you see upstairs as exit -> you're on the first floor inside building
+        PORTAL_TO_LAYER.put("upstairs", "inside");
+
         // Mine and underground
         PORTAL_TO_LAYER.put("minehole", "mine");
         PORTAL_TO_LAYER.put("ladderdown", "underground");
@@ -216,6 +222,9 @@ public class PortalTraversalTracker {
         } catch (Exception e) {
             // Ignore
         }
+
+        // NOTE: Stairs (upstairs/downstairs) DO cause grid changes, just like doors.
+        // They are handled by the normal onGridChanged() logic, not special same-grid handling.
     }
 
     /**
@@ -359,11 +368,28 @@ public class PortalTraversalTracker {
             }
 
             // Strategy 3: Fallback to player position if we don't have the portal position
+            // BUT only if the cachedLastActionsGob matches the expected entrance type
+            // This prevents creating fake portals (e.g., cellarstairs on surface)
             if (entranceCoord == null && lastPlayerLocalCoord != null) {
-                entranceCoord = lastPlayerLocalCoord;
-                // Include position in hash to distinguish different buildings of same type
-                entranceHash = "entrance_" + fromGridId + "_" + entranceName.hashCode() + "_" + lastPlayerLocalCoord.x + "_" + lastPlayerLocalCoord.y;
-                strategyUsed = "Strategy 3 (fallback to player pos)";
+                // Only use fallback if we actually clicked a portal that matches the expected entrance
+                // Check if cachedLastActionsGob is a portal that could reasonably be the entrance
+                boolean canUseFallback = false;
+                if (cachedLastActionsGob != null && cachedLastActionsGob.ngob != null) {
+                    String cachedName = cachedLastActionsGob.ngob.name;
+                    // If the cached action matches the expected entrance, use fallback
+                    if (cachedName != null && cachedName.equals(entranceName)) {
+                        canUseFallback = true;
+                    }
+                }
+
+                if (canUseFallback) {
+                    entranceCoord = lastPlayerLocalCoord;
+                    // Include position in hash to distinguish different buildings of same type
+                    entranceHash = "entrance_" + fromGridId + "_" + entranceName.hashCode() + "_" + lastPlayerLocalCoord.x + "_" + lastPlayerLocalCoord.y;
+                    strategyUsed = "Strategy 3 (fallback to player pos)";
+                } else {
+                    System.out.println("ChunkNav: Strategy 3 skipped - cached action doesn't match expected entrance");
+                }
             }
 
             System.out.println("ChunkNav: Entrance recording using " + strategyUsed + " coord=" + entranceCoord);
@@ -652,12 +678,68 @@ public class PortalTraversalTracker {
     }
 
     /**
-     * Find a portal near the player.
+     * Find the closest portal to the player.
+     * Searches all known portal types and returns the one closest to the player.
      */
     private Gob findNearbyPortal(Gob player) {
+        // Search all known portal types and find the CLOSEST one to player
+        // Includes both interior portals and exterior building gobs
+        String[] knownPortals = {
+            // Interior portals (seen from inside)
+            "gfx/terobjs/arch/upstairs",
+            "gfx/terobjs/arch/downstairs",
+            "gfx/terobjs/arch/cellardoor",
+            "gfx/terobjs/arch/cellarstairs",
+            "gfx/terobjs/arch/minehole",
+            "gfx/terobjs/arch/ladder",
+            // Interior doors (seen from inside buildings)
+            "gfx/terobjs/arch/stonemansion-door",
+            "gfx/terobjs/arch/logcabin-door",
+            "gfx/terobjs/arch/timberhouse-door",
+            "gfx/terobjs/arch/stonestead-door",
+            "gfx/terobjs/arch/greathall-door",
+            "gfx/terobjs/arch/stonetower-door",
+            "gfx/terobjs/arch/windmill-door",
+            // Exterior buildings (seen from outside)
+            "gfx/terobjs/arch/stonemansion",
+            "gfx/terobjs/arch/logcabin",
+            "gfx/terobjs/arch/timberhouse",
+            "gfx/terobjs/arch/stonestead",
+            "gfx/terobjs/arch/greathall",
+            "gfx/terobjs/arch/stonetower",
+            "gfx/terobjs/arch/windmill"
+        };
+
+        Gob closestPortal = null;
+        double closestDist = Double.MAX_VALUE;
+
+        try {
+            for (String portalName : knownPortals) {
+                ArrayList<Gob> portals = Finder.findGobs(new NAlias(portalName));
+                for (Gob portal : portals) {
+                    // Verify hash is populated (gob is fully loaded)
+                    if (portal.ngob != null && portal.ngob.hash != null) {
+                        double dist = player.rc.dist(portal.rc);
+                        if (dist < closestDist) {
+                            closestDist = dist;
+                            closestPortal = portal;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Continue to fallback
+        }
+
+        if (closestPortal != null) {
+            System.out.println("ChunkNav: findNearbyPortal found " + closestPortal.ngob.name + " at dist=" + closestDist);
+            return closestPortal;
+        }
+
+        // Fallback: proximity-based search using glob
         try {
             Glob glob = NUtils.getGameUI().ui.sess.glob;
-            double closestDist = PORTAL_PROXIMITY_THRESHOLD;
+            closestDist = PORTAL_PROXIMITY_THRESHOLD;
             Gob closest = null;
 
             synchronized (glob.oc) {
