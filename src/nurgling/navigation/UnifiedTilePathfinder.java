@@ -71,16 +71,20 @@ public class UnifiedTilePathfinder {
         allNodes.put(startTile, startNode);
 
         int iterations = 0;
-        int maxIterations = 100000; // Safety limit
+        int maxIterations = 500000; // Safety limit - increased for large maps
+
+        // Track unique chunks explored for diagnostics
+        Set<Long> chunksExplored = new HashSet<>();
 
         while (!openSet.isEmpty() && iterations < maxIterations) {
             iterations++;
 
             AStarNode current = openSet.poll();
+            chunksExplored.add(current.tile.chunkId);
 
             if (current.tile.equals(targetTile)) {
                 // Found path - reconstruct it
-                System.out.println("UnifiedPathfinder: Found path in " + iterations + " iterations");
+                System.out.println("UnifiedPathfinder: Found path in " + iterations + " iterations, explored " + chunksExplored.size() + " chunks");
                 return reconstructPath(current);
             }
 
@@ -117,7 +121,7 @@ public class UnifiedTilePathfinder {
             }
         }
 
-        System.out.println("UnifiedPathfinder: No path found after " + iterations + " iterations");
+        System.out.println("UnifiedPathfinder: No path found after " + iterations + " iterations, explored " + chunksExplored.size() + " chunks, openSet=" + openSet.size());
         return null;
     }
 
@@ -181,34 +185,49 @@ public class UnifiedTilePathfinder {
 
     /**
      * Get a tile in an adjacent chunk when crossing an edge.
+     * Uses neighbor relationships (persistent) instead of gridCoord (session-based).
      */
     private TileNode getCrossChunkTile(ChunkNavData fromChunk, int nx, int ny) {
-        if (fromChunk.gridCoord == null) return null;
-
-        // Determine which direction we're crossing
-        int chunkDx = 0, chunkDy = 0;
+        // Determine which direction we're crossing and find neighbor
         int newX = nx, newY = ny;
+        long neighborId = -1;
 
         if (nx < 0) {
-            chunkDx = -1;
+            neighborId = fromChunk.neighborWest;
             newX = CHUNK_SIZE - 1;
         } else if (nx >= CHUNK_SIZE) {
-            chunkDx = 1;
+            neighborId = fromChunk.neighborEast;
             newX = 0;
         }
 
         if (ny < 0) {
-            chunkDy = -1;
+            // If also crossing horizontally, this is diagonal - need to handle specially
+            if (neighborId != -1) {
+                // Diagonal crossing - get the diagonal neighbor through corner
+                // For simplicity, prefer horizontal then vertical
+                ChunkNavData horzNeighbor = graph.getChunk(neighborId);
+                if (horzNeighbor != null) {
+                    neighborId = horzNeighbor.neighborNorth;
+                }
+            } else {
+                neighborId = fromChunk.neighborNorth;
+            }
             newY = CHUNK_SIZE - 1;
         } else if (ny >= CHUNK_SIZE) {
-            chunkDy = 1;
+            if (neighborId != -1) {
+                ChunkNavData horzNeighbor = graph.getChunk(neighborId);
+                if (horzNeighbor != null) {
+                    neighborId = horzNeighbor.neighborSouth;
+                }
+            } else {
+                neighborId = fromChunk.neighborSouth;
+            }
             newY = 0;
         }
 
-        // Find adjacent chunk
-        Coord neighborCoord = fromChunk.gridCoord.add(chunkDx, chunkDy);
-        ChunkNavData neighborChunk = graph.getChunkByCoord(neighborCoord);
+        if (neighborId == -1) return null;
 
+        ChunkNavData neighborChunk = graph.getChunk(neighborId);
         if (neighborChunk == null) return null;
 
         // Must be same layer
@@ -349,6 +368,9 @@ public class UnifiedTilePathfinder {
     /**
      * Heuristic function for A* - estimates distance between two tiles.
      * Uses chunk-aware distance calculation.
+     *
+     * IMPORTANT: gridCoord and worldTileOrigin are session-based and may be null
+     * for chunks loaded from save files. Use neighbor-based estimation as fallback.
      */
     private double heuristic(TileNode from, TileNode to) {
         if (from.chunkId == to.chunkId) {
@@ -356,38 +378,78 @@ public class UnifiedTilePathfinder {
             return from.localCoord.dist(to.localCoord);
         }
 
-        // Different chunks - use world coordinates if available
+        // Different chunks
         ChunkNavData fromChunk = graph.getChunk(from.chunkId);
         ChunkNavData toChunk = graph.getChunk(to.chunkId);
 
-        if (fromChunk != null && toChunk != null &&
-            fromChunk.worldTileOrigin != null && toChunk.worldTileOrigin != null) {
+        if (fromChunk == null || toChunk == null) {
+            return 1000.0; // Unknown chunk
+        }
 
-            // Check if same layer - if not, add portal traversal cost estimate
-            if (!fromChunk.layer.equals(toChunk.layer)) {
-                // Different layers require portal - check connection quality
-                int depth = getPortalPathDepth(fromChunk, toChunk, new HashSet<>());
-                if (depth == -1) {
-                    return 999999.0; // Dead end - this building doesn't connect to target
-                }
-                // Add cost based on how many portal hops are needed
-                // Direct connection (depth=1) = 100, going through extra building = 500+ per hop
-                return 100.0 + (depth - 1) * 400.0;
+        // Check if same layer - if not, add portal traversal cost estimate
+        if (!fromChunk.layer.equals(toChunk.layer)) {
+            int depth = getPortalPathDepth(fromChunk, toChunk, new HashSet<>());
+            if (depth == -1) {
+                return 999999.0; // Dead end - this building doesn't connect to target
             }
+            return 100.0 + (depth - 1) * 400.0;
+        }
 
+        // Try world coordinates if both chunks have been seen this session
+        if (fromChunk.worldTileOrigin != null && toChunk.worldTileOrigin != null) {
             Coord fromWorld = fromChunk.worldTileOrigin.add(from.localCoord);
             Coord toWorld = toChunk.worldTileOrigin.add(to.localCoord);
             return fromWorld.dist(toWorld);
         }
 
-        // Fallback - estimate based on chunk distance
-        if (fromChunk != null && toChunk != null &&
-            fromChunk.gridCoord != null && toChunk.gridCoord != null) {
-            double chunkDist = fromChunk.gridCoord.dist(toChunk.gridCoord);
-            return chunkDist * CHUNK_SIZE;
+        // Fallback: estimate based on neighbor-based distance
+        // BFS to find shortest path through neighbor relationships
+        int neighborDist = getNeighborDistance(from.chunkId, to.chunkId);
+        if (neighborDist >= 0) {
+            // Each chunk is 100 tiles, estimate walking across half of each
+            return neighborDist * CHUNK_SIZE + from.localCoord.dist(new Coord(50, 50)) + to.localCoord.dist(new Coord(50, 50));
         }
 
-        return 1000.0; // Large default for unknown distance
+        // No path through neighbors - might need portal
+        // Return large but not infinite estimate
+        return 5000.0;
+    }
+
+    /**
+     * Get shortest path distance between chunks using neighbor relationships.
+     * Returns number of chunks to traverse, or -1 if not connected through neighbors.
+     */
+    private int getNeighborDistance(long fromChunkId, long toChunkId) {
+        if (fromChunkId == toChunkId) return 0;
+
+        // BFS through neighbor relationships
+        Map<Long, Integer> visited = new HashMap<>();
+        Queue<Long> queue = new LinkedList<>();
+        queue.add(fromChunkId);
+        visited.put(fromChunkId, 0);
+
+        while (!queue.isEmpty()) {
+            long current = queue.poll();
+            int dist = visited.get(current);
+
+            // Limit search depth to avoid expensive searches
+            if (dist > 20) continue;
+
+            ChunkNavData chunk = graph.getChunk(current);
+            if (chunk == null) continue;
+
+            long[] neighbors = {chunk.neighborNorth, chunk.neighborSouth, chunk.neighborEast, chunk.neighborWest};
+            for (long neighbor : neighbors) {
+                if (neighbor == -1) continue;
+                if (neighbor == toChunkId) return dist + 1;
+                if (!visited.containsKey(neighbor)) {
+                    visited.put(neighbor, dist + 1);
+                    queue.add(neighbor);
+                }
+            }
+        }
+
+        return -1; // Not connected through neighbors
     }
 
     /**

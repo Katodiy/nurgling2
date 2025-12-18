@@ -220,11 +220,46 @@ public class ChunkNavManager {
     }
 
     /**
+     * Ensure the player's current chunk is recorded in the graph.
+     * This is called before path planning to handle cases where the player
+     * teleported (e.g., via Hearth Fire skill) to an unrecorded chunk.
+     */
+    private void ensurePlayerChunkRecorded() {
+        try {
+            NGameUI gui = NUtils.getGameUI();
+            if (gui == null || gui.map == null || gui.map.glob == null || gui.map.glob.map == null) {
+                return;
+            }
+
+            Gob player = NUtils.player();
+            if (player == null) return;
+
+            MCache mcache = gui.map.glob.map;
+            Coord tileCoord = player.rc.floor(MCache.tilesz);
+            MCache.Grid playerGrid = mcache.getgridt(tileCoord);
+
+            if (playerGrid == null) return;
+
+            // Check if this chunk is already recorded
+            if (!graph.hasChunk(playerGrid.id)) {
+                System.out.println("ChunkNav: Recording player's current unrecorded chunk " + playerGrid.id);
+                recorder.recordGrid(playerGrid);
+            }
+        } catch (Exception e) {
+            // Ignore - best effort
+        }
+    }
+
+    /**
      * Plan a path to an area.
      * Returns the chunk-level path. PathFinder handles actual navigation within grids.
      */
     public ChunkPath planToArea(NArea area) {
         if (!enabled || !initialized) return null;
+
+        // Ensure player's current chunk is recorded before planning
+        // This handles cases where the player teleported to an unrecorded chunk
+        ensurePlayerChunkRecorded();
 
         ChunkPath path = planner.planToArea(area);
         if (path == null) {

@@ -309,15 +309,9 @@ public class ChunkNavData {
         obj.put("lastUpdated", lastUpdated);
         obj.put("confidence", confidence);
 
-        if (gridCoord != null) {
-            obj.put("gridCoordX", gridCoord.x);
-            obj.put("gridCoordY", gridCoord.y);
-        }
-
-        if (worldTileOrigin != null) {
-            obj.put("worldTileOriginX", worldTileOrigin.x);
-            obj.put("worldTileOriginY", worldTileOrigin.y);
-        }
+        // NOTE: gridCoord and worldTileOrigin are NOT saved - they're session-based and become invalid after restart
+        // These fields are populated when the grid is seen in the current session
+        // Cross-session pathfinding uses neighbor relationships instead
 
         // Neighbor relationships (persistent)
         if (neighborNorth != -1) obj.put("neighborNorth", neighborNorth);
@@ -390,13 +384,9 @@ public class ChunkNavData {
         data.lastUpdated = obj.getLong("lastUpdated");
         data.confidence = (float) obj.getDouble("confidence");
 
-        if (obj.has("gridCoordX") && obj.has("gridCoordY")) {
-            data.gridCoord = new Coord(obj.getInt("gridCoordX"), obj.getInt("gridCoordY"));
-        }
-
-        if (obj.has("worldTileOriginX") && obj.has("worldTileOriginY")) {
-            data.worldTileOrigin = new Coord(obj.getInt("worldTileOriginX"), obj.getInt("worldTileOriginY"));
-        }
+        // NOTE: gridCoord and worldTileOrigin are NOT loaded - they're session-based and stale values cause pathfinding bugs
+        // These fields will be populated when the grid is seen in the current session
+        // Legacy data in JSON is ignored
 
         // Neighbor relationships (persistent)
         data.neighborNorth = obj.optLong("neighborNorth", -1);

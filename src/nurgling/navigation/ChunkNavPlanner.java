@@ -33,18 +33,16 @@ public class ChunkNavPlanner {
     public ChunkPath planToArea(NArea area) {
         if (area == null) return null;
 
-        // Get player's current chunk and local position
-        long startChunkId = graph.getPlayerChunkId();
-        if (startChunkId == -1) {
-            System.out.println("ChunkNav: Cannot get player's current chunk");
+        // Get player's current chunk and local position using direct MCache lookup
+        // This is more reliable than ngob.grid_id which can be stale
+        PlayerLocation playerLoc = getPlayerLocation();
+        if (playerLoc == null) {
+            System.out.println("ChunkNav: Cannot get player's current location");
             return null;
         }
 
-        Coord playerLocal = getPlayerLocalCoord(startChunkId);
-        if (playerLocal == null) {
-            System.out.println("ChunkNav: Cannot get player's local position");
-            return null;
-        }
+        long startChunkId = playerLoc.gridId;
+        Coord playerLocal = playerLoc.localCoord;
 
         System.out.println("ChunkNav: Planning path to area '" + area.name + "' from chunk " + startChunkId + " playerLocal=" + playerLocal);
 
@@ -292,6 +290,54 @@ public class ChunkNavPlanner {
         TargetLocation(long chunkId, Coord localCoord) {
             this.chunkId = chunkId;
             this.localCoord = localCoord;
+        }
+    }
+
+    /**
+     * Player location result.
+     */
+    private static class PlayerLocation {
+        final long gridId;
+        final Coord localCoord;
+
+        PlayerLocation(long gridId, Coord localCoord) {
+            this.gridId = gridId;
+            this.localCoord = localCoord;
+        }
+    }
+
+    /**
+     * Get player's current grid ID and local coordinate using direct MCache lookup.
+     * This is more reliable than ngob.grid_id which can be stale after teleports.
+     */
+    private PlayerLocation getPlayerLocation() {
+        try {
+            NGameUI gui = NUtils.getGameUI();
+            if (gui == null || gui.map == null || gui.map.glob == null || gui.map.glob.map == null) {
+                return null;
+            }
+
+            Gob player = NUtils.player();
+            if (player == null) return null;
+
+            MCache mcache = gui.map.glob.map;
+            Coord playerTile = player.rc.floor(MCache.tilesz);
+
+            // Direct lookup - most reliable
+            MCache.Grid grid = mcache.getgridt(playerTile);
+            if (grid != null) {
+                Coord localCoord = playerTile.sub(grid.ul);
+                // Validate
+                if (localCoord.x >= 0 && localCoord.x < CHUNK_SIZE &&
+                    localCoord.y >= 0 && localCoord.y < CHUNK_SIZE) {
+                    return new PlayerLocation(grid.id, localCoord);
+                }
+            }
+
+            return null;
+        } catch (Exception e) {
+            System.err.println("ChunkNav: Error getting player location: " + e.getMessage());
+            return null;
         }
     }
 
@@ -628,27 +674,44 @@ public class ChunkNavPlanner {
                     if (grid.id == chunkGridId) {
                         // Calculate local coord relative to grid origin
                         Coord localCoord = playerTile.sub(grid.ul);
-                        // Clamp to valid range
-                        localCoord = new Coord(
-                            Math.max(0, Math.min(CHUNK_SIZE - 1, localCoord.x)),
-                            Math.max(0, Math.min(CHUNK_SIZE - 1, localCoord.y))
-                        );
-                        return localCoord;
+
+                        // Check if local coord is valid (player actually in this grid)
+                        if (localCoord.x >= 0 && localCoord.x < CHUNK_SIZE &&
+                            localCoord.y >= 0 && localCoord.y < CHUNK_SIZE) {
+                            return localCoord;
+                        } else {
+                            // Player is NOT in this grid - the grid ID is wrong
+                            System.out.println("ChunkNav: Player tile " + playerTile + " not in grid " + chunkGridId +
+                                " (ul=" + grid.ul + ", local=" + localCoord + ")");
+                            // Try to find the correct grid
+                            MCache.Grid correctGrid = mcache.getgridt(playerTile);
+                            if (correctGrid != null) {
+                                Coord correctLocal = playerTile.sub(correctGrid.ul);
+                                System.out.println("ChunkNav: Player is actually in grid " + correctGrid.id + " at local " + correctLocal);
+                            }
+                            return null;
+                        }
                     }
                 }
             }
 
-            // Fallback: use stored worldTileOrigin
+            // Grid not found in MCache - try stored worldTileOrigin
             ChunkNavData chunk = graph.getChunk(chunkGridId);
             if (chunk != null && chunk.worldTileOrigin != null) {
                 Coord localCoord = playerTile.sub(chunk.worldTileOrigin);
-                // Clamp to valid range
-                localCoord = new Coord(
-                    Math.max(0, Math.min(CHUNK_SIZE - 1, localCoord.x)),
-                    Math.max(0, Math.min(CHUNK_SIZE - 1, localCoord.y))
-                );
-                return localCoord;
+
+                // Check if local coord is valid
+                if (localCoord.x >= 0 && localCoord.x < CHUNK_SIZE &&
+                    localCoord.y >= 0 && localCoord.y < CHUNK_SIZE) {
+                    return localCoord;
+                } else {
+                    System.out.println("ChunkNav: Player tile " + playerTile + " not in stored chunk " + chunkGridId +
+                        " (worldTileOrigin=" + chunk.worldTileOrigin + ", local=" + localCoord + ")");
+                    return null;
+                }
             }
+
+            System.out.println("ChunkNav: Grid " + chunkGridId + " not found in MCache or stored data");
 
         } catch (Exception e) {
             System.err.println("ChunkNav: Error getting player local coord: " + e.getMessage());

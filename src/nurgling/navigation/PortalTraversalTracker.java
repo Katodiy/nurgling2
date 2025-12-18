@@ -231,6 +231,15 @@ public class PortalTraversalTracker {
             return;
         }
 
+        // Check if player landed on their hearthfire - this indicates a teleport, not a portal traversal
+        if (isPlayerOnHearthfire(player)) {
+            // Player teleported to hearthfire - don't record this as a portal connection
+            lastProcessedFromGridId = fromGridId;
+            lastProcessedToGridId = toGridId;
+            lastProcessedTime = now;
+            return;
+        }
+
         // Mark this transition as processed
         lastProcessedFromGridId = fromGridId;
         lastProcessedToGridId = toGridId;
@@ -839,6 +848,37 @@ public class PortalTraversalTracker {
         }
         // Fallback - use gob id and position
         return "portal_" + gob.id + "_" + (int)gob.rc.x + "_" + (int)gob.rc.y;
+    }
+
+    /**
+     * Check if the player is standing on a hearthfire.
+     * This indicates a teleport (Hearth Fire skill) rather than walking through a portal.
+     */
+    private boolean isPlayerOnHearthfire(Gob player) {
+        if (player == null) return false;
+
+        try {
+            // Search for fire gobs near the player
+            // Fire gob resource is "gfx/terobjs/pow", but only model attribute 17 is a hearthfire
+            ArrayList<Gob> fires = Finder.findGobs(new NAlias("gfx/terobjs/pow"));
+
+            for (Gob fire : fires) {
+                // Check if this is actually a hearthfire (model attribute 17)
+                if (fire.ngob == null || fire.ngob.getModelAttribute() != 17) {
+                    continue;
+                }
+
+                double dist = player.rc.dist(fire.rc);
+                // If player is very close to a hearthfire (within ~2 tiles), they likely teleported
+                if (dist < 11.0) {  // ~2 tiles in world units
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            // Ignore errors
+        }
+
+        return false;
     }
 
     /**
