@@ -33,6 +33,12 @@ public class PortalTraversalTracker {
     private Coord previousTickPlayerLocalCoord = null;  // Player position from previous tick (before any grid change)
     private long lastCheckTime = 0;
 
+    // Duplicate grid transition prevention
+    private long lastProcessedFromGridId = -1;
+    private long lastProcessedToGridId = -1;
+    private long lastProcessedTime = 0;
+    private static final long DUPLICATE_PREVENTION_MS = 2000; // Ignore same transition within 2 seconds
+
     // Explicitly tracked portal (set when we know which portal was clicked)
     private Gob clickedPortal = null;
     private Coord clickedPortalLocalCoord = null;
@@ -101,15 +107,15 @@ public class PortalTraversalTracker {
     /**
      * Call this BEFORE clicking on a portal to explicitly track which portal was clicked.
      * This is more reliable than proximity-based tracking.
-     * Uses the continuously cached player position (lastPlayerLocalCoord) as the access point.
+     * Uses the portal's position (with offset for buildings) for stable identification.
      */
     public void setClickedPortal(Gob portal) {
         if (portal != null && portal.ngob != null) {
             this.clickedPortal = portal;
-            // Use the cached player position - this was continuously updated on every tick
-            // while the player was standing in front of the door, BEFORE clicking
-            this.clickedPortalLocalCoord = lastPlayerLocalCoord;
-            System.out.println("ChunkNav: setClickedPortal(" + portal.ngob.name + ") using cached player pos: " + clickedPortalLocalCoord);
+            // Use getPortalLocalCoord which handles building offsets
+            Gob player = NUtils.player();
+            this.clickedPortalLocalCoord = getPortalLocalCoord(portal, player);
+            System.out.println("ChunkNav: setClickedPortal(" + portal.ngob.name + ") using pos: " + clickedPortalLocalCoord);
         }
     }
 
@@ -183,26 +189,28 @@ public class PortalTraversalTracker {
             previousTickPlayerLocalCoord = currentPlayerLocalCoord;
         }
 
-        // Track nearby portals - use PLAYER's current position as the access point
-        // The player must be standing in a walkable spot to be near the portal
+        // Track nearby portals - use getPortalLocalCoord which handles building offsets
         Gob nearbyPortal = findNearbyPortal(player);
         if (nearbyPortal != null) {
             lastNearbyPortal = nearbyPortal;
-            // Use player's current position - they're standing in front of the door
-            lastNearbyPortalLocalCoord = currentPlayerLocalCoord;
+            // Use getPortalLocalCoord which offsets buildings toward player for stable door position
+            lastNearbyPortalLocalCoord = getPortalLocalCoord(nearbyPortal, player);
         }
 
         // Capture lastActions gob BEFORE grid change (like routes system does)
         // This preserves the clicked portal info even after the grid changes
-        // Use PLAYER's position as the access point - they clicked while standing there
         try {
             NCore.LastActions lastActions = NUtils.getUI().core.getLastActions();
             if (lastActions != null && lastActions.gob != null && lastActions.gob.ngob != null) {
                 String gobName = lastActions.gob.ngob.name;
                 if (gobName != null && isPortalGob(gobName)) {
                     cachedLastActionsGob = lastActions.gob;
-                    // Use player's current position - they clicked while standing here
-                    cachedLastActionsGobLocalCoord = currentPlayerLocalCoord;
+                    // Use getPortalLocalCoord which offsets buildings toward player for stable door position
+                    Coord portalCoord = getPortalLocalCoord(lastActions.gob, player);
+                    if (portalCoord != null) {
+                        cachedLastActionsGobLocalCoord = portalCoord;
+                        System.out.println("ChunkNav: Cached lastActions portal " + gobName + " at " + portalCoord);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -215,6 +223,19 @@ public class PortalTraversalTracker {
      */
     private void onGridChanged(long fromGridId, long toGridId, Gob player) {
         System.out.println("ChunkNav: Grid changed from " + fromGridId + " to " + toGridId);
+
+        // Check for duplicate grid transition (same transition firing multiple times)
+        long now = System.currentTimeMillis();
+        if (fromGridId == lastProcessedFromGridId && toGridId == lastProcessedToGridId &&
+            (now - lastProcessedTime) < DUPLICATE_PREVENTION_MS) {
+            System.out.println("ChunkNav: Skipping duplicate grid transition (already processed " + (now - lastProcessedTime) + "ms ago)");
+            return;
+        }
+
+        // Mark this transition as processed
+        lastProcessedFromGridId = fromGridId;
+        lastProcessedToGridId = toGridId;
+        lastProcessedTime = now;
 
         // Wait a moment for gobs to load after grid change
         // This is called from tick(), so we can't do async waiting - just retry on next tick if needed
@@ -302,38 +323,50 @@ public class PortalTraversalTracker {
         if (entranceName != null) {
             Coord entranceCoord = null;
             String entranceHash = null;
+            String strategyUsed = "none";
 
             // Strategy 1: Use cached lastActions gob (captured BEFORE grid change, like routes system)
             // This is the most reliable way because we captured it while the grid was still loaded
             if (cachedLastActionsGob != null && cachedLastActionsGob.ngob != null &&
                 cachedLastActionsGobLocalCoord != null) {
                 String cachedName = cachedLastActionsGob.ngob.name;
+                System.out.println("ChunkNav: Strategy 1 check: cachedName=" + cachedName + " entranceName=" + entranceName);
                 // Verify this is the entrance portal we're looking for
+                // Use strict matching: must be exact match OR cachedName must be the building (entranceName)
+                // NOT the reverse (don't match stonemansion-door when looking for stonemansion)
                 if (cachedName != null && isPortalGob(cachedName) &&
                     (cachedName.equals(entranceName) ||
-                     cachedName.contains(entranceName) ||
-                     entranceName.contains(cachedName))) {
+                     cachedName.endsWith("/" + getSimpleName(entranceName)))) {
                     entranceCoord = cachedLastActionsGobLocalCoord;
                     entranceHash = getPortalHash(cachedLastActionsGob);
+                    strategyUsed = "Strategy 1 (cachedLastActions)";
                 }
             }
 
             // Strategy 2: Check if the portal we were tracking matches the expected entrance
             if (entranceCoord == null && lastNearbyPortal != null && lastNearbyPortal.ngob != null &&
-                lastNearbyPortal.ngob.name != null && lastNearbyPortalLocalCoord != null &&
-                (lastNearbyPortal.ngob.name.equals(entranceName) ||
-                 lastNearbyPortal.ngob.name.contains(entranceName) ||
-                 entranceName.contains(lastNearbyPortal.ngob.name))) {
-                // Use the actual portal position we were tracking
-                entranceCoord = lastNearbyPortalLocalCoord;
-                entranceHash = getPortalHash(lastNearbyPortal);
+                lastNearbyPortal.ngob.name != null && lastNearbyPortalLocalCoord != null) {
+                String nearbyName = lastNearbyPortal.ngob.name;
+                System.out.println("ChunkNav: Strategy 2 check: lastNearby=" + nearbyName + " entranceName=" + entranceName);
+                // Use strict matching like Strategy 1
+                if (nearbyName.equals(entranceName) ||
+                    nearbyName.endsWith("/" + getSimpleName(entranceName))) {
+                    // Use the actual portal position we were tracking
+                    entranceCoord = lastNearbyPortalLocalCoord;
+                    entranceHash = getPortalHash(lastNearbyPortal);
+                    strategyUsed = "Strategy 2 (lastNearbyPortal)";
+                }
             }
 
             // Strategy 3: Fallback to player position if we don't have the portal position
             if (entranceCoord == null && lastPlayerLocalCoord != null) {
                 entranceCoord = lastPlayerLocalCoord;
-                entranceHash = "entrance_" + fromGridId + "_" + entranceName.hashCode();
+                // Include position in hash to distinguish different buildings of same type
+                entranceHash = "entrance_" + fromGridId + "_" + entranceName.hashCode() + "_" + lastPlayerLocalCoord.x + "_" + lastPlayerLocalCoord.y;
+                strategyUsed = "Strategy 3 (fallback to player pos)";
             }
+
+            System.out.println("ChunkNav: Entrance recording using " + strategyUsed + " coord=" + entranceCoord);
 
             if (entranceCoord != null && entranceHash != null) {
                 System.out.println("ChunkNav: Recording entrance portal " + entranceName + " connects " + fromGridId + " -> " + toGridId);
@@ -430,6 +463,92 @@ public class PortalTraversalTracker {
             // Ignore
         }
         return null;
+    }
+
+    /**
+     * Get the appropriate local coordinate for a portal gob.
+     * For buildings (stonemansion, etc.), offsets from center toward player to get door position.
+     * For other portals (doors, cellars), uses the gob's actual position.
+     */
+    private Coord getPortalLocalCoord(Gob portalGob, Gob player) {
+        if (portalGob == null || portalGob.ngob == null) {
+            return null;
+        }
+
+        String name = portalGob.ngob.name;
+        if (name == null) {
+            return getGobLocalCoord(portalGob);
+        }
+
+        // Buildings need offset toward player to get door position
+        // These are whole-building gobs where the door is on the edge, not at center
+        double offset = getBuildingDoorOffset(name);
+        if (offset > 0 && player != null) {
+            return getDoorLocalCoord(portalGob, player, offset);
+        }
+
+        // Regular portals (doors, cellars, gates) - use actual gob position
+        return getGobLocalCoord(portalGob);
+    }
+
+    /**
+     * Get the door offset for a building type.
+     * Returns 0 for non-building portals (use gob position directly).
+     */
+    private double getBuildingDoorOffset(String gobName) {
+        if (gobName == null) return 0;
+        String lower = gobName.toLowerCase();
+
+        // Buildings where the gob is the whole structure and door is on the edge
+        // Offset is approximate distance from center to door in tiles
+        if (lower.contains("stonemansion")) return 5;
+        if (lower.contains("logcabin")) return 3;
+        if (lower.contains("timberhouse")) return 3;
+        if (lower.contains("stonestead")) return 4;
+        if (lower.contains("greathall")) return 5;
+        if (lower.contains("stonetower")) return 3;
+        if (lower.contains("windmill")) return 3;
+
+        return 0; // Not a building, use direct position
+    }
+
+    /**
+     * Get the "door position" for a building gob by offsetting from building center toward player.
+     * This gives a stable position for the door even if player stands at slightly different spots.
+     * @param buildingGob The building gob (e.g., stonemansion)
+     * @param player The player gob
+     * @param offsetTiles How many tiles to offset toward player (e.g., 5 for stonemansion)
+     */
+    private Coord getDoorLocalCoord(Gob buildingGob, Gob player, double offsetTiles) {
+        try {
+            MCache mcache = NUtils.getGameUI().map.glob.map;
+
+            // Get building center in world coords
+            Coord2d buildingPos = buildingGob.rc;
+            Coord2d playerPos = player.rc;
+
+            // Calculate direction from building to player
+            Coord2d direction = playerPos.sub(buildingPos);
+            double dist = direction.dist(Coord2d.z);
+            if (dist < 1.0) {
+                // Player is at building center, just use building pos
+                return getGobLocalCoord(buildingGob);
+            }
+
+            // Normalize and scale by offset
+            Coord2d normalized = new Coord2d(direction.x / dist, direction.y / dist);
+            Coord2d doorPos = buildingPos.add(normalized.mul(offsetTiles * MCache.tilesz.x));
+
+            // Convert to tile coord
+            Coord tileCoord = doorPos.floor(MCache.tilesz);
+            MCache.Grid grid = mcache.getgridt(tileCoord);
+            if (grid != null) {
+                return tileCoord.sub(grid.ul);
+            }
+        } catch (Exception e) {
+            // Fallback to building center
+        }
+        return getGobLocalCoord(buildingGob);
     }
 
     /**
@@ -600,6 +719,16 @@ public class PortalTraversalTracker {
     }
 
     /**
+     * Get the simple name from a full resource path.
+     * e.g., "gfx/terobjs/arch/stonemansion" -> "stonemansion"
+     */
+    private String getSimpleName(String fullName) {
+        if (fullName == null) return "";
+        int lastSlash = fullName.lastIndexOf('/');
+        return lastSlash >= 0 ? fullName.substring(lastSlash + 1) : fullName;
+    }
+
+    /**
      * Check if a gob name is a portal type.
      */
     private boolean isPortalGob(String name) {
@@ -680,5 +809,8 @@ public class PortalTraversalTracker {
         lastNearbyPortalLocalCoord = null;
         lastPlayerLocalCoord = null;
         previousTickPlayerLocalCoord = null;
+        lastProcessedFromGridId = -1;
+        lastProcessedToGridId = -1;
+        lastProcessedTime = 0;
     }
 }
