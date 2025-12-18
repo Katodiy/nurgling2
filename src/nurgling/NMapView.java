@@ -16,6 +16,9 @@ import nurgling.conf.QuickActionPreset;
 import nurgling.widgets.options.QuickActions;
 import nurgling.overlays.*;
 import nurgling.overlays.map.*;
+import nurgling.navigation.ChunkNavData;
+import nurgling.navigation.ChunkNavManager;
+import nurgling.navigation.ChunkPortal;
 import nurgling.routes.Route;
 import nurgling.routes.RouteGraphManager;
 import nurgling.routes.RoutePoint;
@@ -115,6 +118,7 @@ public class NMapView extends MapView
 
     public HashMap<Long, Gob> dummys = new HashMap<>();
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
+    public HashMap<Long, Gob> portalDummys = new HashMap<>();
 
     public RouteGraphManager routeGraphManager;
 
@@ -331,6 +335,52 @@ public class NMapView extends MapView
                 glob.oc.remove(d);
         }
         routeDummys.clear();
+    }
+
+    public void destroyPortalDummys()
+    {
+        for(Gob d: portalDummys.values())
+        {
+            if(glob.oc.getgob(d.id)!=null)
+                glob.oc.remove(d);
+        }
+        portalDummys.clear();
+    }
+
+    /**
+     * Create portal labels for all portals in all visible chunks.
+     */
+    public void createPortalLabels() {
+        destroyPortalDummys();
+
+        ChunkNavManager manager = ChunkNavManager.getInstance();
+        if (!manager.isInitialized()) return;
+
+        MCache mcache = glob.map;
+        if (mcache == null) return;
+
+        synchronized (mcache.grids) {
+            for (MCache.Grid grid : mcache.grids.values()) {
+                if (grid == null || grid.ul == null) continue;
+
+                ChunkNavData chunk = manager.getGraph().getChunk(grid.id);
+                if (chunk == null) continue;
+
+                for (ChunkPortal portal : chunk.portals) {
+                    if (portal.localCoord == null) continue;
+
+                    // Convert local tile coord to world coord
+                    Coord worldTile = grid.ul.add(portal.localCoord);
+                    Coord2d absCoord = worldTile.mul(MCache.tilesz).add(MCache.tilesz.div(2));
+
+                    OCache.Virtual dummy = glob.oc.new Virtual(absCoord, 0);
+                    dummy.virtual = true;
+                    dummy.addcustomol(new PortalLabel(dummy, chunk, portal));
+                    portalDummys.put(dummy.id, dummy);
+                    glob.oc.add(dummy);
+                }
+            }
+        }
     }
 
     public static NMiningOverlay getMiningOl()

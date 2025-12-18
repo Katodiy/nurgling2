@@ -39,6 +39,11 @@ public class ChunkNavManager {
     private long lastRecordTime = 0;
     private static final long RECORD_THROTTLE_MS = 2000; // Record visible grids every 2 seconds
 
+    // Portal visualization
+    private boolean showPortalsEnabled = true; // Show portals by default
+    private long lastPortalRefreshTime = 0;
+    private static final long PORTAL_REFRESH_MS = 3000; // Refresh portal display every 3 seconds
+
     // Background thread for recording (to avoid FPS drops)
     private ExecutorService recordingExecutor;
     private volatile boolean recordingInProgress = false;
@@ -147,6 +152,12 @@ public class ChunkNavManager {
         if (now - lastRecordTime >= RECORD_THROTTLE_MS) {
             lastRecordTime = now;
             recordVisibleGrids();
+        }
+
+        // Periodically refresh portal visualization
+        if (showPortalsEnabled && now - lastPortalRefreshTime >= PORTAL_REFRESH_MS) {
+            lastPortalRefreshTime = now;
+            refreshPortalVisualization();
         }
     }
 
@@ -512,6 +523,61 @@ public class ChunkNavManager {
 
         } catch (Exception e) {
             // Ignore
+        }
+    }
+
+    /**
+     * Refresh portal visualization (called from tick).
+     */
+    private void refreshPortalVisualization() {
+        try {
+            NGameUI gui = NUtils.getGameUI();
+            if (gui != null && gui.map != null) {
+                ((nurgling.NMapView) gui.map).createPortalLabels();
+            }
+        } catch (Exception e) {
+            // Ignore - UI might not be ready
+        }
+    }
+
+    /**
+     * Enable portal visualization.
+     */
+    public void showPortals() {
+        showPortalsEnabled = true;
+        lastPortalRefreshTime = 0; // Force immediate refresh
+    }
+
+    /**
+     * Disable portal visualization.
+     */
+    public void hidePortals() {
+        showPortalsEnabled = false;
+        try {
+            NGameUI gui = NUtils.getGameUI();
+            if (gui != null && gui.map != null) {
+                ((nurgling.NMapView) gui.map).destroyPortalDummys();
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+    }
+
+    /**
+     * Check if portal visualization is enabled.
+     */
+    public boolean isShowPortalsEnabled() {
+        return showPortalsEnabled;
+    }
+
+    /**
+     * Toggle portal visualization on/off.
+     */
+    public void togglePortals() {
+        if (showPortalsEnabled) {
+            hidePortals();
+        } else {
+            showPortals();
         }
     }
 }
