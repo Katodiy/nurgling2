@@ -48,11 +48,13 @@ public class PortalTraversalTracker {
     // The EXIT portal (what you see after traversing) determines the layer
     private static final Map<String, String> PORTAL_TO_LAYER = new HashMap<>();
     static {
-        // When you see cellardoor as exit -> you're in the cellar (you went down via cellardoor)
-        PORTAL_TO_LAYER.put("cellardoor", "cellar");
+        // When you see cellardoor as exit -> you're INSIDE the building (you came up from cellar)
+        // The cellardoor is the entrance TO the cellar, located on the inside floor
+        PORTAL_TO_LAYER.put("cellardoor", "inside");
 
-        // When you see cellarstairs as exit -> you're inside the building (you came up from cellar)
-        PORTAL_TO_LAYER.put("cellarstairs", "inside");
+        // When you see cellarstairs as exit -> you're IN the cellar (you went down)
+        // The cellarstairs is what you see AT THE BOTTOM after going down
+        PORTAL_TO_LAYER.put("cellarstairs", "cellar");
 
         // When you see a *-door as exit -> you're inside the building (you entered from outside)
         // These are the "-door" variants you see INSIDE the building after entering
@@ -98,18 +100,15 @@ public class PortalTraversalTracker {
     /**
      * Call this BEFORE clicking on a portal to explicitly track which portal was clicked.
      * This is more reliable than proximity-based tracking.
-     * Records the PLAYER's position (accessible spot in front of door), not the door gob's position.
+     * Uses the continuously cached player position (lastPlayerLocalCoord) as the access point.
      */
     public void setClickedPortal(Gob portal) {
         if (portal != null && portal.ngob != null) {
             this.clickedPortal = portal;
-            // Record PLAYER's position - this is where you can access the door from
-            Gob player = NUtils.player();
-            if (player != null) {
-                this.clickedPortalLocalCoord = getGobLocalCoord(player);
-            } else {
-                this.clickedPortalLocalCoord = getGobLocalCoord(portal);
-            }
+            // Use the cached player position - this was continuously updated on every tick
+            // while the player was standing in front of the door, BEFORE clicking
+            this.clickedPortalLocalCoord = lastPlayerLocalCoord;
+            System.out.println("ChunkNav: setClickedPortal(" + portal.ngob.name + ") using cached player pos: " + clickedPortalLocalCoord);
         }
     }
 
@@ -178,26 +177,25 @@ public class PortalTraversalTracker {
             lastPlayerLocalCoord = currentPlayerLocalCoord;
         }
 
-        // Track nearby portals and cache PLAYER's position (not portal position) while grid is loaded
-        // The player's position is where the door is accessible from - this is what we navigate to
+        // Track nearby portals - use PLAYER's current position as the access point
+        // The player must be standing in a walkable spot to be near the portal
         Gob nearbyPortal = findNearbyPortal(player);
         if (nearbyPortal != null) {
             lastNearbyPortal = nearbyPortal;
-            // Cache the PLAYER's local coordinate NOW while the grid is still loaded
-            // This is the accessible spot in front of the door
+            // Use player's current position - they're standing in front of the door
             lastNearbyPortalLocalCoord = currentPlayerLocalCoord;
         }
 
         // Capture lastActions gob BEFORE grid change (like routes system does)
         // This preserves the clicked portal info even after the grid changes
-        // We store the PLAYER's position (not the gob's position) as that's where we can access the door from
+        // Use PLAYER's position as the access point - they clicked while standing there
         try {
             NCore.LastActions lastActions = NUtils.getUI().core.getLastActions();
             if (lastActions != null && lastActions.gob != null && lastActions.gob.ngob != null) {
                 String gobName = lastActions.gob.ngob.name;
                 if (gobName != null && isPortalGob(gobName)) {
                     cachedLastActionsGob = lastActions.gob;
-                    // Store PLAYER's position - this is the accessible spot in front of the door
+                    // Use player's current position - they clicked while standing here
                     cachedLastActionsGobLocalCoord = currentPlayerLocalCoord;
                 }
             }

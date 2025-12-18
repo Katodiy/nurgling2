@@ -353,11 +353,11 @@ public class ChunkNavRecorder {
         // Ladders
         if (lower.contains("/ladder")) return true;
 
-        // Gates - only small gate objects, not walls
-        // Check for specific gate patterns
-        if ((lower.contains("gate") && !lower.contains("water") && !lower.contains("flood")) &&
-            (lower.contains("/polegate") || lower.contains("/palisadegate") ||
-             lower.contains("/drystonewallgate") || lower.endsWith("gate"))) {
+        // All types of gates - these are passable when open
+        // Includes: polegate, polebiggate, palisadegate, palisadebiggate, drystonewallgate, drystonewallbiggate
+        if (lower.contains("/polegate") || lower.contains("/polebiggate") ||
+            lower.contains("/palisadegate") || lower.contains("/palisadebiggate") ||
+            lower.contains("/drystonewallgate") || lower.contains("/drystonewallbiggate")) {
             return true;
         }
 

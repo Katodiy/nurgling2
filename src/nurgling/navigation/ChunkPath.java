@@ -8,12 +8,20 @@ import java.util.List;
 
 /**
  * Result of global path planning on the chunk graph.
+ * Contains both high-level waypoints and detailed tile-level path.
  */
 public class ChunkPath {
     public List<ChunkWaypoint> waypoints = new ArrayList<>();
     public float totalCost;
     public float confidence;       // Min confidence along path
     public boolean requiresPortals;
+
+    /**
+     * Detailed tile-level path segments.
+     * Each segment is a list of TileStep from one waypoint to the next.
+     * This is the actual path to follow, computed by intra-chunk A*.
+     */
+    public List<PathSegment> segments = new ArrayList<>();
 
     public ChunkPath() {
         this.totalCost = 0;
@@ -89,17 +97,93 @@ public class ChunkPath {
         DESTINATION     // Final destination
     }
 
+    /**
+     * Check if this path has detailed tile-level segments.
+     */
+    public boolean hasDetailedPath() {
+        return !segments.isEmpty();
+    }
+
+    /**
+     * Get total number of tile steps across all segments.
+     */
+    public int getTotalTileSteps() {
+        int total = 0;
+        for (PathSegment seg : segments) {
+            total += seg.steps.size();
+        }
+        return total;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("ChunkPath[cost=").append(totalCost);
         sb.append(", confidence=").append(confidence);
         sb.append(", waypoints=").append(waypoints.size());
+        sb.append(", segments=").append(segments.size());
+        sb.append(", tileSteps=").append(getTotalTileSteps());
         if (requiresPortals) sb.append(", hasPortals");
         sb.append("]\n");
         for (int i = 0; i < waypoints.size(); i++) {
             sb.append("  ").append(i).append(": ").append(waypoints.get(i)).append("\n");
         }
         return sb.toString();
+    }
+
+    /**
+     * A segment of the path within a single chunk.
+     * Contains tile-level steps from one point to another.
+     */
+    public static class PathSegment {
+        public long gridId;                    // Grid this segment is in
+        public Coord worldTileOrigin;          // World tile origin for converting local to world
+        public List<TileStep> steps;           // Tile-level steps to follow
+        public SegmentType type;               // What kind of segment this is
+
+        public PathSegment(long gridId, Coord worldTileOrigin) {
+            this.gridId = gridId;
+            this.worldTileOrigin = worldTileOrigin;
+            this.steps = new ArrayList<>();
+            this.type = SegmentType.WALK;
+        }
+
+        public boolean isEmpty() {
+            return steps.isEmpty();
+        }
+
+        public int size() {
+            return steps.size();
+        }
+    }
+
+    /**
+     * Type of path segment.
+     */
+    public enum SegmentType {
+        WALK,           // Walk along these tiles
+        PORTAL          // Use a portal at the end of this segment
+    }
+
+    /**
+     * A single tile step in the path.
+     */
+    public static class TileStep {
+        public Coord localCoord;      // Local tile coordinate (0-99, 0-99)
+        public Coord2d worldCoord;    // World coordinate (computed from localCoord + worldTileOrigin)
+
+        public TileStep(Coord localCoord, Coord worldTileOrigin) {
+            this.localCoord = localCoord;
+            // Compute world coordinate: (worldTileOrigin + localCoord) * tilesz + tilehsz
+            if (worldTileOrigin != null) {
+                Coord worldTile = worldTileOrigin.add(localCoord);
+                this.worldCoord = worldTile.mul(haven.MCache.tilesz).add(haven.MCache.tilehsz);
+            }
+        }
+
+        public TileStep(Coord localCoord, Coord2d worldCoord) {
+            this.localCoord = localCoord;
+            this.worldCoord = worldCoord;
+        }
     }
 }
