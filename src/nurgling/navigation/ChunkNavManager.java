@@ -66,10 +66,7 @@ public class ChunkNavManager {
         });
 
         // Register shutdown hook to save on exit
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("ChunkNavManager: Shutdown hook triggered, saving...");
-            shutdown();
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
     }
 
     public static ChunkNavManager getInstance() {
@@ -84,7 +81,6 @@ public class ChunkNavManager {
      */
     public void initialize(String genus) {
         if (genus == null || genus.isEmpty()) {
-            System.err.println("ChunkNavManager: Cannot initialize with null genus");
             return;
         }
 
@@ -108,7 +104,6 @@ public class ChunkNavManager {
         load();
 
         this.initialized = true;
-        System.out.println("ChunkNavManager: Initialized for world " + genus + " - " + graph.getStats());
     }
 
     /**
@@ -355,11 +350,9 @@ public class ChunkNavManager {
             // Write to file
             Files.write(filePath, root.toString(2).getBytes(StandardCharsets.UTF_8));
             lastSaveTime = System.currentTimeMillis();
-            System.out.println("ChunkNavManager: Saved " + graph.getChunkCount() + " chunks to " + filePath);
 
         } catch (Exception e) {
-            System.err.println("ChunkNavManager: Error saving: " + e.getMessage());
-            e.printStackTrace();
+            // Ignore save errors
         }
     }
 
@@ -372,7 +365,6 @@ public class ChunkNavManager {
         try {
             Path filePath = getStoragePath();
             if (!Files.exists(filePath)) {
-                System.out.println("ChunkNavManager: No saved data found at " + filePath);
                 return;
             }
 
@@ -382,7 +374,6 @@ public class ChunkNavManager {
             // Verify genus matches
             String savedGenus = root.optString("genus", "");
             if (!currentGenus.equals(savedGenus)) {
-                System.out.println("ChunkNavManager: Saved data is for different world, ignoring");
                 return;
             }
 
@@ -393,18 +384,15 @@ public class ChunkNavManager {
                     ChunkNavData chunk = ChunkNavData.fromJson(chunksArray.getJSONObject(i));
                     graph.addChunk(chunk);
                 } catch (Exception e) {
-                    System.err.println("ChunkNavManager: Error loading chunk: " + e.getMessage());
+                    // Ignore individual chunk errors
                 }
             }
 
             // Rebuild connections after loading all chunks
             graph.rebuildAllConnections();
 
-            System.out.println("ChunkNavManager: Loaded " + graph.getChunkCount() + " chunks from " + filePath);
-
         } catch (Exception e) {
-            System.err.println("ChunkNavManager: Error loading: " + e.getMessage());
-            e.printStackTrace();
+            // Ignore load errors
         }
     }
 
@@ -422,7 +410,6 @@ public class ChunkNavManager {
     public void clear() {
         graph.clear();
         recorder.clearSession();
-        System.out.println("ChunkNavManager: Cleared all navigation data");
     }
 
     /**

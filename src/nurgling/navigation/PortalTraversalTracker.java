@@ -121,7 +121,6 @@ public class PortalTraversalTracker {
             // Use getPortalLocalCoord which handles building offsets
             Gob player = NUtils.player();
             this.clickedPortalLocalCoord = getPortalLocalCoord(portal, player);
-            System.out.println("ChunkNav: setClickedPortal(" + portal.ngob.name + ") using pos: " + clickedPortalLocalCoord);
         }
     }
 
@@ -157,11 +156,6 @@ public class PortalTraversalTracker {
 
         long currentGridId = graph.getPlayerChunkId();
         if (currentGridId == -1) return;
-
-        // Debug: log grid changes to verify we're being called
-        if (lastGridId != -1 && currentGridId != lastGridId) {
-            System.out.println("ChunkNav: doCheck() detected grid change: " + lastGridId + " -> " + currentGridId);
-        }
 
         // Calculate player's current local coord in their CURRENT grid
         Coord currentPlayerLocalCoord = null;
@@ -215,7 +209,6 @@ public class PortalTraversalTracker {
                     Coord portalCoord = getPortalLocalCoord(lastActions.gob, player);
                     if (portalCoord != null) {
                         cachedLastActionsGobLocalCoord = portalCoord;
-                        System.out.println("ChunkNav: Cached lastActions portal " + gobName + " at " + portalCoord);
                     }
                 }
             }
@@ -231,13 +224,10 @@ public class PortalTraversalTracker {
      * Called when player's grid ID changes.
      */
     private void onGridChanged(long fromGridId, long toGridId, Gob player) {
-        System.out.println("ChunkNav: Grid changed from " + fromGridId + " to " + toGridId);
-
         // Check for duplicate grid transition (same transition firing multiple times)
         long now = System.currentTimeMillis();
         if (fromGridId == lastProcessedFromGridId && toGridId == lastProcessedToGridId &&
             (now - lastProcessedTime) < DUPLICATE_PREVENTION_MS) {
-            System.out.println("ChunkNav: Skipping duplicate grid transition (already processed " + (now - lastProcessedTime) + "ms ago)");
             return;
         }
 
@@ -259,7 +249,6 @@ public class PortalTraversalTracker {
         if (clickedPortal != null && clickedPortal.ngob != null && clickedPortalLocalCoord != null) {
             String portalName = clickedPortal.ngob.name;
             String portalHash = getPortalHash(clickedPortal);
-            System.out.println("ChunkNav: Using explicitly clicked portal: " + portalName);
 
             // Record the entrance connection
             recordPortalConnection(portalHash, portalName, fromGridId, toGridId, clickedPortalLocalCoord);
@@ -281,10 +270,7 @@ public class PortalTraversalTracker {
                 String exitHash = getPortalHash(exitPortal);
                 String exitName = exitPortal.ngob.name;
                 Coord exitLocalCoord = getGobLocalCoord(player);
-                System.out.println("ChunkNav: Found exit portal: " + exitName);
                 recordPortalConnection(exitHash, exitName, toGridId, fromGridId, exitLocalCoord);
-            } else {
-                System.out.println("ChunkNav: No exit portal found for explicit traversal");
             }
 
             // Clear tracking
@@ -296,7 +282,6 @@ public class PortalTraversalTracker {
         // FALLBACK: For manual traversals, use exit portal to determine entrance
         // Find the exit portal on the new side - retry a few times for gobs to load
         Gob exitPortal = null;
-        System.out.println("ChunkNav: Looking for nearby exit portal...");
         for (int i = 0; i < 5 && exitPortal == null; i++) {
             exitPortal = findNearbyPortal(player);
             if (exitPortal == null) {
@@ -308,14 +293,12 @@ public class PortalTraversalTracker {
             }
         }
         if (exitPortal == null || exitPortal.ngob == null) {
-            System.out.println("ChunkNav: No exit portal found nearby player after retries");
             return;
         }
 
         String exitName = exitPortal.ngob.name;
         String exitHash = getPortalHash(exitPortal);
         String entranceName = GateDetector.getDoorPair(exitName);
-        System.out.println("ChunkNav: Found exit portal: " + exitName + " entrance pair: " + entranceName);
 
         // Use PLAYER's current position - this is where we land after exiting, the accessible spot
         Coord exitLocalCoord = getGobLocalCoord(player);
@@ -324,7 +307,6 @@ public class PortalTraversalTracker {
         updateChunkLayer(toGridId, exitName);
 
         // Record: exit portal on toGrid connects back to fromGrid (using player's position as access point)
-        System.out.println("ChunkNav: Recording exit portal " + exitName + " connects " + toGridId + " -> " + fromGridId);
         recordPortalConnection(exitHash, exitName, toGridId, fromGridId, exitLocalCoord);
 
         // Record: entrance portal on fromGrid connects to toGrid
@@ -332,14 +314,12 @@ public class PortalTraversalTracker {
         if (entranceName != null) {
             Coord entranceCoord = null;
             String entranceHash = null;
-            String strategyUsed = "none";
 
             // Strategy 1: Use cached lastActions gob (captured BEFORE grid change, like routes system)
             // This is the most reliable way because we captured it while the grid was still loaded
             if (cachedLastActionsGob != null && cachedLastActionsGob.ngob != null &&
                 cachedLastActionsGobLocalCoord != null) {
                 String cachedName = cachedLastActionsGob.ngob.name;
-                System.out.println("ChunkNav: Strategy 1 check: cachedName=" + cachedName + " entranceName=" + entranceName);
                 // Verify this is the entrance portal we're looking for
                 // Use strict matching: must be exact match OR cachedName must be the building (entranceName)
                 // NOT the reverse (don't match stonemansion-door when looking for stonemansion)
@@ -348,7 +328,6 @@ public class PortalTraversalTracker {
                      cachedName.endsWith("/" + getSimpleName(entranceName)))) {
                     entranceCoord = cachedLastActionsGobLocalCoord;
                     entranceHash = getPortalHash(cachedLastActionsGob);
-                    strategyUsed = "Strategy 1 (cachedLastActions)";
                 }
             }
 
@@ -356,14 +335,12 @@ public class PortalTraversalTracker {
             if (entranceCoord == null && lastNearbyPortal != null && lastNearbyPortal.ngob != null &&
                 lastNearbyPortal.ngob.name != null && lastNearbyPortalLocalCoord != null) {
                 String nearbyName = lastNearbyPortal.ngob.name;
-                System.out.println("ChunkNav: Strategy 2 check: lastNearby=" + nearbyName + " entranceName=" + entranceName);
                 // Use strict matching like Strategy 1
                 if (nearbyName.equals(entranceName) ||
                     nearbyName.endsWith("/" + getSimpleName(entranceName))) {
                     // Use the actual portal position we were tracking
                     entranceCoord = lastNearbyPortalLocalCoord;
                     entranceHash = getPortalHash(lastNearbyPortal);
-                    strategyUsed = "Strategy 2 (lastNearbyPortal)";
                 }
             }
 
@@ -386,22 +363,12 @@ public class PortalTraversalTracker {
                     entranceCoord = lastPlayerLocalCoord;
                     // Include position in hash to distinguish different buildings of same type
                     entranceHash = "entrance_" + fromGridId + "_" + entranceName.hashCode() + "_" + lastPlayerLocalCoord.x + "_" + lastPlayerLocalCoord.y;
-                    strategyUsed = "Strategy 3 (fallback to player pos)";
-                } else {
-                    System.out.println("ChunkNav: Strategy 3 skipped - cached action doesn't match expected entrance");
                 }
             }
 
-            System.out.println("ChunkNav: Entrance recording using " + strategyUsed + " coord=" + entranceCoord);
-
             if (entranceCoord != null && entranceHash != null) {
-                System.out.println("ChunkNav: Recording entrance portal " + entranceName + " connects " + fromGridId + " -> " + toGridId);
                 recordPortalConnection(entranceHash, entranceName, fromGridId, toGridId, entranceCoord);
-            } else {
-                System.out.println("ChunkNav: Could not determine entrance portal position for " + entranceName);
             }
-        } else {
-            System.out.println("ChunkNav: No entrance pair mapping for exit portal: " + exitName);
         }
 
         // Clear tracking state after use
@@ -416,16 +383,12 @@ public class PortalTraversalTracker {
      * @param localCoord The local tile coordinate within the chunk (can be null for default center)
      */
     private void recordPortalConnection(String gobHash, String gobName, long fromGridId, long toGridId, Coord localCoord) {
-        System.out.println("ChunkNav: recordPortalConnection(" + gobName + ", " + fromGridId + " -> " + toGridId + ", " + localCoord + ")");
-
         // Update the portal in the source chunk
         ChunkNavData fromChunk = graph.getChunk(fromGridId);
         if (fromChunk == null) {
-            System.out.println("ChunkNav: Chunk " + fromGridId + " not found, creating minimal chunk...");
             // Chunk not recorded yet - try to record it now
             fromChunk = createMinimalChunk(fromGridId);
             if (fromChunk == null) {
-                System.out.println("ChunkNav: Failed to create minimal chunk for " + fromGridId);
                 return;
             }
         }
@@ -448,20 +411,17 @@ public class PortalTraversalTracker {
             portal = new ChunkPortal(gobHash, gobName, type, portalCoord);
             fromChunk.addOrUpdatePortal(portal);
             graph.addChunk(fromChunk); // Re-add to update portal index
-            System.out.println("ChunkNav: Created new portal " + gobName + " in chunk " + fromGridId);
         } else {
             // Update existing portal with new hash and position if provided
             portal.gobHash = gobHash;  // Update hash in case it was a synthetic one
             if (localCoord != null) {
                 portal.localCoord = portalCoord;
             }
-            System.out.println("ChunkNav: Updated existing portal " + gobName + " in chunk " + fromGridId);
         }
 
         // Update the connection
         portal.connectsToGridId = toGridId;
         portal.lastTraversed = System.currentTimeMillis();
-        System.out.println("ChunkNav: Portal " + gobName + " now connects to " + toGridId);
 
         // Also notify recorder
         recorder.recordPortalTraversal(gobHash, fromGridId, toGridId);
@@ -732,7 +692,6 @@ public class PortalTraversalTracker {
         }
 
         if (closestPortal != null) {
-            System.out.println("ChunkNav: findNearbyPortal found " + closestPortal.ngob.name + " at dist=" + closestDist);
             return closestPortal;
         }
 
