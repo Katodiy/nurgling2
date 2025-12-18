@@ -29,7 +29,8 @@ public class PortalTraversalTracker {
     private long lastGridId = -1;
     private Gob lastNearbyPortal = null;
     private Coord lastNearbyPortalLocalCoord = null;  // Cached local coord of lastNearbyPortal
-    private Coord lastPlayerLocalCoord = null;  // Player's local coord in current grid (cached before portal traversal)
+    private Coord lastPlayerLocalCoord = null;  // Player's local coord in PREVIOUS grid (preserved across grid change)
+    private Coord previousTickPlayerLocalCoord = null;  // Player position from previous tick (before any grid change)
     private long lastCheckTime = 0;
 
     // Explicitly tracked portal (set when we know which portal was clicked)
@@ -165,16 +166,21 @@ public class PortalTraversalTracker {
 
         // Check for grid change
         if (lastGridId != -1 && currentGridId != lastGridId) {
-            // Grid changed! Use the PREVIOUS lastPlayerLocalCoord (from before the change)
+            // Grid changed! Use previousTickPlayerLocalCoord - the player's position from BEFORE the change
+            // This is the position they were standing at when they clicked the door
             onGridChanged(lastGridId, currentGridId, player);
         }
 
         // Update tracking state AFTER handling grid change
         lastGridId = currentGridId;
-        // Only update lastPlayerLocalCoord if we got a valid position for the current grid
-        // This ensures we always have the player's position in lastGridId's coordinate space
+
+        // Chain the local coords: current -> previous -> lastPlayer
+        // This ensures we always have the position from 1-2 ticks ago when grid change is detected
         if (currentPlayerLocalCoord != null) {
-            lastPlayerLocalCoord = currentPlayerLocalCoord;
+            // Save current tick position as the "previous tick" for next time
+            // And save previous tick as "last player" for grid change detection
+            lastPlayerLocalCoord = previousTickPlayerLocalCoord;
+            previousTickPlayerLocalCoord = currentPlayerLocalCoord;
         }
 
         // Track nearby portals - use PLAYER's current position as the access point
@@ -368,10 +374,11 @@ public class PortalTraversalTracker {
         // Use provided localCoord or default to center
         Coord portalCoord = localCoord != null ? localCoord : new Coord(50, 50);
 
-        // Find or create the portal - check by hash first, then by name
+        // Find or create the portal - check by hash first, then by position
+        // Do NOT use findPortalByName - that causes all buildings with same name to merge
         ChunkPortal portal = fromChunk.findPortal(gobHash);
-        if (portal == null) {
-            portal = fromChunk.findPortalByName(gobName);
+        if (portal == null && portalCoord != null) {
+            portal = fromChunk.findPortalByPosition(portalCoord, 3);
         }
 
         if (portal == null) {
@@ -671,5 +678,6 @@ public class PortalTraversalTracker {
         lastNearbyPortal = null;
         lastNearbyPortalLocalCoord = null;
         lastPlayerLocalCoord = null;
+        previousTickPlayerLocalCoord = null;
     }
 }

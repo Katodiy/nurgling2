@@ -204,15 +204,35 @@ public class ChunkNavData {
     }
 
     /**
-     * Add or update a portal. Updates existing portal with same hash OR same name.
+     * Find a portal by its position (localCoord).
+     * Two portals are considered the same if they're within a few tiles of each other.
+     */
+    public ChunkPortal findPortalByPosition(Coord localCoord, int tolerance) {
+        if (localCoord == null) return null;
+        for (ChunkPortal portal : portals) {
+            if (portal.localCoord != null) {
+                int dx = Math.abs(portal.localCoord.x - localCoord.x);
+                int dy = Math.abs(portal.localCoord.y - localCoord.y);
+                if (dx <= tolerance && dy <= tolerance) {
+                    return portal;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Add or update a portal. Updates existing portal with same hash OR same position.
+     * Each building at a different position is a separate portal entry.
      * Preserves connectsToGridId if the existing portal has a valid connection.
      */
     public void addOrUpdatePortal(ChunkPortal portal) {
-        // First try to find by hash
+        // First try to find by hash (exact match)
         ChunkPortal existing = findPortal(portal.gobHash);
-        // If not found by hash, try by name (to avoid duplicates with different hashes)
-        if (existing == null) {
-            existing = findPortalByName(portal.gobName);
+        // If not found by hash, try by position (portals at same location are the same building)
+        // This handles cases where gobHash changes but building is still there
+        if (existing == null && portal.localCoord != null) {
+            existing = findPortalByPosition(portal.localCoord, 3); // 3 tile tolerance
         }
         if (existing != null) {
             // Preserve existing connection if new portal doesn't have one
