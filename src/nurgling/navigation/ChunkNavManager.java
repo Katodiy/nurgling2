@@ -13,6 +13,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 import static nurgling.navigation.ChunkNavConfig.*;
 
@@ -38,6 +39,10 @@ public class ChunkNavManager {
     private long lastRecordTime = 0;
     private static final long RECORD_THROTTLE_MS = 2000; // Record visible grids every 2 seconds
 
+    // Background thread for recording (to avoid FPS drops)
+    private ExecutorService recordingExecutor;
+    private volatile boolean recordingInProgress = false;
+
     // Singleton instance
     private static ChunkNavManager instance;
 
@@ -46,6 +51,14 @@ public class ChunkNavManager {
         this.recorder = new ChunkNavRecorder(graph);
         this.planner = new ChunkNavPlanner(graph);
         this.portalTracker = new PortalTraversalTracker(graph, recorder);
+
+        // Create single-thread executor for background recording
+        this.recordingExecutor = Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r, "ChunkNav-Recorder");
+            t.setDaemon(true);
+            t.setPriority(Thread.MIN_PRIORITY); // Low priority to not affect game
+            return t;
+        });
 
         // Register shutdown hook to save on exit
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -95,6 +108,7 @@ public class ChunkNavManager {
 
     /**
      * Called when a grid becomes visible.
+     * Recording happens in background thread to avoid FPS drops.
      */
     public void onGridLoaded(MCache.Grid grid) {
         if (grid == null) return;
@@ -103,13 +117,16 @@ public class ChunkNavManager {
             return;
         }
 
-        try {
-            recorder.recordGrid(grid);
-            // Always save (throttled) since we now re-sample walkability each time
-            saveThrottled();
-        } catch (Exception e) {
-            // Ignore recording errors
-        }
+        // Submit to background thread
+        recordingExecutor.submit(() -> {
+            try {
+                recorder.recordGrid(grid);
+                // Always save (throttled) since we now re-sample walkability each time
+                saveThrottled();
+            } catch (Exception e) {
+                // Ignore recording errors
+            }
+        });
     }
 
     /**
@@ -136,21 +153,51 @@ public class ChunkNavManager {
     /**
      * Record all currently visible grids.
      * This catches grids that were already loaded when player walks through them.
+     * Runs in a background thread to avoid FPS drops.
      */
     private void recordVisibleGrids() {
+        // Skip if recording is already in progress
+        if (recordingInProgress) {
+            return;
+        }
+
+        // Capture grid data on main thread (quick), then process in background
         try {
             MCache mcache = NUtils.getGameUI().map.glob.map;
             if (mcache == null) return;
 
+            // Capture list of grids to record (quick operation on main thread)
+            List<MCache.Grid> gridsToRecord = new ArrayList<>();
             synchronized (mcache.grids) {
                 for (MCache.Grid grid : mcache.grids.values()) {
                     if (grid != null && grid.ul != null) {
-                        recorder.recordGrid(grid);
+                        gridsToRecord.add(grid);
                     }
                 }
             }
-            saveThrottled();
+
+            if (gridsToRecord.isEmpty()) return;
+
+            // Submit recording task to background thread
+            recordingInProgress = true;
+            recordingExecutor.submit(() -> {
+                try {
+                    for (MCache.Grid grid : gridsToRecord) {
+                        try {
+                            recorder.recordGrid(grid);
+                        } catch (Exception e) {
+                            // Ignore individual grid errors
+                        }
+                    }
+                    saveThrottled();
+                } catch (Exception e) {
+                    // Ignore background recording errors
+                } finally {
+                    recordingInProgress = false;
+                }
+            });
         } catch (Exception e) {
+            recordingInProgress = false;
             // Ignore - game state may not be ready
         }
     }
@@ -422,6 +469,18 @@ public class ChunkNavManager {
         if (initialized) {
             save();
             initialized = false;
+        }
+
+        // Shutdown recording executor
+        if (recordingExecutor != null) {
+            recordingExecutor.shutdown();
+            try {
+                if (!recordingExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+                    recordingExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                recordingExecutor.shutdownNow();
+            }
         }
     }
 
