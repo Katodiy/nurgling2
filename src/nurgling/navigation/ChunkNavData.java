@@ -222,17 +222,38 @@ public class ChunkNavData {
     }
 
     /**
-     * Add or update a portal. Updates existing portal with same hash OR same position.
+     * Find a portal by its position AND name.
+     * Only returns a portal if BOTH the position matches (within tolerance) AND the name matches.
+     * This prevents different portal types at the same location from being merged.
+     */
+    public ChunkPortal findPortalByPositionAndName(Coord localCoord, String gobName, int tolerance) {
+        if (localCoord == null || gobName == null) return null;
+        for (ChunkPortal portal : portals) {
+            if (portal.localCoord != null && gobName.equals(portal.gobName)) {
+                int dx = Math.abs(portal.localCoord.x - localCoord.x);
+                int dy = Math.abs(portal.localCoord.y - localCoord.y);
+                if (dx <= tolerance && dy <= tolerance) {
+                    return portal;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Add or update a portal. Updates existing portal with same hash OR same position+name.
      * Each building at a different position is a separate portal entry.
+     * Different portal types at the same location (e.g., cellardoor and stonemansion-door) are separate.
      * Preserves connectsToGridId if the existing portal has a valid connection.
      */
     public void addOrUpdatePortal(ChunkPortal portal) {
         // First try to find by hash (exact match)
         ChunkPortal existing = findPortal(portal.gobHash);
-        // If not found by hash, try by position (portals at same location are the same building)
+        // If not found by hash, try by position AND name
         // This handles cases where gobHash changes but building is still there
-        if (existing == null && portal.localCoord != null) {
-            existing = findPortalByPosition(portal.localCoord, 3); // 3 tile tolerance
+        // Using name ensures we don't merge different portal types at same location
+        if (existing == null && portal.localCoord != null && portal.gobName != null) {
+            existing = findPortalByPositionAndName(portal.localCoord, portal.gobName, 3); // 3 tile tolerance
         }
         if (existing != null) {
             // Preserve existing connection if new portal doesn't have one

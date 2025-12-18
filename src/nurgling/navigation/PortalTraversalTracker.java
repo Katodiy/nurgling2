@@ -374,11 +374,12 @@ public class PortalTraversalTracker {
         // Use provided localCoord or default to center
         Coord portalCoord = localCoord != null ? localCoord : new Coord(50, 50);
 
-        // Find or create the portal - check by hash first, then by position
+        // Find or create the portal - check by hash first, then by position+name
         // Do NOT use findPortalByName - that causes all buildings with same name to merge
+        // Use position+name to avoid merging different portal types at same location (e.g., cellardoor vs stonemansion-door)
         ChunkPortal portal = fromChunk.findPortal(gobHash);
-        if (portal == null && portalCoord != null) {
-            portal = fromChunk.findPortalByPosition(portalCoord, 3);
+        if (portal == null && portalCoord != null && gobName != null) {
+            portal = fromChunk.findPortalByPositionAndName(portalCoord, gobName, 3);
         }
 
         if (portal == null) {
