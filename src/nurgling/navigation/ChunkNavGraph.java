@@ -302,9 +302,17 @@ public class ChunkNavGraph {
     }
 
     /**
-     * Determine direction from one chunk to another using worldTileOrigin.
+     * Determine direction from one chunk to another.
+     * Uses stored neighbor relationships (persistent) or falls back to session-based coordinates.
      */
     private Direction getDirectionTo(ChunkNavData from, ChunkNavData to) {
+        // Check stored neighbor relationships first (persistent across sessions)
+        if (from.neighborNorth == to.gridId) return Direction.NORTH;
+        if (from.neighborSouth == to.gridId) return Direction.SOUTH;
+        if (from.neighborEast == to.gridId) return Direction.EAST;
+        if (from.neighborWest == to.gridId) return Direction.WEST;
+
+        // Fallback to session-based worldTileOrigin (only works within same session)
         if (from.worldTileOrigin == null || to.worldTileOrigin == null) return null;
 
         int dx = to.worldTileOrigin.x - from.worldTileOrigin.x;
@@ -343,34 +351,50 @@ public class ChunkNavGraph {
 
     /**
      * Update connections between chunks after recording.
-     * Uses worldTileOrigin for reliable neighbor detection across sessions.
+     * Uses stored neighbor relationships (persistent) or falls back to session-based coordinates.
      * Only connects chunks on the same layer (surface, inside, cellar, etc.)
      */
     public void updateConnections(ChunkNavData chunk) {
-        if (chunk.worldTileOrigin == null) return;
+        // Check neighbors by stored relationships first (persistent across sessions)
+        long[] neighborIds = {chunk.neighborNorth, chunk.neighborSouth, chunk.neighborEast, chunk.neighborWest};
 
-        // Find adjacent chunks by worldTileOrigin
-        // Adjacent chunks have worldTileOrigin offset by exactly CHUNK_SIZE (100 tiles)
-        for (ChunkNavData other : chunks.values()) {
-            if (other.gridId == chunk.gridId || other.worldTileOrigin == null) continue;
+        for (long neighborId : neighborIds) {
+            if (neighborId == -1) continue;
+
+            ChunkNavData other = chunks.get(neighborId);
+            if (other == null) continue;
 
             // Only connect chunks on the same layer
-            // Different layers (surface, inside, cellar) can only connect via portals
             if (!chunk.layer.equals(other.layer)) continue;
 
-            int dx = other.worldTileOrigin.x - chunk.worldTileOrigin.x;
-            int dy = other.worldTileOrigin.y - chunk.worldTileOrigin.y;
+            // Check if they can connect (have walkable crossing)
+            EdgeCrossing crossing = findBestCrossing(chunk, other);
+            if (crossing != null) {
+                chunk.connectedChunks.add(other.gridId);
+                other.connectedChunks.add(chunk.gridId);
+            }
+        }
 
-            // Check if chunks are adjacent (exactly 100 tiles apart in one direction, 0 in other)
-            boolean isAdjacent = (Math.abs(dx) == CHUNK_SIZE && dy == 0) ||
-                                 (dx == 0 && Math.abs(dy) == CHUNK_SIZE);
+        // Fallback: also check session-based coordinates for chunks without neighbor data
+        if (chunk.worldTileOrigin != null) {
+            for (ChunkNavData other : chunks.values()) {
+                if (other.gridId == chunk.gridId) continue;
+                if (chunk.connectedChunks.contains(other.gridId)) continue; // Already connected
+                if (!chunk.layer.equals(other.layer)) continue;
+                if (other.worldTileOrigin == null) continue;
 
-            if (isAdjacent) {
-                // Check if they can connect (have walkable crossing)
-                EdgeCrossing crossing = findBestCrossing(chunk, other);
-                if (crossing != null) {
-                    chunk.connectedChunks.add(other.gridId);
-                    other.connectedChunks.add(chunk.gridId);
+                int dx = other.worldTileOrigin.x - chunk.worldTileOrigin.x;
+                int dy = other.worldTileOrigin.y - chunk.worldTileOrigin.y;
+
+                boolean isAdjacent = (Math.abs(dx) == CHUNK_SIZE && dy == 0) ||
+                                     (dx == 0 && Math.abs(dy) == CHUNK_SIZE);
+
+                if (isAdjacent) {
+                    EdgeCrossing crossing = findBestCrossing(chunk, other);
+                    if (crossing != null) {
+                        chunk.connectedChunks.add(other.gridId);
+                        other.connectedChunks.add(chunk.gridId);
+                    }
                 }
             }
         }

@@ -18,8 +18,15 @@ public class ChunkNavData {
     public float confidence;        // 0.0 - 1.0, decays over time
 
     // Grid position (for spatial queries)
-    public Coord gridCoord;         // Grid coordinate (grid.ul / 100)
-    public Coord worldTileOrigin;   // Actual world tile origin (grid.ul) - persists across sessions
+    public Coord gridCoord;         // Grid coordinate (grid.gc) - SESSION-BASED, unreliable across sessions
+    public Coord worldTileOrigin;   // Actual world tile origin (grid.ul) - SESSION-BASED, unreliable across sessions
+
+    // Neighbor relationships (PERSISTENT - grid IDs never change)
+    // These are discovered when grids are loaded together and we can see their spatial relationship
+    public long neighborNorth = -1;  // Grid ID of neighbor to the north (gc.y - 1)
+    public long neighborSouth = -1;  // Grid ID of neighbor to the south (gc.y + 1)
+    public long neighborEast = -1;   // Grid ID of neighbor to the east (gc.x + 1)
+    public long neighborWest = -1;   // Grid ID of neighbor to the west (gc.x - 1)
 
     // Layer identifier - different physical spaces that may share coordinates
     // "surface" = outside world (default), "inside" = building interior, "cellar" = underground cellar, etc.
@@ -312,6 +319,12 @@ public class ChunkNavData {
             obj.put("worldTileOriginY", worldTileOrigin.y);
         }
 
+        // Neighbor relationships (persistent)
+        if (neighborNorth != -1) obj.put("neighborNorth", neighborNorth);
+        if (neighborSouth != -1) obj.put("neighborSouth", neighborSouth);
+        if (neighborEast != -1) obj.put("neighborEast", neighborEast);
+        if (neighborWest != -1) obj.put("neighborWest", neighborWest);
+
         // Layer
         obj.put("layer", layer);
 
@@ -384,6 +397,12 @@ public class ChunkNavData {
         if (obj.has("worldTileOriginX") && obj.has("worldTileOriginY")) {
             data.worldTileOrigin = new Coord(obj.getInt("worldTileOriginX"), obj.getInt("worldTileOriginY"));
         }
+
+        // Neighbor relationships (persistent)
+        data.neighborNorth = obj.optLong("neighborNorth", -1);
+        data.neighborSouth = obj.optLong("neighborSouth", -1);
+        data.neighborEast = obj.optLong("neighborEast", -1);
+        data.neighborWest = obj.optLong("neighborWest", -1);
 
         // Layer (default to "surface" for backwards compatibility)
         data.layer = obj.optString("layer", "surface");

@@ -63,6 +63,7 @@ public class ChunkNavRecorder {
             detectPortals(grid, chunk);
             detectLayer(grid, chunk);
             updateEdgeWalkability(chunk);
+            discoverNeighbors(grid, chunk);
             chunk.markUpdated();
 
             graph.addChunk(chunk);
@@ -151,6 +152,47 @@ public class ChunkNavRecorder {
             }
         }
 
+    }
+
+    /**
+     * Discover and record neighbor relationships by examining all currently loaded grids.
+     * When multiple grids are loaded, we can see their spatial relationship through gc coordinates.
+     * These relationships are persistent because grid IDs never change.
+     */
+    private void discoverNeighbors(MCache.Grid grid, ChunkNavData chunk) {
+        try {
+            MCache mcache = getMCache();
+            if (mcache == null) return;
+
+            Coord myGc = grid.gc;
+
+            synchronized (mcache.grids) {
+                for (MCache.Grid other : mcache.grids.values()) {
+                    if (other.id == grid.id) continue;
+
+                    Coord otherGc = other.gc;
+                    int dx = otherGc.x - myGc.x;
+                    int dy = otherGc.y - myGc.y;
+
+                    // Check if this grid is an immediate neighbor (exactly 1 grid apart)
+                    if (dx == 0 && dy == -1) {
+                        // Other is to the north
+                        chunk.neighborNorth = other.id;
+                    } else if (dx == 0 && dy == 1) {
+                        // Other is to the south
+                        chunk.neighborSouth = other.id;
+                    } else if (dx == 1 && dy == 0) {
+                        // Other is to the east
+                        chunk.neighborEast = other.id;
+                    } else if (dx == -1 && dy == 0) {
+                        // Other is to the west
+                        chunk.neighborWest = other.id;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore errors during neighbor discovery
+        }
     }
 
     /**

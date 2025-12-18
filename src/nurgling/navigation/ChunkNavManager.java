@@ -231,9 +231,79 @@ public class ChunkNavManager {
             return null;
         }
 
+        // Export path visualization
+        exportPathVisualization(path, area);
+
         // Note: path.isEmpty() is valid when already in the target chunk
         // The executor handles this case by navigating directly to the area
         return path;
+    }
+
+    /**
+     * Export path visualization data to JSON file for the Python visualizer.
+     */
+    private void exportPathVisualization(ChunkPath path, NArea area) {
+        if (path == null) return;
+
+        System.out.println("ChunkNav: Exporting path visualization - segments=" + path.segments.size() + " waypoints=" + path.waypoints.size());
+        for (int i = 0; i < path.segments.size(); i++) {
+            ChunkPath.PathSegment seg = path.segments.get(i);
+            System.out.println("  Segment " + i + ": gridId=" + seg.gridId + " steps=" + seg.steps.size());
+        }
+
+        try {
+            JSONObject pathJson = new JSONObject();
+            pathJson.put("timestamp", System.currentTimeMillis());
+            pathJson.put("targetArea", area != null ? area.name : "unknown");
+            pathJson.put("totalCost", path.totalCost);
+            pathJson.put("confidence", path.confidence);
+            pathJson.put("requiresPortals", path.requiresPortals);
+
+            // Export waypoints
+            JSONArray waypointsArray = new JSONArray();
+            for (ChunkPath.ChunkWaypoint wp : path.waypoints) {
+                JSONObject wpJson = new JSONObject();
+                wpJson.put("gridId", wp.gridId);
+                wpJson.put("localX", wp.localCoord != null ? wp.localCoord.x : 50);
+                wpJson.put("localY", wp.localCoord != null ? wp.localCoord.y : 50);
+                wpJson.put("type", wp.type.name());
+                if (wp.portal != null) {
+                    wpJson.put("portalName", wp.portal.gobName);
+                    wpJson.put("portalType", wp.portal.type.name());
+                }
+                waypointsArray.put(wpJson);
+            }
+            pathJson.put("waypoints", waypointsArray);
+
+            // Export segments with tile-level detail
+            JSONArray segmentsArray = new JSONArray();
+            for (ChunkPath.PathSegment seg : path.segments) {
+                JSONObject segJson = new JSONObject();
+                segJson.put("gridId", seg.gridId);
+                segJson.put("worldTileOriginX", seg.worldTileOrigin != null ? seg.worldTileOrigin.x : 0);
+                segJson.put("worldTileOriginY", seg.worldTileOrigin != null ? seg.worldTileOrigin.y : 0);
+                segJson.put("type", seg.type.name());
+
+                // Export tile steps
+                JSONArray stepsArray = new JSONArray();
+                for (ChunkPath.TileStep step : seg.steps) {
+                    JSONObject stepJson = new JSONObject();
+                    stepJson.put("localX", step.localCoord.x);
+                    stepJson.put("localY", step.localCoord.y);
+                    stepsArray.put(stepJson);
+                }
+                segJson.put("steps", stepsArray);
+                segmentsArray.put(segJson);
+            }
+            pathJson.put("segments", segmentsArray);
+
+            // Write to file next to chunknav.nurgling.json
+            Path pathFile = getStoragePath().getParent().resolve("chunknav_path.json");
+            Files.write(pathFile, pathJson.toString(2).getBytes(StandardCharsets.UTF_8));
+
+        } catch (Exception e) {
+            // Ignore export errors
+        }
     }
 
     /**
