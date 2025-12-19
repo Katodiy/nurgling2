@@ -465,7 +465,7 @@ public class NEquipory extends Equipory
     @Override
     public void draw(GOut g) {
         super.draw(g);
-        Coord textCoord = new Coord(sz.x - percExpText.getWidth() - UI.scale(65), UI.scale(3));
+        Coord textCoord = new Coord(sz.x - percExpText.getWidth() - UI.scale(85), UI.scale(3));
         if (percExpText != null) {
 
             g.image(eye, textCoord, UI.scale(20,20));
