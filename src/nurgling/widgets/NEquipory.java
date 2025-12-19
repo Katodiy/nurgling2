@@ -44,6 +44,21 @@ public class NEquipory extends Equipory
         initToggleButtons();
     }
 
+    // Custom offset for STORE_HAT slot to avoid overlapping HEAD slot's button
+    private static final int STORE_HAT_OFFSET = UI.scale(20);
+
+    /**
+     * Gets the display coordinate for a slot, applying any custom offsets
+     */
+    private Coord getSlotDisplayCoord(int slotIdx) {
+        Coord baseCoord = ecoords[slotIdx];
+        // Move STORE_HAT slot to the right to avoid covering HEAD's toggle button
+        if (slotIdx == Slots.STORE_HAT.idx) {
+            return new Coord(baseCoord.x + STORE_HAT_OFFSET, baseCoord.y);
+        }
+        return baseCoord;
+    }
+
     /**
      * Initializes toggle buttons for each equipment slot
      */
@@ -54,19 +69,19 @@ public class NEquipory extends Equipory
 
         for (int i = 0; i < ecoords.length; i++) {
             final int slotIdx = i;
-            Coord slotCoord = ecoords[i];
+            Coord slotCoord = getSlotDisplayCoord(i);
 
-            // Determine if this is a right column slot by checking if x > slot width
-            // Left column has x=0, right column has x > invsq.sz().x
+            // Determine if this is a right column slot by checking x position
+            // Left column has x=0, right column has x > inventory slot width
             boolean isRightColumn = slotCoord.x > invsq.sz().x;
 
             // Calculate button position - center vertically next to the slot with extra spacing
             Coord btnPos;
             if (isRightColumn) {
-                // Right column: button on left side of slot (move further left)
+                // Right column: button on left side of slot
                 btnPos = new Coord(slotCoord.x - btnSize - spacing, slotCoord.y + (invsq.sz().y - btnSize) / 2);
             } else {
-                // Left column: button on right side of slot (move further right)
+                // Left column: button on right side of slot
                 btnPos = new Coord(slotCoord.x + invsq.sz().x + spacing, slotCoord.y + (invsq.sz().y - btnSize) / 2);
             }
 
@@ -306,7 +321,7 @@ public class NEquipory extends Equipory
             WItem[] v = new NWItem[args.length];
             for ( int i = 0 ; i < args.length ; i++ ) {
                 int ep = ( Integer ) args[i];
-                v[i] = quickslots[ep] = add ( new NWItem(g), ecoords[ep].add ( 1, 1 ) );
+                v[i] = quickslots[ep] = add ( new NWItem(g), getSlotDisplayCoord(ep).add ( 1, 1 ) );
             }
             wmap.put ( g, Arrays.asList ( v.clone () ) );
             
@@ -409,6 +424,40 @@ public class NEquipory extends Equipory
         } else if ("inventory".equals(action)) {
             // Transfer to inventory
             item.wdgmsg("transfer", witem.c, 1);
+        }
+    }
+
+    @Override
+    public int epat(Coord c) {
+        for(int i = 0; i < ecoords.length; i++) {
+            if(c.isect(getSlotDisplayCoord(i), invsq.sz()))
+                return(i);
+        }
+        return(-1);
+    }
+
+    @Override
+    public void drawslots(GOut g) {
+        int slots = 0;
+        GameUI gui = getparent(GameUI.class);
+        if((gui != null) && (gui.vhand != null)) {
+            try {
+                SlotInfo si = ItemInfo.find(SlotInfo.class, gui.vhand.item.info());
+                if(si != null)
+                    slots = si.slots();
+            } catch(Loading l) {
+            }
+        }
+        for(int i = 0; i < ecoords.length; i++) {
+            Coord slotCoord = getSlotDisplayCoord(i);
+            if((slots & (1 << i)) != 0) {
+                g.chcolor(255, 255, 0, 64);
+                g.frect(slotCoord.add(1, 1), invsq.sz().sub(2, 2));
+                g.chcolor();
+            }
+            g.image(invsq, slotCoord);
+            if(ebgs[i] != null)
+                g.image(ebgs[i], slotCoord);
         }
     }
 
