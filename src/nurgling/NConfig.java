@@ -165,7 +165,8 @@ public class NConfig
         amountOverlay,
         studyInfoOverlay,
         progressOverlay,
-        volumeOverlay
+        volumeOverlay,
+        equipProxySlots
     }
 
     public enum BBDisplayMode
@@ -465,6 +466,13 @@ public class NConfig
         volumeDefaults.defaultColor = new java.awt.Color(65, 255, 115);
         volumeDefaults.showBackground = true;
         conf.put(Key.volumeOverlay, volumeDefaults);
+
+        // Equipment proxy slots - default to Left Hand, Right Hand, Belt
+        ArrayList<Integer> defaultEquipProxySlots = new ArrayList<>();
+        defaultEquipProxySlots.add(6);  // HAND_LEFT
+        defaultEquipProxySlots.add(7);  // HAND_RIGHT
+        defaultEquipProxySlots.add(5);  // BELT
+        conf.put(Key.equipProxySlots, defaultEquipProxySlots);
     }
 
 
@@ -793,6 +801,11 @@ public class NConfig
                     }
                 }
                 else if (jobj instanceof String) {
+                    res.addAll(objs);
+                    break;
+                }
+                else if (jobj instanceof Number) {
+                    // Handle arrays of numbers (integers, longs, etc.)
                     res.addAll(objs);
                     break;
                 }

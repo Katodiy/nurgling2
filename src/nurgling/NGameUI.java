@@ -84,7 +84,41 @@ public class NGameUI extends GameUI
     public String getGenus() {
         return genus;
     }
-    
+
+    /**
+     * Gets equipment proxy slots from config and converts to Slots array.
+     * Handles both Integer and Long types that may come from JSON parsing.
+     */
+    public static NEquipory.Slots[] getEquipProxySlotsFromConfig() {
+        Object configValue = NConfig.get(NConfig.Key.equipProxySlots);
+
+        // Convert config value to list of integers, handling various types
+        ArrayList<Integer> slotIndices = new ArrayList<>();
+        if (configValue instanceof ArrayList) {
+            for (Object item : (ArrayList<?>) configValue) {
+                if (item instanceof Number) {
+                    slotIndices.add(((Number) item).intValue());
+                }
+            }
+        }
+
+        if (slotIndices.isEmpty()) {
+            // Return default slots if config is empty
+            return new NEquipory.Slots[]{NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT, NEquipory.Slots.BELT};
+        }
+
+        ArrayList<NEquipory.Slots> slots = new ArrayList<>();
+        for (Integer idx : slotIndices) {
+            for (NEquipory.Slots slot : NEquipory.Slots.values()) {
+                if (slot.idx == idx) {
+                    slots.add(slot);
+                    break;
+                }
+            }
+        }
+        return slots.toArray(new NEquipory.Slots[0]);
+    }
+
     public NGameUI(String chrid, long plid, String genus, NUI nui)
     {
         super(chrid, plid, genus, nui);
@@ -121,7 +155,8 @@ public class NGameUI extends GameUI
             add(new NDraggableWidget(calendar, "Calendar", UI.scale(400,90)), calPos);
         }
         add(new NDraggableWidget(alarmWdg = new NAlarmWdg(),"alarm",NStyle.alarm[0].sz().add(NDraggableWidget.delta)));
-        add(new NDraggableWidget(nep = new NEquipProxy(NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT, NEquipory.Slots.BELT), "EquipProxy",  UI.scale(138, 55)));
+        nep = new NEquipProxy(getEquipProxySlotsFromConfig());
+        add(new NDraggableWidget(nep, "EquipProxy", nep.sz.add(NDraggableWidget.delta)));
         add(new NDraggableWidget(nbp = new NBeltProxy(), "BeltProxy", UI.scale(825, 55)));
         for(int i = 0; i<(Integer)NConfig.get(NConfig.Key.numbelts); i++)
         {
