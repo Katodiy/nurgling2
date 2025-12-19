@@ -243,10 +243,12 @@ public class NEquipory extends Equipory
         CAPE(14),      //14: Cape
         BOOTS(15),     //15: Shoes
         STORE_HAT(16), //16: Hat from store
-        EYES(17),      //17: Eyes
+        EYES(17),      //17: Eyes/Mask
         MOUTH(18),     //18: Mouth
         LFOOT(19),     //19: Left Foot
-        RFOOT(20);     //20: Right Foot
+        RFOOT(20),     //20: Right Foot
+        SHOULDER(21),  //21: Shoulder
+        COAT(22);      //22: Coat
 
         public final int idx;
         Slots(int idx) {
