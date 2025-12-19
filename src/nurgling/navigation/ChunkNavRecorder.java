@@ -50,6 +50,9 @@ public class ChunkNavRecorder {
             ChunkNavData existing = graph.getChunk(grid.id);
             ChunkNavData chunk;
 
+            System.out.println("ChunkNav recordGrid: id=" + grid.id + " ul=" + grid.ul +
+                " existing=" + (existing != null ? "YES" : "NO"));
+
             if (existing != null) {
                 // Merge new observations with existing data
                 chunk = existing;
@@ -83,46 +86,80 @@ public class ChunkNavRecorder {
 
     /**
      * Merge new walkability observations with existing chunk data.
-     * Re-samples all tiles to update with current gob positions.
+     * Only records tiles within the player's visibility range (~40 tiles radius).
+     * Tiles outside visibility remain unobserved (blocked by default).
      */
     private void mergeWalkability(MCache.Grid grid, ChunkNavData chunk) {
         MCache mcache = getMCache();
         if (mcache == null) return;
 
-        // Build set of tiles blocked by gobs
+        // Get player's tile position
+        Coord playerTile = getPlayerTile();
+        if (playerTile == null) return;
+
+        // Build set of tiles blocked by gobs (only includes visible gobs)
         Set<Long> gobBlockedTiles = getGobBlockedTiles(grid);
 
-        int updatedToWalkable = 0;
-        int updatedToBlocked = 0;
+        int terrainBlockedCount = 0;
+        int gobBlockedCount = 0;
+        int walkableCount = 0;
+        int skippedCount = 0;
 
         for (int tx = 0; tx < CELLS_PER_EDGE; tx++) {
             for (int ty = 0; ty < CELLS_PER_EDGE; ty++) {
                 // Calculate world tile coordinate
                 Coord worldTile = grid.ul.add(tx, ty);
 
-                // Check terrain and gobs
+                // Skip tiles outside visibility range
+                int dx = Math.abs(worldTile.x - playerTile.x);
+                int dy = Math.abs(worldTile.y - playerTile.y);
+                if (dx > VISIBLE_RADIUS_TILES || dy > VISIBLE_RADIUS_TILES) {
+                    skippedCount++;
+                    continue;  // Leave as unobserved (blocked by default)
+                }
+
+                // Check terrain (deterministic from tile type)
                 boolean terrainBlocked = isTileBlocked(mcache, worldTile);
+
+                // Check gobs
                 long tileKey = ((long) tx << 32) | (ty & 0xFFFFFFFFL);
                 boolean gobBlocked = gobBlockedTiles.contains(tileKey);
-
-                // Determine new walkability (tile-level: only 0 or 2)
-                byte newWalkability = (terrainBlocked || gobBlocked) ? (byte) 2 : (byte) 0;
 
                 // Mark tile as observed
                 chunk.observed[tx][ty] = true;
 
-                // Update walkability
-                byte existing = chunk.walkability[tx][ty];
-                if (newWalkability != existing) {
-                    if (newWalkability == 0) {
-                        updatedToWalkable++;
-                    } else {
-                        updatedToBlocked++;
-                    }
+                // Record what we observe
+                if (terrainBlocked) {
+                    terrainBlockedCount++;
+                    chunk.walkability[tx][ty] = 2;  // Blocked by terrain
+                } else if (gobBlocked) {
+                    gobBlockedCount++;
+                    chunk.walkability[tx][ty] = 2;  // Blocked by gob
+                } else {
+                    walkableCount++;
+                    chunk.walkability[tx][ty] = 0;  // Walkable
                 }
-                chunk.walkability[tx][ty] = newWalkability;
             }
         }
+
+        System.out.println("ChunkNav DEBUG mergeWalkability grid.id=" + grid.id +
+            " terrain=" + terrainBlockedCount + " gob=" + gobBlockedCount +
+            " walkable=" + walkableCount + " skipped=" + skippedCount);
+    }
+
+    /**
+     * Get the player's current tile coordinate.
+     */
+    private Coord getPlayerTile() {
+        try {
+            Gob player = NUtils.player();
+            if (player != null) {
+                return player.rc.floor(MCache.tilesz);
+            }
+        } catch (Exception e) {
+            // Player not available
+        }
+        return null;
     }
 
     /**
@@ -180,11 +217,16 @@ public class ChunkNavRecorder {
 
     /**
      * Sample walkability at tile-level resolution (1 tile per cell).
-     * Samples all tiles in the grid without visibility restrictions.
+     * Only samples tiles within the player's visibility range (~40 tiles radius).
+     * Tiles outside visibility remain unobserved (blocked by default).
      */
     private void sampleWalkability(MCache.Grid grid, ChunkNavData chunk) {
         MCache mcache = getMCache();
         if (mcache == null) return;
+
+        // Get player's tile position
+        Coord playerTile = getPlayerTile();
+        if (playerTile == null) return;
 
         // Build set of tiles blocked by gobs
         Set<Long> gobBlockedTiles = getGobBlockedTiles(grid);
@@ -192,6 +234,7 @@ public class ChunkNavRecorder {
         int terrainBlockedCount = 0;
         int gobBlockedCount = 0;
         int walkableCount = 0;
+        int skippedCount = 0;
 
         // DEBUG: Track floor tile bounds (non-nil tiles)
         int floorMinX = CELLS_PER_EDGE, floorMaxX = 0, floorMinY = CELLS_PER_EDGE, floorMaxY = 0;
@@ -199,12 +242,21 @@ public class ChunkNavRecorder {
         // DEBUG: Log key info
         System.out.println("ChunkNav DEBUG sampleWalkability:");
         System.out.println("  grid.ul=" + grid.ul + " grid.id=" + grid.id);
+        System.out.println("  playerTile=" + playerTile);
         System.out.println("  gobBlockedTiles.size=" + gobBlockedTiles.size());
 
         for (int tx = 0; tx < CELLS_PER_EDGE; tx++) {
             for (int ty = 0; ty < CELLS_PER_EDGE; ty++) {
                 // Calculate world tile coordinate
                 Coord worldTile = grid.ul.add(tx, ty);
+
+                // Skip tiles outside visibility range
+                int dx = Math.abs(worldTile.x - playerTile.x);
+                int dy = Math.abs(worldTile.y - playerTile.y);
+                if (dx > VISIBLE_RADIUS_TILES || dy > VISIBLE_RADIUS_TILES) {
+                    skippedCount++;
+                    continue;  // Leave as unobserved (blocked by default)
+                }
 
                 // Mark as observed
                 chunk.observed[tx][ty] = true;
@@ -239,7 +291,7 @@ public class ChunkNavRecorder {
         }
 
         System.out.println("  Results: terrainBlocked=" + terrainBlockedCount +
-            " gobBlocked=" + gobBlockedCount + " walkable=" + walkableCount);
+            " gobBlocked=" + gobBlockedCount + " walkable=" + walkableCount + " skipped=" + skippedCount);
         int floorTileCount = gobBlockedCount + walkableCount;
         System.out.println("  Floor tiles (non-nil): " + floorTileCount +
             " bounds=(" + floorMinX + "," + floorMinY + ")-(" + floorMaxX + "," + floorMaxY + ")");
@@ -762,7 +814,7 @@ public class ChunkNavRecorder {
 
     /**
      * DEBUG: Dump walkability grid to text file for visualization.
-     * '.' = walkable, '#' = blocked by gob, 'x' = blocked by terrain (nil)
+     * '.' = walkable, '#' = blocked by gob, 'x' = terrain-blocked, '?' = unobserved
      */
     private void dumpWalkabilityGrid(ChunkNavData chunk, long gridId) {
         try {
@@ -798,12 +850,14 @@ public class ChunkNavRecorder {
                 writer.println("World Tile Origin: " + chunk.worldTileOrigin);
                 writer.println();
 
-                // Count stats
-                int walkable = 0, gobBlocked = 0, terrainBlocked = 0;
+                // Count stats including unobserved
+                int walkable = 0, gobBlocked = 0, terrainBlocked = 0, unobserved = 0;
                 int minX = CELLS_PER_EDGE, maxX = 0, minY = CELLS_PER_EDGE, maxY = 0;
                 for (int x = 0; x < CELLS_PER_EDGE; x++) {
                     for (int y = 0; y < CELLS_PER_EDGE; y++) {
-                        if (chunk.walkability[x][y] == 0) {
+                        if (!chunk.observed[x][y]) {
+                            unobserved++;
+                        } else if (chunk.walkability[x][y] == 0) {
                             walkable++;
                             minX = Math.min(minX, x);
                             maxX = Math.max(maxX, x);
@@ -817,7 +871,8 @@ public class ChunkNavRecorder {
                     }
                 }
 
-                writer.println("Total: " + walkable + " walkable, " + gobBlocked + " gob-blocked, " + terrainBlocked + " terrain-blocked");
+                writer.println("Total: " + walkable + " walkable, " + gobBlocked + " gob-blocked, " +
+                    terrainBlocked + " terrain-blocked, " + unobserved + " unobserved");
                 writer.println("Floor tile bounds: (" + floorMinX + "," + floorMinY + ") to (" + floorMaxX + "," + floorMaxY + ")");
                 writer.println("Walkable bounds: (" + minX + "," + minY + ") to (" + maxX + "," + maxY + ")");
                 writer.println();
@@ -829,7 +884,7 @@ public class ChunkNavRecorder {
                     int endX = Math.min(CELLS_PER_EDGE, floorMaxX + 3);
                     int endY = Math.min(CELLS_PER_EDGE, floorMaxY + 3);
 
-                    writer.println("Legend: . = walkable, # = gob-blocked, x = terrain-blocked (nil)");
+                    writer.println("Legend: . = walkable, # = gob-blocked, x = terrain-blocked, ? = unobserved");
                     writer.println("Showing tiles " + padX + "-" + (endX-1) + " x " + padY + "-" + (endY-1) + ":");
                     writer.println();
 
@@ -844,7 +899,9 @@ public class ChunkNavRecorder {
                         StringBuilder sb = new StringBuilder();
                         sb.append(String.format("%3d ", y));
                         for (int x = padX; x < endX; x++) {
-                            if (chunk.walkability[x][y] == 0) {
+                            if (!chunk.observed[x][y]) {
+                                sb.append('?');  // Unobserved (blocked by default)
+                            } else if (chunk.walkability[x][y] == 0) {
                                 sb.append('.');  // Walkable
                             } else if (isFloorTile[x][y]) {
                                 sb.append('#');  // Gob-blocked floor

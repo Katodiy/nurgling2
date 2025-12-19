@@ -61,6 +61,20 @@ public class ChunkNavData {
         this.confidence = INITIAL_CONFIDENCE;
         this.lastUpdated = System.currentTimeMillis();
         initializeEdges();
+        initializeWalkability();
+    }
+
+    /**
+     * Initialize walkability to blocked (2) by default.
+     * Tiles are only marked walkable (0) when actually observed as walkable.
+     * This prevents unvisited tiles from being treated as walkable.
+     */
+    private void initializeWalkability() {
+        for (int x = 0; x < CELLS_PER_EDGE; x++) {
+            for (int y = 0; y < CELLS_PER_EDGE; y++) {
+                walkability[x][y] = 2;  // Blocked until observed
+            }
+        }
     }
 
     public ChunkNavData(long gridId) {
