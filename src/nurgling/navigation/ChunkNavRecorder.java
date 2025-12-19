@@ -86,7 +86,7 @@ public class ChunkNavRecorder {
 
     /**
      * Merge new walkability observations with existing chunk data.
-     * Only records tiles within the player's visibility range (~40 tiles radius).
+     * Only records tiles within gob visibility range (~25 tiles radius).
      * Tiles outside visibility remain unobserved (blocked by default).
      */
     private void mergeWalkability(MCache.Grid grid, ChunkNavData chunk) {
@@ -211,13 +211,15 @@ public class ChunkNavRecorder {
         return grid.ul.div(CHUNK_SIZE);
     }
 
-    // Visible area is approximately 81x81 tiles centered on player (9 grids * 100 units / 11 tilesz)
-    // Use a conservative radius in tiles for walkability sampling
-    private static final int VISIBLE_RADIUS_TILES = 40;
+    // Gob visibility range is smaller than tile visibility range (~25-30 tiles vs ~40 tiles)
+    // We must use the GOB visibility range, not tile visibility, to ensure we only
+    // mark tiles as walkable when we can actually see all gobs on them.
+    // Using 25 tiles to be conservative - if gobs aren't visible, don't trust the tile.
+    private static final int VISIBLE_RADIUS_TILES = 25;
 
     /**
      * Sample walkability at tile-level resolution (1 tile per cell).
-     * Only samples tiles within the player's visibility range (~40 tiles radius).
+     * Only samples tiles within gob visibility range (~25 tiles radius).
      * Tiles outside visibility remain unobserved (blocked by default).
      */
     private void sampleWalkability(MCache.Grid grid, ChunkNavData chunk) {
@@ -441,10 +443,11 @@ public class ChunkNavRecorder {
         if (name == null) return false;
         String lower = name.toLowerCase();
 
-        // Walls are thin edge decorations (about 1/8th of a tile)
+        // Indoor wall decorations are thin (about 1/8th of a tile)
         // They don't block tile access - the room boundary is defined by nil tiles
-        // Includes: hwall, vwall, and their variants
-        if (lower.contains("/arch/") && (lower.contains("wall") || lower.contains("corner"))) return true;
+        // Specifically: hwall, vwall (horizontal/vertical walls inside buildings)
+        // NOT palisade corners or other outdoor structures!
+        if (lower.contains("/arch/") && (lower.contains("/hwall") || lower.contains("/vwall"))) return true;
 
         // Specific door gobs (the actual door objects, not buildings with doors)
         // These are the "-door" suffix objects like "stonemansion-door"
