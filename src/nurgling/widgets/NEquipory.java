@@ -73,7 +73,8 @@ public class NEquipory extends Equipory
 
             // Determine if this is a right column slot by checking x position
             // Left column has x=0, right column has x > inventory slot width
-            boolean isRightColumn = slotCoord.x > invsq.sz().x;
+            // STORE_HAT is a special middle slot - treat it like left column (button on right)
+            boolean isRightColumn = slotCoord.x > invsq.sz().x && slotIdx != Slots.STORE_HAT.idx;
 
             // Calculate button position - center vertically next to the slot with extra spacing
             Coord btnPos;
@@ -81,7 +82,7 @@ public class NEquipory extends Equipory
                 // Right column: button on left side of slot
                 btnPos = new Coord(slotCoord.x - btnSize - spacing, slotCoord.y + (invsq.sz().y - btnSize) / 2);
             } else {
-                // Left column: button on right side of slot
+                // Left column or STORE_HAT: button on right side of slot
                 btnPos = new Coord(slotCoord.x + invsq.sz().x + spacing, slotCoord.y + (invsq.sz().y - btnSize) / 2);
             }
 
