@@ -33,6 +33,11 @@ public class PortalTraversalTracker {
     private Coord previousTickPlayerLocalCoord = null;  // Player position from previous tick (before any grid change)
     private long lastCheckTime = 0;
 
+    // Mine level tracking - tracks how deep we are in the mine
+    // 0 = surface, 1 = mine1, 2 = mine2, etc.
+    private int currentMineLevel = 0;
+    private boolean mineLevelInitialized = false;  // Has mine level been initialized from current grid?
+
     // Duplicate grid transition prevention
     private long lastProcessedFromGridId = -1;
     private long lastProcessedToGridId = -1;
@@ -157,6 +162,12 @@ public class PortalTraversalTracker {
         long currentGridId = graph.getPlayerChunkId();
         if (currentGridId == -1) return;
 
+        // Initialize mine level from current grid's layer on first valid tick
+        // This handles login/teleport where we need to know our starting level
+        if (!mineLevelInitialized) {
+            initializeMineLevelFromCurrentGrid(currentGridId);
+        }
+
         // Calculate player's current local coord in their CURRENT grid
         Coord currentPlayerLocalCoord = null;
         try {
@@ -234,6 +245,8 @@ public class PortalTraversalTracker {
         // Check if player landed on their hearthfire - this indicates a teleport, not a portal traversal
         if (isPlayerOnHearthfire(player)) {
             // Player teleported to hearthfire - don't record this as a portal connection
+            // Re-initialize mine level from the new location since we teleported
+            mineLevelInitialized = false;
             lastProcessedFromGridId = fromGridId;
             lastProcessedToGridId = toGridId;
             lastProcessedTime = now;
@@ -799,6 +812,7 @@ public class PortalTraversalTracker {
 
     /**
      * Determine the layer for a destination grid based on the exit portal type.
+     * Also updates mine level tracking when traversing mine portals.
      * @param exitPortalName The name of the exit portal (the portal you see after traversing)
      * @return The layer name for the destination grid
      */
@@ -807,9 +821,38 @@ public class PortalTraversalTracker {
 
         String lowerName = exitPortalName.toLowerCase();
 
-        // Check each mapping
+        // Mine level tracking based on exit portal:
+        // - If we see a LADDER as exit, we went DOWN through a minehole (level++)
+        //   (ladder is what takes you back UP, so seeing it means we descended)
+        // - If we see a MINEHOLE as exit, we went UP through a ladder (level--)
+        //   (minehole is what takes you DOWN, so seeing it means we ascended)
+        if (lowerName.contains("ladder")) {
+            // We went DOWN into mine (minehole entrance -> ladder exit)
+            currentMineLevel++;
+            return "mine" + currentMineLevel;
+        }
+        if (lowerName.contains("minehole")) {
+            // We went UP out of mine (ladder entrance -> minehole exit)
+            currentMineLevel--;
+            if (currentMineLevel <= 0) {
+                currentMineLevel = 0;
+                return "surface";
+            }
+            return "mine" + currentMineLevel;
+        }
+
+        // Check each mapping for non-mine portals
         for (Map.Entry<String, String> entry : PORTAL_TO_LAYER.entrySet()) {
-            if (lowerName.contains(entry.getKey().toLowerCase())) {
+            String key = entry.getKey().toLowerCase();
+            // Skip mine-related entries - handled above
+            if (key.equals("minehole") || key.contains("ladder")) {
+                continue;
+            }
+            if (lowerName.contains(key)) {
+                // Reset mine level when going to surface
+                if ("surface".equals(entry.getValue())) {
+                    currentMineLevel = 0;
+                }
                 return entry.getValue();
             }
         }
@@ -826,6 +869,7 @@ public class PortalTraversalTracker {
      * Update the layer of a chunk based on the exit portal.
      * Called when we traverse to a new grid and find an exit portal.
      * Only updates if a definitive layer can be determined from the exit portal.
+     * For mine levels, also updates all currently loaded grids to the same level.
      */
     private void updateChunkLayer(long gridId, String exitPortalName) {
         String layer = determineLayerFromExitPortal(exitPortalName);
@@ -833,9 +877,49 @@ public class PortalTraversalTracker {
             return;
         }
 
+        // Update the target chunk
         ChunkNavData chunk = graph.getChunk(gridId);
         if (chunk != null && !layer.equals(chunk.layer)) {
             chunk.layer = layer;
+        }
+
+        // For mine levels, update ALL currently loaded grids to the same level
+        // This ensures all grids at this mine level get the correct layer
+        if (layer.startsWith("mine")) {
+            updateAllLoadedGridsToMineLevel(layer, gridId);
+        }
+    }
+
+    /**
+     * Update all currently loaded grids to the specified mine level.
+     * Called after we determine the mine level from portal traversal.
+     * @param mineLayer The mine layer (e.g., "mine1", "mine2")
+     * @param excludeGridId Grid to exclude (already updated)
+     */
+    private void updateAllLoadedGridsToMineLevel(String mineLayer, long excludeGridId) {
+        try {
+            MCache mcache = NUtils.getGameUI().map.glob.map;
+            if (mcache == null) return;
+
+            synchronized (mcache.grids) {
+                for (MCache.Grid grid : mcache.grids.values()) {
+                    if (grid.id == excludeGridId) continue;
+
+                    ChunkNavData chunk = graph.getChunk(grid.id);
+                    if (chunk != null) {
+                        // Only update if chunk doesn't have a proper mine level yet,
+                        // or if it has the wrong level
+                        if (chunk.layer == null ||
+                            chunk.layer.equals("mine") ||
+                            chunk.layer.equals("surface") ||
+                            (chunk.layer.startsWith("mine") && !chunk.layer.equals(mineLayer))) {
+                            chunk.layer = mineLayer;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore - grids might not be available
         }
     }
 
@@ -893,5 +977,54 @@ public class PortalTraversalTracker {
         lastProcessedFromGridId = -1;
         lastProcessedToGridId = -1;
         lastProcessedTime = 0;
+        currentMineLevel = 0;
+        mineLevelInitialized = false;  // Will re-initialize on next tick
+    }
+
+    /**
+     * Initialize mine level from the current grid's stored layer.
+     * Called on first tick after reset/login to restore correct mine depth.
+     */
+    private void initializeMineLevelFromCurrentGrid(long gridId) {
+        mineLevelInitialized = true;  // Mark as initialized even if we fail, to avoid repeated attempts
+
+        ChunkNavData chunk = graph.getChunk(gridId);
+        if (chunk == null || chunk.layer == null) {
+            // No stored data - assume surface
+            currentMineLevel = 0;
+            return;
+        }
+
+        // Parse mine level from layer string (e.g., "mine3" -> 3)
+        if (chunk.layer.startsWith("mine")) {
+            try {
+                String levelStr = chunk.layer.substring(4);  // Remove "mine" prefix
+                int level = Integer.parseInt(levelStr);
+                currentMineLevel = Math.max(0, level);
+            } catch (NumberFormatException e) {
+                // Legacy "mine" without number - assume level 1
+                currentMineLevel = 1;
+            }
+        } else {
+            // Not in a mine (surface, inside, cellar, etc.)
+            currentMineLevel = 0;
+        }
+    }
+
+    /**
+     * Get the current mine level (for debugging/display).
+     * @return 0 if on surface, 1+ for mine levels
+     */
+    public int getCurrentMineLevel() {
+        return currentMineLevel;
+    }
+
+    /**
+     * Set the current mine level. Useful when restoring state from a known position.
+     * @param level The mine level (0 = surface, 1 = mine1, etc.)
+     */
+    public void setCurrentMineLevel(int level) {
+        this.currentMineLevel = Math.max(0, level);
+        this.mineLevelInitialized = true;
     }
 }

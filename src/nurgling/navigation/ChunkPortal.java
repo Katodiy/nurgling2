@@ -21,12 +21,18 @@ public class ChunkPortal {
         STAIRS_UP,      // Upstairs
         STAIRS_DOWN,    // Downstairs
         CELLAR,         // Cellar entrance
-        MINE_ENTRANCE;  // Mine ladder
+        MINE_ENTRANCE,  // Mine entrance (legacy, generic)
+        MINEHOLE,       // Minehole - goes DOWN into mine
+        LADDER;         // Ladder - goes UP out of mine level
 
         public static PortalType fromString(String s) {
             try {
                 return valueOf(s);
             } catch (IllegalArgumentException e) {
+                // Handle legacy "MINE_ENTRANCE" - default to MINEHOLE
+                if ("MINE_ENTRANCE".equals(s)) {
+                    return MINEHOLE;
+                }
                 return DOOR;
             }
         }
@@ -83,15 +89,16 @@ public class ChunkPortal {
             return PortalType.CELLAR;
         }
 
-        // Mine
-        if (name.contains("minehole") || name.contains("ladder")) {
-            return PortalType.MINE_ENTRANCE;
+        // Mine - distinguish between minehole (down) and ladder (up)
+        if (name.contains("minehole")) {
+            return PortalType.MINEHOLE;
+        }
+        if (name.contains("ladder")) {
+            return PortalType.LADDER;
         }
 
-        // Gates (check before door)
-        if (name.contains("gate") && !name.contains("water")) {
-            return PortalType.GATE;
-        }
+        // Gates are NOT portals - they're just openings in walls.
+        // Walkability grid handles whether you can walk through them.
 
         // Doors
         if (name.contains("door")) {
