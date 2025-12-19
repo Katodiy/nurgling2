@@ -49,7 +49,19 @@ public class NEquipProxy extends Widget implements DTarget {
         if(e != null && s != null) {
             WItem w = NUtils.getEquipment().quickslots[s.idx];
             if(w != null) {
-                w.mousedown(ev);
+                // Calculate the slot index in our display
+                int slotIndex = 0;
+                for (int i = 0; i < slots.length; i++) {
+                    if (slots[i] == s) {
+                        slotIndex = i;
+                        break;
+                    }
+                }
+                // Calculate offset within the slot and create adjusted event
+                Coord slotPos = sqoff(new Coord(slotIndex, 0)).add(1, 1);
+                Coord itemOffset = ev.c.sub(slotPos);
+                MouseDownEvent adjustedEv = new MouseDownEvent(ev, itemOffset);
+                w.mousedown(adjustedEv);
                 return true;
             }
         }
