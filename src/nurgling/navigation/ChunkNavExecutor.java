@@ -172,10 +172,22 @@ public class ChunkNavExecutor implements Action {
     /**
      * Find and traverse the portal that connects to a specific target grid.
      * This ensures we use the correct portal when multiple portals exist (e.g., cellardoor and stonemansion-door).
+     * Uses layer-aware selection to prefer the correct portal type for the transition.
      */
     private Results findAndTraversePortalToGrid(NGameUI gui, ChunkPath.PathSegment segment, long targetGridId) throws InterruptedException {
         Gob player = gui.map.player();
         if (player == null) return Results.FAIL();
+
+        // Get source and target layers to determine expected portal type
+        ChunkNavData sourceChunk = graph.getChunk(segment.gridId);
+        String sourceLayer = sourceChunk != null && sourceChunk.layer != null ? sourceChunk.layer : "surface";
+        ChunkNavData targetChunk = graph.getChunk(targetGridId);
+        String targetLayer = targetChunk != null && targetChunk.layer != null ? targetChunk.layer : "unknown";
+
+        // Determine expected portal type based on layer transition
+        String expectedPortalType = getExpectedPortalType(sourceLayer, targetLayer);
+        System.out.println("ChunkNav: Layer transition " + sourceLayer + " -> " + targetLayer +
+                           ", expected portal type: " + (expectedPortalType != null ? expectedPortalType : "any"));
 
         ChunkNavData chunk = graph.getChunk(segment.gridId);
         if (chunk != null && !chunk.portals.isEmpty()) {
@@ -183,54 +195,58 @@ public class ChunkNavExecutor implements Action {
             List<ChunkPortal> portalsCopy = new ArrayList<>(chunk.portals);
             System.out.println("ChunkNav: Checking " + portalsCopy.size() + " recorded portals in chunk " + segment.gridId + " for connection to " + targetGridId);
 
-            // First pass: look for portal that connects specifically to our target grid
-            for (ChunkPortal recordedPortal : portalsCopy) {
-                if (recordedPortal.connectsToGridId == targetGridId) {
-                    System.out.println("ChunkNav: Found portal connecting to target: " + recordedPortal.gobName);
-                    Gob portalGob = findGobByName(gui, recordedPortal.gobName, player.rc, MCache.tilesz.x * 30);
-                    if (portalGob != null) {
-                        double dist = player.rc.dist(portalGob.rc);
-                        System.out.println("ChunkNav: Portal " + recordedPortal.gobName + " at dist=" + dist);
-
-                        if (dist > MCache.tilesz.x * 5) {
-                            System.out.println("ChunkNav: Portal is far, walking toward it...");
-                            PathFinder pf = new PathFinder(portalGob);
-                            Results walkResult = pf.run(gui);
-                            if (!walkResult.IsSuccess()) {
-                                System.out.println("ChunkNav: Failed to walk to portal via PathFinder");
-                                continue;
-                            }
-                        }
-
-                        return traversePortalGob(gui, portalGob);
+            // First pass: look for portal that connects to target AND matches expected type
+            if (expectedPortalType != null) {
+                for (ChunkPortal recordedPortal : portalsCopy) {
+                    if (recordedPortal.connectsToGridId == targetGridId &&
+                        recordedPortal.gobName != null &&
+                        recordedPortal.gobName.toLowerCase().contains(expectedPortalType)) {
+                        System.out.println("ChunkNav: Found matching portal (correct type): " + recordedPortal.gobName);
+                        Results result = tryTraversePortal(gui, player, recordedPortal);
+                        if (result != null) return result;
                     }
                 }
             }
 
-            // Second pass: if no exact match, try any portal with a connection (fallback)
+            // Second pass: look for portal of expected type even if connectsToGridId doesn't match
+            // (handles case where portal connection was never recorded or is corrupted)
+            if (expectedPortalType != null) {
+                for (ChunkPortal recordedPortal : portalsCopy) {
+                    if (recordedPortal.gobName != null &&
+                        recordedPortal.gobName.toLowerCase().contains(expectedPortalType)) {
+                        System.out.println("ChunkNav: Found portal of expected type (ignoring connectsTo): " + recordedPortal.gobName);
+                        Results result = tryTraversePortal(gui, player, recordedPortal);
+                        if (result != null) return result;
+                    }
+                }
+            }
+
+            // Third pass: look for any portal that connects to target (original behavior)
+            for (ChunkPortal recordedPortal : portalsCopy) {
+                if (recordedPortal.connectsToGridId == targetGridId) {
+                    // Skip building gobs when transitioning to mine (they can't lead to mines)
+                    if (targetLayer.startsWith("mine") && isBuildingGob(recordedPortal.gobName)) {
+                        System.out.println("ChunkNav: Skipping building portal " + recordedPortal.gobName + " for mine transition");
+                        continue;
+                    }
+                    System.out.println("ChunkNav: Found portal connecting to target: " + recordedPortal.gobName);
+                    Results result = tryTraversePortal(gui, player, recordedPortal);
+                    if (result != null) return result;
+                }
+            }
+
+            // Fourth pass: if no exact match, try any portal with a connection (fallback)
             System.out.println("ChunkNav: No exact match found, trying any connected portal...");
             for (ChunkPortal recordedPortal : portalsCopy) {
                 if (recordedPortal.connectsToGridId != -1) {
+                    // Skip building gobs when transitioning to mine
+                    if (targetLayer.startsWith("mine") && isBuildingGob(recordedPortal.gobName)) {
+                        continue;
+                    }
                     System.out.println("ChunkNav: Trying fallback portal: " + recordedPortal.gobName +
                                        " connects to " + recordedPortal.connectsToGridId);
-                    Gob portalGob = findGobByName(gui, recordedPortal.gobName, player.rc, MCache.tilesz.x * 30);
-                    if (portalGob != null) {
-                        double dist = player.rc.dist(portalGob.rc);
-                        System.out.println("ChunkNav: Found fallback portal: " + recordedPortal.gobName +
-                                           " at dist=" + dist);
-
-                        if (dist > MCache.tilesz.x * 5) {
-                            System.out.println("ChunkNav: Portal is far, walking toward it...");
-                            PathFinder pf = new PathFinder(portalGob);
-                            Results walkResult = pf.run(gui);
-                            if (!walkResult.IsSuccess()) {
-                                System.out.println("ChunkNav: Failed to walk to portal via PathFinder");
-                                continue;
-                            }
-                        }
-
-                        return traversePortalGob(gui, portalGob);
-                    }
+                    Results result = tryTraversePortal(gui, player, recordedPortal);
+                    if (result != null) return result;
                 }
             }
         }
@@ -272,6 +288,102 @@ public class ChunkNavExecutor implements Action {
 
         System.out.println("ChunkNav: No portal found nearby");
         return Results.FAIL();
+    }
+
+    /**
+     * Determine the expected portal type based on layer transition.
+     * Returns a substring to match in the portal gob name.
+     */
+    private String getExpectedPortalType(String sourceLayer, String targetLayer) {
+        if (sourceLayer == null || targetLayer == null) return null;
+
+        // Surface/inside -> mine: use minehole
+        if (!sourceLayer.startsWith("mine") && targetLayer.startsWith("mine")) {
+            return "minehole";
+        }
+        // Mine -> surface/shallower mine: use ladder
+        if (sourceLayer.startsWith("mine") && !targetLayer.startsWith("mine")) {
+            return "ladder";
+        }
+        // Mine level N -> Mine level N+1: use minehole (going deeper)
+        if (sourceLayer.startsWith("mine") && targetLayer.startsWith("mine")) {
+            int srcLevel = extractMineLevel(sourceLayer);
+            int tgtLevel = extractMineLevel(targetLayer);
+            if (tgtLevel > srcLevel) {
+                return "minehole";  // Going deeper
+            } else if (tgtLevel < srcLevel) {
+                return "ladder";    // Going up
+            }
+        }
+        // Surface -> inside: use building doors (stonemansion, logcabin, etc.)
+        if ("surface".equals(sourceLayer) && "inside".equals(targetLayer)) {
+            return null;  // Any building door works
+        }
+        // Inside -> surface: use -door suffix
+        if ("inside".equals(sourceLayer) && "surface".equals(targetLayer)) {
+            return "-door";
+        }
+        // Inside -> cellar: use cellardoor
+        if ("inside".equals(sourceLayer) && "cellar".equals(targetLayer)) {
+            return "cellardoor";
+        }
+        // Cellar -> inside: use cellarstairs
+        if ("cellar".equals(sourceLayer) && "inside".equals(targetLayer)) {
+            return "cellarstairs";
+        }
+
+        return null;  // No specific type required
+    }
+
+    /**
+     * Extract mine level number from layer string (e.g., "mine2" -> 2).
+     */
+    private int extractMineLevel(String layer) {
+        if (layer == null || !layer.startsWith("mine")) return 0;
+        try {
+            return Integer.parseInt(layer.substring(4));
+        } catch (NumberFormatException e) {
+            return 1;  // "mine" without number = level 1
+        }
+    }
+
+    /**
+     * Check if a gob name is a building (stonemansion, logcabin, etc.).
+     * Buildings cannot lead to mines.
+     */
+    private boolean isBuildingGob(String gobName) {
+        if (gobName == null) return false;
+        String lower = gobName.toLowerCase();
+        return lower.contains("stonemansion") || lower.contains("logcabin") ||
+               lower.contains("timberhouse") || lower.contains("stonestead") ||
+               lower.contains("greathall") || lower.contains("stonetower") ||
+               lower.contains("windmill");
+    }
+
+    /**
+     * Try to traverse a recorded portal. Returns Results if successful, null if should continue to next portal.
+     */
+    private Results tryTraversePortal(NGameUI gui, Gob player, ChunkPortal recordedPortal) throws InterruptedException {
+        Gob portalGob = findGobByName(gui, recordedPortal.gobName, player.rc, MCache.tilesz.x * 30);
+        if (portalGob == null) {
+            System.out.println("ChunkNav: Portal gob not found: " + recordedPortal.gobName);
+            return null;
+        }
+
+        double dist = player.rc.dist(portalGob.rc);
+        System.out.println("ChunkNav: Portal " + recordedPortal.gobName + " at dist=" + dist);
+
+        if (dist > MCache.tilesz.x * 5) {
+            System.out.println("ChunkNav: Portal is far, walking toward it...");
+            PathFinder pf = new PathFinder(portalGob);
+            Results walkResult = pf.run(gui);
+            if (!walkResult.IsSuccess()) {
+                System.out.println("ChunkNav: Failed to walk to portal via PathFinder");
+                return null;  // Try next portal
+            }
+        }
+
+        return traversePortalGob(gui, portalGob);
     }
 
     /**
