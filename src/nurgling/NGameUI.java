@@ -155,7 +155,8 @@ public class NGameUI extends GameUI
             add(new NDraggableWidget(calendar, "Calendar", UI.scale(400,90)), calPos);
         }
         add(new NDraggableWidget(alarmWdg = new NAlarmWdg(),"alarm",NStyle.alarm[0].sz().add(NDraggableWidget.delta)));
-        add(new NDraggableWidget(nep = new NEquipProxy(getEquipProxySlotsFromConfig()), "EquipProxy",  UI.scale(138, 55)));
+        nep = new NEquipProxy(getEquipProxySlotsFromConfig());
+        add(new NDraggableWidget(nep, "EquipProxy", nep.sz.add(NDraggableWidget.delta)));
         add(new NDraggableWidget(nbp = new NBeltProxy(), "BeltProxy", UI.scale(825, 55)));
         for(int i = 0; i<(Integer)NConfig.get(NConfig.Key.numbelts); i++)
         {

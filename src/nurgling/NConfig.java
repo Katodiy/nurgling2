@@ -804,6 +804,11 @@ public class NConfig
                     res.addAll(objs);
                     break;
                 }
+                else if (jobj instanceof Number) {
+                    // Handle arrays of numbers (integers, longs, etc.)
+                    res.addAll(objs);
+                    break;
+                }
             }
             return res;
         }

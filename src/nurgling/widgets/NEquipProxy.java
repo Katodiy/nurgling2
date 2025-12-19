@@ -14,8 +14,9 @@ import nurgling.*;
 public class NEquipProxy extends Widget implements DTarget {
     NEquipory.Slots []slots;
     public NEquipProxy(NEquipory.Slots...slots) {
-        super(new Coord(UI.scale(2)+NInventory.sqsz.x*3, NInventory.sqsz.y+UI.scale(2) ));
-        setSlots(slots);
+        // Calculate initial size based on actual number of slots
+        super(slots.length == 0 ? Coord.z : invsz(new Coord(slots.length, 1)));
+        this.slots = slots;
     }
 
     public void setSlots(NEquipory.Slots...slots) {
