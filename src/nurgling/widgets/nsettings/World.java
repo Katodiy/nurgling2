@@ -13,6 +13,7 @@ public class World extends Panel {
         boolean flatSurface;
         boolean decorativeObjects;
         boolean hideNature;
+        boolean hideEarthworm;
         boolean showBB;
         boolean showBeehiveRadius;
         boolean showTroughRadius;
@@ -31,6 +32,7 @@ public class World extends Panel {
     private CheckBox flatSurface;
     private CheckBox decorativeObjects;
     private CheckBox natura;
+    private CheckBox earthworm;
     private CheckBox boundingBoxes;
     private CheckBox beehiveRadius;
     private CheckBox troughRadius;
@@ -121,6 +123,13 @@ public class World extends Panel {
             }
         }, prev.pos("bl").adds(0, 5));
 
+        prev = earthworm = content.add(new CheckBox("Hide earthworms") {
+            public void set(boolean val) {
+                tempSettings.hideEarthworm = !val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+
         prev = boundingBoxes = content.add(new CheckBox("Show object boundaries") {
             public void set(boolean val) {
                 tempSettings.showBB = val;
@@ -192,6 +201,7 @@ public class World extends Panel {
         tempSettings.flatSurface = (Boolean) NConfig.get(NConfig.Key.nextflatsurface);
         tempSettings.decorativeObjects = (Boolean) NConfig.get(NConfig.Key.nextshowCSprite);
         tempSettings.hideNature = (Boolean) NConfig.get(NConfig.Key.hideNature);
+        tempSettings.hideEarthworm = (Boolean) NConfig.get(NConfig.Key.hideEarthworm);
         tempSettings.showBB = (Boolean) NConfig.get(NConfig.Key.showBB);
         tempSettings.showBeehiveRadius = (Boolean) NConfig.get(NConfig.Key.showBeehiveRadius);
         tempSettings.showTroughRadius = (Boolean) NConfig.get(NConfig.Key.showTroughRadius);
@@ -215,6 +225,7 @@ public class World extends Panel {
         flatSurface.a = tempSettings.flatSurface;
         decorativeObjects.a = tempSettings.decorativeObjects;
         natura.a = !tempSettings.hideNature;
+        earthworm.a = !tempSettings.hideEarthworm;
         boundingBoxes.a = tempSettings.showBB;
         beehiveRadius.a = tempSettings.showBeehiveRadius;
         troughRadius.a = tempSettings.showTroughRadius;
@@ -268,7 +279,14 @@ public class World extends Panel {
         
         // Save hideNature setting
         NConfig.set(NConfig.Key.hideNature, tempSettings.hideNature);
-        
+
+        // Save hideEarthworm setting
+        boolean oldHideEarthworm = (Boolean) NConfig.get(NConfig.Key.hideEarthworm);
+        NConfig.set(NConfig.Key.hideEarthworm, tempSettings.hideEarthworm);
+        if (oldHideEarthworm != tempSettings.hideEarthworm) {
+            NUtils.showHideEarthworm();
+        }
+
         // Update colors from UI widgets
         tempSettings.boxFillColor = fillColorWidget.color;
         tempSettings.boxEdgeColor = edgeColorWidget.color;
