@@ -101,6 +101,7 @@ public class RoutePointNavigator implements Action {
         }
 
         // Navigate the path
+        long lastGridId = playerGridId; // Track grid changes
         for (int i = 0; i<path.size(); i++) {
             RoutePoint currentPoint = path.get(i);
             RoutePoint previousPoint = null;
@@ -132,6 +133,25 @@ public class RoutePointNavigator implements Action {
             }
 
             new PathFinder(target).run(gui);
+            
+            // Check if we've transitioned to a different grid after navigation
+            Gob currentPlayer = gui.map.player();
+            if (currentPlayer != null && currentPlayer.rc != null) {
+                try {
+                    Coord currentPlayerTile = currentPlayer.rc.floor(gui.map.glob.map.tilesz);
+                    MCache.Grid currentPlayerGrid = gui.map.glob.map.getgridt(currentPlayerTile);
+                    long currentGridId = currentPlayerGrid.id;
+                    
+                    // If grid changed, wait for map to load (all 9 grids)
+                    if (currentGridId != lastGridId) {
+                        Coord currentGc = currentPlayerTile.div(gui.map.glob.map.cmaps);
+                        NUtils.getUI().core.addTask(new GridsFilled(currentGc));
+                        lastGridId = currentGridId;
+                    }
+                } catch (Exception e) {
+                    // Grid not loaded yet, continue
+                }
+            }
 
             // Handle door closing
             if(previousPoint != null) {
