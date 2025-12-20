@@ -1501,7 +1501,7 @@ public class VSpec {
 //        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/bakedbirchdream\",\"name\":\"Baked Birchbark Bream\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/barkbread\",\"name\":\"Bark Bread\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/birthdaycake\",\"name\":\"Birthday Cake\"}"));
-//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/blueberrypie\",\"name\":\"Blueberry Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/blueberryslice\",\"name\":\"Blueberry Pie\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/bread\",\"name\":\"Bread\"}"));
 //        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/butterscones\",\"name\":\"Butter Scones\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/carrotcake\",\"name\":\"Carrot Cake\"}"));
@@ -1523,7 +1523,7 @@ public class VSpec {
 //        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/magpie\",\"name\":\"Magpie (Pie)\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/marrowcake\",\"name\":\"Marrow Cake\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/meatpie\",\"name\":\"Meatpie\"}"));
-//        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/mushroompirozhki\",\"name\":\"Mushroom & Onion Pirozhki\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/pirozhki\",\"name\":\"Mushroom & Onion Pirozhki\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/mushroompie\",\"name\":\"Mushroom Pie\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/olivebread\",\"name\":\"Olive Bread\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/peapie\",\"name\":\"Pea Pie\"}"));
@@ -1543,6 +1543,7 @@ public class VSpec {
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-barkbread\",\"name\":\"Unbaked Bark Bread\"}"));
 //        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-birthdaycake\",\"name\":\"Unbaked Birthday Cake\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-bread\",\"name\":\"Bread Dough\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-blueberryslice\",\"name\":\"Blueberry Pie Dough\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-carrotcake\",\"name\":\"Unbaked Carrot Cake\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-cheesecake\",\"name\":\"Unbaked Cheesecake\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-dreamcookies\",\"name\":\"Unbaked Dream Cookies\"}"));
@@ -1565,6 +1566,7 @@ public class VSpec {
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-poultrypotpie\",\"name\":\"Unbaked Poultry Pot Pie\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-pumpkinbread\",\"name\":\"Unbaked Pumpkin Bread\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-pumpkinpie\",\"name\":\"Unbaked Pumpkin Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-pirozhki\",\"name\":\"Mushroom & Onion Pirozhki Dough\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-raisinbuttercake\",\"name\":\"Unbaked Raisin Butter-Cake\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-ringofbrodgar\",\"name\":\"Unbaked Ring of Brodgar\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-shepherdspie\",\"name\":\"Unbaked Shepherd's Pie\"}"));
