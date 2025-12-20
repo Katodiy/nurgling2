@@ -454,8 +454,10 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 				Runnable act = bopts.get(opt.name);
 				if(act != null)
 				    act.run();
+				uimsg("act", opt.num);
+			    } else {
+				uimsg("cancel");
 			    }
-			    super.nchoose(opt);
 			}
 		    };
 		ui.root.add(menu, c);
