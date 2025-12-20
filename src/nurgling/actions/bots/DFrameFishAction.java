@@ -17,6 +17,7 @@ import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
+import nurgling.tools.VSpec;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
@@ -27,8 +28,9 @@ import java.util.HashSet;
 public class DFrameFishAction implements Action {
 
     NAlias fish = new NAlias("Fish");
-    NAlias fillet = new NAlias("Fillet");
-    
+    NAlias dfillet = new NAlias("Dried Filet");
+    NAlias rfillet = new NAlias(new ArrayList<>(Arrays.asList("Filet")),new ArrayList<>(Arrays.asList("Dried")));
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NArea.Specialisation rdframe = new NArea.Specialisation(Specialisation.SpecName.dframe.toString());
@@ -75,71 +77,61 @@ public class DFrameFishAction implements Action {
             });
 
             // Освобождаем сушилки от готового филе
-            new FreeContainers(containers, fillet).run(gui);
+            new FreeContainers(containers, dfillet).run(gui);
             
             // Основной цикл обработки рыбы
             NContext context = new NContext(gui);
             Pair<Coord2d, Coord2d> fishArea = NContext.findSpec(Specialisation.SpecName.rawfish.toString()).getRCArea();
             
-            while (hasEmptySlots(containers)) {
+            // Получаем размер рыбы из пайла (как в FillContainersFromPiles)
+            Coord fishSize = new Coord(1, 1); // размер по умолчанию
+            
+            while (hasEmptySlots(containers) && gui.getInventory().getNumberFreeCoord(new Coord(1,3))>0 && gui.getInventory().getNumberFreeCoord(new Coord(2,1))>0) {
                 // Проверяем, есть ли рыба в пайлах
                 ArrayList<Gob> piles = Finder.findGobs(fishArea, new NAlias("stockpile"));
                 if (piles.isEmpty()) {
                     break; // Нет рыбы - выходим
                 }
                 
-                // Берем рыбу из пайлов
+                // Освобождаем инвентарь если нужно
                 if (gui.getInventory().getFreeSpace() < 3) {
-                    // Если инвентарь заполнен, переносим филе на сушилки
-                    if (!gui.getInventory().getItems(fillet).isEmpty()) {
+                    // Если есть филе, переносим на сушилки
+                    if (!gui.getInventory().getItems(dfillet).isEmpty()) {
                         fillDryingFrames(gui, containers);
                     }
-                    // Если все еще мало места, сбрасываем остальное
+                    // Если места все еще нет, выходим
                     if (gui.getInventory().getFreeSpace() < 3) {
-                        new FreeInventory2(context).run(gui);
+                        break;
                     }
                 }
                 
-                // Берем рыбу из пайла
                 piles.sort(NUtils.d_comp);
                 Gob pile = piles.get(0);
                 new PathFinder(pile).run(gui);
                 new OpenTargetContainer("Stockpile", pile).run(gui);
                 
-                // Берем минимум между свободным местом и доступным количеством на сушилках
-                int freeSlots = calculateFreeSlots(containers);
-                int takeAmount = Math.min(freeSlots, gui.getInventory().getFreeSpace());
-                takeAmount = Math.min(takeAmount, 10); // Не берем слишком много за раз
-                
-                if (takeAmount > 0) {
-                    new TakeItemsFromPile(pile, gui.getStockpile(), takeAmount).run(gui);
+                while(Finder.findGob(pile.id)!=null && gui.getInventory().getNumberFreeCoord(new Coord(1,3))>0 && gui.getInventory().getNumberFreeCoord(new Coord(2,1))>0)
+                {
+                    new TakeItemsFromPile(pile, gui.getStockpile(), 1).run(gui);
                 }
                 new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
                 
-                // Обрабатываем взятую рыбу - делаем Butcher для каждой рыбины
-                ArrayList<WItem> fishItems = gui.getInventory().getItems(fish);
+                ArrayList<WItem> fishItems = gui.getInventory().getItems(new NAlias(VSpec.getCategoryContent("Fish")));
                 for (WItem fishItem : fishItems) {
-                    // Выполняем Butcher действие для рыбы
-                    int oldFilletCount = gui.getInventory().getItems(fillet).size();
+                    int oldFilletCount = gui.getInventory().getItems(rfillet).size();
                     new SelectFlowerAction("Butcher", fishItem).run(gui);
                     
-                    // Ждем появления филе
-                    NUtils.addTask(new WaitItems((NInventory) gui.maininv, fillet, oldFilletCount + 1));
-                    
-                    // Если накопилось много филе или инвентарь заполнен, вешаем на сушилки
-                    if (gui.getInventory().getItems(fillet).size() >= 5 || gui.getInventory().getFreeSpace() < 2) {
-                        fillDryingFrames(gui, containers);
-                    }
+                    NUtils.addTask(new WaitItems((NInventory) gui.maininv, rfillet, oldFilletCount + 1));
                 }
                 
                 // После обработки всей взятой рыбы вешаем оставшееся филе на сушилки
-                if (!gui.getInventory().getItems(fillet).isEmpty()) {
+                if (!gui.getInventory().getItems(rfillet).isEmpty()) {
                     fillDryingFrames(gui, containers);
                 }
             }
             
             // В конце переносим все оставшееся филе на сушилки
-            if (!gui.getInventory().getItems(fillet).isEmpty()) {
+            if (!gui.getInventory().getItems(rfillet).isEmpty()) {
                 fillDryingFrames(gui, containers);
             }
             
@@ -196,7 +188,7 @@ public class DFrameFishAction implements Action {
      */
     private void fillDryingFrames(NGameUI gui, ArrayList<Container> containers) throws InterruptedException {
         for (Container container : containers) {
-            if (gui.getInventory().getItems(fillet).isEmpty()) {
+            if (gui.getInventory().getItems(rfillet).isEmpty()) {
                 break; // Филе закончилось
             }
             
@@ -214,9 +206,9 @@ public class DFrameFishAction implements Action {
                     new OpenTargetContainer(container).run(gui);
                     
                     // Переносим филе
-                    int toTransfer = Math.min(freeSpace, gui.getInventory().getItems(fillet).size());
+                    int toTransfer = Math.min(freeSpace, gui.getInventory().getItems(rfillet).size());
                     for (int i = 0; i < toTransfer; i++) {
-                        ArrayList<WItem> fillets = gui.getInventory().getItems(fillet);
+                        ArrayList<WItem> fillets = gui.getInventory().getItems(rfillet);
                         if (!fillets.isEmpty()) {
                             WItem filletItem = fillets.get(0);
                             NUtils.takeItemToHand(filletItem);
@@ -238,9 +230,6 @@ public class DFrameFishAction implements Action {
                     }
                     
                     new CloseTargetContainer(container).run(gui);
-                    
-                    // Обновляем информацию о свободном месте
-                    space.update();
                 }
             }
         }
