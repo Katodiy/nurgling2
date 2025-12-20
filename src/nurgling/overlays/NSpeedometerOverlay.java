@@ -65,12 +65,12 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
             isMountedPlayer = (following != null);
         }
 
-        // Check if gob is moving and is a player or kritter (but not a mounted player)
+        // Check if gob is moving and should display speedometer (but not a mounted player)
         shouldShow = configEnabled &&
                     !isMountedPlayer &&
                     (gob.getattr(Moving.class) != null) &&
                     (gob.getv() > 0.1) &&
-                    isPlayerOrKritter(gob);
+                    shouldShowSpeedometerFor(gob);
         
         // Update speed label periodically only if we should show
         if (shouldShow) {
@@ -203,10 +203,10 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
     }
 
     /**
-     * Checks if the gob is a player or kritter (creature) that should display speedometer.
-     * Only players and creatures should show speedometer, not vehicles or other objects.
+     * Checks if the gob should display a speedometer.
+     * Shows for: players, creatures (kritters), and vehicles (excluding carts).
      */
-    private boolean isPlayerOrKritter(Gob gob) {
+    private boolean shouldShowSpeedometerFor(Gob gob) {
         try {
             // Check if it's any player using pose pattern (proven method from NKinRing)
             String pose = gob.pose();
@@ -214,9 +214,19 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
                 return true; // This is a player
             }
 
-            // Check if it's a creature (kritter) using resource name pattern
+            // Check resource name for kritters and vehicles
             if (gob.ngob != null && gob.ngob.name != null) {
-                return gob.ngob.name.contains("kritter");
+                String name = gob.ngob.name;
+
+                // Check if it's a creature (kritter)
+                if (name.contains("kritter")) {
+                    return true;
+                }
+
+                // Check if it's a vehicle (excluding carts)
+                if (name.contains("vehicle") && !name.contains("/cart")) {
+                    return true;
+                }
             }
 
             return false;
