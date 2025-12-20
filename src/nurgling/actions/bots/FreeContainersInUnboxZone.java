@@ -97,8 +97,9 @@ public class FreeContainersInUnboxZone implements Action {
                 }
             }
         }
+        gui.msg("FINAL TRANSFER!");
         new FreeInventory2(context).run(gui);
-
+        gui.msg("FINAL TRANSFER END!");
         return Results.SUCCESS();
     }
 }

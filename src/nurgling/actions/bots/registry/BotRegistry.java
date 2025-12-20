@@ -70,6 +70,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("ugardenpot", BotDescriptor.BotType.PRODUCTIONS, "Ungarden Pot", "Ungardens pots.", true, true, UnGardentPotAction.class, "ugardenpot", true));
         bots.add(new BotDescriptor("butcher", BotDescriptor.BotType.PRODUCTIONS, "Butcher", "Butchers animals.", true, true, Butcher.class, "butcher", false));
         bots.add(new BotDescriptor("hides", BotDescriptor.BotType.PRODUCTIONS, "Handle hides.", "Handles hides.", true, true, DFrameHidesAction.class, "hides", true));
+        bots.add(new BotDescriptor("dryedfish", BotDescriptor.BotType.PRODUCTIONS, "Dry Fish", "Dries fish on drying frames.", true, true, DFrameFishAction.class, "dryedfish", true));
         bots.add(new BotDescriptor("fishroast", BotDescriptor.BotType.PRODUCTIONS, "Spit Roast", "Roasts fish.", false, true, FriedFish.class, "fishroast", true));
         bots.add(new BotDescriptor("leather", BotDescriptor.BotType.PRODUCTIONS, "Leather Action", "Makes leather.", true, true, LeatherAction.class, "leather", true));
         bots.add(new BotDescriptor("smoking", BotDescriptor.BotType.PRODUCTIONS, "Smoking", "Smokes stuff.", false, true, Smoking.class, "smoking", true));
