@@ -98,7 +98,9 @@ public class NAlarmWdg extends Widget
                             int group = 0;
                             boolean buddyLoaded = (buddy != null && buddy.b != null);
                             boolean shouldDelayAlarm = false;
-                            
+                            if(buddy!=null && buddy.b == null)
+                                continue;
+
                             if (buddyLoaded) {
                                 group = buddy.b.group;
                                 lastKnownGroup.put(id, group); // Cache the group
@@ -133,7 +135,7 @@ public class NAlarmWdg extends Widget
                             boolean shouldAlarm = kinProp.alarm && isWhiteOrRed && !shouldDelayAlarm;
                             boolean isAlarmed = alarms.contains(id);
                             
-                            if (shouldAlarm && !isAlarmed) {
+                            if (shouldAlarm && !isAlarmed ) {
                                 // Add alarm if needed (only after delay period)
                                 addAlarm(id);
                             } else if (!shouldAlarm && isAlarmed) {
