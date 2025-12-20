@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import haven.Composite;
 import haven.res.ui.obj.buddy.Buddy;
 import nurgling.NAlarmManager;
 import nurgling.NConfig;
@@ -82,6 +83,15 @@ public class NAlarmWdg extends Widget
                         String pose = gob.pose();
                         // Skip mannequins, skeletons, and dead characters
                         if (pose == null || !NParser.checkName(pose, new NAlias("dead", "manneq", "skel"))) {
+                            // Verify that Composite is loaded before processing alarms
+                            // This prevents false alarms during player loading
+                            Composite c = gob.getattr(Composite.class);
+                            if (c == null || c.comp == null || c.comp.cmod.isEmpty()) {
+                                // Player model not fully loaded yet, skip alarm processing
+                                continue;
+                            }
+                            
+                            // Now that we know the model is loaded, get Buddy info
                             Buddy buddy = gob.getattr(Buddy.class);
                             
                             // Determine actual group - use cached if buddy is temporarily null

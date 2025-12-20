@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.Composite;
 import haven.render.Location;
 import haven.render.Pipe;
 import haven.render.Transform;
@@ -617,8 +618,14 @@ public class NGob
                     if (NParser.checkName(name, BORKA_ALIAS))
                     {
                         // Add delayed check to ensure this is not a mannequin and not the player
+                        // Also check that Composite is fully loaded (like Hurricane does)
                         delayedOverlayTasks.add(new DelayedOverlayTask(
-                                gob -> gob.pose() != null,
+                                gob -> {
+                                    if (gob.pose() == null) return false;
+                                    // Check that Composite attribute exists and is fully loaded
+                                    Composite c = gob.getattr(Composite.class);
+                                    return c != null && c.comp != null && !c.comp.cmod.isEmpty();
+                                },
                                 gob ->
                                 {
                                     String posename = gob.pose();
