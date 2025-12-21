@@ -59,12 +59,10 @@ public class Window extends Widget {
     public static final Coord dlmrgn = UI.scale(23, 14);
     public static final Coord dsmrgn = UI.scale(9, 9);
     public static final BufferedImage ctex = Resource.loadimg("nurgling/hud/fonttex");
-    public static final Text.Furnace cf = new Text.Imager(new PUtils.TexFurn(new Text.Foundry(Text.sans, 15).aa(true), ctex)) {
-	    protected BufferedImage proc(Text text) {
-		// return(rasterimg(blurmask2(text.img.getRaster(), 1, 1, Color.BLACK)));
-		return(rasterimg(blurmask2(text.img.getRaster(), UI.rscale(0.75), UI.rscale(1.0), Color.BLACK)));
-	    }
-	};
+    public static final Text.Furnace cf = Text.Imager.of(new PUtils.TexFurn(new Text.Foundry(Text.fraktur, 15).aa(true), ctex),
+	in -> rasterimg(blurmask2(in.img.getRaster(), UI.rscale(0.75), UI.rscale(1.0), new Color(96, 96, 0))));
+    public static final Text.Furnace ncf = Text.Imager.of(new PUtils.TexFurn(new Text.Foundry(Text.fraktur, 15).aa(true), ctex),
+	in -> rasterimg(blurmask2(in.img.getRaster(), UI.rscale(0.75), UI.rscale(1.0), Color.BLACK)));
     public static final IBox wbox = new IBox.Scaled("nurgling/hud/box", "tl", "tr", "bl", "br", "extvl", "extvr", "extht", "exthb") {
 	    final Coord co = UI.scale(3, 3), bo = UI.scale(2, 2);
 
@@ -205,7 +203,7 @@ public class Window extends Widget {
     public static class DefaultDeco extends DragDeco {
 	public final boolean lg;
 	public final IButton cbtn;
-	public boolean dragsize;
+	public boolean dragsize, cfocus;
 	public Area aa, ca;
 	public Coord cptl = Coord.z, cpsz = Coord.z;
 	public int cmw;
@@ -300,8 +298,8 @@ public class Window extends Widget {
 
 	protected void drawframe(GOut g) {
 	    Window wnd = (Window)parent;
-	    if((cap == null) || (cap.text != wnd.cap)) {
-		cap = (wnd.cap == null) ? null : cf.render(wnd.cap);
+	    if((cap == null) || (cap.text != wnd.cap) || (cfocus != wnd.hasfocus)) {
+		cap = (wnd.cap == null) ? null : ((cfocus = wnd.hasfocus) ? cf : ncf).render(wnd.cap);
 		cmw = (cap == null) ? 0 : cap.sz().x;
 		cmw = Math.max(cmw, this.sz.x / 4);
 		cptl = Coord.of(ca.ul.x, 0);
@@ -409,12 +407,12 @@ public class Window extends Widget {
 		if(deco!=null && deco instanceof DefaultDeco) {
 			if(!this.cancelb.visible)
 				this.cancelb.show();
-			
+
 			// Draw semi-transparent overlay
 			g.chcolor(0, 0, 0, 85);
 			g.frect(Coord.z, deco.contarea().sz());
 			g.chcolor();
-			
+
 			int id = (int) (NUtils.getTickId() / 5) % 12;
 			g.image(NStyle.gear[id], new Coord(deco.contarea().sz().x / 2 - NStyle.gear[0].sz().x / 2, deco.contarea().sz().y / 2 - NStyle.gear[0].sz().y / 2));
 			super.draw(g,strict);
