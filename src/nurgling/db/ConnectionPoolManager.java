@@ -13,7 +13,7 @@ public class ConnectionPoolManager {
 
     // Pool sizes: PostgreSQL can handle multiple concurrent connections,
     // SQLite should use 1 (doesn't support concurrent writes)
-    private static final int POSTGRES_POOL_SIZE = 5;
+    private static final int POSTGRES_POOL_SIZE = 10;
     private static final int SQLITE_POOL_SIZE = 1;
 
     public ConnectionPoolManager() {

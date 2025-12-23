@@ -74,7 +74,7 @@ public class NGlobalSearchItems implements Runnable {
                         while (resultSet.next()) {
                             containerHashes.add(resultSet.getString("hash"));
                         }
-                        updateVersion++; // Signal that containerHashes has changed
+                        updateVersion++;
                     }
                 }
 

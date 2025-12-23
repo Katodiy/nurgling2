@@ -14,33 +14,16 @@ public class NGlobalSearch extends GAttrib implements Gob.SetupMod
     }
 
     private static final Color COLOR = new Color(64, 255, 64, 255);
-    private long lastVersion = -1;
-    private boolean lastHighlighted = false;
+    // Use a cached MixColor to avoid creating new objects every frame
+    private static final MixColor HIGHLIGHT_COLOR = new MixColor(COLOR.getRed(), COLOR.getGreen(), COLOR.getBlue(), 255);
 
     public Pipe.Op gobstate() {
-        // Check if containerHashes was updated
-        long currentVersion = NGlobalSearchItems.updateVersion;
-        
-        boolean isHighlighted = false;
         if (gob.ngob.hash != null) {
             synchronized (NGlobalSearchItems.containerHashes) {
-                isHighlighted = NGlobalSearchItems.containerHashes.contains(gob.ngob.hash);
+                if (NGlobalSearchItems.containerHashes.contains(gob.ngob.hash)) {
+                    return HIGHLIGHT_COLOR;
+                }
             }
-        }
-        
-        // If version changed and highlight state changed, force gob state update
-        if (currentVersion != lastVersion && isHighlighted != lastHighlighted) {
-            lastVersion = currentVersion;
-            lastHighlighted = isHighlighted;
-            // Schedule state update for next frame (can't call updstate during gobstate)
-            gob.defer(() -> gob.updstate());
-        } else {
-            lastVersion = currentVersion;
-            lastHighlighted = isHighlighted;
-        }
-        
-        if (isHighlighted) {
-            return new MixColor(COLOR.getRed(), COLOR.getGreen(), COLOR.getBlue(), 255);
         }
         return null;
     }

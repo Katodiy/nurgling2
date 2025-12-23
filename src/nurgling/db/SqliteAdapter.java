@@ -17,7 +17,9 @@ public class SqliteAdapter extends DatabaseAdapter {
     @Override
     public ResultSet executeQuery(String sql, Object... params) throws SQLException {
         PreparedStatement stmt = prepareStatement(sql, params);
-        return stmt.executeQuery();
+        ResultSet rs = stmt.executeQuery();
+        // Wrap the ResultSet to close the statement when the ResultSet is closed
+        return new StatementClosingResultSet(rs, stmt);
     }
 
     @Override

@@ -195,8 +195,14 @@ public class NSearchItem
      * Force refresh of global search results
      */
     public void refreshSearch() {
+        // Prevent too frequent refreshes (minimum 50 ticks between refreshes)
+        long currentTick = NUtils.getTickId();
+        if (currentTick - lastSearchTick < 50) {
+            return;
+        }
+        
         if (!isEmpty() && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
-            lastSearchTick = NUtils.getTickId();
+            lastSearchTick = currentTick;
             NUtils.getUI().core.searchContainer(this);
         }
     }

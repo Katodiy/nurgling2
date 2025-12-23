@@ -131,6 +131,7 @@ public class DatabaseManager {
      */
     public <T> T executeOperation(DatabaseOperation<T> operation) throws SQLException {
         Connection conn = null;
+        boolean connectionBroken = false;
         try {
             conn = connectionPoolManager.getConnection();
             if (conn == null) {
@@ -142,18 +143,64 @@ public class DatabaseManager {
             conn.commit();
             return result;
         } catch (SQLException e) {
-            if (conn != null) {
+            // Check if this is an I/O error (connection is broken)
+            if (isConnectionBroken(e)) {
+                connectionBroken = true;
+                System.err.println("[DatabaseManager] Connection broken due to I/O error, will not return to pool");
+            }
+            if (conn != null && !connectionBroken) {
                 try {
                     conn.rollback();
-                } catch (SQLException ignore) {
+                } catch (SQLException rollbackEx) {
+                    // Rollback failed, connection is likely broken
+                    connectionBroken = true;
                 }
             }
             throw e;
         } finally {
             if (conn != null) {
-                connectionPoolManager.returnConnection(conn);
+                if (connectionBroken) {
+                    // Close broken connection instead of returning to pool
+                    try {
+                        conn.close();
+                    } catch (SQLException ignore) {
+                    }
+                } else {
+                    connectionPoolManager.returnConnection(conn);
+                }
             }
         }
+    }
+    
+    /**
+     * Check if the SQLException indicates a broken connection
+     */
+    private boolean isConnectionBroken(SQLException e) {
+        // Check for I/O errors, timeout errors, connection closed errors
+        String message = e.getMessage();
+        if (message != null) {
+            String lowerMessage = message.toLowerCase();
+            if (lowerMessage.contains("i/o error") ||
+                lowerMessage.contains("connection closed") ||
+                lowerMessage.contains("connection reset") ||
+                lowerMessage.contains("socket") ||
+                lowerMessage.contains("timeout")) {
+                return true;
+            }
+        }
+        
+        // Check cause chain
+        Throwable cause = e.getCause();
+        while (cause != null) {
+            if (cause instanceof java.net.SocketException ||
+                cause instanceof java.net.SocketTimeoutException ||
+                cause instanceof java.io.IOException) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        
+        return false;
     }
 
     /**

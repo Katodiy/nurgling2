@@ -294,10 +294,13 @@ public class NGItem extends GItem
     
     /**
      * Generate a hash for this item for database identification
+     * Must match ItemWatcher.generateItemHash() format
      */
     private String generateItemHash() {
         if (name == null || wi == null) return null;
-        String data = name + wi.c.toString() + (quality != null ? quality : -1);
+        // Format quality the same way as ItemWatcher.ItemInfo constructor
+        double q = Double.parseDouble(Utils.odformat2(quality != null ? quality : -1, 2));
+        String data = name + wi.c.toString() + q;
         return NUtils.calculateSHA256(data);
     }
 

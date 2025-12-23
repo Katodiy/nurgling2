@@ -28,6 +28,7 @@ public class SimpleConnectionPool {
 
     private static final long BORROW_TIMEOUT_MS = 5000; // 5 seconds timeout for borrowing
     private static final int VALIDATION_TIMEOUT_SECONDS = 2;
+    private static final int MAX_TOTAL_CONNECTIONS = 20; // Safety limit to prevent connection leaks
 
     /**
      * Creates a new connection pool.
@@ -43,8 +44,9 @@ public class SimpleConnectionPool {
         this.isPostgres = (Boolean) NConfig.get(NConfig.Key.postgres);
 
         if (isPostgres) {
+            // Increased timeouts: connectTimeout=10s, socketTimeout=60s for slow operations
             this.jdbcUrl = "jdbc:postgresql://" + NConfig.get(NConfig.Key.serverNode)
-                         + "/nurgling_db?connectTimeout=5&socketTimeout=10";
+                         + "/nurgling_db?connectTimeout=10&socketTimeout=60";
             this.user = (String) NConfig.get(NConfig.Key.serverUser);
             this.password = (String) NConfig.get(NConfig.Key.serverPass);
         } else {
@@ -71,6 +73,7 @@ public class SimpleConnectionPool {
         if (conn != null) {
             // Validate existing connection
             if (isValid(conn)) {
+                logPoolStatus("borrow (reused)");
                 return conn;
             } else {
                 // Connection is stale, close it and decrement counter
@@ -84,14 +87,17 @@ public class SimpleConnectionPool {
             conn = createConnection();
             if (conn != null) {
                 currentSize.incrementAndGet();
+                logPoolStatus("borrow (new)");
                 return conn;
             }
         }
 
         // Pool is at max capacity, wait for a connection to be returned
         try {
+            System.out.println("[ConnectionPool] Pool exhausted, waiting for connection (pool=" + pool.size() + ", total=" + currentSize.get() + "/" + maxSize + ")");
             conn = pool.poll(BORROW_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             if (conn != null && isValid(conn)) {
+                logPoolStatus("borrow (waited)");
                 return conn;
             } else if (conn != null) {
                 closeQuietly(conn);
@@ -101,7 +107,15 @@ public class SimpleConnectionPool {
             Thread.currentThread().interrupt();
         }
 
+        System.err.println("[ConnectionPool] Failed to borrow connection!");
         return null;
+    }
+    
+    private void logPoolStatus(String action) {
+        // Only log occasionally to avoid spam
+        if (currentSize.get() > maxSize / 2) {
+            System.out.println("[ConnectionPool] " + action + ": pool=" + pool.size() + ", total=" + currentSize.get() + "/" + maxSize);
+        }
     }
 
     /**
