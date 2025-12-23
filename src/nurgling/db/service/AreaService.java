@@ -184,16 +184,44 @@ public class AreaService {
     }
 
     /**
-     * Export areas asynchronously
+     * Export areas asynchronously with automatic retry on failure
      */
     public CompletableFuture<Integer> exportAreasToDatabaseAsync(Map<Integer, NArea> areas, String profile) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return exportAreasToDatabase(areas, profile);
-            } catch (SQLException e) {
-                throw new RuntimeException("Failed to export areas", e);
+        // Make a copy to avoid ConcurrentModificationException
+        List<NArea> areasCopy = new ArrayList<>(areas.values());
+        
+        return databaseManager.executeWithRetry(adapter -> {
+            int count = 0;
+            for (NArea area : areasCopy) {
+                // Extract data (space, in, out, spec)
+                org.json.JSONObject json = area.toJson();
+                org.json.JSONObject dataJson = new org.json.JSONObject();
+                if (json.has("space")) dataJson.put("space", json.get("space"));
+                if (json.has("in")) dataJson.put("in", json.get("in"));
+                if (json.has("out")) dataJson.put("out", json.get("out"));
+                if (json.has("spec")) dataJson.put("spec", json.get("spec"));
+
+                int oldVersion = area.version;
+                int newVersion = areaDao.saveArea(adapter,
+                    area.id,
+                    area.name,
+                    area.path,
+                    area.hide,
+                    area.color.getRed(),
+                    area.color.getGreen(),
+                    area.color.getBlue(),
+                    area.color.getAlpha(),
+                    dataJson.toString(),
+                    profile);
+                // Update local version to prevent sync from re-downloading
+                area.version = newVersion;
+                if (newVersion != oldVersion) {
+                    System.out.println("Area " + area.id + " saved: local v" + oldVersion + " -> v" + newVersion);
+                }
+                count++;
             }
-        });
+            return count;
+        }, "Export " + areasCopy.size() + " areas");
     }
 
     /**

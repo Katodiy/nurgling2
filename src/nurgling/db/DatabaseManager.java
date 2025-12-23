@@ -5,9 +5,8 @@ import nurgling.db.service.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Main database manager that provides unified access to all database operations.
@@ -28,11 +27,109 @@ public class DatabaseManager {
     private StorageItemService storageItemService;
     private AreaService areaService;
     private RouteService routeService;
+    
+    // Task queue for retry logic
+    private final BlockingQueue<QueuedTask<?>> taskQueue = new LinkedBlockingQueue<>(1000);
+    private ScheduledExecutorService queueProcessor;
+    private static final int MAX_RETRIES = 3;
+    private static final long RETRY_DELAY_MS = 2000; // 2 seconds between retries
+    private final AtomicInteger queuedTaskCount = new AtomicInteger(0);
+    
+    /**
+     * Wrapper for queued database tasks with retry support
+     */
+    private static class QueuedTask<T> {
+        final DatabaseOperation<T> operation;
+        final CompletableFuture<T> future;
+        final String description;
+        int retryCount = 0;
+        long nextRetryTime = 0;
+        
+        QueuedTask(DatabaseOperation<T> operation, CompletableFuture<T> future, String description) {
+            this.operation = operation;
+            this.future = future;
+            this.description = description;
+        }
+    }
 
     public DatabaseManager(int threadPoolSize) {
         this.threadPoolSize = threadPoolSize;
         this.executorService = Executors.newFixedThreadPool(threadPoolSize);
+        startQueueProcessor();
         initialize();
+    }
+    
+    /**
+     * Start the background queue processor
+     */
+    private void startQueueProcessor() {
+        queueProcessor = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "DB-Queue-Processor");
+            t.setDaemon(true);
+            return t;
+        });
+        
+        queueProcessor.scheduleWithFixedDelay(() -> {
+            if (shutdown || !initialized) return;
+            
+            try {
+                processQueuedTasks();
+            } catch (Exception e) {
+                System.err.println("[DatabaseManager] Queue processor error: " + e.getMessage());
+            }
+        }, 1, 1, TimeUnit.SECONDS);
+    }
+    
+    /**
+     * Process queued tasks that are ready for retry
+     */
+    private void processQueuedTasks() {
+        if (taskQueue.isEmpty()) return;
+        
+        long now = System.currentTimeMillis();
+        int processed = 0;
+        int maxToProcess = 10; // Process up to 10 tasks per cycle
+        
+        while (processed < maxToProcess && !taskQueue.isEmpty()) {
+            QueuedTask<?> task = taskQueue.peek();
+            if (task == null) break;
+            
+            // Check if it's time to retry
+            if (task.nextRetryTime > now) {
+                break; // Tasks are ordered by time, so no point checking others
+            }
+            
+            // Remove from queue and process
+            task = taskQueue.poll();
+            if (task == null) break;
+            
+            processTask(task);
+            processed++;
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private <T> void processTask(QueuedTask<T> task) {
+        try {
+            T result = executeOperation(task.operation);
+            task.future.complete(result);
+            queuedTaskCount.decrementAndGet();
+        } catch (SQLException e) {
+            task.retryCount++;
+            if (task.retryCount < MAX_RETRIES) {
+                // Schedule for retry
+                task.nextRetryTime = System.currentTimeMillis() + RETRY_DELAY_MS * task.retryCount;
+                taskQueue.offer(task);
+                System.out.println("[DatabaseManager] Task '" + task.description + "' failed, retry " + 
+                    task.retryCount + "/" + MAX_RETRIES + " scheduled");
+            } else {
+                // Max retries exceeded
+                task.future.completeExceptionally(e);
+                queuedTaskCount.decrementAndGet();
+                System.err.println("[DatabaseManager] Task '" + task.description + "' failed after " + 
+                    MAX_RETRIES + " retries: " + e.getMessage());
+            }
+        }
     }
 
     /**
@@ -124,6 +221,55 @@ public class DatabaseManager {
             // Executor was shut down between check and submit
             return null;
         }
+    }
+    
+    /**
+     * Execute operation with automatic retry on failure.
+     * If connection is not available, the task is queued for later execution.
+     * 
+     * @param operation The database operation to execute
+     * @param description Description for logging
+     * @return CompletableFuture that completes when operation succeeds or max retries exceeded
+     */
+    public <T> CompletableFuture<T> executeWithRetry(DatabaseOperation<T> operation, String description) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        
+        if (shutdown || !initialized) {
+            future.completeExceptionally(new SQLException("Database not available"));
+            return future;
+        }
+        
+        // Try to execute immediately
+        executorService.submit(() -> {
+            try {
+                T result = executeOperation(operation);
+                future.complete(result);
+            } catch (SQLException e) {
+                // Failed - queue for retry
+                QueuedTask<T> task = new QueuedTask<>(operation, future, description);
+                task.retryCount = 1;
+                task.nextRetryTime = System.currentTimeMillis() + RETRY_DELAY_MS;
+                
+                if (taskQueue.offer(task)) {
+                    queuedTaskCount.incrementAndGet();
+                    System.out.println("[DatabaseManager] Task '" + description + "' queued for retry (queue size: " + 
+                        queuedTaskCount.get() + ")");
+                } else {
+                    // Queue is full
+                    future.completeExceptionally(new SQLException("Task queue full, operation rejected: " + description));
+                    System.err.println("[DatabaseManager] Task queue full, rejected: " + description);
+                }
+            }
+        });
+        
+        return future;
+    }
+    
+    /**
+     * Get current queued task count
+     */
+    public int getQueuedTaskCount() {
+        return queuedTaskCount.get();
     }
 
     /**
@@ -275,6 +421,28 @@ public class DatabaseManager {
      */
     public synchronized void shutdown() {
         shutdown = true;
+        
+        // Stop queue processor first
+        if (queueProcessor != null) {
+            queueProcessor.shutdown();
+            try {
+                queueProcessor.awaitTermination(2, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                queueProcessor.shutdownNow();
+            }
+        }
+        
+        // Cancel all queued tasks
+        int cancelled = 0;
+        QueuedTask<?> task;
+        while ((task = taskQueue.poll()) != null) {
+            task.future.completeExceptionally(new SQLException("Database shutdown"));
+            cancelled++;
+        }
+        if (cancelled > 0) {
+            System.out.println("[DatabaseManager] Cancelled " + cancelled + " queued tasks on shutdown");
+        }
+        
         if (executorService != null) {
             executorService.shutdown();
         }
