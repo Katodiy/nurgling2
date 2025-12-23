@@ -781,7 +781,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	return(curstate);
     }
 
-    private void updstate() {
+    public void updstate() {
 	GobState nst;
 	try {
 	    nst = new GobState();

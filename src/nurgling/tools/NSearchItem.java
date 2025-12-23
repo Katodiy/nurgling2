@@ -9,6 +9,8 @@ import java.util.ArrayList;
 public class NSearchItem
 {
     public String name ="";
+    private long lastSearchTick = 0;
+    private static final long SEARCH_REFRESH_INTERVAL = 100; // Refresh every 100 ticks (~3-4 seconds)
 
     public static class Quality{
         public double val;
@@ -172,6 +174,39 @@ public class NSearchItem
     public boolean onlyName() {
         synchronized (gilding) {
             return !name.isEmpty() && !fgs && gilding.isEmpty() && food.isEmpty() && q.isEmpty();
+        }
+    }
+    
+    /**
+     * Called periodically to refresh search results
+     */
+    public void tick() {
+        if (isEmpty()) {
+            return;
+        }
+        
+        long currentTick = NUtils.getTickId();
+        if (currentTick - lastSearchTick >= SEARCH_REFRESH_INTERVAL) {
+            refreshSearch();
+        }
+    }
+    
+    /**
+     * Force refresh of global search results
+     */
+    public void refreshSearch() {
+        if (!isEmpty() && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+            lastSearchTick = NUtils.getTickId();
+            NUtils.getUI().core.searchContainer(this);
+        }
+    }
+    
+    /**
+     * Notify that container data has changed - triggers search refresh
+     */
+    public static void notifyContainerDataChanged() {
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().itemsForSearch != null) {
+            NUtils.getGameUI().itemsForSearch.refreshSearch();
         }
     }
 }

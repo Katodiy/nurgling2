@@ -12,6 +12,7 @@ public class NGlobalSearchItems implements Runnable {
     private final DatabaseManager databaseManager;
 
     public static final ArrayList<String> containerHashes = new ArrayList<>();
+    public static volatile long updateVersion = 0; // Incremented when containerHashes changes
 
     public NGlobalSearchItems(NSearchItem item, DatabaseManager databaseManager) {
         this.item = item;
@@ -73,6 +74,7 @@ public class NGlobalSearchItems implements Runnable {
                         while (resultSet.next()) {
                             containerHashes.add(resultSet.getString("hash"));
                         }
+                        updateVersion++; // Signal that containerHashes has changed
                     }
                 }
 

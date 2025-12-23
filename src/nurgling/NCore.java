@@ -507,6 +507,32 @@ public class NCore extends Widget
         }
     }
 
+    /**
+     * Clear all items for a container when it's opened (to refresh data)
+     * Note: Don't notify search here - data is being cleared, search will update when container closes
+     */
+    public void clearContainerItems(Gob gob) {
+        if (gob == null || databaseManager == null || !databaseManager.isReady()) {
+            return;
+        }
+        databaseManager.submitTask(() -> {
+            try {
+                // Wait for hash to be available
+                int waitCount = 0;
+                while (gob.ngob.hash == null && waitCount < 100) {
+                    Thread.sleep(10);
+                    waitCount++;
+                }
+                if (gob.ngob.hash != null) {
+                    databaseManager.getStorageItemService().deleteStorageItemsByContainer(gob.ngob.hash);
+                    // Don't notify search here - container is being browsed, data will be saved when closed
+                }
+            } catch (Exception e) {
+                // Silently ignore errors during container item clearing
+            }
+        });
+    }
+
     public void writeItemInfoForContainer(ArrayList<ItemWatcher.ItemInfo> iis) {
         if (databaseManager == null || !databaseManager.isReady()) {
             return;

@@ -48,6 +48,9 @@ public class ItemWatcher implements Runnable {
 
                 return null;
             });
+            
+            // Notify that container data has changed - refresh global search
+            nurgling.tools.NSearchItem.notifyContainerDataChanged();
         } catch (Exception e) {
             e.printStackTrace();
         }

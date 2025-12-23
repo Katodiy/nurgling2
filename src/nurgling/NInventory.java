@@ -45,6 +45,21 @@ public class NInventory extends Inventory
     public Gob parentGob = null;
     long lastUpdate = 0;
     
+    // Track pending item deletions for database sync
+    public static class PendingDeletion {
+        public final String itemHash;
+        public final long deleteAtTick;
+        public final String containerHash;
+        
+        public PendingDeletion(String itemHash, String containerHash, long deleteAtTick) {
+            this.itemHash = itemHash;
+            this.containerHash = containerHash;
+            this.deleteAtTick = deleteAtTick;
+        }
+    }
+    public final java.util.List<PendingDeletion> pendingDeletions = new java.util.ArrayList<>();
+    private long pendingSearchRefreshTick = 0;
+    
     // Pre-cached slot number textures for performance
     private static final int MAX_SLOT_NUMBERS = 200;
     private static final TexI[] cachedSlotNumbers = new TexI[MAX_SLOT_NUMBERS + 1];
@@ -423,6 +438,36 @@ public class NInventory extends Inventory
         {
             iis.clear();
         }
+        
+        // Process pending deletions - items deleted while inventory stays open
+        if (!pendingDeletions.isEmpty() && (Boolean) NConfig.get(NConfig.Key.ndbenable) && 
+            ui != null && ui.core != null && ui.core.databaseManager != null && ui.core.databaseManager.isReady()) {
+            long currentTick = NUtils.getTickId();
+            java.util.Iterator<PendingDeletion> it = pendingDeletions.iterator();
+            int deletedCount = 0;
+            while (it.hasNext()) {
+                PendingDeletion pd = it.next();
+                if (currentTick >= pd.deleteAtTick) {
+                    // Delete item from database async
+                    ui.core.databaseManager.getStorageItemService().deleteStorageItemAsync(pd.itemHash);
+                    it.remove();
+                    deletedCount++;
+                }
+            }
+            // Schedule search refresh after a short delay to allow DB operations to complete
+            if (deletedCount > 0) {
+                pendingSearchRefreshTick = currentTick + 5; // Refresh search in 5 ticks
+            }
+        }
+        
+        // Handle pending search refresh
+        if (pendingSearchRefreshTick > 0 && NUtils.getTickId() >= pendingSearchRefreshTick) {
+            pendingSearchRefreshTick = 0;
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().itemsForSearch != null) {
+                NUtils.getGameUI().itemsForSearch.refreshSearch();
+            }
+        }
+        
         if(NUtils.getGameUI() == null)
             return;
         super.tick(dt);
@@ -1498,6 +1543,9 @@ public class NInventory extends Inventory
 
     @Override
     public void reqdestroy() {
+        // Clear pending deletions - the ItemWatcher will handle bulk update on close
+        pendingDeletions.clear();
+        
         if(parentGob!=null && parentGob.ngob.hash!=null)
         {
             if((Boolean)NConfig.get(NConfig.Key.ndbenable)) {

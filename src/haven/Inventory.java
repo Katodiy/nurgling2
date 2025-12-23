@@ -67,8 +67,10 @@ public class Inventory extends Widget implements DTarget {
 		NInventory ni = new NInventory((Coord) args[0]);
 		if(ui.core.getLastActions()!=null) {
 			ni.parentGob = ui.core.getLastActions().gob;
-			if(false && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+			if((Boolean) NConfig.get(NConfig.Key.ndbenable) && ui.core.databaseManager != null && ui.core.databaseManager.isReady()) {
 				ui.core.writeContainerInfo(ni.parentGob);
+				// Items will be refreshed when container closes (via ItemWatcher)
+				// Don't clear here to avoid breaking global search overlay
 			}
 		}
 		return ni;
