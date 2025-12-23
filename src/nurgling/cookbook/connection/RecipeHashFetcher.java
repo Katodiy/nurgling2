@@ -193,6 +193,11 @@ public class RecipeHashFetcher implements Runnable {
                                     fepName, operator, value));
                         }
                     }
+                } else {
+                    // Plain text search - search in recipe name AND ingredient names
+                    String value = escapeSql(part);
+                    conditions.add("(r.item_name ILIKE '%" + value + "%' OR " +
+                            "EXISTS (SELECT 1 FROM ingredients i WHERE i.recipe_hash = r.recipe_hash AND i.name ILIKE '%" + value + "%'))");
                 }
             } catch (Exception e) {
                 System.err.println("Error parsing filter condition: " + part);

@@ -470,9 +470,8 @@ public class NCore extends Widget
                 if (info instanceof Ingredient) {
                     Ingredient ing = (Ingredient) info;
                     double percentage = ing.val != null ? ing.val * 100 : 0;
-                    // Use resName if available, otherwise fall back to name
-                    String key = ing.resName != null ? ing.resName : ing.name;
-                    ingredients.put(key, new nurgling.cookbook.Recipe.IngredientInfo(percentage, ing.resName));
+                    // Use pretty name as key, store resName in IngredientInfo for resource lookup
+                    ingredients.put(ing.name, new nurgling.cookbook.Recipe.IngredientInfo(percentage, ing.resName));
                 }
             }
 
