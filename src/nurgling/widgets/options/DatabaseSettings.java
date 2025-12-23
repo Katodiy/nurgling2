@@ -215,9 +215,9 @@ public class DatabaseSettings extends Panel {
         }
 
         if (ui != null) {
-            if (ui.core.poolManager == null)
-                ui.core.poolManager = new DBPoolManager(1);
-            ui.core.poolManager.reconnect();
+            if (ui.core.databaseManager == null)
+                ui.core.databaseManager = new nurgling.db.DatabaseManager(1);
+            ui.core.databaseManager.reconnect();
         }
 
         NConfig.needUpdate();
@@ -242,9 +242,9 @@ public class DatabaseSettings extends Panel {
             initDbButton.visible = isSQLite;
 
             if (ui != null) {
-                if (ui.core.poolManager == null)
-                    ui.core.poolManager = new DBPoolManager(1);
-                ui.core.poolManager.reconnect();
+                if (ui.core.databaseManager == null)
+                    ui.core.databaseManager = new nurgling.db.DatabaseManager(1);
+                ui.core.databaseManager.reconnect();
             }
         }
 

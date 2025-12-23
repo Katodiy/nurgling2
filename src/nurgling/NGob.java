@@ -93,7 +93,7 @@ public class NGob
             {
                 if (ANIMAL_NAMES.contains(name))
                 {
-                    if (nurgling.NUtils.getGameUI() != null)
+                    if (nurgling.NUtils.getGameUI() != null && NUtils.getGameUI().fv!=null)
                     {
                         for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel)
                         {

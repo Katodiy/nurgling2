@@ -1,24 +1,21 @@
 package monitoring;
 
-import nurgling.DBPoolManager;
 import nurgling.NConfig;
+import nurgling.db.DatabaseManager;
 import nurgling.tools.NSearchItem;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class NGlobalSearchItems implements Runnable {
     private final NSearchItem item;
-    private final DBPoolManager poolManager;
+    private final DatabaseManager databaseManager;
 
     public static final ArrayList<String> containerHashes = new ArrayList<>();
 
-    public NGlobalSearchItems(NSearchItem item, DBPoolManager poolManager) {
+    public NGlobalSearchItems(NSearchItem item, DatabaseManager databaseManager) {
         this.item = item;
-        this.poolManager = poolManager;
+        this.databaseManager = databaseManager;
     }
 
     @Override
@@ -27,56 +24,50 @@ public class NGlobalSearchItems implements Runnable {
             return;
         }
 
-        Connection conn = null;
         try {
-            conn = poolManager.getConnection();
-            if (conn == null) {
-                System.err.println("NGlobalSearchItems: Unable to get database connection");
-                return;
-            }
+            databaseManager.executeOperation(adapter -> {
+                boolean isSQLite = adapter instanceof nurgling.db.SqliteAdapter;
 
-            boolean isSQLite = (Boolean) NConfig.get(NConfig.Key.sqlite);
+                String nameOp = isSQLite ? "LIKE" : "ILIKE";
+                String collation = isSQLite ? " COLLATE NOCASE" : "";
 
-            String nameOp = isSQLite ? "LIKE" : "ILIKE";
-            String collation = isSQLite ? " COLLATE NOCASE" : "";
+                StringBuilder dynamicSql = new StringBuilder()
+                        .append("SELECT DISTINCT c.hash ")
+                        .append("FROM containers c ")
+                        .append("JOIN storageitems si ON c.hash = si.container ")
+                        .append("WHERE si.name ").append(nameOp).append(" ?").append(collation);
 
-            StringBuilder dynamicSql = new StringBuilder()
-                    .append("SELECT DISTINCT c.hash ")
-                    .append("FROM containers c ")
-                    .append("JOIN storageitems si ON c.hash = si.container ")
-                    .append("WHERE si.name ").append(nameOp).append(" ?").append(collation);
-
-            if (!item.q.isEmpty()) {
-                dynamicSql.append(" AND (");
-                for (int i = 0; i < item.q.size(); i++) {
-                    if (i > 0) {
-                        dynamicSql.append(" OR ");
-                    }
-                    dynamicSql.append("(");
-                    switch (item.q.get(i).type) {
-                        case MORE:
-                            dynamicSql.append("si.quality > ?");
-                            break;
-                        case LOW:
-                            dynamicSql.append("si.quality < ?");
-                            break;
-                        case EQ:
-                            dynamicSql.append("si.quality = ?");
-                            break;
+                if (!item.q.isEmpty()) {
+                    dynamicSql.append(" AND (");
+                    for (int i = 0; i < item.q.size(); i++) {
+                        if (i > 0) {
+                            dynamicSql.append(" OR ");
+                        }
+                        dynamicSql.append("(");
+                        switch (item.q.get(i).type) {
+                            case MORE:
+                                dynamicSql.append("si.quality > ?");
+                                break;
+                            case LOW:
+                                dynamicSql.append("si.quality < ?");
+                                break;
+                            case EQ:
+                                dynamicSql.append("si.quality = ?");
+                                break;
+                        }
+                        dynamicSql.append(")");
                     }
                     dynamicSql.append(")");
                 }
-                dynamicSql.append(")");
-            }
 
-            try (PreparedStatement preparedStatement = conn.prepareStatement(dynamicSql.toString())) {
-                preparedStatement.setString(1, "%" + item.name + "%");
+                Object[] params = new Object[1 + item.q.size()];
+                params[0] = "%" + item.name + "%";
 
                 for (int i = 0; i < item.q.size(); i++) {
-                    preparedStatement.setDouble(i + 2, item.q.get(i).val);
+                    params[i + 1] = item.q.get(i).val;
                 }
 
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                try (java.sql.ResultSet resultSet = adapter.executeQuery(dynamicSql.toString(), params)) {
                     synchronized (containerHashes) {
                         containerHashes.clear();
                         while (resultSet.next()) {
@@ -85,20 +76,10 @@ public class NGlobalSearchItems implements Runnable {
                     }
                 }
 
-                conn.commit();
-            }
-        } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ignore) {
-                }
-            }
+                return null;
+            });
+        } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            if (conn != null) {
-                poolManager.returnConnection(conn);
-            }
         }
     }
 }

@@ -1,14 +1,15 @@
 package nurgling.actions;
 
 import haven.Utils;
-import nurgling.DBPoolManager;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.sql.*;
 import java.util.HashSet;
 
@@ -21,34 +22,29 @@ public class ReadJsonAction implements Action {
 
     @Override
     public Results run(NGameUI gui) {
-        if (gui.ui.core.poolManager == null || !gui.ui.core.poolManager.isConnectionReady()) {
+        if (gui.ui.core.databaseManager == null || !gui.ui.core.databaseManager.isReady()) {
             return Results.ERROR("Database connection not available");
         }
 
-        Connection conn = null;
-        try (FileReader fileReader = new FileReader(path)) {
-            conn = gui.ui.core.poolManager.getConnection();
-            if (conn == null) {
-                return Results.ERROR("Database connection not available");
-            }
-            JSONArray foodItems = new JSONArray(new JSONTokener(fileReader));
-            loadDataIntoDatabase(conn, foodItems);
-            System.out.println("Data imported successfully");
+        try {
+            return gui.ui.core.databaseManager.executeOperation(adapter -> {
+                try (FileReader fileReader = new FileReader(path)) {
+                    JSONArray foodItems = new JSONArray(new JSONTokener(fileReader));
+                    loadDataIntoDatabase(adapter.getConnection(), foodItems);
+                    System.out.println("Data imported successfully");
+                    return Results.SUCCESS();
+                } catch (FileNotFoundException e)
+                {
+                    throw new RuntimeException(e);
+                } catch (IOException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ignore) {
-                }
-            }
             return Results.ERROR(e.getMessage());
-        } finally {
-            if (conn != null) {
-                gui.ui.core.poolManager.returnConnection(conn);
-            }
         }
-        return Results.SUCCESS();
     }
 
     private static final String INSERT_RECIPE_SQL =

@@ -2,14 +2,11 @@ package monitoring;
 
 import haven.Coord;
 import haven.Utils;
-import nurgling.DBPoolManager;
 import nurgling.NUtils;
+import nurgling.db.DatabaseManager;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 public class ItemWatcher implements Runnable {
 
@@ -27,12 +24,12 @@ public class ItemWatcher implements Runnable {
         }
     }
 
-    private final DBPoolManager poolManager;
+    private final DatabaseManager databaseManager;
     private final ArrayList<ItemInfo> iis;
 
-    public ItemWatcher(ArrayList<ItemInfo> iis, DBPoolManager poolManager) {
+    public ItemWatcher(ArrayList<ItemInfo> iis, DatabaseManager databaseManager) {
         this.iis = iis;
-        this.poolManager = poolManager;
+        this.databaseManager = databaseManager;
     }
 
     @Override
@@ -41,69 +38,51 @@ public class ItemWatcher implements Runnable {
             return;
         }
 
-        Connection conn = null;
         try {
-            conn = poolManager.getConnection();
-            if (conn == null) {
-                System.err.println("ItemWatcher: Unable to get database connection");
-                return;
-            }
+            databaseManager.executeOperation(adapter -> {
+                // Delete old items from container
+                deleteItems(adapter);
 
-            deleteItems(conn);
-            insertItems(conn);
-            conn.commit();
-        } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ignore) {
-                }
-            }
+                // Insert new items
+                insertItems(adapter);
+
+                return null;
+            });
+        } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            if (conn != null) {
-                poolManager.returnConnection(conn);
-            }
         }
     }
 
-    private void deleteItems(Connection conn) throws SQLException {
+    private void deleteItems(nurgling.db.DatabaseAdapter adapter) throws SQLException {
         // Build parameterized IN clause: DELETE ... WHERE ... NOT IN (?, ?, ?, ...)
-        String placeholders = iis.stream().map(i -> "?").collect(Collectors.joining(","));
+        String placeholders = iis.stream().map(i -> "?").collect(java.util.stream.Collectors.joining(","));
         String deleteSql = "DELETE FROM storageitems WHERE container = ? AND item_hash NOT IN (" + placeholders + ")";
 
-        try (PreparedStatement deleteStatement = conn.prepareStatement(deleteSql)) {
-            deleteStatement.setString(1, iis.get(0).container);
+        Object[] params = new Object[iis.size() + 1];
+        params[0] = iis.get(0).container;
 
-            // Set each item hash as a separate parameter
-            int paramIndex = 2;
-            for (ItemInfo item : iis) {
-                deleteStatement.setString(paramIndex++, generateItemHash(item));
-            }
-
-            deleteStatement.executeUpdate();
+        // Set each item hash as a separate parameter
+        for (int i = 0; i < iis.size(); i++) {
+            params[i + 1] = generateItemHash(iis.get(i));
         }
+
+        adapter.executeUpdate(deleteSql, params);
     }
 
-    private void insertItems(Connection conn) throws SQLException {
-        final String insertSql = "INSERT INTO storageitems (item_hash, name, quality, coordinates, container) " +
-                "VALUES (?, ?, ?, ?, ?) " +
-                "ON CONFLICT (item_hash) DO UPDATE SET " +
-                "name = EXCLUDED.name, quality = EXCLUDED.quality, coordinates = EXCLUDED.coordinates";
+    private void insertItems(nurgling.db.DatabaseAdapter adapter) throws SQLException {
+        String insertSql = adapter.getUpsertSql("storageitems",
+            java.util.Map.of("item_hash", "?",
+                           "name", "?",
+                           "quality", "?",
+                           "coordinates", "?",
+                           "container", "?"),
+            java.util.List.of("item_hash"));
 
-        try (PreparedStatement insertStatement = conn.prepareStatement(insertSql)) {
-            for (ItemInfo item : iis) {
-                String itemHash = generateItemHash(item);
-
-                insertStatement.setString(1, itemHash);
-                insertStatement.setString(2, item.name);
-                insertStatement.setDouble(3, item.q);
-                insertStatement.setString(4, item.c.toString());
-                insertStatement.setString(5, item.container);
-
-                insertStatement.addBatch();
-            }
-            insertStatement.executeBatch();
+        // For simplicity, insert items one by one since batch operations are complex with different SQL syntax
+        for (ItemInfo item : iis) {
+            String itemHash = generateItemHash(item);
+            adapter.executeUpdate(insertSql,
+                itemHash, item.name, item.q, item.c.toString(), item.container);
         }
     }
 

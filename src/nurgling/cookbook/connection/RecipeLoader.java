@@ -1,21 +1,20 @@
 package nurgling.cookbook.connection;
 
-import nurgling.DBPoolManager;
 import nurgling.NConfig;
 import nurgling.cookbook.Recipe;
+import nurgling.db.DatabaseManager;
 
-import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RecipeLoader implements Runnable {
-    private final DBPoolManager poolManager;
+    private final DatabaseManager databaseManager;
     private final ArrayList<String> recipeHashes;
     private final ArrayList<Recipe> recipes = new ArrayList<>();
     public AtomicBoolean ready = new AtomicBoolean(false);
 
-    public RecipeLoader(DBPoolManager poolManager, ArrayList<String> recipeHashes) {
-        this.poolManager = poolManager;
+    public RecipeLoader(DatabaseManager databaseManager, ArrayList<String> recipeHashes) {
+        this.databaseManager = databaseManager;
         this.recipeHashes = recipeHashes;
     }
 
@@ -26,102 +25,14 @@ public class RecipeLoader implements Runnable {
             return;
         }
 
-        HashMap<String, Recipe> res = new HashMap<>();
-        Connection conn = null;
-
         try {
-            conn = poolManager.getConnection();
-            if (conn == null) {
-                System.err.println("RecipeLoader: Unable to get database connection");
-                return;
-            }
-
-            String sql;
-            if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                sql = "SELECT r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
-                        "i.name AS ingredient_name, i.percentage, i.resource_name AS ing_resource, " +
-                        "f.name AS fep_name, f.value AS fep_value, f.weight as fep_weight " +
-                        "FROM recipes r " +
-                        "LEFT JOIN ingredients i ON r.recipe_hash = i.recipe_hash " +
-                        "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash " +
-                        "WHERE r.recipe_hash = ANY(?)";
-            } else { // SQLite
-                sql = "SELECT r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
-                        "i.name AS ingredient_name, i.percentage, i.resource_name AS ing_resource, " +
-                        "f.name AS fep_name, f.value AS fep_value, f.weight as fep_weight " +
-                        "FROM recipes r " +
-                        "LEFT JOIN ingredients i ON r.recipe_hash = i.recipe_hash " +
-                        "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash " +
-                        "WHERE r.recipe_hash IN (" + String.join(",", Collections.nCopies(recipeHashes.size(), "?")) + ")";
-            }
-
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                    Array sqlArray = conn.createArrayOf("varchar", recipeHashes.toArray(new String[0]));
-                    stmt.setArray(1, sqlArray);
-                } else { // SQLite
-                    for (int i = 0; i < recipeHashes.size(); i++) {
-                        stmt.setString(i + 1, recipeHashes.get(i));
-                    }
-                }
-
-                ResultSet rs = stmt.executeQuery();
-
-                while (rs.next()) {
-                    String hash = rs.getString("recipe_hash");
-                    Recipe recipe = res.computeIfAbsent(hash, k -> {
-                        try {
-                            return new Recipe(
-                                    hash,
-                                    rs.getString("item_name"),
-                                    rs.getString("resource_name"),
-                                    rs.getDouble("hunger"),
-                                    rs.getInt("energy"),
-                                    new HashMap<>(),
-                                    new HashMap<>()
-                            );
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-
-                    String ingredientName = rs.getString("ingredient_name");
-                    if (!rs.wasNull() && ingredientName != null) {
-                        String ingResource = rs.getString("ing_resource");
-                        recipe.getIngredients().put(
-                                ingredientName,
-                                new Recipe.IngredientInfo(rs.getDouble("percentage"), ingResource)
-                        );
-                    }
-
-                    String fepName = rs.getString("fep_name");
-                    if (!rs.wasNull() && fepName != null) {
-                        recipe.getFeps().put(
-                                fepName,
-                                new Recipe.Fep(rs.getDouble("fep_value"), rs.getDouble("fep_weight"))
-                        );
-                    }
-                }
-            }
-
-            conn.commit();
-        } catch (SQLException e) {
+            List<Recipe> loadedRecipes = databaseManager.getRecipeService().loadRecipes(recipeHashes);
+            recipes.addAll(loadedRecipes);
+        } catch (Exception e) {
             System.err.println("Error loading recipes:");
             e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ignore) {
-                }
-            }
         } finally {
-            for (String hash : recipeHashes) {
-                recipes.add(res.get(hash));
-            }
             ready.set(true);
-            if (conn != null) {
-                poolManager.returnConnection(conn);
-            }
         }
     }
 

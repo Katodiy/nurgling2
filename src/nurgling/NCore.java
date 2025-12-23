@@ -31,7 +31,7 @@ public class NCore extends Widget
     public AutoSaveTableware autoSaveTableware = null;
     public ScenarioManager scenarioManager = new ScenarioManager();
 
-    public DBPoolManager poolManager = null;
+    public nurgling.db.DatabaseManager databaseManager = null;
     public boolean isInspectMode()
     {
         if(debug)
@@ -181,15 +181,15 @@ public class NCore extends Widget
     @Override
     public void tick(double dt)
     {
-        if((Boolean) NConfig.get(NConfig.Key.ndbenable) && poolManager == null)
+        if((Boolean) NConfig.get(NConfig.Key.ndbenable) && databaseManager == null)
         {
-            poolManager = new DBPoolManager(1);
+            databaseManager = new nurgling.db.DatabaseManager(1);
         }
 
-        if(!(Boolean) NConfig.get(NConfig.Key.ndbenable) && poolManager != null)
+        if(!(Boolean) NConfig.get(NConfig.Key.ndbenable) && databaseManager != null)
         {
-            poolManager.shutdown();
-            poolManager = null;
+            databaseManager.shutdown();
+            databaseManager = null;
         }
 
         if(autoDrink == null && (Boolean)NConfig.get(NConfig.Key.autoDrink))
@@ -325,10 +325,10 @@ public class NCore extends Widget
     @Override
     public void dispose() {
         mappingClient.done.set(true);
-        if(poolManager!=null)
+        if(databaseManager!=null)
         {
-            poolManager.shutdown();
-            poolManager = null;
+            databaseManager.shutdown();
+            databaseManager = null;
         }
         super.dispose();
     }
@@ -347,191 +347,167 @@ public class NCore extends Widget
 
     public static class NGItemWriter implements Runnable {
         private final NGItem item;
-        private final DBPoolManager poolManager;
+        private final nurgling.db.DatabaseManager databaseManager;
 
-        public NGItemWriter(NGItem item, DBPoolManager poolManager) {
+        public NGItemWriter(NGItem item, nurgling.db.DatabaseManager databaseManager) {
             this.item = item;
-            this.poolManager = poolManager;
-        }
-
-        private String getInsertRecipeSQL() {
-            if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?) ON CONFLICT(recipe_hash) DO NOTHING";
-            } else { // SQLite
-                return "INSERT OR IGNORE INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
-            }
-        }
-
-        private String getInsertIngredientSQL() {
-            if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO ingredients (recipe_hash, name, percentage, resource_name) VALUES (?, ?, ?, ?) ON CONFLICT(recipe_hash, name) DO NOTHING";
-            } else { // SQLite
-                return "INSERT OR IGNORE INTO ingredients (recipe_hash, name, percentage, resource_name) VALUES (?, ?, ?, ?)";
-            }
-        }
-
-        private String getInsertFepsSQL() {
-            if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?) ON CONFLICT(recipe_hash, name) DO NOTHING";
-            } else { // SQLite
-                return "INSERT OR IGNORE INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
-            }
+            this.databaseManager = databaseManager;
         }
 
         @Override
         public void run() {
-            if (!(Boolean) NConfig.get(NConfig.Key.postgres) && !(Boolean) NConfig.get(NConfig.Key.sqlite)) {
-                return;
-            }
-
-            java.sql.Connection conn = null;
             try {
-                conn = poolManager.getConnection();
-                if (conn == null) {
-                    return;
-                }
-
-                PreparedStatement recipeStatement = conn.prepareStatement(getInsertRecipeSQL());
-                PreparedStatement ingredientStatement = conn.prepareStatement(getInsertIngredientSQL());
-                PreparedStatement fepsStatement = conn.prepareStatement(getInsertFepsSQL());
-
+                // Extract food information
                 NFoodInfo fi = item.getInfo(NFoodInfo.class);
+                if (fi == null) {
+                    return; // Not a food item
+                }
+
+                // Calculate hunger value
                 String hunger = Utils.odformat2(2 * fi.glut / (1 + Math.sqrt(item.quality / 10)) * 1000, 2);
-                
-                // Get composite resource name from item sprite FIRST (needed for hash)
-                String resourceName = item.getres().name;
-                try {
-                    GSprite spr = item.spr;
-                    if (spr != null) {
-                        JSONObject saved = ItemTex.save(spr);
-                        if (saved != null) {
-                            if (saved.has("layer")) {
-                                JSONArray layers = saved.getJSONArray("layer");
-                                StringBuilder sb = new StringBuilder();
-                                for (int i = 0; i < layers.length(); i++) {
-                                    if (i > 0) sb.append("+");
-                                    sb.append(layers.getString(i));
-                                }
-                                resourceName = sb.toString();
-                            } else if (saved.has("static")) {
-                                resourceName = saved.getString("static");
+
+                // Get composite resource name from item sprite
+                String resourceName = getCompositeResourceName();
+
+                // Build recipe hash
+                String recipeHash = buildRecipeHash(fi, resourceName);
+
+                // Extract ingredients
+                java.util.Map<String, nurgling.cookbook.Recipe.IngredientInfo> ingredients = extractIngredients();
+
+                // Extract food effects (FEPs)
+                java.util.Map<String, nurgling.cookbook.Recipe.Fep> feps = extractFeps(fi);
+
+                // Create recipe object
+                nurgling.cookbook.Recipe recipe = new nurgling.cookbook.Recipe(
+                    recipeHash,
+                    item.name(),
+                    resourceName,
+                    Double.parseDouble(hunger),
+                    (int) (fi.energy() * 100),
+                    ingredients,
+                    feps
+                );
+
+                // Save recipe using service (handles duplicates gracefully)
+                databaseManager.getRecipeService().saveRecipeAsync(recipe);
+
+            } catch (Exception e) {
+                // Log error but don't crash - recipe import should be resilient
+                System.err.println("Failed to save recipe for item: " + item.name());
+                e.printStackTrace();
+            }
+        }
+
+        private String getCompositeResourceName() {
+            String resourceName = item.getres().name;
+            try {
+                GSprite spr = item.spr;
+                if (spr != null) {
+                    JSONObject saved = ItemTex.save(spr);
+                    if (saved != null) {
+                        if (saved.has("layer")) {
+                            JSONArray layers = saved.getJSONArray("layer");
+                            StringBuilder sb = new StringBuilder();
+                            for (int i = 0; i < layers.length(); i++) {
+                                if (i > 0) sb.append("+");
+                                sb.append(layers.getString(i));
                             }
-                        }
-                    }
-                } catch (Exception e) {
-                    // Fallback to base resource name
-                }
-                
-                // Build hash including composite resource name for unique identification
-                StringBuilder hashInput = new StringBuilder();
-                hashInput.append(item.name).append((int) (100 * fi.energy()));
-                hashInput.append(resourceName); // Include composite resource in hash
-
-                for (ItemInfo info : item.info) {
-                    if (info instanceof Ingredient) {
-                        Ingredient ing = ((Ingredient) info);
-                        // Use resName if available (for unique identification of meats, fish, etc.)
-                        // Fall back to name if resName is null
-                        if (ing.resName != null) {
-                            hashInput.append(ing.resName);
-                        } else {
-                            hashInput.append(ing.name);
-                        }
-                        if (ing.val != null) {
-                            hashInput.append(ing.val * 100);
+                            resourceName = sb.toString();
+                        } else if (saved.has("static")) {
+                            resourceName = saved.getString("static");
                         }
                     }
                 }
+            } catch (Exception e) {
+                // Fallback to base resource name
+            }
+            return resourceName;
+        }
 
-                String recipeHash = NUtils.calculateSHA256(hashInput.toString());
+        private String buildRecipeHash(NFoodInfo fi, String resourceName) {
+            StringBuilder hashInput = new StringBuilder();
+            hashInput.append(item.name).append((int) (100 * fi.energy()));
+            hashInput.append(resourceName);
 
-                recipeStatement.setString(1, recipeHash);
-                recipeStatement.setString(2, item.name());
-                recipeStatement.setString(3, resourceName);
-                recipeStatement.setDouble(4, Double.parseDouble(hunger));
-                recipeStatement.setInt(5, (int) (fi.energy() * 100));
-                recipeStatement.execute();
-
-                for (ItemInfo info : item.info) {
-                    if (info instanceof Ingredient) {
-                        Ingredient ing = (Ingredient) info;
-                        ingredientStatement.setString(1, recipeHash);
-                        ingredientStatement.setString(2, ing.name);
-                        ingredientStatement.setDouble(3, ing.val != null ? ing.val * 100 : 0);
-                        ingredientStatement.setString(4, ing.resName); // Store composite resource name for layered sprites
-                        ingredientStatement.executeUpdate();
+            for (ItemInfo info : item.info) {
+                if (info instanceof Ingredient) {
+                    Ingredient ing = (Ingredient) info;
+                    // Use resName if available, otherwise fall back to name
+                    if (ing.resName != null) {
+                        hashInput.append(ing.resName);
+                    } else {
+                        hashInput.append(ing.name);
                     }
-                }
-
-                double multiplier = Math.sqrt(item.quality / 10.0);
-                for (FoodInfo.Event ef : fi.evs) {
-                    fepsStatement.setString(1, recipeHash);
-                    fepsStatement.setString(2, ef.ev.nm);
-                    fepsStatement.setDouble(3, Double.parseDouble(Utils.odformat2(ef.a / multiplier, 2)));
-                    fepsStatement.setDouble(4, Double.parseDouble(Utils.odformat2(ef.a / fi.fepSum, 2)));
-                    fepsStatement.executeUpdate();
-                }
-
-                conn.commit();
-
-            } catch (SQLException e) {
-                if (conn != null) {
-                    try {
-                        conn.rollback();
-                    } catch (SQLException ex) {
-                        // ignore rollback error
+                    if (ing.val != null) {
+                        hashInput.append(ing.val * 100);
                     }
-                }
-
-                // Ignore unique constraint violations
-                boolean isUniqueViolation = false;
-                if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                    isUniqueViolation = e.getSQLState() != null && e.getSQLState().equals("23505");
-                } else if ((Boolean) NConfig.get(NConfig.Key.sqlite)) {
-                    isUniqueViolation = e.getMessage() != null && e.getMessage().contains("UNIQUE constraint");
-                }
-                
-                if (!isUniqueViolation) {
-                    e.printStackTrace();
-                }
-            } finally {
-                if (conn != null) {
-                    poolManager.returnConnection(conn);
                 }
             }
+
+            return NUtils.calculateSHA256(hashInput.toString());
+        }
+
+        private java.util.Map<String, nurgling.cookbook.Recipe.IngredientInfo> extractIngredients() {
+            java.util.Map<String, nurgling.cookbook.Recipe.IngredientInfo> ingredients = new java.util.HashMap<>();
+
+            for (ItemInfo info : item.info) {
+                if (info instanceof Ingredient) {
+                    Ingredient ing = (Ingredient) info;
+                    double percentage = ing.val != null ? ing.val * 100 : 0;
+                    // Use resName if available, otherwise fall back to name
+                    String key = ing.resName != null ? ing.resName : ing.name;
+                    ingredients.put(key, new nurgling.cookbook.Recipe.IngredientInfo(percentage, ing.resName));
+                }
+            }
+
+            return ingredients;
+        }
+
+        private java.util.Map<String, nurgling.cookbook.Recipe.Fep> extractFeps(NFoodInfo fi) {
+            java.util.Map<String, nurgling.cookbook.Recipe.Fep> feps = new java.util.HashMap<>();
+            double multiplier = Math.sqrt(item.quality / 10.0);
+
+            for (FoodInfo.Event ef : fi.evs) {
+                double value = Double.parseDouble(Utils.odformat2(ef.a / multiplier, 2));
+                double weight = Double.parseDouble(Utils.odformat2(ef.a / fi.fepSum, 2));
+                feps.put(ef.ev.nm, new nurgling.cookbook.Recipe.Fep(value, weight));
+            }
+
+            return feps;
         }
     }
 
     public void writeNGItem(NGItem item) {
-        if (poolManager == null) {
+        if (databaseManager == null) {
             return;
         }
-        NGItemWriter ngItemWriter = new NGItemWriter(item, poolManager);
-        poolManager.submitTask(ngItemWriter);
+        NGItemWriter ngItemWriter = new NGItemWriter(item, databaseManager);
+        databaseManager.submitTask(ngItemWriter);
     }
 
     public void writeContainerInfo(Gob gob) {
-        if (gob != null && poolManager != null && poolManager.isConnectionReady()) {
-            ContainerWatcher cw = new ContainerWatcher(gob, poolManager);
-            poolManager.submitTask(cw);
+        if (gob != null && databaseManager != null && databaseManager.isReady()) {
+            ContainerWatcher cw = new ContainerWatcher(gob, databaseManager);
+            databaseManager.submitTask(cw);
         }
     }
 
     public void writeItemInfoForContainer(ArrayList<ItemWatcher.ItemInfo> iis) {
-        if (poolManager == null || !poolManager.isConnectionReady()) {
+        if (databaseManager == null || !databaseManager.isReady()) {
             return;
         }
-        ItemWatcher itemWatcher = new ItemWatcher(iis, poolManager);
-        poolManager.submitTask(itemWatcher);
+        ItemWatcher itemWatcher = new ItemWatcher(iis, databaseManager);
+        databaseManager.submitTask(itemWatcher);
     }
 
     final ArrayList<String> targetGobs = new ArrayList<>();
 
     public void searchContainer(NSearchItem item) {
-        if (poolManager == null || !poolManager.isConnectionReady()) {
+        if (databaseManager == null || !databaseManager.isReady()) {
             return;
         }
-        NGlobalSearchItems gsi = new NGlobalSearchItems(item, poolManager);
-        poolManager.submitTask(gsi);
+        NGlobalSearchItems gsi = new NGlobalSearchItems(item, databaseManager);
+        databaseManager.submitTask(gsi);
     }
 }
